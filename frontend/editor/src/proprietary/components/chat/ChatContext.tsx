@@ -10,9 +10,7 @@ import { useTranslation } from "react-i18next";
 import { generateId } from "@app/utils/generateId";
 import { useAllFiles, useFileActions } from "@app/contexts/FileContext";
 import apiClient from "@app/services/apiClient";
-import { getApiBaseUrl } from "@app/services/apiClientConfig";
 import { getAuthHeaders } from "@app/services/apiClientSetup";
-import { dispatchPaygLimitReached } from "@app/services/usageLimitBridge";
 import { createChildStub } from "@app/contexts/file/fileActions";
 import {
   createNewStirlingFileStub,
@@ -180,29 +178,11 @@ interface AiWorkflowResponse {
   fileId?: string;
   fileName?: string;
   contentType?: string;
-  /**
-   * Structured error code when a tool call inside the workflow was blocked (e.g.
-   * PAYG_LIMIT_REACHED / FEATURE_DEGRADED). Present instead of a raw failure reason so the
-   * client can pop the usage-limit modal. See {@link isPaygLimitCode}.
-   */
-  errorCode?: string;
-  /** From the blocking 402: true → over spending cap, false/absent → free allowance spent. */
-  errorSubscribed?: boolean;
-}
-
-/**
- * Usage-limit sentinels the agent can surface (matching the saas EntitlementGuard / apiClient
- * interceptor). When one of these is the result's errorCode, we open the usage-limit modal rather
- * than render the failure as chat text.
- */
-const PAYG_LIMIT_CODES = new Set(["PAYG_LIMIT_REACHED", "FEATURE_DEGRADED"]);
-
-function isPaygLimitCode(code: string | null | undefined): boolean {
-  return code != null && PAYG_LIMIT_CODES.has(code);
 }
 
 interface ChatState {
   messages: ChatMessage[];
+  isOpen: boolean;
   isLoading: boolean;
   progress: AiWorkflowProgress | null;
   /** Ordered log of every progress event in the current request. UI shows the last N entries. */
@@ -219,6 +199,8 @@ type ChatAction =
   | { type: "SET_LOADING"; loading: boolean }
   | { type: "SET_PROGRESS"; progress: AiWorkflowProgress | null }
   | { type: "APPEND_PROGRESS"; progress: AiWorkflowProgress }
+  | { type: "TOGGLE_OPEN" }
+  | { type: "SET_OPEN"; open: boolean }
   | { type: "CLEAR" };
 
 function chatReducer(state: ChatState, action: ChatAction): ChatState {
@@ -248,6 +230,10 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
                 action.progress,
               ],
       };
+    case "TOGGLE_OPEN":
+      return { ...state, isOpen: !state.isOpen };
+    case "SET_OPEN":
+      return { ...state, isOpen: action.open };
     case "CLEAR":
       return {
         ...state,
@@ -376,10 +362,13 @@ async function consumeSSEStream(
 
 interface ChatContextValue {
   messages: ChatMessage[];
+  isOpen: boolean;
   isLoading: boolean;
   progress: AiWorkflowProgress | null;
   /** Ordered log of every progress event for the current in-flight request. */
   progressLog: AiWorkflowProgress[];
+  toggleOpen: () => void;
+  setOpen: (open: boolean) => void;
   sendMessage: (content: string) => Promise<void>;
   cancelMessage: () => void;
   /** Abort any in-flight request and reset the chat to an empty conversation. */
@@ -390,6 +379,7 @@ const ChatContext = createContext<ChatContextValue | null>(null);
 
 const initialState: ChatState = {
   messages: [],
+  isOpen: false,
   isLoading: false,
   progress: null,
   progressLog: [],
@@ -475,6 +465,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     [fileActions, downloadFile],
   );
 
+  const toggleOpen = useCallback(() => dispatch({ type: "TOGGLE_OPEN" }), []);
+  const setOpen = useCallback(
+    (open: boolean) => dispatch({ type: "SET_OPEN", open }),
+    [],
+  );
   const cancelMessage = useCallback(() => {
     abortRef.current?.abort();
   }, []);
@@ -519,58 +514,27 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           formData.append(`conversationHistory[${i}].role`, message.role);
           formData.append(`conversationHistory[${i}].content`, message.content);
         });
-        const response = await fetch(
-          `${getApiBaseUrl()}/api/v1/ai/orchestrate/stream`,
-          {
-            method: "POST",
-            body: formData,
-            headers: await getAuthHeaders(),
-            credentials: "include",
-            signal: controller.signal,
-          },
-        );
+        const response = await fetch("/api/v1/ai/orchestrate/stream", {
+          method: "POST",
+          body: formData,
+          headers: getAuthHeaders(),
+          credentials: "include",
+          signal: controller.signal,
+        });
 
         if (!response.ok) {
           let detail: string | undefined;
-          let limitHandled = false;
           try {
             const body = await response.json();
-            const code = typeof body?.error === "string" ? body.error : null;
-            // A 402 carrying a usage-limit sentinel means the agent call itself was gated.
-            // Fire the usage-limit modal (free → subscribe, subscribed → raise cap) and show a
-            // brief line below — not a generic "engine failed" error.
-            if (response.status === 402 && isPaygLimitCode(code)) {
-              dispatchPaygLimitReached(
-                typeof body?.subscribed === "boolean" ? body.subscribed : null,
-              );
-              limitHandled = true;
-            } else {
-              detail =
-                body?.message ??
-                body?.detail ??
-                body?.error ??
-                (Array.isArray(body?.errors)
-                  ? body.errors[0]?.message
-                  : undefined);
-            }
+            detail =
+              body?.message ??
+              body?.detail ??
+              body?.error ??
+              (Array.isArray(body?.errors)
+                ? body.errors[0]?.message
+                : undefined);
           } catch {
             // non-JSON body — ignore
-          }
-          if (limitHandled) {
-            dispatch({ type: "SET_PROGRESS", progress: null });
-            dispatch({
-              type: "ADD_MESSAGE",
-              message: {
-                id: generateId(),
-                role: ChatRole.ASSISTANT,
-                content: t(
-                  "chat.responses.usage_limit_reached",
-                  "You've reached your usage limit. Check your plan options to keep going.",
-                ),
-                timestamp: Date.now(),
-              },
-            });
-            return;
           }
           throw new Error(
             detail ?? `AI engine request failed: ${response.status}`,
@@ -601,20 +565,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           onResult: (data) => {
             receivedResult = true;
             dispatch({ type: "SET_PROGRESS", progress: null });
-            // The agent's tool calls run server-side, so a usage-limit 402 surfaces here on the
-            // result (not via the apiClient interceptor that pops the modal for direct calls).
-            // Fire the matching modal and replace the raw "tool failed: 402…" reason with a
-            // brief, non-alarming line.
-            const isLimit = isPaygLimitCode(data.errorCode);
-            if (isLimit) {
-              dispatchPaygLimitReached(data.errorSubscribed ?? null);
-            }
-            const replyContent = isLimit
-              ? t(
-                  "chat.responses.usage_limit_reached",
-                  "You've reached your usage limit. Check your plan options to keep going.",
-                )
-              : formatWorkflowResponse(data, t);
+            const replyContent = formatWorkflowResponse(data, t);
             dispatch({
               type: "ADD_MESSAGE",
               message: {
@@ -698,9 +649,12 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     <ChatContext.Provider
       value={{
         messages: state.messages,
+        isOpen: state.isOpen,
         isLoading: state.isLoading,
         progress: state.progress,
         progressLog: state.progressLog,
+        toggleOpen,
+        setOpen,
         sendMessage,
         cancelMessage,
         clearChat,

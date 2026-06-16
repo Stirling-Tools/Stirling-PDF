@@ -37,19 +37,6 @@ export function GuestUserBanner({ className = "" }: GuestUserBannerProps) {
     return () => clearTimeout(timer);
   }, [isAnon]);
 
-  // Let other surfaces re-summon the banner on demand (e.g. a guest clicking a
-  // gated feature). Re-show even if previously dismissed; the render guard below
-  // still hides it for non-anonymous users.
-  useEffect(() => {
-    const show = () => {
-      setIsDismissed(false);
-      setVisible(true);
-      hasShownThisLoad = true;
-    };
-    window.addEventListener("stirling:show-guest-banner", show);
-    return () => window.removeEventListener("stirling:show-guest-banner", show);
-  }, []);
-
   if (!isAnon || isDismissed || !visible) {
     return null;
   }

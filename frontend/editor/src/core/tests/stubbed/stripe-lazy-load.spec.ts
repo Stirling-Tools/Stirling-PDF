@@ -4,9 +4,9 @@ import { test, expect } from "@app/tests/helpers/stub-test-base";
  * Verifies that the Stripe SDK (@stripe/stripe-js, @stripe/react-stripe-js,
  * and the js.stripe.com remote script) is NOT fetched on cold page loads —
  * only when the checkout modal actually mounts. The proprietary
- * CheckoutProvider and the SaaS Plan settings page gate the modal behind
- * React.lazy + a conditional render so the Stripe chunk lives in its own
- * async bundle.
+ * CheckoutProvider, the SaaS TrialStatusBanner, and the SaaS Plan settings
+ * page all gate the modal behind React.lazy + a conditional render so the
+ * Stripe chunk lives in its own async bundle.
  */
 
 const STRIPE_URL_FRAGMENTS = [

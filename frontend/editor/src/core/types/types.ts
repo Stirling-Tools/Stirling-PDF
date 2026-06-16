@@ -16,8 +16,6 @@ export interface AnimatedCircleConfig {
 export interface AnimatedSlideBackgroundProps {
   gradientStops: [string, string];
   circles: AnimatedCircleConfig[];
-  /** Overall background tone; controls on top of the hero (e.g. close button) adapt to stay visible. Defaults to "dark". */
-  tone?: "light" | "dark";
 }
 
 export interface SlideConfig {

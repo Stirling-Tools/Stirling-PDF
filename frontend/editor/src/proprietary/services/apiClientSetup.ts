@@ -1,5 +1,4 @@
 import { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from "axios";
-import { withBasePath } from "@app/constants/app";
 
 let isRefreshing = false;
 let failedQueue: Array<{
@@ -90,18 +89,17 @@ async function refreshAuthToken(client: AxiosInstance): Promise<string> {
     clearJwtTokenFromStorage();
 
     // Redirect to login
-    const loginPath = withBasePath("/login");
-    if (window.location.pathname !== loginPath) {
+    if (window.location.pathname !== "/login") {
       console.log("[API Client] Redirecting to login page...");
-      window.location.href = loginPath;
+      window.location.href = "/login";
     }
 
     throw error;
   }
 }
 
-/** Auth headers for raw fetch() calls (SSE streams). Async to match SaaS override. */
-export async function getAuthHeaders(): Promise<Record<string, string>> {
+/** Auth headers for raw fetch() calls (SSE streams, etc.). */
+export function getAuthHeaders(): Record<string, string> {
   const headers: Record<string, string> = {};
   const jwt = getJwtTokenFromStorage();
   if (jwt) {
@@ -117,8 +115,8 @@ export async function getAuthHeaders(): Promise<Record<string, string>> {
 export function setupApiInterceptors(client: AxiosInstance): void {
   // Install request interceptor to add JWT token
   client.interceptors.request.use(
-    async (config) => {
-      const authHeaders = await getAuthHeaders();
+    (config) => {
+      const authHeaders = getAuthHeaders();
       for (const [key, value] of Object.entries(authHeaders)) {
         if (!config.headers[key]) {
           config.headers[key] = value;

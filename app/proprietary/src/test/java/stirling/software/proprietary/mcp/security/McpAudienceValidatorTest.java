@@ -53,30 +53,6 @@ class McpAudienceValidatorTest {
         assertThat(result.hasErrors()).isTrue();
     }
 
-    @Test
-    void acceptedAudience_isAccepted_alongsideResourceId() {
-        // Supabase-style IdP: every token carries aud=authenticated, never the resource id.
-        McpAudienceValidator relaxed = new McpAudienceValidator(RESOURCE, List.of("authenticated"));
-        assertThat(relaxed.validate(tokenWithAudience(List.of("authenticated"))).hasErrors())
-                .isFalse();
-        assertThat(relaxed.validate(tokenWithAudience(List.of(RESOURCE))).hasErrors()).isFalse();
-        assertThat(relaxed.validate(tokenWithAudience(List.of("something-else"))).hasErrors())
-                .isTrue();
-    }
-
-    @Test
-    void blankAcceptedAudienceEntries_areIgnored() {
-        McpAudienceValidator relaxed = new McpAudienceValidator(RESOURCE, List.of("", "  "));
-        assertThat(relaxed.validate(tokenWithAudience(List.of(""))).hasErrors()).isTrue();
-        assertThat(relaxed.validate(tokenWithAudience(List.of(RESOURCE))).hasErrors()).isFalse();
-    }
-
-    @Test
-    void blankResourceIdWithOnlyBlankAccepted_failsClosed() {
-        McpAudienceValidator blank = new McpAudienceValidator("", List.of(" "));
-        assertThat(blank.validate(tokenWithAudience(List.of(RESOURCE))).hasErrors()).isTrue();
-    }
-
     private static Jwt tokenWithAudience(List<String> audience) {
         return new Jwt(
                 "header.payload.signature",

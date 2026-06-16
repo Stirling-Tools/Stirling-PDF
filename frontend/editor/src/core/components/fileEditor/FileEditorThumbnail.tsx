@@ -36,7 +36,7 @@ import ToolChain from "@app/components/shared/ToolChain";
 import HoverActionMenu, {
   HoverAction,
 } from "@app/components/shared/HoverActionMenu";
-import { downloadFileWithPolicy as downloadFile } from "@app/services/exportWithPolicy";
+import { downloadFile } from "@app/services/downloadService";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import UploadToServerModal from "@app/components/shared/UploadToServerModal";
 import ShareFileModal from "@app/components/shared/ShareFileModal";
@@ -248,7 +248,6 @@ const FileEditorThumbnail = ({
           data: fileToSave,
           filename: file.name,
           localPath: file.localFilePath,
-          fileId: file.id,
         });
         if (!result.cancelled && result.savedPath) {
           fileActions.updateStirlingFileStub(file.id, {

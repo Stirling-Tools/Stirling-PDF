@@ -201,13 +201,6 @@
   border-color: var(--border-subtle) !important;
 }
 
-/* The collapse/expand toggle keeps a stable identity across the collapsed strip
-   and the expanded header, so a view transition translates it between the two
-   (same size) instead of cross-fading/scaling it ("big then small"). */
-.tool-panel__toggle-vt {
-  view-transition-name: sidebar-toggle;
-}
-
 .tool-panel__expand-btn svg {
   color: var(--text-secondary) !important;
 }
@@ -276,22 +269,6 @@
 
 .tool-panel__compact-header-search .search-input-container {
   width: 100%;
-}
-
-/* Search that separates the Policies section from the Tools list below it. */
-.tool-panel__between-search {
-  padding: 0.5rem 0.75rem 0.25rem;
-  border-top: 1px solid var(--border-subtle, var(--color-border));
-}
-
-.tool-panel__between-search .search-input-container {
-  width: 100%;
-  margin-bottom: 0;
-}
-
-/* Slightly recessed search field so it reads as distinct from the panel. */
-.tool-panel__between-search input {
-  background-color: var(--bg-muted);
 }
 
 .tool-panel__active-tool-pill {
@@ -383,6 +360,15 @@
   ::view-transition-new(tool-rail) {
     animation-duration: 1ms !important;
   }
+}
+
+.tool-panel__section-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  line-height: 1;
 }
 
 .tool-panel__mode-toggle {
@@ -844,6 +830,33 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+}
+
+/* Agents card lives in its own column above the tool grid. It uses the same
+   .tool-panel__fullscreen-group base styles but with a colourful gradient
+   border so it stands out as a distinct surface (and doesn't blend into the
+   neighbouring category cards). */
+.tool-panel__fullscreen-agents {
+  padding: 1.5rem 1.75rem 0;
+}
+
+.tool-panel__fullscreen-group--agents {
+  position: relative;
+  background:
+    linear-gradient(var(--fullscreen-bg-group), var(--fullscreen-bg-group))
+      padding-box,
+    linear-gradient(
+        135deg,
+        var(--mantine-color-blue-6) 0%,
+        var(--mantine-color-violet-6) 45%,
+        var(--mantine-color-pink-6) 100%
+      )
+      border-box;
+  border: 1.5px solid transparent;
+}
+
+.tool-panel__fullscreen-section-icon--agents {
+  color: var(--mantine-color-blue-6);
 }
 
 @keyframes tool-panel-fullscreen-slide-in {

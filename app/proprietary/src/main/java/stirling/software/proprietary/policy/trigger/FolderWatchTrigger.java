@@ -33,14 +33,20 @@ import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.store.PolicyStore;
 
 /**
- * Fires policies when a file lands in one of their folder sources, rather than polling on a timer.
+ * Fires policies the moment a file lands in one of their folder sources, instead of polling on a
+ * timer. The trigger only reads that location; turning it into files is still the source's job.
  *
- * <p>The watch is a latency optimisation, not a source of truth: a periodic reconcile sweep ({@code
- * watchReconcileSeconds}) re-syncs watched dirs and re-runs every policy, covering files that
- * pre-dated the watch, dropped events, and filesystems that emit none (NFS, bind mounts). Redundant
- * runs are harmless since {@link InputSource} does the claiming.
+ * <p>The watcher is a latency optimisation, not a source of truth, so this pairs an event watch
+ * with a low-frequency <b>reconcile</b> sweep ({@code watchReconcileSeconds}). The reconcile both
+ * (a) re-syncs which directories are watched as policies are created/edited/deleted and folders
+ * appear on disk, and (b) runs every folder-watch policy once, catching files that pre-dated the
+ * watch, events lost to inotify-queue overflow, and changes on filesystems that do not deliver
+ * events at all (NFS, many container bind mounts). Both paths just call {@link PolicyRunner#run};
+ * the {@link InputSource} does the claiming, so a redundant run finds nothing to claim and is
+ * harmless.
  *
- * <p>Watch state is in memory, so this assumes a single node and rebuilds registrations on restart.
+ * <p>Like {@link ScheduleTrigger}, watch state is per-node and in memory; this assumes a single
+ * node and rebuilds its registrations on restart from the {@link PolicyStore}.
  */
 @Slf4j
 @Service
@@ -59,7 +65,7 @@ public class FolderWatchTrigger implements PolicyTrigger {
 
     private volatile boolean running;
 
-    // Package-visible so tests can drive syncRegistrations() against a real service.
+    // Package-visible (not private) so tests can drive syncRegistrations() against a real service.
     volatile WatchService watchService;
 
     private volatile ScheduledExecutorService reconciler;
@@ -119,7 +125,8 @@ public class FolderWatchTrigger implements PolicyTrigger {
     }
 
     private void watchLoop() {
-        // Capture once: stop() may null the field; close() still wakes take()/poll() on this local.
+        // Capture the service once: stop() may null the field, and a local avoids racing that to an
+        // NPE (close() still wakes take()/poll() on this same instance).
         WatchService watcher = watchService;
         if (watcher == null) {
             return;
@@ -139,8 +146,9 @@ public class FolderWatchTrigger implements PolicyTrigger {
     }
 
     /**
-     * Coalesce a burst of file-system events into one set of affected directories: drain everything
-     * arriving within the quiet period. Event kinds are irrelevant; any event means "go look".
+     * Collect the directories touched by {@code first} and any further events that arrive within
+     * the quiet period, so a burst of file-system events becomes a single set of affected
+     * directories. The event kinds are irrelevant: any event on a watched dir just means "go look".
      */
     private Set<Path> drainBurst(WatchService watcher, WatchKey first) {
         long quietPeriodMs = applicationProperties.getPolicies().getWatchQuietPeriodMs();
@@ -192,7 +200,7 @@ public class FolderWatchTrigger implements PolicyTrigger {
         }
     }
 
-    /** Reconcile safety net: run every folder-watch policy regardless of watch events. */
+    /** The reconcile safety net: run every folder-watch policy regardless of watch events. */
     void runAll() {
         for (Policy policy : policyStore.findByTriggerType(TYPE)) {
             try {
@@ -206,7 +214,10 @@ public class FolderWatchTrigger implements PolicyTrigger {
         }
     }
 
-    /** Register newly-wanted dirs that exist on disk, cancel ones no longer wanted. */
+    /**
+     * Bring the set of watched directories in line with the current folder-watch policies: register
+     * newly required directories that exist on disk, and cancel ones no longer wanted.
+     */
     synchronized void syncRegistrations() {
         if (watchService == null) {
             return;
@@ -263,8 +274,11 @@ public class FolderWatchTrigger implements PolicyTrigger {
         return dirs;
     }
 
-    // Absolute + normalised so registration keys and event-time matching compare regardless of how
-    // the path was configured.
+    /**
+     * The normalised, absolute directories this policy's sources expose to watch. Normalisation
+     * makes registration keys and event-time matching comparable regardless of how the path was
+     * configured.
+     */
     private List<Path> watchDirsOf(Policy policy) {
         List<Path> dirs = new ArrayList<>();
         for (InputSpec spec : policy.sources()) {

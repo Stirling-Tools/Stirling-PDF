@@ -12,11 +12,13 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * JPA row for a {@link stirling.software.proprietary.policy.model.Policy}. The whole policy lives
- * as JSON in {@code policyJson} (authoritative on read); the scalar columns are denormalized copies
- * for querying, notably {@code triggerType} + {@code enabled} so background triggers can fetch
- * their policies. {@code owner} is a plain string, not a foreign key, to stay decoupled from the
- * security entities.
+ * JPA row for a {@link stirling.software.proprietary.policy.model.Policy}.
+ *
+ * <p>The whole policy is stored as JSON in {@code policyJson} (authoritative on read, and the same
+ * serialization the API uses); the scalar columns are denormalized copies for querying - notably
+ * {@code triggerType} + {@code enabled} so background triggers can fetch their policies. Ownership
+ * is a plain {@code owner} string rather than a foreign key, to stay decoupled from the security
+ * entities; richer team scoping can be layered on later.
  */
 @Entity
 @Table(name = "policies")

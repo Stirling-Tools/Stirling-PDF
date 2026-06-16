@@ -79,6 +79,15 @@ export default function Footer({
       >
         <a
           className="footer-link px-3"
+          id="survey"
+          target="_blank"
+          rel="noopener noreferrer"
+          href="https://stirlingpdf.info/s/cm28y3niq000o56dv7liv8wsu"
+        >
+          {t("survey.nav", "Survey")}
+        </a>
+        <a
+          className="footer-link px-3"
           target="_blank"
           rel="noopener noreferrer"
           href={finalPrivacyUrl}

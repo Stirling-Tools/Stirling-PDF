@@ -22,7 +22,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import stirling.software.saas.payg.model.BillingCategory;
 import stirling.software.saas.payg.model.LedgerBucket;
 import stirling.software.saas.payg.model.LedgerEntryType;
 import stirling.software.saas.payg.model.ReferenceType;
@@ -76,15 +75,6 @@ public class WalletLedgerEntry implements Serializable {
 
     @Column(name = "stripe_event_id", length = 128)
     private String stripeEventId;
-
-    /**
-     * PAYG analytics axis. {@code null} for system entries (grants, resets) and pre-V16 rows; set
-     * by the charge interceptor for billable debits. Stripe pricing never reads this — it's a
-     * single flat meter — so the column stays soft-typed (no NOT NULL, no FK).
-     */
-    @Enumerated(EnumType.STRING)
-    @Column(name = "billing_category", length = 16)
-    private BillingCategory billingCategory;
 
     @CreationTimestamp
     @Column(name = "occurred_at", nullable = false, updatable = false)

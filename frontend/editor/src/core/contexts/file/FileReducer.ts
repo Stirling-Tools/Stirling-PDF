@@ -288,33 +288,7 @@ export function fileContextReducer(
     case "CONSUME_FILES": {
       const { inputFileIds, outputStirlingFileStubs } = action.payload;
 
-      // Transitive provenance: the outputs derive from these inputs AND from
-      // whatever those inputs themselves derived from. Accumulating the closure
-      // (rather than just the immediate inputs) means a policy badge still
-      // resolves after an intermediate edit has been consumed and removed —
-      // e.g. redact → edit → split still tags each split part. Captured before
-      // the inputs are swapped out below.
-      const sourceFileIds = Array.from(
-        new Set(
-          inputFileIds.flatMap((id) => [
-            id,
-            ...(state.files.byId[id]?.sourceFileIds ?? []),
-          ]),
-        ),
-      );
-
-      // Mark every consume output as tool-produced (the single chokepoint for
-      // both versioned edits and independent artifacts like convert/split/merge)
-      // and stamp its provenance. Tag here, not in processFileSwap, so
-      // UNDO_CONSUME (which restores the original inputs through the same helper)
-      // doesn't mislabel real uploads.
-      const taggedOutputs = outputStirlingFileStubs.map((stub) => ({
-        ...stub,
-        derivedFromTool: true,
-        sourceFileIds,
-      }));
-
-      return processFileSwap(state, inputFileIds, taggedOutputs);
+      return processFileSwap(state, inputFileIds, outputStirlingFileStubs);
     }
 
     case "UNDO_CONSUME_FILES": {

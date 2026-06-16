@@ -7,9 +7,15 @@ import org.springframework.core.io.Resource;
 import lombok.Getter;
 
 /**
- * Thrown by a step that needs further user input, pausing the run in {@code WAITING_FOR_INPUT}
- * instead of failing. Carries the resume reason, 0-based resume step index, and intermediate files;
- * the engine persists those and suspends. Not yet thrown by any step.
+ * Thrown by a step to signal that the run cannot proceed without further user input, pausing the
+ * run in {@code WAITING_FOR_INPUT} rather than failing it.
+ *
+ * <p>Carries everything needed to resume: a human-readable reason, the 0-based index of the step to
+ * resume from, and the intermediate files produced so far. The engine persists those files and
+ * suspends the run.
+ *
+ * <p>Defined now to fix the run shape; no step throws it yet, and the resume handshake is
+ * implemented in a later stage.
  */
 @Getter
 public class PolicyInputRequiredException extends RuntimeException {

@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-import asyncio
 import json
 from datetime import datetime
 
 import psycopg
 from pgvector import Vector
 from pgvector.psycopg import register_vector_async
-from psycopg_pool import AsyncConnectionPool
 
 from stirling.contracts.documents import Page, PageRange
 from stirling.documents.store import Document, DocumentStore, SearchResult, StoredPage
@@ -16,19 +14,11 @@ from stirling.models import OwnerId, PrincipalId
 _READ_PERMISSION = "read"
 
 
-async def _register_vector(conn: psycopg.AsyncConnection) -> None:
-    await register_vector_async(conn)
-
-
 class PgVectorStore(DocumentStore):
     """PostgreSQL + pgvector backed store, scoped by owner with ACL-gated reads.
 
     Connects to an external Postgres instance (DSN provided via config) and uses the
     `vector` extension for similarity search. The schema is created on first use.
-
-    Queries run on a shared async connection pool. The pool is opened lazily on
-    first use, after the schema bootstrap, because each pooled connection's
-    configure hook registers the ``vector`` type, which must already exist.
 
     Owned tables:
 
@@ -42,39 +32,28 @@ class PgVectorStore(DocumentStore):
     Writes are owner-scoped; reads are ACL-scoped.
     """
 
-    def __init__(self, dsn: str, pool_min_size: int, pool_max_size: int) -> None:
+    def __init__(self, dsn: str) -> None:
         if not dsn:
-            raise ValueError("pgvector backend requires a non-empty DSN (STIRLING_DOCUMENTS_PGVECTOR_DSN)")
+            raise ValueError("pgvector backend requires a non-empty DSN (STIRLING_RAG_PGVECTOR_DSN)")
         self._dsn = dsn
-        self._pool = AsyncConnectionPool(
-            dsn,
-            min_size=pool_min_size,
-            max_size=pool_max_size,
-            open=False,
-            configure=_register_vector,
-            check=AsyncConnectionPool.check_connection,
-        )
         self._initialized = False
-        self._init_lock = asyncio.Lock()
 
-    async def _ensure_ready(self) -> None:
-        """Create the schema and open the pool, exactly once across concurrent callers."""
+    async def _connect(self) -> psycopg.AsyncConnection:
+        conn = await psycopg.AsyncConnection.connect(self._dsn)
+        await register_vector_async(conn)
+        return conn
+
+    async def _ensure_schema(self) -> None:
         if self._initialized:
             return
-        async with self._init_lock:
-            if self._initialized:
-                return
-            await self._bootstrap_schema()
-            await self._pool.open()
-            self._initialized = True
-
-    async def _bootstrap_schema(self) -> None:
-        # The `vector` type must exist before the pool's configure hook
-        # (register_vector_async) can resolve it, and on a fresh database it doesn't
-        # yet. Create the extension + schema on a raw, non-pool connection that hasn't
-        # registered the type; _ensure_ready then opens the pool, whose configure hook
-        # registers the now-existing type per connection.
-        async with await psycopg.AsyncConnection.connect(self._dsn) as conn:
+        # The `vector` type must exist before register_vector_async (called inside
+        # _connect) can resolve it. On a fresh database it doesn't yet, so create the
+        # extension first on a raw connection that hasn't registered the type.
+        async with await psycopg.AsyncConnection.connect(self._dsn) as bootstrap:
+            async with bootstrap.cursor() as cur:
+                await cur.execute("CREATE EXTENSION IF NOT EXISTS vector")
+            await bootstrap.commit()
+        async with await self._connect() as conn:
             async with conn.cursor() as cur:
                 await cur.execute("CREATE EXTENSION IF NOT EXISTS vector")
                 await cur.execute(
@@ -147,6 +126,7 @@ class PgVectorStore(DocumentStore):
                     "CREATE INDEX IF NOT EXISTS idx_acl_principal_permission ON document_acl(principal_id, permission)"
                 )
                 await conn.commit()
+        self._initialized = True
 
     # ── lifecycle of the (collection, owner_id) row ────────────────────────
 
@@ -157,8 +137,8 @@ class PgVectorStore(DocumentStore):
         owner_id: OwnerId,
         expires_at: datetime | None,
     ) -> None:
-        await self._ensure_ready()
-        async with self._pool.connection() as conn:
+        await self._ensure_schema()
+        async with await self._connect() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(
                     """
@@ -173,8 +153,8 @@ class PgVectorStore(DocumentStore):
                 await conn.commit()
 
     async def purge_owner(self, owner_id: OwnerId) -> int:
-        await self._ensure_ready()
-        async with self._pool.connection() as conn:
+        await self._ensure_schema()
+        async with await self._connect() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(
                     "DELETE FROM documents_meta WHERE owner_id = %s",
@@ -185,8 +165,8 @@ class PgVectorStore(DocumentStore):
         return deleted
 
     async def reap_expired(self) -> int:
-        await self._ensure_ready()
-        async with self._pool.connection() as conn:
+        await self._ensure_schema()
+        async with await self._connect() as conn:
             async with conn.cursor() as cur:
                 await cur.execute("DELETE FROM documents_meta WHERE expires_at IS NOT NULL AND expires_at < NOW()")
                 deleted = cur.rowcount
@@ -194,8 +174,8 @@ class PgVectorStore(DocumentStore):
         return deleted
 
     async def delete_collection(self, collection: str, owner_id: OwnerId) -> bool:
-        await self._ensure_ready()
-        async with self._pool.connection() as conn:
+        await self._ensure_schema()
+        async with await self._connect() as conn:
             async with conn.cursor() as cur:
                 # Cascade FKs handle rag_documents, document_pages, document_acl.
                 await cur.execute(
@@ -220,8 +200,8 @@ class PgVectorStore(DocumentStore):
         if not documents:
             return
 
-        await self._ensure_ready()
-        async with self._pool.connection() as conn:
+        await self._ensure_schema()
+        async with await self._connect() as conn:
             async with conn.cursor() as cur:
                 for doc, emb in zip(documents, embeddings):
                     await cur.execute(
@@ -239,8 +219,8 @@ class PgVectorStore(DocumentStore):
                 await conn.commit()
 
     async def add_pages(self, collection: str, pages: list[StoredPage], owner_id: OwnerId) -> None:
-        await self._ensure_ready()
-        async with self._pool.connection() as conn:
+        await self._ensure_schema()
+        async with await self._connect() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(
                     "DELETE FROM document_pages WHERE collection = %s AND owner_id = %s",
@@ -266,8 +246,8 @@ class PgVectorStore(DocumentStore):
     ) -> None:
         if not principals:
             return
-        await self._ensure_ready()
-        async with self._pool.connection() as conn:
+        await self._ensure_schema()
+        async with await self._connect() as conn:
             async with conn.cursor() as cur:
                 await cur.executemany(
                     """
@@ -285,8 +265,8 @@ class PgVectorStore(DocumentStore):
         owner_id: OwnerId,
         principal: PrincipalId,
     ) -> None:
-        await self._ensure_ready()
-        async with self._pool.connection() as conn:
+        await self._ensure_schema()
+        async with await self._connect() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(
                     "DELETE FROM document_acl WHERE collection = %s AND owner_id = %s AND principal_id = %s",
@@ -305,8 +285,8 @@ class PgVectorStore(DocumentStore):
     ) -> list[SearchResult]:
         if not principals:
             return []
-        await self._ensure_ready()
-        async with self._pool.connection() as conn:
+        await self._ensure_schema()
+        async with await self._connect() as conn:
             async with conn.cursor() as cur:
                 owner_id = await self._readable_owner_for(cur, collection, principals)
                 if owner_id is None:
@@ -361,8 +341,8 @@ class PgVectorStore(DocumentStore):
     ) -> list[Page]:
         if not principals:
             return []
-        await self._ensure_ready()
-        async with self._pool.connection() as conn:
+        await self._ensure_schema()
+        async with await self._connect() as conn:
             async with conn.cursor() as cur:
                 owner_id = await self._readable_owner_for(cur, collection, principals)
                 if owner_id is None:
@@ -387,8 +367,8 @@ class PgVectorStore(DocumentStore):
     async def has_collection(self, collection: str, principals: list[PrincipalId]) -> bool:
         if not principals:
             return False
-        await self._ensure_ready()
-        async with self._pool.connection() as conn:
+        await self._ensure_schema()
+        async with await self._connect() as conn:
             async with conn.cursor() as cur:
                 owner_id = await self._readable_owner_for(cur, collection, principals)
                 return owner_id is not None
@@ -396,8 +376,8 @@ class PgVectorStore(DocumentStore):
     async def list_collections(self, principals: list[PrincipalId]) -> list[str]:
         if not principals:
             return []
-        await self._ensure_ready()
-        async with self._pool.connection() as conn:
+        await self._ensure_schema()
+        async with await self._connect() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(
                     """
@@ -412,4 +392,5 @@ class PgVectorStore(DocumentStore):
         return [r[0] for r in rows]
 
     async def close(self) -> None:
-        await self._pool.close()
+        # Connections are opened and closed per call, so nothing persistent to release.
+        return None

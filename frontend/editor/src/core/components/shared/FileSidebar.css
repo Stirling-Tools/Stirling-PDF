@@ -396,19 +396,6 @@
   justify-content: center;
   flex-shrink: 0;
   user-select: none;
-  overflow: hidden;
-}
-
-/* No colored disc behind an actual photo; keep it for the initials fallback. */
-.file-sidebar-bottom-avatar--picture {
-  background-color: transparent;
-}
-
-.file-sidebar-bottom-avatar-img {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  object-fit: cover;
 }
 
 .file-sidebar-bottom-name {

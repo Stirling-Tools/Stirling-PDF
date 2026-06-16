@@ -31,12 +31,12 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import {
   useChat,
   AiWorkflowPhase,
   ChatRole,
+  PROGRESS_LOG_MAX,
   isKnownEngineProgressDetail,
   type AiWorkflowProgress,
   type AnyEngineProgressDetail,
@@ -151,15 +151,20 @@ function formatEngineProgress(
 }
 
 /**
- * Phase-specific icon for a progress step: the tool's registry icon while a
- * tool runs, or a generic glyph for the read/extract/think phases. Used for the
- * right-hand "what it's doing" icon in the live indicator and for each row of
- * the completed tool breakdown.
+ * Choose an icon for a progress step.
+ *
+ * The active (current) step always shows the animated Stirling logo so it reads
+ * as the "live" indicator. Past steps get a phase-specific icon so the trail
+ * is scannable at a glance.
  */
 function progressStepIcon(
   progress: AiWorkflowProgress,
   resolveToolIcon: ToolIconResolver,
+  isActive: boolean,
 ): ReactNode {
+  if (isActive) {
+    return <StirlingLogoAnimated size={18} />;
+  }
   if (progress.phase === AiWorkflowPhase.EXECUTING_TOOL) {
     const registryIcon = progress.tool ? resolveToolIcon(progress.tool) : null;
     if (registryIcon) {
@@ -177,10 +182,9 @@ function progressStepIcon(
 }
 
 /**
- * Live progress indicator shown while the AI is working. One step at a time:
- * our animated logo on the left, the current step's label shimmering in the
- * middle, and the phase-specific icon (what it's doing right now) on the right.
- * The latest event replaces the previous one in place — no growing list.
+ * Animated step-by-step progress log shown while the AI is working.
+ * Displays the last {@link PROGRESS_LOG_VISIBLE} steps from the live event stream,
+ * with the active (most recent) step highlighted and older steps dimmed.
  */
 function ProgressLogDisplay({
   progressLog,
@@ -193,23 +197,55 @@ function ProgressLogDisplay({
   resolveToolName: ToolNameResolver;
   resolveToolIcon: ToolIconResolver;
 }) {
-  const current =
-    progressLog.length > 0 ? progressLog[progressLog.length - 1] : null;
-  const label = current
-    ? formatProgress(current, t, resolveToolName)
-    : t("chat.progress.thinking");
+  // Placeholder shown before the first SSE event arrives.
+  if (progressLog.length === 0) {
+    return (
+      <div className="chat-progress-log">
+        <div className="chat-progress-step chat-progress-step--active">
+          <div className="chat-progress-step__left">
+            <div className="chat-progress-step__icon">
+              <StirlingLogoAnimated size={18} />
+            </div>
+          </div>
+          <span className="chat-progress-step__label">
+            {t("chat.progress.thinking")}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  // Chronological order: oldest at top, newest (active) at bottom.
+  // The reducer already caps progressLog at PROGRESS_LOG_MAX entries, so this
+  // slice is effectively a no-op but kept for defensive correctness.
+  const visibleSteps = progressLog.slice(-PROGRESS_LOG_MAX);
+  const startIndex = progressLog.length - visibleSteps.length;
 
   return (
-    <div className="chat-progress-live">
-      <span className="chat-progress-live__logo">
-        <StirlingLogoAnimated size={18} />
-      </span>
-      <span className="chat-progress-live__label">{label}</span>
-      {current && (
-        <span className="chat-progress-live__phase-icon">
-          {progressStepIcon(current, resolveToolIcon)}
-        </span>
-      )}
+    <div className="chat-progress-log">
+      {visibleSteps.map((step, i) => {
+        // Stable key based on absolute position in the full log — React reuses
+        // existing DOM elements and only mounts (and animates) new ones.
+        const globalIndex = startIndex + i;
+        const isActive = i === visibleSteps.length - 1; // last = newest = bottom
+        // Connector runs below every step except the active one at the bottom.
+        const showConnector = i < visibleSteps.length - 1;
+        const label = formatProgress(step, t, resolveToolName);
+        return (
+          <div
+            key={globalIndex}
+            className={`chat-progress-step${isActive ? " chat-progress-step--active" : ""}`}
+          >
+            <div className="chat-progress-step__left">
+              <div className="chat-progress-step__icon">
+                {progressStepIcon(step, resolveToolIcon, isActive)}
+              </div>
+              {showConnector && <div className="chat-progress-step__line" />}
+            </div>
+            <span className="chat-progress-step__label">{label}</span>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -229,10 +265,8 @@ function formatDuration(ms: number, t: TranslateFn): string {
 }
 
 /**
- * Collapsed "Ran for X seconds" control above each completed assistant turn.
- * Expands to a numbered list of just the tools that actually ran — generic
- * progress phases (analysing, thinking, reading the document, …) are omitted.
- * When no tool ran, the duration shows as a plain label with nothing to expand.
+ * Collapsed "Ran for X seconds" dropdown that appears above each completed
+ * assistant turn. Expands to show the full ordered progress log for that turn.
  */
 function CompletedProgressLogDropdown({
   progressLog,
@@ -249,22 +283,6 @@ function CompletedProgressLogDropdown({
 }) {
   const [expanded, setExpanded] = useState(false);
   const label = formatDuration(durationMs, t);
-
-  const toolSteps = progressLog.filter(
-    (step) => step.phase === AiWorkflowPhase.EXECUTING_TOOL && step.tool,
-  );
-
-  // A purely conversational turn (no tools): just show the duration, nothing
-  // to expand.
-  if (toolSteps.length === 0) {
-    return (
-      <div className="chat-completed-log">
-        <Text size="xs" c="dimmed" className="chat-completed-log__static">
-          {label}
-        </Text>
-      </div>
-    );
-  }
 
   return (
     <div className="chat-completed-log">
@@ -285,21 +303,28 @@ function CompletedProgressLogDropdown({
         </Group>
       </UnstyledButton>
       <Collapse in={expanded}>
-        <ol className="chat-completed-log__tools">
-          {toolSteps.map((step, i) => {
-            const endpoint = step.tool ?? "";
-            const name = resolveToolName(endpoint) ?? endpoint;
+        <div className="chat-completed-log__steps">
+          {progressLog.map((step, i) => {
+            const showConnector = i < progressLog.length - 1;
+            const stepLabel = formatProgress(step, t, resolveToolName);
             return (
-              <li key={i} className="chat-completed-log__tool">
-                <span className="chat-completed-log__tool-num">{i + 1}</span>
-                <span className="chat-completed-log__tool-icon">
-                  {progressStepIcon(step, resolveToolIcon)}
-                </span>
-                <span className="chat-completed-log__tool-name">{name}</span>
-              </li>
+              <div
+                key={i}
+                className="chat-progress-step chat-progress-step--done"
+              >
+                <div className="chat-progress-step__left">
+                  <div className="chat-progress-step__icon">
+                    {progressStepIcon(step, resolveToolIcon, false)}
+                  </div>
+                  {showConnector && (
+                    <div className="chat-progress-step__line" />
+                  )}
+                </div>
+                <span className="chat-progress-step__label">{stepLabel}</span>
+              </div>
             );
           })}
-        </ol>
+        </div>
       </Collapse>
     </div>
   );
@@ -463,10 +488,6 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
   };
 
   const showQuickActions = messages.length === 0 && !isLoading;
-  const disclaimerText = t(
-    "chat.input.disclaimer",
-    "AI can make mistakes. Be sure to verify the output before sharing.",
-  );
 
   return (
     <Box className="chat-panel chat-panel--embedded">
@@ -512,23 +533,8 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
         </ActionIcon>
       </div>
 
-      {showQuickActions && (
-        <div className="chat-panel-disclaimer chat-panel-disclaimer--banner">
-          <InfoOutlinedIcon
-            className="chat-panel-disclaimer__icon"
-            sx={{ fontSize: 18 }}
-          />
-          <span>{disclaimerText}</span>
-        </div>
-      )}
-
       <ScrollArea className="chat-panel-messages" viewportRef={scrollRef}>
-        <Stack
-          gap="sm"
-          px="md"
-          pt="sm"
-          className="chat-panel-messages__content"
-        >
+        <Stack gap="sm" px="md" py="sm">
           {messages.map((msg) => (
             <ChatMessageBubble
               key={msg.id}
@@ -562,29 +568,7 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
         />
       )}
 
-      {!showQuickActions && (
-        <div className="chat-panel-disclaimer chat-panel-disclaimer--inline">
-          <InfoOutlinedIcon
-            className="chat-panel-disclaimer__icon"
-            sx={{ fontSize: 13 }}
-          />
-          <span>{disclaimerText}</span>
-        </div>
-      )}
-
       <div className="chat-panel-input">
-        <ActionIcon
-          className="chat-panel-input__send"
-          variant="filled"
-          color="blue"
-          radius="xl"
-          size="sm"
-          onClick={() => handleSend()}
-          disabled={!input.trim() || isLoading}
-          aria-label={t("chat.input.send", "Send message")}
-        >
-          <ArrowUpwardIcon sx={{ fontSize: 16 }} />
-        </ActionIcon>
         <Textarea
           ref={inputRef}
           placeholder={t("chat.input.placeholder", "What do you want to do?")}
@@ -596,11 +580,21 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
           minRows={1}
           maxRows={4}
           variant="unstyled"
-          classNames={{
-            root: "chat-panel-input__textarea",
-            input: "chat-panel-input__field",
-          }}
+          classNames={{ input: "chat-panel-input__field" }}
         />
+        <div className="chat-panel-input__actions">
+          <ActionIcon
+            variant="filled"
+            color="blue"
+            radius="xl"
+            size="md"
+            onClick={() => handleSend()}
+            disabled={!input.trim() || isLoading}
+            aria-label={t("chat.input.send", "Send message")}
+          >
+            <ArrowUpwardIcon sx={{ fontSize: 16 }} />
+          </ActionIcon>
+        </div>
       </div>
     </Box>
   );

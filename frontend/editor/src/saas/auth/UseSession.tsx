@@ -18,13 +18,15 @@ import {
   CreditSummary,
   SubscriptionInfo,
   CreditCheckResult,
+  ApiCredits,
 } from "@app/types/credits";
-import { setGlobalCreditUpdateCallback } from "@app/services/apiClient";
+import apiClient, {
+  setGlobalCreditUpdateCallback,
+} from "@app/services/apiClient";
 import { synchronizeUserUpgrade } from "@app/services/userService";
 import {
   syncOAuthAvatar,
   getProfilePictureMetadata,
-  getProviderAvatarUrl,
   type ProfilePictureMetadata,
 } from "@app/services/avatarSyncService";
 
@@ -75,8 +77,6 @@ interface AuthContextType {
    *   consumers can fall back to whatever makes sense.
    */
   displayName: string | null;
-  /** Whether the current session is an anonymous (Supabase `is_anonymous`) guest. */
-  isAnonymous: boolean;
   loading: boolean;
   error: AuthError | null;
   creditBalance: number | null;
@@ -101,7 +101,6 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   user: null,
   displayName: null,
-  isAnonymous: false,
   loading: true,
   error: null,
   creditBalance: null,
@@ -145,18 +144,67 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profilePictureMetadata, setProfilePictureMetadata] =
     useState<ProfilePictureMetadata | null>(null);
 
-  // Legacy weekly-credits feed (GET /api/v1/credits) is dead. PAYG replaces it via
-  // useWallet() reading /api/v1/payg/wallet. Symbols are kept as no-ops so existing
-  // consumers of useAuth() that still destructure creditBalance / refreshCredits
-  // compile cleanly; values just stay null forever and refreshCredits is a noop.
-  // _ underscore on the param keeps the public signature stable for callers.
-  const fetchCredits = useCallback(async (_sessionToUse?: Session | null) => {
-    /* legacy credit fetch removed — see comment above */
-  }, []);
+  const fetchCredits = useCallback(
+    async (sessionToUse?: Session | null) => {
+      const currentSession = sessionToUse ?? session;
+
+      if (!currentSession?.user) {
+        console.debug("[Auth Debug] No user session, skipping credit fetch");
+        setCreditBalance(null);
+        setCreditSummary(null);
+        setSubscription(null);
+        return;
+      }
+
+      try {
+        console.debug(
+          "[Auth Debug] Fetching credits for user:",
+          currentSession.user.id,
+        );
+        const response = await apiClient.get<ApiCredits>("/api/v1/credits");
+        const apiCredits = response.data;
+
+        // Map server payload to app CreditSummary
+        const credits: CreditSummary = {
+          currentCredits: apiCredits.totalAvailableCredits,
+          maxCredits:
+            apiCredits.weeklyCreditsAllocated + apiCredits.totalBoughtCredits,
+          creditsUsed:
+            apiCredits.weeklyCreditsAllocated -
+            apiCredits.weeklyCreditsRemaining +
+            (apiCredits.totalBoughtCredits - apiCredits.boughtCreditsRemaining),
+          creditsRemaining: apiCredits.totalAvailableCredits,
+          resetDate: apiCredits.weeklyResetDate,
+          weeklyAllowance: apiCredits.weeklyCreditsAllocated,
+        };
+
+        setCreditSummary(credits);
+        setCreditBalance(credits.creditsRemaining);
+
+        const subscriptionInfo: SubscriptionInfo = {
+          status: "active",
+          tier: (credits.weeklyAllowance || 0) > 100 ? "premium" : "free",
+          creditsPerWeek: credits.weeklyAllowance,
+          maxCredits: credits.maxCredits,
+        };
+        setSubscription(subscriptionInfo);
+
+        console.debug("[Auth Debug] Credits fetched successfully:", credits);
+      } catch (error: unknown) {
+        console.debug("[Auth Debug] Failed to fetch credits:", error);
+        // Don't set error state for credit fetching failures to avoid disrupting auth flow
+        // Credits might not be available in all deployments
+        setCreditBalance(null);
+        setCreditSummary(null);
+        setSubscription(null);
+      }
+    },
+    [session],
+  );
 
   const refreshCredits = useCallback(async () => {
-    /* legacy credit refresh removed — useWallet() replaces this */
-  }, []);
+    await fetchCredits();
+  }, [fetchCredits]);
 
   const fetchProStatus = useCallback(
     async (sessionToUse?: Session | null) => {
@@ -266,21 +314,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await fetchTrialStatus();
   }, [fetchTrialStatus]);
 
-  // Provider photo as interim fallback when the bucket copy is missing —
-  // skipped when the user explicitly chose upload/removal (source "upload").
-  const providerAvatarFallback = useCallback(
-    async (user: SupabaseUser): Promise<string | null> => {
-      try {
-        const metadata = await getProfilePictureMetadata(user.id);
-        if (metadata?.source === "upload") return null;
-        return getProviderAvatarUrl(user);
-      } catch {
-        return getProviderAvatarUrl(user);
-      }
-    },
-    [],
-  );
-
   const fetchProfilePicture = useCallback(
     async (sessionToUse?: Session | null) => {
       const currentSession = sessionToUse ?? session;
@@ -311,9 +344,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             "[Auth Debug] Profile picture not available:",
             error.message,
           );
-          setProfilePictureUrl(
-            await providerAvatarFallback(currentSession.user),
-          );
+          setProfilePictureUrl(null);
         } else {
           setProfilePictureUrl(data.signedUrl);
           console.debug(
@@ -322,10 +353,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } catch (error: unknown) {
         console.debug("[Auth Debug] Failed to fetch profile picture:", error);
-        setProfilePictureUrl(await providerAvatarFallback(currentSession.user));
+        setProfilePictureUrl(null);
       }
     },
-    [session, providerAvatarFallback],
+    [session],
   );
 
   const refreshProfilePicture = useCallback(async () => {
@@ -484,22 +515,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           // Fetch credits, pro status, trial status, profile picture metadata, and profile picture using the session from the response
           if (data.session?.user) {
-            // Sync OAuth avatar in background; fetch the picture once the
-            // sync settles instead of guessing with a fixed delay.
-            syncOAuthAvatar(data.session.user)
-              .catch((err) => {
-                console.debug(
-                  "[Auth Debug] Failed to sync OAuth avatar on init:",
-                  err,
-                );
-                return false;
-              })
-              .then(() => fetchProfilePicture(data.session));
+            // Sync OAuth avatar in background
+            syncOAuthAvatar(data.session.user).catch((err) => {
+              console.debug(
+                "[Auth Debug] Failed to sync OAuth avatar on init:",
+                err,
+              );
+            });
 
             await fetchCredits(data.session);
             await fetchProStatus(data.session);
             await fetchTrialStatus(data.session);
             await fetchProfilePictureMetadata(data.session);
+
+            // Small delay to allow avatar sync to complete if quick
+            setTimeout(() => {
+              fetchProfilePicture(data.session);
+            }, 500);
           }
         }
       } catch (err) {
@@ -563,15 +595,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               // null/loading states.
 
               // Sync OAuth avatar in background (don't block other fetches)
-              const avatarSync = syncOAuthAvatar(newSession.user).catch(
-                (err) => {
-                  console.debug(
-                    "[Auth Debug] Failed to sync OAuth avatar:",
-                    err,
-                  );
-                  return false;
-                },
-              );
+              syncOAuthAvatar(newSession.user).catch((err) => {
+                console.debug("[Auth Debug] Failed to sync OAuth avatar:", err);
+              });
 
               // Fetch user data in parallel
               Promise.all([
@@ -580,14 +606,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 fetchTrialStatus(newSession),
                 fetchProfilePictureMetadata(newSession),
               ]).then(() => {
-                // Fetch the picture once the avatar sync settles.
-                avatarSync.then(() => {
+                // Fetch profile picture AFTER sync has had time to complete
+                // Use a small delay to allow avatar sync to finish if it's quick
+                setTimeout(() => {
                   fetchProfilePicture(newSession).finally(() => {
                     console.debug(
                       "[Auth Debug] User data fully loaded after sign in",
                     );
                   });
-                });
+                }, 500);
               });
             }
           } else if (event === "TOKEN_REFRESHED") {
@@ -674,7 +701,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     session,
     user,
     displayName: deriveDisplayName(user, t),
-    isAnonymous: Boolean(user?.is_anonymous),
     loading,
     error,
     creditBalance,

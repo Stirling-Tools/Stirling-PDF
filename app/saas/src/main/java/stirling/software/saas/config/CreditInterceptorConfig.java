@@ -9,10 +9,8 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.saas.interceptor.UnifiedCreditInterceptor;
 
-// Legacy credit-billing path. Disabled in saas-PAYG by default — activate the legacy-credits
-// profile explicitly (`--spring.profiles.active=saas,dev,legacy-credits`) if you need it back.
 @Configuration
-@Profile("saas & legacy-credits")
+@Profile("saas")
 @RequiredArgsConstructor
 public class CreditInterceptorConfig implements WebMvcConfigurer {
 

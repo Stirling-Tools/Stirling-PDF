@@ -14,14 +14,6 @@ export interface AuthContextType {
    * should treat the resulting string as opaque display text.
    */
   displayName: string | null;
-  /**
-   * Whether the current session is an anonymous / guest one. Each layer
-   * derives this from its own native user shape (Supabase `is_anonymous` in
-   * SaaS, the Spring anonymous flag in proprietary). Always `false` in core
-   * OSS, which has no auth context. Consumers use it to gate account-only
-   * actions (cloud folders, MCP) without reaching into a layer-specific user.
-   */
-  isAnonymous: boolean;
   loading: boolean;
   error: Error | null;
   signOut: () => Promise<void>;
@@ -37,7 +29,6 @@ export function useAuth(): AuthContextType {
     session: null,
     user: null,
     displayName: null,
-    isAnonymous: false,
     loading: false,
     error: null,
     signOut: async () => {},

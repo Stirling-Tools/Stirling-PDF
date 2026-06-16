@@ -5,8 +5,8 @@ import java.util.List;
 import stirling.software.common.model.job.ResultFile;
 
 /**
- * Read-only view of a {@link PolicyRun} for the status endpoint. Outputs are {@link ResultFile}s,
- * downloadable via {@code GET /api/v1/general/files/{id}}.
+ * Read-only view of a {@link PolicyRun} returned by the status endpoint. Output files are surfaced
+ * as {@link ResultFile} so the caller can download each via {@code GET /api/v1/general/files/{id}}.
  */
 public record PolicyRunView(
         String runId,
@@ -14,8 +14,6 @@ public record PolicyRunView(
         int currentStep,
         int stepCount,
         String error,
-        String errorCode,
-        Boolean errorSubscribed,
         List<ResultFile> outputs) {
 
     public static PolicyRunView of(PolicyRun run) {
@@ -25,8 +23,6 @@ public record PolicyRunView(
                 run.getCurrentStep(),
                 run.stepCount(),
                 run.getError(),
-                run.getErrorCode(),
-                run.getErrorSubscribed(),
                 run.getOutputs());
     }
 }

@@ -77,30 +77,6 @@ if echo "$PRM_BODY" | grep -q "mcp.tools"; then
 else
     fail "metadata missing mcp.tools scopes"
 fi
-
-# RFC 9728 path-inserted form: clients derive {origin}/.well-known/oauth-protected-resource/mcp
-# for a resource at /mcp. This must serve the SAME customized metadata; a default document here
-# (no authorization_servers) makes clients fall back to treating Stirling as its own AS.
-PRM_SUB=$(curl -s -o /tmp/mcp_prm_sub.json -w "%{http_code}" "${PRM_URL}/mcp")
-PRM_SUB_BODY=$(cat /tmp/mcp_prm_sub.json 2>/dev/null)
-if [ "$PRM_SUB" = "200" ]; then
-    pass "GET ${PRM_URL}/mcp -> 200 (RFC 9728 path-inserted form)"
-else
-    fail "GET ${PRM_URL}/mcp -> $PRM_SUB (expected 200)"
-fi
-if echo "$PRM_SUB_BODY" | grep -q "realms/$REALM"; then
-    pass "path-inserted metadata advertises the Keycloak authorization server"
-else
-    fail "path-inserted metadata missing authorization_servers (filter-chain fall-through regression)"
-fi
-WWW_AUTH=$(curl -s -o /dev/null -D - -X POST "$MCP_URL" \
-    -H "Content-Type: application/json" \
-    -d '{"jsonrpc":"2.0","id":1,"method":"ping"}' | grep -i '^WWW-Authenticate:')
-if echo "$WWW_AUTH" | grep -q 'oauth-protected-resource/mcp'; then
-    pass "401 WWW-Authenticate advertises the path-inserted metadata URL"
-else
-    fail "401 WWW-Authenticate lacks the path-inserted metadata URL: $WWW_AUTH"
-fi
 echo ""
 
 # unauthenticated access is rejected

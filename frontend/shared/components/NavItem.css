@@ -40,53 +40,8 @@
 .sui-navitem__trailing {
   display: inline-flex;
   align-items: center;
-  margin-left: auto;
 }
 .sui-navitem:focus-visible {
   outline: 0.125rem solid var(--color-blue);
   outline-offset: 0.125rem;
-}
-
-/* ---- Status accent (optional) ---- */
-.sui-navitem--accent {
-  position: relative;
-}
-.sui-navitem--accent::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0.3125rem;
-  bottom: 0.3125rem;
-  width: 3px;
-  border-radius: 3px;
-}
-.sui-navitem[data-accent="blue"]::before {
-  background: var(--color-blue);
-}
-.sui-navitem[data-accent="purple"]::before {
-  background: var(--color-purple);
-}
-.sui-navitem[data-accent="green"]::before {
-  background: var(--color-green);
-}
-.sui-navitem[data-accent="amber"]::before {
-  background: var(--color-amber);
-}
-.sui-navitem[data-accent="red"]::before {
-  background: var(--color-red);
-}
-.sui-navitem[data-accent="blue"] .sui-navitem__icon {
-  color: var(--color-blue);
-}
-.sui-navitem[data-accent="purple"] .sui-navitem__icon {
-  color: var(--color-purple);
-}
-.sui-navitem[data-accent="green"] .sui-navitem__icon {
-  color: var(--color-green);
-}
-.sui-navitem[data-accent="amber"] .sui-navitem__icon {
-  color: var(--color-amber);
-}
-.sui-navitem[data-accent="red"] .sui-navitem__icon {
-  color: var(--color-red);
 }

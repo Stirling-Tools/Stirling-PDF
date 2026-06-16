@@ -16,7 +16,7 @@ from fastapi.testclient import TestClient
 
 from stirling.api import app
 from stirling.api.dependencies import get_pdf_comment_agent
-from stirling.config import AppSettings, DocumentsBackend, load_settings
+from stirling.config import AppSettings, RagBackend, load_settings
 from stirling.contracts.pdf_comments import (
     PdfCommentInstruction,
     PdfCommentRequest,
@@ -35,13 +35,10 @@ class StubSettingsProvider:
             fast_model_name="test",
             smart_model_max_tokens=8192,
             fast_model_max_tokens=2048,
-            model_max_concurrency=32,
-            documents_backend=DocumentsBackend.SQLITE,
+            rag_backend=RagBackend.SQLITE,
             rag_embedding_model="test-embed",
-            documents_sqlite_path=Path(":memory:"),
-            documents_pgvector_dsn="",
-            documents_pgvector_pool_min_size=1,
-            documents_pgvector_pool_max_size=10,
+            rag_store_path=Path(":memory:"),
+            rag_pgvector_dsn="",
             rag_chunk_size=512,
             rag_chunk_overlap=64,
             rag_default_top_k=5,
@@ -52,7 +49,6 @@ class StubSettingsProvider:
             chunked_reasoner_notes_char_budget=250_000,
             max_pages=100,
             max_characters=100_000,
-            require_user_id=False,
             posthog_enabled=False,
             posthog_api_key="",
             posthog_host="https://eu.i.posthog.com",

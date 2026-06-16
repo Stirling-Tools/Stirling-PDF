@@ -141,14 +141,7 @@ async function settle(page: Page, ms = 350): Promise<void> {
 }
 
 test.describe("Files page screenshots", () => {
-  // Seed a logged-in session: the cloud-folder surfaces (move-dialog
-  // create-folder, the seeded "Reports" folder) only render once a confirmed,
-  // non-anonymous user triggers the folder pull (see FolderContext gating).
-  test.use({
-    autoGoto: false,
-    viewport: { width: 1600, height: 900 },
-    seedJwt: true,
-  });
+  test.use({ autoGoto: false, viewport: { width: 1600, height: 900 } });
 
   test("01_empty_state_ctas", async ({ page }) => {
     await stubStorageApis(page);

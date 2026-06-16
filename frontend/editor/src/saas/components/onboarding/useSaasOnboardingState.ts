@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useAuth } from "@app/auth/UseSession";
 import { useOs } from "@app/hooks/useOs";
-import { useWallet } from "@app/hooks/useWallet";
-import { useSaaSTeam } from "@app/contexts/SaaSTeamContext";
 import {
   SLIDE_DEFINITIONS,
   type ButtonAction,
@@ -30,9 +28,7 @@ export function useSaasOnboardingState({
   opened,
   onClose,
 }: UseSaasOnboardingStateProps): UseSaasOnboardingStateResult | null {
-  const { loading } = useAuth();
-  const { wallet } = useWallet();
-  const { isTeamLeader } = useSaaSTeam();
+  const { trialStatus, isPro, loading } = useAuth();
   const osType = useOs();
   const selectedDownloadUrlRef = useRef<string>("");
 
@@ -74,15 +70,13 @@ export function useSaasOnboardingState({
     selectedDownloadUrlRef.current = url;
   }, []);
 
-  // Usage meter only makes sense for free-tier wallets with allowance left;
-  // the team slide is for leaders (anonymous guests are never leaders).
-  const showUsageSlide = wallet?.status === "free" && wallet.freeRemaining > 0;
-  const showTeamSlide = isTeamLeader;
-
-  const flowSlideIds = useMemo(
-    () => resolveSaasFlow({ showUsageSlide, showTeamSlide }),
-    [showUsageSlide, showTeamSlide],
+  // Resolve flow based on trial status
+  const resolvedFlow = useMemo(
+    () => resolveSaasFlow(trialStatus, isPro),
+    [trialStatus, isPro],
   );
+
+  const flowSlideIds = resolvedFlow.ids;
   const totalSteps = flowSlideIds.length;
   const maxIndex = Math.max(totalSteps - 1, 0);
 
@@ -105,8 +99,16 @@ export function useSaasOnboardingState({
       osUrl: os.url,
       osOptions,
       onDownloadUrlChange: handleDownloadUrlChange,
+      trialStatus: trialStatus ?? undefined,
     });
-  }, [slideDefinition, os.label, os.url, osOptions, handleDownloadUrlChange]);
+  }, [
+    slideDefinition,
+    os.label,
+    os.url,
+    osOptions,
+    handleDownloadUrlChange,
+    trialStatus,
+  ]);
 
   // Navigation functions
   const goNext = useCallback(() => {

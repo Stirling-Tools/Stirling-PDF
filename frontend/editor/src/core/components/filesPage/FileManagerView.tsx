@@ -34,8 +34,6 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import RefreshIcon from "@mui/icons-material/Refresh";
 
-import { stripBasePath } from "@app/constants/app";
-import { useAuth } from "@app/auth/UseSession";
 import { useSharingEnabled } from "@app/hooks/useSharingEnabled";
 import { useFolders } from "@app/contexts/FolderContext";
 import { useFileActions } from "@app/contexts/file/fileHooks";
@@ -108,27 +106,17 @@ export default function FileManagerView() {
   const isMobile = useIsMobile();
   const isMobileUploadAvailable =
     Boolean(appConfig?.enableMobileScanner) && !isMobile;
-  // Guests (anonymous sessions) have no server-side storage, so every cloud
-  // action is account-only. Rather than let the click fire a guaranteed 401
-  // (which surfaced as an error toast), we disable the control and explain why
-  // on hover - the same affordance the storage-disabled / wrong-tab gates use.
-  const { isAnonymous } = useAuth();
-  const signInRequiredReason = isAnonymous
-    ? t("filesPage.signInRequired", "Sign in to use cloud storage.")
-    : null;
   // Server storage gate; mirrors ConfigController's storageEnabled
   // (enableLogin && storage.isEnabled). When off, Save-to-server stays
   // visible but disabled with an explanatory tooltip (discoverability beats
   // hiding - mirrors the New folder / Manage sharing gates in this view).
   const uploadEnabled = appConfig?.storageEnabled === true;
-  const saveToServerDisabledReason: string | null =
-    signInRequiredReason ??
-    (uploadEnabled
-      ? null
-      : t(
-          "filesPage.saveToServerDisabledHint",
-          "Saving to the server isn't enabled on this server. Ask your admin to enable it.",
-        ));
+  const saveToServerDisabledReason: string | null = uploadEnabled
+    ? null
+    : t(
+        "filesPage.saveToServerDisabledHint",
+        "Saving to the server isn't enabled on this server. Ask your admin to enable it.",
+      );
   const [mobileUploadModalOpen, setMobileUploadModalOpen] = useState(false);
   const { actions: navActions } = useNavigationActions();
   const { requestNavigation } = useNavigationGuard();
@@ -202,11 +190,10 @@ export default function FileManagerView() {
 
   // Push folder selection into the URL while still on /files.
   useEffect(() => {
-    const stripped = stripBasePath(window.location.pathname);
-    if (!stripped.startsWith("/files")) return;
+    if (!window.location.pathname.startsWith("/files")) return;
     const target =
       currentFolderId === null ? "/files" : `/files/${currentFolderId}`;
-    if (stripped !== target) {
+    if (window.location.pathname !== target) {
       navigate(target, { replace: true });
     }
   }, [currentFolderId, navigate]);
@@ -816,11 +803,6 @@ export default function FileManagerView() {
 
   // null = New folder actionable; string = disabled tooltip reason.
   const newFolderDisabledReason: string | null = useMemo(() => {
-    // Guests can't use cloud folders at all - say so before any tab/storage
-    // hint, since switching tabs wouldn't help them.
-    if (signInRequiredReason) {
-      return signInRequiredReason;
-    }
     if (currentTab === "local") {
       return t(
         "filesPage.localFoldersUnavailable",
@@ -844,7 +826,7 @@ export default function FileManagerView() {
       );
     }
     return null;
-  }, [signInRequiredReason, currentTab, folders.serverReachable, t]);
+  }, [currentTab, folders.serverReachable, t]);
 
   return (
     <div className="files-page" ref={dropZoneRef}>
@@ -911,17 +893,14 @@ export default function FileManagerView() {
               />
               <div className="files-page-header-actions">
                 <Tooltip
-                  label={
-                    signInRequiredReason ??
-                    t("filesPage.refresh", "Refresh from server")
-                  }
+                  label={t("filesPage.refresh", "Refresh from server")}
                   withinPortal
                 >
                   <ActionIcon
                     variant="default"
                     size="md"
                     loading={refreshing}
-                    disabled={refreshing || Boolean(signInRequiredReason)}
+                    disabled={refreshing}
                     aria-busy={refreshing}
                     onClick={handleRefresh}
                     aria-label={t("filesPage.refresh", "Refresh from server")}

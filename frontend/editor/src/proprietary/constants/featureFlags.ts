@@ -6,17 +6,10 @@
  */
 
 /**
- * Watched Folders — a proprietary feature whose implementation lives under
- * `proprietary/`. Still disabled for now; flip to `true` to surface it in the
- * proprietary build only. The core override stays `false`, so the shared
- * sidebar entry point never appears in the open-source build (which has no
- * Watched Folders implementation to navigate to).
+ * Watched Folders (a.k.a. Watched Folders) — a proprietary feature whose
+ * implementation lives under `proprietary/`. Still disabled for now; flip to
+ * `true` to surface it in the proprietary build only. The core override stays
+ * `false`, so the shared sidebar entry point never appears in the open-source
+ * build (which has no Watched Folders implementation to navigate to).
  */
 export const WATCHED_FOLDERS_ENABLED: boolean = false;
-
-/**
- * Policies — proprietary, automation-backed policy enforcement. Enabled in the
- * proprietary build so it's reachable while in active development (frontend is
- * mock/stub-backed; no real server yet). Core stays `false`.
- */
-export const POLICIES_ENABLED: boolean = true;

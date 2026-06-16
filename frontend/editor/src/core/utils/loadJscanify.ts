@@ -1,5 +1,3 @@
-import { withBasePath } from "@app/constants/app";
-
 declare global {
   interface Window {
     cv?: any;
@@ -7,9 +5,8 @@ declare global {
   }
 }
 
-// Served under the app's base path (handles sub-path deploys like /app).
-const OPENCV_SRC = withBasePath("/vendor/jscanify/opencv.js");
-const JSCANIFY_SRC = withBasePath("/vendor/jscanify/jscanify.js");
+const OPENCV_SRC = "/vendor/jscanify/opencv.js";
+const JSCANIFY_SRC = "/vendor/jscanify/jscanify.js";
 
 let loadPromise: Promise<void> | null = null;
 

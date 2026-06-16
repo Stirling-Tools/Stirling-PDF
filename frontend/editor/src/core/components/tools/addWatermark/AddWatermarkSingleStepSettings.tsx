@@ -21,15 +21,12 @@ interface AddWatermarkSingleStepSettingsProps {
     value: AddWatermarkParameters[K],
   ) => void;
   disabled?: boolean;
-  /** When false, hide the "Flatten PDF pages to images" option (e.g. in policies). */
-  showFlatten?: boolean;
 }
 
 const AddWatermarkSingleStepSettings = ({
   parameters,
   onParameterChange,
   disabled = false,
-  showFlatten = true,
 }: AddWatermarkSingleStepSettingsProps) => {
   return (
     <Stack gap="lg">
@@ -72,7 +69,6 @@ const AddWatermarkSingleStepSettings = ({
           parameters={parameters}
           onParameterChange={onParameterChange}
           disabled={disabled}
-          showFlatten={showFlatten}
         />
       )}
     </Stack>
