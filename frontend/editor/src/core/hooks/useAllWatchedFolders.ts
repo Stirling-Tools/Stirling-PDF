@@ -17,7 +17,9 @@ export function useAllWatchedFolders(): WatchedFolder[] {
   useEffect(() => {
     const load = async () => {
       try {
-        setFolders(await watchedFolderStorage.getAllFolders());
+        // Policy-owned folders are managed by Policies, not shown here.
+        const all = await watchedFolderStorage.getAllFolders();
+        setFolders(all.filter((f) => !f.policyCategoryId));
       } catch (err) {
         console.error("Failed to load smart folders:", err);
       }

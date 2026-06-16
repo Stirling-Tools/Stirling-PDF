@@ -10,6 +10,8 @@ import PasswordSecurity from "@app/components/shared/config/configSections/Passw
 import ApiKeys from "@app/components/shared/config/configSections/ApiKeys";
 import Plan from "@app/components/shared/config/configSections/Plan";
 import McpSection from "@app/components/shared/config/configSections/McpSection";
+import LegalSection from "@app/components/shared/config/configSections/LegalSection";
+import TeamSection from "@app/components/shared/config/configSections/TeamSection";
 
 type OverviewComponent = React.ComponentType<{ onLogoutClick: () => void }>;
 
@@ -147,6 +149,36 @@ function appendMcpSection(
   );
 }
 
+// Legal links (privacy policy, terms, etc.). Shown to anonymous users too —
+// it's public information.
+function appendLegalSection(
+  sections: ConfigNavSection[],
+  t: TFunction<"translation", undefined>,
+): ConfigNavSection[] {
+  const hasLegal = sections.some((section) =>
+    section.items.some((item) => item.key === "legal"),
+  );
+
+  if (hasLegal) {
+    return sections;
+  }
+
+  return [
+    ...sections,
+    {
+      title: t("settings.legal.title", "Legal"),
+      items: [
+        {
+          key: "legal" as const,
+          label: t("settings.legal.label", "Legal"),
+          icon: "gavel-rounded",
+          component: <LegalSection />,
+        },
+      ],
+    },
+  ];
+}
+
 export function createSaasConfigNavSections(
   Overview: OverviewComponent,
   onLogoutClick: () => void,
@@ -173,6 +205,15 @@ export function createSaasConfigNavSections(
     ],
   };
 
+  if (!isAnonymous) {
+    accountSection.items.push({
+      key: "teams",
+      label: t("config.team", "Team"),
+      icon: "groups-rounded",
+      component: <TeamSection />,
+    });
+  }
+
   let sections = [accountSection, ...baseSections];
 
   // Suppress OSS-only sections (update checker, login config banner) not relevant in SaaS
@@ -193,8 +234,13 @@ export function createSaasConfigNavSections(
   sections = appendMcpSection(sections, t);
 
   if (!isAnonymous) {
+    // The Plan tab is now the single billing surface — it internally branches
+    // free vs subscribed × leader vs member via useWallet(). The old separate
+    // "Pay-as-you-go" tab and paygEnabled / isLeader options were removed.
     sections = appendBillingSection(sections, t);
   }
+
+  sections = appendLegalSection(sections, t);
 
   if (isDev) {
     console.debug("[AppConfigModal] SaaS navigation sections", sections);
