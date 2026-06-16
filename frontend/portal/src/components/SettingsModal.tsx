@@ -6,12 +6,12 @@ import {
   Input,
   Modal,
   Select,
+  SettingsShell,
   Skeleton,
   StatusBadge,
-  Tabs,
   ToggleSwitch,
   type SelectOption,
-  type TabItem,
+  type SettingsNavSection,
 } from "@shared/components";
 import { useTier, type Tier } from "@portal/contexts/TierContext";
 import { useTheme, type Theme } from "@portal/contexts/ThemeContext";
@@ -22,11 +22,27 @@ import {
   type BetaFeature,
   type SettingsSnapshot,
 } from "@portal/api/settings";
+import {
+  UsersIcon,
+  SunIcon,
+  BellIcon,
+  SettingsIcon,
+  PoliciesIcon,
+  InfrastructureIcon,
+  SparklesIcon,
+} from "@portal/components/icons";
 import "@portal/components/SettingsModal.css";
 
-type SettingsTab = "profile" | "preferences" | "workspace" | "admin";
+type SettingsSection =
+  | "profile"
+  | "appearance"
+  | "notifications"
+  | "general"
+  | "authentication"
+  | "sessions"
+  | "early-access";
 
-/** Org-wide auth posture the Admin tab edits, mirrored into local form state. */
+/** Org-wide auth posture the Admin sections edit, mirrored into local state. */
 interface SecurityForm {
   mfaEnforced: boolean;
   ssoEnabled: boolean;
@@ -70,11 +86,55 @@ const NOTIFICATION_COPY: Record<
   },
 };
 
-const TABS: TabItem<SettingsTab>[] = [
-  { key: "profile", label: "Profile" },
-  { key: "preferences", label: "Preferences" },
-  { key: "workspace", label: "Workspace" },
-  { key: "admin", label: "Admin" },
+const SECTION_LABEL: Record<SettingsSection, string> = {
+  profile: "Profile",
+  appearance: "Appearance",
+  notifications: "Notifications",
+  general: "General",
+  authentication: "Authentication",
+  sessions: "Active sessions",
+  "early-access": "Early access",
+};
+
+const NAV_SECTIONS: SettingsNavSection[] = [
+  {
+    title: "Account",
+    items: [
+      { key: "profile", label: "Profile", icon: <UsersIcon size={16} /> },
+      { key: "appearance", label: "Appearance", icon: <SunIcon size={16} /> },
+      {
+        key: "notifications",
+        label: "Notifications",
+        icon: <BellIcon size={16} />,
+      },
+    ],
+  },
+  {
+    title: "Workspace",
+    items: [
+      { key: "general", label: "General", icon: <SettingsIcon size={16} /> },
+    ],
+  },
+  {
+    title: "Admin",
+    items: [
+      {
+        key: "authentication",
+        label: "Authentication",
+        icon: <PoliciesIcon size={16} />,
+      },
+      {
+        key: "sessions",
+        label: "Active sessions",
+        icon: <InfrastructureIcon size={16} />,
+      },
+      {
+        key: "early-access",
+        label: "Early access",
+        icon: <SparklesIcon size={16} />,
+      },
+    ],
+  },
 ];
 
 const THEME_OPTIONS: { value: Theme; label: string; hint: string }[] = [
@@ -91,16 +151,15 @@ const SESSION_TIMEOUT_OPTIONS: SelectOption[] = [
 ];
 
 /**
- * Account settings as a portal-wide overlay. Opens onto a tier-aware snapshot
- * (profile, notification defaults, workspace + region) which seeds editable
- * local form state. Save is a no-op for the demo — it simply closes — but the
- * theme control writes straight through to ThemeProvider so the change is real
- * and visible immediately.
+ * Account settings as a portal-wide overlay. A grouped left-nav (Account /
+ * Workspace / Admin) over a tier-aware snapshot that seeds editable local form
+ * state. Save is a no-op for the demo — it closes — but the theme control
+ * writes straight through to ThemeProvider so the change is real and visible.
  */
 export function SettingsModal({ open, onClose }: SettingsModalProps) {
   const { tier } = useTier();
   const { theme, setTheme } = useTheme();
-  const [tab, setTab] = useState<SettingsTab>("profile");
+  const [section, setSection] = useState<SettingsSection>("profile");
 
   const { data: snapshot, loading } = useAsync<SettingsSnapshot>(
     () => fetchSettings(tier),
@@ -146,7 +205,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
   }, [snapshot]);
 
   useEffect(() => {
-    if (open) setTab("profile");
+    if (open) setSection("profile");
   }, [open]);
 
   const regionOptions = useMemo<SelectOption[]>(() => {
@@ -167,36 +226,31 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
     <Modal
       open={open}
       onClose={onClose}
-      width="lg"
-      title="Settings"
-      subtitle="Manage your account, workspace, and organisation controls."
+      width="xl"
+      ariaLabel="Settings"
       className="portal-settings"
-      footer={
-        <>
-          <span className="portal-settings__footer-note">
-            Changes apply to this workspace.
-          </span>
-          <Button variant="ghost" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button variant="gradient" onClick={onClose}>
-            Save changes
-          </Button>
-        </>
-      }
     >
-      <div className="portal-settings__tabs">
-        <Tabs
-          items={TABS}
-          activeKey={tab}
-          onChange={setTab}
-          variant="underline"
-          ariaLabel="Settings sections"
-        />
-      </div>
-
-      <div className="portal-settings__panel">
-        {tab === "profile" && (
+      <SettingsShell
+        sections={NAV_SECTIONS}
+        activeKey={section}
+        onSelect={(k) => setSection(k as SettingsSection)}
+        title={SECTION_LABEL[section]}
+        onClose={onClose}
+        footer={
+          <>
+            <span className="portal-settings__footer-note">
+              Changes apply to this workspace.
+            </span>
+            <Button variant="ghost" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button variant="gradient" onClick={onClose}>
+              Save changes
+            </Button>
+          </>
+        }
+      >
+        {section === "profile" && (
           <ProfilePanel
             loading={isLoading}
             name={name}
@@ -208,20 +262,22 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
           />
         )}
 
-        {tab === "preferences" && (
-          <PreferencesPanel
+        {section === "appearance" && (
+          <AppearancePanel theme={theme} onTheme={setTheme} />
+        )}
+
+        {section === "notifications" && (
+          <NotificationsPanel
             loading={isLoading}
             notifications={notifications}
             order={snapshot?.notifications.map((n) => n.id) ?? []}
             onToggle={(id, value) =>
               setNotifications((prev) => ({ ...prev, [id]: value }))
             }
-            theme={theme}
-            onTheme={setTheme}
           />
         )}
 
-        {tab === "workspace" && (
+        {section === "general" && (
           <WorkspacePanel
             loading={isLoading}
             workspaceName={workspaceName}
@@ -234,13 +290,26 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
           />
         )}
 
-        {tab === "admin" && (
-          <AdminPanel
+        {section === "authentication" && (
+          <AuthenticationPanel
             loading={isLoading}
             tier={tier}
             security={security}
             onSecurity={(patch) => setSecurity((s) => ({ ...s, ...patch }))}
+          />
+        )}
+
+        {section === "sessions" && (
+          <SessionsPanel
+            loading={isLoading}
             sessions={snapshot?.security.activeSessions ?? []}
+          />
+        )}
+
+        {section === "early-access" && (
+          <EarlyAccessPanel
+            loading={isLoading}
+            tier={tier}
             betaFeatures={snapshot?.betaFeatures ?? []}
             betaToggles={betaToggles}
             onBeta={(id, value) =>
@@ -248,7 +317,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
             }
           />
         )}
-      </div>
+      </SettingsShell>
     </Modal>
   );
 }
@@ -339,21 +408,13 @@ function ProfilePanel({
 }
 
 /* ──────────────────────────────────────────────────────────────────────── */
-/*  Preferences                                                              */
+/*  Appearance                                                               */
 /* ──────────────────────────────────────────────────────────────────────── */
 
-function PreferencesPanel({
-  loading,
-  notifications,
-  order,
-  onToggle,
+function AppearancePanel({
   theme,
   onTheme,
 }: {
-  loading: boolean;
-  notifications: Record<string, boolean>;
-  order: string[];
-  onToggle: (id: string, value: boolean) => void;
   theme: Theme;
   onTheme: (theme: Theme) => void;
 }) {
@@ -361,7 +422,7 @@ function PreferencesPanel({
     <div className="portal-settings__section">
       <div className="portal-settings__group">
         <div className="portal-settings__group-head">
-          <h3 className="portal-settings__group-title">Appearance</h3>
+          <h3 className="portal-settings__group-title">Theme</h3>
           <p className="portal-settings__group-sub">
             Choose how the portal looks on this device.
           </p>
@@ -398,10 +459,30 @@ function PreferencesPanel({
           ))}
         </div>
       </div>
+    </div>
+  );
+}
 
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Notifications                                                            */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+function NotificationsPanel({
+  loading,
+  notifications,
+  order,
+  onToggle,
+}: {
+  loading: boolean;
+  notifications: Record<string, boolean>;
+  order: string[];
+  onToggle: (id: string, value: boolean) => void;
+}) {
+  return (
+    <div className="portal-settings__section">
       <div className="portal-settings__group">
         <div className="portal-settings__group-head">
-          <h3 className="portal-settings__group-title">Notifications</h3>
+          <h3 className="portal-settings__group-title">Email notifications</h3>
           <p className="portal-settings__group-sub">
             Pick which events reach your inbox.
           </p>
@@ -524,34 +605,26 @@ function WorkspacePanel({
 }
 
 /* ──────────────────────────────────────────────────────────────────────── */
-/*  Admin                                                                    */
+/*  Admin · Authentication                                                   */
 /* ──────────────────────────────────────────────────────────────────────── */
 
-function AdminPanel({
+function AuthenticationPanel({
   loading,
   tier,
   security,
   onSecurity,
-  sessions,
-  betaFeatures,
-  betaToggles,
-  onBeta,
 }: {
   loading: boolean;
   tier: Tier;
   security: SecurityForm;
   onSecurity: (patch: Partial<SecurityForm>) => void;
-  sessions: ActiveSession[];
-  betaFeatures: BetaFeature[];
-  betaToggles: Record<string, boolean>;
-  onBeta: (id: string, value: boolean) => void;
 }) {
   if (loading) {
     return (
       <div className="portal-settings__section">
         <Skeleton height="3rem" />
         <Skeleton height="3rem" />
-        <Skeleton height="5rem" />
+        <Skeleton height="3rem" />
       </div>
     );
   }
@@ -564,9 +637,9 @@ function AdminPanel({
     <div className="portal-settings__section">
       <div className="portal-settings__group">
         <div className="portal-settings__group-head">
-          <h3 className="portal-settings__group-title">Authentication</h3>
+          <h3 className="portal-settings__group-title">Sign-in policy</h3>
           <p className="portal-settings__group-sub">
-            Organisation-wide sign-in and session policy.
+            Organisation-wide authentication controls.
           </p>
         </div>
 
@@ -634,7 +707,32 @@ function AdminPanel({
           />
         </FormField>
       </div>
+    </div>
+  );
+}
 
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Admin · Active sessions                                                  */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+function SessionsPanel({
+  loading,
+  sessions,
+}: {
+  loading: boolean;
+  sessions: ActiveSession[];
+}) {
+  if (loading) {
+    return (
+      <div className="portal-settings__section">
+        <Skeleton height="3rem" />
+        <Skeleton height="3rem" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="portal-settings__section">
       <div className="portal-settings__group">
         <div className="portal-settings__group-head">
           <h3 className="portal-settings__group-title">Active sessions</h3>
@@ -665,10 +763,43 @@ function AdminPanel({
           ))}
         </div>
       </div>
+    </div>
+  );
+}
 
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Admin · Early access                                                     */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+function EarlyAccessPanel({
+  loading,
+  tier,
+  betaFeatures,
+  betaToggles,
+  onBeta,
+}: {
+  loading: boolean;
+  tier: Tier;
+  betaFeatures: BetaFeature[];
+  betaToggles: Record<string, boolean>;
+  onBeta: (id: string, value: boolean) => void;
+}) {
+  if (loading) {
+    return (
+      <div className="portal-settings__section">
+        <Skeleton height="3rem" />
+        <Skeleton height="3rem" />
+      </div>
+    );
+  }
+
+  const isEnterprise = tier === "enterprise";
+
+  return (
+    <div className="portal-settings__section">
       <div className="portal-settings__group">
         <div className="portal-settings__group-head">
-          <h3 className="portal-settings__group-title">Early access</h3>
+          <h3 className="portal-settings__group-title">Preview features</h3>
           <p className="portal-settings__group-sub">
             Opt into features still in preview.
           </p>
