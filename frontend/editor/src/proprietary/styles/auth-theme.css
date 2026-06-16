@@ -1,7 +1,7 @@
 /* Auth-specific CSS variables for proprietary version */
 
 :root {
-  /* Auth page colors (light mode only - auth pages force light mode) */
+  /* Auth page colors (light mode) */
   --auth-bg-color-light-only: #f3f4f6;
   --auth-card-bg: #ffffff;
   --auth-card-bg-light-only: #ffffff;

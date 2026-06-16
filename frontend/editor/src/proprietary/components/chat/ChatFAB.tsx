@@ -1,5 +1,10 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { createTheme, MantineProvider, Popover } from "@mantine/core";
+import {
+  createTheme,
+  MantineProvider,
+  Popover,
+  useMantineColorScheme,
+} from "@mantine/core";
 import { Rnd } from "react-rnd";
 import { useTranslation } from "react-i18next";
 import { ChatFABButton } from "@shared/components/ChatFABButton";
@@ -55,6 +60,12 @@ export function ChatFAB() {
   const { isLoading } = useChat();
   const { config } = useAppConfig();
   const enabled = Boolean(config?.aiEngineEnabled);
+
+  // Scope the panel's nested MantineProvider to this ref; unscoped it writes
+  // its color scheme onto <html> and overrides the whole app's theme.
+  const panelThemeRootRef = useRef<HTMLDivElement>(null);
+  const { colorScheme } = useMantineColorScheme();
+  const panelColorScheme = colorScheme === "dark" ? "dark" : "light";
 
   // Detect loading → done transition. If the FAB is closed when the agent
   // finishes, show the tick badge until the user opens the panel.
@@ -194,11 +205,17 @@ export function ChatFAB() {
           }}
         >
           <ChatFABWindow open={isOpen} onDoubleClick={handleHeaderDoubleClick}>
-            <MantineProvider theme={FAB_PANEL_THEME}>
-              <ChatPanel
-                onBack={() => setIsOpen(false)}
-                backLabel={t("chat.fab.close", "Close chat")}
-              />
+            <MantineProvider
+              theme={FAB_PANEL_THEME}
+              getRootElement={() => panelThemeRootRef.current ?? undefined}
+              forceColorScheme={panelColorScheme}
+            >
+              <div ref={panelThemeRootRef} style={{ display: "contents" }}>
+                <ChatPanel
+                  onBack={() => setIsOpen(false)}
+                  backLabel={t("chat.fab.close", "Close chat")}
+                />
+              </div>
             </MantineProvider>
           </ChatFABWindow>
         </Rnd>
