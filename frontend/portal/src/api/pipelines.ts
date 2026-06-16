@@ -28,8 +28,8 @@ export async function fetchPipelines(tier: Tier): Promise<PipelinesResponse> {
  * rules apply fleet-wide instead of just to the originating flow.
  *
  * TODO(backend): POST /v1/pipelines/{id}/promote-to-policy — should create the
- * policy from the pipeline's stages and return the new policy id. Stubbed
- * against the mock handler for now; the UI treats a resolved promise as accepted.
+ * policy from the pipeline's stages and return the new policy id. The mock
+ * handler resolves `{ ok: true }`; the UI treats a resolved promise as accepted.
  */
 export async function promoteToPolicy(id: string): Promise<{ ok: true }> {
   return httpJson<{ ok: true }>(

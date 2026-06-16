@@ -18,7 +18,7 @@ export function CredentialRotationCard({ serviceToken }: Props) {
 
   function rotate() {
     // TODO(backend): POST /v1/editor/deployment/rotate → mints a new service
-    // token and revokes the old one after a grace window. Local-only for now.
+    // token and revokes the old one after a grace window.
     setRotating(true);
     setTimeout(() => {
       setRotating(false);

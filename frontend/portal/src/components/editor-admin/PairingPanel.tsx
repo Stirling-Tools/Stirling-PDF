@@ -25,7 +25,7 @@ export function PairingPanel({ pairings, onUpgrade }: Props) {
 
   function rotate(method: PairingMethod) {
     // TODO(backend): POST /v1/editor/pairings { method } → returns a freshly
-    // minted token / short code / IaC reference. Local-only feedback for now.
+    // minted token / short code / IaC reference.
     setRotated(method);
     setTimeout(() => setRotated((m) => (m === method ? null : m)), 1800);
   }

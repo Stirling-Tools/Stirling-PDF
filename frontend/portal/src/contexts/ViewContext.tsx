@@ -70,11 +70,9 @@ interface ViewContextValue {
 }
 
 /**
- * Backwards-compatible facade over react-router. Components keep using
- * useView()/setActiveView the way they did before; URLs are now real.
- *
- * No <ViewProvider> wrapper exists any more — the router is the provider.
- * App.tsx wraps its children in <BrowserRouter>.
+ * Facade over react-router so components navigate by `ViewId` (activeView /
+ * setActiveView) while URLs stay the source of truth. There is no
+ * <ViewProvider> — the router is the provider; App.tsx supplies <BrowserRouter>.
  */
 export function useView(): ViewContextValue {
   const { pathname } = useLocation();

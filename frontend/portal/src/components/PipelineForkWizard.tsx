@@ -60,7 +60,7 @@ export function PipelineForkWizard() {
 
   function deploy() {
     // TODO(backend): POST /v1/pipelines { templateId, name } to create the
-    // forked pipeline, then navigate to it. For now we hand off to the editor.
+    // forked pipeline. Without a backend, route to the pipelines list.
     setActiveView("pipelines");
   }
 

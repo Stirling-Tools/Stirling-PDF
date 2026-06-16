@@ -24,10 +24,9 @@ import {
 } from "@portal/components/icons";
 import "@portal/components/Sidebar.css";
 
-// TEMP app switcher. The editor is a separate Vite app — no shared shell yet
-// (see PORTAL_INTEGRATION_PLAN.md), so switching is a hard navigation: the
-// editor's own dev server in dev, the site root in prod. A standalone portal
-// deploy will later gate this behind a configured editor URL.
+// The editor is a separate Vite app with no shared shell, so switching apps is
+// a hard navigation — the editor's dev server in dev, the site root in prod.
+// A standalone portal deploy can gate this behind a configured editor URL.
 const EDITOR_URL = import.meta.env.DEV ? "http://localhost:5180/" : "/";
 
 interface NavEntry {
