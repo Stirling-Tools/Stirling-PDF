@@ -2,7 +2,7 @@
 # Supabase publishable ARG is client-safe by design, not a real secret.
 
 # Stage 1: build
-FROM node:25-alpine@sha256:e80397b81fa93888b5f855e8bef37d9b18d3c5eb38b8731fc23d6d878647340f AS build
+FROM node:26-alpine@sha256:9c0e1e52125d6b67d505cf75b4880fcf1290ccea5c480849910e1d57b2cf72b5 AS build
 
 WORKDIR /app
 
