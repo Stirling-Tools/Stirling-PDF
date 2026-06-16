@@ -1,6 +1,12 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react-swc";
 import tsconfigPaths from "vite-tsconfig-paths";
+import path from "node:path";
+
+// Global @shared alias so SUI components (and their own `@shared/*` self-imports,
+// which live outside the editor tsconfig scope) resolve under test — mirrors the
+// resolve.alias in vite.config.ts.
+const sharedDir = path.resolve(__dirname, "../shared");
 
 export default defineConfig({
   test: {
@@ -42,6 +48,9 @@ export default defineConfig({
             projects: ["./tsconfig.core.vite.json"],
           }),
         ],
+        resolve: {
+          alias: { "@shared": sharedDir },
+        },
         esbuild: {
           target: "es2020",
         },
@@ -60,6 +69,9 @@ export default defineConfig({
             projects: ["./tsconfig.proprietary.vite.json"],
           }),
         ],
+        resolve: {
+          alias: { "@shared": sharedDir },
+        },
         esbuild: {
           target: "es2020",
         },
@@ -78,6 +90,9 @@ export default defineConfig({
             projects: ["./tsconfig.desktop.vite.json"],
           }),
         ],
+        resolve: {
+          alias: { "@shared": sharedDir },
+        },
         esbuild: {
           target: "es2020",
         },
@@ -96,6 +111,9 @@ export default defineConfig({
             projects: ["./tsconfig.saas.vite.json"],
           }),
         ],
+        resolve: {
+          alias: { "@shared": sharedDir },
+        },
         esbuild: {
           target: "es2020",
         },
@@ -114,6 +132,9 @@ export default defineConfig({
             projects: ["./tsconfig.prototypes.vite.json"],
           }),
         ],
+        resolve: {
+          alias: { "@shared": sharedDir },
+        },
         esbuild: {
           target: "es2020",
         },

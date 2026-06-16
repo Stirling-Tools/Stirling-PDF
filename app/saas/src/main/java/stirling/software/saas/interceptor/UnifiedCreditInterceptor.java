@@ -32,8 +32,10 @@ import stirling.software.saas.service.SaasUserExtensionService;
 import stirling.software.saas.service.TeamCreditService;
 import stirling.software.saas.util.AuthenticationUtils;
 
+// Legacy credit-billing interceptor. PAYG replaces this with PaygChargeInterceptor — disabled
+// by default in saas, activate legacy-credits profile to bring it back.
 @Component
-@Profile("saas")
+@Profile("saas & legacy-credits")
 @Slf4j
 public class UnifiedCreditInterceptor implements AsyncHandlerInterceptor {
 

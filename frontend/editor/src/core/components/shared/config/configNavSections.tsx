@@ -4,6 +4,7 @@ import { NavKey } from "@app/components/shared/config/types";
 import HotkeysSection from "@app/components/shared/config/configSections/HotkeysSection";
 import GeneralSection from "@app/components/shared/config/configSections/GeneralSection";
 import HelpSection from "@app/components/shared/config/configSections/HelpSection";
+import LegalSection from "@app/components/shared/config/configSections/LegalSection";
 
 export interface ConfigNavItem {
   key: NavKey;
@@ -67,6 +68,17 @@ export const useConfigNavSections = (
           component: (
             <HelpSection isAdmin={_isAdmin} onRequestClose={onRequestClose} />
           ),
+        },
+      ],
+    },
+    {
+      title: t("settings.legal.title", "Legal"),
+      items: [
+        {
+          key: "legal",
+          label: t("settings.legal.label", "Legal"),
+          icon: "gavel-rounded",
+          component: <LegalSection />,
         },
       ],
     },

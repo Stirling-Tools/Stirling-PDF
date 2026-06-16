@@ -25,8 +25,9 @@ import stirling.software.saas.service.CreditService;
 import stirling.software.saas.service.CreditService.CreditSummary;
 import stirling.software.saas.util.LogRedactionUtils;
 
+// Legacy credit-billing endpoints. PAYG replaces this — gated behind legacy-credits profile.
 @RestController
-@Profile("saas")
+@Profile("saas & legacy-credits")
 @RequestMapping("/api/v1/credits")
 @Tag(name = "Credit Management", description = "Endpoints for managing user API credits")
 @RequiredArgsConstructor
