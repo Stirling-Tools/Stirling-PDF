@@ -125,6 +125,29 @@ function QuickActions({ onTryOp }: { onTryOp: () => void }) {
         <button
           type="button"
           className="portal-home__quick-row"
+          onClick={() => setActiveView("getting-started")}
+        >
+          <span
+            className="portal-home__quick-icon"
+            style={{
+              background: "var(--color-purple-light)",
+              color: "var(--color-purple)",
+            }}
+            aria-hidden
+          >
+            ★
+          </span>
+          <span className="portal-home__quick-text">
+            <strong>Guided setup</strong>
+            <span>Pick a use case and go live in three steps</span>
+          </span>
+          <span className="portal-home__quick-arrow" aria-hidden>
+            →
+          </span>
+        </button>
+        <button
+          type="button"
+          className="portal-home__quick-row"
           onClick={onTryOp}
         >
           <span

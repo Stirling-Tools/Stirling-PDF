@@ -9,7 +9,6 @@ import markLight from "@shared/assets/stirling-mark-light.svg";
 import markDark from "@shared/assets/stirling-mark-dark.svg";
 import {
   HomeIcon,
-  GettingStartedIcon,
   UsersIcon,
   SourcesIcon,
   PoliciesIcon,
@@ -37,15 +36,10 @@ interface NavEntry {
 
 const GROUP_PRIMARY: NavEntry[] = [
   { id: "home", label: "Home", icon: <HomeIcon /> },
-  {
-    id: "getting-started",
-    label: "Getting started",
-    icon: <GettingStartedIcon />,
-  },
-  { id: "users", label: "Users", icon: <UsersIcon /> },
 ];
 
 const GROUP_OPERATIONAL: NavEntry[] = [
+  { id: "users", label: "Users", icon: <UsersIcon /> },
   { id: "sources", label: "Sources", icon: <SourcesIcon /> },
   { id: "policies", label: "Policies", icon: <PoliciesIcon /> },
   { id: "pipelines", label: "Pipelines", icon: <PipelinesIcon /> },
