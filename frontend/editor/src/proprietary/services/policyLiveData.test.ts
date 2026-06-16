@@ -60,6 +60,42 @@ describe("runsToActivity", () => {
       action: "Step 2 failed",
     });
   });
+
+  it("shows pipeline progress on a running run once the step is known", () => {
+    const [withStep, noStep] = runsToActivity([
+      run({ runId: "a", status: "RUNNING", currentStep: 1, stepCount: 2 }),
+      run({ runId: "b", status: "RUNNING" }),
+    ]);
+    expect(withStep.action).toBe("Enforcing… · step 1/2");
+    // Before the first status report (no step yet) it stays the plain label.
+    expect(noStep.action).toBe("Enforcing…");
+  });
+
+  it("shows a queue-rejected run awaiting retry as busy, not a failure", () => {
+    const [item] = runsToActivity([
+      run({
+        status: "FAILED",
+        error: "Policy run could not be queued: Job queue full",
+        errorCode: "POLICY_QUEUE_FULL",
+        retrying: true,
+      }),
+    ]);
+    expect(item.status).toBe("processing");
+    expect(item.action).toBe("Busy — retrying…");
+  });
+
+  it("shows a queue rejection that has exhausted its retries as a failure", () => {
+    const [item] = runsToActivity([
+      run({
+        status: "FAILED",
+        error: "Policy run could not be queued: Job queue full",
+        errorCode: "POLICY_QUEUE_FULL",
+        // no `retrying` flag — the auto-retry budget is spent.
+      }),
+    ]);
+    expect(item.status).toBe("flagged");
+    expect(item.action).toContain("Job queue full");
+  });
 });
 
 describe("runsToStats", () => {
