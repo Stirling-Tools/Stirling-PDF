@@ -9,6 +9,8 @@ export type {
   PipelineMetrics,
   PipelinesResponse,
   PipelineStatus,
+  PromotedPipeline,
+  PromotedStatus,
   SchemaDrift,
   StageKey,
   StageSummary,
@@ -18,5 +20,20 @@ export type {
 export async function fetchPipelines(tier: Tier): Promise<PipelinesResponse> {
   return httpJson<PipelinesResponse>(
     `/v1/pipelines?tier=${encodeURIComponent(tier)}`,
+  );
+}
+
+/**
+ * Promote a watch-folder-derived pipeline into a governed org policy, so its
+ * rules apply fleet-wide instead of just to the originating flow.
+ *
+ * TODO(backend): POST /v1/pipelines/{id}/promote-to-policy — should create the
+ * policy from the pipeline's stages and return the new policy id. Stubbed
+ * against the mock handler for now; the UI treats a resolved promise as accepted.
+ */
+export async function promoteToPolicy(id: string): Promise<{ ok: true }> {
+  return httpJson<{ ok: true }>(
+    `/v1/pipelines/${encodeURIComponent(id)}/promote-to-policy`,
+    { method: "POST" },
   );
 }

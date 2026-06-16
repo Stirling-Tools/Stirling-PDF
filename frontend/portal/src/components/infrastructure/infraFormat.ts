@@ -1,10 +1,12 @@
 import type { ChipTone, StatusTone } from "@shared/components";
 import type {
   ApiKeyStatus,
+  AttestationStatus,
   AuditCategory,
   AuditStatus,
   CertStatus,
   DeploymentStatus,
+  KeyMode,
   ModelCostUnit,
   ModelProvider,
   ModelStatus,
@@ -64,6 +66,31 @@ export const CERT_LABEL: Record<CertStatus, string> = {
   certified: "Certified",
   "in-progress": "In progress",
   "not-started": "Not started",
+};
+
+export const KEY_MODE_LABEL: Record<KeyMode, string> = {
+  managed: "Stirling-managed",
+  byok: "BYOK",
+  hyok: "HYOK",
+};
+
+export const KEY_MODE_TONE: Record<KeyMode, StatusTone> = {
+  managed: "info",
+  byok: "purple",
+  // HYOK is the strongest posture (Stirling never sees plaintext) → success.
+  hyok: "success",
+};
+
+export const ATTESTATION_LABEL: Record<AttestationStatus, string> = {
+  attested: "Attested",
+  "in-scope": "In scope",
+  "not-applicable": "N/A",
+};
+
+export const ATTESTATION_TONE: Record<AttestationStatus, StatusTone> = {
+  attested: "success",
+  "in-scope": "warning",
+  "not-applicable": "neutral",
 };
 
 export const AUDIT_TONE: Record<AuditStatus, StatusTone> = {

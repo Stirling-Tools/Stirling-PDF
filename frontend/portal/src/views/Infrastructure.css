@@ -10,6 +10,12 @@
 /* View header */
 .portal-infra__head {
   display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.portal-infra__head-text {
+  display: flex;
   flex-direction: column;
   gap: 0.25rem;
 }
@@ -284,6 +290,60 @@
   font-size: 0.6875rem;
   color: var(--color-text-4);
   line-height: 1.4;
+}
+
+/* Encryption key management */
+.portal-infra__keymgmt-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.portal-infra__keymgmt-title {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+}
+
+/* Compliance attestations — same grid rhythm as certs, but each card stacks
+   a framework chip + report link, so it needs a little more vertical room. */
+.portal-infra__attestations {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+@media (max-width: 60rem) {
+  .portal-infra__attestations {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 36rem) {
+  .portal-infra__attestations {
+    grid-template-columns: 1fr;
+  }
+}
+
+.portal-infra__attestation {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.portal-infra__attestation-link {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-blue);
+  text-decoration: none;
+}
+
+.portal-infra__attestation-link:hover {
+  text-decoration: underline;
 }
 
 /* ── Storage ────────────────────────────────────────────────────────────── */

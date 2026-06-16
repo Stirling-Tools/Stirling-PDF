@@ -281,11 +281,56 @@ export interface IpAllowEntry {
   added: string;
 }
 
+/**
+ * Where encryption keys live. Mirrors the {@link AccessPolicy} posture but is
+ * surfaced separately because the key *custody model* (who can decrypt) is the
+ * detail security teams scrutinise:
+ *   - `managed` — Stirling-owned KMS keys; zero key ops on the customer side.
+ *   - `byok` — customer key, but Stirling can use it to decrypt while processing.
+ *   - `hyok` — key never leaves the customer KMS; Stirling holds only ciphertext.
+ */
+export type KeyMode = "managed" | "byok" | "hyok";
+
+export interface KeyManagement {
+  mode: KeyMode;
+  /** Human-readable provider, e.g. "Stirling KMS" or "AWS KMS (customer)". */
+  provider: string;
+  /** ARN-style identifier for the active key. */
+  keyId: string;
+  /** Encryption algorithm in force. */
+  algorithm: string;
+  /** Relative last-rotation time, e.g. "32 days ago". */
+  lastRotated: string;
+  /** Rotation cadence summary, e.g. "Automatic · every 90 days". */
+  rotationPolicy: string;
+  /**
+   * Whether the customer may switch key custody (BYOK/HYOK). Stirling-managed
+   * tiers see the posture but cannot change provider — only enterprise can.
+   */
+  customerManaged: boolean;
+}
+
+export type AttestationStatus = "attested" | "in-scope" | "not-applicable";
+
+export interface ComplianceAttestation {
+  id: string;
+  name: string;
+  /** Framework family / short descriptor shown under the name. */
+  framework: string;
+  status: AttestationStatus;
+  /** Coverage or audit detail, e.g. "Type II · audited Apr 2026". */
+  detail: string;
+  /** Stub link to the downloadable report; null when none is available. */
+  reportUrl: string | null;
+}
+
 export interface SecurityConfig {
   accessPolicy: AccessPolicy;
   dataResidency: DataResidency;
   certs: ComplianceCert[];
   ipAllowlist: IpAllowEntry[];
+  keyManagement: KeyManagement;
+  attestations: ComplianceAttestation[];
 }
 
 const CERTS_FULL: ComplianceCert[] = [
@@ -366,6 +411,118 @@ const IP_ALLOWLIST: IpAllowEntry[] = [
   },
 ];
 
+// Stirling-managed key custody — what free/pro tiers run on. No key ops on the
+// customer side, so the provider/key fields describe Stirling's own KMS.
+const KEY_MANAGED: KeyManagement = {
+  mode: "managed",
+  provider: "Stirling KMS",
+  keyId: "arn:stirling:kms:us-east-1:platform/cmk-default",
+  algorithm: "AES-256-GCM",
+  lastRotated: "32 days ago",
+  rotationPolicy: "Automatic · every 90 days",
+  customerManaged: false,
+};
+
+const KEY_HYOK: KeyManagement = {
+  mode: "hyok",
+  provider: "AWS CloudHSM (customer)",
+  keyId: "arn:aws:kms:eu-west-1:418xxxx:key/2a7e-hyok",
+  algorithm: "AES-256-GCM · external key store",
+  lastRotated: "5 days ago",
+  rotationPolicy: "Customer-controlled · keys never leave your HSM",
+  customerManaged: true,
+};
+
+// Full attestation set an enterprise contract is covered by.
+const ATTESTATIONS_FULL: ComplianceAttestation[] = [
+  {
+    id: "soc2",
+    name: "SOC 2 Type II",
+    framework: "AICPA Trust Services",
+    status: "attested",
+    detail: "Type II · audited Apr 2026 · Coalfire",
+    reportUrl: "/v1/infrastructure/security/reports/soc2",
+  },
+  {
+    id: "iso27001",
+    name: "ISO 27001",
+    framework: "ISO/IEC 27001:2022",
+    status: "attested",
+    detail: "Cert #IS-774201 · valid to 2027",
+    reportUrl: "/v1/infrastructure/security/reports/iso27001",
+  },
+  {
+    id: "hipaa",
+    name: "HIPAA",
+    framework: "US healthcare · PHI",
+    status: "attested",
+    detail: "BAA signed · PHI-eligible workloads",
+    reportUrl: "/v1/infrastructure/security/reports/hipaa",
+  },
+  {
+    id: "gdpr",
+    name: "GDPR",
+    framework: "EU data protection",
+    status: "attested",
+    detail: "EU SCCs · DPA on file · EU residency",
+    reportUrl: "/v1/infrastructure/security/reports/gdpr",
+  },
+  {
+    id: "pci",
+    name: "PCI DSS",
+    framework: "Payment card data",
+    status: "in-scope",
+    detail: "SAQ-D in progress · QSA assessment Q3",
+    reportUrl: null,
+  },
+];
+
+// What lower tiers can claim: the platform-inherited attestations only. HIPAA
+// and PCI require a paid contract + signed paperwork, so they read as
+// not-applicable until the customer upgrades.
+const ATTESTATIONS_FREE: ComplianceAttestation[] = [
+  {
+    id: "soc2",
+    name: "SOC 2 Type II",
+    framework: "AICPA Trust Services",
+    status: "attested",
+    detail: "Inherited — Stirling platform",
+    reportUrl: "/v1/infrastructure/security/reports/soc2",
+  },
+  {
+    id: "iso27001",
+    name: "ISO 27001",
+    framework: "ISO/IEC 27001:2022",
+    status: "attested",
+    detail: "Inherited — Stirling platform",
+    reportUrl: "/v1/infrastructure/security/reports/iso27001",
+  },
+  {
+    id: "gdpr",
+    name: "GDPR",
+    framework: "EU data protection",
+    status: "in-scope",
+    detail: "Standard EU processing terms",
+    reportUrl: null,
+  },
+  {
+    id: "hipaa",
+    name: "HIPAA",
+    framework: "US healthcare · PHI",
+    status: "not-applicable",
+    detail: "Requires a paid plan + signed BAA",
+    reportUrl: null,
+  },
+  {
+    id: "pci",
+    name: "PCI DSS",
+    framework: "Payment card data",
+    status: "not-applicable",
+    detail: "Requires an enterprise contract",
+    reportUrl: null,
+  },
+];
+
 export function securityFor(tier: Tier): SecurityConfig {
   if (tier === "free") {
     return {
@@ -373,6 +530,8 @@ export function securityFor(tier: Tier): SecurityConfig {
       dataResidency: "us",
       certs: CERTS_FREE,
       ipAllowlist: [],
+      keyManagement: KEY_MANAGED,
+      attestations: ATTESTATIONS_FREE,
     };
   }
   if (tier === "pro") {
@@ -381,6 +540,9 @@ export function securityFor(tier: Tier): SecurityConfig {
       dataResidency: "us",
       certs: CERTS_FULL,
       ipAllowlist: IP_ALLOWLIST.slice(0, 2),
+      // Pro stays on Stirling-managed keys; BYOK/HYOK is an enterprise lever.
+      keyManagement: KEY_MANAGED,
+      attestations: ATTESTATIONS_FREE,
     };
   }
   return {
@@ -388,6 +550,8 @@ export function securityFor(tier: Tier): SecurityConfig {
     dataResidency: "eu",
     certs: CERTS_FULL,
     ipAllowlist: IP_ALLOWLIST,
+    keyManagement: KEY_HYOK,
+    attestations: ATTESTATIONS_FULL,
   };
 }
 

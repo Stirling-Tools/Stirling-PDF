@@ -16,6 +16,7 @@ import { agentsHandlers } from "@portal/mocks/handlers/agents";
 import { policiesHandlers } from "@portal/mocks/handlers/policies";
 import { documentsHandlers } from "@portal/mocks/handlers/documents";
 import { sdkComponentsHandlers } from "@portal/mocks/handlers/sdkComponents";
+import { editorDeployHandlers } from "@portal/mocks/handlers/editorDeploy";
 
 export const handlers = [
   ...homeHandlers,
@@ -36,6 +37,7 @@ export const handlers = [
   ...policiesHandlers,
   ...documentsHandlers,
   ...sdkComponentsHandlers,
+  ...editorDeployHandlers,
 ];
 
 export { resetNotificationsStore } from "@portal/mocks/handlers/notifications";

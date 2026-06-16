@@ -8,6 +8,7 @@ import { Sources } from "@portal/views/Sources";
 import { AgentBuilder } from "@portal/views/AgentBuilder";
 import { Policies } from "@portal/views/Policies";
 import { Components } from "@portal/views/Components";
+import { EditorAdmin } from "@portal/views/EditorAdmin";
 import { Infrastructure } from "@portal/views/Infrastructure";
 import { Usage } from "@portal/views/Usage";
 import { DeveloperDocs } from "@portal/views/DeveloperDocs";
@@ -28,6 +29,7 @@ export function ViewRouter() {
       <Route path={VIEW_PATHS.policies} element={<Policies />} />
       <Route path={VIEW_PATHS.documents} element={<Documents />} />
       <Route path={VIEW_PATHS.components} element={<Components />} />
+      <Route path={VIEW_PATHS.editor} element={<EditorAdmin />} />
       <Route path={VIEW_PATHS.infrastructure} element={<Infrastructure />} />
       <Route path={VIEW_PATHS.usage} element={<Usage />} />
       <Route path={VIEW_PATHS.docs} element={<DeveloperDocs />} />

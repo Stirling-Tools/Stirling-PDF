@@ -57,7 +57,7 @@ non-2xx). Views consume via `useAsync()` + `useSectionFlags()` (`hooks/useAsync.
 | Users | `GET /v1/users` | `tier` | `fetchUsers` | `UsersResponse` |
 | Documents | `GET /v1/endpoints` | `vertical?` | `fetchVerticals` | `Vertical[]` |
 | Documents | `GET /v1/documents` | `tier` | `fetchDocuments` | `DocumentsResponse` |
-| Pipelines | `GET /v1/pipelines` | `tier` | `fetchPipelines` | `PipelinesResponse` |
+| Pipelines | `GET /v1/pipelines` · `POST /v1/pipelines/:id/promote-to-policy` | `tier` | `fetchPipelines` · `promoteToPolicy` | `PipelinesResponse` |
 | Policies | `GET /v1/policies` | `tier` | `fetchPolicies` | `PoliciesResponse` |
 | Agent Builder | `GET /v1/agents` | `tier` | `fetchAgents` | `AgentsResponse` |
 | Sources | `GET /v1/sources` | `tier` | `fetchSources` | `SourcesResponse` |
@@ -73,6 +73,7 @@ non-2xx). Views consume via `useAsync()` + `useSectionFlags()` (`hooks/useAsync.
 | Usage & Billing | `GET /v1/billing/plans` | — | `fetchPlanOptions` | `PlanOption[]` |
 | Usage & Billing | `GET /v1/billing/history` | `tier` | `fetchBillingHistory` | `BillingHistoryRow[]` |
 | Developer Docs | `GET /v1/docs/nav` | — | `fetchDocsNav` | `DocsNavSection[]` |
+| Editor | `GET /v1/editor/deployment` | `tier` | `fetchEditorDeployment` | `EditorDeploymentResponse` |
 | Settings | `GET /v1/settings` | `tier` | `fetchSettings` | `UserSettings` |
 | Notifications | `GET /v1/notifications` · `POST /v1/notifications/mark-all-read` | — | — | `Notification[]` |
 | Ops | `GET /v1/ops/featured` · `POST /v1/ops/:opId/run` | — | — | — |

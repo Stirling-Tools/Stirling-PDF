@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Tabs, type TabItem } from "@shared/components";
+import { Button, Tabs, type TabItem } from "@shared/components";
+import { useView } from "@portal/contexts/ViewContext";
 import { DeploymentsTab } from "@portal/components/infrastructure/DeploymentsTab";
 import { ApiKeysTab } from "@portal/components/infrastructure/ApiKeysTab";
 import { SecurityTab } from "@portal/components/infrastructure/SecurityTab";
@@ -27,15 +28,25 @@ const TABS: TabItem<InfraTab>[] = [
 
 export function Infrastructure() {
   const [tab, setTab] = useState<InfraTab>("deployments");
+  const { setActiveView } = useView();
 
   return (
     <div className="portal-infra">
       <header className="portal-infra__head">
-        <h1 className="portal-infra__title">Infrastructure</h1>
-        <p className="portal-infra__sub">
-          Deployments, credentials, security posture, storage, and the audit
-          trail for your Stirling workspace.
-        </p>
+        <div className="portal-infra__head-text">
+          <h1 className="portal-infra__title">Infrastructure</h1>
+          <p className="portal-infra__sub">
+            Deployments, credentials, security posture, storage, and the audit
+            trail for your Stirling workspace.
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setActiveView("editor")}
+        >
+          Manage Editor deployment
+        </Button>
       </header>
 
       <Tabs<InfraTab>

@@ -172,7 +172,7 @@ export function Sidebar() {
                 />
               }
             >
-              Portal
+              Processor
             </Dropdown.Item>
             <Dropdown.Item
               onSelect={() => {
