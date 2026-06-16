@@ -12,7 +12,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.context.annotation.Profile;
-import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -38,15 +37,11 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
-import stirling.software.saas.payg.cap.AiToolRoutes;
-import stirling.software.saas.payg.cap.RequiresFeature;
 import stirling.software.saas.payg.charge.ChargeContext;
 import stirling.software.saas.payg.charge.ChargeOutcome;
 import stirling.software.saas.payg.charge.JobChargeService;
 import stirling.software.saas.payg.charge.JobInput;
 import stirling.software.saas.payg.job.JobService;
-import stirling.software.saas.payg.model.BillingCategory;
-import stirling.software.saas.payg.model.FeatureGate;
 import stirling.software.saas.payg.model.JobSource;
 import stirling.software.saas.payg.model.JobStepStatus;
 import stirling.software.saas.payg.model.ProcessType;
@@ -57,13 +52,10 @@ import stirling.software.saas.util.AuthenticationUtils;
  * after it in {@code PaygWebMvcConfig} so legacy credit-rejection short-circuits before we waste
  * work hashing inputs.
  *
- * <p>{@code preHandle}: gates on {@code @AutoJobPostMapping} OR {@code @RequiresFeature} (the
- * latter lets AI controllers — JSON-bodied, no AutoJobPostMapping — bill correctly), reads the
- * parsed multipart parts, materialises each input to a {@code TempFile}, and asks {@link
- * JobChargeService#openProcess} to open (or join) a process. The resulting {@link ChargeOutcome}
- * plus input temp-files are stashed as request attributes for {@code afterCompletion}. Routes
- * without multipart inputs short-circuit inside {@code doPreHandle} without touching the charge
- * service.
+ * <p>{@code preHandle}: gates on {@code @AutoJobPostMapping}, reads the parsed multipart parts,
+ * materialises each input to a {@code TempFile}, and asks {@link JobChargeService#openProcess} to
+ * open (or join) a process. The resulting {@link ChargeOutcome} plus input temp-files are stashed
+ * as request attributes for {@code afterCompletion}.
  *
  * <p>{@code afterCompletion}: branches on HTTP status — 2xx hashes the response body for OUTPUT
  * lineage; 4xx records a step append for audit; 5xx triggers refund-and-close (OPENED) or
@@ -113,7 +105,6 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
     private final Counter callsOpened;
     private final Counter callsJoined;
     private final Counter callsShortCircuit;
-    private final Counter callsBypassed;
     private final Counter refundsCounter;
 
     /** preHandle wall-clock per request. Separate from afterCompletion — different populations. */
@@ -153,11 +144,6 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
                 Counter.builder("payg.filter.calls")
                         .tag("disposition", "SHORT_CIRCUIT")
                         .register(meterRegistry);
-        this.callsBypassed =
-                Counter.builder("payg.filter.bypassed")
-                        .description(
-                                "Manual UI tool calls that skipped openProcess (BillingCategory.BYPASSED)")
-                        .register(meterRegistry);
         this.refundsCounter =
                 Counter.builder("payg.filter.refunds")
                         .description("First-step 5xx refunds applied to shadow rows")
@@ -182,42 +168,13 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
             if (!properties.isEnabled()) {
                 return true;
             }
-            if (!(handler instanceof HandlerMethod hm)) {
+            if (!(handler instanceof HandlerMethod hm)
+                    || hm.getMethodAnnotation(AutoJobPostMapping.class) == null) {
                 callsShortCircuit.increment();
-                return true;
-            }
-            // In-scope when the handler carries @AutoJobPostMapping (multipart tool POSTs) OR
-            // @RequiresFeature (AI controllers, future non-multipart gated routes). Without one of
-            // these the interceptor short-circuits — admin / info / static routes never run
-            // determineCategory.
-            boolean hasAutoJobPostMapping =
-                    AnnotationUtils.findAnnotation(hm.getMethod(), AutoJobPostMapping.class) != null
-                            || AnnotationUtils.findAnnotation(
-                                            hm.getBeanType(), AutoJobPostMapping.class)
-                                    != null;
-            boolean hasRequiresFeature =
-                    AnnotationUtils.findAnnotation(hm.getMethod(), RequiresFeature.class) != null
-                            || AnnotationUtils.findAnnotation(
-                                            hm.getBeanType(), RequiresFeature.class)
-                                    != null;
-            // AI document tools (/api/v1/ai/tools/**) live in the proprietary module and can't
-            // carry @RequiresFeature, so they're recognised by path — see AiToolRoutes.
-            boolean aiToolRoute = AiToolRoutes.matches(request);
-            if (!hasAutoJobPostMapping && !hasRequiresFeature && !aiToolRoute) {
-                callsShortCircuit.increment();
-                return true;
-            }
-            // Bypass fast-path: determine the BillingCategory BEFORE any multipart
-            // materialisation or openProcess call. Manual UI tool calls (BYPASSED) skip the
-            // entire ledger/shadow pipeline — no temp files, no DB writes.
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            BillingCategory category = determineCategory(hm, request, auth);
-            if (category == BillingCategory.BYPASSED) {
-                callsBypassed.increment();
                 return true;
             }
             try {
-                doPreHandle(request, auth, category);
+                doPreHandle(request);
             } catch (RuntimeException e) {
                 log.warn("PAYG preHandle failed; passing through unbilled", e);
                 errorsCounter.increment();
@@ -230,8 +187,8 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
         }
     }
 
-    private void doPreHandle(
-            HttpServletRequest request, Authentication auth, BillingCategory category) {
+    private void doPreHandle(HttpServletRequest request) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         User currentUser = resolveUser(auth);
         if (currentUser == null) {
             callsShortCircuit.increment();
@@ -291,8 +248,7 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
                         currentUser.getId(),
                         currentUser.getTeam() == null ? null : currentUser.getTeam().getId(),
                         determineSource(request, auth),
-                        ProcessType.SINGLE_TOOL,
-                        category);
+                        ProcessType.SINGLE_TOOL);
 
         ChargeOutcome outcome;
         try {
@@ -375,36 +331,10 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
         }
         if (status >= 400) {
             // 4xx: customer paid for the attempt. No OUTPUT recording, no refund.
-            // Still a successful-from-billing-standpoint OPENED process — meter it below.
-            meterIfOpened(jobId, disposition);
             return;
         }
 
-        // Success: this is the moment the billable work finished, so this is when we tell Stripe.
-        // Only the OPENED request meters — JOINED follow-up steps (chained tools on the same
-        // document) added no units and must not re-meter. The process stays OPEN for further
-        // lineage joins; StaleJobCloser closing it later is a no-op at Stripe thanks to the shared
-        // idempotency key. metering is best-effort and must never break the response teardown.
-        meterIfOpened(jobId, disposition);
         recordOutputs(request, response, jobId);
-    }
-
-    /**
-     * Fire the Stripe meter for a just-finished process, but only when this request OPENED it. Runs
-     * on the request-teardown thread (the response is already flushed to the client); {@code
-     * meterJobUsage} is best-effort and swallows its own failures, but we still guard here so a
-     * meter hiccup can't disturb lineage/cleanup that follows.
-     */
-    private void meterIfOpened(UUID jobId, ChargeOutcome.Disposition disposition) {
-        if (disposition != ChargeOutcome.Disposition.OPENED) {
-            return;
-        }
-        try {
-            chargeService.meterJobUsage(jobId);
-        } catch (RuntimeException e) {
-            log.warn("Meter-on-completion failed for job {}: {}", jobId, e.getMessage());
-            errorsCounter.increment();
-        }
     }
 
     private void recordOutputs(
@@ -513,54 +443,6 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
             return JobSource.API;
         }
         return JobSource.WEB;
-    }
-
-    /**
-     * Resolve the {@link BillingCategory} for this request. Precedence: {@code
-     * X-Stirling-Automation: true} or {@code @RequiresFeature(AUTOMATION)} → AUTOMATION;
-     * {@code @RequiresFeature(AI_SUPPORT)} → AI; an AI document-tool route ({@link AiToolRoutes}) →
-     * AI; API-key auth → API; otherwise BYPASSED (manual UI tool — short-circuited in {@link
-     * #preHandle}).
-     *
-     * <p>Method-level {@code @RequiresFeature} wins over class-level. Multiple gates: AUTOMATION
-     * dominates AI within a single annotation. The AI-tool path check sits below the automation
-     * header on purpose: an AI tool dispatched inside a policy / AI workflow bills as AUTOMATION,
-     * while a direct call to it bills as AI.
-     */
-    private static BillingCategory determineCategory(
-            HandlerMethod handler, HttpServletRequest request, Authentication auth) {
-        String automationHeader = request.getHeader(AUTOMATION_HEADER);
-        if (automationHeader != null && "true".equalsIgnoreCase(automationHeader.trim())) {
-            return BillingCategory.AUTOMATION;
-        }
-        RequiresFeature ann =
-                AnnotationUtils.findAnnotation(handler.getMethod(), RequiresFeature.class);
-        if (ann == null) {
-            ann = AnnotationUtils.findAnnotation(handler.getBeanType(), RequiresFeature.class);
-        }
-        if (ann != null) {
-            boolean ai = false;
-            for (FeatureGate gate : ann.value()) {
-                if (gate == FeatureGate.AUTOMATION) {
-                    return BillingCategory.AUTOMATION;
-                }
-                if (gate == FeatureGate.AI_SUPPORT) {
-                    ai = true;
-                }
-            }
-            if (ai) {
-                return BillingCategory.AI;
-            }
-        }
-        // AI document tools (proprietary module, recognised by path). A direct call bills as AI; an
-        // orchestrator-dispatched call already returned AUTOMATION above via the automation header.
-        if (AiToolRoutes.matches(request)) {
-            return BillingCategory.AI;
-        }
-        if (auth instanceof ApiKeyAuthenticationToken) {
-            return BillingCategory.API;
-        }
-        return BillingCategory.BYPASSED;
     }
 
     /**

@@ -16,11 +16,11 @@ export function AppProviders({
   appConfigProviderProps,
 }: AppProvidersProps) {
   return (
-    <AuthProvider>
-      <CoreAppProviders
-        appConfigRetryOptions={appConfigRetryOptions}
-        appConfigProviderProps={appConfigProviderProps}
-      >
+    <CoreAppProviders
+      appConfigRetryOptions={appConfigRetryOptions}
+      appConfigProviderProps={appConfigProviderProps}
+    >
+      <AuthProvider>
         <LicenseProvider>
           <UpdateSeatsProvider>
             <ServerExperienceProvider>
@@ -31,7 +31,7 @@ export function AppProviders({
             </ServerExperienceProvider>
           </UpdateSeatsProvider>
         </LicenseProvider>
-      </CoreAppProviders>
-    </AuthProvider>
+      </AuthProvider>
+    </CoreAppProviders>
   );
 }

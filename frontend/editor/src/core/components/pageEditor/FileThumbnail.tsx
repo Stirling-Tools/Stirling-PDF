@@ -23,7 +23,7 @@ import { FileId } from "@app/types/file";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
-import { downloadFileWithPolicy as downloadFile } from "@app/services/exportWithPolicy";
+import { downloadFile } from "@app/services/downloadService";
 
 interface FileItem {
   id: FileId;
@@ -98,7 +98,6 @@ const FileThumbnail = ({
       void downloadFile({
         data: maybeFile,
         filename: maybeFile.name || file.name || "download",
-        fileId: file.id,
       });
       return;
     }

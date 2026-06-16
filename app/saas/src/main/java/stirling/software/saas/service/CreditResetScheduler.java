@@ -2,8 +2,12 @@ package stirling.software.saas.service;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.temporal.TemporalAdjusters;
 
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Profile;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -43,11 +47,47 @@ public class CreditResetScheduler {
         }
     }
 
-    // NOTE: The startup catch-up reset (formerly @EventListener(ApplicationReadyEvent)) was
-    // removed. It bulk-looped every user on each boot (per-row save), hammering the DB and
-    // stalling boot on large user tables. Per-user cycle resets already happen lazily in
-    // CreditService.getOrCreateUserCredits (isCycleResetDue), and the monthly cron above still
-    // performs the scheduled reset.
+    /** Check for missed resets on application startup */
+    @EventListener(ApplicationReadyEvent.class)
+    public void onApplicationReady() {
+        try {
+            ZoneId configuredZone = ZoneId.of(creditsProperties.getReset().getZone());
+            LocalDateTime now = LocalDateTime.now(configuredZone);
+            LocalDateTime lastScheduledReset = getMostRecentScheduledReset(now, configuredZone);
+
+            log.info(
+                    "Checking for missed cycle credit resets. Last scheduled: {}, Current: {}",
+                    lastScheduledReset,
+                    now);
+
+            creditService.resetCycleCreditsForAllUsers(lastScheduledReset);
+            creditService.resetCycleCreditsForAllTeams(lastScheduledReset);
+            log.info("Catch-up cycle credit reset completed");
+        } catch (Exception e) {
+            log.error("Error during catch-up credit reset", e);
+        }
+    }
+
+    /** Get the most recent scheduled reset time based on configured schedule and zone */
+    private LocalDateTime getMostRecentScheduledReset(LocalDateTime now, ZoneId configuredZone) {
+        ZonedDateTime zonedNow = now.atZone(configuredZone);
+
+        // Find the 1st of the current month at the configured time (default 02:00)
+        ZonedDateTime firstOfMonth =
+                zonedNow.with(TemporalAdjusters.firstDayOfMonth())
+                        .withHour(2)
+                        .withMinute(0)
+                        .withSecond(0)
+                        .withNano(0);
+
+        // If it's the 1st and before the reset hour, or if current time is before the 1st at 2 AM,
+        // go to previous month's 1st
+        if (zonedNow.isBefore(firstOfMonth)) {
+            firstOfMonth = firstOfMonth.minusMonths(1);
+        }
+
+        return firstOfMonth.toLocalDateTime();
+    }
 
     /**
      * Cleanup and maintenance task; runs daily at 3 AM UTC. Performs maintenance tasks like

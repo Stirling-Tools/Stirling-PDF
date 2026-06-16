@@ -7,15 +7,13 @@ export interface CheckboxProps extends Omit<
 > {
   label?: ReactNode;
   description?: ReactNode;
-  /** Optional glyph shown between the box and the label text. */
-  leadingIcon?: ReactNode;
   /** Tri-state checkbox visual (still focusable + submittable, but renders the dash). */
   indeterminate?: boolean;
 }
 
 export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
   function Checkbox(
-    { label, description, leadingIcon, indeterminate, className, id, ...rest },
+    { label, description, indeterminate, className, id, ...rest },
     ref,
   ) {
     return (
@@ -59,11 +57,6 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
           </svg>
           <span className="sui-check__dash" />
         </span>
-        {leadingIcon && (
-          <span className="sui-check__icon" aria-hidden>
-            {leadingIcon}
-          </span>
-        )}
         {(label || description) && (
           <span className="sui-check__text">
             {label && <span className="sui-check__label">{label}</span>}

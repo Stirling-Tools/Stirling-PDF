@@ -608,7 +608,7 @@ dependencies = [
     { name = "opentelemetry-sdk" },
     { name = "pgvector" },
     { name = "posthog" },
-    { name = "psycopg", extra = ["binary", "pool"] },
+    { name = "psycopg", extra = ["binary"] },
     { name = "pydantic" },
     { name = "pydantic-ai" },
     { name = "pydantic-ai-slim", extra = ["voyageai"] },
@@ -635,7 +635,7 @@ requires-dist = [
     { name = "opentelemetry-sdk", specifier = ">=1.39.0" },
     { name = "pgvector", specifier = ">=0.3.6" },
     { name = "posthog", specifier = ">=3.0.0" },
-    { name = "psycopg", extras = ["binary", "pool"], specifier = ">=3.2" },
+    { name = "psycopg", extras = ["binary"], specifier = ">=3.2" },
     { name = "pydantic", specifier = ">=2.0.0" },
     { name = "pydantic-ai", specifier = ">=1.67.0" },
     { name = "pydantic-ai-slim", extras = ["voyageai"], specifier = ">=1.67.0" },
@@ -2167,9 +2167,6 @@ wheels = [
 binary = [
     { name = "psycopg-binary", marker = "implementation_name != 'pypy'" },
 ]
-pool = [
-    { name = "psycopg-pool" },
-]
 
 [[package]]
 name = "psycopg-binary"
@@ -2198,18 +2195,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/c7/2c/a4981bf42cf30ebba0424971d7ce70a222ae9b82594c42fc3f2105d7b525/psycopg_binary-3.3.3-cp314-cp314-musllinux_1_2_riscv64.whl", hash = "sha256:47f06fcbe8542b4d96d7392c476a74ada521c5aebdb41c3c0155f6595fc14c8d", size = 3944542, upload-time = "2026-02-18T16:52:04.266Z" },
     { url = "https://files.pythonhosted.org/packages/60/e9/b7c29b56aa0b85a4e0c4d89db691c1ceef08f46a356369144430c155a2f5/psycopg_binary-3.3.3-cp314-cp314-musllinux_1_2_x86_64.whl", hash = "sha256:e7800e6c6b5dc4b0ca7cc7370f770f53ac83886b76afda0848065a674231e856", size = 4254339, upload-time = "2026-02-18T16:52:10.444Z" },
     { url = "https://files.pythonhosted.org/packages/98/5a/291d89f44d3820fffb7a04ebc8f3ef5dda4f542f44a5daea0c55a84abf45/psycopg_binary-3.3.3-cp314-cp314-win_amd64.whl", hash = "sha256:165f22ab5a9513a3d7425ffb7fcc7955ed8ccaeef6d37e369d6cc1dff1582383", size = 3652796, upload-time = "2026-02-18T16:52:14.02Z" },
-]
-
-[[package]]
-name = "psycopg-pool"
-version = "3.3.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "typing-extensions" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/90/82/7a23d26039827ecd4ebe93905651029ddd307c5182ad59296dfb6f67b528/psycopg_pool-3.3.1.tar.gz", hash = "sha256:b10b10b7a175d5cc1592147dc5b7eec8a9e0834eb3ed2c4a92c858e2f51eb63c", size = 31661, upload-time = "2026-05-01T23:31:59.809Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/37/ed/89c2c620af0e1660354cd8aabf9f5b21f911597ce22acb37c805d6c86bc8/psycopg_pool-3.3.1-py3-none-any.whl", hash = "sha256:2af5b432941c4c9ad5c87b3fa410aec910ec8f7c122855897983a06c45f2e4b5", size = 40023, upload-time = "2026-05-01T23:31:53.136Z" },
 ]
 
 [[package]]

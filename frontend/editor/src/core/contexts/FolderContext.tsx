@@ -38,9 +38,6 @@ import {
 } from "@app/types/folder";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useAuth } from "@app/auth/UseSession";
-import { useLocation } from "react-router-dom";
-import { isAuthRoute } from "@app/constants/routes";
 
 interface FolderContextValue {
   folders: FolderRecord[];
@@ -366,28 +363,10 @@ export function FolderProvider({ children }: FolderProviderProps) {
   // guaranteed-to-403 round-trip per session.
   const { config: appConfig } = useAppConfig();
   const storageBackedByServer = appConfig?.storageEnabled === true;
-  // Skip server pulls on auth routes: FolderProvider is mounted globally and
-  // /login has no session yet, so the pull would be a guaranteed 401.
-  const location = useLocation();
-  const onAuthRoute = isAuthRoute(location.pathname);
-  // Guests (anonymous sessions) have no server-side storage, so a pull is a
-  // guaranteed 401 - skip it once we know the session is anonymous. This is
-  // what keeps the "must sign in" affordance toast-free: with no folder request
-  // fired, there's no error to surface. We gate on `isAnonymous` (which is
-  // false for a real signed-in user) rather than the auth `loading` flag, which
-  // can stay true for an authenticated session and would otherwise block the
-  // pull for legitimate users.
-  const { user, isAnonymous } = useAuth();
   useEffect(() => {
-    // Only pull once we have a confirmed, non-anonymous user. Skipping while
-    // `user` is still null avoids a stray 401 in the brief window before an
-    // anonymous session resolves (at which point `isAnonymous` flips true and
-    // keeps us out). `isAnonymous` alone isn't enough because it defaults false
-    // before the session loads; the auth `loading` flag is unreliable (it can
-    // stay true for a valid signed-in session), so we key off the user object.
-    if (!storageBackedByServer || onAuthRoute || !user || isAnonymous) return;
+    if (!storageBackedByServer) return;
     void pullFromServer();
-  }, [pullFromServer, storageBackedByServer, onAuthRoute, user, isAnonymous]);
+  }, [pullFromServer, storageBackedByServer]);
 
   const foldersById = useMemo(() => {
     const map = new Map<FolderId, FolderRecord>();

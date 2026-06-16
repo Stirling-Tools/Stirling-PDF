@@ -216,15 +216,6 @@ export default defineConfig(async ({ mode }) => {
       }),
       compressStaticCopyPlugin(),
     ],
-    resolve: {
-      // Global alias so @shared resolves for ALL importers — including the
-      // shared components' own `@shared/components/X.css` self-imports, which
-      // live outside the editor tsconfig scope and so aren't rewritten by
-      // vite-tsconfig-paths. Required for the editor to consume SUI components.
-      alias: {
-        "@shared": path.resolve(__dirname, "../shared"),
-      },
-    },
     server: {
       host: true,
       allowedHosts: allowedHosts.length > 0 ? allowedHosts : undefined,
@@ -256,6 +247,11 @@ export default defineConfig(async ({ mode }) => {
         },
       },
     },
+    resolve: {
+      alias: {
+        "@shared": path.resolve(__dirname, "../shared"),
+      },
+    },
     optimizeDeps: {
       exclude: ["@embedpdf/pdfium"],
     },
@@ -266,10 +262,8 @@ export default defineConfig(async ({ mode }) => {
     // SPA fallback returns index.html as text/html and React never mounts.
     // VITE_BUILD_FOR_PREVIEW=1 (set by the CI playwright steps) overrides to
     // an absolute base so deep-route asset paths resolve to /assets/...
-    // Trailing slash required: it becomes `<base href>`, and browsers resolve
-    // relative URLs (manifest.json, favicon) against the base's *directory*.
     base: env.RUN_SUBPATH
-      ? `/${env.RUN_SUBPATH}/`
+      ? `/${env.RUN_SUBPATH}`
       : process.env.VITE_BUILD_FOR_PREVIEW === "1"
         ? "/"
         : "./",

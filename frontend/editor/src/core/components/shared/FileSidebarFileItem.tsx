@@ -4,7 +4,6 @@ import { Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
-import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import type { FileId } from "@app/types/file";
 import { FileDocIcon } from "@app/components/shared/FileDocIcon";
 import { getFileDocVariant } from "@app/components/shared/filePreview/getFileTypeIcon";
@@ -126,17 +125,6 @@ export interface FileItemFolderRef {
   accentColor: string;
 }
 
-/** A policy that has run on this file, used for the activity badges. */
-export interface FileItemPolicyRef {
-  id: string;
-  name: string;
-  /** CSS colour for the badge (matches the policy's accent). */
-  accentColor: string;
-  /** True only just after the policy was applied — drives the one-off glow, so
-   *  it doesn't replay on every reload of an already-enforced file. */
-  recent: boolean;
-}
-
 export interface FileItemProps {
   fileId: FileId;
   name: string;
@@ -155,12 +143,9 @@ export interface FileItemProps {
   folders?: FileItemFolderRef[];
   /** Clicking a membership dot opens that folder. */
   onFolderClick?: (folderId: string) => void;
-  /** Policies that have run on this file — rendered as small shield badges. */
-  policies?: FileItemPolicyRef[];
 }
 
 const MAX_VISIBLE_FOLDER_TAGS = 2;
-const MAX_VISIBLE_POLICY_BADGES = 3;
 
 export function FileItem({
   fileId,
@@ -177,7 +162,6 @@ export function FileItem({
   onDragStart,
   folders = [],
   onFolderClick,
-  policies = [],
 }: FileItemProps) {
   const { t } = useTranslation();
   const ext = getFileExtension(name);
@@ -204,9 +188,6 @@ export function FileItem({
 
   const handleMouseLeave = useCallback(() => setHoverRect(null), []);
 
-  // A just-applied policy (recent run) drives the one-off row glow.
-  const recentPolicy = policies.find((p) => p.recent);
-
   // Reactive: tooltip appears as soon as both hover rect and thumbnail are ready
   const thumbPos =
     hoverRect && resolvedThumbnail
@@ -220,14 +201,7 @@ export function FileItem({
     <>
       <div
         ref={itemRef}
-        className={`file-sidebar-file-item${isSelected ? " selected" : ""}${isActive ? " active" : ""}${isViewedInViewer ? " viewed" : ""}${recentPolicy ? " policy-enforced" : ""}`}
-        style={
-          recentPolicy
-            ? ({
-                "--policy-glow": recentPolicy.accentColor,
-              } as React.CSSProperties)
-            : undefined
-        }
+        className={`file-sidebar-file-item${isSelected ? " selected" : ""}${isActive ? " active" : ""}${isViewedInViewer ? " viewed" : ""}`}
         onClick={() => onClick(fileId)}
         draggable={draggable}
         onDragStart={
@@ -263,25 +237,6 @@ export function FileItem({
               {dateLabel && typeLabel ? " · " : ""}
               {typeLabel}
             </span>
-            {policies.length > 0 && (
-              <span className="file-sidebar-policy-badges" data-no-select>
-                {policies.slice(0, MAX_VISIBLE_POLICY_BADGES).map((policy) => (
-                  <Tooltip
-                    key={policy.id}
-                    label={`${policy.name} policy ran on this file`}
-                    withArrow
-                    position="top"
-                  >
-                    <span
-                      className="file-sidebar-policy-badge"
-                      style={{ color: policy.accentColor }}
-                    >
-                      <ShieldOutlinedIcon sx={{ fontSize: "0.7rem" }} />
-                    </span>
-                  </Tooltip>
-                ))}
-              </span>
-            )}
           </span>
           {folders.length > 0 && (
             <span className="file-sidebar-folder-tags" data-no-select>

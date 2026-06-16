@@ -108,16 +108,6 @@ class PaygEntitiesSmokeTest {
     }
 
     @Test
-    void walletLedgerEntry_billingCategoryRoundTrips() {
-        WalletLedgerEntry entry = new WalletLedgerEntry();
-        // Default (unset) is null — captured by both the legacy debit path and pre-V16 rows.
-        assertThat(entry.getBillingCategory()).isNull();
-
-        entry.setBillingCategory(BillingCategory.AUTOMATION);
-        assertThat(entry.getBillingCategory()).isEqualTo(BillingCategory.AUTOMATION);
-    }
-
-    @Test
     void walletPolicy_carriesSensibleDefaults() {
         WalletPolicy policy = new WalletPolicy();
 
@@ -157,30 +147,5 @@ class PaygEntitiesSmokeTest {
         row.setDiffPct(-80);
 
         assertThat(row.getDiffPct()).isNegative();
-    }
-
-    @Test
-    void paygShadowCharge_billingCategoryAndJobSourceRoundTrip() {
-        PaygShadowCharge row = new PaygShadowCharge();
-        assertThat(row.getBillingCategory()).isNull();
-        assertThat(row.getJobSource()).isNull();
-
-        row.setBillingCategory(BillingCategory.AI);
-        row.setJobSource(JobSource.API);
-
-        assertThat(row.getBillingCategory()).isEqualTo(BillingCategory.AI);
-        assertThat(row.getJobSource()).isEqualTo(JobSource.API);
-    }
-
-    @Test
-    void billingCategory_listingOrderIsStable() {
-        // No downstream relies on ordinal() today, but the comment in the enum claims BYPASSED is
-        // declared first as the default sentinel — guard against an accidental reorder.
-        assertThat(BillingCategory.values())
-                .containsExactly(
-                        BillingCategory.BYPASSED,
-                        BillingCategory.API,
-                        BillingCategory.AI,
-                        BillingCategory.AUTOMATION);
     }
 }

@@ -18,15 +18,6 @@ version: '3'
 tasks:
   dev:
     desc: "Start backend dev server"
-    cmds:
-      - task: dev:proprietary
-        vars:
-          PORT: '{{.PORT}}'
-          AIENGINE_URL: '{{.AIENGINE_URL}}'
-          AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS}}'
-
-  dev:proprietary:
-    desc: "Start backend dev server in proprietary mode"
     ignore_error: true
     vars:
       PORT: '{{.PORT | default "8080"}}'
@@ -59,14 +50,9 @@ tasks:
       PORT: '{{.PORT | default "8080"}}'
       # Override to "" to run the pure `saas` profile against your own SAAS_DB_*.
       PROFILES: '{{.PROFILES | default "dev"}}'
-      AIENGINE_URL: '{{.AIENGINE_URL | default ""}}'
-      AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS | default "120"}}'
     env:
       SERVER_PORT: '{{.PORT}}'
       STIRLING_FLAVOR: saas
-      AIENGINE_URL: '{{.AIENGINE_URL}}'
-      AIENGINE_ENABLED: '{{if .AIENGINE_URL}}true{{else}}false{{end}}'
-      AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS}}'
     cmds:
       - cmd: cmd /c ".\gradlew.bat :stirling-pdf:bootRun {{if .PROFILES}}--args=\"--spring.profiles.include={{.PROFILES}}\"{{end}}"
         platforms: [windows]

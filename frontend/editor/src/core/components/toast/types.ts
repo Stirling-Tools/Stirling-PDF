@@ -25,10 +25,6 @@ export interface ToastOptions {
   id?: string;
   /** If true, show chevron and collapse/expand animation. Defaults to true. */
   expandable?: boolean;
-  /** Optional accent colour (any CSS colour, e.g. a `var(--color-…)`). When set,
-   *  the toast pulses a glow in this colour — used to tie a toast to a policy's
-   *  accent. */
-  glowColor?: string;
 }
 
 export interface ToastInstance extends Omit<

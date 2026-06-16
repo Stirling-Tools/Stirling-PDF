@@ -17,7 +17,7 @@ import AddFileCard from "@app/components/fileEditor/AddFileCard";
 import FilePickerModal from "@app/components/shared/FilePickerModal";
 import { FileId, StirlingFile } from "@app/types/fileContext";
 import { alert } from "@app/components/toast";
-import { downloadFileWithPolicy as downloadFile } from "@app/services/exportWithPolicy";
+import { downloadFile } from "@app/services/downloadService";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 
 interface FileEditorProps {
@@ -256,7 +256,6 @@ const FileEditor = ({
           data: file,
           filename: file.name,
           localPath: record.localFilePath,
-          fileId,
         });
         console.log("[FileEditor] Download complete, checking dirty state:", {
           localFilePath: record.localFilePath,

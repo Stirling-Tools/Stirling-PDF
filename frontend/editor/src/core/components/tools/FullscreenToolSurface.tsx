@@ -25,6 +25,8 @@ interface FullscreenToolSurfaceProps {
   onToggleDescriptions: () => void;
   onExitFullscreenMode: () => void;
   geometry: ToolPanelGeometry | null;
+  /** Optional agents block rendered above the tool list. */
+  agentsSlot?: React.ReactNode;
 }
 
 const FullscreenToolSurface = ({
@@ -39,6 +41,7 @@ const FullscreenToolSurface = ({
   onToggleDescriptions,
   onExitFullscreenMode: _onExitFullscreenMode,
   geometry,
+  agentsSlot,
 }: FullscreenToolSurfaceProps) => {
   const { t } = useTranslation();
   const surfaceRef = useRef<HTMLDivElement>(null);
@@ -89,6 +92,9 @@ const FullscreenToolSurface = ({
             className="tool-panel__fullscreen-scroll"
             offsetScrollbars
           >
+            {agentsSlot && (
+              <div className="tool-panel__fullscreen-agents">{agentsSlot}</div>
+            )}
             <FullscreenToolList
               filteredTools={filteredTools}
               searchQuery={searchQuery}

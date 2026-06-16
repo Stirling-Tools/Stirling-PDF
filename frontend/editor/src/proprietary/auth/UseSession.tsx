@@ -10,7 +10,6 @@ import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { springAuth } from "@app/auth/springAuthClient";
 import { clearPlatformAuthOnLoginInit } from "@app/extensions/authSessionCleanup";
-import { stripBasePath } from "@app/constants/app";
 import type {
   Session,
   User,
@@ -34,8 +33,6 @@ interface AuthContextType {
    *   consumers can fall back to whatever makes sense.
    */
   displayName: string | null;
-  /** Whether the current session is an anonymous (login-disabled) one. */
-  isAnonymous: boolean;
   loading: boolean;
   error: AuthError | null;
   signOut: () => Promise<void>;
@@ -63,7 +60,6 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   user: null,
   displayName: null,
-  isAnonymous: false,
   loading: true,
   error: null,
   signOut: async () => {},
@@ -171,7 +167,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Clear any platform-specific cached auth on login page init.
         if (
           typeof window !== "undefined" &&
-          stripBasePath(window.location.pathname).startsWith("/login")
+          window.location.pathname.startsWith("/login")
         ) {
           await clearPlatformAuthOnLoginInit();
         }
@@ -295,7 +291,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     session,
     user,
     displayName: deriveDisplayName(user, t),
-    isAnonymous: user?.is_anonymous === true,
     loading,
     error,
     signOut,

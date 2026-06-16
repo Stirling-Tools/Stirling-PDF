@@ -63,27 +63,20 @@ export function scoreMatch(queryRaw: string, targetRaw: string): number {
     }
   }
 
-  // Levenshtein fallback is for typos only: allow a small absolute number of
-  // edits against the whole target or any single token. Relative similarity is
-  // not enough here; half the letters of an unrelated word can match (e.g.
-  // "rotate" vs "update" is edit distance 3 of 6).
-  const maxEdits = query.length <= 4 ? 1 : 2;
-  let best = 0;
-  for (const candidate of [target, ...tokens]) {
-    if (Math.abs(query.length - candidate.length) > maxEdits) continue;
-    const distance = levenshtein(query, candidate);
-    if (distance > maxEdits) continue;
-    const maxLen = Math.max(query.length, candidate.length, 1);
-    const similarity = 1 - distance / maxLen; // 0..1
-    const score = Math.floor(similarity * 60); // scale below substring scores
-    if (score > best) best = score;
-  }
-  return best;
+  const distance = levenshtein(
+    query,
+    target.length > 64 ? target.slice(0, 64) : target,
+  );
+  const maxLen = Math.max(query.length, target.length, 1);
+  const similarity = 1 - distance / maxLen; // 0..1
+  return Math.floor(similarity * 60); // scale below substring scores
 }
 
 export function minScoreForQuery(query: string): number {
   const len = normalizeText(query).length;
-  return len <= 3 ? 40 : 30;
+  if (len <= 3) return 40;
+  if (len <= 6) return 30;
+  return 25;
 }
 
 // Decide if a target matches a query based on a threshold

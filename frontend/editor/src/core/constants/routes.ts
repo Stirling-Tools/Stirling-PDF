@@ -14,7 +14,6 @@ export const AUTH_ROUTES = [
   "/invite",
   "/forgot-password",
   "/reset-password",
-  "/oauth/consent",
 ];
 
 /**

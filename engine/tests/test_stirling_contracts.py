@@ -77,20 +77,17 @@ def test_pdf_question_answer_defaults_evidence_list() -> None:
 def test_app_settings_accepts_model_configuration() -> None:
     from pathlib import Path
 
-    from stirling.config import DocumentsBackend
+    from stirling.config import RagBackend
 
     settings = AppSettings(
         smart_model_name="claude-sonnet-4-5-20250929",
         fast_model_name="claude-haiku-4-5-20251001",
         smart_model_max_tokens=8192,
         fast_model_max_tokens=2048,
-        model_max_concurrency=32,
-        documents_backend=DocumentsBackend.SQLITE,
+        rag_backend=RagBackend.SQLITE,
         rag_embedding_model="voyageai:voyage-4",
-        documents_sqlite_path=Path(":memory:"),
-        documents_pgvector_dsn="",
-        documents_pgvector_pool_min_size=1,
-        documents_pgvector_pool_max_size=10,
+        rag_store_path=Path(":memory:"),
+        rag_pgvector_dsn="",
         rag_chunk_size=512,
         rag_chunk_overlap=64,
         rag_default_top_k=5,
@@ -101,7 +98,6 @@ def test_app_settings_accepts_model_configuration() -> None:
         chunked_reasoner_notes_char_budget=250_000,
         max_pages=200,
         max_characters=200_000,
-        require_user_id=False,
         posthog_enabled=False,
         posthog_api_key="",
         posthog_host="https://eu.i.posthog.com",

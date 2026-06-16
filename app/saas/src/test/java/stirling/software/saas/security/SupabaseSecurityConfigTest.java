@@ -9,24 +9,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
 import org.springframework.security.oauth2.jwt.Jwt;
 
-import stirling.software.proprietary.security.model.User;
 import stirling.software.saas.security.SupabaseSecurityConfig.SupabaseTokenValidator;
 
 /** Unit tests for the JWT-claim → Spring authorities mapping. */
 class SupabaseSecurityConfigTest {
-
-    @AfterEach
-    void clearSecurityContext() {
-        SecurityContextHolder.clearContext();
-    }
 
     @Test
     void anonymousJwtGetsLimitedApiUserRole() {
@@ -81,47 +73,6 @@ class SupabaseSecurityConfigTest {
         assertThat(authorityNames(auth))
                 .containsExactly("ROLE_USER")
                 .doesNotContain("ROLE_", "PERM_");
-    }
-
-    @Test
-    void carriesUserPrincipalFromContextBuiltByAuthFilter() {
-        Jwt jwt = jwtWith(false, "alice@example.com", "authenticated", null, List.of());
-        User user = new User();
-        SecurityContextHolder.getContext()
-                .setAuthentication(
-                        new EnhancedJwtAuthenticationToken(
-                                jwt, List.of(), "alice@example.com", jwt.getSubject(), user));
-
-        AbstractAuthenticationToken auth = SupabaseSecurityConfig.toAuthentication(jwt);
-
-        assertThat(auth.getPrincipal()).isSameAs(user);
-    }
-
-    @Test
-    void principalStaysJwtWithoutContextUser() {
-        Jwt jwt = jwtWith(false, "alice@example.com", "authenticated", null, List.of());
-
-        AbstractAuthenticationToken auth = SupabaseSecurityConfig.toAuthentication(jwt);
-
-        assertThat(auth.getPrincipal()).isSameAs(jwt);
-    }
-
-    @Test
-    void ignoresContextUserForDifferentSubject() {
-        Jwt jwt = jwtWith(false, "alice@example.com", "authenticated", null, List.of());
-        Jwt other = jwtWith(false, "bob@example.com", "authenticated", null, List.of());
-        SecurityContextHolder.getContext()
-                .setAuthentication(
-                        new EnhancedJwtAuthenticationToken(
-                                other,
-                                List.of(),
-                                "bob@example.com",
-                                other.getSubject(),
-                                new User()));
-
-        AbstractAuthenticationToken auth = SupabaseSecurityConfig.toAuthentication(jwt);
-
-        assertThat(auth.getPrincipal()).isSameAs(jwt);
     }
 
     private static Jwt jwtWith(

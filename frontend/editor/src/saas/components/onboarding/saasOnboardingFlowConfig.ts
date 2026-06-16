@@ -1,12 +1,12 @@
-import FreeEditorSlide from "@app/components/onboarding/slides/FreeEditorSlide";
-import UsageSnapshotSlide from "@app/components/onboarding/slides/UsageSnapshotSlide";
-import TeamSlide from "@app/components/onboarding/slides/TeamSlide";
+import WelcomeSlide from "@app/components/onboarding/slides/WelcomeSlide";
 import DesktopInstallSlide from "@app/components/onboarding/slides/DesktopInstallSlide";
+import FreeTrialSlide from "@app/components/onboarding/slides/FreeTrialSlide";
 import { SlideConfig } from "@app/types/types";
+import { TrialStatus } from "@app/auth/UseSession";
 
-export type SlideId = "free-editor" | "usage" | "team" | "desktop-install";
+export type SlideId = "welcome" | "free-trial" | "desktop-install";
 
-export type HeroType = "logo" | "bolt" | "team" | "dual-icon";
+export type HeroType = "rocket" | "dual-icon" | "diamond";
 
 export type ButtonAction = "next" | "prev" | "close" | "download-selected";
 
@@ -23,6 +23,7 @@ export interface SlideFactoryParams {
   osUrl: string;
   osOptions?: OSOption[];
   onDownloadUrlChange?: (url: string) => void;
+  trialStatus?: TrialStatus | null;
 }
 
 export interface HeroDefinition {
@@ -47,46 +48,47 @@ export interface SlideDefinition {
   buttons: ButtonDefinition[];
 }
 
-const BACK_BUTTON: ButtonDefinition = {
-  key: "back",
-  type: "icon",
-  icon: "chevron-left",
-  group: "left",
-  action: "prev",
-};
-
-const NEXT_BUTTON: ButtonDefinition = {
-  key: "next",
-  type: "button",
-  label: "onboarding.buttons.next",
-  variant: "primary",
-  group: "right",
-  action: "next",
-};
-
 export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
-  "free-editor": {
-    id: "free-editor",
-    createSlide: () => FreeEditorSlide(),
-    hero: { type: "logo" },
-    buttons: [{ ...NEXT_BUTTON, key: "free-editor-next" }],
-  },
-  usage: {
-    id: "usage",
-    createSlide: () => UsageSnapshotSlide(),
-    hero: { type: "bolt" },
+  welcome: {
+    id: "welcome",
+    createSlide: () => WelcomeSlide(),
+    hero: { type: "rocket" },
     buttons: [
-      { ...BACK_BUTTON, key: "usage-back" },
-      { ...NEXT_BUTTON, key: "usage-next" },
+      {
+        key: "welcome-next",
+        type: "button",
+        label: "onboarding.buttons.next",
+        variant: "primary",
+        group: "right",
+        action: "next",
+      },
     ],
   },
-  team: {
-    id: "team",
-    createSlide: () => TeamSlide(),
-    hero: { type: "team" },
+  "free-trial": {
+    id: "free-trial",
+    createSlide: ({ trialStatus }) => {
+      if (!trialStatus) {
+        throw new Error("Trial status is required for free-trial slide");
+      }
+      return FreeTrialSlide({ trialStatus });
+    },
+    hero: { type: "diamond" },
     buttons: [
-      { ...BACK_BUTTON, key: "team-back" },
-      { ...NEXT_BUTTON, key: "team-next" },
+      {
+        key: "trial-back",
+        type: "icon",
+        icon: "chevron-left",
+        group: "left",
+        action: "prev",
+      },
+      {
+        key: "trial-next",
+        type: "button",
+        label: "onboarding.buttons.next",
+        variant: "primary",
+        group: "right",
+        action: "next",
+      },
     ],
   },
   "desktop-install": {
@@ -95,7 +97,13 @@ export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
       DesktopInstallSlide({ osLabel, osUrl, osOptions, onDownloadUrlChange }),
     hero: { type: "dual-icon" },
     buttons: [
-      { ...BACK_BUTTON, key: "desktop-back" },
+      {
+        key: "desktop-back",
+        type: "icon",
+        icon: "chevron-left",
+        group: "left",
+        action: "prev",
+      },
       {
         key: "desktop-skip",
         type: "button",
@@ -114,4 +122,9 @@ export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
       },
     ],
   },
+};
+
+export const FLOW_SEQUENCES = {
+  saasTrialUser: ["welcome", "free-trial", "desktop-install"] as SlideId[],
+  saasPaidUser: ["welcome", "desktop-install"] as SlideId[],
 };

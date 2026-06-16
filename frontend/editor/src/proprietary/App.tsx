@@ -26,9 +26,8 @@ import "@app/styles/auth-theme.css";
 // Import file ID debugging helpers (development only)
 import "@app/utils/fileIdSafety";
 
-// Minimal providers for public, no-auth pages (mobile scanner, participant
-// signing) - no API calls, no authentication
-function PublicRouteProviders({ children }: { children: React.ReactNode }) {
+// Minimal providers for mobile scanner - no API calls, no authentication
+function MobileScannerProviders({ children }: { children: React.ReactNode }) {
   return (
     <PreferencesProvider>
       <RainbowThemeProvider>{children}</RainbowThemeProvider>
@@ -51,9 +50,9 @@ export default function App() {
         <Route
           path="/mobile-scanner"
           element={
-            <PublicRouteProviders>
+            <MobileScannerProviders>
               <MobileScannerPage />
-            </PublicRouteProviders>
+            </MobileScannerProviders>
           }
         />
 
@@ -61,9 +60,9 @@ export default function App() {
         <Route
           path="/workflow/sign/:token"
           element={
-            <PublicRouteProviders>
+            <MobileScannerProviders>
               <ParticipantViewPage />
-            </PublicRouteProviders>
+            </MobileScannerProviders>
           }
         />
 

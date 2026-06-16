@@ -14,8 +14,6 @@ export interface MetricCardProps {
   deltaDirection?: DeltaDirection;
   /** Visual emphasis. `primary` = darker surface, used for hero metrics. */
   emphasis?: "default" | "primary";
-  /** Density. `sm` tightens padding + value size for narrow rails/strips. */
-  size?: "sm" | "md";
   /** Optional icon shown in the top-right corner. */
   icon?: ReactNode;
   onClick?: () => void;
@@ -43,7 +41,6 @@ export function MetricCard({
   delta,
   deltaDirection,
   emphasis = "default",
-  size = "md",
   icon,
   onClick,
   className,
@@ -53,7 +50,6 @@ export function MetricCard({
 
   const classes = [
     "sui-metric",
-    `sui-metric--${size}`,
     emphasis === "primary" ? "sui-metric--primary" : "",
     interactive ? "sui-metric--interactive" : "",
     className ?? "",

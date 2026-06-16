@@ -214,26 +214,6 @@ def test_pdf_edit_route() -> None:
     assert response.json()["outcome"] == "cannot_do"
 
 
-def test_routes_require_user_id_when_enforced() -> None:
-    """With STIRLING_REQUIRE_USER_ID on, an identity-less request is rejected
-    at the boundary before any handler runs; supplying X-User-Id is accepted.
-    The other route tests in this module run with the flag off and cover the
-    identity-less self-hosted path."""
-    app.dependency_overrides[load_settings] = lambda: build_app_settings().model_copy(update={"require_user_id": True})
-    try:
-        anonymous = client.post("/api/v1/pdf/edit", json={"userMessage": "rotate this"})
-        identified = client.post(
-            "/api/v1/pdf/edit",
-            json={"userMessage": "rotate this"},
-            headers={"X-User-Id": "alice"},
-        )
-    finally:
-        app.dependency_overrides[load_settings] = build_app_settings
-
-    assert anonymous.status_code == 401
-    assert identified.status_code == 200
-
-
 def test_pdf_questions_route() -> None:
     response = client.post(
         "/api/v1/pdf/questions",

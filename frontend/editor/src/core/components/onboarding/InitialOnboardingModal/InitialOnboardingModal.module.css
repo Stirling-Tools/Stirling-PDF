@@ -34,8 +34,8 @@
 }
 
 .standaloneIcon {
-  width: 80px;
-  height: 80px;
+  width: 96px;
+  height: 96px;
   object-fit: contain;
   animation: heroLogoScale 0.25s ease forwards;
 }
@@ -124,6 +124,8 @@
   align-items: flex-start;
   justify-content: center;
   animation: heroLogoEnter 0.25s ease forwards;
+  position: relative;
+  top: 1rem;
 }
 
 .iconWrapper {
@@ -173,8 +175,8 @@
 }
 
 .downloadIcon {
-  width: 80px;
-  height: 80px;
+  width: 96px;
+  height: 96px;
   object-fit: contain;
   animation: heroLogoScale 0.25s ease forwards;
 }
@@ -203,7 +205,6 @@
 }
 
 .bodyCopy {
-  text-align: center;
   opacity: 0;
   transform: translateX(24px);
   animation: bodySlideIn 0.25s ease forwards;

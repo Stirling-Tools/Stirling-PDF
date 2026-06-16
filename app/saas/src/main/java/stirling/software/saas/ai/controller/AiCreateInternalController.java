@@ -26,8 +26,6 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.saas.ai.model.AiCreateSession;
 import stirling.software.saas.ai.model.AiCreateSessionStatus;
 import stirling.software.saas.ai.service.AiCreateSessionService;
-import stirling.software.saas.payg.cap.RequiresFeature;
-import stirling.software.saas.payg.model.FeatureGate;
 
 @RestController
 @Profile("saas")
@@ -35,7 +33,6 @@ import stirling.software.saas.payg.model.FeatureGate;
 @Tag(name = "AI")
 @Hidden
 @RequiredArgsConstructor
-@RequiresFeature(FeatureGate.AI_SUPPORT)
 @Slf4j
 public class AiCreateInternalController {
 

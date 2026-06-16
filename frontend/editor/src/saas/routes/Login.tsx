@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase, signInAnonymously } from "@app/auth/supabase";
 import { useAuth } from "@app/auth/UseSession";
@@ -47,25 +47,6 @@ export default function Login() {
     }
   }, []);
 
-  // Same-origin relative path to return to after login (e.g. the OAuth
-  // consent page). Same sanitization rules as AuthCallback's `next`.
-  const nextPath = useMemo(() => {
-    try {
-      const next = new URL(window.location.href).searchParams.get("next");
-      return next && next.startsWith("/") && !next.startsWith("//")
-        ? next
-        : null;
-    } catch (_) {
-      return null;
-    }
-  }, []);
-
-  useEffect(() => {
-    if (session && !loading && nextPath) {
-      navigate(nextPath, { replace: true });
-    }
-  }, [session, loading, nextPath, navigate]);
-
   const baseUrl = getBaseUrl();
 
   // Set document meta
@@ -84,11 +65,8 @@ export default function Login() {
     ogUrl: `${window.location.origin}${window.location.pathname}`,
   });
 
-  // Show logged in state if authenticated (unless bouncing back to `next`)
+  // Show logged in state if authenticated
   if (session && !loading) {
-    if (nextPath) {
-      return null;
-    }
     return <LoggedInState />;
   }
 
@@ -99,9 +77,7 @@ export default function Login() {
       setIsSigningIn(true);
       setError(null);
 
-      const redirectTo =
-        absoluteWithBasePath("/auth/callback") +
-        (nextPath ? `?next=${encodeURIComponent(nextPath)}` : "");
+      const redirectTo = absoluteWithBasePath("/auth/callback");
       console.log(`[Login] Signing in with ${provider}`);
 
       const oauthOptions: {
@@ -193,9 +169,7 @@ export default function Login() {
       const { error } = await supabase.auth.signInWithOtp({
         email: magicLinkEmail.trim(),
         options: {
-          emailRedirectTo:
-            absoluteWithBasePath("/auth/callback") +
-            (nextPath ? `?next=${encodeURIComponent(nextPath)}` : ""),
+          emailRedirectTo: absoluteWithBasePath("/auth/callback"),
         },
       });
 

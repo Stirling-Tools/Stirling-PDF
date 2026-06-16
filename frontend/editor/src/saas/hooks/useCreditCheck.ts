@@ -1,26 +1,63 @@
 import { useCallback } from "react";
+import { useTranslation } from "react-i18next";
+import { useCredits } from "@app/hooks/useCredits";
+import { getToolCreditCost } from "@app/utils/creditCosts";
+import { openPlanSettings } from "@app/utils/appSettings";
+import type { ToolId } from "@app/types/toolId";
 
-/**
- * Pre-flight credit-balance check, formerly run before every billable tool call.
- *
- * Replaced by PAYG's reactive 402 FEATURE_DEGRADED handler (see paygErrorInterceptor.ts):
- * we no longer try to predict whether the user has "enough credits" before the request —
- * we make the request, and if the wallet hits the free-tier ceiling the BE returns 402
- * with a discriminating code that the global axios interceptor turns into a toast +
- * prompt-to-add-card. This is more accurate (no race between FE balance cache and the
- * BE's atomic debit) and avoids the round-trip latency of a pre-flight call.
- *
- * The hook signature is preserved as a no-op so {@code useToolOperation} (the sole
- * caller) compiles without modification. {@code checkCredits} always resolves to null
- * — the BE's 402 handler is now the only gate.
- */
-export function useCreditCheck(
-  _operationType?: string,
-  _endpoint?: string,
-): { checkCredits: (_runtimeEndpoint?: string) => Promise<string | null> } {
+export function useCreditCheck(operationType?: string, _endpoint?: string) {
+  const { hasSufficientCredits, isPro, creditBalance, refreshCredits } =
+    useCredits();
+  const { t } = useTranslation();
+
   const checkCredits = useCallback(
-    async (_runtimeEndpoint?: string): Promise<string | null> => null,
-    [],
+    async (_runtimeEndpoint?: string): Promise<string | null> => {
+      const requiredCredits = getToolCreditCost(operationType as ToolId);
+      const creditCheck = hasSufficientCredits(requiredCredits);
+
+      if (creditBalance === null) {
+        try {
+          await refreshCredits();
+        } catch (_e) {
+          void _e;
+        }
+        return t("loadingCredits", "Checking credits...");
+      }
+
+      if (isPro === null) {
+        return t("loadingProStatus", "Checking subscription status...");
+      }
+
+      if (!isPro && !creditCheck.hasSufficientCredits) {
+        const shortfall = creditCheck.shortfall || 0;
+        const error = t(
+          "insufficientCredits",
+          "Insufficient credits. Required: {{requiredCredits}}, Available: {{currentBalance}}, Shortfall: {{shortfall}}",
+          {
+            requiredCredits,
+            currentBalance: creditCheck.currentBalance,
+            shortfall,
+          },
+        );
+        const notice = t(
+          "noticeTopUpOrPlan",
+          "Not enough credits, please top up or upgrade to a plan",
+        );
+        openPlanSettings(notice);
+        return error;
+      }
+
+      return null;
+    },
+    [
+      hasSufficientCredits,
+      isPro,
+      creditBalance,
+      refreshCredits,
+      operationType,
+      t,
+    ],
   );
+
   return { checkCredits };
 }

@@ -368,15 +368,6 @@ public class ApplicationProperties {
             private String resourceId = "";
 
             /**
-             * Additional JWT audiences accepted at the MCP endpoint, on top of {@link #resourceId}.
-             * Empty (default) keeps strict RFC 8707 binding. Some IdPs cannot mint
-             * resource-specific audiences - e.g. Supabase's OAuth server always issues {@code
-             * aud=authenticated} - so operators list the audience their IdP actually emits here
-             * (env: {@code MCP_AUTH_ACCEPTEDAUDIENCES}, comma-separated).
-             */
-            private List<String> acceptedAudiences = new ArrayList<>();
-
-            /**
              * JWT claim whose value is matched against a provisioned Stirling username. Defaults to
              * {@code sub}; set to {@code email} or {@code preferred_username} to match how your IdP
              * maps users to Stirling accounts.
@@ -1005,10 +996,6 @@ public class ApplicationProperties {
         @Data
         public static class Signing {
             private boolean enabled = false;
-
-            // Signing user-picker scope: 'org' (default) = whole instance, anything else =
-            // caller's team only (fail-closed). The saas profile pins 'team'.
-            private String userListScope = "org";
         }
     }
 

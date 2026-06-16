@@ -25,7 +25,6 @@ import {
 import { useFileActions } from "@app/contexts/file/fileHooks";
 import { useFolders } from "@app/contexts/FolderContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useAuth } from "@app/auth/UseSession";
 
 /** View-toggle modes; tuple keeps the union and iterator in sync. */
 export const FILES_PAGE_VIEW_MODES = ["grid", "list"] as const;
@@ -141,7 +140,6 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   const folders = useFolders();
   const { actions: fileActions } = useFileActions();
   const { config: appConfig } = useAppConfig();
-  const { isAnonymous } = useAuth();
 
   const [allFiles, setAllFiles] = useState<StirlingFileStub[]>([]);
   const [loading, setLoading] = useState(true);
@@ -168,7 +166,6 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
       const merged = await reconcileServerFiles(localLeaf, {
         storageEnabled,
         shareLinksEnabled,
-        isAnonymous,
       });
       // Drop the merged result if a newer refresh has already started -
       // otherwise its stale snapshot will clobber the newer one's state.
@@ -184,7 +181,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
       // Only the latest refresh should clear the loading state.
       if (gen === refreshGenRef.current) setLoading(false);
     }
-  }, [setFoldersError, storageEnabled, shareLinksEnabled, isAnonymous]);
+  }, [setFoldersError, storageEnabled, shareLinksEnabled]);
 
   useEffect(() => {
     void refresh();

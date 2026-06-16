@@ -10,9 +10,15 @@ import {
   Badge,
   ActionIcon,
   Menu,
+  List,
+  ThemeIcon,
+  Modal,
+  CloseButton,
+  Anchor,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useSaaSTeam } from "@app/contexts/SaaSTeamContext";
+import { useSaaSBilling } from "@app/contexts/SaasBillingContext";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import apiClient from "@app/services/apiClient";
@@ -37,10 +43,15 @@ export function SaaSTeamsSection() {
     refreshTeams,
   } = useSaaSTeam();
 
+  // Check Pro status via billing context
+  const { tier } = useSaaSBilling();
+  const isPro = tier !== "free";
+
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviting, setInviting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [featuresModalOpened, setFeaturesModalOpened] = useState(false);
 
   // Team rename state
   const [isEditingName, setIsEditingName] = useState(false);
@@ -59,6 +70,12 @@ export function SaaSTeamsSection() {
 
     return () => clearInterval(interval);
   }, []); // Only run on mount/unmount
+
+  const navigateToPlan = () => {
+    window.dispatchEvent(
+      new CustomEvent("appConfig:navigate", { detail: { key: "planBilling" } }),
+    );
+  };
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -304,6 +321,156 @@ export function SaaSTeamsSection() {
         </Group>
       </div>
 
+      {/* Upgrade Banner for Free Users */}
+      {isPersonalTeam && !isPro && (
+        <Alert
+          color="blue"
+          icon={<LocalIcon icon="info" width={16} height={16} />}
+        >
+          <Group justify="space-between" align="center">
+            <div>
+              <Text fw={500} size="sm">
+                {t(
+                  "team.upgrade.title",
+                  "Upgrade to Pro to unlock team features",
+                )}
+              </Text>
+              <Text size="xs" c="dimmed" mt={2}>
+                {t(
+                  "team.upgrade.description",
+                  "Invite members, share credits, and more.",
+                )}{" "}
+                <Anchor
+                  size="xs"
+                  onClick={() => setFeaturesModalOpened(true)}
+                  style={{ cursor: "pointer" }}
+                >
+                  {t("common.learnMore", "Learn more")}
+                </Anchor>
+              </Text>
+            </div>
+            <Button size="sm" variant="light" onClick={navigateToPlan}>
+              {t("team.upgrade.button", "Upgrade to Pro")}
+            </Button>
+          </Group>
+        </Alert>
+      )}
+
+      {/* Team Features Modal */}
+      <Modal
+        opened={featuresModalOpened}
+        onClose={() => setFeaturesModalOpened(false)}
+        size="md"
+        centered
+        padding="xl"
+        withCloseButton={false}
+        zIndex={Z_INDEX_OVER_CONFIG_MODAL}
+      >
+        <div style={{ position: "relative" }}>
+          <CloseButton
+            onClick={() => setFeaturesModalOpened(false)}
+            size="lg"
+            style={{
+              position: "absolute",
+              top: -8,
+              right: -8,
+              zIndex: 1,
+            }}
+          />
+          <Stack gap="lg" pt="md">
+            {/* Header */}
+            <Stack gap="md" align="center">
+              <Badge size="lg" color="violet" variant="filled">
+                {t("team.features.badge", "PRO FEATURE")}
+              </Badge>
+              <Text size="xl" fw={700} ta="center">
+                {t("team.features.title", "Team Collaboration")}
+              </Text>
+              <Text size="sm" c="dimmed" ta="center">
+                {t(
+                  "team.features.subtitle",
+                  "Upgrade to Pro and unlock powerful team features",
+                )}
+              </Text>
+            </Stack>
+
+            {/* Features List */}
+            <List
+              spacing="md"
+              size="sm"
+              icon={
+                <ThemeIcon color="violet" size={24} radius="xl" variant="light">
+                  <LocalIcon icon="check" width={14} height={14} />
+                </ThemeIcon>
+              }
+            >
+              <List.Item>
+                <Text fw={500}>
+                  {t("team.features.invite.title", "Invite team members")}
+                </Text>
+                <Text size="xs" c="dimmed">
+                  {t(
+                    "team.features.invite.description",
+                    "Add unlimited users with additional seat purchases",
+                  )}
+                </Text>
+              </List.Item>
+              <List.Item>
+                <Text fw={500}>
+                  {t(
+                    "team.features.credits.title",
+                    "Share credits across your team",
+                  )}
+                </Text>
+                <Text size="xs" c="dimmed">
+                  {t(
+                    "team.features.credits.description",
+                    "Pool resources for collaborative work",
+                  )}
+                </Text>
+              </List.Item>
+              <List.Item>
+                <Text fw={500}>
+                  {t(
+                    "team.features.dashboard.title",
+                    "Team management dashboard",
+                  )}
+                </Text>
+                <Text size="xs" c="dimmed">
+                  {t(
+                    "team.features.dashboard.description",
+                    "Control permissions, monitor usage, and manage members",
+                  )}
+                </Text>
+              </List.Item>
+              <List.Item>
+                <Text fw={500}>
+                  {t("team.features.billing.title", "Centralized billing")}
+                </Text>
+                <Text size="xs" c="dimmed">
+                  {t(
+                    "team.features.billing.description",
+                    "One invoice for all team seats and usage",
+                  )}
+                </Text>
+              </List.Item>
+            </List>
+
+            {/* CTA Button */}
+            <Button
+              size="md"
+              fullWidth
+              onClick={() => {
+                setFeaturesModalOpened(false);
+                navigateToPlan();
+              }}
+            >
+              {t("team.features.viewPlans", "View Pro Plans")}
+            </Button>
+          </Stack>
+        </div>
+      </Modal>
+
       {/* Error/Success Messages */}
       {error && (
         <Alert color="red" onClose={() => setError(null)} withCloseButton>
@@ -317,8 +484,8 @@ export function SaaSTeamsSection() {
         </Alert>
       )}
 
-      {/* Invite Members */}
-      {isTeamLeader && (
+      {/* Invite Members (Pro Users) */}
+      {isTeamLeader && isPro && (
         <div>
           <Text fw={600} size="md" mb="sm">
             {t("team.invite.title", "Invite Team Member")}

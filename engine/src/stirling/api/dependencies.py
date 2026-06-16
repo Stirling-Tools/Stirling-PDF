@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from typing import Annotated
-
-from fastapi import Depends, HTTPException, Request, status
+from fastapi import HTTPException, Request, status
 
 from stirling.agents import (
     ExecutionPlanningAgent,
@@ -13,7 +11,6 @@ from stirling.agents import (
 )
 from stirling.agents.ledger import MathAuditorAgent
 from stirling.agents.pdf_comment import PdfCommentAgent
-from stirling.config import AppSettings, load_settings
 from stirling.documents import DocumentService
 from stirling.models import UserId
 from stirling.services import AppRuntime, current_user_id
@@ -70,16 +67,3 @@ def require_user_id() -> UserId:
             detail="X-User-Id header is required",
         )
     return user_id
-
-
-def enforce_required_user_id(
-    settings: Annotated[AppSettings, Depends(load_settings)],
-) -> None:
-    """Router-level boundary gate, applied uniformly to every router."""
-    if not settings.require_user_id:
-        return
-    if current_user_id.get() is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="X-User-Id header is required",
-        )

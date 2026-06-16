@@ -3,6 +3,11 @@ import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import { useWorkbenchBar } from "@app/contexts/WorkbenchBarContext";
+import {
+  AgentsFullscreenSection,
+  useAgentChatOpen,
+  useAgentsEnabled,
+} from "@app/components/agents/AgentsPanel";
 import FullscreenToolSurface from "@app/components/tools/FullscreenToolSurface";
 import { ToolId } from "@app/types/toolId";
 import type { ToolPanelGeometry } from "@app/hooks/tools/useToolPanelGeometry";
@@ -11,11 +16,13 @@ import type { ToolPanelGeometry } from "@app/hooks/tools/useToolPanelGeometry";
 export function useIsFullscreenExpanded(): boolean {
   const { toolPanelMode, leftPanelView, readerMode } = useToolWorkflow();
   const isMobile = useIsMobile();
+  const agentChatOpen = useAgentChatOpen();
   return (
     toolPanelMode === "fullscreen" &&
     leftPanelView === "toolPicker" &&
     !isMobile &&
-    !readerMode
+    !readerMode &&
+    !agentChatOpen
   );
 }
 
@@ -43,6 +50,8 @@ export function FullscreenToolPanel({ geometry }: FullscreenToolPanelProps) {
     handleToolSelect,
   } = useToolWorkflow();
   const isMobile = useIsMobile();
+  const agentsEnabled = useAgentsEnabled();
+  const agentChatOpen = useAgentChatOpen();
   const { setAllButtonsDisabled } = useWorkbenchBar();
   const { preferences, updatePreference } = usePreferences();
 
@@ -50,7 +59,8 @@ export function FullscreenToolPanel({ geometry }: FullscreenToolPanelProps) {
     toolPanelMode === "fullscreen" &&
     leftPanelView === "toolPicker" &&
     !isMobile &&
-    !readerMode;
+    !readerMode &&
+    !agentChatOpen;
 
   useEffect(() => {
     setAllButtonsDisabled(fullscreenExpanded);
@@ -84,6 +94,9 @@ export function FullscreenToolPanel({ geometry }: FullscreenToolPanelProps) {
       }
       onExitFullscreenMode={() => setToolPanelMode("sidebar")}
       geometry={geometry}
+      agentsSlot={
+        agentsEnabled && !searchQuery ? <AgentsFullscreenSection /> : null
+      }
     />
   );
 }

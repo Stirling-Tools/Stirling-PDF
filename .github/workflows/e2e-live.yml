@@ -188,30 +188,10 @@ jobs:
           name: backend-log-live-${{ github.run_id }}
           path: .test-state/playwright/backend.log
           retention-days: 7
-      - name: List Playwright output locations (debug)
-        if: always()
-        run: |
-          echo "::group::Playwright output dirs"
-          # Playwright anchors its default outputDir + HTML report to the
-          # nearest package.json, which is frontend/ (frontend/editor has
-          # none), so artifacts land under frontend/, not frontend/editor/.
-          ls -la frontend/playwright-report 2>/dev/null \
-            || echo "no playwright-report at frontend/"
-          ls -la frontend/test-results 2>/dev/null \
-            || echo "no test-results at frontend/"
-          find . -name node_modules -prune -o -name 'trace.zip' -print 2>/dev/null || true
-          echo "::endgroup::"
-      - name: Upload Playwright report + traces
+      - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: playwright-report-live-${{ github.run_id }}
-          # test-results/ holds the per-test trace.zip (with browser console
-          # logs) + screenshots/video; playwright-report/ is the HTML report.
-          # Both live under frontend/ (Playwright anchors them to the nearest
-          # package.json, which is frontend/; frontend/editor has none).
-          path: |
-            frontend/playwright-report/
-            frontend/test-results/
+          path: frontend/editor/playwright-report/
           retention-days: 7
-          if-no-files-found: warn

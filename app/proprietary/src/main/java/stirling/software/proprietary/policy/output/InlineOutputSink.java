@@ -17,8 +17,9 @@ import stirling.software.common.service.FileStorage;
 import stirling.software.proprietary.policy.model.OutputSpec;
 
 /**
- * Default sink: stores each output in {@code FileStorage} so it is downloadable via {@code GET
- * /api/v1/general/files/{fileId}}. Used for manual runs whose results return to the caller.
+ * Default output sink: stores each output file in {@code FileStorage} so it is downloadable via
+ * {@code GET /api/v1/general/files/{fileId}}. This is the destination for manually-triggered runs
+ * whose results are returned to the caller.
  */
 @Service
 @RequiredArgsConstructor

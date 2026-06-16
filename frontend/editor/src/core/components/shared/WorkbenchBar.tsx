@@ -29,7 +29,7 @@ import { ViewerContext, useViewer } from "@app/contexts/ViewerContext";
 import { WorkbenchType, isBaseWorkbench } from "@app/types/workbench";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import LocalIcon from "@app/components/shared/LocalIcon";
-import { downloadFileWithPolicy as downloadFile } from "@app/services/exportWithPolicy";
+import { downloadFile } from "@app/services/downloadService";
 import {
   WorkbenchBarButtonConfig,
   WorkbenchBarRenderContext,
@@ -150,7 +150,6 @@ export default function WorkbenchBar({
             data: new Blob([buffer], { type: "application/pdf" }),
             filename: fileToExport.name,
             localPath: forceNewFile ? undefined : stub?.localFilePath,
-            fileId: stub?.id,
           });
           if (!forceNewFile && !result.cancelled && stub && result.savedPath) {
             fileActions.updateStirlingFileStub(stub.id, {
@@ -180,7 +179,6 @@ export default function WorkbenchBar({
             data: file,
             filename: file.name,
             localPath: forceNewFile ? undefined : stub?.localFilePath,
-            fileId: stub?.id,
           });
           if (result.cancelled) continue;
           if (!forceNewFile && stub && result.savedPath) {

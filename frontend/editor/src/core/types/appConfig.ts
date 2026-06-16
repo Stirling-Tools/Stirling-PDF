@@ -20,7 +20,6 @@ export interface AppConfig {
   enableDesktopInstallSlide?: boolean;
   premiumEnabled?: boolean;
   premiumKey?: string;
-  paygEnabled?: boolean;
   termsAndConditions?: string;
   privacyPolicy?: string;
   cookiePolicy?: string;

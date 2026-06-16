@@ -26,11 +26,6 @@ export const Z_INDEX_DRAG_BADGE = 1001;
 // Modal that appears on top of config modal (e.g., restart confirmation, update modal)
 export const Z_INDEX_OVER_CONFIG_MODAL = 2000;
 
-// Cookie-consent banner — above the chat FAB (1050), below all modals and onboarding; reaches CSS via --z-index-cookie-consent
-export const Z_INDEX_COOKIE_CONSENT_BANNER = 1060;
-// Cookie-consent preferences dialog — above the config modal it opens from; reaches CSS via --z-index-cookie-preferences
-export const Z_INDEX_COOKIE_PREFERENCES_MODAL = 1450;
-
 // Sign-in modal — must appear above all app UI including config and analytics modals
 export const Z_INDEX_SIGN_IN_MODAL = 9000;
 

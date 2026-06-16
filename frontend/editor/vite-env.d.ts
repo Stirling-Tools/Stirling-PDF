@@ -14,6 +14,7 @@ interface ImportMetaEnv {
 
   // SaaS only (.env.saas)
   readonly VITE_USERBACK_TOKEN: string;
+  readonly VITE_RUN_SUBPATH: string;
   readonly VITE_DEV_BYPASS_AUTH: string;
 
   // Desktop only (.env.desktop)

@@ -87,11 +87,7 @@ public class User implements UserDetails, Serializable {
     private String email;
 
     // SaaS-only: Supabase user UUID. Null in OSS / proprietary deployments.
-    // Column is `supabase_auth_id` (canonical name from the initial Supabase remote
-    // schema migration). An earlier Flyway V2 (PR #6384) accidentally introduced a
-    // parallel `supabase_id` column that was used by Java; V17 backfilled and dropped
-    // it. Field name is kept as `supabaseId` to avoid a wide refactor of callers.
-    @Column(name = "supabase_auth_id", unique = true)
+    @Column(name = "supabase_id", unique = true)
     private UUID supabaseId;
 
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, mappedBy = "user")

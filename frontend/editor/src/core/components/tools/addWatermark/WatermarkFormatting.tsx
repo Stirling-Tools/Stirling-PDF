@@ -10,15 +10,12 @@ interface WatermarkFormattingProps {
     value: AddWatermarkParameters[K],
   ) => void;
   disabled?: boolean;
-  /** When false, hide the "Flatten PDF pages to images" option (e.g. in policies). */
-  showFlatten?: boolean;
 }
 
 const WatermarkFormatting = ({
   parameters,
   onParameterChange,
   disabled = false,
-  showFlatten = true,
 }: WatermarkFormattingProps) => {
   const { t } = useTranslation();
 
@@ -98,19 +95,17 @@ const WatermarkFormatting = ({
       </Group>
 
       {/* Advanced Options */}
-      {showFlatten && (
-        <Checkbox
-          label={t(
-            "watermark.settings.convertToImage",
-            "Flatten PDF pages to images",
-          )}
-          checked={parameters.convertPDFToImage}
-          onChange={(event) =>
-            onParameterChange("convertPDFToImage", event.currentTarget.checked)
-          }
-          disabled={disabled}
-        />
-      )}
+      <Checkbox
+        label={t(
+          "watermark.settings.convertToImage",
+          "Flatten PDF pages to images",
+        )}
+        checked={parameters.convertPDFToImage}
+        onChange={(event) =>
+          onParameterChange("convertPDFToImage", event.currentTarget.checked)
+        }
+        disabled={disabled}
+      />
     </Stack>
   );
 };

@@ -3,11 +3,16 @@ package stirling.software.proprietary.policy.model;
 import java.util.List;
 
 /**
- * A stored automation: ordered tool steps, input sources, and an output destination.
+ * A stored automation: an ordered chain of tool steps, the sources its input files come from, and
+ * an output destination for the results.
  *
- * <p>Always runnable on demand. An optional {@link TriggerConfig} fires it automatically; a {@code
- * null} trigger means manual-only. Trigger decides when, {@link InputSpec sources} decide where
- * files come from; a run pulls from every source.
+ * <p>Every policy can always be run on demand (manually). It may additionally carry one automatic
+ * {@link TriggerConfig} - usually a schedule - that fires it without a person asking; a {@code
+ * null} trigger means manual-only. A trigger decides <em>when</em> a run happens and a {@link
+ * InputSpec source} decides <em>where</em> its files come from; the two are independent, and a run
+ * pulls from every configured source.
+ *
+ * <p>This is the feature's central configuration object - what a user defines and the engine runs.
  */
 public record Policy(
         String id,
@@ -17,29 +22,12 @@ public record Policy(
         TriggerConfig trigger,
         List<InputSpec> sources,
         List<PipelineStep> steps,
-        OutputSpec output,
-        Long teamId) {
+        OutputSpec output) {
 
     public Policy {
         sources = sources == null ? List.of() : List.copyOf(sources);
         steps = steps == null ? List.of() : steps;
         output = output == null ? OutputSpec.inline() : output;
-    }
-
-    /**
-     * Without an explicit owning team. Kept for the engine and tests; the controller always stamps
-     * a {@code teamId} on stored policies so they stay scoped to the creating user's team.
-     */
-    public Policy(
-            String id,
-            String name,
-            String owner,
-            boolean enabled,
-            TriggerConfig trigger,
-            List<InputSpec> sources,
-            List<PipelineStep> steps,
-            OutputSpec output) {
-        this(id, name, owner, enabled, trigger, sources, steps, output, null);
     }
 
     /** A policy with no configured sources (a generator, or files supplied directly to a run). */
@@ -51,10 +39,10 @@ public record Policy(
             TriggerConfig trigger,
             List<PipelineStep> steps,
             OutputSpec output) {
-        this(id, name, owner, enabled, trigger, List.of(), steps, output, null);
+        this(id, name, owner, enabled, trigger, List.of(), steps, output);
     }
 
-    /** This policy's pipeline as the engine sees it. */
+    /** The engine-level, trigger-agnostic view of this policy's pipeline. */
     public PipelineDefinition toDefinition() {
         return new PipelineDefinition(name, steps, output);
     }

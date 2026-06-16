@@ -24,7 +24,6 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
-import org.springframework.security.oauth2.server.resource.OAuth2ProtectedResourceMetadata;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
@@ -158,11 +157,7 @@ public class McpSecurityConfig {
             throws Exception {
         String metadataPath = "/.well-known/oauth-protected-resource";
         applyCors(http);
-        // RFC 9728 section 3.1: clients derive the metadata URL by inserting the well-known
-        // segment before the resource path, so /mcp is discovered at {metadataPath}/mcp. Claim
-        // the subpaths too; otherwise they fall through to another filter chain whose default
-        // Spring Security metadata filter serves a document without authorization_servers.
-        http.securityMatcher(BASE_PATH, BASE_PATH + "/**", metadataPath, metadataPath + "/**")
+        http.securityMatcher(BASE_PATH, BASE_PATH + "/**", metadataPath)
                 // CSRF intentionally disabled: /mcp is a stateless JSON-RPC resource server
                 // authenticated by OAuth2 Bearer JWTs (Authorization header). No cookies, no
                 // session, no form submissions; CSRF requires browser-attached ambient credentials
@@ -173,8 +168,7 @@ public class McpSecurityConfig {
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(
                         a ->
-                                a.requestMatchers(
-                                                HttpMethod.GET, metadataPath, metadataPath + "/**")
+                                a.requestMatchers(HttpMethod.GET, metadataPath)
                                         .permitAll()
                                         .anyRequest()
                                         .authenticated())
@@ -193,43 +187,34 @@ public class McpSecurityConfig {
                 .oauth2ResourceServer(
                         oauth2 ->
                                 oauth2.authenticationEntryPoint(
-                                                // Advertise the path-inserted form; RFC 9728 makes
-                                                // it the canonical location for a resource with a
-                                                // path component.
-                                                new McpAuthenticationEntryPoint(
-                                                        metadataPath + BASE_PATH))
+                                                new McpAuthenticationEntryPoint(metadataPath))
                                         // RFC 9728 protected-resource metadata for OAuth discovery.
                                         .protectedResourceMetadata(
                                                 prm ->
                                                         prm.protectedResourceMetadataCustomizer(
-                                                                builder ->
-                                                                        buildResourceMetadata(
-                                                                                builder, auth)))
+                                                                builder -> {
+                                                                    if (!auth.getResourceId()
+                                                                            .isBlank()) {
+                                                                        builder.resource(
+                                                                                auth
+                                                                                        .getResourceId());
+                                                                    }
+                                                                    if (!auth.getIssuerUri()
+                                                                            .isBlank()) {
+                                                                        builder.authorizationServer(
+                                                                                auth
+                                                                                        .getIssuerUri());
+                                                                    }
+                                                                    builder.scope("mcp.tools.read");
+                                                                    builder.scope(
+                                                                            "mcp.tools.write");
+                                                                }))
                                         .jwt(
                                                 jwt ->
                                                         jwt.decoder(mcpJwtDecoder)
                                                                 .jwtAuthenticationConverter(
                                                                         mcpJwtAuthenticationConverter())));
         return http.build();
-    }
-
-    /** Populate the RFC 9728 protected-resource metadata document from the configured auth. */
-    private void buildResourceMetadata(
-            OAuth2ProtectedResourceMetadata.Builder builder, ApplicationProperties.Mcp.Auth auth) {
-        if (!auth.getResourceId().isBlank()) {
-            builder.resource(auth.getResourceId());
-        }
-        if (!auth.getIssuerUri().isBlank()) {
-            builder.authorizationServer(auth.getIssuerUri());
-        }
-        // Only advertise the granular tool scopes when we actually enforce them. When scopes are
-        // disabled (e.g. the IdP only mints coarse tokens, like Supabase), advertising scopes the
-        // authorization server can't issue makes spec-compliant clients request them and get
-        // rejected with invalid_request.
-        if (applicationProperties.getMcp().isScopesEnabled()) {
-            builder.scope("mcp.tools.read");
-            builder.scope("mcp.tools.write");
-        }
     }
 
     @Bean
@@ -251,9 +236,7 @@ public class McpSecurityConfig {
                 JwtValidators.createDefaultWithIssuer(auth.getIssuerUri());
         OAuth2TokenValidator<Jwt> combined =
                 new DelegatingOAuth2TokenValidator<>(
-                        defaultValidators,
-                        new McpAudienceValidator(
-                                auth.getResourceId(), auth.getAcceptedAudiences()));
+                        defaultValidators, new McpAudienceValidator(auth.getResourceId()));
         decoder.setJwtValidator(combined);
         return decoder;
     }

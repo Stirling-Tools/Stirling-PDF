@@ -39,10 +39,8 @@ import stirling.software.saas.util.CreditHeaderUtils;
  * Scoped to controllers annotated with {@link AutoJobPostMapping} so it doesn't hijack the global
  * exception flow.
  */
-// Legacy credit-billing error advice. PAYG handles its own error semantics via
-// PaygChargeInterceptor — disabled by default in saas, activate legacy-credits profile if needed.
 @RestControllerAdvice(annotations = AutoJobPostMapping.class)
-@Profile("saas & legacy-credits")
+@Profile("saas")
 @Slf4j
 @Order(1)
 public class CreditErrorAdvice {

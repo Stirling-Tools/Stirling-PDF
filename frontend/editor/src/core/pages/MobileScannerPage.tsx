@@ -21,10 +21,6 @@ import UploadRoundedIcon from "@mui/icons-material/UploadRounded";
 import AddPhotoAlternateRoundedIcon from "@mui/icons-material/AddPhotoAlternateRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import { loadJscanify } from "@app/utils/loadJscanify";
-import apiClient from "@app/services/apiClient";
-
-// Use the configured API base (e.g. api.stirling.com), not the page origin.
-const API_BASE = (apiClient.defaults.baseURL ?? "").replace(/\/+$/, "");
 
 /**
  * MobileScannerPage
@@ -87,7 +83,7 @@ export default function MobileScannerPage() {
 
       try {
         const response = await fetch(
-          `${API_BASE}/api/v1/mobile-scanner/validate-session/${sessionId}`,
+          `/api/v1/mobile-scanner/validate-session/${sessionId}`,
         );
 
         if (response.ok) {
@@ -845,7 +841,7 @@ export default function MobileScannerPage() {
       });
 
       const uploadResponse = await fetch(
-        `${API_BASE}/api/v1/mobile-scanner/upload/${sessionId}`,
+        `/api/v1/mobile-scanner/upload/${sessionId}`,
         {
           method: "POST",
           body: formData,

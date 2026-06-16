@@ -20,7 +20,6 @@ import {
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useAuth } from "@app/auth/UseSession";
-import { useProfilePictureUrl } from "@app/hooks/useProfilePictureUrl";
 import {
   useIndexedDB,
   useIndexedDBRevision,
@@ -42,7 +41,6 @@ import type { FileId } from "@app/types/file";
 import { FileItem } from "@app/components/shared/FileSidebarFileItem";
 import { useFolderMembership } from "@app/hooks/useFolderMembership";
 import { useAllWatchedFolders } from "@app/hooks/useAllWatchedFolders";
-import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
 import {
   setWatchedFolderDraggedFileIds,
   clearWatchedFolderDraggedFileIds,
@@ -132,7 +130,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     // the workbench). The same map drives the per-file membership dots.
     const folderMembership = useFolderMembership();
     const allFolders = useAllWatchedFolders();
-    const policyFileBadges = usePolicyFileBadges();
     const folderById = useMemo(
       () => new Map(allFolders.map((f) => [f.id, f])),
       [allFolders],
@@ -186,11 +183,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const [accountUsername, setAccountUsername] = useState<string | null>(null);
     const displayName =
       authDisplayName ?? accountUsername ?? t("auth.displayName.user", "User");
-
-    const profilePictureUrl = useProfilePictureUrl();
-    const [pictureFailed, setPictureFailed] = useState(false);
-    useEffect(() => setPictureFailed(false), [profilePictureUrl]);
-    const showProfilePicture = !!profilePictureUrl && !pictureFailed;
 
     useEffect(() => {
       if (!config?.enableLogin) {
@@ -894,9 +886,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                           onDragStart={handleWatchedFolderDragStart}
                           folders={memberFolders}
                           onFolderClick={openWatchedFolder}
-                          policies={
-                            policyFileBadges.get(stub.id as string) ?? []
-                          }
                         />
                       );
                     })}
@@ -949,21 +938,10 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             style={onOpenSettings ? { cursor: "pointer" } : undefined}
           >
             <div
-              className={`file-sidebar-bottom-avatar${
-                showProfilePicture ? " file-sidebar-bottom-avatar--picture" : ""
-              }`}
+              className="file-sidebar-bottom-avatar"
               aria-label={displayName}
             >
-              {showProfilePicture ? (
-                <img
-                  src={profilePictureUrl}
-                  alt=""
-                  className="file-sidebar-bottom-avatar-img"
-                  onError={() => setPictureFailed(true)}
-                />
-              ) : (
-                displayName.charAt(0).toUpperCase()
-              )}
+              {displayName.charAt(0).toUpperCase()}
             </div>
             {!collapsed && (
               <span className="file-sidebar-bottom-name sidebar-content-fade">

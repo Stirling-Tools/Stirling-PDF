@@ -33,9 +33,8 @@ export function useWatchedFolders(): UseWatchedFoldersReturn {
 
   const refreshFolders = useCallback(async () => {
     try {
-      // Policy-owned folders are managed by Policies, not shown here.
       const all = await watchedFolderStorage.getAllFolders();
-      setFolders(all.filter((f) => !f.policyCategoryId));
+      setFolders(all);
     } catch (error) {
       console.error("Failed to load smart folders:", error);
     } finally {
