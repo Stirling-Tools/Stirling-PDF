@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 export type ViewId =
   | "home"
-  | "getting-started"
   | "editor"
   | "users"
   | "sources"
@@ -19,7 +18,6 @@ export type ViewId =
 
 export const VIEW_LABELS: Record<ViewId, string> = {
   home: "Home",
-  "getting-started": "Getting started",
   editor: "Editor",
   users: "Users",
   sources: "Sources",
@@ -36,7 +34,6 @@ export const VIEW_LABELS: Record<ViewId, string> = {
 
 export const VIEW_PATHS: Record<ViewId, string> = {
   home: "/",
-  "getting-started": "/getting-started",
   editor: "/editor",
   users: "/users",
   sources: "/sources",

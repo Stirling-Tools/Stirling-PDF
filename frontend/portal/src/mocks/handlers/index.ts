@@ -10,7 +10,6 @@ import { infrastructureHandlers } from "@portal/mocks/handlers/infrastructure";
 import { usageHandlers } from "@portal/mocks/handlers/usage";
 import { docsHandlers } from "@portal/mocks/handlers/docs";
 import { settingsHandlers } from "@portal/mocks/handlers/settings";
-import { gettingStartedHandlers } from "@portal/mocks/handlers/gettingStarted";
 import { usersHandlers } from "@portal/mocks/handlers/users";
 import { agentsHandlers } from "@portal/mocks/handlers/agents";
 import { policiesHandlers } from "@portal/mocks/handlers/policies";
@@ -31,7 +30,6 @@ export const handlers = [
   ...usageHandlers,
   ...docsHandlers,
   ...settingsHandlers,
-  ...gettingStartedHandlers,
   ...usersHandlers,
   ...agentsHandlers,
   ...policiesHandlers,

@@ -1,6 +1,5 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { Home } from "@portal/views/Home";
-import { GettingStarted } from "@portal/views/GettingStarted";
 import { Users } from "@portal/views/Users";
 import { Documents } from "@portal/views/Documents";
 import { Pipelines } from "@portal/views/Pipelines";
@@ -18,10 +17,6 @@ export function ViewRouter() {
   return (
     <Routes>
       <Route path={VIEW_PATHS.home} element={<Home />} />
-      <Route
-        path={VIEW_PATHS["getting-started"]}
-        element={<GettingStarted />}
-      />
       <Route path={VIEW_PATHS.users} element={<Users />} />
       <Route path={VIEW_PATHS.pipelines} element={<Pipelines />} />
       <Route path={VIEW_PATHS.sources} element={<Sources />} />
