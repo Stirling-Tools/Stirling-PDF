@@ -1,0 +1,30 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 80,
+  "tabWidth": 2,
+  "useTabs": false,
+  "endOfLine": "lf",
+  "sortPackageJson": false,
+  "ignorePatterns": [
+    "dist/",
+    "dist-portal/",
+    "editor/dist/",
+    "editor/src-tauri/**/target/",
+    "editor/src-tauri/gen/",
+    "node_modules/",
+    "editor/public/vendor/",
+    "portal/public/mockServiceWorker.js",
+    "editor/public/pdfjs*/",
+    "editor/public/js/thirdParty/",
+    "editor/public/css/cookieconsent.css",
+    "storybook-static/",
+    "playwright-report/",
+    "editor/playwright-report/",
+    "test-results/",
+    "editor/test-results/",
+    "*.min.*",
+    "*.md",
+    "*.wxs",
+    "editor/src/output.css"
+  ]
+}
