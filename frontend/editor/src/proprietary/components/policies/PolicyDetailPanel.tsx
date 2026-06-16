@@ -9,7 +9,7 @@ import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 import LockIcon from "@mui/icons-material/Lock";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
-import { PanelHeaderPill } from "@app/components/shared/PanelHeaderPill";
+import { PanelHeader } from "@app/components/shared/PanelHeader";
 import { Card } from "@shared/components/Card";
 import { ChipFlow } from "@shared/components/ChipFlow";
 import { StatusBadge } from "@shared/components/StatusBadge";
@@ -129,7 +129,7 @@ export function PolicyDetailPanel({
   };
   return (
     <div className="pol-detail">
-      <PanelHeaderPill
+      <PanelHeader
         icon={category.icon}
         title={t(`policies.catalog.${category.id}`, category.label)}
         onClose={onBack}

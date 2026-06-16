@@ -2,9 +2,9 @@ import type { ReactNode } from "react";
 import { ActionIcon, Menu } from "@mantine/core";
 import CloseIcon from "@mui/icons-material/Close";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import "@app/components/shared/PanelHeaderPill.css";
+import "@app/components/shared/PanelHeader.css";
 
-export interface PanelHeaderPillMenuItem {
+export interface PanelHeaderMenuItem {
   /** Stable key; falls back to the item index. */
   key?: string;
   /** Optional leading glyph. */
@@ -14,40 +14,40 @@ export interface PanelHeaderPillMenuItem {
   disabled?: boolean;
 }
 
-export interface PanelHeaderPillProps {
-  /** Glyph rendered in the tinted circular badge at the pill's leading edge. */
+export interface PanelHeaderProps {
+  /** Glyph rendered in the tinted circular badge at the header's leading edge. */
   icon: ReactNode;
-  /** Pill label. */
+  /** Header title. */
   title: ReactNode;
   /** Close (X) handler. The trailing close button renders only when supplied. */
   onClose?: () => void;
   /** aria-label for the close button. */
   closeLabel?: string;
   /**
-   * When provided, the pill becomes a dropdown trigger: a disclosure chevron is
-   * shown and clicking the pill opens a menu of these items (e.g. "Clear chat").
+   * When provided, the header becomes a dropdown trigger: a disclosure chevron is
+   * shown and clicking it opens a menu of these items (e.g. "Clear chat").
    */
-  menuItems?: PanelHeaderPillMenuItem[];
-  /** aria-label for the pill when it acts as a menu trigger. */
+  menuItems?: PanelHeaderMenuItem[];
+  /** aria-label for the header when it acts as a menu trigger. */
   menuLabel?: string;
   /** Shows a pulsing status dot on the icon + a tinted border (e.g. AI running). */
   loading?: boolean;
   /** Right-aligned content rendered before the close button (e.g. a status badge). */
   actions?: ReactNode;
-  /** Applied to the pill element itself — e.g. to set a view-transition-name. */
-  pillClassName?: string;
+  /** Applied to the inner header element — e.g. to set a view-transition-name. */
+  barClassName?: string;
   /** Applied to the outer header container. */
   className?: string;
 }
 
 /**
- * The rounded "pill" header shared by the rail surfaces — the active tool panel,
- * the AI chat panel, and the Policies detail/wizard. A tinted icon badge + title
- * sit in a pill, with an optional dropdown menu and a trailing close button. The
- * pill styling mirrors the AI chat header so it stays legible in dark mode (thin
- * border, no heavy fill) across every surface.
+ * The header shared by the rail surfaces — the active tool panel, the AI chat
+ * panel, and the Policies detail/wizard. A tinted icon badge + title sit in a
+ * rounded bar, with an optional dropdown menu and a trailing close button. The
+ * styling stays legible in dark mode (thin border, no heavy fill) across every
+ * surface.
  */
-export function PanelHeaderPill({
+export function PanelHeader({
   icon,
   title,
   onClose,
@@ -56,29 +56,29 @@ export function PanelHeaderPill({
   menuLabel,
   loading = false,
   actions,
-  pillClassName,
+  barClassName,
   className,
-}: PanelHeaderPillProps) {
+}: PanelHeaderProps) {
   const hasMenu = menuItems != null && menuItems.length > 0;
 
-  const pillClasses = [
-    "sui-pillhdr__pill",
-    loading ? "sui-pillhdr__pill--loading" : "",
-    pillClassName ?? "",
+  const barClasses = [
+    "sui-panelhdr__bar",
+    loading ? "sui-panelhdr__bar--loading" : "",
+    barClassName ?? "",
   ]
     .filter(Boolean)
     .join(" ");
 
-  const pillBody = (
+  const barBody = (
     <>
-      <span className="sui-pillhdr__icon">
+      <span className="sui-panelhdr__icon">
         {icon}
-        {loading && <span className="sui-pillhdr__dot" />}
+        {loading && <span className="sui-panelhdr__dot" />}
       </span>
-      <span className="sui-pillhdr__label">{title}</span>
+      <span className="sui-panelhdr__label">{title}</span>
       {hasMenu && (
         <KeyboardArrowDownIcon
-          className="sui-pillhdr__chevron"
+          className="sui-panelhdr__chevron"
           sx={{ fontSize: 18 }}
         />
       )}
@@ -86,16 +86,14 @@ export function PanelHeaderPill({
   );
 
   return (
-    <div className={["sui-pillhdr", className ?? ""].filter(Boolean).join(" ")}>
+    <div
+      className={["sui-panelhdr", className ?? ""].filter(Boolean).join(" ")}
+    >
       {hasMenu ? (
         <Menu shadow="md" width={220} position="bottom-start" withinPortal>
           <Menu.Target>
-            <button
-              type="button"
-              className={pillClasses}
-              aria-label={menuLabel}
-            >
-              {pillBody}
+            <button type="button" className={barClasses} aria-label={menuLabel}>
+              {barBody}
             </button>
           </Menu.Target>
           <Menu.Dropdown>
@@ -112,15 +110,15 @@ export function PanelHeaderPill({
           </Menu.Dropdown>
         </Menu>
       ) : (
-        <div className={pillClasses}>{pillBody}</div>
+        <div className={barClasses}>{barBody}</div>
       )}
 
       {(actions != null || onClose != null) && (
-        <div className="sui-pillhdr__trail">
+        <div className="sui-panelhdr__trail">
           {actions}
           {onClose && (
             <ActionIcon
-              className="sui-pillhdr__close"
+              className="sui-panelhdr__close"
               variant="subtle"
               color="gray"
               radius="xl"

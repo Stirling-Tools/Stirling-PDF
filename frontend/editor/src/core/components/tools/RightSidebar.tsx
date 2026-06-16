@@ -21,7 +21,7 @@ import { useFavoriteToolItems } from "@app/hooks/tools/useFavoriteToolItems";
 import { useToolSections } from "@app/hooks/useToolSections";
 import type { SubcategoryGroup } from "@app/hooks/useToolSections";
 import { ToolIcon } from "@app/components/shared/ToolIcon";
-import { PanelHeaderPill } from "@app/components/shared/PanelHeaderPill";
+import { PanelHeader } from "@app/components/shared/PanelHeader";
 import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
 import { withViewTransition } from "@app/utils/viewTransition";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
@@ -294,7 +294,7 @@ export default function RightSidebar() {
             <>
               {!showPolicies &&
                 (activeTool ? (
-                  <PanelHeaderPill
+                  <PanelHeader
                     icon={
                       <ToolIcon
                         icon={activeTool.icon}

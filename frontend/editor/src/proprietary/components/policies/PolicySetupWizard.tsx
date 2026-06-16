@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import { PanelHeaderPill } from "@app/components/shared/PanelHeaderPill";
+import { PanelHeader } from "@app/components/shared/PanelHeader";
 import { Card } from "@shared/components/Card";
 import { Button } from "@shared/components/Button";
 import { Input } from "@shared/components/Input";
@@ -155,7 +155,7 @@ export function PolicySetupWizard({
   if (!canConfigure) {
     return (
       <div className="pol-detail">
-        <PanelHeaderPill
+        <PanelHeader
           icon={category.icon}
           title={
             isEdit
@@ -295,7 +295,7 @@ export function PolicySetupWizard({
 
   return (
     <div className="pol-detail">
-      <PanelHeaderPill
+      <PanelHeader
         icon={category.icon}
         title={
           isEdit

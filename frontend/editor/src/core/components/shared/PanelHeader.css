@@ -1,9 +1,9 @@
-/* ===================== PanelHeaderPill ===================== */
-/* The rounded pill header shared by the active-tool panel, the AI chat panel  */
-/* and the Policies detail/wizard. Mirrors the AI chat header treatment so the */
-/* pill reads well in both light and dark mode (thin border, no heavy fill).   */
+/* ===================== PanelHeader ===================== */
+/* The header shared by the active-tool panel, the AI chat panel and the        */
+/* Policies detail/wizard. Mirrors the AI chat header treatment so it reads well */
+/* in both light and dark mode (thin border, no heavy fill).                     */
 
-.sui-pillhdr {
+.sui-panelhdr {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -11,7 +11,7 @@
   flex-shrink: 0;
 }
 
-.sui-pillhdr__pill {
+.sui-panelhdr__bar {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -26,18 +26,18 @@
 }
 
 /* Only the menu-trigger variant is interactive. */
-button.sui-pillhdr__pill {
+button.sui-panelhdr__bar {
   cursor: pointer;
   transition:
     background 120ms ease-out,
     border-color 120ms ease-out;
 }
 
-button.sui-pillhdr__pill:hover {
+button.sui-panelhdr__bar:hover {
   background: var(--mantine-color-default-hover);
 }
 
-.sui-pillhdr__icon {
+.sui-panelhdr__icon {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -50,7 +50,7 @@ button.sui-pillhdr__pill:hover {
   flex-shrink: 0;
 }
 
-.sui-pillhdr__icon svg {
+.sui-panelhdr__icon svg {
   font-size: 1rem;
   width: 1rem;
   height: 1rem;
@@ -58,7 +58,7 @@ button.sui-pillhdr__pill:hover {
 
 /* ToolIcon wraps its glyph in .tool-button-icon with its own margin/transform;
    reset them so the glyph sits dead-centre in the circular badge. */
-.sui-pillhdr__icon .tool-button-icon {
+.sui-panelhdr__icon .tool-button-icon {
   margin: 0 !important;
   transform: none !important;
   display: inline-flex;
@@ -67,7 +67,7 @@ button.sui-pillhdr__pill:hover {
   line-height: 1;
 }
 
-.sui-pillhdr__label {
+.sui-panelhdr__label {
   flex: 1;
   min-width: 0;
   font-size: 0.9rem;
@@ -78,20 +78,20 @@ button.sui-pillhdr__pill:hover {
   color: var(--text-primary);
 }
 
-.sui-pillhdr__chevron {
+.sui-panelhdr__chevron {
   flex-shrink: 0;
   color: var(--text-muted);
 }
 
-.sui-pillhdr__trail {
+.sui-panelhdr__trail {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   flex-shrink: 0;
 }
 
-/* Running / in-progress status dot, anchored to the pill icon. */
-.sui-pillhdr__dot {
+/* Running / in-progress status dot, anchored to the header icon. */
+.sui-panelhdr__dot {
   position: absolute;
   bottom: 0;
   right: 0;
@@ -100,11 +100,11 @@ button.sui-pillhdr__pill:hover {
   border-radius: 50%;
   background: var(--mantine-color-blue-5);
   border: 1.5px solid var(--mantine-color-body);
-  animation: sui-pillhdr-dot-pulse 2.4s ease-in-out infinite;
+  animation: sui-panelhdr-dot-pulse 2.4s ease-in-out infinite;
   pointer-events: none;
 }
 
-@keyframes sui-pillhdr-dot-pulse {
+@keyframes sui-panelhdr-dot-pulse {
   0%,
   100% {
     opacity: 1;
@@ -115,12 +115,12 @@ button.sui-pillhdr__pill:hover {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sui-pillhdr__dot {
+  .sui-panelhdr__dot {
     animation: none;
   }
 }
 
-.sui-pillhdr__pill--loading {
+.sui-panelhdr__bar--loading {
   border-color: color-mix(
     in srgb,
     var(--mantine-color-blue-5) 60%,
@@ -128,18 +128,18 @@ button.sui-pillhdr__pill:hover {
   );
 }
 
-/* Dark mode: let the pill blend into the rail — just a thin border, no fill —
+/* Dark mode: let the header blend into the rail — just a thin border, no fill —
    so it doesn't read as a clashing lighter card on the dark toolbar. */
-[data-mantine-color-scheme="dark"] .sui-pillhdr__pill {
+[data-mantine-color-scheme="dark"] .sui-panelhdr__bar {
   background: transparent;
   border-color: var(--border-subtle);
 }
 
-[data-mantine-color-scheme="dark"] button.sui-pillhdr__pill:hover {
+[data-mantine-color-scheme="dark"] button.sui-panelhdr__bar:hover {
   background: rgba(255, 255, 255, 0.04);
 }
 
-[data-mantine-color-scheme="dark"] .sui-pillhdr__pill--loading {
+[data-mantine-color-scheme="dark"] .sui-panelhdr__bar--loading {
   border-color: color-mix(
     in srgb,
     var(--mantine-color-blue-4) 55%,
@@ -147,7 +147,7 @@ button.sui-pillhdr__pill:hover {
   );
 }
 
-[data-mantine-color-scheme="dark"] .sui-pillhdr__icon {
+[data-mantine-color-scheme="dark"] .sui-panelhdr__icon {
   background: color-mix(
     in srgb,
     var(--mantine-color-blue-filled) 18%,
@@ -158,10 +158,10 @@ button.sui-pillhdr__pill:hover {
 
 /* Dark mode: the subtle gray close button is too dim against the dark rail —
    brighten it to a clearly-visible light grey (near-white on hover). */
-[data-mantine-color-scheme="dark"] .sui-pillhdr__close {
+[data-mantine-color-scheme="dark"] .sui-panelhdr__close {
   color: var(--mantine-color-gray-4);
 }
 
-[data-mantine-color-scheme="dark"] .sui-pillhdr__close:hover {
+[data-mantine-color-scheme="dark"] .sui-panelhdr__close:hover {
   color: var(--mantine-color-gray-2);
 }
