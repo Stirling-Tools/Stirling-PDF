@@ -61,13 +61,18 @@ export function usePoliciesEnabled(): boolean {
   return POLICIES_ENABLED;
 }
 
-/** Admins always see the list; others only see it when they have configured policies, hiding the section entirely when none are set up. */
+/**
+ * Whether the right rail should show the Policies section. Everyone sees it when
+ * the feature is on: admins / team leads get the full catalogue (coming-soon rows
+ * greyed), regular users get the live policies only. It only disappears if there
+ * are no rows to show for the current user — which can't happen while a live
+ * (non-coming-soon) policy like Security exists, but is handled defensively.
+ */
 export function usePoliciesVisible(): boolean {
   const pol = usePolicies();
   const { categories } = usePolicyCatalog();
   if (!POLICIES_ENABLED) return false;
-  if (pol.canConfigure) return true;
-  return categories.some((c) => pol.policies[c.id]?.configured);
+  return pol.canConfigure || categories.some((c) => !c.comingSoon);
 }
 
 /**
@@ -131,10 +136,12 @@ export function PoliciesSection({
 
   if (!POLICIES_ENABLED) return null;
 
-  // Admins see the full catalogue; others see only configured policies — section disappears when none are configured.
+  // Admins / team leads see the full catalogue (coming-soon rows greyed as an
+  // enterprise upsell); regular users only see the live policies — the
+  // coming-soon "Upgrade to enterprise" rows are hidden from them.
   const visibleCategories = pol.canConfigure
     ? categories
-    : categories.filter((c) => pol.policies[c.id]?.configured);
+    : categories.filter((c) => !c.comingSoon);
   if (visibleCategories.length === 0) return null;
 
   // The header tally counts every CONFIGURED policy (active + paused), not just
