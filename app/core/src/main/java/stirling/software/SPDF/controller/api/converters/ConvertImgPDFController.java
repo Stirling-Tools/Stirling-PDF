@@ -187,7 +187,7 @@ public class ConvertImgPDFController {
                 }
 
                 if (webpFiles.size() == 1) {
-                    Path webpFilePath = webpFiles.get(0);
+                    Path webpFilePath = webpFiles.getFirst();
                     byte[] webpBytes = Files.readAllBytes(webpFilePath);
                     Files.deleteIfExists(tempFile);
                     tempFile = null;

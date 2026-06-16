@@ -119,7 +119,7 @@ public class InternalApiClient {
         boolean hasFilePart =
                 body.values().stream()
                         .flatMap(java.util.List::stream)
-                        .anyMatch(v -> v instanceof Resource);
+                        .anyMatch(Resource.class::isInstance);
         if (isAiTool && !hasFilePart) {
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         }

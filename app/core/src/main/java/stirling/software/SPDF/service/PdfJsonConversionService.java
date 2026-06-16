@@ -2688,7 +2688,7 @@ public class PdfJsonConversionService {
 
                     // Find which page the field is on
                     PDAnnotationWidget widget =
-                            field.getWidgets().isEmpty() ? null : field.getWidgets().get(0);
+                            field.getWidgets().isEmpty() ? null : field.getWidgets().getFirst();
                     if (widget != null) {
                         PDPage fieldPage = widget.getPage();
                         if (fieldPage != null) {
@@ -3164,7 +3164,7 @@ public class PdfJsonConversionService {
                         && imageObjectNames != null
                         && !imageObjectNames.isEmpty()
                         && !targetTokens.isEmpty()) {
-                    Object previous = targetTokens.get(targetTokens.size() - 1);
+                    Object previous = targetTokens.getLast();
                     if (previous instanceof COSName cosName
                             && imageObjectNames.contains(cosName.getName())) {
                         targetTokens.remove(targetTokens.size() - 1);
@@ -5246,7 +5246,7 @@ public class PdfJsonConversionService {
                 throws IOException {
             if (OperatorName.DRAW_OBJECT.equals(operator.getName())
                     && !operands.isEmpty()
-                    && operands.get(0) instanceof COSName name) {
+                    && operands.getFirst() instanceof COSName name) {
                 currentXObjectName = name;
             }
             super.processOperator(operator, operands);

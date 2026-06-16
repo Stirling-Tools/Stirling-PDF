@@ -243,35 +243,32 @@ public class CreditErrorAdvice {
     private HttpStatus determineHttpStatus(Throwable throwable) {
         // Map common exceptions to HTTP status codes
         String exceptionClass = throwable.getClass().getSimpleName();
-        switch (exceptionClass) {
-            case "IllegalArgumentException":
-            case "ValidationException":
-            case "MethodArgumentNotValidException":
-                return HttpStatus.BAD_REQUEST;
-            case "AccessDeniedException":
-                return HttpStatus.FORBIDDEN;
-            case "UsernameNotFoundException":
-                return HttpStatus.UNAUTHORIZED;
-            case "HttpMessageNotReadableException":
-                return HttpStatus.BAD_REQUEST;
-            case "MaxUploadSizeExceededException":
-                return HttpStatus.PAYLOAD_TOO_LARGE;
-            case "UnsupportedOperationException":
-                return HttpStatus.NOT_IMPLEMENTED;
-            default:
+        return switch (exceptionClass) {
+            case "IllegalArgumentException",
+                    "ValidationException",
+                    "MethodArgumentNotValidException",
+                    "HttpMessageNotReadableException" ->
+                    HttpStatus.BAD_REQUEST;
+            case "AccessDeniedException" -> HttpStatus.FORBIDDEN;
+            case "UsernameNotFoundException" -> HttpStatus.UNAUTHORIZED;
+            case "MaxUploadSizeExceededException" -> HttpStatus.PAYLOAD_TOO_LARGE;
+            case "UnsupportedOperationException" -> HttpStatus.NOT_IMPLEMENTED;
+            default -> {
                 // Check error message for clues
                 String message = throwable.getMessage();
                 if (message != null) {
-                    if (message.toLowerCase().contains("validation")
-                            || message.toLowerCase().contains("invalid parameter")) {
-                        return HttpStatus.BAD_REQUEST;
+                    String lowerMessage = message.toLowerCase();
+                    if (lowerMessage.contains("validation")
+                            || lowerMessage.contains("invalid parameter")) {
+                        yield HttpStatus.BAD_REQUEST;
                     }
-                    if (message.toLowerCase().contains("not found")) {
-                        return HttpStatus.NOT_FOUND;
+                    if (lowerMessage.contains("not found")) {
+                        yield HttpStatus.NOT_FOUND;
                     }
                 }
-                return HttpStatus.INTERNAL_SERVER_ERROR;
-        }
+                yield HttpStatus.INTERNAL_SERVER_ERROR;
+            }
+        };
     }
 
     private boolean isSseRequest(HttpServletRequest request) {

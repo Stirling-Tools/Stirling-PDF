@@ -266,7 +266,7 @@ public class TeamCreditService {
         }
 
         // Return first leader (typically only one leader per team)
-        TeamMembership leader = leaders.get(0);
+        TeamMembership leader = leaders.getFirst();
         User leaderUser = leader.getUser();
         log.debug(
                 "Found team {} leader: {} (user ID: {})",

@@ -183,6 +183,6 @@ public class SessionPersistentRegistry implements SessionRegistry {
         allSessions.sort((s1, s2) -> s2.getLastRequest().compareTo(s1.getLastRequest()));
 
         // The first session in the list is the latest session for the given principal name
-        return Optional.of(allSessions.get(0));
+        return Optional.of(allSessions.getFirst());
     }
 }

@@ -483,7 +483,7 @@ public class UnifiedCreditInterceptor implements AsyncHandlerInterceptor {
                 return false;
             }
 
-            User leader = leaders.get(0).getUser();
+            User leader = leaders.getFirst().getUser();
             return saasUserExtensionService.isMeteredBillingEnabled(leader);
         } catch (Exception e) {
             log.error("Error checking team leader metered billing: {}", e.getMessage());
