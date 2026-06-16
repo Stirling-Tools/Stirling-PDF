@@ -265,7 +265,8 @@
         "shared/**/*.{js,mjs,jsx,ts,tsx}"
       ],
       "rules": {
-        "typescript/no-explicit-any": "error"
+        "typescript/no-explicit-any": "error",
+        "typescript/no-unnecessary-type-assertion": "error"
       },
       "env": {
         "browser": true
@@ -285,7 +286,8 @@
         "editor/src/core/utils/**/*.{js,mjs,jsx,ts,tsx}"
       ],
       "rules": {
-        "typescript/no-explicit-any": "off"
+        "typescript/no-explicit-any": "off",
+        "typescript/no-unnecessary-type-assertion": "off"
       }
     },
     {
