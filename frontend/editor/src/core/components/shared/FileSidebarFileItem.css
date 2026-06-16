@@ -36,6 +36,32 @@
   background-color: rgba(59, 130, 246, 0.06);
 }
 
+/* A policy-enforced file glows in that policy's accent colour so it's obvious
+   the file has had a policy applied: it pulses a few times to catch the eye and
+   then fades out (no lingering glow). */
+.file-sidebar-file-item.policy-enforced {
+  animation: policy-glow-fade 4.5s ease-in-out forwards;
+}
+@keyframes policy-glow-fade {
+  0%,
+  24%,
+  48% {
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--policy-glow) 30%, transparent),
+      0 0 6px -2px var(--policy-glow);
+  }
+  12%,
+  36%,
+  60% {
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--policy-glow) 75%, transparent),
+      0 0 16px 0 var(--policy-glow);
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
 .file-sidebar-file-item.selected {
   background-color: rgba(59, 130, 246, 0.12);
 }
@@ -132,6 +158,25 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* ---- Policy activity badges (a shield per policy that has run on the file) ---- */
+.file-sidebar-policy-badges {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+.file-sidebar-policy-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 4px;
+  /* `color` is set inline to the policy's accent; the tint follows it. */
+  color: var(--text-secondary);
+  background: color-mix(in srgb, currentColor 16%, transparent);
 }
 
 /* ---- Folder membership tags ---- */

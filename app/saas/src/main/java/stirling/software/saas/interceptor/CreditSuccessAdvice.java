@@ -27,8 +27,10 @@ import stirling.software.saas.service.TeamCreditService;
 import stirling.software.saas.util.AuthenticationUtils;
 import stirling.software.saas.util.CreditHeaderUtils;
 
+// Legacy credit-billing success advice. PAYG writes its own ledger entries via
+// JobChargeService — disabled by default in saas, activate legacy-credits profile if needed.
 @RestControllerAdvice
-@Profile("saas")
+@Profile("saas & legacy-credits")
 @Slf4j
 public class CreditSuccessAdvice implements ResponseBodyAdvice<Object> {
 

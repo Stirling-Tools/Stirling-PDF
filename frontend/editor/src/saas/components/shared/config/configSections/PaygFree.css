@@ -1,0 +1,324 @@
+/* Styles for the free-tier Plan views (PaygFreeLeader + PaygFreeMember).
+   Extends Payg.css — the hero + bar + status pill reuse those classes so the
+   visual reads as a continuation of the Processor dashboard. New classes here
+   are prefixed `paygf-`. */
+
+.payg-hero__head-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: nowrap;
+}
+
+/* ── Editor plan card (always-free tools only, no billing window) ─────── */
+/* Reuses .payg-planhead chrome; the eyebrow sits in the flex top row so its
+   default 8px bottom margin would misalign it against the role pill. */
+.paygf-editorcard__eyebrow {
+  margin-bottom: 0;
+}
+
+/* ── Processor plan card: two-column (pitch + benefits | meter + CTA) ──── */
+.paygf-proc {
+  gap: 14px;
+}
+.paygf-proc__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--payg-accent);
+}
+.paygf-proc__split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 20px;
+}
+.paygf-proc__pitch {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.paygf-proc__pitch .paygf-cta__subtitle {
+  margin-top: 0;
+}
+/* Force the benefits into a single column inside the narrower left column. */
+.paygf-proc__benefits {
+  grid-template-columns: 1fr;
+}
+.paygf-proc__aside {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-left: 20px;
+  border-left: 1px solid var(--payg-divider);
+}
+.paygf-proc__cta {
+  width: 100%;
+  text-align: center;
+}
+.paygf-proc__reassure {
+  text-align: center;
+}
+.paygf-proc__membernote {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+.paygf-proc__membernote-icon {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  font-size: 1.1rem !important;
+  margin-top: 1px;
+}
+@media (max-width: 640px) {
+  .paygf-proc__split {
+    grid-template-columns: 1fr;
+  }
+  .paygf-proc__aside {
+    padding-left: 0;
+    padding-top: 16px;
+    border-left: none;
+    border-top: 1px solid var(--payg-divider);
+  }
+}
+
+/* ── Compact one-time free meter (inside the Processor aside) ─────────── */
+.paygf-meter {
+  padding: 14px 16px;
+  border-radius: 11px;
+  background: var(--payg-inset-bg);
+  border: 1px solid var(--payg-card-border);
+}
+.paygf-meter__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.paygf-meter__figure {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+}
+.paygf-meter__num {
+  font-size: 1.7rem;
+  font-weight: 750;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+.paygf-meter__cap {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.paygf-meter .payg-bar {
+  margin-top: 11px;
+}
+.paygf-meter__meta {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+/* ── Leader CTA card ──────────────────────────────────────────────────── */
+
+.paygf-cta {
+  padding: 18px 22px;
+  border-radius: var(--payg-radius);
+  background: var(--payg-card-bg);
+  /* Gradient border using padding-box / border-box trick so the inner bg
+     stays solid + the outline gets the brand gradient. */
+  border: 1.5px solid transparent;
+  background:
+    linear-gradient(var(--payg-card-bg), var(--payg-card-bg)) padding-box,
+    linear-gradient(135deg, var(--payg-accent) 0%, #6c5ce7 100%) border-box;
+  box-shadow: 0 10px 28px -18px rgba(10, 139, 255, 0.4);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.paygf-cta__heading-row {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+.paygf-cta__icon {
+  flex-shrink: 0;
+  padding: 10px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--payg-accent) 0%, #6c5ce7 100%);
+  color: white !important;
+  font-size: 1.7rem !important;
+}
+.paygf-cta__heading-text {
+  flex: 1 1 auto;
+}
+.paygf-cta__title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+.paygf-cta__subtitle {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.paygf-cta__benefits {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px 16px;
+}
+.paygf-cta__benefits li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  line-height: 1.45;
+}
+.paygf-cta__check {
+  flex-shrink: 0;
+  color: var(--payg-accent);
+  margin-top: 2px;
+}
+
+/* Footer row: button on the left, reassurance text on the right.
+   Right-side text wraps to second line below button on narrow viewports. */
+.paygf-cta__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding-top: 4px;
+  border-top: 1px solid var(--payg-divider);
+  padding-top: 16px;
+}
+.paygf-cta__button {
+  padding: 13px 22px;
+  border: none;
+  border-radius: 11px;
+  background: linear-gradient(135deg, var(--payg-accent) 0%, #6c5ce7 100%);
+  color: white;
+  font-weight: 600;
+  font-size: 0.95rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease;
+  white-space: nowrap;
+}
+.paygf-cta__button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px -6px rgba(10, 139, 255, 0.55);
+}
+.paygf-cta__reassurance {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+/* ── Member ask-the-owner note ───────────────────────────────────────── */
+
+.paygf-member-note {
+  padding: 18px 22px;
+  border-radius: var(--payg-radius);
+  background: var(--payg-inset-bg);
+  border: 1px solid var(--payg-card-border);
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+.paygf-member-note__icon {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  padding: 8px;
+  background: var(--payg-card-bg);
+  border-radius: 10px;
+  font-size: 1.6rem !important;
+}
+.paygf-member-note__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.005em;
+  line-height: 1.3;
+}
+.paygf-member-note__body {
+  margin: 6px 0 0;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* ── Explainer (free vs metered) — shared by leader + member ──────────── */
+
+.paygf-explainer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: var(--payg-gap);
+}
+@media (max-width: 640px) {
+  .paygf-explainer {
+    grid-template-columns: 1fr;
+  }
+}
+.paygf-explainer__col {
+  padding: 18px 20px;
+  border-radius: 12px;
+  background: var(--payg-card-bg);
+  border: 1px solid var(--payg-card-border);
+}
+.paygf-explainer__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+.paygf-explainer__icon {
+  font-size: 1rem !important;
+}
+.paygf-explainer__icon--free {
+  color: #10b981;
+}
+.paygf-explainer__icon--paid {
+  color: var(--payg-accent);
+}
+.paygf-explainer__text {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  line-height: 1.55;
+}

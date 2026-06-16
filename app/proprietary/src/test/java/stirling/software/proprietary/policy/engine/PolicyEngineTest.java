@@ -28,9 +28,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.MDC;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.HttpClientErrorException;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.FileStorage;
@@ -171,6 +175,35 @@ class PolicyEngineTest {
     }
 
     @Test
+    void runBlockedByUsageLimit_surfacesErrorCodeAndSubscribed() throws Exception {
+        // A downstream tool call gets a 402 entitlement block. The run fails, but its errorCode +
+        // subscribed are taken from the 402 body so the client can pop the right usage-limit modal
+        // (the policy 402 happens server-side, out of reach of the apiClient interceptor).
+        when(toolMetadataService.isMultiInput(ROTATE)).thenReturn(false);
+        String body = "{\"error\":\"PAYG_LIMIT_REACHED\",\"subscribed\":true}";
+        when(internalApiClient.post(eq(ROTATE), any()))
+                .thenThrow(
+                        HttpClientErrorException.create(
+                                HttpStatus.PAYMENT_REQUIRED,
+                                "Payment Required",
+                                HttpHeaders.EMPTY,
+                                body.getBytes(java.nio.charset.StandardCharsets.UTF_8),
+                                java.nio.charset.StandardCharsets.UTF_8));
+
+        PolicyRun run =
+                engine.submit(
+                                definition(new PipelineStep(ROTATE, Map.of())),
+                                PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                                PolicyProgressListener.NOOP)
+                        .completion()
+                        .get(10, TimeUnit.SECONDS);
+
+        assertEquals(PolicyRunStatus.FAILED, run.getStatus());
+        assertEquals("PAYG_LIMIT_REACHED", run.getErrorCode());
+        assertEquals(Boolean.TRUE, run.getErrorSubscribed());
+    }
+
+    @Test
     void runPolicyExecutesThePolicysPipeline() throws Exception {
         when(toolMetadataService.isMultiInput(anyString())).thenReturn(false);
         when(toolMetadataService.shouldUnpackZipResponse(anyString())).thenReturn(false);
@@ -202,6 +235,86 @@ class PolicyEngineTest {
         PolicyRun run = handle.completion().get(10, TimeUnit.SECONDS);
         assertEquals(PolicyRunStatus.COMPLETED, run.getStatus());
         verify(internalApiClient).post(eq(ROTATE), any());
+    }
+
+    @Test
+    void runPolicyDispatchesToolCallsAsTheOwner() throws Exception {
+        // Billing-attribution regression: the pipeline runs on a background worker thread, but the
+        // policy owner must be propagated as the audit principal so InternalApiClient (and thus
+        // PAYG) attributes each tool call to the owner — not the INTERNAL_API_USER fallback.
+        when(toolMetadataService.isMultiInput(anyString())).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(anyString())).thenReturn(false);
+        int[] counter = {0};
+        when(fileStorage.storeInputStream(any(InputStream.class), anyString()))
+                .thenAnswer(
+                        inv ->
+                                new StoredFile(
+                                        "file-" + ++counter[0],
+                                        ((InputStream) inv.getArgument(0)).readAllBytes().length));
+
+        String[] principalAtDispatch = {"<none>"};
+        when(internalApiClient.post(eq(ROTATE), any()))
+                .thenAnswer(
+                        inv -> {
+                            principalAtDispatch[0] = MDC.get("auditPrincipal");
+                            return ResponseEntity.ok(pdf("rotated", "rotated.pdf"));
+                        });
+
+        Policy policy =
+                new Policy(
+                        "p1",
+                        "rotate",
+                        "alice",
+                        true,
+                        null,
+                        List.of(new PipelineStep(ROTATE, Map.of())),
+                        OutputSpec.inline());
+
+        engine.runPolicy(
+                        policy,
+                        PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                        PolicyProgressListener.NOOP)
+                .completion()
+                .get(10, TimeUnit.SECONDS);
+
+        assertEquals("alice", principalAtDispatch[0]);
+    }
+
+    @Test
+    void adHocRunDispatchesToolCallsAsTheSubmittingUser() throws Exception {
+        // Ad-hoc runs (no stored policy) bill whoever kicked them off; the principal is captured on
+        // the request thread (here simulated via MDC) and re-established on the worker thread.
+        when(toolMetadataService.isMultiInput(anyString())).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(anyString())).thenReturn(false);
+        int[] counter = {0};
+        when(fileStorage.storeInputStream(any(InputStream.class), anyString()))
+                .thenAnswer(
+                        inv ->
+                                new StoredFile(
+                                        "file-" + ++counter[0],
+                                        ((InputStream) inv.getArgument(0)).readAllBytes().length));
+
+        String[] principalAtDispatch = {"<none>"};
+        when(internalApiClient.post(eq(ROTATE), any()))
+                .thenAnswer(
+                        inv -> {
+                            principalAtDispatch[0] = MDC.get("auditPrincipal");
+                            return ResponseEntity.ok(pdf("rotated", "rotated.pdf"));
+                        });
+
+        MDC.put("auditPrincipal", "bob"); // the request thread's audit principal
+        try {
+            engine.submit(
+                            definition(new PipelineStep(ROTATE, Map.of())),
+                            PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                            PolicyProgressListener.NOOP)
+                    .completion()
+                    .get(10, TimeUnit.SECONDS);
+        } finally {
+            MDC.remove("auditPrincipal");
+        }
+
+        assertEquals("bob", principalAtDispatch[0]);
     }
 
     @Test
