@@ -117,10 +117,6 @@ public class PolicyExecutor {
             files.addAll(r.files());
             report = r.report();
         } else if (inputFiles.isEmpty()) {
-            // Generator tools (e.g. create-pdf-from-html-agent) take no input file and produce
-            // their output purely from parameters. Per-file dispatch would skip them entirely
-            // (zero files = zero iterations = zero calls), so call once with no file — matching
-            // the single call the multi-input branch already makes for an empty input list.
             ToolResult r = callEndpoint(step, List.of(), supportingFiles);
             files.addAll(r.files());
             report = r.report();
