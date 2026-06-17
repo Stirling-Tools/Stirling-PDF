@@ -4,6 +4,7 @@ import {
   Card,
   EmptyState,
   MetricCard,
+  MetricStrip,
   Skeleton,
   StatusBadge,
 } from "@shared/components";
@@ -365,7 +366,7 @@ function TierKpiStrip() {
   );
 
   return (
-    <section className="portal-home__metrics">
+    <MetricStrip>
       {labels.map((spec, i) => {
         // useAsync keeps the previous tier's data during a refetch; ignore it
         // while loading so the new labels never pair with stale values.
@@ -381,7 +382,7 @@ function TierKpiStrip() {
           />
         );
       })}
-    </section>
+    </MetricStrip>
   );
 }
 

@@ -1,24 +1,23 @@
 package stirling.software.proprietary.policy.trigger;
 
+import stirling.software.proprietary.policy.model.Policy;
+
 /**
- * Activates policies of one trigger type. A trigger owns a {@link #type()} (matching {@code
- * TriggerConfig.type()}); when its condition fires it runs the relevant {@code Policy} through the
- * {@code PolicyEngine}.
- *
- * <p>Background triggers (folder watcher, schedule) are driven by configuration: on {@link
- * #start()} they begin watching/scheduling for the policies returned by {@code
- * PolicyStore.findByTriggerType(type())}, and stop on {@link #stop()}. Request-driven triggers
- * (manual) have no background lifecycle and run a policy directly in response to a call. New
- * trigger kinds are new beans of this type; the engine and the {@code Policy} model do not change.
+ * Decides <em>when</em> a policy runs. On firing it hands the policy to {@code PolicyRunner}; it
+ * never resolves sources itself. New trigger kinds are just new beans of this type.
  */
 public interface PolicyTrigger {
 
-    /** Stable identifier for this trigger kind, matching {@code TriggerConfig.type()}. */
+    /** Matches {@code TriggerConfig.type()}. */
     String type();
 
-    /** Begin activating policies of this type (e.g. start a folder watcher). No-op for manual. */
+    /**
+     * Validate at save time so misconfiguration fails fast, not at fire time. Receives the whole
+     * {@link Policy} so triggers that depend on the policy's sources (folder-watch) can check that.
+     */
+    default void validate(Policy policy) {}
+
     default void start() {}
 
-    /** Stop activating and release any resources. */
     default void stop() {}
 }

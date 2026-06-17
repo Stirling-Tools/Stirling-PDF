@@ -539,7 +539,10 @@ test.describe("Files page", () => {
   });
 
   test.describe("Move dialog inline create-folder", () => {
-    test.use({ autoGoto: false });
+    // The inline create-folder affordance is gated on `serverReachable`, which
+    // only flips true once a confirmed, non-anonymous user triggers the folder
+    // pull (see FolderContext). Seed a JWT so the stubbed session is logged-in.
+    test.use({ autoGoto: false, seedJwt: true });
 
     test("Move dialog shows Create new folder affordance", async ({ page }) => {
       await stubStorageApis(page);

@@ -618,6 +618,8 @@ public class AdminSettingsController {
             case "autopipeline", "autoPipeline" -> applicationProperties.getAutoPipeline();
             case "legal" -> applicationProperties.getLegal();
             case "telegram" -> applicationProperties.getTelegram();
+            case "aiengine", "aiEngine" -> applicationProperties.getAiEngine();
+            case "mcp" -> applicationProperties.getMcp();
             default -> null;
         };
     }
@@ -641,7 +643,10 @@ public class AdminSettingsController {
                     "autoPipeline",
                     "autopipeline",
                     "legal",
-                    "telegram");
+                    "telegram",
+                    "aiEngine",
+                    "aiengine",
+                    "mcp");
 
     // Pattern to validate safe property paths - only alphanumeric, dots, and underscores
     private static final Pattern SAFE_KEY_PATTERN =
@@ -697,7 +702,7 @@ public class AdminSettingsController {
                 if (path != null && !path.trim().isEmpty()) {
                     try {
                         java.nio.file.Path normalized =
-                                java.nio.file.Paths.get(path.trim()).toAbsolutePath().normalize();
+                                java.nio.file.Path.of(path.trim()).toAbsolutePath().normalize();
                         String normalizedStr = normalized.toString();
 
                         // Check for duplicates
@@ -714,9 +719,9 @@ public class AdminSettingsController {
             // Check for overlapping paths
             java.util.List<String> pathList = new java.util.ArrayList<>(normalizedPaths);
             for (int i = 0; i < pathList.size(); i++) {
-                java.nio.file.Path path1 = java.nio.file.Paths.get(pathList.get(i));
+                java.nio.file.Path path1 = java.nio.file.Path.of(pathList.get(i));
                 for (int j = i + 1; j < pathList.size(); j++) {
-                    java.nio.file.Path path2 = java.nio.file.Paths.get(pathList.get(j));
+                    java.nio.file.Path path2 = java.nio.file.Path.of(pathList.get(j));
                     if (path1.startsWith(path2) || path2.startsWith(path1)) {
                         return "Overlapping paths detected: " + path1 + " and " + path2;
                     }

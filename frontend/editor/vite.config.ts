@@ -1,13 +1,14 @@
-import { defineConfig, loadEnv, type PluginOption } from "vite";
 import react from "@vitejs/plugin-react-swc";
-import tsconfigPaths from "vite-tsconfig-paths";
-import { viteStaticCopy } from "vite-plugin-static-copy";
 import { compression, defineAlgorithm } from "vite-plugin-compression2";
-import { constants, gzip, brotliCompress } from "node:zlib";
+import fs from "node:fs/promises";
+import path, { resolve } from "node:path";
+import { constants, brotliCompress, gzip } from "node:zlib";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
-import fs from "node:fs/promises";
-import path from "node:path";
+import { defineConfig, loadEnv } from "vite";
+import type { PluginOption } from "vite";
+import tsconfigPaths from "vite-tsconfig-paths";
+import { viteStaticCopy } from "vite-plugin-static-copy";
 
 const gzipPromise = promisify(gzip);
 const brotliPromise = promisify(brotliCompress);
@@ -73,6 +74,10 @@ function compressStaticCopyPlugin(): PluginOption {
   };
 }
 
+// NOTE: cloud/ is a SHARED layer, not a runnable build flavor — it's compiled
+// into the saas and desktop builds. It has no entry here and no vite tsconfig;
+// it is only typechecked standalone via editor/src/cloud/tsconfig.json
+// (task frontend:typecheck:cloud) to prove it carries no saas/desktop-only deps.
 const VALID_MODES = [
   "core",
   "proprietary",
@@ -96,6 +101,7 @@ export default defineConfig(async ({ mode }) => {
   // this file lived at frontend/, but after the editor was moved under
   // frontend/editor/ the cwd-based lookup would miss editor/.env*.
   const env = loadEnv(mode, import.meta.dirname, "");
+  const parentEnv = loadEnv(mode, resolve(import.meta.dirname, ".."), "");
 
   // Effective mode: --mode > STIRLING_FLAVOR > ENABLE_SAAS > DISABLE_ADDITIONAL_FEATURES > proprietary.
   const explicitMode = (VALID_MODES as readonly string[]).includes(mode)
@@ -120,6 +126,17 @@ export default defineConfig(async ({ mode }) => {
   // Backend proxy target: default localhost:8080. Override via BACKEND_URL env var
   // so the top-level dev launcher can wire a dynamically-assigned backend port.
   const backendUrl = process.env.BACKEND_URL || "http://localhost:8080";
+  // Allow host header checks to be configured via env so LAN/reverse-proxy
+  // dev setups don't require editing this file for each machine.
+  const allowedHostsRaw =
+    process.env.FRONTEND_ALLOWED_HOSTS ||
+    env.FRONTEND_ALLOWED_HOSTS ||
+    parentEnv.FRONTEND_ALLOWED_HOSTS ||
+    "";
+  const allowedHosts = allowedHostsRaw
+    .split(",")
+    .map((host) => host.trim())
+    .filter(Boolean);
   const backendProxy = {
     target: backendUrl,
     changeOrigin: true,
@@ -203,8 +220,18 @@ export default defineConfig(async ({ mode }) => {
       }),
       compressStaticCopyPlugin(),
     ],
+    resolve: {
+      // Global alias so @shared resolves for ALL importers — including the
+      // shared components' own `@shared/components/X.css` self-imports, which
+      // live outside the editor tsconfig scope and so aren't rewritten by
+      // vite-tsconfig-paths. Required for the editor to consume SUI components.
+      alias: {
+        "@shared": path.resolve(__dirname, "../shared"),
+      },
+    },
     server: {
       host: true,
+      allowedHosts: allowedHosts.length > 0 ? allowedHosts : undefined,
       // make sure this port matches the devUrl port in tauri.conf.json file
       port: 5173,
       // Tauri expects a fixed port, fail if that port is not available
@@ -243,8 +270,10 @@ export default defineConfig(async ({ mode }) => {
     // SPA fallback returns index.html as text/html and React never mounts.
     // VITE_BUILD_FOR_PREVIEW=1 (set by the CI playwright steps) overrides to
     // an absolute base so deep-route asset paths resolve to /assets/...
+    // Trailing slash required: it becomes `<base href>`, and browsers resolve
+    // relative URLs (manifest.json, favicon) against the base's *directory*.
     base: env.RUN_SUBPATH
-      ? `/${env.RUN_SUBPATH}`
+      ? `/${env.RUN_SUBPATH}/`
       : process.env.VITE_BUILD_FOR_PREVIEW === "1"
         ? "/"
         : "./",

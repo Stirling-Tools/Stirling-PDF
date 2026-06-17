@@ -74,6 +74,16 @@ public class PricingPolicy implements Serializable {
     private Integer fileUnitCap = 1000;
 
     /**
+     * One-time lifetime free document grant handed to a team on creation. {@code 0} (default) means
+     * no free grant. NOT per-cycle: it never replenishes and a team keeps any unused portion after
+     * subscribing. The value is copied into {@code payg_team_extensions.free_units_remaining} when
+     * the team's sidecar row is created (V14 trigger, updated in V19); from then on the per-team
+     * counter is authoritative and this column is only the seed for new teams.
+     */
+    @Column(name = "free_tier_units", nullable = false)
+    private Long freeTierUnits = 0L;
+
+    /**
      * Max tool steps allowed in one process before it splits, keyed by the caller's {@link
      * JobSource}. Self-hosted teams typically get a higher limit via a per-team policy override.
      *

@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@app/components/toast/ToastContext";
 import { ToastInstance, ToastLocation } from "@app/components/toast/types";
@@ -64,7 +65,16 @@ export default function ToastRenderer() {
         <div key={loc} className={`toast-container ${locationToClass[loc]}`}>
           {grouped[loc].map((t) => {
             return (
-              <div key={t.id} role="status" className={getToastItemClass(t)}>
+              <div
+                key={t.id}
+                role="status"
+                className={`${getToastItemClass(t)}${t.glowColor ? " toast-item--glow" : ""}`}
+                style={
+                  t.glowColor
+                    ? ({ "--toast-glow": t.glowColor } as CSSProperties)
+                    : undefined
+                }
+              >
                 {/* Top row: Icon + Title + Controls */}
                 <div className="toast-header">
                   {/* Icon */}
