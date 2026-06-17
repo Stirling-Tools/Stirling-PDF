@@ -1,9 +1,11 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import {
   dispatchKey,
+  getRun,
   isDispatched,
   markDispatched,
   recordRunStart,
+  removeRun,
   updateRun,
   resetPolicyRuns,
   type PolicyRunRecord,
@@ -68,6 +70,16 @@ describe("policyRunStore", () => {
     recordRunStart(rec({ runId: "abc", status: "PENDING" }));
     updateRun("nope", { status: "FAILED" });
     expect(read("stirling-policy-runs").runs[0].status).toBe("PENDING");
+  });
+
+  it("getRun returns the record by id, removeRun drops it but keeps the dispatched key", () => {
+    recordRunStart(rec({ runId: "abc" }));
+    expect(getRun("abc")?.fileId).toBe("f1");
+    removeRun("abc");
+    expect(getRun("abc")).toBeUndefined();
+    expect(read("stirling-policy-runs").runs).toHaveLength(0);
+    // The (policy, file) pair stays dispatched so the auto-run doesn't re-fire on its own.
+    expect(isDispatched("security", "f1")).toBe(true);
   });
 
   it("caps stored runs at 50, newest first", () => {

@@ -19,6 +19,11 @@ export interface PolicyRunRecord {
   fileName: string;
   fileSize: number;
   status: PolicyRunStatus;
+  /** Pipeline progress reported by the run-status endpoint: the 1-based step
+   *  currently running, and the total step count. Drive the "step X/Y" label
+   *  while a run is in flight. Absent until the first status report. */
+  currentStep?: number;
+  stepCount?: number;
   /** Output files (downloadable via /api/v1/general/files/{id}) once done. */
   outputs: { fileId: string; fileName: string }[];
   /** True once ALL outputs have been imported into the workspace. */
@@ -33,6 +38,9 @@ export interface PolicyRunRecord {
   error: string | null;
   /** Stable backend failure code (e.g. an entitlement sentinel) when FAILED; null otherwise. */
   errorCode?: string | null;
+  /** Set while an auto-retry is pending after a transient (queue-full) rejection, so the activity
+   *  feed shows a soft "busy" row instead of a hard failure during the backoff window. */
+  retrying?: boolean;
   /** Epoch ms when the run was dispatched. */
   startedAt: number;
 }
@@ -143,6 +151,19 @@ export function updateRun(runId: string, patch: Partial<PolicyRunRecord>) {
   });
   if (!changed) return;
   state = { ...state, runs };
+  emit();
+}
+
+/** The current record for a run id, if any. */
+export function getRun(runId: string): PolicyRunRecord | undefined {
+  return state.runs.find((r) => r.runId === runId);
+}
+
+/** Drop a run record (leaving its dispatched key intact). Used when retrying a
+ *  queue-rejected run in place, so the replacement run doesn't stack a second row. */
+export function removeRun(runId: string) {
+  if (!state.runs.some((r) => r.runId === runId)) return;
+  state = { ...state, runs: state.runs.filter((r) => r.runId !== runId) };
   emit();
 }
 
