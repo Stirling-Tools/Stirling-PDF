@@ -367,8 +367,19 @@ export function TextRunOverlay({
           window.addEventListener("pointerup", onPointerUp);
           return;
         }
+        // Shift-click EXTENDS the multi-object selection. Focusing the run
+        // (a text-edit action) fights multi-select and lets the browser
+        // start a cross-run text-range drag, so the 2nd run often failed to
+        // add and the align/distribute buttons stayed disabled. For a
+        // shift-click, preventDefault + select-only makes the toggle into
+        // selection.runIds authoritative; only a plain click focuses to edit.
+        if (e.shiftKey) {
+          e.preventDefault();
+          onSelect(true);
+          return;
+        }
         (e.currentTarget as HTMLDivElement).focus();
-        onSelect(e.shiftKey);
+        onSelect(false);
       }}
       onFocus={(e) => {
         setFocused(true);
