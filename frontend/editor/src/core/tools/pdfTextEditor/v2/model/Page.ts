@@ -72,6 +72,15 @@ export class Page {
     this.revision += 1;
   }
 
+  /**
+   * Bump the snapshot revision WITHOUT marking the page dirty. For
+   * session-only, non-serialized state (e.g. lock toggles) that must
+   * refresh the React overlay but never trigger save/GenerateContent.
+   */
+  bumpRevision(): void {
+    this.revision += 1;
+  }
+
   clearDirty(): void {
     this.dirty = false;
     this.runs.forEach((r) => {

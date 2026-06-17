@@ -40,6 +40,9 @@ export class SetLockCommand implements Command {
       if (!run) return;
       if (this.prevLocked === null) this.prevLocked = run.locked;
       run.locked = this.nextLocked;
+      // Refresh the overlay snapshot so contentEditable/hit-test reflect
+      // the new lock state; lock is session-only, never dirties the page.
+      page.bumpRevision();
       return;
     }
     if (this.imageId) {
@@ -47,6 +50,7 @@ export class SetLockCommand implements Command {
       if (!img) return;
       if (this.prevLocked === null) this.prevLocked = img.locked;
       img.locked = this.nextLocked;
+      page.bumpRevision();
     }
   }
 
@@ -56,11 +60,13 @@ export class SetLockCommand implements Command {
     if (this.runId) {
       const run = page.runs.find((r) => r.id === this.runId);
       if (run) run.locked = this.prevLocked;
+      page.bumpRevision();
       return;
     }
     if (this.imageId) {
       const img = page.images.find((i) => i.id === this.imageId);
       if (img) img.locked = this.prevLocked;
+      page.bumpRevision();
     }
   }
 }

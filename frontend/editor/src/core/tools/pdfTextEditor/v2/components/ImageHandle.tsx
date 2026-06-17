@@ -54,12 +54,18 @@ export function ImageHandle({
     return { x, y, width: w, height: h };
   }
 
+  // Locked images are inert: no select, drag, or resize. The PDFium bitmap
+  // still paints them so the user sees what's there; the editor just refuses
+  // to act on them (mirrors TextRunOverlay's locked behaviour).
+  const locked = image.locked === true;
+
   return (
     <Rnd
       size={{ width, height }}
       position={{ x: left, y: top }}
+      disableDragging={locked}
       enableResizing={
-        selected || hovered
+        !locked && (selected || hovered)
           ? {
               bottomRight: true,
               bottomLeft: true,
@@ -105,17 +111,19 @@ export function ImageHandle({
             : "none",
         background:
           selected || dragging ? "rgba(44,123,229,0.08)" : "transparent",
-        cursor: "move",
+        cursor: locked ? "default" : "move",
         // No explicit zIndex - text overlays paint on top via DOM order.
         pointerEvents: "auto",
       }}
       onClick={(e: React.MouseEvent) => {
         e.stopPropagation();
+        if (locked) return;
         onSelect();
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       data-testid={`v2-image-${image.id}`}
+      data-locked={locked ? "true" : undefined}
     />
   );
 }
