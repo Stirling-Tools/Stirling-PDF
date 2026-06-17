@@ -78,6 +78,9 @@ interface ToolbarProps {
   hasImageSelection: boolean;
   /** Count of selected objects (runs + images). 0/1 disables align; <3 disables distribute. */
   selectionCount: number;
+  /** True when exactly one multi-line paragraph is selected - enables the
+   * horizontal aligns (left/centre/right) to align that paragraph's lines. */
+  canAlignLines: boolean;
   disabled: boolean;
 }
 
@@ -113,10 +116,14 @@ export function Toolbar({
   hasRunSelection,
   hasImageSelection,
   selectionCount,
+  canAlignLines,
   disabled,
 }: ToolbarProps) {
   const imageDisabled = disabled || !hasImageSelection;
+  // Vertical aligns + distribute need 2+ objects. Horizontal aligns also
+  // accept a single multi-line paragraph (aligns its lines to each other).
   const alignDisabled = disabled || selectionCount < 2;
+  const hAlignDisabled = disabled || (selectionCount < 2 && !canAlignLines);
   const distributeDisabled = disabled || selectionCount < 3;
   const fillHex = state.fill ? toCssHex(state.fill) : "#000000";
   // Reflect the selection's font in the Select instead of always showing the
@@ -342,7 +349,7 @@ export function Toolbar({
         <ActionIcon
           variant="subtle"
           onClick={() => onAlign("left")}
-          disabled={alignDisabled}
+          disabled={hAlignDisabled}
           aria-label="Align left"
           data-testid="v2-align-left"
         >
@@ -353,7 +360,7 @@ export function Toolbar({
         <ActionIcon
           variant="subtle"
           onClick={() => onAlign("center-h")}
-          disabled={alignDisabled}
+          disabled={hAlignDisabled}
           aria-label="Align horizontal center"
           data-testid="v2-align-center-h"
         >
@@ -364,7 +371,7 @@ export function Toolbar({
         <ActionIcon
           variant="subtle"
           onClick={() => onAlign("right")}
-          disabled={alignDisabled}
+          disabled={hAlignDisabled}
           aria-label="Align right"
           data-testid="v2-align-right"
         >

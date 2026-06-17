@@ -161,6 +161,102 @@ test.describe("v2 editor - reported issue: align multi-select (real UI)", () => 
   });
 });
 
+test.describe("v2 editor - reported issue: align a single paragraph's lines", () => {
+  async function selectOne(page: any, id: string): Promise<void> {
+    await page.evaluate(
+      (rid: string) =>
+        (window as any).__v2_editor_store.selection.selectOne(rid),
+      id,
+    );
+    await page.waitForTimeout(120);
+  }
+  async function lineRights(page: any, id: string): Promise<number[]> {
+    return page.evaluate((rid: string) => {
+      const run = (window as any).__v2_editor_store.doc
+        .page(1)
+        .runs.find((r: any) => r.id === rid);
+      return (run?.paragraphLineSlots ?? []).map((s: any) =>
+        Math.max(...s.mergedFromBounds.map((b: any) => b.right)),
+      );
+    }, id);
+  }
+  async function lineLefts(page: any, id: string): Promise<number[]> {
+    return page.evaluate((rid: string) => {
+      const run = (window as any).__v2_editor_store.doc
+        .page(1)
+        .runs.find((r: any) => r.id === rid);
+      return (run?.paragraphLineSlots ?? []).map((s: any) =>
+        Math.min(...s.mergedFromBounds.map((b: any) => b.x)),
+      );
+    }, id);
+  }
+
+  test("align buttons enable for a single multi-line paragraph", async ({
+    page,
+  }) => {
+    await open(page, 1);
+    const para = await runId(page, 1, "Stirling\\s+PDF\\s+is\\s+a\\s+robust");
+    await selectOne(page, para);
+    // Horizontal aligns enable on a single paragraph...
+    await expect(page.getByTestId("v2-align-left")).toBeEnabled();
+    await expect(page.getByTestId("v2-align-right")).toBeEnabled();
+    await expect(page.getByTestId("v2-align-center-h")).toBeEnabled();
+    // ...but vertical aligns still need 2+ objects.
+    await expect(page.getByTestId("v2-align-top")).toBeDisabled();
+  });
+
+  test("align buttons stay disabled for a single single-line run", async ({
+    page,
+  }) => {
+    await open(page, 1);
+    const heading = await runId(page, 1, "What\\s+is\\s+Stirling");
+    await selectOne(page, heading);
+    await expect(page.getByTestId("v2-align-left")).toBeDisabled();
+    await expect(page.getByTestId("v2-align-right")).toBeDisabled();
+  });
+
+  test("align-right flushes a paragraph's lines to a shared right edge; undo reverts", async ({
+    page,
+  }) => {
+    await open(page, 1);
+    const para = await runId(page, 1, "Stirling\\s+PDF\\s+is\\s+a\\s+robust");
+    await selectOne(page, para);
+    const before = await lineRights(page, para);
+    expect(before.length, "paragraph has multiple lines").toBeGreaterThan(1);
+    await page.getByTestId("v2-align-right").click();
+    await page.waitForTimeout(300);
+    const after = await lineRights(page, para);
+    expect(
+      Math.max(...after) - Math.min(...after),
+      "all lines share a right edge",
+    ).toBeLessThan(1.5);
+    // Undo restores the original per-line right edges.
+    await page.getByTestId("v2-undo").click();
+    await page.waitForTimeout(300);
+    const reverted = await lineRights(page, para);
+    for (let i = 0; i < before.length; i++) {
+      expect(reverted[i]).toBeCloseTo(before[i], 0);
+    }
+  });
+
+  test("align-left flushes a paragraph's lines to a shared left edge", async ({
+    page,
+  }) => {
+    await open(page, 1);
+    const para = await runId(page, 1, "Comprehensive\\s+toolkit");
+    await selectOne(page, para);
+    const before = await lineLefts(page, para);
+    expect(before.length).toBeGreaterThan(1);
+    await page.getByTestId("v2-align-left").click();
+    await page.waitForTimeout(300);
+    const after = await lineLefts(page, para);
+    expect(
+      Math.max(...after) - Math.min(...after),
+      "all lines share a left edge",
+    ).toBeLessThan(1.5);
+  });
+});
+
 test.describe("v2 editor - reported issue: character insertion + font integrity", () => {
   test("inserting a duplicate letter into an embedded-font run keeps text correct and emits no ydieresis tofu", async ({
     page,

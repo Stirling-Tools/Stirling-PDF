@@ -29,6 +29,7 @@ import { MergeRunsCommand } from "@app/tools/pdfTextEditor/v2/commands/MergeRuns
 import { MoveTextRunCommand } from "@app/tools/pdfTextEditor/v2/commands/MoveTextRunCommand";
 import { SetImageTransformCommand } from "@app/tools/pdfTextEditor/v2/commands/SetImageTransformCommand";
 import { SetLockCommand } from "@app/tools/pdfTextEditor/v2/commands/SetLockCommand";
+import { AlignParagraphLinesCommand } from "@app/tools/pdfTextEditor/v2/commands/AlignParagraphLinesCommand";
 import {
   TransformImageObjectCommand,
   type ImageTransformMode,
@@ -417,6 +418,30 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
       if (!doc) return;
       const selRuns = new Set(store.selection.value.runIds);
       const selImages = new Set(store.selection.value.imageIds);
+      // Single multi-line paragraph + a horizontal mode: align the lines
+      // WITHIN that paragraph (flush-left / centre / flush-right) instead
+      // of requiring a 2+ object selection. Vertical modes still need 2+.
+      if (
+        selRuns.size === 1 &&
+        selImages.size === 0 &&
+        (mode === "left" || mode === "center-h" || mode === "right")
+      ) {
+        const runId = [...selRuns][0];
+        for (const p of doc.loadedPages()) {
+          const run = p.runs.find((r) => r.id === runId);
+          if (!run) continue;
+          if (AlignParagraphLinesCommand.canAlign(run)) {
+            store.dispatch(
+              new AlignParagraphLinesCommand({
+                pageIndex: p.index,
+                runId,
+                mode,
+              }),
+            );
+          }
+          return;
+        }
+      }
       if (selRuns.size + selImages.size < 2) return;
       for (const p of doc.loadedPages()) {
         // Collect selected items on this page with their bounds.
@@ -775,6 +800,14 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
         })()}
         hasRunSelection={selection.runIds.length > 0}
         selectionCount={selection.runIds.length + selection.imageIds.length}
+        canAlignLines={(() => {
+          if (selection.runIds.length !== 1 || selection.imageIds.length > 0)
+            return false;
+          const run = state.pages
+            .flatMap((p) => p.runs)
+            .find((r) => r.id === selection.runIds[0]);
+          return !!run && (run.paragraphLineCount ?? 0) > 1;
+        })()}
         disabled={
           !state.hasDocument ||
           (selection.runIds.length === 0 && selection.imageIds.length === 0)
