@@ -413,16 +413,17 @@ function rebuildRunFromLines(
   const glyphDerived = lineTexts
     .map((t, i) => (i === 0 ? t : (lineIsHardStart[i] ? "\n" : " ") + t))
     .join("");
-  // Reflow only repositions glyphs - it doesn't change the WORD sequence. When
-  // the glyph word count matches the pre-reflow text's, preserve that text so
-  // typed whitespace the glyph stream can't represent survives in the model
-  // (PDFium collapses consecutive spaces in a text object, so re-deriving from
-  // glyphs silently loses them). Falls back to the glyph-derived text when the
-  // word counts diverge (a substantial structural change - trust the glyphs).
-  const glyphWordCount = lines.reduce((n, l) => n + l.length, 0);
-  const preWordCount = (preReflowText.match(/\S+/g) ?? []).length;
+  // Reflow only repositions glyphs - it never changes the non-whitespace
+  // CONTENT, just whitespace/line-breaks. So when the glyph-derived text has
+  // the SAME non-whitespace characters as the pre-reflow text, preserve the
+  // pre-reflow text: it carries the user's intended whitespace (e.g. runs of
+  // typed spaces), which the glyph stream can't represent because PDFium
+  // collapses consecutive spaces in a text object. Fall back to the
+  // glyph-derived text only when the content genuinely differs (a structural
+  // change the glyphs are the source of truth for).
+  const stripWs = (s: string): string => s.replace(/\s+/g, "");
   run.text =
-    preWordCount > 0 && glyphWordCount === preWordCount
+    stripWs(glyphDerived) === stripWs(preReflowText) && preReflowText.length > 0
       ? preReflowText
       : glyphDerived;
 

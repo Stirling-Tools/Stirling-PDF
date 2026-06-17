@@ -794,7 +794,12 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
         />
       )}
       <HelpOverlay opened={helpOpen} onClose={() => setHelpOpen(false)} />
-      <EditorSidebar state={state} selection={selection} />
+      <EditorSidebar
+        state={state}
+        selection={selection}
+        onSetGroupingMode={(mode) => store.setGroupingMode(mode)}
+        onSetWidthMode={(m) => store.setWidthMode(m)}
+      />
     </Stack>
   );
 }

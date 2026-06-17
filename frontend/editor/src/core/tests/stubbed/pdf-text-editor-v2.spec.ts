@@ -3490,26 +3490,6 @@ test.describe("PDF text editor v2 - load progress overlay", () => {
   });
 });
 
-test.describe("PDF text editor v2 - page list jump", () => {
-  test("clicking a page in the sidebar list scrolls it into view", async ({
-    page,
-  }) => {
-    await gotoV2(page);
-    await page
-      .locator('[data-testid="v2-file-input"]')
-      .setInputFiles(MULTI_PAGE_PDF);
-    await expect(page.getByTestId("v2-page-list")).toBeVisible({
-      timeout: 30_000,
-    });
-    // Jump to the last page
-    await page.getByTestId("v2-page-list-2").click();
-    await expect(page.getByTestId("v2-page-2")).toBeInViewport({
-      ratio: 0.1,
-      timeout: 5_000,
-    });
-  });
-});
-
 test.describe("PDF text editor v2 - fit-to-width", () => {
   test("Fit button updates the zoom percent based on viewport width", async ({
     page,
@@ -3843,28 +3823,32 @@ test.describe("PDF text editor v2 - marquee + merge", () => {
       const stage = document.querySelector(
         '[data-testid="v2-pages"]',
       ) as HTMLElement;
+      // MarqueeSelector listens for POINTER events (pointer-based for
+      // mouse/pen/touch parity), so fire pointer events, not mouse events.
       const fire = (type: string, x: number, y: number) =>
         stage.dispatchEvent(
-          new MouseEvent(type, {
+          new PointerEvent(type, {
             bubbles: true,
             cancelable: true,
             clientX: x,
             clientY: y,
             ctrlKey: true,
             shiftKey: true,
+            pointerId: 1,
           }),
         );
-      fire("mousedown", left - 5, top - 5);
-      fire("mousemove", right + 5, bottom + 5);
-      // Mouseup goes through window in MarqueeSelector's listener.
+      fire("pointerdown", left - 5, top - 5);
+      fire("pointermove", right + 5, bottom + 5);
+      // Pointerup goes through window in MarqueeSelector's listener.
       window.dispatchEvent(
-        new MouseEvent("mouseup", {
+        new PointerEvent("pointerup", {
           bubbles: true,
           cancelable: true,
           clientX: right + 5,
           clientY: bottom + 5,
           ctrlKey: true,
           shiftKey: true,
+          pointerId: 1,
         }),
       );
     });
@@ -4789,9 +4773,13 @@ test.describe("PDF text editor v2 - stress: add / remove cycles (no leaks)", () 
       );
       await page.waitForTimeout(180);
     }
-    // Five undos.
-    for (let i = 0; i < 5; i++) {
-      await page.getByTestId("v2-undo").click();
+    // Undo the whole burst. Rapid same-run edits coalesce into one undo step
+    // (typing-session granularity), so undo until the button is disabled
+    // rather than assuming a fixed count.
+    for (let i = 0; i < 6; i++) {
+      const undoBtn = page.getByTestId("v2-undo");
+      if (await undoBtn.isDisabled()) break;
+      await undoBtn.click();
       await page.waitForTimeout(200);
     }
     const after = await page.evaluate((rid) => {

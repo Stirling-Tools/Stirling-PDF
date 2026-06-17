@@ -10,7 +10,6 @@ import {
   measureObjRightEdgePt,
 } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
 import { helveticaVariantFor } from "@app/tools/pdfTextEditor/v2/util/helveticaVariant";
-import { getActiveCharcodeStrategy } from "@app/tools/pdfTextEditor/v2/charcode/CharcodeStrategy";
 import { writeUtf16 } from "@app/services/pdfiumService";
 
 /**
@@ -242,7 +241,24 @@ export function planPartialEdit(
   if (prevText === nextText) return null;
   if (hasSurrogatePair(prevText)) return null;
 
-  const { keptA, keptB, alignment } = lcsIndices(prevText, nextText);
+  let { keptA, keptB, alignment } = lcsIndices(prevText, nextText);
+
+  // Pure append (nextText starts with prevText): force the trivial 1:1 prefix
+  // alignment. The generic LCS can otherwise match a repeated char in prevText
+  // (e.g. the "o" in "hello") to a LATER occurrence in nextText (the "o" in an
+  // appended "world"), scattering the inserted suffix into mis-ordered pieces
+  // ("hello" + "world" -> "helloo wrld"). Anchoring prev to the prefix keeps
+  // the kept text contiguous and the whole suffix as one ordered insert.
+  if (nextText.startsWith(prevText)) {
+    keptA = new Set();
+    keptB = new Set();
+    alignment = [];
+    for (let i = 0; i < prevText.length; i++) {
+      keptA.add(i);
+      keptB.add(i);
+      alignment.push({ aIdx: i, bIdx: i });
+    }
+  }
 
   // Read per-sub-run char-start positions directly off the run. The
   // gaps between consecutive sub-runs' char-ranges hold LineGrouper-
@@ -651,36 +667,14 @@ export function applyPartialEditPlan(
   // with the original byte codes, but that needs binding work to
   // expose per-char-code accessors on text objects.
   //
-  // Workaround we DO ship: try the borrow, measure the actual
-  // rendered width via `FPDFPageObj_GetBounds`, and fall back to
-  // Helvetica when the result looks broken (sub-threshold per-char
-  // width = font didn't have working glyphs for these chars). The
-  // detection costs one bounds read per emit - negligible.
-  //
-  // Borrow-font policy: always borrow when a charcode strategy is
-  // active (cmap / content-stream / backend can resolve any char the
-  // font has a glyph for), else use the conservative
-  // surviving-chars-pool check.
-  //
-  // The legacy 'helvetica' strategy still needs the safety gate
-  // because FPDFText_SetText can map unknown chars to glyph 0xFF
-  // (ydieresis) which renders at full visible width and passes the
-  // measure check below - the safety gate keeps that failure mode
-  // out of the saved PDF.
-  //
-  // Active strategies don't have that problem: charcodes that
-  // resolve produce the right glyph, and chars that DON'T resolve
-  // are detected by tryResolveCharcodes returning `missing.length >
-  // 0`, in which case emitTextLine falls back to SetText for that
-  // chunk (and the existing measure-and-fallback below catches any
-  // resulting tofu).
-  // Single source of truth: charcode/CharcodeStrategy.ts. Was a
-  // 26-line inline IIFE here that duplicated the URL/localStorage
-  // lookup with a hard-coded strategy-name union literal - now it
-  // imports the typed helper so any change to strategy resolution
-  // (e.g. adding a new strategy) only happens in one place.
-  const strategy = getActiveCharcodeStrategy();
-
+  // Workaround we DO ship: borrow a survivor font ONLY for chars proven
+  // present in the line (the surviving-chars pool), measure the rendered
+  // width, and fall back to Helvetica when broken. Borrowing for an
+  // arbitrary new char (not in the pool) is unsafe: FPDFText_SetText maps an
+  // unknown char to glyph 0xFF (ydieresis tofu) which can pass the per-word
+  // width check when other chars in the same word render. Real charcode
+  // resolution for new chars lives in emitTextLine's per-char backend branch
+  // (used when the backend is reachable); this path stays base-14-safe.
   const survivingChars = new Set<string>();
   for (let i = 0; i < plan.prevMergedFromTexts.length; i++) {
     if (plan.subRunStatus[i] !== "all-deleted") {
@@ -836,18 +830,18 @@ export function applyPartialEditPlan(
           ? beforeBounds.x + offset
           : lastEnd + leadingGap;
 
-      // Borrow the font from a survivor that actually contains the
-      // inserted chars (e.g. the neighbouring "i"), so the new glyph
-      // reuses that exact embedded font. Borrow when every insert char is
-      // already present somewhere in the line (safe) OR a charcode strategy
-      // is active (the resolver can map arbitrary chars to the embedded
-      // font's glyphs); only the legacy 'helvetica' strategy needs the safe
-      // gate. emitTextLine still validates and falls back to base-14 if the
-      // borrowed font renders .notdef.
-      const borrowedFontPtr =
-        allInsertCharsAreSafe || strategy !== "helvetica"
-          ? borrowFontForChars(m, plan, insertText)
-          : 0;
+      // Borrow the font from a survivor that actually contains the inserted
+      // chars (e.g. the neighbouring "i"), so the new glyph reuses that exact
+      // embedded font - but ONLY when every insert char is already present in
+      // the line (safe). Borrowing for an arbitrary new char (e.g. "W" not in
+      // the subset) and writing it via SetText renders U+00FF tofu when the
+      // backend charcode resolver isn't available, and the per-word width
+      // check can't catch a single bad char. The per-char backend branch in
+      // emitTextLine handles real charcode resolution when the backend IS
+      // reachable; this fallback stays base-14-safe for unsafe chars.
+      const borrowedFontPtr = allInsertCharsAreSafe
+        ? borrowFontForChars(m, plan, insertText)
+        : 0;
 
       // Try the borrowed source font first; measure the result and fall
       // back to Helvetica if the rendered width is sub-threshold (font
