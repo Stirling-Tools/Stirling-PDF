@@ -321,7 +321,7 @@ public class PdfTextEditorV2CharcodeController {
     private static java.util.Map<String, Long> buildReverseUnicodeMap(PDFont font) {
         java.util.Map<String, Long> out = new java.util.HashMap<>();
         int upper = font.isStandard14() ? 256 : 0x10000;
-        for (int cc = 0; cc <= upper; cc++) {
+        for (int cc = 0; cc < upper; cc++) {
             String u;
             try {
                 u = font.toUnicode(cc);

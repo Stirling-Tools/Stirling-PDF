@@ -2,6 +2,7 @@ import { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDocument
 import { HistoryStack } from "@app/tools/pdfTextEditor/v2/store/HistoryStack";
 import { Selection } from "@app/tools/pdfTextEditor/v2/store/Selection";
 import { PdfiumTextReader } from "@app/tools/pdfTextEditor/v2/pdfium/PdfiumTextReader";
+import { resetBackendResolverCaches } from "@app/tools/pdfTextEditor/v2/charcode/BackendResolver";
 import type { Command } from "@app/tools/pdfTextEditor/v2/commands/Command";
 import type {
   GroupingMode,
@@ -210,6 +211,9 @@ export class EditorStore {
 
   async setDocument(doc: EditorDocument): Promise<void> {
     this.disposeDocumentIfAny();
+    // Charcode caches are keyed by raw PDFium font/page pointers, which the
+    // new document can reuse for different fonts - drop them on doc switch.
+    resetBackendResolverCaches();
     this.doc = doc;
     this.history.clear();
     this.savedUndoDepth = 0;
@@ -228,6 +232,7 @@ export class EditorStore {
 
   clearDocument(): void {
     this.disposeDocumentIfAny();
+    resetBackendResolverCaches();
     this.history.clear();
     this.savedUndoDepth = 0;
     this.bakedDirty = false;

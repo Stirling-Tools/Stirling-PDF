@@ -400,13 +400,6 @@ export async function prewarmBackendCacheForPage(
     }
     return;
   }
-  // Tentatively mark - we'll un-mark below if every probe failed so
-  // the next focus retries. Previously a single failed prewarm round
-  // (e.g. all-401 because the JWT wasn't attached, all-500 because
-  // the backend was down) silently locked the page out of any future
-  // prewarm attempt for the rest of the session.
-  prewarmedPages.add(pagePtr);
-
   const ctx: ResolverContext = { module: m, pagePtr, docPtr };
 
   // Walk the page text once, collecting (perCharFont, unicode) for every
@@ -464,6 +457,12 @@ export async function prewarmBackendCacheForPage(
     }
   }
   if (probes.length === 0) return;
+
+  // Guard the page only once we're committed to the fetch fan-out. Marking
+  // earlier left the page guarded on cheap early-returns (missing PDFium
+  // funcs, no text page, nothing to probe), silently skipping all future
+  // retries. We un-mark below if every probe failed so a later focus retries.
+  prewarmedPages.add(pagePtr);
 
   try {
     const { PdfiumSave } =
@@ -609,10 +608,12 @@ function getEditorDocument():
 function uint8ToBase64(bytes: Uint8Array): string {
   let bin = "";
   const chunk = 0x8000;
+  // Pass the typed-array subarray straight to apply() (it is array-like) so we
+  // don't allocate an intermediate Array per chunk for large PDFs.
   for (let i = 0; i < bytes.length; i += chunk) {
     bin += String.fromCharCode.apply(
       null,
-      Array.from(bytes.subarray(i, i + chunk)),
+      bytes.subarray(i, i + chunk) as unknown as number[],
     );
   }
   return btoa(bin);
@@ -626,4 +627,18 @@ function cacheKey(fontPtr: number, ch: string): string {
 export function _clearBackendCacheForTests(): void {
   charCache.clear();
   inFlight.clear();
+}
+
+/**
+ * Reset ALL module-level caches keyed by raw PDFium pointers (per-char
+ * charcodes, per-page prewarm guard, per-char font handles, in-flight set).
+ * MUST be called whenever the editor switches documents: PDFium can reuse a
+ * freed font/page pointer for a different font in the next document, so a
+ * stale entry would otherwise serve the wrong charcode/glyph across docs.
+ */
+export function resetBackendResolverCaches(): void {
+  charCache.clear();
+  inFlight.clear();
+  prewarmedPages.clear();
+  fontForCharCache.clear();
 }

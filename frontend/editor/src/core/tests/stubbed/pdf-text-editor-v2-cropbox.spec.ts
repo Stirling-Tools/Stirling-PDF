@@ -148,6 +148,111 @@ test("CropBox + Rotate 90 fixture: dims swap, rotation in the transform, model r
   expect(disp.y).toBeLessThanOrEqual(p.height);
 });
 
+test("editing text on a Rotate-90 page applies cleanly and keeps placement in-bounds", async ({
+  page,
+}) => {
+  // Editing happens in raw PDF space (commands are rotation-agnostic); the
+  // overlay maps the anchor through the rotation transform. Verify a real
+  // type-edit round-trips on a rotated page with no crash and in-bounds anchor.
+  const errs: string[] = [];
+  page.on("pageerror", (e) => errs.push(e.message));
+  await page.goto("/pdf-text-editor?charcodeStrategy=content-stream", {
+    waitUntil: "domcontentloaded",
+  });
+  await expect(page.getByTestId("v2-root")).toBeVisible({ timeout: 30_000 });
+  await page
+    .locator('[data-testid="v2-file-input"]')
+    .setInputFiles(
+      path.join(__dirname, "../test-fixtures/cropbox-rotate90.pdf"),
+    );
+  await expect(page.getByTestId("v2-page-0")).toBeVisible({ timeout: 30_000 });
+  await page.waitForTimeout(800);
+
+  const id = await page.evaluate(() => {
+    const s = (
+      window as unknown as {
+        __v2_editor_store: {
+          doc: { page: (i: number) => { runs: Array<{ id: string }> } };
+        };
+      }
+    ).__v2_editor_store;
+    return s.doc.page(0).runs[0]?.id ?? "";
+  });
+  expect(id).toMatch(/^p0-/);
+
+  await page.locator(`[data-testid="v2-run-${id}"]`).click();
+  await page.waitForTimeout(150);
+  await page.evaluate((rid) => {
+    const el = document.querySelector<HTMLDivElement>(
+      `[data-testid="v2-run-${rid}"]`,
+    )!;
+    el.focus();
+    const sel = window.getSelection()!;
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    range.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(range);
+    document.execCommand("insertText", false, "Z");
+  }, id);
+  await page.waitForTimeout(150);
+  await page.evaluate(
+    (rid) =>
+      document
+        .querySelector<HTMLElement>(`[data-testid="v2-run-${rid}"]`)
+        ?.blur(),
+    id,
+  );
+  await page.waitForTimeout(800);
+
+  const after = await page.evaluate(() => {
+    const s = (
+      window as unknown as {
+        __v2_editor_store: {
+          doc: {
+            page: (i: number) => {
+              width: number;
+              height: number;
+              runs: Array<{
+                id: string;
+                text: string;
+                bounds: { x: number };
+                matrix: { f: number };
+              }>;
+              display: {
+                a: number;
+                b: number;
+                c: number;
+                d: number;
+                e: number;
+                f: number;
+              };
+            };
+          };
+        };
+      }
+    ).__v2_editor_store;
+    const pg = s.doc.page(0);
+    const r = pg.runs[0];
+    const d = pg.display;
+    return {
+      text: r.text,
+      width: pg.width,
+      height: pg.height,
+      dispX: d.a * r.bounds.x + d.c * r.matrix.f + d.e,
+      dispY: d.b * r.bounds.x + d.d * r.matrix.f + d.f,
+    };
+  });
+
+  expect(errs, `no page errors:\n${errs.join("\n")}`).toEqual([]);
+  expect(after.text).toContain("Z"); // edit applied
+  // Anchor still inside the rotated visible page (no off-page drift).
+  expect(after.dispX).toBeGreaterThanOrEqual(0);
+  expect(after.dispX).toBeLessThanOrEqual(after.width);
+  expect(after.dispY).toBeGreaterThanOrEqual(0);
+  expect(after.dispY).toBeLessThanOrEqual(after.height);
+});
+
 test("CropBox-offset: the rendered glyph pixels overlap the run overlay box", async ({
   page,
 }) => {

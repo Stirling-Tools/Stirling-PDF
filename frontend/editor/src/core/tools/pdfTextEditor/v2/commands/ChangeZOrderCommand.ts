@@ -22,7 +22,7 @@ interface InsertAtModule {
  * object list. The op uses `FPDFPage_RemoveObject` + the newer
  * `FPDFPage_InsertObjectAtIndex` binding (when available). If the
  * binding isn't exposed by this PDFium build the command becomes a
- * no-op (logged once for diagnostics).
+ * no-op (a diagnostic warning is logged on each attempt).
  *
  * Revert restores the object to its original index by the inverse
  * remove+insert. The original index is captured on apply.
