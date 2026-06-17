@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.commons.io.FilenameUtils;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.MediaTypeFactory;
@@ -30,6 +31,7 @@ import stirling.software.proprietary.policy.model.OutputSpec;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Profile("saas")
 public class FolderOutputSink implements PolicyOutputSink {
 
     static final String TYPE = FolderAccessGuard.FOLDER_TYPE;

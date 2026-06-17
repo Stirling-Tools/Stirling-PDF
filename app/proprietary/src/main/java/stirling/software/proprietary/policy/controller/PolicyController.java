@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
@@ -63,6 +64,7 @@ import stirling.software.proprietary.policy.store.PolicyStore;
 @Hidden
 @RequiredArgsConstructor
 @Tag(name = "Policies", description = "Run tool pipelines on the backend")
+@Profile("saas")
 public class PolicyController {
 
     private final PolicyRunner policyRunner;
