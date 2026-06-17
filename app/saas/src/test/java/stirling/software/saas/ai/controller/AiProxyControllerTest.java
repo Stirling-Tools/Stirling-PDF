@@ -6,7 +6,6 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
@@ -17,7 +16,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -30,70 +28,41 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-import stirling.software.proprietary.model.Team;
-import stirling.software.proprietary.security.database.repository.UserRepository;
-import stirling.software.proprietary.security.model.User;
 import stirling.software.saas.ai.service.AiProxyService;
-import stirling.software.saas.service.CreditService;
-import stirling.software.saas.service.TeamCreditService;
-import stirling.software.saas.util.CreditHeaderUtils;
 
 /**
  * Pure unit tests for {@link AiProxyController}. Every collaborator is mocked; each handler is
  * invoked directly and asserted via {@link ResponseEntity} / {@code verify}.
  *
  * <p>All endpoints funnel through one private {@code proxy(method, path, request,
- * acceptEventStream, includeCreditsHeader)} helper, so the suite has two halves:
+ * acceptEventStream)} helper, so the suite has two halves:
  *
  * <ol>
  *   <li>per-endpoint tests that pin the exact {@code (method, path, acceptEventStream)} contract a
  *       given handler forwards (the path-mapping surface), and
  *   <li>behavioural tests around the single shared {@code proxy} body: header copy, status
- *       resolution, the 503 error fallback, and the credit-header path keyed off {@code
- *       includeCreditsHeader}.
+ *       resolution, and the 503 error fallback.
  * </ol>
- *
- * <p>The credit-header branch reads {@code SecurityContextHolder}, so the relevant tests seed an
- * authentication and {@link #clearSecurityContext()} resets it afterwards.
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class AiProxyControllerTest {
 
     @Mock private AiProxyService aiProxyService;
-    @Mock private CreditService creditService;
-    @Mock private TeamCreditService teamCreditService;
-    @Mock private UserRepository userRepository;
-    @Mock private CreditHeaderUtils creditHeaderUtils;
 
     private AiProxyController controller;
 
     @org.junit.jupiter.api.BeforeEach
     void setUp() {
-        controller =
-                new AiProxyController(
-                        aiProxyService,
-                        creditService,
-                        teamCreditService,
-                        userRepository,
-                        creditHeaderUtils);
-    }
-
-    @AfterEach
-    void clearSecurityContext() {
-        SecurityContextHolder.clearContext();
+        controller = new AiProxyController(aiProxyService);
     }
 
     // ----------------------------------------------------------------------------------------------
     // Endpoint path/method mapping — each handler pins the exact upstream contract it forwards.
-    // None of these endpoints request the credit header except chat/* and edit message; see the
-    // dedicated credit-header section for those.
     // ----------------------------------------------------------------------------------------------
 
     @Nested
@@ -101,7 +70,7 @@ class AiProxyControllerTest {
     class EndpointMapping {
 
         @Test
-        @DisplayName("generateSection POSTs to /api/generate_section, non-stream, no credit header")
+        @DisplayName("generateSection POSTs to /api/generate_section, non-stream")
         void generateSection() throws Exception {
             HttpServletRequest req = req();
             stubForward("POST", "/api/generate_section", req, false, ok("body"));
@@ -110,7 +79,6 @@ class AiProxyControllerTest {
 
             assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
             verify(aiProxyService).forward("POST", "/api/generate_section", req, false);
-            assertThat(resp.getHeaders().containsHeader("X-Credit-Source")).isFalse();
         }
 
         @Test
@@ -133,6 +101,39 @@ class AiProxyControllerTest {
             controller.intentCheck(req);
 
             verify(aiProxyService).forward("POST", "/api/intent/check", req, false);
+        }
+
+        @Test
+        @DisplayName("chatRoute POSTs to /api/chat/route")
+        void chatRoute() throws Exception {
+            HttpServletRequest req = req();
+            stubForward("POST", "/api/chat/route", req, false, ok("body"));
+
+            controller.chatRoute(req);
+
+            verify(aiProxyService).forward("POST", "/api/chat/route", req, false);
+        }
+
+        @Test
+        @DisplayName("createSmartFolder POSTs to /api/chat/create-smart-folder")
+        void createSmartFolder() throws Exception {
+            HttpServletRequest req = req();
+            stubForward("POST", "/api/chat/create-smart-folder", req, false, ok("body"));
+
+            controller.createSmartFolder(req);
+
+            verify(aiProxyService).forward("POST", "/api/chat/create-smart-folder", req, false);
+        }
+
+        @Test
+        @DisplayName("chatInfo POSTs to /api/chat/info")
+        void chatInfo() throws Exception {
+            HttpServletRequest req = req();
+            stubForward("POST", "/api/chat/info", req, false, ok("body"));
+
+            controller.chatInfo(req);
+
+            verify(aiProxyService).forward("POST", "/api/chat/info", req, false);
         }
 
         @Test
@@ -213,6 +214,18 @@ class AiProxyControllerTest {
         }
 
         @Test
+        @DisplayName("editSessionMessage POSTs /api/edit/sessions/{id}/messages")
+        void editSessionMessage() throws Exception {
+            HttpServletRequest req = req();
+            stubForward("POST", "/api/edit/sessions/sess-9/messages", req, false, ok("body"));
+
+            controller.editSessionMessage("sess-9", req);
+
+            verify(aiProxyService)
+                    .forward("POST", "/api/edit/sessions/sess-9/messages", req, false);
+        }
+
+        @Test
         @DisplayName("editSessionAttachment POSTs /api/edit/sessions/{id}/attachments")
         void editSessionAttachment() throws Exception {
             HttpServletRequest req = req();
@@ -228,7 +241,7 @@ class AiProxyControllerTest {
         @DisplayName("runEditSession POSTs /api/edit/sessions/{id}/run as an event stream")
         void runEditSession() throws Exception {
             HttpServletRequest req = req();
-            // acceptEventStream == true here (and no credit header).
+            // acceptEventStream == true here.
             stubForward("POST", "/api/edit/sessions/sess-9/run", req, true, ok("data: x\n\n"));
 
             controller.runEditSession("sess-9", req);
@@ -505,234 +518,6 @@ class AiProxyControllerTest {
             assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
             assertThat(drain(resp.getBody())).contains("AI backend unavailable");
         }
-
-        @Test
-        @DisplayName("a credit-bearing endpoint failing in forward never reaches the credit path")
-        void creditEndpointFailure_skipsCreditWork() throws Exception {
-            HttpServletRequest req = req();
-            authenticateWeb(userWithTeam(7L, 100L));
-            when(aiProxyService.forward(any(), any(), any(), anyBoolean()))
-                    .thenThrow(new java.io.IOException("down"));
-
-            ResponseEntity<StreamingResponseBody> resp = controller.chatRoute(req);
-
-            assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
-            // The credit header is only added after a successful forward.
-            verifyNoInteractions(creditHeaderUtils);
-            assertThat(resp.getHeaders().containsHeader("X-Credit-Source")).isFalse();
-        }
-    }
-
-    // ----------------------------------------------------------------------------------------------
-    // Credit headers — only the chat/* and edit-message endpoints set includeCreditsHeader = true.
-    // ----------------------------------------------------------------------------------------------
-
-    @Nested
-    @DisplayName(
-            "credit-header endpoints (chatRoute / createSmartFolder / chatInfo / editSessionMessage)")
-    class CreditHeaders {
-
-        @Test
-        @DisplayName(
-                "chatRoute POSTs /api/chat/route and adds X-Credits-Remaining for an authed user")
-        void chatRoute_addsCreditHeaders() throws Exception {
-            User user = userWithTeam(7L, 100L);
-            authenticateWeb(user);
-            when(creditHeaderUtils.getRemainingCredits(user, creditService, teamCreditService))
-                    .thenReturn(42);
-            HttpServletRequest req = req();
-            stubForward("POST", "/api/chat/route", req, false, ok("reply"));
-
-            ResponseEntity<StreamingResponseBody> resp = controller.chatRoute(req);
-
-            assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(resp.getHeaders().getFirst("X-Credits-Remaining")).isEqualTo("42");
-            assertThat(resp.getHeaders().getFirst("X-Credit-Source")).isEqualTo("AI_TOOL_CALL");
-            verify(aiProxyService).forward("POST", "/api/chat/route", req, false);
-        }
-
-        @Test
-        @DisplayName("createSmartFolder POSTs /api/chat/create-smart-folder with the credit header")
-        void createSmartFolder_addsCreditHeaders() throws Exception {
-            User user = userWithTeam(7L, 100L);
-            authenticateWeb(user);
-            when(creditHeaderUtils.getRemainingCredits(user, creditService, teamCreditService))
-                    .thenReturn(5);
-            HttpServletRequest req = req();
-            stubForward("POST", "/api/chat/create-smart-folder", req, false, ok("folder"));
-
-            ResponseEntity<StreamingResponseBody> resp = controller.createSmartFolder(req);
-
-            assertThat(resp.getHeaders().getFirst("X-Credits-Remaining")).isEqualTo("5");
-            assertThat(resp.getHeaders().getFirst("X-Credit-Source")).isEqualTo("AI_TOOL_CALL");
-            verify(aiProxyService).forward("POST", "/api/chat/create-smart-folder", req, false);
-        }
-
-        @Test
-        @DisplayName("chatInfo POSTs /api/chat/info with the credit header")
-        void chatInfo_addsCreditHeaders() throws Exception {
-            User user = userWithTeam(7L, 100L);
-            authenticateWeb(user);
-            when(creditHeaderUtils.getRemainingCredits(user, creditService, teamCreditService))
-                    .thenReturn(3);
-            HttpServletRequest req = req();
-            stubForward("POST", "/api/chat/info", req, false, ok("info"));
-
-            ResponseEntity<StreamingResponseBody> resp = controller.chatInfo(req);
-
-            assertThat(resp.getHeaders().getFirst("X-Credits-Remaining")).isEqualTo("3");
-            verify(aiProxyService).forward("POST", "/api/chat/info", req, false);
-        }
-
-        @Test
-        @DisplayName(
-                "editSessionMessage POSTs /api/edit/sessions/{id}/messages with the credit header")
-        void editSessionMessage_addsCreditHeaders() throws Exception {
-            User user = userWithTeam(7L, 100L);
-            authenticateWeb(user);
-            when(creditHeaderUtils.getRemainingCredits(user, creditService, teamCreditService))
-                    .thenReturn(99);
-            HttpServletRequest req = req();
-            stubForward("POST", "/api/edit/sessions/sess-9/messages", req, false, ok("msg"));
-
-            ResponseEntity<StreamingResponseBody> resp =
-                    controller.editSessionMessage("sess-9", req);
-
-            assertThat(resp.getHeaders().getFirst("X-Credits-Remaining")).isEqualTo("99");
-            assertThat(resp.getHeaders().getFirst("X-Credit-Source")).isEqualTo("AI_TOOL_CALL");
-            verify(aiProxyService)
-                    .forward("POST", "/api/edit/sessions/sess-9/messages", req, false);
-        }
-
-        @Test
-        @DisplayName("zero remaining credits still emits the header (>= 0 boundary)")
-        void zeroCredits_emitsHeader() throws Exception {
-            User user = userWithTeam(7L, 100L);
-            authenticateWeb(user);
-            when(creditHeaderUtils.getRemainingCredits(user, creditService, teamCreditService))
-                    .thenReturn(0);
-            HttpServletRequest req = req();
-            stubForward("POST", "/api/chat/route", req, false, ok("reply"));
-
-            ResponseEntity<StreamingResponseBody> resp = controller.chatRoute(req);
-
-            assertThat(resp.getHeaders().getFirst("X-Credits-Remaining")).isEqualTo("0");
-            assertThat(resp.getHeaders().getFirst("X-Credit-Source")).isEqualTo("AI_TOOL_CALL");
-        }
-
-        @Test
-        @DisplayName(
-                "negative remaining credits omits X-Credits-Remaining but still sets the source")
-        void negativeCredits_omitsRemainingButKeepsSource() throws Exception {
-            User user = userWithTeam(7L, 100L);
-            authenticateWeb(user);
-            when(creditHeaderUtils.getRemainingCredits(user, creditService, teamCreditService))
-                    .thenReturn(-1);
-            HttpServletRequest req = req();
-            stubForward("POST", "/api/chat/route", req, false, ok("reply"));
-
-            ResponseEntity<StreamingResponseBody> resp = controller.chatRoute(req);
-
-            assertThat(resp.getHeaders().containsHeader("X-Credits-Remaining")).isFalse();
-            // X-Credit-Source is set unconditionally once we reach the credit path.
-            assertThat(resp.getHeaders().getFirst("X-Credit-Source")).isEqualTo("AI_TOOL_CALL");
-        }
-
-        @Test
-        @DisplayName(
-                "no authentication: credit work is skipped, no credit headers, response still streams")
-        void noAuth_skipsCreditHeaders() throws Exception {
-            SecurityContextHolder.clearContext();
-            HttpServletRequest req = req();
-            stubForward("POST", "/api/chat/route", req, false, ok("reply"));
-
-            ResponseEntity<StreamingResponseBody> resp = controller.chatRoute(req);
-
-            assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(resp.getHeaders().containsHeader("X-Credits-Remaining")).isFalse();
-            assertThat(resp.getHeaders().containsHeader("X-Credit-Source")).isFalse();
-            verifyNoInteractions(creditHeaderUtils);
-            assertThat(drain(resp.getBody())).isEqualTo("reply");
-        }
-
-        @Test
-        @DisplayName("an unauthenticated token (isAuthenticated()==false) is treated as no-auth")
-        void unauthenticatedToken_skipsCreditHeaders() throws Exception {
-            // 2-arg ctor → isAuthenticated() == false, so the credit branch short-circuits.
-            UsernamePasswordAuthenticationToken token =
-                    new UsernamePasswordAuthenticationToken("alice", "pw");
-            SecurityContextHolder.getContext().setAuthentication(token);
-            HttpServletRequest req = req();
-            stubForward("POST", "/api/chat/route", req, false, ok("reply"));
-
-            ResponseEntity<StreamingResponseBody> resp = controller.chatRoute(req);
-
-            assertThat(resp.getHeaders().containsHeader("X-Credits-Remaining")).isFalse();
-            assertThat(resp.getHeaders().containsHeader("X-Credit-Source")).isFalse();
-            verifyNoInteractions(creditHeaderUtils);
-        }
-
-        @Test
-        @DisplayName("credit-header work blowing up is swallowed; the response still streams")
-        void creditLookupThrows_stillStreams() throws Exception {
-            User user = userWithTeam(7L, 100L);
-            authenticateWeb(user);
-            when(creditHeaderUtils.getRemainingCredits(any(), any(), any()))
-                    .thenThrow(new RuntimeException("boom"));
-            HttpServletRequest req = req();
-            stubForward("POST", "/api/chat/route", req, false, ok("payload"));
-
-            ResponseEntity<StreamingResponseBody> resp = controller.chatRoute(req);
-
-            assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
-            // The catch in addCreditHeaders runs before X-Credit-Source is set, so neither lands.
-            assertThat(resp.getHeaders().containsHeader("X-Credits-Remaining")).isFalse();
-            assertThat(resp.getHeaders().containsHeader("X-Credit-Source")).isFalse();
-            assertThat(drain(resp.getBody())).isEqualTo("payload");
-        }
-
-        @Test
-        @DisplayName("resolving the current user failing is swallowed; the response still streams")
-        void getCurrentUserThrows_stillStreams() throws Exception {
-            // EnhancedJwtAuthenticationToken is the only auth type with a getCurrentUser DB lookup,
-            // but a plain authed token whose principal is a User short-circuits there. To exercise
-            // the swallow we make the downstream credit lookup throw (covered above); here we
-            // assert
-            // that a non-User principal that can't be resolved doesn't break the stream.
-            UsernamePasswordAuthenticationToken token =
-                    new UsernamePasswordAuthenticationToken("alice", "pw", List.of());
-            // principal is the String "alice"; getCurrentUser will hit
-            // userRepository.findByUsername.
-            when(userRepository.findByUsername("alice")).thenReturn(java.util.Optional.empty());
-            SecurityContextHolder.getContext().setAuthentication(token);
-            HttpServletRequest req = req();
-            stubForward("POST", "/api/chat/route", req, false, ok("payload"));
-
-            ResponseEntity<StreamingResponseBody> resp = controller.chatRoute(req);
-
-            assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(resp.getHeaders().containsHeader("X-Credits-Remaining")).isFalse();
-            assertThat(resp.getHeaders().containsHeader("X-Credit-Source")).isFalse();
-            assertThat(drain(resp.getBody())).isEqualTo("payload");
-            verifyNoInteractions(creditHeaderUtils);
-        }
-
-        @Test
-        @DisplayName(
-                "an authed User principal is passed straight to the credit utils (no repo lookup)")
-        void authedUserPrincipal_passedToCreditUtils() throws Exception {
-            User user = userWithTeam(7L, 100L);
-            authenticateWeb(user);
-            when(creditHeaderUtils.getRemainingCredits(any(), any(), any())).thenReturn(11);
-            HttpServletRequest req = req();
-            stubForward("POST", "/api/chat/route", req, false, ok("reply"));
-
-            controller.chatRoute(req);
-
-            // The principal User is forwarded verbatim alongside both credit services.
-            verify(creditHeaderUtils).getRemainingCredits(user, creditService, teamCreditService);
-            verifyNoInteractions(userRepository);
-        }
     }
 
     // ----------------------------------------------------------------------------------------------
@@ -757,24 +542,6 @@ class AiProxyControllerTest {
 
     private static HttpResponse<InputStream> ok(String body) {
         return upstreamResponse(200, body, httpHeaders(Map.of()));
-    }
-
-    private static User userWithTeam(long userId, long teamId) {
-        User user = new User();
-        user.setId(userId);
-        Team team = new Team();
-        team.setId(teamId);
-        user.setTeam(team);
-        return user;
-    }
-
-    /**
-     * Authenticated WEB principal: 3-arg ctor so isAuthenticated()==true, principal is the User.
-     */
-    private static void authenticateWeb(User user) {
-        UsernamePasswordAuthenticationToken auth =
-                new UsernamePasswordAuthenticationToken(user, null, List.of());
-        SecurityContextHolder.getContext().setAuthentication(auth);
     }
 
     private static java.net.http.HttpHeaders httpHeaders(Map<String, String> single) {
