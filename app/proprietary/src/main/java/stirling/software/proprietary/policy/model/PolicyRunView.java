@@ -17,7 +17,9 @@ public record PolicyRunView(
         String error,
         String errorCode,
         Boolean errorSubscribed,
-        List<ResultFile> outputs) {
+        List<ResultFile> outputs,
+        /** When the run was created, epoch millis, so a rediscovered run shows its real age. */
+        long createdAt) {
 
     public static PolicyRunView of(PolicyRun run) {
         return new PolicyRunView(
@@ -29,6 +31,7 @@ public record PolicyRunView(
                 run.getError(),
                 run.getErrorCode(),
                 run.getErrorSubscribed(),
-                run.getOutputs());
+                run.getOutputs(),
+                run.getCreatedAt().toEpochMilli());
     }
 }

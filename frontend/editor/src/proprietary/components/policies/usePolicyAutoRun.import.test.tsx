@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => ({
   getStirlingFile: vi.fn(),
   getStirlingFileStub: vi.fn(),
   downloadPolicyOutput: vi.fn(),
+  listPolicyRuns: vi.fn(),
   createStirlingFilesAndStubs: vi.fn(),
 }));
 
@@ -45,7 +46,7 @@ vi.mock("@app/hooks/usePolicies", () => ({
 vi.mock("@app/services/policyApi", () => ({
   runStoredPolicy: vi.fn(),
   getPolicyRun: vi.fn(),
-  listPolicyRuns: vi.fn().mockResolvedValue([]),
+  listPolicyRuns: mocks.listPolicyRuns,
   downloadPolicyOutput: mocks.downloadPolicyOutput,
 }));
 vi.mock("@app/services/fileStorage", () => ({
@@ -94,6 +95,7 @@ beforeEach(() => {
   resetPolicyRuns();
   vi.clearAllMocks();
   mocks.fileStubs = [];
+  mocks.listPolicyRuns.mockResolvedValue([]);
   mocks.getStirlingFileStub.mockResolvedValue(null);
   mocks.persistVersionedOutputs.mockResolvedValue(undefined);
   mocks.consumeFiles.mockResolvedValue(undefined);
@@ -154,5 +156,31 @@ describe("auto-run import: new-version output delivery", () => {
     expect(mocks.addFiles).toHaveBeenCalled();
     expect(mocks.persistVersionedOutputs).not.toHaveBeenCalled();
     expect(mocks.consumeFiles).not.toHaveBeenCalled();
+  });
+
+  it("adopts a server-only run, dating it from the server's createdAt (not now)", async () => {
+    // A run the client never recorded (true orphan): reconcile adopts it from the server. With no
+    // local input link it delivers as a new file, and its age comes from the server, not Date.now().
+    mocks.listPolicyRuns.mockResolvedValue([
+      {
+        runId: "srv-1",
+        policyId: "backend-1",
+        status: "COMPLETED",
+        currentStep: 1,
+        stepCount: 1,
+        error: null,
+        outputs: [{ fileId: "out-file-1", fileName: "doc.pdf" }],
+        createdAt: 1000,
+      },
+    ]);
+
+    renderHook(() => usePolicyAutoRun());
+    await act(async () => {
+      await vi.waitFor(() => expect(getRun("srv-1")?.imported).toBe(true));
+    });
+
+    expect(getRun("srv-1")?.startedAt).toBe(1000);
+    expect(mocks.addFiles).toHaveBeenCalled();
+    expect(mocks.persistVersionedOutputs).not.toHaveBeenCalled();
   });
 });

@@ -152,6 +152,9 @@ export function usePolicyAutoRun(): void {
   const scheduleQueueRetry = useCallback((runId: string) => {
     const rec = getRun(runId);
     if (!rec) return;
+    // A run rediscovered from the server (reconciled) has no local input fileId, so it can't be
+    // re-dispatched; leave it failed rather than spinning on a file we can't resolve.
+    if (!rec.fileId) return;
     const key = dispatchKey(rec.categoryId, rec.fileId);
     const attempts = queueRetries.current.get(key) ?? 0;
     const backendId = policiesRef.current[rec.categoryId]?.backendId;
@@ -341,13 +344,18 @@ async function reconcileServerRuns(
     addReconciledRun({
       runId: view.runId,
       categoryId,
+      // No local input link: a run rediscovered purely from the server (never recorded by this
+      // client) can't be tied back to a workspace/storage file, so its output is delivered as a
+      // new file rather than a version, and it isn't retried. The recorded-run path (real fileId)
+      // covers the common refresh case; this only bites true orphans (storage wipe / other device).
       fileId: "",
       fileName: view.outputs[0]?.fileName ?? "",
       fileSize: 0,
       status: view.status,
       outputs: view.outputs,
       error: view.error,
-      startedAt: Date.now(),
+      // Use the server's creation time, not now, so a rediscovered run shows its real age.
+      startedAt: view.createdAt,
     });
   }
 }

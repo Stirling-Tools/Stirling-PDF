@@ -91,6 +91,8 @@ export interface PolicyRunView {
    */
   errorSubscribed?: boolean | null;
   outputs: BackendResultFile[];
+  /** When the run was created (epoch millis); lets a rediscovered run show its real age. */
+  createdAt: number;
 }
 
 /** Resolve a frontend operation id to its backend tool endpoint path. */
