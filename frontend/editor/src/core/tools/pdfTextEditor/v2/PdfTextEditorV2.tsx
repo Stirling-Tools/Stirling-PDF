@@ -171,9 +171,9 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
 
   /**
    * Ctrl+V: read clipboard and create a fresh InsertTextCommand on
-   * the currently-visible page, positioned in roughly the centre.
-   * Each line of the clipboard becomes a new text object so paste of
-   * multi-line content works without flattening to one long run.
+   * the currently-visible page, positioned in roughly the centre. The
+   * whole clipboard string (newlines preserved) is inserted as a single
+   * multi-line text run.
    *
    * Skipped silently when:
    *   - no document loaded

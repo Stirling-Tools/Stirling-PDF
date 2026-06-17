@@ -28,9 +28,11 @@ export function useSelectionActions(store: EditorStore) {
       const sel = store.selection.value;
       const doc = store.document;
       if (!doc || sel.runIds.length === 0) return;
+      // Pre-index the selection for O(1) membership in the nested walk.
+      const selIds = new Set(sel.runIds);
       for (const page of doc.loadedPages()) {
         for (const run of page.runs) {
-          if (sel.runIds.includes(run.id)) visit(run);
+          if (selIds.has(run.id)) visit(run);
         }
       }
     },

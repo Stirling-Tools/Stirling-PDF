@@ -34,6 +34,7 @@ export function deriveToolbarState(
     .filter((r) => selection.runIds.includes(r.id));
   if (selected.length === 0) return EMPTY_TOOLBAR;
   const first = selected[0];
+  const sameFamily = selected.every((r) => r.fontId === first.fontId);
   const sameSize = selected.every((r) => r.fontSize === first.fontSize);
   const sameFill = selected.every(
     (r) =>
@@ -55,7 +56,7 @@ export function deriveToolbarState(
     bold: firstBold,
     italic: firstItalic,
     mixed: {
-      fontFamily: false,
+      fontFamily: !sameFamily,
       fontSize: !sameSize,
       fill: !sameFill,
       bold: !sameBold,

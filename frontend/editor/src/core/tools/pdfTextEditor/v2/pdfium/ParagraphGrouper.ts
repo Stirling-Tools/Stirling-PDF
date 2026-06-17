@@ -23,7 +23,7 @@ import type {
  *      with the wide bootstrap range [0.6, 2.0] of the font size for the
  *      FIRST pair; once two lines have joined, the paragraph locks onto
  *      the observed median delta and admits subsequent lines only when
- *      |delta - median| <= 0.20 * median. This catches paragraphs whose
+ *      |delta - median| <= MEDIAN_TOLERANCE * median. This catches paragraphs whose
  *      first line is followed by a slightly larger spacing (drop cap,
  *      figure rule) while still rejecting an actual paragraph break.
  *   4. Left margin matches the established paragraph left edge. The

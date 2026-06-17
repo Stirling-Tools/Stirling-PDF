@@ -4,10 +4,9 @@ import type { Page } from "@app/tools/pdfTextEditor/v2/model/Page";
 /**
  * Renders pages to bitmaps for the on-screen preview.
  *
- * Holds a per-page cache keyed by `(pageIndex, scale, version)` where
- * `version` is incremented whenever the page's dirty bit clears via save.
- * V0 just re-renders on demand; a future iteration adds an LRU eviction
- * and a debounce.
+ * V0 just re-renders on demand; a future iteration will add a per-page
+ * cache keyed by `(pageIndex, scale, version)` with LRU eviction and a
+ * debounce.
  */
 export class PdfiumPageRenderer {
   static async render(

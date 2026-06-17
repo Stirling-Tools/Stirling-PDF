@@ -279,7 +279,7 @@ public class PdfTextEditorV2CharcodeController {
             // For Type3 with at most ~16 glyphs, this is microseconds. For full Type0 subsets
             // it's a few-thousand-iteration scan.
             int upper = font.isStandard14() ? 256 : 0x10000;
-            for (int cc = 0; cc <= upper; cc++) {
+            for (int cc = 0; cc < upper; cc++) {
                 String u;
                 try {
                     u = font.toUnicode(cc);
