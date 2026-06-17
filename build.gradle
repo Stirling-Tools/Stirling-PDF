@@ -187,8 +187,8 @@ subprojects {
         }
         // Maven Central first; mirrors below are fallbacks for niche artifacts.
         mavenCentral()
-        maven { url = "https://build.shibboleth.net/maven/releases" }
         maven { url = "https://repository.jboss.org/" }
+        maven { url = "https://build.shibboleth.net/maven/releases" }
     }
 
     configurations.configureEach {
@@ -585,6 +585,7 @@ repositories {
         }
     }
     mavenCentral()
+    maven { url = "https://repository.jboss.org/" }
     maven { url = "https://build.shibboleth.net/maven/releases" }
 }
 
