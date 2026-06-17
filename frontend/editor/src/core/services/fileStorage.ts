@@ -731,6 +731,53 @@ class FileStorageService {
   }
 
   /**
+   * Persist output files as versions of their inputs: mark each input non-leaf (unless the
+   * outputs are v1 originals, i.e. nothing was versioned) and store each output with its stub.
+   * This is the durable half of {@link consumeFiles}, shared so a versioned result can be written
+   * even when the input isn't in the active workspace (e.g. a policy run recovered after a reload).
+   * Storage-only callers must bump the IndexedDB revision afterwards so the file views re-read;
+   * {@link consumeFiles} instead updates workspace state via its dispatch.
+   */
+  async persistVersionedOutputs(
+    inputFileIds: FileId[],
+    outputStirlingFiles: StirlingFile[],
+    outputStirlingFileStubs: StirlingFileStub[],
+  ): Promise<void> {
+    if (outputStirlingFiles.length !== outputStirlingFileStubs.length) {
+      throw new Error(
+        `Mismatch between output files (${outputStirlingFiles.length}) and stubs (${outputStirlingFileStubs.length})`,
+      );
+    }
+
+    const allV1 = outputStirlingFileStubs.every(
+      (stub) => stub.versionNumber === 1,
+    );
+    if (!allV1) {
+      await Promise.all(
+        inputFileIds.map((fileId) =>
+          this.markFileAsProcessed(fileId).catch((error) => {
+            // Best-effort: a missing/locked input shouldn't block storing the outputs.
+            console.warn(`Failed to mark file ${fileId} as processed:`, error);
+          }),
+        ),
+      );
+    }
+
+    await Promise.all(
+      outputStirlingFiles.map((file, i) =>
+        this.storeStirlingFile(file, outputStirlingFileStubs[i]).catch(
+          (error) =>
+            console.error(
+              "Failed to persist output file to storage:",
+              file.name,
+              error,
+            ),
+        ),
+      ),
+    );
+  }
+
+  /**
    * Mark a file as leaf (opposite of markFileAsProcessed)
    * Used when promoting a file back to "recent" status
    */
