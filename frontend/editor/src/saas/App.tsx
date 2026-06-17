@@ -18,7 +18,6 @@ import OAuthConsent from "@app/routes/OAuthConsent";
 import ShareLinkPage from "@app/routes/ShareLinkPage";
 import MobileScannerPage from "@app/pages/MobileScannerPage";
 import OnboardingBootstrap from "@app/components/OnboardingBootstrap";
-import TrialExpiredBootstrap from "@app/components/TrialExpiredBootstrap";
 import SignupRequiredBootstrap from "@app/components/SignupRequiredBootstrap";
 import UsageLimitModalHost from "@app/components/UsageLimitModalHost";
 
@@ -47,9 +46,9 @@ function PublicRouteProviders({ children }: { children: ReactNode }) {
 }
 
 /**
- * Onboarding and trial-expired modals must never cover auth-flow pages
- * (login, signup, OAuth consent): they steal focus from the task the user
- * was sent there to complete. Unmounting also stops their background polling.
+ * Onboarding / sign-up modals must never cover auth-flow pages (login, signup,
+ * OAuth consent): they steal focus from the task the user was sent there to
+ * complete.
  */
 function NonAuthBootstraps() {
   const location = useLocation();
@@ -59,7 +58,6 @@ function NonAuthBootstraps() {
   return (
     <>
       <OnboardingBootstrap />
-      <TrialExpiredBootstrap />
       <SignupRequiredBootstrap />
       <UsageLimitModalHost />
     </>

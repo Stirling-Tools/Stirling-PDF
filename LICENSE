@@ -16,6 +16,8 @@ if that directory exists, is licensed under the license defined in "frontend/edi
 if that directory exists, is licensed under the license defined in "frontend/editor/src/desktop/LICENSE".
 * All content that resides under the "frontend/editor/src/saas/" directory of this repository,
 if that directory exists, is licensed under the license defined in "frontend/editor/src/saas/LICENSE".
+* All content that resides under the "frontend/editor/src/cloud/" directory of this repository,
+if that directory exists, is licensed under the license defined in "frontend/editor/src/cloud/LICENSE".
 * All content that resides under the "frontend/editor/src/prototypes/" directory of this repository,
 if that directory exists, is licensed under the license defined in "frontend/editor/src/prototypes/LICENSE".
 * All content that resides under the "frontend/portal/" directory of this repository,

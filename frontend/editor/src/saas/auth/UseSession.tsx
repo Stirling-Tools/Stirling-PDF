@@ -54,15 +54,6 @@ export function deriveDisplayName(
   );
 }
 
-export interface TrialStatus {
-  isTrialing: boolean;
-  trialEnd: string;
-  daysRemaining: number;
-  hasPaymentMethod: boolean;
-  hasScheduledSub: boolean;
-  status: string;
-}
-
 interface AuthContextType {
   session: Session | null;
   user: User | null;
@@ -83,7 +74,6 @@ interface AuthContextType {
   subscription: SubscriptionInfo | null;
   creditSummary: CreditSummary | null;
   isPro: boolean | null;
-  trialStatus: TrialStatus | null;
   profilePictureUrl: string | null;
   profilePictureMetadata: ProfilePictureMetadata | null;
   signOut: () => Promise<void>;
@@ -92,7 +82,6 @@ interface AuthContextType {
   updateCredits: (newBalance: number) => void;
   refreshCredits: () => Promise<void>;
   refreshProStatus: () => Promise<void>;
-  refreshTrialStatus: () => Promise<void>;
   refreshProfilePicture: () => Promise<void>;
   refreshProfilePictureMetadata: () => Promise<void>;
 }
@@ -108,7 +97,6 @@ const AuthContext = createContext<AuthContextType>({
   subscription: null,
   creditSummary: null,
   isPro: null,
-  trialStatus: null,
   profilePictureUrl: null,
   profilePictureMetadata: null,
   signOut: async () => {},
@@ -121,7 +109,6 @@ const AuthContext = createContext<AuthContextType>({
   updateCredits: () => {},
   refreshCredits: async () => {},
   refreshProStatus: async () => {},
-  refreshTrialStatus: async () => {},
   refreshProfilePicture: async () => {},
   refreshProfilePictureMetadata: async () => {},
 });
@@ -138,7 +125,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     null,
   );
   const [isPro, setIsPro] = useState<boolean | null>(null);
-  const [trialStatus, setTrialStatus] = useState<TrialStatus | null>(null);
   const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(
     null,
   );
@@ -196,75 +182,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshProStatus = useCallback(async () => {
     await fetchProStatus();
   }, [fetchProStatus]);
-
-  const fetchTrialStatus = useCallback(
-    async (sessionToUse?: Session | null) => {
-      const currentSession = sessionToUse ?? session;
-
-      if (!currentSession?.user) {
-        console.debug(
-          "[Auth Debug] No user session, skipping trial status fetch",
-        );
-        setTrialStatus(null);
-        return;
-      }
-
-      try {
-        console.debug(
-          "[Auth Debug] Fetching trial status for user:",
-          currentSession.user.id,
-        );
-        const { data, error } = await supabase
-          .from("billing_subscriptions")
-          .select(
-            "status, trial_end, has_payment_method, scheduled_subscription_id",
-          )
-          .in("status", ["trialing", "incomplete_expired", "canceled"])
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        if (error) {
-          console.error("[Auth Debug] Error fetching trial status:", error);
-          setTrialStatus(null);
-          return;
-        }
-
-        if (data?.trial_end) {
-          const trialEnd = new Date(data.trial_end);
-          const now = new Date();
-          const daysRemaining = Math.ceil(
-            (trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
-          );
-
-          setTrialStatus({
-            isTrialing: data.status === "trialing" && daysRemaining > 0,
-            trialEnd: data.trial_end,
-            daysRemaining: Math.max(0, daysRemaining),
-            hasPaymentMethod: data.has_payment_method || false,
-            hasScheduledSub: !!data.scheduled_subscription_id,
-            status: data.status,
-          });
-          console.debug("[Auth Debug] Trial status fetched:", {
-            status: data.status,
-            daysRemaining: Math.max(0, daysRemaining),
-            hasPaymentMethod: data.has_payment_method,
-            isTrialing: data.status === "trialing" && daysRemaining > 0,
-          });
-        } else {
-          setTrialStatus(null);
-        }
-      } catch (error: unknown) {
-        console.debug("[Auth Debug] Failed to fetch trial status:", error);
-        setTrialStatus(null);
-      }
-    },
-    [session],
-  );
-
-  const refreshTrialStatus = useCallback(async () => {
-    await fetchTrialStatus();
-  }, [fetchTrialStatus]);
 
   // Provider photo as interim fallback when the bucket copy is missing —
   // skipped when the user explicitly chose upload/removal (source "upload").
@@ -482,7 +399,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           });
           setSession(data.session);
 
-          // Fetch credits, pro status, trial status, profile picture metadata, and profile picture using the session from the response
+          // Fetch credits, pro status, profile picture metadata, and profile picture using the session from the response
           if (data.session?.user) {
             // Sync OAuth avatar in background; fetch the picture once the
             // sync settles instead of guessing with a fixed delay.
@@ -498,7 +415,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
             await fetchCredits(data.session);
             await fetchProStatus(data.session);
-            await fetchTrialStatus(data.session);
             await fetchProfilePictureMetadata(data.session);
           }
         }
@@ -542,12 +458,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Additional handling for specific events
           if (event === "SIGNED_OUT") {
             console.debug("[Auth Debug] User signed out, clearing session");
-            // Clear credit data, pro status, trial status, profile picture, and metadata on sign out
+            // Clear credit data, pro status, profile picture, and metadata on sign out
             setCreditBalance(null);
             setCreditSummary(null);
             setSubscription(null);
             setIsPro(null);
-            setTrialStatus(null);
             setProfilePictureUrl(null);
             setProfilePictureMetadata(null);
           } else if (event === "SIGNED_IN") {
@@ -577,7 +492,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               Promise.all([
                 fetchCredits(newSession),
                 fetchProStatus(newSession),
-                fetchTrialStatus(newSession),
                 fetchProfilePictureMetadata(newSession),
               ]).then(() => {
                 // Fetch the picture once the avatar sync settles.
@@ -592,12 +506,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
           } else if (event === "TOKEN_REFRESHED") {
             console.debug("[Auth Debug] Token refreshed");
-            // Optionally refresh credits, pro status, trial status, profile picture metadata, and profile picture on token refresh
+            // Optionally refresh credits, pro status, profile picture metadata, and profile picture on token refresh
             if (newSession?.user) {
               Promise.all([
                 fetchCredits(newSession),
                 fetchProStatus(newSession),
-                fetchTrialStatus(newSession),
                 fetchProfilePictureMetadata(newSession),
                 fetchProfilePicture(newSession),
               ]).then(() => {
@@ -634,12 +547,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     "[Auth Debug] User upgrade synchronized successfully",
                   );
 
-                  // Refresh credits, pro status, trial status, profile picture metadata, and profile picture after upgrade
+                  // Refresh credits, pro status, profile picture metadata, and profile picture after upgrade
                   if (newSession?.user) {
                     return Promise.all([
                       fetchCredits(newSession),
                       fetchProStatus(newSession),
-                      fetchTrialStatus(newSession),
                       fetchProfilePictureMetadata(newSession),
                       fetchProfilePicture(newSession),
                     ]);
@@ -681,7 +593,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     subscription,
     creditSummary,
     isPro,
-    trialStatus,
     profilePictureUrl,
     profilePictureMetadata,
     signOut,
@@ -690,7 +601,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     updateCredits,
     refreshCredits,
     refreshProStatus,
-    refreshTrialStatus,
     refreshProfilePicture,
     refreshProfilePictureMetadata,
   };

@@ -10,6 +10,7 @@ import { tauriBackendService } from "@app/services/tauriBackendService";
 import { createBackendNotReadyError } from "@app/constants/backendErrors";
 import { operationRouter } from "@app/services/operationRouter";
 import { authService } from "@app/services/authService";
+import { getAccessToken } from "@app/auth/session";
 import { connectionModeService } from "@app/services/connectionModeService";
 import {
   STIRLING_SAAS_URL,
@@ -86,7 +87,7 @@ export function setupApiInterceptors(client: AxiosInstance): void {
 
           // If another request is already refreshing, wait before attaching token
           await authService.awaitRefreshIfInProgress();
-          const token = await authService.getAuthToken();
+          const token = await getAccessToken();
 
           if (token) {
             extendedConfig.headers.Authorization = `Bearer ${token}`;
@@ -224,7 +225,7 @@ export function setupApiInterceptors(client: AxiosInstance): void {
 
         if (refreshed) {
           // Retry the original request with new token
-          const token = await authService.getAuthToken();
+          const token = await getAccessToken();
           console.debug(
             `[apiClientSetup] Token refreshed, retrying request to: ${originalRequest.url}`,
           );
