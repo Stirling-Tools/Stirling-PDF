@@ -12,7 +12,9 @@ const SAAS_URL = "https://api.saas.test";
 vi.mock("@app/services/connectionModeService", () => ({
   connectionModeService: {
     getCurrentMode: vi.fn().mockResolvedValue("saas"),
-    getServerConfig: vi.fn().mockResolvedValue({ url: "https://api.saas.test" }),
+    getServerConfig: vi
+      .fn()
+      .mockResolvedValue({ url: "https://api.saas.test" }),
   },
 }));
 vi.mock("@app/constants/connection", () => ({

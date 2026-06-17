@@ -44,7 +44,8 @@ function dispatchOverlay(open: boolean) {
 // reaches step 2. See StripeCheckoutPanel.tsx for the full pattern + the
 // chunk-graph reasoning.
 const StripeCheckoutPanel = React.lazy(
-  () => import("@app/components/shared/config/configSections/StripeCheckoutPanel"),
+  () =>
+    import("@app/components/shared/config/configSections/StripeCheckoutPanel"),
 );
 
 interface UpgradeModalProps {

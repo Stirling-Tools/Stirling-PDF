@@ -11,6 +11,8 @@
  */
 import type { OpenExternal } from "@cloud/platform/openExternal";
 
-export const openExternal: OpenExternal = async (url: string): Promise<void> => {
+export const openExternal: OpenExternal = async (
+  url: string,
+): Promise<void> => {
   window.location.assign(url);
 };

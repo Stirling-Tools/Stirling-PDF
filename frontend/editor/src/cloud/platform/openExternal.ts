@@ -21,6 +21,8 @@ export type OpenExternal = (url: string) => Promise<void>;
  * Opens an external URL in the user's system browser. Each platform supplies
  * its own implementation; this default is never reached in a real build.
  */
-export const openExternal: OpenExternal = async (_url: string): Promise<void> => {
+export const openExternal: OpenExternal = async (
+  _url: string,
+): Promise<void> => {
   throw new Error("openExternal: platform impl required");
 };

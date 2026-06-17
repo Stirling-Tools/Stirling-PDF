@@ -9,6 +9,8 @@
 import { open as shellOpen } from "@tauri-apps/plugin-shell";
 import type { OpenExternal } from "@cloud/platform/openExternal";
 
-export const openExternal: OpenExternal = async (url: string): Promise<void> => {
+export const openExternal: OpenExternal = async (
+  url: string,
+): Promise<void> => {
   await shellOpen(url);
 };

@@ -88,7 +88,8 @@ export function useSaasOnboardingState({
   const showTeamSlide = isTeamLeader;
 
   const flowSlideIds = useMemo(
-    () => resolveSaasFlow({ showUsageSlide, showTeamSlide, hideDesktopInstall }),
+    () =>
+      resolveSaasFlow({ showUsageSlide, showTeamSlide, hideDesktopInstall }),
     [showUsageSlide, showTeamSlide, hideDesktopInstall],
   );
   const totalSteps = flowSlideIds.length;

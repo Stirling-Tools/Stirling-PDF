@@ -3,7 +3,12 @@
   "compilerOptions": {
     "baseUrl": "../../",
     "paths": {
-      "@app/*": ["src/saas/*", "src/cloud/*", "src/proprietary/*", "src/core/*"],
+      "@app/*": [
+        "src/saas/*",
+        "src/cloud/*",
+        "src/proprietary/*",
+        "src/core/*"
+      ],
       "@cloud/*": ["src/cloud/*"],
       "@proprietary/*": ["src/proprietary/*"],
       "@core/*": ["src/core/*"],
