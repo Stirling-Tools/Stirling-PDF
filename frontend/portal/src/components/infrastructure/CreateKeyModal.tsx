@@ -13,7 +13,7 @@ import type { ApiKeyPermission } from "@portal/api/infrastructure";
 const PERMISSION_OPTS: ApiKeyPermission[] = ["Read", "Write", "Admin"];
 
 // Shown once after a key is created. TODO(backend): use the one-time secret
-// returned by POST /v1/infrastructure/api-keys — it is never persisted server-side.
+// returned by POST /api/v1/infrastructure/api-keys — it is never persisted server-side.
 const DEMO_NEW_KEY_SECRET = "sk_live_demo_key_rotate_in_prod";
 
 export function CreateKeyModal({
@@ -48,7 +48,7 @@ export function CreateKeyModal({
   }
 
   function createKey() {
-    // TODO(backend): POST /v1/infrastructure/api-keys { name, perms, ips }
+    // TODO(backend): POST /api/v1/infrastructure/api-keys { name, perms, ips }
     // and render the one-time secret from the response instead of the fixture.
     setCreated(true);
   }

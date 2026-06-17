@@ -8,12 +8,12 @@ export function resetNotificationsStore(seed?: Notification[]): void {
 }
 
 export const notificationsHandlers = [
-  http.get("/v1/notifications", async () => {
+  http.get("/api/v1/notifications", async () => {
     await delay(120);
     return HttpResponse.json(store);
   }),
 
-  http.post("/v1/notifications/mark-all-read", async () => {
+  http.post("/api/v1/notifications/mark-all-read", async () => {
     await delay(120);
     store = [];
     return HttpResponse.json({ ok: true });

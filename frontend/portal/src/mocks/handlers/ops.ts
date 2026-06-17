@@ -2,12 +2,12 @@ import { http, HttpResponse, delay } from "msw";
 import { FEATURED_OPS, OP_RESULTS } from "@portal/mocks/ops";
 
 export const opsHandlers = [
-  http.get("/v1/ops/featured", async () => {
+  http.get("/api/v1/ops/featured", async () => {
     await delay(120);
     return HttpResponse.json(FEATURED_OPS);
   }),
 
-  http.post("/v1/ops/:opId/run", async ({ params }) => {
+  http.post("/api/v1/ops/:opId/run", async ({ params }) => {
     const start = performance.now();
     await delay(800 + Math.random() * 200);
     const opId = String(params.opId);

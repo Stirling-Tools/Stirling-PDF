@@ -8,9 +8,9 @@ export type {
   SettingsSnapshot,
 } from "@portal/mocks/settings";
 
-/** GET /v1/settings?tier=… — the account + workspace snapshot the modal edits. */
+/** GET /api/v1/settings?tier=… — the account + workspace snapshot the modal edits. */
 export async function fetchSettings(tier: Tier): Promise<SettingsSnapshot> {
   return httpJson<SettingsSnapshot>(
-    `/v1/settings?tier=${encodeURIComponent(tier)}`,
+    `/api/v1/settings?tier=${encodeURIComponent(tier)}`,
   );
 }

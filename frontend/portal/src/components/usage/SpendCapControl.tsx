@@ -53,7 +53,7 @@ export function SpendCapControl({ summary }: { summary: BillingSummary }) {
   const projected = summary.costThisMonth;
   const capRatio = enabled ? Math.min(projected / cap, 1) : 0;
 
-  // TODO(backend): PUT /v1/billing/spend-cap { enabled, cap } — persist the cap
+  // TODO(backend): PUT /api/v1/billing/spend-cap { enabled, cap } — persist the cap
   // so processing pauses server-side when projected spend reaches the limit.
   return (
     <Card padding="loose" className="portal-usage__cap-card">

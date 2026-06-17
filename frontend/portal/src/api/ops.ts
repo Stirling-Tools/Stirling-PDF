@@ -3,9 +3,9 @@ import type { FeaturedOp, OpResultMap } from "@portal/mocks/ops";
 
 export type { FeaturedOp, OpResultMap };
 
-/** GET /v1/ops/featured */
+/** GET /api/v1/ops/featured */
 export async function fetchFeaturedOps(): Promise<FeaturedOp[]> {
-  return httpJson<FeaturedOp[]>("/v1/ops/featured");
+  return httpJson<FeaturedOp[]>("/api/v1/ops/featured");
 }
 
 export class UnknownOpError extends Error {
@@ -15,14 +15,14 @@ export class UnknownOpError extends Error {
   }
 }
 
-/** POST /v1/ops/{opId}/run */
+/** POST /api/v1/ops/{opId}/run */
 export async function runSingleOp(
   opId: string,
   sample: string,
 ): Promise<{ result: OpResultMap; durationMs: number }> {
   try {
     return await httpJson<{ result: OpResultMap; durationMs: number }>(
-      `/v1/ops/${encodeURIComponent(opId)}/run`,
+      `/api/v1/ops/${encodeURIComponent(opId)}/run`,
       {
         method: "POST",
         body: { sample },

@@ -16,12 +16,12 @@ export type {
   SdkStatus,
 } from "@portal/mocks/docs";
 
-/** GET /v1/docs/nav — the docs nav tree. */
+/** GET /api/v1/docs/nav — the docs nav tree. */
 export async function fetchDocsNav(): Promise<DocsNavSection[]> {
-  return httpJson<DocsNavSection[]>("/v1/docs/nav");
+  return httpJson<DocsNavSection[]>("/api/v1/docs/nav");
 }
 
-/** GET /v1/docs/content — the tier-scaled reference content. */
+/** GET /api/v1/docs/content — the tier-scaled reference content. */
 export async function fetchDocsContent(tier: Tier): Promise<DocsContent> {
-  return httpJson<DocsContent>(`/v1/docs/content?tier=${tier}`);
+  return httpJson<DocsContent>(`/api/v1/docs/content?tier=${tier}`);
 }

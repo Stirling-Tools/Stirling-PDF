@@ -24,7 +24,7 @@ export const Loading: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get("/v1/infrastructure/security", async () => {
+        http.get("/api/v1/infrastructure/security", async () => {
           await delay("infinite");
           return HttpResponse.json(null);
         }),
@@ -37,7 +37,7 @@ export const Unavailable: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get("/v1/infrastructure/security", () =>
+        http.get("/api/v1/infrastructure/security", () =>
           HttpResponse.json(null, { status: 503 }),
         ),
       ],

@@ -50,8 +50,8 @@ export function WebhookPanel({ d }: { d: WebhookDetail }) {
         </div>
       </div>
 
-      {/* TODO(backend): wire to POST /v1/sources/{id}/test-event and
-          GET /v1/sources/{id}/signing-secret — currently inert demo controls. */}
+      {/* TODO(backend): wire to POST /api/v1/sources/{id}/test-event and
+          GET /api/v1/sources/{id}/signing-secret — currently inert demo controls. */}
       <div className="portal-sources__detail-actions">
         <Button size="sm" variant="outline">
           Send test event

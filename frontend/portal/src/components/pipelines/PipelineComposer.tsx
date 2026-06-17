@@ -77,7 +77,7 @@ export function PipelineComposer({ open, onClose }: PipelineComposerProps) {
   }
 
   function deploy() {
-    // TODO(backend): POST /v1/pipelines { source, ops: selectedOps, destination, alerts }
+    // TODO(backend): POST /api/v1/pipelines { source, ops: selectedOps, destination, alerts }
     close();
   }
 

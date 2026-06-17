@@ -24,7 +24,7 @@ export const Loading: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get("/v1/infrastructure/deployments", async () => {
+        http.get("/api/v1/infrastructure/deployments", async () => {
           await delay("infinite");
           return HttpResponse.json({ regions: [], recent: [] });
         }),
@@ -37,7 +37,7 @@ export const Empty: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get("/v1/infrastructure/deployments", () =>
+        http.get("/api/v1/infrastructure/deployments", () =>
           HttpResponse.json({ regions: [], recent: [] }),
         ),
       ],

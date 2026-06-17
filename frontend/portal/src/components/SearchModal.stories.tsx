@@ -34,7 +34,7 @@ export const EmptyCatalogue: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get("/v1/search/quick-actions", () => HttpResponse.json([])),
+        http.get("/api/v1/search/quick-actions", () => HttpResponse.json([])),
       ],
     },
   },

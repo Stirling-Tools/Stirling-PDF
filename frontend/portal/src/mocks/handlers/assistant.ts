@@ -9,11 +9,11 @@ interface AssistantMessageBody {
 }
 
 export const assistantHandlers = [
-  http.get("/v1/assistant/suggestions", async () => {
+  http.get("/api/v1/assistant/suggestions", async () => {
     return HttpResponse.json(ASSISTANT_SUGGESTIONS);
   }),
 
-  http.post("/v1/assistant/messages", async ({ request }) => {
+  http.post("/api/v1/assistant/messages", async ({ request }) => {
     const body = (await request.json()) as AssistantMessageBody;
     await delay(600 + Math.random() * 300);
     return HttpResponse.json({ reply: routeAssistantReply(body.input) });

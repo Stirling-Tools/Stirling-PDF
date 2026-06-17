@@ -40,31 +40,33 @@ export interface DeploymentsResponse {
 
 const q = (tier: Tier) => `?tier=${encodeURIComponent(tier)}`;
 
-/** GET /v1/infrastructure/deployments?tier=… */
+/** GET /api/v1/infrastructure/deployments?tier=… */
 export async function fetchDeployments(
   tier: Tier,
 ): Promise<DeploymentsResponse> {
   return httpJson<DeploymentsResponse>(
-    `/v1/infrastructure/deployments${q(tier)}`,
+    `/api/v1/infrastructure/deployments${q(tier)}`,
   );
 }
 
-/** GET /v1/infrastructure/api-keys?tier=… */
+/** GET /api/v1/infrastructure/api-keys?tier=… */
 export async function fetchApiKeys(tier: Tier): Promise<ApiKey[]> {
-  return httpJson<ApiKey[]>(`/v1/infrastructure/api-keys${q(tier)}`);
+  return httpJson<ApiKey[]>(`/api/v1/infrastructure/api-keys${q(tier)}`);
 }
 
-/** GET /v1/infrastructure/security?tier=… */
+/** GET /api/v1/infrastructure/security?tier=… */
 export async function fetchSecurity(tier: Tier): Promise<SecurityConfig> {
-  return httpJson<SecurityConfig>(`/v1/infrastructure/security${q(tier)}`);
+  return httpJson<SecurityConfig>(`/api/v1/infrastructure/security${q(tier)}`);
 }
 
-/** GET /v1/infrastructure/storage?tier=… */
+/** GET /api/v1/infrastructure/storage?tier=… */
 export async function fetchStorage(tier: Tier): Promise<StorageConfig> {
-  return httpJson<StorageConfig>(`/v1/infrastructure/storage${q(tier)}`);
+  return httpJson<StorageConfig>(`/api/v1/infrastructure/storage${q(tier)}`);
 }
 
-/** GET /v1/infrastructure/audit-log?tier=… */
+/** GET /api/v1/infrastructure/audit-log?tier=… */
 export async function fetchAuditLog(tier: Tier): Promise<AuditLogResponse> {
-  return httpJson<AuditLogResponse>(`/v1/infrastructure/audit-log${q(tier)}`);
+  return httpJson<AuditLogResponse>(
+    `/api/v1/infrastructure/audit-log${q(tier)}`,
+  );
 }

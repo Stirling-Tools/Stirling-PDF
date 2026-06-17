@@ -24,7 +24,7 @@ export const Loading: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get("/v1/billing/usage", async () => {
+        http.get("/api/v1/billing/usage", async () => {
           await delay("infinite");
           return HttpResponse.json(buildUsagePayload());
         }),
@@ -37,7 +37,7 @@ export const Empty: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get("/v1/billing/usage", () =>
+        http.get("/api/v1/billing/usage", () =>
           HttpResponse.json({ points: [], priorTotal: 0 }),
         ),
       ],

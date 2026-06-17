@@ -23,7 +23,7 @@ export const Loading: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get("/v1/endpoints", async () => {
+        http.get("/api/v1/endpoints", async () => {
           await delay("infinite");
           return HttpResponse.json([]);
         }),
@@ -35,7 +35,7 @@ export const Loading: Story = {
 export const Empty: Story = {
   parameters: {
     msw: {
-      handlers: [http.get("/v1/endpoints", () => HttpResponse.json([]))],
+      handlers: [http.get("/api/v1/endpoints", () => HttpResponse.json([]))],
     },
   },
 };

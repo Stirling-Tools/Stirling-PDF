@@ -58,7 +58,7 @@ export const OverThreshold: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get("/v1/infrastructure/storage", () =>
+        http.get("/api/v1/infrastructure/storage", () =>
           HttpResponse.json(OVER_CAP),
         ),
       ],
@@ -70,7 +70,7 @@ export const Loading: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get("/v1/infrastructure/storage", async () => {
+        http.get("/api/v1/infrastructure/storage", async () => {
           await delay("infinite");
           return HttpResponse.json(null);
         }),

@@ -109,7 +109,7 @@ export function UpgradeModal({
           <Button variant="ghost" onClick={onClose}>
             Not now
           </Button>
-          {/* TODO(backend): POST /v1/billing/plan-change { tier } (or hand off to
+          {/* TODO(backend): POST /api/v1/billing/plan-change { tier } (or hand off to
               sales) — for now the CTA just dismisses the modal. */}
           <Button variant="gradient" accent={copy.ctaAccent} onClick={onClose}>
             {copy.cta}

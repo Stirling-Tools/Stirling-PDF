@@ -70,8 +70,8 @@ export function AgentPanel({ d }: { d: AgentDetail }) {
         </div>
       </div>
 
-      {/* TODO(backend): wire to GET /v1/sources/{id}/eval-runs and
-          POST /v1/sources/{id}/pause — currently inert demo controls. */}
+      {/* TODO(backend): wire to GET /api/v1/sources/{id}/eval-runs and
+          POST /api/v1/sources/{id}/pause — currently inert demo controls. */}
       <div className="portal-sources__detail-actions">
         <Button size="sm" variant="outline">
           View eval runs

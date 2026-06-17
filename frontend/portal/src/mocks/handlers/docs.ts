@@ -8,12 +8,12 @@ function tierFrom(request: Request): Tier {
 }
 
 export const docsHandlers = [
-  http.get("/v1/docs/nav", async () => {
+  http.get("/api/v1/docs/nav", async () => {
     await delay(120);
     return HttpResponse.json(buildDocsNav());
   }),
 
-  http.get("/v1/docs/content", async ({ request }) => {
+  http.get("/api/v1/docs/content", async ({ request }) => {
     await delay(120);
     return HttpResponse.json(docsContentFor(tierFrom(request)));
   }),

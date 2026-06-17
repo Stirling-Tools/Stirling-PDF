@@ -46,8 +46,8 @@ export function ApiClientPanel({ d }: { d: ApiClientDetail }) {
         </div>
       </div>
 
-      {/* TODO(backend): wire to POST /v1/sources/{id}/rotate-key and
-          DELETE /v1/sources/{id} — currently inert demo controls. */}
+      {/* TODO(backend): wire to POST /api/v1/sources/{id}/rotate-key and
+          DELETE /api/v1/sources/{id} — currently inert demo controls. */}
       <div className="portal-sources__detail-actions">
         <Button size="sm" variant="outline" accent="amber">
           Rotate key

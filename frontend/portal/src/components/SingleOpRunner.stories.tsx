@@ -28,7 +28,7 @@ export const RunFailsWithUnknownOp: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.post("/v1/ops/:opId/run", () =>
+        http.post("/api/v1/ops/:opId/run", () =>
           HttpResponse.json({ error: "Unknown op" }, { status: 404 }),
         ),
       ],
@@ -40,7 +40,7 @@ export const SlowOp: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.post("/v1/ops/:opId/run", async () => {
+        http.post("/api/v1/ops/:opId/run", async () => {
           await delay(4000);
           return HttpResponse.json({
             result: { schema: "demo", note: "took its time" },

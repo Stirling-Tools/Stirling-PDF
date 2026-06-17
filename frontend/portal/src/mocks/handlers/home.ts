@@ -20,29 +20,29 @@ function kpisFor(tier: Tier): KpiEntry[] {
 }
 
 export const homeHandlers = [
-  http.get("/v1/analytics/usage", async () => {
+  http.get("/api/v1/analytics/usage", async () => {
     await delay(120);
     return HttpResponse.json(buildUsageSeriesResponse());
   }),
 
-  http.get("/v1/activity", async () => {
+  http.get("/api/v1/activity", async () => {
     await delay(120);
     return HttpResponse.json(RECENT_ACTIVITY);
   }),
 
-  http.get("/v1/home/kpis", async ({ request }) => {
+  http.get("/api/v1/home/kpis", async ({ request }) => {
     await delay(120);
     const url = new URL(request.url);
     const tier = (url.searchParams.get("tier") ?? "pro") as Tier;
     return HttpResponse.json(kpisFor(tier));
   }),
 
-  http.get("/v1/regions/health", async () => {
+  http.get("/api/v1/regions/health", async () => {
     await delay(120);
     return HttpResponse.json(REGION_HEALTH);
   }),
 
-  http.get("/v1/onboarding", async () => {
+  http.get("/api/v1/onboarding", async () => {
     await delay(120);
     return HttpResponse.json(FREE_ONBOARDING);
   }),

@@ -82,7 +82,7 @@ export function SecurityTab() {
 
   // Local mirrors so the radios are interactive without a backend round-trip,
   // seeded from the fetched config once it lands.
-  // TODO(backend): PATCH /v1/infrastructure/security { accessPolicy, dataResidency }
+  // TODO(backend): PATCH /api/v1/infrastructure/security { accessPolicy, dataResidency }
   const [access, setAccess] = useState<AccessPolicy | null>(null);
   const [residency, setResidency] = useState<DataResidency | null>(null);
 

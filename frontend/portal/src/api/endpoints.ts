@@ -9,7 +9,7 @@ export type {
   VerticalKey,
 } from "@shared/data/endpoints";
 
-/** GET /v1/endpoints — verticals plus their endpoints. */
+/** GET /api/v1/endpoints — verticals plus their endpoints. */
 export async function fetchVerticals(): Promise<Vertical[]> {
-  return httpJson<Vertical[]>("/v1/endpoints");
+  return httpJson<Vertical[]>("/api/v1/endpoints");
 }

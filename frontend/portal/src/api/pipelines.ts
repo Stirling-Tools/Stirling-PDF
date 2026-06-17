@@ -14,9 +14,9 @@ export type {
   StageSummary,
 } from "@portal/mocks/pipelines";
 
-/** GET /v1/pipelines?tier=… — the deployed fleet plus tier-specific extras. */
+/** GET /api/v1/pipelines?tier=… — the deployed fleet plus tier-specific extras. */
 export async function fetchPipelines(tier: Tier): Promise<PipelinesResponse> {
   return httpJson<PipelinesResponse>(
-    `/v1/pipelines?tier=${encodeURIComponent(tier)}`,
+    `/api/v1/pipelines?tier=${encodeURIComponent(tier)}`,
   );
 }

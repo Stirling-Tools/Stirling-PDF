@@ -24,7 +24,7 @@ export const Loading: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get("/v1/infrastructure/audit-log", async () => {
+        http.get("/api/v1/infrastructure/audit-log", async () => {
           await delay("infinite");
           return HttpResponse.json({ summary: {}, events: [] });
         }),
@@ -37,7 +37,7 @@ export const Empty: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get("/v1/infrastructure/audit-log", () =>
+        http.get("/api/v1/infrastructure/audit-log", () =>
           HttpResponse.json({
             summary: { totalEvents: 0, processing: 0, elevation: 0, config: 0 },
             events: [],

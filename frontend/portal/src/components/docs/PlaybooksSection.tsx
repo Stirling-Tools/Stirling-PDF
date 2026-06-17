@@ -29,7 +29,7 @@ export function PlaybooksSection({ playbooks }: { playbooks: Playbook[] }) {
                 </span>
               ))}
             </div>
-            {/* TODO(backend): POST /v1/pipelines/clone-from-playbook to seed a
+            {/* TODO(backend): POST /api/v1/pipelines/clone-from-playbook to seed a
                 draft pipeline from this recipe, then route to the composer. */}
             <Button variant="outline" accent={p.accent} size="sm">
               Clone recipe

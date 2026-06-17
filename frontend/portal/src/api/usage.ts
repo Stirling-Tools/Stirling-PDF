@@ -17,28 +17,28 @@ export type {
 } from "@portal/mocks/usage";
 export { OVERAGE_RATE } from "@portal/mocks/usage";
 
-/** GET /v1/billing/usage — 30-day docs-processed series. */
+/** GET /api/v1/billing/usage — 30-day docs-processed series. */
 export async function fetchBillingUsage(): Promise<UsageSeriesResponse> {
-  return httpJson<UsageSeriesResponse>("/v1/billing/usage");
+  return httpJson<UsageSeriesResponse>("/api/v1/billing/usage");
 }
 
-/** GET /v1/billing/summary?tier=… — KPI strip + current-plan figures. */
+/** GET /api/v1/billing/summary?tier=… — KPI strip + current-plan figures. */
 export async function fetchBillingSummary(tier: Tier): Promise<BillingSummary> {
   return httpJson<BillingSummary>(
-    `/v1/billing/summary?tier=${encodeURIComponent(tier)}`,
+    `/api/v1/billing/summary?tier=${encodeURIComponent(tier)}`,
   );
 }
 
-/** GET /v1/billing/plans — available plan catalogue. */
+/** GET /api/v1/billing/plans — available plan catalogue. */
 export async function fetchPlanOptions(): Promise<PlanOption[]> {
-  return httpJson<PlanOption[]>("/v1/billing/plans");
+  return httpJson<PlanOption[]>("/api/v1/billing/plans");
 }
 
-/** GET /v1/billing/history?tier=… — invoice / line-item history. */
+/** GET /api/v1/billing/history?tier=… — invoice / line-item history. */
 export async function fetchBillingHistory(
   tier: Tier,
 ): Promise<BillingHistoryRow[]> {
   return httpJson<BillingHistoryRow[]>(
-    `/v1/billing/history?tier=${encodeURIComponent(tier)}`,
+    `/api/v1/billing/history?tier=${encodeURIComponent(tier)}`,
   );
 }

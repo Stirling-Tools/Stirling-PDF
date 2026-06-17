@@ -3,7 +3,7 @@ import type { Tier } from "@portal/contexts/TierContext";
 import { pipelinesFor } from "@portal/mocks/pipelines";
 
 export const pipelinesHandlers = [
-  http.get("/v1/pipelines", async ({ request }) => {
+  http.get("/api/v1/pipelines", async ({ request }) => {
     await delay(120);
     const url = new URL(request.url);
     const tier = (url.searchParams.get("tier") ?? "pro") as Tier;

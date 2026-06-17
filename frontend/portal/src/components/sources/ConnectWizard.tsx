@@ -36,7 +36,7 @@ export function ConnectWizard({ open, onClose }: ConnectWizardProps) {
 
   function advance() {
     if (isLast) {
-      // TODO(backend): POST /v1/sources { type, pipeline, region } — provision
+      // TODO(backend): POST /api/v1/sources { type, pipeline, region } — provision
       // the source, then close on success.
       close();
     } else {

@@ -15,7 +15,7 @@ function tierFrom(request: Request): Tier {
 }
 
 export const infrastructureHandlers = [
-  http.get("/v1/infrastructure/deployments", async ({ request }) => {
+  http.get("/api/v1/infrastructure/deployments", async ({ request }) => {
     await delay(120);
     const tier = tierFrom(request);
     return HttpResponse.json({
@@ -24,22 +24,22 @@ export const infrastructureHandlers = [
     });
   }),
 
-  http.get("/v1/infrastructure/api-keys", async ({ request }) => {
+  http.get("/api/v1/infrastructure/api-keys", async ({ request }) => {
     await delay(120);
     return HttpResponse.json(apiKeysFor(tierFrom(request)));
   }),
 
-  http.get("/v1/infrastructure/security", async ({ request }) => {
+  http.get("/api/v1/infrastructure/security", async ({ request }) => {
     await delay(120);
     return HttpResponse.json(securityFor(tierFrom(request)));
   }),
 
-  http.get("/v1/infrastructure/storage", async ({ request }) => {
+  http.get("/api/v1/infrastructure/storage", async ({ request }) => {
     await delay(120);
     return HttpResponse.json(storageFor(tierFrom(request)));
   }),
 
-  http.get("/v1/infrastructure/audit-log", async ({ request }) => {
+  http.get("/api/v1/infrastructure/audit-log", async ({ request }) => {
     await delay(120);
     return HttpResponse.json(auditLogFor(tierFrom(request)));
   }),

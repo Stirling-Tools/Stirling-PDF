@@ -45,7 +45,7 @@ export function StorageTab() {
   const { data } = state;
   const { isLoading, isEmpty } = useSectionFlags(state);
 
-  // TODO(backend): PATCH /v1/infrastructure/storage { retention }
+  // TODO(backend): PATCH /api/v1/infrastructure/storage { retention }
   const [retention, setRetention] = useState<RetentionWindow | null>(null);
   const retentionValue = retention ?? data?.retention ?? "90";
 
@@ -129,7 +129,7 @@ export function StorageTab() {
                   </span>
                 ) : (
                   // TODO(backend): launch the provider OAuth/credential flow,
-                  // then POST /v1/infrastructure/storage/providers/{id}/connect
+                  // then POST /api/v1/infrastructure/storage/providers/{id}/connect
                   <Button variant="outline" size="sm">
                     Connect
                   </Button>

@@ -29,7 +29,9 @@ export const Default: Story = {};
 export const Empty: Story = {
   parameters: {
     msw: {
-      handlers: [http.get("/v1/notifications", () => HttpResponse.json([]))],
+      handlers: [
+        http.get("/api/v1/notifications", () => HttpResponse.json([])),
+      ],
     },
   },
 };
@@ -38,7 +40,7 @@ export const Loading: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get("/v1/notifications", async () => {
+        http.get("/api/v1/notifications", async () => {
           await delay("infinite");
           return HttpResponse.json([]);
         }),
@@ -51,7 +53,7 @@ export const HighVolume: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get("/v1/notifications", () => {
+        http.get("/api/v1/notifications", () => {
           const items = Array.from({ length: 24 }, (_, i) => ({
             ...NOTIFICATIONS[i % NOTIFICATIONS.length],
             id: `n${i + 1}`,
@@ -67,7 +69,7 @@ export const NetworkError: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get("/v1/notifications", () =>
+        http.get("/api/v1/notifications", () =>
           HttpResponse.json({ error: "Service unavailable" }, { status: 503 }),
         ),
       ],

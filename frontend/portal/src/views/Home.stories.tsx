@@ -19,7 +19,7 @@ export const SlowUsage: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get("/v1/analytics/usage", async () => {
+        http.get("/api/v1/analytics/usage", async () => {
           await delay(3000);
           return HttpResponse.json({ points: [], priorTotal: 0 });
         }),

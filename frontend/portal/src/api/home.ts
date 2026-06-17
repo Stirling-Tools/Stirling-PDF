@@ -18,27 +18,29 @@ export type {
   UsageSeriesResponse,
 } from "@portal/mocks/home";
 
-/** GET /v1/analytics/usage?window=30d */
+/** GET /api/v1/analytics/usage?window=30d */
 export async function fetchUsageSeries(): Promise<UsageSeriesResponse> {
-  return httpJson<UsageSeriesResponse>("/v1/analytics/usage?window=30d");
+  return httpJson<UsageSeriesResponse>("/api/v1/analytics/usage?window=30d");
 }
 
-/** GET /v1/activity?limit=8 */
+/** GET /api/v1/activity?limit=8 */
 export async function fetchRecentActivity(): Promise<ActivityEvent[]> {
-  return httpJson<ActivityEvent[]>("/v1/activity?limit=8");
+  return httpJson<ActivityEvent[]>("/api/v1/activity?limit=8");
 }
 
-/** GET /v1/home/kpis?tier=… */
+/** GET /api/v1/home/kpis?tier=… */
 export async function fetchHomeKpis(tier: Tier): Promise<KpiEntry[]> {
-  return httpJson<KpiEntry[]>(`/v1/home/kpis?tier=${encodeURIComponent(tier)}`);
+  return httpJson<KpiEntry[]>(
+    `/api/v1/home/kpis?tier=${encodeURIComponent(tier)}`,
+  );
 }
 
-/** GET /v1/regions/health (Enterprise) */
+/** GET /api/v1/regions/health (Enterprise) */
 export async function fetchRegionHealth(): Promise<RegionHealth[]> {
-  return httpJson<RegionHealth[]>("/v1/regions/health");
+  return httpJson<RegionHealth[]>("/api/v1/regions/health");
 }
 
-/** GET /v1/onboarding (Free) */
+/** GET /api/v1/onboarding (Free) */
 export async function fetchOnboarding(): Promise<OnboardingStep[]> {
-  return httpJson<OnboardingStep[]>("/v1/onboarding");
+  return httpJson<OnboardingStep[]>("/api/v1/onboarding");
 }

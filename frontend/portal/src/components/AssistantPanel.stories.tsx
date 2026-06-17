@@ -34,7 +34,7 @@ export const SlowReply: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.post("/v1/assistant/messages", async () => {
+        http.post("/api/v1/assistant/messages", async () => {
           await delay(3000);
           return HttpResponse.json({
             reply:
@@ -50,7 +50,7 @@ export const ReplyFails: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.post("/v1/assistant/messages", () =>
+        http.post("/api/v1/assistant/messages", () =>
           HttpResponse.json({ error: "rate limit exceeded" }, { status: 429 }),
         ),
       ],

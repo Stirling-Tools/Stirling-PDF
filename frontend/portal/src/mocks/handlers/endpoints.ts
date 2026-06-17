@@ -2,7 +2,7 @@ import { http, HttpResponse, delay } from "msw";
 import { VERTICALS } from "@shared/data/endpoints";
 
 export const endpointsHandlers = [
-  http.get("/v1/endpoints", async ({ request }) => {
+  http.get("/api/v1/endpoints", async ({ request }) => {
     await delay(120);
     const url = new URL(request.url);
     const verticalKey = url.searchParams.get("vertical");

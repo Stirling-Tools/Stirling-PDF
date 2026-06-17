@@ -163,7 +163,7 @@ export function CurrentPlanCard({
             Adjust commitment
           </Button>
         )}
-        {/* TODO(backend): GET /v1/billing/invoices?format=pdf — bundle + download invoice PDFs. */}
+        {/* TODO(backend): GET /api/v1/billing/invoices?format=pdf — bundle + download invoice PDFs. */}
         <Button variant="ghost" size="md">
           Download invoices
         </Button>
