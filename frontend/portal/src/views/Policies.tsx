@@ -1,71 +1,183 @@
-import { useState } from "react";
-import { Banner, Skeleton } from "@shared/components";
-import { useTier } from "@portal/contexts/TierContext";
+import { useCallback, useState } from "react";
+import { Skeleton } from "@shared/components";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import {
+  deletePolicy,
   fetchPolicies,
-  tierMeetsRequirement,
+  runPolicy,
+  savePolicy,
+  type CatalogueEntry,
   type PoliciesResponse,
-  type PolicyCategoryConfig,
+  type Policy,
+  type PolicySetupResult,
 } from "@portal/api/policies";
-import { SummaryStrip } from "@portal/components/policies/SummaryStrip";
+import { CatalogueSummary } from "@portal/components/policies/CatalogueSummary";
 import { PolicyCategoryCard } from "@portal/components/policies/PolicyCategoryCard";
-import { PolicyDesigner } from "@portal/components/policies/PolicyDesigner";
+import { PolicyDetailPanel } from "@portal/components/policies/PolicyDetailPanel";
+import { PolicySetupWizard } from "@portal/components/policies/PolicySetupWizard";
 import "@portal/views/Policies.css";
 
+/**
+ * Translate the setup flow's collected result into the backend `Policy` wire
+ * record (Policy.java): the tool chain becomes the ordered pipeline `steps`,
+ * the run event becomes the `trigger`, and the output settings become `output`.
+ * Reuses the existing record's id on edit so the POST updates in place.
+ */
+function toWirePolicy(
+  entry: CatalogueEntry,
+  result: PolicySetupResult,
+): Policy {
+  return {
+    id: entry.policy?.state.backendId ?? "",
+    name: `${entry.category.label} Policy`,
+    enabled: entry.policy ? entry.policy.state.status !== "paused" : true,
+    trigger: { event: result.runOn },
+    sources: result.sources.map((source) => ({ source })),
+    steps: result.steps,
+    output: {
+      mode: result.outputMode,
+      name: result.outputName,
+      namePosition: result.outputNamePosition,
+    },
+    categoryId: entry.category.id,
+  };
+}
+
 export function Policies() {
-  const { tier } = useTier();
-  const state = useAsync<PoliciesResponse>(() => fetchPolicies(tier), [tier]);
+  // The catalogue is refetched after every mutation by bumping this counter,
+  // so the cards/detail reflect the in-memory store the handlers maintain.
+  const [version, setVersion] = useState(0);
+  const state = useAsync<PoliciesResponse>(() => fetchPolicies(), [version]);
   const { data, loading } = state;
   const { isLoading } = useSectionFlags(state);
 
-  const [editing, setEditing] = useState<PolicyCategoryConfig | null>(null);
+  // The category whose detail panel is open (configured), and the one whose
+  // setup wizard is open. Both reference a catalogue entry.
+  const [detail, setDetail] = useState<CatalogueEntry | null>(null);
+  const [wizard, setWizard] = useState<CatalogueEntry | null>(null);
+  const [busy, setBusy] = useState(false);
 
-  const categories = data?.categories ?? [];
+  const catalogue = data?.catalogue ?? [];
+  const refetch = useCallback(() => setVersion((v) => v + 1), []);
+
+  // Open the detail panel for configured categories, the wizard otherwise.
+  function openEntry(entry: CatalogueEntry) {
+    if (entry.policy) setDetail(entry);
+    else setWizard(entry);
+  }
+
+  async function handleSubmit(
+    entry: CatalogueEntry,
+    result: PolicySetupResult,
+  ) {
+    await savePolicy(toWirePolicy(entry, result));
+    setWizard(null);
+    setDetail(null);
+    refetch();
+  }
+
+  async function runLifecycle(action: () => Promise<unknown>) {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await action();
+      setDetail(null);
+      refetch();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function handleRun() {
+    const id = detail?.policy?.state.backendId;
+    if (id) void runLifecycle(() => runPolicy(id));
+  }
+
+  function handleTogglePause() {
+    const entry = detail;
+    const policy = entry?.policy;
+    if (!entry || !policy?.state.backendId) return;
+    // Pause/resume is a re-save with the enabled flag flipped (the backend has
+    // no dedicated endpoint — every mutation routes through POST /policies).
+    void runLifecycle(() =>
+      savePolicy({
+        id: policy.state.backendId!,
+        name: `${entry.category.label} Policy`,
+        enabled: policy.state.status === "paused",
+        trigger: { event: policy.state.runOn ?? "upload" },
+        sources: policy.state.sources.map((source) => ({ source })),
+        steps: policy.steps,
+        output: {
+          mode: policy.state.outputMode ?? "new_version",
+          name: policy.state.outputName ?? "",
+          namePosition: "suffix",
+        },
+        categoryId: entry.category.id,
+      }),
+    );
+  }
+
+  function handleDelete() {
+    const id = detail?.policy?.state.backendId;
+    if (id) void runLifecycle(() => deletePolicy(id));
+  }
+
+  // Reopen the wizard for the policy currently shown in the detail panel.
+  function handleEdit() {
+    if (detail) {
+      setWizard(detail);
+      setDetail(null);
+    }
+  }
 
   return (
     <div className="portal-policies">
       <header className="portal-policies__head">
         <h1 className="portal-policies__title">Policies</h1>
         <p className="portal-policies__sub">
-          Org-wide standing rules that govern every document, regardless of
-          which pipeline processes it. Policies are admin-controlled and apply
-          across your whole organisation.
+          Standing automations that enforce a tool pipeline on every document.
+          Each policy fires on upload or export, runs its tool chain, and saves
+          the enforced version alongside the original.
         </p>
       </header>
 
-      <SummaryStrip data={data} loading={loading} />
-
-      {tier === "free" && (
-        <Banner
-          tone="info"
-          title="Some policy categories are locked on the Free plan"
-          description="Ingestion and Retention are editable today. Upgrade to unlock Routing, Security and Compliance controls."
-        />
-      )}
+      <CatalogueSummary data={data} loading={loading} />
 
       {isLoading && (
         <div className="portal-policies__grid" aria-hidden>
           {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} height="9rem" />
+            <Skeleton key={i} height="11rem" />
           ))}
         </div>
       )}
 
-      {!isLoading && categories.length > 0 && (
+      {!isLoading && catalogue.length > 0 && (
         <div className="portal-policies__grid">
-          {categories.map((config) => (
+          {catalogue.map((entry) => (
             <PolicyCategoryCard
-              key={config.category}
-              config={config}
-              editable={tierMeetsRequirement(tier, config.requiredTier)}
-              onOpen={setEditing}
+              key={entry.category.id}
+              entry={entry}
+              onOpen={openEntry}
             />
           ))}
         </div>
       )}
 
-      <PolicyDesigner config={editing} onClose={() => setEditing(null)} />
+      <PolicyDetailPanel
+        policy={detail?.policy ?? null}
+        busy={busy}
+        onClose={() => setDetail(null)}
+        onEdit={handleEdit}
+        onRun={handleRun}
+        onTogglePause={handleTogglePause}
+        onDelete={handleDelete}
+      />
+
+      <PolicySetupWizard
+        entry={wizard}
+        onClose={() => setWizard(null)}
+        onSubmit={handleSubmit}
+      />
     </div>
   );
 }

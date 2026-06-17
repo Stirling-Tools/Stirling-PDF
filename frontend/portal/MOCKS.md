@@ -56,7 +56,7 @@ non-2xx). Views consume via `useAsync()` + `useSectionFlags()` (`hooks/useAsync.
 | Users | `GET /v1/users` | `tier` | `fetchUsers` | `UsersResponse` |
 | Documents | `GET /v1/documents` | `tier` | `fetchDocuments` | `DocumentsResponse` |
 | Pipelines | `GET /v1/pipelines` · `POST /v1/pipelines/:id/promote-to-policy` | `tier` | `fetchPipelines` · `promoteToPolicy` | `PipelinesResponse` |
-| Policies | `GET /v1/policies` | `tier` | `fetchPolicies` | `PoliciesResponse` |
+| Policies | `GET/POST /api/v1/policies` · `GET/DELETE /api/v1/policies/{id}` · `POST /api/v1/policies/{id}/run` | — | `fetchPolicies` · `savePolicy` · `deletePolicy` · `runPolicy` | `PoliciesResponse` · `Policy` |
 | Agent Builder | `GET /v1/agents` | `tier` | `fetchAgents` | `AgentsResponse` |
 | Sources | `GET /v1/sources` | `tier` | `fetchSources` | `SourcesResponse` |
 | Components | `GET /v1/components` | `tier` | `fetchComponents` | `ComponentsResponse` |
@@ -80,3 +80,7 @@ non-2xx). Views consume via `useAsync()` + `useSectionFlags()` (`hooks/useAsync.
 
 > Catalogue generated from `mocks/handlers/*.ts`. The `api/<surface>.ts` JSDoc on
 > each function is the authoritative per-endpoint reference.
+>
+> **Policies** targets the **real** backend base `/api/v1/policies` (Stirling's
+> `PolicyController`) rather than the mock `/v1/...` convention — its contract
+> mirrors the live policy engine, so MSW can be dropped with no code change.

@@ -1,477 +1,612 @@
 /**
- * Policies fixtures and the types api/policies.ts shares with them.
+ * Policies fixtures and the canonical TS model the portal shares with them.
  *
- * A "policy" is an org-wide standing rule that governs how every document is
- * handled — independent of which developer pipeline processes it. There are
- * exactly five fixed categories (Ingestion, Security, Compliance, Routing,
- * Retention); each carries a global default config plus per-document-type
- * overrides. Buyers/admins own these; developers own Pipelines.
+ * The model mirrors the editor + backend policy contract so the portal's
+ * "set up a policy" flow is plug-and-play against the real `/api/v1/policies`
+ * API. A policy is a stored automation: an ordered chain of tool steps (each
+ * step's `operation` is a Stirling endpoint path) plus an output destination,
+ * fired automatically by a trigger (editor upload/export) over a set of
+ * sources. The catalogue groups policies by category, each category carrying a
+ * `PolicyConfigDef` (summary, rules, fields, default tool chain) the setup flow
+ * builds from.
  *
- * api/policies.ts imports the types; the MSW handlers serve the fixture data
- * over the intercepted httpJson() calls. Components never reach into this
- * module directly. Once a real backend exists the handlers stop being
- * registered and these fixtures can be deleted (or kept as test seeds).
+ * The wire types (`Policy`, `PipelineStep`) match the backend records exactly;
+ * the catalogue + decorated state shapes (`PolicyConfigDef`, `PolicyField`,
+ * `PolicyState`, …) are lifted from the editor's `types/policies.ts`, with
+ * ReactNode icons replaced by string icon keys (the portal renders its own).
+ *
+ * api/policies.ts re-exports these types; the MSW handlers serve the fixture
+ * data over intercepted httpJson() calls. Components never reach in here.
  */
 
-import type { Tier } from "@portal/contexts/TierContext";
-
 /* ──────────────────────────────────────────────────────────────────────── */
-/*  Categories                                                               */
+/*  Backend wire model — matches Policy.java / PipelineStep.java exactly      */
 /* ──────────────────────────────────────────────────────────────────────── */
-
-/** The five fixed policy categories. The set is closed — not user-extensible. */
-export type PolicyCategory =
-  | "ingestion"
-  | "security"
-  | "compliance"
-  | "routing"
-  | "retention";
-
-export const POLICY_CATEGORIES: PolicyCategory[] = [
-  "ingestion",
-  "security",
-  "compliance",
-  "routing",
-  "retention",
-];
 
 /**
- * Each category's config is a flat bag of typed fields. Field kinds map to a
- * single SUI control in the designer, so the form renders generically without a
- * bespoke component per category.
+ * A single tool invocation in a policy's pipeline. `operation` is a Stirling
+ * endpoint path (e.g. `/api/v1/security/auto-redact`); `parameters` are the
+ * scalar form fields that endpoint accepts. `fileParameters` binds a tool's
+ * named file field to an asset key in a run's supporting-file store.
  */
-export type PolicyFieldKind = "toggle" | "select" | "number" | "text";
-
-export interface PolicyFieldOption {
-  value: string;
-  label: string;
+export interface PipelineStep {
+  operation: string;
+  parameters: Record<string, unknown>;
+  fileParameters?: Record<string, string>;
 }
+
+/** When a policy fires automatically. A null trigger means manual-only. */
+export interface TriggerConfig {
+  /** The editor event the policy runs on. */
+  event: "upload" | "export";
+}
+
+/** Where a policy's documents come from (a connected source). */
+export interface InputSpec {
+  /** Source id from {@link POLICY_SOURCES}. */
+  source: string;
+}
+
+/** How a run's result is delivered. */
+export interface OutputSpec {
+  /** A separate new file, or a new version of the input the policy ran on. */
+  mode: "new_file" | "new_version";
+  /** Rename rule for the output; empty keeps the input filename. */
+  name: string;
+  namePosition: "prefix" | "suffix" | "auto-number";
+}
+
+/**
+ * The stored policy record — the exact JSON body the backend returns from
+ * `GET /api/v1/policies` and accepts on `POST /api/v1/policies`. The portal
+ * decorates this with catalogue + runtime data for display (see {@link decorate}).
+ */
+export interface Policy {
+  /** Blank on create; the backend assigns one and returns it. */
+  id: string;
+  name: string;
+  /** Server-assigned owner; the client never forges it. */
+  owner?: string;
+  /** Whether the trigger fires automatically. Pausing flips this. */
+  enabled: boolean;
+  trigger: TriggerConfig | null;
+  sources: InputSpec[];
+  steps: PipelineStep[];
+  output: OutputSpec;
+  /** The category this policy belongs to. Drives catalogue grouping. */
+  categoryId: string;
+}
+
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Catalogue model — lifted from editor types/policies.ts                    */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+export type PolicyStatus = "default" | "active" | "paused";
+
+/** Derived display status for a card/detail. */
+export type PolicyRowStatus = "active" | "paused" | "setup";
+
+/** A configurable field within a policy's settings. */
+export type PolicyFieldType = "toggle" | "select" | "chips" | "text";
 
 export interface PolicyField {
-  key: string;
   label: string;
-  kind: PolicyFieldKind;
-  /** Current value. Booleans for toggles, strings/numbers otherwise. */
-  value: string | number | boolean;
-  /** Choices for `select` fields. */
-  options?: PolicyFieldOption[];
-  /** One-line help shown under the control. */
-  help?: string;
-  /** Unit suffix for `number` fields, e.g. "days", "MB". */
-  unit?: string;
+  key: string;
+  type: PolicyFieldType;
+  /** Default value: boolean (toggle), string (select/text), string[] (chips). */
+  value: boolean | string | string[];
+  /** Options for select/chips. */
+  options?: string[];
 }
 
-/** A per-document-type deviation from the global default. */
-export interface PolicyOverride {
-  /** Document type this override applies to, e.g. "Invoices". */
-  docType: string;
-  /** Human-readable summary of how this type deviates from the default. */
-  rule: string;
+/**
+ * Static definition of a policy category. The editor's `icon: ReactNode` is
+ * replaced by a string `icon` key the portal resolves to its own glyph.
+ */
+export interface PolicyCategory {
+  id: string;
+  label: string;
+  /** Icon key the portal renders (not a component — the portal owns glyphs). */
+  icon: string;
+  /** Visual tone for the category's icon chip. */
+  tone: "neutral" | "blue" | "purple" | "green" | "amber" | "red";
+  /** Long description shown in the setup flow. */
+  desc: string;
+  /** Drives the "Set up Classification" affordance (doc-type narrowing). */
+  providesClassification?: boolean;
+  /** Locked "Coming soon" — can't be opened or configured. */
+  comingSoon?: boolean;
 }
 
-export interface PolicyCategoryConfig {
-  category: PolicyCategory;
-  enabled: boolean;
-  /** One-line summary of the active global rule, shown on the card. */
+/** The narrative + field configuration backing a category. */
+export interface PolicyConfigDef {
+  /** One-line summary of what the policy enforces. */
   summary: string;
-  /** Editable global-default fields surfaced in the designer. */
+  /** Pipeline-like rule chips shown in the "Enforces" section. */
+  rules: string[];
+  /** Human label for the scope this policy applies to. */
+  scopeLabel: string;
+  /** Editable policy-level settings fields. */
   fields: PolicyField[];
-  /** Per-document-type overrides layered on top of the global default. */
-  overrides: PolicyOverride[];
-  lastEditedBy: string;
-  /** Relative-time string, e.g. "3 days ago". */
-  lastEditedAt: string;
   /**
-   * Minimum tier that can edit this category. Categories above the active tier
-   * render locked with an upgrade nudge.
+   * The preset pipeline a new policy is seeded with — the real, editable tool
+   * steps (each `operation` is a Stirling endpoint path, matching the backend's
+   * PipelineStep). The setup flow starts from these.
    */
-  requiredTier: Tier;
+  defaultOperations: PipelineStep[];
 }
 
+/** A source a policy can run over (setup "Sources" step). */
+export interface PolicySource {
+  id: string;
+  label: string;
+  desc: string;
+  /** Icon key the portal renders. */
+  icon: string;
+}
+
+/** Three-up summary stats shown at the foot of a configured policy's detail. */
+export interface PolicyStats {
+  /** Documents enforced. */
+  enforced: number;
+  /** Human-formatted data-processed figure, e.g. "2.3 GB". */
+  dataProcessed: string;
+  /** Human-formatted active-for figure, e.g. "12d", or "—" when idle. */
+  activeFor: string;
+}
+
+/** An entry in a policy's recent-activity feed. */
+export interface PolicyActivityItem {
+  /** Document the policy acted on. */
+  doc: string;
+  /** What the policy did, e.g. "Redacted 4 PII matches • 2 pages". */
+  action: string;
+  /** Relative timestamp, e.g. "2h ago". */
+  time: string;
+  /** "enforced" (clean), "flagged" (needs review), "processing" (running). */
+  status: "enforced" | "flagged" | "processing";
+}
+
+/**
+ * The collected settings the setup flow gathers and the detail panel reads —
+ * the editor's `PolicyState`, minus the local-cache bookkeeping (folderId etc).
+ */
+export interface PolicyState {
+  configured: boolean;
+  status: PolicyStatus;
+  /** Selected sources (ids from {@link POLICY_SOURCES}). */
+  sources: string[];
+  /** When non-empty, narrows the policy to these document types. */
+  scopeTypes: string[];
+  /** Email low-confidence enforcements are routed to. */
+  reviewerEmail: string;
+  /** Saved field values, keyed by field key (overrides the definition default). */
+  fieldValues: Record<string, boolean | string | string[]>;
+  /** How a run's output is delivered. Defaults to "new_version". */
+  outputMode?: "new_file" | "new_version";
+  /** Rename rule for the output. Empty keeps the input filename. */
+  outputName?: string;
+  /** When the policy runs. Defaults to "upload". */
+  runOn?: "upload" | "export";
+  /** Backend record id once persisted; used to update/delete/run it. */
+  backendId?: string;
+  /** A shipped catalogue policy (configurable but not deletable). */
+  isDefault?: boolean;
+}
+
+/** What the setup flow hands back on submit — collected settings + built steps. */
+export interface PolicySetupResult {
+  fieldValues: Record<string, boolean | string | string[]>;
+  sources: string[];
+  scopeTypes: string[];
+  reviewerEmail: string;
+  outputMode: "new_file" | "new_version";
+  outputName: string;
+  outputNamePosition: "prefix" | "suffix" | "auto-number";
+  runOn: "upload" | "export";
+  /** The configured tool chain as backend pipeline steps. */
+  steps: PipelineStep[];
+}
+
+/**
+ * A configured policy as the catalogue view consumes it: the wire record plus
+ * the catalogue's category/config and derived runtime data. The handlers build
+ * this from the in-memory store + fixtures.
+ */
+export interface DecoratedPolicy {
+  category: PolicyCategory;
+  config: PolicyConfigDef;
+  state: PolicyState;
+  /** The policy's configured steps (drives the detail "Enforces" flow). */
+  steps: PipelineStep[];
+  stats: PolicyStats;
+  activity: PolicyActivityItem[];
+}
+
+/** Catalogue strip totals shown above the cards. */
 export interface PoliciesSummary {
-  /** Categories currently enabled out of the five. */
-  activePolicies: number;
-  totalCategories: number;
-  /** Distinct document types covered by at least one override. */
-  docTypesCovered: number;
-  /** Relative-time string for the most recent change across all categories. */
-  lastChange: string;
-  /** Who made the most recent change. */
-  lastChangeBy: string;
+  /** Policies currently active (enabled). */
+  active: number;
+  /** Policies configured but paused. */
+  paused: number;
+  /** Categories available to configure. */
+  categories: number;
+  /** Documents enforced across all active policies. */
+  docsEnforced: number;
 }
 
+/** The `GET /api/v1/policies` response, in the portal's catalogue shape. */
 export interface PoliciesResponse {
   summary: PoliciesSummary;
-  categories: PolicyCategoryConfig[];
+  /** Every catalogue category, each with its definition + (optional) state. */
+  catalogue: CatalogueEntry[];
+}
+
+/** One catalogue row: a category, its definition, and its current state. */
+export interface CatalogueEntry {
+  category: PolicyCategory;
+  config: PolicyConfigDef;
+  /** The configured policy's runtime view, or null when not yet set up. */
+  policy: DecoratedPolicy | null;
 }
 
 /* ──────────────────────────────────────────────────────────────────────── */
-/*  Per-category presentation metadata (icon + tone + label)                 */
-/*  Lives client-side — it's product copy, not data. Re-exported for the     */
-/*  view via api/policies.ts.                                                 */
+/*  Tool → endpoint registry                                                  */
+/*  Maps a frontend tool id to its Stirling endpoint path. The setup flow's   */
+/*  pipeline steps carry endpoint paths (the backend's PipelineStep contract), */
+/*  so this is the seam that keeps the preset chains plug-and-play.            */
 /* ──────────────────────────────────────────────────────────────────────── */
 
-export interface PolicyCategoryMeta {
-  label: string;
-  icon: string;
-  tone: "neutral" | "blue" | "purple" | "green" | "amber" | "red";
-  /** What the category governs, shown under the card title. */
-  blurb: string;
-}
-
-export const POLICY_CATEGORY_META: Record<PolicyCategory, PolicyCategoryMeta> =
-  {
-    ingestion: {
-      label: "Ingestion",
-      icon: "⭳",
-      tone: "blue",
-      blurb: "What documents are accepted and how they enter",
-    },
-    security: {
-      label: "Security",
-      icon: "🛡",
-      tone: "purple",
-      blurb: "Encryption, redaction and access controls",
-    },
-    compliance: {
-      label: "Compliance",
-      icon: "§",
-      tone: "amber",
-      blurb: "Regulatory frameworks and attestations",
-    },
-    routing: {
-      label: "Routing",
-      icon: "⇉",
-      tone: "green",
-      blurb: "Which pipeline handles which document",
-    },
-    retention: {
-      label: "Retention",
-      icon: "⏲",
-      tone: "neutral",
-      blurb: "How long documents and outputs are kept",
-    },
-  };
-
-/* ──────────────────────────────────────────────────────────────────────── */
-/*  Fixture builders                                                         */
-/* ──────────────────────────────────────────────────────────────────────── */
-
-/**
- * Free tier may only edit the two foundational categories; the rest are shown
- * locked. Pro unlocks everything operational; Compliance is gated to
- * enterprise where attestations and frameworks become relevant.
- */
-const REQUIRED_TIER: Record<PolicyCategory, Tier> = {
-  ingestion: "free",
-  retention: "free",
-  routing: "pro",
-  security: "pro",
-  compliance: "enterprise",
+export const TOOL_ENDPOINTS: Record<string, string> = {
+  redact: "/api/v1/security/auto-redact",
+  sanitize: "/api/v1/security/sanitize-pdf",
+  watermark: "/api/v1/security/add-watermark",
+  ocr: "/api/v1/misc/ocr-pdf",
+  flatten: "/api/v1/misc/flatten",
+  compress: "/api/v1/misc/compress-pdf",
 };
 
-function ingestionConfig(tier: Tier): PolicyCategoryConfig {
-  return {
-    category: "ingestion",
-    enabled: true,
-    summary: "Accept PDF, DOCX, PNG up to 50 MB · reject password-protected",
-    requiredTier: REQUIRED_TIER.ingestion,
-    lastEditedBy: "you@acme.com",
-    lastEditedAt: "3 days ago",
-    fields: [
-      {
-        key: "maxSizeMb",
-        label: "Maximum file size",
-        kind: "number",
-        value: 50,
-        unit: "MB",
-        help: "Documents above this size are rejected at intake.",
-      },
-      {
-        key: "allowedTypes",
-        label: "Accepted formats",
-        kind: "select",
-        value: "pdf-office-image",
-        options: [
-          { value: "pdf-only", label: "PDF only" },
-          { value: "pdf-office", label: "PDF + Office" },
-          { value: "pdf-office-image", label: "PDF + Office + Images" },
-          { value: "any", label: "Any document type" },
-        ],
-        help: "Formats accepted across every source.",
-      },
-      {
-        key: "rejectEncrypted",
-        label: "Reject password-protected files",
-        kind: "toggle",
-        value: true,
-        help: "Encrypted PDFs are bounced rather than queued for a password.",
-      },
-      {
-        key: "virusScan",
-        label: "Virus scan on intake",
-        kind: "toggle",
-        value: tier === "enterprise",
-        help: "Hold documents until an AV pass clears them.",
-      },
-    ],
-    overrides: [
-      { docType: "Invoices", rule: "Allow up to 100 MB for scanned batches" },
-      { docType: "Legal contracts", rule: "PDF only · reject images" },
-    ],
-  };
+/** A friendly label for an endpoint path (for the detail "Enforces" chips). */
+export const ENDPOINT_LABELS: Record<string, string> = {
+  "/api/v1/security/auto-redact": "Redact PII",
+  "/api/v1/security/sanitize-pdf": "Remove JavaScript",
+  "/api/v1/security/add-watermark": "Watermark",
+  "/api/v1/misc/ocr-pdf": "OCR",
+  "/api/v1/misc/flatten": "Flatten",
+  "/api/v1/misc/compress-pdf": "Compress",
+};
+
+/** "/api/v1/security/auto-redact" → "Auto Redact" — fallback humanisation. */
+export function humanizeEndpoint(path: string): string {
+  if (ENDPOINT_LABELS[path]) return ENDPOINT_LABELS[path];
+  const last = path.split("/").filter(Boolean).pop() ?? path;
+  return last
+    .replace(/-/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+    .trim();
 }
 
-function retentionConfig(tier: Tier): PolicyCategoryConfig {
-  const days = tier === "enterprise" ? 2555 : 365;
-  return {
-    category: "retention",
-    enabled: true,
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Catalogue definitions — categories, configs, sources, doc types          */
+/*  Modelled on the editor's policyDefinitions. PII redact regexes are the    */
+/*  precise patterns the /auto-redact endpoint matches (wordsToRedact).       */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+/** PII regexes seeded into a Security policy's redact step (SSN + cards). */
+const DEFAULT_PII_PATTERNS: string[] = [
+  "\\b(?!000|666|9\\d{2})\\d{3}([- ])(?!00)\\d{2}\\1(?!0000)\\d{4}\\b", // SSN
+  "\\b(?:4\\d{12}(?:\\d{3})?|5[1-5]\\d{14}|3[47]\\d{13}|6(?:011|5\\d{2})\\d{12})\\b", // cards
+];
+
+export const POLICY_CATEGORIES: PolicyCategory[] = [
+  {
+    id: "ingestion",
+    label: "Ingestion",
+    icon: "layers",
+    tone: "blue",
+    desc: "Classify documents, extract structured data, enforce naming conventions, and normalize pages.",
+    providesClassification: true,
+    comingSoon: true,
+  },
+  {
+    id: "security",
+    label: "Security",
+    icon: "shield",
+    tone: "purple",
+    desc: "Detect PII, redact, strip active content, and watermark documents.",
+  },
+  {
+    id: "compliance",
+    label: "Compliance",
+    icon: "check",
+    tone: "amber",
+    desc: "Enforce HIPAA, GDPR, SOC 2, or FedRAMP requirements on every document.",
+    comingSoon: true,
+  },
+  {
+    id: "routing",
+    label: "Routing",
+    icon: "route",
+    tone: "green",
+    desc: "Auto-route documents to the right team, folder, or system.",
+    comingSoon: true,
+  },
+  {
+    id: "retention",
+    label: "Retention",
+    icon: "clock",
+    tone: "neutral",
+    desc: "Set how long documents are kept, when to archive, and when to delete.",
+    comingSoon: true,
+  },
+];
+
+export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
+  ingestion: {
     summary:
-      tier === "enterprise"
-        ? "Keep originals 7 years · purge derived artifacts after 90 days"
-        : "Keep documents 365 days · purge derived artifacts after 30 days",
-    requiredTier: REQUIRED_TIER.retention,
-    lastEditedBy: "compliance@acme.com",
-    lastEditedAt: "2 weeks ago",
+      "Classifies documents, extracts structured data, enforces naming, and normalizes pages.",
+    rules: ["Classify", "Extract", "Name", "Normalize"],
+    scopeLabel: "All documents",
+    defaultOperations: [
+      { operation: TOOL_ENDPOINTS.ocr, parameters: {} },
+      { operation: TOOL_ENDPOINTS.flatten, parameters: {} },
+    ],
     fields: [
       {
-        key: "retainDays",
-        label: "Retain originals",
-        kind: "number",
-        value: days,
-        unit: "days",
-        help: "Source documents are deleted after this window.",
+        label: "Min confidence",
+        key: "minConfidence",
+        type: "select",
+        value: "80%",
+        options: ["60%", "70%", "80%", "90%", "95%"],
       },
       {
-        key: "purgeDerivedDays",
-        label: "Purge derived artifacts",
-        kind: "number",
-        value: tier === "enterprise" ? 90 : 30,
-        unit: "days",
-        help: "Extractions, redaction masks and thumbnails expire sooner.",
-      },
-      {
-        key: "legalHold",
-        label: "Honor legal holds",
-        kind: "toggle",
-        value: true,
-        help: "Suspend deletion for documents under an active hold.",
-      },
-      {
-        key: "purgeMode",
-        label: "Deletion method",
-        kind: "select",
-        value: tier === "enterprise" ? "crypto-shred" : "soft-delete",
-        options: [
-          { value: "soft-delete", label: "Soft delete (recoverable 30d)" },
-          { value: "hard-delete", label: "Hard delete" },
-          { value: "crypto-shred", label: "Crypto-shred (key destruction)" },
-        ],
+        label: "Below threshold",
+        key: "belowThreshold",
+        type: "select",
+        value: "Flag for review",
+        options: ["Flag for review", "Route to bucket", "Hold"],
       },
     ],
-    overrides: [
-      { docType: "Tax records", rule: "Retain 7 years regardless of default" },
-      { docType: "Drafts", rule: "Purge after 30 days" },
+  },
+  security: {
+    summary:
+      "Detects and redacts PII, strips active content (JavaScript), and watermarks documents.",
+    rules: ["Redact PII", "Remove JavaScript"],
+    scopeLabel: "All documents",
+    // Default chain: redact PII (flattened to image so text is truly removed) +
+    // strip JavaScript. Watermark is offered in the designer but off by default.
+    defaultOperations: [
+      {
+        operation: TOOL_ENDPOINTS.redact,
+        parameters: {
+          mode: "automatic",
+          useRegex: true,
+          convertPDFToImage: true,
+          wordsToRedact: DEFAULT_PII_PATTERNS,
+        },
+      },
+      {
+        operation: TOOL_ENDPOINTS.sanitize,
+        parameters: {
+          removeJavaScript: true,
+          removeEmbeddedFiles: false,
+          removeMetadata: false,
+          removeLinks: false,
+          removeFonts: false,
+        },
+      },
     ],
-  };
-}
-
-function routingConfig(): PolicyCategoryConfig {
-  return {
-    category: "routing",
-    enabled: true,
-    summary: "Default pipeline: Redact & Flatten · classify before routing",
-    requiredTier: REQUIRED_TIER.routing,
-    lastEditedBy: "platform@acme.com",
-    lastEditedAt: "5 days ago",
+    // The tool chain is configured per-tool in the designer (redact / sanitize /
+    // watermark); no separate policy-level fields.
+    fields: [],
+  },
+  compliance: {
+    summary:
+      "Validates documents against regulatory frameworks before they leave the system.",
+    rules: ["Framework scan", "Enforce action", "Audit trail"],
+    scopeLabel: "All documents",
+    defaultOperations: [
+      { operation: TOOL_ENDPOINTS.sanitize, parameters: {} },
+      { operation: TOOL_ENDPOINTS.flatten, parameters: {} },
+    ],
     fields: [
       {
-        key: "defaultPipeline",
-        label: "Default pipeline",
-        kind: "select",
-        value: "redact-flatten",
-        options: [
-          { value: "redact-flatten", label: "Redact & Flatten" },
-          { value: "ocr-index", label: "OCR & Index" },
-          { value: "passthrough", label: "Passthrough (no processing)" },
-        ],
-        help: "Applied when no override or classifier match is found.",
-      },
-      {
-        key: "classifyFirst",
-        label: "Classify before routing",
-        kind: "toggle",
-        value: true,
-        help: "Run the document classifier to pick a pipeline by content.",
-      },
-      {
-        key: "onUnclassified",
-        label: "When classification is uncertain",
-        kind: "select",
-        value: "default-pipeline",
-        options: [
-          { value: "default-pipeline", label: "Use default pipeline" },
-          { value: "manual-review", label: "Send to manual review" },
-          { value: "reject", label: "Reject document" },
-        ],
-      },
-    ],
-    overrides: [
-      { docType: "Invoices", rule: "Route to Invoice v3" },
-      { docType: "KYC documents", rule: "Route to KYC Onboarding" },
-      { docType: "Contracts", rule: "Route to Contract Review" },
-    ],
-  };
-}
-
-function securityConfig(tier: Tier): PolicyCategoryConfig {
-  return {
-    category: "security",
-    enabled: true,
-    summary: "Encrypt at rest (AES-256) · auto-redact PII · region-locked",
-    requiredTier: REQUIRED_TIER.security,
-    lastEditedBy: "security@acme.com",
-    lastEditedAt: "yesterday",
-    fields: [
-      {
-        key: "encryptAtRest",
-        label: "Encrypt documents at rest",
-        kind: "toggle",
-        value: true,
-        help: "AES-256 envelope encryption on stored originals and outputs.",
-      },
-      {
-        key: "autoRedactPii",
-        label: "Auto-redact detected PII",
-        kind: "toggle",
-        value: true,
-        help: "Mask SSNs, card numbers and contact details on processed copies.",
-      },
-      {
-        key: "dataRegion",
-        label: "Processing region",
-        kind: "select",
-        value: "us-east-1",
-        options: [
-          { value: "us-east-1", label: "US East (Virginia)" },
-          { value: "eu-west-1", label: "EU West (Ireland)" },
-          { value: "ap-southeast-2", label: "Asia Pacific (Sydney)" },
-        ],
-        help: "Documents never leave this region during processing.",
-      },
-      {
-        key: "keyManagement",
-        label: "Encryption keys",
-        kind: "select",
-        value: tier === "enterprise" ? "cmk" : "platform",
-        options: [
-          { value: "platform", label: "Platform-managed" },
-          { value: "cmk", label: "Customer-managed (BYOK)" },
-        ],
-      },
-    ],
-    overrides: [
-      { docType: "Medical records", rule: "EU West region · BYOK required" },
-      { docType: "Public filings", rule: "Skip auto-redaction" },
-    ],
-  };
-}
-
-function complianceConfig(): PolicyCategoryConfig {
-  return {
-    category: "compliance",
-    enabled: true,
-    summary: "SOC 2 + HIPAA attested · audit trail on every document",
-    requiredTier: REQUIRED_TIER.compliance,
-    lastEditedBy: "compliance@acme.com",
-    lastEditedAt: "1 month ago",
-    fields: [
-      {
+        label: "Frameworks",
         key: "frameworks",
-        label: "Active framework",
-        kind: "select",
-        value: "soc2-hipaa",
+        type: "chips",
+        value: ["HIPAA"],
+        options: ["HIPAA", "GDPR", "SOC 2", "FedRAMP", "PCI DSS", "ISO 27001"],
+      },
+      {
+        label: "When non-compliant",
+        key: "onViolation",
+        type: "select",
+        value: "Flag for review",
         options: [
-          { value: "soc2", label: "SOC 2 Type II" },
-          { value: "soc2-hipaa", label: "SOC 2 + HIPAA" },
-          { value: "soc2-hipaa-gdpr", label: "SOC 2 + HIPAA + GDPR" },
+          "Flag for review",
+          "Block export",
+          "Auto-redact PHI",
+          "Quarantine document",
         ],
-        help: "Drives required controls, attestations and audit retention.",
+      },
+      { label: "Audit trail", key: "auditTrail", type: "toggle", value: true },
+      { label: "Access log", key: "accessLog", type: "toggle", value: true },
+    ],
+  },
+  routing: {
+    summary:
+      "Routes documents to the right destination based on type and classification.",
+    rules: ["Auto-classify", "Route to folder", "Webhook notify"],
+    scopeLabel: "All documents",
+    defaultOperations: [{ operation: TOOL_ENDPOINTS.compress, parameters: {} }],
+    fields: [
+      {
+        label: "Destination",
+        key: "destination",
+        type: "select",
+        value: "Documents",
+        options: ["Documents", "S3 bucket", "SharePoint", "Webhook"],
+      },
+      { label: "Webhook URL", key: "webhookUrl", type: "text", value: "" },
+      { label: "Notify on route", key: "notify", type: "toggle", value: false },
+    ],
+  },
+  retention: {
+    summary:
+      "Enforces how long documents are kept, when to archive, and when to delete.",
+    rules: ["Retention hold", "Auto-archive", "Deletion block"],
+    scopeLabel: "All documents",
+    defaultOperations: [{ operation: TOOL_ENDPOINTS.compress, parameters: {} }],
+    fields: [
+      {
+        label: "Keep for",
+        key: "keepFor",
+        type: "select",
+        value: "7 years",
+        options: ["30 days", "1 year", "3 years", "7 years", "Indefinite"],
       },
       {
-        key: "auditTrail",
-        label: "Immutable audit trail",
-        kind: "toggle",
-        value: true,
-        help: "Append-only log of every access and transformation.",
+        label: "Archive after",
+        key: "archiveAfter",
+        type: "select",
+        value: "Never",
+        options: ["30 days", "90 days", "1 year", "Never"],
       },
       {
-        key: "requireAttestation",
-        label: "Require processor attestation",
-        kind: "toggle",
-        value: true,
-        help: "Each pipeline must carry a signed data-processing attestation.",
-      },
-      {
-        key: "dpaContact",
-        label: "Data protection officer",
-        kind: "text",
-        value: "dpo@acme.com",
-        help: "Notified on policy breaches and subject-access requests.",
+        label: "Immutable hold",
+        key: "immutableHold",
+        type: "toggle",
+        value: false,
       },
     ],
-    overrides: [
-      { docType: "Health forms", rule: "HIPAA · 7-year audit retention" },
-      { docType: "EU customer data", rule: "GDPR · right-to-erasure enabled" },
-    ],
-  };
-}
+  },
+};
 
-/**
- * The full category set for a tier. Every category is always present so the
- * five cards render consistently; tier only governs which are editable
- * (`requiredTier`) and the values inside enterprise-sensitive fields.
- */
-export function categoriesFor(tier: Tier): PolicyCategoryConfig[] {
+export const POLICY_SOURCES: PolicySource[] = [
+  {
+    id: "editor",
+    label: "Editor",
+    desc: "Documents you save or export in Stirling",
+    icon: "file",
+  },
+  {
+    id: "device",
+    label: "Entire device",
+    desc: "All PDFs on this machine, retroactively",
+    icon: "device",
+  },
+  {
+    id: "sharepoint",
+    label: "SharePoint",
+    desc: "Connected SharePoint libraries",
+    icon: "globe",
+  },
+  {
+    id: "dropbox",
+    label: "Dropbox",
+    desc: "Connected Dropbox folders",
+    icon: "cloud",
+  },
+  {
+    id: "gmail",
+    label: "Gmail",
+    desc: "PDF attachments in email",
+    icon: "mail",
+  },
+  {
+    id: "gdrive",
+    label: "Google Drive",
+    desc: "Connected Drive folders",
+    icon: "folder",
+  },
+];
+
+export const POLICY_DOC_TYPES: string[] = [
+  "Contracts",
+  "Invoices",
+  "Tax documents",
+  "HR records",
+  "Insurance",
+  "Medical / PHI",
+  "Legal filings",
+  "Financial reports",
+];
+
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Seed policies — a few configured policies in the wire shape, so the store */
+/*  behaves like a backend that already has policies set up.                  */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+/** The shipped default policies the handlers seed the store with. */
+export function seedPolicies(): Policy[] {
   return [
-    ingestionConfig(tier),
-    securityConfig(tier),
-    complianceConfig(),
-    routingConfig(),
-    retentionConfig(tier),
+    {
+      id: "pol_security_default",
+      name: "Security Policy",
+      owner: "security@acme.com",
+      enabled: true,
+      trigger: { event: "upload" },
+      sources: [{ source: "editor" }],
+      steps: POLICY_CONFIG.security.defaultOperations,
+      output: { mode: "new_version", name: "", namePosition: "suffix" },
+      categoryId: "security",
+    },
   ];
 }
 
-export function summaryFor(tier: Tier): PoliciesSummary {
-  const categories = categoriesFor(tier);
-  const editable = categories.filter((c) =>
-    tierMeetsRequirement(tier, c.requiredTier),
-  );
-  const activePolicies = editable.filter((c) => c.enabled).length;
-  const docTypes = new Set(
-    editable.flatMap((c) => c.overrides.map((o) => o.docType)),
-  );
+/**
+ * Per-policy runtime extras keyed by policy id — the parts the wire record
+ * doesn't carry (collected field values, scope, derived stats + activity).
+ * In a real backend these would be derived server-side from the user's files.
+ */
+export interface PolicyRuntime {
+  scopeTypes: string[];
+  reviewerEmail: string;
+  fieldValues: Record<string, boolean | string | string[]>;
+  stats: PolicyStats;
+  activity: PolicyActivityItem[];
+  isDefault?: boolean;
+}
+
+export function seedRuntime(): Record<string, PolicyRuntime> {
   return {
-    activePolicies,
-    totalCategories: categories.length,
-    docTypesCovered: docTypes.size,
-    lastChange: "yesterday",
-    lastChangeBy: "security@acme.com",
+    pol_security_default: {
+      scopeTypes: [],
+      reviewerEmail: "security@acme.com",
+      fieldValues: {},
+      isDefault: true,
+      stats: { enforced: 4821, dataProcessed: "2.3 GB", activeFor: "34d" },
+      activity: [
+        {
+          doc: "Q2-vendor-agreement.pdf",
+          action: "Redacted 6 PII matches • JavaScript stripped",
+          time: "12m ago",
+          status: "enforced",
+        },
+        {
+          doc: "patient-intake-0481.pdf",
+          action: "Low-confidence match — routed for review",
+          time: "1h ago",
+          status: "flagged",
+        },
+        {
+          doc: "invoice-7782.pdf",
+          action: "Enforcing…",
+          time: "just now",
+          status: "processing",
+        },
+      ],
+    },
   };
 }
 
-export function buildPoliciesResponse(tier: Tier): PoliciesResponse {
-  return { summary: summaryFor(tier), categories: categoriesFor(tier) };
-}
-
-/* ──────────────────────────────────────────────────────────────────────── */
-/*  Tier helpers                                                             */
-/* ──────────────────────────────────────────────────────────────────────── */
-
-const TIER_RANK: Record<Tier, number> = { free: 0, pro: 1, enterprise: 2 };
-
-/** True when `active` is at or above the `required` tier. */
-export function tierMeetsRequirement(active: Tier, required: Tier): boolean {
-  return TIER_RANK[active] >= TIER_RANK[required];
+/** Empty stats/activity for a freshly-configured policy with no runs yet. */
+export function emptyRuntime(reviewerEmail = "you@acme.com"): PolicyRuntime {
+  return {
+    scopeTypes: [],
+    reviewerEmail,
+    fieldValues: {},
+    stats: { enforced: 0, dataProcessed: "0 B", activeFor: "—" },
+    activity: [],
+  };
 }

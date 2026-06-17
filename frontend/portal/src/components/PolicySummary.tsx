@@ -7,33 +7,28 @@ import {
   Table,
   type TableColumn,
 } from "@shared/components";
-import { useTier } from "@portal/contexts/TierContext";
 import { useView } from "@portal/contexts/ViewContext";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import {
   fetchPolicies,
-  POLICY_CATEGORY_META,
-  tierMeetsRequirement,
+  type CatalogueEntry,
   type PoliciesResponse,
-  type PolicyCategoryConfig,
 } from "@portal/api/policies";
+import { policyIcon } from "@portal/components/policies/policyIcons";
 import "@portal/components/PolicySummary.css";
 
 /**
- * Each row's display state collapses three policy facts into one of three
+ * Each row's display state collapses a category's facts into one of three
  * mutually-exclusive shapes:
  *
- *   - `locked`  — the category requires a higher tier; show an upgrade nudge
- *   - `active`  — enabled and editable; offer "Configure"
- *   - `off`     — editable but disabled; offer "Turn on"
- *
- * Locked takes precedence over enabled because a free user can't act on a
- * pro/enterprise category regardless of whether the fixture marks it enabled.
+ *   - `locked`  — a coming-soon category; show a "Soon" affordance
+ *   - `active`  — a configured policy that's enabled; offer "Configure"
+ *   - `off`     — available but not set up (or paused); offer "Set up"
  */
 type RowState = "locked" | "active" | "off";
 
 interface PolicyRow {
-  config: PolicyCategoryConfig;
+  entry: CatalogueEntry;
   state: RowState;
 }
 
@@ -43,18 +38,18 @@ const STATE_BADGE: Record<
 > = {
   active: { tone: "success", label: "Active" },
   off: { tone: "neutral", label: "Off" },
-  locked: { tone: "info", label: "Upgrade" },
+  locked: { tone: "info", label: "Soon" },
 };
 
-function toRow(config: PolicyCategoryConfig, canEdit: boolean): PolicyRow {
-  if (!canEdit) return { config, state: "locked" };
-  return { config, state: config.enabled ? "active" : "off" };
+function toRow(entry: CatalogueEntry): PolicyRow {
+  if (entry.category.comingSoon) return { entry, state: "locked" };
+  const active = entry.policy?.state.status === "active";
+  return { entry, state: active ? "active" : "off" };
 }
 
 export function PolicySummary() {
-  const { tier } = useTier();
   const { setActiveView } = useView();
-  const state = useAsync<PoliciesResponse>(() => fetchPolicies(tier), [tier]);
+  const state = useAsync<PoliciesResponse>(() => fetchPolicies(), []);
   const { data } = state;
   const { isLoading, isEmpty } = useSectionFlags(state);
 
@@ -64,20 +59,17 @@ export function PolicySummary() {
     {
       key: "category",
       header: "Policy",
-      render: ({ config }) => {
-        const meta = POLICY_CATEGORY_META[config.category];
-        return (
-          <div className="portal-policysum__cat">
-            <span className="portal-policysum__icon" aria-hidden>
-              {meta.icon}
-            </span>
-            <div className="portal-policysum__cat-text">
-              <strong>{meta.label}</strong>
-              <span>{meta.blurb}</span>
-            </div>
+      render: ({ entry }) => (
+        <div className="portal-policysum__cat">
+          <span className="portal-policysum__icon" aria-hidden>
+            {policyIcon(entry.category.icon)}
+          </span>
+          <div className="portal-policysum__cat-text">
+            <strong>{entry.category.label}</strong>
+            <span>{entry.category.desc}</span>
           </div>
-        );
-      },
+        </div>
+      ),
     },
     {
       key: "status",
@@ -95,9 +87,9 @@ export function PolicySummary() {
     {
       key: "rule",
       header: "Active rule",
-      render: ({ config, state }) => (
+      render: ({ entry, state }) => (
         <span className="portal-policysum__rule">
-          {state === "off" ? "No rule enforced yet" : config.summary}
+          {state === "active" ? entry.config.summary : "No rule enforced yet"}
         </span>
       ),
     },
@@ -106,11 +98,11 @@ export function PolicySummary() {
       header: "",
       align: "right",
       width: "9rem",
-      render: ({ config, state }) => {
+      render: ({ state }) => {
         if (state === "locked") {
           return (
             <Button size="sm" variant="ghost" onClick={goToPolicies}>
-              {config.requiredTier === "enterprise" ? "Enterprise" : "Upgrade"}
+              Coming soon
             </Button>
           );
         }
@@ -120,17 +112,14 @@ export function PolicySummary() {
             variant={state === "active" ? "ghost" : "outline"}
             onClick={goToPolicies}
           >
-            {state === "active" ? "Configure" : "Turn on"}
+            {state === "active" ? "Configure" : "Set up"}
           </Button>
         );
       },
     },
   ];
 
-  const rows: PolicyRow[] =
-    data?.categories.map((c) =>
-      toRow(c, tierMeetsRequirement(tier, c.requiredTier)),
-    ) ?? [];
+  const rows: PolicyRow[] = data?.catalogue.map(toRow) ?? [];
 
   return (
     <section className="portal-policysum" aria-label="What runs on your PDFs">
@@ -139,14 +128,13 @@ export function PolicySummary() {
           <div>
             <h2 className="portal-policysum__title">What runs on your PDFs</h2>
             <p className="portal-policysum__sub">
-              Org-wide rules every document passes through, regardless of which
-              pipeline handles it.
+              Standing automations every document passes through, regardless of
+              which pipeline handles it.
             </p>
           </div>
           {data && (
             <StatusBadge tone="info" size="sm">
-              {data.summary.activePolicies} / {data.summary.totalCategories}{" "}
-              active
+              {data.summary.active} / {data.summary.categories} active
             </StatusBadge>
           )}
         </header>
@@ -166,7 +154,7 @@ export function PolicySummary() {
           <EmptyState
             size="compact"
             title="No policies yet"
-            description="Once policies are configured, the five categories appear here."
+            description="Once policies are configured, the categories appear here."
           />
         )}
 
@@ -174,7 +162,7 @@ export function PolicySummary() {
           <Table
             columns={columns}
             rows={rows}
-            rowKey={(r) => r.config.category}
+            rowKey={(r) => r.entry.category.id}
             onRowClick={goToPolicies}
           />
         )}

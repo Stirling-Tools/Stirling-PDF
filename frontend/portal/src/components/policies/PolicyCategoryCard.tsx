@@ -1,46 +1,40 @@
-import { Card, Chip, StatusBadge } from "@shared/components";
-import {
-  POLICY_CATEGORY_META,
-  type PolicyCategoryConfig,
-} from "@portal/api/policies";
+import { Card, Chip, StatusBadge, StatTile } from "@shared/components";
+import type { CatalogueEntry } from "@portal/api/policies";
+import { policyIcon } from "@portal/components/policies/policyIcons";
 import "@portal/views/Policies.css";
 
 interface PolicyCategoryCardProps {
-  config: PolicyCategoryConfig;
-  /** False when the active tier is below the category's required tier. */
-  editable: boolean;
-  onOpen: (category: PolicyCategoryConfig) => void;
+  entry: CatalogueEntry;
+  onOpen: (entry: CatalogueEntry) => void;
 }
 
 /**
- * One card per policy category. Editable cards open the designer on click;
- * locked cards (tier below the category's requirement) stay inert and show an
- * upgrade nudge instead of the edit affordance.
+ * One card per policy category. Configured categories show the live status +
+ * stats and open the detail panel; unconfigured ones show the summary + a
+ * "Set up" affordance; coming-soon categories render locked and inert.
  */
-export function PolicyCategoryCard({
-  config,
-  editable,
-  onOpen,
-}: PolicyCategoryCardProps) {
-  const meta = POLICY_CATEGORY_META[config.category];
-  const overrideCount = config.overrides.length;
+export function PolicyCategoryCard({ entry, onOpen }: PolicyCategoryCardProps) {
+  const { category, config, policy } = entry;
+  const comingSoon = category.comingSoon === true;
+  const openable = !comingSoon;
+  const status = policy?.state.status;
 
   return (
     <Card
       className={
         "portal-policies__card" +
-        (editable ? "" : " portal-policies__card--locked")
+        (comingSoon ? " portal-policies__card--locked" : "")
       }
-      interactive={editable}
-      onClick={editable ? () => onOpen(config) : undefined}
-      role={editable ? "button" : undefined}
-      tabIndex={editable ? 0 : undefined}
+      interactive={openable}
+      onClick={openable ? () => onOpen(entry) : undefined}
+      role={openable ? "button" : undefined}
+      tabIndex={openable ? 0 : undefined}
       onKeyDown={
-        editable
+        openable
           ? (e) => {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
-                onOpen(config);
+                onOpen(entry);
               }
             }
           : undefined
@@ -48,52 +42,58 @@ export function PolicyCategoryCard({
     >
       <header className="portal-policies__card-head">
         <span
-          className={`portal-policies__cat-icon portal-policies__cat-icon--${meta.tone}`}
+          className={`portal-policies__cat-icon portal-policies__cat-icon--${category.tone}`}
           aria-hidden
         >
-          {meta.icon}
+          {policyIcon(category.icon)}
         </span>
         <div className="portal-policies__card-titles">
-          <h2 className="portal-policies__card-title">{meta.label}</h2>
-          <span className="portal-policies__card-blurb">{meta.blurb}</span>
+          <h2 className="portal-policies__card-title">{category.label}</h2>
+          <span className="portal-policies__card-blurb">{category.desc}</span>
         </div>
-        {editable ? (
+        {comingSoon ? (
+          <Chip tone="neutral" size="sm">
+            Coming soon
+          </Chip>
+        ) : policy ? (
           <StatusBadge
-            tone={config.enabled ? "success" : "neutral"}
+            tone={status === "paused" ? "warning" : "success"}
             size="sm"
-            pulse={config.enabled}
+            pulse={status !== "paused"}
           >
-            {config.enabled ? "Enabled" : "Disabled"}
+            {status === "paused" ? "Paused" : "Active"}
           </StatusBadge>
         ) : (
-          <Chip
-            tone="amber"
-            size="sm"
-            leadingIcon={<span aria-hidden>🔒</span>}
-          >
-            Locked
+          <Chip tone="blue" size="sm">
+            Not set up
           </Chip>
         )}
       </header>
 
-      {editable ? (
-        <>
-          <p className="portal-policies__card-summary">{config.summary}</p>
-          <footer className="portal-policies__card-foot">
-            <Chip tone="neutral" size="sm">
-              {overrideCount} doc-type{overrideCount === 1 ? "" : "s"}{" "}
-              overridden
-            </Chip>
-            <span className="portal-policies__card-meta">
-              Edited {config.lastEditedAt} by {config.lastEditedBy}
-            </span>
-          </footer>
-        </>
+      <p className="portal-policies__card-summary">{config.summary}</p>
+
+      {policy ? (
+        <footer className="portal-policies__card-stats">
+          <StatTile
+            label="Docs enforced"
+            value={policy.stats.enforced.toLocaleString()}
+          />
+          <StatTile label="Data processed" value={policy.stats.dataProcessed} />
+          <StatTile label="Active" value={policy.stats.activeFor} />
+        </footer>
       ) : (
-        <p className="portal-policies__card-locked-note">
-          Editing {meta.label} policy requires the{" "}
-          <strong>{config.requiredTier}</strong> plan.
-        </p>
+        <footer className="portal-policies__card-foot">
+          <div className="portal-policies__card-rules">
+            {config.rules.slice(0, 3).map((rule) => (
+              <Chip key={rule} tone="neutral" size="sm">
+                {rule}
+              </Chip>
+            ))}
+          </div>
+          {!comingSoon && (
+            <span className="portal-policies__card-cta">Set up →</span>
+          )}
+        </footer>
       )}
     </Card>
   );

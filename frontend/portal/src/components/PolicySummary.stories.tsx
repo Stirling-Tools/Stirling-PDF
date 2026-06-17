@@ -17,14 +17,13 @@ const meta: Meta<typeof PolicySummary> = {
 export default meta;
 type Story = StoryObj<typeof PolicySummary>;
 
-/** Use the Tier toolbar to see free vs pro vs enterprise locking. */
 export const Default: Story = {};
 
 export const Loading: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get("/v1/policies", async () => {
+        http.get("/api/v1/policies", async () => {
           await delay("infinite");
           return HttpResponse.json({});
         }),
@@ -37,16 +36,10 @@ export const Empty: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get("/v1/policies", () =>
+        http.get("/api/v1/policies", () =>
           HttpResponse.json({
-            summary: {
-              activePolicies: 0,
-              totalCategories: 5,
-              docTypesCovered: 0,
-              lastChange: "never",
-              lastChangeBy: "—",
-            },
-            categories: [],
+            summary: { active: 0, paused: 0, categories: 0, docsEnforced: 0 },
+            catalogue: [],
           }),
         ),
       ],
