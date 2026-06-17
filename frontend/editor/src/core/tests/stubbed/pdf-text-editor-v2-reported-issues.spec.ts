@@ -365,29 +365,26 @@ test.describe("v2 editor - reported issue: bullet-to-item mapping", () => {
     await page.waitForTimeout(2000);
   }
 
-  // KNOWN BUG (documented, not yet fixed): on the "Plus Many More" page the
-  // bullet glyphs are grouped into an orphan bullet-only run instead of
-  // attaching to their list items, so editing maps them to the wrong text.
-  // When the grouper is reworked to pair each bullet with its item this
-  // test will start passing and should be un-failed.
-  test.fail(
-    "bullets attach to their list items (not an orphan bullet-only run)",
-    async ({ page }) => {
-      await loadPage2(page);
-      const hasOrphanBulletRun = await page.evaluate(() => {
-        const s = (window as any).__v2_editor_store;
-        const runs = s.doc.page(2).runs as Array<{ text: string }>;
-        // An "orphan" run is one whose text is ONLY bullets + whitespace
-        // and holds 2+ bullets (the stacked bullet column).
-        return runs.some(
-          (r) =>
-            /^[\s•]+$/.test(r.text) && (r.text.match(/•/g) ?? []).length >= 2,
-        );
-      });
-      expect(
-        hasOrphanBulletRun,
-        "bullets should attach to items, not form a stacked bullet-only run",
-      ).toBe(false);
-    },
-  );
+  // FIXED by the LineGrouper rework (font-scaled sort band + bullet-indent
+  // gap): bullets now attach to their list items instead of forming an
+  // orphan stacked bullet-only run.
+  test("bullets attach to their list items (not an orphan bullet-only run)", async ({
+    page,
+  }) => {
+    await loadPage2(page);
+    const hasOrphanBulletRun = await page.evaluate(() => {
+      const s = (window as any).__v2_editor_store;
+      const runs = s.doc.page(2).runs as Array<{ text: string }>;
+      // An "orphan" run is one whose text is ONLY bullets + whitespace
+      // and holds 2+ bullets (the stacked bullet column).
+      return runs.some(
+        (r) =>
+          /^[\s•]+$/.test(r.text) && (r.text.match(/•/g) ?? []).length >= 2,
+      );
+    });
+    expect(
+      hasOrphanBulletRun,
+      "bullets should attach to items, not form a stacked bullet-only run",
+    ).toBe(false);
+  });
 });

@@ -62,6 +62,15 @@ function isDecorativeOverlap(members: TextRun[]): boolean {
   return overlapping / (members.length - 1) > 0.3;
 }
 
+// A run that is just a list bullet (and a narrow glyph). Bullets are emitted
+// as their own text object, indented to the LEFT of the item text by more
+// than an inter-word space - so the merge step lets the item attach across
+// that wider indent when the previous run is a bullet.
+const BULLET_GLYPHS = /^[\s]*[•·∙▪●○◦‣⁃・‧°]+[\s]*$/;
+function isBulletLead(run: TextRun): boolean {
+  return BULLET_GLYPHS.test(run.text) && run.bounds.width <= run.fontSize;
+}
+
 /**
  * Sort one container's runs top-to-bottom / left-to-right and merge
  * same-baseline, close-together runs into line groups, appending each
@@ -71,7 +80,13 @@ function isDecorativeOverlap(members: TextRun[]): boolean {
 function groupPartitionIntoLines(runs: TextRun[], out: LineGroupInfo[]): void {
   const sorted = [...runs].sort((a, b) => {
     const yDiff = b.matrix.f - a.matrix.f;
-    if (Math.abs(yDiff) > 1) return yDiff;
+    // Same-line band scaled to font size (matches the merge baseline
+    // tolerance) so a list bullet sitting a couple of points above its item
+    // still x-sorts onto the item's line, instead of a flat 1pt band that
+    // split the bullet onto its own line (orphan bullet column).
+    const band =
+      BASELINE_TOLERANCE * Math.max(Math.min(a.fontSize, b.fontSize), 4);
+    if (Math.abs(yDiff) > Math.max(1, band)) return yDiff;
     return a.bounds.x - b.bounds.x;
   });
 
@@ -94,7 +109,17 @@ function groupPartitionIntoLines(runs: TextRun[], out: LineGroupInfo[]): void {
     // half the font size (for large display text). Column gutters stay
     // wider than this in practice, so they still split correctly.
     const maxGap = Math.max(ABS_MAX_GAP_PT, 0.5 * Math.max(ref.fontSize, 4));
-    const close = gap <= maxGap;
+    // A leading bullet is indented from its item by more than an inter-word
+    // space; let the item attach across that wider indent. Still far below a
+    // column gutter (~200pt+), so columns never merge.
+    const effMaxGap = isBulletLead(prev)
+      ? Math.max(maxGap, 2 * Math.max(ref.fontSize, 4))
+      : maxGap;
+    // Reject joining a run that starts far to the LEFT of the previous run's
+    // right edge (a hugely negative gap) - a right-column run must never
+    // absorb the left column. Tolerate small kerning overlap only.
+    const minNegGap = 0.25 * Math.max(ref.fontSize, 4);
+    const close = gap <= effMaxGap && gap >= -minNegGap;
 
     if (sameLine && close) {
       current.members.push(run);
