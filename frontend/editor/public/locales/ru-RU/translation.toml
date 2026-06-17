@@ -2686,9 +2686,9 @@ agentMenu = "Параметры агента Stirling"
 clearChat = "Очистить чат"
 
 [chat.input]
+disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 placeholder = "Что вы хотите сделать?"
 send = "Отправить сообщение"
-disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 
 [chat.progress]
 analyzing = "Анализируем ваш запрос..."

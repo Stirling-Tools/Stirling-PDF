@@ -2686,9 +2686,9 @@ agentMenu = "Alternativ för Stirling-agent"
 clearChat = "Rensa chatt"
 
 [chat.input]
+disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 placeholder = "Vad vill du göra?"
 send = "Skicka meddelande"
-disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 
 [chat.progress]
 analyzing = "Analyserar din begäran..."

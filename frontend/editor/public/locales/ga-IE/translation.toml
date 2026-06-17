@@ -2686,9 +2686,9 @@ agentMenu = "Roghanna gníomhaire Stirling"
 clearChat = "Glan comhrá"
 
 [chat.input]
+disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 placeholder = "Cad is mian leat a dhéanamh?"
 send = "Seol teachtaireacht"
-disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 
 [chat.progress]
 analyzing = "Ag anailísiú d’iarratas..."

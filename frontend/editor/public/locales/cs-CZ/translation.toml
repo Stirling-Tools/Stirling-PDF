@@ -2686,9 +2686,9 @@ agentMenu = "Možnosti agenta Stirling"
 clearChat = "Vymazat chat"
 
 [chat.input]
+disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 placeholder = "Co chcete udělat?"
 send = "Odeslat zprávu"
-disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 
 [chat.progress]
 analyzing = "Analyzuji váš požadavek..."

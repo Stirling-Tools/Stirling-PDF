@@ -2686,9 +2686,9 @@ agentMenu = "Tùy chọn tác nhân Stirling"
 clearChat = "Xóa trò chuyện"
 
 [chat.input]
+disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 placeholder = "Bạn muốn làm gì?"
 send = "Gửi tin nhắn"
-disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 
 [chat.progress]
 analyzing = "Đang phân tích yêu cầu của bạn..."

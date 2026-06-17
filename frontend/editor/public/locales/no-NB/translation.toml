@@ -2686,9 +2686,9 @@ agentMenu = "Stirling-agentalternativer"
 clearChat = "Tøm chat"
 
 [chat.input]
+disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 placeholder = "Hva vil du gjøre?"
 send = "Send melding"
-disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 
 [chat.progress]
 analyzing = "Analyserer forespørselen din..."

@@ -2686,9 +2686,9 @@ agentMenu = "خيارات وكيل Stirling"
 clearChat = "مسح الدردشة"
 
 [chat.input]
+disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 placeholder = "ما الذي تريد فعله؟"
 send = "إرسال الرسالة"
-disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 
 [chat.progress]
 analyzing = "جاري تحليل طلبك..."

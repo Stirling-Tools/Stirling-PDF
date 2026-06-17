@@ -2686,9 +2686,9 @@ agentMenu = "Opcje agenta Stirling"
 clearChat = "Wyczyść czat"
 
 [chat.input]
+disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 placeholder = "Co chcesz zrobić?"
 send = "Wyślij wiadomość"
-disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 
 [chat.progress]
 analyzing = "Analizowanie żądania..."

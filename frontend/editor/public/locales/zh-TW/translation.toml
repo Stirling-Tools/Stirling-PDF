@@ -2686,9 +2686,9 @@ agentMenu = "Stirling 代理選項"
 clearChat = "清除聊天"
 
 [chat.input]
+disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 placeholder = "您想要做什麼？"
 send = "傳送訊息"
-disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 
 [chat.progress]
 analyzing = "正在分析您的請求..."

@@ -2686,9 +2686,9 @@ agentMenu = "Stirling ügynök beállításai"
 clearChat = "Csevegés törlése"
 
 [chat.input]
+disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 placeholder = "Mit szeretne tenni?"
 send = "Üzenet küldése"
-disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 
 [chat.progress]
 analyzing = "Kérésének elemzése..."

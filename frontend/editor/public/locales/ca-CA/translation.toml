@@ -2686,9 +2686,9 @@ agentMenu = "Opcions de l'agent Stirling"
 clearChat = "Neteja el xat"
 
 [chat.input]
+disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 placeholder = "Què vols fer?"
 send = "Envia el missatge"
-disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 
 [chat.progress]
 analyzing = "Analitzant la teva sol·licitud..."

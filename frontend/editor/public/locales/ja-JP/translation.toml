@@ -2686,9 +2686,9 @@ agentMenu = "Stirling エージェントのオプション"
 clearChat = "チャットをクリア"
 
 [chat.input]
+disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 placeholder = "何をしたいですか？"
 send = "メッセージを送信"
-disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 
 [chat.progress]
 analyzing = "リクエストを分析しています..."

@@ -2686,9 +2686,9 @@ agentMenu = "گزینه‌های عامل Stirling"
 clearChat = "پاک‌کردن چت"
 
 [chat.input]
+disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 placeholder = "می‌خواهید چه کاری انجام دهید؟"
 send = "ارسال پیام"
-disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 
 [chat.progress]
 analyzing = "در حال تحلیل درخواست شما..."

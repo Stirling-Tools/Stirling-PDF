@@ -2686,9 +2686,9 @@ agentMenu = "Stirling agent འདེམས་ཚན"
 clearChat = "གླེང་མོལ་བཤོལ"
 
 [chat.input]
+disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 placeholder = "གང་བྱེད་དགོས?"
 send = "འཕྲིན་དོན་གཏོང"
-disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 
 [chat.progress]
 analyzing = "ཁྱེད་ཀྱི་ཞུ་བ་ཞིབ་འཇུག་བཞིན..."

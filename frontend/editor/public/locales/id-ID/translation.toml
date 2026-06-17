@@ -2686,9 +2686,9 @@ agentMenu = "Opsi agen Stirling"
 clearChat = "Hapus obrolan"
 
 [chat.input]
+disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 placeholder = "Apa yang ingin Anda lakukan?"
 send = "Kirim pesan"
-disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 
 [chat.progress]
 analyzing = "Menganalisis permintaan Anda..."

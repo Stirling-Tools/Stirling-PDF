@@ -2686,9 +2686,9 @@ agentMenu = "Stirling agentearen aukerak"
 clearChat = "Garbitu txata"
 
 [chat.input]
+disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 placeholder = "Zer egin nahi duzu?"
 send = "Bidali mezua"
-disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 
 [chat.progress]
 analyzing = "Zure eskaera aztertzen..."
