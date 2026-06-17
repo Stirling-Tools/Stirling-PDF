@@ -52,12 +52,9 @@ help = "Hjelp"
 imgPrompt = "Velg Bilde(r)"
 incorrectPasswordMessage = "Nåværende passord er feil."
 info = "Info"
-insufficientCredits = "Ikke nok kreditter. Påkrevd: {{requiredCredits}}, Tilgjengelig: {{currentBalance}}, Mangler: {{shortfall}}"
 invalidUndoData = "Kan ikke angre: ugyldige operasjonsdata"
 keepWorking = "Fortsett å jobbe"
 loading = "Laster..."
-loadingCredits = "Sjekker kreditter..."
-loadingProStatus = "Sjekker abonnementsstatus..."
 logOut = "Logg ut"
 marginTooltip = "Avstand mellom sidetallet og kanten av siden."
 moreOptions = "Flere alternativer"
@@ -68,7 +65,6 @@ noFileSelected = "Ingen fil valgt. Last opp en."
 noFilesToUndo = "Kan ikke angre: ingen filer ble behandlet i forrige operasjon"
 noOperationToUndo = "Ingen operasjon å angre"
 nothingToUndo = "Ingenting å angre"
-noticeTopUpOrPlan = "Ikke nok kreditter, fyll på eller oppgrader til et abonnement"
 noValidFiles = "Ingen gyldige filer å behandle"
 oops = "Ops!"
 openInNewWindow = "Åpne i nytt vindu"
@@ -277,7 +273,6 @@ saved = "Saved"
 text = "Text"
 
 [addPageNumbers]
-tags = "number,pagination,count,add page numbers,page numbering,page numbers,footer,header,number pages,sequential,pagination tool"
 customize = "Tilpass utseende"
 customNumberDesc = "Standard til {n}, aksepterer også 'Side {n} av {total}', 'Tekst-{n}', '{filnavn}-{n}"
 fontName = "Skrifttype"
@@ -288,6 +283,7 @@ positionAndPages = "Plassering og sider"
 preview = "Valg av plassering"
 previewDisclaimer = "Forhåndsvisningen er omtrentlig. Endelig resultat kan variere på grunn av PDF-skriftmetrikker."
 submit = "Legg til Sidetall"
+tags = "number,pagination,count,add page numbers,page numbering,page numbers,footer,header,number pages,sequential,pagination tool"
 title = "Legg til Sidetall"
 zeroPad = "Zero‑pad Width (Bates Stamping)"
 zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
@@ -305,9 +301,9 @@ title = "Resultater for sidetall"
 6 = "Tilpasset Tekst"
 
 [addPassword]
-tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 desc = "Krypter PDF-dokumentet ditt med et passord."
 submit = "Krypter"
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Legg til passord"
 
 [addPassword.encryption.keyLength]
@@ -352,6 +348,9 @@ title = "Passordtyper"
 [addPassword.tooltip.permissions]
 text = "Disse tillatelsene kontrollerer hva brukere kan gjøre med PDF-en. Mest effektivt når det kombineres med et eierpassord."
 title = "Endre tillatelser"
+
+[addStamp]
+tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
 [AddStampRequest]
 alphabet = "Alfabet"
@@ -423,6 +422,9 @@ header = "Legg til tekst i PDF-er"
 tags = "tekst,merknad,etikett"
 title = "Legg til tekst"
 
+[addText.canvas]
+colorPickerTitle = "Choose stroke colour"
+
 [addText.error]
 failed = "Det oppsto en feil da tekst skulle legges til i PDF-en."
 
@@ -441,25 +443,6 @@ resume = "Gjenoppta plassering"
 
 [addText.results]
 title = "Resultater for Legg til tekst"
-
-[addText.step]
-createDesc = "Skriv inn teksten du vil legge til"
-place = "Plasser tekst"
-placeDesc = "Klikk på PDF-en for å legge til teksten"
-
-[addText.steps]
-configure = "Konfigurer tekst"
-
-[addText.text]
-colorLabel = "Tekstfarge"
-fontLabel = "Skrifttype"
-fontSizeLabel = "Skriftstørrelse"
-fontSizePlaceholder = "Skriv eller velg skriftstørrelse (8-200)"
-name = "Tekstinnhold"
-placeholder = "Skriv inn teksten du vil legge til"
-
-[addText.canvas]
-colorPickerTitle = "Choose stroke colour"
 
 [addText.saved]
 defaultCanvasLabel = "Drawing signature"
@@ -483,6 +466,22 @@ canvas = "Drawing"
 image = "Upload"
 text = "Text"
 
+[addText.step]
+createDesc = "Skriv inn teksten du vil legge til"
+place = "Plasser tekst"
+placeDesc = "Klikk på PDF-en for å legge til teksten"
+
+[addText.steps]
+configure = "Konfigurer tekst"
+
+[addText.text]
+colorLabel = "Tekstfarge"
+fontLabel = "Skrifttype"
+fontSizeLabel = "Skriftstørrelse"
+fontSizePlaceholder = "Skriv eller velg skriftstørrelse (8-200)"
+name = "Tekstinnhold"
+placeholder = "Skriv inn teksten du vil legge til"
+
 [addText.type]
 canvas = "Canvas"
 image = "Image"
@@ -493,7 +492,6 @@ text = "Text"
 tags = "fargekorrigering,tilpasse,modifisere,forbedre"
 
 [adjustContrast]
-tags = "contrast,brightness,saturation,adjust colors,color correction,enhance,lighten,darken,improve quality,color balance,hue,vibrance"
 adjustColors = "Juster farger"
 basic = "Grunnleggende justeringer"
 blue = "Blå"
@@ -504,6 +502,7 @@ green = "Grønn"
 noPreview = "Velg en PDF for forhåndsvisning"
 red = "Rød"
 saturation = "Metning:"
+tags = "contrast,brightness,saturation,adjust colors,color correction,enhance,lighten,darken,improve quality,color balance,hue,vibrance"
 title = "Juster Kontrast"
 
 [adjustContrast.error]
@@ -1133,6 +1132,10 @@ apikeyNote = "Clients send a Stirling API key in the X-API-KEY header (or Author
 description = "Expose Stirling's PDF tools and AI agents to MCP clients over an OAuth-protected endpoint."
 title = "MCP Server"
 
+[admin.settings.mcp.acceptedAudiences]
+description = "Extra token audience values accepted besides the Resource ID (comma or space separated). Leave blank for strict RFC 8707. Needed for IdPs that cannot mint resource audiences - e.g. Supabase's OAuth server always issues aud=authenticated."
+label = "Additional accepted audiences (optional)"
+
 [admin.settings.mcp.allowedOps]
 description = "If set, ONLY these operation ids are exposed (an allow-list; comma or space separated). Leave blank to expose all enabled tools except any blocked below."
 label = "Allowed tools"
@@ -1617,6 +1620,9 @@ paragraph1 = "Stirling PDF har valgfri analyse for å hjelpe oss med å forbedre
 paragraph2 = "Vennligst vurder å aktivere analyse for å hjelpe Stirling-PDF å vokse og for å la oss forstå brukerne våre bedre."
 title = "Vill du gjøre Stirling PDF bedre?"
 
+[annotate]
+tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
+
 [annotation]
 annotationStyle = "Merknadsstil"
 backgroundColor = "Bakgrunnsfarge"
@@ -1846,7 +1852,6 @@ bullet3 = "Beholder det opprinnelige navnet hvis ingen egnet tittel finnes"
 title = "Smart navngivning"
 
 [automate]
-tags = "workflow,sequence,automation,automate,batch,batch processing,pipeline,chain,multi-step,recurring,scheduled,automatic,process multiple,bulk operations"
 copyToSaved = "Kopier til Lagrede"
 desc = "Bygg flertrinns arbeidsflyter ved å kjede sammen PDF-handlinger. Ideelt for gjentakende oppgaver."
 export = "Eksporter"
@@ -1857,6 +1862,7 @@ importPartialSuccess_other = "Imported with {{count}} unmapped operations: {{ops
 importSuccess = "Importert automatisering: {{name}}"
 invalidStep = "Ugyldig trinn"
 reviewTitle = "Resultater av automatisering"
+tags = "workflow,sequence,automation,automate,batch,batch processing,pipeline,chain,multi-step,recurring,scheduled,automatic,process multiple,bulk operations"
 title = "Automatiser"
 
 [automate.config]
@@ -1956,8 +1962,8 @@ secureWorkflow = "Sikkerhetsarbeidsflyt"
 secureWorkflowDesc = "Sikrer PDF-dokumenter ved å fjerne potensielt ondsinnet innhold som JavaScript og innebygde filer, og legger deretter til passordbeskyttelse for å hindre uautorisert tilgang. Passordet er satt til 'password' som standard."
 
 [autoRename]
-tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
 description = "Dette verktøyet vil automatisk gi PDF-filer nytt navn basert på innholdet. Det analyserer dokumentet for å finne den mest passende tittelen fra teksten."
+tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
 
 [autoSizeSplitPDF]
 tags = "pdf,del,dokument,organisering"
@@ -2539,9 +2545,9 @@ ssoManaged = "Kontoen din administreres av identitetsleverandøren din."
 title = "Endre Legitimasjon"
 
 [changeMetadata]
-tags = "edit,modify,update,metadata,properties,document properties,author,title,subject,keywords,creator,producer,info,document info,file properties"
 filenamePrefix = "metadata"
 submit = "Endre"
+tags = "edit,modify,update,metadata,properties,document properties,author,title,subject,keywords,creator,producer,info,document info,file properties"
 
 [changeMetadata.advanced]
 title = "Avanserte alternativer"
@@ -2647,9 +2653,9 @@ true = "Sann"
 unknown = "Ukjent"
 
 [changePermissions]
-tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 desc = "Endre dokumentbegrensninger og tillatelser."
 submit = "Endre tillatelser"
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Endre tillatelser"
 
 [changePermissions.error]
@@ -2697,11 +2703,16 @@ resize = "Endre størrelse på chatpanelet"
 [chat.actions]
 copy = "Kopier melding"
 
+[chat.fab]
+close = "Close chat"
+open = "Open Stirling AI assistant"
+
 [chat.header]
 agentMenu = "Stirling-agentalternativer"
 clearChat = "Tøm chat"
 
 [chat.input]
+disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 placeholder = "Hva vil du gjøre?"
 send = "Send melding"
 
@@ -2714,18 +2725,18 @@ executing_tool_single = "Kjører {{tool}}..."
 executing_tool_step = "Kjører {{tool}} (steg {{step}} av {{total}})..."
 extracting_content = "Henter ut innhold fra dokumentene dine..."
 processing = "Behandler hentet innhold..."
+ranForMinutes = "Ran for {{count}} minutes"
+ranForMinutes_one = "Ran for 1 minute"
+ranForMinutes_other = "Ran for {{count}} minutes"
+ranForMinutesSeconds = "Ran for {{minutes}} min, {{seconds}} sec"
+ranForSeconds = "Ran for {{count}} seconds"
+ranForSeconds_one = "Ran for 1 second"
+ranForSeconds_other = "Ran for {{count}} seconds"
 thinking = "Tenker..."
 whole_doc_compression_round = "Sammenstiller notater..."
 whole_doc_read_done = "Ferdig med å lese dokumentet..."
 whole_doc_read_started = "Leser dokumentet..."
 whole_doc_slice_done = "Leser dokumentet... ({{percent}}% fullført)"
-ranForSeconds = "Ran for {{count}} seconds"
-ranForSeconds_one = "Ran for 1 second"
-ranForSeconds_other = "Ran for {{count}} seconds"
-ranForMinutes = "Ran for {{count}} minutes"
-ranForMinutes_one = "Ran for 1 minute"
-ranForMinutes_other = "Ran for {{count}} minutes"
-ranForMinutesSeconds = "Ran for {{minutes}} min, {{seconds}} sec"
 
 [chat.quickActions]
 browseYourFiles = "Bla gjennom filene dine"
@@ -2738,8 +2749,6 @@ mergeMany = "Slå sammen disse {{count}} dokumentene til 1"
 moreFiles = "+{{count}} til"
 openFromComputer = "Åpne fra datamaskin"
 removeFile = "Fjern {{name}}"
-rotateMany = "Roter disse dokumentene"
-rotateOne = "Roter dette dokumentet"
 splitOne = "Del dette dokumentet"
 
 [chat.responses]
@@ -2750,15 +2759,12 @@ need_clarification = "Kan du utdype forespørselen?"
 not_found = "Jeg fant ikke den forespurte informasjonen."
 processing = "Behandler ({{outcome}})..."
 unsupported_capability = "Ikke støttet funksjon: {{capability}}"
+usage_limit_reached = "You've reached your usage limit. Check your plan options to keep going."
 
 [chat.toolsUsed]
 summary_one = "Kjørte 1 verktøy"
 summary_other = "Kjørte {{count}} verktøy"
 unknownTool = "Ukjent verktøy"
-
-[chat.fab]
-close = "Close chat"
-open = "Open Stirling AI assistant"
 
 [cloudBadge]
 tooltip = "Denne operasjonen vil bruke skykreditter"
@@ -2770,7 +2776,6 @@ tooltip = "Velg farge fra skjermen"
 title = "Velg farge"
 
 [common]
-available = "tilgjengelig"
 back = "Tilbake"
 cancel = "Avbryt"
 close = "Lukk"
@@ -2781,16 +2786,13 @@ copy = "Kopier"
 done = "Ferdig"
 error = "Feil"
 expand = "Utvid"
-learnMore = "Lær mer"
 loading = "Laster..."
 next = "Neste"
-operation = "denne operasjonen"
 preview = "Forhåndsvis"
 previous = "Forrige"
 refresh = "Oppdater"
 retry = "Prøv igjen"
 save = "Lagre"
-used = "brukt"
 
 [compare]
 clearSelected = "Tøm valgte"
@@ -2916,9 +2918,9 @@ unlinkedTitle = "Uavhengig rulling og panorering aktivert"
 message = "Disse dokumentene virker svært ulike. Sammenligning ble stoppet for å spare tid."
 
 [compress]
-tags = "shrink,reduce,optimize,compress,smaller,downsize,file size,reduce size,minimize,make smaller,decrease size,optimize size"
 desc = "Komprimer PDF-er for å redusere filstørrelsen."
 submit = "Komprimer"
+tags = "shrink,reduce,optimize,compress,smaller,downsize,file size,reduce size,minimize,make smaller,decrease size,optimize size"
 title = "Komprimer"
 
 [compress.compressionLevel]
@@ -2980,6 +2982,7 @@ tags = "komprimer,liten,tiny"
 
 [config]
 plan = "Abonnement"
+team = "Team"
 
 [config.account.overview]
 confirmDelete = "Slett kontoen min"
@@ -3035,9 +3038,7 @@ title = "Oppgrader gjestekonto"
 upgradeButton = "Oppgrader konto"
 
 [config.apiKeys]
-chartAriaLabel = "Kredittbruk: inkludert {{includedUsed}} av {{includedTotal}}, kjøpt {{purchasedUsed}} av {{purchasedTotal}}"
 copyKeyAriaLabel = "Kopier API-nøkkel"
-creditsRemaining = "Gjenstående kreditter"
 description = "API-nøkkelen din for tilgang til Stirlings pakke med PDF-verktøy. Kopier den til prosjektet ditt eller oppdater for å generere en ny."
 docsDescription = "Lær mer om integrasjon med Stirling PDF:"
 docsLink = "API-dokumentasjon"
@@ -3045,14 +3046,9 @@ docsTitle = "API-dokumentasjon"
 generateError = "Vi kunne ikke generere API-nøkkelen din."
 goToAccount = "Gå til konto"
 guestInfo = "Gjestebrukere mottar ikke API-nøkler. Opprett en konto for å få en API-nøkkel du kan bruke i applikasjonene dine."
-includedCredits = "Inkluderte kreditter"
 intro = "Bruk API-nøkkelen din for programmatisk tilgang til Stirling PDF sine prosesseringsmuligheter."
 label = "API-nøkkel"
-lastApiUse = "Siste API-bruk"
-nextReset = "Neste tilbakestilling"
-overlayMessage = "Generer en nøkkel for å se kreditter og tilgjengelige kreditter"
 publicKeyAriaLabel = "Offentlig API-nøkkel"
-purchasedCredits = "Kjøpte kreditter"
 refreshAriaLabel = "Oppdater API-nøkkel"
 schemaLink = "Referanse for API-skjema"
 usage = "Inkluder denne nøkkelen i X-API-KEY-headeren med alle API-forespørsler."
@@ -3075,6 +3071,7 @@ warning = "⚠️ Advarsel: Denne handlingen vil generere nye API-nøkler og gj�
 
 [config.mcp]
 description = "Model Context Protocol (MCP) lets AI assistants like Claude use your Stirling PDF tools directly. Connect a client once and your assistant can convert, edit, secure and process documents on your behalf."
+guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
 title = "MCP Server"
@@ -3096,14 +3093,6 @@ addTo = "Add to"
 hint = "Pick your client, paste the snippet into the file shown, then restart it. You'll sign in with your Stirling account on first use - no keys to copy."
 title = "Connect your AI assistant"
 
-[config.mcp.tools]
-ai = "AI"
-convert = "Convert"
-misc = "Misc"
-pages = "Pages"
-security = "Security"
-title = "What your assistant can do"
-
 [config.overview]
 description = "Gjeldende programinnstillinger og konfigurasjonsdetaljer."
 error = "Feil"
@@ -3118,7 +3107,6 @@ security = "Sikkerhetskonfigurasjon"
 system = "Systemkonfigurasjon"
 
 [convert]
-tags = "transform,change,convert,PDF to Word,PDF to Excel,PDF to image,Word to PDF,Excel to PDF,PowerPoint to PDF,HTML to PDF,export,import,file conversion,format change,save as"
 autoRotate = "Roter automatisk"
 autoRotateDescription = "Roter bilder automatisk for å passe bedre til PDF-siden"
 blackwhite = "Svart-hvitt"
@@ -3178,6 +3166,7 @@ strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)
 svgPdfOptions = "SVG to PDF Options"
 svgToPdf = "SVG → PDF"
 svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
+tags = "transform,change,convert,PDF to Word,PDF to Excel,PDF to image,Word to PDF,Excel to PDF,PowerPoint to PDF,HTML to PDF,export,import,file conversion,format change,save as"
 targetFormatPlaceholder = "Målformat"
 title = "Konverter"
 webOptions = "Alternativer for web til PDF"
@@ -3242,69 +3231,22 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
-[credits]
-enableOverageBilling = "Aktiver overforbruksfakturering"
-maybeLater = "Kanskje senere"
-upgrade = "Oppgrader"
-
-[credits.insufficient]
-brief = "Utilstrekkelige kreditter. Du trenger {{required}} kreditter, men har {{current}}."
-freeTier = "Oppgrader til Team for 10x flere kreditter og ubegrenset overforbruksfakturering."
-managedMember = "Ta kontakt med teamlederen din for hjelp."
-message = "Du har ikke nok kreditter til å kjøre {{tool}}. Du har for øyeblikket {{current}} kreditter."
-messageWithAmount = "Du trenger {{required}} kreditter for å kjøre {{tool}}, men du har bare {{current}}."
-teamMember = "Aktiver overforbruksfakturering for aldri å gå tom for kreditter."
-title = "Utilstrekkelige kreditter"
-
 [credits.modal]
 advancedMonitoring = "Avansert overvåking"
 allInOneWorkspace = "Alt-i-ett PDF-arbeidsområde (viser, verktøy og agent)"
 apiSandbox = "API-sandkasse"
-contactSales = "Kontakt salg"
-creditsRemaining = "{{current}} av {{total}} gjenstår"
-creditsThisMonth = "Månedlige kreditter"
-current = "Gjeldende plan"
-customPricing = "Egendefinert"
 dedicatedSupportSlas = "Dedikert støtte og SLA-er"
-enterpriseSubscription = "Enterprise"
-everythingInCredits = "Alt i Credits, pluss:"
-everythingInFree = "Alt i Free, pluss:"
 fasterThroughput = "10x raskere gjennomstrømming"
-forRegularWork = "For vanlig PDF-arbeid:"
-freeTier = "Gratisnivå"
 fullyPrivateFiles = "Fullt private filer"
 largeFileProcessing = "Behandling av store filer"
-managedMemberMessage = "Du har ubegrenset tilgang til kreditter gjennom teamet ditt. Hvis du trenger hjelp, kontakt teamlederen din."
-managedMemberTitle = "Ubegrensede kreditter"
-meteringBillingNote = "Overforbrukskreditter faktureres månedlig sammen med Team-abonnementet ditt. Følg med på bruken din når som helst i kontoinnstillingene."
-meteringExplanation = "Team-planen din inkluderer {{credits}} kreditter per måned. Når de tar slutt, gir overforbruksfakturering automatisk ekstra kreditter slik at du aldri må stoppe arbeidet."
-meteringIncluded = "{{credits}} kreditter/måned inkludert i Team"
-meteringNeverRunOut = "Gå aldri tom for kreditter"
-meteringNoCommitment = "Ingen binding, kan sies opp når som helst"
-meteringPayAsYouGo = "Betal kun for det du bruker"
-meteringPrice = "Ekstra kreditter til {{price}}/kreditt"
-meteringTitle = "Overforbruksfakturering – betal for det du bruker"
-monthlyCredits = "månedlige kreditter"
 orgWideAccess = "Organisasjonsomfattende tilgangskontroller"
-overage = "overforbruk"
-perMonth = "/måned"
-popular = "Populær"
 premiumAiModels = "Premium AI-modeller"
 prioritySupport = "Prioritert støtte"
 privateDocCloud = "Privat dokumentsky"
 ragFineTuning = "RAG + finjustering"
 secureApiAccess = "Sikker API-tilgang"
-selfHostLink = "Se gjennom dokumentasjon og planer"
-selfHostPrompt = "Vil du egenhoste?"
 standardThroughput = "Standard gjennomstrømming"
-subtitle = "Oppgrader til Team for 10x flere kreditter og raskere prosessering."
-subtitlePro = "Aktiver automatisk overforbruksfakturering for aldri å gå tom for kreditter."
-teamLeaderOnly = "Bare teamledere kan aktivere overforbruksfakturering"
-teamSubscription = "Team"
-titleExhausted = "Du har brukt opp gratiskredittene dine"
-titleExhaustedPro = "Du har gått tom for kreditter"
 unlimitedApiAccess = "Ubegrenset API-tilgang"
-unlimitedMonthlyCredits = "Site-lisens"
 unlimitedSeats = "Ubegrensede plasser"
 
 [crop]
@@ -3397,6 +3339,18 @@ docsLink = "Se installasjonsdokumentasjon"
 message = "Stirling-PDF har ikke tillatelse til å oppdatere seg selv på denne maskinen."
 title = "Administratorrettigheter kreves"
 
+[devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
+
+[devApi]
+tags = "API,development,documentation,developer,REST,integration,endpoints,programmatic,automation,scripting"
+
+[devFolderScanning]
+tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,batch,monitor folder,auto process,folder monitoring"
+
+[devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
+
 [dropdownList]
 searchPlaceholder = "Søk..."
 
@@ -3405,8 +3359,8 @@ edit = "Rediger"
 editSecretValue = "Rediger hemmelig verdi"
 
 [editTableOfContents]
-tags = "bookmarks,contents,edit,table of contents,TOC,outline,navigation,chapters,sections,add bookmarks,edit bookmarks,PDF outline"
 submit = "Bruk innholdsfortegnelse"
+tags = "bookmarks,contents,edit,table of contents,TOC,outline,navigation,chapters,sections,add bookmarks,edit bookmarks,PDF outline"
 
 [editTableOfContents.actions]
 clipboardUnavailable = "Tilgang til utklippstavlen er ikke tilgjengelig i denne nettleseren."
@@ -3541,8 +3495,8 @@ title = "Innstillinger"
 tags = "ekstrahere"
 
 [extractPages]
-tags = "pull,select,copy,extract,extract pages,get pages,pull out,save pages,export pages,copy pages,select pages,specific pages"
 submit = "Ekstraher sider"
+tags = "pull,select,copy,extract,extract pages,get pages,pull out,save pages,export pages,copy pages,select pages,specific pages"
 title = "Ekstraher sider"
 
 [extractPages.error]
@@ -3795,6 +3749,7 @@ selectFile = "Velg fil {{name}}"
 shareDisabledHint = "Fildeling er ikke aktivert på denne serveren. Be administratoren om å aktivere det."
 shareManage = "Administrer deling"
 showDetails = "Vis detaljer"
+signInRequired = "Sign in to use cloud storage."
 summary_one = "{{count}} item"
 summary_other = "{{count}} items"
 tree = "Mapper"
@@ -3986,8 +3941,8 @@ welcomeMessage = "Av sikkerhetsgrunner må du endre passordet ved første innlog
 welcomeTitle = "Velkommen!"
 
 [flatten]
-tags = "simplify,remove,interactive,flatten,flatten form,remove form fields,make static,finalize form,lock form,disable editing,convert to image,non-editable"
 submit = "Utjevn"
+tags = "simplify,remove,interactive,flatten,flatten form,remove form fields,make static,finalize form,lock form,disable editing,convert to image,non-editable"
 title = "Utjevning"
 
 [flatten.error]
@@ -4635,6 +4590,7 @@ signIn = "Logg inn"
 accountCreatedSuccess = "Konto opprettet! Du kan nå logge inn."
 backToSignIn = "Tilbake til innlogging"
 changePasswordWarning = "Endre passordet ditt etter at du har logget inn for første gang"
+createAccount = "Create an account"
 credentialsUpdated = "Innloggingsinformasjonen din er oppdatert. Logg inn på nytt."
 defaultCredentials = "Standard påloggingsopplysninger"
 email = "E-post"
@@ -4664,7 +4620,6 @@ sending = "Sender…"
 sendMagicLink = "Send magisk lenke"
 sendResetLink = "Send tilbakestillingslenke"
 sessionExpired = "Økten din har utløpt. Logg inn på nytt."
-createAccount = "Create an account"
 signin = "Logg inn"
 signingIn = "Logger inn..."
 signInWith = "Logg inn med"
@@ -4803,6 +4758,34 @@ title = "Autentisering mislyktes"
 message = "Du kan lukke dette vinduet og gå tilbake til Stirling PDF."
 title = "Autentisering vellykket"
 
+[oauthConsent]
+approve = "Allow access"
+approving = "Allowing..."
+decisionFailed = "Could not submit your decision. Please try again."
+deny = "Deny"
+denying = "Denying..."
+loadFailed = "This authorisation request is invalid or has expired. Close this tab and try connecting again from the app."
+loading = "Loading authorisation request..."
+missingId = "Missing authorisation request. Start the connection from your app and try again."
+redirecting = "Returning you to the app..."
+requesting = "{{app}} wants to access your Stirling PDF account"
+scopesIntro = "This will allow {{app}} to:"
+signedInAs = "Signed in as {{name}}"
+signInButton = "Sign in to continue"
+signInPrompt = "Sign in to your Stirling PDF account to continue connecting the app."
+title = "Authorise access"
+unknownApp = "A third-party application"
+
+[oauthConsent.access]
+actAsYou = "Act as you - everything {{app}} does runs under your account and counts towards your usage"
+tools = "Use your Stirling PDF tools on your behalf - convert, edit, sign, secure and process your documents"
+
+[oauthConsent.scope]
+email = "See your email address"
+openid = "Confirm your identity"
+phone = "See your phone number"
+profile = "See your basic profile information"
+
 [ocr]
 desc = "Rydd opp skanninger og oppdag tekst fra bilder i en PDF og legg den til som tekst."
 tags = "gjenkjenning,tekst,bilde,skann,les,identifisere,deteksjon,redigerbar"
@@ -4920,15 +4903,6 @@ body = "Stirling fungerer best som en skrivebordsapp. Du kan bruke den offline, 
 title = "Last ned"
 titleWithOs = "Last ned for {{osLabel}}"
 
-[onboarding.freeTrial]
-afterTrialWithoutPayment = "Når prøveperioden avsluttes, fortsetter du med gratisnivået vårt. Legg til en betalingsmetode for å beholde Pro-tilgang."
-afterTrialWithPayment = "Pro-abonnementet ditt begynner automatisk når prøveperioden slutter."
-body = "Du har full tilgang til Stirling PDF Pro-funksjoner under prøveperioden. Nyt ubegrensede konverteringer, større filstørrelser og prioritert behandling."
-daysRemaining = "{{days}} dager igjen"
-daysRemainingSingular = "{{days}} dag igjen"
-title = "Din 30-dagers Pro-prøveperiode"
-trialEnds = "Prøveperioden slutter {{date}}"
-
 [onboarding.mfa]
 authenticationCode = "Autentiseringskode"
 qrCodeLoading = "Genererer QR-koden din…"
@@ -4939,6 +4913,22 @@ adminBodyLoginEnabled = "Som admin kan du administrere brukere, konfigurere inns
 adminTitle = "Admin-oversikt"
 userBody = "Inviter teammedlemmer, tildel roller og hold dokumentene organiserte i et sikkert arbeidsområde. Aktiver innloggingsmodus når du er klar til å vokse utover solobruk."
 userTitle = "Planoversikt"
+
+[onboarding.saas.freeEditor]
+freeLine = "The editor is now <free>completely free</free>."
+premium = "We've added loads of new features, including <strong>Policies</strong> and <strong>Agent Chat</strong>."
+title = "Welcome to Stirling"
+
+[onboarding.saas.team]
+addButton = "Add"
+createBody = "Work on documents together: teammates share files, automations and your plan. Add the first member by email to create your team."
+createTitle = "Create your team"
+inviteBody = "Everyone on your team shares files, automations and your plan. Add teammates by email and they'll get an invitation."
+inviteTitle = "Invite members to your team"
+
+[onboarding.saas.usage]
+body = "Automations, AI and API requests draw from your free allowance. Manual editing never counts against it."
+title = "Your free Processor allowance"
 
 [onboarding.securityCheck]
 message = "Applikasjonen har nylig gjennomgått betydelige endringer. Serveradministratorens oppmerksomhet kan være nødvendig. Bekreft rollen din for å fortsette."
@@ -5210,12 +5200,215 @@ title = "Sideintervaller"
 bullet1 = "<strong>all</strong> → velger alle sider"
 title = "Spesielle nøkkelord"
 
+[payg.activity]
+docs = "docs"
+empty = "No billable activity yet this period."
+subtitle = "Only AI and automation draw from your budget. Everyday tools are free and aren't listed here."
+title = "Recent billable activity"
+
+[payg.cap]
+amount = "Cap amount"
+custom = "Custom"
+docsEstimate = "≈ {{docs}} processed PDFs / month"
+docsRate = "at {{rate}} / PDF"
+noCapDesc = "Usage is billed without an upper limit. You can re-enable a cap at any time."
+noCapLabel = "No cap"
+noneShort = "No cap"
+perMonth = "/ month"
+save = "Update cap"
+subtitle = "Set your maximum spend. We convert this to PDFs using the current price tier."
+title = "Monthly spending cap"
+
+[payg.checkout]
+connecting = "Connecting to Stripe…"
+errorTitle = "Stripe error"
+
+[payg.checkout.error]
+startFailed = "Couldn't start checkout session"
+
+[payg.checkout.mock]
+backend = "Backend is in mock mode; no real Stripe session was created."
+continue = "Continue with mock subscription"
+noKey = "VITE_STRIPE_PUBLISHABLE_KEY is unset. Real iframe mounts here once configured."
+title = "Stripe Embedded Checkout (mock mode)"
+
+[payg.confirm]
+body = "Your team can now run automation, AI, and API operations beyond your 500 free PDFs."
+capValue = "{{symbol}}{{amount}} / month"
+noCap = "No cap"
+note = "You can change your cap, cancel, or open the Stripe customer portal any time from this page."
+summaryLabel = "Monthly ceiling"
+title = "Welcome to the Processor plan"
+
+[payg.docHelp]
+billable = "Only automation runs, AI tools, and API calls count. Manual tools in the editor are always free."
+chains = "Running the same file through several steps of one automation counts it once, not once per step."
+perFile = "Each file you process counts as one PDF. Very long or very large files can count as more than one."
+refunds = "If a job fails on its first step, the PDF is credited back automatically."
+toggle = "What counts as a PDF?"
+
+[payg.error]
+body = "We couldn't reach the billing service. Refresh the page to try again."
+title = "Couldn't load your plan"
+
+[payg.exhausted]
+body = "You've used all 500 of your free PDFs. Upgrade to Processor to keep going."
+cta = "Go to billing"
+title = "You've used your free PDFs"
+
+[payg.free.cta]
+benefit1Body = "chain tools, schedule runs, batch process"
+benefit1Title = "Automation pipelines"
+benefit2Body = "summarise, classify, redact, AI-OCR"
+benefit2Title = "AI tools"
+benefit3Body = "call any Stirling endpoint programmatically"
+benefit3Title = "API access"
+button = "Turn on Processor →"
+reassurance = "No minimum · Set a $0 cap to test · Cancel anytime"
+subtitle = "Keep going past your 500 free PDFs with automation, AI, and the API. Set a monthly ceiling, so you stay in control."
+title = "Turn on the Processor plan"
+
+[payg.free.editor]
+eyebrow = "Editor plan · Always free"
+
+[payg.free.header]
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+freeTitle = "Unlimited PDF editing"
+
+[payg.free.hero]
+capSuffix = "/ {{limit}} free PDFs"
+metaCategories = "Automation · AI · API requests"
+
+[payg.free.member]
+ownerOnly = "Only your team owner can turn on Processor. Manual tools stay free for you to use as much as you like."
+
+[payg.free.proc]
+eyebrow = "Processor plan · metered"
+
+[payg.free.state]
+approachingLimit = "Approaching limit"
+limitReached = "Limit reached"
+plentyLeft = "Plenty left"
+
+[payg.gates]
+ai = "AI tools (AI Create, suggestions, AI-OCR)"
+automation = "Automations & pipelines"
+client = "Browser-only tools (viewer, page editor, file management)"
+offsite = "Server tools (compress, OCR, convert, watermark…)"
+pauses = "pauses at cap"
+title = "What happens when the cap is reached"
+
+[payg.header]
+eyebrow = "Processor plan · {{start}} – {{end}}"
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+freeLabel = "Always free"
+freeTitle = "Unlimited PDF editing"
+meterBody = "{{limit}} free PDFs to start, then billed per PDF up to your cap."
+meterLabel = "Metered"
+meterTitle = "Automation · AI · API"
+
+[payg.member]
+askLeader = "Only your team owner can change the cap."
+
+[payg.members]
+docs = "PDFs"
+subtitle = "Billable PDFs each teammate has processed this period."
+title = "Team member usage"
+
+[payg.role]
+leader = "Team owner"
+member = "Member"
+
+[payg.signupRequired]
+body = "Stirling PDF gives every signed-up account 500 free operations, enough to keep most workflows humming without paying a cent. You're currently using Stirling as a guest, which doesn't include billable tools like AI, automations, or hosted processing."
+cancel = "Not now"
+cta = "Sign up free"
+subtext = "Creating an account is free and takes a few seconds. No credit card required."
+title = "Sign up to use {{category}}"
+
+[payg.signupRequired.category]
+ai = "AI features"
+api = "this tool"
+automation = "automations"
+default = "this feature"
+
+[payg.spendCapMeter]
+capSuffix = "/ {{amount}} cap"
+metaCategories = "Automation · AI · API spend"
+resets = "Resets each billing period"
+
+[payg.state]
+degraded = "Cap reached"
+full = "Healthy"
+warned = "Approaching cap"
+
+[payg.stripe]
+open = "Open billing portal"
+subtitle = "Receipts, invoices, payment method, billing currency."
+title = "Manage billing in Stripe"
+
+[payg.stripe.toast.unavailable]
+body = "Billing portal isn't available right now. Try again in a moment."
+title = "Billing portal unavailable"
+
+[payg.upgrade]
+backAria = "Back"
+closeAria = "Close"
+
+[payg.upgrade.button]
+cancel = "Cancel"
+continue = "Continue →"
+finish = "Finish"
+
+[payg.upgrade.cap]
+help = "We'll never charge above this. Set $0 if you want to keep everything free while testing."
+title = "Set your monthly spend ceiling"
+usdNote = "Estimated in USD. You can adjust your cap any time after subscribing, in your own currency."
+
+[payg.upgrade.checkout]
+capValue = "{{symbol}}{{amount}} / month"
+edit = "Edit"
+help = "Stripe handles your card details. Stirling never sees them."
+loading = "Loading checkout…"
+noCap = "No cap"
+title = "Add your payment method"
+
+[payg.upgrade.help]
+aiBody = "summarise, classify, redact, AI-OCR"
+aiTitle = "AI tools"
+apiBody = "programmatic access to any Stirling endpoint"
+apiTitle = "API calls"
+automationBody = "chained tools or scheduled runs that don't need clicks"
+automationTitle = "Automation pipelines"
+footnote = "Manual tools (viewing, editing, merging, splitting, watermarking, compressing, manual OCR) are always free, even past 500. The distinction is the type of work, not where you click."
+title = "What we count toward billing"
+
+[payg.upgrade.promise]
+body = "You only pay for automation pipelines, AI tools, and API calls, the work that goes beyond a single click. Edit, merge, split, sign, compress as much as you want, no charge."
+highlight = "Manual tools stay free, always."
+
+[payg.upgrade.steps]
+cap = "Set monthly ceiling"
+payment = "Add payment method"
+
+[payg.upgrade.title]
+confirm = "You're subscribed"
+default = "Upgrade to Processor plan"
+
+[payg.usage]
+breakdown = "AI {{ai}} • Automation {{automation}} • API {{api}}"
+capLine = "{{cap}}/mo cap"
+estBill = "≈ {{amount}} so far this period"
+firstFree = "First {{free}} free"
+noCap = "No monthly cap"
+ofLimitProcessed = "/ {{limit}} PDFs processed"
+processed = "PDFs processed"
+resetsIn = "Resets in {{days}} days"
+resetsTomorrow = "Resets tomorrow"
+thisPeriod = "This billing period"
+
 [payment]
-autoClose = "Dette vinduet lukkes automatisk..."
 canCloseWindow = "Du kan nå lukke dette vinduet."
-checkoutInstructions = "Fullfør kjøpet i nettleservinduet som nettopp åpnet. Etter at betalingen er fullført, kom tilbake hit og klikk knappen nedenfor for å oppdatere faktureringsinformasjonen."
-checkoutOpened = "Kasse åpnet i nettleser"
-closeLater = "Jeg gjør dette senere"
 error = "Betalingsfeil"
 generatingLicense = "Genererer lisensnøkkel..."
 licenseActivated = "Lisens aktivert! Lisensnøkkelen er lagret. En bekreftelse er sendt til den registrerte e-posten din."
@@ -5231,7 +5424,6 @@ paymentCanceled = "Betalingen ble avbrutt. Ingen kostnader påløp."
 perMonth = "/måned"
 preparing = "Forbereder kassen..."
 redirecting = "Videresender til sikker betaling..."
-refreshBilling = "Jeg har fullført betalingen – oppdater fakturering"
 success = "Betaling vellykket!"
 successMessage = "Abonnementet ditt er aktivert. Du vil snart motta en bekreftelses-e-post."
 syncError = "Betaling vellykket, men lisenssynk mislyktes. Lisensen oppdateres snart. Kontakt support hvis problemet vedvarer."
@@ -5311,7 +5503,6 @@ REVERSE_ORDER = "Snu dokumentet slik at siste side blir først, og så videre."
 SIDE_STITCH_BOOKLET_SORT = "Ordne sider for hefteutskrift med sidehefting (optimalisert for innbinding på siden)."
 
 [pdfTextEditor]
-tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 conversionFailed = "Kunne ikke konvertere PDF. Prøv igjen."
 converting = "Konverterer PDF til redigerbart format..."
 currentFile = "Gjeldende fil: {{name}}"
@@ -5319,6 +5510,7 @@ imageLabel = "Plassert bilde"
 noTextOnPage = "Ingen redigerbar tekst ble oppdaget på denne siden."
 pagePreviewAlt = "Forhåndsvisning av side"
 pageSummary = "Side {{number}} av {{total}}"
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF JSON-redigerer"
 viewLabel = "PDF-redigerer"
 
@@ -5480,9 +5672,9 @@ title = "PDF til Presentasjon"
 tags = "enkelside"
 
 [pdfToSinglePage]
-tags = "combine,merge,single,single page,one page,merge to single,combine all,stitch pages,concatenate vertical,long page,poster"
 description = "Dette verktøyet vil slå sammen alle sidene i PDF-en din til én stor enkeltside. Bredden vil forbli den samme som de opprinnelige sidene, men høyden blir summen av alle sidehøydene."
 submit = "Konverter til Enkelt Side"
+tags = "combine,merge,single,single page,one page,merge to single,combine all,stitch pages,concatenate vertical,long page,poster"
 title = "PDF Til Enkelt Side"
 
 [pdfToSinglePage.error]
@@ -5521,29 +5713,19 @@ title = "Pipeline (Avansert)"
 
 [plan]
 contact = "Kontakt oss"
-currency = "Valuta"
 current = "Gjeldende plan"
-customPricing = "Tilpasset"
 featureComparison = "Funksjonssammenligning"
 from = "Fra"
 hideComparison = "Skjul funksjonssammenligning"
-included = "Inkludert"
 licensedSeats = "Lisensiert: {{count}} plasser"
 manage = "Administrer"
 perMonth = "/måned"
 perSeat = "/plass"
 popular = "Populær"
-purchase = "Kjøp"
-selectCredits = "Velg kreditbeløp"
 selectPlan = "Velg plan"
 showComparison = "Sammenlign alle funksjoner"
-totalCost = "Totalkostnad"
 upgrade = "Oppgrader"
 withServer = "+ Server-plan"
-
-[plan.activePlan]
-subtitle = "Detaljer om ditt nåværende abonnement"
-title = "Aktiv plan"
 
 [plan.api]
 large = "5,000 kreditter"
@@ -5551,12 +5733,7 @@ medium = "1,000 kreditter"
 small = "500 kreditter"
 xsmall = "100 kreditter"
 
-[plan.apiPackages]
-subtitle = "Kjøp API-kreditter for applikasjonene dine"
-title = "API-kredittpakker"
-
 [plan.availablePlans]
-loadError = "Kan ikke laste planpriser. Bruker standardverdier."
 subtitle = "Velg planen som passer dine behov"
 title = "Tilgjengelige planer"
 
@@ -5567,7 +5744,6 @@ highlight3 = "Nyeste funksjoner"
 name = "Enterprise"
 requiresServer = "Krever server"
 requiresServerMessage = "Oppgrader til Server-planen først før du oppgraderer til Enterprise."
-siteLicense = "Site-lisens"
 
 [plan.feature]
 api = "API-tilgang"
@@ -5606,6 +5782,12 @@ highlight3 = "Fellesskapsstøtte"
 included = "Inkludert"
 name = "Gratis"
 
+[plan.freeLimit]
+cta = "View Processor Plan"
+dismiss = "Maybe Later"
+message = "That's your whole free allowance for automation, AI and the API. Seriously impressive! Keep the momentum going for just pennies a day."
+title = "Woah, {{total}} PDFs Processed!"
+
 [plan.highlights]
 advancedIntegrations = "Avanserte integrasjoner"
 allBasicFeatures = "Alle grunnleggende funksjoner"
@@ -5637,6 +5819,12 @@ highlight2 = "Avanserte PDF-verktøy"
 highlight3 = "Ingen vannmerker"
 name = "Pro"
 
+[plan.spendCap]
+cta = "View Spending Limit"
+dismiss = "Not Now"
+message = "You've made the most of this month's cap. That's a load of automation, AI and API work! Bump it up whenever you like to keep going."
+title = "You're on a Roll!"
+
 [plan.static]
 activateLicense = "Aktiver lisensen din"
 contactToUpgrade = "Kontakt oss for å oppgradere eller tilpasse planen din"
@@ -5661,22 +5849,111 @@ keyDescription = "Lim inn lisensnøkkelen fra e-posten din"
 success = "Lisens aktivert!"
 successMessage = "Lisensen din er aktivert. Du kan nå lukke dette vinduet."
 
-[plan.team]
-name = "Team"
-
 [plan.trial]
-badge = "Prøve"
-continueWithFree = "Fortsett med gratis"
-daysRemaining = "Prøveperioden slutter om {{days}} dager"
-endDate = "Utløper: {{date}}"
-expired = "Din prøveperiode er avsluttet"
-expiredMessage = "Din 30-dagers Pro-prøveperiode er utløpt. Abonner på Pro for å fortsette å bruke premiumfunksjoner, eller fortsett med gratisnivået."
-freeTierLimitations = "Gratisnivået inkluderer grunnleggende PDF-verktøy med bruksbegrensninger."
 message = ""
-subscribe = "Abonner på Pro"
-subscribeToPro = "Abonner på Pro"
-subscriptionScheduled = "Abonnement planlagt – starter {{date}}"
-title = "Prøveperiode aktiv"
+
+[policies]
+deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
+deleteConfirmTitle = "Delete {{label}} policy?"
+
+[policies.catalog]
+compliance = "Compliance"
+ingestion = "Ingestion"
+retention = "Retention"
+routing = "Routing"
+security = "Security"
+
+[policies.detail]
+editSettings = "Edit Settings"
+enforces = "Enforces"
+managedByOrg = "Managed by your organisation. Contact a team leader to change this policy."
+noActivityDescription = "Documents will appear here once this policy runs."
+noActivityTitle = "No activity yet"
+onEveryUpload = "On every upload"
+originalsNote = "Originals stay untouched • Enforced version saved alongside"
+pause = "Pause"
+recentActivity = "Recent Activity"
+resume = "Resume"
+retry = "Retry"
+showLess = "Show less"
+showMore = "Show more"
+statActive = "Active"
+statDataProcessed = "Data processed"
+statDocsEnforced = "Docs enforced"
+statusActive = "Active"
+statusPaused = "Paused"
+
+[policies.fields]
+selectedCount = "{{count}} selected"
+
+[policies.pii]
+fieldLabel = "PII to redact"
+placeholder = "Select PII types"
+
+[policies.sidebar]
+activeCount = "{{count}} active"
+infoAriaLabel = "What is a policy?"
+infoTooltip = "A policy is a fixed set of tools that runs automatically whenever it's triggered — for example when a new document arrives — enforcing rules like redacting PII with no manual steps."
+loading = "Loading…"
+railAriaLabel = "{{label}} policy — {{status}}"
+railSuffixActive = " (Active)"
+railSuffixPaused = " (Paused)"
+setUp = "Set up"
+title = "Policies"
+upgradeToEnterprise = "Upgrade to enterprise"
+
+[policies.status]
+active = "Active"
+paused = "Paused"
+setup = "Set up"
+
+[policies.toolConfig]
+enableAriaLabel = "Enable {{tool}}"
+infoAriaLabel = "What does {{tool}} do?"
+
+[policies.wizard]
+allDocTypesDescription = "Enable the Classification policy to filter by document type."
+allDocTypesTitle = "All document types"
+back = "Back"
+builderDesc = "Build the sequence of tools this policy runs on each document."
+clear = "Clear"
+continue = "Continue"
+docTypesLabel = "Document types"
+edit = "Edit"
+editTitle = "Edit {{label}} Policy"
+enablePolicy = "Enable Policy"
+filenameAutoNumber = "Auto-number"
+filenamePositionAria = "Filename position"
+filenamePrefix = "Prefix"
+filenameSuffix = "Suffix"
+filenameTextAria = "Filename text"
+filenameTextPlaceholder = "Text to add (optional)"
+lockedDescription = "Contact a team leader to change this policy."
+lockedTitle = "Managed by your organisation"
+maxRetriesLabel = "Max retries"
+noToolsError = "Add at least one configured tool to the workflow first."
+outputAsLabel = "Output as"
+outputFilenameSubhead = "Output filename"
+outputModeAria = "Output mode"
+outputNewFile = "New file"
+outputNewVersion = "New version"
+outputRetriesLabel = "Output & retries"
+outputSubhead = "Output"
+retryDelayAria = "Retry delay minutes"
+retryDelayLabel = "Retry delay (min)"
+runOnExport = "Export"
+runOnLabel = "Run on"
+runOnSubhead = "Run on"
+runOnUpload = "Upload"
+saveChanges = "Save Changes"
+saveError = "Couldn't save the policy. Please try again."
+setupClassification = "Set up Classification"
+setupTitle = "Set up {{label}} Policy"
+sourcesDesc = "Choose where this policy runs and which document types it applies to."
+sourcesLabel = "Sources"
+stepOf = "Step {{step}} of {{total}}"
+toolChainDesc = "Configure the tools this policy runs on each document."
+typesSelected = "{{count}} types selected"
 
 [printFile]
 title = "Skriv ut fil"
@@ -5958,6 +6235,9 @@ whatsNewTourDesc = "Omvisning i oppdatert layout"
 admin = "Se gjennomganger her: Verktøy-omvisning, ny V2-layout-omvisning og admin-omvisning."
 user = "Se gjennomganger her: Verktøy-omvisning og ny V2-layout-omvisning."
 
+[read]
+tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
+
 [redact]
 submit = "Sensurer"
 tags = "Sensurere,Skjule,sverte ut,svart,markør,skjult,manuell"
@@ -6088,8 +6368,8 @@ title = "Hva den gjør"
 title = "Om Fjern merknader"
 
 [removeBlanks]
-tags = "delete,clean,empty,remove blank,delete blank pages,empty pages,white pages,remove empty,clean up,cleanup blank"
 submit = "Fjern Blank Sider"
+tags = "delete,clean,empty,remove blank,delete blank pages,empty pages,white pages,remove empty,clean up,cleanup blank"
 title = "Fjern Blank Sider"
 
 [removeBlanks.error]
@@ -6147,8 +6427,8 @@ failed = "Det oppstod en feil under fjerning av sertifikatsignaturer."
 title = "Resultater for fjerning av sertifikater"
 
 [removeImage]
-tags = "remove,delete,clean,remove image,delete image,strip images,remove pictures,delete photos,clean images,reduce size,remove graphics"
 submit = "Fjern bilde"
+tags = "remove,delete,clean,remove image,delete image,strip images,remove pictures,delete photos,clean images,reduce size,remove graphics"
 title = "Fjern bilde"
 
 [removeImage.error]
@@ -6219,8 +6499,8 @@ title = "Dekrypterte PDF-er"
 description = "Fjerning av passordbeskyttelse krever passordet som ble brukt til å kryptere PDF-en. Dette vil dekryptere dokumentet, slik at det er tilgjengelig uten passord."
 
 [reorganizePages]
-tags = "rearrange,reorder,organize,reorganize,move pages,page order,sort pages,arrange pages,shuffle,resequence"
 submit = "Omorganiser sider"
+tags = "rearrange,reorder,organize,reorganize,move pages,page order,sort pages,arrange pages,shuffle,resequence"
 
 [reorganizePages.error]
 failed = "Kunne ikke omorganisere sider"
@@ -6303,11 +6583,11 @@ text = "Inverterer alle farger i PDF-en fullstendig og skaper en negativ-effekt.
 title = "Inverter alle farger"
 
 [rotate]
-tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 rotateLeft = "Roter mot klokken"
 rotateRight = "Roter med klokken"
 selectRotation = "Velg rotasjonsvinkel (med klokken)"
 submit = "Roter"
+tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 title = "Roter PDF"
 
 [rotate.error]
@@ -6327,10 +6607,10 @@ text = "Roter PDF-sidene med eller mot klokken i 90-graders trinn. Alle sider i 
 title = "Oversikt over rotasjonsinnstillinger"
 
 [sanitize]
-tags = "clean,purge,remove,sanitize,sanitise,remove scripts,remove javascript,remove metadata,strip metadata,security,clean document,remove hidden data,privacy"
 desc = "Fjern potensielt skadelige elementer fra PDF-filer."
 sanitizationResults = "Saniteringsresultater"
 submit = "Rensker PDF"
+tags = "clean,purge,remove,sanitize,sanitise,remove scripts,remove javascript,remove metadata,strip metadata,security,clean document,remove hidden data,privacy"
 title = "Saniter"
 
 [sanitize.error]
@@ -6376,6 +6656,9 @@ title = "Rensker PDF"
 [scalePages]
 tags = "resize,adjust,scale,page size,resize page,scale page,change size,adjust size,enlarge,shrink page,fit to page,A4,letter size"
 title = "Juster side-skala"
+
+[scannerEffect]
+tags = "scan,simulate,create,fake scan,look scanned,scanner effect,make look scanned,photocopy effect,simulate scanner,realistic scan"
 
 [ScannerImageSplit.selectText]
 1 = "Vinkelgrense:"
@@ -6615,6 +6898,18 @@ title = "Tastatursnarveier"
 mac = "Inkluder ⌘ (Command), ⌥ (Option) eller en annen modifikator i snarveien."
 windows = "Inkluder Ctrl, Alt eller en annen modifikator i snarveien."
 
+[settings.legal]
+label = "Legal"
+title = "Legal"
+
+[settings.legal.cookiePreferences]
+description = "Review or change your cookie consent choices."
+manage = "Manage"
+
+[settings.legal.documents]
+description = "Policies and legal information for this service."
+title = "Legal Documents"
+
 [settings.licensingAnalytics]
 audit = "Revisjon"
 plan = "Plan"
@@ -6803,7 +7098,6 @@ title = "Vis Javascript"
 title = "Ekstrahert JavaScript"
 
 [sign]
-tags = "signature,autograph,e-sign,electronic signature,digital signature,sign document,approval,signoff,authorize,endorse,ink signature,handwriting"
 activate = "Aktiver signaturplassering"
 add = "Legg til"
 addToAll = "Legg til på alle sider"
@@ -6823,6 +7117,7 @@ redo = "Gjør om"
 save = "Lagre signatur"
 sharedSigs = "Delte signaturer"
 submit = "Signer dokument"
+tags = "signature,autograph,e-sign,electronic signature,digital signature,sign document,approval,signoff,authorize,endorse,ink signature,handwriting"
 title = "Signer"
 undo = "Angre"
 updateAndPlace = "Oppdater og plasser"
@@ -7010,11 +7305,11 @@ small = "Liten"
 x-large = "Ekstra Stor"
 
 [split]
-tags = "divide,separate,break,split,extract pages,separate pages,divide document,break apart,separate files,unbind,split by page,divide by chapter"
 resultsTitle = "Delingsresultater"
 selectMethod = "Velg en delingsmetode"
 splitPages = "Skriv inn sidene som skal deles på:"
 submit = "Del"
+tags = "divide,separate,break,split,extract pages,separate pages,divide document,break apart,separate files,unbind,split by page,divide by chapter"
 title = "Del PDF"
 
 [split.error]
@@ -7306,10 +7601,6 @@ title = "Last opp til server"
 updateButton = "Oppdater på server"
 uploadButton = "Last opp til server"
 
-[survey]
-nav = "Undersøkelse"
-title = "Stirling-PDF-undersøkelse"
-
 [swagger]
 tags = "api,dokumentasjon,swagger,endepunkter,utvikling"
 title = "API-dokumentasjon"
@@ -7342,28 +7633,6 @@ removeError = "Kunne ikke fjerne medlem"
 renameError = "Kunne ikke gi nytt navn til teamet"
 renameSuccess = "Teamet har fått nytt navn"
 
-[team.features]
-badge = "Teamfunksjoner"
-subtitle = "Samarbeid med teamet ditt"
-title = "Teamsamarbeid"
-viewPlans = "Se planer"
-
-[team.features.billing]
-description = "Administrer fakturering og abonnementer"
-title = "Faktureringsadministrasjon"
-
-[team.features.credits]
-description = "Delt kredittpott for alle medlemmer"
-title = "Delte kreditter"
-
-[team.features.dashboard]
-description = "Se teamaktivitet og bruk"
-title = "Team-dashbord"
-
-[team.features.invite]
-description = "Legg til medlemmer i teamet ditt"
-title = "Inviter medlemmer"
-
 [team.invitationBanner]
 acceptButton = "Godta"
 message = "har invitert deg til å bli med"
@@ -7385,11 +7654,6 @@ remove = "Fjern"
 roleColumn = "Rolle"
 title = "Teammedlemmer"
 
-[team.upgrade]
-button = "Oppgrader til Team"
-description = "Lås opp team-samarbeidsfunksjoner"
-title = "Oppgrader til Team-plan"
-
 [textAlign]
 center = "Sentrert"
 left = "Venstre"
@@ -7405,10 +7669,10 @@ justNow = "akkurat nå"
 minutesAgo = "{{count}}m siden"
 
 [timestampPdf]
-tags = "timestamp,RFC 3161,TSA,time stamp authority,document timestamp,proof of existence,timestamp token,trusted timestamp,sign timestamp,notarise"
 desc = "Legg til et RFC 3161-tidsstempel i PDF-en din ved hjelp av en pålitelig Time Stamp Authority (TSA)-server."
 results = "Tidsstempelresultater"
 submit = "Bruk tidsstempel"
+tags = "timestamp,RFC 3161,TSA,time stamp authority,document timestamp,proof of existence,timestamp token,trusted timestamp,sign timestamp,notarise"
 title = "Tidsstemple PDF"
 
 [timestampPdf.error]
@@ -7806,10 +8070,173 @@ title = "Vis/Rediger PDF"
 [warning]
 tooltipTitle = "Advarsel"
 
+[watchedFolders]
+alreadyInFolder = "Already in this folder"
+defaultFolderWarning = "This is a default folder and will be recreated on next reload."
+deleteConfirmBody = "This will remove the folder and its run history. Files already downloaded are not affected."
+deleteConfirmTitle = "Delete folder?"
+folderNotFound = "Folder not found"
+newFolder = "New folder"
+noFolders = "No watched folders yet"
+sidebarTitle = "Watched Folders"
+title = "Watched Folders"
+
+[watchedFolders.actions]
+back = "Back"
+collapse = "Collapse"
+dismiss = "Dismiss"
+download = "Download"
+downloadInput = "Download input"
+downloadOutput = "Download output"
+expand = "Expand"
+retry = "Retry"
+
+[watchedFolders.card]
+delete = "Delete folder"
+edit = "Edit folder"
+
+[watchedFolders.home]
+addAnother = "Add another Watched Folder"
+addAnotherDesc = "Automatically process files with a new pipeline"
+create = "Create your first Watched Folder"
+deleteFolder = "Delete folder"
+editFolder = "Edit folder"
+empty = "No watched folders yet"
+emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
+emptyTitle = "Automate your PDF workflows"
+file = "file"
+files = "files"
+pause = "Pause"
+resume = "Resume"
+
+[watchedFolders.howItWorks]
+step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
+step1Title = "Drop files"
+step2Desc = "Your configured tools process each file automatically"
+step2Title = "Pipeline runs"
+step3Desc = "Download processed files from inside the folder"
+step3Title = "Output ready"
+title = "How Watched Folders work"
+
+[watchedFolders.modal]
+advanced = "Advanced"
+automation = "Automation"
+automationNameFallback = "Watched Folder automation"
+automationRequired = "Add at least one configured step before saving."
+autoNumber = "Auto-number"
+autoNumberExample = "e.g. document.pdf → document (1).pdf"
+autoScanHelp = "New PDF files in this folder are processed automatically every 10 seconds."
+changeFolder = "Change"
+chooseFolder = "Choose"
+clearFolder = "Clear"
+color = "Accent color"
+createFolder = "Create Folder"
+createTitle = "New Watched Folder"
+editTitle = "Edit Watched Folder"
+inputFolder = "Input folder"
+inputFolderNotChosen = "No folder chosen — required for auto-scan"
+inputSource = "Input source"
+inputSourceBrowser = "Browser — drop files here"
+inputSourceLocal = "Local folder (auto-scan)"
+inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
+localOutputFolder = "Local output folder"
+maxRetries = "Max retries"
+name = "Folder name"
+namePlaceholder = "My Watched Folder"
+nameRequired = "Folder name is required"
+nameTooLong = "Folder name must be 50 characters or less"
+outputFolderNotSet = "Not set — outputs stay in app"
+outputFolderUnsupported = "Not supported in this browser"
+outputModeNewDesc = "Output is saved as a new separate file"
+outputModeVersion = "Replace original?"
+outputModeVersionDesc = "Output becomes a new version of the input file rather than a separate file"
+outputName = "Output filename prefix"
+outputNamePrefix = "Filename prefix"
+outputNameSuffix = "Suffix"
+positionPrefix = "Prefix"
+positionSuffix = "Suffix"
+replaceOriginal = "Replace original file"
+retryDelay = "Delay (minutes)"
+saveChanges = "Save Changes"
+saveFailed = "Failed to save folder. Please try again."
+sectionFolder = "Folder"
+sectionSourceOutput = "Source & Output"
+sectionSteps = "Steps"
+
+[watchedFolders.status]
+active = "Active"
+done = "Done"
+paused = "Paused"
+processing = "Processing"
+
+[watchedFolders.time]
+daysAgo = "{{count}}d ago"
+hoursAgo = "{{count}}h ago"
+justNow = "just now"
+minutesAgo = "{{count}}m ago"
+
+[watchedFolders.workbench]
+activity = "Activity"
+addFiles = "Add files"
+allTime = "All time"
+cancel = "Cancel"
+chartTooltipComplete = "{{count}} complete"
+chartTooltipFailed = "{{count}} failed"
+clearSelection = "Clear selection"
+countProcessing = "{{count}} processing"
+countQueued = "{{count}} queued"
+countSelected = "{{count}} selected"
+dataSaved = "Saved"
+dayRunning = "day running"
+daysRunning = "days running"
+delete = "Delete"
+deleteConfirmBody = "Remove notifications only clears the activity log. Delete outputs also removes the processed files from storage. Your original input files are never touched."
+deleteOutputs = "Delete outputs"
+directionIn = "in"
+directionOut = "out"
+dropToProcess = "Drop to process"
+export = "Export"
+exportSeparately = "Export separately"
+exportZip = "Export zip"
+failed = "Failed"
+filesProcessedOverTime = "Files processed over time"
+filterAll = "All"
+filterPending = "Pending"
+inputs = "Inputs"
+inputSize = "Input size"
+legendComplete = "Complete"
+noActivity = "No activity yet — drop a PDF to start"
+noActivityMatch = "No matching activity"
+noInputFolder = "No input folder — edit to configure"
+outputs = "Outputs"
+pause = "Pause"
+preview = "Preview"
+previewInput = "Preview input"
+previewLoadFailed = "Could not load file preview."
+previewOutput = "Preview output"
+queued = "Queued"
+queuedWaiting = "Queued — waiting to run"
+removeEntries = "Remove {{count}} entries"
+removeEntry = "Remove entry"
+removeNotificationsOnly = "Remove notifications only"
+resume = "Resume"
+retryAll = "Retry all"
+retryIn = "retry in {{count}}m"
+retryingSoon = "retrying…"
+retryMixedConfirm = "Some selected files have already completed and will be skipped. Only failed files will be retried. Continue?"
+running = "Running"
+search = "Search…"
+selectAll = "Select all {{count}}"
+sortNameAsc = "A → Z"
+sortNameDesc = "Z → A"
+sortNewest = "Newest"
+sortOldest = "Oldest"
+watching = "Watching: {{name}}"
+
 [watermark]
-tags = "stamp,mark,overlay,watermark,branding,logo,confidential,draft,copyright,trademark,text overlay,image overlay,background text"
 desc = "Legg til tekst- eller bildevannmerker i PDF-filer"
 submit = "Legg til vannmerke"
+tags = "stamp,mark,overlay,watermark,branding,logo,confidential,draft,copyright,trademark,text overlay,image overlay,background text"
 title = "Legg til vannmerke"
 
 [watermark.error]
@@ -8275,190 +8702,3 @@ confirm = "Pakk ut"
 message_one = "This ZIP contains {{count}} file. Extract anyway?"
 message_other = "This ZIP contains {{count}} files. Extract anyway?"
 title = "Stor ZIP-fil"
-
-[watchedFolders]
-alreadyInFolder = "Already in this folder"
-deleteConfirmBody = "This will remove the folder and its run history. Files already downloaded are not affected."
-deleteConfirmTitle = "Delete folder?"
-defaultFolderWarning = "This is a default folder and will be recreated on next reload."
-folderNotFound = "Folder not found"
-newFolder = "New folder"
-noFolders = "No watched folders yet"
-sidebarTitle = "Watched Folders"
-title = "Watched Folders"
-
-[watchedFolders.modal]
-automation = "Automation"
-createFolder = "Create Folder"
-automationRequired = "Add at least one configured step before saving."
-color = "Accent color"
-createTitle = "New Watched Folder"
-editTitle = "Edit Watched Folder"
-name = "Folder name"
-namePlaceholder = "My Watched Folder"
-nameRequired = "Folder name is required"
-nameTooLong = "Folder name must be 50 characters or less"
-saveChanges = "Save Changes"
-saveFailed = "Failed to save folder. Please try again."
-automationNameFallback = "Watched Folder automation"
-maxRetries = "Max retries"
-retryDelay = "Delay (minutes)"
-outputModeVersion = "Replace original?"
-outputModeVersionDesc = "Output becomes a new version of the input file rather than a separate file"
-outputModeNewDesc = "Output is saved as a new separate file"
-outputName = "Output filename prefix"
-outputNameSuffix = "Suffix"
-sectionFolder = "Folder"
-sectionSourceOutput = "Source & Output"
-sectionSteps = "Steps"
-inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
-inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
-inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
-changeFolder = "Change"
-chooseFolder = "Choose"
-clearFolder = "Clear"
-autoScanHelp = "New PDF files in this folder are processed automatically every 10 seconds."
-localOutputFolder = "Local output folder"
-outputFolderUnsupported = "Not supported in this browser"
-outputFolderNotSet = "Not set — outputs stay in app"
-advanced = "Advanced"
-replaceOriginal = "Replace original file"
-autoNumber = "Auto-number"
-autoNumberExample = "e.g. document.pdf → document (1).pdf"
-outputNamePrefix = "Filename prefix"
-positionPrefix = "Prefix"
-positionSuffix = "Suffix"
-
-[watchedFolders.home]
-create = "Create your first Watched Folder"
-editFolder = "Edit folder"
-empty = "No watched folders yet"
-file = "file"
-files = "files"
-emptyTitle = "Automate your PDF workflows"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
-addAnother = "Add another Watched Folder"
-addAnotherDesc = "Automatically process files with a new pipeline"
-resume = "Resume"
-pause = "Pause"
-deleteFolder = "Delete folder"
-
-[watchedFolders.card]
-edit = "Edit folder"
-delete = "Delete folder"
-
-[watchedFolders.status]
-done = "Done"
-processing = "Processing"
-paused = "Paused"
-active = "Active"
-
-[watchedFolders.howItWorks]
-title = "How Watched Folders work"
-step1Title = "Drop files"
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
-step2Title = "Pipeline runs"
-step2Desc = "Your configured tools process each file automatically"
-step3Title = "Output ready"
-step3Desc = "Download processed files from inside the folder"
-
-[watchedFolders.workbench]
-addFiles = "Add files"
-inputs = "Inputs"
-outputs = "Outputs"
-failed = "Failed"
-dataSaved = "Saved"
-running = "Running"
-dropToProcess = "Drop to process"
-activity = "Activity"
-noActivity = "No activity yet — drop a PDF to start"
-noActivityMatch = "No matching activity"
-retryAll = "Retry all"
-retryIn = "retry in {{count}}m"
-retryingSoon = "retrying…"
-pause = "Pause"
-resume = "Resume"
-dayRunning = "day running"
-daysRunning = "days running"
-sortNewest = "Newest"
-sortOldest = "Oldest"
-sortNameAsc = "A → Z"
-sortNameDesc = "Z → A"
-filterAll = "All"
-filterPending = "Pending"
-search = "Search…"
-retryMixedConfirm = "Some selected files have already completed and will be skipped. Only failed files will be retried. Continue?"
-watching = "Watching: {{name}}"
-noInputFolder = "No input folder — edit to configure"
-countProcessing = "{{count}} processing"
-countQueued = "{{count}} queued"
-exportZip = "Export zip"
-exportSeparately = "Export separately"
-countSelected = "{{count}} selected"
-selectAll = "Select all {{count}}"
-delete = "Delete"
-clearSelection = "Clear selection"
-preview = "Preview"
-export = "Export"
-previewInput = "Preview input"
-previewOutput = "Preview output"
-directionIn = "in"
-directionOut = "out"
-queuedWaiting = "Queued — waiting to run"
-allTime = "All time"
-queued = "Queued"
-inputSize = "Input size"
-filesProcessedOverTime = "Files processed over time"
-legendComplete = "Complete"
-chartTooltipComplete = "{{count}} complete"
-chartTooltipFailed = "{{count}} failed"
-removeEntry = "Remove entry"
-removeEntries = "Remove {{count}} entries"
-deleteConfirmBody = "Remove notifications only clears the activity log. Delete outputs also removes the processed files from storage. Your original input files are never touched."
-cancel = "Cancel"
-removeNotificationsOnly = "Remove notifications only"
-deleteOutputs = "Delete outputs"
-previewLoadFailed = "Could not load file preview."
-
-[watchedFolders.actions]
-back = "Back"
-dismiss = "Dismiss"
-retry = "Retry"
-download = "Download"
-downloadInput = "Download input"
-downloadOutput = "Download output"
-collapse = "Collapse"
-expand = "Expand"
-
-[watchedFolders.time]
-justNow = "just now"
-minutesAgo = "{{count}}m ago"
-hoursAgo = "{{count}}h ago"
-daysAgo = "{{count}}d ago"
-
-[addStamp]
-tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
-
-[annotate]
-tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
-
-[devAirgapped]
-tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
-
-[devApi]
-tags = "API,development,documentation,developer,REST,integration,endpoints,programmatic,automation,scripting"
-
-[devFolderScanning]
-tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,batch,monitor folder,auto process,folder monitoring"
-
-[devSsoGuide]
-tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
-
-[read]
-tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
-
-[scannerEffect]
-tags = "scan,simulate,create,fake scan,look scanned,scanner effect,make look scanned,photocopy effect,simulate scanner,realistic scan"

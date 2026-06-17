@@ -52,12 +52,9 @@ help = "Laguntza"
 imgPrompt = "Hautatu Irudia(k)"
 incorrectPasswordMessage = "Uneko pasahitza ez da zuzena."
 info = "Info"
-insufficientCredits = "Kreditu nahikorik ez. Beharrezkoa: {{requiredCredits}}, Eskuragarri: {{currentBalance}}, Gabezia: {{shortfall}}"
 invalidUndoData = "Ezin da desegin: eragiketaren datuak baliogabeak dira"
 keepWorking = "Lanean jarraitu"
 loading = "Kargatzen..."
-loadingCredits = "Kredituak egiaztatzen..."
-loadingProStatus = "Harpidetza-egoera egiaztatzen..."
 logOut = "Saioa itxi"
 marginTooltip = "Orri-zenbakiaren eta orrialdearen ertzen arteko distantzia."
 moreOptions = "Aukera gehiago"
@@ -68,7 +65,6 @@ noFileSelected = "Ez da fitxategirik hautatu. Mesedez, igo bat."
 noFilesToUndo = "Ezin da desegin: azken eragiketan ez da fitxategirik prozesatu"
 noOperationToUndo = "Ez dago desegiteko eragiketarik"
 nothingToUndo = "Ez dago desegitekorik"
-noticeTopUpOrPlan = "Kreditu nahikorik ez, mesedez kargatu edo eguneratu plan batera"
 noValidFiles = "Ez dago prozesatzeko baliozko fitxategirik"
 oops = "Epa!"
 openInNewWindow = "Ireki leiho berrian"
@@ -277,7 +273,6 @@ saved = "Saved"
 text = "Text"
 
 [addPageNumbers]
-tags = "number,pagination,count,add page numbers,page numbering,page numbers,footer,header,number pages,sequential,pagination tool"
 customize = "Itxura pertsonalizatu"
 customNumberDesc = "Lehenetsoa {n}-ra, '{n} orria {total}-tik', 'Text-{n}', '{filename}-{n}' ere onartzen du"
 fontName = "Letra-tipoaren izena"
@@ -288,6 +283,7 @@ positionAndPages = "Kokalekua eta orrialdeak"
 preview = "Kokalekuaren hautaketa"
 previewDisclaimer = "Aurrebista orientagarria da. Azken emaitza aldatu daiteke PDFaren letra-metriken arabera."
 submit = "Gehitu orrialde-zenbakiak"
+tags = "number,pagination,count,add page numbers,page numbering,page numbers,footer,header,number pages,sequential,pagination tool"
 title = "Gehitu orrialde-zenbakiak"
 zeroPad = "Zero‑pad Width (Bates Stamping)"
 zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
@@ -305,9 +301,9 @@ title = "Orri-zenbakien emaitzak"
 6 = "Testu pertsonalizatua"
 
 [addPassword]
-tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 desc = "Zifratu zure PDF dokumentua pasahitz batekin."
 submit = "Enkriptatu"
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Gehitu pasahitza"
 
 [addPassword.encryption.keyLength]
@@ -352,6 +348,9 @@ title = "Pasahitz motak"
 [addPassword.tooltip.permissions]
 text = "Baimen hauek erabiltzaileek PDFarekin egin dezaketena kontrolatzen dute. Eraginkorrena jabearen pasahitzarekin konbinatuta."
 title = "Aldatu baimenak"
+
+[addStamp]
+tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
 [AddStampRequest]
 alphabet = "Alfabetoa"
@@ -423,6 +422,9 @@ header = "Testua gehitu PDFetara"
 tags = "testua,anotazioa,etiketa"
 title = "Testua gehitu"
 
+[addText.canvas]
+colorPickerTitle = "Choose stroke colour"
+
 [addText.error]
 failed = "Errore bat gertatu da testua PDFari gehitzean."
 
@@ -441,25 +443,6 @@ resume = "Kokatzea berrekin"
 
 [addText.results]
 title = "Testua gehitzearen emaitzak"
-
-[addText.step]
-createDesc = "Sartu gehitu nahi duzun testua"
-place = "Testua kokatu"
-placeDesc = "Egin klik PDFan zure testua gehitzeko"
-
-[addText.steps]
-configure = "Testua konfiguratu"
-
-[addText.text]
-colorLabel = "Testuaren kolorea"
-fontLabel = "Letra-tipoa"
-fontSizeLabel = "Letra-tamainoa"
-fontSizePlaceholder = "Idatzi edo hautatu letra-tamainoa (8-200)"
-name = "Testu-edukia"
-placeholder = "Sartu gehitu nahi duzun testua"
-
-[addText.canvas]
-colorPickerTitle = "Choose stroke colour"
 
 [addText.saved]
 defaultCanvasLabel = "Drawing signature"
@@ -483,6 +466,22 @@ canvas = "Drawing"
 image = "Upload"
 text = "Text"
 
+[addText.step]
+createDesc = "Sartu gehitu nahi duzun testua"
+place = "Testua kokatu"
+placeDesc = "Egin klik PDFan zure testua gehitzeko"
+
+[addText.steps]
+configure = "Testua konfiguratu"
+
+[addText.text]
+colorLabel = "Testuaren kolorea"
+fontLabel = "Letra-tipoa"
+fontSizeLabel = "Letra-tamainoa"
+fontSizePlaceholder = "Idatzi edo hautatu letra-tamainoa (8-200)"
+name = "Testu-edukia"
+placeholder = "Sartu gehitu nahi duzun testua"
+
 [addText.type]
 canvas = "Canvas"
 image = "Image"
@@ -493,7 +492,6 @@ text = "Text"
 tags = "color-correction,tune,modify,enhance"
 
 [adjustContrast]
-tags = "contrast,brightness,saturation,adjust colors,color correction,enhance,lighten,darken,improve quality,color balance,hue,vibrance"
 adjustColors = "Koloreak doitu"
 basic = "Oinarrizko doikuntzak"
 blue = "Urdina"
@@ -504,6 +502,7 @@ green = "Berdea"
 noPreview = "Hautatu PDF bat aurreikusteko"
 red = "Gorria"
 saturation = "Asetasuna:"
+tags = "contrast,brightness,saturation,adjust colors,color correction,enhance,lighten,darken,improve quality,color balance,hue,vibrance"
 title = "Doitu kontrastea"
 
 [adjustContrast.error]
@@ -1133,6 +1132,10 @@ apikeyNote = "Clients send a Stirling API key in the X-API-KEY header (or Author
 description = "Expose Stirling's PDF tools and AI agents to MCP clients over an OAuth-protected endpoint."
 title = "MCP Server"
 
+[admin.settings.mcp.acceptedAudiences]
+description = "Extra token audience values accepted besides the Resource ID (comma or space separated). Leave blank for strict RFC 8707. Needed for IdPs that cannot mint resource audiences - e.g. Supabase's OAuth server always issues aud=authenticated."
+label = "Additional accepted audiences (optional)"
+
 [admin.settings.mcp.allowedOps]
 description = "If set, ONLY these operation ids are exposed (an allow-list; comma or space separated). Leave blank to expose all enabled tools except any blocked below."
 label = "Allowed tools"
@@ -1617,6 +1620,9 @@ paragraph1 = "Stirling PDF-k aukerazko analitikak ditu produktua hobetzen lagunt
 paragraph2 = "Mesedez, kontuan hartu analitikak gaitzea Stirling-PDF hazten laguntzeko eta gure erabiltzaileak hobeto ulertzeko."
 title = "Stirling PDF hobetzea nahi duzu?"
 
+[annotate]
+tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
+
 [annotation]
 annotationStyle = "Anotazioaren estiloa"
 backgroundColor = "Atzeko planoaren kolorea"
@@ -1846,7 +1852,6 @@ bullet3 = "Izen egokirik aurkitzen ez bada, jatorrizkoa mantentzen du"
 title = "Berriz-izendatze adimenduna"
 
 [automate]
-tags = "workflow,sequence,automation,automate,batch,batch processing,pipeline,chain,multi-step,recurring,scheduled,automatic,process multiple,bulk operations"
 copyToSaved = "Gordetakoetara kopiatu"
 desc = "Eraiki hainbat pausoko lan-fluxuak PDF ekintzak kateatuz. Egokia zeregin errepikakorretarako."
 export = "Esportatu"
@@ -1857,6 +1862,7 @@ importPartialSuccess_other = "Imported with {{count}} unmapped operations: {{ops
 importSuccess = "Automatizazioa inportatuta: {{name}}"
 invalidStep = "Urrats baliogabea"
 reviewTitle = "Automatizazioaren emaitzak"
+tags = "workflow,sequence,automation,automate,batch,batch processing,pipeline,chain,multi-step,recurring,scheduled,automatic,process multiple,bulk operations"
 title = "Automatizatu"
 
 [automate.config]
@@ -1956,8 +1962,8 @@ secureWorkflow = "Segurtasun lan-fluxua"
 secureWorkflowDesc = "PDF dokumentuak seguru bihurtzen ditu eduki gaizto potentziala kentzen (JavaScript eta txertatutako fitxategiak, adibidez), eta ondoren pasahitz-babesa gehitzen du baimenik gabeko sarbidea saihesteko. Lehenespenez pasahitza 'password' da."
 
 [autoRename]
-tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
 description = "Tresna honek PDF fitxategiak automatikoki birizendatuko ditu haien edukian oinarrituta. Dokumentua aztertzen du testutik titulu egokiena aurkitzeko."
+tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
 
 [autoSizeSplitPDF]
 tags = "pdf,banatu,dokumentua,antolaketa"
@@ -2539,9 +2545,9 @@ ssoManaged = "Zure kontua identitate-hornitzaileak kudeatzen du."
 title = "Aldatu kredentzialak"
 
 [changeMetadata]
-tags = "edit,modify,update,metadata,properties,document properties,author,title,subject,keywords,creator,producer,info,document info,file properties"
 filenamePrefix = "metadatuak"
 submit = "Aldatu"
+tags = "edit,modify,update,metadata,properties,document properties,author,title,subject,keywords,creator,producer,info,document info,file properties"
 
 [changeMetadata.advanced]
 title = "Aukera aurreratuak"
@@ -2647,9 +2653,9 @@ true = "Egia"
 unknown = "Ezezaguna"
 
 [changePermissions]
-tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 desc = "Dokumentuaren murrizketak eta baimenak aldatu."
 submit = "Aldatu baimenak"
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Aldatu baimenak"
 
 [changePermissions.error]
@@ -2697,11 +2703,16 @@ resize = "Aldatu txat-panelaren tamaina"
 [chat.actions]
 copy = "Kopiatu mezua"
 
+[chat.fab]
+close = "Close chat"
+open = "Open Stirling AI assistant"
+
 [chat.header]
 agentMenu = "Stirling agentearen aukerak"
 clearChat = "Garbitu txata"
 
 [chat.input]
+disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 placeholder = "Zer egin nahi duzu?"
 send = "Bidali mezua"
 
@@ -2714,18 +2725,18 @@ executing_tool_single = "{{tool}} exekutatzen..."
 executing_tool_step = "{{tool}} exekutatzen ({{total}}etik {{step}}. urratsa)..."
 extracting_content = "Zure dokumentuetatik edukia erauzten..."
 processing = "Erauzi den edukia prozesatzen..."
+ranForMinutes = "Ran for {{count}} minutes"
+ranForMinutes_one = "Ran for 1 minute"
+ranForMinutes_other = "Ran for {{count}} minutes"
+ranForMinutesSeconds = "Ran for {{minutes}} min, {{seconds}} sec"
+ranForSeconds = "Ran for {{count}} seconds"
+ranForSeconds_one = "Ran for 1 second"
+ranForSeconds_other = "Ran for {{count}} seconds"
 thinking = "Pentsatzen..."
 whole_doc_compression_round = "Oharrak bateratzen..."
 whole_doc_read_done = "Dokumentua irakurtzen amaituta..."
 whole_doc_read_started = "Dokumentua irakurtzen..."
 whole_doc_slice_done = "Dokumentua irakurtzen... ({{percent}}% osatuta)"
-ranForSeconds = "Ran for {{count}} seconds"
-ranForSeconds_one = "Ran for 1 second"
-ranForSeconds_other = "Ran for {{count}} seconds"
-ranForMinutes = "Ran for {{count}} minutes"
-ranForMinutes_one = "Ran for 1 minute"
-ranForMinutes_other = "Ran for {{count}} minutes"
-ranForMinutesSeconds = "Ran for {{minutes}} min, {{seconds}} sec"
 
 [chat.quickActions]
 browseYourFiles = "Arakatu zure fitxategiak"
@@ -2738,8 +2749,6 @@ mergeMany = "Batu {{count}} dokumentu hauek 1ean"
 moreFiles = "+{{count}} gehiago"
 openFromComputer = "Ireki ordenagailutik"
 removeFile = "Kendu {{name}}"
-rotateMany = "Biratu dokumentu hauek"
-rotateOne = "Biratu dokumentu hau"
 splitOne = "Zatitu dokumentu hau"
 
 [chat.responses]
@@ -2750,15 +2759,12 @@ need_clarification = "Eskaera argituko zenuke?"
 not_found = "Ezin izan dut eskatutako informazioa aurkitu."
 processing = "Prozesatzen ({{outcome}})..."
 unsupported_capability = "Onartzen ez den gaitasuna: {{capability}}"
+usage_limit_reached = "You've reached your usage limit. Check your plan options to keep going."
 
 [chat.toolsUsed]
 summary_one = "Tresna 1 exekutatu da"
 summary_other = "{{count}} tresna exekutatu dira"
 unknownTool = "Tresna ezezaguna"
-
-[chat.fab]
-close = "Close chat"
-open = "Open Stirling AI assistant"
 
 [cloudBadge]
 tooltip = "Eragiketa honek zure hodeiko kredituak erabiliko ditu"
@@ -2770,7 +2776,6 @@ tooltip = "Hautatu kolorea pantailatik"
 title = "Aukeratu kolorea"
 
 [common]
-available = "eskuragarri"
 back = "Atzera"
 cancel = "Utzi"
 close = "Itxi"
@@ -2781,16 +2786,13 @@ copy = "Kopiatu"
 done = "Eginda"
 error = "Errorea"
 expand = "Zabaldu"
-learnMore = "Gehiago jakin"
 loading = "Kargatzen..."
 next = "Hurrengoa"
-operation = "eragiketa hau"
 preview = "Aurrebista"
 previous = "Aurrekoa"
 refresh = "Freskatu"
 retry = "Saiatu berriro"
 save = "Gorde"
-used = "erabilita"
 
 [compare]
 clearSelected = "Garbitu hautatutakoa"
@@ -2916,9 +2918,9 @@ unlinkedTitle = "Korritze eta panoramika independenteak gaituta"
 message = "Dokumentu hauek oso desberdinak dirudite. Denbora aurrezteko konparazioa gelditu da."
 
 [compress]
-tags = "shrink,reduce,optimize,compress,smaller,downsize,file size,reduce size,minimize,make smaller,decrease size,optimize size"
 desc = "Konprimatu PDFak haien fitxategi-tamaina murrizteko."
 submit = "Konprimatu"
+tags = "shrink,reduce,optimize,compress,smaller,downsize,file size,reduce size,minimize,make smaller,decrease size,optimize size"
 title = "Konprimatu"
 
 [compress.compressionLevel]
@@ -2980,6 +2982,7 @@ tags = "estutu,txiki,oso-txiki"
 
 [config]
 plan = "Plana"
+team = "Team"
 
 [config.account.overview]
 confirmDelete = "Nire kontua ezabatu"
@@ -3035,9 +3038,7 @@ title = "Gonbidatu-kontua bertsio-berritu"
 upgradeButton = "Bertsio-berritu kontua"
 
 [config.apiKeys]
-chartAriaLabel = "Kredituen erabilera: barne {{includedUsed}}/{{includedTotal}}, erosiak {{purchasedUsed}}/{{purchasedTotal}}"
 copyKeyAriaLabel = "API gakoa kopiatu"
-creditsRemaining = "Geratzen diren kredituak"
 description = "Stirlingen PDF tresna-multzora sartzeko zure API gakoa. Kopiatu zure proiektuara edo berritu berri bat sortzeko."
 docsDescription = "Ikasi gehiago Stirling PDFrekin integrazioari buruz:"
 docsLink = "API dokumentazioa"
@@ -3045,14 +3046,9 @@ docsTitle = "API dokumentazioa"
 generateError = "Ezin izan dugu zure API gakoa sortu."
 goToAccount = "Joan kontura"
 guestInfo = "Gonbidatu erabiltzaileek ez dute API gakorik jasotzen. Sortu kontu bat zure aplikazioetan erabil dezakezun API gakoa lortzeko."
-includedCredits = "Barne kredituak"
 intro = "Erabili zure API gakoa Stirling PDFren prozesatzeko gaitasunetara programatikoki sartzeko."
 label = "API gakoa"
-lastApiUse = "Azken API erabilera"
-nextReset = "Hurrengo berrezarpena"
-overlayMessage = "Sortu gako bat kredituak eta erabilgarri dauden kredituak ikusteko"
 publicKeyAriaLabel = "API gako publikoa"
-purchasedCredits = "Erositako kredituak"
 refreshAriaLabel = "API gakoa berritu"
 schemaLink = "API eskema-erreferentzia"
 usage = "Sartu gako hau X-API-KEY goiburuan API eskaera guztietan."
@@ -3075,6 +3071,7 @@ warning = "⚠️ Abisua: Ekintza honek API gako berriak sortuko ditu eta aurrek
 
 [config.mcp]
 description = "Model Context Protocol (MCP) lets AI assistants like Claude use your Stirling PDF tools directly. Connect a client once and your assistant can convert, edit, secure and process documents on your behalf."
+guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
 title = "MCP Server"
@@ -3096,14 +3093,6 @@ addTo = "Add to"
 hint = "Pick your client, paste the snippet into the file shown, then restart it. You'll sign in with your Stirling account on first use - no keys to copy."
 title = "Connect your AI assistant"
 
-[config.mcp.tools]
-ai = "AI"
-convert = "Convert"
-misc = "Misc"
-pages = "Pages"
-security = "Security"
-title = "What your assistant can do"
-
 [config.overview]
 description = "Uneko aplikazioaren ezarpenak eta konfigurazio xehetasunak."
 error = "Errorea"
@@ -3118,7 +3107,6 @@ security = "Segurtasun-konfigurazioa"
 system = "Sistema-konfigurazioa"
 
 [convert]
-tags = "transform,change,convert,PDF to Word,PDF to Excel,PDF to image,Word to PDF,Excel to PDF,PowerPoint to PDF,HTML to PDF,export,import,file conversion,format change,save as"
 autoRotate = "Biraketa automatikoa"
 autoRotateDescription = "Automatikoki biratu irudiak PDF orrialdera hobeto doitzeko"
 blackwhite = "Zuri-beltza"
@@ -3178,6 +3166,7 @@ strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)
 svgPdfOptions = "SVG to PDF Options"
 svgToPdf = "SVG → PDF"
 svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
+tags = "transform,change,convert,PDF to Word,PDF to Excel,PDF to image,Word to PDF,Excel to PDF,PowerPoint to PDF,HTML to PDF,export,import,file conversion,format change,save as"
 targetFormatPlaceholder = "Helburu formatua"
 title = "Bihurtu"
 webOptions = "Webetik PDFra aukerak"
@@ -3242,69 +3231,22 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
-[credits]
-enableOverageBilling = "Gaitu gain-erabileraren fakturazioa"
-maybeLater = "Agian geroago"
-upgrade = "Eguneratu"
-
-[credits.insufficient]
-brief = "Kreditu nahikorik ez. {{required}} kreditu behar dituzu baina {{current}}."
-freeTier = "Eguneratu Team-era 10x kreditu gehiago eta gain-erabileraren fakturazio mugagabea izateko."
-managedMember = "Mesedez, jar zaitez harremanetan zure talde-buruarekin laguntza lortzeko."
-message = "Ez duzu nahikoa kreditu {{tool}} exekutatzeko. Une honetan {{current}} kreditu dituzu."
-messageWithAmount = "{{tool}} exekutatzeko {{required}} kreditu behar dituzu, baina {{current}} besterik ez daukazu."
-teamMember = "Gaitu gain-erabilera fakturazioa inoiz kreditu gabe ez gelditzeko."
-title = "Kreditu nahikorik ez"
-
 [credits.modal]
 advancedMonitoring = "Monitorizazio aurreratua"
 allInOneWorkspace = "PDF lanerako ingurune osoa (ikusgailua, tresnak eta agentea)"
 apiSandbox = "API sandbox"
-contactSales = "Jarri harremanetan salmentekin"
-creditsRemaining = "{{current}}/{{total}} geratzen dira"
-creditsThisMonth = "Hileko kredituak"
-current = "Uneko plana"
-customPricing = "Pertsonalizatua"
 dedicatedSupportSlas = "Laguntza dedikatua eta SLAak"
-enterpriseSubscription = "Enpresa"
-everythingInCredits = "Kredituetan dagoen guztia, gehi:"
-everythingInFree = "Doakoan dagoen guztia, gehi:"
 fasterThroughput = "10x azkarragoa"
-forRegularWork = "PDF lan arrunterako:"
-freeTier = "Doako maila"
 fullyPrivateFiles = "Fitxategi erabat pribatuak"
 largeFileProcessing = "Fitxategi handien prozesamendua"
-managedMemberMessage = "Taldearen bidez kredituetarako sarbide mugagabea duzu. Laguntza behar baduzu, jar zaitez harremanetan zure talde-buruarekin."
-managedMemberTitle = "Kreditu mugagabeak"
-meteringBillingNote = "Gain-erabilerako kredituak hilero fakturatzen dira zure Team harpidetzarekin batera. Jarraitu zure erabilera edozein unetan zure kontuaren ezarpenetan."
-meteringExplanation = "Zure Team planak {{credits}} kreditu hilean ditu. Agortzen direnean, gain-erabileraren fakturazio automatikoak kreditu gehigarriak emango dizkizu inoiz gelditu behar ez dezazun."
-meteringIncluded = "{{credits}} kreditu/hil Team-ekin sartuta"
-meteringNeverRunOut = "Inoiz ez geratu krediturik gabe"
-meteringNoCommitment = "Konpromisorik ez, ezeztatu edonoiz"
-meteringPayAsYouGo = "Erabili ahala ordaindu"
-meteringPrice = "Kreditu gehigarriak {{price}}/kreditu"
-meteringTitle = "Erabileraren araberako gain-erabilera fakturazioa"
-monthlyCredits = "hileko kredituak"
 orgWideAccess = "Erakunde osoko sarbide-kontrolak"
-overage = "gain-erabilera"
-perMonth = "/hilean"
-popular = "Ezaguna"
 premiumAiModels = "Premium IA ereduak"
 prioritySupport = "Lehentasunezko laguntza"
 privateDocCloud = "Dokumentu-hodei pribatua"
 ragFineTuning = "RAG + fintzea"
 secureApiAccess = "API sarbide segurua"
-selfHostLink = "Ikusi dokumentazioa eta planak"
-selfHostPrompt = "Auto-ostatzea nahi duzu?"
 standardThroughput = "Errendimendu estandarra"
-subtitle = "Eguneratu Team-era 10x kreditu eta prozesamendu azkarragoa izateko."
-subtitlePro = "Gaitu gain-erabileraren fakturazio automatikoa inoiz kreditu gabe ez gelditzeko."
-teamLeaderOnly = "Talde-buruek bakarrik gaitu dezakete gain-erabilera fakturazioa"
-teamSubscription = "Taldea"
-titleExhausted = "Zure doako kredituak erabili dituzu"
-titleExhaustedPro = "Kredituak agortu zaizkizu"
 unlimitedApiAccess = "API sarbide mugagabea"
-unlimitedMonthlyCredits = "Site License"
 unlimitedSeats = "Eserleku mugagabeak"
 
 [crop]
@@ -3397,6 +3339,18 @@ docsLink = "Ikusi instalazioaren dokumentazioa"
 message = "Stirling-PDFk ez du baimenik makina honetan bere burua eguneratzeko."
 title = "Administratzaile-baimenak behar dira"
 
+[devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
+
+[devApi]
+tags = "API,development,documentation,developer,REST,integration,endpoints,programmatic,automation,scripting"
+
+[devFolderScanning]
+tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,batch,monitor folder,auto process,folder monitoring"
+
+[devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
+
 [dropdownList]
 searchPlaceholder = "Bilatu..."
 
@@ -3405,8 +3359,8 @@ edit = "Editatu"
 editSecretValue = "Editatu sekretu-balioa"
 
 [editTableOfContents]
-tags = "bookmarks,contents,edit,table of contents,TOC,outline,navigation,chapters,sections,add bookmarks,edit bookmarks,PDF outline"
 submit = "Aplikatu edukien taula"
+tags = "bookmarks,contents,edit,table of contents,TOC,outline,navigation,chapters,sections,add bookmarks,edit bookmarks,PDF outline"
 
 [editTableOfContents.actions]
 clipboardUnavailable = "Arbelerako sarbidea ez dago eskuragarri nabigatzaile honetan."
@@ -3541,8 +3495,8 @@ title = "Ezarpenak"
 tags = "erauzi"
 
 [extractPages]
-tags = "pull,select,copy,extract,extract pages,get pages,pull out,save pages,export pages,copy pages,select pages,specific pages"
 submit = "Erauzi orrialdeak"
+tags = "pull,select,copy,extract,extract pages,get pages,pull out,save pages,export pages,copy pages,select pages,specific pages"
 title = "Erauzi orrialdeak"
 
 [extractPages.error]
@@ -3795,6 +3749,7 @@ selectFile = "Hautatu {{name}} fitxategia"
 shareDisabledHint = "Fitxategien partekatzea ez dago gaituta zerbitzari honetan. Eskatu administratzaileari gaitzeko."
 shareManage = "Kudeatu partekatzea"
 showDetails = "Erakutsi xehetasunak"
+signInRequired = "Sign in to use cloud storage."
 summary_one = "{{count}} item"
 summary_other = "{{count}} items"
 tree = "Karpetak"
@@ -3986,8 +3941,8 @@ welcomeMessage = "Segurtasun arrazoiengatik, lehen saio-hasieran pasahitza aldat
 welcomeTitle = "Ongi etorri!"
 
 [flatten]
-tags = "simplify,remove,interactive,flatten,flatten form,remove form fields,make static,finalize form,lock form,disable editing,convert to image,non-editable"
 submit = "Lautu"
+tags = "simplify,remove,interactive,flatten,flatten form,remove form fields,make static,finalize form,lock form,disable editing,convert to image,non-editable"
 title = "Lautu"
 
 [flatten.error]
@@ -4635,6 +4590,7 @@ signIn = "Hasi saioa"
 accountCreatedSuccess = "Kontua ongi sortu da! Orain saioa hasi dezakezu."
 backToSignIn = "Itzuli saioa hastera"
 changePasswordWarning = "Mesedez, aldatu pasahitza lehen aldiz saioa hasi ondoren"
+createAccount = "Create an account"
 credentialsUpdated = "Zure kredentzialak eguneratu dira. Hasi saioa berriro."
 defaultCredentials = "Saio-hasierako kredentzial lehenetsiak"
 email = "E-posta"
@@ -4664,7 +4620,6 @@ sending = "Bidaltzen…"
 sendMagicLink = "Bidali esteka magikoa"
 sendResetLink = "Bidali berrezartzeko esteka"
 sessionExpired = "Zure saioa iraungi da. Hasi saioa berriro, mesedez."
-createAccount = "Create an account"
 signin = "Saioa hasi"
 signingIn = "Saioa hasten..."
 signInWith = "Hasi saioa honekin"
@@ -4803,6 +4758,34 @@ title = "Autentifikazioak huts egin du"
 message = "Leiho hau itxi eta Stirling PDF-era itzul zaitezke."
 title = "Autentifikazioa ongi burutu da"
 
+[oauthConsent]
+approve = "Allow access"
+approving = "Allowing..."
+decisionFailed = "Could not submit your decision. Please try again."
+deny = "Deny"
+denying = "Denying..."
+loadFailed = "This authorisation request is invalid or has expired. Close this tab and try connecting again from the app."
+loading = "Loading authorisation request..."
+missingId = "Missing authorisation request. Start the connection from your app and try again."
+redirecting = "Returning you to the app..."
+requesting = "{{app}} wants to access your Stirling PDF account"
+scopesIntro = "This will allow {{app}} to:"
+signedInAs = "Signed in as {{name}}"
+signInButton = "Sign in to continue"
+signInPrompt = "Sign in to your Stirling PDF account to continue connecting the app."
+title = "Authorise access"
+unknownApp = "A third-party application"
+
+[oauthConsent.access]
+actAsYou = "Act as you - everything {{app}} does runs under your account and counts towards your usage"
+tools = "Use your Stirling PDF tools on your behalf - convert, edit, sign, secure and process your documents"
+
+[oauthConsent.scope]
+email = "See your email address"
+openid = "Confirm your identity"
+phone = "See your phone number"
+profile = "See your basic profile information"
+
 [ocr]
 desc = "Garbiketa-eskaneatzeak eta irudi-testuak detektatu PDF baten barruan eta berriz ere gehitu testu gisa"
 tags = "ezagutzea,testua,irudia,eskaneatu,irakurri,identifikatu,detekzioa,editagarria"
@@ -4920,15 +4903,6 @@ body = "Stirling hobekien funtzionatzen du mahaigaineko aplikazio gisa. Offline 
 title = "Deskargatu"
 titleWithOs = "Deskargatu {{osLabel}}-rako"
 
-[onboarding.freeTrial]
-afterTrialWithoutPayment = "Proba amaitzean, gure maila doakoarekin jarraituko duzu. Gehitu ordainketa-metodo bat Pro sarbidea mantentzeko."
-afterTrialWithPayment = "Zure Pro harpidetza automatikoki hasiko da proba amaitzean."
-body = "Probaldian Stirling PDF Pro-ren funtzio guztietarako sarbidea duzu. Gozatu bihurketa mugagabeak, fitxategi handiagoak eta lehentasunezko prozesatzea."
-daysRemaining = "{{days}} egun falta"
-daysRemainingSingular = "{{days}} egun falta"
-title = "Zure 30 eguneko Pro proba"
-trialEnds = "Proba amaitzen da: {{date}}"
-
 [onboarding.mfa]
 authenticationCode = "Autentifikazio-kodea"
 qrCodeLoading = "Zure QR kodea sortzen…"
@@ -4939,6 +4913,22 @@ adminBodyLoginEnabled = "Admin gisa, erabiltzaileak kudeatu, ezarpenak konfigura
 adminTitle = "Admin ikuspegi orokorra"
 userBody = "Gonbidatu taldekideak, esleitu rolak eta mantendu dokumentuak antolatuta lan-espazio seguruan. Gaitu saio-hasiera modua bakarkako erabileratik harago hazteko prest zaudenean."
 userTitle = "Planaren ikuspegi orokorra"
+
+[onboarding.saas.freeEditor]
+freeLine = "The editor is now <free>completely free</free>."
+premium = "We've added loads of new features, including <strong>Policies</strong> and <strong>Agent Chat</strong>."
+title = "Welcome to Stirling"
+
+[onboarding.saas.team]
+addButton = "Add"
+createBody = "Work on documents together: teammates share files, automations and your plan. Add the first member by email to create your team."
+createTitle = "Create your team"
+inviteBody = "Everyone on your team shares files, automations and your plan. Add teammates by email and they'll get an invitation."
+inviteTitle = "Invite members to your team"
+
+[onboarding.saas.usage]
+body = "Automations, AI and API requests draw from your free allowance. Manual editing never counts against it."
+title = "Your free Processor allowance"
 
 [onboarding.securityCheck]
 message = "Aplikazioak aldaketa handiak izan ditu azkenaldian. Zure zerbitzariaren administratzailearen arreta behar izan daiteke. Mesedez, berretsi zure rola jarraitzeko."
@@ -5210,12 +5200,215 @@ title = "Orrialde barrutiak"
 bullet1 = "<strong>all</strong> → orrialde guztiak hautatzen ditu"
 title = "Gako‑hitz bereziak"
 
+[payg.activity]
+docs = "docs"
+empty = "No billable activity yet this period."
+subtitle = "Only AI and automation draw from your budget. Everyday tools are free and aren't listed here."
+title = "Recent billable activity"
+
+[payg.cap]
+amount = "Cap amount"
+custom = "Custom"
+docsEstimate = "≈ {{docs}} processed PDFs / month"
+docsRate = "at {{rate}} / PDF"
+noCapDesc = "Usage is billed without an upper limit. You can re-enable a cap at any time."
+noCapLabel = "No cap"
+noneShort = "No cap"
+perMonth = "/ month"
+save = "Update cap"
+subtitle = "Set your maximum spend. We convert this to PDFs using the current price tier."
+title = "Monthly spending cap"
+
+[payg.checkout]
+connecting = "Connecting to Stripe…"
+errorTitle = "Stripe error"
+
+[payg.checkout.error]
+startFailed = "Couldn't start checkout session"
+
+[payg.checkout.mock]
+backend = "Backend is in mock mode; no real Stripe session was created."
+continue = "Continue with mock subscription"
+noKey = "VITE_STRIPE_PUBLISHABLE_KEY is unset. Real iframe mounts here once configured."
+title = "Stripe Embedded Checkout (mock mode)"
+
+[payg.confirm]
+body = "Your team can now run automation, AI, and API operations beyond your 500 free PDFs."
+capValue = "{{symbol}}{{amount}} / month"
+noCap = "No cap"
+note = "You can change your cap, cancel, or open the Stripe customer portal any time from this page."
+summaryLabel = "Monthly ceiling"
+title = "Welcome to the Processor plan"
+
+[payg.docHelp]
+billable = "Only automation runs, AI tools, and API calls count. Manual tools in the editor are always free."
+chains = "Running the same file through several steps of one automation counts it once, not once per step."
+perFile = "Each file you process counts as one PDF. Very long or very large files can count as more than one."
+refunds = "If a job fails on its first step, the PDF is credited back automatically."
+toggle = "What counts as a PDF?"
+
+[payg.error]
+body = "We couldn't reach the billing service. Refresh the page to try again."
+title = "Couldn't load your plan"
+
+[payg.exhausted]
+body = "You've used all 500 of your free PDFs. Upgrade to Processor to keep going."
+cta = "Go to billing"
+title = "You've used your free PDFs"
+
+[payg.free.cta]
+benefit1Body = "chain tools, schedule runs, batch process"
+benefit1Title = "Automation pipelines"
+benefit2Body = "summarise, classify, redact, AI-OCR"
+benefit2Title = "AI tools"
+benefit3Body = "call any Stirling endpoint programmatically"
+benefit3Title = "API access"
+button = "Turn on Processor →"
+reassurance = "No minimum · Set a $0 cap to test · Cancel anytime"
+subtitle = "Keep going past your 500 free PDFs with automation, AI, and the API. Set a monthly ceiling, so you stay in control."
+title = "Turn on the Processor plan"
+
+[payg.free.editor]
+eyebrow = "Editor plan · Always free"
+
+[payg.free.header]
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+freeTitle = "Unlimited PDF editing"
+
+[payg.free.hero]
+capSuffix = "/ {{limit}} free PDFs"
+metaCategories = "Automation · AI · API requests"
+
+[payg.free.member]
+ownerOnly = "Only your team owner can turn on Processor. Manual tools stay free for you to use as much as you like."
+
+[payg.free.proc]
+eyebrow = "Processor plan · metered"
+
+[payg.free.state]
+approachingLimit = "Approaching limit"
+limitReached = "Limit reached"
+plentyLeft = "Plenty left"
+
+[payg.gates]
+ai = "AI tools (AI Create, suggestions, AI-OCR)"
+automation = "Automations & pipelines"
+client = "Browser-only tools (viewer, page editor, file management)"
+offsite = "Server tools (compress, OCR, convert, watermark…)"
+pauses = "pauses at cap"
+title = "What happens when the cap is reached"
+
+[payg.header]
+eyebrow = "Processor plan · {{start}} – {{end}}"
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+freeLabel = "Always free"
+freeTitle = "Unlimited PDF editing"
+meterBody = "{{limit}} free PDFs to start, then billed per PDF up to your cap."
+meterLabel = "Metered"
+meterTitle = "Automation · AI · API"
+
+[payg.member]
+askLeader = "Only your team owner can change the cap."
+
+[payg.members]
+docs = "PDFs"
+subtitle = "Billable PDFs each teammate has processed this period."
+title = "Team member usage"
+
+[payg.role]
+leader = "Team owner"
+member = "Member"
+
+[payg.signupRequired]
+body = "Stirling PDF gives every signed-up account 500 free operations, enough to keep most workflows humming without paying a cent. You're currently using Stirling as a guest, which doesn't include billable tools like AI, automations, or hosted processing."
+cancel = "Not now"
+cta = "Sign up free"
+subtext = "Creating an account is free and takes a few seconds. No credit card required."
+title = "Sign up to use {{category}}"
+
+[payg.signupRequired.category]
+ai = "AI features"
+api = "this tool"
+automation = "automations"
+default = "this feature"
+
+[payg.spendCapMeter]
+capSuffix = "/ {{amount}} cap"
+metaCategories = "Automation · AI · API spend"
+resets = "Resets each billing period"
+
+[payg.state]
+degraded = "Cap reached"
+full = "Healthy"
+warned = "Approaching cap"
+
+[payg.stripe]
+open = "Open billing portal"
+subtitle = "Receipts, invoices, payment method, billing currency."
+title = "Manage billing in Stripe"
+
+[payg.stripe.toast.unavailable]
+body = "Billing portal isn't available right now. Try again in a moment."
+title = "Billing portal unavailable"
+
+[payg.upgrade]
+backAria = "Back"
+closeAria = "Close"
+
+[payg.upgrade.button]
+cancel = "Cancel"
+continue = "Continue →"
+finish = "Finish"
+
+[payg.upgrade.cap]
+help = "We'll never charge above this. Set $0 if you want to keep everything free while testing."
+title = "Set your monthly spend ceiling"
+usdNote = "Estimated in USD. You can adjust your cap any time after subscribing, in your own currency."
+
+[payg.upgrade.checkout]
+capValue = "{{symbol}}{{amount}} / month"
+edit = "Edit"
+help = "Stripe handles your card details. Stirling never sees them."
+loading = "Loading checkout…"
+noCap = "No cap"
+title = "Add your payment method"
+
+[payg.upgrade.help]
+aiBody = "summarise, classify, redact, AI-OCR"
+aiTitle = "AI tools"
+apiBody = "programmatic access to any Stirling endpoint"
+apiTitle = "API calls"
+automationBody = "chained tools or scheduled runs that don't need clicks"
+automationTitle = "Automation pipelines"
+footnote = "Manual tools (viewing, editing, merging, splitting, watermarking, compressing, manual OCR) are always free, even past 500. The distinction is the type of work, not where you click."
+title = "What we count toward billing"
+
+[payg.upgrade.promise]
+body = "You only pay for automation pipelines, AI tools, and API calls, the work that goes beyond a single click. Edit, merge, split, sign, compress as much as you want, no charge."
+highlight = "Manual tools stay free, always."
+
+[payg.upgrade.steps]
+cap = "Set monthly ceiling"
+payment = "Add payment method"
+
+[payg.upgrade.title]
+confirm = "You're subscribed"
+default = "Upgrade to Processor plan"
+
+[payg.usage]
+breakdown = "AI {{ai}} • Automation {{automation}} • API {{api}}"
+capLine = "{{cap}}/mo cap"
+estBill = "≈ {{amount}} so far this period"
+firstFree = "First {{free}} free"
+noCap = "No monthly cap"
+ofLimitProcessed = "/ {{limit}} PDFs processed"
+processed = "PDFs processed"
+resetsIn = "Resets in {{days}} days"
+resetsTomorrow = "Resets tomorrow"
+thisPeriod = "This billing period"
+
 [payment]
-autoClose = "Leiho hau automatikoki itxiko da..."
 canCloseWindow = "Orain leiho hau itxi dezakezu."
-checkoutInstructions = "Amaitu zure erosketa orain ireki den arakatzaile-leihoan. Ordainketa amaitutakoan, itzuli hona eta egin klik beheko botoian zure fakturazio informazioa freskatzeko."
-checkoutOpened = "Ordainketa-leihoa arakatzailean ireki da"
-closeLater = "Geroago egingo dut"
 error = "Ordainketa-errorea"
 generatingLicense = "Zure lizentzia-gakoa sortzen..."
 licenseActivated = "Lizentzia aktibatuta! Zure lizentzia-gakoa gorde da. Berrespen email bat bidali da zure erregistratutako helbide elektronikora."
@@ -5231,7 +5424,6 @@ paymentCanceled = "Ordainketa bertan behera utzi da. Ez da kobratu."
 perMonth = "/hilean"
 preparing = "Zure ordainketa prestatzen..."
 redirecting = "Ordainketa segurura birbideratzen..."
-refreshBilling = "Ordainketa egin dut - Freskatu fakturazioa"
 success = "Ordainketa arrakastatsua!"
 successMessage = "Zure harpidetza ongi aktibatu da. Laster jasoko duzu baieztapen-mezu elektronikoa."
 syncError = "Ordainketa arrakastatsua baina lizentzia sinkronizazioak huts egin du. Zure lizentzia laster eguneratuko da. Arazoek jarraitzen badute, jarri harremanetan laguntzarekin."
@@ -5311,7 +5503,6 @@ REVERSE_ORDER = "Irauli dokumentua, azken orrialdea lehenengoa bihurtuz eta abar
 SIDE_STITCH_BOOKLET_SORT = "Antolatu orrialdeak alboko‑josketarako liburuxka inprimatzeko (alboko loturarako optimizatua)."
 
 [pdfTextEditor]
-tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 conversionFailed = "Ezin izan da PDFa bihurtu. Saiatu berriro."
 converting = "PDFa editagarri bihurtzen..."
 currentFile = "Uneko fitxategia: {{name}}"
@@ -5319,6 +5510,7 @@ imageLabel = "Kokatutako irudia"
 noTextOnPage = "Ez da testu editagarririk detektatu orri honetan."
 pagePreviewAlt = "Orriaren aurrebista"
 pageSummary = "{{number}} / {{total}} orri"
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF JSON editorea"
 viewLabel = "PDF Editorea"
 
@@ -5480,9 +5672,9 @@ title = "PDFa aurkezpen bihurtu"
 tags = "orri bakarra"
 
 [pdfToSinglePage]
-tags = "combine,merge,single,single page,one page,merge to single,combine all,stitch pages,concatenate vertical,long page,poster"
 description = "Tresna honek zure PDFko orri guztiak orri handi bakarrean batuko ditu. Zabalera bera izango du jatorrizko orrienarekin, baina altuera orri guztien altueren batura izango da."
 submit = "Orrialde bakarrera bihurtu"
+tags = "combine,merge,single,single page,one page,merge to single,combine all,stitch pages,concatenate vertical,long page,poster"
 title = "PDF Orrialde bakarrera"
 
 [pdfToSinglePage.error]
@@ -5521,29 +5713,19 @@ title = "Hodia"
 
 [plan]
 contact = "Jarri gurekin harremanetan"
-currency = "Moneta"
 current = "Uneko plana"
-customPricing = "Pertsonalizatua"
 featureComparison = "Ezaugarrien konparazioa"
 from = "Hasita"
 hideComparison = "Ezkutatu ezaugarrien konparazioa"
-included = "Sartuta"
 licensedSeats = "Lizentziadunak: {{count}} eserleku"
 manage = "Kudeatu"
 perMonth = "/hilean"
 perSeat = "/eserleku"
 popular = "Ezaguna"
-purchase = "Erosi"
-selectCredits = "Hautatu kreditu kopurua"
 selectPlan = "Aukeratu plana"
 showComparison = "Alderatu ezaugarri guztiak"
-totalCost = "Kostu osoa"
 upgrade = "Bertsio-berritu"
 withServer = "+ Zerbitzari-plana"
-
-[plan.activePlan]
-subtitle = "Zure uneko harpidetzaren xehetasunak"
-title = "Plan aktiboa"
 
 [plan.api]
 large = "5.000 kreditu"
@@ -5551,12 +5733,7 @@ medium = "1.000 kreditu"
 small = "500 kreditu"
 xsmall = "100 kreditu"
 
-[plan.apiPackages]
-subtitle = "Erosi API kredituak zure aplikazioetarako"
-title = "API kreditu paketeak"
-
 [plan.availablePlans]
-loadError = "Ezin izan da planaren prezioa kargatu. Balio lehenetsiak erabiliko dira."
 subtitle = "Aukeratu zure beharretara egokitzen den plana"
 title = "Plan eskuragarriak"
 
@@ -5567,7 +5744,6 @@ highlight3 = "Azken ezaugarriak"
 name = "Enpresa"
 requiresServer = "Zerbitzaria behar du"
 requiresServerMessage = "Mesedez, eguneratu lehenik Zerbitzari planera Enpresara eguneratu aurretik."
-siteLicense = "Site License"
 
 [plan.feature]
 api = "API sarbidea"
@@ -5606,6 +5782,12 @@ highlight3 = "Komunitatearen laguntza"
 included = "Sartuta"
 name = "Doakoa"
 
+[plan.freeLimit]
+cta = "View Processor Plan"
+dismiss = "Maybe Later"
+message = "That's your whole free allowance for automation, AI and the API. Seriously impressive! Keep the momentum going for just pennies a day."
+title = "Woah, {{total}} PDFs Processed!"
+
 [plan.highlights]
 advancedIntegrations = "Integrazio aurreratuak"
 allBasicFeatures = "Oinarrizko ezaugarri guztiak"
@@ -5637,6 +5819,12 @@ highlight2 = "PDF tresna aurreratuak"
 highlight3 = "Ur-marka gabe"
 name = "Pro"
 
+[plan.spendCap]
+cta = "View Spending Limit"
+dismiss = "Not Now"
+message = "You've made the most of this month's cap. That's a load of automation, AI and API work! Bump it up whenever you like to keep going."
+title = "You're on a Roll!"
+
 [plan.static]
 activateLicense = "Aktibatu zure lizentzia"
 contactToUpgrade = "Jarri gurekin harremanetan zure plana bertsio-berritzeko edo pertsonalizatzeko"
@@ -5661,22 +5849,111 @@ keyDescription = "Itsatsi lizentzia-gakoa zure postatik"
 success = "Lizentzia aktibatuta!"
 successMessage = "Zure lizentzia ongi aktibatu da. Orain leiho hau itxi dezakezu."
 
-[plan.team]
-name = "Taldea"
-
 [plan.trial]
-badge = "Proba"
-continueWithFree = "Jarraitu doakoarekin"
-daysRemaining = "Zure proba {{days}} egunetan amaituko da"
-endDate = "Iraungitzen da: {{date}}"
-expired = "Zure proba amaitu da"
-expiredMessage = "Zure 30 eguneko Pro proba iraungi da. Harpidetu Pro-ra funtzio aurreratuetara sartzen jarraitzeko, edo jarraitu gure maila doakoarekin."
-freeTierLimitations = "Maila doakoak PDF oinarrizko tresnak ditu erabilera-mugekin."
 message = ""
-subscribe = "Harpidetu Pro-ra"
-subscribeToPro = "Harpidetu Pro-ra"
-subscriptionScheduled = "Harpidetza programatuta - {{date}}-n hasten da"
-title = "Doako proba aktibo"
+
+[policies]
+deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
+deleteConfirmTitle = "Delete {{label}} policy?"
+
+[policies.catalog]
+compliance = "Compliance"
+ingestion = "Ingestion"
+retention = "Retention"
+routing = "Routing"
+security = "Security"
+
+[policies.detail]
+editSettings = "Edit Settings"
+enforces = "Enforces"
+managedByOrg = "Managed by your organisation. Contact a team leader to change this policy."
+noActivityDescription = "Documents will appear here once this policy runs."
+noActivityTitle = "No activity yet"
+onEveryUpload = "On every upload"
+originalsNote = "Originals stay untouched • Enforced version saved alongside"
+pause = "Pause"
+recentActivity = "Recent Activity"
+resume = "Resume"
+retry = "Retry"
+showLess = "Show less"
+showMore = "Show more"
+statActive = "Active"
+statDataProcessed = "Data processed"
+statDocsEnforced = "Docs enforced"
+statusActive = "Active"
+statusPaused = "Paused"
+
+[policies.fields]
+selectedCount = "{{count}} selected"
+
+[policies.pii]
+fieldLabel = "PII to redact"
+placeholder = "Select PII types"
+
+[policies.sidebar]
+activeCount = "{{count}} active"
+infoAriaLabel = "What is a policy?"
+infoTooltip = "A policy is a fixed set of tools that runs automatically whenever it's triggered — for example when a new document arrives — enforcing rules like redacting PII with no manual steps."
+loading = "Loading…"
+railAriaLabel = "{{label}} policy — {{status}}"
+railSuffixActive = " (Active)"
+railSuffixPaused = " (Paused)"
+setUp = "Set up"
+title = "Policies"
+upgradeToEnterprise = "Upgrade to enterprise"
+
+[policies.status]
+active = "Active"
+paused = "Paused"
+setup = "Set up"
+
+[policies.toolConfig]
+enableAriaLabel = "Enable {{tool}}"
+infoAriaLabel = "What does {{tool}} do?"
+
+[policies.wizard]
+allDocTypesDescription = "Enable the Classification policy to filter by document type."
+allDocTypesTitle = "All document types"
+back = "Back"
+builderDesc = "Build the sequence of tools this policy runs on each document."
+clear = "Clear"
+continue = "Continue"
+docTypesLabel = "Document types"
+edit = "Edit"
+editTitle = "Edit {{label}} Policy"
+enablePolicy = "Enable Policy"
+filenameAutoNumber = "Auto-number"
+filenamePositionAria = "Filename position"
+filenamePrefix = "Prefix"
+filenameSuffix = "Suffix"
+filenameTextAria = "Filename text"
+filenameTextPlaceholder = "Text to add (optional)"
+lockedDescription = "Contact a team leader to change this policy."
+lockedTitle = "Managed by your organisation"
+maxRetriesLabel = "Max retries"
+noToolsError = "Add at least one configured tool to the workflow first."
+outputAsLabel = "Output as"
+outputFilenameSubhead = "Output filename"
+outputModeAria = "Output mode"
+outputNewFile = "New file"
+outputNewVersion = "New version"
+outputRetriesLabel = "Output & retries"
+outputSubhead = "Output"
+retryDelayAria = "Retry delay minutes"
+retryDelayLabel = "Retry delay (min)"
+runOnExport = "Export"
+runOnLabel = "Run on"
+runOnSubhead = "Run on"
+runOnUpload = "Upload"
+saveChanges = "Save Changes"
+saveError = "Couldn't save the policy. Please try again."
+setupClassification = "Set up Classification"
+setupTitle = "Set up {{label}} Policy"
+sourcesDesc = "Choose where this policy runs and which document types it applies to."
+sourcesLabel = "Sources"
+stepOf = "Step {{step}} of {{total}}"
+toolChainDesc = "Configure the tools this policy runs on each document."
+typesSelected = "{{count}} types selected"
 
 [printFile]
 title = "Inprimatu fitxategia"
@@ -5958,6 +6235,9 @@ whatsNewTourDesc = "Egin ibilbidea diseinu eguneratuan"
 admin = "Ikusi hemen ibilbide gidatuak: Tresnen ibilbidea, V2 diseinu berriaren ibilbidea eta Administratzailearen ibilbidea."
 user = "Ikusi hemen ibilbide gidatuak: Tresnen ibilbidea eta V2 diseinu berriaren ibilbidea."
 
+[read]
+tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
+
 [redact]
 submit = "Manual Redaction"
 tags = "Redact,Hide,black out,black,marker,hidden,manual"
@@ -6088,8 +6368,8 @@ title = "Zer egiten duen"
 title = "Oharpenak kentzeari buruz"
 
 [removeBlanks]
-tags = "delete,clean,empty,remove blank,delete blank pages,empty pages,white pages,remove empty,clean up,cleanup blank"
 submit = "Ezabatu zuriuneak"
+tags = "delete,clean,empty,remove blank,delete blank pages,empty pages,white pages,remove empty,clean up,cleanup blank"
 title = "Ezabatu zuriuneak"
 
 [removeBlanks.error]
@@ -6147,8 +6427,8 @@ failed = "Errore bat gertatu da ziurtagiri sinadurak kentzean."
 title = "Ziurtagiria kentzearen emaitzak"
 
 [removeImage]
-tags = "remove,delete,clean,remove image,delete image,strip images,remove pictures,delete photos,clean images,reduce size,remove graphics"
 submit = "Irudia kendu"
+tags = "remove,delete,clean,remove image,delete image,strip images,remove pictures,delete photos,clean images,reduce size,remove graphics"
 title = "Irudia kendu"
 
 [removeImage.error]
@@ -6219,8 +6499,8 @@ title = "Deszifratutako PDFak"
 description = "Pasahitz-babesak kentzeko, PDFa zifratzeko erabili zen pasahitza behar da. Honek dokumentua deszifratuko du, pasahitzik gabe eskuragarri eginez."
 
 [reorganizePages]
-tags = "rearrange,reorder,organize,reorganize,move pages,page order,sort pages,arrange pages,shuffle,resequence"
 submit = "Berrantolatu orriak"
+tags = "rearrange,reorder,organize,reorganize,move pages,page order,sort pages,arrange pages,shuffle,resequence"
 
 [reorganizePages.error]
 failed = "Ezin izan dira orriak berrantolatu"
@@ -6303,11 +6583,11 @@ text = "PDFko kolore guztiak erabat alderantzikatu, negatibo moduko efektua sort
 title = "Kolore guztiak alderantzikatu"
 
 [rotate]
-tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 rotateLeft = "Biratu erlojuaren aurkako noranzkoan"
 rotateRight = "Biratu erlojuaren noranzkoan"
 selectRotation = "Hautatu biraketa angelua (erlojuaren noranzkoan)"
 submit = "Biratu"
+tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 title = "Biratu PDFa"
 
 [rotate.error]
@@ -6327,10 +6607,10 @@ text = "Biratu zure PDF orrialdeak erlojuaren noranzkoan edo kontrakoan 90 gradu
 title = "Biraketa ezarpenen ikuspegi orokorra"
 
 [sanitize]
-tags = "clean,purge,remove,sanitize,sanitise,remove scripts,remove javascript,remove metadata,strip metadata,security,clean document,remove hidden data,privacy"
 desc = "Kaltegarriak izan daitezkeen elementuak kendu PDF fitxategietatik."
 sanitizationResults = "Saneatze-emaitzak"
 submit = "PDF-a desinfektatu"
+tags = "clean,purge,remove,sanitize,sanitise,remove scripts,remove javascript,remove metadata,strip metadata,security,clean document,remove hidden data,privacy"
 title = "Saneatu"
 
 [sanitize.error]
@@ -6376,6 +6656,9 @@ title = "PDF-a desinfektatu"
 [scalePages]
 tags = "resize,adjust,scale,page size,resize page,scale page,change size,adjust size,enlarge,shrink page,fit to page,A4,letter size"
 title = "Doitu orrialdearen eskala"
+
+[scannerEffect]
+tags = "scan,simulate,create,fake scan,look scanned,scanner effect,make look scanned,photocopy effect,simulate scanner,realistic scan"
 
 [ScannerImageSplit.selectText]
 1 = "Angeluaren gutxieneko balioa:"
@@ -6615,6 +6898,18 @@ title = "Laster-teklak"
 mac = "Sartu ⌘ (Command), ⌥ (Option) edo beste aldatzaile bat zure laster-teklean."
 windows = "Sartu Ctrl, Alt edo beste aldatzaile bat zure laster-teklean."
 
+[settings.legal]
+label = "Legal"
+title = "Legal"
+
+[settings.legal.cookiePreferences]
+description = "Review or change your cookie consent choices."
+manage = "Manage"
+
+[settings.legal.documents]
+description = "Policies and legal information for this service."
+title = "Legal Documents"
+
 [settings.licensingAnalytics]
 audit = "Ikuskaritza"
 plan = "Plana"
@@ -6803,7 +7098,6 @@ title = "Javascript erakutsi"
 title = "Erauzi den JavaScript"
 
 [sign]
-tags = "signature,autograph,e-sign,electronic signature,digital signature,sign document,approval,signoff,authorize,endorse,ink signature,handwriting"
 activate = "Aktibatu sinadura kokatzea"
 add = "Gehitu"
 addToAll = "Gehitu orri guztiei"
@@ -6823,6 +7117,7 @@ redo = "Berregin"
 save = "Gorde sinadura"
 sharedSigs = "Partekatutako sinadurak"
 submit = "Sinatu dokumentua"
+tags = "signature,autograph,e-sign,electronic signature,digital signature,sign document,approval,signoff,authorize,endorse,ink signature,handwriting"
 title = "Sinatu"
 undo = "Desegin"
 updateAndPlace = "Eguneratu eta kokatu"
@@ -7010,11 +7305,11 @@ small = "Txikia"
 x-large = "Oso handia"
 
 [split]
-tags = "divide,separate,break,split,extract pages,separate pages,divide document,break apart,separate files,unbind,split by page,divide by chapter"
 resultsTitle = "Zatiketaren emaitzak"
 selectMethod = "Hautatu zatiketa metodo bat"
 splitPages = "Sartu orrialdeak zatitzeko:"
 submit = "Zatitu"
+tags = "divide,separate,break,split,extract pages,separate pages,divide document,break apart,separate files,unbind,split by page,divide by chapter"
 title = "Zatitu PDFa"
 
 [split.error]
@@ -7306,10 +7601,6 @@ title = "Igo zerbitzarira"
 updateButton = "Eguneratu zerbitzarian"
 uploadButton = "Igo zerbitzarira"
 
-[survey]
-nav = "Inkesta"
-title = "Stirling-PDF Inkesta"
-
 [swagger]
 tags = "api,dokumentazioa,swagger,endpointak,garapena"
 title = "API Dokumentazioa"
@@ -7342,28 +7633,6 @@ removeError = "Ezin izan da kidea kendu"
 renameError = "Ezin izan da taldea berrizendatu"
 renameSuccess = "Taldea ongi berrizendatu da"
 
-[team.features]
-badge = "Taldearen ezaugarriak"
-subtitle = "Elkarlanean aritu zure taldearekin"
-title = "Taldeko lankidetza"
-viewPlans = "Ikusi planak"
-
-[team.features.billing]
-description = "Kudeatu fakturazioa eta harpidetzak"
-title = "Fakturazio kudeaketa"
-
-[team.features.credits]
-description = "Kreditu partekatuen multzoa kide guztientzat"
-title = "Kreditu partekatuak"
-
-[team.features.dashboard]
-description = "Ikusi taldearen jarduera eta erabilera"
-title = "Taldearen panela"
-
-[team.features.invite]
-description = "Gehitu kideak zure taldera"
-title = "Gonbidatu kideak"
-
 [team.invitationBanner]
 acceptButton = "Onartu"
 message = "bat egitera gonbidatu zaitu"
@@ -7385,11 +7654,6 @@ remove = "Kendu"
 roleColumn = "Rola"
 title = "Taldekideak"
 
-[team.upgrade]
-button = "Eguneratu Team-era"
-description = "Desblokeatu talde-lankidetzako ezaugarriak"
-title = "Eguneratu Team planera"
-
 [textAlign]
 center = "Erdira"
 left = "Ezkerrera"
@@ -7405,10 +7669,10 @@ justNow = "orain bertan"
 minutesAgo = "Duela {{count}} minutu"
 
 [timestampPdf]
-tags = "timestamp,RFC 3161,TSA,time stamp authority,document timestamp,proof of existence,timestamp token,trusted timestamp,sign timestamp,notarise"
 desc = "Gehitu RFC 3161 dokumentuaren denbora-zigilua zure PDFari Denbora-zigiluen Agintaritza (TSA) fidagarri bat erabiliz."
 results = "Denbora-zigiluaren emaitzak"
 submit = "Aplikatu denbora-zigilua"
+tags = "timestamp,RFC 3161,TSA,time stamp authority,document timestamp,proof of existence,timestamp token,trusted timestamp,sign timestamp,notarise"
 title = "Denbora-zigilatu PDFa"
 
 [timestampPdf.error]
@@ -7806,10 +8070,173 @@ title = "Ikusi/Editatu PDF"
 [warning]
 tooltipTitle = "Abisua"
 
+[watchedFolders]
+alreadyInFolder = "Already in this folder"
+defaultFolderWarning = "This is a default folder and will be recreated on next reload."
+deleteConfirmBody = "This will remove the folder and its run history. Files already downloaded are not affected."
+deleteConfirmTitle = "Delete folder?"
+folderNotFound = "Folder not found"
+newFolder = "New folder"
+noFolders = "No watched folders yet"
+sidebarTitle = "Watched Folders"
+title = "Watched Folders"
+
+[watchedFolders.actions]
+back = "Back"
+collapse = "Collapse"
+dismiss = "Dismiss"
+download = "Download"
+downloadInput = "Download input"
+downloadOutput = "Download output"
+expand = "Expand"
+retry = "Retry"
+
+[watchedFolders.card]
+delete = "Delete folder"
+edit = "Edit folder"
+
+[watchedFolders.home]
+addAnother = "Add another Watched Folder"
+addAnotherDesc = "Automatically process files with a new pipeline"
+create = "Create your first Watched Folder"
+deleteFolder = "Delete folder"
+editFolder = "Edit folder"
+empty = "No watched folders yet"
+emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
+emptyTitle = "Automate your PDF workflows"
+file = "file"
+files = "files"
+pause = "Pause"
+resume = "Resume"
+
+[watchedFolders.howItWorks]
+step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
+step1Title = "Drop files"
+step2Desc = "Your configured tools process each file automatically"
+step2Title = "Pipeline runs"
+step3Desc = "Download processed files from inside the folder"
+step3Title = "Output ready"
+title = "How Watched Folders work"
+
+[watchedFolders.modal]
+advanced = "Advanced"
+automation = "Automation"
+automationNameFallback = "Watched Folder automation"
+automationRequired = "Add at least one configured step before saving."
+autoNumber = "Auto-number"
+autoNumberExample = "e.g. document.pdf → document (1).pdf"
+autoScanHelp = "New PDF files in this folder are processed automatically every 10 seconds."
+changeFolder = "Change"
+chooseFolder = "Choose"
+clearFolder = "Clear"
+color = "Accent color"
+createFolder = "Create Folder"
+createTitle = "New Watched Folder"
+editTitle = "Edit Watched Folder"
+inputFolder = "Input folder"
+inputFolderNotChosen = "No folder chosen — required for auto-scan"
+inputSource = "Input source"
+inputSourceBrowser = "Browser — drop files here"
+inputSourceLocal = "Local folder (auto-scan)"
+inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
+localOutputFolder = "Local output folder"
+maxRetries = "Max retries"
+name = "Folder name"
+namePlaceholder = "My Watched Folder"
+nameRequired = "Folder name is required"
+nameTooLong = "Folder name must be 50 characters or less"
+outputFolderNotSet = "Not set — outputs stay in app"
+outputFolderUnsupported = "Not supported in this browser"
+outputModeNewDesc = "Output is saved as a new separate file"
+outputModeVersion = "Replace original?"
+outputModeVersionDesc = "Output becomes a new version of the input file rather than a separate file"
+outputName = "Output filename prefix"
+outputNamePrefix = "Filename prefix"
+outputNameSuffix = "Suffix"
+positionPrefix = "Prefix"
+positionSuffix = "Suffix"
+replaceOriginal = "Replace original file"
+retryDelay = "Delay (minutes)"
+saveChanges = "Save Changes"
+saveFailed = "Failed to save folder. Please try again."
+sectionFolder = "Folder"
+sectionSourceOutput = "Source & Output"
+sectionSteps = "Steps"
+
+[watchedFolders.status]
+active = "Active"
+done = "Done"
+paused = "Paused"
+processing = "Processing"
+
+[watchedFolders.time]
+daysAgo = "{{count}}d ago"
+hoursAgo = "{{count}}h ago"
+justNow = "just now"
+minutesAgo = "{{count}}m ago"
+
+[watchedFolders.workbench]
+activity = "Activity"
+addFiles = "Add files"
+allTime = "All time"
+cancel = "Cancel"
+chartTooltipComplete = "{{count}} complete"
+chartTooltipFailed = "{{count}} failed"
+clearSelection = "Clear selection"
+countProcessing = "{{count}} processing"
+countQueued = "{{count}} queued"
+countSelected = "{{count}} selected"
+dataSaved = "Saved"
+dayRunning = "day running"
+daysRunning = "days running"
+delete = "Delete"
+deleteConfirmBody = "Remove notifications only clears the activity log. Delete outputs also removes the processed files from storage. Your original input files are never touched."
+deleteOutputs = "Delete outputs"
+directionIn = "in"
+directionOut = "out"
+dropToProcess = "Drop to process"
+export = "Export"
+exportSeparately = "Export separately"
+exportZip = "Export zip"
+failed = "Failed"
+filesProcessedOverTime = "Files processed over time"
+filterAll = "All"
+filterPending = "Pending"
+inputs = "Inputs"
+inputSize = "Input size"
+legendComplete = "Complete"
+noActivity = "No activity yet — drop a PDF to start"
+noActivityMatch = "No matching activity"
+noInputFolder = "No input folder — edit to configure"
+outputs = "Outputs"
+pause = "Pause"
+preview = "Preview"
+previewInput = "Preview input"
+previewLoadFailed = "Could not load file preview."
+previewOutput = "Preview output"
+queued = "Queued"
+queuedWaiting = "Queued — waiting to run"
+removeEntries = "Remove {{count}} entries"
+removeEntry = "Remove entry"
+removeNotificationsOnly = "Remove notifications only"
+resume = "Resume"
+retryAll = "Retry all"
+retryIn = "retry in {{count}}m"
+retryingSoon = "retrying…"
+retryMixedConfirm = "Some selected files have already completed and will be skipped. Only failed files will be retried. Continue?"
+running = "Running"
+search = "Search…"
+selectAll = "Select all {{count}}"
+sortNameAsc = "A → Z"
+sortNameDesc = "Z → A"
+sortNewest = "Newest"
+sortOldest = "Oldest"
+watching = "Watching: {{name}}"
+
 [watermark]
-tags = "stamp,mark,overlay,watermark,branding,logo,confidential,draft,copyright,trademark,text overlay,image overlay,background text"
 desc = "Gehitu testu edo irudi ur‑markak PDF fitxategiei"
 submit = "Gehitu ur-marka"
+tags = "stamp,mark,overlay,watermark,branding,logo,confidential,draft,copyright,trademark,text overlay,image overlay,background text"
 title = "Gehitu ur-marka"
 
 [watermark.error]
@@ -8275,190 +8702,3 @@ confirm = "Erauzi"
 message_one = "This ZIP contains {{count}} file. Extract anyway?"
 message_other = "This ZIP contains {{count}} files. Extract anyway?"
 title = "ZIP fitxategi handia"
-
-[watchedFolders]
-alreadyInFolder = "Already in this folder"
-deleteConfirmBody = "This will remove the folder and its run history. Files already downloaded are not affected."
-deleteConfirmTitle = "Delete folder?"
-defaultFolderWarning = "This is a default folder and will be recreated on next reload."
-folderNotFound = "Folder not found"
-newFolder = "New folder"
-noFolders = "No watched folders yet"
-sidebarTitle = "Watched Folders"
-title = "Watched Folders"
-
-[watchedFolders.modal]
-automation = "Automation"
-createFolder = "Create Folder"
-automationRequired = "Add at least one configured step before saving."
-color = "Accent color"
-createTitle = "New Watched Folder"
-editTitle = "Edit Watched Folder"
-name = "Folder name"
-namePlaceholder = "My Watched Folder"
-nameRequired = "Folder name is required"
-nameTooLong = "Folder name must be 50 characters or less"
-saveChanges = "Save Changes"
-saveFailed = "Failed to save folder. Please try again."
-automationNameFallback = "Watched Folder automation"
-maxRetries = "Max retries"
-retryDelay = "Delay (minutes)"
-outputModeVersion = "Replace original?"
-outputModeVersionDesc = "Output becomes a new version of the input file rather than a separate file"
-outputModeNewDesc = "Output is saved as a new separate file"
-outputName = "Output filename prefix"
-outputNameSuffix = "Suffix"
-sectionFolder = "Folder"
-sectionSourceOutput = "Source & Output"
-sectionSteps = "Steps"
-inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
-inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
-inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
-changeFolder = "Change"
-chooseFolder = "Choose"
-clearFolder = "Clear"
-autoScanHelp = "New PDF files in this folder are processed automatically every 10 seconds."
-localOutputFolder = "Local output folder"
-outputFolderUnsupported = "Not supported in this browser"
-outputFolderNotSet = "Not set — outputs stay in app"
-advanced = "Advanced"
-replaceOriginal = "Replace original file"
-autoNumber = "Auto-number"
-autoNumberExample = "e.g. document.pdf → document (1).pdf"
-outputNamePrefix = "Filename prefix"
-positionPrefix = "Prefix"
-positionSuffix = "Suffix"
-
-[watchedFolders.home]
-create = "Create your first Watched Folder"
-editFolder = "Edit folder"
-empty = "No watched folders yet"
-file = "file"
-files = "files"
-emptyTitle = "Automate your PDF workflows"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
-addAnother = "Add another Watched Folder"
-addAnotherDesc = "Automatically process files with a new pipeline"
-resume = "Resume"
-pause = "Pause"
-deleteFolder = "Delete folder"
-
-[watchedFolders.card]
-edit = "Edit folder"
-delete = "Delete folder"
-
-[watchedFolders.status]
-done = "Done"
-processing = "Processing"
-paused = "Paused"
-active = "Active"
-
-[watchedFolders.howItWorks]
-title = "How Watched Folders work"
-step1Title = "Drop files"
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
-step2Title = "Pipeline runs"
-step2Desc = "Your configured tools process each file automatically"
-step3Title = "Output ready"
-step3Desc = "Download processed files from inside the folder"
-
-[watchedFolders.workbench]
-addFiles = "Add files"
-inputs = "Inputs"
-outputs = "Outputs"
-failed = "Failed"
-dataSaved = "Saved"
-running = "Running"
-dropToProcess = "Drop to process"
-activity = "Activity"
-noActivity = "No activity yet — drop a PDF to start"
-noActivityMatch = "No matching activity"
-retryAll = "Retry all"
-retryIn = "retry in {{count}}m"
-retryingSoon = "retrying…"
-pause = "Pause"
-resume = "Resume"
-dayRunning = "day running"
-daysRunning = "days running"
-sortNewest = "Newest"
-sortOldest = "Oldest"
-sortNameAsc = "A → Z"
-sortNameDesc = "Z → A"
-filterAll = "All"
-filterPending = "Pending"
-search = "Search…"
-retryMixedConfirm = "Some selected files have already completed and will be skipped. Only failed files will be retried. Continue?"
-watching = "Watching: {{name}}"
-noInputFolder = "No input folder — edit to configure"
-countProcessing = "{{count}} processing"
-countQueued = "{{count}} queued"
-exportZip = "Export zip"
-exportSeparately = "Export separately"
-countSelected = "{{count}} selected"
-selectAll = "Select all {{count}}"
-delete = "Delete"
-clearSelection = "Clear selection"
-preview = "Preview"
-export = "Export"
-previewInput = "Preview input"
-previewOutput = "Preview output"
-directionIn = "in"
-directionOut = "out"
-queuedWaiting = "Queued — waiting to run"
-allTime = "All time"
-queued = "Queued"
-inputSize = "Input size"
-filesProcessedOverTime = "Files processed over time"
-legendComplete = "Complete"
-chartTooltipComplete = "{{count}} complete"
-chartTooltipFailed = "{{count}} failed"
-removeEntry = "Remove entry"
-removeEntries = "Remove {{count}} entries"
-deleteConfirmBody = "Remove notifications only clears the activity log. Delete outputs also removes the processed files from storage. Your original input files are never touched."
-cancel = "Cancel"
-removeNotificationsOnly = "Remove notifications only"
-deleteOutputs = "Delete outputs"
-previewLoadFailed = "Could not load file preview."
-
-[watchedFolders.actions]
-back = "Back"
-dismiss = "Dismiss"
-retry = "Retry"
-download = "Download"
-downloadInput = "Download input"
-downloadOutput = "Download output"
-collapse = "Collapse"
-expand = "Expand"
-
-[watchedFolders.time]
-justNow = "just now"
-minutesAgo = "{{count}}m ago"
-hoursAgo = "{{count}}h ago"
-daysAgo = "{{count}}d ago"
-
-[addStamp]
-tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
-
-[annotate]
-tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
-
-[devAirgapped]
-tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
-
-[devApi]
-tags = "API,development,documentation,developer,REST,integration,endpoints,programmatic,automation,scripting"
-
-[devFolderScanning]
-tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,batch,monitor folder,auto process,folder monitoring"
-
-[devSsoGuide]
-tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
-
-[read]
-tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
-
-[scannerEffect]
-tags = "scan,simulate,create,fake scan,look scanned,scanner effect,make look scanned,photocopy effect,simulate scanner,realistic scan"

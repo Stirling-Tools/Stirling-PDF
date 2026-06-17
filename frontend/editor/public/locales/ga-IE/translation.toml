@@ -52,12 +52,9 @@ help = "Cabhrú"
 imgPrompt = "Roghnaigh Íomhá(í)"
 incorrectPasswordMessage = "Tá an pasfhocal reatha mícheart."
 info = "Eolas"
-insufficientCredits = "Creidiúintí neamhleor. Riachtanach: {{requiredCredits}}, Ar fáil: {{currentBalance}}, Easnamh: {{shortfall}}"
 invalidUndoData = "Ní féidir a chealú: sonraí oibríochta neamhbhailí"
 keepWorking = "Lean ort ag obair"
 loading = "Á lódáil..."
-loadingCredits = "Ag seiceáil creidiúintí..."
-loadingProStatus = "Ag seiceáil stádais síntiúis..."
 logOut = "Logáil amach"
 marginTooltip = "Fad idir an uimhir leathanaigh agus imeall na leathanaigh."
 moreOptions = "Tuilleadh Roghanna"
@@ -68,7 +65,6 @@ noFileSelected = "Níl aon chomhad roghnaithe. Uaslódáil ceann, le do thoil."
 noFilesToUndo = "Ní féidir a chealú: níor próiseáladh aon chomhaid san oibríocht is déanaí"
 noOperationToUndo = "Níl aon oibríocht le cealú"
 nothingToUndo = "Níl aon rud le cealú"
-noticeTopUpOrPlan = "Níl go leor creidiúintí ann; cuir creidiúintí leis nó uasghrádaigh go plean"
 noValidFiles = "Níl aon chomhaid bhailí le próiseáil"
 oops = "Úps!"
 openInNewWindow = "Oscail i bhfuinneog nua"
@@ -277,7 +273,6 @@ saved = "Saved"
 text = "Text"
 
 [addPageNumbers]
-tags = "number,pagination,count,add page numbers,page numbering,page numbers,footer,header,number pages,sequential,pagination tool"
 customize = "Saincheap Cuma"
 customNumberDesc = "Réamhshocrú go {n}, glacann sé freisin le 'Leathanach {n} de {total}', 'Text-{n}', '{filename}-{n}"
 fontName = "Ainm Cló"
@@ -288,6 +283,7 @@ positionAndPages = "Suíomh & Leathanaigh"
 preview = "Roghnú Suímh"
 previewDisclaimer = "Is garbh an réamhamharc. D'fhéadfadh an toradh deiridh a bheith éagsúil de bharr méadrachtaí cló PDF."
 submit = "Cuir Uimhreacha Leathanaigh leis"
+tags = "number,pagination,count,add page numbers,page numbering,page numbers,footer,header,number pages,sequential,pagination tool"
 title = "Cuir Uimhreacha Leathanaigh leis"
 zeroPad = "Zero‑pad Width (Bates Stamping)"
 zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
@@ -305,9 +301,9 @@ title = "Torthaí Uimhreacha Leathanach"
 6 = "Téacs Saincheaptha"
 
 [addPassword]
-tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 desc = "Criptigh do dhoiciméad PDF le focal faire."
 submit = "Criptigh"
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Cuir Pasfhocal leis"
 
 [addPassword.encryption.keyLength]
@@ -352,6 +348,9 @@ title = "Cineálacha Focal Faire"
 [addPassword.tooltip.permissions]
 text = "Rialaíonn na ceadanna seo cad is féidir le húsáideoirí a dhéanamh leis an PDF. Is éifeachtaí iad nuair a úsáidtear i dteannta fhocal faire an úinéara iad."
 title = "Athrú Ceadanna"
+
+[addStamp]
+tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
 [AddStampRequest]
 alphabet = "Aibítir"
@@ -423,6 +422,9 @@ header = "Cuir téacs le PDFanna"
 tags = "téacs,anótáil,lipéad"
 title = "Cuir Téacs Leis"
 
+[addText.canvas]
+colorPickerTitle = "Choose stroke colour"
+
 [addText.error]
 failed = "Tharla earráid agus téacs á chur leis an PDF."
 
@@ -441,25 +443,6 @@ resume = "Atosaigh an cur"
 
 [addText.results]
 title = "Torthaí Cur Téacs"
-
-[addText.step]
-createDesc = "Iontráil an téacs is mian leat a chur leis"
-place = "Cuir téacs"
-placeDesc = "Cliceáil ar an PDF chun do théacs a chur leis"
-
-[addText.steps]
-configure = "Cumraigh Téacs"
-
-[addText.text]
-colorLabel = "Dath téacs"
-fontLabel = "Cló"
-fontSizeLabel = "Méid cló"
-fontSizePlaceholder = "Clóscríobh nó roghnaigh méid cló (8-200)"
-name = "Ábhar téacs"
-placeholder = "Iontráil an téacs is mian leat a chur leis"
-
-[addText.canvas]
-colorPickerTitle = "Choose stroke colour"
 
 [addText.saved]
 defaultCanvasLabel = "Drawing signature"
@@ -483,6 +466,22 @@ canvas = "Drawing"
 image = "Upload"
 text = "Text"
 
+[addText.step]
+createDesc = "Iontráil an téacs is mian leat a chur leis"
+place = "Cuir téacs"
+placeDesc = "Cliceáil ar an PDF chun do théacs a chur leis"
+
+[addText.steps]
+configure = "Cumraigh Téacs"
+
+[addText.text]
+colorLabel = "Dath téacs"
+fontLabel = "Cló"
+fontSizeLabel = "Méid cló"
+fontSizePlaceholder = "Clóscríobh nó roghnaigh méid cló (8-200)"
+name = "Ábhar téacs"
+placeholder = "Iontráil an téacs is mian leat a chur leis"
+
 [addText.type]
 canvas = "Canvas"
 image = "Image"
@@ -493,7 +492,6 @@ text = "Text"
 tags = "dath-cheartú, tune, a mhodhnú, a fheabhsú"
 
 [adjustContrast]
-tags = "contrast,brightness,saturation,adjust colors,color correction,enhance,lighten,darken,improve quality,color balance,hue,vibrance"
 adjustColors = "Coigeartaigh Dathanna"
 basic = "Coigeartuithe Bunúsacha"
 blue = "Gorm"
@@ -504,6 +502,7 @@ green = "Uaine"
 noPreview = "Roghnaigh PDF le réamhamharc"
 red = "Dearg"
 saturation = "Sáithiú:"
+tags = "contrast,brightness,saturation,adjust colors,color correction,enhance,lighten,darken,improve quality,color balance,hue,vibrance"
 title = "Coigeartaigh Codarsnacht"
 
 [adjustContrast.error]
@@ -1133,6 +1132,10 @@ apikeyNote = "Clients send a Stirling API key in the X-API-KEY header (or Author
 description = "Expose Stirling's PDF tools and AI agents to MCP clients over an OAuth-protected endpoint."
 title = "MCP Server"
 
+[admin.settings.mcp.acceptedAudiences]
+description = "Extra token audience values accepted besides the Resource ID (comma or space separated). Leave blank for strict RFC 8707. Needed for IdPs that cannot mint resource audiences - e.g. Supabase's OAuth server always issues aud=authenticated."
+label = "Additional accepted audiences (optional)"
+
 [admin.settings.mcp.allowedOps]
 description = "If set, ONLY these operation ids are exposed (an allow-list; comma or space separated). Leave blank to expose all enabled tools except any blocked below."
 label = "Allowed tools"
@@ -1617,6 +1620,9 @@ paragraph1 = "Tá rogha an diúltaithe ag PDF Stirling chun cabhrú linn an tái
 paragraph2 = "Smaoinigh le do thoil ar anailísíocht a chumasú chun cabhrú le Stirling-PDF fás agus chun ligean dúinn ár n-úsáideoirí a thuiscint níos fearr."
 title = "An bhfuil fonn ort PDF Stirling a fheabhsú?"
 
+[annotate]
+tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
+
 [annotation]
 annotationStyle = "Stíl anótála"
 backgroundColor = "Dath an chúlra"
@@ -1846,7 +1852,6 @@ bullet3 = "Coinníonn sé an t-ainm bunaidh mura bhfaightear teideal oiriúnach"
 title = "Athainmniú Cliste"
 
 [automate]
-tags = "workflow,sequence,automation,automate,batch,batch processing,pipeline,chain,multi-step,recurring,scheduled,automatic,process multiple,bulk operations"
 copyToSaved = "Cóipeáil chuig Sábháilte"
 desc = "Tóg sreafaí oibre ilchéime trí ghníomhartha PDF a shlabhrú le chéile. Foirfe do thascanna athfhillteacha."
 export = "Easpórtáil"
@@ -1857,6 +1862,7 @@ importPartialSuccess_other = "Imported with {{count}} unmapped operations: {{ops
 importSuccess = "Uathoibriú iompórtáilte: {{name}}"
 invalidStep = "Céim neamhbhailí"
 reviewTitle = "Torthaí an Uathoibrithe"
+tags = "workflow,sequence,automation,automate,batch,batch processing,pipeline,chain,multi-step,recurring,scheduled,automatic,process multiple,bulk operations"
 title = "Uathoibriú"
 
 [automate.config]
@@ -1956,8 +1962,8 @@ secureWorkflow = "Sreabhadh Oibre Slándála"
 secureWorkflowDesc = "Slánaíonn sé doiciméid PDF trí ábhar dainséarach féideartha mar JavaScript agus comhaid leabaithe a bhaint, ansin cuireann sé cosaint le focal faire chun rochtain neamhdhleathach a chosc. Socraítear an focal faire mar 'password' de réir réamhshocraithe."
 
 [autoRename]
-tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
 description = "Athainmneoidh an uirlis seo comhaid PDF go huathoibríoch bunaithe ar a n-ábhar. Déanann sí an doiciméad a anailísiú chun an teideal is oiriúnaí ón téacs a aimsiú."
+tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
 
 [autoSizeSplitPDF]
 tags = "pdf, scoilt, doiciméad, eagraíocht"
@@ -2539,9 +2545,9 @@ ssoManaged = "Déanann do sholáthraí aitheantais bainistíocht ar do chuntas."
 title = "Athraigh Dintiúir"
 
 [changeMetadata]
-tags = "edit,modify,update,metadata,properties,document properties,author,title,subject,keywords,creator,producer,info,document info,file properties"
 filenamePrefix = "meiteashonraí"
 submit = "Athrú"
+tags = "edit,modify,update,metadata,properties,document properties,author,title,subject,keywords,creator,producer,info,document info,file properties"
 
 [changeMetadata.advanced]
 title = "Roghanna Casta"
@@ -2647,9 +2653,9 @@ true = "Fíor"
 unknown = "Anaithnid"
 
 [changePermissions]
-tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 desc = "Athraigh srianta agus ceadanna an doiciméid."
 submit = "Athrú Ceadanna"
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Athrú Ceadanna"
 
 [changePermissions.error]
@@ -2697,11 +2703,16 @@ resize = "Athraigh méid an phainéil chomhrá"
 [chat.actions]
 copy = "Cóipeáil teachtaireacht"
 
+[chat.fab]
+close = "Close chat"
+open = "Open Stirling AI assistant"
+
 [chat.header]
 agentMenu = "Roghanna gníomhaire Stirling"
 clearChat = "Glan comhrá"
 
 [chat.input]
+disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 placeholder = "Cad is mian leat a dhéanamh?"
 send = "Seol teachtaireacht"
 
@@ -2714,18 +2725,18 @@ executing_tool_single = "Ag rith {{tool}}..."
 executing_tool_step = "Ag rith {{tool}} (céim {{step}} as {{total}})..."
 extracting_content = "Ábhar á bhaint as do dhoiciméid..."
 processing = "Ábhar bainte á phróiseáil..."
+ranForMinutes = "Ran for {{count}} minutes"
+ranForMinutes_one = "Ran for 1 minute"
+ranForMinutes_other = "Ran for {{count}} minutes"
+ranForMinutesSeconds = "Ran for {{minutes}} min, {{seconds}} sec"
+ranForSeconds = "Ran for {{count}} seconds"
+ranForSeconds_one = "Ran for 1 second"
+ranForSeconds_other = "Ran for {{count}} seconds"
 thinking = "Ag smaoineamh..."
 whole_doc_compression_round = "Ag comhdhlúthú nótaí..."
 whole_doc_read_done = "Léamh an doiciméid críochnaithe..."
 whole_doc_read_started = "Ag léamh an doiciméid..."
 whole_doc_slice_done = "Ag léamh an doiciméid... ({{percent}}% críochnaithe)"
-ranForSeconds = "Ran for {{count}} seconds"
-ranForSeconds_one = "Ran for 1 second"
-ranForSeconds_other = "Ran for {{count}} seconds"
-ranForMinutes = "Ran for {{count}} minutes"
-ranForMinutes_one = "Ran for 1 minute"
-ranForMinutes_other = "Ran for {{count}} minutes"
-ranForMinutesSeconds = "Ran for {{minutes}} min, {{seconds}} sec"
 
 [chat.quickActions]
 browseYourFiles = "Brabhsáil do chuid comhad"
@@ -2738,8 +2749,6 @@ mergeMany = "Cumaisc na {{count}} doiciméid seo in 1"
 moreFiles = "+{{count}} eile"
 openFromComputer = "Oscail ón ríomhaire"
 removeFile = "Bain {{name}}"
-rotateMany = "Rothlaigh na doiciméid seo"
-rotateOne = "Rothlaigh an doiciméad seo"
 splitOne = "Roinn an doiciméad seo"
 
 [chat.responses]
@@ -2750,15 +2759,12 @@ need_clarification = "An bhféadfá d’iarratas a shoiléiriú?"
 not_found = "Níor éirigh liom an t-eolas iarrtha a fháil."
 processing = "Á phróiseáil ({{outcome}})..."
 unsupported_capability = "Cumas gan tacaíocht: {{capability}}"
+usage_limit_reached = "You've reached your usage limit. Check your plan options to keep going."
 
 [chat.toolsUsed]
 summary_one = "Rith 1 uirlis"
 summary_other = "Rith {{count}} uirlisí"
 unknownTool = "Uirlis anaithnid"
-
-[chat.fab]
-close = "Close chat"
-open = "Open Stirling AI assistant"
 
 [cloudBadge]
 tooltip = "Úsáidfidh an oibríocht seo do chreidmheasanna scamall"
@@ -2770,7 +2776,6 @@ tooltip = "Roghnaigh dath ón scáileán"
 title = "Roghnaigh dath"
 
 [common]
-available = "ar fáil"
 back = "Siar"
 cancel = "Cealaigh"
 close = "Dún"
@@ -2781,16 +2786,13 @@ copy = "Cóipeáil"
 done = "Déanta"
 error = "Earráid"
 expand = "Leathnaigh"
-learnMore = "Tuilleadh eolais"
 loading = "Á lódáil..."
 next = "Ar Aghaidh"
-operation = "an oibríocht seo"
 preview = "Réamhamharc"
 previous = "Roimhe Seo"
 refresh = "Athnuaigh"
 retry = "Bain triail eile as"
 save = "Sábháil"
-used = "úsáidte"
 
 [compare]
 clearSelected = "Glan roghnaithe"
@@ -2916,9 +2918,9 @@ unlinkedTitle = "Cumasaíodh scrollaigh & pánáil neamhspleách"
 message = "Is cosúil go bhfuil na doiciméid seo an-éagsúil. Stopadh an chomparáid chun am a shábháil."
 
 [compress]
-tags = "shrink,reduce,optimize,compress,smaller,downsize,file size,reduce size,minimize,make smaller,decrease size,optimize size"
 desc = "Comhbhrúigh PDFanna chun a méid comhaid a laghdú."
 submit = "Comhbhrúigh"
+tags = "shrink,reduce,optimize,compress,smaller,downsize,file size,reduce size,minimize,make smaller,decrease size,optimize size"
 title = "Comhbhrúigh"
 
 [compress.compressionLevel]
@@ -2980,6 +2982,7 @@ tags = "squish, beag, beag bídeach"
 
 [config]
 plan = "Plean"
+team = "Team"
 
 [config.account.overview]
 confirmDelete = "Scrios Mo Chuntas"
@@ -3035,9 +3038,7 @@ title = "Uasghrádaigh Cuntas Aoi"
 upgradeButton = "Uasghrádaigh an Cuntas"
 
 [config.apiKeys]
-chartAriaLabel = "Úsáid creidmheasanna: san áireamh {{includedUsed}} as {{includedTotal}}, ceannaithe {{purchasedUsed}} as {{purchasedTotal}}"
 copyKeyAriaLabel = "Cóipeáil eochair API"
-creditsRemaining = "Creidiúintí Fágtha"
 description = "Do eochair API chun rochtain a fháil ar shraith uirlisí PDF Stirling. Cóipeáil chuig do thionscadal í nó déan athnuachan chun ceann nua a ghiniúint."
 docsDescription = "Tuilleadh eolais faoi chomhtháthú le Stirling PDF:"
 docsLink = "Doiciméadú API"
@@ -3045,14 +3046,9 @@ docsTitle = "Doiciméadú API"
 generateError = "Níor éirigh linn d’eochair API a ghiniúint."
 goToAccount = "Téigh chuig an gCuntas"
 guestInfo = "Ní fhaigheann úsáideoirí aíochta eochracha API. Cruthaigh cuntas chun eochair API a fháil is féidir leat a úsáid i d’fheidhmchláir."
-includedCredits = "Creidmheasanna san áireamh"
 intro = "Úsáid do eochair API chun rochtain ríomhchláraithe a fháil ar chumais phróiseála Stirling PDF."
 label = "Eochair API"
-lastApiUse = "Úsáid API is déanaí"
-nextReset = "An chéad athshocrú eile"
-overlayMessage = "Gin eochair chun na creidmheasanna agus an méid atá ar fáil a fheiceáil"
 publicKeyAriaLabel = "Eochair API phoiblí"
-purchasedCredits = "Creidmheasanna ceannaithe"
 refreshAriaLabel = "Athnuaigh eochair API"
 schemaLink = "Tagairt Scéime API"
 usage = "Cuir an eochair seo san cheanntásc X-API-KEY le gach iarratas API."
@@ -3075,6 +3071,7 @@ warning = "⚠️ Rabhadh: Ginfidh an gníomh seo eochracha API nua agus déanfa
 
 [config.mcp]
 description = "Model Context Protocol (MCP) lets AI assistants like Claude use your Stirling PDF tools directly. Connect a client once and your assistant can convert, edit, secure and process documents on your behalf."
+guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
 title = "MCP Server"
@@ -3096,14 +3093,6 @@ addTo = "Add to"
 hint = "Pick your client, paste the snippet into the file shown, then restart it. You'll sign in with your Stirling account on first use - no keys to copy."
 title = "Connect your AI assistant"
 
-[config.mcp.tools]
-ai = "AI"
-convert = "Convert"
-misc = "Misc"
-pages = "Pages"
-security = "Security"
-title = "What your assistant can do"
-
 [config.overview]
 description = "Socruithe reatha an fheidhmchláir agus sonraí cumraíochta."
 error = "Earráid"
@@ -3118,7 +3107,6 @@ security = "Cumraíocht Slándála"
 system = "Cumraíocht Córais"
 
 [convert]
-tags = "transform,change,convert,PDF to Word,PDF to Excel,PDF to image,Word to PDF,Excel to PDF,PowerPoint to PDF,HTML to PDF,export,import,file conversion,format change,save as"
 autoRotate = "Rothlú Uathoibríoch"
 autoRotateDescription = "Rothlaigh íomhánna go huathoibríoch chun teacht níos fearr leis an leathanach PDF"
 blackwhite = "Dubh & Bán"
@@ -3178,6 +3166,7 @@ strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)
 svgPdfOptions = "SVG to PDF Options"
 svgToPdf = "SVG → PDF"
 svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
+tags = "transform,change,convert,PDF to Word,PDF to Excel,PDF to image,Word to PDF,Excel to PDF,PowerPoint to PDF,HTML to PDF,export,import,file conversion,format change,save as"
 targetFormatPlaceholder = "Sprioc‑fhormáid"
 title = "Tiontaigh"
 webOptions = "Roghanna Gréasáin go PDF"
@@ -3242,69 +3231,22 @@ description = "Tá na fianáin seo riachtanach chun go bhfeidhmeoidh an suíomh 
 posthog = "Anailísíocht PostHog"
 scarf = "Scairf Picteilín"
 
-[credits]
-enableOverageBilling = "Cumasaigh Billeáil Ró-Úsáide"
-maybeLater = "B’fhéidir níos déanaí"
-upgrade = "Uasghrádaigh"
-
-[credits.insufficient]
-brief = "Níl dóthain creidmheasanna ann. Teastaíonn {{required}} creidmheasanna uait ach níl ach {{current}} agat."
-freeTier = "Uasghrádaigh go Team le haghaidh 10x níos mó creidmheasanna agus billeáil ró-úsáide neamhtheoranta."
-managedMember = "Déan teagmháil le do cheannaire foirne le do thoil."
-message = "Níl go leor creidmheasanna agat chun {{tool}} a rith. Faoi láthair tá {{current}} creidmheasanna agat."
-messageWithAmount = "Teastaíonn {{required}} creidmheasanna chun {{tool}} a rith, ach níl ach {{current}} agat."
-teamMember = "Cumasaigh billeáil ró-úsáide chun gan riamh rith as creidmheasanna."
-title = "Creidmheasanna Neamhdhóthain"
-
 [credits.modal]
 advancedMonitoring = "Monatóireacht ardleibhéil"
 allInOneWorkspace = "Spás oibre uile-i-aon PDF (amharcán, uirlisí & gníomhaire)"
 apiSandbox = "Bosca gainimh API"
-contactSales = "Déan Teagmháil le Díolacháin"
-creditsRemaining = "{{current}} de {{total}} fágtha"
-creditsThisMonth = "Creidmheasanna míosúla"
-current = "Plean Reatha"
-customPricing = "Saincheaptha"
 dedicatedSupportSlas = "Tacaíocht thiomnaithe & SLAanna"
-enterpriseSubscription = "Enterprise"
-everythingInCredits = "Gach rud i gCreidmheasa, móide:"
-everythingInFree = "Gach rud sa leagan Saor, móide:"
 fasterThroughput = "Ráta próiseála 10x níos tapúla"
-forRegularWork = "Le haghaidh gnáthobair PDF:"
-freeTier = "Sraith Shaor"
 fullyPrivateFiles = "Comhaid go hiomlán príobháideacha"
 largeFileProcessing = "Próiseáil comhad mór"
-managedMemberMessage = "Tá rochtain neamhtheoranta agat ar chreidmheasanna trí d’fhoireann. Má theastaíonn cabhair uait, déan teagmháil le do cheannaire foirne le do thoil."
-managedMemberTitle = "Creidmheasanna Neamhtheoranta"
-meteringBillingNote = "Déantar billeáil ar chreidmheasanna ró-úsáide go míosúil taobh le do shíntiús Team. Is féidir leat d’úsáid a rianú am ar bith i do shocruithe cuntais."
-meteringExplanation = "Cuimsíonn do phlean Team {{credits}} creidmheasanna sa mhí. Nuair a rithfidh tú as, soláthraíonn billeáil ró-úsáide go huathoibríoch creidmheasanna breise ionas nach gá duit stopadh ag obair choíche."
-meteringIncluded = "{{credits}} creidmheas/mí san áireamh le Team"
-meteringNeverRunOut = "Ná rith as creidmheasanna choíche"
-meteringNoCommitment = "Gan aon cheangal, cealaigh am ar bith"
-meteringPayAsYouGo = "Íoc as an méid a úsáideann tú amháin"
-meteringPrice = "Creidmheasanna breise ag {{price}}/creidmheas"
-meteringTitle = "Billeáil Ró-Úsáide de réir Úsáide"
-monthlyCredits = "creidmheasanna míosúla"
 orgWideAccess = "Rialuithe rochtana ar fud na heagraíochta"
-overage = "ró-úsáid"
-perMonth = "/mí"
-popular = "Coitianta"
 premiumAiModels = "Samhlacha AI préimhe"
 prioritySupport = "Tacaíocht tosaíochta"
 privateDocCloud = "Scamall Doiciméad Príobháideach"
 ragFineTuning = "RAG + mionchoigeartú"
 secureApiAccess = "Rochtain API shlán"
-selfHostLink = "Athbhreithnigh na doiciméid agus na pleananna"
-selfHostPrompt = "Ar mhaith leat féinóstáil?"
 standardThroughput = "Ráta próiseála caighdeánach"
-subtitle = "Uasghrádaigh go Team le haghaidh 10x na gcreidmheasanna agus próiseáil níos tapúla."
-subtitlePro = "Cumasaigh billeáil uathoibríoch ró-úsáide chun gan riamh rith as creidmheasanna."
-teamLeaderOnly = "Ní féidir ach le ceannairí foirne billeáil ró-úsáide a chumasú"
-teamSubscription = "Team"
-titleExhausted = "D’úsáid tú do chreidmheasanna saor in aisce"
-titleExhaustedPro = "Tá do chreidmheasanna ídithe agat"
 unlimitedApiAccess = "Rochtain API neamhtheoranta"
-unlimitedMonthlyCredits = "Ceadúnas Suímh"
 unlimitedSeats = "Suíocháin neamhtheoranta"
 
 [crop]
@@ -3397,6 +3339,18 @@ docsLink = "Féach ar dhoiciméadú suiteála"
 message = "Níl cead ag Stirling-PDF é féin a nuashonrú ar an meaisín seo."
 title = "Teastaíonn ceadanna riarthóra"
 
+[devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
+
+[devApi]
+tags = "API,development,documentation,developer,REST,integration,endpoints,programmatic,automation,scripting"
+
+[devFolderScanning]
+tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,batch,monitor folder,auto process,folder monitoring"
+
+[devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
+
 [dropdownList]
 searchPlaceholder = "Cuardaigh..."
 
@@ -3405,8 +3359,8 @@ edit = "Cuir in eagar"
 editSecretValue = "Cuir luach rúnda in eagar"
 
 [editTableOfContents]
-tags = "bookmarks,contents,edit,table of contents,TOC,outline,navigation,chapters,sections,add bookmarks,edit bookmarks,PDF outline"
 submit = "Cuir clár ábhair i bhfeidhm"
+tags = "bookmarks,contents,edit,table of contents,TOC,outline,navigation,chapters,sections,add bookmarks,edit bookmarks,PDF outline"
 
 [editTableOfContents.actions]
 clipboardUnavailable = "Níl rochtain ar an ngearrthaisce ar fáil sa bhrabhsálaí seo."
@@ -3541,8 +3495,8 @@ title = "Socruithe"
 tags = "sliocht"
 
 [extractPages]
-tags = "pull,select,copy,extract,extract pages,get pages,pull out,save pages,export pages,copy pages,select pages,specific pages"
 submit = "Bain Leathanaigh Amach"
+tags = "pull,select,copy,extract,extract pages,get pages,pull out,save pages,export pages,copy pages,select pages,specific pages"
 title = "Bain Leathanaigh"
 
 [extractPages.error]
@@ -3795,6 +3749,7 @@ selectFile = "Roghnaigh an comhad {{name}}"
 shareDisabledHint = "Níl comhroinnt comhad cumasaithe ar an bhfreastalaí seo. Iarr ar do riarthóir é a chumasú."
 shareManage = "Bainistigh comhroinnt"
 showDetails = "Taispeáin sonraí"
+signInRequired = "Sign in to use cloud storage."
 summary_one = "{{count}} item"
 summary_other = "{{count}} items"
 tree = "Fillteáin"
@@ -3986,8 +3941,8 @@ welcomeMessage = "Ar chúiseanna slándála, ní mór duit d'fhocal faire a athr
 welcomeTitle = "Fáilte!"
 
 [flatten]
-tags = "simplify,remove,interactive,flatten,flatten form,remove form fields,make static,finalize form,lock form,disable editing,convert to image,non-editable"
 submit = "Comhcheangail"
+tags = "simplify,remove,interactive,flatten,flatten form,remove form fields,make static,finalize form,lock form,disable editing,convert to image,non-editable"
 title = "Comhcheangail"
 
 [flatten.error]
@@ -4635,6 +4590,7 @@ signIn = "Sínigh Isteach"
 accountCreatedSuccess = "Cruthaíodh an cuntas go rathúil! Is féidir leat logáil isteach anois."
 backToSignIn = "Siar go Sínigh Isteach"
 changePasswordWarning = "Athraigh do fhocal faire tar éis duit logáil isteach don chéad uair"
+createAccount = "Create an account"
 credentialsUpdated = "Nuashonraíodh do dhintiúir. Logáil isteach arís, le do thoil."
 defaultCredentials = "Dintiúir logála isteach réamhshocraithe"
 email = "Ríomhphost"
@@ -4664,7 +4620,6 @@ sending = "Á sheoladh…"
 sendMagicLink = "Seol Nasc Draíochta"
 sendResetLink = "Seol nasc athshocraithe"
 sessionExpired = "Tá do sheisiún imithe in éag. Logáil isteach arís, le do thoil."
-createAccount = "Create an account"
 signin = "Sínigh isteach"
 signingIn = "Ag logáil isteach..."
 signInWith = "Logáil isteach le"
@@ -4803,6 +4758,34 @@ title = "Theip ar an bhfíordheimhniú"
 message = "Is féidir leat an fhuinneog seo a dhúnadh agus filleadh ar Stirling PDF."
 title = "Fíordheimhniú Rathúil"
 
+[oauthConsent]
+approve = "Allow access"
+approving = "Allowing..."
+decisionFailed = "Could not submit your decision. Please try again."
+deny = "Deny"
+denying = "Denying..."
+loadFailed = "This authorisation request is invalid or has expired. Close this tab and try connecting again from the app."
+loading = "Loading authorisation request..."
+missingId = "Missing authorisation request. Start the connection from your app and try again."
+redirecting = "Returning you to the app..."
+requesting = "{{app}} wants to access your Stirling PDF account"
+scopesIntro = "This will allow {{app}} to:"
+signedInAs = "Signed in as {{name}}"
+signInButton = "Sign in to continue"
+signInPrompt = "Sign in to your Stirling PDF account to continue connecting the app."
+title = "Authorise access"
+unknownApp = "A third-party application"
+
+[oauthConsent.access]
+actAsYou = "Act as you - everything {{app}} does runs under your account and counts towards your usage"
+tools = "Use your Stirling PDF tools on your behalf - convert, edit, sign, secure and process your documents"
+
+[oauthConsent.scope]
+email = "See your email address"
+openid = "Confirm your identity"
+phone = "See your phone number"
+profile = "See your basic profile information"
+
 [ocr]
 desc = "Scanann glantachán agus aimsíonn sé téacs ó íomhánna laistigh de PDF agus cuireann sé isteach arís é mar théacs."
 tags = "aithint, téacs, íomhá, scanadh, léamh, a aithint, a bhrath, in eagar"
@@ -4920,15 +4903,6 @@ body = "Oibríonn Stirling is fearr mar aip deisce. Is féidir leat é a úsáid
 title = "Íoslódáil"
 titleWithOs = "Íoslódáil do {{osLabel}}"
 
-[onboarding.freeTrial]
-afterTrialWithoutPayment = "Tar éis do thréimhse trialach a chríochnú, leanfaidh tú leis an sraith saor in aisce. Cuir modh íocaíochta leis chun rochtain Pro a choinneáil."
-afterTrialWithPayment = "Tosóidh do shíntiús Pro go huathoibríoch nuair a chríochnóidh an triail."
-body = "Tá rochtain iomlán agat ar ghnéithe Stirling PDF Pro le linn na trialach. Bain taitneamh as comhshó gan teorainn, méideanna comhaid níos mó, agus próiseáil le tosaíocht."
-daysRemaining = "{{days}} lá fágtha"
-daysRemainingSingular = "{{days}} lá fágtha"
-title = "Do thriail Pro 30 lá"
-trialEnds = "Críochnaíonn an triail {{date}}"
-
 [onboarding.mfa]
 authenticationCode = "Cód fíordheimhnithe"
 qrCodeLoading = "Cód QR á ghiniúint…"
@@ -4939,6 +4913,22 @@ adminBodyLoginEnabled = "Mar riarthóir, is féidir leat úsáideoirí a bhainis
 adminTitle = "Forbhreathnú Riarthóra"
 userBody = "Tabhair cuireadh do chomhoibrithe, sann róil, agus coinnigh do dhoiciméid eagraithe in aon spás oibre slán amháin. Cumasaigh mód logála isteach aon uair is mian leat dul thar úsáid aonair."
 userTitle = "Forbhreathnú Plean"
+
+[onboarding.saas.freeEditor]
+freeLine = "The editor is now <free>completely free</free>."
+premium = "We've added loads of new features, including <strong>Policies</strong> and <strong>Agent Chat</strong>."
+title = "Welcome to Stirling"
+
+[onboarding.saas.team]
+addButton = "Add"
+createBody = "Work on documents together: teammates share files, automations and your plan. Add the first member by email to create your team."
+createTitle = "Create your team"
+inviteBody = "Everyone on your team shares files, automations and your plan. Add teammates by email and they'll get an invitation."
+inviteTitle = "Invite members to your team"
+
+[onboarding.saas.usage]
+body = "Automations, AI and API requests draw from your free allowance. Manual editing never counts against it."
+title = "Your free Processor allowance"
 
 [onboarding.securityCheck]
 message = "Tá athruithe suntasacha déanta ar an bhfeidhmchlár le déanaí. B’fhéidir go mbeidh aird riarthóir do fhreastalaí ag teastáil. Deimhnigh do ról le leanúint ar aghaidh."
@@ -5210,12 +5200,215 @@ title = "Raonta Leathanach"
 bullet1 = "<strong>all</strong> → roghnaíonn sé gach leathanach"
 title = "Eochairfhocail Speisialta"
 
+[payg.activity]
+docs = "docs"
+empty = "No billable activity yet this period."
+subtitle = "Only AI and automation draw from your budget. Everyday tools are free and aren't listed here."
+title = "Recent billable activity"
+
+[payg.cap]
+amount = "Cap amount"
+custom = "Custom"
+docsEstimate = "≈ {{docs}} processed PDFs / month"
+docsRate = "at {{rate}} / PDF"
+noCapDesc = "Usage is billed without an upper limit. You can re-enable a cap at any time."
+noCapLabel = "No cap"
+noneShort = "No cap"
+perMonth = "/ month"
+save = "Update cap"
+subtitle = "Set your maximum spend. We convert this to PDFs using the current price tier."
+title = "Monthly spending cap"
+
+[payg.checkout]
+connecting = "Connecting to Stripe…"
+errorTitle = "Stripe error"
+
+[payg.checkout.error]
+startFailed = "Couldn't start checkout session"
+
+[payg.checkout.mock]
+backend = "Backend is in mock mode; no real Stripe session was created."
+continue = "Continue with mock subscription"
+noKey = "VITE_STRIPE_PUBLISHABLE_KEY is unset. Real iframe mounts here once configured."
+title = "Stripe Embedded Checkout (mock mode)"
+
+[payg.confirm]
+body = "Your team can now run automation, AI, and API operations beyond your 500 free PDFs."
+capValue = "{{symbol}}{{amount}} / month"
+noCap = "No cap"
+note = "You can change your cap, cancel, or open the Stripe customer portal any time from this page."
+summaryLabel = "Monthly ceiling"
+title = "Welcome to the Processor plan"
+
+[payg.docHelp]
+billable = "Only automation runs, AI tools, and API calls count. Manual tools in the editor are always free."
+chains = "Running the same file through several steps of one automation counts it once, not once per step."
+perFile = "Each file you process counts as one PDF. Very long or very large files can count as more than one."
+refunds = "If a job fails on its first step, the PDF is credited back automatically."
+toggle = "What counts as a PDF?"
+
+[payg.error]
+body = "We couldn't reach the billing service. Refresh the page to try again."
+title = "Couldn't load your plan"
+
+[payg.exhausted]
+body = "You've used all 500 of your free PDFs. Upgrade to Processor to keep going."
+cta = "Go to billing"
+title = "You've used your free PDFs"
+
+[payg.free.cta]
+benefit1Body = "chain tools, schedule runs, batch process"
+benefit1Title = "Automation pipelines"
+benefit2Body = "summarise, classify, redact, AI-OCR"
+benefit2Title = "AI tools"
+benefit3Body = "call any Stirling endpoint programmatically"
+benefit3Title = "API access"
+button = "Turn on Processor →"
+reassurance = "No minimum · Set a $0 cap to test · Cancel anytime"
+subtitle = "Keep going past your 500 free PDFs with automation, AI, and the API. Set a monthly ceiling, so you stay in control."
+title = "Turn on the Processor plan"
+
+[payg.free.editor]
+eyebrow = "Editor plan · Always free"
+
+[payg.free.header]
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+freeTitle = "Unlimited PDF editing"
+
+[payg.free.hero]
+capSuffix = "/ {{limit}} free PDFs"
+metaCategories = "Automation · AI · API requests"
+
+[payg.free.member]
+ownerOnly = "Only your team owner can turn on Processor. Manual tools stay free for you to use as much as you like."
+
+[payg.free.proc]
+eyebrow = "Processor plan · metered"
+
+[payg.free.state]
+approachingLimit = "Approaching limit"
+limitReached = "Limit reached"
+plentyLeft = "Plenty left"
+
+[payg.gates]
+ai = "AI tools (AI Create, suggestions, AI-OCR)"
+automation = "Automations & pipelines"
+client = "Browser-only tools (viewer, page editor, file management)"
+offsite = "Server tools (compress, OCR, convert, watermark…)"
+pauses = "pauses at cap"
+title = "What happens when the cap is reached"
+
+[payg.header]
+eyebrow = "Processor plan · {{start}} – {{end}}"
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+freeLabel = "Always free"
+freeTitle = "Unlimited PDF editing"
+meterBody = "{{limit}} free PDFs to start, then billed per PDF up to your cap."
+meterLabel = "Metered"
+meterTitle = "Automation · AI · API"
+
+[payg.member]
+askLeader = "Only your team owner can change the cap."
+
+[payg.members]
+docs = "PDFs"
+subtitle = "Billable PDFs each teammate has processed this period."
+title = "Team member usage"
+
+[payg.role]
+leader = "Team owner"
+member = "Member"
+
+[payg.signupRequired]
+body = "Stirling PDF gives every signed-up account 500 free operations, enough to keep most workflows humming without paying a cent. You're currently using Stirling as a guest, which doesn't include billable tools like AI, automations, or hosted processing."
+cancel = "Not now"
+cta = "Sign up free"
+subtext = "Creating an account is free and takes a few seconds. No credit card required."
+title = "Sign up to use {{category}}"
+
+[payg.signupRequired.category]
+ai = "AI features"
+api = "this tool"
+automation = "automations"
+default = "this feature"
+
+[payg.spendCapMeter]
+capSuffix = "/ {{amount}} cap"
+metaCategories = "Automation · AI · API spend"
+resets = "Resets each billing period"
+
+[payg.state]
+degraded = "Cap reached"
+full = "Healthy"
+warned = "Approaching cap"
+
+[payg.stripe]
+open = "Open billing portal"
+subtitle = "Receipts, invoices, payment method, billing currency."
+title = "Manage billing in Stripe"
+
+[payg.stripe.toast.unavailable]
+body = "Billing portal isn't available right now. Try again in a moment."
+title = "Billing portal unavailable"
+
+[payg.upgrade]
+backAria = "Back"
+closeAria = "Close"
+
+[payg.upgrade.button]
+cancel = "Cancel"
+continue = "Continue →"
+finish = "Finish"
+
+[payg.upgrade.cap]
+help = "We'll never charge above this. Set $0 if you want to keep everything free while testing."
+title = "Set your monthly spend ceiling"
+usdNote = "Estimated in USD. You can adjust your cap any time after subscribing, in your own currency."
+
+[payg.upgrade.checkout]
+capValue = "{{symbol}}{{amount}} / month"
+edit = "Edit"
+help = "Stripe handles your card details. Stirling never sees them."
+loading = "Loading checkout…"
+noCap = "No cap"
+title = "Add your payment method"
+
+[payg.upgrade.help]
+aiBody = "summarise, classify, redact, AI-OCR"
+aiTitle = "AI tools"
+apiBody = "programmatic access to any Stirling endpoint"
+apiTitle = "API calls"
+automationBody = "chained tools or scheduled runs that don't need clicks"
+automationTitle = "Automation pipelines"
+footnote = "Manual tools (viewing, editing, merging, splitting, watermarking, compressing, manual OCR) are always free, even past 500. The distinction is the type of work, not where you click."
+title = "What we count toward billing"
+
+[payg.upgrade.promise]
+body = "You only pay for automation pipelines, AI tools, and API calls, the work that goes beyond a single click. Edit, merge, split, sign, compress as much as you want, no charge."
+highlight = "Manual tools stay free, always."
+
+[payg.upgrade.steps]
+cap = "Set monthly ceiling"
+payment = "Add payment method"
+
+[payg.upgrade.title]
+confirm = "You're subscribed"
+default = "Upgrade to Processor plan"
+
+[payg.usage]
+breakdown = "AI {{ai}} • Automation {{automation}} • API {{api}}"
+capLine = "{{cap}}/mo cap"
+estBill = "≈ {{amount}} so far this period"
+firstFree = "First {{free}} free"
+noCap = "No monthly cap"
+ofLimitProcessed = "/ {{limit}} PDFs processed"
+processed = "PDFs processed"
+resetsIn = "Resets in {{days}} days"
+resetsTomorrow = "Resets tomorrow"
+thisPeriod = "This billing period"
+
 [payment]
-autoClose = "Dúnfaidh an fhuinneog seo go huathoibríoch..."
 canCloseWindow = "Is féidir leat an fhuinneog seo a dhúnadh anois."
-checkoutInstructions = "Críochnaigh do cheannach sa fhuinneog bhrabhsálaí a d’oscail díreach anois. Tar éis don íocaíocht a bheith críochnaithe, fill anseo agus cliceáil an cnaipe thíos chun d’eolas billeála a nuashonrú."
-checkoutOpened = "Seiceáil oscailte sa bhrabhsálaí"
-closeLater = "Déanfaidh mé é seo níos déanaí"
 error = "Earráid Íocaíochta"
 generatingLicense = "D’eochair cheadúnais á giniúint..."
 licenseActivated = "Ceadúnas gníomhachtaithe! Sábháladh d’eochair cheadúnais. Seoladh ríomhphost deimhnithe chuig do sheoladh cláraithe."
@@ -5231,7 +5424,6 @@ paymentCanceled = "Cuireadh an íocaíocht ar ceal. Níor gearradh aon táillí.
 perMonth = "/mí"
 preparing = "Do sheiceáil amach á ullmhú..."
 redirecting = "Ag atreorú chuig an tseiceáil amach slán..."
-refreshBilling = "Tá an íocaíocht déanta agam - Nuashonraigh Billeáil"
 success = "D’éirigh leis an Íocaíocht!"
 successMessage = "Gníomhachtaíodh do shíntiús go rathúil. Gheobhaidh tú ríomhphost dearbhaithe go luath."
 syncError = "D’éirigh leis an íocaíocht ach theip ar shioncronú an cheadúnais. Nuashonrófar do cheadúnas go luath. Déan teagmháil le tacaíocht má leanann fadhbanna."
@@ -5311,7 +5503,6 @@ REVERSE_ORDER = "Cas an cháipéis bunoscionn ionas go n‑éireoidh an leathana
 SIDE_STITCH_BOOKLET_SORT = "Socraigh leathanaigh le haghaidh priontála leabhráin le fuáil ar an taobh (optamaithe do cheangal ar an taobh)."
 
 [pdfTextEditor]
-tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 conversionFailed = "Theip ar thiontú PDF. Bain triail eile as."
 converting = "PDF á thiontú go formáid in-eagarthóireachta..."
 currentFile = "Comhad reatha: {{name}}"
@@ -5319,6 +5510,7 @@ imageLabel = "Íomhá curtha"
 noTextOnPage = "Níor braitheadh aon téacs in-eagarthóireachta ar an leathanach seo."
 pagePreviewAlt = "Réamhamharc leathanaigh"
 pageSummary = "Leathanach {{number}} as {{total}}"
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Eagarthóir PDF JSON"
 viewLabel = "Eagarthóir PDF"
 
@@ -5480,9 +5672,9 @@ title = "PDF a chur i láthair"
 tags = "leathanach amháin"
 
 [pdfToSinglePage]
-tags = "combine,merge,single,single page,one page,merge to single,combine all,stitch pages,concatenate vertical,long page,poster"
 description = "Cuirfidh an uirlis seo gach leathanach de do PDF le chéile in aon leathanach mór amháin. Fanfaidh an leithead mar an gcéanna leis na leathanaigh bhunaidh, ach beidh an airde cothrom le suim airde na leathanach go léir."
 submit = "Tiontaigh go Leathanach Aonair"
+tags = "combine,merge,single,single page,one page,merge to single,combine all,stitch pages,concatenate vertical,long page,poster"
 title = "PDF go leathanach amháin"
 
 [pdfToSinglePage.error]
@@ -5521,29 +5713,19 @@ title = "Píblíne"
 
 [plan]
 contact = "Déan Teagmháil Linn"
-currency = "Airgeadra"
 current = "Plean Reatha"
-customPricing = "Saincheaptha"
 featureComparison = "Comparáid Gnéithe"
 from = "Ó"
 hideComparison = "Folaigh Comparáid Gnéithe"
-included = "San áireamh"
 licensedSeats = "Ceadúnaithe: {{count}} suíochán"
 manage = "Bainistigh"
 perMonth = "/mí"
 perSeat = "/suíochán"
 popular = "Coitianta"
-purchase = "Ceannaigh"
-selectCredits = "Roghnaigh Méid Creidiúintí"
 selectPlan = "Roghnaigh Plean"
 showComparison = "Cuir Gach Gné i gComparáid"
-totalCost = "Costas Iomlán"
 upgrade = "Uasghrádaigh"
 withServer = "+ Plean Freastalaí"
-
-[plan.activePlan]
-subtitle = "Mionsonraí do shínithe reatha"
-title = "Plean Gníomhach"
 
 [plan.api]
 large = "5,000 Creidiúintí"
@@ -5551,12 +5733,7 @@ medium = "1,000 Creidiúintí"
 small = "500 Creidiúintí"
 xsmall = "100 Creidiúintí"
 
-[plan.apiPackages]
-subtitle = "Ceannaigh creidiúintí API do d’fheidhmchláir"
-title = "Pacáistí Creidiúintí API"
-
 [plan.availablePlans]
-loadError = "Ní féidir praghsáil plean a lódáil. Ag úsáid luachanna réamhshocraithe."
 subtitle = "Roghnaigh an plean a oireann do do riachtanais"
 title = "Pleananna atá ar fáil"
 
@@ -5567,7 +5744,6 @@ highlight3 = "Na gnéithe is déanaí"
 name = "Fiontar"
 requiresServer = "Teastaíonn Freastalaí"
 requiresServerMessage = "Uasghrádaigh go dtí an plean Freastalaí ar dtús sula n-uasghrádaíonn tú go Fiontraíochta."
-siteLicense = "Ceadúnas Suímh"
 
 [plan.feature]
 api = "Rochtain API"
@@ -5606,6 +5782,12 @@ highlight3 = "Tacaíocht phobail"
 included = "San áireamh"
 name = "Saor"
 
+[plan.freeLimit]
+cta = "View Processor Plan"
+dismiss = "Maybe Later"
+message = "That's your whole free allowance for automation, AI and the API. Seriously impressive! Keep the momentum going for just pennies a day."
+title = "Woah, {{total}} PDFs Processed!"
+
 [plan.highlights]
 advancedIntegrations = "Comhtháthuithe chun cinn"
 allBasicFeatures = "Gach bunghné"
@@ -5637,6 +5819,12 @@ highlight2 = "Uirlisí PDF Casta"
 highlight3 = "Gan comharthaí uisce"
 name = "Pro"
 
+[plan.spendCap]
+cta = "View Spending Limit"
+dismiss = "Not Now"
+message = "You've made the most of this month's cap. That's a load of automation, AI and API work! Bump it up whenever you like to keep going."
+title = "You're on a Roll!"
+
 [plan.static]
 activateLicense = "Gníomhachtaigh Do Cheadúnas"
 contactToUpgrade = "Déan teagmháil linn chun do phlean a uasghrádú nó a shaincheapadh"
@@ -5661,22 +5849,111 @@ keyDescription = "Greamaigh an eochair cheadúnais ó do ríomhphost"
 success = "Ceadúnas Gníomhachtaithe!"
 successMessage = "Tá do cheadúnas gníomhachtaithe go rathúil. Is féidir leat an fhuinneog seo a dhúnadh anois."
 
-[plan.team]
-name = "Team"
-
 [plan.trial]
-badge = "Triail"
-continueWithFree = "Lean ar aghaidh leis an leagan saor in aisce"
-daysRemaining = "Críochnaíonn do thriail i gceann {{days}} lá"
-endDate = "Dáta éaga: {{date}}"
-expired = "Tá Do Thriall Thart"
-expiredMessage = "Tá do thriail Pro 30 lá imithe in éag. Liostáil le Pro chun leanúint de rochtain ar ghnéithe préimhe, nó lean ar aghaidh lenár sraith saor in aisce."
-freeTierLimitations = "Cuimsíonn an sraith saor in aisce uirlisí bunúsacha PDF le teorainneacha úsáide."
 message = ""
-subscribe = "Liostáil le Pro"
-subscribeToPro = "Liostáil le Pro"
-subscriptionScheduled = "Síntiús sceidealta - tosaíonn sé {{date}}"
-title = "Triail Shaor Gníomhach"
+
+[policies]
+deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
+deleteConfirmTitle = "Delete {{label}} policy?"
+
+[policies.catalog]
+compliance = "Compliance"
+ingestion = "Ingestion"
+retention = "Retention"
+routing = "Routing"
+security = "Security"
+
+[policies.detail]
+editSettings = "Edit Settings"
+enforces = "Enforces"
+managedByOrg = "Managed by your organisation. Contact a team leader to change this policy."
+noActivityDescription = "Documents will appear here once this policy runs."
+noActivityTitle = "No activity yet"
+onEveryUpload = "On every upload"
+originalsNote = "Originals stay untouched • Enforced version saved alongside"
+pause = "Pause"
+recentActivity = "Recent Activity"
+resume = "Resume"
+retry = "Retry"
+showLess = "Show less"
+showMore = "Show more"
+statActive = "Active"
+statDataProcessed = "Data processed"
+statDocsEnforced = "Docs enforced"
+statusActive = "Active"
+statusPaused = "Paused"
+
+[policies.fields]
+selectedCount = "{{count}} selected"
+
+[policies.pii]
+fieldLabel = "PII to redact"
+placeholder = "Select PII types"
+
+[policies.sidebar]
+activeCount = "{{count}} active"
+infoAriaLabel = "What is a policy?"
+infoTooltip = "A policy is a fixed set of tools that runs automatically whenever it's triggered — for example when a new document arrives — enforcing rules like redacting PII with no manual steps."
+loading = "Loading…"
+railAriaLabel = "{{label}} policy — {{status}}"
+railSuffixActive = " (Active)"
+railSuffixPaused = " (Paused)"
+setUp = "Set up"
+title = "Policies"
+upgradeToEnterprise = "Upgrade to enterprise"
+
+[policies.status]
+active = "Active"
+paused = "Paused"
+setup = "Set up"
+
+[policies.toolConfig]
+enableAriaLabel = "Enable {{tool}}"
+infoAriaLabel = "What does {{tool}} do?"
+
+[policies.wizard]
+allDocTypesDescription = "Enable the Classification policy to filter by document type."
+allDocTypesTitle = "All document types"
+back = "Back"
+builderDesc = "Build the sequence of tools this policy runs on each document."
+clear = "Clear"
+continue = "Continue"
+docTypesLabel = "Document types"
+edit = "Edit"
+editTitle = "Edit {{label}} Policy"
+enablePolicy = "Enable Policy"
+filenameAutoNumber = "Auto-number"
+filenamePositionAria = "Filename position"
+filenamePrefix = "Prefix"
+filenameSuffix = "Suffix"
+filenameTextAria = "Filename text"
+filenameTextPlaceholder = "Text to add (optional)"
+lockedDescription = "Contact a team leader to change this policy."
+lockedTitle = "Managed by your organisation"
+maxRetriesLabel = "Max retries"
+noToolsError = "Add at least one configured tool to the workflow first."
+outputAsLabel = "Output as"
+outputFilenameSubhead = "Output filename"
+outputModeAria = "Output mode"
+outputNewFile = "New file"
+outputNewVersion = "New version"
+outputRetriesLabel = "Output & retries"
+outputSubhead = "Output"
+retryDelayAria = "Retry delay minutes"
+retryDelayLabel = "Retry delay (min)"
+runOnExport = "Export"
+runOnLabel = "Run on"
+runOnSubhead = "Run on"
+runOnUpload = "Upload"
+saveChanges = "Save Changes"
+saveError = "Couldn't save the policy. Please try again."
+setupClassification = "Set up Classification"
+setupTitle = "Set up {{label}} Policy"
+sourcesDesc = "Choose where this policy runs and which document types it applies to."
+sourcesLabel = "Sources"
+stepOf = "Step {{step}} of {{total}}"
+toolChainDesc = "Configure the tools this policy runs on each document."
+typesSelected = "{{count}} types selected"
 
 [printFile]
 title = "Priontáil Comhad"
@@ -5958,6 +6235,9 @@ whatsNewTourDesc = "Tabhair cuairt ar an leagan amach nuashonraithe"
 admin = "Féach ar na treoracha anseo: Turas uirlisí, turas leagan amach nua V2, agus turas an Riarthóra."
 user = "Féach ar na treoracha anseo: Turas uirlisí agus turas leagan amach an V2 nua."
 
+[read]
+tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
+
 [redact]
 submit = "Réiteach"
 tags = "Réiteach, Folaigh, dubh amach, dubh, marcóir, i bhfolach, lámhleabhar"
@@ -6088,8 +6368,8 @@ title = "Cad a dhéanann sé"
 title = "Maidir le Bain Anótálacha"
 
 [removeBlanks]
-tags = "delete,clean,empty,remove blank,delete blank pages,empty pages,white pages,remove empty,clean up,cleanup blank"
 submit = "Bain Bearnaí"
+tags = "delete,clean,empty,remove blank,delete blank pages,empty pages,white pages,remove empty,clean up,cleanup blank"
 title = "Bain Bearnaí"
 
 [removeBlanks.error]
@@ -6147,8 +6427,8 @@ failed = "Tharla earráid agus sínithe teastais á mbaint."
 title = "Torthaí Bainte Teastais"
 
 [removeImage]
-tags = "remove,delete,clean,remove image,delete image,strip images,remove pictures,delete photos,clean images,reduce size,remove graphics"
 submit = "Bain íomhá"
+tags = "remove,delete,clean,remove image,delete image,strip images,remove pictures,delete photos,clean images,reduce size,remove graphics"
 title = "Bain íomhá"
 
 [removeImage.error]
@@ -6219,8 +6499,8 @@ title = "PDFanna Díchriptithe"
 description = "Chun cosaint le focal faire a bhaint, tá gá leis an bhfocal faire a úsáideadh chun an PDF a chriptiú. Díchriptóidh sé seo an doiciméad, rud a fhágfaidh gur féidir leis a bheith inrochtana gan focal faire."
 
 [reorganizePages]
-tags = "rearrange,reorder,organize,reorganize,move pages,page order,sort pages,arrange pages,shuffle,resequence"
 submit = "Ath-eagraigh Leathanaigh"
+tags = "rearrange,reorder,organize,reorganize,move pages,page order,sort pages,arrange pages,shuffle,resequence"
 
 [reorganizePages.error]
 failed = "Theip ar atheagrú na leathanach"
@@ -6303,11 +6583,11 @@ text = "Inbhéartaigh gach dath sa PDF go hiomlán, ag cruthú éifeacht cosúil
 title = "Inbhéartaigh Gach Dath"
 
 [rotate]
-tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 rotateLeft = "Rothlaigh tuathalach"
 rotateRight = "Rothlaigh deiseal"
 selectRotation = "Roghnaigh Uillinn Rothlaithe (deiseal)"
 submit = "Rothlaigh"
+tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,anticlockwise,counter-clockwise,fix orientation"
 title = "Rothlaigh PDF"
 
 [rotate.error]
@@ -6327,10 +6607,10 @@ text = "Rothlaigh leathanaigh do PDF deiseal nó tuathalach i méaduithe 90 céi
 title = "Forléargas ar Shocruithe Rothlaithe"
 
 [sanitize]
-tags = "clean,purge,remove,sanitize,sanitise,remove scripts,remove javascript,remove metadata,strip metadata,security,clean document,remove hidden data,privacy"
 desc = "Bain eilimintí a d’fhéadfadh a bheith dochrach as comhaid PDF."
 sanitizationResults = "Torthaí Sláintiúcháin"
 submit = "PDF sláintíocht"
+tags = "clean,purge,remove,sanitize,sanitise,remove scripts,remove javascript,remove metadata,strip metadata,security,clean document,remove hidden data,privacy"
 title = "Sláintigh"
 
 [sanitize.error]
@@ -6376,6 +6656,9 @@ title = "PDF sláintíocht"
 [scalePages]
 tags = "resize,adjust,scale,page size,resize page,scale page,change size,adjust size,enlarge,shrink page,fit to page,A4,letter size"
 title = "Coigeartaigh scála an leathanaigh"
+
+[scannerEffect]
+tags = "scan,simulate,create,fake scan,look scanned,scanner effect,make look scanned,photocopy effect,simulate scanner,realistic scan"
 
 [ScannerImageSplit.selectText]
 1 = "Tairseach Uillinn:"
@@ -6615,6 +6898,18 @@ title = "Aicearraí Méarchláir"
 mac = "Cuir ⌘ (Command), ⌥ (Option), nó modhnóir eile i do aicearra."
 windows = "Cuir Ctrl, Alt, nó modhnóir eile i do aicearra."
 
+[settings.legal]
+label = "Legal"
+title = "Legal"
+
+[settings.legal.cookiePreferences]
+description = "Review or change your cookie consent choices."
+manage = "Manage"
+
+[settings.legal.documents]
+description = "Policies and legal information for this service."
+title = "Legal Documents"
+
 [settings.licensingAnalytics]
 audit = "Iniúchadh"
 plan = "Plean"
@@ -6803,7 +7098,6 @@ title = "Taispeáin Javascript"
 title = "JavaScript Bainte"
 
 [sign]
-tags = "signature,autograph,e-sign,electronic signature,digital signature,sign document,approval,signoff,authorize,endorse,ink signature,handwriting"
 activate = "Gníomhachtaigh Suí an tSínithe"
 add = "Cuir"
 addToAll = "Cuir le gach leathanach"
@@ -6823,6 +7117,7 @@ redo = "Athdhéan"
 save = "Sábháil an Síniú"
 sharedSigs = "Sínithe Roinnte"
 submit = "Sínigh an Doiciméad"
+tags = "signature,autograph,e-sign,electronic signature,digital signature,sign document,approval,signoff,authorize,endorse,ink signature,handwriting"
 title = "Comhartha"
 undo = "Cealaigh"
 updateAndPlace = "Nuashonraigh agus Cuir"
@@ -7010,11 +7305,11 @@ small = "Beaga"
 x-large = "X-Mór"
 
 [split]
-tags = "divide,separate,break,split,extract pages,separate pages,divide document,break apart,separate files,unbind,split by page,divide by chapter"
 resultsTitle = "Torthaí Scoilte"
 selectMethod = "Roghnaigh modh scoilte"
 splitPages = "Iontráil leathanaigh le scoilt ar:"
 submit = "Scoilt"
+tags = "divide,separate,break,split,extract pages,separate pages,divide document,break apart,separate files,unbind,split by page,divide by chapter"
 title = "Scoilt PDF"
 
 [split.error]
@@ -7306,10 +7601,6 @@ title = "Uaslódáil chuig an bhfreastalaí"
 updateButton = "Nuashonraigh ar an bhfreastalaí"
 uploadButton = "Uaslódáil chuig an bhfreastalaí"
 
-[survey]
-nav = "Suirbhé"
-title = "Suirbhé Stirling-PDF"
-
 [swagger]
 tags = "api,doiciméadú,swagger,críochphointí,forbairt"
 title = "Doiciméadú API"
@@ -7342,28 +7633,6 @@ removeError = "Theip ar an mball a bhaint"
 renameError = "Theip ar an bhfoireann a athainmniú"
 renameSuccess = "Athainmníodh an fhoireann go rathúil"
 
-[team.features]
-badge = "Gnéithe Team"
-subtitle = "Comhoibrigh le d’fhoireann"
-title = "Comhoibriú Foirne"
-viewPlans = "Féach ar Phleananna"
-
-[team.features.billing]
-description = "Bainistigh billeáil agus síntiúis"
-title = "Bainistíocht Billeála"
-
-[team.features.credits]
-description = "Linn chreidmheasanna roinnte do gach ball"
-title = "Creidmheasanna Comhroinnte"
-
-[team.features.dashboard]
-description = "Féach gníomhaíocht agus úsáid na foirne"
-title = "Deais Foirne"
-
-[team.features.invite]
-description = "Cuir baill le do fhoireann"
-title = "Tabhair Cuireadh do Bhaill"
-
 [team.invitationBanner]
 acceptButton = "Glac"
 message = "thug cuireadh duit a bheith páirteach"
@@ -7385,11 +7654,6 @@ remove = "Bain"
 roleColumn = "Ról"
 title = "Baill Foirne"
 
-[team.upgrade]
-button = "Uasghrádaigh go Team"
-description = "Díghlasáil gnéithe comhoibrithe foirne"
-title = "Uasghrádaigh go Plean Team"
-
 [textAlign]
 center = "Lár"
 left = "Ar chlé"
@@ -7405,10 +7669,10 @@ justNow = "díreach anois"
 minutesAgo = "{{count}}n ó shin"
 
 [timestampPdf]
-tags = "timestamp,RFC 3161,TSA,time stamp authority,document timestamp,proof of existence,timestamp token,trusted timestamp,sign timestamp,notarise"
 desc = "Cuir stampa ama doiciméid RFC 3161 le do PDF ag úsáid freastalaí iontaofa Time Stamp Authority (TSA)."
 results = "Torthaí Stampa Ama"
 submit = "Cuir Stampa Ama i bhFeidhm"
+tags = "timestamp,RFC 3161,TSA,time stamp authority,document timestamp,proof of existence,timestamp token,trusted timestamp,sign timestamp,notarise"
 title = "Stampa Ama ar PDF"
 
 [timestampPdf.error]
@@ -7806,10 +8070,173 @@ title = "Amharc/Cuir PDF in Eagar"
 [warning]
 tooltipTitle = "Rabhadh"
 
+[watchedFolders]
+alreadyInFolder = "Already in this folder"
+defaultFolderWarning = "This is a default folder and will be recreated on next reload."
+deleteConfirmBody = "This will remove the folder and its run history. Files already downloaded are not affected."
+deleteConfirmTitle = "Delete folder?"
+folderNotFound = "Folder not found"
+newFolder = "New folder"
+noFolders = "No watched folders yet"
+sidebarTitle = "Watched Folders"
+title = "Watched Folders"
+
+[watchedFolders.actions]
+back = "Back"
+collapse = "Collapse"
+dismiss = "Dismiss"
+download = "Download"
+downloadInput = "Download input"
+downloadOutput = "Download output"
+expand = "Expand"
+retry = "Retry"
+
+[watchedFolders.card]
+delete = "Delete folder"
+edit = "Edit folder"
+
+[watchedFolders.home]
+addAnother = "Add another Watched Folder"
+addAnotherDesc = "Automatically process files with a new pipeline"
+create = "Create your first Watched Folder"
+deleteFolder = "Delete folder"
+editFolder = "Edit folder"
+empty = "No watched folders yet"
+emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
+emptyTitle = "Automate your PDF workflows"
+file = "file"
+files = "files"
+pause = "Pause"
+resume = "Resume"
+
+[watchedFolders.howItWorks]
+step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
+step1Title = "Drop files"
+step2Desc = "Your configured tools process each file automatically"
+step2Title = "Pipeline runs"
+step3Desc = "Download processed files from inside the folder"
+step3Title = "Output ready"
+title = "How Watched Folders work"
+
+[watchedFolders.modal]
+advanced = "Advanced"
+automation = "Automation"
+automationNameFallback = "Watched Folder automation"
+automationRequired = "Add at least one configured step before saving."
+autoNumber = "Auto-number"
+autoNumberExample = "e.g. document.pdf → document (1).pdf"
+autoScanHelp = "New PDF files in this folder are processed automatically every 10 seconds."
+changeFolder = "Change"
+chooseFolder = "Choose"
+clearFolder = "Clear"
+color = "Accent color"
+createFolder = "Create Folder"
+createTitle = "New Watched Folder"
+editTitle = "Edit Watched Folder"
+inputFolder = "Input folder"
+inputFolderNotChosen = "No folder chosen — required for auto-scan"
+inputSource = "Input source"
+inputSourceBrowser = "Browser — drop files here"
+inputSourceLocal = "Local folder (auto-scan)"
+inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
+localOutputFolder = "Local output folder"
+maxRetries = "Max retries"
+name = "Folder name"
+namePlaceholder = "My Watched Folder"
+nameRequired = "Folder name is required"
+nameTooLong = "Folder name must be 50 characters or less"
+outputFolderNotSet = "Not set — outputs stay in app"
+outputFolderUnsupported = "Not supported in this browser"
+outputModeNewDesc = "Output is saved as a new separate file"
+outputModeVersion = "Replace original?"
+outputModeVersionDesc = "Output becomes a new version of the input file rather than a separate file"
+outputName = "Output filename prefix"
+outputNamePrefix = "Filename prefix"
+outputNameSuffix = "Suffix"
+positionPrefix = "Prefix"
+positionSuffix = "Suffix"
+replaceOriginal = "Replace original file"
+retryDelay = "Delay (minutes)"
+saveChanges = "Save Changes"
+saveFailed = "Failed to save folder. Please try again."
+sectionFolder = "Folder"
+sectionSourceOutput = "Source & Output"
+sectionSteps = "Steps"
+
+[watchedFolders.status]
+active = "Active"
+done = "Done"
+paused = "Paused"
+processing = "Processing"
+
+[watchedFolders.time]
+daysAgo = "{{count}}d ago"
+hoursAgo = "{{count}}h ago"
+justNow = "just now"
+minutesAgo = "{{count}}m ago"
+
+[watchedFolders.workbench]
+activity = "Activity"
+addFiles = "Add files"
+allTime = "All time"
+cancel = "Cancel"
+chartTooltipComplete = "{{count}} complete"
+chartTooltipFailed = "{{count}} failed"
+clearSelection = "Clear selection"
+countProcessing = "{{count}} processing"
+countQueued = "{{count}} queued"
+countSelected = "{{count}} selected"
+dataSaved = "Saved"
+dayRunning = "day running"
+daysRunning = "days running"
+delete = "Delete"
+deleteConfirmBody = "Remove notifications only clears the activity log. Delete outputs also removes the processed files from storage. Your original input files are never touched."
+deleteOutputs = "Delete outputs"
+directionIn = "in"
+directionOut = "out"
+dropToProcess = "Drop to process"
+export = "Export"
+exportSeparately = "Export separately"
+exportZip = "Export zip"
+failed = "Failed"
+filesProcessedOverTime = "Files processed over time"
+filterAll = "All"
+filterPending = "Pending"
+inputs = "Inputs"
+inputSize = "Input size"
+legendComplete = "Complete"
+noActivity = "No activity yet — drop a PDF to start"
+noActivityMatch = "No matching activity"
+noInputFolder = "No input folder — edit to configure"
+outputs = "Outputs"
+pause = "Pause"
+preview = "Preview"
+previewInput = "Preview input"
+previewLoadFailed = "Could not load file preview."
+previewOutput = "Preview output"
+queued = "Queued"
+queuedWaiting = "Queued — waiting to run"
+removeEntries = "Remove {{count}} entries"
+removeEntry = "Remove entry"
+removeNotificationsOnly = "Remove notifications only"
+resume = "Resume"
+retryAll = "Retry all"
+retryIn = "retry in {{count}}m"
+retryingSoon = "retrying…"
+retryMixedConfirm = "Some selected files have already completed and will be skipped. Only failed files will be retried. Continue?"
+running = "Running"
+search = "Search…"
+selectAll = "Select all {{count}}"
+sortNameAsc = "A → Z"
+sortNameDesc = "Z → A"
+sortNewest = "Newest"
+sortOldest = "Oldest"
+watching = "Watching: {{name}}"
+
 [watermark]
-tags = "stamp,mark,overlay,watermark,branding,logo,confidential,draft,copyright,trademark,text overlay,image overlay,background text"
 desc = "Cuir comharthaí uisce téacs nó íomhá le comhaid PDF"
 submit = "Cuir Uisce leis"
+tags = "stamp,mark,overlay,watermark,branding,logo,confidential,draft,copyright,trademark,text overlay,image overlay,background text"
 title = "Cuir Uisce leis"
 
 [watermark.error]
@@ -8275,190 +8702,3 @@ confirm = "Bain Amach"
 message_one = "This ZIP contains {{count}} file. Extract anyway?"
 message_other = "This ZIP contains {{count}} files. Extract anyway?"
 title = "Comhad ZIP Mór"
-
-[watchedFolders]
-alreadyInFolder = "Already in this folder"
-deleteConfirmBody = "This will remove the folder and its run history. Files already downloaded are not affected."
-deleteConfirmTitle = "Delete folder?"
-defaultFolderWarning = "This is a default folder and will be recreated on next reload."
-folderNotFound = "Folder not found"
-newFolder = "New folder"
-noFolders = "No watched folders yet"
-sidebarTitle = "Watched Folders"
-title = "Watched Folders"
-
-[watchedFolders.modal]
-automation = "Automation"
-createFolder = "Create Folder"
-automationRequired = "Add at least one configured step before saving."
-color = "Accent color"
-createTitle = "New Watched Folder"
-editTitle = "Edit Watched Folder"
-name = "Folder name"
-namePlaceholder = "My Watched Folder"
-nameRequired = "Folder name is required"
-nameTooLong = "Folder name must be 50 characters or less"
-saveChanges = "Save Changes"
-saveFailed = "Failed to save folder. Please try again."
-automationNameFallback = "Watched Folder automation"
-maxRetries = "Max retries"
-retryDelay = "Delay (minutes)"
-outputModeVersion = "Replace original?"
-outputModeVersionDesc = "Output becomes a new version of the input file rather than a separate file"
-outputModeNewDesc = "Output is saved as a new separate file"
-outputName = "Output filename prefix"
-outputNameSuffix = "Suffix"
-sectionFolder = "Folder"
-sectionSourceOutput = "Source & Output"
-sectionSteps = "Steps"
-inputSource = "Input source"
-inputSourceBrowser = "Browser — drop files here"
-inputSourceLocal = "Local folder (auto-scan)"
-inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
-inputFolder = "Input folder"
-inputFolderNotChosen = "No folder chosen — required for auto-scan"
-changeFolder = "Change"
-chooseFolder = "Choose"
-clearFolder = "Clear"
-autoScanHelp = "New PDF files in this folder are processed automatically every 10 seconds."
-localOutputFolder = "Local output folder"
-outputFolderUnsupported = "Not supported in this browser"
-outputFolderNotSet = "Not set — outputs stay in app"
-advanced = "Advanced"
-replaceOriginal = "Replace original file"
-autoNumber = "Auto-number"
-autoNumberExample = "e.g. document.pdf → document (1).pdf"
-outputNamePrefix = "Filename prefix"
-positionPrefix = "Prefix"
-positionSuffix = "Suffix"
-
-[watchedFolders.home]
-create = "Create your first Watched Folder"
-editFolder = "Edit folder"
-empty = "No watched folders yet"
-file = "file"
-files = "files"
-emptyTitle = "Automate your PDF workflows"
-emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
-addAnother = "Add another Watched Folder"
-addAnotherDesc = "Automatically process files with a new pipeline"
-resume = "Resume"
-pause = "Pause"
-deleteFolder = "Delete folder"
-
-[watchedFolders.card]
-edit = "Edit folder"
-delete = "Delete folder"
-
-[watchedFolders.status]
-done = "Done"
-processing = "Processing"
-paused = "Paused"
-active = "Active"
-
-[watchedFolders.howItWorks]
-title = "How Watched Folders work"
-step1Title = "Drop files"
-step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
-step2Title = "Pipeline runs"
-step2Desc = "Your configured tools process each file automatically"
-step3Title = "Output ready"
-step3Desc = "Download processed files from inside the folder"
-
-[watchedFolders.workbench]
-addFiles = "Add files"
-inputs = "Inputs"
-outputs = "Outputs"
-failed = "Failed"
-dataSaved = "Saved"
-running = "Running"
-dropToProcess = "Drop to process"
-activity = "Activity"
-noActivity = "No activity yet — drop a PDF to start"
-noActivityMatch = "No matching activity"
-retryAll = "Retry all"
-retryIn = "retry in {{count}}m"
-retryingSoon = "retrying…"
-pause = "Pause"
-resume = "Resume"
-dayRunning = "day running"
-daysRunning = "days running"
-sortNewest = "Newest"
-sortOldest = "Oldest"
-sortNameAsc = "A → Z"
-sortNameDesc = "Z → A"
-filterAll = "All"
-filterPending = "Pending"
-search = "Search…"
-retryMixedConfirm = "Some selected files have already completed and will be skipped. Only failed files will be retried. Continue?"
-watching = "Watching: {{name}}"
-noInputFolder = "No input folder — edit to configure"
-countProcessing = "{{count}} processing"
-countQueued = "{{count}} queued"
-exportZip = "Export zip"
-exportSeparately = "Export separately"
-countSelected = "{{count}} selected"
-selectAll = "Select all {{count}}"
-delete = "Delete"
-clearSelection = "Clear selection"
-preview = "Preview"
-export = "Export"
-previewInput = "Preview input"
-previewOutput = "Preview output"
-directionIn = "in"
-directionOut = "out"
-queuedWaiting = "Queued — waiting to run"
-allTime = "All time"
-queued = "Queued"
-inputSize = "Input size"
-filesProcessedOverTime = "Files processed over time"
-legendComplete = "Complete"
-chartTooltipComplete = "{{count}} complete"
-chartTooltipFailed = "{{count}} failed"
-removeEntry = "Remove entry"
-removeEntries = "Remove {{count}} entries"
-deleteConfirmBody = "Remove notifications only clears the activity log. Delete outputs also removes the processed files from storage. Your original input files are never touched."
-cancel = "Cancel"
-removeNotificationsOnly = "Remove notifications only"
-deleteOutputs = "Delete outputs"
-previewLoadFailed = "Could not load file preview."
-
-[watchedFolders.actions]
-back = "Back"
-dismiss = "Dismiss"
-retry = "Retry"
-download = "Download"
-downloadInput = "Download input"
-downloadOutput = "Download output"
-collapse = "Collapse"
-expand = "Expand"
-
-[watchedFolders.time]
-justNow = "just now"
-minutesAgo = "{{count}}m ago"
-hoursAgo = "{{count}}h ago"
-daysAgo = "{{count}}d ago"
-
-[addStamp]
-tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
-
-[annotate]
-tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
-
-[devAirgapped]
-tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
-
-[devApi]
-tags = "API,development,documentation,developer,REST,integration,endpoints,programmatic,automation,scripting"
-
-[devFolderScanning]
-tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,batch,monitor folder,auto process,folder monitoring"
-
-[devSsoGuide]
-tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
-
-[read]
-tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
-
-[scannerEffect]
-tags = "scan,simulate,create,fake scan,look scanned,scanner effect,make look scanned,photocopy effect,simulate scanner,realistic scan"
