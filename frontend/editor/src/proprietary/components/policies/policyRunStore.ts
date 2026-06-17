@@ -133,6 +133,18 @@ export function recordRunStart(record: PolicyRunRecord) {
   emit();
 }
 
+/**
+ * Add a run discovered on the backend that this client has no local record of (e.g. it was
+ * started before a refresh recorded it). Unlike {@link recordRunStart} this adds no dispatch key:
+ * the run already exists server-side, so re-dispatch isn't the concern; we only want it polled and
+ * its outputs imported. No-op if the run is already known (reconcile patches those via updateRun).
+ */
+export function addReconciledRun(record: PolicyRunRecord) {
+  if (state.runs.some((r) => r.runId === record.runId)) return;
+  state = { ...state, runs: [record, ...state.runs].slice(0, MAX_RUNS) };
+  emit();
+}
+
 /** Mark a (policy, file) pair dispatched without a run (e.g. dispatch failed). */
 export function markDispatched(categoryId: string, fileId: string) {
   const key = dispatchKey(categoryId, fileId);

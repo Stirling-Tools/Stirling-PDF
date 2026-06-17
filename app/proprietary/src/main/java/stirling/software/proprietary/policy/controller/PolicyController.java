@@ -36,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.job.JobResponse;
+import stirling.software.common.service.JobOwnershipService;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
@@ -73,6 +74,7 @@ public class PolicyController {
     private final PolicyManagementAuthority policyManagementAuthority;
     private final ApplicationProperties applicationProperties;
     private final TempFileManager tempFileManager;
+    private final JobOwnershipService jobOwnershipService;
 
     @PostMapping(value = "/run", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
@@ -141,6 +143,35 @@ public class PolicyController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(PolicyRunView.of(run));
+    }
+
+    @GetMapping("/runs")
+    @Operation(
+            summary = "List the caller's stored-policy runs",
+            description =
+                    "Returns the caller's in-flight and recently-finished stored-policy runs (within"
+                            + " the run-retention window). The frontend reconciles these on load so a"
+                            + " run started before a refresh/crash is rediscovered and its outputs"
+                            + " collected, rather than orphaned on the backend. Ad-hoc runs (no"
+                            + " policy id) are excluded.")
+    public List<PolicyRunView> listRuns() {
+        return runRegistry.all().stream()
+                .filter(run -> run.getPolicyId() != null)
+                .filter(run -> ownedByCurrentUser(run.getRunId()))
+                .map(PolicyRunView::of)
+                .toList();
+    }
+
+    /**
+     * Whether the run is owned by the current user, derived purely from the existing scoping
+     * methods: stripping then re-applying the scope reproduces the run's key only when its owner
+     * prefix matches the caller's. No auth (single-user) owns everything. Avoids duplicating the
+     * scoped-key format here.
+     */
+    private boolean ownedByCurrentUser(String runId) {
+        return jobOwnershipService
+                .createScopedJobKey(jobOwnershipService.extractJobId(runId))
+                .equals(runId);
     }
 
     // --- Policy management ---
