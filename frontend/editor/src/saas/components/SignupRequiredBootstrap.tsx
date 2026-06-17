@@ -17,8 +17,7 @@ import type { PaygSignupRequiredDetail } from "@app/services/paygErrorIntercepto
  * The {@code apiClient} module is created at app boot, outside the React
  * tree, and can't import JSX. We bridge with a {@code CustomEvent}: the
  * interceptor dispatches, this bootstrap (mounted near the app root)
- * listens and renders. Same pattern as {@code TrialExpiredBootstrap},
- * just driven by a request-side trigger rather than auth state.
+ * listens and renders, driven by a request-side trigger.
  *
  * <h2>De-duping</h2>
  * If the user fires multiple billable requests in quick succession (e.g.
