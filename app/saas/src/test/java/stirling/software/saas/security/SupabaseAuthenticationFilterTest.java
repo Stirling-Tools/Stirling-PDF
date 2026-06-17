@@ -46,7 +46,6 @@ class SupabaseAuthenticationFilterTest {
     @Mock private TeamService teamService;
     @Mock private UserService userService;
     @Mock private SupabaseUserService supabaseUserService;
-    @Mock private stirling.software.saas.service.CreditService creditService;
     @Mock private stirling.software.saas.service.SaasTeamService saasTeamService;
     @Mock private JwtDecoder jwtDecoder;
 
@@ -60,12 +59,7 @@ class SupabaseAuthenticationFilterTest {
         SecurityContextHolder.clearContext();
         filter =
                 new SupabaseAuthenticationFilter(
-                        teamService,
-                        userService,
-                        supabaseUserService,
-                        creditService,
-                        saasTeamService,
-                        jwtDecoder);
+                        teamService, userService, supabaseUserService, saasTeamService, jwtDecoder);
         request = new MockHttpServletRequest();
         response = new MockHttpServletResponse();
         chain = new MockFilterChain();

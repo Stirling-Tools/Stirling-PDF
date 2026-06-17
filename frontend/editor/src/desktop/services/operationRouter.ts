@@ -60,6 +60,7 @@ export class OperationRouter {
       /^\/api\/v1\/auth\//, // Supabase auth (SaaS mode)
       /^\/api\/v1\/payg\//, // PAYG wallet / spend-cap / billing
       /^\/api\/v1\/policies(?:\/|$)/, // Policy runs — must bill via the cloud
+      /^\/api\/v1\/ai\//, // AI engine (orchestrate, etc.) — runs in the cloud
       // Add more cloud-only feature prefixes here as they land.
     ];
 
