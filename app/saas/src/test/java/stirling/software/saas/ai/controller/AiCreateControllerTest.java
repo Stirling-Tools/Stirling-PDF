@@ -64,17 +64,13 @@ import stirling.software.saas.payg.charge.JobChargeService;
 import stirling.software.saas.payg.model.BillingCategory;
 import stirling.software.saas.payg.model.JobSource;
 import stirling.software.saas.payg.model.ProcessType;
-import stirling.software.saas.service.CreditService;
-import stirling.software.saas.service.TeamCreditService;
-import stirling.software.saas.util.CreditHeaderUtils;
 
 /**
  * Pure unit tests for {@link AiCreateController}. All collaborators are mocked; the controller's
  * handler methods are invoked directly and asserted via {@link ResponseEntity} / {@code verify}.
  *
- * <p>The controller reads {@code SecurityContextHolder} in the charge + credit-header paths, so
- * each relevant test seeds an authentication and {@link #clearSecurityContext()} resets it
- * afterwards.
+ * <p>The controller reads {@code SecurityContextHolder} in the charge path, so each relevant test
+ * seeds an authentication and {@link #clearSecurityContext()} resets it afterwards.
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -82,10 +78,7 @@ class AiCreateControllerTest {
 
     @Mock private AiCreateSessionService sessionService;
     @Mock private AiCreateProxyService proxyService;
-    @Mock private CreditService creditService;
-    @Mock private TeamCreditService teamCreditService;
     @Mock private UserRepository userRepository;
-    @Mock private CreditHeaderUtils creditHeaderUtils;
     @Mock private JobChargeService jobChargeService;
 
     private AiCreateController controller;
@@ -94,13 +87,7 @@ class AiCreateControllerTest {
     void setUp() {
         controller =
                 new AiCreateController(
-                        sessionService,
-                        proxyService,
-                        creditService,
-                        teamCreditService,
-                        userRepository,
-                        creditHeaderUtils,
-                        jobChargeService);
+                        sessionService, proxyService, userRepository, jobChargeService);
     }
 
     @AfterEach
@@ -729,8 +716,6 @@ class AiCreateControllerTest {
             // Ownership guard runs before the proxy.
             verify(sessionService).getSessionForCurrentUser("sess-1");
             assertThat(drain(resp.getBody())).isEqualTo("section data");
-            // No credit header on the non-AI-triggering endpoint.
-            assertThat(resp.getHeaders().containsHeader("X-Credits-Remaining")).isFalse();
         }
 
         @Test
@@ -761,7 +746,7 @@ class AiCreateControllerTest {
     }
 
     // ----------------------------------------------------------------------------------------------
-    // stream (proxy, accept event-stream + credit header)
+    // stream (proxy, accept event-stream)
     // ----------------------------------------------------------------------------------------------
 
     @Nested
@@ -769,13 +754,9 @@ class AiCreateControllerTest {
     class Stream {
 
         @Test
-        @DisplayName("proxies GET as event-stream and adds X-Credits-Remaining for authed user")
-        void stream_addsCreditHeader() throws Exception {
-            User user = userWithTeam(7L, 100L);
-            authenticateWeb(user);
-            when(creditHeaderUtils.getRemainingCredits(user, creditService, teamCreditService))
-                    .thenReturn(42);
-
+        @DisplayName(
+                "checks ownership, proxies GET as event-stream, defaults Content-Type, and streams")
+        void stream_proxiesEventStreamAndStreams() throws Exception {
             HttpServletRequest req = mock(HttpServletRequest.class);
             HttpResponse<InputStream> upstream =
                     upstreamResponse(200, "data: hi\n\n", httpHeaders(Map.of()));
@@ -789,78 +770,9 @@ class AiCreateControllerTest {
             // No upstream Content-Type → defaulted to text/event-stream.
             assertThat(resp.getHeaders().getFirst(HttpHeaders.CONTENT_TYPE))
                     .isEqualTo(MediaType.TEXT_EVENT_STREAM_VALUE);
-            assertThat(resp.getHeaders().getFirst("X-Credits-Remaining")).isEqualTo("42");
+            // Ownership guard runs before the proxy.
             verify(sessionService).getSessionForCurrentUser("sess-1");
             assertThat(drain(resp.getBody())).isEqualTo("data: hi\n\n");
-        }
-
-        @Test
-        @DisplayName("negative remaining credits suppresses the credit header")
-        void stream_negativeCredits_omitsHeader() throws Exception {
-            User user = userWithTeam(7L, 100L);
-            authenticateWeb(user);
-            when(creditHeaderUtils.getRemainingCredits(user, creditService, teamCreditService))
-                    .thenReturn(-1);
-
-            HttpServletRequest req = mock(HttpServletRequest.class);
-            HttpResponse<InputStream> upstream = upstreamResponse(200, "x", httpHeaders(Map.of()));
-            when(proxyService.forward(any(), any(), any(), eq(true))).thenReturn(upstream);
-
-            ResponseEntity<StreamingResponseBody> resp = controller.stream("sess-1", req);
-
-            assertThat(resp.getHeaders().containsHeader("X-Credits-Remaining")).isFalse();
-        }
-
-        @Test
-        @DisplayName("zero remaining credits still emits the header (>= 0 boundary)")
-        void stream_zeroCredits_emitsHeader() throws Exception {
-            User user = userWithTeam(7L, 100L);
-            authenticateWeb(user);
-            when(creditHeaderUtils.getRemainingCredits(user, creditService, teamCreditService))
-                    .thenReturn(0);
-
-            HttpServletRequest req = mock(HttpServletRequest.class);
-            HttpResponse<InputStream> upstream = upstreamResponse(200, "x", httpHeaders(Map.of()));
-            when(proxyService.forward(any(), any(), any(), eq(true))).thenReturn(upstream);
-
-            ResponseEntity<StreamingResponseBody> resp = controller.stream("sess-1", req);
-
-            assertThat(resp.getHeaders().getFirst("X-Credits-Remaining")).isEqualTo("0");
-        }
-
-        @Test
-        @DisplayName("unauthenticated context: stream still proxies, no credit header, no NPE")
-        void stream_noAuth_omitsCreditHeader() throws Exception {
-            SecurityContextHolder.clearContext();
-            HttpServletRequest req = mock(HttpServletRequest.class);
-            HttpResponse<InputStream> upstream = upstreamResponse(200, "x", httpHeaders(Map.of()));
-            when(proxyService.forward(any(), any(), any(), eq(true))).thenReturn(upstream);
-
-            ResponseEntity<StreamingResponseBody> resp = controller.stream("sess-1", req);
-
-            assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(resp.getHeaders().containsHeader("X-Credits-Remaining")).isFalse();
-            verifyNoInteractions(creditHeaderUtils);
-        }
-
-        @Test
-        @DisplayName("credit-header lookup blowing up does not break the stream response")
-        void stream_creditLookupThrows_stillStreams() throws Exception {
-            User user = userWithTeam(7L, 100L);
-            authenticateWeb(user);
-            when(creditHeaderUtils.getRemainingCredits(any(), any(), any()))
-                    .thenThrow(new RuntimeException("boom"));
-
-            HttpServletRequest req = mock(HttpServletRequest.class);
-            HttpResponse<InputStream> upstream =
-                    upstreamResponse(200, "payload", httpHeaders(Map.of()));
-            when(proxyService.forward(any(), any(), any(), eq(true))).thenReturn(upstream);
-
-            ResponseEntity<StreamingResponseBody> resp = controller.stream("sess-1", req);
-
-            assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(resp.getHeaders().containsHeader("X-Credits-Remaining")).isFalse();
-            assertThat(drain(resp.getBody())).isEqualTo("payload");
         }
 
         @Test
@@ -904,7 +816,7 @@ class AiCreateControllerTest {
         }
 
         @Test
-        @DisplayName("ownership failure short-circuits before proxy/credit work")
+        @DisplayName("ownership failure short-circuits before proxying")
         void stream_ownershipFailure_doesNotProxy() throws Exception {
             HttpServletRequest req = mock(HttpServletRequest.class);
             when(sessionService.getSessionForCurrentUser("sess-1"))
@@ -913,7 +825,6 @@ class AiCreateControllerTest {
             assertThatThrownBy(() -> controller.stream("sess-1", req))
                     .isInstanceOf(ResponseStatusException.class);
             verify(proxyService, never()).forward(any(), any(), any(), anyBoolean());
-            verifyNoInteractions(creditHeaderUtils);
         }
     }
 

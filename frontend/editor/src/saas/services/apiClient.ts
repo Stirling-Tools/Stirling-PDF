@@ -1,23 +1,11 @@
 import axios from "axios";
 import { supabase } from "@app/auth/supabase";
 import { handleHttpError } from "@app/services/httpErrorHandler";
-import { alert } from "@app/components/toast";
-import { openPlanSettings } from "@app/utils/appSettings";
 import {
   classifyPaygError,
   handlePaygError,
 } from "@app/services/paygErrorInterceptor";
 import { withBasePath } from "@app/constants/app";
-
-// Global credit update callback - will be set by the AuthProvider
-let globalCreditUpdateCallback: ((credits: number) => void) | null = null;
-
-// Function to set the global credit update callback
-export const setGlobalCreditUpdateCallback = (
-  callback: (credits: number) => void,
-) => {
-  globalCreditUpdateCallback = callback;
-};
 
 // Helper: decode base64url JWT payload safely
 function decodeJwtPayload(token: string): Record<string, unknown> | null {
@@ -46,20 +34,6 @@ const apiClient = axios.create({
   responseType: "json",
 });
 
-const LOW_CREDIT_THRESHOLD = 10;
-function notifyLowCredits(credits: number) {
-  const title = "Credit balance low";
-  const body = `You have ${credits} credits remaining.`;
-  alert({
-    alertType: "warning",
-    title,
-    body,
-    buttonText: "Top up",
-    buttonCallback: () => openPlanSettings(),
-    isPersistentPopup: true,
-    location: "bottom-right",
-  });
-}
 // Request interceptor to add JWT token to all requests
 apiClient.interceptors.request.use(
   async (config) => {
@@ -136,34 +110,9 @@ function refreshSessionOnce(): ReturnType<typeof supabase.auth.refreshSession> {
   return inFlightRefresh;
 }
 
-// Response interceptor for handling token refresh and credit updates
+// Response interceptor for handling token refresh
 apiClient.interceptors.response.use(
-  (response) => {
-    // Check for X-Credits-Remaining header and update credits automatically
-    const creditsRemaining = response.headers["x-credits-remaining"];
-    if (creditsRemaining && globalCreditUpdateCallback) {
-      const credits = parseInt(creditsRemaining, 10);
-      if (!isNaN(credits) && credits >= 0) {
-        console.debug(
-          "[API Client] Updating credits from response header:",
-          credits,
-          "for URL:",
-          response.config?.url,
-        );
-        globalCreditUpdateCallback(credits);
-        // Show low-credit toast with top-up button when below threshold
-        if (credits < LOW_CREDIT_THRESHOLD) {
-          notifyLowCredits(credits);
-        }
-      } else {
-        console.warn(
-          "[API Client] Invalid credits value in response header:",
-          creditsRemaining,
-        );
-      }
-    }
-    return response;
-  },
+  (response) => response,
   async (error) => {
     const originalRequest = error.config || {};
     const status = error.response?.status;

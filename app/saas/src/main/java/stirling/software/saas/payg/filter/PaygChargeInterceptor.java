@@ -53,9 +53,7 @@ import stirling.software.saas.payg.model.ProcessType;
 import stirling.software.saas.util.AuthenticationUtils;
 
 /**
- * The hot-path PAYG interceptor. Mirrors the {@code UnifiedCreditInterceptor} shape: registered
- * after it in {@code PaygWebMvcConfig} so legacy credit-rejection short-circuits before we waste
- * work hashing inputs.
+ * The hot-path PAYG interceptor, registered in {@code PaygWebMvcConfig}.
  *
  * <p>{@code preHandle}: gates on {@code @AutoJobPostMapping} OR {@code @RequiresFeature} (the
  * latter lets AI controllers — JSON-bodied, no AutoJobPostMapping — bill correctly), reads the

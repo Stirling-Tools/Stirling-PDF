@@ -63,7 +63,6 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
     private final TeamService teamService;
     private final UserService userService;
     private final SupabaseUserService supabaseUserService;
-    private final stirling.software.saas.service.CreditService creditService;
     private final SaasTeamService saasTeamService;
     private final JwtDecoder jwtDecoder;
     private final AuthenticationEntryPoint authenticationEntryPoint =
@@ -73,13 +72,11 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
             TeamService teamService,
             UserService userService,
             SupabaseUserService supabaseUserService,
-            stirling.software.saas.service.CreditService creditService,
             SaasTeamService saasTeamService,
             JwtDecoder jwtDecoder) {
         this.teamService = teamService;
         this.userService = userService;
         this.supabaseUserService = supabaseUserService;
-        this.creditService = creditService;
         this.saasTeamService = saasTeamService;
         this.jwtDecoder = jwtDecoder;
     }
@@ -381,16 +378,6 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
 
         // Only the DB-race winner runs first-time init; the losers skip it.
         if (weCreatedThisUser) {
-            try {
-                creditService.getOrCreateUserCredits(savedUser);
-            } catch (Exception e) {
-                log.warn(
-                        "Failed to initialize credits for new user {} ({}): {}",
-                        LogRedactionUtils.redactSupabaseId(supabaseId),
-                        LogRedactionUtils.redactEmail(savedUser.getUsername()),
-                        e.getMessage());
-            }
-
             try {
                 saasTeamService.createPersonalTeam(savedUser);
                 savedUser = userService.findBySupabaseId(supabaseId).orElse(savedUser);
