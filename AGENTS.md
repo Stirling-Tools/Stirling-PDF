@@ -12,6 +12,7 @@ Task `desc:` fields should describe **what** the task does, not **how** it does 
 - `task install` — install all dependencies
 - `task dev` — start backend + frontend concurrently
 - `task dev:all` — start backend + frontend + engine concurrently
+- `task dev:portal` — start backend + developer portal concurrently
 - `task build` — build all components
 - `task test` — run all tests (backend + frontend + engine)
 - `task lint` — run all linters

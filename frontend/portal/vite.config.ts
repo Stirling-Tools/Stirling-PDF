@@ -22,6 +22,16 @@ export default defineConfig(async ({ mode }) => {
   // Load .env files relative to this config, regardless of where invoked from.
   const env = loadEnv(mode, import.meta.dirname, "");
 
+  const backendUrl = process.env.BACKEND_URL || "http://localhost:8080";
+  const backendProxy = {
+    "/api": {
+      target: backendUrl,
+      changeOrigin: true,
+      secure: false,
+      xfwd: true,
+    },
+  };
+
   return {
     plugins: [
       react(),
@@ -47,6 +57,7 @@ export default defineConfig(async ({ mode }) => {
       host: true,
       port: 5173,
       strictPort: true,
+      proxy: backendProxy,
       fs: {
         allow: [resolve(import.meta.dirname, "..")],
       },
@@ -55,6 +66,7 @@ export default defineConfig(async ({ mode }) => {
       host: true,
       port: 5173,
       strictPort: true,
+      proxy: backendProxy,
     },
     build: {
       outDir: "../dist-portal",
