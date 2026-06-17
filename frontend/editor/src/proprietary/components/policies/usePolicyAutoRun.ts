@@ -18,6 +18,7 @@ import {
   useFileContext,
 } from "@app/contexts/FileContext";
 import { fileStorage } from "@app/services/fileStorage";
+import { useIndexedDB } from "@app/contexts/IndexedDBContext";
 import { POLICIES_ENABLED } from "@app/constants/featureFlags";
 import {
   runStoredPolicy,
@@ -119,6 +120,7 @@ export function usePolicyAutoRun(): void {
   const { fileStubs } = useAllFiles();
   const { addFiles } = useFileManagement();
   const { consumeFiles } = useFileContext();
+  const { bumpRevision } = useIndexedDB();
   const { policies } = usePolicies();
   const runs = usePolicyRuns();
   // Keys (run ids / dispatch keys) currently in flight, so the effects never
@@ -272,6 +274,7 @@ export function usePolicyAutoRun(): void {
       void importOutputs(run, {
         addFiles,
         consumeFiles,
+        bumpRevision,
         outputMode,
         outputName,
         parentStub,
@@ -299,6 +302,8 @@ interface ImportContext {
     outputs: StirlingFile[],
     stubs: StirlingFileStub[],
   ) => Promise<unknown>;
+  /** Bump the IndexedDB revision so the file views re-read after a storage-only version write. */
+  bumpRevision: () => void;
   /** "new_file" adds the output as a separate file; "new_version" versions the input. */
   outputMode: "new_file" | "new_version";
   /** Rename rule. Empty → keep the input's filename; set → use the policy's
@@ -410,22 +415,44 @@ async function importOutputs(
   // them, so they retry (without having been added).
   const files = fetched.map((f) => f.file);
   // Workspace fileIds of the delivered outputs — the policy badge marks these
-  // (the policy's output), not the input it ran on. Set in both branches below.
+  // (the policy's output), not the input it ran on. Set in every branch below.
   let deliveredIds: string[];
-  if (ctx.outputMode === "new_version" && ctx.parentStub) {
+  // For new-version output, resolve the input's stub from the active workspace, or from storage
+  // when the workspace is empty (e.g. after a reload, where the run is recovered but the input
+  // still persists in IndexedDB). Versioning it there keeps the result identical to the no-reload
+  // case (one leaf) instead of adding the output as a second file.
+  const parentStub =
+    ctx.outputMode === "new_version"
+      ? (ctx.parentStub ??
+        (await fileStorage.getStirlingFileStub(run.fileId as FileId)) ??
+        undefined)
+      : undefined;
+  if (parentStub) {
     // Replace the input file with a versioned child (preserves its history).
     // The version records "automate" as its origin tool — a policy is a
     // multi-tool automation, not any single tool (redact/watermark/sanitize/…).
     const { stirlingFiles, stubs } = await createStirlingFilesAndStubs(
       files,
-      ctx.parentStub,
+      parentStub,
       "automate",
     );
     // Mark the outputs handled BEFORE adding them, so the auto-run never enforces
     // the policy on its own output — that would version endlessly in a loop.
     for (const s of stubs) markDispatched(run.categoryId, s.id);
     deliveredIds = stubs.map((s) => s.id as string);
-    await ctx.consumeFiles([run.fileId as FileId], stirlingFiles, stubs);
+    if (ctx.parentStub) {
+      // Input is in the active workspace: version it there (workspace + storage).
+      await ctx.consumeFiles([run.fileId as FileId], stirlingFiles, stubs);
+    } else {
+      // Input is only in storage (run recovered after a reload): version it at the
+      // storage layer, then refresh the file views.
+      await fileStorage.persistVersionedOutputs(
+        [run.fileId as FileId],
+        stirlingFiles,
+        stubs,
+      );
+      ctx.bumpRevision();
+    }
   } else {
     const added = await ctx.addFiles(files);
     // Same loop-guard for new-file output: the produced file is a new workspace
