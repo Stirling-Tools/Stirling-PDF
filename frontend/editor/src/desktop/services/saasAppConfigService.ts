@@ -64,7 +64,10 @@ class SaasAppConfigService {
       this.cacheExpiry = Date.now() + CACHE_MS;
       return data;
     } catch (error) {
-      console.error("[saasAppConfigService] SaaS app-config fetch error:", error);
+      console.error(
+        "[saasAppConfigService] SaaS app-config fetch error:",
+        error,
+      );
       return null;
     }
   }

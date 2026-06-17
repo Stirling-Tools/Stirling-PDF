@@ -53,7 +53,11 @@ describe("saasAppConfigService", () => {
 
   test("returns null on a non-ok response", async () => {
     getModeMock.mockResolvedValue("saas");
-    fetchMock.mockResolvedValue({ ok: false, status: 500, json: async () => ({}) });
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: async () => ({}),
+    });
     expectConsole.warn(/SaaS app-config fetch failed: 500/);
     expect(await saasAppConfigService.getConfig()).toBeNull();
   });
