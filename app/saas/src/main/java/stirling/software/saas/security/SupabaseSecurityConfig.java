@@ -260,7 +260,7 @@ public class SupabaseSecurityConfig {
                 applicationProperties.getSystem() != null
                         && applicationProperties.getSystem().getCorsAllowedOrigins() != null
                         && !applicationProperties.getSystem().getCorsAllowedOrigins().isEmpty();
-        List<String> origins =
+        List<String> configuredOrigins =
                 operatorOverride
                         ? applicationProperties.getSystem().getCorsAllowedOrigins()
                         : List.of(
@@ -270,6 +270,18 @@ public class SupabaseSecurityConfig {
                                 "https://stirling.com",
                                 "https://app.stirling.com",
                                 "https://api.stirling.com");
+        // Always allow the desktop (Tauri) app's webview origins so the bundled
+        // desktop client can reach the cloud backend regardless of the operator's
+        // configured web origins. A browser can never present a tauri:// (or
+        // tauri.localhost) origin, so these are desktop-app identities — safe to
+        // allow alongside allowCredentials=true. Mirrors core WebMvcConfig.
+        List<String> origins = new ArrayList<>(configuredOrigins);
+        for (String desktopOrigin :
+                List.of("tauri://localhost", "http://tauri.localhost", "https://tauri.localhost")) {
+            if (!origins.contains(desktopOrigin)) {
+                origins.add(desktopOrigin);
+            }
+        }
         if (origins.stream().anyMatch(o -> o.contains("*"))) {
             log.warn(
                     "CORS origins contain a wildcard paired with allowCredentials=true: {}."

@@ -56,10 +56,12 @@ export async function runStoredPolicy(
 ): Promise<string> {
   const form = new FormData();
   for (const file of files) form.append("fileInput", file);
+  // Don't set Content-Type: the HTTP client must generate multipart/form-data
+  // WITH its boundary from the FormData body. A manual boundary-less header makes
+  // the server reject the request ("no multipart boundary parameter").
   const res = await apiClient.post<JobResponse>(
     `/api/v1/policies/${encodeURIComponent(id)}/run`,
     form,
-    { headers: { "Content-Type": "multipart/form-data" } },
   );
   return res.data.jobId;
 }
@@ -81,9 +83,8 @@ export async function runPolicyPipeline(
     "json",
     new Blob([JSON.stringify(definition)], { type: "application/json" }),
   );
-  const res = await apiClient.post<JobResponse>("/api/v1/policies/run", form, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  // No Content-Type: let the client set multipart/form-data with its boundary.
+  const res = await apiClient.post<JobResponse>("/api/v1/policies/run", form);
   return res.data.jobId;
 }
 

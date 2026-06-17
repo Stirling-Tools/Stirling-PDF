@@ -74,6 +74,10 @@ function compressStaticCopyPlugin(): PluginOption {
   };
 }
 
+// NOTE: cloud/ is a SHARED layer, not a runnable build flavor — it's compiled
+// into the saas and desktop builds. It has no entry here and no vite tsconfig;
+// it is only typechecked standalone via editor/src/cloud/tsconfig.json
+// (task frontend:typecheck:cloud) to prove it carries no saas/desktop-only deps.
 const VALID_MODES = [
   "core",
   "proprietary",
