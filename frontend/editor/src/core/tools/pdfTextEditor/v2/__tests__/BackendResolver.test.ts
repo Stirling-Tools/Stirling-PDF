@@ -142,4 +142,33 @@ describe("BackendResolver", () => {
       expect(r.resolve(0, "M", fakeCtx)).toBeNull();
     });
   });
+
+  describe("whitespace is never charcode-reused (mushroom „ bug)", () => {
+    it("resolve() reports a space as missing and never round-trips it", async () => {
+      const r = new BackendResolver();
+      const result = r.resolve(99, " ", fakeCtx);
+      // Space must be reported missing (-> emitted as a positional gap),
+      // NOT looked up / cached / sent to the backend (which would paint a
+      // garbage glyph like „ for charcode 0x20 in subset fonts).
+      expect(result?.missing).toEqual([" "]);
+      expect(result?.charcodes).toEqual([]);
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(post).not.toHaveBeenCalled();
+    });
+
+    it("resolve() splits a mixed chunk: real chars miss the cache, whitespace stays a gap", async () => {
+      const r = new BackendResolver();
+      // "a b" - 'a' and 'b' are genuine cache misses (kick a prefetch), the
+      // space is reported missing WITHOUT being counted as a prefetch miss.
+      const result = r.resolve(99, "a b", fakeCtx);
+      expect(result?.missing).toEqual(["a", " ", "b"]);
+      expect(result?.charcodes).toEqual([]);
+      // The prefetch (for 'a') bails before HTTP in this no-window env, but
+      // crucially the space alone must never be the reason a prefetch fires.
+      const spaceOnly = r.resolve(99, "\t\n ", fakeCtx);
+      expect(spaceOnly?.charcodes).toEqual([]);
+      expect(spaceOnly?.missing).toEqual(["\t", "\n", " "]);
+    });
+  });
 });

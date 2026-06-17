@@ -1,5 +1,6 @@
 import { TextRun } from "@app/tools/pdfTextEditor/v2/model/TextRun";
 import { ImageObject } from "@app/tools/pdfTextEditor/v2/model/ImageObject";
+import { DisplayTransform } from "@app/tools/pdfTextEditor/v2/model/DisplayTransform";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 
 /**
@@ -14,6 +15,14 @@ export class Page {
   readonly pagePtr: number;
   readonly width: number;
   readonly height: number;
+  /**
+   * Maps this page's raw PDF object coords (MediaBox, y-up) to the rendered
+   * bitmap's display space (CropBox-cropped + /Rotate-applied). Identity for
+   * normal pages where CropBox==MediaBox and /Rotate==0. Used only at the
+   * screen boundary (overlay placement + screen-derived inputs); the model
+   * and all commands stay in raw PDF space.
+   */
+  readonly display: DisplayTransform;
   runs: TextRun[];
   images: ImageObject[];
   /** True if any object on this page has uncommitted mutation. */
@@ -46,11 +55,14 @@ export class Page {
     pagePtr: number;
     width: number;
     height: number;
+    display?: DisplayTransform;
   }) {
     this.index = opts.index;
     this.pagePtr = opts.pagePtr;
     this.width = opts.width;
     this.height = opts.height;
+    this.display =
+      opts.display ?? DisplayTransform.identity(opts.width, opts.height);
     this.runs = [];
     this.images = [];
     this.dirty = false;

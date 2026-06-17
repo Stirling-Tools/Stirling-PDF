@@ -1072,8 +1072,83 @@ export interface ParagraphEditPlan {
     plan: PartialEditPlan | null;
     nextLine: string;
   }>;
+  /** Per-VISUAL-line next text, parallel to `run.paragraphLineSlots`. */
+  nextLines: string[];
   /** Snapshot of the rep's slots for revert. */
   prevSlots: ParagraphLineSlot[];
+}
+
+/** Count occurrences of a single char in a string. */
+function countChar(s: string, ch: string): number {
+  let n = 0;
+  for (let i = 0; i < s.length; i++) if (s[i] === ch) n++;
+  return n;
+}
+
+/**
+ * True when a plan would SetText whitespace in place via a "modify" op.
+ * Such an op paints „ on an embedded subset font with no space glyph, so the
+ * caller re-emits the line word-split instead. (Multi-word single-object
+ * sub-runs - e.g. a whole LaTeX line as one PDFium object - hit this.)
+ */
+export function planModifiesWhitespace(plan: PartialEditPlan): boolean {
+  return plan.ops.some(
+    (op) => op.type === "modify" && !!op.text && /\s/.test(op.text),
+  );
+}
+
+/** Read a text object's own font handle (0 when unavailable). */
+function objFontPtr(
+  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  ptr: number,
+): number {
+  const fontMod = m as unknown as FontReadingModule;
+  if (!ptr || !fontMod.FPDFTextObj_GetFont) return 0;
+  try {
+    return fontMod.FPDFTextObj_GetFont(ptr) || 0;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * Locate the single contiguous edit between `prev` and `next` via a
+ * prefix/suffix scan. Returns the changed span: `[start, prevEnd)` in
+ * `prev` maps to `[start, nextEnd)` in `next`.
+ */
+function diffSpan(
+  prev: string,
+  next: string,
+): { start: number; prevEnd: number; nextEnd: number } {
+  const minLen = Math.min(prev.length, next.length);
+  let start = 0;
+  while (start < minLen && prev[start] === next[start]) start++;
+  let end = 0;
+  while (
+    end < minLen - start &&
+    prev[prev.length - 1 - end] === next[next.length - 1 - end]
+  ) {
+    end++;
+  }
+  return { start, prevEnd: prev.length - end, nextEnd: next.length - end };
+}
+
+/**
+ * Verify the slot char ranges exactly tile `text` with one-char separators
+ * between visual lines (`[startChar, endChar)` per slot, a single separator
+ * at each `endChar`, last slot ending at `text.length`). When `run.text`
+ * desyncs from the slot model this returns false so the caller bails to the
+ * overlay path instead of slicing garbage.
+ */
+function slotsTileText(slots: ParagraphLineSlot[], text: string): boolean {
+  if (slots.length === 0) return false;
+  if (slots[0].startChar !== 0) return false;
+  for (let i = 0; i < slots.length; i++) {
+    const s = slots[i];
+    if (s.endChar < s.startChar || s.endChar > text.length) return false;
+    if (i > 0 && s.startChar !== slots[i - 1].endChar + 1) return false;
+  }
+  return slots[slots.length - 1].endChar === text.length;
 }
 
 export function planParagraphEdit(
@@ -1081,15 +1156,43 @@ export function planParagraphEdit(
   prevText: string,
   nextText: string,
 ): ParagraphEditPlan | null {
-  if (run.paragraphLineSlots.length < 2) return null;
+  const slots = run.paragraphLineSlots;
+  if (slots.length < 2) return null;
   if (prevText === nextText) return null;
   if (hasSurrogatePair(prevText)) return null;
-  // Line-count guard: typing Enter or deleting a newline changes the
-  // slot count. Bail to overlay for those edits.
-  const prevLines = prevText.split("\n");
-  const nextLines = nextText.split("\n");
-  if (prevLines.length !== nextLines.length) return null;
-  if (prevLines.length !== run.paragraphLineSlots.length) return null;
+  // Per-VISUAL-line text comes from the slot char ranges, NOT split("\n").
+  // run.text joins visual lines with ONE-char separators that are "\n" for
+  // hard (user) breaks but " " for soft word-wraps, so split("\n") under-
+  // counts lines the moment a paragraph soft-wraps - which used to bail the
+  // edit to the whole-paragraph overlay re-emit and collapse every line.
+  if (!slotsTileText(slots, prevText)) return null;
+  const prevLines = slots.map((s) => prevText.slice(s.startChar, s.endChar));
+
+  // A change in the count of hard breaks ("\n") is a structural line
+  // add/remove the slot model can't express; let the line-edit path handle
+  // it. (Soft-wrap separators are spaces and never change via typing.)
+  if (countChar(prevText, "\n") !== countChar(nextText, "\n")) return null;
+
+  // The edit must be confined to a single visual line. Find the slot whose
+  // range fully contains the changed span; an edit that crosses a separator
+  // or spans two slots is structural - bail.
+  const span = diffSpan(prevText, nextText);
+  let hitSlot = -1;
+  for (let i = 0; i < slots.length; i++) {
+    const s = slots[i];
+    if (span.start >= s.startChar && span.prevEnd <= s.endChar) {
+      hitSlot = i;
+      break;
+    }
+  }
+  if (hitSlot < 0) return null;
+
+  // Only the hit slot's text changes; its new length shifts by the edit
+  // delta. Every other visual line is untouched.
+  const delta = nextText.length - prevText.length;
+  const nextLines = prevLines.slice();
+  const hit = slots[hitSlot];
+  nextLines[hitSlot] = nextText.slice(hit.startChar, hit.endChar + delta);
 
   const perSlot: Array<{
     slotIdx: number;
@@ -1097,33 +1200,35 @@ export function planParagraphEdit(
     nextLine: string;
   }> = [];
 
-  for (let i = 0; i < run.paragraphLineSlots.length; i++) {
-    const slot = run.paragraphLineSlots[i];
-    const prevLine = prevLines[i];
-    const nextLine = nextLines[i];
-    if (prevLine === nextLine) continue;
-    // A slot with no sub-run objects can't be partially edited (e.g. an
-    // empty line the user just typed the first character into). Re-emit
-    // ONLY this line fresh - every other line keeps its original objects.
-    if (slot.mergedFromPtrs.length === 0) {
-      perSlot.push({ slotIdx: i, plan: null, nextLine });
-      continue;
-    }
-
+  const prevLine = prevLines[hitSlot];
+  const nextLine = nextLines[hitSlot];
+  if (prevLine === nextLine) return null;
+  // A slot with no sub-run objects can't be partially edited (e.g. an
+  // empty line the user just typed the first character into). Re-emit
+  // ONLY this line fresh - every other line keeps its original objects.
+  if (hit.mergedFromPtrs.length === 0) {
+    perSlot.push({ slotIdx: hitSlot, plan: null, nextLine });
+  } else {
     // Build a synthetic mini-TextRun view of the slot so the existing
     // planPartialEdit / applyPartialEditPlan code can operate on it.
-    const slotView = makeSlotView(run, slot, prevLine);
-    const plan = planPartialEdit(slotView, prevLine, nextLine);
+    const slotView = makeSlotView(run, hit, prevLine);
+    let plan = planPartialEdit(slotView, prevLine, nextLine);
+    // An in-place "modify" op re-SetTexts a sub-run's surviving chars. When
+    // that sub-run spans multiple words (one PDFium object for a whole line,
+    // common in LaTeX output) the surviving text carries spaces - and
+    // FPDFText_SetText paints „ for a space on an embedded subset font with
+    // no space glyph (the glyph at subset code 0x20). Re-emit the whole line
+    // fresh (word-split, inter-word spaces become positional gaps) instead.
+    if (plan && planModifiesWhitespace(plan)) plan = null;
     // Per-line LCS couldn't model the change - re-emit just this line
     // rather than failing the whole paragraph to the overlay re-emit.
-    perSlot.push({ slotIdx: i, plan: plan ?? null, nextLine });
+    perSlot.push({ slotIdx: hitSlot, plan: plan ?? null, nextLine });
   }
-
-  if (perSlot.length === 0) return null;
 
   return {
     perSlot,
-    prevSlots: run.paragraphLineSlots.map((s) => cloneSlot(s)),
+    nextLines,
+    prevSlots: slots.map((s) => cloneSlot(s)),
   };
 }
 
@@ -1139,10 +1244,12 @@ export function applyParagraphEditPlan(
   page: Page,
   run: TextRun,
   paraPlan: ParagraphEditPlan,
-  nextText: string,
 ): ParagraphEditApplyResult {
   const m = doc.module;
-  const lines = nextText.split("\n");
+  // Per-VISUAL-line next text from the plan (slot-range derived). Splitting
+  // nextText on "\n" would under-count lines for soft-wrapped paragraphs and
+  // leave trailing slots empty - the line-collapse bug.
+  const lines = paraPlan.nextLines;
   const newSlots: ParagraphLineSlot[] = run.paragraphLineSlots.map((s) =>
     cloneSlot(s),
   );
@@ -1178,9 +1285,14 @@ export function applyParagraphEditPlan(
 
     if (planEntry.plan === null) {
       // Fresh-emit line: this line couldn't be partially edited (empty line
-      // that gained text, or an LCS that failed). Remove its old objects and
-      // re-emit it in the fallback font; every OTHER line is untouched.
+      // that gained text, an LCS that failed, or an in-place edit that would
+      // SetText whitespace onto a no-space-glyph subset font -> „). Re-emit
+      // the line word-split, REUSING the source font where it renders so the
+      // glyphs still match; emitTextLine self-validates each word and falls
+      // back to base-14 only where the reused font produces .notdef.
       const leftX = slot.mergedFromBounds[0]?.x ?? slot.matrixE;
+      // Read the font handle BEFORE the objects are removed.
+      const reuseFontPtr = objFontPtr(m, slot.mergedFromPtrs[0] ?? 0);
       for (const ptr of slot.mergedFromPtrs) {
         if (!ptr) continue;
         try {
@@ -1199,7 +1311,7 @@ export function applyParagraphEditPlan(
           y: slot.baselineY,
           fontSize: slot.fontSize,
           fill: run.fill,
-          originalFontPtr: 0,
+          originalFontPtr: reuseFontPtr,
           fallbackFamily,
         });
         const built = buildSlotMerged(m, ptrs, lineText, leftX);
@@ -1207,8 +1319,12 @@ export function applyParagraphEditPlan(
         slot.mergedFromTexts = built.texts;
         slot.mergedFromBounds = built.bounds;
         slot.mergedFromCharStarts = built.charStarts;
-        slot.fontId = `base14:${fallbackFamily}`;
-        slot.fontSubset = false;
+        // Only drop to a base-14 identity when the source font wasn't reused;
+        // otherwise keep the slot's font so the NEXT edit reuses it again.
+        if (reuseFontPtr === 0) {
+          slot.fontId = `base14:${fallbackFamily}`;
+          slot.fontSubset = false;
+        }
         slot.containerPtr = 0;
         allInsertedPtrs.push(...ptrs);
         for (const b of built.bounds) {

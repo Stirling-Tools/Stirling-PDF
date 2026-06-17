@@ -5,10 +5,17 @@ import type {
   ImageObjectSnapshot,
   PageRect,
 } from "@app/tools/pdfTextEditor/v2/types";
+import type { DisplayTransform } from "@app/tools/pdfTextEditor/v2/model/DisplayTransform";
 
 interface ImageHandleProps {
   image: ImageObjectSnapshot;
   pageHeight: number;
+  /**
+   * Raw-PDF -> display (CropBox/rotation) transform. Identity for normal
+   * pages; maps the image's PDF AABB onto the rendered (cropped/rotated)
+   * bitmap and back for drag/resize.
+   */
+  transform: DisplayTransform;
   scale: number;
   selected: boolean;
   onSelect: () => void;
@@ -26,6 +33,7 @@ interface ImageHandleProps {
 export function ImageHandle({
   image,
   pageHeight,
+  transform,
   scale,
   selected,
   onSelect,
@@ -34,10 +42,24 @@ export function ImageHandle({
   const [dragging, setDragging] = useState(false);
   const [hovered, setHovered] = useState(false);
 
-  const left = image.bounds.x * scale;
-  const top = (pageHeight - image.bounds.y - image.bounds.height) * scale;
-  const width = Math.max(8, image.bounds.width * scale);
-  const height = Math.max(8, image.bounds.height * scale);
+  // Map the image's raw-PDF AABB into display-PDF space (4 corners through the
+  // transform, then min/max), then to CSS px. Identity transform reduces this
+  // to the prior `left=x*scale; top=(pageHeight-y-h)*scale` exactly.
+  const b = image.bounds;
+  const dispCorners = [
+    transform.apply(b.x, b.y),
+    transform.apply(b.x + b.width, b.y),
+    transform.apply(b.x, b.y + b.height),
+    transform.apply(b.x + b.width, b.y + b.height),
+  ];
+  const dispMinX = Math.min(...dispCorners.map((c) => c.x));
+  const dispMaxX = Math.max(...dispCorners.map((c) => c.x));
+  const dispMinY = Math.min(...dispCorners.map((c) => c.y));
+  const dispMaxY = Math.max(...dispCorners.map((c) => c.y));
+  const left = dispMinX * scale;
+  const top = (pageHeight - dispMaxY) * scale;
+  const width = Math.max(8, (dispMaxX - dispMinX) * scale);
+  const height = Math.max(8, (dispMaxY - dispMinY) * scale);
 
   function cssToPdfBounds(
     leftCss: number,
@@ -45,13 +67,28 @@ export function ImageHandle({
     widthCss: number,
     heightCss: number,
   ): PageRect {
-    const w = Math.max(1, widthCss / scale);
-    const h = Math.max(1, heightCss / scale);
-    const x = leftCss / scale;
-    // CSS y grows downward, PDF y upward. CSS top corresponds to the
-    // image's PDF top edge = bounds.y + bounds.height.
-    const y = pageHeight - topCss / scale - h;
-    return { x, y, width: w, height: h };
+    // CSS rect -> display-PDF AABB (y-up), then invert each corner back to raw
+    // PDF space and re-AABB. Identity transform reduces this to the prior
+    // `x=leftCss/scale; y=pageHeight-topCss/scale-h` exactly.
+    const dLeft = leftCss / scale;
+    const dRight = (leftCss + widthCss) / scale;
+    const dTop = pageHeight - topCss / scale;
+    const dBottom = pageHeight - (topCss + heightCss) / scale;
+    const raw = [
+      transform.invert(dLeft, dBottom),
+      transform.invert(dRight, dBottom),
+      transform.invert(dLeft, dTop),
+      transform.invert(dRight, dTop),
+    ];
+    const minX = Math.min(...raw.map((c) => c.x));
+    const maxX = Math.max(...raw.map((c) => c.x));
+    const minY = Math.min(...raw.map((c) => c.y));
+    const maxY = Math.max(...raw.map((c) => c.y));
+    // Derive x/y from the CLAMPED extent (anchored at the far corner) so the
+    // identity case reduces byte-exactly to the prior `y = top - clampedHeight`.
+    const w = Math.max(1, maxX - minX);
+    const h = Math.max(1, maxY - minY);
+    return { x: maxX - w, y: maxY - h, width: w, height: h };
   }
 
   // Locked images are inert: no select, drag, or resize. The PDFium bitmap

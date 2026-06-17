@@ -5,6 +5,7 @@ import {
   openRawDocument,
 } from "@app/services/pdfiumService";
 import { Page } from "@app/tools/pdfTextEditor/v2/model/Page";
+import { DisplayTransform } from "@app/tools/pdfTextEditor/v2/model/DisplayTransform";
 import { FontRef } from "@app/tools/pdfTextEditor/v2/model/FontRef";
 
 /**
@@ -57,7 +58,15 @@ export class EditorDocument {
     }
     const width = this.module.FPDF_GetPageWidthF(pagePtr);
     const height = this.module.FPDF_GetPageHeightF(pagePtr);
-    const page = new Page({ index, pagePtr, width, height });
+    // CropBox/rotation transform for the screen boundary; identity for normal
+    // pages (CropBox==MediaBox, /Rotate==0) so behaviour is unchanged there.
+    const display = DisplayTransform.fromPage(
+      this.module,
+      pagePtr,
+      width,
+      height,
+    );
+    const page = new Page({ index, pagePtr, width, height, display });
     this.pageCache.set(index, page);
     return page;
   }

@@ -115,9 +115,12 @@ export class ReflowWrapCommand implements Command {
     // glyphs never spill off the right margin even if the caller's box width
     // was computed from a slightly different left (run.bounds.x vs the actual
     // leftmost glyph). One font-size of right margin keeps the last word in.
+    // startX/glyphs are RAW PDF x, so the right edge is the CropBox right edge
+    // in raw space (cropLeft+cropWidth); for identity pages this is page.width.
+    const rawRightEdge = page.display.cropLeft + page.display.cropWidth;
     const maxWidth = Math.min(
       this.maxWidthPt,
-      Math.max(fontSize * 4, page.width - startX - fontSize),
+      Math.max(fontSize * 4, rawRightEdge - startX - fontSize),
     );
 
     const words = groupWords(leaves, fontSize * 0.18);
@@ -405,27 +408,41 @@ function rebuildRunFromLines(
   run.paragraphMemberFs = memberFs;
   run.paragraphLeafPtrs = leafPtrs;
   run.paragraphLeafContainers = leafContainers;
-  // run.text keeps ONLY the hard (user) breaks as "\n"; soft word-wraps are
-  // visual (the glyph positions + slots), joined with a single space. This
-  // is what lets a later edit re-flow soft wraps freely while never deleting
-  // a manual line break. Every separator is exactly one char, so the slot
-  // char ranges above (cursorChar += lineText.length + 1) stay aligned.
+  // run.text joins visual lines with ONE-char separators ("\n" hard, " " soft).
+  // The slot char ranges index into run.text, so the two MUST stay aligned -
+  // a desync makes paragraph edits under-count soft-wrapped lines and collapse
+  // the paragraph onto one baseline.
   const glyphDerived = lineTexts
     .map((t, i) => (i === 0 ? t : (lineIsHardStart[i] ? "\n" : " ") + t))
     .join("");
-  // Reflow only repositions glyphs - it never changes the non-whitespace
-  // CONTENT, just whitespace/line-breaks. So when the glyph-derived text has
-  // the SAME non-whitespace characters as the pre-reflow text, preserve the
-  // pre-reflow text: it carries the user's intended whitespace (e.g. runs of
-  // typed spaces), which the glyph stream can't represent because PDFium
-  // collapses consecutive spaces in a text object. Fall back to the
-  // glyph-derived text only when the content genuinely differs (a structural
-  // change the glyphs are the source of truth for).
+  // PDFium collapses runs of intra-line spaces in the glyph stream, so
+  // glyphDerived loses user-typed multi-spaces. When the pre-reflow text has
+  // the SAME non-whitespace content, re-segment IT per visual line (keeping
+  // intra-line spaces, collapsing inter-line separators to one char) and
+  // RE-ALIGN the slot ranges + char-starts to it - preserving typed spaces
+  // WITHOUT desyncing the slots. Otherwise fall back to glyphDerived.
   const stripWs = (s: string): string => s.replace(/\s+/g, "");
-  run.text =
-    stripWs(glyphDerived) === stripWs(preReflowText) && preReflowText.length > 0
-      ? preReflowText
-      : glyphDerived;
+  if (
+    preReflowText.length > 0 &&
+    stripWs(glyphDerived) === stripWs(preReflowText)
+  ) {
+    const preLines = resegmentByLines(lineTexts, preReflowText);
+    let cursor = 0;
+    for (let i = 0; i < slots.length; i++) {
+      const preLine = preLines[i] ?? "";
+      slots[i].mergedFromCharStarts = slots[i].mergedFromCharStarts.map((cs) =>
+        posAtNonWsIndex(preLine, nonWsLen(lineTexts[i].slice(0, cs))),
+      );
+      slots[i].startChar = cursor;
+      slots[i].endChar = cursor + preLine.length;
+      cursor += preLine.length + (i < slots.length - 1 ? 1 : 0);
+    }
+    run.text = preLines
+      .map((t, i) => (i === 0 ? t : (lineIsHardStart[i] ? "\n" : " ") + t))
+      .join("");
+  } else {
+    run.text = glyphDerived;
+  }
 
   const s0 = slots[0];
   if (s0) {
@@ -556,4 +573,53 @@ function cloneSlot(s: ParagraphLineSlot): ParagraphLineSlot {
     mergedFromBounds: s.mergedFromBounds.map((b) => ({ ...b })),
     mergedFromCharStarts: [...s.mergedFromCharStarts],
   };
+}
+
+/** Count of non-whitespace characters in a string. */
+function nonWsLen(s: string): number {
+  return s.replace(/\s+/g, "").length;
+}
+
+/**
+ * Position in `text` of the `idx`-th (0-based) non-whitespace char; `text.length`
+ * when `idx` is past the end. Lets us map a glyph's position between two strings
+ * that share the same non-whitespace sequence but differ in whitespace.
+ */
+function posAtNonWsIndex(text: string, idx: number): number {
+  let n = 0;
+  for (let i = 0; i < text.length; i++) {
+    if (!/\s/.test(text[i])) {
+      if (n === idx) return i;
+      n++;
+    }
+  }
+  return text.length;
+}
+
+/**
+ * Re-segment `preReflowText` into per-visual-line texts that share the same
+ * non-whitespace content as `lineTexts` (the glyph-derived, space-collapsed
+ * lines). Each output line spans from its first non-ws char to its last,
+ * KEEPING intra-line whitespace (user-typed multi-spaces) but dropping the
+ * inter-line separator whitespace (re-added as a single canonical char by the
+ * caller). Requires stripWs(join(lineTexts)) === stripWs(preReflowText).
+ */
+function resegmentByLines(
+  lineTexts: string[],
+  preReflowText: string,
+): string[] {
+  const out: string[] = [];
+  let cumNw = 0;
+  for (const lt of lineTexts) {
+    const nw = nonWsLen(lt);
+    if (nw === 0) {
+      out.push("");
+      continue;
+    }
+    const start = posAtNonWsIndex(preReflowText, cumNw);
+    const lastPos = posAtNonWsIndex(preReflowText, cumNw + nw - 1);
+    out.push(preReflowText.slice(start, lastPos + 1));
+    cumNw += nw;
+  }
+  return out;
 }

@@ -22,6 +22,10 @@ const chromiumViewport = {
   viewport: { width: 1920, height: 1080 },
 };
 
+// Dedicated dev-server port via V2_PORT so local runs don't collide with a
+// vite already on 5173 from other parallel work. Defaults to 5173.
+const DEV_PORT = process.env.V2_PORT ?? "5173";
+
 export default defineConfig({
   testDir: "./src/core/tests",
   testMatch: "**/*.spec.ts",
@@ -35,7 +39,7 @@ export default defineConfig({
   expect: { timeout: 10_000 },
 
   use: {
-    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:5173",
+    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${DEV_PORT}`,
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     video: "on-first-retry",
@@ -101,9 +105,9 @@ export default defineConfig({
     // blew the 30s navigationTimeout under --workers=3 - see
     // all-tool-pages-load.spec.ts). Locally, keep `vite` dev for HMR.
     command: process.env.CI
-      ? "npx vite preview --port 5173 --strictPort"
-      : "npx vite",
-    url: "http://localhost:5173",
+      ? `npx vite preview --port ${DEV_PORT} --strictPort`
+      : `npx vite --port ${DEV_PORT} --strictPort`,
+    url: `http://localhost:${DEV_PORT}`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },

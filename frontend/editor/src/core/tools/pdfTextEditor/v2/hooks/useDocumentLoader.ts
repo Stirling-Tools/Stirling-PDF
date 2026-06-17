@@ -83,6 +83,7 @@ export function useDocumentLoader(store: EditorStore) {
             revision: page.revision,
             runs: page.runs.map((r) => r.snapshot()),
             images: page.images.map((img) => img.snapshot()),
+            display: page.display.toData(),
           });
         }
         for (let i = eager; i < total; i++) {
@@ -95,6 +96,7 @@ export function useDocumentLoader(store: EditorStore) {
             revision: 0,
             runs: [],
             images: [],
+            display: page.display.toData(),
           });
         }
         if (!store.isCurrentLoad(token)) return;

@@ -25,6 +25,7 @@ import {
 import { EditTextCommand } from "@app/tools/pdfTextEditor/v2/commands/EditTextCommand";
 import { InsertImageCommand } from "@app/tools/pdfTextEditor/v2/commands/InsertImageCommand";
 import { InsertTextCommand } from "@app/tools/pdfTextEditor/v2/commands/InsertTextCommand";
+import { DisplayTransform } from "@app/tools/pdfTextEditor/v2/model/DisplayTransform";
 import { MergeRunsCommand } from "@app/tools/pdfTextEditor/v2/commands/MergeRunsCommand";
 import { MoveTextRunCommand } from "@app/tools/pdfTextEditor/v2/commands/MoveTextRunCommand";
 import { SetImageTransformCommand } from "@app/tools/pdfTextEditor/v2/commands/SetImageTransformCommand";
@@ -125,13 +126,20 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
       if (!page) return;
       const w = page.width * INSERTED_IMAGE_RATIO;
       const h = w * (decoded.height / decoded.width);
+      // Centre in the VISIBLE (display) page, then invert the CropBox/rotation
+      // transform to raw PDF space (commands store raw coords). Identity on
+      // normal pages => unchanged.
+      const ll = DisplayTransform.fromData(page.display).invert(
+        (page.width - w) / 2,
+        (page.height - h) / 2,
+      );
       const cmd = new InsertImageCommand({
         pageIndex: page.pageIndex,
         rgba: decoded.data.data,
         pixelWidth: decoded.width,
         pixelHeight: decoded.height,
-        x: (page.width - w) / 2,
-        y: (page.height - h) / 2,
+        x: ll.x,
+        y: ll.y,
         width: w,
         height: h,
       });
@@ -227,12 +235,17 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
         }
       }
       const page = doc.page(pageIndex);
-      // Position roughly at the page centre, biased toward the upper
-      // third so multi-line paste has room to flow downward.
+      // Position roughly at the page centre (display space), biased toward the
+      // upper third so multi-line paste has room to flow downward, then invert
+      // the CropBox/rotation transform to raw PDF space. Identity => unchanged.
+      const anchor = page.display.invert(
+        page.width / 2 - 80,
+        page.height * 0.55,
+      );
       const cmd = new InsertTextCommand({
         pageIndex,
-        x: page.width / 2 - 80,
-        y: page.height * 0.55,
+        x: anchor.x,
+        y: anchor.y,
         text: normalised,
       });
       store.dispatch(cmd);

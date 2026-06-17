@@ -13,6 +13,7 @@ import {
 import {
   applyParagraphEditPlan,
   applyPartialEditPlan,
+  planModifiesWhitespace,
   planParagraphEdit,
   planPartialEdit,
   setObjText,
@@ -169,13 +170,7 @@ export class EditTextCommand implements Command {
         this.paragraphPlan = paraPlan;
         this.prevParagraphSlots = paraPlan.prevSlots;
         this.editSnapshot = snapshotRunModel(run);
-        const result = applyParagraphEditPlan(
-          doc,
-          page,
-          run,
-          paraPlan,
-          this.nextText,
-        );
+        const result = applyParagraphEditPlan(doc, page, run, paraPlan);
         this.paragraphInsertedPtrs = result.insertedPtrs;
         run.paragraphLineSlots = result.newSlots;
         run.bounds = {
@@ -266,7 +261,10 @@ export class EditTextCommand implements Command {
       !/\r?\n/.test(this.nextText)
     ) {
       const partial = planPartialEdit(run, this.prevText ?? "", this.nextText);
-      if (partial) {
+      // An in-place "modify" op that re-SetTexts whitespace paints „ on an
+      // embedded subset font with no space glyph. Skip the partial path for
+      // those so the overlay re-emit (word-split, font-reused) handles it.
+      if (partial && !planModifiesWhitespace(partial)) {
         this.partialPlan = partial;
         this.prevMergedFromPtrs = [...run.mergedFromPtrs];
         this.prevMergedFromTexts = [...run.mergedFromTexts];
@@ -1112,7 +1110,11 @@ export class EditTextCommand implements Command {
  * exceed the page so selection / layout logic stays on-page.
  */
 function clampWidthToPage(x: number, width: number, page: Page): number {
-  const maxWidth = Math.max(0, page.width - x);
+  // x/width are RAW PDF (MediaBox) space, so the right edge is the CropBox
+  // right edge in raw space (cropLeft+cropWidth); for identity pages this is
+  // page.width, so the common case is unchanged.
+  const rawRightEdge = page.display.cropLeft + page.display.cropWidth;
+  const maxWidth = Math.max(0, rawRightEdge - x);
   return Math.min(width, maxWidth);
 }
 

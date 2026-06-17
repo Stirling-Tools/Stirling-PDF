@@ -208,6 +208,16 @@ public class PdfTextEditorV2CharcodeController {
                 int cp = text.codePointAt(i);
                 String oneChar = new String(Character.toChars(cp));
                 i += Character.charCount(cp);
+                // Whitespace is NEVER charcode-reused. Subset Type1/LaTeX fonts
+                // usually have no real space glyph, yet font.encode(0x20) still
+                // returns code 0x20 without throwing - and SetCharcodes(0x20)
+                // then paints whatever glyph sits at that subset code (e.g. „
+                // quotedblbase in LMRoman). Report whitespace as missing so the
+                // frontend emits it as a positional gap instead.
+                if (Character.isWhitespace(cp)) {
+                    missing.add(oneChar);
+                    continue;
+                }
                 // 1st try: font.encode() - works for Type0/TrueType/Type1
                 Long packed = null;
                 try {

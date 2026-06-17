@@ -38,10 +38,24 @@ export function sampleBackground(
     // Render path reads the content stream - flush any deferred edits
     // so the sample reflects what the user actually sees.
     page.flushGenerate(m);
-    const left = Math.max(0, bounds.x - MARGIN_POINTS);
-    const right = Math.min(page.width, bounds.x + bounds.width + MARGIN_POINTS);
-    const top = Math.min(page.height, bounds.y + bounds.height + MARGIN_POINTS);
-    const bottom = Math.max(0, bounds.y - MARGIN_POINTS);
+    // The rendered bitmap is CropBox/rotation (display) space; the run bounds
+    // are raw PDF. Map the bounds AABB into display space so the sample window
+    // lands on the right region of the bitmap. Identity transform => unchanged.
+    const d = page.display;
+    const cs = [
+      d.apply(bounds.x, bounds.y),
+      d.apply(bounds.x + bounds.width, bounds.y),
+      d.apply(bounds.x, bounds.y + bounds.height),
+      d.apply(bounds.x + bounds.width, bounds.y + bounds.height),
+    ];
+    const dx0 = Math.min(...cs.map((c) => c.x));
+    const dx1 = Math.max(...cs.map((c) => c.x));
+    const dy0 = Math.min(...cs.map((c) => c.y));
+    const dy1 = Math.max(...cs.map((c) => c.y));
+    const left = Math.max(0, dx0 - MARGIN_POINTS);
+    const right = Math.min(page.width, dx1 + MARGIN_POINTS);
+    const top = Math.min(page.height, dy1 + MARGIN_POINTS);
+    const bottom = Math.max(0, dy0 - MARGIN_POINTS);
     const widthPts = right - left;
     const heightPts = top - bottom;
     if (widthPts <= 1 || heightPts <= 1)

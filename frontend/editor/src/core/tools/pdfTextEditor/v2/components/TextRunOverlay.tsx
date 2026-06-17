@@ -4,6 +4,7 @@ import type {
   WidthMode,
 } from "@app/tools/pdfTextEditor/v2/types";
 import { toCssHex } from "@app/tools/pdfTextEditor/v2/model/Color";
+import type { DisplayTransform } from "@app/tools/pdfTextEditor/v2/model/DisplayTransform";
 
 // React + contentEditable do not play well together when JSX manages the
 // element's children: React reconciles the children on every render and can
@@ -137,6 +138,12 @@ interface TextRunOverlayProps {
   pageHeight: number;
   /** Page width in PDF points - caps the box so it never runs off-page. */
   pageWidth: number;
+  /**
+   * Raw-PDF -> display (CropBox/rotation) transform. Identity for normal
+   * pages; applied to the run's anchor so the overlay lands on the rendered
+   * (cropped/rotated) bitmap.
+   */
+  transform: DisplayTransform;
   scale: number;
   /** "grow": box widens to the right. "wrap": locked width, wraps down. */
   widthMode: WidthMode;
@@ -166,6 +173,7 @@ export function TextRunOverlay({
   run,
   pageHeight,
   pageWidth,
+  transform,
   scale,
   widthMode,
   selected,
@@ -215,7 +223,11 @@ export function TextRunOverlay({
     if (el && el.innerText === "") el.innerText = run.text;
   }, []);
 
-  const left = run.bounds.x * scale;
+  // Map the run's raw-PDF anchor (left edge x, baseline f) into display-PDF
+  // space (CropBox/rotation). Identity transform => (bounds.x, matrix.f), so
+  // `left`/`baselineScreen` below reduce to the exact prior arithmetic.
+  const anchor = transform.apply(run.bounds.x, run.matrix.f);
+  const left = anchor.x * scale;
 
   // CSS font for the overlay - derived before the vertical math because
   // baseline placement needs the font's measured ascent.
@@ -248,7 +260,7 @@ export function TextRunOverlay({
   );
   const halfLeading = Math.max(0, (lineHeightPx - (ascent + descent)) / 2);
   const firstBaselineFromTop = halfLeading + ascent;
-  const baselineScreen = (pageHeight - run.matrix.f) * scale;
+  const baselineScreen = (pageHeight - anchor.y) * scale;
   const top = baselineScreen - firstBaselineFromTop;
 
   // Height covers every (typed) line plus descender slack, so the
@@ -358,8 +370,14 @@ export function TextRunOverlay({
             const origin = dragOriginRef.current;
             dragOriginRef.current = null;
             if (!origin) return;
-            const dx = (ev.clientX - origin.x) / scale;
-            const dy = -(ev.clientY - origin.y) / scale; // PDF y is inverted
+            // Screen delta -> display-PDF delta (y inverted), then invert the
+            // linear part of the CropBox/rotation transform to a raw-PDF delta
+            // (the model is raw). Identity transform => (dx, dy) unchanged.
+            const ddx = (ev.clientX - origin.x) / scale;
+            const ddy = -(ev.clientY - origin.y) / scale;
+            const v = transform.invertVector(ddx, ddy);
+            const dx = v.x;
+            const dy = v.y;
             if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
             onMove(dx, dy);
           };

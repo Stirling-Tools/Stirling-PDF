@@ -5,6 +5,7 @@ import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDoc
 import type { PageSnapshot } from "@app/tools/pdfTextEditor/v2/types";
 import { TextRunOverlay } from "@app/tools/pdfTextEditor/v2/components/TextRunOverlay";
 import { ImageHandle } from "@app/tools/pdfTextEditor/v2/components/ImageHandle";
+import { DisplayTransform } from "@app/tools/pdfTextEditor/v2/model/DisplayTransform";
 
 interface PageViewProps {
   document: EditorDocument;
@@ -68,6 +69,9 @@ export function PageView({
 }: PageViewProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  // Raw-PDF -> display (CropBox/rotation) transform for this page. Identity for
+  // normal pages, so every overlay/click computation below is unchanged there.
+  const transform = DisplayTransform.fromData(page.display);
   const visibleFiredRef = useRef(false);
   const firstRenderFiredRef = useRef(false);
   const [rendering, setRendering] = useState(false);
@@ -200,9 +204,13 @@ export function PageView({
         ).getBoundingClientRect();
         const cssX = e.clientX - rect.left;
         const cssY = e.clientY - rect.top;
-        const pageX = cssX / scale;
-        const pageY = page.height - cssY / scale;
-        onPageClick(page.pageIndex, pageX, pageY);
+        // CSS px -> display-PDF (y-up), then invert the CropBox/rotation
+        // transform to raw PDF page space so the new object lands under the
+        // click on cropped/rotated pages. Identity transform => unchanged.
+        const xd = cssX / scale;
+        const yd = page.height - cssY / scale;
+        const p = transform.invert(xd, yd);
+        onPageClick(page.pageIndex, p.x, p.y);
       }}
     >
       <canvas ref={canvasRef} style={{ display: "block" }} />
@@ -288,6 +296,7 @@ export function PageView({
             key={image.id}
             image={image}
             pageHeight={page.height}
+            transform={transform}
             scale={scale}
             selected={selectedImageIds.includes(image.id)}
             onSelect={() => onSelectImage(image.id)}
@@ -302,6 +311,7 @@ export function PageView({
             run={run}
             pageHeight={page.height}
             pageWidth={page.width}
+            transform={transform}
             scale={scale}
             widthMode={widthMode}
             selected={selectedRunIds.includes(run.id)}

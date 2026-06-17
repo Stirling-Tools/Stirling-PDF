@@ -4,6 +4,8 @@
  * Plain data shapes only. Model classes live under `model/`.
  */
 
+import type { DisplayTransformData } from "@app/tools/pdfTextEditor/v2/model/DisplayTransform";
+
 export interface RGBA {
   r: number; // 0..255
   g: number;
@@ -100,6 +102,12 @@ export interface PageSnapshot {
   revision: number;
   runs: TextRunSnapshot[];
   images: ImageObjectSnapshot[];
+  /**
+   * Raw-PDF -> display (CropBox/rotation) transform for the screen boundary.
+   * Plain data; reconstruct a DisplayTransform with `DisplayTransform.fromData`.
+   * Identity for normal pages.
+   */
+  display: DisplayTransformData;
 }
 
 export interface SelectionState {

@@ -89,6 +89,13 @@ export class BackendResolver implements CharcodeResolver {
     const missing: string[] = [];
     const cacheMisses: string[] = [];
     for (const ch of text) {
+      // Whitespace is never charcode-reused (no real space glyph in subset
+      // fonts; SetCharcodes(0x20) paints garbage like „). Report it missing
+      // so the emit path renders a positional gap, and never round-trip it.
+      if (/\s/.test(ch)) {
+        missing.push(ch);
+        continue;
+      }
       const key = cacheKey(font, ch);
       if (!charCache.has(key)) {
         cacheMisses.push(ch);
@@ -141,6 +148,9 @@ function maybeAutoPrefetch(
   chars: string[],
   ctx: ResolverContext,
 ): void {
+  // Never round-trip whitespace - it has no reusable glyph (see resolve()).
+  chars = chars.filter((ch) => !/\s/.test(ch));
+  if (chars.length === 0) return;
   // Avoid re-firing while a prefetch for these chars is in flight.
   const reqKey = `auto:${fontPtr}:${chars.join("")}`;
   if (inFlight.has(reqKey)) return;

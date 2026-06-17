@@ -358,8 +358,9 @@ export function splitIntoWordChunks(
   // Any run of 1+ whitespace becomes a chunk boundary. Earlier versions
   // only split on 2+ spaces (assuming PDFium preserved single spaces in
   // the text object) - that assumption turned out to be unreliable, so
-  // every whitespace run is now an explicit positional jump.
-  const gapRe = /[ \t]+/g;
+  // every whitespace run is now an explicit positional jump. \s (not just
+  // [ \t]) so non-breaking / unicode spaces also become gaps, never glyphs.
+  const gapRe = /\s+/g;
   let leadingGapPt = 0;
   let lastIdx = 0;
   let m: RegExpExecArray | null;

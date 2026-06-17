@@ -12,10 +12,12 @@ import { BLACK } from "@app/tools/pdfTextEditor/v2/model/Color";
  * SAME shape as the rep-level `mergedFrom*` fields so the existing
  * partial-edit machinery can treat a slot as a mini-TextRun.
  *
- * `startChar`/`endChar` are offsets into the rep's joined text - the
- * paragraph's text is the per-line texts joined by `\n`, so each slot
- * owns `[startChar, endChar)` and the `\n` separators live at
- * `slots[i].endChar` (== `slots[i+1].startChar - 1`).
+ * `startChar`/`endChar` are offsets into the rep's joined text. Visual
+ * lines are joined by a SINGLE separator char: `\n` for a hard (user)
+ * break, a space for a soft word-wrap. Each slot owns `[startChar, endChar)`
+ * and the separator lives at `slots[i].endChar` (== `slots[i+1].startChar
+ * - 1`). Always one char wide, so slicing per-line text out of the joined
+ * text by slot range stays exact regardless of which separator it is.
  */
 export interface ParagraphLineSlot {
   startChar: number;
