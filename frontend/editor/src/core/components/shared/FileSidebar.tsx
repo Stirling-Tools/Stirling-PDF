@@ -26,7 +26,7 @@ import {
   useIndexedDBRevision,
 } from "@app/contexts/IndexedDBContext";
 import { accountService } from "@app/services/accountService";
-import { GoogleDriveIcon } from "@app/components/shared/CloudStorageIcons";
+import { GoogleDriveIcon } from "@shared/components/CloudStorageIcons";
 import { Wordmark } from "@app/components/shared/Wordmark";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import MenuIcon from "@mui/icons-material/Menu";

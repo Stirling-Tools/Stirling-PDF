@@ -6,7 +6,7 @@ import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import type { FileId } from "@app/types/file";
-import { FileDocIcon } from "@app/components/shared/FileDocIcon";
+import { FileDocIcon } from "@shared/components/FileDocIcon";
 import { getFileDocVariant } from "@app/components/shared/filePreview/getFileTypeIcon";
 import { useLazyThumbnail } from "@app/hooks/useLazyThumbnail";
 import { IMAGE_EXTENSIONS } from "@app/utils/fileUtils";

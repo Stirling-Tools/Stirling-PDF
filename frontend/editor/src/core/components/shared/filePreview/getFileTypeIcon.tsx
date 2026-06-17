@@ -1,6 +1,6 @@
 import React from "react";
-import { FileDocIcon } from "@app/components/shared/FileDocIcon";
-import type { FileDocVariant } from "@app/components/shared/FileDocIcon";
+import { FileDocIcon } from "@shared/components/FileDocIcon";
+import type { FileDocVariant } from "@shared/components/FileDocIcon";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import { detectFileExtension } from "@app/utils/fileUtils";
 

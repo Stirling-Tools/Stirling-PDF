@@ -39,3 +39,7 @@ export * from "@shared/components/Select";
 export * from "@shared/components/Checkbox";
 export * from "@shared/components/Radio";
 export * from "@shared/components/Slider";
+
+// Icons
+export * from "@shared/components/FileDocIcon";
+export * from "@shared/components/CloudStorageIcons";

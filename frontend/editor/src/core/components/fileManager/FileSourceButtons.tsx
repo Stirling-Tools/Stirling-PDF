@@ -10,7 +10,7 @@ import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import MobileUploadModal from "@app/components/shared/MobileUploadModal";
-import { GoogleDriveIcon } from "@app/components/shared/CloudStorageIcons";
+import { GoogleDriveIcon } from "@shared/components/CloudStorageIcons";
 
 interface FileSourceButtonsProps {
   horizontal?: boolean;
