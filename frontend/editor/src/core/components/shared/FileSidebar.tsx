@@ -3,6 +3,7 @@ import React, {
   useCallback,
   useRef,
   useEffect,
+  useLayoutEffect,
   forwardRef,
 } from "react";
 import { Loader } from "@mantine/core";
@@ -17,6 +18,7 @@ import {
   useNavigationGuard,
 } from "@app/contexts/NavigationContext";
 import { useViewer } from "@app/contexts/ViewerContext";
+import { usePreferences } from "@app/contexts/PreferencesContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
 import { accountService } from "@app/services/accountService";
@@ -53,6 +55,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const [searchQuery, setSearchQuery] = useState("");
     const searchInputRef = useRef<HTMLInputElement>(null);
     const nativeFileInputRef = useRef<HTMLInputElement>(null);
+    const initialSidebarPreferenceAppliedRef = useRef(false);
     // State (not ref) so setting it triggers a re-render — avoids racing addFiles state updates.
     const [pendingViewFileId, setPendingViewFileId] = useState<string | null>(
       null,
@@ -60,6 +63,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
 
     const { openFilesModal } = useFilesModalContext();
     const { config } = useAppConfig();
+    const { preferences } = usePreferences();
     const {
       isEnabled: isGoogleDriveEnabled,
       openPicker: openGoogleDrivePicker,
@@ -75,6 +79,15 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const { addFiles } = useFileHandler();
     const indexedDB = useIndexedDB();
     const [displayName, setDisplayName] = useState<string>("Guest");
+
+    useLayoutEffect(() => {
+      if (initialSidebarPreferenceAppliedRef.current) return;
+
+      initialSidebarPreferenceAppliedRef.current = true;
+      if (preferences.hideFilesSidebarByDefault && !collapsed) {
+        onToggleCollapse?.();
+      }
+    }, [collapsed, onToggleCollapse, preferences.hideFilesSidebarByDefault]);
 
     useEffect(() => {
       if (!config?.enableLogin) return;

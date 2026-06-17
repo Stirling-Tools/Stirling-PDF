@@ -468,6 +468,31 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
           >
             <div>
               <Text fw={500} size="sm">
+                Hide files sidebar by default
+              </Text>
+              <Text size="xs" c="dimmed" mt={4}>
+                Start with the files sidebar collapsed when the app opens.
+              </Text>
+            </div>
+            <Switch
+              checked={preferences.hideFilesSidebarByDefault}
+              onChange={(event) =>
+                updatePreference(
+                  "hideFilesSidebarByDefault",
+                  event.currentTarget.checked,
+                )
+              }
+            />
+          </div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <div>
+              <Text fw={500} size="sm">
                 {t(
                   "settings.general.defaultStartupView",
                   "Default view on launch",
