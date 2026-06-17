@@ -1589,30 +1589,7 @@ admin = "འཛིན་སྐྱོང་།"
 title = "སྤྱོད་མཁན་ཚོད་འཛིན་སྒྲིག་སྟངས།"
 
 [agents]
-auto_redaction_description = "PII རང་འགུལ་ངང་གསང་བཟོ"
-auto_redaction_name = "རང་འགུལ་གསང་བཟོ"
-back_to_tools = "ལག་ཆས་ལ་ཕྱིར་ལོག"
-coming_soon = "ཉེ་ལམ་དུ་འོང་།"
-compliance_description = "མཐུན་འགྲོའི་ཚོད་ལྟ་དང་རྩིས་ཞིབ་གཏོང་།"
-compliance_name = "མཐུན་འགྲོ་ཞིབ་བཤེར"
-data_extraction_description = "ཐིག་ཁྲམ་དང་གཞི་བཀོད་ཡོད་པའི་གནས་སྡུད་ཕྱིར་འབུད"
-data_extraction_name = "གནས་སྡུད་ཕྱིར་འབུད"
-doc_summary_description = "ཡིག་ཆ་རིང་པོ་མདོར་བསྡུ"
-doc_summary_name = "མདོར་བསྡུ་ཆས"
-form_filler_description = "PDF ཐོ་འགོད་ལ་ཤུགས་ལྡན་ངང་བཀང་།"
-form_filler_name = "ཐོ་འགོད་བཀང་མཁན"
-pdf_to_markdown_description = "PDF ཡིག་ཆ་གཙང་མའི Markdown ལ་བསྒྱུར"
-pdf_to_markdown_name = "PDF ནས་ Markdown"
-section_title = "ལས་བྱེད"
-show_less = "ཉུང་སྟོན"
-start_chat = "གླེང་མོལ་མགོ་རྩོམ"
-stirling_description = "ཁྱེད་ཀྱི་PDF སྤྱིར་བཏང་ལས་རོགས"
-stirling_full_name = "Stirling སྤྱིར་བཏང་ལས་བྱེད"
-stirling_long_description = "སྤྱིར་བཏང་ PDF ལས་རོགས། ལག་ཆས་སྒུལ་བཞིན་པ། PDF བཟོ་དང་ཡིག་ཆའི་ནང་ནས་བསྡུར་དང་དཔྱད་གཞི་འདོན་ཐུབ།"
 stirling_name = "Stirling"
-stirling_running = "འཁོར་བརྒྱབ་བཞིན་པ..."
-stirling_tooltip = "Stirling agent"
-view_all = "ལས་བྱེད་ཡོངས་ལྟ"
 
 [analytics]
 learnMore = "ང་ཚོའི་དབྱེ་ཞིབ་སྐོར་ལ་མང་ཙམ་ཤེས་དགོས།"
@@ -2697,9 +2674,6 @@ title = "འཕོ་འགྱུར།"
 [changePermissions.tooltip.warning]
 text = "ཆོག་མཆན་འདི་དག་འགྱུར་བ་མེད་པར་བཟོ་བར། བདག་པོའི་གསང་ཚིག་སྒྲིག་པའི་ཆེད་དུ་གསང་གྲངས་ཁ་སྣོན་བྱེད་པའི་ལག་ཆ་སྤྱོད་དགོས།"
 
-[chat]
-resize = "གླེང་མོལ་སྡེབ་ཚན་ཆེ་ཆུང་བཟོ"
-
 [chat.actions]
 copy = "འཕྲིན་དོན་འདྲ་བཤུས"
 
@@ -2712,9 +2686,9 @@ agentMenu = "Stirling agent འདེམས་ཚན"
 clearChat = "གླེང་མོལ་བཤོལ"
 
 [chat.input]
-disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 placeholder = "གང་བྱེད་དགོས?"
 send = "འཕྲིན་དོན་གཏོང"
+disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 
 [chat.progress]
 analyzing = "ཁྱེད་ཀྱི་ཞུ་བ་ཞིབ་འཇུག་བཞིན..."
@@ -2725,11 +2699,9 @@ executing_tool_single = "{{tool}} སྒྲུབ་བཞིན..."
 executing_tool_step = "{{tool}} སྒྲུབ་བཞིན ({{total}} རིམ་པ་ནས {{step}})..."
 extracting_content = "ཁྱེད་ཀྱི་ཡིག་ཆ་ནས་ནང་དོན་འདོན་བཞིན..."
 processing = "འདོན་ཟོས་ནང་དོན་བཟོ་སྒྱུར་བཞིན..."
-ranForMinutes = "Ran for {{count}} minutes"
 ranForMinutes_one = "Ran for 1 minute"
 ranForMinutes_other = "Ran for {{count}} minutes"
 ranForMinutesSeconds = "Ran for {{minutes}} min, {{seconds}} sec"
-ranForSeconds = "Ran for {{count}} seconds"
 ranForSeconds_one = "Ran for 1 second"
 ranForSeconds_other = "Ran for {{count}} seconds"
 thinking = "བསམ་བློ་བཏང་བཞིན..."
@@ -5251,11 +5223,6 @@ toggle = "What counts as a PDF?"
 body = "We couldn't reach the billing service. Refresh the page to try again."
 title = "Couldn't load your plan"
 
-[payg.exhausted]
-body = "You've used all 500 of your free PDFs. Upgrade to Processor to keep going."
-cta = "Go to billing"
-title = "You've used your free PDFs"
-
 [payg.free.cta]
 benefit1Body = "chain tools, schedule runs, batch process"
 benefit1Title = "Automation pipelines"
@@ -5848,9 +5815,6 @@ instructions = "ཁྱེད་རང་གི་ཉོ་ཆ་དེ་Stripe 
 keyDescription = "ཁྱེད་རང་གི་གློག་འཕྲིན་ནས་ཆོག་མཆན་ལྡེ་མིག་དེ་སྦྱར་དགོས།"
 success = "ལག་འཁྱེར་སྒུལ་ཤུགས་ལྡན་པ།"
 successMessage = "ཁྱེད་ཀྱི་ཆོག་མཆན་དེ་ལེགས་འགྲུབ་བྱུང་ཡོད། ཁྱོད་ཀྱིས་ད་ལྟ་སྒེའུ་ཁུང་འདི་ཁ་རྒྱག་ཐུབ།"
-
-[plan.trial]
-message = ""
 
 [policies]
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
@@ -7600,6 +7564,9 @@ success = "སར་བར་ཡར་བསྐུར་ཚར་བ།"
 title = "སར་བར་ལ་ཡར་བསྐུར།"
 updateButton = "སར་བར་ནང་གསར་སྒྱུར།"
 uploadButton = "སར་བར་ལ་ཡར་བསྐུར།"
+
+[survey]
+title = "Stirling-PDF Survey"
 
 [swagger]
 tags = "api, ཡིག་ཆ། ཐང་ག། མཐའ་སྟོན། འཕེལ་རྒྱས།"

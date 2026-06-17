@@ -1518,18 +1518,12 @@ title = "Feedback Messages"
 
 [admin.settings.telegram.feedback.channel]
 title = "Channel Feedback Rules"
-
-[admin.settings.telegram.feedback.channel.errorMessage]
-description = "Show detailed error messages for channels."
-label = "Show error messages (Channel)"
-
-[admin.settings.telegram.feedback.channel.errorProcessing]
-description = "Send processing error messages to channels."
-label = "Show processing errors (Channel)"
-
-[admin.settings.telegram.feedback.channel.noValidDocument]
-description = "Suppress the no valid document response for channel uploads."
-label = "Show \"No valid document\" (Channel)"
+errorMessage.description = "Show detailed error messages for channels."
+errorMessage.label = "Show error messages (Channel)"
+errorProcessing.description = "Send processing error messages to channels."
+errorProcessing.label = "Show processing errors (Channel)"
+noValidDocument.description = "Suppress the no valid document response for channel uploads."
+noValidDocument.label = "Show \"No valid document\" (Channel)"
 
 [admin.settings.telegram.feedback.general.enabled]
 description = "Control whether the bot sends feedback messages at all."
@@ -1537,18 +1531,12 @@ label = "Enable Feedback"
 
 [admin.settings.telegram.feedback.user]
 title = "User Feedback Rules"
-
-[admin.settings.telegram.feedback.user.errorMessage]
-description = "Show detailed error messages for users."
-label = "Show error messages (User)"
-
-[admin.settings.telegram.feedback.user.errorProcessing]
-description = "Send processing error messages to users."
-label = "Show processing errors (User)"
-
-[admin.settings.telegram.feedback.user.noValidDocument]
-description = "Suppress the no valid document response for user uploads."
-label = "Show \"No valid document\" (User)"
+errorMessage.description = "Show detailed error messages for users."
+errorMessage.label = "Show error messages (User)"
+errorProcessing.description = "Send processing error messages to users."
+errorProcessing.label = "Show processing errors (User)"
+noValidDocument.description = "Suppress the no valid document response for user uploads."
+noValidDocument.label = "Show \"No valid document\" (User)"
 
 [admin.settings.telegram.pipelineInboxFolder]
 description = "Folder under the pipeline directory where incoming Telegram files are stored."
@@ -1589,30 +1577,7 @@ admin = "Admin"
 title = "User Control Settings"
 
 [agents]
-auto_redaction_description = "Redact PII automatically"
-auto_redaction_name = "Auto Redaction"
-back_to_tools = "Back to tools"
-coming_soon = "Coming soon"
-compliance_description = "Audit documents for compliance"
-compliance_name = "Compliance Check"
-data_extraction_description = "Extract tables & structured data"
-data_extraction_name = "Data Extraction"
-doc_summary_description = "Summarise long documents"
-doc_summary_name = "Summariser"
-form_filler_description = "Fill PDF forms intelligently"
-form_filler_name = "Form Filler"
-pdf_to_markdown_description = "Convert PDFs to clean Markdown"
-pdf_to_markdown_name = "PDF to Markdown"
-section_title = "Agents"
-show_less = "Show less"
-start_chat = "Start chatting"
-stirling_description = "Your general-purpose PDF assistant"
-stirling_full_name = "Stirling General Agent"
-stirling_long_description = "General purpose PDF assistant that can run tools, create PDFs and extract insights from your documents."
 stirling_name = "Stirling"
-stirling_running = "Running..."
-stirling_tooltip = "Stirling agent"
-view_all = "View all agents"
 
 [analytics]
 learnMore = "Learn more about our analytics"
@@ -2697,9 +2662,6 @@ title = "Change Permissions"
 [changePermissions.tooltip.warning]
 text = "To make these permissions unchangeable, use the Add Password tool to set an owner password."
 
-[chat]
-resize = "Resize chat panel"
-
 [chat.actions]
 copy = "Copy message"
 
@@ -2712,9 +2674,9 @@ agentMenu = "Stirling agent options"
 clearChat = "Clear chat"
 
 [chat.input]
-disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 placeholder = "What do you want to do?"
 send = "Send message"
+disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 
 [chat.progress]
 analyzing = "Analyzing your request..."
@@ -2725,11 +2687,9 @@ executing_tool_single = "Running {{tool}}..."
 executing_tool_step = "Running {{tool}} (step {{step}} of {{total}})..."
 extracting_content = "Extracting content from your documents..."
 processing = "Processing extracted content..."
-ranForMinutes = "Ran for {{count}} minutes"
 ranForMinutes_one = "Ran for 1 minute"
 ranForMinutes_other = "Ran for {{count}} minutes"
 ranForMinutesSeconds = "Ran for {{minutes}} min, {{seconds}} sec"
-ranForSeconds = "Ran for {{count}} seconds"
 ranForSeconds_one = "Ran for 1 second"
 ranForSeconds_other = "Ran for {{count}} seconds"
 thinking = "Thinking..."
@@ -3230,6 +3190,10 @@ description = "These cookies are essential for the website to function properly.
 [cookieBanner.services]
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
+
+[credits]
+
+[credits.insufficient]
 
 [credits.modal]
 advancedMonitoring = "Advanced monitoring"
@@ -3762,144 +3726,104 @@ versionOrigin = "Original upload"
 versionsCount = "{{count}} versions"
 versionShowHidden = "Show {{count}} earlier versions"
 viewVersion = "View this version"
-
-[filesPage.appearance]
-colour = "Color"
-icon = "Icon"
-title = "Appearance"
-useColour = "Use color {{c}}"
-
-[filesPage.column]
-modified = "Modified"
-name = "Name"
-size = "Size"
-type = "Type"
-
-[filesPage.empty]
-hint = "Drop PDFs anywhere on this page to upload, or use the New folder button to organize your files."
-newFolderCta = "Create folder"
-title = "This folder is empty"
-uploadCta = "Upload files"
-
-[filesPage.empty.cloud]
-hint = "Upload a file to start, or create a folder to organize."
-offlineHint = "Reconnect to load your cloud library."
-offlineTitle = "No cached cloud files"
-title = "No cloud files yet"
-
-[filesPage.empty.local]
-hint = "Files saved without uploading stay here. Drop a file to add one."
-title = "No local-only files"
-
-[filesPage.empty.recent]
-hint = "Files you open or edit will appear here."
-title = "Nothing modified yet"
-
-[filesPage.empty.shared]
-hint = "When someone shares a file via link, it appears here."
-title = "Nothing shared with you"
-
-[filesPage.empty.sharedByMe]
-hint = "Create a share link or invite a teammate from any of your files to see it here."
-title = "You haven't shared any files yet"
-
-[filesPage.error]
-actionFailed = "Could not {{action}}."
-actionFailedDetail = "Could not {{action}}: {{message}}"
-deleteFolderFailed = "Could not delete folder."
-deleteFolderFailedDetail = "Could not delete folder: {{message}}"
-folderAppearanceFailed = "Could not update folder appearance."
-folderAppearanceFailedDetail = "Could not update folder appearance: {{message}}"
-moveFilesFailed = "Could not move files."
-moveFilesFailedDetail = "Could not move files: {{message}}"
-moveFolderFailed = "Could not move folder."
-moveFolderFailedDetail = "Could not move folder: {{message}}"
-removeFilesFailed = "Could not remove files."
-removeFilesFailedDetail = "Could not remove files: {{message}}"
-uploadFilesFailed = "Could not upload files."
-uploadFilesFailedDetail = "Could not upload files: {{message}}"
-
-[filesPage.field]
-added = "Added"
-count = "Files"
-folder = "Folder"
-modified = "Modified"
-name = "Name"
-size = "Size"
-toolHistory = "Tool history"
-toolHistoryAtVersion = "Cumulative tool chain"
-totalSize = "Total size"
-type = "Type"
-versionHistory = "Version journey"
-
-[filesPage.folderName]
-cancel = "Cancel"
-error = "Could not save folder. Try again."
-label = "Folder name"
-placeholder = "Folder name"
-
-[filesPage.moveDialog]
-cancel = "Cancel"
-confirm = "Move here"
-error = "Could not move. Try again."
-hint = "Pick a destination folder. Tip: you can also drag and drop files onto folders in the tree on the left."
-newFolderCancel = "Discard"
-newFolderCreate = "Create"
-newFolderError = "Could not create folder. Try again."
-newFolderLabel = "New folder name"
-newFolderPlaceholder = "Folder name"
-newFolderToggle = "Create new folder…"
-title = "Move to folder"
-
-[filesPage.origin]
-all = "All sources"
-cloud = "Cloud"
-cloudHint = "Stored on the Stirling server"
-local = "Local"
-localHint = "Only stored in this browser"
-shared = "Shared"
-sharedHint = "Shared with you via link"
-
-[filesPage.sort]
-modifiedAsc = "Oldest first"
-modifiedDesc = "Recent first"
-nameAsc = "Name A→Z"
-nameDesc = "Name Z→A"
-sizeAsc = "Smallest first"
-sizeDesc = "Largest first"
-
-[filesPage.syncError]
-client = "Folder sync failed."
-network = "Could not reach the server."
-server = "Server error during folder sync."
-
-[filesPage.tabName]
-local = "Local"
-recent = "Recent"
-shared = "Shared with me"
-sharedByMe = "Shared by me"
-
-[filesPage.tabs]
-all = "All"
-ariaLabel = "File views"
-recent = "Recent"
-shared = "Shared with me"
-sharedByMe = "Shared by me"
-
-[filesPage.treeMenu]
-actions = "Folder actions for {{name}}"
-delete = "Delete folder"
-newSubfolder = "New subfolder"
-rename = "Rename"
-
-[filesPage.typeFilter]
-allTypes = "All types"
-label = "Filter by type"
-
-[filesPage.viewMode]
-grid = "Grid view"
-label = "View mode"
-list = "List view"
+appearance.colour = "Color"
+appearance.icon = "Icon"
+appearance.title = "Appearance"
+appearance.useColour = "Use color {{c}}"
+column.modified = "Modified"
+column.name = "Name"
+column.size = "Size"
+column.type = "Type"
+empty.hint = "Drop PDFs anywhere on this page to upload, or use the New folder button to organize your files."
+empty.newFolderCta = "Create folder"
+empty.title = "This folder is empty"
+empty.uploadCta = "Upload files"
+empty.cloud.hint = "Upload a file to start, or create a folder to organize."
+empty.cloud.offlineHint = "Reconnect to load your cloud library."
+empty.cloud.offlineTitle = "No cached cloud files"
+empty.cloud.title = "No cloud files yet"
+empty.local.hint = "Files saved without uploading stay here. Drop a file to add one."
+empty.local.title = "No local-only files"
+empty.recent.hint = "Files you open or edit will appear here."
+empty.recent.title = "Nothing modified yet"
+empty.shared.hint = "When someone shares a file via link, it appears here."
+empty.shared.title = "Nothing shared with you"
+empty.sharedByMe.hint = "Create a share link or invite a teammate from any of your files to see it here."
+empty.sharedByMe.title = "You haven't shared any files yet"
+error.actionFailed = "Could not {{action}}."
+error.actionFailedDetail = "Could not {{action}}: {{message}}"
+error.deleteFolderFailed = "Could not delete folder."
+error.deleteFolderFailedDetail = "Could not delete folder: {{message}}"
+error.folderAppearanceFailed = "Could not update folder appearance."
+error.folderAppearanceFailedDetail = "Could not update folder appearance: {{message}}"
+error.moveFilesFailed = "Could not move files."
+error.moveFilesFailedDetail = "Could not move files: {{message}}"
+error.moveFolderFailed = "Could not move folder."
+error.moveFolderFailedDetail = "Could not move folder: {{message}}"
+error.removeFilesFailed = "Could not remove files."
+error.removeFilesFailedDetail = "Could not remove files: {{message}}"
+error.uploadFilesFailed = "Could not upload files."
+error.uploadFilesFailedDetail = "Could not upload files: {{message}}"
+field.added = "Added"
+field.count = "Files"
+field.folder = "Folder"
+field.modified = "Modified"
+field.name = "Name"
+field.size = "Size"
+field.toolHistory = "Tool history"
+field.toolHistoryAtVersion = "Cumulative tool chain"
+field.totalSize = "Total size"
+field.type = "Type"
+field.versionHistory = "Version journey"
+folderName.cancel = "Cancel"
+folderName.error = "Could not save folder. Try again."
+folderName.label = "Folder name"
+folderName.placeholder = "Folder name"
+moveDialog.cancel = "Cancel"
+moveDialog.confirm = "Move here"
+moveDialog.error = "Could not move. Try again."
+moveDialog.hint = "Pick a destination folder. Tip: you can also drag and drop files onto folders in the tree on the left."
+moveDialog.newFolderCancel = "Discard"
+moveDialog.newFolderCreate = "Create"
+moveDialog.newFolderError = "Could not create folder. Try again."
+moveDialog.newFolderLabel = "New folder name"
+moveDialog.newFolderPlaceholder = "Folder name"
+moveDialog.newFolderToggle = "Create new folder…"
+moveDialog.title = "Move to folder"
+origin.all = "All sources"
+origin.cloud = "Cloud"
+origin.cloudHint = "Stored on the Stirling server"
+origin.local = "Local"
+origin.localHint = "Only stored in this browser"
+origin.shared = "Shared"
+origin.sharedHint = "Shared with you via link"
+sort.modifiedAsc = "Oldest first"
+sort.modifiedDesc = "Recent first"
+sort.nameAsc = "Name A→Z"
+sort.nameDesc = "Name Z→A"
+sort.sizeAsc = "Smallest first"
+sort.sizeDesc = "Largest first"
+syncError.client = "Folder sync failed."
+syncError.network = "Could not reach the server."
+syncError.server = "Server error during folder sync."
+tabName.local = "Local"
+tabName.recent = "Recent"
+tabName.shared = "Shared with me"
+tabName.sharedByMe = "Shared by me"
+tabs.all = "All"
+tabs.ariaLabel = "File views"
+tabs.recent = "Recent"
+tabs.shared = "Shared with me"
+tabs.sharedByMe = "Shared by me"
+treeMenu.actions = "Folder actions for {{name}}"
+treeMenu.delete = "Delete folder"
+treeMenu.newSubfolder = "New subfolder"
+treeMenu.rename = "Rename"
+typeFilter.allTypes = "All types"
+typeFilter.label = "Filter by type"
+viewMode.grid = "Grid view"
+viewMode.label = "View mode"
+viewMode.list = "List view"
 
 [fileToPDF]
 tags = "transformation,format,document,picture,slide,text,conversion,office,docs,word,excel,powerpoint"
@@ -5251,11 +5175,6 @@ toggle = "What counts as a PDF?"
 body = "We couldn't reach the billing service. Refresh the page to try again."
 title = "Couldn't load your plan"
 
-[payg.exhausted]
-body = "You've used all 500 of your free PDFs. Upgrade to Processor to keep going."
-cta = "Go to billing"
-title = "You've used your free PDFs"
-
 [payg.free.cta]
 benefit1Body = "chain tools, schedule runs, batch process"
 benefit1Title = "Automation pipelines"
@@ -5848,9 +5767,6 @@ instructions = "Complete your purchase in the Stripe tab. Once your payment is c
 keyDescription = "Paste the license key from your email"
 success = "License Activated!"
 successMessage = "Your license has been successfully activated. You can now close this window."
-
-[plan.trial]
-message = ""
 
 [policies]
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
@@ -7600,6 +7516,9 @@ success = "Uploaded to server"
 title = "Upload to Server"
 updateButton = "Update on Server"
 uploadButton = "Upload to Server"
+
+[survey]
+title = "Stirling-PDF Survey"
 
 [swagger]
 tags = "api,documentation,swagger,endpoints,development"

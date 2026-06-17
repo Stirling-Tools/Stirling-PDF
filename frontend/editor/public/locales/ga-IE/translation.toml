@@ -1589,30 +1589,7 @@ admin = "Riarachán"
 title = "Socruithe Rialaithe Úsáideora"
 
 [agents]
-auto_redaction_description = "Cinsriú PII go huathoibríoch"
-auto_redaction_name = "Uath‑Chinsriú"
-back_to_tools = "Ar ais go dtí na huirlisí"
-coming_soon = "Ag teacht go luath"
-compliance_description = "Iniúch doiciméid le haghaidh comhlíonta"
-compliance_name = "Seiceáil Comhlíonta"
-data_extraction_description = "Bain táblaí agus sonraí struchtúrtha"
-data_extraction_name = "Eastóscadh Sonraí"
-doc_summary_description = "Achoimrigh doiciméid fhada"
-doc_summary_name = "Achoimritheoir"
-form_filler_description = "Líon foirmeacha PDF go cliste"
-form_filler_name = "Líontóir Foirmeacha"
-pdf_to_markdown_description = "Tiontaigh PDFs go Markdown glan"
-pdf_to_markdown_name = "PDF go Markdown"
-section_title = "Gníomhairí"
-show_less = "Taispeáin níos lú"
-start_chat = "Tosaigh comhrá"
-stirling_description = "Do chúntóir PDF ilfheidhmeach"
-stirling_full_name = "Gníomhaire Ginearálta Stirling"
-stirling_long_description = "Cúntóir PDF ginearálta is féidir leis uirlisí a rith, PDFs a chruthú agus léargais a bhaint as do dhoiciméid."
 stirling_name = "Stirling"
-stirling_running = "Ag rith..."
-stirling_tooltip = "gníomhaire Stirling"
-view_all = "Féach ar gach gníomhaire"
 
 [analytics]
 learnMore = "Tuilleadh eolais"
@@ -2697,9 +2674,6 @@ title = "Athrú Ceadanna"
 [changePermissions.tooltip.warning]
 text = "Chun na ceadanna seo a dhéanamh dodhéanta a athrú, úsáid an uirlis Cuir Focal Faire Leis chun focal faire úinéara a shocrú."
 
-[chat]
-resize = "Athraigh méid an phainéil chomhrá"
-
 [chat.actions]
 copy = "Cóipeáil teachtaireacht"
 
@@ -2712,9 +2686,9 @@ agentMenu = "Roghanna gníomhaire Stirling"
 clearChat = "Glan comhrá"
 
 [chat.input]
-disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 placeholder = "Cad is mian leat a dhéanamh?"
 send = "Seol teachtaireacht"
+disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 
 [chat.progress]
 analyzing = "Ag anailísiú d’iarratas..."
@@ -2725,11 +2699,9 @@ executing_tool_single = "Ag rith {{tool}}..."
 executing_tool_step = "Ag rith {{tool}} (céim {{step}} as {{total}})..."
 extracting_content = "Ábhar á bhaint as do dhoiciméid..."
 processing = "Ábhar bainte á phróiseáil..."
-ranForMinutes = "Ran for {{count}} minutes"
 ranForMinutes_one = "Ran for 1 minute"
 ranForMinutes_other = "Ran for {{count}} minutes"
 ranForMinutesSeconds = "Ran for {{minutes}} min, {{seconds}} sec"
-ranForSeconds = "Ran for {{count}} seconds"
 ranForSeconds_one = "Ran for 1 second"
 ranForSeconds_other = "Ran for {{count}} seconds"
 thinking = "Ag smaoineamh..."
@@ -5251,11 +5223,6 @@ toggle = "What counts as a PDF?"
 body = "We couldn't reach the billing service. Refresh the page to try again."
 title = "Couldn't load your plan"
 
-[payg.exhausted]
-body = "You've used all 500 of your free PDFs. Upgrade to Processor to keep going."
-cta = "Go to billing"
-title = "You've used your free PDFs"
-
 [payg.free.cta]
 benefit1Body = "chain tools, schedule runs, batch process"
 benefit1Title = "Automation pipelines"
@@ -5848,9 +5815,6 @@ instructions = "Comhlánaigh do cheannachán sa chluaisín Stripe. Nuair a bheid
 keyDescription = "Greamaigh an eochair cheadúnais ó do ríomhphost"
 success = "Ceadúnas Gníomhachtaithe!"
 successMessage = "Tá do cheadúnas gníomhachtaithe go rathúil. Is féidir leat an fhuinneog seo a dhúnadh anois."
-
-[plan.trial]
-message = ""
 
 [policies]
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
@@ -7600,6 +7564,9 @@ success = "Uaslódáladh chuig an bhfreastalaí"
 title = "Uaslódáil chuig an bhfreastalaí"
 updateButton = "Nuashonraigh ar an bhfreastalaí"
 uploadButton = "Uaslódáil chuig an bhfreastalaí"
+
+[survey]
+title = "Stirling-PDF Survey"
 
 [swagger]
 tags = "api,doiciméadú,swagger,críochphointí,forbairt"

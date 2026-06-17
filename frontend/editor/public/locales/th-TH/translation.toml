@@ -1589,30 +1589,7 @@ admin = "ผู้ดูแลระบบ"
 title = "การควบคุมผู้ใช้"
 
 [agents]
-auto_redaction_description = "ปกปิดข้อมูล PII อัตโนมัติ"
-auto_redaction_name = "ปกปิดอัตโนมัติ"
-back_to_tools = "กลับไปที่เครื่องมือ"
-coming_soon = "เร็วๆ นี้"
-compliance_description = "ตรวจสอบเอกสารตามข้อกำหนด"
-compliance_name = "ตรวจสอบความสอดคล้อง"
-data_extraction_description = "ดึงตารางและข้อมูลที่มีโครงสร้าง"
-data_extraction_name = "ดึงข้อมูล"
-doc_summary_description = "สรุปเอกสารยาว"
-doc_summary_name = "ตัวสรุป"
-form_filler_description = "กรอกฟอร์ม PDF อย่างชาญฉลาด"
-form_filler_name = "ตัวกรอกฟอร์ม"
-pdf_to_markdown_description = "แปลง PDF เป็น Markdown ที่สะอาด"
-pdf_to_markdown_name = "PDF เป็น Markdown"
-section_title = "เอเจนต์"
-show_less = "แสดงน้อยลง"
-start_chat = "เริ่มแชต"
-stirling_description = "ผู้ช่วย PDF อเนกประสงค์ของคุณ"
-stirling_full_name = "เอเจนต์ทั่วไปของ Stirling"
-stirling_long_description = "ผู้ช่วย PDF อเนกประสงค์ที่สามารถรันเครื่องมือ สร้าง PDF และดึงข้อมูลเชิงลึกจากเอกสารของคุณได้."
 stirling_name = "Stirling"
-stirling_running = "กำลังทำงาน..."
-stirling_tooltip = "เอเจนต์ของ Stirling"
-view_all = "ดูเอเจนต์ทั้งหมด"
 
 [analytics]
 learnMore = "เรียนรู้เพิ่มเติม"
@@ -2697,9 +2674,6 @@ title = "เปลี่ยนสิทธิ์"
 [changePermissions.tooltip.warning]
 text = "เพื่อให้สิทธิ์เหล่านี้ไม่สามารถเปลี่ยนได้ ให้ใช้เครื่องมือเพิ่มรหัสผ่านเพื่อตั้งรหัสผ่านเจ้าของ"
 
-[chat]
-resize = "ปรับขนาดแผงแชต"
-
 [chat.actions]
 copy = "คัดลอกข้อความ"
 
@@ -2712,9 +2686,9 @@ agentMenu = "ตัวเลือกเอเจนต์ของ Stirling"
 clearChat = "ล้างแชต"
 
 [chat.input]
-disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 placeholder = "คุณต้องการทำอะไร?"
 send = "ส่งข้อความ"
+disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 
 [chat.progress]
 analyzing = "กำลังวิเคราะห์คำขอของคุณ..."
@@ -2725,11 +2699,9 @@ executing_tool_single = "กำลังเรียกใช้ {{tool}}..."
 executing_tool_step = "กำลังเรียกใช้ {{tool}} (ขั้นตอนที่ {{step}} จาก {{total}})..."
 extracting_content = "กำลังแยกเนื้อหาจากเอกสารของคุณ..."
 processing = "กำลังประมวลผลเนื้อหาที่ดึงออกมา..."
-ranForMinutes = "Ran for {{count}} minutes"
 ranForMinutes_one = "Ran for 1 minute"
 ranForMinutes_other = "Ran for {{count}} minutes"
 ranForMinutesSeconds = "Ran for {{minutes}} min, {{seconds}} sec"
-ranForSeconds = "Ran for {{count}} seconds"
 ranForSeconds_one = "Ran for 1 second"
 ranForSeconds_other = "Ran for {{count}} seconds"
 thinking = "กำลังคิด..."
@@ -5251,11 +5223,6 @@ toggle = "What counts as a PDF?"
 body = "We couldn't reach the billing service. Refresh the page to try again."
 title = "Couldn't load your plan"
 
-[payg.exhausted]
-body = "You've used all 500 of your free PDFs. Upgrade to Processor to keep going."
-cta = "Go to billing"
-title = "You've used your free PDFs"
-
 [payg.free.cta]
 benefit1Body = "chain tools, schedule runs, batch process"
 benefit1Title = "Automation pipelines"
@@ -5848,9 +5815,6 @@ instructions = "ทำการซื้อของคุณในแท็บ 
 keyDescription = "วางคีย์ไลเซนส์จากอีเมลของคุณ"
 success = "เปิดใช้งานไลเซนส์แล้ว!"
 successMessage = "เปิดใช้งานไลเซนส์ของคุณเรียบร้อยแล้ว ตอนนี้คุณสามารถปิดหน้าต่างนี้ได้"
-
-[plan.trial]
-message = ""
 
 [policies]
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
@@ -7600,6 +7564,9 @@ success = "อัปโหลดไปยังเซิร์ฟเวอร์
 title = "อัปโหลดไปยังเซิร์ฟเวอร์"
 updateButton = "อัปเดตบนเซิร์ฟเวอร์"
 uploadButton = "อัปโหลดไปยังเซิร์ฟเวอร์"
+
+[survey]
+title = "Stirling-PDF Survey"
 
 [swagger]
 tags = "api,documentation,swagger,endpoints,development"

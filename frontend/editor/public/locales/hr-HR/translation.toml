@@ -1589,30 +1589,7 @@ admin = "Administrator"
 title = "Postavka kontrole korisnika"
 
 [agents]
-auto_redaction_description = "Automatski redigiraj PII"
-auto_redaction_name = "Automatsko redigiranje"
-back_to_tools = "Natrag na alate"
-coming_soon = "Uskoro"
-compliance_description = "Provjeri dokumente radi usklađenosti"
-compliance_name = "Provjera usklađenosti"
-data_extraction_description = "Izdvoji tablice i strukturirane podatke"
-data_extraction_name = "Izdvajanje podataka"
-doc_summary_description = "Sažmi duge dokumente"
-doc_summary_name = "Sažimač"
-form_filler_description = "Inteligentno ispunjavaj PDF obrasce"
-form_filler_name = "Ispunjivač obrazaca"
-pdf_to_markdown_description = "Pretvori PDF-ove u čisti Markdown"
-pdf_to_markdown_name = "PDF u Markdown"
-section_title = "Agenti"
-show_less = "Prikaži manje"
-start_chat = "Započni razgovor"
-stirling_description = "Vaš svestrani PDF asistent"
-stirling_full_name = "Stirling opći agent"
-stirling_long_description = "Svestrani PDF asistent koji može pokretati alate, stvarati PDF-ove i izdvajati uvide iz vaših dokumenata."
 stirling_name = "Stirling"
-stirling_running = "U tijeku..."
-stirling_tooltip = "Stirling agent"
-view_all = "Prikaži sve agente"
 
 [analytics]
 learnMore = "Saznajte više"
@@ -2697,9 +2674,6 @@ title = "Promjena dopuštenja"
 [changePermissions.tooltip.warning]
 text = "Kako bi ove dozvole bile nepromjenjive, upotrijebite alat Dodaj lozinku za postavljanje vlasničke lozinke."
 
-[chat]
-resize = "Promijeni veličinu panela chata"
-
 [chat.actions]
 copy = "Kopiraj poruku"
 
@@ -2712,9 +2686,9 @@ agentMenu = "Opcije Stirling agenta"
 clearChat = "Obriši chat"
 
 [chat.input]
-disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 placeholder = "Što želite učiniti?"
 send = "Pošalji poruku"
+disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 
 [chat.progress]
 analyzing = "Analiziram vaš zahtjev..."
@@ -2725,11 +2699,9 @@ executing_tool_single = "Pokrećem {{tool}}..."
 executing_tool_step = "Pokrećem {{tool}} (korak {{step}} od {{total}})..."
 extracting_content = "Izdvajam sadržaj iz vaših dokumenata..."
 processing = "Obrađujem izdvojeni sadržaj..."
-ranForMinutes = "Ran for {{count}} minutes"
 ranForMinutes_one = "Ran for 1 minute"
 ranForMinutes_other = "Ran for {{count}} minutes"
 ranForMinutesSeconds = "Ran for {{minutes}} min, {{seconds}} sec"
-ranForSeconds = "Ran for {{count}} seconds"
 ranForSeconds_one = "Ran for 1 second"
 ranForSeconds_other = "Ran for {{count}} seconds"
 thinking = "Razmišljam..."
@@ -5251,11 +5223,6 @@ toggle = "What counts as a PDF?"
 body = "We couldn't reach the billing service. Refresh the page to try again."
 title = "Couldn't load your plan"
 
-[payg.exhausted]
-body = "You've used all 500 of your free PDFs. Upgrade to Processor to keep going."
-cta = "Go to billing"
-title = "You've used your free PDFs"
-
 [payg.free.cta]
 benefit1Body = "chain tools, schedule runs, batch process"
 benefit1Title = "Automation pipelines"
@@ -5848,9 +5815,6 @@ instructions = "Dovršite kupnju na Stripe kartici. Nakon dovršenog plaćanja d
 keyDescription = "Zalijepite licenčni ključ iz e-poruke"
 success = "Licenca aktivirana!"
 successMessage = "Vaša licenca je uspješno aktivirana. Sada možete zatvoriti ovaj prozor."
-
-[plan.trial]
-message = ""
 
 [policies]
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
@@ -7600,6 +7564,9 @@ success = "Preneseno na poslužitelj"
 title = "Prenesi na poslužitelj"
 updateButton = "Ažuriraj na poslužitelju"
 uploadButton = "Prenesi na poslužitelj"
+
+[survey]
+title = "Stirling-PDF Survey"
 
 [swagger]
 tags = "api,documentation,swagger,endpoints,development"

@@ -1589,30 +1589,7 @@ admin = "Адміністратор"
 title = "Налаштування контролю користувача"
 
 [agents]
-auto_redaction_description = "Автоматично приховувати PII"
-auto_redaction_name = "Автоматичне приховування"
-back_to_tools = "Назад до інструментів"
-coming_soon = "Незабаром"
-compliance_description = "Перевірка документів на відповідність"
-compliance_name = "Перевірка відповідності"
-data_extraction_description = "Витягування таблиць і структурованих даних"
-data_extraction_name = "Витяг даних"
-doc_summary_description = "Підсумовуйте довгі документи"
-doc_summary_name = "Підсумовувач"
-form_filler_description = "Розумно заповнювати форми PDF"
-form_filler_name = "Заповнювач форм"
-pdf_to_markdown_description = "Перетворюйте PDF на чистий Markdown"
-pdf_to_markdown_name = "PDF у Markdown"
-section_title = "Агенти"
-show_less = "Показати менше"
-start_chat = "Почати чат"
-stirling_description = "Ваш універсальний помічник для PDF"
-stirling_full_name = "Загальний агент Stirling"
-stirling_long_description = "Багатоцільовий помічник для PDF, який може запускати інструменти, створювати PDF і витягувати відомості з ваших документів."
 stirling_name = "Stirling"
-stirling_running = "Працює..."
-stirling_tooltip = "Агент Stirling"
-view_all = "Переглянути всіх агентів"
 
 [analytics]
 learnMore = "Дізнатися більше"
@@ -2697,9 +2674,6 @@ title = "Змінити дозволи"
 [changePermissions.tooltip.warning]
 text = "Щоб зробити ці дозволи незмінними, скористайтесь інструментом «Додати пароль», щоб встановити пароль власника."
 
-[chat]
-resize = "Змінити розмір панелі чату"
-
 [chat.actions]
 copy = "Копіювати повідомлення"
 
@@ -2712,9 +2686,9 @@ agentMenu = "Параметри агента Stirling"
 clearChat = "Очистити чат"
 
 [chat.input]
-disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 placeholder = "Що ви хочете зробити?"
 send = "Надіслати повідомлення"
+disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 
 [chat.progress]
 analyzing = "Аналізую ваш запит..."
@@ -2725,11 +2699,9 @@ executing_tool_single = "Запускаю {{tool}}..."
 executing_tool_step = "Запускаю {{tool}} (крок {{step}} із {{total}})..."
 extracting_content = "Витягую вміст з ваших документів..."
 processing = "Обробляю витягнутий вміст..."
-ranForMinutes = "Ran for {{count}} minutes"
 ranForMinutes_one = "Ran for 1 minute"
 ranForMinutes_other = "Ran for {{count}} minutes"
 ranForMinutesSeconds = "Ran for {{minutes}} min, {{seconds}} sec"
-ranForSeconds = "Ran for {{count}} seconds"
 ranForSeconds_one = "Ran for 1 second"
 ranForSeconds_other = "Ran for {{count}} seconds"
 thinking = "Думаю..."
@@ -5251,11 +5223,6 @@ toggle = "What counts as a PDF?"
 body = "We couldn't reach the billing service. Refresh the page to try again."
 title = "Couldn't load your plan"
 
-[payg.exhausted]
-body = "You've used all 500 of your free PDFs. Upgrade to Processor to keep going."
-cta = "Go to billing"
-title = "You've used your free PDFs"
-
 [payg.free.cta]
 benefit1Body = "chain tools, schedule runs, batch process"
 benefit1Title = "Automation pipelines"
@@ -5848,9 +5815,6 @@ instructions = "Завершіть покупку на вкладці Stripe. П
 keyDescription = "Вставте ліцензійний ключ із листа"
 success = "Ліцензію активовано!"
 successMessage = "Вашу ліцензію успішно активовано. Тепер можете закрити це вікно."
-
-[plan.trial]
-message = ""
 
 [policies]
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
@@ -7600,6 +7564,9 @@ success = "Завантажено на сервер"
 title = "Завантажити на сервер"
 updateButton = "Оновити на сервері"
 uploadButton = "Завантажити на сервер"
+
+[survey]
+title = "Stirling-PDF Survey"
 
 [swagger]
 tags = "api,documentation,swagger,endpoints,development"

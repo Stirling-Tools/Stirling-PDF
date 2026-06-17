@@ -1589,30 +1589,7 @@ admin = "ادمین"
 title = "تنظیمات کنترل کاربران"
 
 [agents]
-auto_redaction_description = "سانسور خودکار PII"
-auto_redaction_name = "سانسور خودکار"
-back_to_tools = "بازگشت به ابزارها"
-coming_soon = "به‌زودی"
-compliance_description = "بررسی انطباق اسناد"
-compliance_name = "بررسی انطباق"
-data_extraction_description = "استخراج جداول و داده‌های ساخت‌یافته"
-data_extraction_name = "استخراج داده"
-doc_summary_description = "خلاصه‌سازی اسناد طولانی"
-doc_summary_name = "خلاصه‌ساز"
-form_filler_description = "پرکردن هوشمند فرم‌های PDF"
-form_filler_name = "پرکنندهٔ فرم"
-pdf_to_markdown_description = "تبدیل PDFها به Markdown تمیز"
-pdf_to_markdown_name = "PDF به Markdown"
-section_title = "عامل‌ها"
-show_less = "نمایش کمتر"
-start_chat = "شروع گفتگو"
-stirling_description = "دستیار PDF همه‌منظورهٔ شما"
-stirling_full_name = "عامل عمومی Stirling"
-stirling_long_description = "دستیار PDF همه‌منظوره که می‌تواند ابزارها را اجرا کند، PDF بسازد و از اسناد شما بینش استخراج کند."
 stirling_name = "Stirling"
-stirling_running = "در حال اجرا..."
-stirling_tooltip = "عامل Stirling"
-view_all = "مشاهدهٔ همهٔ عامل‌ها"
 
 [analytics]
 learnMore = "بیشتر بدانید"
@@ -2697,9 +2674,6 @@ title = "تغییر مجوزها"
 [changePermissions.tooltip.warning]
 text = "برای غیرقابل‌تغییر کردن این مجوزها، از ابزار افزودن رمز عبور برای تنظیم رمز عبور مالک استفاده کنید."
 
-[chat]
-resize = "تغییر اندازهٔ پنل چت"
-
 [chat.actions]
 copy = "کپی پیام"
 
@@ -2712,9 +2686,9 @@ agentMenu = "گزینه‌های عامل Stirling"
 clearChat = "پاک‌کردن چت"
 
 [chat.input]
-disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 placeholder = "می‌خواهید چه کاری انجام دهید؟"
 send = "ارسال پیام"
+disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 
 [chat.progress]
 analyzing = "در حال تحلیل درخواست شما..."
@@ -2725,11 +2699,9 @@ executing_tool_single = "در حال اجرای {{tool}}..."
 executing_tool_step = "در حال اجرای {{tool}} (گام {{step}} از {{total}})..."
 extracting_content = "در حال استخراج محتوا از اسناد شما..."
 processing = "در حال پردازش محتوای استخراج‌شده..."
-ranForMinutes = "Ran for {{count}} minutes"
 ranForMinutes_one = "Ran for 1 minute"
 ranForMinutes_other = "Ran for {{count}} minutes"
 ranForMinutesSeconds = "Ran for {{minutes}} min, {{seconds}} sec"
-ranForSeconds = "Ran for {{count}} seconds"
 ranForSeconds_one = "Ran for 1 second"
 ranForSeconds_other = "Ran for {{count}} seconds"
 thinking = "در حال فکر کردن..."
@@ -5251,11 +5223,6 @@ toggle = "What counts as a PDF?"
 body = "We couldn't reach the billing service. Refresh the page to try again."
 title = "Couldn't load your plan"
 
-[payg.exhausted]
-body = "You've used all 500 of your free PDFs. Upgrade to Processor to keep going."
-cta = "Go to billing"
-title = "You've used your free PDFs"
-
 [payg.free.cta]
 benefit1Body = "chain tools, schedule runs, batch process"
 benefit1Title = "Automation pipelines"
@@ -5848,9 +5815,6 @@ instructions = "خرید خود را در تب Stripe کامل کنید. پس ا
 keyDescription = "کلید لایسنس موجود در ایمیل خود را جای‌گذاری کنید"
 success = "لایسنس فعال شد!"
 successMessage = "لایسنس شما با موفقیت فعال شد. اکنون می‌توانید این پنجره را ببندید."
-
-[plan.trial]
-message = ""
 
 [policies]
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
@@ -7600,6 +7564,9 @@ success = "روی سرور بارگذاری شد"
 title = "بارگذاری در سرور"
 updateButton = "به‌روزرسانی روی سرور"
 uploadButton = "بارگذاری در سرور"
+
+[survey]
+title = "Stirling-PDF Survey"
 
 [swagger]
 tags = "api,مستندات,swagger,پایانه‌ها,توسعه"

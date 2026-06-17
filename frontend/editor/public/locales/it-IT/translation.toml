@@ -1589,30 +1589,7 @@ admin = "Amministratore"
 title = "Impostazioni di controllo utente"
 
 [agents]
-auto_redaction_description = "Oscura automaticamente i dati PII"
-auto_redaction_name = "Oscuramento automatico"
-back_to_tools = "Torna agli strumenti"
-coming_soon = "In arrivo"
-compliance_description = "Verifica i documenti per la conformità"
-compliance_name = "Verifica conformità"
-data_extraction_description = "Estrai tabelle e dati strutturati"
-data_extraction_name = "Estrazione dati"
-doc_summary_description = "Riassumi documenti lunghi"
-doc_summary_name = "Riassuntore"
-form_filler_description = "Compila i moduli PDF in modo intelligente"
-form_filler_name = "Compilatore di moduli"
-pdf_to_markdown_description = "Converti PDF in Markdown pulito"
-pdf_to_markdown_name = "PDF in Markdown"
-section_title = "Agenti"
-show_less = "Mostra meno"
-start_chat = "Inizia a chattare"
-stirling_description = "Il tuo assistente PDF di uso generale"
-stirling_full_name = "Agente generale Stirling"
-stirling_long_description = "Assistente PDF generico che può eseguire strumenti, creare PDF ed estrarre informazioni dai tuoi documenti."
 stirling_name = "Stirling"
-stirling_running = "In esecuzione..."
-stirling_tooltip = "Agente Stirling"
-view_all = "Visualizza tutti gli agenti"
 
 [analytics]
 learnMore = "Scopri di più"
@@ -2697,9 +2674,6 @@ title = "Cambia Permessi"
 [changePermissions.tooltip.warning]
 text = "Per rendere questi permessi immodificabili, usa lo strumento Aggiungi password per impostare una password proprietario."
 
-[chat]
-resize = "Ridimensiona pannello chat"
-
 [chat.actions]
 copy = "Copia messaggio"
 
@@ -2712,9 +2686,9 @@ agentMenu = "Opzioni agente Stirling"
 clearChat = "Cancella chat"
 
 [chat.input]
-disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 placeholder = "Cosa vuoi fare?"
 send = "Invia messaggio"
+disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 
 [chat.progress]
 analyzing = "Analisi della richiesta..."
@@ -2725,11 +2699,9 @@ executing_tool_single = "Esecuzione di {{tool}}..."
 executing_tool_step = "Esecuzione di {{tool}} (fase {{step}} di {{total}})..."
 extracting_content = "Estrazione del contenuto dai documenti..."
 processing = "Elaborazione del contenuto estratto..."
-ranForMinutes = "Ran for {{count}} minutes"
 ranForMinutes_one = "Ran for 1 minute"
 ranForMinutes_other = "Ran for {{count}} minutes"
 ranForMinutesSeconds = "Ran for {{minutes}} min, {{seconds}} sec"
-ranForSeconds = "Ran for {{count}} seconds"
 ranForSeconds_one = "Ran for 1 second"
 ranForSeconds_other = "Ran for {{count}} seconds"
 thinking = "Elaborazione..."
@@ -5251,11 +5223,6 @@ toggle = "What counts as a PDF?"
 body = "We couldn't reach the billing service. Refresh the page to try again."
 title = "Couldn't load your plan"
 
-[payg.exhausted]
-body = "You've used all 500 of your free PDFs. Upgrade to Processor to keep going."
-cta = "Go to billing"
-title = "You've used your free PDFs"
-
 [payg.free.cta]
 benefit1Body = "chain tools, schedule runs, batch process"
 benefit1Title = "Automation pipelines"
@@ -5848,9 +5815,6 @@ instructions = "Completa l'acquisto nella scheda Stripe. Una volta completato il
 keyDescription = "Incolla la chiave di licenza dall'email"
 success = "Licenza attivata!"
 successMessage = "La licenza è stata attivata correttamente. Ora puoi chiudere questa finestra."
-
-[plan.trial]
-message = ""
 
 [policies]
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
@@ -7600,6 +7564,9 @@ success = "Caricato sul server"
 title = "Carica sul server"
 updateButton = "Aggiorna sul server"
 uploadButton = "Carica sul server"
+
+[survey]
+title = "Stirling-PDF Survey"
 
 [swagger]
 tags = "api,documentazione,swagger,endpoint,sviluppo"

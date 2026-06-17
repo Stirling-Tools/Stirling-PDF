@@ -1589,30 +1589,7 @@ admin = "Rendszergazda"
 title = "Felhasználókezelés"
 
 [agents]
-auto_redaction_description = "Személyazonosításra alkalmas adatok automatikus kitakarása"
-auto_redaction_name = "Automatikus kitakarás"
-back_to_tools = "Vissza az eszközökhöz"
-coming_soon = "Hamarosan"
-compliance_description = "Dokumentumok megfelelőségi ellenőrzése"
-compliance_name = "Megfelelőségi ellenőrzés"
-data_extraction_description = "Táblázatok és strukturált adatok kinyerése"
-data_extraction_name = "Adatkinyerés"
-doc_summary_description = "Hosszú dokumentumok összefoglalása"
-doc_summary_name = "Összefoglaló"
-form_filler_description = "PDF-űrlapok intelligens kitöltése"
-form_filler_name = "Űrlapkitöltő"
-pdf_to_markdown_description = "PDF-ek konvertálása letisztult Markdownra"
-pdf_to_markdown_name = "PDF Markdownra"
-section_title = "Ügynökök"
-show_less = "Kevesebb megjelenítése"
-start_chat = "Csevegés indítása"
-stirling_description = "Általános célú PDF-asszisztensed"
-stirling_full_name = "Stirling általános ügynök"
-stirling_long_description = "Általános célú PDF-asszisztens, amely eszközöket futtat, PDF-eket hoz létre és információkat nyer ki a dokumentumokból."
 stirling_name = "Stirling"
-stirling_running = "Fut…"
-stirling_tooltip = "Stirling ügynök"
-view_all = "Összes ügynök megtekintése"
 
 [analytics]
 learnMore = "További információ"
@@ -2697,9 +2674,6 @@ title = "Jogosultságok módosítása"
 [changePermissions.tooltip.warning]
 text = "Ezeket a jogosultságokat tegye megváltoztathatatlanná a \"Jelszó hozzáadása\" eszközzel beállított tulajdonosi jelszóval."
 
-[chat]
-resize = "Csevegőpanel átméretezése"
-
 [chat.actions]
 copy = "Üzenet másolása"
 
@@ -2712,9 +2686,9 @@ agentMenu = "Stirling ügynök beállításai"
 clearChat = "Csevegés törlése"
 
 [chat.input]
-disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 placeholder = "Mit szeretne tenni?"
 send = "Üzenet küldése"
+disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 
 [chat.progress]
 analyzing = "Kérésének elemzése..."
@@ -2725,11 +2699,9 @@ executing_tool_single = "A {{tool}} futtatása..."
 executing_tool_step = "A {{tool}} futtatása ({{step}} / {{total}}. lépés)..."
 extracting_content = "Tartalom kinyerése a dokumentumaiból..."
 processing = "A kinyert tartalom feldolgozása..."
-ranForMinutes = "Ran for {{count}} minutes"
 ranForMinutes_one = "Ran for 1 minute"
 ranForMinutes_other = "Ran for {{count}} minutes"
 ranForMinutesSeconds = "Ran for {{minutes}} min, {{seconds}} sec"
-ranForSeconds = "Ran for {{count}} seconds"
 ranForSeconds_one = "Ran for 1 second"
 ranForSeconds_other = "Ran for {{count}} seconds"
 thinking = "Gondolkodás..."
@@ -5251,11 +5223,6 @@ toggle = "What counts as a PDF?"
 body = "We couldn't reach the billing service. Refresh the page to try again."
 title = "Couldn't load your plan"
 
-[payg.exhausted]
-body = "You've used all 500 of your free PDFs. Upgrade to Processor to keep going."
-cta = "Go to billing"
-title = "You've used your free PDFs"
-
 [payg.free.cta]
 benefit1Body = "chain tools, schedule runs, batch process"
 benefit1Title = "Automation pipelines"
@@ -5848,9 +5815,6 @@ instructions = "Fejezze be a vásárlást a Stripe fülön. A fizetés befejezé
 keyDescription = "Illessze be az e-mailben kapott licenckulcsot"
 success = "A licenc aktiválva!"
 successMessage = "A licenc sikeresen aktiválva. Most bezárhatja ezt az ablakot."
-
-[plan.trial]
-message = ""
 
 [policies]
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
@@ -7600,6 +7564,9 @@ success = "Feltöltve a szerverre"
 title = "Feltöltés a szerverre"
 updateButton = "Frissítés a szerveren"
 uploadButton = "Feltöltés a szerverre"
+
+[survey]
+title = "Stirling-PDF Survey"
 
 [swagger]
 tags = "api,dokumentáció,swagger,végpontok,fejlesztés"

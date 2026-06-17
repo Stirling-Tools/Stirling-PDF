@@ -1589,30 +1589,7 @@ admin = "Administrator"
 title = "Benutzerkontrolle"
 
 [agents]
-auto_redaction_description = "Personenbezogene Daten automatisch schwärzen"
-auto_redaction_name = "Automatische Schwärzung"
-back_to_tools = "Zurück zu den Tools"
-coming_soon = "Demnächst"
-compliance_description = "Dokumente auf Compliance prüfen"
-compliance_name = "Compliance-Prüfung"
-data_extraction_description = "Tabellen und strukturierte Daten extrahieren"
-data_extraction_name = "Datenauszug"
-doc_summary_description = "Lange Dokumente zusammenfassen"
-doc_summary_name = "Zusammenfasser"
-form_filler_description = "PDF-Formulare intelligent ausfüllen"
-form_filler_name = "Formularausfüller"
-pdf_to_markdown_description = "PDFs in sauberes Markdown konvertieren"
-pdf_to_markdown_name = "PDF zu Markdown"
-section_title = "Agenten"
-show_less = "Weniger anzeigen"
-start_chat = "Chat starten"
-stirling_description = "Ihr vielseitiger PDF-Assistent"
-stirling_full_name = "Stirling Allgemeiner Agent"
-stirling_long_description = "Vielseitiger PDF-Assistent, der Tools ausführen, PDFs erstellen und Erkenntnisse aus Ihren Dokumenten gewinnen kann."
 stirling_name = "Stirling"
-stirling_running = "Wird ausgeführt..."
-stirling_tooltip = "Stirling-Agent"
-view_all = "Alle Agenten anzeigen"
 
 [analytics]
 learnMore = "Mehr erfahren"
@@ -2697,9 +2674,6 @@ title = "Berechtigungen ändern"
 [changePermissions.tooltip.warning]
 text = "Um diese Berechtigungen unveränderlich zu machen, verwenden Sie das Passwort hinzufügen-Tool, um ein Besitzer-Passwort zu setzen."
 
-[chat]
-resize = "Chatbereich skalieren"
-
 [chat.actions]
 copy = "Nachricht kopieren"
 
@@ -2712,9 +2686,9 @@ agentMenu = "Stirling-Agent-Optionen"
 clearChat = "Chat löschen"
 
 [chat.input]
-disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 placeholder = "Was möchten Sie tun?"
 send = "Nachricht senden"
+disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 
 [chat.progress]
 analyzing = "Ihre Anfrage wird analysiert..."
@@ -2725,11 +2699,9 @@ executing_tool_single = "{{tool}} wird ausgeführt..."
 executing_tool_step = "{{tool}} wird ausgeführt (Schritt {{step}} von {{total}})..."
 extracting_content = "Inhalte werden aus Ihren Dokumenten extrahiert..."
 processing = "Extrahierte Inhalte werden verarbeitet..."
-ranForMinutes = "Ran for {{count}} minutes"
 ranForMinutes_one = "Ran for 1 minute"
 ranForMinutes_other = "Ran for {{count}} minutes"
 ranForMinutesSeconds = "Ran for {{minutes}} min, {{seconds}} sec"
-ranForSeconds = "Ran for {{count}} seconds"
 ranForSeconds_one = "Ran for 1 second"
 ranForSeconds_other = "Ran for {{count}} seconds"
 thinking = "Es wird nachgedacht..."
@@ -5251,11 +5223,6 @@ toggle = "What counts as a PDF?"
 body = "We couldn't reach the billing service. Refresh the page to try again."
 title = "Couldn't load your plan"
 
-[payg.exhausted]
-body = "You've used all 500 of your free PDFs. Upgrade to Processor to keep going."
-cta = "Go to billing"
-title = "You've used your free PDFs"
-
 [payg.free.cta]
 benefit1Body = "chain tools, schedule runs, batch process"
 benefit1Title = "Automation pipelines"
@@ -5848,9 +5815,6 @@ instructions = "Schließen Sie den Kauf im Stripe-Tab ab. Nach Abschluss der Zah
 keyDescription = "Fügen Sie den Lizenzschlüssel aus Ihrer E-Mail ein"
 success = "Lizenz aktiviert!"
 successMessage = "Ihre Lizenz wurde erfolgreich aktiviert. Sie können dieses Fenster nun schließen."
-
-[plan.trial]
-message = ""
 
 [policies]
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
@@ -7600,6 +7564,9 @@ success = "Auf Server hochgeladen"
 title = "Auf Server hochladen"
 updateButton = "Auf Server aktualisieren"
 uploadButton = "Auf Server hochladen"
+
+[survey]
+title = "Stirling-PDF Survey"
 
 [swagger]
 tags = "API,Dokumentation,Swagger,Endpunkte,Entwicklung"

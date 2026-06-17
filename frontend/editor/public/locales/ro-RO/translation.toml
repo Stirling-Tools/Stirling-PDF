@@ -1589,30 +1589,7 @@ admin = "Administrator"
 title = "Setări Control Utilizator"
 
 [agents]
-auto_redaction_description = "Redactează automat PII"
-auto_redaction_name = "Redactare automată"
-back_to_tools = "Înapoi la instrumente"
-coming_soon = "În curând"
-compliance_description = "Auditează documentele pentru conformitate"
-compliance_name = "Verificare conformitate"
-data_extraction_description = "Extrage tabele și date structurate"
-data_extraction_name = "Extracție de date"
-doc_summary_description = "Rezumă documente lungi"
-doc_summary_name = "Sumarizator"
-form_filler_description = "Completează inteligent formulare PDF"
-form_filler_name = "Completare formulare"
-pdf_to_markdown_description = "Convertește PDF-uri în Markdown curat"
-pdf_to_markdown_name = "PDF în Markdown"
-section_title = "Agenți"
-show_less = "Afișează mai puțin"
-start_chat = "Începeți conversația"
-stirling_description = "Asistentul dvs. PDF pentru uz general"
-stirling_full_name = "Agentul general Stirling"
-stirling_long_description = "Asistent PDF pentru uz general care poate rula instrumente, crea PDF-uri și extrage informații din documentele dvs."
 stirling_name = "Stirling"
-stirling_running = "Rulează..."
-stirling_tooltip = "Agentul Stirling"
-view_all = "Vedeți toți agenții"
 
 [analytics]
 learnMore = "Aflați mai multe"
@@ -2697,9 +2674,6 @@ title = "Schimbă Permisiunile"
 [changePermissions.tooltip.warning]
 text = "Pentru ca aceste permisiuni să nu poată fi schimbate, utilizați instrumentul Adăugare parolă pentru a seta o parolă de proprietar."
 
-[chat]
-resize = "Redimensionați panoul de chat"
-
 [chat.actions]
 copy = "Copiați mesajul"
 
@@ -2712,9 +2686,9 @@ agentMenu = "Opțiuni agent Stirling"
 clearChat = "Goliți chatul"
 
 [chat.input]
-disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 placeholder = "Ce doriți să faceți?"
 send = "Trimiteți mesaj"
+disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 
 [chat.progress]
 analyzing = "Se analizează solicitarea dvs...."
@@ -2725,11 +2699,9 @@ executing_tool_single = "Se rulează {{tool}}..."
 executing_tool_step = "Se rulează {{tool}} (pasul {{step}} din {{total}})..."
 extracting_content = "Se extrage conținutul din documentele dvs...."
 processing = "Se procesează conținutul extras..."
-ranForMinutes = "Ran for {{count}} minutes"
 ranForMinutes_one = "Ran for 1 minute"
 ranForMinutes_other = "Ran for {{count}} minutes"
 ranForMinutesSeconds = "Ran for {{minutes}} min, {{seconds}} sec"
-ranForSeconds = "Ran for {{count}} seconds"
 ranForSeconds_one = "Ran for 1 second"
 ranForSeconds_other = "Ran for {{count}} seconds"
 thinking = "Se gândește..."
@@ -5251,11 +5223,6 @@ toggle = "What counts as a PDF?"
 body = "We couldn't reach the billing service. Refresh the page to try again."
 title = "Couldn't load your plan"
 
-[payg.exhausted]
-body = "You've used all 500 of your free PDFs. Upgrade to Processor to keep going."
-cta = "Go to billing"
-title = "You've used your free PDFs"
-
 [payg.free.cta]
 benefit1Body = "chain tools, schedule runs, batch process"
 benefit1Title = "Automation pipelines"
@@ -5848,9 +5815,6 @@ instructions = "Finalizați achiziția în fila Stripe. După finalizarea plăț
 keyDescription = "Lipiți cheia de licență din e-mail"
 success = "Licență activată!"
 successMessage = "Licența a fost activată cu succes. Puteți închide această fereastră."
-
-[plan.trial]
-message = ""
 
 [policies]
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
@@ -7600,6 +7564,9 @@ success = "Încărcat pe server"
 title = "Încărcați pe server"
 updateButton = "Actualizați pe server"
 uploadButton = "Încărcați pe server"
+
+[survey]
+title = "Stirling-PDF Survey"
 
 [swagger]
 tags = "api,documentație,swagger,endpoint-uri,dezvoltare"

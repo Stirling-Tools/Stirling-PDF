@@ -1589,30 +1589,7 @@ admin = "Quản trị viên"
 title = "Cài đặt kiểm soát người dùng"
 
 [agents]
-auto_redaction_description = "Tự động ẩn PII"
-auto_redaction_name = "Tự động ẩn"
-back_to_tools = "Quay lại công cụ"
-coming_soon = "Sắp ra mắt"
-compliance_description = "Kiểm tra tuân thủ của tài liệu"
-compliance_name = "Kiểm tra tuân thủ"
-data_extraction_description = "Trích xuất bảng và dữ liệu có cấu trúc"
-data_extraction_name = "Trích xuất dữ liệu"
-doc_summary_description = "Tóm tắt tài liệu dài"
-doc_summary_name = "Trình tóm tắt"
-form_filler_description = "Điền biểu mẫu PDF một cách thông minh"
-form_filler_name = "Trình điền biểu mẫu"
-pdf_to_markdown_description = "Chuyển PDF sang Markdown sạch"
-pdf_to_markdown_name = "PDF sang Markdown"
-section_title = "Tác nhân"
-show_less = "Thu gọn"
-start_chat = "Bắt đầu trò chuyện"
-stirling_description = "Trợ lý PDF đa năng của bạn"
-stirling_full_name = "Tác nhân tổng quát Stirling"
-stirling_long_description = "Trợ lý PDF đa năng có thể chạy công cụ, tạo PDF và trích xuất thông tin từ tài liệu của bạn."
 stirling_name = "Stirling"
-stirling_running = "Đang chạy..."
-stirling_tooltip = "Tác nhân Stirling"
-view_all = "Xem tất cả tác nhân"
 
 [analytics]
 learnMore = "Tìm hiểu thêm"
@@ -2697,9 +2674,6 @@ title = "Thay đổi quyền"
 [changePermissions.tooltip.warning]
 text = "Để các quyền này không bị thay đổi, hãy dùng công cụ Thêm mật khẩu để đặt mật khẩu chủ sở hữu."
 
-[chat]
-resize = "Thay đổi kích thước bảng trò chuyện"
-
 [chat.actions]
 copy = "Sao chép tin nhắn"
 
@@ -2712,9 +2686,9 @@ agentMenu = "Tùy chọn tác nhân Stirling"
 clearChat = "Xóa trò chuyện"
 
 [chat.input]
-disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 placeholder = "Bạn muốn làm gì?"
 send = "Gửi tin nhắn"
+disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 
 [chat.progress]
 analyzing = "Đang phân tích yêu cầu của bạn..."
@@ -2725,11 +2699,9 @@ executing_tool_single = "Đang chạy {{tool}}..."
 executing_tool_step = "Đang chạy {{tool}} (bước {{step}} trên {{total}})..."
 extracting_content = "Đang trích xuất nội dung từ tài liệu của bạn..."
 processing = "Đang xử lý nội dung đã trích xuất..."
-ranForMinutes = "Ran for {{count}} minutes"
 ranForMinutes_one = "Ran for 1 minute"
 ranForMinutes_other = "Ran for {{count}} minutes"
 ranForMinutesSeconds = "Ran for {{minutes}} min, {{seconds}} sec"
-ranForSeconds = "Ran for {{count}} seconds"
 ranForSeconds_one = "Ran for 1 second"
 ranForSeconds_other = "Ran for {{count}} seconds"
 thinking = "Đang suy nghĩ..."
@@ -5251,11 +5223,6 @@ toggle = "What counts as a PDF?"
 body = "We couldn't reach the billing service. Refresh the page to try again."
 title = "Couldn't load your plan"
 
-[payg.exhausted]
-body = "You've used all 500 of your free PDFs. Upgrade to Processor to keep going."
-cta = "Go to billing"
-title = "You've used your free PDFs"
-
 [payg.free.cta]
 benefit1Body = "chain tools, schedule runs, batch process"
 benefit1Title = "Automation pipelines"
@@ -5848,9 +5815,6 @@ instructions = "Hoàn tất mua hàng trong thẻ Stripe. Khi thanh toán xong, 
 keyDescription = "Dán khóa giấy phép từ email của bạn"
 success = "Đã kích hoạt giấy phép!"
 successMessage = "Giấy phép của bạn đã được kích hoạt thành công. Bạn có thể đóng cửa sổ này."
-
-[plan.trial]
-message = ""
 
 [policies]
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
@@ -7600,6 +7564,9 @@ success = "Đã tải lên máy chủ"
 title = "Tải lên máy chủ"
 updateButton = "Cập nhật trên máy chủ"
 uploadButton = "Tải lên máy chủ"
+
+[survey]
+title = "Stirling-PDF Survey"
 
 [swagger]
 tags = "api,tài liệu,swagger,điểm cuối,phát triển"

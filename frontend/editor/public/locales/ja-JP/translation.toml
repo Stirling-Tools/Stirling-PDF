@@ -1589,30 +1589,7 @@ admin = "管理者"
 title = "ユーザー制御設定"
 
 [agents]
-auto_redaction_description = "PII を自動で墨消し"
-auto_redaction_name = "自動墨消し"
-back_to_tools = "ツールに戻る"
-coming_soon = "近日公開"
-compliance_description = "コンプライアンスを監査"
-compliance_name = "コンプライアンスチェック"
-data_extraction_description = "表と構造化データを抽出"
-data_extraction_name = "データ抽出"
-doc_summary_description = "長文ドキュメントを要約"
-doc_summary_name = "要約"
-form_filler_description = "PDF フォームに賢く入力"
-form_filler_name = "フォーム入力"
-pdf_to_markdown_description = "PDF をクリーンな Markdown に変換"
-pdf_to_markdown_name = "PDF から Markdown へ"
-section_title = "エージェント"
-show_less = "表示を減らす"
-start_chat = "チャットを開始"
-stirling_description = "汎用の PDF アシスタント"
-stirling_full_name = "Stirling 汎用エージェント"
-stirling_long_description = "ツールの実行、PDF の作成、ドキュメントからの洞察抽出ができる汎用 PDF アシスタント。"
 stirling_name = "Stirling"
-stirling_running = "実行中..."
-stirling_tooltip = "Stirling エージェント"
-view_all = "すべてのエージェントを表示"
 
 [analytics]
 learnMore = "詳しく見る"
@@ -2697,9 +2674,6 @@ title = "権限の変更"
 [changePermissions.tooltip.warning]
 text = "これらの権限を変更不可にするには、パスワード追加ツールでオーナーパスワードを設定してください。"
 
-[chat]
-resize = "チャットパネルのサイズ変更"
-
 [chat.actions]
 copy = "メッセージをコピー"
 
@@ -2712,9 +2686,9 @@ agentMenu = "Stirling エージェントのオプション"
 clearChat = "チャットをクリア"
 
 [chat.input]
-disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 placeholder = "何をしたいですか？"
 send = "メッセージを送信"
+disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 
 [chat.progress]
 analyzing = "リクエストを分析しています..."
@@ -2725,11 +2699,9 @@ executing_tool_single = "{{tool}} を実行しています..."
 executing_tool_step = "{{tool}} を実行しています（{{total}} ステップ中 {{step}} ステップ目）..."
 extracting_content = "ドキュメントからコンテンツを抽出しています..."
 processing = "抽出したコンテンツを処理しています..."
-ranForMinutes = "Ran for {{count}} minutes"
 ranForMinutes_one = "Ran for 1 minute"
 ranForMinutes_other = "Ran for {{count}} minutes"
 ranForMinutesSeconds = "Ran for {{minutes}} min, {{seconds}} sec"
-ranForSeconds = "Ran for {{count}} seconds"
 ranForSeconds_one = "Ran for 1 second"
 ranForSeconds_other = "Ran for {{count}} seconds"
 thinking = "考え中..."
@@ -5251,11 +5223,6 @@ toggle = "What counts as a PDF?"
 body = "We couldn't reach the billing service. Refresh the page to try again."
 title = "Couldn't load your plan"
 
-[payg.exhausted]
-body = "You've used all 500 of your free PDFs. Upgrade to Processor to keep going."
-cta = "Go to billing"
-title = "You've used your free PDFs"
-
 [payg.free.cta]
 benefit1Body = "chain tools, schedule runs, batch process"
 benefit1Title = "Automation pipelines"
@@ -5848,9 +5815,6 @@ instructions = "Stripe のタブで購入を完了してください。支払い
 keyDescription = "メールに記載のライセンスキーを貼り付け"
 success = "ライセンスを有効化しました！"
 successMessage = "ライセンスは正常に有効化されました。このウィンドウを閉じても構いません。"
-
-[plan.trial]
-message = ""
 
 [policies]
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
@@ -7600,6 +7564,9 @@ success = "サーバーにアップロードしました"
 title = "サーバーにアップロード"
 updateButton = "サーバー上で更新"
 uploadButton = "サーバーにアップロード"
+
+[survey]
+title = "Stirling-PDF Survey"
 
 [swagger]
 tags = "API,ドキュメント,swagger,エンドポイント,開発"
