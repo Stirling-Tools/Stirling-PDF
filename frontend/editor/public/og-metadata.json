@@ -474,6 +474,16 @@
       "image": "/og_images/home.png",
       "title": "Help Settings - Stirling PDF",
       "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/legal": {
+      "image": "/og_images/home.png",
+      "title": "Legal Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/payg": {
+      "image": "/og_images/home.png",
+      "title": "Payg Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
     }
   },
   "byPath": {
@@ -623,6 +633,8 @@
     "/settings/adminEndpoints": "/settings/adminEndpoints",
     "/settings/adminStorageSharing": "/settings/adminStorageSharing",
     "/settings/adminMcp": "/settings/adminMcp",
-    "/settings/help": "/settings/help"
+    "/settings/help": "/settings/help",
+    "/settings/legal": "/settings/legal",
+    "/settings/payg": "/settings/payg"
   }
 }
