@@ -10,7 +10,7 @@ import { useTranslation } from "react-i18next";
 import { generateId } from "@app/utils/generateId";
 import { useAllFiles, useFileActions } from "@app/contexts/FileContext";
 import apiClient from "@app/services/apiClient";
-import { getApiBaseUrl } from "@app/services/apiClientConfig";
+import { getAiBaseUrl } from "@app/services/aiBaseUrl";
 import { getAuthHeaders } from "@app/services/apiClientSetup";
 import { dispatchPaygLimitReached } from "@app/services/usageLimitBridge";
 import { createChildStub } from "@app/contexts/file/fileActions";
@@ -407,8 +407,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   // Download a File from the Stirling files endpoint.
   const downloadFile = useCallback(
     async (descriptor: AiWorkflowResultFile): Promise<File> => {
+      // AI result files live on the backend that ran the workflow (the SaaS
+      // engine on desktop), so fetch from the AI base, not the local backend.
       const response = await apiClient.get<Blob>(
-        `/api/v1/general/files/${descriptor.fileId}`,
+        `${getAiBaseUrl()}/api/v1/general/files/${descriptor.fileId}`,
         { responseType: "blob" },
       );
       return new File([response.data], descriptor.fileName, {
@@ -520,7 +522,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           formData.append(`conversationHistory[${i}].content`, message.content);
         });
         const response = await fetch(
-          `${getApiBaseUrl()}/api/v1/ai/orchestrate/stream`,
+          `${getAiBaseUrl()}/api/v1/ai/orchestrate/stream`,
           {
             method: "POST",
             body: formData,
