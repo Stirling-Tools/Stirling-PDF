@@ -39,10 +39,14 @@ RUN ./gradlew dependencies --no-daemon || true
 # Copy entire project
 COPY . .
 
-# Build ultra-lite JAR with embedded frontend (minimal features)
-RUN DISABLE_ADDITIONAL_FEATURES=true \
+# Build ultra-lite JAR with embedded frontend (minimal features).
+# Bundle only the JPDFium musl native for this image's target arch (Alpine).
+ARG TARGETARCH
+RUN JPDFIUM_PLATFORM="$([ "$TARGETARCH" = arm64 ] && echo linux-musl-arm64 || echo linux-musl-x64)" && \
+    DISABLE_ADDITIONAL_FEATURES=true \
     ./gradlew clean build \
       -PbuildWithFrontend=true \
+      -PjpdfiumPlatforms="$JPDFIUM_PLATFORM" \
       -x spotlessApply -x spotlessCheck -x test -x sonarqube \
       --no-daemon
 
@@ -98,7 +102,9 @@ RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/a
     bash \
     curl \
     shadow \
-    util-linux && \
+    util-linux \
+    libstdc++ \
+    libgcc && \
     mkdir -p $HOME /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders /storage /tmp/stirling-pdf /tmp/stirling-pdf/heap_dumps && \
     mkdir -p /usr/share/fonts/opentype/noto && \
     # User permissions

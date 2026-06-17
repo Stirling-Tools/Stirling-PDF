@@ -60,22 +60,26 @@ dependencies {
         exclude group: 'com.google.code.gson', module: 'gson'
     }
 
-    api 'com.stirling:jpdfium:1.0.2'
+    api 'com.stirling:jpdfium:1.1.0'
 
-    // -PjpdfiumPlatforms=all|<csv of linux-x64,linux-arm64,darwin-x64,darwin-arm64,windows-x64>
+    // -PjpdfiumPlatforms=all|<csv of linux-x64,linux-arm64,linux-musl-x64,linux-musl-arm64,darwin-x64,darwin-arm64,windows-x64>
+    // 'all' = the standard glibc/mac/windows set. musl (Alpine) natives are
+    // opt-in only (the ultra-lite Docker build selects them per-arch), so they
+    // are valid values but excluded from 'all'.
     def jpdfiumPlatformsProp = (project.findProperty('jpdfiumPlatforms') ?: 'all').toString().trim()
     def jpdfiumAllPlatforms = ['linux-x64', 'linux-arm64', 'darwin-x64', 'darwin-arm64', 'windows-x64']
+    def jpdfiumValidPlatforms = jpdfiumAllPlatforms + ['linux-musl-x64', 'linux-musl-arm64']
     def jpdfiumPlatforms = jpdfiumPlatformsProp == 'all'
             ? jpdfiumAllPlatforms
             : jpdfiumPlatformsProp.split(',').collect { it.trim() }.findAll { it }
-    def jpdfiumInvalid = jpdfiumPlatforms.findAll { !jpdfiumAllPlatforms.contains(it) }
+    def jpdfiumInvalid = jpdfiumPlatforms.findAll { !jpdfiumValidPlatforms.contains(it) }
     if (jpdfiumInvalid) {
         throw new GradleException("Unknown jpdfiumPlatforms value(s): ${jpdfiumInvalid.join(', ')}. " +
-                "Valid: ${jpdfiumAllPlatforms.join(', ')} or 'all'.")
+                "Valid: ${jpdfiumValidPlatforms.join(', ')} or 'all'.")
     }
     logger.lifecycle("JPDFium native platforms: ${jpdfiumPlatforms.join(', ')}")
     jpdfiumPlatforms.each { platform ->
-        runtimeOnly "com.stirling:jpdfium-natives-${platform}:1.0.2"
+        runtimeOnly "com.stirling:jpdfium-natives-${platform}:1.1.0"
     }
 
     // Bucket4j (local in-process token bucket for RateLimitStore default impl)

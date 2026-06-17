@@ -31,9 +31,13 @@ ARG STIRLING_FLAVOR=proprietary
 ENV STIRLING_FLAVOR=${STIRLING_FLAVOR}
 
 # buildWithFrontend=false → backend-only JAR with API landing page.
-RUN STIRLING_FLAVOR=${STIRLING_FLAVOR} \
+# Bundle only the JPDFium native for this image's target arch (glibc).
+ARG TARGETARCH
+RUN JPDFIUM_PLATFORM="$([ "$TARGETARCH" = arm64 ] && echo linux-arm64 || echo linux-x64)" && \
+    STIRLING_FLAVOR=${STIRLING_FLAVOR} \
     gradle clean build \
       -PbuildWithFrontend=false \
+      -PjpdfiumPlatforms="$JPDFIUM_PLATFORM" \
       -PprototypesMode=${PROTOTYPES_BUILD} \
       -x spotlessApply -x spotlessCheck -x test -x sonarqube \
       --no-daemon
