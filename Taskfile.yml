@@ -171,4 +171,5 @@ tasks:
     desc: "Clean all build artifacts"
     cmds:
       - task: backend:clean
+      - task: frontend:clean
       - task: engine:clean
