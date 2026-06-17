@@ -13,6 +13,7 @@
  */
 
 import { getActiveTarget } from "@portal/api/backendTarget";
+import { clearLoginRedirectGuard, redirectToLogin } from "@portal/auth/login";
 
 export interface HttpRequestOptions {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
@@ -45,6 +46,7 @@ export async function httpJson<T>(
   const authHeaders = await target.getAuthHeaders();
   const res = await fetch(`${target.baseUrl}${path}`, {
     method: options.method ?? "GET",
+    credentials: target.credentials,
     headers: {
       Accept: "application/json",
       ...(options.body !== undefined
@@ -58,13 +60,18 @@ export async function httpJson<T>(
     signal: options.signal,
   });
   if (!res.ok) {
+    // 401 means no valid session: bounce to the shared login (whichever app
+    // you reach first prompts it). 403 is a logged-in non-admin, so it falls
+    // through to HttpError for the caller to surface, not a login redirect.
+    if (res.status === 401) redirectToLogin();
     let body: unknown = null;
     try {
       body = await res.json();
     } catch {
-      // ignore — non-JSON error response
+      // ignore: non-JSON error response
     }
     throw new HttpError(res.status, res.statusText, body);
   }
+  clearLoginRedirectGuard();
   return (await res.json()) as T;
 }

@@ -14,6 +14,38 @@ In dev, `portal/vite.config.ts` proxies `/api` to the backend (default
 **`task dev:portal`**, which spawns the backend and the portal on free ports and
 wires the proxy automatically.
 
+## Connecting to a self-hosted backend (auth)
+
+Self-hosted is the active backend target today (`api/backendTarget.ts`). The
+portal and the editor share one login: both send `credentials: "include"`, so a
+single Stirling session cookie authenticates either app, and both bounce to the
+same `/login` page on a 401. Whichever app you open first prompts the login;
+after that the cookie covers both, so switching between them needs no re-login.
+The server authorizes per request (an admin-only endpoint returns 403 to a
+logged-in non-admin; that surfaces as an `HttpError`, not a login redirect).
+There is no API key and no token to manage in the portal.
+
+This is seamless when the portal and editor share an origin (prod: serve the
+portal under the same host) or at least the same host (dev: cookies are
+host-scoped, not port-scoped, so a `localhost:8080` login is sent to the
+portal's dev port too). The login page lives in the editor, so in dev set
+`VITE_PORTAL_LOGIN_URL` to the editor's `/login` (the portal has no login route
+of its own). A cross-origin prod split additionally needs CORS with credentials
+and a `SameSite=None` session cookie.
+
+To test locally:
+
+1. Run one backend with security enabled (`DOCKER_ENABLE_SECURITY=true`), JWT v2
+   left off (the default; it is still under development).
+2. Point both the editor and the portal at it (`BACKEND_URL=...`), and set the
+   portal's `VITE_PORTAL_LOGIN_URL` to the editor's `/login`.
+3. Turn mocks off. Opening either app redirects you to log in; once you do, both
+   work as that admin.
+
+Against an open dev backend (`DOCKER_ENABLE_SECURITY=false`) no 401 occurs and
+requests succeed unauthenticated. SaaS (Supabase bearer) is wired as a second
+target (`saasTarget`) for later.
+
 ## The three layers
 
 ```
