@@ -68,12 +68,16 @@ export const useConfigNavSections = (
     ],
   };
 
-  // In local mode only show Preferences + Connection Mode — everything else
-  // requires a server and will 500 or show irrelevant admin UI.
+  // In local mode only show Preferences + Connection Mode + Legal — everything
+  // else requires a server and will 500 or show irrelevant admin UI.
   if (isLocalMode) {
     const result: ConfigNavSection[] = [];
     if (sections.length > 0) result.push(sections[0]);
     result.push(connectionModeSection);
+    const legalSection = sections.find((section) =>
+      section.items.some((item) => item.key === "legal"),
+    );
+    if (legalSection) result.push(legalSection);
     return result;
   }
 

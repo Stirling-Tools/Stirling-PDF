@@ -23,8 +23,10 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
@@ -44,6 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.RequestUriUtils;
+import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.saas.service.CreditService;
@@ -333,6 +336,16 @@ public class SupabaseSecurityConfig {
                             .map(GrantedAuthority::getAuthority)
                             .collect(Collectors.joining(",")));
         }
-        return new EnhancedJwtAuthenticationToken(jwt, authorities, email, supabaseId);
+        // BearerTokenAuthenticationFilter overwrites the context SupabaseAuthenticationFilter
+        // built; carry its resolved User across so instanceof-User authorization keeps working.
+        User user = null;
+        Authentication existing = SecurityContextHolder.getContext().getAuthentication();
+        if (existing instanceof EnhancedJwtAuthenticationToken enhanced
+                && supabaseId != null
+                && supabaseId.equals(enhanced.getSupabaseId())
+                && enhanced.getPrincipal() instanceof User existingUser) {
+            user = existingUser;
+        }
+        return new EnhancedJwtAuthenticationToken(jwt, authorities, email, supabaseId, user);
     }
 }
