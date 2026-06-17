@@ -80,6 +80,12 @@ function RedactionAPIBridgeInner({ documentId }: { documentId: string }) {
       enableRedact: () => {
         redactionProvides?.enableRedact();
       },
+      enableRedactSelection: () => {
+        redactionProvides?.enableRedactSelection();
+      },
+      enableMarqueeRedact: () => {
+        redactionProvides?.enableMarqueeRedact();
+      },
       isRedactActive: () => {
         return redactionProvides?.isRedactActive() ?? false;
       },

@@ -1,0 +1,126 @@
+/* Slide-based tool wizard: a calm segmented progress bar, one step per slide
+   with centered content, and big Back / Continue CTAs pinned to the bottom. */
+
+.tool-step-wizard {
+  /* Fill the panel height (the parent ScrollArea content is a flex column with
+     min-height:100%). flex-basis:0 makes this resolve to exactly the viewport
+     height so the body can scroll internally and the CTAs stay pinned. */
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.tool-step-wizard__title {
+  flex-shrink: 0;
+  padding: 0.5rem 0.75rem 0;
+}
+
+/* ---- Progress bar ---- */
+.tool-step-wizard__progress {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 0.85rem 1rem 0.45rem;
+  flex-shrink: 0;
+}
+
+.tool-step-wizard__segment {
+  all: unset;
+  flex: 1 1 0;
+  height: 4px;
+  border-radius: 9999px;
+  background: var(--onboarding-step-inactive);
+  position: relative;
+  overflow: hidden;
+  cursor: default;
+  box-sizing: border-box;
+}
+
+.tool-step-wizard__segment[data-jumpable] {
+  cursor: pointer;
+}
+
+.tool-step-wizard__segment-fill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--mantine-color-blue-filled);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.3s ease;
+}
+
+.tool-step-wizard__segment[data-filled] .tool-step-wizard__segment-fill {
+  transform: scaleX(1);
+}
+
+.tool-step-wizard__caption {
+  flex-shrink: 0;
+  padding: 0 1rem 0.25rem;
+}
+
+/* ---- Slide body: top-aligned content that scrolls when tall ---- */
+.tool-step-wizard__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  /* Horizontal padding lives on the slide + CTA buttons so the CTA's top
+     border can span edge-to-edge. */
+  padding-top: 0.75rem;
+}
+
+.tool-step-wizard__slide {
+  width: 100%;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 0 1rem;
+  animation: wizard-slide-in 0.2s ease;
+}
+
+@keyframes wizard-slide-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.tool-step-wizard__slide-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* ---- CTAs: sit right after the content, stick to the bottom on overflow ---- */
+.tool-step-wizard__cta {
+  position: sticky;
+  bottom: 0;
+  /* Flex column so each button stretches to the container width minus its own
+     horizontal margin (mx="md") — never width:100% + margin, which overflows. */
+  display: flex;
+  flex-direction: column;
+  margin-top: 0.75rem;
+  padding-bottom: 0.85rem;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-toolbar);
+  z-index: 1;
+}
+
+.tool-step-wizard__cta-btn {
+  min-height: 2.85rem !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tool-step-wizard__segment-fill,
+  .tool-step-wizard__slide {
+    transition: none !important;
+    animation: none !important;
+  }
+}

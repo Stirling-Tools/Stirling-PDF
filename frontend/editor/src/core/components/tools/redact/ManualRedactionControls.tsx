@@ -1,6 +1,8 @@
 import { useTranslation } from "react-i18next";
 import { useEffect, useRef, useCallback } from "react";
-import { Button, Stack, Text, Divider, ColorInput } from "@mantine/core";
+import { Button, Stack, Text, Divider, ColorInput, Group } from "@mantine/core";
+import HighlightAltIcon from "@mui/icons-material/HighlightAlt";
+import CropFreeIcon from "@mui/icons-material/CropFree";
 import { useRedaction, useRedactionMode } from "@app/contexts/RedactionContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useSignature } from "@app/contexts/SignatureContext";
@@ -21,7 +23,8 @@ export default function ManualRedactionControls({
 
   // Use our RedactionContext which bridges to EmbedPDF
   const {
-    activateManualRedact,
+    activateTextSelection,
+    activateMarquee,
     redactionsApplied,
     setActiveType,
     setManualRedactColor,
@@ -50,9 +53,9 @@ export default function ManualRedactionControls({
   // Guard: pause auto-reactivation during save/export to avoid interfering with EmbedPDF
   const isSavingRef = useRef(false);
 
-  // Keep redaction tool active at all times while this component is mounted.
-  // If anything deactivates it (annotation tools, text selection, file switch, etc.)
-  // this re-enables it automatically — no manual "Activate" button needed.
+  // Keep a redaction tool active while this component is mounted. If anything
+  // deactivates it (annotation tools, file switch, etc.) this re-enables it —
+  // defaulting to text selection so "Mark Text" is the initial active mode.
   useEffect(() => {
     if (
       disabled ||
@@ -77,7 +80,7 @@ export default function ManualRedactionControls({
       // Small delay to avoid racing with EmbedPDF's own state updates
       const timer = setTimeout(() => {
         if (!isSavingRef.current) {
-          activateManualRedact();
+          activateTextSelection();
         }
       }, 50);
       return () => clearTimeout(timer);
@@ -90,7 +93,7 @@ export default function ManualRedactionControls({
     showNavigationWarning,
     setAnnotationMode,
     signatureApiRef,
-    activateManualRedact,
+    activateTextSelection,
   ]);
 
   // Reset redaction tool when switching between files
@@ -123,6 +126,28 @@ export default function ManualRedactionControls({
 
   const isApiReady = isBridgeReady;
 
+  // Which manual-redaction sub-mode is active (drives the tool button highlight).
+  const isSelectionActive = activeType === "redactSelection";
+  const isMarqueeActive = activeType === "marqueeRedact";
+
+  // Switch to a redaction sub-mode, first stepping out of annotation mode/tools.
+  const switchMode = useCallback(
+    (activate: () => void) => {
+      if (isAnnotationMode) {
+        setAnnotationMode(false);
+        if (signatureApiRef?.current) {
+          try {
+            signatureApiRef.current.deactivateTools();
+          } catch (error) {
+            console.log("Unable to deactivate annotation tools:", error);
+          }
+        }
+      }
+      activate();
+    },
+    [isAnnotationMode, setAnnotationMode, signatureApiRef],
+  );
+
   return (
     <>
       <Divider my="sm" />
@@ -137,6 +162,54 @@ export default function ManualRedactionControls({
             "Select text or draw areas on the PDF to mark content for redaction.",
           )}
         </Text>
+
+        <Group gap="sm" grow wrap="nowrap">
+          <Button
+            variant={
+              isSelectionActive && !isAnnotationMode ? "filled" : "outline"
+            }
+            color={isSelectionActive && !isAnnotationMode ? "blue" : "gray"}
+            leftSection={
+              <HighlightAltIcon style={{ fontSize: 18, flexShrink: 0 }} />
+            }
+            onClick={() => switchMode(activateTextSelection)}
+            disabled={disabled || !isApiReady}
+            size="sm"
+            styles={{
+              root: { minWidth: 0 },
+              label: {
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              },
+            }}
+          >
+            {t("redact.manual.markText", "Mark Text")}
+          </Button>
+
+          <Button
+            variant={
+              isMarqueeActive && !isAnnotationMode ? "filled" : "outline"
+            }
+            color={isMarqueeActive && !isAnnotationMode ? "blue" : "gray"}
+            leftSection={
+              <CropFreeIcon style={{ fontSize: 18, flexShrink: 0 }} />
+            }
+            onClick={() => switchMode(activateMarquee)}
+            disabled={disabled || !isApiReady}
+            size="sm"
+            styles={{
+              root: { minWidth: 0 },
+              label: {
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              },
+            }}
+          >
+            {t("redact.manual.markArea", "Mark Area")}
+          </Button>
+        </Group>
 
         <ColorInput
           label={t("redact.manual.colorLabel", "Redaction Colour")}

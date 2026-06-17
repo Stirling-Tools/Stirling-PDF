@@ -66,7 +66,18 @@ export default function ToolPanel({
         </div>
       ) : (
         <div className="flex-1 min-h-0 overflow-hidden">
-          <ScrollArea h="100%">
+          <ScrollArea
+            h="100%"
+            styles={{
+              // Let the tool fill the panel height so the slide wizard can
+              // center its content and pin its CTAs to the bottom.
+              content: {
+                minHeight: "100%",
+                display: "flex",
+                flexDirection: "column",
+              },
+            }}
+          >
             {selectedToolKey ? (
               <ToolRenderer
                 selectedToolKey={selectedToolKey}

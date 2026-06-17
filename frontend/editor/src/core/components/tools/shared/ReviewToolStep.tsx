@@ -24,7 +24,7 @@ export interface ReviewToolStepProps<TParams = unknown> {
   onCollapsedClick?: () => void;
 }
 
-function ReviewStepContent<TParams = unknown>({
+export function ReviewStepContent<TParams = unknown>({
   operation,
   onFileClick,
   onUndo,

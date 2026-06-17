@@ -1,0 +1,42 @@
+/* Large, clean upload CTA used as the Files slide in the tool step wizard. */
+
+.wizard-files-dropzone {
+  width: 100%;
+  border: 1.5px dashed var(--border-subtle, var(--mantine-color-default-border));
+  border-radius: var(--mantine-radius-lg, 1rem);
+  background: transparent;
+  padding: 2.25rem 1.25rem;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.wizard-files-dropzone:hover {
+  border-color: var(--mantine-color-blue-filled);
+  background: color-mix(
+    in srgb,
+    var(--mantine-color-blue-filled) 5%,
+    transparent
+  );
+}
+
+.wizard-files-dropzone[data-accept] {
+  border-color: var(--mantine-color-blue-filled);
+  background: var(--mantine-color-blue-light);
+}
+
+.wizard-files-dropzone[data-reject] {
+  border-color: var(--mantine-color-red-filled);
+}
+
+.wizard-files-dropzone__icon {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--mantine-color-blue-light);
+  color: var(--mantine-color-blue-filled);
+  margin-bottom: 0.25rem;
+}

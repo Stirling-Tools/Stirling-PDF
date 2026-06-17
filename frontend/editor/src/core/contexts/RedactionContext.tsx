@@ -17,6 +17,8 @@ import { RedactionMode } from "@embedpdf/plugin-redaction";
 export interface RedactionAPI {
   toggleRedact: () => void;
   enableRedact: () => void;
+  enableRedactSelection: () => void;
+  enableMarqueeRedact: () => void;
   isRedactActive: () => boolean;
   endRedact: () => void;
   // Common methods
@@ -211,19 +213,19 @@ export const RedactionProvider: React.FC<{ children: ReactNode }> = ({
     }
   }, []);
 
-  // Legacy UI actions for backwards compatibility
-  // In v2.5.0, both text selection and marquee use the same unified mode
-  // These just activate the unified redact mode and set the active type for UI state
+  // Activate a specific manual-redaction sub-mode. The plugin (v2.14.1) has
+  // dedicated text-selection and marquee modes; the optimistic setActiveType is
+  // reconciled by RedactionAPIBridge syncing the real state from EmbedPDF.
   const activateTextSelection = useCallback(() => {
     if (redactionApiRef.current) {
-      redactionApiRef.current.enableRedact();
+      redactionApiRef.current.enableRedactSelection();
       setActiveType("redactSelection" as RedactionMode);
     }
   }, [setActiveType]);
 
   const activateMarquee = useCallback(() => {
     if (redactionApiRef.current) {
-      redactionApiRef.current.enableRedact();
+      redactionApiRef.current.enableMarqueeRedact();
       setActiveType("marqueeRedact" as RedactionMode);
     }
   }, [setActiveType]);
