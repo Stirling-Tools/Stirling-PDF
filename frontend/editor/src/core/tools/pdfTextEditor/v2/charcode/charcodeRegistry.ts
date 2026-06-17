@@ -177,12 +177,41 @@ export function tryResolveCharcodes(
   font: number,
   text: string,
   ctx: ResolverContext,
+  allowContentStreamFallback = false,
 ): {
   strategy: CharcodeStrategy;
   result: ReturnType<CharcodeResolver["resolve"]>;
 } | null {
   const r = activeResolver();
-  if (!r) return null;
-  const result = r.resolve(font, text, ctx);
-  return { strategy: r.name, result };
+  if (r) {
+    const result = r.resolve(font, text, ctx);
+    if (result && result.coverage === text.length) {
+      return { strategy: r.name, result };
+    }
+    // Active resolver (e.g. backend with a cold cache) did not fully cover
+    // the text. Optionally fall back to the client-side content-stream
+    // resolver so an inserted char that ALREADY exists on the page reuses
+    // its embedded glyph synchronously instead of flipping to Helvetica
+    // while the async backend prefetch is still in flight. The emit path
+    // self-validates a content-stream result against the on-page glyph
+    // advance, so a wrong CID guess is caught and falls back safely.
+    if (allowContentStreamFallback && r.name !== "content-stream") {
+      const cs = resolvers["content-stream"];
+      const csResult = cs?.resolve(font, text, ctx);
+      if (csResult && csResult.coverage === text.length) {
+        return { strategy: "content-stream", result: csResult };
+      }
+    }
+    return { strategy: r.name, result };
+  }
+  // No active resolver (helvetica strategy). Still try the client-side
+  // content-stream reuse when explicitly allowed.
+  if (allowContentStreamFallback) {
+    const cs = resolvers["content-stream"];
+    const csResult = cs?.resolve(font, text, ctx);
+    if (csResult && csResult.coverage === text.length) {
+      return { strategy: "content-stream", result: csResult };
+    }
+  }
+  return null;
 }

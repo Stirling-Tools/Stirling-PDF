@@ -211,6 +211,127 @@ function measureAdvancePt(
   return ctx.measureText(text).width;
 }
 
+// Per-page cache of each char's ON-PAGE rendered advance (per em), keyed
+// pagePtr -> fontPtr -> unicode -> advanceEm. Built once by walking the
+// PDFium text page. Used to self-validate a content-stream charcode GUESS:
+// after emitting a reused glyph we compare its measured advance to the
+// advance the SAME char actually renders at on the page; a wrong CID guess
+// produces a grossly different advance and is rejected (-> Helvetica).
+const onPageAdvCache = new Map<number, Map<number, Map<number, number>>>();
+
+interface LooseBoxModule {
+  FPDFText_LoadPage?: (page: number) => number;
+  FPDFText_ClosePage?: (tp: number) => void;
+  FPDFText_CountChars?: (tp: number) => number;
+  FPDFText_GetUnicode?: (tp: number, i: number) => number;
+  FPDFText_GetTextObject?: (tp: number, i: number) => number;
+  FPDFTextObj_GetFont?: (obj: number) => number;
+  FPDFText_GetFontSize?: (tp: number, i: number) => number;
+  FPDFText_GetLooseCharBox?: (tp: number, i: number, rect: number) => boolean;
+}
+
+function looseBoxAdvancePt(
+  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  tp: number,
+  idx: number,
+): number | null {
+  const mod = m as unknown as LooseBoxModule;
+  if (!mod.FPDFText_GetLooseCharBox) return null;
+  const wasm = (
+    m.pdfium as unknown as {
+      wasmExports: { malloc: (n: number) => number; free: (p: number) => void };
+    }
+  ).wasmExports;
+  const buf = wasm.malloc(16); // FS_RECT = 4 floats {left, top, right, bottom}
+  try {
+    if (!mod.FPDFText_GetLooseCharBox(tp, idx, buf)) return null;
+    const heap = (m.pdfium as unknown as { HEAPU8: Uint8Array }).HEAPU8;
+    const f32 = new Float32Array(heap.buffer, buf, 4);
+    const width = f32[2] - f32[0];
+    return width > 0 ? width : null;
+  } catch {
+    return null;
+  } finally {
+    wasm.free(buf);
+  }
+}
+
+function buildOnPageAdvMap(
+  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  pagePtr: number,
+): Map<number, Map<number, number>> {
+  const mod = m as unknown as LooseBoxModule;
+  const out = new Map<number, Map<number, number>>();
+  if (
+    !mod.FPDFText_LoadPage ||
+    !mod.FPDFText_CountChars ||
+    !mod.FPDFText_GetUnicode ||
+    !mod.FPDFText_GetTextObject ||
+    !mod.FPDFTextObj_GetFont ||
+    !mod.FPDFText_GetFontSize
+  ) {
+    return out;
+  }
+  const tp = mod.FPDFText_LoadPage(pagePtr);
+  if (!tp) return out;
+  try {
+    const count = mod.FPDFText_CountChars(tp);
+    for (let i = 0; i < count; i++) {
+      const u = mod.FPDFText_GetUnicode(tp, i);
+      if (!u) continue;
+      const obj = mod.FPDFText_GetTextObject(tp, i);
+      if (!obj) continue;
+      let font = 0;
+      try {
+        font = mod.FPDFTextObj_GetFont(obj);
+      } catch {
+        /* skip */
+      }
+      if (!font) continue;
+      let fm = out.get(font);
+      if (!fm) {
+        fm = new Map<number, number>();
+        out.set(font, fm);
+      }
+      if (fm.has(u)) continue;
+      const fs = mod.FPDFText_GetFontSize(tp, i);
+      if (!fs || fs <= 0) continue;
+      const adv = looseBoxAdvancePt(m, tp, i);
+      if (adv == null) continue;
+      fm.set(u, adv / fs);
+    }
+  } finally {
+    try {
+      mod.FPDFText_ClosePage?.(tp);
+    } catch {
+      /* best-effort */
+    }
+  }
+  return out;
+}
+
+/** On-page rendered advance (per em) of `ch` in `font`, or null if absent. */
+function onPageAdvanceEm(
+  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+  pagePtr: number,
+  font: number,
+  ch: string,
+): number | null {
+  if (!font) return null;
+  let pageMap = onPageAdvCache.get(pagePtr);
+  if (!pageMap) {
+    pageMap = buildOnPageAdvMap(m, pagePtr);
+    onPageAdvCache.set(pagePtr, pageMap);
+  }
+  const cp = ch.codePointAt(0) ?? 0;
+  return pageMap.get(font)?.get(cp) ?? null;
+}
+
+/** Test-only: drop the on-page advance cache. */
+export function _clearOnPageAdvCacheForTests(): void {
+  onPageAdvCache.clear();
+}
+
 /**
  * Split a line into one chunk per word with the trailing whitespace
  * stored as an explicit `gapAfterPt`. This is the ONLY reliable way to
@@ -327,7 +448,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     // so the embedded subset font renders the chars; falls back to SetText
     // internally. The width check below still catches any .notdef result and
     // re-emits in base-14, so a broken reuse never persists.
-    writeViaCharcodesOrSetText(ptr, text);
+    const strategyUsed = writeViaCharcodesOrSetText(ptr, text);
     applyFillAndPos(m, opts.page, ptr, opts.fill, x, opts.y);
     const right = measureObjRightEdgePt(m, ptr);
     const visible = text.replace(/\s+/g, "").length;
@@ -342,14 +463,54 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
       }
       return emitBase14();
     }
+    // Self-validate an UNTRUSTED content-stream charcode guess: that
+    // resolver maps Unicode->CID by glyph order, which can pick a WRONG
+    // (but non-.notdef) glyph for re-encoded subsets. Compare the emitted
+    // advance to the advance the SAME chars actually render at on the page;
+    // a gross mismatch means the guess hit the wrong glyph, so drop it and
+    // re-emit in base-14 (right letter, safe font) rather than show a wrong
+    // glyph. Trusted strategies (backend/cmap) skip this check.
+    if (strategyUsed === "content-stream" && opts.originalFontPtr) {
+      let expected = 0;
+      let known = 0;
+      for (const ch of text) {
+        if (/\s/.test(ch)) continue;
+        const em = onPageAdvanceEm(
+          m,
+          opts.page.pagePtr,
+          opts.originalFontPtr,
+          ch,
+        );
+        if (em != null) {
+          expected += em * size;
+          known += 1;
+        }
+      }
+      if (known > 0 && expected > 0) {
+        const ratio = (right - x) / expected;
+        if (ratio < 0.6 || ratio > 1.7) {
+          try {
+            m.FPDFPage_RemoveObject(opts.page.pagePtr, ptr);
+          } catch {
+            /* best-effort */
+          }
+          return emitBase14();
+        }
+      }
+    }
     return ptr;
   };
 
   // Try-charcodes wrapper: when we're reusing a source font AND the
   // active charcode strategy can resolve EVERY char in the chunk,
   // call FPDFText_SetCharcodes directly. Otherwise fall through to
-  // FPDFText_SetText (the legacy path). Returns true on success.
-  function writeViaCharcodesOrSetText(ptr: number, text: string): void {
+  // FPDFText_SetText (the legacy path). Returns the strategy that
+  // successfully wrote charcodes (so the caller can self-validate an
+  // untrusted "content-stream" guess), or null when it fell to SetText.
+  function writeViaCharcodesOrSetText(
+    ptr: number,
+    text: string,
+  ): string | null {
     const strategy = getActiveCharcodeStrategy();
     if (!canReuse || !opts.originalFontPtr) {
       emitCharcodeEvent({
@@ -365,13 +526,21 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
         outcome: "no-font",
       });
       setTextOn(m, ptr, text);
-      return;
+      return null;
     }
-    const resolved = tryResolveCharcodes(opts.originalFontPtr, text, {
-      module: m,
-      pagePtr: opts.page.pagePtr,
-      docPtr: opts.doc.docPtr,
-    });
+    // allowContentStreamFallback: if the active resolver (e.g. backend with
+    // a cold cache) misses, reuse the on-page glyph via the client-side
+    // content-stream resolver. The width self-check above guards the guess.
+    const resolved = tryResolveCharcodes(
+      opts.originalFontPtr,
+      text,
+      {
+        module: m,
+        pagePtr: opts.page.pagePtr,
+        docPtr: opts.doc.docPtr,
+      },
+      true,
+    );
     if (!resolved) {
       emitCharcodeEvent({
         timestamp: 0,
@@ -384,7 +553,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
         outcome: "no-strategy",
       });
       setTextOn(m, ptr, text);
-      return;
+      return null;
     }
     const r = resolved.result;
     if (r && r.coverage === text.length && r.charcodes.length === text.length) {
@@ -399,7 +568,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
         note: r.note,
         outcome: ok ? "charcodes-ok" : "charcodes-call-failed",
       });
-      if (ok) return;
+      if (ok) return resolved.strategy;
       // SetCharcodes binding rejected the call - fall back.
     } else if (r) {
       emitCharcodeEvent({
@@ -425,6 +594,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
       });
     }
     setTextOn(m, ptr, text);
+    return null;
   }
 
   // Per-char emit branch for the BACKEND strategy. When the active

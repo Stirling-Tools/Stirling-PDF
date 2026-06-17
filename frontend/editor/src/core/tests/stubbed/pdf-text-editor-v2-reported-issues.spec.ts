@@ -200,6 +200,31 @@ test.describe("v2 editor - reported issue: character insertion + font integrity"
     expect(text).not.toContain("ÿ");
   });
 
+  test("inserting a duplicate char reuses the embedded glyph via the client-side content-stream fallback", async ({
+    page,
+  }) => {
+    // No backend in the stubbed project, so the default 'backend' resolver
+    // misses; the fix falls back to the client-side content-stream resolver
+    // (self-validated against the on-page glyph advance) so the inserted 'S'
+    // reuses "Support"'s embedded glyph instead of flipping to Helvetica.
+    await open(page, 1);
+    const id = await runId(page, 1, "Multi-Language\\s+Support");
+    await page.evaluate(() => ((window as any).__v2_charcode_events = []));
+    await appendViaOverlay(page, id, "S");
+    const outcomes = await page.evaluate(
+      () =>
+        ((window as any).__v2_charcode_events ?? []).map(
+          (e: any) => `${e.strategy}:${e.outcome}`,
+        ) as string[],
+    );
+    expect(
+      outcomes.some((o) => o === "content-stream:charcodes-ok"),
+      `expected a content-stream reuse; got ${JSON.stringify(outcomes)}`,
+    ).toBe(true);
+    const text = await runText(page, 1, id);
+    expect(text).not.toContain("ÿ");
+  });
+
   test("character insertion telemetry records an emit attempt (font-reuse vs fallback)", async ({
     page,
   }) => {
