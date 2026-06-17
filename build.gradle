@@ -185,10 +185,11 @@ subprojects {
                 allowInsecureProtocol = true
             }
         }
-        // Maven Central first; mirrors below are fallbacks for niche artifacts.
+        // Maven Central first; JBoss mirrors opensaml/shibboleth artifacts.
+        // shibboleth.net is auth-walled (403 anon) so keep it last as fallback.
         mavenCentral()
-        maven { url = "https://build.shibboleth.net/maven/releases" }
         maven { url = "https://repository.jboss.org/" }
+        maven { url = "https://build.shibboleth.net/maven/releases" }
     }
 
     configurations.configureEach {
@@ -585,6 +586,8 @@ repositories {
         }
     }
     mavenCentral()
+    // JBoss mirrors opensaml/shibboleth; shibboleth.net is auth-walled (403 anon).
+    maven { url = "https://repository.jboss.org/" }
     maven { url = "https://build.shibboleth.net/maven/releases" }
 }
 

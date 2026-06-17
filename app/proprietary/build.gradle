@@ -1,6 +1,7 @@
 repositories {
-    maven { url = "https://build.shibboleth.net/maven/releases" }
+    // JBoss mirrors opensaml/shibboleth; shibboleth.net is auth-walled (403 anon).
     maven { url = "https://repository.jboss.org/" }
+    maven { url = "https://build.shibboleth.net/maven/releases" }
 }
 
 ext {
