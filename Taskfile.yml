@@ -175,3 +175,4 @@ tasks:
     cmds:
       - task: backend:clean
       - task: engine:clean
+      - task: pre-commit:clean
