@@ -74,15 +74,17 @@ export class AlignParagraphLinesCommand implements Command {
     this.appliedDx = run.paragraphLineSlots.map((_, i) => {
       const e = extents[i];
       if (!e) return 0;
-      let dx = 0;
-      if (this.mode === "left") dx = paraLeft - e.left;
-      else if (this.mode === "right") dx = paraRight - e.right;
-      else dx = paraCentre - (e.left + e.right) / 2;
+      const dx =
+        this.mode === "left"
+          ? paraLeft - e.left
+          : this.mode === "right"
+            ? paraRight - e.right
+            : paraCentre - (e.left + e.right) / 2;
       return Math.abs(dx) < 0.01 ? 0 : dx;
     });
 
     let moved = false;
-    run.paragraphLineSlots.forEach((slot, i) => {
+    run.paragraphLineSlots.forEach((_slot, i) => {
       const dx = this.appliedDx[i];
       if (!dx) return;
       this.shiftLine(m, run, i, dx);
@@ -104,7 +106,7 @@ export class AlignParagraphLinesCommand implements Command {
     const run = page.findRun(this.runId);
     if (!run) return;
     const m = doc.module;
-    run.paragraphLineSlots.forEach((slot, i) => {
+    run.paragraphLineSlots.forEach((_slot, i) => {
       const dx = this.appliedDx[i];
       if (!dx) return;
       this.shiftLine(m, run, i, -dx);
