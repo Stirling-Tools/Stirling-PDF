@@ -6,7 +6,7 @@ import { ChatFABButton } from "@shared/components/ChatFABButton";
 import { ChatFABWindow } from "@shared/components/ChatFABWindow";
 import { ChatPanel } from "@app/components/chat/ChatPanel";
 import { useChat } from "@app/components/chat/ChatContext";
-import { useAgentsEnabled } from "@app/components/agents/AgentsPanel";
+import { useAiEngineEnabled } from "@app/hooks/useAiEngineEnabled";
 import { Z_INDEX_CHAT_FAB_OVERLAY } from "@app/styles/zIndex";
 import "@app/components/chat/ChatFAB.css";
 
@@ -15,8 +15,7 @@ const PANEL_HEIGHT_PX = 520;
 const PANEL_MIN_WIDTH_PX = 300;
 const PANEL_MIN_HEIGHT_PX = 380;
 const FAB_GAP_PX = 16;
-// footer-height (2rem = 32px) + gap so the panel clears the footer
-const FAB_BOTTOM_OFFSET_PX = 32 + FAB_GAP_PX;
+const FAB_BOTTOM_OFFSET_PX = FAB_GAP_PX;
 
 const RESET_MS = 380;
 const RESET_EASING = "cubic-bezier(0.32, 0.72, 0, 1)";
@@ -54,7 +53,9 @@ export function ChatFAB() {
   const [isOpen, setIsOpen] = useState(false);
   const [hasUnviewedResult, setHasUnviewedResult] = useState(false);
   const { isLoading } = useChat();
-  const enabled = useAgentsEnabled();
+  // Desktop sources this from the SaaS backend (cloud kill switch); web reads it
+  // from the local app-config. Either way the AI engine drives FAB visibility.
+  const enabled = useAiEngineEnabled();
 
   // Detect loading → done transition. If the FAB is closed when the agent
   // finishes, show the tick badge until the user opens the panel.
@@ -90,9 +91,13 @@ export function ChatFAB() {
   };
 
   useLayoutEffect(() => {
+    // The overlay only mounts once the AI engine is enabled (config can load
+    // after first render), so re-measure when that flips true rather than only
+    // on initial mount, otherwise the default position never gets computed.
+    if (!enabled) return;
     const pos = getDefaultPos();
     if (pos) setRndPos(pos);
-  }, []);
+  }, [enabled]);
 
   // Clear the reset timer on unmount to avoid state updates on dead components.
   // Also ensure body user-select is restored if we unmount mid-resize.
@@ -140,6 +145,12 @@ export function ChatFAB() {
       <ChatFABButton
         className={`chat-fab-trigger${isOpen ? " chat-fab-trigger--hidden" : ""}`}
         onClick={() => {
+          // Fallback: ensure a position exists before opening, in case the
+          // layout effect measured before the overlay was laid out.
+          if (rndPos === null) {
+            const pos = getDefaultPos();
+            if (pos) setRndPos(pos);
+          }
           setIsOpen(true);
           setHasUnviewedResult(false);
         }}

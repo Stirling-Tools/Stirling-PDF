@@ -31,6 +31,7 @@ interface McpAuthData {
   issuerUri?: string;
   jwksUri?: string;
   resourceId?: string;
+  acceptedAudiences?: string[];
   usernameClaim?: string;
   requireExistingAccount?: boolean;
 }
@@ -97,6 +98,7 @@ export default function AdminMcpSection() {
         "mcp.auth.issuerUri": s.auth?.issuerUri ?? "",
         "mcp.auth.jwksUri": s.auth?.jwksUri ?? "",
         "mcp.auth.resourceId": s.auth?.resourceId ?? "",
+        "mcp.auth.acceptedAudiences": s.auth?.acceptedAudiences ?? [],
         "mcp.auth.usernameClaim": s.auth?.usernameClaim ?? "sub",
         "mcp.auth.requireExistingAccount":
           s.auth?.requireExistingAccount ?? true,
@@ -271,6 +273,32 @@ export default function AdminMcpSection() {
                   value={settings.auth?.resourceId || ""}
                   onChange={(e) => setAuth({ resourceId: e.target.value })}
                   placeholder={mcpUrl}
+                  disabled={!settings.enabled}
+                />
+
+                <TextInput
+                  label={
+                    <Group gap="xs">
+                      <span>
+                        {t(
+                          "admin.settings.mcp.acceptedAudiences.label",
+                          "Additional accepted audiences (optional)",
+                        )}
+                      </span>
+                      <PendingBadge
+                        show={isFieldPending("auth.acceptedAudiences")}
+                      />
+                    </Group>
+                  }
+                  description={t(
+                    "admin.settings.mcp.acceptedAudiences.description",
+                    "Extra token audience values accepted besides the Resource ID (comma or space separated). Leave blank for strict RFC 8707. Needed for IdPs that cannot mint resource audiences - e.g. Supabase's OAuth server always issues aud=authenticated.",
+                  )}
+                  value={(settings.auth?.acceptedAudiences || []).join(" ")}
+                  onChange={(e) =>
+                    setAuth({ acceptedAudiences: parseOpList(e.target.value) })
+                  }
+                  placeholder="authenticated"
                   disabled={!settings.enabled}
                 />
 
