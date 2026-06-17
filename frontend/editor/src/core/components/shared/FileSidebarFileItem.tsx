@@ -1,10 +1,15 @@
 import { useState, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
-import { Tooltip } from "@mantine/core";
+import { Menu, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
+import CloudDoneIcon from "@mui/icons-material/CloudDone";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
+import HistoryIcon from "@mui/icons-material/History";
 import type { FileId } from "@app/types/file";
 import { FileDocIcon } from "@app/components/shared/FileDocIcon";
 import { getFileDocVariant } from "@app/components/shared/filePreview/getFileTypeIcon";
@@ -157,6 +162,18 @@ export interface FileItemProps {
   onFolderClick?: (folderId: string) => void;
   /** Policies that have run on this file — rendered as small shield badges. */
   policies?: FileItemPolicyRef[];
+  /** Delete (local only) from the kebab menu. Omit to hide the menu's delete. */
+  onDelete?: (fileId: FileId) => void;
+  /** Save to cloud from the kebab menu. */
+  onSaveToCloud?: (fileId: FileId) => void;
+  /** Whether the upload-to-server menu item is offered (storage on, signed in). */
+  canSaveToCloud?: boolean;
+  /** File already lives on the server - shows a cloud badge + "Update" label. */
+  isUploadedToCloud?: boolean;
+  /** Open the version-history modal. Only shown when hasVersionHistory. */
+  onVersionHistory?: (fileId: FileId) => void;
+  /** Whether this file has more than one version (drives the menu item). */
+  hasVersionHistory?: boolean;
 }
 
 const MAX_VISIBLE_FOLDER_TAGS = 2;
@@ -178,6 +195,12 @@ export function FileItem({
   folders = [],
   onFolderClick,
   policies = [],
+  onDelete,
+  onSaveToCloud,
+  canSaveToCloud = false,
+  isUploadedToCloud = false,
+  onVersionHistory,
+  hasVersionHistory = false,
 }: FileItemProps) {
   const { t } = useTranslation();
   const ext = getFileExtension(name);
@@ -263,6 +286,20 @@ export function FileItem({
               {dateLabel && typeLabel ? " · " : ""}
               {typeLabel}
             </span>
+            {isUploadedToCloud && (
+              <Tooltip
+                label={t(
+                  "fileSidebar.fileItem.savedToServer",
+                  "Saved to server",
+                )}
+                withArrow
+                position="top"
+              >
+                <span className="file-sidebar-cloud-badge" data-no-select>
+                  <CloudDoneIcon sx={{ fontSize: "0.85rem" }} />
+                </span>
+              </Tooltip>
+            )}
             {policies.length > 0 && (
               <span className="file-sidebar-policy-badges" data-no-select>
                 {policies.slice(0, MAX_VISIBLE_POLICY_BADGES).map((policy) => (
@@ -355,6 +392,73 @@ export function FileItem({
             sx={{ fontSize: "1.1rem" }}
           />
         </button>
+
+        {(onDelete ||
+          onSaveToCloud ||
+          (hasVersionHistory && onVersionHistory)) && (
+          <Menu position="bottom-end" withinPortal shadow="md" width={190}>
+            <Menu.Target>
+              <button
+                className="file-sidebar-kebab-btn"
+                onClick={(e) => e.stopPropagation()}
+                tabIndex={-1}
+                type="button"
+                aria-label={t(
+                  "fileSidebar.fileItem.moreActions",
+                  "More actions",
+                )}
+              >
+                <MoreVertIcon sx={{ fontSize: "1.1rem" }} />
+              </button>
+            </Menu.Target>
+            <Menu.Dropdown onClick={(e) => e.stopPropagation()}>
+              {hasVersionHistory && onVersionHistory && (
+                <Menu.Item
+                  leftSection={<HistoryIcon sx={{ fontSize: 16 }} />}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onVersionHistory(fileId);
+                  }}
+                >
+                  {t("fileSidebar.fileItem.versionHistory", "Version history")}
+                </Menu.Item>
+              )}
+              {canSaveToCloud && onSaveToCloud && (
+                <Menu.Item
+                  leftSection={
+                    <CloudUploadOutlinedIcon sx={{ fontSize: 16 }} />
+                  }
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSaveToCloud(fileId);
+                  }}
+                >
+                  {isUploadedToCloud
+                    ? t(
+                        "fileSidebar.fileItem.updateOnServer",
+                        "Update on server",
+                      )
+                    : t(
+                        "fileSidebar.fileItem.uploadToServer",
+                        "Upload to server",
+                      )}
+                </Menu.Item>
+              )}
+              {onDelete && (
+                <Menu.Item
+                  color="red"
+                  leftSection={<DeleteOutlineIcon sx={{ fontSize: 16 }} />}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(fileId);
+                  }}
+                >
+                  {t("fileSidebar.fileItem.delete", "Delete")}
+                </Menu.Item>
+              )}
+            </Menu.Dropdown>
+          </Menu>
+        )}
       </div>
 
       {useRasterThumb &&

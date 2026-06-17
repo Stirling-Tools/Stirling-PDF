@@ -40,6 +40,15 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import SettingsIcon from "@mui/icons-material/Settings";
 import type { FileId } from "@app/types/file";
 import { FileItem } from "@app/components/shared/FileSidebarFileItem";
+import BulkUploadToServerModal from "@app/components/shared/BulkUploadToServerModal";
+import { getFileOrigin } from "@app/components/filesPage/fileOrigin";
+import { VersionHistoryModal } from "@app/components/filesPage/VersionHistoryModal";
+import { DeleteFilesDialog } from "@app/components/filesPage/DeleteFilesDialog";
+import {
+  deleteServerFile,
+  type DeleteScope,
+} from "@app/services/serverStorageDelete";
+import { fileStorage } from "@app/services/fileStorage";
 import { useFolderMembership } from "@app/hooks/useFolderMembership";
 import { useAllWatchedFolders } from "@app/hooks/useAllWatchedFolders";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
@@ -182,7 +191,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     // Each auth layer derives its own displayName from its native user shape.
     // Fall back to the proprietary REST endpoint only when the auth
     // context yields nothing - then to "User" as a generic last resort.
-    const { displayName: authDisplayName } = useAuth();
+    const { displayName: authDisplayName, isAnonymous } = useAuth();
     const [accountUsername, setAccountUsername] = useState<string | null>(null);
     const displayName =
       authDisplayName ?? accountUsername ?? t("auth.displayName.user", "User");
@@ -220,6 +229,21 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     // Leaf files = user-visible files (excludes intermediate tool outputs)
     const [allFileStubs, setAllFileStubs] = useState<StirlingFileStub[]>([]);
     const [stubsLoaded, setStubsLoaded] = useState(false);
+    // Kebab "Save to cloud" target; drives BulkUploadToServerModal.
+    const [saveToServerTarget, setSaveToServerTarget] = useState<
+      StirlingFileStub[] | null
+    >(null);
+    // Kebab "Version history" target; drives VersionHistoryModal.
+    const [versionHistoryTarget, setVersionHistoryTarget] =
+      useState<StirlingFileStub | null>(null);
+    // Kebab "Delete" target when the file is on the cloud; drives the
+    // local/cloud/both choice dialog. Local-only files delete immediately.
+    const [deleteTarget, setDeleteTarget] = useState<StirlingFileStub | null>(
+      null,
+    );
+    // Storage gate: only offer Save-to-cloud when the server allows it and
+    // the user is signed in (guests have no cloud library).
+    const storageEnabled = config?.storageEnabled === true && !isAnonymous;
 
     const refreshStubs = useCallback(async () => {
       // Leaf files from IDB - same source as the file selection modal.
@@ -246,6 +270,76 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     useEffect(() => {
       refreshStubs();
     }, [refreshStubs, indexedDBRevision]);
+
+    // Kebab delete: local-only files go immediately (cheap, re-addable). When
+    // the file is also on the cloud, open the choice dialog so the user picks
+    // where to remove it from.
+    const handleSidebarDelete = useCallback(
+      async (fileId: FileId) => {
+        const stub = allFileStubs.find((s) => s.id === fileId);
+        const hasCloud =
+          !!stub &&
+          typeof stub.remoteStorageId === "number" &&
+          stub.remoteOwnedByCurrentUser === true;
+        if (hasCloud && stub) {
+          setDeleteTarget(stub);
+          return;
+        }
+        await fileActions.removeFiles([fileId], true);
+        await refreshStubs();
+      },
+      [allFileStubs, fileActions, refreshStubs],
+    );
+
+    const handleConfirmSidebarDelete = useCallback(
+      async (scope: DeleteScope) => {
+        const stub = deleteTarget;
+        if (!stub) return;
+        if (
+          (scope === "cloud" || scope === "everywhere") &&
+          typeof stub.remoteStorageId === "number" &&
+          stub.remoteOwnedByCurrentUser === true
+        ) {
+          await deleteServerFile(stub.remoteStorageId);
+        }
+        if (scope === "device" || scope === "everywhere") {
+          await fileActions.removeFiles([stub.id], true);
+        } else if (scope === "cloud") {
+          // Local copy kept - drop the dead remote pointer so the cloud badge
+          // clears (the sidebar doesn't reconcile with the server itself).
+          const cleared = {
+            remoteStorageId: undefined,
+            remoteStorageUpdatedAt: undefined,
+            remoteOwnedByCurrentUser: undefined,
+            remoteSharedViaLink: false,
+            remoteHasShareLinks: undefined,
+          };
+          fileActions.updateStirlingFileStub(stub.id, cleared);
+          await fileStorage.updateFileMetadata(stub.id, cleared);
+        }
+        setDeleteTarget(null);
+        await refreshStubs();
+      },
+      [deleteTarget, fileActions, refreshStubs],
+    );
+
+    // Kebab: open the upload-to-server modal for this one file.
+    const handleSaveToCloud = useCallback(
+      (fileId: FileId) => {
+        const stub = allFileStubs.find((s) => s.id === fileId);
+        if (stub) setSaveToServerTarget([stub]);
+      },
+      [allFileStubs],
+    );
+
+    // Kebab: open the version-history modal for this one file.
+    const handleVersionHistory = useCallback(
+      (fileId: FileId) => {
+        const stub = allFileStubs.find((s) => s.id === fileId);
+        if (stub) setVersionHistoryTarget(stub);
+      },
+      [allFileStubs],
+    );
 
     // Once a pending file lands in state, open it in the viewer.
     useEffect(() => {
@@ -877,6 +971,9 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                         : (workbenchFileId
                             ? state.files.byId[workbenchFileId]?.thumbnailUrl
                             : undefined) || stub.thumbnailUrl;
+                      // local | cloud | shared-with-me - drives the cloud badge
+                      // and the Upload-vs-Update menu label.
+                      const fileOrigin = getFileOrigin(stub);
                       return (
                         <FileItem
                           key={stub.id}
@@ -897,6 +994,26 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                           policies={
                             policyFileBadges.get(stub.id as string) ?? []
                           }
+                          onDelete={
+                            isWatchedFoldersActive
+                              ? undefined
+                              : handleSidebarDelete
+                          }
+                          onSaveToCloud={
+                            isWatchedFoldersActive
+                              ? undefined
+                              : handleSaveToCloud
+                          }
+                          canSaveToCloud={
+                            storageEnabled && fileOrigin !== "shared-with-me"
+                          }
+                          isUploadedToCloud={fileOrigin === "cloud"}
+                          onVersionHistory={
+                            isWatchedFoldersActive
+                              ? undefined
+                              : handleVersionHistory
+                          }
+                          hasVersionHistory={(stub.versionNumber ?? 1) > 1}
                         />
                       );
                     })}
@@ -917,6 +1034,30 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             )}
           </div>
         </div>
+
+        {/* Kebab "Save to cloud" upload modal (one file at a time). */}
+        <BulkUploadToServerModal
+          opened={Boolean(saveToServerTarget && saveToServerTarget.length > 0)}
+          onClose={() => setSaveToServerTarget(null)}
+          files={saveToServerTarget ?? []}
+          onUploaded={refreshStubs}
+        />
+
+        {/* Kebab "Version history" modal. */}
+        <VersionHistoryModal
+          opened={Boolean(versionHistoryTarget)}
+          onClose={() => setVersionHistoryTarget(null)}
+          file={versionHistoryTarget}
+          onChanged={refreshStubs}
+        />
+
+        {/* Cloud-aware delete choice (only opened for cloud-uploaded files). */}
+        <DeleteFilesDialog
+          opened={Boolean(deleteTarget)}
+          files={deleteTarget ? [deleteTarget] : []}
+          onClose={() => setDeleteTarget(null)}
+          onConfirm={handleConfirmSidebarDelete}
+        />
 
         {/* Bottom bar: user name + settings */}
         <Tooltip
