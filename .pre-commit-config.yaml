@@ -1,7 +1,8 @@
-# The actual checks live in scripts/precommit.py and are driven by Task. This
-# hook just delegates to `task pre-commit` so the git pre-commit hook, CI and a
-# manual `task pre-commit` all run the exact same thing. Requires `task` and
-# `uv` on PATH. To auto-fix instead of only checking, run `task pre-commit:fix`.
+# The actual checks live in .taskfiles/pre-commit.yml (with helper scripts under
+# scripts/pre-commit/) and are driven by Task. This hook just delegates to `task
+# pre-commit` so the git pre-commit hook, CI and a manual `task pre-commit` all
+# run the exact same thing. Requires `task` and `uv` on PATH. To auto-fix instead
+# of only checking, run `task pre-commit:fix`.
 repos:
   - repo: local
     hooks:

@@ -76,38 +76,38 @@ tasks:
     desc: "Install the pinned pre-commit Python tools (ruff, codespell, toml-sort)"
     run: once
     cmds:
-      - uv sync --project scripts --locked
+      - uv sync --project scripts/pre-commit --locked
     sources:
-      - scripts/uv.lock
-      - scripts/pyproject.toml
+      - scripts/pre-commit/uv.lock
+      - scripts/pre-commit/pyproject.toml
     status:
-      - test -d scripts/.venv
+      - test -d scripts/pre-commit/.venv
 
   # Individual checks (hidden from `task --list`, but callable, e.g.
   # `task pre-commit:toml-sort FIX=1`). Pass FIX=1 to auto-fix where supported.
   ruff:
     deps: [install]
     cmds:
-      - uv run --project scripts --no-sync ruff check --line-length=127 {{if .FIX}}--fix {{end}}$(git ls-files {{.PY_FILES}})
+      - uv run --project scripts/pre-commit --no-sync ruff check --line-length=127 {{if .FIX}}--fix {{end}}$(git ls-files {{.PY_FILES}})
 
   ruff-format:
     deps: [install]
     cmds:
-      - uv run --project scripts --no-sync ruff format {{if .FIX}}{{else}}--check {{end}}$(git ls-files {{.PY_FILES}})
+      - uv run --project scripts/pre-commit --no-sync ruff format {{if .FIX}}{{else}}--check {{end}}$(git ls-files {{.PY_FILES}})
 
   codespell:
     deps: [install]
     cmds:
-      - uv run --project scripts --no-sync codespell --ignore-words-list=thirdParty,tabEl,tabEls,Sie,ist,fulfilment --quiet-level=2 $(git ls-files {{.SPELL_FILES}})
+      - uv run --project scripts/pre-commit --no-sync codespell --ignore-words-list=thirdParty,tabEl,tabEls,Sie,ist,fulfilment --quiet-level=2 $(git ls-files {{.SPELL_FILES}})
 
   toml-sort:
     deps: [install]
     cmds:
-      - uv run --project scripts --no-sync toml-sort --all --ignore-case {{if .FIX}}--in-place{{else}}--check{{end}} {{.LOCALE_TOML}}
+      - uv run --project scripts/pre-commit --no-sync toml-sort --all --ignore-case {{if .FIX}}--in-place{{else}}--check{{end}} {{.LOCALE_TOML}}
 
   whitespace:
     cmds:
-      - uv run --no-project python scripts/whitespace.py {{if .FIX}}--fix {{end}}$(git ls-files {{.WS_FILES}})
+      - uv run --no-project python scripts/pre-commit/whitespace.py {{if .FIX}}--fix {{end}}$(git ls-files {{.WS_FILES}})
 
   gitleaks:
     deps: [gitleaks-bin]
@@ -135,7 +135,7 @@ tasks:
         {{- else if eq .GL_PLATFORM "windows_x64"}}54fe94f644b832dd08e8c3a5915efb3bfa862386d59fb27ca0792cb687a83573
         {{- end}}
     cmds:
-      - cmd: bash scripts/install-gitleaks.sh "{{.GL_URL}}.tar.gz" "{{.GL_SHA}}" "{{.GITLEAKS_BIN}}"
+      - cmd: bash scripts/pre-commit/install-gitleaks.sh "{{.GL_URL}}.tar.gz" "{{.GL_SHA}}" "{{.GITLEAKS_BIN}}"
         platforms: [linux, darwin]
-      - cmd: powershell -NoProfile -File scripts/install-gitleaks.ps1 -Url "{{.GL_URL}}.zip" -Sha "{{.GL_SHA}}" -Dest "{{.GITLEAKS_BIN}}"
+      - cmd: powershell -NoProfile -File scripts/pre-commit/install-gitleaks.ps1 -Url "{{.GL_URL}}.zip" -Sha "{{.GL_SHA}}" -Dest "{{.GITLEAKS_BIN}}"
         platforms: [windows]
