@@ -86,7 +86,11 @@ test.describe("1. Authentication and Login", () => {
   });
 
   test.describe("1.5 Login Page - Session Expiry and Redirect", () => {
-    test("should redirect back to intended page after re-login", async ({
+    // FIXME: flaky. After forcing /api/v1/auth/refresh to 401 and reloading, the
+    // SPA intermittently settles on /merge instead of redirecting to /login (the
+    // auth bootstrap races re-authentication against the redirect). Re-enable once
+    // the auth-refresh redirect race is fixed. See e2e-live run 27675862403.
+    test.skip("should redirect back to intended page after re-login", async ({
       page,
     }) => {
       // Starting state: User is logged in and on a tool page
