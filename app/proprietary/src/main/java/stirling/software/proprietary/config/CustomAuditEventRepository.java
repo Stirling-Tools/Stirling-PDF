@@ -80,24 +80,20 @@ public class CustomAuditEventRepository implements AuditEventRepository {
     private static final int PRINCIPAL_MAX_LENGTH = 255;
 
     /**
-     * Keep the principal within the column width and never store a token-shaped value verbatim;
-     * hash those so distinct callers stay distinguishable in the audit trail without persisting a
-     * secret.
+     * Hash JWT-shaped or over-long principals so the insert fits the column and stores no secret.
      */
     static String safePrincipal(String principal) {
         if (principal == null || principal.isBlank()) {
             return "anonymous";
         }
-        // A JWT ("eyJ..."), or any over-long value, is hashed rather than stored as-is.
+        // Hash JWTs ("eyJ...") and any over-long value rather than store verbatim.
         if (principal.startsWith("eyJ") || principal.length() > PRINCIPAL_MAX_LENGTH) {
             return "token:" + sha256Prefix(principal);
         }
         return principal;
     }
 
-    /**
-     * First 8 bytes of the SHA-256 digest as hex: stable per value, one-way, collision-safe enough.
-     */
+    /** First 8 bytes of SHA-256 as hex: stable, one-way, collision-safe enough. */
     private static String sha256Prefix(String value) {
         try {
             byte[] digest =

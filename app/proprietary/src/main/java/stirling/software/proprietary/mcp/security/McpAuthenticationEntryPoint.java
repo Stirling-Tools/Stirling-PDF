@@ -14,10 +14,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Emits 401 + {@code WWW-Authenticate: Bearer resource_metadata="..."} (RFC 9728), preferring
- * X-Forwarded-* headers to build the public-facing metadata URL. When a token is actually presented
- * and rejected, logs the concrete OAuth2 reason (audience/issuer/expiry) and echoes it back as
- * {@code error_description} so admins and MCP clients see why instead of a bare 401.
+ * Emits 401 + {@code WWW-Authenticate: Bearer resource_metadata="..."} (RFC 9728) from
+ * X-Forwarded-* headers. A rejected token also logs the OAuth2 reason and echoes it as {@code
+ * error_description}.
  */
 @Slf4j
 public class McpAuthenticationEntryPoint implements AuthenticationEntryPoint {
@@ -35,8 +34,7 @@ public class McpAuthenticationEntryPoint implements AuthenticationEntryPoint {
             HttpServletResponse response,
             AuthenticationException authException)
             throws IOException {
-        // A tokenless 401 is the normal discovery handshake (client fetches metadata, then retries
-        // with a token); only a present-but-rejected token is a real failure worth a warning.
+        // Tokenless 401 is the normal discovery handshake; only a rejected token is a real failure.
         boolean tokenPresented = request.getHeader("Authorization") != null;
         String reason = rejectionReason(authException);
         if (tokenPresented) {
@@ -59,8 +57,7 @@ public class McpAuthenticationEntryPoint implements AuthenticationEntryPoint {
     }
 
     /**
-     * OAuth2 error as {@code "code - description"} for a rejected token, sanitized so it is safe in
-     * a header value and a single log line; {@code null} when there is no structured OAuth2 error.
+     * OAuth2 error as {@code "code - description"}, sanitized for a header/log line; null if none.
      */
     private static String rejectionReason(AuthenticationException ex) {
         if (!(ex instanceof OAuth2AuthenticationException oae)) {

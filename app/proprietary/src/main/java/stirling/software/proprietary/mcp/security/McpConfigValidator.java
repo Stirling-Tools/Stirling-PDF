@@ -7,9 +7,8 @@ import java.util.Locale;
 import stirling.software.common.model.ApplicationProperties;
 
 /**
- * Startup sanity-checks for MCP configuration. Produces human-readable findings that {@link
- * McpSecurityConfig} logs once at boot, so a misconfigured /mcp endpoint is obvious from the logs
- * before a client ever connects - instead of only surfacing later as a rejected-token 401.
+ * Startup sanity-checks for MCP config; {@link McpSecurityConfig} logs the findings at boot so a
+ * misconfigured /mcp endpoint shows up in the logs instead of as a later rejected-token 401.
  */
 public final class McpConfigValidator {
 
