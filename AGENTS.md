@@ -468,6 +468,10 @@ The frontend is organized with a clear separation of concerns:
 - **Preview System**: Tools can preview results without polluting main file context (see Split tool implementation)
 - **Adding Tools**: See `ADDING_TOOLS.md` for complete guide to creating new PDF tools
 
+## No non-ASCII characters in code
+
+Never use em-dashes (the `—` character), emoji or any other non-standard ASCII characters in source-code unless specifically requested by the developer.
+
 ## Communication Style
 - Be direct and to the point
 - No apologies or conversational filler
