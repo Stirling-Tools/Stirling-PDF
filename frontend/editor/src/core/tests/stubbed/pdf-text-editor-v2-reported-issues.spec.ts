@@ -96,10 +96,13 @@ test.describe("v2 editor - reported issue: align multi-select (real UI)", () => 
   test("shift-click adds a 2nd run, which enables and applies align-left", async ({
     page,
   }) => {
-    await open(page, 1);
-    const a = await runId(page, 1, "Stirling\\s+PDF\\s+is\\s+a\\s+robust");
-    const b = await runId(page, 1, "Comprehensive\\s+toolkit");
-    // Plain click selects A; align needs 2+, so it is still disabled.
+    // Use page-0 SINGLE-LINE runs at different x: a single one keeps align
+    // disabled (single paragraphs enable it - covered in the paragraph
+    // suite), and the two sit at different left edges so align-left is a
+    // real move, not a no-op.
+    await open(page, 0);
+    const a = await runId(page, 0, "10M\\+");
+    const b = await runId(page, 0, "Downloads");
     await page.getByTestId(`v2-run-${a}`).click();
     await page.waitForTimeout(150);
     expect(await selRunCount(page)).toBe(1);
@@ -114,7 +117,7 @@ test.describe("v2 editor - reported issue: align multi-select (real UI)", () => 
     await page.waitForTimeout(250);
     const xs = await page.evaluate(
       ({ a, b }: { a: string; b: string }) => {
-        const pg = (window as any).__v2_editor_store.doc.page(1);
+        const pg = (window as any).__v2_editor_store.doc.page(0);
         return [
           pg.runs.find((r: any) => r.id === a).bounds.x,
           pg.runs.find((r: any) => r.id === b).bounds.x,
@@ -128,15 +131,15 @@ test.describe("v2 editor - reported issue: align multi-select (real UI)", () => 
   test("shift-clicking the same run twice toggles it back off (align re-disables)", async ({
     page,
   }) => {
-    await open(page, 1);
-    const a = await runId(page, 1, "Stirling\\s+PDF\\s+is\\s+a\\s+robust");
-    const b = await runId(page, 1, "Comprehensive\\s+toolkit");
+    await open(page, 0);
+    const a = await runId(page, 0, "10M\\+");
+    const b = await runId(page, 0, "Downloads");
     await page.getByTestId(`v2-run-${a}`).click();
     await page.getByTestId(`v2-run-${b}`).click({ modifiers: ["Shift"] });
     await page.waitForTimeout(200);
     expect(await selRunCount(page)).toBe(2);
     await expect(page.getByTestId("v2-align-left")).toBeEnabled();
-    // Shift-click B again removes it -> back to 1 -> align disabled.
+    // Shift-click B again removes it -> back to 1 single-line run -> disabled.
     await page.getByTestId(`v2-run-${b}`).click({ modifiers: ["Shift"] });
     await page.waitForTimeout(200);
     expect(await selRunCount(page)).toBe(1);
