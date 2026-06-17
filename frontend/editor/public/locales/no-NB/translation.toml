@@ -1,5 +1,4 @@
 accessInvite = "Inviter"
-addToDoc = "Legg til i dokument"
 alphabet = "Alfabet"
 apply = "Bruk"
 applyAndContinue = "Lagre og forlat"
@@ -7,9 +6,7 @@ areYouSure = "Er du sikker på at du vil forlate?"
 back = "Tilbake"
 black = "Svart"
 blue = "Blå"
-bored = "Lei av å vente?"
 cancel = "Avbryt"
-changedCredsMessage = "Legitimasjon endret!"
 chooseFile = "Velg fil"
 close = "Lukk"
 comingSoon = "Kommer snart"
@@ -24,22 +21,13 @@ confirmCloseSaveFailed = "Lagret med feil. {{count}} fil{{plural}} kunne ikke la
 confirmCloseSaveFailedTitle = "Lagring mislyktes"
 confirmCloseUnsaved = "Denne filen har ulagrede endringer."
 confirmCloseUnsavedList = "Du har {{count}} fil{{plural}} med ulagrede endringer.\n\n{{fileList}}"
-confirmPasswordErrorMessage = "Nytt passord og Bekreft nytt passord må være like."
 custom = "Tilpasset..."
 customPosition = "Egendefinert posisjon"
 customTextTooltip = "Valgfritt egendefinert format for sidetall. Bruk {n} som plassholder for tallet. Eksempel: \"Side {n}\" vil vise \"Side 1\", \"Side 2\", osv."
 delete = "Slett"
-deleteCurrentUserMessage = "Kan ikke slette den innloggede brukeren."
-deleteUsernameExistsMessage = "Brukernavnet eksisterer ikke og kan ikke slettes."
 details = "Detaljer"
-disabledCurrentUserMessage = "Den pålogga brukeren kan ikke deaktiveres."
 discardChanges = "Forkast og forlat"
-discardRedactions = "Forkast og forlat"
-donate = "Doner"
-downgradeCurrentUserLongMessage = "Kan ikke nedgradere den innloggede brukerens rolle. Derfor vil ikke den innloggede brukeren bli vist."
-downgradeCurrentUserMessage = "Kan ikke nedgradere den innloggede brukerens rolle."
 download = "Last ned"
-downloadComplete = "Nedlasting Fullført"
 downloadPdf = "Last ned PDF"
 downloadUnavailable = "Nedlasting ikke tilgjengelig for dette elementet"
 edit = "Rediger"
@@ -57,36 +45,24 @@ font = "Skrifttype"
 fontSizeTooltip = "Størrelse på sidetalltekst i punkter. Større tall gir større tekst."
 fontTypeTooltip = "Skrifttype for sidetall. Velg basert på dokumentstilen din."
 genericSubmit = "Send inn"
-goHomepage = "Gå til Hjemmeside"
-goToPage = "Gå"
 green = "Grønn"
 help = "Hjelp"
 imgPrompt = "Velg Bilde(r)"
 incorrectPasswordMessage = "Nåværende passord er feil."
 info = "Info"
-insufficientCredits = "Ikke nok kreditter. Påkrevd: {{requiredCredits}}, Tilgjengelig: {{currentBalance}}, Mangler: {{shortfall}}"
-invalidPasswordMessage = "Passordet kan ikke være tomt og må ikke ha mellomrom i begynnelsen eller slutten."
 invalidUndoData = "Kan ikke angre: ugyldige operasjonsdata"
-invalidUsernameMessage = "Ugyldig brukernavn, brukernavnet kan bare inneholde bokstaver, tall og følgende spesialtegn @._+- eller må være en gyldig e-postadresse."
-joinDiscord = "Bli med på vår Discord-server"
 keepWorking = "Fortsett å jobbe"
 loading = "Laster..."
-loadingCredits = "Sjekker kreditter..."
-loadingProStatus = "Sjekker abonnementsstatus..."
 logOut = "Logg ut"
 marginTooltip = "Avstand mellom sidetallet og kanten av siden."
 moreOptions = "Flere alternativer"
-multiPdfDropPrompt = "Velg (eller dra og slipp) alle PDF-ene du trenger"
 multiPdfPrompt = "Velg PDF-filer (2+)"
 never = "Aldri"
 no = "Nei"
-noFavourites = "Ingen favoritter lagt til"
 noFileSelected = "Ingen fil valgt. Last opp en."
 noFilesToUndo = "Kan ikke angre: ingen filer ble behandlet i forrige operasjon"
 noOperationToUndo = "Ingen operasjon å angre"
-notAuthenticatedMessage = "Bruker ikke autentisert."
 nothingToUndo = "Ingenting å angre"
-noticeTopUpOrPlan = "Ikke nok kreditter, fyll på eller oppgrader til et abonnement"
 noValidFiles = "Ingen gyldige filer å behandle"
 oops = "Ops!"
 openInNewWindow = "Åpne i nytt vindu"
@@ -99,26 +75,18 @@ pages = "Sider"
 pageSelectionPrompt = "Tilpasset Sidevalg (Skriv inn en kommaseparert liste over sidetall 1,5,6 eller Funksjoner som 2n+1):"
 password = "Passord"
 pdfPrompt = "Velg PDF(er)"
-pendingRedactions = "Du har ikke anvendte sladdinger som vil gå tapt."
-pendingRedactionsTitle = "Ikke anvendte sladdinger"
 pin = "Fest fil (hold aktiv etter verktøykjøring)"
-poweredBy = "Drevet av"
 pro = "Pro"
 processingComplete = "Filen din er klar."
 processingCompleteMultiple = "{{count}} filer er klare."
-processTimeWarning = "Denne prosessen kan ta opptil ett minutt avhengig av filstørrelse"
 property = "Egenskap"
 quickPosition = "Hurtigposisjon"
 red = "Rød"
 reset = "Tilbakestill"
 review = "Gjennomgå"
 save = "Lagre"
-saveToBrowser = "Lagre til Nettleser"
 saveUnavailable = "Lagring er ikke tilgjengelig for dette elementet"
-seeDockerHub = "Se Docker Hub"
-selectFillter = "-- Velg --"
 size = "Størrelse"
-sponsor = "Sponsor"
 startingNumberTooltip = "Det første tallet som vises. Etterfølgende sider øker fra dette tallet."
 submit = "Send inn"
 success = "Vellykket"
@@ -137,18 +105,9 @@ unpin = "Løsne fil (erstatt etter verktøykjøring)"
 unsavedChanges = "Du har ulagrede endringer i PDF-en."
 unsavedChangesTitle = "Ulagrede endringer"
 unsupported = "Ikke støttet"
-uploadLimit = "Maksimal filstørrelse:"
-uploadLimitExceededPlural = "er for store. Maks tillatt størrelse er"
-uploadLimitExceededSingular = "er for stor. Maks tillatt størrelse er"
-userAlreadyExistsOAuthMessage = "Brukeren eksisterer allerede som en OAuth2-bruker."
-userAlreadyExistsWebMessage = "Brukeren eksisterer allerede som en web-bruker."
 username = "Brukernavn"
-usernameExistsMessage = "Det nye brukernavnet eksisterer allerede."
-userNotFoundMessage = "Bruker ikke funnet."
-visitGithub = "Besøk Github Repository"
 welcome = "Velkommen"
 white = "Hvit"
-WorkInProgess = "Arbeid pågår, Kan være feil eller buggy, Vennligst rapporter eventuelle problemer!"
 yes = "Ja"
 
 [account]
@@ -205,6 +164,9 @@ signedInAs = "Logget inn som: {{email}}"
 [add-page-numbers]
 tags = "paginere,etikett,organisere,indeks"
 
+[addAttachments]
+tags = "embed,attach,include,attachments,attach files,embed files,include files,add files,file attachment,associated files,supplementary files"
+
 [addAttachments.error]
 failed = "Det oppstod en feil under tillegg av vedlegg til PDF-en."
 
@@ -214,7 +176,6 @@ attachments = "Velg vedlegg"
 info = "Velg filer som skal legges ved PDF-en. Disse filene blir innebygd og tilgjengelige via PDF-ens vedleggspanel."
 placeholder = "Velg filer..."
 selectedFiles = "Valgte filer"
-selectFiles = "Velg filer å legge ved"
 submit = "Legg til vedlegg"
 
 [AddAttachmentsRequest.error]
@@ -237,6 +198,9 @@ applySignatures = "Bruk bilder"
 header = "Legg til bilde i PDF"
 tags = "bilde,jpg,foto"
 title = "Legg til bilde"
+
+[addImage.canvas]
+colorPickerTitle = "Choose stroke color"
 
 [addImage.error]
 failed = "Det oppstod en feil ved å legge til bildet i PDF-en."
@@ -264,8 +228,26 @@ resume = "Gjenoppta plassering"
 title = "Resultater for å legge til bilde"
 
 [addImage.saved]
+defaultCanvasLabel = "Drawing signature"
 defaultImageLabel = "Opplastet bilde"
 defaultLabel = "Bilde"
+defaultTextLabel = "Typed signature"
+delete = "Remove"
+emptyTitle = "No saved signatures yet"
+heading = "Saved signatures"
+label = "Label"
+limitTitle = "Limit reached"
+next = "Next"
+personalHeading = "Personal Signatures"
+prev = "Previous"
+savePersonal = "Save Personal"
+saveShared = "Save Shared"
+sharedHeading = "Shared Signatures"
+
+[addImage.saved.type]
+canvas = "Drawing"
+image = "Upload"
+text = "Text"
 
 [addImage.step]
 createDesc = "Last opp bildet du vil legge til"
@@ -275,20 +257,31 @@ placeDesc = "Klikk på PDF-en for å legge til bildet"
 [addImage.steps]
 configure = "Konfigurer bilde"
 
+[addImage.text]
+colorLabel = "Text color"
+fontLabel = "Font"
+fontSizeLabel = "Font size"
+name = "Text"
+placeholder = "Enter text"
+
+[addImage.type]
+canvas = "Canvas"
+image = "Image"
+saved = "Saved"
+text = "Text"
+
 [addPageNumbers]
-configuration = "Konfigurasjon"
 customize = "Tilpass utseende"
 customNumberDesc = "Standard til {n}, aksepterer også 'Side {n} av {total}', 'Tekst-{n}', '{filnavn}-{n}"
-customTextDesc = "Tilpasset Tekst"
 fontName = "Skrifttype"
 fontSize = "Skriftstørrelse"
-header = "Legg til Sidetall"
 numberPagesDesc = "Hvilke sider som skal nummereres, standard 'alle', aksepterer også 1-5 eller 2,5,9 osv."
 pagesAndStarting = "Sider og startnummer"
 positionAndPages = "Plassering og sider"
 preview = "Valg av plassering"
 previewDisclaimer = "Forhåndsvisningen er omtrentlig. Endelig resultat kan variere på grunn av PDF-skriftmetrikker."
 submit = "Legg til Sidetall"
+tags = "number,pagination,count,add page numbers,page numbering,page numbers,footer,header,number pages,sequential,pagination tool"
 title = "Legg til Sidetall"
 zeroPad = "Zero‑pad Width (Bates Stamping)"
 zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
@@ -300,18 +293,15 @@ failed = "Operasjonen for å legge til sidetall mislyktes"
 title = "Resultater for sidetall"
 
 [addPageNumbers.selectText]
-1 = "Velg PDF-fil:"
 2 = "Marginstørrelse"
-3 = "Posisjon"
 4 = "Startnummer"
 5 = "Sider å nummerere"
 6 = "Tilpasset Tekst"
 
 [addPassword]
-completed = "Passordbeskyttelse lagt til"
 desc = "Krypter PDF-dokumentet ditt med et passord."
-filenamePrefix = "kryptert"
 submit = "Krypter"
+tags = "encrypt,password,lock,secure,protect,security,encryption,safeguard,confidential,private,restrict access"
 title = "Legg til passord"
 
 [addPassword.encryption.keyLength]
@@ -324,7 +314,6 @@ label = "Nøkkellengde for kryptering"
 failed = "Det oppstod en feil under kryptering av PDF-en."
 
 [addPassword.passwords]
-completed = "Passord konfigurert"
 stepTitle = "Passord og kryptering"
 
 [addPassword.passwords.owner]
@@ -358,12 +347,14 @@ title = "Passordtyper"
 text = "Disse tillatelsene kontrollerer hva brukere kan gjøre med PDF-en. Mest effektivt når det kombineres med et eierpassord."
 title = "Endre tillatelser"
 
+[addStamp]
+tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
+
 [AddStampRequest]
 alphabet = "Alfabet"
 clickToExpand = "Click to expand"
 customColor = "Tilpasset Tekstfarge"
 customDateDesc = "Custom format"
-customMargin = "Tilpasset Margin"
 customPosition = "Dra stempelet til ønsket plassering i forhåndsvisningen."
 dateDesc = "Current date"
 datetimeDesc = "Date and time combined"
@@ -374,7 +365,6 @@ filenameDesc = "Filename without extension"
 filenameFullDesc = "Filename with extension"
 fileVars = "File Information"
 fontSize = "Font/Bilde Størrelse"
-header = "Stemple PDF"
 imageSize = "Bildestørrelse"
 margin = "Marg"
 metadataDesc = "From PDF document properties"
@@ -383,8 +373,6 @@ multiLine = "multi-line"
 noStampSelected = "Ingen stempel valgt. Gå tilbake til trinn 1."
 opacity = "Gjennomsiktighet"
 otherVars = "Other"
-overrideX = "Overskriv X-koordinat"
-overrideY = "Overskriv Y-koordinat"
 pageNumberDesc = "Current page number"
 pageVars = "Page Information"
 position = "Posisjon"
@@ -393,7 +381,6 @@ preview = "Preview:"
 quickPosition = "Velg en posisjon på siden for å plassere stempelet."
 rotation = "Rotasjon"
 selectTemplate = "Select a template..."
-stampImage = "Stemplebilde"
 stampSetup = "Stempeloppsett"
 stampText = "Stempele tekst"
 stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
@@ -433,6 +420,9 @@ header = "Legg til tekst i PDF-er"
 tags = "tekst,merknad,etikett"
 title = "Legg til tekst"
 
+[addText.canvas]
+colorPickerTitle = "Choose stroke color"
+
 [addText.error]
 failed = "Det oppsto en feil da tekst skulle legges til i PDF-en."
 
@@ -452,6 +442,28 @@ resume = "Gjenoppta plassering"
 [addText.results]
 title = "Resultater for Legg til tekst"
 
+[addText.saved]
+defaultCanvasLabel = "Drawing signature"
+defaultImageLabel = "Uploaded signature"
+defaultLabel = "Signature"
+defaultTextLabel = "Typed signature"
+delete = "Remove"
+emptyTitle = "No saved signatures yet"
+heading = "Saved signatures"
+label = "Label"
+limitTitle = "Limit reached"
+next = "Next"
+personalHeading = "Personal Signatures"
+prev = "Previous"
+savePersonal = "Save Personal"
+saveShared = "Save Shared"
+sharedHeading = "Shared Signatures"
+
+[addText.saved.type]
+canvas = "Drawing"
+image = "Upload"
+text = "Text"
+
 [addText.step]
 createDesc = "Skriv inn teksten du vil legge til"
 place = "Plasser tekst"
@@ -468,6 +480,12 @@ fontSizePlaceholder = "Skriv eller velg skriftstørrelse (8-200)"
 name = "Tekstinnhold"
 placeholder = "Skriv inn teksten du vil legge til"
 
+[addText.type]
+canvas = "Canvas"
+image = "Image"
+saved = "Saved"
+text = "Text"
+
 [adjust-contrast]
 tags = "fargekorrigering,tilpasse,modifisere,forbedre"
 
@@ -478,12 +496,11 @@ blue = "Blå"
 brightness = "Lysstyrke:"
 confirm = "Bekreft"
 contrast = "Kontrast:"
-download = "Last ned"
 green = "Grønn"
-header = "Juster Kontrast"
 noPreview = "Velg en PDF for forhåndsvisning"
 red = "Rød"
 saturation = "Metning:"
+tags = "contrast,brightness,saturation,adjust colors,color correction,enhance,lighten,darken,improve quality,color balance,hue,vibrance"
 title = "Juster Kontrast"
 
 [adjustContrast.error]
@@ -493,7 +510,6 @@ failed = "Kunne ikke justere farger/kontrast"
 title = "Justert PDF"
 
 [adjustPageScale]
-header = "Juster sideskala"
 submit = "Juster sideskala"
 tags = "skalere,endre,dimensjon,tilpass"
 title = "Juster sideskala"
@@ -537,7 +553,6 @@ title = "Skaleringsfaktor"
 close = "Lukk"
 error = "Feil"
 expand = "Utvid"
-success = "Vellykket"
 
 [admin.settings]
 discard = "Forkast"
@@ -1110,6 +1125,70 @@ label = "SMTP-port"
 description = "Brukernavn for SMTP-autentisering"
 label = "SMTP-brukernavn"
 
+[admin.settings.mcp]
+apikeyNote = "Clients send a Stirling API key in the X-API-KEY header (or Authorization: Bearer <key>). The key maps to its owning Stirling user - only provisioned accounts get in, and actions are audited as that user. Manage keys under Account > API Keys."
+description = "Expose Stirling's PDF tools and AI agents to MCP clients over an OAuth-protected endpoint."
+title = "MCP Server"
+
+[admin.settings.mcp.acceptedAudiences]
+description = "Extra token audience values accepted besides the Resource ID (comma or space separated). Leave blank for strict RFC 8707. Needed for IdPs that cannot mint resource audiences - e.g. Supabase's OAuth server always issues aud=authenticated."
+label = "Additional accepted audiences (optional)"
+
+[admin.settings.mcp.allowedOps]
+description = "If set, ONLY these operation ids are exposed (an allow-list; comma or space separated). Leave blank to expose all enabled tools except any blocked below."
+label = "Allowed tools"
+
+[admin.settings.mcp.blockedOps]
+description = "Operation ids to hide from MCP (comma or space separated), e.g. add-password remove-password. Leave blank to expose all enabled tools."
+label = "Blocked tools"
+
+[admin.settings.mcp.enabled]
+description = "When off (default), no /mcp endpoint, metadata, or MCP beans are loaded."
+label = "Enable MCP Server"
+
+[admin.settings.mcp.guide]
+step1 = "Enter your OAuth issuer + resource ID above, Save, and restart."
+step1ApiKey = "Create an API key under Account > API Keys (each user uses their own)."
+step2 = "In your MCP client add a"
+step2b = "server pointing at:"
+step3 = "The client auto-discovers OAuth from:"
+step3ApiKey = "Send the key in an"
+step3ApiKeyb = "header (or Authorization: Bearer <key>). No OAuth or metadata discovery is used."
+step4 = "Approve the sign-in; the client retries with a token. Tools appear grouped: convert, pages, misc, security, ai."
+step4ApiKey = "Tools appear grouped: convert, pages, misc, security, ai - and every call is audited as the key's owner."
+tip = "Tip: register the resource ID as an allowed audience in your IdP. Tested with MCP Inspector and Claude Desktop."
+tipApiKey = "Tip: API-key mode needs no external IdP - simplest for self-host. The key maps to its owning Stirling user."
+title = "Connect an MCP client"
+
+[admin.settings.mcp.issuerUri]
+description = "Your OAuth2 authorization server (must publish /.well-known/openid-configuration). Required when enabled."
+label = "OAuth Issuer URL"
+
+[admin.settings.mcp.jwksUri]
+description = "Leave blank to discover it from the issuer. Set only if your IdP serves keys at a non-standard URL."
+label = "JWKS URL (optional)"
+placeholder = "Auto-discovered from issuer"
+
+[admin.settings.mcp.mode]
+description = "OAuth needs an external IdP. API key uses a Stirling per-user API key (X-API-KEY) - simplest for self-host."
+label = "Authentication mode"
+
+[admin.settings.mcp.requireAccount]
+description = "Only let tokens through if their subject maps to a provisioned, enabled Stirling user."
+label = "Require an existing Stirling account"
+
+[admin.settings.mcp.resourceId]
+description = "This server's public /mcp URL. Tokens must list it in their audience (RFC 8707) or they are rejected."
+label = "Resource ID"
+
+[admin.settings.mcp.scopes]
+description = "Require mcp.tools.read for read ops and mcp.tools.write for write/AI ops."
+label = "Enforce OAuth scopes"
+
+[admin.settings.mcp.usernameClaim]
+description = "JWT claim matched against a Stirling username (e.g. sub, email, preferred_username)."
+label = "Username claim"
+
 [admin.settings.plan.noData]
 message = "Plan-data er ikke tilgjengelig for øyeblikket."
 title = "Ingen data tilgjengelig"
@@ -1492,10 +1571,6 @@ hint = "Du har ulagrede endringer"
 message = "Du har ulagrede endringer. Vil du forkaste dem?"
 title = "Ulagrede endringer"
 
-[admin.status]
-active = "Aktiv"
-inactive = "Inaktiv"
-
 [adminOnboarding]
 adminTools = "Til slutt har vi avanserte administrasjonsverktøy som <strong>Revisjon</strong> for å spore systemaktivitet og <strong>Bruksanalyse</strong> for å overvåke hvordan brukerne dine samhandler med plattformen."
 configButton = "Klikk på <strong>Config</strong>-knappen for å få tilgang til alle systeminnstillinger og administrative kontroller."
@@ -1508,76 +1583,23 @@ welcome = "Velkommen til <strong>Administrator-omvisningen</strong>! La oss utfo
 wrapUp = "Det var admin-omvisningen! Du har sett bedriftsfunksjonene som gjør Stirling PDF til en kraftig, tilpassbar løsning for organisasjoner. Åpne denne omvisningen når som helst fra <strong>Hjelp</strong>-menyen."
 
 [adminUserSettings]
-actions = "Handlinger"
-activeUsers = "Aktive brukere:"
-addUser = "Legg til Ny Bruker"
 admin = "Admin"
-apiUser = "Begrenset API Bruker"
-authenticated = "Autentisert"
-changeUserRole = "Endre Brukerens Rolle"
-confirmChangeUserStatus = "Skal brukeren deaktiveres/aktiveres?"
-confirmDeleteUser = "Skal brukeren slettes?"
-deleteUser = "Slett Bruker"
-demoUser = "Demo Bruker (Ingen tilpassede innstillinger)"
-disabledUser = "deaktivert bruker"
-disabledUsers = "Deaktiverte brukere:"
-editOwnProfil = "Rediger din profil"
-enabledUser = "aktivert bruker"
-extraApiUser = "Ekstra Begrenset API Bruker"
-forceChange = "Tving bruker til å endre passord ved innlogging"
-header = "Admin Brukerkontroll Innstillinger"
-internalApiUser = "Intern API Bruker"
-lastRequest = "Siste spørring"
-role = "Rolle"
-roles = "Roller"
-submit = "Lagre Bruker"
 title = "Brukerkontroll Innstillinger"
-totalUsers = "Totalt antall brukere:"
-usage = "Vis bruk"
-user = "Bruker"
-usernameInfo = "Brukernavn kan bare inneholde bokstaver, tall og følgende spesialtegn @._+- eller må være en gyldig e-postadresse."
-webOnlyUser = "Kun Web Bruker"
 
 [agents]
-auto_redaction_description = "Sladd PII automatisk"
-auto_redaction_name = "Automatisk sladding"
-back_to_tools = "Tilbake til verktøy"
-coming_soon = "Kommer snart"
-compliance_description = "Kontroller dokumenter for samsvar"
-compliance_name = "Samsvarskontroll"
-data_extraction_description = "Trekk ut tabeller og strukturert data"
-data_extraction_name = "Datauttrekk"
-doc_summary_description = "Oppsummer lange dokumenter"
-doc_summary_name = "Oppsummerer"
-form_filler_description = "Fyll ut PDF-skjemaer intelligent"
-form_filler_name = "Skjemautfyller"
-fullscreen_title = "Stirling-agenter"
-pdf_to_markdown_description = "Konverter PDF-er til ren Markdown"
-pdf_to_markdown_name = "PDF til Markdown"
-section_title = "Agenter"
-show_less = "Vis færre"
-start_chat = "Start chat"
-stirling_description = "Din allsidige PDF-assistent"
-stirling_full_name = "Stirling generell agent"
-stirling_long_description = "Allsidig PDF-assistent som kan kjøre verktøy, opprette PDF-er og hente innsikt fra dokumentene dine."
 stirling_name = "Stirling"
-stirling_running = "Kjører..."
-stirling_tooltip = "Stirling-agent"
-view_all = "Vis alle agenter"
 
 [analytics]
-disable = "Deaktiver analyse"
-enable = "Aktiver analyse"
 learnMore = "Lær mer"
 paragraph1 = "Stirling PDF har valgfri analyse for å hjelpe oss med å forbedre produktet. Vi sporer ikke personlig informasjon eller filinnhold."
 paragraph2 = "Vennligst vurder å aktivere analyse for å hjelpe Stirling-PDF å vokse og for å la oss forstå brukerne våre bedre."
-privacyAssurance = "Vi sporer ikke personopplysninger eller innholdet i filene dine."
-settings = "Du kan endre innstillingene for analyse i config/settings.yml filen"
 title = "Vill du gjøre Stirling PDF bedre?"
+
+[annotate]
+tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
 
 [annotation]
 annotationStyle = "Merknadsstil"
-applyChanges = "Bruk endringer"
 backgroundColor = "Bakgrunnsfarge"
 borderOff = "Kant: Av"
 borderOn = "Kant: På"
@@ -1590,36 +1612,20 @@ comment = "Kommentar"
 comments = "Kommentarer"
 contents = "Tekst"
 delete = "Slett"
-desc = "Bruk utheving, penn, tekst og notater. Endringer er levende—ingen utflating nødvendig."
 drawing = "Tegning"
-duplicate = "Dupliser"
-editCircle = "Rediger sirkel"
-editInk = "Rediger penn"
-editLine = "Rediger linje"
-editNote = "Rediger notat"
-editPolygon = "Rediger polygon"
 editSelectDescription = "Klikk en eksisterende merknad for å redigere farge, opasitet, tekst eller størrelse."
-editSelected = "Rediger merknad"
-editSquare = "Rediger kvadrat"
-editStampHint = "For å endre bildet, slett dette stempelet og legg til et nytt."
-editSwitchToSelect = "Bytt til Velg og rediger for å redigere denne merknaden."
 editText = "Rediger tekstboks"
-editTextMarkup = "Rediger tekstmarkering"
-ellipse = "Ellipse"
-exit = "Avslutt annotasjonsmodus"
 fillColor = "Fyllfarge"
 fillOpacity = "Fyllopasitet"
 fontSize = "Skriftstørrelse"
 freehandHighlighter = "Frihåndsmarkering"
 highlight = "Uthev"
 imagePreview = "Forhåndsvisning"
-inkHighlighter = "Frihåndsmarkering"
 insertText = "Sett inn tekst"
 line = "Linje"
 lineArrow = "Pil"
 noBackground = "Ingen bakgrunn"
 note = "Notat"
-noteIcon = "Notat-ikon"
 notesStamps = "Notater og stempler"
 opacity = "Opasitet"
 pen = "Penn"
@@ -1627,12 +1633,8 @@ polygon = "Polygon"
 polyline = "Polylinje"
 properties = "Egenskaper"
 rectangle = "Rektangel"
-redo = "Gjør om"
 replaceText = "Erstatt tekst"
 saveChanges = "Lagre endringer"
-saveFailed = "Kan ikke lagre kopi"
-saveReady = "Nedlasting klar"
-savingCopy = "Forbereder nedlasting..."
 select = "Velg"
 selectAndMove = "Velg og rediger"
 settings = "Innstillinger"
@@ -1650,24 +1652,17 @@ textAlignment = "Tekstjustering"
 textMarkup = "Tekstmarkering"
 title = "Annoter"
 underline = "Understrek"
-undo = "Angre"
-unsupportedType = "Denne merknadstypen er ikke fullt støttet for redigering."
 width = "Bredde"
 
 [app]
 description = "Det gratis alternativet til Adobe Acrobat (10M+ nedlastinger)"
 
 [attachments]
-add = "Legg til vedlegg"
 convertToPdfA3b = "Konverter til PDF/A-3b"
 convertToPdfA3bDescription = "Oppretter en arkiv-PDF med innebygde vedlegg"
 convertToPdfA3bTooltip = "PDF/A-3b er et arkivformat som sikrer langtidsbevaring. Det tillater å bygge inn vilkårlige filformater som vedlegg. Konvertering krever Ghostscript og kan ta lengre tid for store filer."
 convertToPdfA3bTooltipHeader = "Om PDF/A-3b-konvertering"
 convertToPdfA3bTooltipTitle = "Hva det gjør"
-embed = "Bygg inn vedlegg"
-header = "Add attachments"
-remove = "Fjern vedlegg"
-submit = "Add attachments"
 tags = "embed,attach,file,attachment,attachments"
 title = "Add attachments"
 
@@ -1683,12 +1678,10 @@ notAvailable = "Revisjonssystemet er ikke tilgjengelig"
 notAvailableMessage = "Revisjonssystemet er ikke konfigurert eller ikke tilgjengelig."
 
 [audit.charts]
-byTool = "Mest brukte verktøy"
 byType = "Hendelser etter type"
 byUser = "Hendelser etter bruker"
 day = "Dag"
 error = "Feil ved innlasting av diagrammer"
-hourlyActivity = "Aktivitet per time"
 month = "Måned"
 noData = "Ingen data for denne perioden"
 overTime = "Hendelser over tid"
@@ -1725,17 +1718,12 @@ documentName = "Dokument"
 endDate = "Sluttdato"
 error = "Feil ved innlasting av hendelser"
 eventDetails = "Hendelsesdetaljer"
-failure = "Feil"
 fileHash = "Filhash"
 filterByType = "Filtrer etter type"
 filterByUser = "Filtrer etter bruker"
 ipAddress = "IP-adresse"
 noEvents = "Ingen hendelser funnet"
-outcome = "Status"
-sortAsc = "Sorter stigende"
-sortDesc = "Sorter synkende"
 startDate = "Startdato"
-success = "Vellykket"
 timestamp = "Tidsstempel"
 title = "Revisjonshendelser"
 type = "Type"
@@ -1743,9 +1731,7 @@ user = "Bruker"
 viewDetails = "Vis detaljer"
 
 [audit.export]
-clearFilters = "Tøm"
 description = "Eksporter revisjonshendelser til CSV- eller JSON-format. Bruk filtre for å begrense de eksporterte dataene."
-endDate = "Sluttdato"
 error = "Kunne ikke eksportere data"
 exportButton = "Eksporter data"
 fieldAuthor = "Forfatter (fra PDF)"
@@ -1757,23 +1743,15 @@ fieldOperationResults = "Operasjonsresultater"
 fieldOutcome = "Resultat (suksess/feil)"
 fieldTool = "Verktøy"
 fieldUsername = "Brukernavn"
-filterByType = "Filtrer etter type"
-filterByUser = "Filtrer etter bruker"
 filters = "Filtre (valgfritt)"
 format = "Eksportformat"
 selectFields = "Velg felt som skal tas med"
-startDate = "Startdato"
 title = "Eksporter revisjonsdata"
-verboseRequired = "Krever VERBOSE revisjonsnivå"
 
 [audit.filters]
-allOutcomes = "Alle"
-failureOnly = "Kun feil"
 last30Days = "Siste 30 dager"
 last7Days = "Siste 7 dager"
-outcomeFilter = "Resultat"
 quickPresets = "Hurtigfiltre"
-successOnly = "Kun vellykket"
 thisMonth = "Denne måneden"
 today = "I dag"
 
@@ -1782,18 +1760,14 @@ activeUsers = "Aktive brukere"
 attention = "Krever oppmerksomhet"
 avgLatency = "Gjennomsnittlig ventetid"
 error = "Feil ved lasting av statistikk"
-errorLoadingStats = "Kunne ikke laste statistikk"
 excellent = "Utmerket"
 good = "Bra"
 noData = "N/A"
 successRate = "Suksessrate"
-title = "Sammendrag"
 totalEvents = "Totale hendelser"
 vsLastPeriod = "vs forrige periode"
 
 [audit.systemStatus]
-autoRefresh = "Automatisk oppdatering"
-autoRefreshLabel = "Oppdater automatisk hvert 30. sekund"
 captureBySettings = "Aktiver i innstillinger"
 capturedFields = "Registrerte felt"
 date = "Dato"
@@ -1810,7 +1784,6 @@ title = "Systemstatus"
 tool = "Verktøy"
 totalEvents = "Totalt antall hendelser"
 username = "Brukernavn"
-verboseOnly = "Kun VERBOSE"
 
 [audit.tabs]
 clearData = "Tøm data"
@@ -1821,8 +1794,6 @@ export = "Eksporter"
 [auth]
 accessDenied = "Tilgang nektet"
 insufficientPermissions = "Du har ikke tillatelse til å utføre denne handlingen."
-pleaseLoginAgain = "Logg inn igjen."
-sessionExpired = "Økten er utløpt"
 
 [auth.displayName]
 guest = "Gjest"
@@ -1830,16 +1801,12 @@ user = "Bruker"
 
 [auto-rename]
 description = "Finner automatisk tittelen fra PDF-innholdet ditt og bruker den som filnavn."
-header = "Auto Navngi PDF"
 submit = "Auto Navngi"
 tags = "auto-oppdag,overskrift-basert,organisere,omdøp"
 title = "Auto Navngi"
 
 [auto-rename.error]
 failed = "Det oppstod en feil under automatisk navngivning av PDF-en."
-
-[auto-rename.files]
-placeholder = "Velg en PDF-fil i hovedvisningen for å komme i gang"
 
 [auto-rename.results]
 title = "Resultater for automatisk navngivning"
@@ -1857,7 +1824,6 @@ title = "Slik fungerer automatisk navngivning"
 bullet1 = "Ser etter tekst som fremstår som en tittel eller overskrift"
 bullet2 = "Lager et rent, gyldig filnavn fra den oppdagede tittelen"
 bullet3 = "Beholder det opprinnelige navnet hvis ingen egnet tittel finnes"
-text = "Finner automatisk tittelen fra PDF-innholdet ditt og bruker den som filnavn."
 title = "Smart navngivning"
 
 [automate]
@@ -1870,12 +1836,12 @@ importPartialSuccess = "Importert med {{count}} ikke-tilordnede operasjon(er): {
 importSuccess = "Importert automatisering: {{name}}"
 invalidStep = "Ugyldig trinn"
 reviewTitle = "Resultater av automatisering"
+tags = "workflow,sequence,automation,automate,batch,batch processing,pipeline,chain,multi-step,recurring,scheduled,automatic,process multiple,bulk operations"
 title = "Automatiser"
 
 [automate.config]
 cancel = "Avbryt"
 description = "Konfigurer innstillingene for dette verktøyet. Disse innstillingene vil bli brukt når automatiseringen kjører."
-loading = "Laster verktøykonfigurasjon..."
 noSettings = "Dette verktøyet har ingen konfigurerbare innstillinger."
 save = "Lagre konfigurasjon"
 title = "Konfigurer {{toolName}}"
@@ -1916,16 +1882,6 @@ title = "Ulagrede endringer"
 
 [automate.entryMenu]
 label = "Åpne meny for {{title}}"
-
-[automate.files]
-placeholder = "Velg filer som skal behandles med denne automatiseringen"
-
-[automate.folderScanWarning]
-advice = "Du kan fortsatt laste ned filen (f.eks. for å inspisere eller redigere den manuelt), men de trinnene som ikke støttes må fjernes før backend kan kjøre den."
-cancel = "Avbryt"
-confirm = "Eksporter likevel"
-intro = "Mappeskanning kjører på backend, så den kan bare kjøre verktøy som har et backend-endepunkt. Følgende trinn i denne automasjonen har ikke det, og vil feile når pipelinen kjøres:"
-title = "Noen trinn kan ikke kjøres i mappeskanning"
 
 [automate.importModal]
 cancel = "Avbryt"
@@ -1979,25 +1935,16 @@ secureWorkflowDesc = "Sikrer PDF-dokumenter ved å fjerne potensielt ondsinnet i
 
 [autoRename]
 description = "Dette verktøyet vil automatisk gi PDF-filer nytt navn basert på innholdet. Det analyserer dokumentet for å finne den mest passende tittelen fra teksten."
+tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
 
 [autoSizeSplitPDF]
 tags = "pdf,del,dokument,organisering"
 
 [autoSplitPDF]
-description = "Skriv ut, Sett inn, Skann, last opp, og la oss automatisk separere dokumentene dine. Ingen manuell sortering nødvendig."
 dividerDownload2 = "Last ned 'Auto Splitter Divider (med instruksjoner).pdf'"
 duplexMode = "Dupleksmodus (Front- og bakskanning)"
-formPrompt = "Send inn PDF som inneholder Stirling-PDF-sideskillere:"
-header = "Automatisk Del PDF"
-submit = "Send inn"
 tags = "QR-basert,separere,skann-segment,organisere"
 title = "Automatisk Del PDF"
-
-[autoSplitPDF.selectText]
-1 = "Skriv ut noen delingssider fra alternativene nedenfor (Svart-hvitt er greit)."
-2 = "Skann alle dokumentene samtidig ved å sette inn delingssiden mellom dem."
-3 = "Last opp den enkelte store skannede PDF-filen og la Stirling PDF håndtere resten."
-4 = "Delingssidene blir automatisk oppdaget og fjernet, og garanterer et pent endelig dokument."
 
 [backendHealth]
 checking = "Sjekker backend-status..."
@@ -2035,7 +1982,6 @@ whatHappensNext = "Hva skjer videre?"
 error = "Kunne ikke åpne faktureringsportalen"
 
 [bookletImposition]
-header = "Hefteoppsett"
 paperSizeNote = "Papirstørrelse hentes automatisk fra første side."
 submit = "Lag hefte"
 tags = "hefte,oppsett,utskrift,innbinding,bretting,signatur"
@@ -2081,11 +2027,6 @@ title = "Manuell dupleksmodus"
 [bookletImposition.rtlBinding]
 label = "Høyre-til-venstre-innbinding"
 tooltip = "For arabisk, hebraisk eller andre høyre-til-venstre-språk"
-
-[bookletImposition.spineLocation]
-label = "Plassering av rygg"
-left = "Venstre (standard)"
-right = "Høyre (RTL)"
 
 [bookletImposition.tooltip.advanced]
 bullet1 = "Høyre-til-venstre-innbinding: For arabisk, hebraisk eller RTL-språk"
@@ -2226,7 +2167,6 @@ description = "Bruk din egen PKCS#12-sertifikatfil. Gir full kontroll over serti
 title = "Last opp egendefinert P12"
 
 [certSign]
-allSigned = "Alle deltakere har signert. Klar til å ferdigstille."
 awaitingSignatures = "Avventer signaturer"
 chooseCertificate = "Velg sertifikatfil"
 chooseJksFile = "Velg JKS-fil"
@@ -2235,7 +2175,6 @@ choosePfxFile = "Velg PFX-fil"
 choosePrivateKey = "Velg fil for privat nøkkel"
 declined = "Avslått"
 fetchFailed = "Kunne ikke laste signeringsdata"
-filenamePrefix = "signert"
 finalized = "Ferdigstilt"
 location = "Sted"
 logoTitle = "Logo"
@@ -2243,7 +2182,6 @@ name = "Navn"
 noLogo = "Ingen logo"
 notified = "Avventer"
 pageNumber = "Sidenummer"
-partialNote = "Du kan ferdigstille tidlig med gjeldende signaturer. Usignerte deltakere blir ekskludert."
 password = "Skriv inn passordet for keystore eller privat nøkkel (hvis noen):"
 passwordOptional = "La stå tomt hvis ingen passord"
 pending = "Avventer"
@@ -2311,12 +2249,8 @@ stepTitle = "Sertifikatformat"
 
 [certSign.collab.addParticipants]
 add = "Legg til {{count}} deltakere"
-back = "Tilbake"
-configureSignatures = "Konfigurer signaturinnstillinger"
-continue = "Fortsett til signaturinnstillinger"
 reasonHelp = "Forhåndsangi en signeringsårsak for disse deltakerne (valgfritt, de kan overstyre ved signering)"
 reasonPlaceholder = "f.eks. Godkjenning, Gjennomgang ..."
-selectUsers = "Velg brukere"
 
 [certSign.collab.finalize]
 button = "Ferdigstill og last inn signert PDF"
@@ -2335,7 +2269,6 @@ includeSummaryPage = "Inkluder side med signaturoppsummering"
 includeSummaryPageHelp = "En oppsummeringsside legges til på slutten med all signaturmetadata. Signaturfeltene for digitale sertifikater på enkeltsider blir undertrykt (våte signaturer påvirkes ikke)."
 
 [certSign.collab.sessionDetail]
-addButton = "Legg til deltakere"
 addParticipants = "Legg til deltakere"
 addParticipantsError = "Kunne ikke legge til deltakere"
 backToList = "Tilbake til økter"
@@ -2348,7 +2281,6 @@ finalizeError = "Kunne ikke ferdigstille økt"
 loadPdfError = "Kunne ikke laste signert PDF"
 loadSignedPdf = "Last inn signert PDF i aktive filer"
 messageLabel = "Melding"
-noAdditionalInfo = "Ingen tilleggsinformasjon"
 owner = "Eier"
 participantRemoved = "Deltaker fjernet"
 participants = "Deltakere"
@@ -2369,7 +2301,6 @@ title = "Signaturutforming"
 
 [certSign.collab.signRequest]
 addedToFiles = "Dokument lagt til i aktive filer"
-addSignature = "Legg til signaturen din"
 addToFiles = "Legg til i aktive filer"
 advancedSettings = "Avanserte innstillinger"
 backToList = "Tilbake til signeringsforespørsler"
@@ -2382,35 +2313,27 @@ decline = "Avslå forespørsel"
 declineButton = "Avslå"
 deleteSelected = "Slett valgt signatur"
 drawSignature = "Tegn signaturen din nedenfor"
-dueDate = "Frist"
 fileTooLarge = "Filstørrelsen må være mindre enn 5MB"
 fontFamily = "Skrifttype"
 fontSize = "Skriftstørrelse: {{size}}px"
 fontSizePlaceholder = "Størrelse"
 from = "Fra"
-invalidCertFile = "Velg en P12- eller PFX-sertifikatfil"
 invalidFileType = "Velg en bildefil"
 location = "Sted (valgfritt)"
 locationPlaceholder = "Hvor signerer du fra?"
-message = "Melding"
 noCertificate = "Velg en sertifikatfil"
 noSignatures = "Plasser minst én signatur på PDF-en"
 p12File = "P12/PFX-sertifikatfil"
 password = "Sertifikatpassord"
-passwordPlaceholder = "Angi passord ..."
 penColor = "Pennfarge"
 penSize = "Pennstørrelse: {{size}}px"
-placementActive = "Klikk på PDF-en for å plassere"
-placeSignatureButton = "Plasser signatur på PDF"
 reason = "Årsak (valgfritt)"
 reasonPlaceholder = "Hvorfor signerer du?"
-removeCertFile = "Fjern fil"
 removeImage = "Fjern bilde"
 savedSignatures = "Lagrede signaturer"
 selectFile = "Velg bildefil"
 selectSignatureTitle = "Velg eller opprett signatur"
 signatureInfo = "Disse innstillingene er konfigurert av dokumenteieren"
-signaturePlaced = "Signatur plassert på side"
 signatureSettings = "Signaturinnstillinger"
 signatureText = "Signaturtekst"
 signatureTextPlaceholder = "Skriv inn navnet ditt ..."
@@ -2442,9 +2365,6 @@ description = "Du har plassert {{count}} signatur(er). Velg sertifikatet ditt fo
 sign = "Signer dokument"
 title = "Konfigurer sertifikat"
 
-[certSign.collab.signRequest.image]
-hint = "Last opp et PNG- eller JPG-bilde av signaturen din"
-
 [certSign.collab.signRequest.mode]
 move = "Flytt signatur"
 place = "Plasser signatur"
@@ -2454,10 +2374,6 @@ title = "Signerings- eller flyttemodus"
 draw = "Tegn"
 image = "Last opp"
 text = "Skriv"
-
-[certSign.collab.signRequest.placeSignature]
-message = "Klikk på PDF-en for å plassere signaturen din"
-title = "Plasser signatur"
 
 [certSign.collab.signRequest.preview]
 imageAlt = "Valgt signatur"
@@ -2588,24 +2504,20 @@ text = "Når du sjekker signaturer, forteller verktøyet deg om de er gyldige, h
 title = "Kontroll av signaturer"
 
 [changeCreds]
-changePassword = "Du bruker standard påloggingsdetaljer. Vennligst skriv inn et nytt passord"
 changeUsername = "Oppdater brukernavnet ditt. Du blir logget ut etter oppdatering."
-confirmNewPassword = "Bekreft Nytt Passord"
 credsUpdated = "Konto oppdatert"
 description = "Endringer lagret. Logg inn på nytt."
 error = "Kan ikke oppdatere brukernavn. Bekreft passordet ditt og prøv igjen."
 header = "Oppdater Konto Detaljer"
-newPassword = "Nytt Passord"
 newUsername = "Nytt Brukernavn"
 oldPassword = "Nåværende Passord"
 ssoManaged = "Kontoen din administreres av identitetsleverandøren din."
-submit = "Send Endringer"
 title = "Endre Legitimasjon"
 
 [changeMetadata]
 filenamePrefix = "metadata"
-header = "Endre metadata"
 submit = "Endre"
+tags = "edit,modify,update,metadata,properties,document properties,author,title,subject,keywords,creator,producer,info,document info,file properties"
 
 [changeMetadata.advanced]
 title = "Avanserte alternativer"
@@ -2657,9 +2569,6 @@ placeholder = "Dokumentprodusent"
 [changeMetadata.results]
 title = "Oppdaterte PDF-er"
 
-[changeMetadata.settings]
-title = "Metadata-innstillinger"
-
 [changeMetadata.standardFields]
 title = "Standardfelter"
 
@@ -2698,16 +2607,6 @@ title = "Datofelt"
 text = "Fullstendig sletting av metadata for å sikre personvern."
 title = "Fjern eksisterende metadata"
 
-[changeMetadata.tooltip.header]
-title = "PDF-metadataoversikt"
-
-[changeMetadata.tooltip.options]
-bullet1 = "Egendefinert metadata: Legg til egne nøkkel-verdi-par"
-bullet2 = "Trapped-status: Innstilling for høykvalitetsutskrift"
-bullet3 = "Slett alt: Fjern all metadata av personvernhensyn"
-text = "Egendefinerte felt og personvernkontroller."
-title = "Flere alternativer"
-
 [changeMetadata.tooltip.standardFields]
 bullet1 = "Tittel: Dokumentnavn eller overskrift"
 bullet2 = "Forfatter: Personen som opprettet dokumentet"
@@ -2724,9 +2623,9 @@ true = "Sann"
 unknown = "Ukjent"
 
 [changePermissions]
-completed = "Tillatelser endret"
 desc = "Endre dokumentbegrensninger og tillatelser."
 submit = "Endre tillatelser"
+tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Endre tillatelser"
 
 [changePermissions.error]
@@ -2768,19 +2667,19 @@ title = "Endre tillatelser"
 [changePermissions.tooltip.warning]
 text = "For å gjøre disse tillatelsene uforanderlige, bruk verktøyet Legg til passord for å sette et eierpassord."
 
-[chat]
-resize = "Endre størrelse på chatpanelet"
-
 [chat.actions]
 copy = "Kopier melding"
+
+[chat.fab]
+close = "Close chat"
+open = "Open Stirling AI assistant"
 
 [chat.header]
 agentMenu = "Stirling-agentalternativer"
 clearChat = "Tøm chat"
-settings = "Agentinnstillinger"
 
 [chat.input]
-attach = "Legg ved filer"
+disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 placeholder = "Hva vil du gjøre?"
 send = "Send melding"
 
@@ -2793,6 +2692,13 @@ executing_tool_single = "Kjører {{tool}}..."
 executing_tool_step = "Kjører {{tool}} (steg {{step}} av {{total}})..."
 extracting_content = "Henter ut innhold fra dokumentene dine..."
 processing = "Behandler hentet innhold..."
+ranForMinutes = "Ran for {{count}} minutes"
+ranForMinutes_one = "Ran for 1 minute"
+ranForMinutes_other = "Ran for {{count}} minutes"
+ranForMinutesSeconds = "Ran for {{minutes}} min, {{seconds}} sec"
+ranForSeconds = "Ran for {{count}} seconds"
+ranForSeconds_one = "Ran for 1 second"
+ranForSeconds_other = "Ran for {{count}} seconds"
 thinking = "Tenker..."
 whole_doc_compression_round = "Sammenstiller notater..."
 whole_doc_read_done = "Ferdig med å lese dokumentet..."
@@ -2805,15 +2711,11 @@ compressMany = "Komprimer disse dokumentene"
 compressOne = "Komprimer dette dokumentet"
 convertMany = "Konverter disse dokumentene til PDF"
 convertOne = "Konverter dette dokumentet til PDF"
-fileSummary_one = "1 fil i arbeidsbenk ({{types}})"
-fileSummary_other = "{{count}} filer i arbeidsbenk ({{types}})"
 heading = "Kom i gang"
 mergeMany = "Slå sammen disse {{count}} dokumentene til 1"
 moreFiles = "+{{count}} til"
 openFromComputer = "Åpne fra datamaskin"
 removeFile = "Fjern {{name}}"
-rotateMany = "Roter disse dokumentene"
-rotateOne = "Roter dette dokumentet"
 splitOne = "Del dette dokumentet"
 
 [chat.responses]
@@ -2824,11 +2726,10 @@ need_clarification = "Kan du utdype forespørselen?"
 not_found = "Jeg fant ikke den forespurte informasjonen."
 processing = "Behandler ({{outcome}})..."
 unsupported_capability = "Ikke støttet funksjon: {{capability}}"
+usage_limit_reached = "You've reached your usage limit. Check your plan options to keep going."
 
 [chat.toolsUsed]
 summary = "Kjørte {{count}} verktøy"
-summary_one = "Kjørte 1 verktøy"
-summary_other = "Kjørte {{count}} verktøy"
 unknownTool = "Ukjent verktøy"
 
 [cloudBadge]
@@ -2841,70 +2742,47 @@ tooltip = "Velg farge fra skjermen"
 title = "Velg farge"
 
 [common]
-available = "tilgjengelig"
 back = "Tilbake"
 cancel = "Avbryt"
 close = "Lukk"
 collapse = "Slå sammen"
-collapsed = "sammenfoldet"
 continue = "Fortsett"
 copied = "Kopiert!"
 copy = "Kopier"
 done = "Ferdig"
 error = "Feil"
 expand = "Utvid"
-learnMore = "Lær mer"
-lines = "linjer"
 loading = "Laster..."
 next = "Neste"
-operation = "denne operasjonen"
 preview = "Forhåndsvis"
 previous = "Forrige"
 refresh = "Oppdater"
-remaining = "gjenstår"
 retry = "Prøv igjen"
 save = "Lagre"
-used = "brukt"
 
 [compare]
-addFilesHint = "Legg til PDF-er i Filer-trinnet for å aktivere valg."
 clearSelected = "Tøm valgte"
 clearSlot = "Fjern fil"
 cta = "Sammenlign"
-header = "Sammenlign PDF-er"
 loading = "Sammenligner..."
 newLine = "ny linje"
-noFiles = "Ingen PDF-er tilgjengelig ennå"
 pages = "Sider"
 tags = "differensiere,kontrast,endringer,analyse"
 title = "Sammenlign"
 
 [compare.actions]
 linkScroll = "Koble til rulling"
-linkScrollPan = "Koble til rulling og panorering"
 placeSideBySide = "Plasser side om side"
 resetView = "Tilbakestill visning"
 stackVertically = "Stable vertikalt"
 unlinkScroll = "Koble fra rulling"
-unlinkScrollPan = "Koble fra rulling og panorering"
 zoomIn = "Zoom inn"
 zoomOut = "Zoom ut"
-
-[compare.base]
-label = "Originaldokument"
-placeholder = "Velg den originale PDF-en"
 
 [compare.clear]
 confirm = "Tøm og gå tilbake"
 confirmBody = "Dette vil lukke gjeldende sammenligning og ta deg tilbake til Aktive filer."
 confirmTitle = "Tømme valgte PDF-er?"
-
-[compare.comparison]
-label = "Redigert dokument"
-placeholder = "Velg den redigerte PDF-en"
-
-[compare.complex]
-message = "Ett eller begge av de angitte dokumentene er store filer, nøyaktigheten av sammenligningen kan bli redusert"
 
 [compare.dropdown]
 additions = "Tilføyelser ({{count}})"
@@ -2937,15 +2815,12 @@ message = "Ett eller begge av de angitte dokumentene er for store til å behandl
 body = "Disse PDF-ene overstiger til sammen 2,000 sider. Behandlingen kan ta flere minutter."
 title = "Stor sammenligning pågår"
 
-[compare.mode]
-pixel = "Piksel-sammenligning"
-text = "Tekstsammenligning"
-
 [compare.no.text]
 message = "En eller begge av de valgte PDF-ene har ingen tekstinnhold. Vennligst velg PDF-er med tekst for sammenligning."
 
 [compare.original]
 label = "Original-PDF"
+placeholder = "Select the original PDF"
 
 [compare.pixel]
 base = "Original"
@@ -2979,18 +2854,10 @@ pagesRendered = "sider gjengitt"
 rendering = "gjengir"
 
 [compare.review]
-actionsHint = "Gå gjennom sammenligningen, bytt dokumentroller eller eksporter sammendraget."
-exportSummary = "Eksporter sammendrag"
-switchOrder = "Bytt rekkefølge"
 title = "Sammenligningsresultat"
 
 [compare.selection]
 originalEditedTitle = "Velg original og redigert PDF"
-
-[compare.slowOperation]
-body = "Denne sammenligningen tar lenger tid enn vanlig. Du kan la den fortsette eller avbryte den."
-cancel = "Avbryt sammenligning"
-title = "Jobber fortsatt…"
 
 [compare.status]
 complete = "Sammenligning klar"
@@ -3017,10 +2884,9 @@ unlinkedTitle = "Uavhengig rulling og panorering aktivert"
 message = "Disse dokumentene virker svært ulike. Sammenligning ble stoppet for å spare tid."
 
 [compress]
-credit = "Denne tjenesten bruker qpdf for PDF-komprimering/optimisering."
 desc = "Komprimer PDF-er for å redusere filstørrelsen."
-header = "Komprimer PDF"
 submit = "Komprimer"
+tags = "shrink,reduce,optimize,compress,smaller,downsize,file size,reduce size,minimize,make smaller,decrease size,optimize size"
 title = "Komprimer"
 
 [compress.compressionLevel]
@@ -3052,15 +2918,6 @@ filesize = "Filstørrelse"
 quality = "Kvalitet"
 title = "Komprimeringsmetode"
 
-[compress.selectText]
-2 = "Optimeringsnivå:"
-4 = "Automatisk modus - Justerer automatisk kvaliteten for å få PDF til nøyaktig størrelse"
-5 = "Forventet PDF-størrelse (f.eks. 25MB, 10.8MB, 25KB)"
-
-[compress.selectText.1]
-1 = "1-3 PDF-komprimering,</br> 4-6 lett bildekomprimering,</br> 7-9 intens bildekomprimering vil redusere bildekvaliteten kraftig"
-_value = "Komprimeringsinnstillinger"
-
 [compress.settings]
 desiredSize = "Ønsket filstørrelse"
 desiredSizePlaceholder = "Angi størrelse"
@@ -3091,6 +2948,7 @@ tags = "komprimer,liten,tiny"
 
 [config]
 plan = "Abonnement"
+team = "Team"
 
 [config.account.overview]
 confirmDelete = "Slett kontoen min"
@@ -3146,9 +3004,7 @@ title = "Oppgrader gjestekonto"
 upgradeButton = "Oppgrader konto"
 
 [config.apiKeys]
-chartAriaLabel = "Kredittbruk: inkludert {{includedUsed}} av {{includedTotal}}, kjøpt {{purchasedUsed}} av {{purchasedTotal}}"
 copyKeyAriaLabel = "Kopier API-nøkkel"
-creditsRemaining = "Gjenstående kreditter"
 description = "API-nøkkelen din for tilgang til Stirlings pakke med PDF-verktøy. Kopier den til prosjektet ditt eller oppdater for å generere en ny."
 docsDescription = "Lær mer om integrasjon med Stirling PDF:"
 docsLink = "API-dokumentasjon"
@@ -3156,17 +3012,11 @@ docsTitle = "API-dokumentasjon"
 generateError = "Vi kunne ikke generere API-nøkkelen din."
 goToAccount = "Gå til konto"
 guestInfo = "Gjestebrukere mottar ikke API-nøkler. Opprett en konto for å få en API-nøkkel du kan bruke i applikasjonene dine."
-includedCredits = "Inkluderte kreditter"
 intro = "Bruk API-nøkkelen din for programmatisk tilgang til Stirling PDF sine prosesseringsmuligheter."
 label = "API-nøkkel"
-lastApiUse = "Siste API-bruk"
-nextReset = "Neste tilbakestilling"
-overlayMessage = "Generer en nøkkel for å se kreditter og tilgjengelige kreditter"
 publicKeyAriaLabel = "Offentlig API-nøkkel"
-purchasedCredits = "Kjøpte kreditter"
 refreshAriaLabel = "Oppdater API-nøkkel"
 schemaLink = "Referanse for API-skjema"
-totalCredits = "Totalt antall kreditter"
 usage = "Inkluder denne nøkkelen i X-API-KEY-headeren med alle API-forespørsler."
 
 [config.apiKeys.alert]
@@ -3185,6 +3035,30 @@ impact = "Eventuelle applikasjoner eller tjenester som bruker disse nøklene nå
 title = "Oppdater API-nøkler"
 warning = "⚠️ Advarsel: Denne handlingen vil generere nye API-nøkler og gjøre de tidligere nøklene ugyldige."
 
+[config.mcp]
+description = "Model Context Protocol (MCP) lets AI assistants like Claude use your Stirling PDF tools directly. Connect a client once and your assistant can convert, edit, secure and process documents on your behalf."
+guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
+navLabel = "MCP Server"
+tip = "Every action your assistant runs is performed as your account and counts toward your usage, just like using Stirling PDF directly."
+title = "MCP Server"
+viewApiKeys = "View API keys"
+
+[config.mcp.copy]
+configLabel = "Config"
+copied = "Copied"
+copy = "Copy"
+endpointLabel = "Endpoint URL"
+tooltip = "Copy {{label}}"
+tooltipCopied = "{{label}} copied"
+
+[config.mcp.endpoint]
+label = "Your MCP endpoint"
+
+[config.mcp.setup]
+addTo = "Add to"
+hint = "Pick your client, paste the snippet into the file shown, then restart it. You'll sign in with your Stirling account on first use - no keys to copy."
+title = "Connect your AI assistant"
+
 [config.overview]
 description = "Gjeldende programinnstillinger og konfigurasjonsdetaljer."
 error = "Feil"
@@ -3197,14 +3071,6 @@ basic = "Grunnleggende konfigurasjon"
 integration = "Integrasjonskonfigurasjon"
 security = "Sikkerhetskonfigurasjon"
 system = "Systemkonfigurasjon"
-
-[connectionMode.status]
-localOffline = "Frakoblet modus aktiv"
-localOnline = "Frakoblet modus aktiv"
-saas = "Tilkoblet Stirling Cloud"
-selfhostedChecking = "Tilkoblet selvhostet server (sjekker...)"
-selfhostedOffline = "Selvhostet server kan ikke nås"
-selfhostedOnline = "Tilkoblet selvhostet server"
 
 [convert]
 autoRotate = "Roter automatisk"
@@ -3224,64 +3090,39 @@ combineImages = "Kombiner bilder"
 combineImagesDescription = "Kombiner alle bilder til én PDF, eller opprett separate PDF-er for hvert bilde"
 combineSvgs = "Combine SVGs into single PDF"
 combineSvgsDescription = "Combine all SVG files into one PDF with multiple pages, or create separate PDFs for each SVG"
-conversionCompleted = "Konvertering fullført"
 conversionResults = "Konverteringsresultater"
 convertFiles = "Konverter filer"
 convertFrom = "Konverter fra"
 converting = "Konverterer..."
 convertTo = "Konverter til"
-defaultFilename = "konvertert_fil"
 desc = "Konverter filer mellom ulike formater"
-downloadConverted = "Last ned konvertert fil"
 downloadHtml = "Last ned HTML-mellomfil i stedet for PDF"
 dpi = "DPI"
 ebookToPdf = "E-bok → PDF"
 emailOptions = "Alternativer for e-post til PDF"
 emlToPdf = "E-post → PDF"
 errorConversion = "Det oppstod en feil under konvertering av filen."
-errorNoFiles = "Velg minst én fil å konvertere."
-errorNoFormat = "Velg både kilde- og målformat."
-errorNotSupported = "Konvertering fra {{from}} til {{to}} støttes ikke."
-fileFormat = "Filformat"
-files = "Filer"
 fileToPdf = "Office/Dokument → PDF"
 fillPage = "Fyll side"
 fitDocumentToPage = "Tilpass dokument til side"
 fitOption = "Tilpasningsvalg"
 grayscale = "Gråtone"
-greyscale = "Gråtone"
 imageOptions = "Bildealternativer"
-images = "Bilder"
-imagesExt = "Bilder (JPG, PNG, osv.)"
 includeAllRecipients = "Inkluder CC- og BCC-mottakere i header"
 includeAttachments = "Inkluder e-postvedlegg"
 maintainAspectRatio = "Bevar sideforhold"
-markdown = "Markdown"
 maxAttachmentSize = "Maksimal vedleggsstørrelse (MB)"
 multiple = "Flere"
-noFileSelected = "Ingen fil valgt. Bruk filpanelet for å legge til filer."
-odpExt = "OpenDocument-presentasjon (.odp)"
-odtExt = "OpenDocument-tekst (.odt)"
-officeDocs = "Kontordokumenter (Word, Excel, PowerPoint)"
 optimizeForEbook = "Optimaliser PDF for e-boklesere (bruker Ghostscript)"
 output = "Utdata"
 outputFormat = "Utdataformat"
-outputOptions = "Utdataalternativer"
 pdfaDigitalSignatureWarning = "PDFen inneholder en digital signatur. Denne vil bli fjernet i neste steg."
-pdfaFormat = "PDF/A-format"
 pdfaNote = "PDF/A-1b er mer kompatibel, PDF/A-2b støtter flere funksjoner."
 pdfaOptions = "PDF/A-alternativer"
 pdfOptions = "PDF-alternativer"
 pdfToCbr = "PDF → CBR"
 pdfToCbz = "PDF → CBZ"
 pdfToEpub = "PDF → EPUB"
-pdfxDescription = "PDF/X er en ISO-standardisert PDF-undermengde for pålitelig utskrift og grafikkutveksling."
-pdfxDigitalSignatureWarning = "PDF-en inneholder en digital signatur. Denne vil bli fjernet i neste trinn."
-pptExt = "PowerPoint (.pptx)"
-results = "Resultater"
-rtfExt = "Rich Text Format (.rtf)"
-selectedFiles = "Valgte filer"
-selectFilesPlaceholder = "Velg filer i hovedvisningen for å komme i gang"
 selectSourceFormatFirst = "Velg et kildeformat først"
 settings = "Innstillinger"
 single = "Enkel"
@@ -3291,18 +3132,13 @@ strictModeDesc = "Error if conversion is not perfect (uses VeraPDF verification)
 svgPdfOptions = "SVG to PDF Options"
 svgToPdf = "SVG → PDF"
 svgVectorNote = "SVG files are rendered as vector graphics for crisp output at any resolution. Dimensions from the SVG determine the PDF page size."
+tags = "transform,change,convert,PDF to Word,PDF to Excel,PDF to image,Word to PDF,Excel to PDF,PowerPoint to PDF,HTML to PDF,export,import,file conversion,format change,save as"
 targetFormatPlaceholder = "Målformat"
-textRtf = "Tekst/RTF"
 title = "Konverter"
-txtExt = "Ren tekst (.txt)"
 webOptions = "Alternativer for web til PDF"
-wordDoc = "Word-dokument"
-wordDocExt = "Word-dokument (.docx)"
 zoomLevel = "Zoomnivå"
 
 [convert.ebookOptions]
-ebookOptions = "Alternativer for eBook til PDF"
-ebookOptionsDesc = "Alternativer for å konvertere eBooks til PDF"
 embedAllFonts = "Bygg inn alle skrifter"
 embedAllFontsDesc = "Bygg inn alle skrifter fra eBook-en i den genererte PDF-en"
 includePageNumbers = "Inkluder sidenummer"
@@ -3315,8 +3151,6 @@ optimizeForEbookPdfDesc = "Optimaliser PDF-en for eBook-lesing (mindre filstørr
 [convert.epubOptions]
 detectChapters = "Oppdag kapitler"
 detectChaptersDesc = "Oppdag overskrifter som ser ut som kapitler og sett inn EPUB-sideskift"
-epubOptions = "Alternativer for PDF til eBook"
-epubOptionsDesc = "Alternativer for å konvertere PDF til EPUB/AZW3"
 kindleEink = "Kindle e-Ink (tekstoptimalisert)"
 outputFormat = "Utdataformat"
 outputFormatDesc = "Velg utdataformat for eBook-en"
@@ -3363,80 +3197,26 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
-[credits]
-enableOverageBilling = "Aktiver overforbruksfakturering"
-maybeLater = "Kanskje senere"
-upgrade = "Oppgrader"
-
-[credits.insufficient]
-brief = "Utilstrekkelige kreditter. Du trenger {{required}} kreditter, men har {{current}}."
-freeTier = "Oppgrader til Team for 10x flere kreditter og ubegrenset overforbruksfakturering."
-managedMember = "Ta kontakt med teamlederen din for hjelp."
-message = "Du har ikke nok kreditter til å kjøre {{tool}}. Du har for øyeblikket {{current}} kreditter."
-messageWithAmount = "Du trenger {{required}} kreditter for å kjøre {{tool}}, men du har bare {{current}}."
-teamMember = "Aktiver overforbruksfakturering for aldri å gå tom for kreditter."
-title = "Utilstrekkelige kreditter"
-
 [credits.modal]
 advancedMonitoring = "Avansert overvåking"
 allInOneWorkspace = "Alt-i-ett PDF-arbeidsområde (viser, verktøy og agent)"
 apiSandbox = "API-sandkasse"
-contactSales = "Kontakt salg"
-creditsRemaining = "{{current}} av {{total}} gjenstår"
-creditsThisMonth = "Månedlige kreditter"
-current = "Gjeldende plan"
-customPricing = "Egendefinert"
-customSmartFolders = "Egendefinerte smarte mapper"
 dedicatedSupportSlas = "Dedikert støtte og SLA-er"
-enterpriseSubscription = "Enterprise"
-everythingInCredits = "Alt i Credits, pluss:"
-everythingInFree = "Alt i Free, pluss:"
 fasterThroughput = "10x raskere gjennomstrømming"
-forRegularWork = "For vanlig PDF-arbeid:"
-freeTier = "Gratisnivå"
 fullyPrivateFiles = "Fullt private filer"
 largeFileProcessing = "Behandling av store filer"
-managedMemberMessage = "Du har ubegrenset tilgang til kreditter gjennom teamet ditt. Hvis du trenger hjelp, kontakt teamlederen din."
-managedMemberTitle = "Ubegrensede kreditter"
-meteringBillingNote = "Overforbrukskreditter faktureres månedlig sammen med Team-abonnementet ditt. Følg med på bruken din når som helst i kontoinnstillingene."
-meteringExplanation = "Team-planen din inkluderer {{credits}} kreditter per måned. Når de tar slutt, gir overforbruksfakturering automatisk ekstra kreditter slik at du aldri må stoppe arbeidet."
-meteringIncluded = "{{credits}} kreditter/måned inkludert i Team"
-meteringNeverRunOut = "Gå aldri tom for kreditter"
-meteringNoCommitment = "Ingen binding, kan sies opp når som helst"
-meteringPayAsYouGo = "Betal kun for det du bruker"
-meteringPrice = "Ekstra kreditter til {{price}}/kreditt"
-meteringTitle = "Overforbruksfakturering – betal for det du bruker"
-monthlyCredits = "månedlige kreditter"
 orgWideAccess = "Organisasjonsomfattende tilgangskontroller"
-overage = "overforbruk"
-perMonth = "/måned"
-popular = "Populær"
 premiumAiModels = "Premium AI-modeller"
 prioritySupport = "Prioritert støtte"
 privateDocCloud = "Privat dokumentsky"
 ragFineTuning = "RAG + finjustering"
 secureApiAccess = "Sikker API-tilgang"
-selfHostLink = "Se gjennom dokumentasjon og planer"
-selfHostPrompt = "Vil du egenhoste?"
 standardThroughput = "Standard gjennomstrømming"
-subtitle = "Oppgrader til Team for 10x flere kreditter og raskere prosessering."
-subtitlePro = "Aktiver automatisk overforbruksfakturering for aldri å gå tom for kreditter."
-teamLeaderOnly = "Bare teamledere kan aktivere overforbruksfakturering"
-teamSubscription = "Team"
-titleExhausted = "Du har brukt opp gratiskredittene dine"
-titleExhaustedPro = "Du har gått tom for kreditter"
 unlimitedApiAccess = "Ubegrenset API-tilgang"
-unlimitedMonthlyCredits = "Site-lisens"
 unlimitedSeats = "Ubegrensede plasser"
-
-[credits.modal.features]
-everythingInCredits = "Alt i Credits, pluss:"
-everythingInFree = "Alt i Free, pluss:"
-forRegularWork = "For vanlig PDF-arbeid:"
 
 [crop]
 autoCrop = "Beskjær hvite mellomrom automatisk"
-header = "Beskjær PDF"
 noFileSelected = "Velg en PDF-fil for å begynne beskjæring"
 reset = "Tilbakestill til full PDF"
 submit = "Send inn"
@@ -3487,39 +3267,10 @@ title = "Slik beskjærer du PDF-er"
 
 [database]
 backupCreated = "Sikkerhetskopiering opprettet"
-createBackupFile = "Lag sikkerhetskopifil"
-creationDate = "Opprettelsesdato"
-deleteBackupFile = "Slett sikkerhetskopifil"
-downloadBackupFile = "Last ned sikkerhetskopifil"
-failedImportFile = "Import av fil mislyktes"
 fileName = "Fil navn"
-fileNotFound = "Fil ikke funnet"
-fileNullOrEmpty = "Fil må ikke være tom eller null"
-fileSize = "Filstørrelse"
-header = "Database Import/Eksport"
-importBackupFile = "Importer sikkerhetskopifil"
-importIntoDatabaseSuccessed = "Import til database vellykket"
-info_1 = "Når du importerer data, er det avgjørende å sikre riktig struktur. Hvis du er usikker på hva du gjør, bør du søke råd og støtte fra en profesjonell. En feil i strukturen kan føre til applikasjonsfeil, inkludert fullstendig manglende evne til å kjøre applikasjonen."
-info_2 = "Filnavnet spiller ingen rolle ved opplasting. Det vil bli omdøpt etterpå for å følge formatet backup_user_yyyyMMddHHmm.sql, for å sikre en konsekvent navnekonvensjon."
-notSupported = "Denne funksjonen er ikke tilgjengelig for din databasetilkobling."
-submit = "Importer sikkerhetskopi"
 title = "Database Import/Eksport"
 
-[decrypt]
-cancelled = "Operasjon avbrutt for PDF: {0}"
-invalidPassword = "Prøv igjen med riktig passord."
-invalidPasswordHeader = "Feil passord eller ikke støttet kryptering for PDF: {0}"
-noPassword = "Ikke noe passord oppgitt for kryptert PDF: {0}"
-passwordPrompt = "Denne filen er passordbeskyttet. Skriv inn passordet:"
-serverError = "Serverfeil under dekryptering: {0}"
-success = "Fil dekryptert."
-unexpectedError = "Det oppstod en feil under behandling av filen. Vennligst prøv igjen."
-
 [defaultApp]
-description = "Du kan endre dette senere i systeminnstillingene."
-dismiss = "Avvis"
-message = "Vil du sette Stirling PDF som standard PDF-redigerer?"
-notNow = "Ikke nå"
 setDefault = "Sett som standard"
 title = "Sett som standard PDF-app"
 
@@ -3529,7 +3280,6 @@ title = "Feil"
 
 [defaultApp.prompt]
 message = "Gjør Stirling PDF til standardappen for å åpne PDF-filer."
-title = "Sett som standard PDF-redigerer"
 
 [defaultApp.settingsOpened]
 message = "Velg Stirling PDF i systeminnstillingene"
@@ -3555,6 +3305,18 @@ docsLink = "Se installasjonsdokumentasjon"
 message = "Stirling-PDF har ikke tillatelse til å oppdatere seg selv på denne maskinen."
 title = "Administratorrettigheter kreves"
 
+[devAirgapped]
+tags = "air-gapped,offline,isolated,no internet,disconnected,secure,network isolation,standalone"
+
+[devApi]
+tags = "API,development,documentation,developer,REST,integration,endpoints,programmatic,automation,scripting"
+
+[devFolderScanning]
+tags = "automation,folder,scanning,watch folder,hot folder,automatic processing,batch,monitor folder,auto process,folder monitoring"
+
+[devSsoGuide]
+tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
+
 [dropdownList]
 searchPlaceholder = "Søk..."
 
@@ -3564,6 +3326,7 @@ editSecretValue = "Rediger hemmelig verdi"
 
 [editTableOfContents]
 submit = "Bruk innholdsfortegnelse"
+tags = "bookmarks,contents,edit,table of contents,TOC,outline,navigation,chapters,sections,add bookmarks,edit bookmarks,PDF outline"
 
 [editTableOfContents.actions]
 clipboardUnavailable = "Tilgang til utklippstavlen er ikke tilgjengelig i denne nettleseren."
@@ -3638,12 +3401,9 @@ title = "Bokmerker og struktur"
 
 [editTableOfContents.workbench]
 changeFile = "Bytt PDF"
-fileLabel = "Endringer vil bli brukt på den valgte PDF-en."
 filePrompt = "Velg en PDF fra biblioteket ditt eller last opp en ny for å begynne."
-noFile = "Ingen PDF valgt"
 selectFile = "Velg PDF"
 subtitle = "Importer bokmerker, bygg hierarkier og bruk disposisjonen uten trange sidepaneler."
-tabTitle = "Arbeidsområde for disposisjon"
 
 [editTableOfContents.workbench.empty]
 description = "Velg verktøyet Rediger innholdsfortegnelse for å laste arbeidsområdet."
@@ -3676,62 +3436,15 @@ label = "PDF-passord"
 placeholder = "Skriv inn PDF-passordet"
 
 [endpointStatistics]
-all = "Alle"
-dataTypeAll = "Alle"
-dataTypeApi = "API"
-dataTypeLabel = "Datatype:"
-dataTypeUi = "UI"
-endpoint = "Endepunkt"
-failedToLoad = "Kunne ikke laste endepunktdata. Prøv å oppdatere."
-header = "Endepunktstatistikk"
-home = "Hjem"
-loading = "Laster..."
-login = "Logg inn"
-numberOfVisits = "Antall besøk"
-percentage = "Prosent"
-refresh = "Oppdater"
-retry = "Prøv igjen"
-selectedVisits = "Valgte besøk"
-showing = "Viser"
 title = "Endepunktstatistikk"
-top = "Topp"
-top10 = "Topp 10"
-top20 = "Topp 20"
-totalEndpoints = "Totalt antall endepunkter"
-totalVisits = "Totalt antall besøk"
-visits = "Besøk"
-visitsTooltip = "Besøk: {0} ({1}% av totalen)"
-
-[enterpriseEdition]
-button = "Oppgrader til Pro"
-ssoAdvert = "Søker du etter flere administrerings funksjoner? Sjekk ut Stirling PDF Pro"
-warning = "Denne funksjonen er kun tilgjengelig for Pro-brukere."
-yamlAdvert = "Stirling PDF Pro støtter YAML-konfigurasjons filer og andre SSO funksjoner."
 
 [error]
 _value = "Feil"
-contactTip = "Hvis du fortsatt har problemer, ikke nøl med å kontakte oss for hjelp. Du kan sende inn en billett på vår GitHub-side eller kontakte oss via Discord:"
-copyStack = "Kopier stakksporing"
-discordSubmit = "Discord - Send inn støtteinnlegg"
 dismissAllErrors = "Avvis alle feil"
-encryptedPdfMustRemovePassword = "Denne PDF-en er kryptert eller passordbeskyttet. Lås den opp før du konverterer til PDF/A."
 generic = "Det oppstod en feil"
-github = "Send inn en billett på GitHub"
-githubSubmit = "GitHub - Send inn en billett"
-incorrectPasswordProvided = "PDF-passordet er feil eller ikke oppgitt."
-needHelp = "Trenger du hjelp / Har du funnet et problem?"
-pdfPassword = "PDF-dokumentet er passordbeskyttet og enten ble passordet ikke oppgitt eller var feil"
-showStack = "Vis stakksporing"
-sorry = "Beklager for problemet!"
-
-[error.404]
-1 = "Vi kan ikke finne siden du leter etter."
-2 = "Noe gikk galt"
-head = "404 - Side ikke funnet | Oops, vi falt i koden!"
 
 [extractImages]
 allowDuplicates = "Lagre dupliserte bilder"
-header = "Hent ut bilder"
 selectText = "Velg bildeformat for å konvertere de hentede bildene til"
 submit = "Hent ut"
 tags = "bilde,foto,lagre,arkiv,zip,fangst,hent"
@@ -3748,6 +3461,7 @@ tags = "ekstrahere"
 
 [extractPages]
 submit = "Ekstraher sider"
+tags = "pull,select,copy,extract,extract pages,get pages,pull out,save pages,export pages,copy pages,select pages,specific pages"
 title = "Ekstraher sider"
 
 [extractPages.error]
@@ -3770,23 +3484,11 @@ description = "Ekstraherer de valgte sidene til en ny PDF og bevarer rekkefølge
 openInFileEditor = "Åpne i filredigerer"
 viewInViewer = "Vis i fremviser"
 
-[fileChooser]
-click = "Klikk"
-dragAndDrop = "Dra og slipp"
-dragAndDropImage = "Dra og slipp bildefil"
-dragAndDropPDF = "Dra og slipp PDF-fil"
-extractPDF = "Ekstraherer..."
-hoveredDragAndDrop = "Dra og slipp fil(er) her"
-or = "eller"
-
 [fileDropdownMenu]
 closeFile = "Lukk fil"
 
 [fileEditor]
 addFiles = "Legg til filer"
-pageCount = "{{count}} sider"
-pageCount_one = "{{count}} side"
-pageCount_other = "{{count}} sider"
 
 [fileManager]
 active = "Aktiv"
@@ -3794,7 +3496,6 @@ addToUpload = "Legg til i opplasting"
 changesNotUploaded = "Endringer ikke lastet opp"
 clearAll = "Tøm alt"
 clearSelection = "Fjern markering"
-clickToUpload = "Klikk for å laste opp filer"
 closeAllFiles = "Lukk alle filer"
 closeFile = "Lukk fil"
 cloudFile = "Skyfil"
@@ -3807,10 +3508,7 @@ deselectAll = "Fjern all markering"
 details = "Fildetaljer"
 download = "Last ned"
 downloadSelected = "Last ned valgte"
-dragDrop = "Dra og slipp filer her"
 dropFilesHere = "Slipp filer her"
-failedToLoad = "Kunne ikke laste fil til aktivt sett."
-failedToOpen = "Kunne ikke åpne fil. Den kan ha blitt fjernet fra lagring."
 fileFormat = "Format"
 fileHistory = "Filhistorikk"
 fileName = "Navn"
@@ -3832,8 +3530,6 @@ leaveShare = "Fjern fra listen min"
 leaveShareFailed = "Kunne ikke fjerne den delte filen."
 leaveShareSuccess = "Fjernet fra din delte liste."
 loadingFiles = "Laster filer..."
-loadingHistory = "Laster historikk..."
-localFiles = "Lokale filer"
 localOnly = "Kun lokalt"
 makeCopy = "Lag en kopi"
 mobileShort = "Mobil"
@@ -3841,7 +3537,6 @@ mobileUpload = "Mobilopplasting"
 mobileUploadNotAvailable = "Mobilopplasting er ikke aktivert"
 myFiles = "Mine filer"
 noFiles = "Ingen filer tilgjengelig"
-noFileSelected = "Ingen filer valgt"
 noFilesFound = "Ingen filer funnet som samsvarer med søket ditt"
 noRecentFiles = "Ingen nylige filer funnet"
 openFile = "Åpne fil"
@@ -3851,7 +3546,6 @@ openInPageEditor = "Åpne i Sideeditor"
 owner = "Eier"
 ownerUnknown = "Ukjent"
 recent = "Nylige"
-reloadFiles = "Last inn filer på nytt"
 removeBoth = "Fjern fra begge"
 removeFilePrompt = "Denne filen er lagret på denne enheten og på serveren. Hvor vil du fjerne den fra?"
 removeFileTitle = "Fjern fil"
@@ -3868,7 +3562,6 @@ saveSelected = "Lagre valgte"
 searchFiles = "Søk i filer..."
 selectAll = "Velg alle"
 selectedCount = "{{count}} valgt"
-selectedFiles = "Valgte filer"
 share = "Del"
 shared = "Delt"
 sharedByYou = "Delt av deg"
@@ -3884,20 +3577,13 @@ sortByDate = "Sorter etter dato"
 sortByName = "Sorter etter navn"
 sortBySize = "Sorter etter størrelse"
 storage = "Lagring"
-storageCleared = "Nettleseren tømte lagringen. Filer er fjernet. Last opp på nytt."
-storageError = "Det oppstod en lagringsfeil"
-storageLow = "Lite lagringsplass. Vurder å fjerne gamle filer."
 storageState = "Lagring"
-subtitle = "Legg til filer i lagringen din for enkel tilgang på tvers av verktøy"
-supportMessage = "Drevet av nettleserens databaselagring for ubegrenset kapasitet"
 synced = "Synkronisert"
 title = "Last opp PDF-filer"
 toolChain = "Brukte verktøy"
-totalSelected = "Totalt valgt"
 unsupported = "Ikke støttet"
 unzip = "Pakk ut"
 updateOnServer = "Oppdater på serveren"
-uploadError = "Noen filer kunne ikke lastes opp."
 uploadSelected = "Last opp valgte"
 uploadToServer = "Last opp til serveren"
 
@@ -3969,7 +3655,6 @@ cycleBlocked = "Kan ikke flytte en mappe inn i en av sine egne undermapper."
 delete = "Slett"
 deleteFolder = "Slett mappe"
 deleteFolderBody = "Slette mappen \"{{name}}\"?"
-deleteFolderConfirm = "Slette mappen \"{{name}}\"? Filer inni vil bli flyttet til Alle filer. {{count}} fil(er) berørt."
 deleteFolderContents = "Slett også {{count}} fil(er) inne i mappen"
 deleteFolderContentsWarning = "Filer vil bli fjernet permanent og kan ikke gjenopprettes."
 deleteFolderError = "Kunne ikke slette mappen. Prøv igjen."
@@ -3994,18 +3679,14 @@ inWorkspace = "Åpen"
 inWorkspaceAria = "Allerede i arbeidsområde"
 loading = "Laster…"
 localFoldersUnavailable = "Mapper er kun i skyen – lagre en fil til skyen for å organisere den."
-moreActions = "Flere mappehandlinger"
-moveLocalToCloudBlocked = "Kun lokale filer kan ikke flyttes inn i skymapper. Lagre dem til skyen først."
 moveSkippedRemote = "{{count}} fil(er) kunne ikke flyttes på serveren (mangler tillatelse eller allerede slettet)."
 moveTo = "Flytt til…"
 myFiles = "Mine filer"
 newFolder = "Ny mappe"
 newFolderStorageDisabled = "Serverlagring av mapper er ikke aktivert. Be administratoren om å slå det på."
 newFolderTabUnavailable = "Bytt til Alle eller Sky for å opprette mapper."
-newRootFolder = "Ny mappe i rot"
 offlineNoFolderEdits = "Serversynk for mapper er utilgjengelig – mappeendringer er deaktivert. Sjekk innlogging og lagringskonfigurasjon."
 open = "Åpne"
-openInWorkbench = "Åpne i arbeidsbenk"
 openVersionInWorkspace = "Åpne i arbeidsområde"
 originFilter = "Filtrer etter kilde"
 quickView = "Hurtigvisning"
@@ -4028,9 +3709,8 @@ selectFile = "Velg fil {{name}}"
 shareDisabledHint = "Fildeling er ikke aktivert på denne serveren. Be administratoren om å aktivere det."
 shareManage = "Administrer deling"
 showDetails = "Vis detaljer"
+signInRequired = "Sign in to use cloud storage."
 summary = "{{count}} elementer"
-syncFailed = "Mappesynk mislyktes: {{message}}"
-syncPartial = "Delvis mappesynk: {{failed}} av {{total}} mapper kunne ikke flettes."
 tree = "Mapper"
 upload = "Last opp"
 uploadedToLocal = "Opplastede filer starter i Lokal. Bruk 'Lagre til skyen' for å legge dem i en mappe."
@@ -4161,17 +3841,13 @@ sharedByMe = "Delt av meg"
 [filesPage.tabs]
 all = "Alle"
 ariaLabel = "Filvisninger"
-cloud = "Sky"
-local = "Lokal"
 recent = "Nylig"
 shared = "Delt med meg"
 sharedByMe = "Delt av meg"
 
 [filesPage.treeMenu]
 actions = "Mappehandlinger for {{name}}"
-collapse = "Skjul mappe"
 delete = "Slett mappe"
-expand = "Utvid mappe"
 newSubfolder = "Ny undermappe"
 rename = "Gi nytt navn"
 
@@ -4185,39 +3861,20 @@ label = "Visningsmodus"
 list = "Listevisning"
 
 [fileToPDF]
-credit = "Denne tjenesten bruker LibreOffice og Unoconv for filkonvertering."
-header = "Konverter hvilken som helst fil til PDF"
-submit = "Konverter til PDF"
-supportedFileTypes = "Støttede filtyper bør inkludere følgende, men for en fullstendig oppdatert liste over støttede formater, vennligst se LibreOffice-dokumentasjonen"
-supportedFileTypesInfo = "Støttede filtyper"
 tags = "transformasjon,format,dokument,bilde,slide,tekst,konvertering,office,dokumenter,word,excel,powerpoint"
 title = "Fil til PDF"
 
 [fileUpload]
-addFiles = "Legg til filer"
-backToTools = "Tilbake til verktøy"
-chooseFromStorage = "Velg en fil fra lagring eller last opp en ny PDF"
-chooseFromStorageMultiple = "Velg filer fra lagring eller last opp nye PDF-er"
-dragFilesInOrClick = "Dra inn filer eller klikk \"Legg til filer\" for å bla"
-dropFileHere = "Slipp fil her eller klikk for å laste opp"
 dropFilesHere = "Slipp filer her eller klikk på opplastingsknappen"
 dropFilesHereOpen = "Slipp filer her eller klikk på Åpne-knappen"
 filesAvailable = "filer tilgjengelige"
 loadFromStorage = "Last inn fra lagring"
-loading = "Laster..."
 noFilesInStorage = "Ingen filer tilgjengelig i lagring. Last opp noen filer først."
 noFilesInStorageOpen = "Ingen filer tilgjengelig i lagringen. Åpne noen filer først."
 open = "Åpne"
 openFile = "Åpne fil"
 openFiles = "Åpne filer"
-or = "eller"
-pdfFilesOnly = "Kun PDF-filer"
-selectFile = "Velg en fil"
-selectFiles = "Velg filer"
 selectFromStorage = "Velg fra lagring"
-selectPdfToEdit = "Velg en PDF for redigering"
-selectPdfToView = "Velg en PDF for visning"
-supportedFileTypes = "Støttede filtyper"
 upload = "Last opp"
 uploadFile = "Last opp fil"
 uploadFiles = "Last opp filer"
@@ -4243,22 +3900,15 @@ welcomeMessage = "Av sikkerhetsgrunner må du endre passordet ved første innlog
 welcomeTitle = "Velkommen!"
 
 [flatten]
-filenamePrefix = "flatet_ut"
-flattenOnlyForms = "Utjevning av kun skjemaer"
-header = "Utjevning av PDf"
 submit = "Utjevn"
+tags = "simplify,remove,interactive,flatten,flatten form,remove form fields,make static,finalize form,lock form,disable editing,convert to image,non-editable"
 title = "Utjevning"
 
 [flatten.error]
 failed = "Det oppstod en feil under utflating av PDF-en."
 
-[flatten.files]
-placeholder = "Velg en PDF-fil i hovedvisningen for å komme i gang"
-
 [flatten.options]
-note = "Utflating fjerner interaktive elementer fra PDF-en og gjør dem ikke-redigerbare."
 stepTitle = "Alternativer for utflating"
-title = "Alternativer for utflating"
 
 [flatten.options.flattenOnlyForms]
 desc = "Flat bare ut skjemafelter, og la andre interaktive elementer være intakte"
@@ -4271,9 +3921,6 @@ placeholder = "f.eks. 150"
 
 [flatten.results]
 title = "Resultater for utflating"
-
-[flatten.steps]
-settings = "Innstillinger"
 
 [flatten.tooltip.description]
 bullet1 = "Tekstbokser blir vanlig tekst (kan ikke redigeres)"
@@ -4310,7 +3957,6 @@ close = "Lukk sidepanel"
 [getPdfInfo]
 downloadJson = "Last ned JSON"
 downloads = "Nedlastinger"
-header = "Få Info om PDF"
 indexTitle = "Indeks"
 noneDetected = "Ingen funnet"
 noResults = "Kjør verktøyet for å generere en rapport."
@@ -4321,12 +3967,8 @@ tags = "informasjon,data,statistikk"
 title = "Få Info om PDF"
 
 [getPdfInfo.compliance]
-compliant = "I samsvar"
 failed = "Feilet"
 failedCount = "feilet"
-nonCompliant = "Ikke i samsvar"
-none = "Ingen standarder oppdaget"
-notDetected = "Ikke oppdaget"
 noVerification = "Ingen verifisering utført"
 noVerificationDesc = "Samsvar med PDF-standarder ble ikke verifisert for dette dokumentet."
 passed = "Bestått"
@@ -4354,7 +3996,6 @@ size = "Størrelse"
 xobjects = "XObject-antall"
 
 [getPdfInfo.report]
-entryLabel = "Fullstendig informasjonsoppsummering"
 shortTitle = "PDF-informasjon"
 
 [getPdfInfo.sections]
@@ -4380,7 +4021,6 @@ compliancePassed = "I samsvar med {{standards}}"
 created = "Opprettet"
 documentInfo = "Dokumentinformasjon"
 fileSize = "Filstørrelse"
-hasCompliance = "Har samsvarsstandarder"
 language = "Språk"
 modified = "Endret"
 noCompliance = "Ingen samsvarsstandarder"
@@ -4490,18 +4130,6 @@ message = "Opprett en gratis konto for å lagre arbeidet ditt, få tilgang til f
 signUp = "Registrer deg gratis"
 title = "Du bruker Stirling PDF som gjest!"
 
-[home]
-alphabetical = "Alfabetisk"
-desc = "Din lokale one-stop-shop for alle dine PDF-behov."
-globalPopularity = "Global Popularitet"
-hideFavorites = "Skjul Favoritter"
-legacyHomepage = "Gammel hjemmeside"
-newHomePage = "Prøv vår nye hjemmeside!"
-searchBar = "Søk etter funksjoner..."
-setFavorites = "Angi Favoritter"
-showFavorites = "Vis Favoritter"
-sortBy = "Sorter etter:"
-
 [home.addAttachments]
 desc = "Legg til eller fjern innebygde filer (vedlegg) til/fra en PDF"
 tags = "bygg inn,legg ved,inkluder"
@@ -4553,12 +4181,10 @@ tags = "autogjenkjenning,overskriftsbasert,organiser,gi nytt navn"
 title = "Gi PDF-fil nytt navn automatisk"
 
 [home.autoSizeSplitPDF]
-desc = "Del en enkelt PDF i flere dokumenter basert på størrelse, antall sider eller dokumenter"
 tags = "auto,del,størrelse"
 title = "Auto-del størrelse/antall"
 
 [home.autoSplitPDF]
-desc = "Auto Del Skannet PDF med fysisk skannet sidesplitter QR-kode"
 tags = "auto,del,QR"
 title = "Auto Del Sider"
 
@@ -4652,7 +4278,6 @@ tags = "info,metadata,detaljer"
 title = "Få ALL informasjon om PDF"
 
 [home.manageCertificates]
-desc = "Importer, eksporter eller slett digitale sertifikatfiler som brukes til å signere PDF-er."
 tags = "sertifikater,import,eksport"
 title = "Administrer sertifikater"
 
@@ -4697,7 +4322,6 @@ tags = "AI,agent,kommentar,annotering,klistrelapp,gjennomgang,tilbakemelding,not
 title = "Legg til AI-kommentarer"
 
 [home.pdfOrganiser]
-desc = "Fjern/omorganiser sider i hvilken som helst rekkefølge"
 tags = "organiser,omorganiser,endre rekkefølge"
 title = "Organiser"
 
@@ -4807,17 +4431,14 @@ tags = "del,skill,del opp"
 title = "Del opp"
 
 [home.splitByChapters]
-desc = "Del en PDF i flere filer basert på kapittelstrukturen."
 tags = "del,kapitler,struktur"
 title = "Del PDF etter kapitler"
 
 [home.splitBySections]
-desc = "Del hver side av en PDF i mindre horisontale og vertikale seksjoner"
 tags = "del,seksjoner,del opp"
 title = "Del PDF etter seksjoner"
 
 [home.swagger]
-desc = "Vis API-dokumentasjon og test endepunkter"
 tags = "API,dokumentasjon,test"
 title = "API Docs"
 
@@ -4837,7 +4458,6 @@ tags = "valider,verifiser,sertifikat"
 title = "Valider PDF-signatur"
 
 [home.viewPdf]
-desc = "Vis, annoter, legg til tekst eller bilder"
 title = "Vis/rediger PDF"
 
 [home.watermark]
@@ -4846,25 +4466,9 @@ tags = "stempel,merke,overlegg"
 title = "Legg til Vannmerke"
 
 [HTMLToPDF]
-credit = "Bruker WeasyPrint"
-cssMediaType = "Endre CSS-mediatypen til siden."
-defaultHeader = "Aktiver standardtopp (Navn og sidenummer)"
 header = "HTML Til PDF"
-help = "Godtar HTML-filer og ZIP-filer som inneholder html/css/bilder etc. som er nødvendige"
-marginBottom = "Nedre margin på siden i millimeter. (Blank for standard)"
-marginLeft = "Venstre margin på siden i millimeter. (Blank for standard)"
-marginRight = "Høyre margin på siden i millimeter. (Blank for standard)"
-marginTop = "Øvre margin på siden i millimeter. (Blank for standard)"
-none = "Ingen"
-pageHeight = "Høyde på siden i centimeter. (Blank for standard)"
-pageWidth = "Bredde på siden i centimeter. (Blank for standard)"
-print = "Utskrift"
-printBackground = "Vis bakgrunnen til nettsider."
-screen = "Skjerm"
-submit = "Konverter"
 tags = "markup,web-innhold,transformasjon,konverter"
 title = "HTML Til PDF"
-zoom = "Zoomnivå for visning av nettsiden."
 
 [image.upload]
 hint = "Last opp en PNG, JPG, SVG eller annen bildefil for å plassere på PDF-en. SVG-filer blir konvertert til PNG for kompatibilitet."
@@ -4875,19 +4479,8 @@ placeholder = "Velg bildefil"
 tags = "konvertering,bilde,jpg,foto"
 
 [imageToPDF]
-fillPage = "Fyll side"
-fitDocumentToImage = "Pass side til bilde"
 header = "Bilde til PDF"
-maintainAspectRatio = "Behold sideforhold"
-selectLabel = "Bildejusteringsalternativer"
-submit = "Konverter"
 title = "Bilde til PDF"
-
-[imageToPDF.selectText]
-2 = "Automatisk rotasjon av PDF"
-3 = "Flere fillogikk (Bare aktivert ved arbeid med flere bilder)"
-4 = "Slå sammen til en enkelt PDF"
-5 = "Konverter til separate PDF-filer"
 
 [infoBanner]
 dismiss = "Lukk"
@@ -4912,7 +4505,6 @@ linkExpires = "Lenken utløper"
 passwordMismatch = "Passordene samsvarer ikke"
 passwordPlaceholder = "Skriv inn passordet ditt"
 passwordRequired = "Passord er påkrevd"
-passwordTooShort = "Passordet må være minst 6 tegn"
 signIn = "Logg inn"
 validating = "Validerer invitasjon..."
 validationError = "Kunne ikke validere invitasjonslenken"
@@ -4941,20 +4533,10 @@ showCookieBanner = "Innstillinger for informasjonskapsler"
 terms = "Vilkår og betingelser"
 
 [licenses]
-header = "Tredjeparts lisenser"
-license = "Lisens"
-module = "Modul"
-nav = "Lisenser"
 title = "Tredjeparts lisenser"
-version = "Versjon"
 
 [localMode]
 toolUnavailable = "Dette verktøyet krever en konto. Logg inn på Stirling Cloud eller koble til en selvhostet server for å bruke det."
-
-[localMode.banner]
-message = "Logg inn for å låse opp alle verktøy."
-signIn = "Logg inn"
-title = "Kjører lokalt"
 
 [localMode.toolPicker]
 message = "Logg inn for å låse opp alle verktøy."
@@ -4962,15 +4544,11 @@ signIn = "Logg inn"
 
 [login]
 accountCreatedSuccess = "Konto opprettet! Du kan nå logge inn."
-alreadyLoggedIn = "Du er allerede innlogget på"
-alreadyLoggedIn2 = "enheter. Logg ut og forsøk igjen"
 backToSignIn = "Tilbake til innlogging"
-cancel = "Avbryt"
 changePasswordWarning = "Endre passordet ditt etter at du har logget inn for første gang"
+createAccount = "Create an account"
 credentialsUpdated = "Innloggingsinformasjonen din er oppdatert. Logg inn på nytt."
-debug = "Feilsøk"
 defaultCredentials = "Standard påloggingsopplysninger"
-dontHaveAccount = "Har du ikke en konto? Registrer deg"
 email = "E-post"
 enterEmail = "Skriv inn e-postadressen din"
 enterEmailForMagicLink = "Skriv inn e-posten din for magisk lenke"
@@ -4979,29 +4557,12 @@ enterPassword = "Skriv inn passordet ditt"
 enterUsername = "Skriv inn brukernavn"
 failedToSignIn = "Kunne ikke logge inn med {{provider}}: {{message}}"
 forgotPassword = "Glemt passordet?"
-header = "Logg inn"
-home = "Hjem"
-invalid = "Ugyldig brukernavn eller passord."
-locked = "Kontoen din har blitt låst."
 loggingIn = "Logger inn..."
 logIn = "Logg inn"
 login = "Logg inn"
-logoutMessage = "Du har blitt logget ut."
 magicLinkSent = "Magisk lenke sendt til {{email}}! Sjekk e-posten din og klikk på lenken for å logge inn."
-maxUsersReached = "Maksimalt antall brukere er nådd for din nåværende lisens. Kontakt administratoren for å oppgradere planen din eller legge til flere brukerplasser."
 mfaCode = "Autentiseringskode"
-mfaPromptBody = "Skriv inn autentiseringskoden fra autentiseringsappen for å fortsette."
-mfaPromptTitle = "Tofaktorautentisering"
 mfaRequired = "Tofaktorkode kreves"
-oauth2AccessDenied = "Tilgang nektet"
-oAuth2AdminBlockedUser = "Registrering eller pålogging for ikke-registrerte brukere er for øyeblikket blokkert. Vennligst kontakt administrator"
-oAuth2AutoCreateDisabled = "OAUTH2 Auto-Opretting av bruker deaktivert"
-oauth2InvalidIdToken = "Ugyldig Id Token"
-oauth2invalidRequest = "Ugyldig forespørsel"
-oauth2InvalidTokenResponse = "Ugyldig tokenrespons"
-oauth2InvalidUserInfoResponse = "Ugyldig brukerinforespons"
-oauth2RequestNotFound = "Autentiseringsforespørsel ikke funnet"
-oAuth2RequiresLicense = "OAuth/SSO-pålogging krever en betalt lisens (Server eller Enterprise). Kontakt administratoren for å oppgradere planen din."
 or = "Eller"
 password = "Passord"
 passwordChangedSuccess = "Passord endret! Logg inn med det nye passordet."
@@ -5009,33 +4570,21 @@ passwordResetSent = "Lenke for tilbakestilling av passord sendt til {{email}}! S
 passwordUpdatedSuccess = "Passordet ditt er oppdatert."
 pleaseEnterBoth = "Vennligst oppgi både e-post og passord"
 pleaseEnterEmail = "Vennligst oppgi e-postadressen din"
-relyingPartyRegistrationNotFound = "Ingen konfigurasjon funnet for Relying Party\""
-rememberme = "Husk meg"
 resetHelp = "Skriv inn e-posten din for å motta en sikker lenke for å tilbakestille passordet. Hvis lenken er utløpt, be om en ny."
 resetYourPassword = "Tilbakestill passordet ditt"
-saml2RequiresLicense = "SAML-pålogging krever en betalt lisens (Server eller Enterprise). Kontakt administratoren for å oppgradere planen din."
 sending = "Sender…"
 sendMagicLink = "Send magisk lenke"
 sendResetLink = "Send tilbakestillingslenke"
 sessionExpired = "Økten din har utløpt. Logg inn på nytt."
 signin = "Logg inn"
-signInAnonymously = "Registrer deg som gjest"
 signingIn = "Logger inn..."
-signinTitle = "Vennligst logg inn"
 signInWith = "Logg inn med"
-signOut = "Logg ut"
-ssoSignIn = "Logg inn via Enkel Pålogging"
-subtitle = "Logg inn igjen på Stirling PDF"
 title = "Logg inn"
-toManySessions = "Du har for mange aktive økter"
 unexpectedError = "Uventet feil: {{message}}"
 updatePassword = "Oppdater passord"
 useEmailInstead = "Logg inn med e-post"
 useMagicLink = "Bruk magisk lenke i stedet"
-userIsDisabled = "Bruker er deaktivert, innlogging er for øyeblikket blokkert med dette brukernavnet. Vennligst kontakt administrator"
 username = "Brukernavn"
-verifyingMfa = "Verifiserer..."
-verifyMfa = "Verifiser kode"
 youAreLoggedIn = "Du er logget inn!"
 
 [login.slides.edit]
@@ -5060,10 +4609,7 @@ small = "Liten"
 xLarge = "Ekstra stor"
 
 [MarkdownToPDF]
-credit = "Bruker WeasyPrint"
 header = "Markdown Til PDF"
-help = "Arbeid pågår"
-submit = "Konverter"
 tags = "markup,web-innhold,transformasjon,konverter"
 title = "Markdown Til PDF"
 
@@ -5114,8 +4660,6 @@ capture = "Ta bilde"
 chooseMethod = "Velg opplastingsmetode"
 chooseMethodDescription = "Velg hvordan du vil skanne og laste opp dokumenter"
 clearBatch = "Tøm"
-connected = "Tilkoblet"
-connecting = "Kobler til..."
 edgeDetection = "Kantgjenkjenning"
 fileDescription = "Last opp eksisterende bilder eller dokumenter fra enheten din"
 fileUpload = "Filopplasting"
@@ -5124,7 +4668,6 @@ flashlight = "Lommelykt"
 httpsRequired = "Kameratilgang krever HTTPS eller localhost. Bruk HTTPS eller få tilgang via localhost."
 noSession = "Ugyldig økt"
 noSessionMessage = "Vennligst skann en gyldig QR-kode for å få tilgang til denne siden."
-preview = "Forhåndsvis"
 processing = "Behandler..."
 retake = "Ta på nytt"
 selectFilesPrompt = "Velg filer som skal lastes opp"
@@ -5133,7 +4676,6 @@ sessionExpired = "Denne økten er utløpt. Oppdater og prøv igjen."
 sessionInvalid = "Øktfeil"
 sessionNotFound = "Økt ikke funnet. Oppdater og prøv igjen."
 sessionValidationError = "Kan ikke verifisere økten. Prøv igjen."
-settings = "Innstillinger"
 title = "Mobilskanner"
 upload = "Last opp"
 uploadAll = "Last opp alt"
@@ -5144,7 +4686,6 @@ uploadSuccessMessage = "Bildene dine er overført."
 validating = "Validerer økt..."
 
 [mobileUpload]
-connected = "Mobilenhet tilkoblet"
 description = "Skann for å laste opp bilder. Bilder konverteres automatisk til PDF."
 descriptionNoConvert = "Skann for å laste opp bilder fra mobilenheten din."
 error = "Tilkoblingsfeil"
@@ -5155,55 +4696,14 @@ instructions = "Skann med telefonkameraet ditt. Bilder konverteres automatisk ti
 instructionsNoConvert = "Skann med telefonkameraet for å laste opp filer."
 pollingError = "Feil ved kontroll av filer"
 sessionCreateError = "Kunne ikke opprette økt"
-sessionId = "Økt-ID"
 title = "Last opp fra mobil"
 
 [multiTool]
-addFile = "Legg til fil"
-delete = "Slett"
-deleteSelected = "Slett valgte"
-deselectAll = "Opphev alle valg"
-downloadAll = "Eksporter"
-downloadSelected = "Eksporter valgte"
-dragDropMessage = "Side(r) valgt"
-header = "PDF-multiverktøy"
-insertPageBreak = "Sett inn sideskift"
-moveLeft = "Flytt til venstre"
-moveRight = "Flytt til høyre"
-page = "Side"
-redo = "Redo"
-rotateLeft = "Roter til venstre"
-rotateRight = "Roter til høyre"
-selectAll = "Velg alle"
-selectedPages = "Valgte sider"
-selectPages = "Sidevalg"
-split = "Del opp"
 tags = "Multi Verktøy,Multi operasjon,UI,klikk dra,frontend,klientside,interaktiv,bevegelig"
 title = "PDF-multiverktøy"
-undo = "Undo"
-uploadPrompts = "Filnavn"
-
-[multiTool-advert]
-message = "Denne funksjonen er også tilgjengelig på vår <a href=\"{0}\">multiverktøy-side</a>. Sjekk den ut for forbedret side-for-side-grensesnitt og ekstra funksjoner!"
 
 [navbar]
-allTools = "Verktøy"
-darkmode = "Mørk Modus"
-favorite = "Favoritter"
-language = "Språk"
-multiTool = "Multi Verktøy"
-recent = "Nye og nylig oppdaterte"
 search = "Søk"
-settings = "Innstillinger"
-
-[navbar.sections]
-advance = "Avansert"
-convertFrom = "Konverter fra PDF"
-convertTo = "Konverter til PDF"
-edit = "Vis & Rediger"
-organize = "Organisere"
-popular = "Populært"
-security = "Signer & Sikkerhet"
 
 [oauth.error]
 message = "Autentiseringen var ikke vellykket. Du kan lukke dette vinduet og prøve igjen."
@@ -5213,12 +4713,36 @@ title = "Autentisering mislyktes"
 message = "Du kan lukke dette vinduet og gå tilbake til Stirling PDF."
 title = "Autentisering vellykket"
 
+[oauthConsent]
+approve = "Allow access"
+approving = "Allowing..."
+decisionFailed = "Could not submit your decision. Please try again."
+deny = "Deny"
+denying = "Denying..."
+loadFailed = "This authorization request is invalid or has expired. Close this tab and try connecting again from the app."
+loading = "Loading authorization request..."
+missingId = "Missing authorization request. Start the connection from your app and try again."
+redirecting = "Returning you to the app..."
+requesting = "{{app}} wants to access your Stirling PDF account"
+scopesIntro = "This will allow {{app}} to:"
+signedInAs = "Signed in as {{name}}"
+signInButton = "Sign in to continue"
+signInPrompt = "Sign in to your Stirling PDF account to continue connecting the app."
+title = "Authorize access"
+unknownApp = "A third-party application"
+
+[oauthConsent.access]
+actAsYou = "Act as you - everything {{app}} does runs under your account and counts towards your usage"
+tools = "Use your Stirling PDF tools on your behalf - convert, edit, sign, secure and process your documents"
+
+[oauthConsent.scope]
+email = "See your email address"
+openid = "Confirm your identity"
+phone = "See your phone number"
+profile = "See your basic profile information"
+
 [ocr]
-credit = "Denne tjenesten bruker qpdf og Tesseract for OCR."
 desc = "Rydd opp skanninger og oppdag tekst fra bilder i en PDF og legg den til som tekst."
-header = "Rens av skanning / OCR (Optisk tegngjenkjenning)"
-help = "Vennligst les denne dokumentasjonen for hvordan du bruker dette for andre språk og/eller bruk utenfor Docker."
-submit = "Behandle PDF med OCR"
 tags = "gjenkjenning,tekst,bilde,skann,les,identifisere,deteksjon,redigerbar"
 title = "OCR / Rens av skanning"
 
@@ -5235,20 +4759,6 @@ submit = "Kjør OCR og gjennomgå"
 
 [ocr.results]
 title = "OCR-resultater"
-
-[ocr.selectText]
-1 = "Velg språk som skal oppdages innenfor PDF-en (De oppførte er de som for øyeblikket er oppdaget):"
-10 = "OCR-modus"
-11 = "Fjern bilder etter OCR (Fjerner ALLE bilder, kun nyttig hvis det er en del av konverteringsprosessen)"
-12 = "Renderingstype (Avansert)"
-2 = "Produser tekstfil som inneholder OCR-tekst sammen med OCR-ert PDF"
-3 = "Korriger sider som ble skannet med skjev vinkel ved å rotere dem tilbake på plass"
-4 = "Rens siden slik at det er mindre sannsynlig at OCR vil finne tekst i bakgrunnsstøy. (Ingen utdataendring)"
-5 = "Rens siden slik at det er mindre sannsynlig at OCR vil finne tekst i bakgrunnsstøy, opprettholder rensing i utdataen."
-6 = "Ignorer sider som har interaktiv tekst på dem, OCR kun sider som er bilder"
-7 = "Tving OCR, vil OCR hver side og fjerne alle originale tekstelementer"
-8 = "Normal (Vil gi feil hvis PDF inneholder tekst)"
-9 = "Tilleggsinnstillinger"
 
 [ocr.settings]
 title = "Innstillinger"
@@ -5327,18 +4837,11 @@ filesButton = "Knappen <strong>Filer</strong> på hurtigtilgangslinjen lar deg l
 fileSources = "Du kan laste opp nye filer eller få tilgang til nylige filer herfra. For omvisningen bruker vi en eksempelfil."
 finish = "Fullfør"
 next = "Neste"
-pageEditor = "<strong>Sideeditoren</strong> lar deg utføre ulike operasjoner på sidene i PDF-ene dine, som å endre rekkefølge, rotere og slette."
 pinButton = "Du kan bruke <strong>Fest</strong>-knappen hvis du heller vil at filene dine skal forbli aktive etter å ha kjørt verktøy på dem."
-previous = "Forrige"
 results = "Etter at verktøyet er ferdig kjørt, vil trinnet <strong>Gjennomgang</strong> vise en forhåndsvisning av resultatene i dette panelet, og la deg angre operasjonen eller laste ned filen. "
 runButton = "Når verktøyet er konfigurert, lar denne knappen deg kjøre verktøyet på alle de valgte PDF-ene."
-selectControls = "<strong>Høyrepanelet</strong> inneholder knapper for raskt å velge/fravelge alle aktive PDF-er, sammen med knapper for å endre appens tema eller språk."
 selectCropTool = "La oss velge <strong>Beskjær</strong>-verktøyet for å demonstrere hvordan du bruker et av verktøyene."
-startTour = "Start omvisning"
-startTourDescription = "Ta en guidet tur gjennom Stirling PDF sine nøkkelfunksjoner"
 toolInterface = "Dette er <strong>Beskjær</strong>-verktøyets grensesnitt. Som du ser, er det ikke mye der fordi vi ikke har lagt til noen PDF-filer å jobbe med ennå."
-viewer = "<strong>Visning</strong> lar deg lese og kommentere PDF-ene dine."
-viewSwitcher = "Bruk disse kontrollene for å velge hvordan du vil vise PDF-ene dine."
 workbench = "Dette er <strong>Arbeidsbenken</strong> - hovedområdet der du viser og redigerer PDF-ene dine."
 wrapUp = "Da er du klar! Du har lært om hovedområdene i appen og hvordan du bruker dem. Klikk på <strong>Hjelp</strong>-knappen når som helst for å se denne omvisningen igjen."
 
@@ -5355,15 +4858,6 @@ body = "Stirling fungerer best som en skrivebordsapp. Du kan bruke den offline, 
 title = "Last ned"
 titleWithOs = "Last ned for {{osLabel}}"
 
-[onboarding.freeTrial]
-afterTrialWithoutPayment = "Når prøveperioden avsluttes, fortsetter du med gratisnivået vårt. Legg til en betalingsmetode for å beholde Pro-tilgang."
-afterTrialWithPayment = "Pro-abonnementet ditt begynner automatisk når prøveperioden slutter."
-body = "Du har full tilgang til Stirling PDF Pro-funksjoner under prøveperioden. Nyt ubegrensede konverteringer, større filstørrelser og prioritert behandling."
-daysRemaining = "{{days}} dager igjen"
-daysRemainingSingular = "{{days}} dag igjen"
-title = "Din 30-dagers Pro-prøveperiode"
-trialEnds = "Prøveperioden slutter {{date}}"
-
 [onboarding.mfa]
 authenticationCode = "Autentiseringskode"
 qrCodeLoading = "Genererer QR-koden din…"
@@ -5374,6 +4868,22 @@ adminBodyLoginEnabled = "Som admin kan du administrere brukere, konfigurere inns
 adminTitle = "Admin-oversikt"
 userBody = "Inviter teammedlemmer, tildel roller og hold dokumentene organiserte i et sikkert arbeidsområde. Aktiver innloggingsmodus når du er klar til å vokse utover solobruk."
 userTitle = "Planoversikt"
+
+[onboarding.saas.freeEditor]
+freeLine = "The editor is now <free>completely free</free>."
+premium = "We've added loads of new features, including <strong>Policies</strong> and <strong>Agent Chat</strong>."
+title = "Welcome to Stirling"
+
+[onboarding.saas.team]
+addButton = "Add"
+createBody = "Work on documents together: teammates share files, automations and your plan. Add the first member by email to create your team."
+createTitle = "Create your team"
+inviteBody = "Everyone on your team shares files, automations and your plan. Add teammates by email and they'll get an invite."
+inviteTitle = "Invite members to your team"
+
+[onboarding.saas.usage]
+body = "Automations, AI and API requests draw from your free allowance. Manual editing never counts against it."
+title = "Your free Processor allowance"
 
 [onboarding.securityCheck]
 message = "Applikasjonen har nylig gjennomgått betydelige endringer. Serveradministratorens oppmerksomhet kan være nødvendig. Bekreft rollen din for å fortsette."
@@ -5387,20 +4897,11 @@ freeTitle = "Serverlisens"
 overLimitBody = "Lisensieringen vår tillater opptil <strong>{{freeTierLimit}}</strong> brukere gratis per server. Du har <strong>{{overLimitUserCopy}}</strong> Stirling-brukere. For å fortsette uten avbrudd, oppgrader til Stirling Server-planen – <strong>ubegrensede plasser</strong>, PDF-tekstredigering og full admin-kontroll for $99/server/mnd."
 overLimitTitle = "Serverlisens kreves"
 seePlans = "Se planer →"
-skip = "Hopp over nå"
 upgrade = "Oppgrader nå →"
 
 [onboarding.tourOverview]
 body = "Stirling PDF V2 leveres med dusinvis av verktøy og et fornyet grensesnitt. Ta en rask omvisning for å se hva som er endret og hvor du finner funksjonene du trenger."
 title = "Omvisningsoversikt"
-
-[onboarding.welcomeModal]
-description = "Vil du ta en rask 1-minutts omvisning for å lære nøkkelfunksjonene og hvordan du kommer i gang?"
-dontShowAgain = "Ikke vis igjen"
-helpHint = "Du kan alltid åpne denne omvisningen senere fra <strong>Hjelp</strong>-knappen nederst til venstre."
-maybeLater = "Kanskje senere"
-startTour = "Start omvisning"
-title = "Velkommen til Stirling PDF!"
 
 [onboarding.welcomeSlide]
 body = "Stirling PDF er nå klart for team i alle størrelser. Denne oppdateringen inkluderer et nytt oppsett, kraftige nye admin-funksjoner og vår mest etterspurte funksjon – <strong>Rediger tekst</strong>."
@@ -5417,19 +4918,14 @@ wrapUp = "Det er det som er nytt i V2. Åpne <strong>Omvisninger</strong>-menyen
 
 [overlay-pdfs]
 desc = "Legg én PDF over en annen"
-header = "Overlegg PDF-filer"
 submit = "Send inn"
 tags = "overlay"
 title = "Overlegg PDF-er"
-
-[overlay-pdfs.baseFile]
-label = "Velg grunnleggende PDF-fil"
 
 [overlay-pdfs.counts]
 item = "Antall for fil"
 label = "Antall overlegg (for fast gjentakende modus)"
 noFiles = "Legg til overleggsfiler for å konfigurere antall"
-placeholder = "Skriv inn komma-separerte tellinger (f.eks. 2,3,1)"
 
 [overlay-pdfs.error]
 failed = "Det oppstod en feil under overlegg av PDF-er."
@@ -5487,23 +4983,7 @@ deselectAll = "Velg ingen"
 selectAll = "Velg alle"
 
 [pageEditor]
-actualSize = "Faktisk størrelse"
-addFileNotImplemented = "Legg til fil er ikke implementert i demoen"
-closePdf = "Lukk PDF"
-deleted = "Slettet:"
-fitToWidth = "Tilpass til bredde"
-insertedPageBreak = "Satte inn sideskift ved:"
-movedLeft = "Flyttet til venstre:"
-movedRight = "Flyttet til høyre:"
-noPdfLoaded = "Ingen PDF lastet inn. Last opp en PDF for å redigere."
-reset = "Tilbakestill endringer"
-rotatedLeft = "Roterte til venstre:"
-rotatedRight = "Roterte til høyre:"
-save = "Lagre endringer"
-splitAt = "Delt ved:"
 title = "Sideeditor"
-zoomIn = "Zoom inn"
-zoomOut = "Zoom ut"
 
 [pageEditor.emptyState]
 body = "Legg til filer for å begynne å redigere sider"
@@ -5517,9 +4997,6 @@ rotateRight = "Roter valgte mot høyre"
 undo = "Angre"
 
 [pageExtracter]
-header = "Trekk ut Sider"
-placeholder = "(f.eks. 1,2,8 eller 4,7,12-16 eller 2n-1)"
-submit = "Trekk ut"
 title = "Trekk ut Sider"
 
 [pageLayout]
@@ -5528,7 +5005,6 @@ borderWidth = "Kanttykkelse"
 bottom = "Nedre marg"
 cols = "Kolonner"
 colsPlaceholder = "Angi kolonner"
-header = "Flersideoppsett"
 innerMargin = "Indre marg"
 left = "Venstre marg"
 pagesPerSheet = "Sider per ark:"
@@ -5618,16 +5094,6 @@ label = "Leseretning:"
 ltr = "Venstre til høyre"
 rtl = "Høyre til venstre"
 
-[pageLayout.tooltip.addBorder]
-text = "Tegner kantlinjer rundt hver siderute for skjæreguider eller visuell separasjon."
-title = "Legg til kanter"
-
-[pageLayout.tooltip.arrangement]
-bullet1 = "Etter rader: Fyll rad for rad (venstre-til-høyre eller høyre-til-venstre)."
-bullet2 = "Etter kolonner: Fyll ovenfra og ned, kolonne for kolonne."
-text = "Styrer rekkefølgen sidene fyller rutenettet:"
-title = "Sidearrangement"
-
 [pageLayout.tooltip.header]
 title = "Veiledning for sideoppsett"
 
@@ -5637,12 +5103,6 @@ bullet2 = "Egendefinert: Angi rader og kolonner manuelt."
 text = "Velg hvordan rutenettet konfigureres:"
 title = "Modus"
 
-[pageLayout.tooltip.orientation]
-bullet1 = "Stående: Høyere enn bred."
-bullet2 = "Liggende: Bredere enn høyt."
-text = "Angir retningen på utdataarket:"
-title = "Retning"
-
 [pageLayout.tooltip.overview]
 text = "Plasser flere sider på ett ark for utdelinger eller for å spare papir."
 title = "Hva er sideoppsett?"
@@ -5651,44 +5111,21 @@ title = "Hva er sideoppsett?"
 text = "Velg hvor mange sider per ark (f.eks. 4 → 2×2, 9 → 3×3)."
 title = "Sider per ark (standardmodus)"
 
-[pageLayout.tooltip.readingDirection]
-bullet1 = "LTR: Venstre til høyre."
-bullet2 = "RTL: Høyre til venstre."
-text = "Styrer den horisontale rekkefølgen på sider:"
-title = "Leseretning"
-
 [pageLayout.tooltip.rowsCols]
 text = "Angi nøyaktige rutenettmål. Totalt sider per ark = rader × kolonner."
 title = "Rader og kolonner (egendefinert modus)"
 
 [pageRemover]
-header = "PDF-sidefjerner"
-pagesToDelete = "Sider som skal slettes (Skriv inn en kommaseparert liste over sidenumre):"
-placeholder = "(f.eks. 1,2,6 eller 1-10,15-30)"
-submit = "Slett sider"
 title = "Sletting av sider"
 
 [pageSelection.tooltip]
 description = "Velg hvilke sider som skal brukes for operasjonen. Støtter enkeltsider, intervaller, formler og nøkkelordet all."
-
-[pageSelection.tooltip.advanced]
-title = "Avanserte funksjoner"
-
-[pageSelection.tooltip.basic]
-bullet1 = "Enkeltsider: 1,3,5"
-bullet2 = "Sideintervaller: 3-6 eller 10-15"
-bullet3 = "Alle sider: all"
-text = "Velg bestemte sider fra PDF-dokumentet ved å bruke enkel syntaks."
-title = "Grunnleggende bruk"
 
 [pageSelection.tooltip.complex]
 bullet1 = "<strong>1,3-5,8,2n</strong> → sidene 1, 3–5, 8, samt partallssidene"
 bullet2 = "<strong>10-,2n-1</strong> → fra side 10 til slutt + oddetallssidene"
 description = "Bland ulike typer."
 title = "Komplekse kombinasjoner"
-
-[pageSelection.tooltip.examples]
-title = "Eksempler"
 
 [pageSelection.tooltip.header]
 title = "Veiledning for sidevalg"
@@ -5707,13 +5144,6 @@ bullet4 = "<strong>4n-1</strong> → sidene 3, 7, 11, 15…"
 description = "Bruk n i formler for mønstre."
 title = "Matematiske funksjoner"
 
-[pageSelection.tooltip.operators]
-and = "AND: & or \"and\" — krever begge betingelser (f.eks. 1-50 & even)"
-comma = "Komma: , eller | — kombinerer utvalg (f.eks. 1-10, 20)"
-not = "NOT: ! or \"not\" — ekskluderer sider (f.eks. 3n & not 30)"
-text = "AND har høyere presedens enn komma. NOT gjelder innenfor dokumentområdet."
-title = "Operatorer"
-
 [pageSelection.tooltip.ranges]
 bullet1 = "<strong>3-6</strong> → velger sidene 3–6"
 bullet2 = "<strong>10-15</strong> → velger sidene 10–15"
@@ -5725,53 +5155,225 @@ title = "Sideintervaller"
 bullet1 = "<strong>all</strong> → velger alle sider"
 title = "Spesielle nøkkelord"
 
-[pageSelection.tooltip.syntax]
-text = "Bruk tall, intervaller, nøkkelord og progresjoner (n starter på 0). Parenteser støttes."
-title = "Grunnleggende syntaks"
+[payg.activity]
+docs = "docs"
+empty = "No billable activity yet this period."
+subtitle = "Only AI and automation draw from your budget. Everyday tools are free and aren't listed here."
+title = "Recent billable activity"
 
-[pageSelection.tooltip.syntax.bullets]
-keywords = "Nøkkelord: odd, even"
-numbers = "Tall/intervaller: 5, 10-20"
-progressions = "Progresjoner: 3n, 4n+1"
+[payg.cap]
+amount = "Cap amount"
+custom = "Custom"
+docsEstimate = "≈ {{docs}} processed PDFs / month"
+docsRate = "at {{rate}} / PDF"
+noCapDesc = "Usage is billed without an upper limit. You can re-enable a cap at any time."
+noCapLabel = "No cap"
+noneShort = "No cap"
+perMonth = "/ month"
+save = "Update cap"
+subtitle = "Set your maximum spend. We convert this to PDFs using the current price tier."
+title = "Monthly spending cap"
 
-[pageSelection.tooltip.tips]
-bullet1 = "Sidenumre starter på 1 (ikke 0)"
-bullet2 = "Mellomrom fjernes automatisk"
-bullet3 = "Ugyldige uttrykk ignoreres"
-text = "Husk disse retningslinjene:"
-title = "Tips"
+[payg.checkout]
+connecting = "Connecting to Stripe…"
+errorTitle = "Stripe error"
+
+[payg.checkout.error]
+startFailed = "Couldn't start checkout session"
+
+[payg.checkout.mock]
+backend = "Backend is in mock mode; no real Stripe session was created."
+continue = "Continue with mock subscription"
+noKey = "VITE_STRIPE_PUBLISHABLE_KEY is unset. Real iframe mounts here once configured."
+title = "Stripe Embedded Checkout (mock mode)"
+
+[payg.confirm]
+body = "Your team can now run automation, AI, and API operations beyond your 500 free PDFs."
+capValue = "{{symbol}}{{amount}} / month"
+noCap = "No cap"
+note = "You can change your cap, cancel, or open the Stripe customer portal any time from this page."
+summaryLabel = "Monthly ceiling"
+title = "Welcome to the Processor plan"
+
+[payg.docHelp]
+billable = "Only automation runs, AI tools, and API calls count. Manual tools in the editor are always free."
+chains = "Running the same file through several steps of one automation counts it once, not once per step."
+perFile = "Each file you process counts as one PDF. Very long or very large files can count as more than one."
+refunds = "If a job fails on its first step, the PDF is credited back automatically."
+toggle = "What counts as a PDF?"
+
+[payg.error]
+body = "We couldn't reach the billing service. Refresh the page to try again."
+title = "Couldn't load your plan"
+
+[payg.free.cta]
+benefit1Body = "chain tools, schedule runs, batch process"
+benefit1Title = "Automation pipelines"
+benefit2Body = "summarize, classify, redact, AI-OCR"
+benefit2Title = "AI tools"
+benefit3Body = "call any Stirling endpoint programmatically"
+benefit3Title = "API access"
+button = "Turn on Processor →"
+reassurance = "No minimum · Set a $0 cap to test · Cancel anytime"
+subtitle = "Keep going past your 500 free PDFs with automation, AI, and the API. Set a monthly ceiling, so you stay in control."
+title = "Turn on the Processor plan"
+
+[payg.free.editor]
+eyebrow = "Editor plan · Always free"
+
+[payg.free.header]
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+freeTitle = "Unlimited PDF editing"
+
+[payg.free.hero]
+capSuffix = "/ {{limit}} free PDFs"
+metaCategories = "Automation · AI · API requests"
+
+[payg.free.member]
+ownerOnly = "Only your team owner can turn on Processor. Manual tools stay free for you to use as much as you like."
+
+[payg.free.proc]
+eyebrow = "Processor plan · metered"
+
+[payg.free.state]
+approachingLimit = "Approaching limit"
+limitReached = "Limit reached"
+plentyLeft = "Plenty left"
+
+[payg.gates]
+ai = "AI tools (AI Create, suggestions, AI-OCR)"
+automation = "Automations & pipelines"
+client = "Browser-only tools (viewer, page editor, file management)"
+offsite = "Server tools (compress, OCR, convert, watermark…)"
+pauses = "pauses at cap"
+title = "What happens when the cap is reached"
+
+[payg.header]
+eyebrow = "Processor plan · {{start}} – {{end}}"
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+freeLabel = "Always free"
+freeTitle = "Unlimited PDF editing"
+meterBody = "{{limit}} free PDFs to start, then billed per PDF up to your cap."
+meterLabel = "Metered"
+meterTitle = "Automation · AI · API"
+
+[payg.member]
+askLeader = "Only your team owner can change the cap."
+
+[payg.members]
+docs = "PDFs"
+subtitle = "Billable PDFs each teammate has processed this period."
+title = "Team member usage"
+
+[payg.role]
+leader = "Team owner"
+member = "Member"
+
+[payg.signupRequired]
+body = "Stirling PDF gives every signed-up account 500 free operations, enough to keep most workflows humming without paying a cent. You're currently using Stirling as a guest, which doesn't include billable tools like AI, automations, or hosted processing."
+cancel = "Not now"
+cta = "Sign up free"
+subtext = "Creating an account is free and takes a few seconds. No credit card required."
+title = "Sign up to use {{category}}"
+
+[payg.signupRequired.category]
+ai = "AI features"
+api = "this tool"
+automation = "automations"
+default = "this feature"
+
+[payg.spendCapMeter]
+capSuffix = "/ {{amount}} cap"
+metaCategories = "Automation · AI · API spend"
+resets = "Resets each billing period"
+
+[payg.state]
+degraded = "Cap reached"
+full = "Healthy"
+warned = "Approaching cap"
+
+[payg.stripe]
+open = "Open billing portal"
+subtitle = "Receipts, invoices, payment method, billing currency."
+title = "Manage billing in Stripe"
+
+[payg.stripe.toast.unavailable]
+body = "Billing portal isn't available right now. Try again in a moment."
+title = "Billing portal unavailable"
+
+[payg.upgrade]
+backAria = "Back"
+closeAria = "Close"
+
+[payg.upgrade.button]
+cancel = "Cancel"
+continue = "Continue →"
+finish = "Finish"
+
+[payg.upgrade.cap]
+help = "We'll never charge above this. Set $0 if you want to keep everything free while testing."
+title = "Set your monthly spend ceiling"
+usdNote = "Estimated in USD. You can adjust your cap any time after subscribing, in your own currency."
+
+[payg.upgrade.checkout]
+capValue = "{{symbol}}{{amount}} / month"
+edit = "Edit"
+help = "Stripe handles your card details. Stirling never sees them."
+loading = "Loading checkout…"
+noCap = "No cap"
+title = "Add your payment method"
+
+[payg.upgrade.help]
+aiBody = "summarize, classify, redact, AI-OCR"
+aiTitle = "AI tools"
+apiBody = "programmatic access to any Stirling endpoint"
+apiTitle = "API calls"
+automationBody = "chained tools or scheduled runs that don't need clicks"
+automationTitle = "Automation pipelines"
+footnote = "Manual tools (viewing, editing, merging, splitting, watermarking, compressing, manual OCR) are always free, even past 500. The distinction is the type of work, not where you click."
+title = "What we count toward billing"
+
+[payg.upgrade.promise]
+body = "You only pay for automation pipelines, AI tools, and API calls, the work that goes beyond a single click. Edit, merge, split, sign, compress as much as you want, no charge."
+highlight = "Manual tools stay free, always."
+
+[payg.upgrade.steps]
+cap = "Set monthly ceiling"
+payment = "Add payment method"
+
+[payg.upgrade.title]
+confirm = "You're subscribed"
+default = "Upgrade to Processor plan"
+
+[payg.usage]
+breakdown = "AI {{ai}} • Automation {{automation}} • API {{api}}"
+capLine = "{{cap}}/mo cap"
+estBill = "≈ {{amount}} so far this period"
+firstFree = "First {{free}} free"
+noCap = "No monthly cap"
+ofLimitProcessed = "/ {{limit}} PDFs processed"
+processed = "PDFs processed"
+resetsIn = "Resets in {{days}} days"
+resetsTomorrow = "Resets tomorrow"
+thisPeriod = "This billing period"
 
 [payment]
-autoClose = "Dette vinduet lukkes automatisk..."
-billingPeriod = "Faktureringsperiode"
 canCloseWindow = "Du kan nå lukke dette vinduet."
-checkoutInstructions = "Fullfør kjøpet i nettleservinduet som nettopp åpnet. Etter at betalingen er fullført, kom tilbake hit og klikk knappen nedenfor for å oppdatere faktureringsinformasjonen."
-checkoutOpened = "Kasse åpnet i nettleser"
-closeLater = "Jeg gjør dette senere"
-emailInvalid = "Angi en gyldig e-postadresse"
-enterpriseNote = "Plasser kan justeres i kassen (1–1000)."
 error = "Betalingsfeil"
 generatingLicense = "Genererer lisensnøkkel..."
-installationId = "Installasjons-ID"
 licenseActivated = "Lisens aktivert! Lisensnøkkelen er lagret. En bekreftelse er sendt til den registrerte e-posten din."
 licenseDelayed = "Betaling vellykket! Lisensen din genereres. Du mottar snart en e-post med lisensnøkkelen. Kontakt support hvis du ikke mottar den innen 10 minutter."
 licenseDelayedMessage = "Lisensnøkkelen genereres. Sjekk e-posten din snart eller kontakt support."
 licenseInstructions = "Dette er lagt til i installasjonen din. Du får også en kopi på e-post."
 licenseKey = "Lisensnøkkelen din"
-licenseKeyProcessing = "Behandler lisensnøkkel"
 licensePollingError = "Betaling vellykket, men vi kunne ikke hente lisensnøkkelen automatisk. Sjekk e-posten din eller kontakt support med betalingsbekreftelsen."
 licenseRetrievalError = "Betaling vellykket, men henting av lisens mislyktes. Du får lisensnøkkelen via e-post. Kontakt support hvis du ikke mottar den innen 10 minutter."
 licenseSaveError = "Kunne ikke lagre lisensnøkkel. Kontakt support med lisensnøkkelen din for å fullføre aktiveringen."
 monthly = "Månedlig"
 paymentCanceled = "Betalingen ble avbrutt. Ingen kostnader påløp."
-paymentSuccess = "Betaling vellykket! Henter lisensnøkkelen din..."
 perMonth = "/måned"
-perYear = "/år"
 preparing = "Forbereder kassen..."
 redirecting = "Videresender til sikker betaling..."
-refreshBilling = "Jeg har fullført betalingen – oppdater fakturering"
-stripeNotConfigured = "Stripe ikke konfigurert"
-stripeNotConfiguredMessage = "Stripe-betalingsintegrasjon er ikke konfigurert. Kontakt administratoren din."
 success = "Betaling vellykket!"
 successMessage = "Abonnementet ditt er aktivert. Du vil snart motta en bekreftelses-e-post."
 syncError = "Betaling vellykket, men lisenssynk mislyktes. Lisensen oppdateres snart. Kontakt support hvis problemet vedvarer."
@@ -5788,25 +5390,17 @@ description = "Vi bruker denne til å sende lisensnøkkelen og kvitteringer."
 emailLabel = "E-postadresse"
 emailPlaceholder = "din@email.com"
 modalTitle = "Kom i gang – {{planName}}"
-title = "Skriv inn e-posten din"
 
 [payment.paymentStage]
-backToPlan = "Tilbake til planvalg"
 modalTitle = "Fullfør betaling – {{planName}}"
-selectedPlan = "Valgt plan"
 
 [payment.planStage]
-basePrice = "Grunnpris"
 billedYearly = "Faktureres årlig med {{currency}}{{amount}}"
 modalTitle = "Velg faktureringsperiode – {{planName}}"
 savePercent = "Spar {{percent}}%"
 savingsAmount = "Du sparer {{amount}}"
-savingsNote = "Spar {{percent}}% med årlig fakturering"
-seatPrice = "Per plass"
 selectMonthly = "Velg månedlig"
 selectYearly = "Velg årlig"
-title = "Velg faktureringsperiode"
-totalForSeats = "Totalt ({{count}} plasser)"
 
 [pdfCommentAgent]
 submit = "Generer kommentarer"
@@ -5827,24 +5421,9 @@ title = "Kommentert PDF"
 title = "Kommentarinstruksjoner"
 
 [pdfOrganiser]
-header = "PDF-sideorganisering"
 placeholder = "(f.eks. 1,3,2 eller 4-8,2,10-12 eller 2n-1)"
-submit = "Omorganiser sider"
 tags = "dupleks,par,single,sorter,flytt"
 title = "Sideorganisering"
-
-[pdfOrganiser.desc]
-BOOKLET_SORT = "Ordne sider for hefteutskrift (siste, første, andre, nest siste, …)."
-CUSTOM = "Bruk en egendefinert sekvens av sidetall eller uttrykk for å definere en ny rekkefølge."
-DUPLEX_SORT = "Flett forsider og deretter baksider som om en dupleks-skanner skannet alle forsider, deretter alle baksider (1, n, 2, n-1, …)."
-DUPLICATE = "Dupliser hver side i henhold til antallet i den egendefinerte rekkefølgen (f.eks. 4 duplikater gjør hver side 4×)."
-ODD_EVEN_MERGE = "Slå sammen to PDF-er ved å alternere sider: odde fra den første, like fra den andre."
-ODD_EVEN_SPLIT = "Del dokumentet i to utdata: alle odde sider og alle like sider."
-REMOVE_FIRST = "Fjern den første siden fra dokumentet."
-REMOVE_FIRST_AND_LAST = "Fjern både den første og den siste siden fra dokumentet."
-REMOVE_LAST = "Fjern den siste siden fra dokumentet."
-REVERSE_ORDER = "Snu dokumentet slik at siste side blir først, og så videre."
-SIDE_STITCH_BOOKLET_SORT = "Ordne sider for hefteutskrift med sidehefting (optimalisert for innbinding på siden)."
 
 [pdfOrganiser.mode]
 1 = "Egendefinert sideorden"
@@ -5881,32 +5460,22 @@ imageLabel = "Plassert bilde"
 noTextOnPage = "Ingen redigerbar tekst ble oppdaget på denne siden."
 pagePreviewAlt = "Forhåndsvisning av side"
 pageSummary = "Side {{number}} av {{total}}"
+tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF JSON-redigerer"
 viewLabel = "PDF-redigerer"
 
 [pdfTextEditor.actions]
 applyChanges = "Bruk endringer"
 downloadCopy = "Last ned kopi"
-downloadJson = "Last ned JSON"
-generatePdf = "Generer PDF"
 reset = "Tilbakestill endringer"
-saveChanges = "Lagre endringer"
 
 [pdfTextEditor.badges]
 earlyAccess = "Tidlig tilgang"
 modified = "Redigert"
-unsaved = "Redigert"
-
-[pdfTextEditor.disclaimer]
-alpha = "Denne alfa-visningen er fortsatt under utvikling—visse skrifttyper, farger, gjennomsiktighetseffekter og layoutelementer kan endres litt. Kontroller den genererte PDF-en før deling."
-heading = "Begrensninger i forhåndsvisning"
-previewVariance = "Noen visuelle elementer (som tabellkanter, former eller merknaders utseende) kan avvike i forhåndsvisningen. Den eksporterte PDF-en beholder de opprinnelige tegnekommandoene når det er mulig."
-textFocus = "Dette arbeidsområdet fokuserer på å redigere tekst og flytte innebygde bilder. Kompleks sidegrafikk, skjemawidgets og lagdelte grafiske elementer bevares for eksport, men er ikke fullt redigerbare her."
 
 [pdfTextEditor.empty]
 dropzone = "Dra og slipp en PDF- eller JSON-fil her, eller klikk for å bla gjennom"
 dropzoneWithFiles = "Velg en fil fra fanen Filer, eller dra og slipp en PDF- eller JSON-fil her, eller klikk for å bla gjennom"
-subtitle = "Last inn en PDF- eller JSON-fil for å begynne å redigere tekstinnhold."
 title = "Ingen dokument lastet inn"
 
 [pdfTextEditor.errors]
@@ -5968,12 +5537,13 @@ paragraphDescription = "Grupperer justerte linjer til flerlinjede avsnittstekstb
 singleLineDescription = "Beholder hver PDF-tekstlinje som en egen tekstboks."
 title = "Tekstgrupperingsmodus"
 
-[pdfTextEditor.options.manualGrouping]
-descriptionInline = "Tips: Hold Ctrl (Cmd) eller Shift for å multivelge tekstbokser. En flytende verktøylinje vises over utvalget slik at du kan slå sammen, oppheve gruppering eller justere bredder."
-
 [pdfTextEditor.pageType]
 paragraph = "Avsnittsside"
 sparse = "Sparsom tekst"
+
+[pdfTextEditor.stages]
+processing = "Processing"
+uploading = "Uploading"
 
 [pdfTextEditor.tooltip.alpha]
 text = "Denne alpha-visningen er fortsatt under utvikling—visse skrifter, farger, gjennomsiktighetseffekter og layoutdetaljer kan endres litt. Dobbeltsjekk generert PDF før du deler."
@@ -6018,191 +5588,94 @@ title = "Velkommen til PDF Text Editor (Tidlig tilgang)"
 
 [PDFToCSV]
 header = "PDF til CSV"
-prompt = "Velg side for å trekke ut tabell"
-submit = "Trekke ut"
 title = "PDF til CSV"
 
 [PDFToHTML]
-credit = "Denne tjenesten bruker pdftohtml for filkonvertering."
 header = "PDF til HTML"
-submit = "Konverter"
 tags = "web-innhold,nettleservennlig"
 title = "PDF til HTML"
 
 [pdfToImage]
-blackwhite = "Svart-hvitt (kan miste data!)"
-color = "Farge"
-colorType = "Farge type"
-grey = "Gråtone"
-header = "PDF til bilde"
-info = "Python er ikke installert. Kreves for WebP-konvertering."
-multi = "Flere bilder, ett bilde per side"
-placeholder = "(f.eks. 1,2,8 eller 4,7,12-16 eller 2n-1)"
-selectText = "Bildeformat"
-single = "Enkelt stort bilde som kombinerer alle sider"
-singleOrMultiple = "Resultattype for side til bilde"
-submit = "Konverter"
 tags = "konvertering,bilde,jpg,foto"
 title = "PDF til bilde"
 
 [PDFToMarkdown]
 header = "PDF til Markdown"
-submit = "Konverter"
 tags = "markup,web-innhold,transformasjon,konverter"
 title = "PDF til Markdown"
 
 [pdfToPDFA]
-credit = "Denne tjenesten bruker libreoffice for PDF/A-konvertering"
 header = "PDF til PDF/A"
-outputFormat = "Utdataformat"
-pdfWithDigitalSignature = "PDFen inneholder en digital signatur. Denne vil bli fjernet i neste steg."
-submit = "Konverter"
 tags = "arkiv,langtidslagring,standard,konvertering,lagring,bevaring"
-tip = "Fungere for øyeblikket ikke for flere innganger samtidig"
 title = "PDF til PDF/A"
 
 [pdfToPDFX]
-credit = "Denne tjenesten bruker Ghostscript for PDF/X-konvertering"
-header = "PDF til PDF/X"
-outputFormat = "Utdataformat"
-pdfWithDigitalSignature = "PDF-en inneholder en digital signatur. Denne vil bli fjernet i neste trinn."
-submit = "Konverter"
 tags = "utskrift,standard,konvertering,produksjon,trykklargjøring,arkiv"
-tip = "Fungerer for øyeblikket ikke for flere inndata samtidig"
 title = "PDF til PDF/X"
 
 [PDFToPresentation]
-credit = "Denne tjenesten bruker LibreOffice for filkonvertering."
 header = "PDF til Presentasjon"
-submit = "Konverter"
 tags = "slides,visning,office,microsoft"
 title = "PDF til Presentasjon"
-
-[PDFToPresentation.selectText]
-1 = "Utdatafilformat"
 
 [PdfToSinglePage]
 tags = "enkelside"
 
 [pdfToSinglePage]
 description = "Dette verktøyet vil slå sammen alle sidene i PDF-en din til én stor enkeltside. Bredden vil forbli den samme som de opprinnelige sidene, men høyden blir summen av alle sidehøydene."
-filenamePrefix = "enkelt_side"
-header = "PDF Til Enkelt Side"
 submit = "Konverter til Enkelt Side"
+tags = "combine,merge,single,single page,one page,merge to single,combine all,stitch pages,concatenate vertical,long page,poster"
 title = "PDF Til Enkelt Side"
 
 [pdfToSinglePage.error]
 failed = "Det oppstod en feil under konvertering til enkeltside."
 
-[pdfToSinglePage.files]
-placeholder = "Velg en PDF-fil i hovedvisningen for å komme i gang"
-
 [pdfToSinglePage.results]
 title = "Resultater for enkeltside"
 
 [PDFToText]
-credit = "Denne tjenesten bruker LibreOffice for filkonvertering."
 header = "PDF til RTF (Tekst)"
-submit = "Konverter"
 tags = "rikformat,riktekstformat,rik tekst format"
 title = "PDF til RTF (Tekst)"
 
-[PDFToText.selectText]
-1 = "Utdatafilformat"
-
 [PDFToWord]
-credit = "Denne tjenesten bruker LibreOffice for filkonvertering."
 header = "PDF til Word"
-submit = "Konverter"
 tags = "doc,docx,odt,word,transformasjon,format,konvertering,office,microsoft,dokumentfil"
 title = "PDF til Word"
 
-[PDFToWord.selectText]
-1 = "Utdatafilformat"
-
 [PDFToXLSX]
 header = "PDF til Excel"
-prompt = "Velg sider for å hente ut tabeller"
-submit = "Konverter"
 tags = "regneark,excel,xlsx,tabell,ekstraher,konverter"
 title = "PDF til Excel (XLSX)"
 
 [PDFToXML]
-credit = "Denne tjenesten bruker LibreOffice for filkonvertering."
 header = "PDF til XML"
-submit = "Konverter"
 tags = "datauttrekk,strukturert innhold,interop,transformasjon,konverter"
 title = "PDF til XML"
 
 [permissions]
-header = "Endre tillatelser"
-submit = "Endre"
 tags = "les,skriv,rediger,skriv ut"
 title = "Endre tillatelser"
-warning = "Advarsel: For at disse tillatelsene skal være ugjenkallelige, anbefales det å angi dem med et passord via siden for å legge til passord"
-
-[permissions.selectText]
-1 = "Velg PDF for å endre tillatelser"
-10 = "Forhindre utskrift i ulike formater"
-2 = "Tillatelser å sette"
-3 = "Forhindre sammenstilling av dokumentet"
-4 = "Forhindre innholdsekstraksjon"
-5 = "Forhindre ekstraksjon for tilgjengelighet"
-6 = "Forhindre utfylling av skjema"
-7 = "Forhindre modifisering"
-8 = "Forhindre annotasjonsmodifisering"
-9 = "Forhindre utskrift"
 
 [pipeline]
-configureButton = "Konfigurer"
-defaultOption = "Tilpasset"
-deletePrompt = "Er du sikker på at du vil slette denne pipelinen?"
-header = "Pipeline-meny (Beta)"
-help = "Pipeline hjelp"
-scanHelp = "Mappe skanning hjelp"
-submitButton = "Send inn"
 tags = "automatisere,sekvens,skriptet,batch-prosess"
 title = "Pipeline (Avansert)"
-uploadButton = "Last opp tilpasset"
-
-[pipelineOptions]
-addOperationButton = "Legg til operasjon"
-header = "Pipeline konfigurasjon"
-pipelineHeader = "Pipeline:"
-pipelineNameLabel = "Pipeline navn"
-pipelineNamePrompt = "Skriv inn pipeline-navn her"
-saveButton = "Last ned"
-saveForFolderScanning = "Lagre for mappeskanning"
-saveSettings = "Lagre operasjonsinnstillinger"
-selectOperation = "Velg operasjon"
-validateButton = "Valider"
 
 [plan]
 contact = "Kontakt oss"
-currency = "Valuta"
 current = "Gjeldende plan"
-customPricing = "Tilpasset"
 featureComparison = "Funksjonssammenligning"
 from = "Fra"
 hideComparison = "Skjul funksjonssammenligning"
-included = "Inkludert"
-includedInCurrent = "Inkludert i planen din"
 licensedSeats = "Lisensiert: {{count}} plasser"
 manage = "Administrer"
 perMonth = "/måned"
 perSeat = "/plass"
 popular = "Populær"
-purchase = "Kjøp"
-selectCredits = "Velg kreditbeløp"
 selectPlan = "Velg plan"
 showComparison = "Sammenlign alle funksjoner"
-totalCost = "Totalkostnad"
 upgrade = "Oppgrader"
 withServer = "+ Server-plan"
-
-[plan.activePlan]
-subtitle = "Detaljer om ditt nåværende abonnement"
-title = "Aktiv plan"
 
 [plan.api]
 large = "5,000 kreditter"
@@ -6210,12 +5683,7 @@ medium = "1,000 kreditter"
 small = "500 kreditter"
 xsmall = "100 kreditter"
 
-[plan.apiPackages]
-subtitle = "Kjøp API-kreditter for applikasjonene dine"
-title = "API-kredittpakker"
-
 [plan.availablePlans]
-loadError = "Kan ikke laste planpriser. Bruker standardverdier."
 subtitle = "Velg planen som passer dine behov"
 title = "Tilgjengelige planer"
 
@@ -6226,7 +5694,6 @@ highlight3 = "Nyeste funksjoner"
 name = "Enterprise"
 requiresServer = "Krever server"
 requiresServerMessage = "Oppgrader til Server-planen først før du oppgraderer til Enterprise."
-siteLicense = "Site-lisens"
 
 [plan.feature]
 api = "API-tilgang"
@@ -6265,6 +5732,12 @@ highlight3 = "Fellesskapsstøtte"
 included = "Inkludert"
 name = "Gratis"
 
+[plan.freeLimit]
+cta = "View Processor Plan"
+dismiss = "Maybe Later"
+message = "That's your whole free allowance for automation, AI and the API. Seriously impressive! Keep the momentum going for just pennies a day."
+title = "Woah, {{total}} PDFs Processed!"
+
 [plan.highlights]
 advancedIntegrations = "Avanserte integrasjoner"
 allBasicFeatures = "Alle grunnleggende funksjoner"
@@ -6287,12 +5760,8 @@ cta = "Se planer"
 overLimit = "mer enn {{limit}}"
 title = "Grense for gratis selvhostet nådd"
 
-[plan.manageSubscription]
-description = "Administrer abonnement, fakturering og betalingsmetoder"
-
 [plan.period]
 month = "måned"
-perUserPerMonth = "/bruker/måned"
 
 [plan.pro]
 highlight1 = "Ubegrenset verktøybruk"
@@ -6300,18 +5769,18 @@ highlight2 = "Avanserte PDF-verktøy"
 highlight3 = "Ingen vannmerker"
 name = "Pro"
 
+[plan.spendCap]
+cta = "View Spending Limit"
+dismiss = "Not Now"
+message = "You've made the most of this month's cap. That's a load of automation, AI and API work! Bump it up whenever you like to keep going."
+title = "You're on a Roll!"
+
 [plan.static]
 activateLicense = "Aktiver lisensen din"
-checkoutInstructions = "Fullfør kjøpet i Stripe-fanen. Etter betaling, kom tilbake hit og oppdater siden for å aktivere lisensen. Du får også en e-post med lisensnøkkelen din."
-checkoutOpened = "Kassen åpnet"
-contactSales = "Kontakt salg"
 contactToUpgrade = "Kontakt oss for å oppgradere eller tilpasse planen din"
 getLicense = "Skaff serverlisens"
-maxUsers = "Maks brukere"
-message = "Nettfakturering er for øyeblikket ikke konfigurert. For å oppgradere planen din eller administrere abonnementer, vennligst kontakt oss direkte."
 monthlyBilling = "Månedlig fakturering"
 selectPeriod = "Velg fakturaperiode"
-title = "Fakturainformasjon"
 upgradeToEnterprise = "Oppgrader til Enterprise"
 upTo = "Opptil"
 yearlyBilling = "Årlig fakturering"
@@ -6330,32 +5799,111 @@ keyDescription = "Lim inn lisensnøkkelen fra e-posten din"
 success = "Lisens aktivert!"
 successMessage = "Lisensen din er aktivert. Du kan nå lukke dette vinduet."
 
-[plan.team]
-name = "Team"
-siteLicense = "Site-lisens"
+[policies]
+deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
+deleteConfirmTitle = "Delete {{label}} policy?"
 
-[plan.trial]
-badge = "Prøve"
-continueWithFree = "Fortsett med gratis"
-daysRemaining = "Prøveperioden slutter om {{days}} dager"
-endDate = "Utløper: {{date}}"
-expired = "Din prøveperiode er avsluttet"
-expiredMessage = "Din 30-dagers Pro-prøveperiode er utløpt. Abonner på Pro for å fortsette å bruke premiumfunksjoner, eller fortsett med gratisnivået."
-freeTierLimitations = "Gratisnivået inkluderer grunnleggende PDF-verktøy med bruksbegrensninger."
-message = ""
-subscribe = "Abonner på Pro"
-subscribeToPro = "Abonner på Pro"
-subscriptionScheduled = "Abonnement planlagt – starter {{date}}"
-title = "Prøveperiode aktiv"
+[policies.catalog]
+compliance = "Compliance"
+ingestion = "Ingestion"
+retention = "Retention"
+routing = "Routing"
+security = "Security"
+
+[policies.detail]
+editSettings = "Edit Settings"
+enforces = "Enforces"
+managedByOrg = "Managed by your organization. Contact a team leader to change this policy."
+noActivityDescription = "Documents will appear here once this policy runs."
+noActivityTitle = "No activity yet"
+onEveryUpload = "On every upload"
+originalsNote = "Originals stay untouched • Enforced version saved alongside"
+pause = "Pause"
+recentActivity = "Recent Activity"
+resume = "Resume"
+retry = "Retry"
+showLess = "Show less"
+showMore = "Show more"
+statActive = "Active"
+statDataProcessed = "Data processed"
+statDocsEnforced = "Docs enforced"
+statusActive = "Active"
+statusPaused = "Paused"
+
+[policies.fields]
+selectedCount = "{{count}} selected"
+
+[policies.pii]
+fieldLabel = "PII to redact"
+placeholder = "Select PII types"
+
+[policies.sidebar]
+activeCount = "{{count}} active"
+infoAriaLabel = "What is a policy?"
+infoTooltip = "A policy is a fixed set of tools that runs automatically whenever it's triggered — for example when a new document arrives — enforcing rules like redacting PII with no manual steps."
+loading = "Loading…"
+railAriaLabel = "{{label}} policy — {{status}}"
+railSuffixActive = " (Active)"
+railSuffixPaused = " (Paused)"
+setUp = "Set up"
+title = "Policies"
+upgradeToEnterprise = "Upgrade to enterprise"
+
+[policies.status]
+active = "Active"
+paused = "Paused"
+setup = "Set up"
+
+[policies.toolConfig]
+enableAriaLabel = "Enable {{tool}}"
+infoAriaLabel = "What does {{tool}} do?"
+
+[policies.wizard]
+allDocTypesDescription = "Enable the Classification policy to filter by document type."
+allDocTypesTitle = "All document types"
+back = "Back"
+builderDesc = "Build the sequence of tools this policy runs on each document."
+clear = "Clear"
+continue = "Continue"
+docTypesLabel = "Document types"
+edit = "Edit"
+editTitle = "Edit {{label}} Policy"
+enablePolicy = "Enable Policy"
+filenameAutoNumber = "Auto-number"
+filenamePositionAria = "Filename position"
+filenamePrefix = "Prefix"
+filenameSuffix = "Suffix"
+filenameTextAria = "Filename text"
+filenameTextPlaceholder = "Text to add (optional)"
+lockedDescription = "Contact a team leader to change this policy."
+lockedTitle = "Managed by your organization"
+maxRetriesLabel = "Max retries"
+noToolsError = "Add at least one configured tool to the workflow first."
+outputAsLabel = "Output as"
+outputFilenameSubhead = "Output filename"
+outputModeAria = "Output mode"
+outputNewFile = "New file"
+outputNewVersion = "New version"
+outputRetriesLabel = "Output & retries"
+outputSubhead = "Output"
+retryDelayAria = "Retry delay minutes"
+retryDelayLabel = "Retry delay (min)"
+runOnExport = "Export"
+runOnLabel = "Run on"
+runOnSubhead = "Run on"
+runOnUpload = "Upload"
+saveChanges = "Save Changes"
+saveError = "Couldn't save the policy. Please try again."
+setupClassification = "Set up Classification"
+setupTitle = "Set up {{label}} Policy"
+sourcesDesc = "Choose where this policy runs and which document types it applies to."
+sourcesLabel = "Sources"
+stepOf = "Step {{step}} of {{total}}"
+toolChainDesc = "Configure the tools this policy runs on each document."
+typesSelected = "{{count}} types selected"
 
 [printFile]
-header = "Skriv ut fil til skriver"
-submit = "Skriv ut"
 title = "Skriv ut fil"
-
-[printFile.selectText]
-1 = "Velg fil som skal skrives ut"
-2 = "Skriv inn skrivernavn"
 
 [provider.googledrive]
 name = "Google Drive"
@@ -6582,12 +6130,9 @@ accessSelectedFile = "Valgt fil"
 accessSendInvite = "Send invitasjon"
 accessTitle = "Dokumenttilgang"
 accessYou = "Deg"
-account = "Konto"
 activeSessions = "Aktive økter"
 activeTab = "Aktive"
 activity = "Logg"
-adminSettings = "Admin Innst."
-allSessions = "Alle økter"
 allTools = "All Tools"
 automate = "Auto"
 back = "Tilbake"
@@ -6596,7 +6141,6 @@ certSign = "Signer med sertifikat"
 completedSessions = "Fullførte økter"
 completedTab = "Fullført"
 config = "Oppsett"
-createNew = "Opprett ny forespørsel"
 createSession = "Opprett signeringsforespørsel"
 dueDate = "Frist (valgfritt)"
 files = "Filer"
@@ -6620,7 +6164,6 @@ selectUsers = "Velg brukere som skal signere"
 selectUsersPlaceholder = "Velg deltakere ..."
 sendingRequest = "Sender ..."
 settings = "Innst."
-showMeAround = "Vis meg rundt"
 sign = "Signer"
 signatureRequests = "Signeringsforespørsler"
 signYourself = "Signer selv"
@@ -6639,6 +6182,9 @@ whatsNewTourDesc = "Omvisning i oppdatert layout"
 admin = "Se gjennomganger her: Verktøy-omvisning, ny V2-layout-omvisning og admin-omvisning."
 user = "Se gjennomganger her: Verktøy-omvisning og ny V2-layout-omvisning."
 
+[read]
+tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
+
 [redact]
 submit = "Sensurer"
 tags = "Sensurere,Skjule,sverte ut,svart,markør,skjult,manuell"
@@ -6648,7 +6194,6 @@ title = "Manuell Sensurering"
 colorLabel = "Boksfarge"
 convertPDFToImageLabel = "Konverter PDF til PDF-bilde"
 customPaddingLabel = "Egendefinert ekstra utfylling"
-header = "Automatisk sladding"
 useRegexLabel = "Bruk Regex"
 wholeWordSearchLabel = "Søk etter hele ord"
 
@@ -6666,54 +6211,17 @@ title = "Ord som skal sladdes"
 failed = "Det oppstod en feil under sladding av PDF-en."
 
 [redact.manual]
-activate = "Aktiver sladdeverktøy"
-active = "Sladdemodus aktiv"
 apply = "Bruk"
-applyChanges = "Bruk endringer"
-applyRedactions = "Apply Redactions"
 applyWarning = "⚠️ Permanent handling, kan ikke angres og data under blir slettet"
-boxRedaction = "Sladding ved å tegne boks"
 colorLabel = "Farge for sladding"
-colourPicker = "Fargevelger"
 controlsTitle = "Manuelle sladdekontroller"
-convertPDFToImageLabel = "Konverter PDF til PDF-bilde (brukes til å fjerne tekst bak boksen)"
-export = "Eksporter"
-findCurrentOutlineItem = "Finn gjeldende disposisjonselement"
-header = "Manuell sladding"
 instructions = "Velg tekst eller tegn områder på PDF-en for å markere innhold for sladding."
-markArea = "Marker område"
-markText = "Marker tekst"
-nextPage = "Neste side"
-noMarks = "Ingen sladdemerker. Bruk verktøyene ovenfor for å markere innhold for sladding."
-pageBasedRedaction = "Sidebasert sladding"
-pendingLabel = "Venter:"
-previousPage = "Forrige side"
-showAttachments = "Vis vedlegg"
-showDocumentOutline = "Vis dokumentdisposisjon (dobbeltklikk for å utvide/skjule alle elementer)"
-showLayers = "Vis lag (dobbeltklikk for å tilbakestille alle lag til standardtilstanden)"
-showThumbnails = "Vis miniatyrbilder"
-textBasedRedaction = "Tekstbasert sladding"
 title = "Sladdeverktøy"
-toggleSidebar = "Slå av/på sidepanel"
-upload = "Last opp"
-zoom = "Zoom"
-zoomIn = "Zoom inn"
-zoomOut = "Zoom ut"
-
-[redact.manual.pageRedactionNumbers]
-placeholder = "(f.eks. 1,2,8 eller 4,7,12-16 eller 2n-1)"
-title = "Sider"
-
-[redact.manual.redactionColor]
-title = "Sladdefarge"
 
 [redact.modeSelector]
 automatic = "Automatisk"
-automaticDesc = "Sladd tekst basert på søkeord"
 automaticDisabledTooltip = "Velg filer i filbehandleren for å sladde flere filer samtidig"
 manual = "Manuell"
-manualComingSoon = "Manuell sladding kommer snart"
-manualDesc = "Klikk og dra for å sladde bestemte områder"
 mode = "Modus"
 title = "Sladdemetode"
 
@@ -6784,16 +6292,9 @@ title = "Vanlige eksempler"
 title = "Ord som skal sladdes"
 
 [releases]
-footer = "Versjoner"
-header = "Versjonsnotater"
-note = "Versjonsnotater er kun tilgjengelige på engelsk"
 title = "Versjonsnotater"
 
-[releases.current]
-version = "Gjeldende Versjon"
-
 [removeAnnotations]
-header = "Fjern Anmerkninger"
 submit = "Fjern"
 tags = "kommentarer,utheving,notater,markering,fjern"
 title = "Fjern Anmerkninger"
@@ -6803,7 +6304,6 @@ failed = "Det oppstod en feil under fjerning av merknader fra PDF-en."
 
 [removeAnnotations.info]
 description = "Dette verktøyet fjerner alle merknader (kommentarer, uthevinger, notater osv.) fra PDF-dokumentene dine."
-title = "Om fjerning av merknader"
 
 [removeAnnotations.settings]
 title = "Innstillinger"
@@ -6815,8 +6315,8 @@ title = "Hva den gjør"
 title = "Om Fjern merknader"
 
 [removeBlanks]
-header = "Fjern Blank Sider"
 submit = "Fjern Blank Sider"
+tags = "delete,clean,empty,remove blank,delete blank pages,empty pages,white pages,remove empty,clean up,cleanup blank"
 title = "Fjern Blank Sider"
 
 [removeBlanks.error]
@@ -6860,13 +6360,9 @@ title = "Terskel for hvit prosent"
 
 [removeBlanks.whitePercent]
 label = "Terskel for hvit prosent"
-unit = "%"
 
 [removeCertSign]
 description = "Dette verktøyet vil fjerne digitale sertifikatsignaturer fra PDF-dokumentet ditt."
-filenamePrefix = "usignert"
-header = "Fjern det digitale sertifikatet fra PDF-en"
-selectPDF = "Velg en PDF-fil:"
 submit = "Fjern Signatur"
 tags = "autentisere,PEM,P12,offisiell,dechiffrere"
 title = "Fjern Sertifikatsignatur"
@@ -6874,16 +6370,12 @@ title = "Fjern Sertifikatsignatur"
 [removeCertSign.error]
 failed = "Det oppstod en feil under fjerning av sertifikatsignaturer."
 
-[removeCertSign.files]
-placeholder = "Velg en PDF-fil i hovedvisningen for å komme i gang"
-
 [removeCertSign.results]
 title = "Resultater for fjerning av sertifikater"
 
 [removeImage]
-header = "Fjern bilde"
-removeImage = "Fjern bilde"
 submit = "Fjern bilde"
+tags = "remove,delete,clean,remove image,delete image,strip images,remove pictures,delete photos,clean images,reduce size,remove graphics"
 title = "Fjern bilde"
 
 [removeImage.error]
@@ -6895,20 +6387,13 @@ title = "Resultater for fjerning av bilder"
 [removeImagePdf]
 tags = "Fjern Bilde,Sideoperasjoner,Backend,serverside"
 
-[removeMetadata]
-submit = "Fjern metadata"
-
 [removePages]
-filenamePrefix = "sider_fjernet"
 submit = "Fjern"
 tags = "fjern sider,slett sider"
 title = "Fjern"
 
 [removePages.error]
 failed = "Det oppstod en feil under fjerning av sider."
-
-[removePages.files]
-placeholder = "Velg en PDF-fil i hovedvisningen for å komme i gang"
 
 [removePages.pageNumbers]
 error = "Ugyldig sidetallformat. Bruk tall, intervaller (1-5) eller matematiske uttrykk (2n+1)"
@@ -6940,17 +6425,8 @@ bullet4 = "Åpne intervaller: 5- (fjerner fra side 5 til slutten)"
 text = "Angi hvilke sider som skal fjernes fra PDF-en. Du kan velge enkeltsider, intervaller eller bruke matematiske uttrykk."
 title = "Sidevalg"
 
-[removePages.tooltip.safety]
-bullet1 = "Forhåndsvis alltid valget før behandling"
-bullet2 = "Ta en sikkerhetskopi av originalfilen"
-bullet3 = "Sidenumre starter på 1, ikke 0"
-bullet4 = "Ugyldige sidenumre ignoreres"
-text = "Viktige hensyn ved fjerning av sider:"
-title = "Sikkerhetstips"
-
 [removePassword]
 desc = "Fjern passordbeskyttelse fra din PDF-dokument."
-filenamePrefix = "dekryptert"
 submit = "Fjern"
 tags = "sikker,dekrypter,trygghet,upassord,slett passord"
 title = "Fjern passord"
@@ -6959,7 +6435,6 @@ title = "Fjern passord"
 failed = "Det oppstod en feil under fjerning av passordet fra PDF-en."
 
 [removePassword.password]
-completed = "Passord konfigurert"
 label = "Nåværende Passord"
 placeholder = "Angi gjeldende passord"
 stepTitle = "Fjern Passord"
@@ -6972,6 +6447,7 @@ description = "Fjerning av passordbeskyttelse krever passordet som ble brukt til
 
 [reorganizePages]
 submit = "Omorganiser sider"
+tags = "rearrange,reorder,organize,reorganize,move pages,page order,sort pages,arrange pages,shuffle,resequence"
 
 [reorganizePages.error]
 failed = "Kunne ikke omorganisere sider"
@@ -6984,8 +6460,6 @@ title = "Innstillinger"
 
 [repair]
 description = "Dette verktøyet vil forsøke å reparere korrupte eller skadede PDF-filer. Ingen ekstra innstillinger kreves."
-filenamePrefix = "reparert"
-header = "Reparer PDF-er"
 submit = "Reparer"
 tags = "fiks,gjenopprett,korreksjon,gjenoppretting"
 title = "Reparer"
@@ -6993,32 +6467,17 @@ title = "Reparer"
 [repair.error]
 failed = "Det oppstod en feil under reparasjon av PDF-en."
 
-[repair.files]
-placeholder = "Velg en PDF-fil i hovedvisningen for å komme i gang"
-
 [repair.results]
 title = "Reparasjonsresultater"
 
 [replace-color]
-previewOverlayOpacity = "Ugjennomsiktighet for forhåndsvisningsoverlegg"
-previewOverlayTransparency = "Gjennomsiktighet for forhåndsvisningsoverlegg"
-previewOverlayVisibility = "Vis forhåndsvisningsoverlegg"
 submit = "Erstatt"
 title = "Erstatt-Inverter-Farge"
-
-[replace-color.options]
-fill = "Fyllfarge"
-gradient = "Gradient"
 
 [replace-color.selectText]
 1 = "Erstatt eller Inverter farge alternativer"
 10 = "Velg tekstfarge"
 11 = "Velg bakgrunnsfarge"
-12 = "Velg startfarge"
-13 = "Velg sluttfarge"
-2 = "Standard(Standard høy kontrast farger)"
-3 = "Tilpasset(Tilpassede farger)"
-4 = "Full-Invertering(Inverter alle farger)"
 5 = "Høy kontrast fargealternativer"
 6 = "hvit tekst på svart bakgrunn"
 7 = "Svart tekst på hvit bakgrunn"
@@ -7075,6 +6534,7 @@ rotateLeft = "Roter mot klokken"
 rotateRight = "Roter med klokken"
 selectRotation = "Velg rotasjonsvinkel (med klokken)"
 submit = "Roter"
+tags = "turn,flip,orient,rotate,orientation,landscape,portrait,90 degrees,180 degrees,clockwise,counterclockwise,counter-clockwise,fix orientation"
 title = "Roter PDF"
 
 [rotate.error]
@@ -7094,19 +6554,14 @@ text = "Roter PDF-sidene med eller mot klokken i 90-graders trinn. Alle sider i 
 title = "Oversikt over rotasjonsinnstillinger"
 
 [sanitize]
-completed = "Sanitering fullført"
 desc = "Fjern potensielt skadelige elementer fra PDF-filer."
-filenamePrefix = "sanitert"
 sanitizationResults = "Saniteringsresultater"
 submit = "Rensker PDF"
+tags = "clean,purge,remove,sanitize,remove scripts,remove javascript,remove metadata,strip metadata,security,clean document,remove hidden data,privacy"
 title = "Saniter"
 
 [sanitize.error]
 failed = "Det oppstod en feil under sanitering av PDF-en."
-generic = "Sanitering mislyktes"
-
-[sanitize.files]
-placeholder = "Velg en PDF-fil i hovedvisningen for å komme i gang"
 
 [sanitize.options]
 note = "Velg elementene du vil fjerne fra PDF-en. Minst ett alternativ må være valgt."
@@ -7137,37 +6592,20 @@ desc = "Fjern XMP-metadata fra PDF-en"
 label = "Fjern XMP-metadata"
 
 [sanitize.steps]
-files = "Filer"
-results = "Resultater"
 settings = "Innstillinger"
 
 [sanitizePdf]
 tags = "rydde opp,sikker,trygg,fjern trusler"
 
 [sanitizePDF]
-header = "Rensker en PDF fil"
-submit = "Rensk PDF"
 title = "Rensker PDF"
 
-[sanitizePDF.selectText]
-1 = "Fjern JavaScript-handlinger"
-2 = "Fjern innebygde filer"
-3 = "Fjern XMP-metadata"
-4 = "Fjern lenker"
-5 = "Fjern skrifter"
-6 = "Fjern dokumentinfo-metadata"
-
 [scalePages]
-header = "Juster side-skala"
-keepPageSize = "Opprinnelig størrelse"
-pageSize = "Størrelse på et ark i dokumentet."
-scaleFactor = "Zoom-nivå (beskjær) for en side."
-submit = "Send inn"
+tags = "resize,adjust,scale,page size,resize page,scale page,change size,adjust size,enlarge,shrink page,fit to page,A4,letter size"
 title = "Juster side-skala"
 
-[ScannerImageSplit]
-info = "Python er ikke installert. Det er påkrevd for å kjøre."
-tags = "separere,auto-oppdag,skanninger,flere bilder,organisere"
+[scannerEffect]
+tags = "scan,simulate,create,fake scan,look scanned,scanner effect,make look scanned,photocopy effect,simulate scanner,realistic scan"
 
 [ScannerImageSplit.selectText]
 1 = "Vinkelgrense:"
@@ -7183,6 +6621,7 @@ tags = "separere,auto-oppdag,skanninger,flere bilder,organisere"
 
 [scannerImageSplit]
 submit = "Ekstraher bildeskanninger"
+tags = "separate,auto-detect,scans,multi-photo,organize"
 title = "Ekstraherte bilder"
 
 [scannerImageSplit.error]
@@ -7227,7 +6666,6 @@ toolNotAvailableLocally = "Stirling-PDF-serveren din er frakoblet og \"{{endpoin
 
 [session]
 expired = "Økten din har utløpt. Vennligst oppdater siden og prøv igjen."
-refreshPage = "Oppdater Side"
 
 [sessionManagement.tooltip]
 header = "Administrere signeringsøkter"
@@ -7269,6 +6707,7 @@ advanced = "Avansert"
 database = "Database"
 endpoints = "Endepunkter"
 features = "Funksjoner"
+mcp = "MCP Server"
 storageSharing = "Fil-lagring og deling"
 systemSettings = "Systeminnstillinger"
 title = "Konfigurasjon"
@@ -7406,6 +6845,18 @@ title = "Tastatursnarveier"
 mac = "Inkluder ⌘ (Command), ⌥ (Option) eller en annen modifikator i snarveien."
 windows = "Inkluder Ctrl, Alt eller en annen modifikator i snarveien."
 
+[settings.legal]
+label = "Legal"
+title = "Legal"
+
+[settings.legal.cookiePreferences]
+description = "Review or change your cookie consent choices."
+manage = "Manage"
+
+[settings.legal.documents]
+description = "Policies and legal information for this service."
+title = "Legal Documents"
+
 [settings.licensingAnalytics]
 audit = "Revisjon"
 plan = "Plan"
@@ -7524,31 +6975,13 @@ people = "Personer"
 teams = "Team"
 title = "Arbeidsområde"
 
-[setup]
-description = "Kom i gang ved å velge hvordan du vil bruke Stirling PDF"
-welcome = "Velkommen til Stirling PDF"
-
 [setup.login]
 connectingTo = "Kobler til:"
-hideInstructions = "Skjul instruksjoner"
-instructions = "Slik aktiverer du pålogging på din Stirling PDF-server:"
-instructionsEnvVar = "Sett miljøvariabelen:"
-instructionsOrYml = "Eller i settings.yml:"
-instructionsRestart = "Start deretter serveren på nytt for at endringene skal tre i kraft."
 oauthPending = "Åpner nettleser for autentisering..."
 orContinueWith = "Eller fortsett med e-post"
-serverRequirement = "Merk: Serveren må ha pålogging aktivert."
-showInstructions = "Hvordan aktivere?"
-signInWith = "Logg inn med"
 skipSignIn = "Fortsett uten å logge inn"
 sso = "Single Sign-On"
 submit = "Logg inn"
-subtitle = "Skriv inn legitimasjonen din for å fortsette"
-title = "Logg inn"
-
-[setup.login.email]
-label = "E-post"
-placeholder = "Skriv inn e-posten din"
 
 [setup.login.error]
 emptyEmail = "Skriv inn e-posten din"
@@ -7556,24 +6989,7 @@ emptyPassword = "Skriv inn passordet ditt"
 emptyUsername = "Skriv inn brukernavnet ditt"
 oauthFailed = "OAuth-innlogging mislyktes. Prøv igjen."
 
-[setup.login.password]
-label = "Passord"
-placeholder = "Skriv inn passordet ditt"
-
-[setup.login.username]
-label = "Brukernavn"
-placeholder = "Skriv inn brukernavnet ditt"
-
-[setup.mode.saas]
-description = "Logg inn med Stirling-kontoen din"
-title = "Stirling Cloud"
-
-[setup.mode.selfhosted]
-description = "Koble til din egen Stirling PDF-server"
-title = "Selvhostet server"
-
 [setup.saas]
-subtitle = "Logg inn med Stirling-kontoen din"
 title = "Logg inn i Stirling"
 
 [setup.selfhosted]
@@ -7585,7 +7001,6 @@ title = "Logg inn på server"
 
 [setup.selfhosted.unreachable]
 changeServer = "Koble til en annen server"
-changeServerLocked = "Organisasjonen din har begrenset denne appen til en bestemt server"
 continueOffline = "Bruk lokale verktøy i stedet"
 message = "Kunne ikke nå {{url}}. Kontroller at serveren kjører og er tilgjengelig."
 retry = "Prøv igjen"
@@ -7612,42 +7027,20 @@ step2 = "Eller angi security.enableLogin=true i settings.yml"
 step3 = "Start serveren på nytt"
 title = "Innlogging ikke aktivert"
 
-[setup.server.type]
-saas = "Stirling PDF SaaS"
-selfhosted = "Selvhostet server"
-
 [setup.server.url]
 description = "Skriv inn full URL til din selvhostede Stirling PDF-server"
 label = "Server-URL"
 
-[setup.step1]
-description = "Offline eller server"
-label = "Velg modus"
-
-[setup.step2]
-description = "Selvhostet server"
-label = "Velg server"
-
-[setup.step3]
-description = "Oppgi legitimasjon"
-label = "Logg inn"
-
 [showJS]
 done = "JavaScript hentet ut"
-downloadJS = "Last ned Javascript"
-header = "Vis Javascript"
 processing = "Henter ut JavaScript..."
 results = "Resultat"
-singleFileWarning = "Dette verktøyet støtter bare én fil om gangen. Velg én fil."
 submit = "Vis"
 tags = "JS"
 title = "Vis Javascript"
 
 [showJS.view]
 title = "Ekstrahert JavaScript"
-
-[sidebar]
-toggle = "Vis/skjul sidepanel"
 
 [sign]
 activate = "Aktiver signaturplassering"
@@ -7669,6 +7062,7 @@ redo = "Gjør om"
 save = "Lagre signatur"
 sharedSigs = "Delte signaturer"
 submit = "Signer dokument"
+tags = "signature,autograph,e-sign,electronic signature,digital signature,sign document,approval,signoff,authorize,endorse,ink signature,handwriting"
 title = "Signer"
 undo = "Angre"
 updateAndPlace = "Oppdater og plasser"
@@ -7843,10 +7237,11 @@ passwordsDoNotMatch = "Passordene samsvarer ikke"
 passwordTooShort = "Passordet må være minst 6 tegn langt"
 pleaseFillAllFields = "Vennligst fyll inn alle feltene"
 signUp = "Registrer deg"
+signUpWith = "Sign up with"
+skip = "Skip"
 subtitle = "Bli med i Stirling PDF for å komme i gang"
 title = "Opprett en konto"
 unexpectedError = "Uventet feil: {{message}}"
-useEmailInstead = "Bruk e-post i stedet"
 
 [sizes]
 large = "Stor"
@@ -7855,67 +7250,45 @@ small = "Liten"
 x-large = "Ekstra Stor"
 
 [split]
-header = "Del PDF"
 resultsTitle = "Delingsresultater"
 selectMethod = "Velg en delingsmetode"
 splitPages = "Skriv inn sidene som skal deles på:"
 submit = "Del"
+tags = "divide,separate,break,split,extract pages,separate pages,divide document,break apart,separate files,unbind,split by page,divide by chapter"
 title = "Del PDF"
-
-[split.desc]
-1 = "De tallene du velger er sidenummeret du ønsker å dele på"
-2 = "Således vil valg av 1,3,7-9 dele et 10-siders dokument inn i 6 separate PDF-er med:"
-3 = "Dokument #1: Side 1"
-4 = "Dokument #2: Side 2 og 3"
-5 = "Dokument #3: Side 4, 5, 6 og 7"
-6 = "Dokument #4: Side 8"
-7 = "Dokument #5: Side 9"
-8 = "Dokument #6: Side 10"
 
 [split.error]
 failed = "Det oppstod en feil under oppdeling av PDF-en."
 
-[split.method]
-label = "Velg delingsmetode"
-placeholder = "Velg hvordan PDF-en skal deles"
-
 [split.methods.byChapters]
-desc = "Del ved bokmerkegrenser"
 name = "Kapitler"
 tooltip = "Bruker PDF-bokmerker til å bestemme delingspunkter"
 
 [split.methods.byDocCount]
-desc = "Opprett et bestemt antall filer"
 name = "Antall dokumenter"
 tooltip = "Angi hvor mange filer du vil opprette"
 
 [split.methods.byPageCount]
-desc = "Fast antall sider per fil"
 name = "Antall sider"
 tooltip = "Angi antall sider for hver delte fil"
 
 [split.methods.byPageDivider]
-desc = "Automatisk deling med skilleark"
 name = "Skilleark"
 tooltip = "Bruk QR-kode-skilleark mellom dokumenter ved skanning"
 
 [split.methods.byPages]
-desc = "Trekk ut bestemte sider (1,3,5-10)"
 name = "Sidetall"
 tooltip = "Skriv inn sidetall separert med komma eller områder med bindestrek"
 
 [split.methods.byPoster]
-desc = "Del opp store sider i utskriftsvennlige størrelser"
 name = "Utskrivbare deler"
 tooltip = "Del opp overdimensjonerte sider i mindre deler egnet for utskrift på standardpapir (A4, Letter osv.)"
 
 [split.methods.bySections]
-desc = "Del sider i rutenettseksjoner"
 name = "Seksjoner"
 tooltip = "Del hver side i horisontale og vertikale seksjoner"
 
 [split.methods.bySize]
-desc = "Begrens maksimal filstørrelse"
 name = "Filstørrelse"
 tooltip = "Angi maksimal filstørrelse (f.eks. 10MB, 500KB)"
 
@@ -7963,13 +7336,6 @@ bullet2 = "Inkluder metadata: Bevar dokumentegenskaper"
 bullet3 = "Tillat duplikater: Håndter gjentatte bokmerkenavn"
 text = "Bruk PDF-bokmerker for automatisk deling ved kapittelgrenser. Krever PDF-er med bokmerkestruktur."
 title = "Del etter kapitler"
-
-[split.tooltip.byCount]
-bullet1 = "Antall sider: Fast antall sider per fil"
-bullet2 = "Antall dokumenter: Fast antall utdatafiler"
-bullet3 = "Nyttig for batch-prosesser"
-text = "Opprett flere PDF-er med et spesifikt antall sider eller dokumenter hver."
-title = "Del etter antall"
 
 [split.tooltip.byDocCount]
 bullet1 = "Angi antall utdatafiler du ønsker"
@@ -8023,9 +7389,6 @@ bullet3 = "Systemet deler ved sidegrenser"
 text = "Opprett flere PDF-er som ikke overskrider en angitt filstørrelse. Ideelt ved størrelsesbegrensninger eller e-postvedlegg."
 title = "Del etter filstørrelse"
 
-[split.tooltip.header]
-title = "Oversikt over delingsmetoder"
-
 [split.value.docCount]
 label = "Antall filer"
 placeholder = "f.eks. 3, 5"
@@ -8039,9 +7402,7 @@ label = "Sider per fil"
 placeholder = "f.eks. 5, 10"
 
 [split-by-sections]
-header = "Del PDF inn i seksjoner"
 merge = "Slå sammen til én PDF"
-submit = "Del PDF"
 tags = "seksjonsdeling,del,tilpass"
 title = "Del PDF etter seksjoner"
 
@@ -8067,15 +7428,7 @@ label = "Vertikale delinger"
 placeholder = "Skriv inn antall vertikale delinger"
 
 [split-by-size-or-count]
-header = "Del PDF etter størrelse eller antall"
-submit = "Send inn"
 title = "Del PDF etter størrelse eller antall"
-
-[split-by-size-or-count.type]
-docCount = "Etter antall dokumenter"
-label = "Velg delingstype"
-pageCount = "Etter sidetall"
-size = "Etter størrelse"
 
 [split-by-size-or-count.value]
 label = "Skriv inn verdi"
@@ -8084,28 +7437,11 @@ placeholder = "Skriv inn størrelse (f.eks. 2 MB eller 3 KB) eller antall (f.eks
 [splitByChapters]
 allowDuplicates = "Tillat duplikater"
 bookmarkLevel = "Bokmerkenivå"
-header = "Del PDF etter kapitler"
 includeMetadata = "Inkluder metadata"
-submit = "Del PDF"
 title = "Del PDF etter kapitler"
-
-[splitByChapters.desc]
-1 = "Dette verktøyet deler en PDF-fil i flere PDF-er basert på kapittelinndelingen."
-2 = "Bokmerkenivå: Velg nivået av bokmerker som skal brukes for splitting (0 for toppnivå, 1 for andre nivå, osv.)."
-3 = "Inkluder metadata: Hvis avkrysset, vil den opprinnelige PDF-ens metadata inkluderes i hver delte PDF."
-4 = "Tillat duplikater: Hvis avkrysset, tillater flere bokmerker på samme side å lage separate PDF-er."
 
 [splitPdfByChapters]
 tags = "del,kapitler,bokmerker,organiser"
-
-[storage]
-approximateSize = "Omtrentlig størrelse"
-fileTooLarge = "Filen er for stor. Maksimal størrelse per fil er"
-storageFull = "Lagringen er nesten full. Vurder å fjerne noen filer."
-storageLimit = "Lagringsgrense"
-storageQuotaExceeded = "Lagringskvoten er overskredet. Fjern noen filer før du laster opp flere."
-storageUsed = "Midlertidig lagring brukt"
-temporaryNotice = "Filer lagres midlertidig i nettleseren din og kan slettes automatisk"
 
 [storageShare]
 accessDenied = "Du har ikke tilgang til denne delte filen. Be eieren dele den med deg."
@@ -8208,43 +7544,10 @@ title = "Last opp til server"
 updateButton = "Oppdater på server"
 uploadButton = "Last opp til server"
 
-[subscription]
-cancelsOn = "Kanselleres {{date}}"
-renewsOn = "Fornyes {{date}}"
-
-[subscription.status]
-active = "Aktiv"
-canceled = "Kansellert"
-incomplete = "Ufullstendig"
-none = "Ingen abonnement"
-pastDue = "Forfalt"
-trialing = "Prøve"
-
 [survey]
-button = "Ta undersøkelsen"
-changes = "Stirling-PDF har endret seg siden forrige undersøkelse! For å finne ut mer, se blogginnlegget vårt her:"
-changes2 = "Med disse endringene får vi betalt forretningsstøtte og finansiering"
-description = "Stirling-PDF har ingen sporing, så vi vil høre fra brukerne våre for å forbedre Stirling-PDF!"
-disabled = "(Undersøkelses-popup vil bli deaktivert i kommende oppdateringer, men tilgjengelig nederst på siden)"
-dontShowAgain = "Ikke vis igjen"
-nav = "Undersøkelse"
-please = "Please consider taking our survey!"
 title = "Stirling-PDF-undersøkelse"
 
-[survey.meeting]
-1 = "Hvis du bruker Stirling PDF på jobb, vil vi gjerne snakke med deg. Vi tilbyr tekniske støttesesjoner i bytte mot en 15-minutters brukerinnsiktssamtale."
-2 = "Dette er en mulighet til å:"
-3 = "Få hjelp med utrulling, integrasjoner eller feilsøking"
-4 = "Gi direkte tilbakemelding på ytelse, randtilfeller og funksjonsmangler"
-5 = "Hjelpe oss med å forbedre Stirling PDF for bruk i virkelige virksomheter"
-6 = "Hvis du er interessert, kan du booke tid direkte med teamet vårt. (Kun engelskspråklig)"
-7 = "Vi ser frem til å lære mer om dine brukstilfeller og gjøre Stirling PDF enda bedre!"
-button = "Book møte"
-notInterested = "Ikke en bedrift og/eller interessert i et møte?"
-
 [swagger]
-desc = "Vis og test Stirling PDF API-endepunkter"
-header = "API-dokumentasjon"
 tags = "api,dokumentasjon,swagger,endepunkter,utvikling"
 title = "API-dokumentasjon"
 
@@ -8274,28 +7577,6 @@ removeError = "Kunne ikke fjerne medlem"
 renameError = "Kunne ikke gi nytt navn til teamet"
 renameSuccess = "Teamet har fått nytt navn"
 
-[team.features]
-badge = "Teamfunksjoner"
-subtitle = "Samarbeid med teamet ditt"
-title = "Teamsamarbeid"
-viewPlans = "Se planer"
-
-[team.features.billing]
-description = "Administrer fakturering og abonnementer"
-title = "Faktureringsadministrasjon"
-
-[team.features.credits]
-description = "Delt kredittpott for alle medlemmer"
-title = "Delte kreditter"
-
-[team.features.dashboard]
-description = "Se teamaktivitet og bruk"
-title = "Team-dashbord"
-
-[team.features.invite]
-description = "Legg til medlemmer i teamet ditt"
-title = "Inviter medlemmer"
-
 [team.invitationBanner]
 acceptButton = "Godta"
 message = "har invitert deg til å bli med"
@@ -8317,11 +7598,6 @@ remove = "Fjern"
 roleColumn = "Rolle"
 title = "Teammedlemmer"
 
-[team.upgrade]
-button = "Oppgrader til Team"
-description = "Lås opp team-samarbeidsfunksjoner"
-title = "Oppgrader til Team-plan"
-
 [textAlign]
 center = "Sentrert"
 left = "Venstre"
@@ -8330,9 +7606,6 @@ right = "Høyre"
 [textInput]
 clear = "Tøm inndata"
 
-[theme]
-toggle = "Bytt tema"
-
 [time.relative]
 daysAgo = "{{count}}d siden"
 hoursAgo = "{{count}}h siden"
@@ -8340,19 +7613,14 @@ justNow = "akkurat nå"
 minutesAgo = "{{count}}m siden"
 
 [timestampPdf]
-completed = "PDF er tidsstemplet"
 desc = "Legg til et RFC 3161-tidsstempel i PDF-en din ved hjelp av en pålitelig Time Stamp Authority (TSA)-server."
-filenamePrefix = "tidsstemplet"
 results = "Tidsstempelresultater"
 submit = "Bruk tidsstempel"
+tags = "timestamp,RFC 3161,TSA,time stamp authority,document timestamp,proof of existence,timestamp token,trusted timestamp,sign timestamp,notarize"
 title = "Tidsstemple PDF"
 
 [timestampPdf.error]
 failed = "Det oppsto en feil under tidsstempling av PDF-en."
-generic = "Tidsstempling mislyktes"
-
-[timestampPdf.files]
-placeholder = "Velg en PDF i hovedvisningen for å komme i gang"
 
 [timestampPdf.options]
 note = "Bare en SHA-256-hash av dokumentet ditt sendes til TSA-serveren; selve PDF-filen sendes aldri til TSA-serveren."
@@ -8383,18 +7651,13 @@ singleFileScope = "Gjelder kun: {{fileName}}"
 viewerMode = "Bytt til filredigereren for å velge flere filer."
 
 [toolPanel]
-allTools = "Alle verktøy"
 alpha = "Alpha"
 backToAllTools = "Tilbake til alle verktøy"
-backToDefault = "Tilbake"
-backToTools = "Tilbake til verktøy"
 collapse = "Skjul panel"
-comingSoon = "Kommer snart:"
 expand = "Utvid panel"
 goBack = "Gå tilbake"
 placeholder = "Velg et verktøy for å komme i gang"
 premiumFeature = "Premium-funksjon:"
-search = "Søk i verktøy"
 toolsHeader = "Verktøy"
 viewAllTools = "Vis alle verktøy"
 
@@ -8422,10 +7685,6 @@ recommended = "Anbefalt"
 sidebarDescription = "Hold verktøy ved siden av arbeidsområdet for rask bytting."
 sidebarTitle = "Sidepanel-modus"
 title = "Velg hvordan du blar gjennom verktøy"
-
-[toolPanel.toggle]
-fullscreen = "Bytt til fullskjerm-modus"
-sidebar = "Bytt til sidepanel-modus"
 
 [toolPicker]
 allTools = "ALLE VERKTØY"
@@ -8460,8 +7719,6 @@ close = "Lukk verktøytips"
 
 [unlockPDFForms]
 description = "Dette verktøyet vil fjerne skrivebeskyttelse fra PDF-skjemaer, slik at de kan redigeres og fylles ut."
-filenamePrefix = "ulåste_skjemaer"
-header = "Lås opp PDF-skjemaer"
 submit = "Remove"
 tags = "fjern,slett,skjema,felt,skrivebeskyttet"
 title = "Fjern skrivebeskyttelse fra skjemafelter"
@@ -8469,15 +7726,11 @@ title = "Fjern skrivebeskyttelse fra skjemafelter"
 [unlockPDFForms.error]
 failed = "Det oppstod en feil under opplåsing av PDF-skjemaer."
 
-[unlockPDFForms.files]
-placeholder = "Velg en PDF-fil i hovedvisningen for å komme i gang"
-
 [unlockPDFForms.results]
 title = "Resultater for opplåste skjemaer"
 
 [update]
 allReleases = "Alle utgivelser"
-availableUpdates = "Tilgjengelige oppdateringer"
 breaking = "Brytende"
 breakingChanges = "Inkompatible endringer"
 breakingChangesDefault = "Denne versjonen inneholder inkompatible endringer."
@@ -8490,7 +7743,6 @@ defaultRecommendation = "Denne oppdateringen inneholder viktige rettelser og for
 downloadLatest = "Last ned siste"
 later = "Senere"
 latest = "Siste versjon"
-latestStable = "Siste stabile"
 loadingDetailedInfo = "Laster detaljert informasjon..."
 migrationGuide = "Migreringsveiledning"
 migrationGuides = "Migreringsveiledninger"
@@ -8498,18 +7750,14 @@ migrationGuidesDesc = "Gå gjennom viktige endringer før du oppdaterer."
 modalSubtitle = "En ny versjon av Stirling PDF er klar til installasjon."
 modalTitle = "Oppdatering tilgjengelig"
 notes = "Notater"
-priorityLabel = "Prioritet"
-recommendedAction = "Anbefalt handling"
 releaseNotes = "Versjonsnotater"
 showLess = "Vis færre versjoner"
 showMore = "Vis alle {{count}} versjoner"
 stable = "STABLE"
-unableToLoadDetails = "Kan ikke laste detaljert informasjon."
 updateAvailable = "Oppdatering tilgjengelig"
 urgentUpdateAvailable = "Kritisk oppdatering"
 version = "Versjon"
 versionHistory = "Versjonshistorikk"
-viewAllReleases = "Vis alle utgivelser"
 viewGuide = "Vis veiledning"
 whatsNewIn = "Hva er nytt i"
 
@@ -8523,16 +7771,12 @@ urgent = "Kritisk"
 attentionBody = "Adminen din må logge inn for å se mer info. Kontakt dem umiddelbart."
 attentionBodyAdmin = "Gå gjennom lisenskravene for å holde denne serveren i samsvar."
 attentionTitle = "Denne serveren trenger admin-oppmerksomhet"
-dismiss = "Avvis banner"
 message = "Få mest mulig ut av Stirling PDF med ubegrensede brukere og avanserte funksjoner"
 seeInfo = "Se info"
 title = "Oppgrader til Server-planen"
 upgradeButton = "Oppgrader nå"
 
 [URLToPDF]
-credit = "Bruker WeasyPrint"
-header = "URL Til PDF"
-submit = "Konverter"
 tags = "web-fangst,lagre side,web-til-dokument,arkiv"
 title = "URL Til PDF"
 
@@ -8585,7 +7829,6 @@ downloadCsv = "Last ned CSV"
 downloadJson = "Last ned JSON"
 downloadPdf = "Last ned PDF-rapport"
 finalizing = "Forbereder nedlastinger..."
-header = "Valider Digitale Signaturer"
 location = "Sted"
 noResults = "Kjør valideringen for å generere en rapport."
 noSignatures = "Ingen digitale signaturer funnet i dette dokumentet"
@@ -8594,7 +7837,6 @@ processing = "Validerer signaturer..."
 reason = "Årsak"
 results = "Valideringsresultater"
 selectCustomCert = "Tilpasset Sertifikatfil X.509 (Valgfritt)"
-selectPDF = "Velg signert PDF-fil"
 signatureDate = "Signeringsdato"
 signer = "Signatar"
 submit = "Valider Signaturer"
@@ -8606,21 +7848,15 @@ totalSignatures = "Totalt antall signaturer"
 algorithm = "Algoritme"
 bits = "bit"
 details = "Sertifikatdetaljer"
-expired = "Sertifikatet har utløpt"
-info = "Sertifikatdetaljer"
 issuer = "Utsteder"
 keySize = "Nøkkelstørrelse"
 keyUsage = "Nøkkelbruk"
-revoked = "Sertifikatet har blitt tilbakekalt"
 selfSigned = "Selv-signert"
 serialNumber = "Serienummer"
 subject = "Emne"
 validFrom = "Gyldig Fra"
 validUntil = "Gyldig Til"
 version = "Versjon"
-
-[validateSignature.chain]
-invalid = "Validering av sertifikatkjede feilet - kan ikke verifisere signatarens identitet"
 
 [validateSignature.downloadType]
 csv = "CSV"
@@ -8668,22 +7904,11 @@ title = "Valideringsinnstillinger"
 
 [validateSignature.signature]
 _value = "Signatur"
-info = "Signaturinformasjon"
-mathValid = "Signaturen er matematisk gyldig MEN:"
 
 [validateSignature.status]
-_value = "Status"
 complete = "Validering fullført"
 invalid = "Ugyldig"
 valid = "Gyldig"
-
-[validateSignature.trust]
-invalid = "Sertifikatet er ikke i tillitslager - kilden kan ikke verifiseres"
-
-[view]
-fileManager = "Filbehandling"
-pageEditor = "Sideeditor"
-viewer = "Visning"
 
 [viewer]
 cannotPreviewFile = "Kan ikke forhåndsvise fil"
@@ -8730,10 +7955,8 @@ moreActions = "Flere handlinger"
 nComments = "{{count}} kommentarer"
 oneComment = "1 kommentar"
 pageLabel = "Side {{page}}"
-placeholder = "Skriv kommentaren din..."
 removeCommentOnly = "Fjern bare kommentaren"
 saveReply = "Lagre svar"
-send = "Send"
 title = "Kommentarer"
 typeComment = "Kommentar"
 typeInsertText = "Sett inn tekst"
@@ -8760,7 +7983,6 @@ columnDefault = "Kolonne {{index}}"
 convertToPdf = "Konverter til PDF"
 csvStats = "{{rows}} rader · {{columns}} kolonner · {{size}}"
 emptyFile = "Tom fil"
-fileTypeBadge = "{{type}}-fil"
 htmlPreview = "HTML-forhåndsvisning"
 htmlPreviewWarning = "HTML-forhåndsvisning — eksterne ressurser kan hende ikke lastes · {{size}}"
 invalidJson = "Ugyldig JSON — viser rått innhold"
@@ -8784,27 +8006,180 @@ resultsOf = "av {{total}}"
 delete = "Slett signatur"
 
 [viewPdf]
-header = "Vis PDF"
 tags = "vis,les,annoter,tekst,bilde"
 title = "Vis/Rediger PDF"
 
 [warning]
 tooltipTitle = "Advarsel"
 
-[watermark]
-completed = "Vannmerke lagt til"
-desc = "Legg til tekst- eller bildevannmerker i PDF-filer"
-filenamePrefix = "vannmerket"
-submit = "Legg til vannmerke"
-title = "Legg til vannmerke"
+[watchedFolders]
+alreadyInFolder = "Already in this folder"
+defaultFolderWarning = "This is a default folder and will be recreated on next reload."
+deleteConfirmBody = "This will remove the folder and its run history. Files already downloaded are not affected."
+deleteConfirmTitle = "Delete folder?"
+folderNotFound = "Folder not found"
+newFolder = "New folder"
+noFolders = "No watched folders yet"
+sidebarTitle = "Watched Folders"
+title = "Watched Folders"
 
-[watermark.alphabet]
-arabic = "Arabisk"
-chinese = "Kinesisk"
-japanese = "Japansk"
-korean = "Koreansk"
-roman = "Romersk/latin"
-thai = "Thai"
+[watchedFolders.actions]
+back = "Back"
+collapse = "Collapse"
+dismiss = "Dismiss"
+download = "Download"
+downloadInput = "Download input"
+downloadOutput = "Download output"
+expand = "Expand"
+retry = "Retry"
+
+[watchedFolders.card]
+delete = "Delete folder"
+edit = "Edit folder"
+
+[watchedFolders.home]
+addAnother = "Add another Watched Folder"
+addAnotherDesc = "Automatically process files with a new pipeline"
+create = "Create your first Watched Folder"
+deleteFolder = "Delete folder"
+editFolder = "Edit folder"
+empty = "No watched folders yet"
+emptyDesc = "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does."
+emptyTitle = "Automate your PDF workflows"
+file = "file"
+files = "files"
+pause = "Pause"
+resume = "Resume"
+
+[watchedFolders.howItWorks]
+step1Desc = "Drag PDFs onto any Watched Folder card — or send them from your file list"
+step1Title = "Drop files"
+step2Desc = "Your configured tools process each file automatically"
+step2Title = "Pipeline runs"
+step3Desc = "Download processed files from inside the folder"
+step3Title = "Output ready"
+title = "How Watched Folders work"
+
+[watchedFolders.modal]
+advanced = "Advanced"
+automation = "Automation"
+automationNameFallback = "Watched Folder automation"
+automationRequired = "Add at least one configured step before saving."
+autoNumber = "Auto-number"
+autoNumberExample = "e.g. document.pdf → document (1).pdf"
+autoScanHelp = "New PDF files in this folder are processed automatically every 10 seconds."
+changeFolder = "Change"
+chooseFolder = "Choose"
+clearFolder = "Clear"
+color = "Accent color"
+createFolder = "Create Folder"
+createTitle = "New Watched Folder"
+editTitle = "Edit Watched Folder"
+inputFolder = "Input folder"
+inputFolderNotChosen = "No folder chosen — required for auto-scan"
+inputSource = "Input source"
+inputSourceBrowser = "Browser — drop files here"
+inputSourceLocal = "Local folder (auto-scan)"
+inputSourceLocalUnsupported = "Local folder (auto-scan) — Chrome/Edge only"
+localOutputFolder = "Local output folder"
+maxRetries = "Max retries"
+name = "Folder name"
+namePlaceholder = "My Watched Folder"
+nameRequired = "Folder name is required"
+nameTooLong = "Folder name must be 50 characters or less"
+outputFolderNotSet = "Not set — outputs stay in app"
+outputFolderUnsupported = "Not supported in this browser"
+outputModeNewDesc = "Output is saved as a new separate file"
+outputModeVersion = "Replace original?"
+outputModeVersionDesc = "Output becomes a new version of the input file rather than a separate file"
+outputName = "Output filename prefix"
+outputNamePrefix = "Filename prefix"
+outputNameSuffix = "Suffix"
+positionPrefix = "Prefix"
+positionSuffix = "Suffix"
+replaceOriginal = "Replace original file"
+retryDelay = "Delay (minutes)"
+saveChanges = "Save Changes"
+saveFailed = "Failed to save folder. Please try again."
+sectionFolder = "Folder"
+sectionSourceOutput = "Source & Output"
+sectionSteps = "Steps"
+
+[watchedFolders.status]
+active = "Active"
+done = "Done"
+paused = "Paused"
+processing = "Processing"
+
+[watchedFolders.time]
+daysAgo = "{{count}}d ago"
+hoursAgo = "{{count}}h ago"
+justNow = "just now"
+minutesAgo = "{{count}}m ago"
+
+[watchedFolders.workbench]
+activity = "Activity"
+addFiles = "Add files"
+allTime = "All time"
+cancel = "Cancel"
+chartTooltipComplete = "{{count}} complete"
+chartTooltipFailed = "{{count}} failed"
+clearSelection = "Clear selection"
+countProcessing = "{{count}} processing"
+countQueued = "{{count}} queued"
+countSelected = "{{count}} selected"
+dataSaved = "Saved"
+dayRunning = "day running"
+daysRunning = "days running"
+delete = "Delete"
+deleteConfirmBody = "Remove notifications only clears the activity log. Delete outputs also removes the processed files from storage. Your original input files are never touched."
+deleteOutputs = "Delete outputs"
+directionIn = "in"
+directionOut = "out"
+dropToProcess = "Drop to process"
+export = "Export"
+exportSeparately = "Export separately"
+exportZip = "Export zip"
+failed = "Failed"
+filesProcessedOverTime = "Files processed over time"
+filterAll = "All"
+filterPending = "Pending"
+inputs = "Inputs"
+inputSize = "Input size"
+legendComplete = "Complete"
+noActivity = "No activity yet — drop a PDF to start"
+noActivityMatch = "No matching activity"
+noInputFolder = "No input folder — edit to configure"
+outputs = "Outputs"
+pause = "Pause"
+preview = "Preview"
+previewInput = "Preview input"
+previewLoadFailed = "Could not load file preview."
+previewOutput = "Preview output"
+queued = "Queued"
+queuedWaiting = "Queued — waiting to run"
+removeEntries = "Remove {{count}} entries"
+removeEntry = "Remove entry"
+removeNotificationsOnly = "Remove notifications only"
+resume = "Resume"
+retryAll = "Retry all"
+retryIn = "retry in {{count}}m"
+retryingSoon = "retrying…"
+retryMixedConfirm = "Some selected files have already completed and will be skipped. Only failed files will be retried. Continue?"
+running = "Running"
+search = "Search…"
+selectAll = "Select all {{count}}"
+sortNameAsc = "A → Z"
+sortNameDesc = "Z → A"
+sortNewest = "Newest"
+sortOldest = "Oldest"
+watching = "Watching: {{name}}"
+
+[watermark]
+desc = "Legg til tekst- eller bildevannmerker i PDF-filer"
+submit = "Legg til vannmerke"
+tags = "stamp,mark,overlay,watermark,branding,logo,confidential,draft,copyright,trademark,text overlay,image overlay,background text"
+title = "Legg til vannmerke"
 
 [watermark.error]
 failed = "Det oppstod en feil ved å legge til vannmerke i PDF-en."
@@ -8816,16 +8191,12 @@ title = "Vannmerkeresultater"
 alphabet = "Skrifttype/språk"
 color = "Vannmerkefarge"
 convertToImage = "Gjør PDF-sider om til bilder"
-fontSize = "Skriftstørrelse"
 opacity = "Ugjennomsiktighet (%)"
 rotation = "Rotasjon (grader)"
 size = "Størrelse"
-type = "Vannmerketype"
 
 [watermark.settings.image]
 choose = "Velg bilde"
-label = "Vannmerkebilde"
-selected = "Valgt: {{filename}}"
 
 [watermark.settings.spacing]
 height = "Høydeavstand"
@@ -8834,7 +8205,6 @@ vertical = "Vertikal avstand"
 width = "Breddeavstand"
 
 [watermark.settings.text]
-label = "Vannmerketekst"
 placeholder = "Skriv inn vannmerketekst"
 
 [watermark.steps]
@@ -8868,13 +8238,6 @@ bullet3 = "Bilder med høyere oppløsning bevarer kvaliteten bedre"
 text = "Last opp en bildefil for å bruke som vannmerke."
 title = "Bildevalg"
 
-[watermark.tooltip.formatting.appearance]
-bullet1 = "Rotasjon: -360° til 360° for skrå vannmerker"
-bullet2 = "Opasitet: 0–100 % for gjennomsiktighet"
-bullet3 = "Lavere opasitet gir mer diskrete vannmerker"
-text = "Kontroller hvordan vannmerket ser ut og blander seg med dokumentet."
-title = "Utseendeinnstillinger"
-
 [watermark.tooltip.formatting.header]
 title = "Formatering og oppsett"
 
@@ -8890,13 +8253,6 @@ title = "Sikkerhetsalternativ"
 bullet1 = "Større størrelser gir mer framtredende vannmerker"
 text = "Juster størrelsen på vannmerket (tekst eller bilde)."
 title = "Størrelseskontroll"
-
-[watermark.tooltip.formatting.spacing]
-bullet1 = "Horisontal avstand: Avstand mellom vannmerker fra venstre til høyre"
-bullet2 = "Vertikal avstand: Avstand mellom vannmerker fra topp til bunn"
-bullet3 = "Høyere verdier gir mer spredte mønstre"
-text = "Juster avstanden mellom gjentatte vannmerker på siden."
-title = "Avstandskontroll"
 
 [watermark.tooltip.language]
 text = "Velg riktig språkinstilling for å sikre korrekt skrifttypevisning for teksten."
@@ -8918,10 +8274,6 @@ title = "Fargevalg"
 
 [watermark.tooltip.textStyle.header]
 title = "Tekststil"
-
-[watermark.tooltip.textStyle.language]
-text = "Velg riktig språkinstilling for å sikre korrekt skrifttypevisning."
-title = "Språkstøtte"
 
 [watermark.tooltip.type.description]
 text = "Velg mellom tekst- eller bildevannmerker basert på behovene dine."
@@ -8992,17 +8344,13 @@ annotations = "Annoteringer"
 applyRedactionsFirst = "Bruk sladdingene først"
 closeAll = "Lukk alle filer"
 closePdf = "Lukk PDF"
-closeSelected = "Lukk valgte filer"
 deleteSelected = "Slett valgte sider"
 deselectAll = "Opphev valg av alle"
 downloadAll = "Last ned alt"
-downloadSelected = "Last ned valgte filer"
-draw = "Tegn"
 exitRedaction = "Avslutt sladdemodus"
 exportAll = "Eksporter PDF"
 exportSelected = "Eksporter valgte sider"
 formFill = "Fyll ut skjema"
-language = "Språk"
 multiTool = "Multiverktøy"
 panMode = "Panoreringsmodus"
 print = "Skriv ut PDF"
@@ -9021,14 +8369,12 @@ search = "Søk i PDF"
 selectAll = "Velg alle"
 selectByNumber = "Velg etter sidenummer"
 selectLanguage = "Velg språk"
-share = "Del"
 toggleAnnotations = "Veksle synlighet for annoteringer"
 toggleAttachments = "Veksle vedlegg"
 toggleBookmarks = "Veksle bokmerker"
 toggleComments = "Kommentarer"
 toggleLayers = "Veksle lag"
 toggleSidebar = "Veksle sidepanel"
-toggleTheme = "Veksle tema"
 viewer = "Visning"
 
 [workflow.participant]
@@ -9088,7 +8434,6 @@ member = "Medlem"
 noMembersFound = "Ingen medlemmer funnet"
 role = "Rolle"
 searchMembers = "Søk i medlemmer..."
-status = "Status"
 team = "Team"
 title = "Personer"
 unlockAccount = "Lås opp konto"
@@ -9097,25 +8442,21 @@ unlockUserSuccess = "Brukerkonto låst opp"
 user = "Bruker"
 
 [workspace.people.actions]
-label = "Handlinger"
 upgrade = "Oppgrader"
 
 [workspace.people.addMember]
 authType = "Autentiseringstype"
-cancel = "Avbryt"
 error = "Kunne ikke opprette bruker"
 forceMFA = "Krev MFA-oppsett ved neste pålogging"
 forcePasswordChange = "Tving passordendring ved første innlogging"
 password = "Passord"
 passwordPlaceholder = "Angi passord"
 passwordRequired = "Passord er påkrevd"
-passwordTooShort = "Passordet må være minst 6 tegn"
 role = "Rolle"
 submit = "Legg til medlem"
 success = "Bruker opprettet"
 team = "Team (valgfritt)"
 teamPlaceholder = "Velg et team"
-title = "Legg til medlem"
 username = "Brukernavn (e-post)"
 usernamePlaceholder = "user@example.com"
 usernameRequired = "Brukernavn og passord er påkrevd"
@@ -9151,15 +8492,7 @@ subtitle = "Oppdater passordet for"
 success = "Passord oppdatert"
 title = "Endre passord"
 
-[workspace.people.delete]
-error = "Kunne ikke slette bruker"
-success = "Bruker slettet"
-
-[workspace.people.directInvite]
-tab = "Direkte opprettelse"
-
 [workspace.people.editMember]
-cancel = "Avbryt"
 editing = "Redigerer:"
 error = "Kunne ikke oppdatere bruker"
 role = "Rolle"
@@ -9171,7 +8504,6 @@ title = "Rediger medlem"
 
 [workspace.people.emailInvite]
 allFailed = "Kunne ikke invitere brukere"
-description = "Skriv eller lim inn e-poster nedenfor, separert med komma. Brukere vil motta innloggingsdetaljer via e-post."
 emails = "E-postadresser"
 emailsPlaceholder = "user1@example.com, user2@example.com"
 emailsRequired = "Minst én e-postadresse er påkrevd"
@@ -9179,34 +8511,20 @@ error = "Kunne ikke sende invitasjoner"
 partialFailure = "Noen invitasjoner mislyktes"
 submit = "Send invitasjoner"
 success = "bruker(e) invitert"
-tab = "E-postinvitasjon"
 
 [workspace.people.inviteLink]
 copied = "Lenke kopiert til utklippstavlen"
-description = "Generer en sikker lenke som lar brukeren sette sitt eget passord"
 email = "E-postadresse"
 emailDescription = "Valgfritt - la stå tomt for en generell invitasjonslenke som kan brukes av hvem som helst"
-emailFailed = "Invitasjonslenke generert, men e-post feilet"
-emailFailedDetails = "Feil: {0}. Vennligst del invitasjonslenken manuelt."
-emailOptional = "Valgfritt - la stå tomt for en generell invitasjonslenke"
 emailPlaceholder = "user@example.com (valgfritt)"
-emailRequired = "E-postadresse er påkrevd"
-emailRequiredForSend = "E-postadresse er nødvendig for å sende e-postvarsling"
 emailSent = "Invitasjonslenke generert og sendt via e-post"
 error = "Kunne ikke generere invitasjonslenke"
-expiryDescription = "Hvor mange timer til lenken utløper"
 expiryHours = "Utløpstid (timer)"
 generate = "Generer lenke"
 generated = "Invitasjonslenke generert"
 sendEmail = "Send invitasjonslenke via e-post"
 sendEmailDescription = "Hvis aktivert, sendes invitasjonslenken til den angitte e-postadressen"
-smtpRequired = "SMTP ikke konfigurert"
 submit = "Generer invitasjonslenke"
-success = "Invitasjonslenke generert"
-successWithEmail = "Invitasjonslenke generert og sendt via e-post"
-
-[workspace.people.inviteLinkTab]
-tab = "Invitasjonslenke"
 
 [workspace.people.inviteMembers]
 label = "Inviter medlemmer"
@@ -9219,7 +8537,6 @@ link = "Lenke"
 username = "Brukernavn"
 
 [workspace.people.license]
-availableSlots = "Tilgjengelige plasser"
 currentUsage = "Bruker for tiden {{current}} av {{max}} brukerlisenser"
 fromLicense = "fra lisens"
 grandfathered = "Videreført"
@@ -9243,12 +8560,10 @@ error = "Kunne ikke oppdatere brukerstatus"
 success = "Brukerstatus oppdatert"
 
 [workspace.teams]
-actions = "Handlinger"
 addMember = "Legg til medlem"
 backToTeams = "Tilbake til team"
 cannotAddToInternal = "Kan ikke legge til medlemmer i det interne teamet"
 cannotDeleteInternal = "Kan ikke slette det interne teamet"
-cannotRemoveFromSystemTeam = "Kan ikke fjerne fra systemteam"
 cannotRenameInternal = "Kan ikke gi det interne teamet nytt navn"
 confirmDelete = "Er du sikker på at du vil slette dette teamet? Dette teamet må være tomt for å kunne slettes."
 confirmRemove = "Fjerne bruker fra dette teamet?"
@@ -9274,7 +8589,6 @@ viewTeam = "Vis team"
 
 [workspace.teams.addMemberToTeam]
 addingTo = "Legger til i"
-cancel = "Avbryt"
 currentlyIn = "for tiden i"
 error = "Kunne ikke legge til medlem i team"
 selectUser = "Velg bruker"
@@ -9298,7 +8612,6 @@ success = "Team endret"
 title = "Bytt team"
 
 [workspace.teams.createTeam]
-cancel = "Avbryt"
 error = "Kunne ikke opprette team"
 nameRequired = "Teamnavn er påkrevd"
 submit = "Opprett team"
@@ -9310,10 +8623,8 @@ title = "Opprett nytt team"
 [workspace.teams.deleteTeam]
 error = "Kunne ikke slette team. Sørg for at teamet er tomt."
 success = "Team slettet"
-teamMustBeEmpty = "Teamet må være tomt før sletting"
 
 [workspace.teams.renameTeam]
-cancel = "Avbryt"
 error = "Kunne ikke gi team nytt navn"
 nameRequired = "Teamnavn er påkrevd"
 newTeamName = "Nytt teamnavn"
