@@ -13,9 +13,8 @@ import stirling.software.proprietary.policy.model.Policy;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Durable {@link PolicyStore} backed by JPA. The runtime store whenever the proprietary module runs
- * (a datasource is always present). Policies are persisted as JSON via {@link PolicyEntity}; the
- * scalar columns are kept in sync for querying.
+ * Durable {@link PolicyStore} backed by JPA; the runtime store. Policies are persisted as JSON via
+ * {@link PolicyEntity}, with scalar columns kept in sync for querying.
  */
 @Service
 @RequiredArgsConstructor
@@ -39,7 +38,8 @@ public class JpaPolicyStore implements PolicyStore {
                         policy.trigger(),
                         policy.sources(),
                         policy.steps(),
-                        policy.output());
+                        policy.output(),
+                        policy.teamId());
 
         PolicyEntity entity = new PolicyEntity();
         entity.setId(id);

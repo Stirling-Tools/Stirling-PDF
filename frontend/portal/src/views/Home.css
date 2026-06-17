@@ -42,18 +42,7 @@
   color: var(--color-text-3);
 }
 
-/* Metric strip */
-.portal-home__metrics {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0.75rem;
-}
-
-@media (max-width: 50rem) {
-  .portal-home__metrics {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
+/* Metric strip now uses the shared <MetricStrip>. */
 
 /* Two-column dashboard row (activity + quick actions) */
 .portal-home__row {

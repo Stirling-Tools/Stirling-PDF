@@ -11,16 +11,9 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
- * When a scheduled policy should fire, expressed as intent ("every day at 02:00") rather than a
- * cron string. A frontend builds one of these from a friendly picker; the schedule trigger asks it
- * for the next firing after a given moment.
- *
- * <p>Sealed so every cadence is an explicit, self-validating shape and adding a new one forces a
- * new subtype rather than another string convention to learn. The {@code type} discriminator stays
- * on the wire so the frontend can switch on it without knowing the Java hierarchy.
- *
- * <p>Wall-clock kinds ({@link Daily}, {@link Weekly}, {@link Monthly}) are evaluated in the zone of
- * the {@code after} argument; {@link Every} is a fixed offset and ignores wall-clock time.
+ * A scheduled policy's firing cadence; {@code type} is the JSON discriminator. Wall-clock kinds
+ * ({@link Daily}, {@link Weekly}, {@link Monthly}) evaluate in the {@code after} argument's zone;
+ * {@link Every} is a fixed offset and ignores wall-clock time.
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
@@ -42,10 +35,7 @@ public sealed interface Schedule {
         DAYS
     }
 
-    /**
-     * A fixed cadence repeating from when the policy was last seen: "every 15 minutes", "every 6
-     * hours". Time of day is irrelevant.
-     */
+    /** A fixed offset from {@code after}: "every 15 minutes", "every 6 hours". No time of day. */
     record Every(long count, Unit unit) implements Schedule {
         public Every {
             if (count <= 0) {
@@ -91,8 +81,7 @@ public sealed interface Schedule {
 
         @Override
         public ZonedDateTime nextAfter(ZonedDateTime after) {
-            // The soonest of the next 7 days that lands on a chosen weekday, at the configured
-            // time.
+            // Soonest of the next 7 days landing on a chosen weekday, at the configured time.
             for (int i = 0; i <= 7; i++) {
                 ZonedDateTime candidate = after.plusDays(i).with(at);
                 if (candidate.isAfter(after) && days.contains(candidate.getDayOfWeek())) {

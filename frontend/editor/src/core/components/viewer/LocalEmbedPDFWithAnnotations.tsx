@@ -300,10 +300,11 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
           selectAfterCreate: true,
         }),
 
-        // Register pan plugin
-        createPluginRegistration(PanPluginPackage, {
-          defaultMode: "mobile",
-        }),
+        // Register pan plugin. Keep the default mode ("never"). Do NOT set
+        // defaultMode: "mobile" - it makes pan the default interaction on any
+        // touch-capable device (e.g. Windows touchscreen laptops) and blocks
+        // text selection.
+        createPluginRegistration(PanPluginPackage),
 
         // Register zoom plugin
         createPluginRegistration(ZoomPluginPackage, {

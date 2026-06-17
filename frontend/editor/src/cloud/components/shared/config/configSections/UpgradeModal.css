@@ -1,0 +1,447 @@
+/* Upgrade-to-Processor modal: two steps inside one frame.
+   Step 1: pick a monthly cap.
+   Step 2: Stripe Embedded Checkout (or placeholder when no test key set).
+   The frame doesn't change between steps — only the panel slides — so the
+   user feels like they're filling out one form, not navigating pages. */
+
+.upm {
+  --upm-accent: #0a8bff;
+  --upm-accent-2: #6c5ce7;
+  --upm-accent-soft: rgba(10, 139, 255, 0.08);
+  --upm-success: #10b981;
+  --upm-radius: 18px;
+  --upm-card-bg: var(--bg-surface);
+  --upm-border: var(--border-default);
+  --upm-divider: var(--border-subtle);
+  --upm-text: var(--text-primary);
+  --upm-muted: var(--text-muted);
+}
+[data-mantine-color-scheme="dark"] .upm {
+  --upm-card-bg: #313842;
+  --upm-border: #3d444e;
+  --upm-divider: #3d444e;
+  --upm-accent-soft: rgba(10, 139, 255, 0.14);
+}
+
+/* Backdrop locks the page and centres the modal. z-index matches
+   Z_INDEX_OVER_SETTINGS_MODAL (styles/zIndex.ts) — must sit above the
+   AppConfigModal's 1300 (Z_INDEX_OVER_FULLSCREEN_SURFACE). The config modal
+   also hides itself while we're open (appConfig:overlay event), so this is
+   belt-and-braces for the brief overlap during open/close transitions. */
+.upm-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  z-index: 1400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: upm-fade-in 180ms ease;
+}
+
+@keyframes upm-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.upm-frame {
+  background: var(--upm-card-bg);
+  border: 1px solid var(--upm-border);
+  border-radius: var(--upm-radius);
+  width: 100%;
+  /* Stripe Embedded Checkout flips from its single-column layout to the two-column
+     "horizontal" one (order summary beside the payment form) once the iframe is
+     ~1000px wide — measured empirically against a live test session; Stripe doesn't
+     document the breakpoint. The live iframe gets frame_width − 44px (the 22px body
+     padding each side; the live mount's own padding is removed — see
+     .upm-stripe-mount[data-state="live"]). So 1100px → ~1056px iframe, comfortably
+     past the ~1000px threshold. Because the frame stays width:100% under this cap,
+     narrow windows shrink it and Stripe falls back to single column — horizontal
+     when it fits, vertical when it doesn't. Cap + confirm steps read fine at this
+     width (their internal text is already capped — see upm-confirm__body,
+     upm-section-help). */
+  max-width: 1100px;
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.4);
+  animation: upm-pop-in 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes upm-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ── Header: title + close + step dots ────────────────────────────────── */
+.upm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid var(--upm-divider);
+}
+.upm-header__title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  color: var(--upm-text);
+  margin: 0;
+}
+.upm-header__close {
+  background: transparent;
+  border: none;
+  color: var(--upm-muted);
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background 120ms ease,
+    color 120ms ease;
+}
+.upm-header__close:hover {
+  background: var(--upm-divider);
+  color: var(--upm-text);
+}
+
+/* Left cluster: optional back arrow + title. The back arrow only renders on the
+   checkout step (cap/confirm have no parent step to return to) — it replaces the
+   old footer "← Back" button. */
+.upm-header__left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.upm-header__back {
+  background: transparent;
+  border: none;
+  color: var(--upm-muted);
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: -6px;
+  transition:
+    background 120ms ease,
+    color 120ms ease;
+}
+.upm-header__back:hover {
+  background: var(--upm-divider);
+  color: var(--upm-text);
+}
+
+.upm-steps {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 22px 14px;
+  background: var(--upm-accent-soft);
+  border-bottom: 1px solid var(--upm-divider);
+}
+.upm-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--upm-muted);
+  transition: color 200ms ease;
+}
+.upm-step__dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--upm-card-bg);
+  border: 1.5px solid var(--upm-divider);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  transition:
+    background 200ms ease,
+    border-color 200ms ease,
+    color 200ms ease;
+}
+.upm-step[data-state="active"] {
+  color: var(--upm-text);
+}
+.upm-step[data-state="active"] .upm-step__dot {
+  background: linear-gradient(135deg, var(--upm-accent), var(--upm-accent-2));
+  border-color: transparent;
+  color: white;
+}
+.upm-step[data-state="done"] {
+  color: var(--upm-success);
+}
+.upm-step[data-state="done"] .upm-step__dot {
+  background: var(--upm-success);
+  border-color: transparent;
+  color: white;
+}
+.upm-step__connector {
+  flex: 1 1 auto;
+  height: 1.5px;
+  background: var(--upm-divider);
+  margin: 0 4px;
+}
+
+/* ── Body: slides between steps without remounting ───────────────────── */
+.upm-body {
+  padding: 22px;
+  overflow-y: auto;
+  flex: 1 1 auto;
+}
+
+/* Hero promise reinforcement — only shown on step 1 */
+.upm-promise {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--upm-accent-soft);
+  border-radius: 12px;
+  margin-bottom: 18px;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--upm-text);
+}
+.upm-promise__icon {
+  flex-shrink: 0;
+  color: var(--upm-accent);
+  margin-top: 1px;
+}
+.upm-promise__highlight {
+  font-weight: 700;
+}
+
+.upm-section-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--upm-text);
+  margin: 0 0 4px;
+  letter-spacing: -0.005em;
+}
+.upm-section-help {
+  font-size: 0.825rem;
+  color: var(--upm-muted);
+  margin: 0 0 14px;
+  line-height: 1.45;
+}
+
+/* Cap selection (presets + custom + no-cap + estimate) now lives in the shared
+   SpendCapControl (SpendCapControl.css). The old upm-cap-* / upm-no-cap-toggle
+   rules were removed with it. */
+
+/* What counts as "processed" — quiet helper text */
+.upm-help-card {
+  background: var(--upm-divider);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-top: 14px;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--upm-muted);
+}
+.upm-help-card__title {
+  display: block;
+  font-weight: 700;
+  color: var(--upm-text);
+  margin-bottom: 4px;
+  font-size: 0.8rem;
+}
+
+/* On the checkout step, step 1's "Set monthly ceiling" label is replaced (inside
+   the step bar) by the chosen ceiling + an inline Edit affordance — see
+   UpgradeModal.tsx. Kept here next to the step-bar markup it styles. */
+.upm-step__chosen {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--upm-text);
+  font-weight: 700;
+}
+.upm-step__edit {
+  background: transparent;
+  border: none;
+  color: var(--upm-accent);
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+.upm-step__edit:hover {
+  background: rgba(10, 139, 255, 0.12);
+}
+
+/* Placeholder card for the loading / error / mock states — a dashed, centered
+   box with helper text. The live Stripe iframe is NOT meant to wear this chrome;
+   it gets a full-width reset below (data-state="live"). */
+.upm-stripe-mount {
+  min-height: 220px;
+  border: 1.5px dashed var(--upm-divider);
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 8px;
+  color: var(--upm-muted);
+  font-size: 0.875rem;
+}
+
+/* Live Stripe Embedded Checkout — strip the placeholder card chrome so the
+   iframe spans the full body width and Stripe renders its two-column
+   "horizontal" layout. Without this the dashed border + 24px padding + centering
+   above box the iframe ~48px narrower, dropping it back to single column. */
+.upm-stripe-mount[data-state="live"] {
+  display: block;
+  border: none;
+  padding: 0;
+  min-height: 0;
+  text-align: left;
+}
+.upm-stripe-mount__title {
+  font-weight: 700;
+  color: var(--upm-text);
+  font-size: 0.95rem;
+}
+.upm-stripe-mount__code {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.75rem;
+  padding: 2px 6px;
+  background: var(--upm-card-bg);
+  border-radius: 4px;
+  border: 1px solid var(--upm-divider);
+  color: var(--upm-text);
+}
+
+/* ── Footer / nav actions ─────────────────────────────────────────────── */
+.upm-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 22px;
+  border-top: 1px solid var(--upm-divider);
+  background: var(--upm-card-bg);
+}
+.upm-footer__actions {
+  display: flex;
+  gap: 8px;
+}
+.upm-btn {
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: 1.5px solid transparent;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 120ms ease;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.upm-btn[data-variant="ghost"] {
+  background: transparent;
+  border-color: var(--upm-divider);
+  color: var(--upm-text);
+}
+.upm-btn[data-variant="ghost"]:hover {
+  border-color: var(--upm-accent);
+  color: var(--upm-accent);
+}
+.upm-btn[data-variant="primary"] {
+  background: linear-gradient(135deg, var(--upm-accent), var(--upm-accent-2));
+  color: white;
+}
+.upm-btn[data-variant="primary"]:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px -6px rgba(10, 139, 255, 0.5);
+}
+.upm-btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* ── Step 3: confirmation ─────────────────────────────────────────────── */
+
+.upm-confirm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 12px 8px 4px;
+  gap: 12px;
+}
+.upm-confirm__icon {
+  font-size: 64px !important;
+  color: #10b981;
+  filter: drop-shadow(0 6px 18px rgba(16, 185, 129, 0.35));
+}
+.upm-confirm__title {
+  margin: 6px 0 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--upm-text);
+}
+.upm-confirm__body {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--upm-text-muted);
+  max-width: 380px;
+  line-height: 1.55;
+}
+.upm-confirm__summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 360px;
+  padding: 14px 18px;
+  background: var(--upm-inset-bg, rgba(0, 0, 0, 0.03));
+  border: 1px solid var(--upm-divider);
+  border-radius: 12px;
+  margin-top: 6px;
+  font-size: 0.92rem;
+}
+.upm-confirm__summary > strong {
+  color: var(--upm-text);
+  font-size: 1.05rem;
+}
+.upm-confirm__note {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  color: var(--upm-text-muted);
+  max-width: 380px;
+  line-height: 1.5;
+}

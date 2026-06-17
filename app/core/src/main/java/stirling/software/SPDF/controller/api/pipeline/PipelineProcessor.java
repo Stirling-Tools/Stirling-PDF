@@ -5,7 +5,6 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -326,12 +325,12 @@ public class PipelineProcessor {
         }
         List<Resource> outputFiles = new ArrayList<>();
         for (File file : files) {
-            Path normalizedPath = Paths.get(file.getName()).normalize();
+            Path normalizedPath = Path.of(file.getName()).normalize();
             if (normalizedPath.startsWith("..")) {
                 throw new SecurityException(
                         "Potential path traversal attempt in file name: " + file.getName());
             }
-            Path path = Paths.get(file.getAbsolutePath());
+            Path path = Path.of(file.getAbsolutePath());
             // debug statement
             log.info("Reading file: {}", path);
             if (Files.exists(path)) {
