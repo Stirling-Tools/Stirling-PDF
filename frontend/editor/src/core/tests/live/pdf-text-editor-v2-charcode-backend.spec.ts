@@ -183,39 +183,41 @@ test.describe("v2 charcode backend strategy (live PDFBox)", () => {
       document.execCommand("insertText", false, "M");
     }, runTestId);
 
-    // Scrape the HUD to verify a charcodes-ok per-char emit landed
-    // for the typed "M". We poll until the OK row appears: this is
-    // robust to whether the prewarm finished BEFORE the keystroke
-    // (ideal: 1-attempt) or it finished slightly after (the resolver's
-    // own auto-prefetch + retry-on-next-keystroke kicks in - still
-    // correct, just slower).
-    const hudLocator = page.getByTestId("v2-charcode-debug-hud");
-    await expect(hudLocator).toBeVisible({ timeout: 10_000 });
+    // The debug HUD was removed from production builds, so verify the emit
+    // through the window-exposed telemetry buffer instead (charcodeRegistry
+    // mirrors recent CharcodeEvents onto window.__v2_charcode_events for
+    // exactly this purpose). Poll for a charcodes-ok event covering the
+    // typed "M": robust to whether prewarm beat the keystroke (1-attempt)
+    // or the resolver's auto-prefetch retried slightly after.
+    type CharcodeEmitEvent = {
+      text: string;
+      outcome: string;
+      resolved: number[];
+    };
+    const readCharcodeEvents = () =>
+      page.evaluate(
+        () =>
+          (
+            window as unknown as {
+              __v2_charcode_events?: CharcodeEmitEvent[];
+            }
+          ).__v2_charcode_events ?? [],
+      );
 
-    // Dump the cache state so the failing assertion shows exactly
-    // what got cached vs missed.
-    const cacheDump = await page.evaluate(() => {
-      const w = window as unknown as {
-        __v2_charcode_cache_dump?: () => Record<string, number | null>;
-      };
-      return w.__v2_charcode_cache_dump?.() ?? null;
-    });
-    process.stdout.write(
-      `[cache-dump] ${JSON.stringify(cacheDump, null, 2)}\n`,
-    );
-
-    // Poll for the OK row. Up to 8s gives the resolver time to fall
-    // back to the auto-prefetch path if the prewarm raced the
-    // keystroke - either way we MUST see a charcodes-ok emit for M.
     await expect
       .poll(
         async () => {
-          const text = await hudLocator.innerText();
-          return text;
+          const events = await readCharcodeEvents();
+          return events.some(
+            (e) =>
+              e.text.includes("M") &&
+              e.outcome === "charcodes-ok" &&
+              e.resolved.length > 0,
+          );
         },
         { timeout: 10_000, intervals: [250, 500, 1000] },
       )
-      .toMatch(/text="M"[\s\S]*charcodes \[\d+\][\s\S]*per-char backend emit/);
+      .toBe(true);
 
     // Cross-check: the editor's model must reflect "10M+M" - the
     // typed M became a real text run via the per-char emit branch.
@@ -234,16 +236,15 @@ test.describe("v2 charcode backend strategy (live PDFBox)", () => {
     }, runTestId);
     expect(runText).toBe("10M+M");
 
-    // And the explicit no-regression guard: the latest HUD emit row
-    // (top of the list) MUST be the charcodes-ok "M" line, NOT a
-    // fallback. This is the "first-keystroke-must-work" assertion.
-    // We accept either of two stamp formats - "→ charcodes [182]"
-    // (single per-char emit) or a multi-char emit that includes M.
-    const hudText = await hudLocator.innerText();
-    const firstEmitBlock = hudText.split("(newest first):")[1] ?? hudText;
+    // No-regression guard: the MOST RECENT emit covering "M" must be a
+    // source-font charcodes-ok emit, NOT a Helvetica fallback. This is
+    // the "first-keystroke-must-work" assertion.
+    const events = await readCharcodeEvents();
+    const mEvents = events.filter((e) => e.text.includes("M"));
+    const lastM = mEvents[mEvents.length - 1];
     expect(
-      firstEmitBlock,
-      `HUD top-of-list should be a charcodes-ok M emit. Full HUD:\n${hudText}`,
-    ).toMatch(/OK[\s\S]*text="M"[\s\S]*charcodes \[\d+\]/);
+      lastM?.outcome,
+      `latest M emit must be charcodes-ok. Events:\n${JSON.stringify(events, null, 2)}`,
+    ).toBe("charcodes-ok");
   });
 });

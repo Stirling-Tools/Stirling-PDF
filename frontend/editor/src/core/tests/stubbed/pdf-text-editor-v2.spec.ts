@@ -42,6 +42,20 @@ async function gotoV2(page: import("@playwright/test").Page) {
   await expect(page.getByTestId("v2-root")).toBeVisible({ timeout: 15_000 });
 }
 
+/**
+ * Change the selected run's font family through the real toolbar dropdown.
+ * Driving the Mantine Select (not constructing the command via an ad-hoc
+ * `import("/src/...")`, which Vite cannot resolve at runtime and tsc cannot
+ * type-check) is both the real user flow and round-trip safe.
+ */
+async function selectFontFamily(
+  page: import("@playwright/test").Page,
+  optionLabel: string,
+) {
+  await page.getByTestId("v2-font-family").click();
+  await page.getByRole("option", { name: optionLabel, exact: true }).click();
+}
+
 async function loadSamplePdf(page: import("@playwright/test").Page) {
   // The visible "Open" flow goes through the left-sidebar Files panel.
   // For headless tests we drive the editor via the hidden test-only
@@ -4304,6 +4318,23 @@ test.describe("PDF text editor v2 - stress: bold / font swap variations", () => 
   }
 
   async function selectTagline(page: import("@playwright/test").Page) {
+    // The page-0 runs are read lazily on first intersection; wait for them
+    // to populate so the test actually runs instead of skipping on a race.
+    await page
+      .waitForFunction(
+        () => {
+          const s = (
+            window as unknown as {
+              __v2_editor_store?: {
+                doc?: { page: (i: number) => { runs: unknown[] } };
+              };
+            }
+          ).__v2_editor_store;
+          return (s?.doc?.page(0).runs.length ?? 0) > 0;
+        },
+        { timeout: 15_000 },
+      )
+      .catch(() => {});
     const id = await page.evaluate(() => {
       const store = (
         window as unknown as {
@@ -4520,47 +4551,16 @@ test.describe("PDF text editor v2 - stress: bold / font swap variations", () => 
       test.skip(true, "fixture missing tagline");
       return;
     }
-    // Dispatch SetFontFamily directly via store. Await the dynamic
-    // import inside evaluate so the dispatch completes before the
-    // outer await resolves - otherwise the test reads the model
-    // BEFORE the command has applied and sees stale state.
-    await page.evaluate(async (rid) => {
-      const { SetFontFamilyCommand } =
-        await import("/src/core/tools/pdfTextEditor/v2/commands/SetFontFamilyCommand.ts");
-      const store = (
-        window as unknown as {
-          __v2_editor_store: { dispatch: (cmd: unknown) => void };
-        }
-      ).__v2_editor_store;
-      store.dispatch(
-        new SetFontFamilyCommand({
-          pageIndex: 0,
-          runId: rid,
-          nextFamily: "Times-Roman",
-        }),
-      );
-    }, id);
+    // Change font family through the real toolbar dropdown (the tagline run
+    // is already selected). The Select's onChange dispatches SetFontFamily.
+    await selectFontFamily(page, "Times Roman");
     await page.waitForTimeout(300);
     const mid = await readRun(page, id);
     if (!mid) throw new Error("mid read failed");
     expect(mid.merged).toBe(0);
     expect(mid.fontId).toBe("base14:Times-Roman");
     // Swap back to Helvetica.
-    await page.evaluate(async (rid) => {
-      const { SetFontFamilyCommand } =
-        await import("/src/core/tools/pdfTextEditor/v2/commands/SetFontFamilyCommand.ts");
-      (
-        window as unknown as {
-          __v2_editor_store: { dispatch: (cmd: unknown) => void };
-        }
-      ).__v2_editor_store.dispatch(
-        new SetFontFamilyCommand({
-          pageIndex: 0,
-          runId: rid,
-          nextFamily: "Helvetica",
-        }),
-      );
-    }, id);
+    await selectFontFamily(page, "Helvetica");
     await page.waitForTimeout(300);
     const after = await readRun(page, id);
     if (!after) throw new Error("after read failed");
