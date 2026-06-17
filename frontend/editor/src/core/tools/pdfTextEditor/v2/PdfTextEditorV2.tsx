@@ -100,24 +100,25 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
     async (file: File) => {
       const doc = store.document;
       if (!doc) return;
-      const bitmap = await createImageBitmap(file);
-      // The document may have been reloaded while the bitmap decoded; bail
+      // Decode via an <img> element rather than createImageBitmap: the latter
+      // lacks codec support in some environments (and headless Chromium),
+      // throwing "source image could not be decoded". The <img> path decodes
+      // anywhere the browser can render the format. Surface failures instead
+      // of swallowing them so the user isn't left wondering why nothing happened.
+      let decoded: { data: ImageData; width: number; height: number };
+      try {
+        decoded = await decodeImageFile(file);
+      } catch (err) {
+        store.setError(
+          err instanceof Error
+            ? err.message
+            : "Could not decode the selected image.",
+        );
+        return;
+      }
+      // The document may have been reloaded while the image decoded; bail
       // rather than insert against geometry from the wrong document.
-      if (store.document !== doc) {
-        bitmap.close?.();
-        return;
-      }
-      const canvas = document.createElement("canvas");
-      canvas.width = bitmap.width;
-      canvas.height = bitmap.height;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) {
-        bitmap.close?.();
-        return;
-      }
-      ctx.drawImage(bitmap, 0, 0);
-      const data = ctx.getImageData(0, 0, bitmap.width, bitmap.height);
-      bitmap.close?.();
+      if (store.document !== doc) return;
       // Insert onto the page currently in view, read from fresh store state
       // (not a stale render closure), so scrolling to page 10 and inserting
       // doesn't silently drop the image onto page 1 off-screen.
@@ -126,12 +127,12 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
       const page = pages.find((p) => p.pageIndex === visibleIndex) ?? pages[0];
       if (!page) return;
       const w = page.width * INSERTED_IMAGE_RATIO;
-      const h = w * (bitmap.height / bitmap.width);
+      const h = w * (decoded.height / decoded.width);
       const cmd = new InsertImageCommand({
         pageIndex: page.pageIndex,
-        rgba: data.data,
-        pixelWidth: bitmap.width,
-        pixelHeight: bitmap.height,
+        rgba: decoded.data.data,
+        pixelWidth: decoded.width,
+        pixelHeight: decoded.height,
         x: (page.width - w) / 2,
         y: (page.height - h) / 2,
         width: w,
@@ -339,4 +340,43 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
       />
     </Stack>
   );
+}
+
+/**
+ * Decode an image File to RGBA via an <img> element + canvas. Used instead of
+ * createImageBitmap, which lacks codec support in some environments. Rejects
+ * (so the caller can surface an error) when the image can't be decoded.
+ */
+function decodeImageFile(
+  file: File,
+): Promise<{ data: ImageData; width: number; height: number }> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const width = img.naturalWidth || img.width;
+        const height = img.naturalHeight || img.height;
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          reject(new Error("Canvas 2D context unavailable"));
+          return;
+        }
+        ctx.drawImage(img, 0, 0);
+        resolve({ data: ctx.getImageData(0, 0, width, height), width, height });
+      } catch (e) {
+        reject(e instanceof Error ? e : new Error(String(e)));
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Could not decode the selected image."));
+    };
+    img.src = url;
+  });
 }

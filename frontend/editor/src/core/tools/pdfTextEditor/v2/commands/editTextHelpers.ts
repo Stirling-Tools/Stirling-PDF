@@ -11,6 +11,30 @@ export function everyCharIn(text: string, pool: string): boolean {
 }
 
 /**
+ * Strip characters a base-14 (WinAnsi) font cannot render. PDFium's
+ * FPDFText_SetText silently maps anything outside Latin-1 to U+00FF
+ * (ydieresis) "tofu", so for the base-14 fallback we DROP non-representable
+ * code points (CJK, emoji, etc.) rather than persist garbage glyphs.
+ *
+ * Iterates by code POINT so an astral char (surrogate pair) is dropped whole -
+ * a lone surrogate is never left behind. NBSP becomes a normal space (base-14
+ * maps U+00A0 to ydieresis too).
+ */
+export function sanitizeForBase14(text: string): string {
+  let out = "";
+  for (const ch of text) {
+    const cp = ch.codePointAt(0) ?? 0;
+    if (cp === 0x00a0) {
+      out += " ";
+    } else if (cp <= 0xff) {
+      out += ch;
+    }
+    // else: unrepresentable in base-14 - drop it (no tofu).
+  }
+  return out;
+}
+
+/**
  * Every PDFium pointer that backs a run. A run can be one of:
  *  - paragraph (multi-line) → `paragraphLeafPtrs` (every leaf across every line)
  *  - merged line group     → `mergedFromPtrs`
@@ -239,35 +263,42 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
   // Helvetica, so a rewrite NEVER persists invisible / garbled text - it
   // keeps the source font only where that font genuinely renders the chars.
   const emitWord = (text: string, x: number): number => {
+    // base-14 can only render Latin-1; drop the rest so PDFium never emits
+    // U+00FF tofu. The reused source font keeps the raw text (it may have the
+    // glyphs); only the fallback path sanitises.
+    const base14Text = sanitizeForBase14(text);
     const newBase14 = (): number =>
       m.FPDFPageObj_NewTextObj(opts.doc.docPtr, family, size);
-    let ptr = canReuse
-      ? m2.FPDFPageObj_CreateTextObj!(
-          opts.doc.docPtr,
-          opts.originalFontPtr,
-          size,
-        )
-      : newBase14();
-    if (!ptr) return 0;
+    const emitBase14 = (): number => {
+      if (base14Text.length === 0) return 0; // nothing representable - drop
+      const p = newBase14();
+      if (!p) return 0;
+      setTextOn(m, p, base14Text);
+      applyFillAndPos(m, opts.page, p, opts.fill, x, opts.y);
+      return p;
+    };
+    if (!canReuse) return emitBase14();
+
+    const ptr = m2.FPDFPageObj_CreateTextObj!(
+      opts.doc.docPtr,
+      opts.originalFontPtr,
+      size,
+    );
+    if (!ptr) return emitBase14();
     setTextOn(m, ptr, text);
     applyFillAndPos(m, opts.page, ptr, opts.fill, x, opts.y);
-    if (canReuse) {
-      const right = measureObjRightEdgePt(m, ptr);
-      const visible = text.replace(/\s+/g, "").length;
-      // Narrowest base-14 glyph ("i") is ~0.22em; anything well under ~0.15em
-      // per visible char means the reused font produced .notdef / 0-width.
-      const minExpected = visible * size * 0.15;
-      if (visible > 0 && right - x < minExpected) {
-        try {
-          m.FPDFPage_RemoveObject(opts.page.pagePtr, ptr);
-        } catch {
-          /* best-effort - the failed object is discarded */
-        }
-        ptr = newBase14();
-        if (!ptr) return 0;
-        setTextOn(m, ptr, text);
-        applyFillAndPos(m, opts.page, ptr, opts.fill, x, opts.y);
+    const right = measureObjRightEdgePt(m, ptr);
+    const visible = text.replace(/\s+/g, "").length;
+    // Narrowest base-14 glyph ("i") is ~0.22em; anything well under ~0.15em
+    // per visible char means the reused font produced .notdef / 0-width.
+    const minExpected = visible * size * 0.15;
+    if (visible > 0 && right - x < minExpected) {
+      try {
+        m.FPDFPage_RemoveObject(opts.page.pagePtr, ptr);
+      } catch {
+        /* best-effort - the failed object is discarded */
       }
+      return emitBase14();
     }
     return ptr;
   };

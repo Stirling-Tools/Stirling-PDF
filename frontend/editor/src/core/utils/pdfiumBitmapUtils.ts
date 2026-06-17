@@ -86,7 +86,9 @@ export interface DecodedImage {
  * Create a PDFium bitmap from decoded RGBA pixels, attach it to a new image
  * page object, position it via an affine matrix, and insert it into the page.
  *
- * Returns `true` if the image was successfully inserted, `false` otherwise.
+ * Returns the new image object pointer on success, or 0 on failure. The
+ * caller can use the pointer directly instead of re-looking it up by index
+ * (FPDFPage_GetObject returns null until GenerateContent runs).
  * All intermediate WASM resources are cleaned up on failure.
  */
 export function embedBitmapImageOnPage(
@@ -98,9 +100,9 @@ export function embedBitmapImageOnPage(
   pdfY: number,
   drawWidth: number,
   drawHeight: number,
-): boolean {
+): number {
   const bitmapPtr = m.FPDFBitmap_Create(image.width, image.height, 1);
-  if (!bitmapPtr) return false;
+  if (!bitmapPtr) return 0;
 
   try {
     const bufferPtr = m.FPDFBitmap_GetBuffer(bitmapPtr);
@@ -116,7 +118,7 @@ export function embedBitmapImageOnPage(
     );
 
     const imageObjPtr = m.FPDFPageObj_NewImageObj(docPtr);
-    if (!imageObjPtr) return false;
+    if (!imageObjPtr) return 0;
 
     const setBitmapOk = m.FPDFImageObj_SetBitmap(
       pagePtr,
@@ -126,7 +128,7 @@ export function embedBitmapImageOnPage(
     );
     if (!setBitmapOk) {
       m.FPDFPageObj_Destroy(imageObjPtr);
-      return false;
+      return 0;
     }
 
     // -- early-destroy the bitmap; PDFium has copied the pixel data internally
@@ -144,14 +146,14 @@ export function embedBitmapImageOnPage(
 
       if (!m.FPDFPageObj_SetMatrix(imageObjPtr, matrixPtr)) {
         m.FPDFPageObj_Destroy(imageObjPtr);
-        return false;
+        return 0;
       }
     } finally {
       m.pdfium.wasmExports.free(matrixPtr);
     }
 
     m.FPDFPage_InsertObject(pagePtr, imageObjPtr);
-    return true;
+    return imageObjPtr;
   } finally {
     // Safety net: FPDFBitmap_Destroy is a no-op if ptr is 0 in most PDFium
     // builds but guard anyway.  If already destroyed above, the second call

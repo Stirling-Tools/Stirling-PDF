@@ -105,12 +105,16 @@ export class EditorStore {
     return () => this.listeners.delete(listener);
   }
 
-  setLoading(loading: boolean, error: string | null = null): void {
-    this.patch({
-      loading,
-      error,
-      progress: loading ? this.state.progress : null,
-    });
+  setLoading(loading: boolean): void {
+    // Starting a load clears any stale error. Finishing must NOT touch error:
+    // a failed load sets it in its catch, then the finally calls
+    // setLoading(false), which previously reset error to null - silently
+    // swallowing every load failure (encrypted/corrupted PDFs).
+    if (loading) {
+      this.patch({ loading: true, error: null });
+    } else {
+      this.patch({ loading: false, progress: null });
+    }
   }
 
   setProgress(progress: LoadProgress | null): void {

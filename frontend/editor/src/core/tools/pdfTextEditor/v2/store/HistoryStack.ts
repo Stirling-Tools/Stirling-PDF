@@ -1,7 +1,16 @@
 import type { Command } from "@app/tools/pdfTextEditor/v2/commands/Command";
+import { CompositeCommand } from "@app/tools/pdfTextEditor/v2/commands/CompositeCommand";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDocument";
 
 const DEFAULT_LIMIT = 200;
+
+/**
+ * Commands sharing a coalesce key that execute within this many ms of each
+ * other are grouped into one undo step. contentEditable fires several `input`
+ * events per logical keystroke (e.g. Enter then a letter), so without this a
+ * single typed action would need several undos to reverse.
+ */
+const COALESCE_WINDOW_MS = 600;
 
 /**
  * LIFO command history for undo/redo.
@@ -16,6 +25,10 @@ export class HistoryStack {
   private readonly undoStack: Command[];
   private readonly redoStack: Command[];
   private readonly limit: number;
+  /** Coalesce key of the last executed command, or null if not coalescable. */
+  private lastCoalesceKey: string | null = null;
+  /** Timestamp (ms) of the last execute(), for the coalesce time window. */
+  private lastExecuteAt = 0;
 
   constructor(limit: number = DEFAULT_LIMIT) {
     this.undoStack = [];
@@ -37,10 +50,34 @@ export class HistoryStack {
 
   execute(cmd: Command, doc: EditorDocument): void {
     cmd.apply(doc);
-    this.undoStack.push(cmd);
-    if (this.undoStack.length > this.limit) {
-      this.undoStack.shift();
+    const key = cmd.coalesceKey?.() ?? null;
+    const now = Date.now();
+    const top = this.undoStack[this.undoStack.length - 1];
+    // Group with the previous command when it shares a coalesce key and ran
+    // within the time window. The child was already applied above; the group
+    // only re-applies / reverts as a unit.
+    if (
+      key !== null &&
+      key === this.lastCoalesceKey &&
+      top &&
+      now - this.lastExecuteAt <= COALESCE_WINDOW_MS
+    ) {
+      if (top instanceof CompositeCommand) {
+        top.push(cmd);
+      } else {
+        this.undoStack[this.undoStack.length - 1] = new CompositeCommand([
+          top,
+          cmd,
+        ]);
+      }
+    } else {
+      this.undoStack.push(cmd);
+      if (this.undoStack.length > this.limit) {
+        this.undoStack.shift();
+      }
     }
+    this.lastCoalesceKey = key;
+    this.lastExecuteAt = now;
     this.redoStack.length = 0;
   }
 
@@ -49,6 +86,8 @@ export class HistoryStack {
     if (!cmd) return null;
     cmd.revert(doc);
     this.redoStack.push(cmd);
+    // End the coalescing burst - a later edit starts a fresh undo step.
+    this.lastCoalesceKey = null;
     return cmd;
   }
 
@@ -57,12 +96,14 @@ export class HistoryStack {
     if (!cmd) return null;
     cmd.apply(doc);
     this.undoStack.push(cmd);
+    this.lastCoalesceKey = null;
     return cmd;
   }
 
   clear(): void {
     this.undoStack.length = 0;
     this.redoStack.length = 0;
+    this.lastCoalesceKey = null;
   }
 
   /**

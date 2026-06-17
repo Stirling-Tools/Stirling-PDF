@@ -181,6 +181,7 @@ export class ReflowWrapCommand implements Command {
       topBaseline,
       lineHeight,
       fontSize,
+      this.prev.text,
     );
     run.dirty = true;
     page.markDirty();
@@ -212,6 +213,15 @@ export class ReflowWrapCommand implements Command {
 
   describe(): string {
     return `Wrap ${this.runId}`;
+  }
+
+  /**
+   * Share the edit coalesce key for this run so the auto-reflow that fires on
+   * blur merges into the preceding typing burst's single undo step - otherwise
+   * an undo right after editing reverts only the reflow, not the text change.
+   */
+  coalesceKey(): string {
+    return `edit-text:${this.pageIndex}:${this.runId}`;
   }
 }
 
@@ -326,6 +336,7 @@ function rebuildRunFromLines(
   topBaseline: number,
   lineHeight: number,
   fontSize: number,
+  preReflowText: string,
 ): void {
   const slots: ParagraphLineSlot[] = [];
   const lineTexts: string[] = [];
@@ -399,9 +410,21 @@ function rebuildRunFromLines(
   // is what lets a later edit re-flow soft wraps freely while never deleting
   // a manual line break. Every separator is exactly one char, so the slot
   // char ranges above (cursorChar += lineText.length + 1) stay aligned.
-  run.text = lineTexts
+  const glyphDerived = lineTexts
     .map((t, i) => (i === 0 ? t : (lineIsHardStart[i] ? "\n" : " ") + t))
     .join("");
+  // Reflow only repositions glyphs - it doesn't change the WORD sequence. When
+  // the glyph word count matches the pre-reflow text's, preserve that text so
+  // typed whitespace the glyph stream can't represent survives in the model
+  // (PDFium collapses consecutive spaces in a text object, so re-deriving from
+  // glyphs silently loses them). Falls back to the glyph-derived text when the
+  // word counts diverge (a substantial structural change - trust the glyphs).
+  const glyphWordCount = lines.reduce((n, l) => n + l.length, 0);
+  const preWordCount = (preReflowText.match(/\S+/g) ?? []).length;
+  run.text =
+    preWordCount > 0 && glyphWordCount === preWordCount
+      ? preReflowText
+      : glyphDerived;
 
   const s0 = slots[0];
   if (s0) {

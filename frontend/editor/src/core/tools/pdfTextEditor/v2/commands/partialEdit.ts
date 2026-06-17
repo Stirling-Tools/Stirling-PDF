@@ -98,10 +98,12 @@ function buildSlotMerged(
 
 /**
  * Astral characters (emoji, math symbols, CJK ext-B) are two UTF-16 code
- * units. The LCS + char->sub-run maps below index by code unit, so they
- * could split a surrogate pair across keep/drop or different sub-runs and
- * emit a lone surrogate (tofu). Bail to the overlay path, which re-emits
- * whole words and keeps the pair intact.
+ * units. The LCS + char->sub-run maps below index by code unit, so an EXISTING
+ * astral char in prevText could be split across keep/drop and emit a lone
+ * surrogate (tofu). We only guard prevText: a NEW astral char in an insert is
+ * emitted whole-word by emitTextLine (and sanitised in the base-14 fallback),
+ * so it never splits - and the insert can proceed without bailing the whole
+ * paragraph (which would drop every other line's source objects).
  */
 function hasSurrogatePair(s: string): boolean {
   return /[\uD800-\uDBFF][\uDC00-\uDFFF]/.test(s);
@@ -236,7 +238,7 @@ export function planPartialEdit(
   if (run.mergedFromBounds.length !== run.mergedFromPtrs.length) return null;
   if (nextText.length === 0) return null;
   if (prevText === nextText) return null;
-  if (hasSurrogatePair(prevText) || hasSurrogatePair(nextText)) return null;
+  if (hasSurrogatePair(prevText)) return null;
 
   const { keptA, keptB, alignment } = lcsIndices(prevText, nextText);
 
@@ -311,7 +313,13 @@ export function planPartialEdit(
     }
     if (keptCount === 0) subRunStatus.push("all-deleted");
     else if (keptCount === subLen) subRunStatus.push("all-kept");
-    else {
+    else if (surviving.trim() === "") {
+      // Only whitespace survives this partially-deleted sub-run. SetText-ing a
+      // lone space back onto the (often Type3) source object renders it as
+      // U+00FF ("ÿ") tofu - that font has no space glyph. Drop the object
+      // instead; the gap is carried positionally by the surrounding glyphs.
+      subRunStatus.push("all-deleted");
+    } else {
       subRunStatus.push("mixed");
       mixedSubRuns.add(i);
       mixedSurviving.set(i, surviving);
@@ -677,7 +685,16 @@ export function applyPartialEditPlan(
     for (let i = processedUpTo + 1; i < idx; i++) {
       if (plan.subRunStatus[i] === "all-deleted") {
         const b = plan.prevMergedFromBounds[i];
-        if (b) offset -= b.right - b.x;
+        if (!b) continue;
+        // Subtract the deleted sub-run's ADVANCE (distance to the next
+        // sub-run's left edge), not just its ink width, so the following kept
+        // glyphs shift left to exactly where the deleted one began - fully
+        // closing the gap. Ink width left a residual gap that ReflowWrap's
+        // word-grouping later read as a spurious inter-word space (e.g.
+        // deleting a mid-word char produced "Compre ensive"). Falls back to
+        // ink width for the last sub-run (no following one to measure against).
+        const next = plan.prevMergedFromBounds[i + 1];
+        offset -= next && next.x > b.x ? next.x - b.x : b.right - b.x;
       }
     }
     processedUpTo = Math.max(processedUpTo, idx);
@@ -846,15 +863,25 @@ export function applyPartialEditPlan(
       }
       for (let i = 0; i < ptrs.length; i++) {
         const word = insertWords[i];
+        if (!word) {
+          // More emitted objects than words (e.g. a whitespace-only insert
+          // after deleting the leading word). Registering an empty-text ptr
+          // makes it read back as U+00FF ("ÿ") tofu later, so remove the
+          // stray object and skip it instead of storing "".
+          try {
+            m.FPDFPage_RemoveObject(page.pagePtr, ptrs[i]);
+          } catch {
+            /* best-effort */
+          }
+          continue;
+        }
         const bnds = objBoundsLR(m, ptrs[i], anchorX);
         newMergedFromPtrs.push(ptrs[i]);
-        newMergedFromTexts.push(word ? word.text : "");
+        newMergedFromTexts.push(word.text);
         newMergedFromBounds.push({ x: bnds.x, right: bnds.right });
-        newMergedFromCharStarts.push(
-          op.startBIdx + (word ? word.start : insertText.length),
-        );
+        newMergedFromCharStarts.push(op.startBIdx + word.start);
+        insertedPtrs.push(ptrs[i]);
       }
-      insertedPtrs.push(...ptrs);
       if (realRightEdge > lastEnd) lastEnd = realRightEdge;
       // Update offset:
       //   * anchored (mixed-replacement): delta vs original sub-run
@@ -945,7 +972,7 @@ export function planParagraphEdit(
 ): ParagraphEditPlan | null {
   if (run.paragraphLineSlots.length < 2) return null;
   if (prevText === nextText) return null;
-  if (hasSurrogatePair(prevText) || hasSurrogatePair(nextText)) return null;
+  if (hasSurrogatePair(prevText)) return null;
   // Line-count guard: typing Enter or deleting a newline changes the
   // slot count. Bail to overlay for those edits.
   const prevLines = prevText.split("\n");

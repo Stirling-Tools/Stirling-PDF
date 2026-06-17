@@ -54,7 +54,26 @@ interface RunModelSnapshot {
   paragraphLeafPtrs: number[];
   paragraphLeafContainers: number[];
   paragraphLineSlots: ParagraphLineSlot[];
+  mergedFromPtrs: number[];
+  mergedFromTexts: string[];
+  mergedFromBounds: Array<{ x: number; right: number }>;
+  mergedFromCharStarts: number[];
+  fontId: string;
+  fontSubset: boolean;
   pdfiumObjPtr: number;
+}
+
+/**
+ * True when a partial-edit plan only ADDED objects (no original object was
+ * freed via removePtrs, none mutated in place via a "modify" op). Such an
+ * apply is fully reversible by restoring the pre-edit model + deleting the
+ * inserted objects - so redo can re-engage the SAME path and reproduce
+ * byte-identical output (used to keep redo faithful, issue: redo-after-undo).
+ */
+function planIsPureInsert(plan: PartialEditPlan): boolean {
+  return (
+    plan.removePtrs.length === 0 && plan.ops.every((op) => op.type !== "modify")
+  );
 }
 
 /**
@@ -94,6 +113,13 @@ export class EditTextCommand implements Command {
   private paragraphPlan: ParagraphEditPlan | null = null;
   private paragraphInsertedPtrs: number[] = [];
   private prevParagraphSlots: ParagraphLineSlot[] = [];
+  /**
+   * Full pre-edit model snapshot, captured by the partial / paragraph-partial
+   * apply paths. When the edit only inserted objects (see planIsPureInsert),
+   * revert restores this snapshot instead of flattening to an overlay model -
+   * so redo re-engages the same path and reproduces identical output.
+   */
+  private editSnapshot: RunModelSnapshot | null = null;
   /** Set when the apply path took the paragraph line add/remove shortcut. */
   private lineEdit: {
     /** Matched lines translated to a new baseline (reversed on revert). */
@@ -142,6 +168,7 @@ export class EditTextCommand implements Command {
       if (paraPlan) {
         this.paragraphPlan = paraPlan;
         this.prevParagraphSlots = paraPlan.prevSlots;
+        this.editSnapshot = snapshotRunModel(run);
         const result = applyParagraphEditPlan(
           doc,
           page,
@@ -154,7 +181,11 @@ export class EditTextCommand implements Command {
         run.bounds = {
           ...run.bounds,
           x: result.newBoundsX,
-          width: result.newBoundsWidth,
+          width: clampWidthToPage(
+            result.newBoundsX,
+            result.newBoundsWidth,
+            page,
+          ),
         };
         // Keep mergedFrom* synchronized with slot[0] so a later
         // single-line partial edit on the rep continues to work.
@@ -240,6 +271,7 @@ export class EditTextCommand implements Command {
         this.prevMergedFromPtrs = [...run.mergedFromPtrs];
         this.prevMergedFromTexts = [...run.mergedFromTexts];
         this.prevMergedFromBounds = run.mergedFromBounds.map((b) => ({ ...b }));
+        this.editSnapshot = snapshotRunModel(run);
         const result = applyPartialEditPlan(doc, page, run, partial);
         this.partialInsertedPtrs = result.insertedPtrs;
         run.mergedFromPtrs = result.newMergedFromPtrs;
@@ -249,7 +281,11 @@ export class EditTextCommand implements Command {
         run.bounds = {
           ...run.bounds,
           x: result.newBoundsX,
-          width: result.newBoundsWidth,
+          width: clampWidthToPage(
+            result.newBoundsX,
+            result.newBoundsWidth,
+            page,
+          ),
         };
         if (result.newMergedFromPtrs.length > 0) {
           run.pdfiumObjPtr = result.newMergedFromPtrs[0];
@@ -301,19 +337,17 @@ export class EditTextCommand implements Command {
     // Reusing the source font handle works when:
     //   * Every nextText char already appears in prevText (`safeChars`)
     //     - guarantees the font has a glyph for each char (it just
-    //       rendered them).
-    //   * The font is NOT a subset (subsets only embed the glyphs the
-    //     original text used; we can't rely on Unicode→glyph mapping
-    //     beyond the original char set).
+    //       rendered them). This holds for SUBSET fonts too: if a char was
+    //       in prevText, the subset embedded a glyph for it.
     //   * The run lives at page level (FPDFPageObj_CreateTextObj only
     //     accepts page-level docPtr; form-xobject text needs a different
     //     code path that PDFium doesn't expose cleanly).
     //
-    // The previous extra `looksBase14` check was overly conservative -
-    // it forced full-font non-base14 sources (LMRoman, etc.) to flip to
-    // base-14 Helvetica on any edit, even safe-char deletes. Dropping
-    // it lets typed-into-LMRoman titles keep their LMRoman font.
-    const canReuseFont = safeChars && !run.fontSubset && run.containerPtr === 0;
+    // emitTextLine validates the reused font actually renders visible glyphs
+    // (measures width, falls back to base-14 on .notdef), so dropping the old
+    // `!run.fontSubset` guard is safe and keeps subset/embedded fonts on edit
+    // instead of always flipping to Helvetica.
+    const canReuseFont = safeChars && run.containerPtr === 0;
     const originalFontPtr =
       canReuseFont && run.pdfiumObjPtr ? safeGetFont(m, run.pdfiumObjPtr) : 0;
 
@@ -537,6 +571,22 @@ export class EditTextCommand implements Command {
         }
       }
       this.paragraphInsertedPtrs = [];
+      // Pure-insert edit (no original object freed/mutated): every original
+      // object is still alive, so restore the exact pre-edit model. This lets
+      // a later redo re-engage the paragraph-partial path and reproduce
+      // byte-identical output instead of re-emitting via the overlay path.
+      const pureInsert = this.paragraphPlan.perSlot.every(
+        (e) => e.plan !== null && planIsPureInsert(e.plan),
+      );
+      if (pureInsert && this.editSnapshot) {
+        restoreRunModel(run, this.editSnapshot);
+        run.text = this.prevText;
+        run.dirty = true;
+        this.paragraphPlan = null;
+        page.markDirty();
+        page.markNeedsGenerate();
+        return;
+      }
       const revertFallback = helveticaVariantFor(this.prevFontId ?? run.fontId);
       // Rebuild every line from the pre-edit slots: kept/modified sub-runs
       // keep their live original object; all-deleted ones are re-emitted as
@@ -602,6 +652,17 @@ export class EditTextCommand implements Command {
         }
       }
       this.partialInsertedPtrs = [];
+      // Pure-insert edit: restore the exact pre-edit model so redo re-engages
+      // the partial path and reproduces identical output (no overlay re-emit).
+      if (planIsPureInsert(this.partialPlan) && this.editSnapshot) {
+        restoreRunModel(run, this.editSnapshot);
+        run.text = this.prevText;
+        run.dirty = true;
+        this.partialPlan = null;
+        page.markDirty();
+        page.markNeedsGenerate();
+        return;
+      }
       // In-place "modify" sub-runs kept their object (and font); restore
       // their original text so undo shows the pre-edit characters.
       for (const op of this.partialPlan.ops) {
@@ -1032,6 +1093,27 @@ export class EditTextCommand implements Command {
   describe(): string {
     return `Type into ${this.runId}`;
   }
+
+  /**
+   * Consecutive typing on the SAME run coalesces into one undo step. A blur
+   * (ReflowWrapCommand), selection change, move, etc. are different commands
+   * with no/other key, so they break the burst - giving natural undo
+   * granularity (one undo per typing session, not per keystroke event).
+   */
+  coalesceKey(): string {
+    return `edit-text:${this.pageIndex}:${this.runId}`;
+  }
+}
+
+/**
+ * Keep a run's model width from claiming space past the page's right edge.
+ * The glyphs of a long grow-mode line can still extend right (the editing box
+ * caps to the page and wraps via CSS), but the run's reported bounds must never
+ * exceed the page so selection / layout logic stays on-page.
+ */
+function clampWidthToPage(x: number, width: number, page: Page): number {
+  const maxWidth = Math.max(0, page.width - x);
+  return Math.min(width, maxWidth);
 }
 
 function safeGetFont(
@@ -1291,6 +1373,12 @@ function snapshotRunModel(run: TextRun): RunModelSnapshot {
     paragraphLeafPtrs: [...run.paragraphLeafPtrs],
     paragraphLeafContainers: [...run.paragraphLeafContainers],
     paragraphLineSlots: run.paragraphLineSlots.map(cloneSlot),
+    mergedFromPtrs: [...run.mergedFromPtrs],
+    mergedFromTexts: [...run.mergedFromTexts],
+    mergedFromBounds: run.mergedFromBounds.map((b) => ({ ...b })),
+    mergedFromCharStarts: [...run.mergedFromCharStarts],
+    fontId: run.fontId,
+    fontSubset: run.fontSubset,
     pdfiumObjPtr: run.pdfiumObjPtr,
   };
 }
@@ -1305,6 +1393,12 @@ function restoreRunModel(run: TextRun, snap: RunModelSnapshot): void {
   run.paragraphLeafPtrs = [...snap.paragraphLeafPtrs];
   run.paragraphLeafContainers = [...snap.paragraphLeafContainers];
   run.paragraphLineSlots = snap.paragraphLineSlots.map(cloneSlot);
+  run.mergedFromPtrs = [...snap.mergedFromPtrs];
+  run.mergedFromTexts = [...snap.mergedFromTexts];
+  run.mergedFromBounds = snap.mergedFromBounds.map((b) => ({ ...b }));
+  run.mergedFromCharStarts = [...snap.mergedFromCharStarts];
+  run.fontId = snap.fontId;
+  run.fontSubset = snap.fontSubset;
   run.pdfiumObjPtr = snap.pdfiumObjPtr;
 }
 

@@ -50,10 +50,10 @@ export class InsertImageCommand implements Command {
   apply(doc: EditorDocument): void {
     const page = doc.page(this.pageIndex);
     const m = doc.module;
-    // The embed helper doesn't return the new object pointer, so we
-    // count first and look up by index afterwards.
-    const beforeCount = m.FPDFPage_CountObjects(page.pagePtr);
-    const ok = embedBitmapImageOnPage(
+    // The embed helper returns the new object pointer directly. Looking it up
+    // afterwards via FPDFPage_GetObject failed because the content stream
+    // isn't regenerated until save, so the object index wasn't yet resolvable.
+    const newObjPtr = embedBitmapImageOnPage(
       m,
       doc.docPtr,
       page.pagePtr,
@@ -71,8 +71,6 @@ export class InsertImageCommand implements Command {
       this.width,
       this.height,
     );
-    if (!ok) return;
-    const newObjPtr = m.FPDFPage_GetObject(page.pagePtr, beforeCount);
     if (!newObjPtr) return;
     const imageId = `p${page.index}-new-img-${page.images.length}-${newObjPtr}`;
     const created = new ImageObject({
