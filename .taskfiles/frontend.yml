@@ -278,6 +278,12 @@ tasks:
     cmds:
       - npx tsc --noEmit --project editor/src/desktop/tsconfig.json
 
+  typecheck:cloud:
+    desc: "Typecheck cloud shared layer (standalone)"
+    deps: [prepare]
+    cmds:
+      - npx tsc --noEmit --project editor/src/cloud/tsconfig.json
+
   typecheck:scripts:
     desc: "Typecheck scripts"
     deps: [prepare]
@@ -309,6 +315,7 @@ tasks:
       - task: typecheck:proprietary
       - task: typecheck:saas
       - task: typecheck:desktop
+      - task: typecheck:cloud
       - task: typecheck:scripts
       - task: typecheck:prototypes
       - task: typecheck:portal

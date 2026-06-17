@@ -129,6 +129,10 @@ function prerenderOgPlugin(): PluginOption {
   };
 }
 
+// NOTE: cloud/ is a SHARED layer, not a runnable build flavor — it's compiled
+// into the saas and desktop builds. It has no entry here and no vite tsconfig;
+// it is only typechecked standalone via editor/src/cloud/tsconfig.json
+// (task frontend:typecheck:cloud) to prove it carries no saas/desktop-only deps.
 const VALID_MODES = [
   "core",
   "proprietary",
@@ -272,6 +276,15 @@ export default defineConfig(async ({ mode }) => {
       compressStaticCopyPlugin(),
       prerenderOgPlugin(),
     ],
+    resolve: {
+      // Global alias so @shared resolves for ALL importers — including the
+      // shared components' own `@shared/components/X.css` self-imports, which
+      // live outside the editor tsconfig scope and so aren't rewritten by
+      // vite-tsconfig-paths. Required for the editor to consume SUI components.
+      alias: {
+        "@shared": path.resolve(__dirname, "../shared"),
+      },
+    },
     server: {
       host: true,
       allowedHosts: allowedHosts.length > 0 ? allowedHosts : undefined,
@@ -303,11 +316,6 @@ export default defineConfig(async ({ mode }) => {
         },
       },
     },
-    resolve: {
-      alias: {
-        "@shared": path.resolve(__dirname, "../shared"),
-      },
-    },
     optimizeDeps: {
       exclude: ["@embedpdf/pdfium"],
     },
@@ -318,8 +326,10 @@ export default defineConfig(async ({ mode }) => {
     // SPA fallback returns index.html as text/html and React never mounts.
     // VITE_BUILD_FOR_PREVIEW=1 (set by the CI playwright steps) overrides to
     // an absolute base so deep-route asset paths resolve to /assets/...
+    // Trailing slash required: it becomes `<base href>`, and browsers resolve
+    // relative URLs (manifest.json, favicon) against the base's *directory*.
     base: env.RUN_SUBPATH
-      ? `/${env.RUN_SUBPATH}`
+      ? `/${env.RUN_SUBPATH}/`
       : process.env.VITE_BUILD_FOR_PREVIEW === "1"
         ? "/"
         : "./",

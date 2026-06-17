@@ -1,0 +1,11 @@
+.sui-metric-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+}
+
+@media (max-width: 50rem) {
+  .sui-metric-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

@@ -9,6 +9,7 @@ import { AppShell } from "@portal/components/AppShell";
 import { AssistantButton } from "@portal/components/AssistantButton";
 import { AssistantPanel } from "@portal/components/AssistantPanel";
 import { SearchModal } from "@portal/components/SearchModal";
+import { SettingsModal } from "@portal/components/SettingsModal";
 import { ViewRouter } from "@portal/ViewRouter";
 
 /**
@@ -52,6 +53,12 @@ function GlobalShortcuts() {
   return null;
 }
 
+/** Bridges the Settings modal's open/close props to UIContext state. */
+function SettingsHost() {
+  const { settingsOpen, closeSettings } = useUI();
+  return <SettingsModal open={settingsOpen} onClose={closeSettings} />;
+}
+
 export function App() {
   return (
     <ThemeProvider>
@@ -66,6 +73,7 @@ export function App() {
               <AssistantButton />
               <AssistantPanel />
               <SearchModal />
+              <SettingsHost />
             </UIProvider>
           </BrowserRouter>
         </TierProvider>

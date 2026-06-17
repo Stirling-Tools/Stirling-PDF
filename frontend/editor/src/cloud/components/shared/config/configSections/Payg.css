@@ -1,0 +1,624 @@
+/* Pay-as-you-go settings screen — visual polish.
+   Uses the app's semantic theme tokens (theme.css) so it tracks light/dark. */
+
+.payg {
+  --payg-accent: #0a8bff;
+  --payg-accent-soft: rgba(10, 139, 255, 0.1);
+  --payg-radius: 14px;
+  --payg-gap: 20px;
+  /* Cards sit ON the modal content bg; in light that's white-on-white so we
+     lean on border + shadow. Tokens are overridden per scheme below. */
+  --payg-card-bg: var(--bg-surface);
+  --payg-card-border: var(--border-default);
+  --payg-inset-bg: var(--bg-raised);
+  --payg-divider: var(--border-subtle);
+}
+
+/* Dark mode: the modal content bg is #2a2f36 and so is --bg-surface, so plain
+   cards vanish. Lift cards a shade above the modal and strengthen borders. */
+[data-mantine-color-scheme="dark"] .payg {
+  --payg-card-bg: #313842;
+  --payg-card-border: #3d444e;
+  --payg-inset-bg: #272c33;
+  --payg-accent-soft: rgba(10, 139, 255, 0.16);
+  --payg-divider: #3d444e;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────── */
+.payg-header__title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+.payg-header__subtitle {
+  margin-top: 4px;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+.payg-role-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.payg-role-pill[data-leader="true"] {
+  background: var(--payg-accent-soft);
+  color: var(--payg-accent);
+  border: 1px solid rgba(10, 139, 255, 0.25);
+}
+.payg-role-pill[data-leader="false"] {
+  background: var(--bg-muted);
+  color: var(--text-muted);
+  border: 1px solid var(--border-default);
+}
+
+/* ── Plan header: free-vs-metered split (shared by free + subscribed) ──── */
+.payg-planhead {
+  padding: 14px 20px;
+  border-radius: var(--payg-radius);
+  background: var(--payg-card-bg);
+  border: 1px solid var(--payg-card-border);
+}
+.payg-planhead__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.payg-planhead__eyebrow {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+.payg-planhead__split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+}
+.payg-planhead__col {
+  padding-right: 22px;
+}
+.payg-planhead__col--meter {
+  padding-right: 0;
+  padding-left: 22px;
+  border-left: 1px solid var(--payg-divider);
+}
+.payg-planhead__lbl {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.payg-planhead__lbl--free {
+  color: #10b981;
+}
+.payg-planhead__lbl--meter {
+  color: var(--payg-accent);
+}
+.payg-planhead__lbl-icon {
+  font-size: 1rem !important;
+}
+.payg-planhead__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+.payg-planhead__body {
+  margin: 5px 0 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+@media (max-width: 640px) {
+  .payg-planhead__split {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .payg-planhead__col {
+    padding-right: 0;
+  }
+  .payg-planhead__col--meter {
+    padding-left: 0;
+    padding-top: 16px;
+    border-left: none;
+    border-top: 1px solid var(--payg-divider);
+  }
+}
+
+/* ── Generic card ───────────────────────────────────────────────────── */
+.payg-card {
+  background: var(--payg-card-bg);
+  border: 1px solid var(--payg-card-border);
+  border-radius: var(--payg-radius);
+  padding: 16px 20px;
+  box-shadow: var(--shadow-xs);
+}
+.payg-card__title {
+  font-size: 0.95rem;
+  font-weight: 650;
+  color: var(--text-primary);
+}
+.payg-card__subtitle {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* ── Hero usage panel ───────────────────────────────────────────────── */
+.payg-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--payg-radius);
+  padding: 18px 22px;
+  border: 1px solid var(--payg-card-border);
+  background: var(--payg-card-bg);
+  box-shadow: var(--shadow-xs);
+}
+.payg-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.9;
+}
+.payg-hero[data-state="FULL"]::before {
+  background: linear-gradient(
+    135deg,
+    rgba(10, 139, 255, 0.12) 0%,
+    rgba(10, 139, 255, 0) 55%
+  );
+}
+.payg-hero[data-state="WARNED"]::before {
+  background: linear-gradient(
+    135deg,
+    rgba(234, 179, 8, 0.16) 0%,
+    rgba(234, 179, 8, 0) 55%
+  );
+}
+.payg-hero[data-state="DEGRADED"]::before {
+  background: linear-gradient(
+    135deg,
+    rgba(239, 68, 68, 0.16) 0%,
+    rgba(239, 68, 68, 0) 55%
+  );
+}
+.payg-hero__inner {
+  position: relative;
+  z-index: 1;
+}
+.payg-hero__eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.payg-hero__figure {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-top: 6px;
+}
+.payg-hero__spend {
+  font-size: 2.35rem;
+  font-weight: 750;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+.payg-hero__cap {
+  font-size: 1rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.payg-hero__meta {
+  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+.payg-hero__meta-dot {
+  color: var(--border-strong);
+}
+.payg-hero__credit {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-green-700);
+  background: rgba(34, 197, 94, 0.14);
+}
+[data-mantine-color-scheme="dark"] .payg-hero__credit {
+  color: #4ade80;
+  background: rgba(34, 197, 94, 0.18);
+}
+
+/* Make Mantine default-variant buttons read clearly on the lifted cards in
+   both themes (their stock border can wash out against --payg-card-bg). */
+.payg .mantine-Button-root[data-variant="default"] {
+  border-color: var(--payg-card-border);
+}
+
+/* Dark mode: the stock default button is a flat slab that disappears into the
+   card. Lift it with a soft top-down gradient + brighter border, and warm the
+   hover so the buttons feel tactile against --payg-card-bg (#313842). Driven
+   through Mantine's --button-* vars. The same rule covers disabled buttons
+   (Cancel/Update cap before the form is dirty) so they read identically to the
+   always-enabled ones — Mantine only fades them via opacity. */
+[data-mantine-color-scheme="dark"]
+  .payg
+  .mantine-Button-root[data-variant="default"] {
+  --button-bg: linear-gradient(180deg, #3d4651 0%, #353d48 100%);
+  --button-hover: linear-gradient(180deg, #475160 0%, #3d4654 100%);
+  --button-bd: 1px solid #4b5563;
+  --button-color: var(--mantine-color-white);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 1px 2px rgba(0, 0, 0, 0.25);
+}
+/* Mantine recolours disabled buttons to a dim grey via a hard-coded color/bg
+   on the disabled selector, overriding --button-color. Re-assert white + the
+   gradient so disabled buttons match the rest. */
+[data-mantine-color-scheme="dark"]
+  .payg
+  .mantine-Button-root[data-variant="default"]:disabled,
+[data-mantine-color-scheme="dark"]
+  .payg
+  .mantine-Button-root[data-variant="default"][data-disabled] {
+  background: var(--button-bg);
+  color: var(--mantine-color-white);
+}
+
+/* Status chip */
+.payg-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 13px;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.payg-status__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+}
+.payg-status[data-state="FULL"] {
+  background: var(--color-green-100);
+  color: var(--color-green-700);
+}
+.payg-status[data-state="FULL"] .payg-status__dot {
+  background: var(--color-green-500);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.18);
+}
+.payg-status[data-state="WARNED"] {
+  background: var(--color-yellow-100);
+  color: var(--color-yellow-700);
+}
+.payg-status[data-state="WARNED"] .payg-status__dot {
+  background: var(--color-yellow-500);
+  box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.2);
+}
+.payg-status[data-state="DEGRADED"] {
+  background: var(--color-red-100);
+  color: var(--color-red-700);
+}
+.payg-status[data-state="DEGRADED"] .payg-status__dot {
+  background: var(--color-red-500);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+}
+
+/* Segmented usage bar */
+.payg-bar {
+  margin-top: 18px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--bg-muted);
+  overflow: hidden;
+  position: relative;
+}
+.payg-bar__fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.payg-bar__fill[data-state="FULL"] {
+  background: linear-gradient(90deg, #0a8bff, #38bdf8);
+}
+.payg-bar__fill[data-state="WARNED"] {
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+.payg-bar__fill[data-state="DEGRADED"] {
+  background: linear-gradient(90deg, #dc2626, #f87171);
+}
+
+/* ── "What counts as a document?" expandable help ───────────────────── */
+.payg-help {
+  margin-top: 12px;
+}
+.payg-help__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.payg-help__toggle:hover {
+  color: var(--text-primary);
+}
+.payg-help__chevron {
+  transition: transform 0.15s ease;
+}
+.payg-help__toggle[aria-expanded="true"] .payg-help__chevron {
+  transform: rotate(180deg);
+}
+.payg-help__panel {
+  margin-top: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--payg-card-border);
+  background: var(--bg-muted);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+.payg-help__panel ul {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+}
+
+/* ── Cap preview strip ──────────────────────────────────────────────── */
+.payg-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 16px;
+  border-radius: 10px;
+  background: var(--payg-accent-soft);
+  border: 1px solid rgba(10, 139, 255, 0.2);
+}
+.payg-preview__icon {
+  color: var(--payg-accent);
+  display: flex;
+}
+.payg-preview__main {
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  font-weight: 550;
+}
+.payg-preview__note {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+/* ── Gates grid ─────────────────────────────────────────────────────── */
+.payg-gates {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 4px;
+}
+@media (max-width: 720px) {
+  .payg-gates {
+    grid-template-columns: 1fr;
+  }
+}
+.payg-gate {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 15px;
+  border-radius: 11px;
+  border: 1px solid var(--payg-card-border);
+  background: var(--payg-inset-bg);
+}
+.payg-gate[data-enabled="false"] {
+  border-style: dashed;
+  opacity: 0.85;
+}
+.payg-gate__chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  flex-shrink: 0;
+}
+.payg-gate[data-enabled="true"] .payg-gate__chip {
+  background: rgba(34, 197, 94, 0.16);
+  color: #22c55e;
+}
+.payg-gate[data-enabled="false"] .payg-gate__chip {
+  background: rgba(239, 68, 68, 0.16);
+  color: #f87171;
+}
+.payg-gate__label {
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: var(--text-primary);
+  flex: 1;
+}
+.payg-gate__tag {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.payg-gate__tag[data-variant="on"] {
+  color: var(--text-muted);
+  background: var(--bg-muted);
+}
+.payg-gate__tag[data-variant="pause"] {
+  color: #dc2626;
+  background: rgba(239, 68, 68, 0.12);
+}
+[data-mantine-color-scheme="dark"] .payg-gate__tag[data-variant="pause"] {
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.18);
+}
+
+/* ── Member rows ────────────────────────────────────────────────────── */
+.payg-member {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 4px;
+  border-bottom: 1px solid var(--payg-divider);
+}
+.payg-member:last-child {
+  border-bottom: none;
+}
+.payg-member__avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8125rem;
+  font-weight: 650;
+  color: #fff;
+  flex-shrink: 0;
+}
+.payg-member__name {
+  font-size: 0.875rem;
+  font-weight: 550;
+  color: var(--text-primary);
+}
+.payg-member__email {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.payg-member__usage {
+  text-align: right;
+  min-width: 120px;
+}
+.payg-member__usage-num {
+  font-size: 0.8125rem;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+.payg-member__minibar {
+  height: 5px;
+  width: 90px;
+  border-radius: 999px;
+  background: var(--payg-inset-bg);
+  overflow: hidden;
+  margin-top: 5px;
+  margin-left: auto;
+}
+.payg-member__minibar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--payg-accent);
+}
+
+/* ── Activity feed ──────────────────────────────────────────────────── */
+.payg-activity-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 4px;
+  border-bottom: 1px solid var(--payg-divider);
+}
+.payg-activity-row:last-child {
+  border-bottom: none;
+}
+.payg-activity__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+.payg-activity__dot[data-kind="ai"] {
+  background: var(--category-color-formatting); /* purple */
+}
+.payg-activity__dot[data-kind="automation"] {
+  background: var(--category-color-automation); /* pink */
+}
+.payg-activity__label {
+  font-size: 0.8438rem;
+  color: var(--text-primary);
+  flex: 1;
+}
+.payg-activity__ts {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.payg-activity__kind {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: var(--bg-muted);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.payg-activity__units {
+  font-size: 0.8125rem;
+  font-weight: 650;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  min-width: 58px;
+  text-align: right;
+}
+
+/* ── Stripe CTA card ────────────────────────────────────────────────── */
+.payg-stripe {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px;
+  border-radius: var(--payg-radius);
+  border: 1px solid rgba(99, 91, 255, 0.28);
+  background: linear-gradient(
+    135deg,
+    rgba(99, 91, 255, 0.1) 0%,
+    rgba(99, 91, 255, 0.02) 100%
+  );
+}
+.payg-stripe__title {
+  font-size: 0.9375rem;
+  font-weight: 650;
+  color: var(--text-primary);
+}
+.payg-stripe__subtitle {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
