@@ -51,10 +51,7 @@ import stirling.software.saas.payg.model.BillingCategory;
 import stirling.software.saas.payg.model.FeatureGate;
 import stirling.software.saas.payg.model.JobSource;
 import stirling.software.saas.payg.model.ProcessType;
-import stirling.software.saas.service.CreditService;
-import stirling.software.saas.service.TeamCreditService;
 import stirling.software.saas.util.AuthenticationUtils;
-import stirling.software.saas.util.CreditHeaderUtils;
 
 @RestController
 @Profile("saas")
@@ -69,10 +66,7 @@ public class AiCreateController {
     private final AiCreateSessionService sessionService;
     private final AiCreateProxyService proxyService;
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final CreditService creditService;
-    private final TeamCreditService teamCreditService;
     private final UserRepository userRepository;
-    private final CreditHeaderUtils creditHeaderUtils;
     private final JobChargeService jobChargeService;
 
     @PostMapping("/sessions")
@@ -233,8 +227,7 @@ public class AiCreateController {
             @PathVariable String sessionId, HttpServletRequest request) {
         sessionService.getSessionForCurrentUser(sessionId);
         log.info("AI create fillFields sessionId={}", sessionId);
-        return proxy(
-                "POST", "/api/create/sessions/" + sessionId + "/fields", request, false, false);
+        return proxy("POST", "/api/create/sessions/" + sessionId + "/fields", request, false);
     }
 
     @GetMapping(
@@ -243,20 +236,11 @@ public class AiCreateController {
     public ResponseEntity<StreamingResponseBody> stream(
             @PathVariable String sessionId, HttpServletRequest request) {
         sessionService.getSessionForCurrentUser(sessionId);
-        return proxy(
-                "GET",
-                "/api/create/sessions/" + sessionId + "/stream",
-                request,
-                true,
-                true); // Add credits header: frontend endpoint that triggers AI
+        return proxy("GET", "/api/create/sessions/" + sessionId + "/stream", request, true);
     }
 
     private ResponseEntity<StreamingResponseBody> proxy(
-            String method,
-            String path,
-            HttpServletRequest request,
-            boolean acceptEventStream,
-            boolean includeCreditsHeader) {
+            String method, String path, HttpServletRequest request, boolean acceptEventStream) {
         try {
             HttpResponse<InputStream> response =
                     proxyService.forward(method, path, request, acceptEventStream);
@@ -268,11 +252,6 @@ public class AiCreateController {
             copyHeader(response, headers, HttpHeaders.CONTENT_LENGTH);
             if (acceptEventStream && !headers.containsHeader(HttpHeaders.CONTENT_TYPE)) {
                 headers.set(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_EVENT_STREAM_VALUE);
-            }
-
-            // Add credit headers if requested
-            if (includeCreditsHeader) {
-                addCreditHeaders(headers);
             }
 
             StreamingResponseBody body =
@@ -300,31 +279,6 @@ public class AiCreateController {
         response.headers()
                 .firstValue(headerName)
                 .ifPresent(value -> headers.set(headerName, value));
-    }
-
-    /**
-     * Add credit headers to the response headers.
-     *
-     * @param headers The headers to add credit information to
-     */
-    private void addCreditHeaders(HttpHeaders headers) {
-        try {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            if (auth == null || !auth.isAuthenticated()) {
-                log.debug("[AI-CREATE] No authentication found, skipping credit header");
-                return;
-            }
-
-            User user = AuthenticationUtils.getCurrentUser(auth, userRepository);
-            int remainingCredits =
-                    creditHeaderUtils.getRemainingCredits(user, creditService, teamCreditService);
-            if (remainingCredits >= 0) {
-                headers.set("X-Credits-Remaining", Integer.toString(remainingCredits));
-                log.warn("[AI-CREATE] Added X-Credits-Remaining header: {}", remainingCredits);
-            }
-        } catch (Exception e) {
-            log.error("[AI-CREATE] Failed to add credit header: {}", e.getMessage(), e);
-        }
     }
 
     public record CreateSessionRequest(
