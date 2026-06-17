@@ -3741,13 +3741,9 @@ selectFile = "Select file {{name}}"
 shareDisabledHint = "File sharing isn't enabled on this server. Ask your admin to enable it."
 shareManage = "Manage sharing"
 showDetails = "Show details"
-<<<<<<< translation_mutil_20260607
+signInRequired = "Sign in to use cloud storage."
 summary_one = "{{count}} item"
 summary_other = "{{count}} items"
-=======
-signInRequired = "Sign in to use cloud storage."
-summary = "{{count}} items"
->>>>>>> main
 tree = "Folders"
 upload = "Upload"
 uploadedToLocal = "Uploaded files start in Local. Use 'Save to cloud' to put them in a folder."
