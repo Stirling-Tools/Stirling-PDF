@@ -55,14 +55,14 @@ def extract_untranslated(language_code, batch_size=500, include_existing=False):
     print(f"\n🔍 Extracting {mode} entries for {language_code}...")
 
     # Load files
-    golden_path = find_translation_file(Path("frontend/editor/public/locales/en-GB"))
+    golden_path = find_translation_file(Path("frontend/editor/public/locales/en-US"))
     lang_path = find_translation_file(
         Path(f"frontend/editor/public/locales/{language_code}")
     )
 
     if not golden_path:
         print(
-            "Error: Golden truth file not found in frontend/editor/public/locales/en-GB"
+            "Error: Golden truth file not found in frontend/editor/public/locales/en-US"
         )
         return None
 
@@ -222,7 +222,7 @@ def apply_translations(merged_file, language_code):
 
 
 def beautify_translations(language_code):
-    """Beautify translation file to match en-GB structure."""
+    """Beautify translation file to match en-US structure."""
     print(f"\n✨ Beautifying {language_code} translation file...")
 
     cmd = f"python3 scripts/translations/toml_beautifier.py --language {language_code}"

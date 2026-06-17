@@ -141,7 +141,14 @@ async function settle(page: Page, ms = 350): Promise<void> {
 }
 
 test.describe("Files page screenshots", () => {
-  test.use({ autoGoto: false, viewport: { width: 1600, height: 900 } });
+  // Seed a logged-in session: the cloud-folder surfaces (move-dialog
+  // create-folder, the seeded "Reports" folder) only render once a confirmed,
+  // non-anonymous user triggers the folder pull (see FolderContext gating).
+  test.use({
+    autoGoto: false,
+    viewport: { width: 1600, height: 900 },
+    seedJwt: true,
+  });
 
   test("01_empty_state_ctas", async ({ page }) => {
     await stubStorageApis(page);
@@ -486,12 +493,13 @@ test.describe("Files page screenshots", () => {
     const card = page
       .locator(".files-page-card:not(.is-folder)")
       .filter({ hasText: "alpha.pdf" });
-    await card.getByRole("button", { name: /File actions/i }).click();
-    await page.getByRole("menuitem", { name: /Move to/i }).click();
-    await page.getByRole("button", { name: /Create new folder/i }).click();
-    await expect(
-      page.getByRole("textbox", { name: /New folder name/i }),
-    ).toBeVisible();
+    // Locate by stable test ids, not translated accessible names: this test
+    // runs in Arabic (enableRtl), so English-text locators break once the
+    // ar-AR strings are actually translated.
+    await card.getByTestId("file-card-actions").click();
+    await page.getByTestId("file-menu-move-to").click();
+    await page.getByTestId("move-dialog-create-folder-toggle").click();
+    await expect(page.getByTestId("move-dialog-new-folder-name")).toBeVisible();
     await settle(page);
     await page.screenshot({
       path: shotPath("17_rtl_move_dialog_create_folder"),

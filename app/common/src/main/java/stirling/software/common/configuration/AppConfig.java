@@ -3,7 +3,6 @@ package stirling.software.common.configuration;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
@@ -122,17 +121,17 @@ public class AppConfig {
 
     @Bean(name = "RunningInDocker")
     public boolean runningInDocker() {
-        return Files.exists(Paths.get("/.dockerenv"));
+        return Files.exists(Path.of("/.dockerenv"));
     }
 
     @Bean(name = "configDirMounted")
     public boolean isRunningInDockerWithConfig() {
-        Path dockerEnv = Paths.get("/.dockerenv");
+        Path dockerEnv = Path.of("/.dockerenv");
         // default to true if not docker
         if (!Files.exists(dockerEnv)) {
             return true;
         }
-        Path mountInfo = Paths.get("/proc/1/mountinfo");
+        Path mountInfo = Path.of("/proc/1/mountinfo");
         // this should always exist, if not some unknown usecase
         if (!Files.exists(mountInfo)) {
             return true;

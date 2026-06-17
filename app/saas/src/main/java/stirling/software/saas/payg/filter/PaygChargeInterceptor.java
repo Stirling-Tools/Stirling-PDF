@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -20,6 +21,7 @@ import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.AsyncHandlerInterceptor;
+import org.springframework.web.servlet.HandlerMapping;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -36,25 +38,30 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.saas.payg.cap.AiToolRoutes;
+import stirling.software.saas.payg.cap.RequiresFeature;
 import stirling.software.saas.payg.charge.ChargeContext;
 import stirling.software.saas.payg.charge.ChargeOutcome;
 import stirling.software.saas.payg.charge.JobChargeService;
 import stirling.software.saas.payg.charge.JobInput;
 import stirling.software.saas.payg.job.JobService;
+import stirling.software.saas.payg.model.BillingCategory;
+import stirling.software.saas.payg.model.FeatureGate;
 import stirling.software.saas.payg.model.JobSource;
 import stirling.software.saas.payg.model.JobStepStatus;
 import stirling.software.saas.payg.model.ProcessType;
 import stirling.software.saas.util.AuthenticationUtils;
 
 /**
- * The hot-path PAYG interceptor. Mirrors the {@code UnifiedCreditInterceptor} shape: registered
- * after it in {@code PaygWebMvcConfig} so legacy credit-rejection short-circuits before we waste
- * work hashing inputs.
+ * The hot-path PAYG interceptor, registered in {@code PaygWebMvcConfig}.
  *
- * <p>{@code preHandle}: gates on {@code @AutoJobPostMapping}, reads the parsed multipart parts,
- * materialises each input to a {@code TempFile}, and asks {@link JobChargeService#openProcess} to
- * open (or join) a process. The resulting {@link ChargeOutcome} plus input temp-files are stashed
- * as request attributes for {@code afterCompletion}.
+ * <p>{@code preHandle}: gates on {@code @AutoJobPostMapping} OR {@code @RequiresFeature} (the
+ * latter lets AI controllers — JSON-bodied, no AutoJobPostMapping — bill correctly), reads the
+ * parsed multipart parts, materialises each input to a {@code TempFile}, and asks {@link
+ * JobChargeService#openProcess} to open (or join) a process. The resulting {@link ChargeOutcome}
+ * plus input temp-files are stashed as request attributes for {@code afterCompletion}. Routes
+ * without multipart inputs short-circuit inside {@code doPreHandle} without touching the charge
+ * service.
  *
  * <p>{@code afterCompletion}: branches on HTTP status — 2xx hashes the response body for OUTPUT
  * lineage; 4xx records a step append for audit; 5xx triggers refund-and-close (OPENED) or
@@ -82,6 +89,17 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
 
     private static final String AUTOMATION_HEADER = "X-Stirling-Automation";
 
+    /**
+     * Optional header the Tauri desktop shell sets so saas-side traffic from the embedded client
+     * can be classified as {@link JobSource#DESKTOP_APP} instead of {@code WEB}. No anti-spoof —
+     * V12 step limits for DESKTOP_APP and WEB are identical, so the worst-case abuse value is zero
+     * today. Tighten if/when their limits diverge.
+     */
+    private static final String DESKTOP_CLIENT_HEADER = "X-Stirling-Client";
+
+    /** Matches {@code processing_job_step.tool_id} column width (VARCHAR(128)). */
+    private static final int TOOL_ID_MAX_LENGTH = 128;
+
     private final JobChargeService chargeService;
     private final JobService jobService;
     private final UserRepository userRepository;
@@ -93,8 +111,14 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
     private final Counter callsOpened;
     private final Counter callsJoined;
     private final Counter callsShortCircuit;
+    private final Counter callsBypassed;
     private final Counter refundsCounter;
-    private final Timer durationTimer;
+
+    /** preHandle wall-clock per request. Separate from afterCompletion — different populations. */
+    private final Timer preHandleTimer;
+
+    /** afterCompletion wall-clock per request. Includes response hashing + step append + refund. */
+    private final Timer afterCompletionTimer;
 
     public PaygChargeInterceptor(
             JobChargeService chargeService,
@@ -127,13 +151,24 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
                 Counter.builder("payg.filter.calls")
                         .tag("disposition", "SHORT_CIRCUIT")
                         .register(meterRegistry);
+        this.callsBypassed =
+                Counter.builder("payg.filter.bypassed")
+                        .description(
+                                "Manual UI tool calls that skipped openProcess (BillingCategory.BYPASSED)")
+                        .register(meterRegistry);
         this.refundsCounter =
                 Counter.builder("payg.filter.refunds")
                         .description("First-step 5xx refunds applied to shadow rows")
                         .register(meterRegistry);
-        this.durationTimer =
+        this.preHandleTimer =
                 Timer.builder("payg.filter.duration")
-                        .description("preHandle + afterCompletion wall-clock per request")
+                        .tag("phase", "preHandle")
+                        .description("preHandle wall-clock per request")
+                        .register(meterRegistry);
+        this.afterCompletionTimer =
+                Timer.builder("payg.filter.duration")
+                        .tag("phase", "afterCompletion")
+                        .description("afterCompletion wall-clock per request")
                         .register(meterRegistry);
     }
 
@@ -145,13 +180,42 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
             if (!properties.isEnabled()) {
                 return true;
             }
-            if (!(handler instanceof HandlerMethod hm)
-                    || hm.getMethodAnnotation(AutoJobPostMapping.class) == null) {
+            if (!(handler instanceof HandlerMethod hm)) {
                 callsShortCircuit.increment();
                 return true;
             }
+            // In-scope when the handler carries @AutoJobPostMapping (multipart tool POSTs) OR
+            // @RequiresFeature (AI controllers, future non-multipart gated routes). Without one of
+            // these the interceptor short-circuits — admin / info / static routes never run
+            // determineCategory.
+            boolean hasAutoJobPostMapping =
+                    AnnotationUtils.findAnnotation(hm.getMethod(), AutoJobPostMapping.class) != null
+                            || AnnotationUtils.findAnnotation(
+                                            hm.getBeanType(), AutoJobPostMapping.class)
+                                    != null;
+            boolean hasRequiresFeature =
+                    AnnotationUtils.findAnnotation(hm.getMethod(), RequiresFeature.class) != null
+                            || AnnotationUtils.findAnnotation(
+                                            hm.getBeanType(), RequiresFeature.class)
+                                    != null;
+            // AI document tools (/api/v1/ai/tools/**) live in the proprietary module and can't
+            // carry @RequiresFeature, so they're recognised by path — see AiToolRoutes.
+            boolean aiToolRoute = AiToolRoutes.matches(request);
+            if (!hasAutoJobPostMapping && !hasRequiresFeature && !aiToolRoute) {
+                callsShortCircuit.increment();
+                return true;
+            }
+            // Bypass fast-path: determine the BillingCategory BEFORE any multipart
+            // materialisation or openProcess call. Manual UI tool calls (BYPASSED) skip the
+            // entire ledger/shadow pipeline — no temp files, no DB writes.
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            BillingCategory category = determineCategory(hm, request, auth);
+            if (category == BillingCategory.BYPASSED) {
+                callsBypassed.increment();
+                return true;
+            }
             try {
-                doPreHandle(request);
+                doPreHandle(request, auth, category);
             } catch (RuntimeException e) {
                 log.warn("PAYG preHandle failed; passing through unbilled", e);
                 errorsCounter.increment();
@@ -160,12 +224,12 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
             }
             return true;
         } finally {
-            sample.stop(durationTimer);
+            sample.stop(preHandleTimer);
         }
     }
 
-    private void doPreHandle(HttpServletRequest request) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    private void doPreHandle(
+            HttpServletRequest request, Authentication auth, BillingCategory category) {
         User currentUser = resolveUser(auth);
         if (currentUser == null) {
             callsShortCircuit.increment();
@@ -218,14 +282,15 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
         // async-dispatch), and (b) hard-fails any future caller that tries to mutate it.
         request.setAttribute(ATTR_INPUT_TEMP_FILES, Collections.unmodifiableList(tempFiles));
         request.setAttribute(ATTR_INPUT_BYTES, totalInputBytes);
-        request.setAttribute(ATTR_TOOL_ID, request.getRequestURI());
+        request.setAttribute(ATTR_TOOL_ID, resolveToolId(request));
 
         ChargeContext ctx =
                 new ChargeContext(
                         currentUser.getId(),
                         currentUser.getTeam() == null ? null : currentUser.getTeam().getId(),
                         determineSource(request, auth),
-                        ProcessType.SINGLE_TOOL);
+                        ProcessType.SINGLE_TOOL,
+                        category);
 
         ChargeOutcome outcome;
         try {
@@ -274,7 +339,7 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
                 closeWrapper(request);
             }
         } finally {
-            sample.stop(durationTimer);
+            sample.stop(afterCompletionTimer);
         }
     }
 
@@ -308,10 +373,36 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
         }
         if (status >= 400) {
             // 4xx: customer paid for the attempt. No OUTPUT recording, no refund.
+            // Still a successful-from-billing-standpoint OPENED process — meter it below.
+            meterIfOpened(jobId, disposition);
             return;
         }
 
+        // Success: this is the moment the billable work finished, so this is when we tell Stripe.
+        // Only the OPENED request meters — JOINED follow-up steps (chained tools on the same
+        // document) added no units and must not re-meter. The process stays OPEN for further
+        // lineage joins; StaleJobCloser closing it later is a no-op at Stripe thanks to the shared
+        // idempotency key. metering is best-effort and must never break the response teardown.
+        meterIfOpened(jobId, disposition);
         recordOutputs(request, response, jobId);
+    }
+
+    /**
+     * Fire the Stripe meter for a just-finished process, but only when this request OPENED it. Runs
+     * on the request-teardown thread (the response is already flushed to the client); {@code
+     * meterJobUsage} is best-effort and swallows its own failures, but we still guard here so a
+     * meter hiccup can't disturb lineage/cleanup that follows.
+     */
+    private void meterIfOpened(UUID jobId, ChargeOutcome.Disposition disposition) {
+        if (disposition != ChargeOutcome.Disposition.OPENED) {
+            return;
+        }
+        try {
+            chargeService.meterJobUsage(jobId);
+        } catch (RuntimeException e) {
+            log.warn("Meter-on-completion failed for job {}: {}", jobId, e.getMessage());
+            errorsCounter.increment();
+        }
     }
 
     private void recordOutputs(
@@ -412,9 +503,90 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
         if (automationHeader != null && "true".equalsIgnoreCase(automationHeader.trim())) {
             return JobSource.PIPELINE;
         }
+        String desktopHeader = request.getHeader(DESKTOP_CLIENT_HEADER);
+        if (desktopHeader != null && "desktop".equalsIgnoreCase(desktopHeader.trim())) {
+            return JobSource.DESKTOP_APP;
+        }
         if (auth instanceof ApiKeyAuthenticationToken) {
             return JobSource.API;
         }
         return JobSource.WEB;
+    }
+
+    /**
+     * Resolve the {@link BillingCategory} for this request. Precedence: {@code
+     * X-Stirling-Automation: true} or {@code @RequiresFeature(AUTOMATION)} → AUTOMATION;
+     * {@code @RequiresFeature(AI_SUPPORT)} → AI; an AI document-tool route ({@link AiToolRoutes}) →
+     * AI; API-key auth → API; otherwise BYPASSED (manual UI tool — short-circuited in {@link
+     * #preHandle}).
+     *
+     * <p>Method-level {@code @RequiresFeature} wins over class-level. Multiple gates: AUTOMATION
+     * dominates AI within a single annotation. The AI-tool path check sits below the automation
+     * header on purpose: an AI tool dispatched inside a policy / AI workflow bills as AUTOMATION,
+     * while a direct call to it bills as AI.
+     */
+    private static BillingCategory determineCategory(
+            HandlerMethod handler, HttpServletRequest request, Authentication auth) {
+        String automationHeader = request.getHeader(AUTOMATION_HEADER);
+        if (automationHeader != null && "true".equalsIgnoreCase(automationHeader.trim())) {
+            return BillingCategory.AUTOMATION;
+        }
+        RequiresFeature ann =
+                AnnotationUtils.findAnnotation(handler.getMethod(), RequiresFeature.class);
+        if (ann == null) {
+            ann = AnnotationUtils.findAnnotation(handler.getBeanType(), RequiresFeature.class);
+        }
+        if (ann != null) {
+            boolean ai = false;
+            for (FeatureGate gate : ann.value()) {
+                if (gate == FeatureGate.AUTOMATION) {
+                    return BillingCategory.AUTOMATION;
+                }
+                if (gate == FeatureGate.AI_SUPPORT) {
+                    ai = true;
+                }
+            }
+            if (ai) {
+                return BillingCategory.AI;
+            }
+        }
+        // AI document tools (proprietary module, recognised by path). A direct call bills as AI; an
+        // orchestrator-dispatched call already returned AUTOMATION above via the automation header.
+        if (AiToolRoutes.matches(request)) {
+            return BillingCategory.AI;
+        }
+        if (auth instanceof ApiKeyAuthenticationToken) {
+            return BillingCategory.API;
+        }
+        return BillingCategory.BYPASSED;
+    }
+
+    /**
+     * Resolves the {@code tool_id} value stored on {@code processing_job_step}. Prefers the route
+     * pattern (e.g. {@code /api/v1/security/add-password}) over the raw URI so audit rollups
+     * aggregate by endpoint rather than by request — path variables, query strings, and matrix
+     * params don't pollute the column. Falls back to the raw URI when the pattern isn't available
+     * (non-Spring-MVC dispatches, async re-dispatch edges).
+     *
+     * <p>Truncates to {@link #TOOL_ID_MAX_LENGTH} to match the column's {@code VARCHAR(128)} width.
+     * Logs at WARN + increments {@link #errorsCounter} when truncation actually happens so support
+     * notices the {@code tool_id} they expected isn't what we stored.
+     */
+    private String resolveToolId(HttpServletRequest request) {
+        Object pattern = request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+        String value = pattern instanceof String s ? s : request.getRequestURI();
+        if (value == null) {
+            return "unknown";
+        }
+        if (value.length() <= TOOL_ID_MAX_LENGTH) {
+            return value;
+        }
+        log.warn(
+                "tool_id length {} exceeds column max {}; truncating. value='{}'",
+                value.length(),
+                TOOL_ID_MAX_LENGTH,
+                value);
+        errorsCounter.increment();
+        return value.substring(0, TOOL_ID_MAX_LENGTH);
     }
 }

@@ -154,8 +154,8 @@ export async function mockAppApis(
       email: "test@example.com",
       roles: ["ROLE_USER"],
     },
-    languages = ["en-GB"],
-    defaultLocale = "en-GB",
+    languages = ["en-US"],
+    defaultLocale = "en-US",
     endpointsAvailability = {},
     backendStatus = "UP",
   } = opts;
@@ -183,7 +183,7 @@ export async function mockAppApis(
 
   // Current user — anonymous by default, configurable for authenticated flows
   await page.route("**/api/v1/auth/me", (route: Route) =>
-    route.fulfill({ json: user }),
+    route.fulfill({ json: { user } }),
   );
 
   // Tool availability — every tool enabled unless overridden
@@ -247,6 +247,14 @@ export async function mockAppApis(
   // Info sub-resources
   await page.route("**/api/v1/info/wau", (route: Route) =>
     route.fulfill({ json: { count: 0 } }),
+  );
+
+  // Policies (proprietary): the reconcile fires GET /api/v1/policies on app
+  // load. Return an empty list so the stubbed (backend-free) env stays clean —
+  // no failed request polluting the console, and the auto-run controller has
+  // nothing to dispatch.
+  await page.route("**/api/v1/policies", (route: Route) =>
+    route.fulfill({ json: [] }),
   );
 }
 

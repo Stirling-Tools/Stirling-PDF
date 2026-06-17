@@ -1,4 +1,13 @@
-import React, { useCallback, useState, useMemo, useRef } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useState,
+  useMemo,
+  useRef,
+} from "react";
+import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import { useDocumentState } from "@embedpdf/core/react";
 import { useScroll } from "@embedpdf/plugin-scroll/react";
 import { useAnnotation } from "@embedpdf/plugin-annotation/react";
@@ -7,6 +16,7 @@ import {
   PdfActionType,
   type PdfLinkAnnoObject,
 } from "@embedpdf/models";
+import { Z_INDEX_VIEWER_FLOATING_MENU } from "@app/styles/zIndex";
 
 // ---------------------------------------------------------------------------
 // Inline SVG icons (thin-stroke, modern)
@@ -122,7 +132,9 @@ function isInternalLink(annotationLink: PdfLinkAnnoObject): boolean {
 
 interface LinkToolbarProps {
   annotationLink: PdfLinkAnnoObject;
-  scale: number;
+  toolbarRef: React.Ref<HTMLDivElement>;
+  left: number;
+  top: number;
   flipped: boolean;
   onNavigate: (annotationLink: PdfLinkAnnoObject) => void;
   onDelete: (annotationLink: PdfLinkAnnoObject) => void;
@@ -132,33 +144,64 @@ interface LinkToolbarProps {
 
 const TOOLBAR_HEIGHT = 32;
 const TOOLBAR_GAP = 8;
+const TOOLBAR_EDGE_MARGIN = 4;
+const TOOLBAR_LEAVE_DELAY = 120;
+
+interface ToolbarPlacement {
+  linkId: string;
+  left: number;
+  top: number;
+  flipped: boolean;
+}
+
+function clampToolbarCenter(centerX: number, toolbarWidth: number): number {
+  if (toolbarWidth <= 0 || typeof window === "undefined") return centerX;
+
+  const minCenter = TOOLBAR_EDGE_MARGIN + toolbarWidth / 2;
+  const maxCenter = window.innerWidth - TOOLBAR_EDGE_MARGIN - toolbarWidth / 2;
+
+  if (minCenter > maxCenter) return window.innerWidth / 2;
+  return Math.min(Math.max(centerX, minCenter), maxCenter);
+}
+
+function isRectOutsideViewport(rect: DOMRect): boolean {
+  if (typeof window === "undefined") return false;
+
+  return (
+    rect.bottom < 0 ||
+    rect.top > window.innerHeight ||
+    rect.right < 0 ||
+    rect.left > window.innerWidth
+  );
+}
 
 const LinkToolbar: React.FC<LinkToolbarProps> = React.memo(
   ({
     annotationLink,
-    scale,
+    toolbarRef,
+    left,
+    top,
     flipped,
     onNavigate,
     onDelete,
     onMouseEnter,
     onMouseLeave,
   }) => {
-    const centerX =
-      (annotationLink.rect.origin.x + annotationLink.rect.size.width / 2) *
-      scale;
-    const topY = flipped
-      ? (annotationLink.rect.origin.y + annotationLink.rect.size.height) *
-          scale +
-        TOOLBAR_GAP
-      : annotationLink.rect.origin.y * scale - TOOLBAR_HEIGHT - TOOLBAR_GAP;
-
+    const { t } = useTranslation();
     const internal = isInternalLink(annotationLink);
     const label = getLinkLabel(annotationLink);
 
     return (
       <div
+        ref={toolbarRef}
         className={`pdf-link-toolbar${flipped ? " pdf-link-toolbar--below" : ""}`}
-        style={{ left: `${centerX}px`, top: `${topY}px` }}
+        style={{
+          position: "fixed",
+          left: `${left}px`,
+          top: `${top}px`,
+          maxWidth: `calc(100vw - ${TOOLBAR_EDGE_MARGIN * 2}px)`,
+          zIndex: Z_INDEX_VIEWER_FLOATING_MENU,
+        }}
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
       >
@@ -170,8 +213,8 @@ const LinkToolbar: React.FC<LinkToolbarProps> = React.memo(
             e.stopPropagation();
             onDelete(annotationLink);
           }}
-          aria-label="Delete link"
-          title="Delete link"
+          aria-label={t("viewer.link.delete", "Delete link")}
+          title={t("viewer.link.delete", "Delete link")}
         >
           <TrashIcon />
         </button>
@@ -186,11 +229,7 @@ const LinkToolbar: React.FC<LinkToolbarProps> = React.memo(
             e.stopPropagation();
             onNavigate(annotationLink);
           }}
-          aria-label={
-            internal
-              ? `Go to page ${annotationLink.target?.type === "destination" ? annotationLink.target.destination.pageIndex + 1 : ""}`
-              : "Open link"
-          }
+          aria-label={internal ? `Go to ${label}` : "Open link"}
           title={label}
         >
           {internal ? <PageIcon /> : <ExternalLinkIcon />}
@@ -221,7 +260,11 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
   const documentState = useDocumentState(documentId);
 
   const [hoveredLinkId, setHoveredLinkId] = useState<string | null>(null);
+  const [toolbarPlacement, setToolbarPlacement] =
+    useState<ToolbarPlacement | null>(null);
   const leaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const linkElementRefs = useRef<Map<string, HTMLAnchorElement>>(new Map());
+  const toolbarElementRef = useRef<HTMLDivElement | null>(null);
 
   // Extract link annotations for this page from EmbedPDF annotation state
   const linkAnnotations = useMemo<PdfLinkAnnoObject[]>(() => {
@@ -249,6 +292,52 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
 
   // EmbedPDF scale factor (annotation rects are in PDF points at scale 1)
   const scale = documentState?.scale ?? 1;
+  // The portal position is measured from DOM, so this key realigns it when the page transform changes.
+  const toolbarPositionKey = [
+    scale,
+    documentState?.document?.pages?.[pageIndex]?.rotation ?? 0,
+    documentState?.rotation ?? 0,
+  ].join(":");
+
+  const updateToolbarPlacement = useCallback((linkId: string | null) => {
+    if (!linkId) {
+      setToolbarPlacement(null);
+      return;
+    }
+
+    const linkElement = linkElementRefs.current.get(linkId);
+    if (!linkElement) {
+      setHoveredLinkId(null);
+      setToolbarPlacement(null);
+      return;
+    }
+
+    if (typeof window === "undefined") return;
+
+    const rect = linkElement.getBoundingClientRect();
+    if (isRectOutsideViewport(rect)) {
+      setHoveredLinkId(null);
+      setToolbarPlacement(null);
+      return;
+    }
+
+    const toolbarWidth = toolbarElementRef.current?.offsetWidth ?? 0;
+    const verticalSpace = TOOLBAR_HEIGHT + TOOLBAR_GAP + TOOLBAR_EDGE_MARGIN;
+    const fitsAbove = rect.top >= verticalSpace;
+    const fitsBelow = window.innerHeight - rect.bottom >= verticalSpace;
+    const centerX = rect.left + rect.width / 2;
+    const flipped = !fitsAbove && fitsBelow;
+    const top = flipped
+      ? rect.bottom + TOOLBAR_GAP
+      : Math.max(TOOLBAR_EDGE_MARGIN, rect.top - TOOLBAR_HEIGHT - TOOLBAR_GAP);
+
+    setToolbarPlacement({
+      linkId,
+      left: clampToolbarCenter(centerX, toolbarWidth),
+      top,
+      flipped,
+    });
+  }, []);
 
   const clearLeaveTimer = useCallback(() => {
     if (leaveTimerRef.current) {
@@ -261,15 +350,17 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
     clearLeaveTimer();
     leaveTimerRef.current = setTimeout(() => {
       setHoveredLinkId(null);
-    }, 120);
+      setToolbarPlacement(null);
+    }, TOOLBAR_LEAVE_DELAY);
   }, [clearLeaveTimer]);
 
   const handleLinkMouseEnter = useCallback(
     (id: string) => {
       clearLeaveTimer();
       setHoveredLinkId(id);
+      updateToolbarPlacement(id);
     },
-    [clearLeaveTimer],
+    [clearLeaveTimer, updateToolbarPlacement],
   );
 
   const handleLinkMouseLeave = useCallback(() => {
@@ -288,6 +379,7 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
     (annotationLink: PdfLinkAnnoObject) => {
       if (!annotationLink.target) {
         setHoveredLinkId(null);
+        setToolbarPlacement(null);
         return;
       }
 
@@ -327,6 +419,7 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
       }
 
       setHoveredLinkId(null);
+      setToolbarPlacement(null);
     },
     [scroll],
   );
@@ -334,35 +427,103 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
   const handleDelete = useCallback(
     (annotationLink: PdfLinkAnnoObject) => {
       setHoveredLinkId(null);
+      setToolbarPlacement(null);
       if (!scope) return;
       scope.deleteAnnotation(pageIndex, annotationLink.id);
     },
     [scope, pageIndex],
   );
 
+  useEffect(() => () => clearLeaveTimer(), [clearLeaveTimer]);
+
+  useEffect(() => {
+    if (!hoveredLinkId) {
+      setToolbarPlacement(null);
+      return;
+    }
+
+    updateToolbarPlacement(hoveredLinkId);
+
+    if (typeof window === "undefined") return;
+
+    const handleViewportChange = () => {
+      updateToolbarPlacement(hoveredLinkId);
+    };
+
+    window.addEventListener("scroll", handleViewportChange, true);
+    window.addEventListener("resize", handleViewportChange);
+
+    return () => {
+      window.removeEventListener("scroll", handleViewportChange, true);
+      window.removeEventListener("resize", handleViewportChange);
+    };
+  }, [
+    hoveredLinkId,
+    linkAnnotations,
+    toolbarPositionKey,
+    updateToolbarPlacement,
+  ]);
+
+  useLayoutEffect(() => {
+    if (!hoveredLinkId || toolbarPlacement?.linkId !== hoveredLinkId) return;
+    updateToolbarPlacement(hoveredLinkId);
+  }, [
+    hoveredLinkId,
+    toolbarPlacement?.linkId,
+    toolbarPositionKey,
+    updateToolbarPlacement,
+  ]);
+
+  const hoveredAnnotationLink = useMemo(
+    () => linkAnnotations.find((link) => link.id === hoveredLinkId) ?? null,
+    [linkAnnotations, hoveredLinkId],
+  );
+
   if (linkAnnotations.length === 0) return null;
 
+  const toolbarPortal =
+    hoveredAnnotationLink &&
+    toolbarPlacement?.linkId === hoveredAnnotationLink.id &&
+    typeof document !== "undefined"
+      ? createPortal(
+          <LinkToolbar
+            annotationLink={hoveredAnnotationLink}
+            toolbarRef={toolbarElementRef}
+            left={toolbarPlacement.left}
+            top={toolbarPlacement.top}
+            flipped={toolbarPlacement.flipped}
+            onNavigate={handleNavigate}
+            onDelete={handleDelete}
+            onMouseEnter={handleToolbarMouseEnter}
+            onMouseLeave={handleToolbarMouseLeave}
+          />,
+          document.body,
+        )
+      : null;
+
   return (
-    <div
-      className="absolute inset-0"
-      style={{ pointerEvents: "none", zIndex: 10 }}
-    >
-      {linkAnnotations.map((annotationLink) => {
-        const isHovered = hoveredLinkId === annotationLink.id;
-        const left = annotationLink.rect.origin.x * scale;
-        const top = annotationLink.rect.origin.y * scale;
-        const width = annotationLink.rect.size.width * scale;
-        const height = annotationLink.rect.size.height * scale;
+    <>
+      <div
+        className="absolute inset-0"
+        style={{ pointerEvents: "none", zIndex: 10 }}
+      >
+        {linkAnnotations.map((annotationLink) => {
+          const isHovered = hoveredLinkId === annotationLink.id;
+          const left = annotationLink.rect.origin.x * scale;
+          const top = annotationLink.rect.origin.y * scale;
+          const width = annotationLink.rect.size.width * scale;
+          const height = annotationLink.rect.size.height * scale;
 
-        // Flip toolbar below if link is near the top of the page
-        const flipped =
-          annotationLink.rect.origin.y * scale <
-          TOOLBAR_HEIGHT + TOOLBAR_GAP + 4;
-
-        return (
-          <React.Fragment key={annotationLink.id}>
-            {/* Hit-area overlay */}
+          return (
             <a
+              key={annotationLink.id}
+              ref={(node) => {
+                if (node) {
+                  linkElementRefs.current.set(annotationLink.id, node);
+                } else {
+                  linkElementRefs.current.delete(annotationLink.id);
+                }
+              }}
               href="#"
               onClick={(e) => {
                 e.preventDefault();
@@ -385,22 +546,10 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
               tabIndex={0}
               aria-label={getLinkLabel(annotationLink)}
             />
-
-            {/* Floating toolbar */}
-            {isHovered && (
-              <LinkToolbar
-                annotationLink={annotationLink}
-                scale={scale}
-                flipped={flipped}
-                onNavigate={handleNavigate}
-                onDelete={handleDelete}
-                onMouseEnter={handleToolbarMouseEnter}
-                onMouseLeave={handleToolbarMouseLeave}
-              />
-            )}
-          </React.Fragment>
-        );
-      })}
-    </div>
+          );
+        })}
+      </div>
+      {toolbarPortal}
+    </>
   );
 };

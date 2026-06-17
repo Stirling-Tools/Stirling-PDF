@@ -1,0 +1,164 @@
+/* Reusable monthly spend-cap control — preset chips + an inline custom-entry
+   pill + a no-cap chip, with a live "≈ N PDFs/month" estimate beneath. Shared
+   by the subscribed plan-page cap editor (Payg.tsx) and the upgrade checkout
+   flow (UpgradeModal.tsx).
+
+   Self-contained tokens so the control looks right whether it's dropped into
+   the Plan card (light/dark modal content) or the dark upgrade modal. We lean
+   on the app's semantic theme tokens and override per scheme, mirroring the
+   Payg.css / UpgradeModal.css treatments the control sits beside. */
+
+.scc {
+  --scc-accent: #0a8bff;
+  --scc-accent-text: #0a8bff;
+  --scc-accent-soft: rgba(10, 139, 255, 0.12);
+  --scc-accent-border: rgba(10, 139, 255, 0.25);
+  --scc-chip-bg: var(--bg-muted);
+  --scc-chip-border: var(--border-default);
+  /* Consistent vertical rhythm between the control row, the estimate, and any
+     note — without it the blocks sit flush. */
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+[data-mantine-color-scheme="dark"] .scc {
+  --scc-accent-text: #66b8ff;
+  --scc-accent-soft: rgba(10, 139, 255, 0.16);
+  --scc-chip-bg: #272d35;
+  --scc-chip-border: #3d444e;
+}
+
+/* ── Inline row: presets · custom · no-cap · (save) ──────────────────── */
+.scc-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Shared pill shape for presets, the custom-entry pill, and no-cap. Keeping a
+   single height/radius/border is what makes the custom field read as "one more
+   button" rather than a form input bolted on. */
+.scc-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid var(--scc-chip-border);
+  background: var(--scc-chip-bg);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+  transition:
+    color 0.12s ease,
+    border-color 0.12s ease,
+    background 0.12s ease;
+}
+.scc-chip:hover:not(:disabled) {
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+.scc-chip[data-selected="true"] {
+  background: var(--scc-accent-soft);
+  border-color: var(--scc-accent);
+  color: var(--scc-accent-text);
+}
+.scc-chip:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* Custom-entry pill — Option A: a dashed pill that matches the presets and
+   reads as "or type your own", filling solid like a selected chip once it
+   carries a value. */
+.scc-custom {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px dashed var(--scc-chip-border);
+  background: transparent;
+  cursor: text;
+  transition:
+    border-color 0.12s ease,
+    background 0.12s ease;
+}
+.scc-custom:hover {
+  border-color: var(--border-strong);
+}
+.scc-custom[data-active="true"] {
+  border-style: solid;
+  border-color: var(--scc-accent);
+  background: var(--scc-accent-soft);
+}
+.scc-custom__symbol {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.scc-custom[data-active="true"] .scc-custom__symbol,
+.scc-custom[data-active="true"] .scc-custom__input {
+  color: var(--scc-accent-text);
+}
+.scc-custom__input {
+  width: 70px;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.scc-custom__input::placeholder {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.scc-custom:disabled,
+.scc-custom[data-disabled="true"] {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.scc-row__spacer {
+  margin-left: auto;
+}
+
+/* ── Live PDF estimate ───────────────────────────────────────────────── */
+.scc-estimate {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--scc-accent-soft);
+  border: 1px solid var(--scc-accent-border);
+}
+.scc-estimate__icon {
+  color: var(--scc-accent-text);
+  display: flex;
+}
+.scc-estimate__main {
+  font-size: 0.875rem;
+  font-weight: 550;
+  color: var(--text-primary);
+}
+.scc-estimate__sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+/* Quiet helper line (e.g. "Shown in USD — change later in your currency"). */
+.scc-note {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}

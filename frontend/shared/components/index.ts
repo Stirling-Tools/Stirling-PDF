@@ -14,6 +14,8 @@ export * from "@shared/components/Modal";
 // Layout
 export * from "@shared/components/Stack";
 export * from "@shared/components/Inline";
+export * from "@shared/components/MetricStrip";
+export * from "@shared/components/StatTile";
 
 // Feedback
 export * from "@shared/components/Spinner";
@@ -28,6 +30,7 @@ export * from "@shared/components/Toast";
 export * from "@shared/components/Tabs";
 export * from "@shared/components/Dropdown";
 export * from "@shared/components/Drawer";
+export * from "@shared/components/Table";
 
 // Forms
 export * from "@shared/components/FormField";

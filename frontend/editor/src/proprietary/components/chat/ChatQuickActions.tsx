@@ -8,7 +8,6 @@ import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFileOutlined";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import LayersIcon from "@mui/icons-material/Layers";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
-import RotateRightIcon from "@mui/icons-material/RotateRight";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { useAllFiles, useFileActions } from "@app/contexts/FileContext";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
@@ -205,21 +204,11 @@ export function ChatQuickActions({ heading, onAction }: ChatQuickActionsProps) {
         "chat.quickActions.compressOne",
         "Compress this document",
       );
-      const rotateText = t(
-        "chat.quickActions.rotateOne",
-        "Rotate this document",
-      );
       result.push({
         key: "compress",
         icon: <CompressIcon sx={{ fontSize: 18 }} />,
         title: compressText,
         onClick: send(compressText),
-      });
-      result.push({
-        key: "rotate",
-        icon: <RotateRightIcon sx={{ fontSize: 18 }} />,
-        title: rotateText,
-        onClick: send(rotateText),
       });
       return result;
     }
@@ -246,10 +235,6 @@ export function ChatQuickActions({ heading, onAction }: ChatQuickActionsProps) {
       "chat.quickActions.compressMany",
       "Compress these documents",
     );
-    const rotateText = t(
-      "chat.quickActions.rotateMany",
-      "Rotate these documents",
-    );
     result.push({
       key: "merge",
       icon: <LayersIcon sx={{ fontSize: 18 }} />,
@@ -261,12 +246,6 @@ export function ChatQuickActions({ heading, onAction }: ChatQuickActionsProps) {
       icon: <CompressIcon sx={{ fontSize: 18 }} />,
       title: compressText,
       onClick: send(compressText),
-    });
-    result.push({
-      key: "rotate",
-      icon: <RotateRightIcon sx={{ fontSize: 18 }} />,
-      title: rotateText,
-      onClick: send(rotateText),
     });
     return result;
   }, [summary, t, onAction, openFilesModal]);
