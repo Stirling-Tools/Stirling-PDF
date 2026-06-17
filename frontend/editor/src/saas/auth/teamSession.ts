@@ -17,19 +17,18 @@ import type { TeamAuth } from "@cloud/auth/teamSession";
 export type { TeamAuth } from "@cloud/auth/teamSession";
 
 export function useTeamAuth(): TeamAuth {
-  const { user, refreshCredits, refreshSession } = useAuth();
+  const { user, refreshSession } = useAuth();
 
   // Teams require a signed-in, non-anonymous user — anonymous (guest) sessions
   // never load or manage teams.
   const canUseTeams = !!user && !isUserAnonymous(user);
 
   // After a membership change the user's billing tier may have changed, so
-  // refresh credits + the Supabase session (mirrors the pre-move accept/leave
-  // flow in saas SaaSTeamContext).
+  // refresh the Supabase session (mirrors the pre-move accept/leave flow in
+  // saas SaaSTeamContext).
   const refreshAfterMembershipChange = useCallback(async () => {
-    await refreshCredits();
     await refreshSession();
-  }, [refreshCredits, refreshSession]);
+  }, [refreshSession]);
 
   return { canUseTeams, refreshAfterMembershipChange };
 }
