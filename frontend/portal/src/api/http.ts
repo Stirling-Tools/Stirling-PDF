@@ -5,7 +5,14 @@
  * In dev and Storybook those requests are intercepted by the MSW handlers in
  * `mocks/` and answered with fixture data; pointing at a real backend is just
  * a matter of not registering MSW. Consumers don't change either way.
+ *
+ * Requests are routed through the active backend target (see
+ * {@link getActiveTarget}): it supplies the base URL and the auth headers, so
+ * `api/*.ts` stays path-only and agnostic of which backend (SaaS today,
+ * self-hosted later) it's talking to.
  */
+
+import { getActiveTarget } from "@portal/api/backendTarget";
 
 export interface HttpRequestOptions {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
@@ -34,13 +41,17 @@ export async function httpJson<T>(
   path: string,
   options: HttpRequestOptions = {},
 ): Promise<T> {
-  const res = await fetch(path, {
+  const target = getActiveTarget();
+  const authHeaders = await target.getAuthHeaders();
+  const res = await fetch(`${target.baseUrl}${path}`, {
     method: options.method ?? "GET",
     headers: {
       Accept: "application/json",
       ...(options.body !== undefined
         ? { "Content-Type": "application/json" }
         : {}),
+      ...authHeaders,
+      // Per-call headers win, so a caller can override auth when needed.
       ...options.headers,
     },
     body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
