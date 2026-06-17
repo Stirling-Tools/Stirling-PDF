@@ -17,6 +17,7 @@ import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteIcon from "@mui/icons-material/Delete";
 import HistoryIcon from "@mui/icons-material/History";
 import LinkIcon from "@mui/icons-material/Link";
+import ShareIcon from "@mui/icons-material/Share";
 import { useTranslation } from "react-i18next";
 
 import apiClient from "@app/services/apiClient";
@@ -472,13 +473,25 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
       opened={opened}
       onClose={onClose}
       centered
-      title={t("storageShare.manageTitle", "Manage Sharing")}
+      title={
+        <Group gap="xs" wrap="nowrap">
+          <ShareIcon style={{ fontSize: 20 }} />
+          <Text fw={600} size="lg">
+            {t("storageShare.manageTitle", "Manage Sharing")}
+          </Text>
+        </Group>
+      }
       zIndex={Z_INDEX_OVER_FILE_MANAGER_MODAL}
-      size="xl"
+      size={shareLinksEnabled ? "min(58rem, 94vw)" : "min(46rem, 94vw)"}
+      radius="lg"
+      padding="lg"
+      styles={{
+        header: { paddingTop: "0.875rem", paddingBottom: "0.875rem" },
+      }}
       overlayProps={{ blur: 8 }}
     >
       <Stack gap="lg">
-        <Stack gap={4}>
+        <Group justify="space-between" align="center" gap="md" mt="md">
           <Text size="sm" c="dimmed">
             {t(
               "storageShare.manageDescription",
@@ -491,7 +504,7 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
               {file.name}
             </Text>
           </Text>
-        </Stack>
+        </Group>
 
         {errorMessage && (
           <Alert
@@ -513,7 +526,10 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
           </Alert>
         )}
 
-        <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
+        <SimpleGrid
+          cols={{ base: 1, md: shareLinksEnabled ? 2 : 1 }}
+          spacing="lg"
+        >
           <Stack gap="lg">
             {shareLinksEnabled && (
               <Paper withBorder radius="md" p="md">
@@ -574,8 +590,9 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
                 <Text size="sm" fw={600}>
                   {t("storageShare.sharedUsersTitle", "Shared users")}
                 </Text>
-                <Group align="flex-end" gap="sm">
+                <Group align="flex-end" gap="sm" wrap="nowrap">
                   <TextInput
+                    style={{ flex: 1 }}
                     label={t("storageShare.usernameLabel", "Username or email")}
                     placeholder={t(
                       "storageShare.usernamePlaceholder",

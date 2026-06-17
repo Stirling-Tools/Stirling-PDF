@@ -177,9 +177,18 @@ export const ReviewSessionStep: React.FC<ReviewSessionStepProps> = ({
         <Button
           onClick={onSubmit}
           disabled={disabled}
+          h="auto"
           style={{ flex: 1 }}
           leftSection={<SendIcon sx={{ fontSize: 16 }} />}
           color="green"
+          styles={{
+            root: { paddingTop: 6, paddingBottom: 6 },
+            label: {
+              whiteSpace: "normal",
+              textAlign: "center",
+              lineHeight: 1.2,
+            },
+          }}
         >
           {t("groupSigning.steps.review.send", "Send Signing Requests")}
         </Button>

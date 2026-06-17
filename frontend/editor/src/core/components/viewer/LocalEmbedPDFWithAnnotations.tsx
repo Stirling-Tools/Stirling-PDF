@@ -503,6 +503,9 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
                             onDragStart={(e) => e.preventDefault()}
                             onDrop={(e) => e.preventDefault()}
                             onDragOver={(e) => e.preventDefault()}
+                            onMouseDown={(e) => {
+                              if (placementMode) e.preventDefault();
+                            }}
                             onMouseMove={(e) => {
                               if (!placementMode || !signatureData) return;
                               const rect =
@@ -521,7 +524,11 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
                             onClick={(e) => {
                               if (isDraggingRef.current) return;
 
-                              if (placementMode && onPlaceSignature) {
+                              if (
+                                placementMode &&
+                                onPlaceSignature &&
+                                signatureData
+                              ) {
                                 const rect =
                                   e.currentTarget.getBoundingClientRect();
                                 // Store as fractions (0–1) of the rendered page so overlays

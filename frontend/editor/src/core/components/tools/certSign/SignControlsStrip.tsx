@@ -468,9 +468,12 @@ export default function SignControlsStrip({
             }}
           />
         ) : (
-          <Text size="xs" c="dimmed">
-            {t("certSign.collab.signRequest.preview.missing", "No preview")}
-          </Text>
+          <Group gap={4} wrap="nowrap" c="var(--mantine-color-blue-6)">
+            <DrawIcon sx={{ fontSize: "0.95rem" }} />
+            <Text size="xs" fw={600}>
+              {t("certSign.collab.signRequest.preview.create", "Add signature")}
+            </Text>
+          </Group>
         )}
       </div>
     );

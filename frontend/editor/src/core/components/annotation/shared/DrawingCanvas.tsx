@@ -277,7 +277,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
         opened={modalOpen}
         onClose={closeModal}
         title={t("sign.canvas.modalTitle", "Draw your signature")}
-        size="auto"
+        size="min(48rem, 92vw)"
         centered
       >
         <Stack gap="md">
