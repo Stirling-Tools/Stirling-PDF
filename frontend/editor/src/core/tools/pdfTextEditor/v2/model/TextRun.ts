@@ -155,6 +155,12 @@ export class TextRun {
    * sub-run data.
    */
   paragraphLineSlots: ParagraphLineSlot[];
+  /**
+   * Session-only lock: when true the run is skipped by all hit-tests
+   * (mouse, marquee, Ctrl+A) and edit gestures are no-ops. Not written
+   * to the saved PDF; re-opens with all runs unlocked.
+   */
+  locked: boolean;
 
   constructor(
     init: TextRunSnapshot & {
@@ -188,6 +194,7 @@ export class TextRun {
     this.paragraphLeafContainers = [];
     this.paragraphLineSlots = [];
     this.coverRectPtr = 0;
+    this.locked = init.locked ?? false;
   }
 
   snapshot(): TextRunSnapshot {
@@ -203,6 +210,7 @@ export class TextRun {
       fontSubset: this.fontSubset,
       paragraphLineHeight: this.paragraphLineHeight,
       paragraphLineCount: this.paragraphMemberPtrs.length || undefined,
+      locked: this.locked || undefined,
     };
   }
 }

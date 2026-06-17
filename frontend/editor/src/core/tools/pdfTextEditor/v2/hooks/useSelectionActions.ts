@@ -86,8 +86,17 @@ export function useSelectionActions(store: EditorStore) {
 
   const toggleBold = useCallback(() => {
     forEachSelectedRun((run) => {
-      const next = flipBold(familyOf(run.fontId), !isBoldFamily(run.fontId));
-      if (!next) return;
+      // For base-14 source fonts, flip the variant in place
+      // (Helvetica → Helvetica-Bold). For embedded source fonts (the
+      // dominant case for real PDFs - Word / InDesign / Quark output),
+      // flipBold returns null because the family isn't one we know how
+      // to bold. Fall back to swapping the run wholesale to Helvetica-
+      // Bold so the user CAN actually bold their text. Earlier this
+      // path silently no-op'd and the Bold button appeared dead.
+      const isOn = isBoldFamily(run.fontId);
+      const next =
+        flipBold(familyOf(run.fontId), !isOn) ??
+        (isOn ? "Helvetica" : "Helvetica-Bold");
       store.dispatch(
         new SetFontFamilyCommand({
           pageIndex: run.pageIndex,
@@ -100,11 +109,12 @@ export function useSelectionActions(store: EditorStore) {
 
   const toggleItalic = useCallback(() => {
     forEachSelectedRun((run) => {
-      const next = flipItalic(
-        familyOf(run.fontId),
-        !isItalicFamily(run.fontId),
-      );
-      if (!next) return;
+      // Same fallback as toggleBold: for unknown / embedded families,
+      // swap wholesale to Helvetica-Oblique so the button isn't dead.
+      const isOn = isItalicFamily(run.fontId);
+      const next =
+        flipItalic(familyOf(run.fontId), !isOn) ??
+        (isOn ? "Helvetica" : "Helvetica-Oblique");
       store.dispatch(
         new SetFontFamilyCommand({
           pageIndex: run.pageIndex,

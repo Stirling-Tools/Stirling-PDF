@@ -15,6 +15,8 @@ interface KeyboardShortcutCallbacks {
   onDuplicate: () => void;
   onSelectAll: () => void;
   onCopySelected: () => void;
+  onCutSelected: () => void;
+  onPaste: (stripFormatting: boolean) => void;
   onToggleHelp: () => void;
   onOpenFind: () => void;
   onFindNext: (reverse: boolean) => void;
@@ -33,6 +35,8 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
     onDuplicate,
     onSelectAll,
     onCopySelected,
+    onCutSelected,
+    onPaste,
     onToggleHelp,
     onOpenFind,
     onFindNext,
@@ -75,6 +79,25 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
         case "c":
           if (isFocusInContentEditable()) return;
           onCopySelected();
+          return;
+        case "x":
+          if (isFocusInContentEditable()) return;
+          if (
+            store.selection.value.runIds.length === 0 &&
+            store.selection.value.imageIds.length === 0
+          )
+            return;
+          e.preventDefault();
+          onCutSelected();
+          return;
+        case "v":
+          // Browser's native paste into a focused contentEditable does
+          // exactly what the user wants - inserting into the run they're
+          // typing into. Only hijack for editor-level paste when the
+          // caret isn't inside a run.
+          if (isFocusInContentEditable()) return;
+          e.preventDefault();
+          onPaste(e.shiftKey);
           return;
         case "f":
           e.preventDefault();
@@ -162,6 +185,8 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
     onDuplicate,
     onSelectAll,
     onCopySelected,
+    onCutSelected,
+    onPaste,
     onToggleHelp,
     onOpenFind,
     onFindNext,

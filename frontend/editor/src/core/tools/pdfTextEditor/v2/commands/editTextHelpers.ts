@@ -2,6 +2,44 @@ import { writeUtf16 } from "@app/services/pdfiumService";
 import type { TextRun } from "@app/tools/pdfTextEditor/v2/model/TextRun";
 import type { Page } from "@app/tools/pdfTextEditor/v2/model/Page";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
+import {
+  emitCharcodeEvent,
+  findFontForChar,
+  setCharcodesOn,
+  tryResolveCharcodes,
+} from "@app/tools/pdfTextEditor/v2/charcode/charcodeRegistry";
+import { getActiveCharcodeStrategy } from "@app/tools/pdfTextEditor/v2/charcode/CharcodeStrategy";
+
+/**
+ * Pointers freshly created by the per-char BACKEND emit branch in
+ * `emitTextLine`. The partial-edit measure-and-fallback in
+ * `applyPartialEditPlan` consults `isVerifiedPerCharPtr` before
+ * deciding whether to remove + retry a "tofu" emit: ptrs in this set
+ * were created with known-good (font, charcode) pairs from the
+ * backend resolver cache, so a 0-width measurement just means the
+ * page content stream hasn't been regenerated yet, NOT that the
+ * glyph is broken. Without this signal the retry creates a duplicate
+ * per-char text object and the original .notdef-stripe ptr can't
+ * always be cleanly removed (FPDFPage_RemoveObject silently fails
+ * for some Type3 / form-xobject combinations).
+ *
+ * Entries are weak by convention: the Set grows over the session but
+ * each per-char emit is a small int (PDFium handle), so even after a
+ * long edit session the memory footprint is negligible. We don't
+ * bother removing entries on object delete because the check is
+ * one-shot (right after emit) - stale entries are harmless.
+ */
+const perCharBranchPtrs = new Set<number>();
+
+/** Caller check: was this ptr produced by the per-char emit branch? */
+export function isVerifiedPerCharPtr(ptr: number): boolean {
+  return perCharBranchPtrs.has(ptr);
+}
+
+/** Test-only: clear the verified-ptr set between cases. */
+export function _clearVerifiedPerCharPtrsForTests(): void {
+  perCharBranchPtrs.clear();
+}
 
 /** True when every character in `text` is also present in `pool`. */
 export function everyCharIn(text: string, pool: string): boolean {
@@ -285,7 +323,11 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
       size,
     );
     if (!ptr) return emitBase14();
-    setTextOn(m, ptr, text);
+    // Reuse path: resolve real font charcodes (backend/cmap/content-stream)
+    // so the embedded subset font renders the chars; falls back to SetText
+    // internally. The width check below still catches any .notdef result and
+    // re-emits in base-14, so a broken reuse never persists.
+    writeViaCharcodesOrSetText(ptr, text);
     applyFillAndPos(m, opts.page, ptr, opts.fill, x, opts.y);
     const right = measureObjRightEdgePt(m, ptr);
     const visible = text.replace(/\s+/g, "").length;
@@ -302,6 +344,215 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     }
     return ptr;
   };
+
+  // Try-charcodes wrapper: when we're reusing a source font AND the
+  // active charcode strategy can resolve EVERY char in the chunk,
+  // call FPDFText_SetCharcodes directly. Otherwise fall through to
+  // FPDFText_SetText (the legacy path). Returns true on success.
+  function writeViaCharcodesOrSetText(ptr: number, text: string): void {
+    const strategy = getActiveCharcodeStrategy();
+    if (!canReuse || !opts.originalFontPtr) {
+      emitCharcodeEvent({
+        timestamp: 0,
+        strategy,
+        text,
+        fontPtr: opts.originalFontPtr,
+        resolved: [],
+        missing: [...text],
+        note: !canReuse
+          ? "no source font available (Helvetica fresh emit)"
+          : "originalFontPtr is 0",
+        outcome: "no-font",
+      });
+      setTextOn(m, ptr, text);
+      return;
+    }
+    const resolved = tryResolveCharcodes(opts.originalFontPtr, text, {
+      module: m,
+      pagePtr: opts.page.pagePtr,
+      docPtr: opts.doc.docPtr,
+    });
+    if (!resolved) {
+      emitCharcodeEvent({
+        timestamp: 0,
+        strategy,
+        text,
+        fontPtr: opts.originalFontPtr,
+        resolved: [],
+        missing: [...text],
+        note: "active strategy is 'helvetica' (no resolver)",
+        outcome: "no-strategy",
+      });
+      setTextOn(m, ptr, text);
+      return;
+    }
+    const r = resolved.result;
+    if (r && r.coverage === text.length && r.charcodes.length === text.length) {
+      const ok = setCharcodesOn(m, ptr, r.charcodes);
+      emitCharcodeEvent({
+        timestamp: 0,
+        strategy: resolved.strategy,
+        text,
+        fontPtr: opts.originalFontPtr,
+        resolved: [...r.charcodes],
+        missing: [],
+        note: r.note,
+        outcome: ok ? "charcodes-ok" : "charcodes-call-failed",
+      });
+      if (ok) return;
+      // SetCharcodes binding rejected the call - fall back.
+    } else if (r) {
+      emitCharcodeEvent({
+        timestamp: 0,
+        strategy: resolved.strategy,
+        text,
+        fontPtr: opts.originalFontPtr,
+        resolved: [...r.charcodes],
+        missing: [...r.missing],
+        note: r.note,
+        outcome: "partial-coverage-fallback",
+      });
+    } else {
+      emitCharcodeEvent({
+        timestamp: 0,
+        strategy: resolved.strategy,
+        text,
+        fontPtr: opts.originalFontPtr,
+        resolved: [],
+        missing: [...text],
+        note: "resolver returned null (unavailable for this font)",
+        outcome: "partial-coverage-fallback",
+      });
+    }
+    setTextOn(m, ptr, text);
+  }
+
+  // Per-char emit branch for the BACKEND strategy. When the active
+  // strategy is 'backend', each char's font may be DIFFERENT (Chrome/
+  // Skia-style per-glyph-per-font PDFs). For each char we ask the
+  // resolver for a charcode AND probe PDFium for the font handle that
+  // renders that char on the page. We then create one text object per
+  // char with the CORRECT font + charcode, positioning them adjacently
+  // so the visual output matches the source font.
+  //
+  // Fires whenever the backend strategy is active AND every char has
+  // both a per-char font handle on the page AND a backend-resolved
+  // charcode. The result ptrs are recorded in `perCharBranchPtrs` so
+  // the partial-edit measure-and-fallback knows to TRUST them and
+  // skip its tofu retry. Without that signal the retry would fire a
+  // second per-char emit on top of the first - the F-duplication bug
+  // from before.
+  //
+  // The earlier `!reuse` gate (intended to avoid the double-emit) was
+  // too restrictive: with a borrowed font supplied, the per-char
+  // branch bailed, the legacy SetText path produced .notdef glyphs
+  // (visible as horizontal-bar stripes for Type3 fonts on Sample.pdf),
+  // FPDFPage_RemoveObject silently failed to clear those for
+  // form-xobject text, and the second consecutive M edit left visible
+  // stripes around BOTH the first and the second M. Per-char branch
+  // always firing (when it CAN) + verified-ptr signal to skip the
+  // retry sidesteps both failure modes.
+  //
+  // Bails out (falls through to the normal path) when:
+  //   - text contains whitespace (whitespace doesn't have a per-char
+  //     font on the page; the normal per-chunk path already handles it)
+  //   - we're not in backend strategy mode
+  //   - ANY char fails to resolve both a font handle AND a charcode
+  const isBackendStrategy = getActiveCharcodeStrategy() === "backend";
+  const hasAnyWhitespaceForBranch = /\s/.test(opts.text);
+  if (
+    isBackendStrategy &&
+    !hasAnyWhitespaceForBranch &&
+    opts.text.length > 0 &&
+    m2.FPDFPageObj_CreateTextObj
+  ) {
+    const ctx = {
+      module: m,
+      pagePtr: opts.page.pagePtr,
+      docPtr: opts.doc.docPtr,
+    };
+    // Probe per char first. If any char fails resolution, fall through
+    // to the normal write path (which will surface the failure via
+    // emitCharcodeEvent's outcome:partial-coverage-fallback path).
+    const perChar: Array<{ ch: string; font: number; charcodes: number[] }> =
+      [];
+    let allOk = true;
+    for (const ch of opts.text) {
+      const charFont = findFontForChar(ch, ctx);
+      if (!charFont) {
+        allOk = false;
+        break;
+      }
+      const resolved = tryResolveCharcodes(charFont, ch, ctx);
+      if (
+        !resolved?.result ||
+        resolved.result.charcodes.length !== 1 ||
+        resolved.result.missing.length > 0
+      ) {
+        allOk = false;
+        break;
+      }
+      perChar.push({
+        ch,
+        font: charFont,
+        charcodes: resolved.result.charcodes,
+      });
+    }
+    if (allOk && perChar.length === opts.text.length) {
+      // Per-char emit: one text object per char, each with its OWN font.
+      const ptrs: number[] = [];
+      let cursor = opts.x;
+      for (const pc of perChar) {
+        const ptr = m2.FPDFPageObj_CreateTextObj!(
+          opts.doc.docPtr,
+          pc.font,
+          size,
+        );
+        if (!ptr) continue;
+        const ok = setCharcodesOn(m, ptr, pc.charcodes);
+        if (!ok) {
+          // Couldn't set charcodes - rare but possible. Remove the
+          // orphaned object and bail to the normal path.
+          try {
+            m.FPDFPage_RemoveObject(opts.page.pagePtr, ptr);
+          } catch {
+            /* best-effort */
+          }
+          ptrs.length = 0;
+          break;
+        }
+        applyFillAndPos(m, opts.page, ptr, opts.fill, cursor, opts.y);
+        const measured = measureObjRightEdgePt(m, ptr);
+        cursor =
+          measured > cursor
+            ? measured
+            : cursor + measureAdvancePt(pc.ch, family, size);
+        emitCharcodeEvent({
+          timestamp: 0,
+          strategy: "backend",
+          text: pc.ch,
+          fontPtr: pc.font,
+          resolved: [...pc.charcodes],
+          missing: [],
+          note: `per-char backend emit: font=${pc.font} charcode=${pc.charcodes[0]}`,
+          outcome: "charcodes-ok",
+        });
+        ptrs.push(ptr);
+        // Mark this ptr as verified - it was created via the per-char
+        // branch with a known-good (font, charcode) pair from the
+        // backend resolver cache. Downstream callers (the
+        // partial-edit measure-and-fallback in applyPartialEditPlan)
+        // check this set and SKIP their tofu retry for these ptrs,
+        // because the retry would emit a second per-char text object
+        // on top and the duplicates can't all be cleanly removed
+        // (FPDFPage_RemoveObject silently fails for some Type3 /
+        // form-xobject combinations, leaving visible stripes).
+        perCharBranchPtrs.add(ptr);
+      }
+      if (ptrs.length === opts.text.length) return ptrs;
+    }
+    // fall through to the normal path if per-char attempt didn't work
+  }
 
   // Fast path: no whitespace at all → one text object holds the whole word.
   const hasAnyWhitespace = /\s/.test(opts.text);

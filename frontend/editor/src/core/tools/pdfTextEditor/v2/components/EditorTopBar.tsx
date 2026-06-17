@@ -2,6 +2,19 @@ import { Box, Button, Group, Text, Tooltip } from "@mantine/core";
 import type { EditorStore } from "@app/tools/pdfTextEditor/v2/store/EditorStore";
 import type { PageSnapshot } from "@app/tools/pdfTextEditor/v2/types";
 
+/**
+ * Top bar for the v2 text/image editor.
+ *
+ * This editor is scoped to TEXT and IMAGE editing on top of a PDF
+ * substrate. Document-level operations (page rotation, page reorder,
+ * page split, print, save-to-workbench-for-another-tool) live in
+ * Stirling's dedicated tools and have intentionally been removed
+ * from this surface so users don't see overlapping affordances.
+ *
+ * Kept controls: zoom (editing visibility), add text, add image,
+ * group/ungroup paragraph runs, save PDF (canonical document output),
+ * keyboard help.
+ */
 interface TopBarProps {
   store: EditorStore;
   hasDocument: boolean;
@@ -10,7 +23,6 @@ interface TopBarProps {
   mode: "select" | "addText";
   pages: PageSnapshot[];
   openedFileName: string | null;
-  canReset: boolean;
   /** True when ≥2 text runs are selected. */
   canGroup: boolean;
   /** True when exactly one paragraph-grouped run is selected. */
@@ -19,8 +31,6 @@ interface TopBarProps {
   onPickImage: () => void;
   onGroup: () => void;
   onUngroup: () => void;
-  onReset: () => void;
-  onSaveToWorkbench: () => void;
   onSave: () => void;
   onShowHelp: () => void;
 }
@@ -39,15 +49,12 @@ export function EditorTopBar(props: TopBarProps) {
     mode,
     pages,
     openedFileName,
-    canReset,
     canGroup,
     canUngroup,
     onToggleAddText,
     onPickImage,
     onGroup,
     onUngroup,
-    onReset,
-    onSaveToWorkbench,
     onSave,
     onShowHelp,
   } = props;
@@ -195,27 +202,6 @@ export function EditorTopBar(props: TopBarProps) {
               data-testid="v2-ungroup"
             >
               Ungroup
-            </Button>
-          </Tooltip>
-          <Tooltip label="Reset every edit">
-            <Button
-              size="xs"
-              variant="subtle"
-              onClick={onReset}
-              data-testid="v2-reset"
-              disabled={!canReset}
-            >
-              Reset
-            </Button>
-          </Tooltip>
-          <Tooltip label="Save to Workbench (open in another tool)">
-            <Button
-              size="xs"
-              variant="subtle"
-              onClick={onSaveToWorkbench}
-              data-testid="v2-save-workbench"
-            >
-              Save to Workbench
             </Button>
           </Tooltip>
           <Tooltip label="Download edited PDF (Ctrl+S)">

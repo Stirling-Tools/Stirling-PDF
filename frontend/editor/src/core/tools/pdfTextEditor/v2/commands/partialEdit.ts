@@ -6,9 +6,11 @@ import type {
 } from "@app/tools/pdfTextEditor/v2/model/TextRun";
 import {
   emitTextLine,
+  isVerifiedPerCharPtr,
   measureObjRightEdgePt,
 } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
 import { helveticaVariantFor } from "@app/tools/pdfTextEditor/v2/util/helveticaVariant";
+import { getActiveCharcodeStrategy } from "@app/tools/pdfTextEditor/v2/charcode/CharcodeStrategy";
 import { writeUtf16 } from "@app/services/pdfiumService";
 
 /**
@@ -459,6 +461,28 @@ export function planPartialEdit(
   };
 }
 
+let _wsMeasureCanvas: HTMLCanvasElement | null = null;
+/**
+ * Canvas-measured advance width for whitespace chars. PDFium's
+ * FPDFPageObj_GetBounds returns the visible-glyph bounds (zero for
+ * a space, since a space has no ink), so when an insert contains
+ * whitespace we can't read its advance width back from PDFium. The
+ * canvas measurement of the same string in Liberation Sans / the
+ * fallback family is close enough for our offset-tracking purposes.
+ */
+function measureWhitespaceAdvancePt(
+  text: string,
+  fontFamily: string,
+  fontSizePt: number,
+): number {
+  if (typeof document === "undefined") return text.length * fontSizePt * 0.27;
+  if (!_wsMeasureCanvas) _wsMeasureCanvas = document.createElement("canvas");
+  const ctx = _wsMeasureCanvas.getContext("2d");
+  if (!ctx) return text.length * fontSizePt * 0.27;
+  ctx.font = `${fontSizePt}pt ${fontFamily}`;
+  return ctx.measureText(text).width;
+}
+
 interface FontReadingModule {
   FPDFTextObj_GetFont?: (ptr: number) => number;
 }
@@ -633,15 +657,43 @@ export function applyPartialEditPlan(
   // width = font didn't have working glyphs for these chars). The
   // detection costs one bounds read per emit - negligible.
   //
-  // Only attempt the borrow when EVERY char in EVERY insert op
-  // already appears in some surviving sub-run's text. The surviving
-  // glyphs are proof the font has a working CID for those chars; an
-  // arbitrary new char (e.g. user typed 'Ω' into an ASCII document)
-  // skips the borrow and goes straight to Helvetica.
+  // Borrow-font policy: always borrow when a charcode strategy is
+  // active (cmap / content-stream / backend can resolve any char the
+  // font has a glyph for), else use the conservative
+  // surviving-chars-pool check.
+  //
+  // The legacy 'helvetica' strategy still needs the safety gate
+  // because FPDFText_SetText can map unknown chars to glyph 0xFF
+  // (ydieresis) which renders at full visible width and passes the
+  // measure check below - the safety gate keeps that failure mode
+  // out of the saved PDF.
+  //
+  // Active strategies don't have that problem: charcodes that
+  // resolve produce the right glyph, and chars that DON'T resolve
+  // are detected by tryResolveCharcodes returning `missing.length >
+  // 0`, in which case emitTextLine falls back to SetText for that
+  // chunk (and the existing measure-and-fallback below catches any
+  // resulting tofu).
+  // Single source of truth: charcode/CharcodeStrategy.ts. Was a
+  // 26-line inline IIFE here that duplicated the URL/localStorage
+  // lookup with a hard-coded strategy-name union literal - now it
+  // imports the typed helper so any change to strategy resolution
+  // (e.g. adding a new strategy) only happens in one place.
+  const strategy = getActiveCharcodeStrategy();
+
   const survivingChars = new Set<string>();
   for (let i = 0; i < plan.prevMergedFromTexts.length; i++) {
     if (plan.subRunStatus[i] !== "all-deleted") {
       for (const ch of plan.prevMergedFromTexts[i]) survivingChars.add(ch);
+    }
+  }
+  for (const otherPage of doc.loadedPages()) {
+    for (const otherRun of otherPage.runs) {
+      if (otherRun.fontId !== run.fontId) continue;
+      for (const ch of otherRun.text) survivingChars.add(ch);
+      for (const sub of otherRun.mergedFromTexts) {
+        for (const ch of sub) survivingChars.add(ch);
+      }
     }
   }
   let allInsertCharsAreSafe = true;
@@ -786,11 +838,16 @@ export function applyPartialEditPlan(
 
       // Borrow the font from a survivor that actually contains the
       // inserted chars (e.g. the neighbouring "i"), so the new glyph
-      // reuses that exact embedded font. Only when every insert char is
-      // already present somewhere in the line (safe), else go base-14.
-      const borrowedFontPtr = allInsertCharsAreSafe
-        ? borrowFontForChars(m, plan, insertText)
-        : 0;
+      // reuses that exact embedded font. Borrow when every insert char is
+      // already present somewhere in the line (safe) OR a charcode strategy
+      // is active (the resolver can map arbitrary chars to the embedded
+      // font's glyphs); only the legacy 'helvetica' strategy needs the safe
+      // gate. emitTextLine still validates and falls back to base-14 if the
+      // borrowed font renders .notdef.
+      const borrowedFontPtr =
+        allInsertCharsAreSafe || strategy !== "helvetica"
+          ? borrowFontForChars(m, plan, insertText)
+          : 0;
 
       // Try the borrowed source font first; measure the result and fall
       // back to Helvetica if the rendered width is sub-threshold (font
@@ -813,13 +870,36 @@ export function applyPartialEditPlan(
       }
       let measuredWidth = realRightEdge - anchorX;
 
-      // Heuristic: a working glyph is at least ~0.15 * fontSize per
-      // char wide (narrowest base-14 Helvetica glyph "i" is ~0.22).
-      // Anything well below that means SetText returned a 0-width
-      // (.notdef) glyph - the borrowed font's Unicode→CID lookup
-      // failed for these chars. Re-emit via Helvetica fallback.
-      const minExpected = insertText.length * run.fontSize * 0.15;
-      if (borrowedFontPtr !== 0 && measuredWidth < minExpected) {
+      // Heuristic: a working visible glyph is at least ~0.15 * fontSize
+      // wide. Anything below that PER NON-WHITESPACE CHAR means SetText
+      // returned a 0-width (.notdef) glyph - the borrowed font's
+      // Unicode→CID lookup failed. Re-emit via Helvetica fallback.
+      //
+      // We exclude whitespace from the check because FPDFPageObj_GetBounds
+      // returns the visible-glyph extent (0 for spaces, regardless of
+      // the font's advance width). A pure-whitespace insert (e.g.
+      // typing a single space) ALWAYS measures 0 and would be wrongly
+      // re-emitted forever.
+      const nonWhitespaceLen = insertText.replace(/\s/g, "").length;
+      const minExpected = nonWhitespaceLen * run.fontSize * 0.15;
+      // Skip the tofu retry when ALL returned ptrs came from the
+      // per-char backend emit branch in emitTextLine. Those ptrs were
+      // created with known-good (font, charcode) pairs from the
+      // backend resolver cache; a sub-threshold measurement just
+      // means PDFium's page content stream hasn't been regenerated
+      // yet, NOT that the glyph is broken. Without this gate a second
+      // consecutive edit would fire a duplicate per-char emit on top
+      // of a still-rendering first emit, leaving visible
+      // .notdef-stripe artefacts that FPDFPage_RemoveObject can't
+      // always clear cleanly (form-xobject Type3 case).
+      const allVerified =
+        ptrs.length > 0 && ptrs.every((p) => isVerifiedPerCharPtr(p));
+      if (
+        !allVerified &&
+        borrowedFontPtr !== 0 &&
+        nonWhitespaceLen > 0 &&
+        measuredWidth < minExpected
+      ) {
         // Remove the failed text objects before retrying.
         for (const ptr of ptrs) {
           if (!ptr) continue;
@@ -847,12 +927,26 @@ export function applyPartialEditPlan(
         }
         measuredWidth = realRightEdge - anchorX;
       }
-      // Map each emitted text object back to the word it rendered, so the
-      // sub-run model stays char-accurate: one entry per ptr with its real
-      // text, char-start (offset of that word within insertText) and PDFium
-      // bounds. emitTextLine emits one object per whitespace-separated word,
-      // in order. Storing the FULL insert string on every ptr (the old
-      // behaviour) corrupted the next edit's integrity check and char map.
+      // Add the advance width of whitespace chars (FPDFPageObj_GetBounds
+      // excludes invisible glyphs) so the offset that shifts following kept
+      // sub-runs accounts for inserted spaces - otherwise "AlternativeHi"
+      // renders with no gap.
+      const whitespaceLen = insertText.length - nonWhitespaceLen;
+      if (whitespaceLen > 0) {
+        const wsWidth = measureWhitespaceAdvancePt(
+          " ".repeat(whitespaceLen),
+          fallbackFamily,
+          run.fontSize,
+        );
+        measuredWidth += wsWidth;
+      }
+      // Map emitted ptrs back to text. emitTextLine emits one ptr per
+      // whitespace-separated WORD on the normal path, but one ptr per CHAR on
+      // the per-char backend branch. Discriminate by count: when the ptrs line
+      // up with words, use the accurate word mapping (and drop any stray
+      // empty-word ptr so it can't read back as U+00FF tofu); otherwise slice
+      // insertText across the ptrs so each entry stores its own slice (the next
+      // edit's sanity check compares prevText.slice against the stored text).
       const insertWords: Array<{ text: string; start: number }> = [];
       {
         const wordRe = /\S+/g;
@@ -861,26 +955,49 @@ export function applyPartialEditPlan(
           insertWords.push({ text: wm[0], start: wm.index });
         }
       }
-      for (let i = 0; i < ptrs.length; i++) {
-        const word = insertWords[i];
-        if (!word) {
-          // More emitted objects than words (e.g. a whitespace-only insert
-          // after deleting the leading word). Registering an empty-text ptr
-          // makes it read back as U+00FF ("ÿ") tofu later, so remove the
-          // stray object and skip it instead of storing "".
-          try {
-            m.FPDFPage_RemoveObject(page.pagePtr, ptrs[i]);
-          } catch {
-            /* best-effort */
+      if (ptrs.length === insertWords.length) {
+        for (let i = 0; i < ptrs.length; i++) {
+          const word = insertWords[i];
+          if (!word) {
+            try {
+              m.FPDFPage_RemoveObject(page.pagePtr, ptrs[i]);
+            } catch {
+              /* best-effort */
+            }
+            continue;
           }
-          continue;
+          const bnds = objBoundsLR(m, ptrs[i], anchorX);
+          newMergedFromPtrs.push(ptrs[i]);
+          newMergedFromTexts.push(word.text);
+          newMergedFromBounds.push({ x: bnds.x, right: bnds.right });
+          newMergedFromCharStarts.push(op.startBIdx + word.start);
+          insertedPtrs.push(ptrs[i]);
         }
-        const bnds = objBoundsLR(m, ptrs[i], anchorX);
-        newMergedFromPtrs.push(ptrs[i]);
-        newMergedFromTexts.push(word.text);
-        newMergedFromBounds.push({ x: bnds.x, right: bnds.right });
-        newMergedFromCharStarts.push(op.startBIdx + word.start);
-        insertedPtrs.push(ptrs[i]);
+      } else {
+        // Per-char (or mismatched) emit: slice the insert text across ptrs.
+        let runningCursor = anchorX;
+        const charsPerPtr = Math.max(
+          1,
+          Math.floor(insertText.length / Math.max(1, ptrs.length)),
+        );
+        let charCursor = 0;
+        for (let i = 0; i < ptrs.length; i++) {
+          const sliceWidth = measuredWidth / ptrs.length;
+          const isLast = i === ptrs.length - 1;
+          const sliceText = isLast
+            ? insertText.slice(charCursor)
+            : insertText.slice(charCursor, charCursor + charsPerPtr);
+          newMergedFromPtrs.push(ptrs[i]);
+          newMergedFromTexts.push(sliceText);
+          newMergedFromBounds.push({
+            x: runningCursor,
+            right: runningCursor + sliceWidth,
+          });
+          newMergedFromCharStarts.push(op.startBIdx + charCursor);
+          insertedPtrs.push(ptrs[i]);
+          runningCursor += sliceWidth;
+          charCursor += sliceText.length;
+        }
       }
       if (realRightEdge > lastEnd) lastEnd = realRightEdge;
       // Update offset:

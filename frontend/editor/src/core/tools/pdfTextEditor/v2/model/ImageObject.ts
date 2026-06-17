@@ -11,6 +11,8 @@ export class ImageObject {
   bounds: PageRect;
   matrix: Affine;
   dirty: boolean;
+  /** Session-only lock; see TextRun.locked. */
+  locked: boolean;
 
   constructor(init: ImageObjectSnapshot & { pdfiumObjPtr: number }) {
     this.id = init.id;
@@ -19,6 +21,7 @@ export class ImageObject {
     this.bounds = init.bounds;
     this.matrix = init.matrix;
     this.dirty = false;
+    this.locked = init.locked ?? false;
   }
 
   snapshot(): ImageObjectSnapshot {
@@ -27,6 +30,7 @@ export class ImageObject {
       pageIndex: this.pageIndex,
       bounds: { ...this.bounds },
       matrix: { ...this.matrix },
+      locked: this.locked || undefined,
     };
   }
 }

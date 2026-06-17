@@ -9,11 +9,14 @@ import { collectMemberPtrs } from "@app/tools/pdfTextEditor/v2/commands/editText
  * which preserves any scale/rotation already baked into the run's
  * matrix and just moves it.
  *
- * For LineGrouper-merged runs (where the rep is backed by many per-word
- * PDFium text objects), Transform is applied to EVERY sub-object so the
- * whole run moves together. The previous version only translated
- * `run.pdfiumObjPtr` and the rest of the sub-words stayed in place,
- * producing a partial drag.
+ * Text runs are often composites - LineGrouper merges many per-glyph PDFium
+ * text objects into one logical run, and paragraph recognition merges per-line
+ * objects. Translating only `run.pdfiumObjPtr` would move just the anchor leaf
+ * and leave the rest in place (partial drag), so we translate EVERY leaf the
+ * run owns (`collectMemberPtrs`: paragraphLeafPtrs / mergedFromPtrs / the
+ * single ptr) and remember exactly which ptrs we moved so revert is precise.
+ * The per-line baselines and sub-run bounds are shifted too so the
+ * partial-edit path stays round-trippable after a move.
  */
 export class MoveTextRunCommand implements Command {
   readonly type = "move-text-run";
@@ -21,7 +24,7 @@ export class MoveTextRunCommand implements Command {
   private readonly runId: string;
   private readonly dx: number;
   private readonly dy: number;
-  private applied: boolean;
+  private appliedPtrs: number[];
 
   constructor(opts: {
     pageIndex: number;
@@ -33,110 +36,79 @@ export class MoveTextRunCommand implements Command {
     this.runId = opts.runId;
     this.dx = opts.dx;
     this.dy = opts.dy;
-    this.applied = false;
+    this.appliedPtrs = [];
   }
 
   apply(doc: EditorDocument): void {
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
-    if (!run || !run.pdfiumObjPtr) return;
-    translateAll(doc, collectMemberPtrs(run), this.dx, this.dy);
-    run.matrix = {
-      ...run.matrix,
-      e: run.matrix.e + this.dx,
-      f: run.matrix.f + this.dy,
-    };
-    run.bounds = {
-      ...run.bounds,
-      x: run.bounds.x + this.dx,
-      y: run.bounds.y + this.dy,
-    };
-    // Per-line baselines move too so re-emit positioning stays correct.
-    if (run.paragraphMemberFs.length > 0) {
-      run.paragraphMemberFs = run.paragraphMemberFs.map((f) => f + this.dy);
+    if (!run) return;
+    const m = doc.module;
+    const seen = new Set<number>();
+    for (const ptr of collectMemberPtrs(run)) {
+      if (!ptr || seen.has(ptr)) continue;
+      seen.add(ptr);
+      try {
+        m.FPDFPageObj_Transform(ptr, 1, 0, 0, 1, this.dx, this.dy);
+        this.appliedPtrs.push(ptr);
+      } catch {
+        /* skip leaks; revert only undoes the ptrs we actually moved */
+      }
     }
-    if (run.paragraphLineSlots.length > 0) {
-      run.paragraphLineSlots = run.paragraphLineSlots.map((s) => ({
-        ...s,
-        baselineY: s.baselineY + this.dy,
-        matrixE: s.matrixE + this.dx,
-        mergedFromBounds: s.mergedFromBounds.map((b) => ({
-          x: b.x + this.dx,
-          right: b.right + this.dx,
-        })),
-      }));
-    }
-    if (run.mergedFromBounds.length > 0) {
-      run.mergedFromBounds = run.mergedFromBounds.map((b) => ({
-        x: b.x + this.dx,
-        right: b.right + this.dx,
-      }));
-    }
+    this.shiftModel(run, this.dx, this.dy);
     run.dirty = true;
     page.markDirty();
     page.markNeedsGenerate();
-    this.applied = true;
   }
 
   revert(doc: EditorDocument): void {
-    if (!this.applied) return;
+    if (this.appliedPtrs.length === 0) return;
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
-    if (!run || !run.pdfiumObjPtr) return;
-    translateAll(doc, collectMemberPtrs(run), -this.dx, -this.dy);
-    run.matrix = {
-      ...run.matrix,
-      e: run.matrix.e - this.dx,
-      f: run.matrix.f - this.dy,
-    };
-    run.bounds = {
-      ...run.bounds,
-      x: run.bounds.x - this.dx,
-      y: run.bounds.y - this.dy,
-    };
+    if (!run) return;
+    const m = doc.module;
+    for (const ptr of this.appliedPtrs) {
+      if (!ptr) continue;
+      try {
+        m.FPDFPageObj_Transform(ptr, 1, 0, 0, 1, -this.dx, -this.dy);
+      } catch {
+        /* best-effort */
+      }
+    }
+    this.shiftModel(run, -this.dx, -this.dy);
+    run.dirty = true;
+    page.markDirty();
+    page.markNeedsGenerate();
+    this.appliedPtrs = [];
+  }
+
+  /** Shift the run's matrix/bounds + per-line + sub-run model by (dx, dy). */
+  private shiftModel(
+    run: import("@app/tools/pdfTextEditor/v2/model/TextRun").TextRun,
+    dx: number,
+    dy: number,
+  ): void {
+    run.matrix = { ...run.matrix, e: run.matrix.e + dx, f: run.matrix.f + dy };
+    run.bounds = { ...run.bounds, x: run.bounds.x + dx, y: run.bounds.y + dy };
     if (run.paragraphMemberFs.length > 0) {
-      run.paragraphMemberFs = run.paragraphMemberFs.map((f) => f - this.dy);
+      run.paragraphMemberFs = run.paragraphMemberFs.map((f) => f + dy);
     }
     if (run.paragraphLineSlots.length > 0) {
       run.paragraphLineSlots = run.paragraphLineSlots.map((s) => ({
         ...s,
-        baselineY: s.baselineY - this.dy,
-        matrixE: s.matrixE - this.dx,
+        baselineY: s.baselineY + dy,
+        matrixE: s.matrixE + dx,
         mergedFromBounds: s.mergedFromBounds.map((b) => ({
-          x: b.x - this.dx,
-          right: b.right - this.dx,
+          x: b.x + dx,
+          right: b.right + dx,
         })),
       }));
     }
     if (run.mergedFromBounds.length > 0) {
       run.mergedFromBounds = run.mergedFromBounds.map((b) => ({
-        x: b.x - this.dx,
-        right: b.right - this.dx,
+        x: b.x + dx,
+        right: b.right + dx,
       }));
-    }
-    run.dirty = true;
-    page.markDirty();
-    page.markNeedsGenerate();
-    this.applied = false;
-  }
-}
-
-function translateAll(
-  doc: EditorDocument,
-  ptrs: number[],
-  dx: number,
-  dy: number,
-): void {
-  if (dx === 0 && dy === 0) return;
-  const m = doc.module;
-  const seen = new Set<number>();
-  for (const ptr of ptrs) {
-    if (!ptr || seen.has(ptr)) continue;
-    seen.add(ptr);
-    try {
-      m.FPDFPageObj_Transform(ptr, 1, 0, 0, 1, dx, dy);
-    } catch {
-      /* best-effort - stale ptr silently skipped */
     }
   }
 }

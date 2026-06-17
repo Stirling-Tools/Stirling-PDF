@@ -324,10 +324,17 @@ export function TextRunOverlay({
     <div
       ref={ref}
       data-testid={`v2-run-${run.id}`}
-      contentEditable
+      contentEditable={!run.locked}
       suppressContentEditableWarning
+      data-locked={run.locked ? "true" : undefined}
+      title={run.locked ? "Locked - use the Unlock button to edit" : undefined}
       onPointerDown={(e) => {
         e.stopPropagation();
+        // Locked runs are inert: no select, no drag, no edit. They
+        // remain visible (the PDFium bitmap renders the source glyphs)
+        // and hit-test-able only as a no-op blocker so the user can
+        // tell something is there - but no command fires.
+        if (run.locked) return;
         if ((e.ctrlKey || e.metaKey) && onMove) {
           dragOriginRef.current = { x: e.clientX, y: e.clientY };
           setDragging(true);
@@ -370,13 +377,35 @@ export function TextRunOverlay({
         focusTextRef.current = extractHardBreaks(el);
         // Place caret at end so typed keys route into the element.
         const sel = window.getSelection();
-        if (!sel) return;
-        if (sel.rangeCount > 0 && el.contains(sel.anchorNode)) return;
-        const range = document.createRange();
-        range.selectNodeContents(el);
-        range.collapse(false);
-        sel.removeAllRanges();
-        sel.addRange(range);
+        if (sel && !(sel.rangeCount > 0 && el.contains(sel.anchorNode))) {
+          const range = document.createRange();
+          range.selectNodeContents(el);
+          range.collapse(false);
+          sel.removeAllRanges();
+          sel.addRange(range);
+        }
+        // Backend strategy: pre-warm the per-char charcode cache for the
+        // whole page in the background. By the time the user types their
+        // first char, the cache is populated and the per-char emit branch
+        // in editTextHelpers fires on the FIRST keystroke - no more
+        // "type once for Helvetica, retype for the real font" UX. This
+        // is a one-shot per page per session (idempotent guard in
+        // BackendResolver).
+        void (async () => {
+          try {
+            const [
+              { getActiveCharcodeStrategy },
+              { prewarmBackendCacheForPage },
+            ] = await Promise.all([
+              import("@app/tools/pdfTextEditor/v2/charcode/CharcodeStrategy"),
+              import("@app/tools/pdfTextEditor/v2/charcode/charcodeRegistry"),
+            ]);
+            if (getActiveCharcodeStrategy() !== "backend") return;
+            await prewarmBackendCacheForPage(run.pageIndex);
+          } catch {
+            /* prewarm is best-effort, never block focus */
+          }
+        })();
       }}
       onBlur={(e) => {
         setFocused(false);
