@@ -6803,6 +6803,7 @@ theme = "തീം"
 themeDark = "ഡാർക്ക്"
 themeDescription = "ലൈറ്റ്, ഡാർക്ക് മോഡുകൾക്ക് ഇടയിൽ മാറുക"
 themeLight = "ലൈറ്റ്"
+themeSystem = "System"
 title = "ജനറൽ"
 user = "ഉപയോക്താവ്"
 
@@ -7963,6 +7964,7 @@ valid = "സാധുവാണ്"
 
 [viewer]
 cannotPreviewFile = "ഫയൽ പ്രിവ്യൂ ചെയ്യാൻ കഴിയില്ല"
+copyText = "Copy"
 disableColorFilter = "നിറ ഫിൽട്ടർ പ്രവർത്തനരഹിതമാക്കുക"
 dualPageView = "രണ്ടുപേജ് ദൃശ്യം"
 enableDarkFilter = "ഡാർക്ക് ഫിൽട്ടർ പ്രവർത്തനക്ഷമമാക്കുക"
@@ -8481,7 +8483,6 @@ loading = "അംഗങ്ങളെ ലോഡ് ചെയ്യുന്നു.
 locked = "ലോക്കുചെയ്തിരിക്കുന്നു"
 lockedBadge = "ലോക്കുചെയ്ത"
 loginRequired = "ആദ്യം ലോഗിൻ മോഡ് പ്രാപ്തമാക്കുക"
-member = "അംഗം"
 noMembersFound = "അംഗങ്ങളെ കണ്ടെത്താനായില്ല"
 role = "റോൾ"
 searchMembers = "അംഗങ്ങളെ തിരയുക..."

@@ -6803,6 +6803,7 @@ theme = "དབྱིབས"
 themeDark = "ནག་པོ"
 themeDescription = "དཀར་པོའི་ཐབས་ལམ་དང་ནག་པོའི་ཐབས་ལམ་བར་བསྒྱུར"
 themeLight = "དཀར་པོ"
+themeSystem = "System"
 title = "སྤྱིར་བཏང་གི"
 user = "བེད་སྤྱོད།"
 
@@ -7963,6 +7964,7 @@ valid = "ཁྲིམས་མཐུན"
 
 [viewer]
 cannotPreviewFile = "སྔོན་ལྟའི་ཡིག་འབྲུའི་ཡིག་ཚགས་བཟོ་མི་རུང་།"
+copyText = "Copy"
 disableColorFilter = "ཁ་དོག་འཚག་བཟོ་བར་བཀག"
 dualPageView = "ཤོག་ངོས་གཉིས་ལྡན་གྱི་མཐོང་སྣང་།"
 enableDarkFilter = "མུན་མཐོང་འཚག་བཟོ་ལྕོགས་འགུལ"
@@ -8481,7 +8483,6 @@ loading = "མི་ལ་སྐྱེལ་འདྲེན་བྱེད་པ
 locked = "བཀག་ཡོད"
 lockedBadge = "བཀག་ཡོད"
 loginRequired = "ནང་འཇུག་ཐབས་ལམ་ཐོག་མར་ལྕོགས་ཅན་བཟོ་བ།"
-member = "འཐུས་མི།"
 noMembersFound = "འཐུས་མི་གང་ཡང་མ་ཐོབ།"
 role = "འཁྲབ་ཚན"
 searchMembers = "འཚོལ་ཞིབ་ཚོགས་མི།..."
