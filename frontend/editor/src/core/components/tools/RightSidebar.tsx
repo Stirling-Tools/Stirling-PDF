@@ -241,7 +241,9 @@ export default function RightSidebar() {
             </ActionIcon>
           </div>
           <div className="tool-panel__collapsed-divider" />
-          <PoliciesCollapsedButton onExpand={handleOpenPolicy} />
+          {policiesEnabled && (
+            <PoliciesCollapsedButton onExpand={handleOpenPolicy} />
+          )}
           <div className="tool-panel__collapsed-tools">
             {collapsedRailItems.map(({ id, tool }) => (
               <AppTooltip

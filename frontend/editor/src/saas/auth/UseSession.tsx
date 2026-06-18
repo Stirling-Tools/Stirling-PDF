@@ -14,12 +14,6 @@ import type {
   User as SupabaseUser,
   AuthError,
 } from "@supabase/supabase-js";
-import {
-  CreditSummary,
-  SubscriptionInfo,
-  CreditCheckResult,
-} from "@app/types/credits";
-import { setGlobalCreditUpdateCallback } from "@app/services/apiClient";
 import { synchronizeUserUpgrade } from "@app/services/userService";
 import {
   syncOAuthAvatar,
@@ -54,15 +48,6 @@ export function deriveDisplayName(
   );
 }
 
-export interface TrialStatus {
-  isTrialing: boolean;
-  trialEnd: string;
-  daysRemaining: number;
-  hasPaymentMethod: boolean;
-  hasScheduledSub: boolean;
-  status: string;
-}
-
 interface AuthContextType {
   session: Session | null;
   user: User | null;
@@ -79,20 +64,12 @@ interface AuthContextType {
   isAnonymous: boolean;
   loading: boolean;
   error: AuthError | null;
-  creditBalance: number | null;
-  subscription: SubscriptionInfo | null;
-  creditSummary: CreditSummary | null;
   isPro: boolean | null;
-  trialStatus: TrialStatus | null;
   profilePictureUrl: string | null;
   profilePictureMetadata: ProfilePictureMetadata | null;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
-  hasSufficientCredits: (requiredCredits: number) => CreditCheckResult;
-  updateCredits: (newBalance: number) => void;
-  refreshCredits: () => Promise<void>;
   refreshProStatus: () => Promise<void>;
-  refreshTrialStatus: () => Promise<void>;
   refreshProfilePicture: () => Promise<void>;
   refreshProfilePictureMetadata: () => Promise<void>;
 }
@@ -104,24 +81,12 @@ const AuthContext = createContext<AuthContextType>({
   isAnonymous: false,
   loading: true,
   error: null,
-  creditBalance: null,
-  subscription: null,
-  creditSummary: null,
   isPro: null,
-  trialStatus: null,
   profilePictureUrl: null,
   profilePictureMetadata: null,
   signOut: async () => {},
   refreshSession: async () => {},
-  hasSufficientCredits: () => ({
-    hasSufficientCredits: false,
-    currentBalance: 0,
-    requiredCredits: 0,
-  }),
-  updateCredits: () => {},
-  refreshCredits: async () => {},
   refreshProStatus: async () => {},
-  refreshTrialStatus: async () => {},
   refreshProfilePicture: async () => {},
   refreshProfilePictureMetadata: async () => {},
 });
@@ -130,33 +95,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<AuthError | null>(null);
-  const [creditBalance, setCreditBalance] = useState<number | null>(null);
-  const [subscription, setSubscription] = useState<SubscriptionInfo | null>(
-    null,
-  );
-  const [creditSummary, setCreditSummary] = useState<CreditSummary | null>(
-    null,
-  );
   const [isPro, setIsPro] = useState<boolean | null>(null);
-  const [trialStatus, setTrialStatus] = useState<TrialStatus | null>(null);
   const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(
     null,
   );
   const [profilePictureMetadata, setProfilePictureMetadata] =
     useState<ProfilePictureMetadata | null>(null);
-
-  // Legacy weekly-credits feed (GET /api/v1/credits) is dead. PAYG replaces it via
-  // useWallet() reading /api/v1/payg/wallet. Symbols are kept as no-ops so existing
-  // consumers of useAuth() that still destructure creditBalance / refreshCredits
-  // compile cleanly; values just stay null forever and refreshCredits is a noop.
-  // _ underscore on the param keeps the public signature stable for callers.
-  const fetchCredits = useCallback(async (_sessionToUse?: Session | null) => {
-    /* legacy credit fetch removed — see comment above */
-  }, []);
-
-  const refreshCredits = useCallback(async () => {
-    /* legacy credit refresh removed — useWallet() replaces this */
-  }, []);
 
   const fetchProStatus = useCallback(
     async (sessionToUse?: Session | null) => {
@@ -196,75 +140,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshProStatus = useCallback(async () => {
     await fetchProStatus();
   }, [fetchProStatus]);
-
-  const fetchTrialStatus = useCallback(
-    async (sessionToUse?: Session | null) => {
-      const currentSession = sessionToUse ?? session;
-
-      if (!currentSession?.user) {
-        console.debug(
-          "[Auth Debug] No user session, skipping trial status fetch",
-        );
-        setTrialStatus(null);
-        return;
-      }
-
-      try {
-        console.debug(
-          "[Auth Debug] Fetching trial status for user:",
-          currentSession.user.id,
-        );
-        const { data, error } = await supabase
-          .from("billing_subscriptions")
-          .select(
-            "status, trial_end, has_payment_method, scheduled_subscription_id",
-          )
-          .in("status", ["trialing", "incomplete_expired", "canceled"])
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        if (error) {
-          console.error("[Auth Debug] Error fetching trial status:", error);
-          setTrialStatus(null);
-          return;
-        }
-
-        if (data?.trial_end) {
-          const trialEnd = new Date(data.trial_end);
-          const now = new Date();
-          const daysRemaining = Math.ceil(
-            (trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
-          );
-
-          setTrialStatus({
-            isTrialing: data.status === "trialing" && daysRemaining > 0,
-            trialEnd: data.trial_end,
-            daysRemaining: Math.max(0, daysRemaining),
-            hasPaymentMethod: data.has_payment_method || false,
-            hasScheduledSub: !!data.scheduled_subscription_id,
-            status: data.status,
-          });
-          console.debug("[Auth Debug] Trial status fetched:", {
-            status: data.status,
-            daysRemaining: Math.max(0, daysRemaining),
-            hasPaymentMethod: data.has_payment_method,
-            isTrialing: data.status === "trialing" && daysRemaining > 0,
-          });
-        } else {
-          setTrialStatus(null);
-        }
-      } catch (error: unknown) {
-        console.debug("[Auth Debug] Failed to fetch trial status:", error);
-        setTrialStatus(null);
-      }
-    },
-    [session],
-  );
-
-  const refreshTrialStatus = useCallback(async () => {
-    await fetchTrialStatus();
-  }, [fetchTrialStatus]);
 
   // Provider photo as interim fallback when the bucket copy is missing —
   // skipped when the user explicitly chose upload/removal (source "upload").
@@ -372,46 +247,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await fetchProfilePictureMetadata();
   }, [fetchProfilePictureMetadata]);
 
-  const updateCredits = useCallback(
-    (newBalance: number) => {
-      console.debug("[Auth Debug] Updating credit balance:", {
-        from: creditBalance,
-        to: newBalance,
-      });
-      setCreditBalance(newBalance);
-      // Also update the creditSummary if it exists
-      if (creditSummary) {
-        const updatedSummary: CreditSummary = {
-          ...creditSummary,
-          creditsRemaining: newBalance,
-          currentCredits: newBalance,
-        };
-        setCreditSummary(updatedSummary);
-      }
-    },
-    [creditSummary],
-  );
-
-  const hasSufficientCredits = useCallback(
-    (requiredCredits: number): CreditCheckResult => {
-      const currentBalance = creditBalance ?? 0;
-      const hasSufficient = currentBalance >= requiredCredits;
-      console.debug("[Auth Debug] Credit check:", {
-        requiredCredits,
-        currentBalance,
-        hasSufficient,
-      });
-
-      return {
-        hasSufficientCredits: hasSufficient,
-        currentBalance,
-        requiredCredits,
-        shortfall: hasSufficient ? undefined : requiredCredits - currentBalance,
-      };
-    },
-    [creditBalance],
-  );
-
   const refreshSession = async () => {
     try {
       setLoading(true);
@@ -455,11 +290,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Set up global credit update callback
-  useEffect(() => {
-    setGlobalCreditUpdateCallback(updateCredits);
-  }, [updateCredits]);
-
   useEffect(() => {
     let mounted = true;
 
@@ -482,7 +312,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           });
           setSession(data.session);
 
-          // Fetch credits, pro status, trial status, profile picture metadata, and profile picture using the session from the response
+          // Fetch pro status, profile picture metadata, and profile picture using the session from the response
           if (data.session?.user) {
             // Sync OAuth avatar in background; fetch the picture once the
             // sync settles instead of guessing with a fixed delay.
@@ -496,9 +326,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               })
               .then(() => fetchProfilePicture(data.session));
 
-            await fetchCredits(data.session);
             await fetchProStatus(data.session);
-            await fetchTrialStatus(data.session);
             await fetchProfilePictureMetadata(data.session);
           }
         }
@@ -542,12 +370,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Additional handling for specific events
           if (event === "SIGNED_OUT") {
             console.debug("[Auth Debug] User signed out, clearing session");
-            // Clear credit data, pro status, trial status, profile picture, and metadata on sign out
-            setCreditBalance(null);
-            setCreditSummary(null);
-            setSubscription(null);
+            // Clear pro status, profile picture, and metadata on sign out
             setIsPro(null);
-            setTrialStatus(null);
             setProfilePictureUrl(null);
             setProfilePictureMetadata(null);
           } else if (event === "SIGNED_IN") {
@@ -575,9 +399,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
               // Fetch user data in parallel
               Promise.all([
-                fetchCredits(newSession),
                 fetchProStatus(newSession),
-                fetchTrialStatus(newSession),
                 fetchProfilePictureMetadata(newSession),
               ]).then(() => {
                 // Fetch the picture once the avatar sync settles.
@@ -592,12 +414,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
           } else if (event === "TOKEN_REFRESHED") {
             console.debug("[Auth Debug] Token refreshed");
-            // Optionally refresh credits, pro status, trial status, profile picture metadata, and profile picture on token refresh
+            // Optionally refresh pro status, profile picture metadata, and profile picture on token refresh
             if (newSession?.user) {
               Promise.all([
-                fetchCredits(newSession),
                 fetchProStatus(newSession),
-                fetchTrialStatus(newSession),
                 fetchProfilePictureMetadata(newSession),
                 fetchProfilePicture(newSession),
               ]).then(() => {
@@ -634,12 +454,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     "[Auth Debug] User upgrade synchronized successfully",
                   );
 
-                  // Refresh credits, pro status, trial status, profile picture metadata, and profile picture after upgrade
+                  // Refresh pro status, profile picture metadata, and profile picture after upgrade
                   if (newSession?.user) {
                     return Promise.all([
-                      fetchCredits(newSession),
                       fetchProStatus(newSession),
-                      fetchTrialStatus(newSession),
                       fetchProfilePictureMetadata(newSession),
                       fetchProfilePicture(newSession),
                     ]);
@@ -677,20 +495,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAnonymous: Boolean(user?.is_anonymous),
     loading,
     error,
-    creditBalance,
-    subscription,
-    creditSummary,
     isPro,
-    trialStatus,
     profilePictureUrl,
     profilePictureMetadata,
     signOut,
     refreshSession,
-    hasSufficientCredits,
-    updateCredits,
-    refreshCredits,
     refreshProStatus,
-    refreshTrialStatus,
     refreshProfilePicture,
     refreshProfilePictureMetadata,
   };

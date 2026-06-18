@@ -73,6 +73,8 @@ export interface BackendResultFile {
 /** Read-only view returned by the run status endpoint (mirrors PolicyRunView). */
 export interface PolicyRunView {
   runId: string;
+  /** ID of the stored policy that produced the run; null for ad-hoc pipelines. */
+  policyId: string | null;
   status: PolicyRunStatus;
   currentStep: number;
   stepCount: number;
@@ -89,6 +91,8 @@ export interface PolicyRunView {
    */
   errorSubscribed?: boolean | null;
   outputs: BackendResultFile[];
+  /** When the run was created (epoch millis); lets a rediscovered run show its real age. */
+  createdAt: number;
 }
 
 /** Resolve a frontend operation id to its backend tool endpoint path. */

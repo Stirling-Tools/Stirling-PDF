@@ -51,10 +51,9 @@ import stirling.software.saas.payg.wallet.WalletLedgerEntry;
  * The real-charging path lives in a separate follow-up and reuses the same orchestration — only the
  * side-effect (shadow row vs ledger entry + Stripe call) differs.
  *
- * <p>The {@code legacyCreditsCharged} field on the shadow row is set to {@code 0} here. When the
- * legacy {@code CreditService} is wired to call this service (separate PR), the legacy debit amount
- * becomes available and {@code diffPct} can be computed against it; until then the shadow row
- * captures the PAYG units only.
+ * <p>The {@code legacyCreditsCharged} field on the shadow row is set to {@code 0}: the legacy
+ * credit engine has been removed, so there is no legacy debit to compare against and {@code
+ * diffPct} stays {@code 0}. The shadow row captures the PAYG units only.
  */
 @Service
 @Profile("saas")
@@ -281,8 +280,7 @@ public class JobChargeService {
         // Free-vs-paid split fixed at charge time: paid (metered) = paygUnits - freeUnitsConsumed,
         // and a refund restores freeUnitsConsumed to the team's grant.
         row.setFreeUnitsConsumed(freeUnitsConsumed);
-        // No legacy comparison yet — wired when the shadow path is connected to the legacy
-        // CreditService in the follow-up PR. Until then, diff stays at 0.
+        // No legacy comparison: the legacy credit engine has been removed, so diff stays at 0.
         row.setLegacyCreditsCharged(0);
         row.setDiffPct(0);
         row.setStatus(ShadowChargeStatus.CHARGED);

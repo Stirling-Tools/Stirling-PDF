@@ -56,10 +56,12 @@ export async function runStoredPolicy(
 ): Promise<string> {
   const form = new FormData();
   for (const file of files) form.append("fileInput", file);
+  // Don't set Content-Type: the HTTP client must generate multipart/form-data
+  // WITH its boundary from the FormData body. A manual boundary-less header makes
+  // the server reject the request ("no multipart boundary parameter").
   const res = await apiClient.post<JobResponse>(
     `/api/v1/policies/${encodeURIComponent(id)}/run`,
     form,
-    { headers: { "Content-Type": "multipart/form-data" } },
   );
   return res.data.jobId;
 }
@@ -81,9 +83,8 @@ export async function runPolicyPipeline(
     "json",
     new Blob([JSON.stringify(definition)], { type: "application/json" }),
   );
-  const res = await apiClient.post<JobResponse>("/api/v1/policies/run", form, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  // No Content-Type: let the client set multipart/form-data with its boundary.
+  const res = await apiClient.post<JobResponse>("/api/v1/policies/run", form);
   return res.data.jobId;
 }
 
@@ -101,5 +102,16 @@ export async function getPolicyRun(runId: string): Promise<PolicyRunView> {
   const res = await apiClient.get<PolicyRunView>(
     `/api/v1/policies/run/${encodeURIComponent(runId)}`,
   );
+  return res.data;
+}
+
+/**
+ * The caller's in-flight and recently-finished stored-policy runs (server-owned,
+ * within the run-retention window). Used to reconcile on load: a run started
+ * before a refresh/crash is rediscovered here and its outputs collected, so a
+ * finished run is never orphaned on the backend.
+ */
+export async function listPolicyRuns(): Promise<PolicyRunView[]> {
+  const res = await apiClient.get<PolicyRunView[]>("/api/v1/policies/runs");
   return res.data;
 }

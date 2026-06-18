@@ -49,6 +49,13 @@ export interface GoldenSet {
   total: number;
   /** Last time the set was run. */
   lastRun: string;
+  /**
+   * Minimum pass rate (fraction) this pipeline must hold to be considered
+   * reliable. A pipeline below its own bound is amber/red at a glance — the
+   * bound is per-pipeline because a clause-risk pipeline tolerates less slack
+   * than a high-volume extraction one.
+   */
+  threshold: number;
 }
 
 /** A single field whose shape has drifted from the inferred schema. */
@@ -140,7 +147,7 @@ const COI_COMPLIANCE: Pipeline = {
     ["Redact PII", "Encryption at rest"],
     ["Primary store", "Processing manifest"],
   ),
-  golden: { passing: 36, total: 36, lastRun: "2h ago" },
+  golden: { passing: 36, total: 36, lastRun: "2h ago", threshold: 0.95 },
   drift: [],
 };
 
@@ -167,7 +174,8 @@ const PRIOR_AUTH: Pipeline = {
     ["Redact PII", "PII/PHI enforcement", "Encryption at rest"],
     ["Conditional routing", "Human review"],
   ),
-  golden: { passing: 24, total: 28, lastRun: "47m ago" },
+  // Below its own 0.90 bound (24/28 ≈ 0.857) — the at-a-glance reliability miss.
+  golden: { passing: 24, total: 28, lastRun: "47m ago", threshold: 0.9 },
   drift: [
     {
       field: "procedure_codes",
@@ -209,7 +217,7 @@ const INVOICE_AP: Pipeline = {
     ["Redact PII", "Encryption at rest"],
     ["Primary store", "Mirror to bucket", "Notify"],
   ),
-  golden: { passing: 41, total: 42, lastRun: "1h ago" },
+  golden: { passing: 41, total: 42, lastRun: "1h ago", threshold: 0.95 },
   drift: [
     {
       field: "tax",
@@ -244,7 +252,7 @@ const CONTRACT_REVIEW: Pipeline = {
     ["Redact PII", "Confidentiality mark", "Signed outputs"],
     ["Human review", "Flag"],
   ),
-  golden: { passing: 31, total: 33, lastRun: "5h ago" },
+  golden: { passing: 31, total: 33, lastRun: "5h ago", threshold: 0.95 },
   drift: [],
 };
 
@@ -272,7 +280,7 @@ const KYC_PROCESSOR: Pipeline = {
     ["Field-aware redact", "Attribution watermark", "Encryption at rest"],
     ["Compliance archive", "Processing manifest", "Notify"],
   ),
-  golden: { passing: 52, total: 54, lastRun: "31m ago" },
+  golden: { passing: 52, total: 54, lastRun: "31m ago", threshold: 0.95 },
   drift: [
     {
       field: "document_number",
@@ -304,15 +312,86 @@ const ENTERPRISE_EVALS: EvalsNote = {
     "Prior Auth v3.2.0-rc and Invoice v2.9.0-rc are mirroring live traffic in shadow; KYC v4.1.0 is in a comparative run against v4.0.3. The Contract Review v2.0.0 candidate is blocked — it regressed 3 golden cases on clause-risk scoring, so the comparative run is held until the candidate is re-cut. No promotion happens until a candidate clears its golden set and the comparative delta stays inside bounds.",
 };
 
+/**
+ * A pipeline that began life as an Editor watch-folder flow and was promoted
+ * into the portal. These are the on-ramp from ad-hoc desktop automation to a
+ * governed, deployed pipeline — they keep a pointer back to the watch folder
+ * they grew out of so the lineage stays visible.
+ */
+export interface PromotedPipeline {
+  id: string;
+  name: string;
+  /** Doc type the originating watch-folder flow was built around. */
+  sourceDocType: string;
+  /** The Editor watch folder this was promoted from. */
+  watchFolder: string;
+  /** Where the promotion sits in its lifecycle. */
+  status: PromotedStatus;
+  /** When the promotion landed. */
+  promotedAt: string;
+}
+
+/**
+ * A promoted flow is `deployed` once it runs in the portal, `staged` while it
+ * mirrors the watch folder without taking over, and `review` when it needs a
+ * human to confirm the flow before it goes live.
+ */
+export type PromotedStatus = "deployed" | "staged" | "review";
+
 export interface PipelinesResponse {
   pipelines: Pipeline[];
   /** Present for enterprise only. */
   evals: EvalsNote | null;
+  /** Flows promoted up from Editor watch folders. Empty on free. */
+  promoted: PromotedPipeline[];
 }
+
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Promoted-from-Editor fixtures                                            */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+const PROMOTED_PRO: PromotedPipeline[] = [
+  {
+    id: "pl-promo-statements",
+    name: "Bank Statement Normalizer",
+    sourceDocType: "Bank statement",
+    watchFolder: "~/StirlingWatch/statements-in",
+    status: "deployed",
+    promotedAt: "promoted 3d ago",
+  },
+  {
+    id: "pl-promo-receipts",
+    name: "Receipt Splitter",
+    sourceDocType: "Expense receipt",
+    watchFolder: "~/StirlingWatch/receipts",
+    status: "staged",
+    promotedAt: "promoted 11h ago",
+  },
+];
+
+const PROMOTED_ENTERPRISE: PromotedPipeline[] = [
+  ...PROMOTED_PRO,
+  {
+    id: "pl-promo-claims",
+    name: "Claims Intake Splitter",
+    sourceDocType: "Insurance claim",
+    watchFolder: "\\\\fileserver\\ClaimsDropbox",
+    status: "deployed",
+    promotedAt: "promoted 6d ago",
+  },
+  {
+    id: "pl-promo-onboarding",
+    name: "New-Hire Packet Sorter",
+    sourceDocType: "Onboarding packet",
+    watchFolder: "\\\\hr-share\\NewHireScans",
+    status: "review",
+    promotedAt: "promoted 2h ago",
+  },
+];
 
 export function pipelinesFor(tier: Tier): PipelinesResponse {
   if (tier === "free") {
-    return { pipelines: [], evals: null };
+    return { pipelines: [], evals: null, promoted: [] };
   }
   if (tier === "enterprise") {
     return {
@@ -324,11 +403,13 @@ export function pipelinesFor(tier: Tier): PipelinesResponse {
         CONTRACT_REVIEW,
       ],
       evals: ENTERPRISE_EVALS,
+      promoted: PROMOTED_ENTERPRISE,
     };
   }
   // pro
   return {
     pipelines: [COI_COMPLIANCE, INVOICE_AP, PRIOR_AUTH],
     evals: null,
+    promoted: PROMOTED_PRO,
   };
 }

@@ -18,6 +18,10 @@ vi.mock("react-i18next", () => ({
   I18nextProvider: ({ children }: { children: ReactNode }) => children,
 }));
 
+// Policies ship gated SaaS-only via the build-flavor flag; these tests exercise
+// the component itself, so force the flag on regardless of the test build flavor.
+vi.mock("@app/constants/featureFlags", () => ({ POLICIES_ENABLED: true }));
+
 // usePolicies derives `canConfigure` from app-config; with no AppConfigProvider
 // here `config` is null, which (tri-state gate) hides the edit affordances. Mock
 // app-config as a single-user deployment (login off) so the local operator can

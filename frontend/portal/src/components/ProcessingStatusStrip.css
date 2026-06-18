@@ -1,0 +1,78 @@
+.portal-statusstrip--free {
+  display: flex;
+  flex-direction: column;
+}
+
+/* The Banner body already provides padding; lay out the free meter inside it. */
+.portal-statusstrip--free .sui-banner__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.portal-statusstrip__free-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.portal-statusstrip__free-label {
+  font-size: 0.8125rem;
+  color: var(--color-text-2);
+}
+
+.portal-statusstrip__free-label strong {
+  color: var(--color-text-1);
+  font-weight: 600;
+}
+
+.portal-statusstrip__free-pct {
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  color: var(--color-text-4);
+}
+
+/* Paid strip: single inline row */
+.portal-statusstrip--paid {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.625rem 0.875rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.portal-statusstrip__plan {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4375rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+
+.portal-statusstrip__dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+}
+
+.portal-statusstrip__sep {
+  color: var(--color-text-5);
+}
+
+.portal-statusstrip__volume {
+  font-size: 0.8125rem;
+  color: var(--color-text-3);
+}
+
+.portal-statusstrip__volume strong {
+  color: var(--color-text-1);
+  font-weight: 600;
+}
+
+.portal-statusstrip__manage {
+  margin-left: auto;
+}
