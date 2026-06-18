@@ -201,8 +201,6 @@ function isPaygLimitCode(code: string | null | undefined): boolean {
   return code != null && PAYG_LIMIT_CODES.has(code);
 }
 
-const CREATE_PDF_AGENT_TOOL = "/api/v1/ai/tools/create-pdf-from-html-agent";
-
 interface ChatState {
   messages: ChatMessage[];
   isLoading: boolean;
@@ -613,20 +611,12 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             if (isLimit) {
               dispatchPaygLimitReached(data.errorSubscribed ?? null);
             }
-            // A create turn creates a whole document, so nudge the user to check its details
-            const createdDocument =
-              !isLimit && toolsUsed.includes(CREATE_PDF_AGENT_TOOL);
             const replyContent = isLimit
               ? t(
                   "chat.responses.usage_limit_reached",
                   "You've reached your usage limit. Check your plan options to keep going.",
                 )
-              : createdDocument
-                ? `${formatWorkflowResponse(data, t)}\n\n${t(
-                    "chat.responses.create_verify",
-                    "AI-generated documents can include mistakes, so double-check the details before sharing.",
-                  )}`
-                : formatWorkflowResponse(data, t);
+              : formatWorkflowResponse(data, t);
             dispatch({
               type: "ADD_MESSAGE",
               message: {
