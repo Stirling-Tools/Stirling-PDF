@@ -74,6 +74,65 @@ function compressStaticCopyPlugin(): PluginOption {
   };
 }
 
+// Bake per-route Open Graph / Twitter Card tags into static HTML at build time.
+//
+// The SPA sets these client-side for real browsers, but link-unfurling crawlers
+// (Slack, Facebook, X, LinkedIn, iMessage, ...) do not run JavaScript. Prerendering
+// flat per-route files (e.g. dist/compress.html) means every static host - Cloudflare
+// Pages, Docker's bundled static dir, desktop - serves correct previews with NO
+// server-side rendering. Cloudflare Pages serves `compress.html` at `/compress`
+// automatically (clean URLs), and the Spring backend serves the same file.
+//
+// Absolute URLs (best for Facebook/X) are used when a canonical base is known:
+// VITE_OG_BASE_URL (custom domain) or CF_PAGES_URL (set automatically by Cloudflare
+// Pages). Otherwise URLs stay root-relative, which still resolves against whatever
+// origin serves the page (correct for self-hosted Docker). Logic lives in
+// scripts/og-prerender.mjs so it can be unit-tested without a full build.
+function prerenderOgPlugin(): PluginOption {
+  return {
+    name: "prerender-og",
+    apply: "build" as const,
+    async closeBundle() {
+      const { prerenderOg } = await import("./scripts/og-prerender.mjs");
+      const ogBase = (
+        process.env.VITE_OG_BASE_URL ||
+        process.env.CF_PAGES_URL ||
+        ""
+      ).replace(/\/+$/, "");
+      // Absolute deploy base for nested routes' <base href> (matches vite `base`).
+      const subpath = (process.env.RUN_SUBPATH || "").replace(/^\/+|\/+$/g, "");
+      const baseHref = subpath ? `/${subpath}/` : "/";
+      let manifest;
+      try {
+        manifest = JSON.parse(
+          await fs.readFile(
+            path.resolve(__dirname, "public/og-metadata.json"),
+            "utf8",
+          ),
+        );
+      } catch {
+        console.warn(
+          "[prerender-og] public/og-metadata.json missing; skipping OG prerender. " +
+            "Run `node scripts/generate-og-metadata.mjs`.",
+        );
+        return;
+      }
+      const distDir = path.resolve(__dirname, "dist");
+      const count = await prerenderOg({ distDir, manifest, ogBase, baseHref });
+      console.log(
+        `[prerender-og] wrote ${count} prerendered route pages` +
+          (ogBase
+            ? ` (absolute URLs, base=${ogBase})`
+            : " (root-relative URLs)"),
+      );
+    },
+  };
+}
+
+// NOTE: cloud/ is a SHARED layer, not a runnable build flavor — it's compiled
+// into the saas and desktop builds. It has no entry here and no vite tsconfig;
+// it is only typechecked standalone via editor/src/cloud/tsconfig.json
+// (task frontend:typecheck:cloud) to prove it carries no saas/desktop-only deps.
 const VALID_MODES = [
   "core",
   "proprietary",
@@ -215,7 +274,17 @@ export default defineConfig(async ({ mode }) => {
         ],
       }),
       compressStaticCopyPlugin(),
+      prerenderOgPlugin(),
     ],
+    resolve: {
+      // Global alias so @shared resolves for ALL importers — including the
+      // shared components' own `@shared/components/X.css` self-imports, which
+      // live outside the editor tsconfig scope and so aren't rewritten by
+      // vite-tsconfig-paths. Required for the editor to consume SUI components.
+      alias: {
+        "@shared": path.resolve(__dirname, "../shared"),
+      },
+    },
     server: {
       host: true,
       allowedHosts: allowedHosts.length > 0 ? allowedHosts : undefined,
@@ -247,11 +316,6 @@ export default defineConfig(async ({ mode }) => {
         },
       },
     },
-    resolve: {
-      alias: {
-        "@shared": path.resolve(__dirname, "../shared"),
-      },
-    },
     optimizeDeps: {
       exclude: ["@embedpdf/pdfium"],
     },
@@ -262,8 +326,10 @@ export default defineConfig(async ({ mode }) => {
     // SPA fallback returns index.html as text/html and React never mounts.
     // VITE_BUILD_FOR_PREVIEW=1 (set by the CI playwright steps) overrides to
     // an absolute base so deep-route asset paths resolve to /assets/...
+    // Trailing slash required: it becomes `<base href>`, and browsers resolve
+    // relative URLs (manifest.json, favicon) against the base's *directory*.
     base: env.RUN_SUBPATH
-      ? `/${env.RUN_SUBPATH}`
+      ? `/${env.RUN_SUBPATH}/`
       : process.env.VITE_BUILD_FOR_PREVIEW === "1"
         ? "/"
         : "./",

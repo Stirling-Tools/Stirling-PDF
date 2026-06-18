@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
@@ -22,29 +23,22 @@ import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.PolicyInputs;
 
 /**
- * Reads input files from a directory. Each ready file becomes its own unit of work (one run per
- * file) so a failure on one file does not affect the others.
+ * Reads input files from a directory; each ready file is its own unit of work so one failure does
+ * not affect the others.
  *
- * <p>Two modes via the {@code mode} option:
- *
- * <ul>
- *   <li>{@code "consume"} (default) - claim each file by moving it into {@code
- *       .stirling/processing}, then route it to {@code .stirling/done} or {@code .stirling/error}
- *       when its run finishes. Each file is processed once; right for "process new arrivals" (and
- *       the basis of watched folders).
- *   <li>{@code "snapshot"} - read the directory's current files without moving them; every run sees
- *       the full set again. Right for "always regenerate from a fixed input set".
- * </ul>
- *
- * Readiness is checked first (via {@link FileReadinessChecker}) so files mid-write are skipped.
+ * <p>Mode option: "consume" (default) claims each file by moving it into {@code
+ * .stirling/processing} then routes it to {@code .stirling/done} or {@code .stirling/error}, so
+ * each file runs once; "snapshot" reads without moving, so every run sees the full set. Readiness
+ * is checked first so files mid-write are skipped.
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Profile("saas")
 public class FolderInputSource implements InputSource {
 
     private static final String TYPE = FolderAccessGuard.FOLDER_TYPE;
-    // Bookkeeping lives under one hidden namespace dir so the watched folder stays tidy.
+    // Bookkeeping lives under one hidden dir so the watched folder stays tidy.
     private static final String WORK_SUBDIR = ".stirling";
     private static final String PROCESSING_SUBDIR = "processing";
     private static final String DONE_SUBDIR = "done";
@@ -107,6 +101,7 @@ public class FolderInputSource implements InputSource {
         return work;
     }
 
+    // Atomic move into processing/: only one sweep can win the claim, the rest see the file gone.
     private Path claim(Path inputDir, Path file) {
         try {
             Path processingDir = workDir(inputDir, PROCESSING_SUBDIR);
@@ -135,7 +130,6 @@ public class FolderInputSource implements InputSource {
         }
     }
 
-    /** A bookkeeping subdirectory under the watched folder's {@code .stirling} namespace. */
     private static Path workDir(Path inputDir, String subdir) {
         return inputDir.resolve(WORK_SUBDIR).resolve(subdir);
     }
@@ -166,7 +160,6 @@ public class FolderInputSource implements InputSource {
         }
     }
 
-    /** The typed, validated form of a folder source's options: the directory and dedup mode. */
     record FolderConfig(Path directory, boolean snapshot) {
 
         private static final String DIRECTORY_OPTION = "directory";

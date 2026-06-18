@@ -11,7 +11,7 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /**
- * Pins the contract {@code CreditService.scheduleStripeReportAfterCommit} relies on: a {@link
+ * Pins the contract {@code JobChargeService.close} relies on for its Stripe meter post: a {@link
  * TransactionSynchronization#afterCommit()} hook fires after a successful commit and never on
  * rollback.
  */

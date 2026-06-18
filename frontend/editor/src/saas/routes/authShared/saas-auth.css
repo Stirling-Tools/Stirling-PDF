@@ -4,7 +4,6 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem; /* 12px */
-  margin-bottom: 0.625rem; /* 10px */
 }
 
 .oauth-button-fullwidth {
@@ -38,6 +37,19 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
+[data-mantine-color-scheme="dark"] .oauth-button-fullwidth {
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  border-color: var(--border-default);
+  box-shadow: none;
+}
+
+[data-mantine-color-scheme="dark"]
+  .oauth-button-fullwidth:hover:not(:disabled) {
+  background-color: var(--bg-raised);
+  box-shadow: none;
+}
+
 .auth-dropdown-wrapper {
   position: relative;
 }
@@ -64,6 +76,13 @@
   padding: 0.25rem;
 }
 
+[data-mantine-color-scheme="dark"] .auth-dropdown {
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  border-color: var(--border-default);
+  box-shadow: var(--shadow-md);
+}
+
 .auth-dropdown-item {
   display: block;
   width: 100%;
@@ -76,10 +95,18 @@
   cursor: pointer;
 }
 
+[data-mantine-color-scheme="dark"] .auth-dropdown-item {
+  color: var(--text-primary);
+}
+
 .auth-guest-button {
   background-color: #ffffff;
   color: #9c2f30;
   border: 2px solid currentColor;
+}
+
+[data-mantine-color-scheme="dark"] .auth-guest-button {
+  background-color: transparent;
 }
 
 /* ── Logo block ─────────────────────────────────────────────────────── */
@@ -95,10 +122,6 @@
 .auth-logo-header {
   height: 8rem;
   width: auto;
-}
-
-.auth-logo-header--dark {
-  display: none;
 }
 
 /* ── Page entrance animation ────────────────────────────────────────── */

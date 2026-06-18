@@ -1,0 +1,27 @@
+.sui-steps {
+  display: flex;
+  gap: 0.3rem;
+  width: 100%;
+}
+.sui-steps__bar {
+  flex: 1;
+  border-radius: 999px;
+  background: var(--color-border);
+  transition: background var(--motion-fast);
+}
+.sui-steps--md .sui-steps__bar {
+  height: 0.3rem;
+}
+.sui-steps--sm .sui-steps__bar {
+  height: 0.2rem;
+}
+/* Completed steps: solid accent. */
+.sui-steps__bar[data-state="done"] {
+  background: var(--color-blue);
+}
+/* Current step: solid accent + a soft ring so it reads as "you are here". */
+.sui-steps__bar[data-state="current"] {
+  background: var(--color-blue);
+  box-shadow: 0 0 0 0.1875rem
+    color-mix(in srgb, var(--color-blue) 22%, transparent);
+}

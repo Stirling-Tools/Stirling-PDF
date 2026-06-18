@@ -7,7 +7,7 @@ import {
   setPageRotation,
   addNewPage,
 } from "@app/services/pdfiumService";
-import { downloadFile } from "@app/services/downloadService";
+import { downloadFileWithPolicy } from "@app/services/exportWithPolicy";
 import { PDFDocument, PDFPage } from "@app/types/pageEditor";
 
 // A4 dimensions in PDF points (72 dpi)
@@ -259,10 +259,10 @@ export class PDFExportService {
   }
 
   /**
-   * Download a single file
+   * Download a single file, applying any export-triggered policy first.
    */
   downloadFile(blob: Blob, filename: string): void {
-    void downloadFile({ data: blob, filename });
+    void downloadFileWithPolicy({ data: blob, filename });
   }
 
   /**
