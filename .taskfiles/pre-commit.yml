@@ -84,22 +84,13 @@ tasks:
       - test -d scripts/pre-commit/.venv
 
   clean:
-    desc: "Remove the cache/build artifacts"
+    desc: "Remove the cached gitleaks binary and the tool virtualenv"
     cmds:
-      - task: '{{if eq OS "windows"}}clean-windows{{else}}clean-unix{{end}}'
-
-  clean-unix:
-    internal: true
-    cmds:
-      - rm -rf scripts/pre-commit/.venv .task/bin/gitleaks .task/bin/gitleaks.exe
-
-  # On Windows, use PowerShell so it matches the same paths and tolerates absent
-  # files without erroring.
-  clean-windows:
-    internal: true
-    ignore_error: true
-    cmds:
-      - powershell -NoProfile -Command "Remove-Item -Recurse -Force -ErrorAction SilentlyContinue scripts/pre-commit/.venv, .task/bin/gitleaks, .task/bin/gitleaks.exe"
+      - cmd: rm -rf scripts/pre-commit/.venv .task/bin/gitleaks
+        platforms: [linux, darwin]
+      - cmd: cmd /c "rmdir /s /q scripts\pre-commit\.venv & del /q .task\bin\gitleaks.exe"
+        platforms: [windows]
+        ignore_error: true
 
   # Individual checks (hidden from `task --list`, but callable, e.g.
   # `task pre-commit:toml-sort FIX=1`). Pass FIX=1 to auto-fix where supported.
