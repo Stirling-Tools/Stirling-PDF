@@ -4,9 +4,13 @@ import { useLocation, useNavigate } from "react-router-dom";
 export type ViewId =
   | "home"
   | "editor"
+  | "users"
   | "sources"
+  | "agent-builder"
+  | "policies"
   | "pipelines"
   | "documents"
+  | "components"
   | "infrastructure"
   | "usage"
   | "docs"
@@ -15,9 +19,13 @@ export type ViewId =
 export const VIEW_LABELS: Record<ViewId, string> = {
   home: "Home",
   editor: "Editor",
+  users: "Users",
   sources: "Sources",
+  "agent-builder": "Agent Builder",
+  policies: "Policies",
   pipelines: "Pipelines",
   documents: "Documents",
+  components: "Components",
   infrastructure: "Infrastructure",
   usage: "Usage & Billing",
   docs: "Developer Docs",
@@ -27,9 +35,13 @@ export const VIEW_LABELS: Record<ViewId, string> = {
 export const VIEW_PATHS: Record<ViewId, string> = {
   home: "/",
   editor: "/editor",
+  users: "/users",
   sources: "/sources",
+  "agent-builder": "/agent-builder",
+  policies: "/policies",
   pipelines: "/pipelines",
   documents: "/documents",
+  components: "/components",
   infrastructure: "/infrastructure",
   usage: "/usage",
   docs: "/docs",
@@ -55,11 +67,9 @@ interface ViewContextValue {
 }
 
 /**
- * Backwards-compatible facade over react-router. Components keep using
- * useView()/setActiveView the way they did before; URLs are now real.
- *
- * No <ViewProvider> wrapper exists any more — the router is the provider.
- * App.tsx wraps its children in <BrowserRouter>.
+ * Facade over react-router so components navigate by `ViewId` (activeView /
+ * setActiveView) while URLs stay the source of truth. There is no
+ * <ViewProvider> — the router is the provider; App.tsx supplies <BrowserRouter>.
  */
 export function useView(): ViewContextValue {
   const { pathname } = useLocation();
