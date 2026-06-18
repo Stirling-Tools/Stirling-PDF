@@ -64,9 +64,6 @@ export type { OAuthProvider } from "@shared/auth/spring/oauthTypes";
 //   import { configureSupabase } from "@shared/auth/supabase/supabaseClient";
 // The unified <AuthProvider mode="supabase"> lazy-loads the provider on demand.
 
-// Login UI
-export {
-  SpringLoginPanel,
-  type SpringLoginPanelProps,
-  type SpringLoginLabels,
-} from "@shared/auth/ui/SpringLoginPanel";
+// Login UI components live under @shared/auth/ui/* and are imported directly
+// (default exports), e.g. `import OAuthButtons from "@shared/auth/ui/OAuthButtons"`.
+// They use react-i18next, so hosts must initialise i18next.

@@ -27,3 +27,17 @@
   height: 48px;
   object-fit: contain;
 }
+
+.portal-login__title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-align: center;
+  color: var(--auth-text-primary-light-only, #0f172a);
+}
+
+.portal-login__subtitle {
+  margin: 0;
+  text-align: center;
+  color: var(--auth-text-secondary-light-only, #475569);
+}

@@ -5,7 +5,7 @@ import { BrowserRouter, MemoryRouter } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
 import Login from "@app/routes/Login";
 import { useAuth } from "@app/auth/UseSession";
-import { springAuth } from "@app/auth/springAuthClient";
+import { springAuth } from "@shared/auth/spring/springAuthClient";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
 import apiClient from "@app/services/apiClient";
 
@@ -41,10 +41,10 @@ vi.mock("@app/auth/UseSession", () => ({
 }));
 
 // Mock springAuth; keep the real redirect-path helpers.
-vi.mock("@app/auth/springAuthClient", async () => {
+vi.mock("@shared/auth/spring/springAuthClient", async () => {
   const actual = await vi.importActual<
-    typeof import("@app/auth/springAuthClient")
-  >("@app/auth/springAuthClient");
+    typeof import("@shared/auth/spring/springAuthClient")
+  >("@shared/auth/spring/springAuthClient");
   return {
     ...actual,
     springAuth: {

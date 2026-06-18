@@ -9,7 +9,7 @@ import { Text, Stack, Alert } from "@mantine/core";
 import {
   setPostLoginRedirectPath,
   springAuth,
-} from "@app/auth/springAuthClient";
+} from "@shared/auth/spring/springAuthClient";
 import { useAuth } from "@app/auth/UseSession";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useTranslation } from "react-i18next";
@@ -18,16 +18,16 @@ import AuthLayout from "@app/routes/authShared/AuthLayout";
 import { useBackendProbe } from "@app/hooks/useBackendProbe";
 import apiClient from "@app/services/apiClient";
 import { BASE_PATH, withBasePath } from "@app/constants/app";
-import { type OAuthProvider } from "@app/auth/oauthTypes";
+import { type OAuthProvider } from "@shared/auth/spring/oauthTypes";
 import { updateSupportedLanguages } from "@app/i18n";
 
 // Import login components
-import ErrorMessage from "@app/routes/login/ErrorMessage";
-import EmailPasswordForm from "@app/routes/login/EmailPasswordForm";
+import ErrorMessage from "@shared/auth/ui/ErrorMessage";
+import EmailPasswordForm from "@shared/auth/ui/EmailPasswordForm";
 import OAuthButtons, {
   DEBUG_SHOW_ALL_PROVIDERS,
   oauthProviderConfig,
-} from "@app/routes/login/OAuthButtons";
+} from "@shared/auth/ui/OAuthButtons";
 import DividerWithText from "@app/components/shared/DividerWithText";
 import LoggedInState from "@app/routes/login/LoggedInState";
 

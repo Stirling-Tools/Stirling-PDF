@@ -1,9 +1,10 @@
 /**
- * Where to send users to reach the editor app.
+ * Where to send users to reach the editor app (app switcher, and the auth gate
+ * bouncing non-admins out).
  *
- * The editor is a separate Vite app with no shared shell, so switching apps is
- * a hard navigation: the editor's dev server in dev, the site root in prod
- * (the backend serves the editor at "/" and the portal under a subpath).
- * Used by the app switcher and by the auth gate when bouncing non-admins out.
+ * Sourced from VITE_EDITOR_URL so it's configurable per deploy rather than
+ * hardcoded. The committed default is "/" (production serves the editor at the
+ * root on the same origin as the portal). For dev cross-app navigation to a
+ * separately-running editor, set VITE_EDITOR_URL in portal/.env.local.
  */
-export const EDITOR_URL = import.meta.env.DEV ? "http://localhost:5180/" : "/";
+export const EDITOR_URL = import.meta.env.VITE_EDITOR_URL;

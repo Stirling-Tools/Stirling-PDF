@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import "@app/routes/authShared/auth.css";
+import "@shared/auth/ui/auth.css";
 import { TextInput, PasswordInput, Button } from "@mantine/core";
 
 // Force light mode styles for auth inputs
@@ -83,10 +83,10 @@ export default function EmailPasswordForm({
           <div className="auth-field">
             <PasswordInput
               id="password"
-              label={t("login.password")}
+              label={t("login.password", "Password")}
               name="current-password"
               autoComplete="current-password"
-              placeholder={t("login.enterPassword")}
+              placeholder={t("login.enterPassword", "Enter password")}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               error={fieldErrors.password}

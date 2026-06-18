@@ -1,14 +1,11 @@
 /**
- * Spring Auth Client (editor binding)
- *
- * The engine itself now lives in `@shared/auth/spring/springAuthClient` so it
- * can be shared with the portal. This module wires the editor's per-flavor
- * seams into that engine and re-exports it under the original
- * `@app/auth/springAuthClient` path.
+ * Wires the editor's transport + platform seams into the shared Spring auth
+ * engine. Import this module for its side effect (it configures the engine on
+ * load) before any auth call runs - AppProviders does so via UseSession.
  *
  * The `@app/*` imports resolve per build flavor: proprietary/web gets the no-op
  * web defaults, the desktop build gets the Tauri-backed implementations. So the
- * desktop and web auth behaviour is unchanged by the move to shared.
+ * desktop and web auth behaviour is unchanged by the move to the shared engine.
  */
 import type { AxiosInstance } from "axios";
 import apiClient from "@app/services/apiClient";
@@ -27,9 +24,6 @@ import {
 } from "@app/extensions/platformSessionBridge";
 import { startOAuthNavigation } from "@app/extensions/oauthNavigation";
 
-// Wire the editor's transport + platform seams into the shared engine. Runs
-// once at import; getSpringAuthConfig() is read lazily by the engine, so this
-// only needs to happen before the first auth call (AppProviders imports this).
 configureSpringAuth({
   // The desktop build resolves @app/services/apiClient to a TauriHttpClient,
   // which is API-compatible with axios but not nominally an AxiosInstance -
@@ -48,6 +42,3 @@ configureSpringAuth({
     startOAuthNavigation,
   },
 });
-
-export * from "@shared/auth/spring/springAuthClient";
-export { default } from "@shared/auth/spring/springAuthClient";
