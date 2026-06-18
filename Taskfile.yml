@@ -25,6 +25,9 @@ includes:
   e2e:
     taskfile: .taskfiles/e2e.yml
     dir: .
+  pre-commit:
+    taskfile: .taskfiles/pre-commit.yml
+    dir: .
 
 tasks:
   # ============================================================
@@ -174,3 +177,4 @@ tasks:
       - task: backend:clean
       - task: frontend:clean
       - task: engine:clean
+      - task: pre-commit:clean
