@@ -2216,6 +2216,13 @@
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
+            "moduleName": "org.springframework.boot:spring-boot-security-oauth2-resource-server",
+            "moduleUrl": "https://spring.io/projects/spring-boot",
+            "moduleVersion": "4.0.6",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
             "moduleName": "org.springframework.boot:spring-boot-servlet",
             "moduleUrl": "https://spring.io/projects/spring-boot",
             "moduleVersion": "4.0.6",
@@ -2315,6 +2322,13 @@
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-starter-micrometer-metrics",
+            "moduleUrl": "https://spring.io/projects/spring-boot",
+            "moduleVersion": "4.0.6",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "org.springframework.boot:spring-boot-starter-oauth2-resource-server",
             "moduleUrl": "https://spring.io/projects/spring-boot",
             "moduleVersion": "4.0.6",
             "moduleLicense": "Apache License, Version 2.0",
@@ -2433,6 +2447,13 @@
         },
         {
             "moduleName": "org.springframework.security:spring-security-oauth2-jose",
+            "moduleUrl": "https://spring.io/projects/spring-security",
+            "moduleVersion": "7.0.5",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "org.springframework.security:spring-security-oauth2-resource-server",
             "moduleUrl": "https://spring.io/projects/spring-security",
             "moduleVersion": "7.0.5",
             "moduleLicense": "Apache License, Version 2.0",
