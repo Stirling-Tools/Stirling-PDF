@@ -30,27 +30,6 @@ export default function AuthLayout({
   // Use either overflow detection or email form expansion to determine scrollable state
   const shouldBeScrollable = isOverflowing || isEmailFormExpanded;
 
-  // Force light mode on auth pages
-  useEffect(() => {
-    const htmlElement = document.documentElement;
-    const previousColorScheme = htmlElement.getAttribute(
-      "data-mantine-color-scheme",
-    );
-
-    // Set light mode
-    htmlElement.setAttribute("data-mantine-color-scheme", "light");
-
-    // Cleanup: restore previous theme when leaving auth pages
-    return () => {
-      if (previousColorScheme) {
-        htmlElement.setAttribute(
-          "data-mantine-color-scheme",
-          previousColorScheme,
-        );
-      }
-    };
-  }, []);
-
   useEffect(() => {
     const update = () => {
       // Use viewport to avoid hysteresis when the card is already in single-column mode
@@ -101,7 +80,7 @@ export default function AuthLayout({
           marginRight: "-1.5rem",
         }}
       >
-        <Footer forceLightMode={true} analyticsEnabled />
+        <Footer analyticsEnabled />
       </div>
     </div>
   );

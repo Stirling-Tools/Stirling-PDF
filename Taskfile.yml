@@ -25,6 +25,9 @@ includes:
   e2e:
     taskfile: .taskfiles/e2e.yml
     dir: .
+  pre-commit:
+    taskfile: .taskfiles/pre-commit.yml
+    dir: .
 
 tasks:
   # ============================================================
@@ -87,6 +90,7 @@ tasks:
         vars:
           PORT: '{{.BACKEND_PORT}}'
           AIENGINE_URL: 'http://localhost:{{.ENGINE_PORT}}'
+          AIENGINE_ENABLED: "true"
       - task: 'frontend:dev:{{.FRONTEND}}'
         vars:
           PORT: '{{.FRONTEND_PORT}}'
@@ -171,4 +175,6 @@ tasks:
     desc: "Clean all build artifacts"
     cmds:
       - task: backend:clean
+      - task: frontend:clean
       - task: engine:clean
+      - task: pre-commit:clean

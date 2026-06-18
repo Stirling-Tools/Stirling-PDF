@@ -3,7 +3,7 @@ import { Routes, Route, useLocation } from "react-router-dom";
 import { isAuthRoute } from "@app/utils/pathUtils";
 import { AppProviders } from "@app/components/AppProviders";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
-import { RainbowThemeProvider } from "@app/components/shared/RainbowThemeProvider";
+import { ThemeProvider } from "@app/components/shared/ThemeProvider";
 import { setBaseUrl } from "@app/constants/app";
 import type { AppConfig } from "@app/contexts/AppConfigContext";
 import { AppLayout } from "@app/components/AppLayout";
@@ -18,7 +18,6 @@ import OAuthConsent from "@app/routes/OAuthConsent";
 import ShareLinkPage from "@app/routes/ShareLinkPage";
 import MobileScannerPage from "@app/pages/MobileScannerPage";
 import OnboardingBootstrap from "@app/components/OnboardingBootstrap";
-import TrialExpiredBootstrap from "@app/components/TrialExpiredBootstrap";
 import SignupRequiredBootstrap from "@app/components/SignupRequiredBootstrap";
 import UsageLimitModalHost from "@app/components/UsageLimitModalHost";
 
@@ -41,15 +40,15 @@ function handleConfigLoaded(config: AppConfig) {
 function PublicRouteProviders({ children }: { children: ReactNode }) {
   return (
     <PreferencesProvider>
-      <RainbowThemeProvider>{children}</RainbowThemeProvider>
+      <ThemeProvider>{children}</ThemeProvider>
     </PreferencesProvider>
   );
 }
 
 /**
- * Onboarding and trial-expired modals must never cover auth-flow pages
- * (login, signup, OAuth consent): they steal focus from the task the user
- * was sent there to complete. Unmounting also stops their background polling.
+ * Onboarding / sign-up modals must never cover auth-flow pages (login, signup,
+ * OAuth consent): they steal focus from the task the user was sent there to
+ * complete.
  */
 function NonAuthBootstraps() {
   const location = useLocation();
@@ -59,7 +58,6 @@ function NonAuthBootstraps() {
   return (
     <>
       <OnboardingBootstrap />
-      <TrialExpiredBootstrap />
       <SignupRequiredBootstrap />
       <UsageLimitModalHost />
     </>

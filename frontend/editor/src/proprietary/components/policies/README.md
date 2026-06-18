@@ -44,7 +44,7 @@ accent / `PanelHeader` icon slot / `Checkbox` leadingIcon / `MetricCard size`)
 were **built up in SUI** as part of this work — each has a Storybook story.
 
 Bootstrapping: the editor loads `@shared/tokens/tokens.css` globally via
-`RainbowThemeProvider`, which also mirrors the Mantine colour scheme onto
+`ThemeProvider`, which also mirrors the Mantine colour scheme onto
 `<html data-theme>` (SUI's dark palette keys on `data-theme`). A global
 `@shared` alias in `editor/vite.config.ts` + `vitest.config.ts` resolves the
 shared components' own `@shared/*.css` self-imports.

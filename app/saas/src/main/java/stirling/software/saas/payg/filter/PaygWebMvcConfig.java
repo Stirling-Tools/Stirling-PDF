@@ -18,10 +18,8 @@ import stirling.software.saas.payg.entitlement.EntitlementGuard;
  *   <li>{@link PaygResponseBodyWrapperFilter} as a Servlet filter — registered with no explicit
  *       order so it sits at the end of the Spring filter chain (after all security filters). Pure
  *       response-wrapping plumbing.
- *   <li>{@link PaygChargeInterceptor} as a Spring MVC interceptor — registered AFTER {@code
- *       UnifiedCreditInterceptor} so legacy credit rejections short-circuit before we hash inputs.
- *       Both intercept {@code /api/**} with the same admin/info/health exclusions as the legacy
- *       config.
+ *   <li>{@link PaygChargeInterceptor} as a Spring MVC interceptor — intercepts {@code /api/**} with
+ *       admin/info/health exclusions.
  * </ul>
  */
 @Configuration
@@ -42,10 +40,9 @@ public class PaygWebMvcConfig implements WebMvcConfigurer {
     }
 
     /**
-     * The {@code PaygChargeInterceptor} runs after the {@link #ENTITLEMENT_GUARD_ORDER guard} (and
-     * after the legacy {@code UnifiedCreditInterceptor}, default order 0), so {@code openProcess}
-     * only fires for requests the guard has admitted. See {@link #ENTITLEMENT_GUARD_ORDER} for the
-     * full ordering rationale.
+     * The {@code PaygChargeInterceptor} runs after the {@link #ENTITLEMENT_GUARD_ORDER guard}, so
+     * {@code openProcess} only fires for requests the guard has admitted. See {@link
+     * #ENTITLEMENT_GUARD_ORDER} for the full ordering rationale.
      */
     public static final int INTERCEPTOR_ORDER = 1000;
 
@@ -57,9 +54,7 @@ public class PaygWebMvcConfig implements WebMvcConfigurer {
      * short-circuits with its 402 before the charge interceptor ever runs. A blocked request
      * therefore never opens a process, materialises inputs, or writes a charge: a refused operation
      * must not bill, and running the guard first guarantees that structurally rather than by
-     * compensating after the fact. Stays above the legacy {@code UnifiedCreditInterceptor} (default
-     * order 0, only registered under the {@code legacy-credits} profile) so a legacy rejection
-     * still wins.
+     * compensating after the fact.
      */
     public static final int ENTITLEMENT_GUARD_ORDER = 900;
 
@@ -67,20 +62,12 @@ public class PaygWebMvcConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(paygChargeInterceptor)
                 .addPathPatterns("/api/**")
-                .excludePathPatterns(
-                        "/api/v1/credits/**",
-                        "/api/v1/config/**",
-                        "/api/v1/info/**",
-                        "/api/v1/admin/**")
+                .excludePathPatterns("/api/v1/config/**", "/api/v1/info/**", "/api/v1/admin/**")
                 .order(INTERCEPTOR_ORDER);
 
         registry.addInterceptor(entitlementGuard)
                 .addPathPatterns("/api/**")
-                .excludePathPatterns(
-                        "/api/v1/credits/**",
-                        "/api/v1/config/**",
-                        "/api/v1/info/**",
-                        "/api/v1/admin/**")
+                .excludePathPatterns("/api/v1/config/**", "/api/v1/info/**", "/api/v1/admin/**")
                 .order(ENTITLEMENT_GUARD_ORDER);
     }
 }

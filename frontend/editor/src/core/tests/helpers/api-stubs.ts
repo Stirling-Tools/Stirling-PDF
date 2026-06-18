@@ -256,6 +256,13 @@ export async function mockAppApis(
   await page.route("**/api/v1/policies", (route: Route) =>
     route.fulfill({ json: [] }),
   );
+  // The auto-run controller also reconciles server-side runs on load via
+  // GET /api/v1/policies/runs. The glob above doesn't cover this sub-path, so
+  // stub it empty too; otherwise the request hits the absent backend and the
+  // console error fails the page's no-unexpected-output guard.
+  await page.route("**/api/v1/policies/runs", (route: Route) =>
+    route.fulfill({ json: [] }),
+  );
 }
 
 /**
