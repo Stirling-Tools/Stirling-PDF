@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, Stack } from "@mantine/core";
 import DescriptionIcon from "@mui/icons-material/DescriptionOutlined";
 import { downloadBlob } from "@app/utils/downloadUtils";
@@ -17,27 +17,12 @@ import { EditorTopBar } from "@app/tools/pdfTextEditor/v2/components/EditorTopBa
 import { EditorSidebar } from "@app/tools/pdfTextEditor/v2/components/EditorSidebar";
 import { EditorFileInputs } from "@app/tools/pdfTextEditor/v2/components/EditorFileInputs";
 import { PageStage } from "@app/tools/pdfTextEditor/v2/components/PageStage";
-import { Toolbar } from "@app/tools/pdfTextEditor/v2/components/Toolbar";
-import {
-  ChangeZOrderCommand,
-  type ZOrderMode,
-} from "@app/tools/pdfTextEditor/v2/commands/ChangeZOrderCommand";
-import { EditTextCommand } from "@app/tools/pdfTextEditor/v2/commands/EditTextCommand";
 import { InsertImageCommand } from "@app/tools/pdfTextEditor/v2/commands/InsertImageCommand";
 import { InsertTextCommand } from "@app/tools/pdfTextEditor/v2/commands/InsertTextCommand";
 import { DisplayTransform } from "@app/tools/pdfTextEditor/v2/model/DisplayTransform";
 import { MergeRunsCommand } from "@app/tools/pdfTextEditor/v2/commands/MergeRunsCommand";
-import { MoveTextRunCommand } from "@app/tools/pdfTextEditor/v2/commands/MoveTextRunCommand";
-import { SetImageTransformCommand } from "@app/tools/pdfTextEditor/v2/commands/SetImageTransformCommand";
-import { SetLockCommand } from "@app/tools/pdfTextEditor/v2/commands/SetLockCommand";
-import { AlignParagraphLinesCommand } from "@app/tools/pdfTextEditor/v2/commands/AlignParagraphLinesCommand";
-import {
-  TransformImageObjectCommand,
-  type ImageTransformMode,
-} from "@app/tools/pdfTextEditor/v2/commands/TransformImageObjectCommand";
 import { UngroupParagraphCommand } from "@app/tools/pdfTextEditor/v2/commands/UngroupParagraphCommand";
 import { exportToBlob } from "@app/tools/pdfTextEditor/v2/util/exportPdf";
-import { deriveToolbarState } from "@app/tools/pdfTextEditor/v2/util/toolbarState";
 import { visiblePageNumber } from "@app/tools/pdfTextEditor/v2/util/dom";
 import type { SelectionState } from "@app/tools/pdfTextEditor/v2/types";
 
@@ -321,387 +306,6 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
     if (reps.length > 0) store.selection.selectMany(reps);
   }, [store]);
 
-  /**
-   * Toggle the session-only `locked` flag on every selected run and
-   * image. If the selection mixes locked + unlocked, the action sets
-   * EVERY object to locked (closest match to the user's mental model:
-   * "lock everything I have selected"). The unlock affordance lives
-   * on the same button when the entire selection is already locked.
-   */
-  const handleToggleLockSelection = useCallback(() => {
-    const doc = store.document;
-    if (!doc) return;
-    const selRuns = new Set(store.selection.value.runIds);
-    const selImages = new Set(store.selection.value.imageIds);
-    if (selRuns.size === 0 && selImages.size === 0) return;
-    let allLocked = true;
-    for (const p of doc.loadedPages()) {
-      for (const r of p.runs)
-        if (selRuns.has(r.id) && !r.locked) allLocked = false;
-      for (const im of p.images)
-        if (selImages.has(im.id) && !im.locked) allLocked = false;
-    }
-    const nextLocked = !allLocked;
-    for (const p of doc.loadedPages()) {
-      for (const r of p.runs)
-        if (selRuns.has(r.id) && r.locked !== nextLocked) {
-          store.dispatch(
-            new SetLockCommand({
-              pageIndex: p.index,
-              runId: r.id,
-              locked: nextLocked,
-            }),
-          );
-        }
-      for (const im of p.images)
-        if (selImages.has(im.id) && im.locked !== nextLocked) {
-          store.dispatch(
-            new SetLockCommand({
-              pageIndex: p.index,
-              imageId: im.id,
-              locked: nextLocked,
-            }),
-          );
-        }
-    }
-  }, [store]);
-
-  /**
-   * Re-order selected objects in their page's content stream. PDF
-   * paints later objects on top, so "to front" = highest index.
-   * Multi-selection: every selected object on every page gets one
-   * ChangeZOrderCommand. The order within a single page is preserved
-   * by walking the page's existing object list in index order so
-   * relative stacking between selected items stays consistent.
-   */
-  const handleChangeZOrder = useCallback(
-    (mode: ZOrderMode) => {
-      const doc = store.document;
-      if (!doc) return;
-      const selRuns = new Set(store.selection.value.runIds);
-      const selImages = new Set(store.selection.value.imageIds);
-      if (selRuns.size === 0 && selImages.size === 0) return;
-      for (const p of doc.loadedPages()) {
-        for (const r of p.runs) {
-          if (!selRuns.has(r.id)) continue;
-          store.dispatch(
-            new ChangeZOrderCommand({
-              pageIndex: p.index,
-              runId: r.id,
-              mode,
-            }),
-          );
-        }
-        for (const im of p.images) {
-          if (!selImages.has(im.id)) continue;
-          store.dispatch(
-            new ChangeZOrderCommand({
-              pageIndex: p.index,
-              imageId: im.id,
-              mode,
-            }),
-          );
-        }
-      }
-    },
-    [store],
-  );
-
-  type AlignMode =
-    | "left"
-    | "center-h"
-    | "right"
-    | "top"
-    | "middle-v"
-    | "bottom";
-
-  /**
-   * Align every selected object along the chosen axis. Reference is
-   * the EXTREME of the selection: align-left snaps each object's left
-   * edge to the leftmost left in the selection, align-center snaps each
-   * to the selection's horizontal centre, etc. Single-page selections
-   * align within the page; multi-page selections align per page (one
-   * page's selection doesn't influence another's bounds).
-   *
-   * Skipped when fewer than 2 objects are selected on the current page.
-   */
-  const handleAlignSelection = useCallback(
-    (mode: AlignMode) => {
-      const doc = store.document;
-      if (!doc) return;
-      const selRuns = new Set(store.selection.value.runIds);
-      const selImages = new Set(store.selection.value.imageIds);
-      // Single multi-line paragraph + a horizontal mode: align the lines
-      // WITHIN that paragraph (flush-left / centre / flush-right) instead
-      // of requiring a 2+ object selection. Vertical modes still need 2+.
-      if (
-        selRuns.size === 1 &&
-        selImages.size === 0 &&
-        (mode === "left" || mode === "center-h" || mode === "right")
-      ) {
-        const runId = [...selRuns][0];
-        for (const p of doc.loadedPages()) {
-          const run = p.runs.find((r) => r.id === runId);
-          if (!run) continue;
-          if (AlignParagraphLinesCommand.canAlign(run)) {
-            store.dispatch(
-              new AlignParagraphLinesCommand({
-                pageIndex: p.index,
-                runId,
-                mode,
-              }),
-            );
-          }
-          return;
-        }
-      }
-      if (selRuns.size + selImages.size < 2) return;
-      for (const p of doc.loadedPages()) {
-        // Collect selected items on this page with their bounds.
-        const items: Array<{
-          kind: "run" | "image";
-          id: string;
-          bounds: { x: number; y: number; width: number; height: number };
-        }> = [];
-        for (const r of p.runs) {
-          if (!selRuns.has(r.id)) continue;
-          items.push({ kind: "run", id: r.id, bounds: r.bounds });
-        }
-        for (const im of p.images) {
-          if (!selImages.has(im.id)) continue;
-          items.push({ kind: "image", id: im.id, bounds: im.bounds });
-        }
-        if (items.length < 2) continue;
-        const lefts = items.map((it) => it.bounds.x);
-        const rights = items.map((it) => it.bounds.x + it.bounds.width);
-        const bottoms = items.map((it) => it.bounds.y);
-        const tops = items.map((it) => it.bounds.y + it.bounds.height);
-        const minLeft = Math.min(...lefts);
-        const maxRight = Math.max(...rights);
-        const minBottom = Math.min(...bottoms);
-        const maxTop = Math.max(...tops);
-        const centreX = (minLeft + maxRight) / 2;
-        const centreY = (minBottom + maxTop) / 2;
-        for (const it of items) {
-          const b = it.bounds;
-          let dx = 0;
-          let dy = 0;
-          switch (mode) {
-            case "left":
-              dx = minLeft - b.x;
-              break;
-            case "right":
-              dx = maxRight - (b.x + b.width);
-              break;
-            case "center-h":
-              dx = centreX - (b.x + b.width / 2);
-              break;
-            case "bottom":
-              dy = minBottom - b.y;
-              break;
-            case "top":
-              dy = maxTop - (b.y + b.height);
-              break;
-            case "middle-v":
-              dy = centreY - (b.y + b.height / 2);
-              break;
-          }
-          if (Math.abs(dx) < 0.01 && Math.abs(dy) < 0.01) continue;
-          if (it.kind === "run") {
-            store.dispatch(
-              new MoveTextRunCommand({
-                pageIndex: p.index,
-                runId: it.id,
-                dx,
-                dy,
-              }),
-            );
-          } else {
-            store.dispatch(
-              new SetImageTransformCommand({
-                pageIndex: p.index,
-                imageId: it.id,
-                nextBounds: {
-                  x: b.x + dx,
-                  y: b.y + dy,
-                  width: b.width,
-                  height: b.height,
-                },
-              }),
-            );
-          }
-        }
-      }
-    },
-    [store],
-  );
-
-  /**
-   * Distribute selected objects with equal SPACING (not equal centres)
-   * along an axis. Outermost objects stay put; intermediate objects
-   * are re-spaced so the gap between consecutive bounding boxes is
-   * identical. Skipped when fewer than 3 objects are on a page since
-   * 2 objects already have implicit equal spacing.
-   */
-  const handleDistributeSelection = useCallback(
-    (axis: "horizontal" | "vertical") => {
-      const doc = store.document;
-      if (!doc) return;
-      const selRuns = new Set(store.selection.value.runIds);
-      const selImages = new Set(store.selection.value.imageIds);
-      if (selRuns.size + selImages.size < 3) return;
-      for (const p of doc.loadedPages()) {
-        const items: Array<{
-          kind: "run" | "image";
-          id: string;
-          bounds: { x: number; y: number; width: number; height: number };
-        }> = [];
-        for (const r of p.runs) {
-          if (!selRuns.has(r.id)) continue;
-          items.push({ kind: "run", id: r.id, bounds: r.bounds });
-        }
-        for (const im of p.images) {
-          if (!selImages.has(im.id)) continue;
-          items.push({ kind: "image", id: im.id, bounds: im.bounds });
-        }
-        if (items.length < 3) continue;
-        // Sort along the axis.
-        items.sort((a, b) =>
-          axis === "horizontal"
-            ? a.bounds.x - b.bounds.x
-            : a.bounds.y - b.bounds.y,
-        );
-        const first = items[0].bounds;
-        const last = items[items.length - 1].bounds;
-        const totalSize =
-          axis === "horizontal"
-            ? last.x + last.width - first.x
-            : last.y + last.height - first.y;
-        const sumSize = items.reduce(
-          (acc, it) =>
-            acc + (axis === "horizontal" ? it.bounds.width : it.bounds.height),
-          0,
-        );
-        const gap = (totalSize - sumSize) / (items.length - 1);
-        let cursor =
-          axis === "horizontal"
-            ? first.x + first.width + gap
-            : first.y + first.height + gap;
-        // Move every middle object so its left/bottom = cursor.
-        for (let i = 1; i < items.length - 1; i++) {
-          const it = items[i];
-          const b = it.bounds;
-          let dx = 0;
-          let dy = 0;
-          if (axis === "horizontal") {
-            dx = cursor - b.x;
-            cursor += b.width + gap;
-          } else {
-            dy = cursor - b.y;
-            cursor += b.height + gap;
-          }
-          if (Math.abs(dx) < 0.01 && Math.abs(dy) < 0.01) continue;
-          if (it.kind === "run") {
-            store.dispatch(
-              new MoveTextRunCommand({
-                pageIndex: p.index,
-                runId: it.id,
-                dx,
-                dy,
-              }),
-            );
-          } else {
-            store.dispatch(
-              new SetImageTransformCommand({
-                pageIndex: p.index,
-                imageId: it.id,
-                nextBounds: {
-                  x: b.x + dx,
-                  y: b.y + dy,
-                  width: b.width,
-                  height: b.height,
-                },
-              }),
-            );
-          }
-        }
-      }
-    },
-    [store],
-  );
-
-  /**
-   * Apply a rotate/flip transform to every selected image. Text runs
-   * are skipped silently - rotation of text is meaningful but the
-   * UX surface (and PDF emit story) is different and lives behind a
-   * separate command.
-   */
-  const handleTransformImage = useCallback(
-    (mode: ImageTransformMode) => {
-      const doc = store.document;
-      if (!doc) return;
-      const selImages = new Set(store.selection.value.imageIds);
-      if (selImages.size === 0) return;
-      for (const p of doc.loadedPages()) {
-        for (const im of p.images) {
-          if (!selImages.has(im.id)) continue;
-          store.dispatch(
-            new TransformImageObjectCommand({
-              pageIndex: p.index,
-              imageId: im.id,
-              mode,
-            }),
-          );
-        }
-      }
-    },
-    [store],
-  );
-
-  /**
-   * Transform every selected run's text via the chosen case rule and
-   * dispatch one EditTextCommand per run. Pure string transform; no
-   * PDFium plumbing.
-   */
-  const handleChangeCase = useCallback(
-    (mode: "upper" | "lower" | "title" | "sentence") => {
-      const doc = store.document;
-      if (!doc) return;
-      const sel = new Set(store.selection.value.runIds);
-      if (sel.size === 0) return;
-      const transform = (s: string): string => {
-        switch (mode) {
-          case "upper":
-            return s.toUpperCase();
-          case "lower":
-            return s.toLowerCase();
-          case "title":
-            return s.replace(
-              /\b\w[\w']*/g,
-              (w) => w[0].toUpperCase() + w.slice(1).toLowerCase(),
-            );
-          case "sentence":
-            return s.replace(/(^\s*\w|[.!?]\s+\w)/g, (m) => m.toUpperCase());
-        }
-      };
-      for (const p of doc.loadedPages()) {
-        for (const r of p.runs) {
-          if (!sel.has(r.id)) continue;
-          const next = transform(r.text);
-          if (next === r.text) continue;
-          store.dispatch(
-            new EditTextCommand({
-              pageIndex: p.index,
-              runId: r.id,
-              nextText: next,
-            }),
-          );
-        }
-      }
-    },
-    [store],
-  );
-
   useEditorKeyboardShortcuts({
     store,
     onUndo: useCallback(() => store.undo(), [store]),
@@ -728,10 +332,26 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
     onMergeSelection: handleMergeSelection,
   });
 
-  const toolbarState = useMemo(
-    () => deriveToolbarState(state.pages, selection),
-    [state.pages, selection],
+  const canGroup = selection.runIds.length >= 2;
+  const canUngroup = (() => {
+    if (selection.runIds.length !== 1) return false;
+    const run = state.pages
+      .flatMap((p) => p.runs)
+      .find((r) => r.id === selection.runIds[0]);
+    return !!run && (run.paragraphLineCount ?? 0) > 1;
+  })();
+  const handleToggleAddText = useCallback(
+    () =>
+      store.setMode(store.getState().mode === "addText" ? "select" : "addText"),
+    [store],
   );
+  const handlePickImageClick = useCallback(() => {
+    (
+      document.querySelector(
+        '[data-testid="v2-image-input"]',
+      ) as HTMLInputElement | null
+    )?.click();
+  }, []);
 
   const onPickPdf = useCallback(
     (file: File) => {
@@ -753,78 +373,10 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
         hasDocument={state.hasDocument}
         dirty={state.dirty}
         renderScale={state.renderScale}
-        mode={state.mode}
         pages={state.pages}
         openedFileName={openedFileName}
-        canGroup={selection.runIds.length >= 2}
-        canUngroup={(() => {
-          if (selection.runIds.length !== 1) return false;
-          const id = selection.runIds[0];
-          const run = state.pages
-            .flatMap((p) => p.runs)
-            .find((r) => r.id === id);
-          return !!run && (run.paragraphLineCount ?? 0) > 1;
-        })()}
-        onToggleAddText={() =>
-          store.setMode(state.mode === "addText" ? "select" : "addText")
-        }
-        onPickImage={() =>
-          (
-            document.querySelector(
-              '[data-testid="v2-image-input"]',
-            ) as HTMLInputElement | null
-          )?.click()
-        }
-        onGroup={handleMergeSelection}
-        onUngroup={handleUngroupSelection}
         onSave={handleSave}
         onShowHelp={() => setHelpOpen(true)}
-      />
-      <Toolbar
-        state={toolbarState}
-        canUndo={store.history.canUndo}
-        canRedo={store.history.canRedo}
-        onUndo={() => store.undo()}
-        onRedo={() => store.redo()}
-        onChangeFontSize={sel.changeFontSize}
-        onChangeFill={sel.changeFill}
-        onChangeFontFamily={sel.changeFontFamily}
-        onToggleBold={sel.toggleBold}
-        onToggleItalic={sel.toggleItalic}
-        onDelete={sel.deleteSelection}
-        onToggleLock={handleToggleLockSelection}
-        onChangeCase={handleChangeCase}
-        onChangeZOrder={handleChangeZOrder}
-        onAlign={handleAlignSelection}
-        onDistribute={handleDistributeSelection}
-        onTransformImage={handleTransformImage}
-        hasImageSelection={selection.imageIds.length > 0}
-        selectionAllLocked={(() => {
-          const runs = new Set(selection.runIds);
-          const images = new Set(selection.imageIds);
-          if (runs.size === 0 && images.size === 0) return false;
-          for (const p of state.pages) {
-            for (const r of p.runs)
-              if (runs.has(r.id) && !r.locked) return false;
-            for (const im of p.images)
-              if (images.has(im.id) && !im.locked) return false;
-          }
-          return true;
-        })()}
-        hasRunSelection={selection.runIds.length > 0}
-        selectionCount={selection.runIds.length + selection.imageIds.length}
-        canAlignLines={(() => {
-          if (selection.runIds.length !== 1 || selection.imageIds.length > 0)
-            return false;
-          const run = state.pages
-            .flatMap((p) => p.runs)
-            .find((r) => r.id === selection.runIds[0]);
-          return !!run && (run.paragraphLineCount ?? 0) > 1;
-        })()}
-        disabled={
-          !state.hasDocument ||
-          (selection.runIds.length === 0 && selection.imageIds.length === 0)
-        }
       />
       {state.error && (
         <Alert color="red" m="sm" data-testid="v2-error">
@@ -843,6 +395,13 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
       <EditorSidebar
         state={state}
         selection={selection}
+        mode={state.mode}
+        canGroup={canGroup}
+        canUngroup={canUngroup}
+        onToggleAddText={handleToggleAddText}
+        onPickImage={handlePickImageClick}
+        onGroup={handleMergeSelection}
+        onUngroup={handleUngroupSelection}
         onSetGroupingMode={(mode) => store.setGroupingMode(mode)}
         onSetWidthMode={(m) => store.setWidthMode(m)}
       />

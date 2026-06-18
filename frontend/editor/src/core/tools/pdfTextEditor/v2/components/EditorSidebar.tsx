@@ -1,26 +1,55 @@
-import { Box, Kbd, SegmentedControl, Stack, Text } from "@mantine/core";
+import {
+  Badge,
+  Box,
+  Button,
+  Group,
+  Kbd,
+  SegmentedControl,
+  Stack,
+  Text,
+  Tooltip,
+} from "@mantine/core";
+import TextFieldsIcon from "@mui/icons-material/TextFieldsOutlined";
+import ImageIcon from "@mui/icons-material/ImageOutlined";
+import CallMergeIcon from "@mui/icons-material/CallMergeOutlined";
+import CallSplitIcon from "@mui/icons-material/CallSplitOutlined";
+import CheckCircleIcon from "@mui/icons-material/CheckCircleOutlined";
+import WarningIcon from "@mui/icons-material/WarningAmberOutlined";
 import type {
   EditorViewState,
   LoadProgress,
 } from "@app/tools/pdfTextEditor/v2/store/EditorStore";
 import type {
   GroupingMode,
+  PageSnapshot,
   SelectionState,
   WidthMode,
 } from "@app/tools/pdfTextEditor/v2/types";
+import {
+  analyzePageFonts,
+  type FontStatusV2,
+} from "@app/tools/pdfTextEditor/v2/util/pageFonts";
 
 /**
- * Sidebar status panel for the v2 text/image editor.
+ * Sidebar for the v2 text/image editor.
  *
- * Scope: editing-session status (dirty state, selection count, usage hint)
- * plus the text-level controls - grouping (Auto/Line) and text-box width
- * (Grow/Wrap) - and the Ctrl+drag move tip. The document-level page
- * navigator (thumbnails / click-to-jump) is intentionally NOT here; page
- * operations live in Stirling's dedicated page tools.
+ * Scope: the general (non-selection) editor tools - insert (add text /
+ * image), paragraph grouping (group / ungroup), and the editor settings
+ * (text grouping, text-box width) - plus a compact selection status and
+ * the Ctrl+drag move tip. The per-selection formatting controls live in
+ * the toolbar above; document-level page operations live in Stirling's
+ * dedicated page tools.
  */
 interface SidebarProps {
   state: EditorViewState;
   selection: SelectionState;
+  mode: "select" | "addText";
+  canGroup: boolean;
+  canUngroup: boolean;
+  onToggleAddText: () => void;
+  onPickImage: () => void;
+  onGroup: () => void;
+  onUngroup: () => void;
   onSetGroupingMode: (mode: GroupingMode) => void;
   onSetWidthMode: (mode: WidthMode) => void;
 }
@@ -28,6 +57,13 @@ interface SidebarProps {
 export function EditorSidebar({
   state,
   selection,
+  mode,
+  canGroup,
+  canUngroup,
+  onToggleAddText,
+  onPickImage,
+  onGroup,
+  onUngroup,
   onSetGroupingMode,
   onSetWidthMode,
 }: SidebarProps) {
@@ -37,12 +73,146 @@ export function EditorSidebar({
         <LoadedSidebar
           state={state}
           selection={selection}
+          mode={mode}
+          canGroup={canGroup}
+          canUngroup={canUngroup}
+          onToggleAddText={onToggleAddText}
+          onPickImage={onPickImage}
+          onGroup={onGroup}
+          onUngroup={onUngroup}
           onSetGroupingMode={onSetGroupingMode}
           onSetWidthMode={onSetWidthMode}
         />
       ) : (
         <EmptySidebar progress={state.progress} loading={state.loading} />
       )}
+    </Box>
+  );
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <Text size="xs" fw={600} c="dimmed" style={{ letterSpacing: "0.4px" }}>
+      {children}
+    </Text>
+  );
+}
+
+const FONT_STATUS_META: Record<
+  FontStatusV2,
+  { color: string; label: string; hint: string }
+> = {
+  standard: {
+    color: "green",
+    label: "Standard",
+    hint: "Standard PDF font (Helvetica / Times / Courier family) - always available, so edits and new text render correctly.",
+  },
+  embedded: {
+    color: "teal",
+    label: "Embedded",
+    hint: "Fully embedded font - the complete glyph set ships in the PDF, so existing edits and new characters render correctly.",
+  },
+  subset: {
+    color: "yellow",
+    label: "Subset",
+    hint: "Subset font - only the characters the document already uses are embedded. Existing text edits fine, but typing new characters may fall back to Helvetica.",
+  },
+};
+
+/**
+ * Lists the fonts found across the loaded pages with an at-a-glance status
+ * (standard / embedded / subset) so the user knows up front whether a given
+ * font is safe to edit - subset fonts are the ones that can drop new glyphs.
+ */
+function FontsSection({ pages }: { pages: PageSnapshot[] }) {
+  const fonts = analyzePageFonts(pages);
+  if (fonts.length === 0) return null;
+  const subsetCount = fonts.filter((f) => f.status === "subset").length;
+  return (
+    <Stack gap="xs" data-testid="v2-fonts-panel">
+      <SectionLabel>Fonts</SectionLabel>
+      <FontCompatibilitySummary subsetCount={subsetCount} />
+      {fonts.map((f) => {
+        const meta = FONT_STATUS_META[f.status];
+        return (
+          <Group key={f.key} justify="space-between" wrap="nowrap" gap="xs">
+            <Text
+              size="xs"
+              style={{
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+              title={f.name}
+            >
+              {f.name}
+            </Text>
+            <Tooltip
+              label={meta.hint}
+              multiline
+              w={230}
+              withArrow
+              position="left"
+            >
+              <Badge
+                size="xs"
+                color={meta.color}
+                variant="light"
+                style={{ cursor: "help", flexShrink: 0 }}
+                data-testid={`v2-font-${f.status}`}
+              >
+                {meta.label}
+              </Badge>
+            </Tooltip>
+          </Group>
+        );
+      })}
+    </Stack>
+  );
+}
+
+/**
+ * Top-level editor-compatibility summary for the Fonts section: a single
+ * at-a-glance line saying whether the document's fonts are all safe to edit.
+ * "Issues" here are purely about NEW characters - every font edits its
+ * EXISTING text fine; only subset fonts can drop glyphs the document never
+ * used (they fall back to Helvetica). Standard + fully-embedded fonts have
+ * the whole glyph set available, so there's nothing to flag.
+ */
+function FontCompatibilitySummary({ subsetCount }: { subsetCount: number }) {
+  const ok = subsetCount === 0;
+  return (
+    <Box
+      data-testid="v2-font-compat"
+      data-compat={ok ? "ok" : "warn"}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        border: "1px solid var(--mantine-color-default-border)",
+        borderRadius: "var(--mantine-radius-sm)",
+        padding: "6px 10px",
+        background: ok
+          ? "var(--mantine-color-green-light)"
+          : "var(--mantine-color-yellow-light)",
+      }}
+    >
+      {ok ? (
+        <CheckCircleIcon
+          fontSize="small"
+          style={{ color: "var(--mantine-color-green-text)", flexShrink: 0 }}
+        />
+      ) : (
+        <WarningIcon
+          fontSize="small"
+          style={{ color: "var(--mantine-color-yellow-text)", flexShrink: 0 }}
+        />
+      )}
+      <Text size="xs" c={ok ? "green.8" : "yellow.8"}>
+        {ok
+          ? "No compatibility issues - every font is fully editable."
+          : `${subsetCount} subset font${subsetCount === 1 ? "" : "s"} - typing new characters may fall back to Helvetica.`}
+      </Text>
     </Box>
   );
 }
@@ -82,47 +252,144 @@ function EmptySidebar({
 function LoadedSidebar({
   state,
   selection,
+  mode,
+  canGroup,
+  canUngroup,
+  onToggleAddText,
+  onPickImage,
+  onGroup,
+  onUngroup,
   onSetGroupingMode,
   onSetWidthMode,
-}: {
-  state: EditorViewState;
-  selection: SelectionState;
-  onSetGroupingMode: (mode: GroupingMode) => void;
-  onSetWidthMode: (mode: WidthMode) => void;
-}) {
+}: Omit<SidebarProps, never>) {
   const selectionLabel = formatSelection(selection);
   return (
-    <Stack gap="md" data-testid="v2-sidebar-status">
-      <Stack gap="xs">
-        <Text size="xs" c="dimmed">
-          Click any text in the document to edit it inline. Selecting a run
-          enables the colour and font-size controls above.
-        </Text>
-        <Text size="xs" c="dimmed">
-          {state.dirty
-            ? "Unsaved changes - press Save PDF to download."
-            : "No changes yet."}
-        </Text>
-        {selectionLabel && (
-          <Text size="xs" c="blue.6" data-testid="v2-selection-count">
-            {selectionLabel}
-          </Text>
-        )}
-      </Stack>
-      <GroupingModeControl
-        mode={state.groupingMode}
-        onChange={onSetGroupingMode}
+    <Stack gap="lg" data-testid="v2-sidebar-status">
+      <InsertSection
+        mode={mode}
+        onToggleAddText={onToggleAddText}
+        onPickImage={onPickImage}
       />
-      <WidthModeControl mode={state.widthMode} onChange={onSetWidthMode} />
+      <ParagraphSection
+        canGroup={canGroup}
+        canUngroup={canUngroup}
+        onGroup={onGroup}
+        onUngroup={onUngroup}
+      />
+      <Stack gap="sm">
+        <SectionLabel>Editor settings</SectionLabel>
+        <GroupingModeControl
+          mode={state.groupingMode}
+          onChange={onSetGroupingMode}
+        />
+        <WidthModeControl mode={state.widthMode} onChange={onSetWidthMode} />
+      </Stack>
+      <FontsSection pages={state.pages} />
       <MoveTip />
+      {selectionLabel && (
+        <Text size="xs" c="blue.6" data-testid="v2-selection-count">
+          {selectionLabel}
+        </Text>
+      )}
+    </Stack>
+  );
+}
+
+function InsertSection({
+  mode,
+  onToggleAddText,
+  onPickImage,
+}: {
+  mode: "select" | "addText";
+  onToggleAddText: () => void;
+  onPickImage: () => void;
+}) {
+  return (
+    <Stack gap="xs">
+      <SectionLabel>Insert</SectionLabel>
+      <Group grow gap="xs" wrap="nowrap">
+        <Button
+          size="xs"
+          variant={mode === "addText" ? "filled" : "default"}
+          leftSection={<TextFieldsIcon fontSize="small" />}
+          onClick={onToggleAddText}
+          data-testid="v2-add-text"
+        >
+          {mode === "addText" ? "Click page to add text" : "Add text"}
+        </Button>
+        <Button
+          size="xs"
+          variant="default"
+          leftSection={<ImageIcon fontSize="small" />}
+          onClick={onPickImage}
+          data-testid="v2-add-image"
+        >
+          Add image
+        </Button>
+      </Group>
+    </Stack>
+  );
+}
+
+function ParagraphSection({
+  canGroup,
+  canUngroup,
+  onGroup,
+  onUngroup,
+}: {
+  canGroup: boolean;
+  canUngroup: boolean;
+  onGroup: () => void;
+  onUngroup: () => void;
+}) {
+  return (
+    <Stack gap="xs">
+      <SectionLabel>Paragraph</SectionLabel>
+      <Group grow gap="xs" wrap="nowrap">
+        <Tooltip
+          label={
+            canGroup
+              ? "Merge selected runs into one paragraph (Ctrl+M)"
+              : "Select 2+ runs to merge"
+          }
+        >
+          <Button
+            size="xs"
+            variant="default"
+            leftSection={<CallMergeIcon fontSize="small" />}
+            onClick={onGroup}
+            disabled={!canGroup}
+            data-testid="v2-group"
+          >
+            Group
+          </Button>
+        </Tooltip>
+        <Tooltip
+          label={
+            canUngroup
+              ? "Split this paragraph into one run per line"
+              : "Select a multi-line paragraph to ungroup"
+          }
+        >
+          <Button
+            size="xs"
+            variant="default"
+            leftSection={<CallSplitIcon fontSize="small" />}
+            onClick={onUngroup}
+            disabled={!canUngroup}
+            data-testid="v2-ungroup"
+          >
+            Ungroup
+          </Button>
+        </Tooltip>
+      </Group>
     </Stack>
   );
 }
 
 /**
  * Reminder that text boxes are repositioned with Ctrl + drag (the same
- * gesture the overlay listens for). Styled as a subtle hint card so it
- * sits comfortably beneath the grouping / width controls.
+ * gesture the overlay listens for).
  */
 function MoveTip() {
   return (
@@ -136,10 +403,7 @@ function MoveTip() {
       }}
     >
       <Text size="xs" c="dimmed">
-        <Text span fw={600} c="dimmed">
-          Tip:{" "}
-        </Text>
-        Hold <Kbd>Ctrl</Kbd> and drag a text box to move it around the page.
+        Hold <Kbd>Ctrl</Kbd> and drag a text box to move it.
       </Text>
     </Box>
   );
@@ -175,8 +439,8 @@ function GroupingModeControl({
       />
       <Text size="xs" c="dimmed">
         {mode === "auto"
-          ? "Equal-spaced lines are grouped into editable paragraphs."
-          : "Each source line is edited on its own. Switching re-reads the document and clears undo history."}
+          ? "Equal-spaced lines group into editable paragraphs."
+          : "Each source line is edited on its own. Switching clears undo history."}
       </Text>
     </Stack>
   );
@@ -186,7 +450,6 @@ function GroupingModeControl({
  * Toggle how a text box resizes as you type past its current width.
  *  - Grow: the box widens to the right and never wraps.
  *  - Wrap: the box keeps its width and overflow wraps onto new lines.
- * Styled to match `GroupingModeControl` and sits next to it.
  */
 function WidthModeControl({
   mode,

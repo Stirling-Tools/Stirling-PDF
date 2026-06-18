@@ -422,6 +422,7 @@ export class EditTextCommand implements Command {
         fontSize: run.fontSize,
         fill: run.fill,
         originalFontPtr,
+        originalFontSubset: run.fontSubset,
         fallbackFamily,
       });
       if (ptrs.length === 0) continue;

@@ -855,6 +855,7 @@ export function applyPartialEditPlan(
         fontSize: run.fontSize,
         fill: run.fill,
         originalFontPtr: borrowedFontPtr,
+        originalFontSubset: run.fontSubset,
         fallbackFamily,
       });
       let realRightEdge = anchorX;
@@ -1312,6 +1313,7 @@ export function applyParagraphEditPlan(
           fontSize: slot.fontSize,
           fill: run.fill,
           originalFontPtr: reuseFontPtr,
+          originalFontSubset: slot.fontSubset,
           fallbackFamily,
         });
         const built = buildSlotMerged(m, ptrs, lineText, leftX);

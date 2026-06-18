@@ -166,6 +166,14 @@ interface CreatedTextOptions {
   fill: { r: number; g: number; b: number; a: number };
   /** When non-zero, reuse the source font instead of base-14. */
   originalFontPtr: number;
+  /**
+   * Whether the reused source font is a SUBSET font. Gates the untrusted
+   * content-stream charcode guess: only subset fonts (where FPDFText_SetText's
+   * reverse Unicode→charcode lookup fails) fall back to the guess. Non-subset
+   * fonts render correctly via SetText, so the guess - which picks wrong
+   * glyphs for re-encoded fonts - is never used for them.
+   */
+  originalFontSubset?: boolean;
   /** Base-14 family used when `originalFontPtr` is zero. Defaults to Helvetica. */
   fallbackFamily?: string;
 }
@@ -531,7 +539,28 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     }
     // allowContentStreamFallback: if the active resolver (e.g. backend with
     // a cold cache) misses, reuse the on-page glyph via the client-side
-    // content-stream resolver. The width self-check above guards the guess.
+    // content-stream resolver.
+    //
+    // GATED TO SUBSET FONTS, SINGLE CODE POINTS. The content-stream resolver
+    // GUESSES each glyph's charcode as its sequential order of first
+    // appearance on the page. For re-encoded / non-subset fonts (e.g. LaTeX
+    // LMRoman) that guess picks valid-but-WRONG glyphs (e.g. "a"→"fi",
+    // "occupying"→garbage), and its only self-check - the per-emit advance
+    // ratio - can't tell a same-width wrong glyph apart. Two gates make this
+    // safe:
+    //   * SUBSET only: non-subset fonts render correctly via SetText (their
+    //     reverse Unicode→charcode lookup works), so they never need - and
+    //     must never use - the guess. Only subset fonts (where SetText returns
+    //     .notdef) fall back to it.
+    //   * SINGLE code point only: the advance self-check is a true per-char
+    //     check for one char but averages per-char errors across a multi-char
+    //     word, so a whole-line re-emit could scramble every word while
+    //     passing. Multi-char text uses SetText (correct for non-subset) or
+    //     the width check's base-14 re-emit (correct letters for subset).
+    // Net: the result is always real glyphs - the original font where it
+    // renders, base-14 otherwise - never a scramble.
+    const allowGuessFallback =
+      !!opts.originalFontSubset && [...text].length === 1;
     const resolved = tryResolveCharcodes(
       opts.originalFontPtr,
       text,
@@ -540,7 +569,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
         pagePtr: opts.page.pagePtr,
         docPtr: opts.doc.docPtr,
       },
-      true,
+      allowGuessFallback,
     );
     if (!resolved) {
       emitCharcodeEvent({

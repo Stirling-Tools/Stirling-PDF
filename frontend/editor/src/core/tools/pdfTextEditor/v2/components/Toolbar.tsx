@@ -1,5 +1,6 @@
 import {
   ActionIcon,
+  Button,
   ColorInput,
   Group,
   Menu,
@@ -16,8 +17,13 @@ import FormatItalicIcon from "@mui/icons-material/FormatItalic";
 import LockIcon from "@mui/icons-material/LockOutlined";
 import LockOpenIcon from "@mui/icons-material/LockOpenOutlined";
 import TextFieldsIcon from "@mui/icons-material/TextFields";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import LayersIcon from "@mui/icons-material/LayersOutlined";
+import ImageIcon from "@mui/icons-material/ImageOutlined";
 import FlipToFrontIcon from "@mui/icons-material/FlipToFrontOutlined";
 import FlipToBackIcon from "@mui/icons-material/FlipToBackOutlined";
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import VerticalAlignTopIcon from "@mui/icons-material/VerticalAlignTop";
 import VerticalAlignBottomIcon from "@mui/icons-material/VerticalAlignBottom";
 import VerticalAlignCenterIcon from "@mui/icons-material/VerticalAlignCenter";
@@ -94,6 +100,14 @@ const FONT_FAMILIES: { value: string; label: string }[] = [
   { value: "Courier-Bold", label: "Courier Bold" },
 ];
 
+function ToolbarSeparator() {
+  return (
+    <Text size="sm" c="dimmed" aria-hidden>
+      |
+    </Text>
+  );
+}
+
 export function Toolbar({
   state,
   canUndo,
@@ -137,7 +151,7 @@ export function Toolbar({
   })();
   return (
     <Group
-      gap="sm"
+      gap="xs"
       px="md"
       py="xs"
       style={{
@@ -168,12 +182,23 @@ export function Toolbar({
           <RedoIcon fontSize="small" />
         </ActionIcon>
       </Tooltip>
-      <Text size="sm" c="dimmed">
-        |
-      </Text>
+      <ToolbarSeparator />
+      <Select
+        size="xs"
+        w={150}
+        placeholder="Font family"
+        aria-label="Font family"
+        data-testid="v2-font-family"
+        data={FONT_FAMILIES}
+        value={fontValue}
+        onChange={(value) => {
+          if (value) onChangeFontFamily(value);
+        }}
+        disabled={disabled}
+      />
       <NumberInput
         size="xs"
-        w={88}
+        w={72}
         min={4}
         max={144}
         value={state.fontSize ?? 12}
@@ -187,7 +212,7 @@ export function Toolbar({
       />
       <ColorInput
         size="xs"
-        w={140}
+        w={132}
         value={fillHex}
         onChange={(next) => {
           if (!next) return;
@@ -196,19 +221,6 @@ export function Toolbar({
         disabled={disabled || !state.fill}
         aria-label="Font colour"
         data-testid="v2-colour"
-      />
-      <Select
-        size="xs"
-        w={160}
-        placeholder="Font family"
-        aria-label="Font family"
-        data-testid="v2-font-family"
-        data={FONT_FAMILIES}
-        value={fontValue}
-        onChange={(value) => {
-          if (value) onChangeFontFamily(value);
-        }}
-        disabled={disabled}
       />
       <Tooltip label="Bold">
         <ActionIcon
@@ -272,6 +284,7 @@ export function Toolbar({
           </Menu.Item>
         </Menu.Dropdown>
       </Menu>
+      <ToolbarSeparator />
       <Tooltip
         label={
           selectionAllLocked
@@ -295,194 +308,6 @@ export function Toolbar({
           )}
         </ActionIcon>
       </Tooltip>
-      <Text size="sm" c="dimmed">
-        |
-      </Text>
-      <Tooltip label="Bring to front (top of stack)">
-        <ActionIcon
-          variant="subtle"
-          onClick={() => onChangeZOrder("to-front")}
-          disabled={disabled}
-          aria-label="Bring to front"
-          data-testid="v2-z-to-front"
-        >
-          <FlipToFrontIcon fontSize="small" />
-        </ActionIcon>
-      </Tooltip>
-      <Tooltip label="Send to back (bottom of stack)">
-        <ActionIcon
-          variant="subtle"
-          onClick={() => onChangeZOrder("to-back")}
-          disabled={disabled}
-          aria-label="Send to back"
-          data-testid="v2-z-to-back"
-        >
-          <FlipToBackIcon fontSize="small" />
-        </ActionIcon>
-      </Tooltip>
-      <Tooltip label="Bring forward one step">
-        <ActionIcon
-          variant="subtle"
-          onClick={() => onChangeZOrder("forward")}
-          disabled={disabled}
-          aria-label="Bring forward"
-          data-testid="v2-z-forward"
-        >
-          <Text size="xs">↑</Text>
-        </ActionIcon>
-      </Tooltip>
-      <Tooltip label="Send backward one step">
-        <ActionIcon
-          variant="subtle"
-          onClick={() => onChangeZOrder("backward")}
-          disabled={disabled}
-          aria-label="Send backward"
-          data-testid="v2-z-backward"
-        >
-          <Text size="xs">↓</Text>
-        </ActionIcon>
-      </Tooltip>
-      <Text size="sm" c="dimmed">
-        |
-      </Text>
-      <Tooltip label="Align left edges (select 2+)">
-        <ActionIcon
-          variant="subtle"
-          onClick={() => onAlign("left")}
-          disabled={hAlignDisabled}
-          aria-label="Align left"
-          data-testid="v2-align-left"
-        >
-          <AlignHorizontalLeftIcon fontSize="small" />
-        </ActionIcon>
-      </Tooltip>
-      <Tooltip label="Align horizontal centres (select 2+)">
-        <ActionIcon
-          variant="subtle"
-          onClick={() => onAlign("center-h")}
-          disabled={hAlignDisabled}
-          aria-label="Align horizontal center"
-          data-testid="v2-align-center-h"
-        >
-          <AlignHorizontalCenterIcon fontSize="small" />
-        </ActionIcon>
-      </Tooltip>
-      <Tooltip label="Align right edges (select 2+)">
-        <ActionIcon
-          variant="subtle"
-          onClick={() => onAlign("right")}
-          disabled={hAlignDisabled}
-          aria-label="Align right"
-          data-testid="v2-align-right"
-        >
-          <AlignHorizontalRightIcon fontSize="small" />
-        </ActionIcon>
-      </Tooltip>
-      <Tooltip label="Align top edges (select 2+)">
-        <ActionIcon
-          variant="subtle"
-          onClick={() => onAlign("top")}
-          disabled={alignDisabled}
-          aria-label="Align top"
-          data-testid="v2-align-top"
-        >
-          <VerticalAlignTopIcon fontSize="small" />
-        </ActionIcon>
-      </Tooltip>
-      <Tooltip label="Align vertical middles (select 2+)">
-        <ActionIcon
-          variant="subtle"
-          onClick={() => onAlign("middle-v")}
-          disabled={alignDisabled}
-          aria-label="Align vertical middle"
-          data-testid="v2-align-middle-v"
-        >
-          <VerticalAlignCenterIcon fontSize="small" />
-        </ActionIcon>
-      </Tooltip>
-      <Tooltip label="Align bottom edges (select 2+)">
-        <ActionIcon
-          variant="subtle"
-          onClick={() => onAlign("bottom")}
-          disabled={alignDisabled}
-          aria-label="Align bottom"
-          data-testid="v2-align-bottom"
-        >
-          <VerticalAlignBottomIcon fontSize="small" />
-        </ActionIcon>
-      </Tooltip>
-      <Tooltip label="Distribute horizontally (select 3+)">
-        <ActionIcon
-          variant="subtle"
-          onClick={() => onDistribute("horizontal")}
-          disabled={distributeDisabled}
-          aria-label="Distribute horizontally"
-          data-testid="v2-distribute-h"
-        >
-          <LinearScaleIcon fontSize="small" />
-        </ActionIcon>
-      </Tooltip>
-      <Tooltip label="Distribute vertically (select 3+)">
-        <ActionIcon
-          variant="subtle"
-          onClick={() => onDistribute("vertical")}
-          disabled={distributeDisabled}
-          aria-label="Distribute vertically"
-          data-testid="v2-distribute-v"
-        >
-          <LinearScaleIcon
-            fontSize="small"
-            style={{ transform: "rotate(90deg)" }}
-          />
-        </ActionIcon>
-      </Tooltip>
-      <Text size="sm" c="dimmed">
-        |
-      </Text>
-      <Tooltip label="Rotate image 90° counter-clockwise (image selected)">
-        <ActionIcon
-          variant="subtle"
-          onClick={() => onTransformImage("rotate-ccw")}
-          disabled={imageDisabled}
-          aria-label="Rotate image counter-clockwise"
-          data-testid="v2-image-rotate-ccw"
-        >
-          <RotateLeftIcon fontSize="small" />
-        </ActionIcon>
-      </Tooltip>
-      <Tooltip label="Rotate image 90° clockwise (image selected)">
-        <ActionIcon
-          variant="subtle"
-          onClick={() => onTransformImage("rotate-cw")}
-          disabled={imageDisabled}
-          aria-label="Rotate image clockwise"
-          data-testid="v2-image-rotate-cw"
-        >
-          <RotateRightIcon fontSize="small" />
-        </ActionIcon>
-      </Tooltip>
-      <Tooltip label="Flip image horizontally (image selected)">
-        <ActionIcon
-          variant="subtle"
-          onClick={() => onTransformImage("flip-h")}
-          disabled={imageDisabled}
-          aria-label="Flip image horizontally"
-          data-testid="v2-image-flip-h"
-        >
-          <FlipIcon fontSize="small" />
-        </ActionIcon>
-      </Tooltip>
-      <Tooltip label="Flip image vertically (image selected)">
-        <ActionIcon
-          variant="subtle"
-          onClick={() => onTransformImage("flip-v")}
-          disabled={imageDisabled}
-          aria-label="Flip image vertically"
-          data-testid="v2-image-flip-v"
-        >
-          <FlipIcon fontSize="small" style={{ transform: "rotate(90deg)" }} />
-        </ActionIcon>
-      </Tooltip>
       <Tooltip label="Delete (Del)">
         <ActionIcon
           variant="subtle"
@@ -495,6 +320,186 @@ export function Toolbar({
           <DeleteIcon fontSize="small" />
         </ActionIcon>
       </Tooltip>
+      <ToolbarSeparator />
+      {/* Arrange groups the object-level z-order, align and distribute
+          controls behind one menu so the strip stays compact. Align needs
+          2+ objects (or a multi-line paragraph); distribute needs 3+. */}
+      <Menu shadow="md" position="bottom-start" withinPortal closeOnItemClick>
+        <Menu.Target>
+          <Button
+            size="xs"
+            variant="default"
+            leftSection={<LayersIcon fontSize="small" />}
+            rightSection={<ExpandMoreIcon fontSize="small" />}
+            disabled={disabled}
+            data-testid="v2-arrange-menu"
+          >
+            Arrange
+          </Button>
+        </Menu.Target>
+        <Menu.Dropdown>
+          <Menu.Label>Order</Menu.Label>
+          <Menu.Item
+            leftSection={<FlipToFrontIcon fontSize="small" />}
+            onClick={() => onChangeZOrder("to-front")}
+            data-testid="v2-z-to-front"
+          >
+            Bring to front
+          </Menu.Item>
+          <Menu.Item
+            leftSection={<ArrowUpwardIcon fontSize="small" />}
+            onClick={() => onChangeZOrder("forward")}
+            data-testid="v2-z-forward"
+          >
+            Bring forward
+          </Menu.Item>
+          <Menu.Item
+            leftSection={<ArrowDownwardIcon fontSize="small" />}
+            onClick={() => onChangeZOrder("backward")}
+            data-testid="v2-z-backward"
+          >
+            Send backward
+          </Menu.Item>
+          <Menu.Item
+            leftSection={<FlipToBackIcon fontSize="small" />}
+            onClick={() => onChangeZOrder("to-back")}
+            data-testid="v2-z-to-back"
+          >
+            Send to back
+          </Menu.Item>
+          <Menu.Divider />
+          <Menu.Label>Align · needs 2+ objects</Menu.Label>
+          <Menu.Item
+            leftSection={<AlignHorizontalLeftIcon fontSize="small" />}
+            disabled={hAlignDisabled}
+            onClick={() => onAlign("left")}
+            data-testid="v2-align-left"
+          >
+            Align left
+          </Menu.Item>
+          <Menu.Item
+            leftSection={<AlignHorizontalCenterIcon fontSize="small" />}
+            disabled={hAlignDisabled}
+            onClick={() => onAlign("center-h")}
+            data-testid="v2-align-center-h"
+          >
+            Align centre
+          </Menu.Item>
+          <Menu.Item
+            leftSection={<AlignHorizontalRightIcon fontSize="small" />}
+            disabled={hAlignDisabled}
+            onClick={() => onAlign("right")}
+            data-testid="v2-align-right"
+          >
+            Align right
+          </Menu.Item>
+          <Menu.Item
+            leftSection={<VerticalAlignTopIcon fontSize="small" />}
+            disabled={alignDisabled}
+            onClick={() => onAlign("top")}
+            data-testid="v2-align-top"
+          >
+            Align top
+          </Menu.Item>
+          <Menu.Item
+            leftSection={<VerticalAlignCenterIcon fontSize="small" />}
+            disabled={alignDisabled}
+            onClick={() => onAlign("middle-v")}
+            data-testid="v2-align-middle-v"
+          >
+            Align middle
+          </Menu.Item>
+          <Menu.Item
+            leftSection={<VerticalAlignBottomIcon fontSize="small" />}
+            disabled={alignDisabled}
+            onClick={() => onAlign("bottom")}
+            data-testid="v2-align-bottom"
+          >
+            Align bottom
+          </Menu.Item>
+          <Menu.Divider />
+          <Menu.Label>Distribute · needs 3+ objects</Menu.Label>
+          <Menu.Item
+            leftSection={<LinearScaleIcon fontSize="small" />}
+            disabled={distributeDisabled}
+            onClick={() => onDistribute("horizontal")}
+            data-testid="v2-distribute-h"
+          >
+            Distribute horizontally
+          </Menu.Item>
+          <Menu.Item
+            leftSection={
+              <LinearScaleIcon
+                fontSize="small"
+                style={{ transform: "rotate(90deg)" }}
+              />
+            }
+            disabled={distributeDisabled}
+            onClick={() => onDistribute("vertical")}
+            data-testid="v2-distribute-v"
+          >
+            Distribute vertically
+          </Menu.Item>
+        </Menu.Dropdown>
+      </Menu>
+      {/* Image transforms only apply to a selected image. The menu opens
+          whenever something is selected; if it isn't an image, the items are
+          disabled and a label explains why (reachable, unlike a tooltip on a
+          disabled button). */}
+      <Menu shadow="md" position="bottom-start" withinPortal closeOnItemClick>
+        <Menu.Target>
+          <Button
+            size="xs"
+            variant="default"
+            leftSection={<ImageIcon fontSize="small" />}
+            rightSection={<ExpandMoreIcon fontSize="small" />}
+            disabled={disabled}
+            data-testid="v2-imgop-menu"
+          >
+            Image
+          </Button>
+        </Menu.Target>
+        <Menu.Dropdown>
+          {!hasImageSelection && <Menu.Label>Select an image first</Menu.Label>}
+          <Menu.Item
+            leftSection={<RotateLeftIcon fontSize="small" />}
+            disabled={imageDisabled}
+            onClick={() => onTransformImage("rotate-ccw")}
+            data-testid="v2-imgop-rotate-ccw"
+          >
+            Rotate 90° left
+          </Menu.Item>
+          <Menu.Item
+            leftSection={<RotateRightIcon fontSize="small" />}
+            disabled={imageDisabled}
+            onClick={() => onTransformImage("rotate-cw")}
+            data-testid="v2-imgop-rotate-cw"
+          >
+            Rotate 90° right
+          </Menu.Item>
+          <Menu.Item
+            leftSection={<FlipIcon fontSize="small" />}
+            disabled={imageDisabled}
+            onClick={() => onTransformImage("flip-h")}
+            data-testid="v2-imgop-flip-h"
+          >
+            Flip horizontal
+          </Menu.Item>
+          <Menu.Item
+            leftSection={
+              <FlipIcon
+                fontSize="small"
+                style={{ transform: "rotate(90deg)" }}
+              />
+            }
+            disabled={imageDisabled}
+            onClick={() => onTransformImage("flip-v")}
+            data-testid="v2-imgop-flip-v"
+          >
+            Flip vertical
+          </Menu.Item>
+        </Menu.Dropdown>
+      </Menu>
     </Group>
   );
 }
