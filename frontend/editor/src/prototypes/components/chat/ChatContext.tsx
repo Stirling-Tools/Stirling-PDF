@@ -9,7 +9,6 @@ import {
 import { useAllFiles, useFileActions } from "@app/contexts/FileContext";
 import { generateId } from "@app/utils/generateId";
 import apiClient from "@app/services/apiClient";
-import { buildApiUrl } from "@app/services/buildApiUrl";
 import { getAuthHeaders } from "@app/services/apiClientSetup";
 import { createChildStub } from "@app/contexts/file/fileActions";
 import {
@@ -442,7 +441,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         });
 
         const response = await fetch(
-          buildApiUrl("/api/v1/ai/orchestrate/stream"),
+          apiClient.getUri({ url: "/api/v1/ai/orchestrate/stream" }),
           {
             method: "POST",
             body: formData,
