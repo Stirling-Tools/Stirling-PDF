@@ -1,4 +1,5 @@
 import {
+  Badge,
   Box,
   Button,
   Group,
@@ -18,9 +19,14 @@ import type {
 } from "@app/tools/pdfTextEditor/v2/store/EditorStore";
 import type {
   GroupingMode,
+  PageSnapshot,
   SelectionState,
   WidthMode,
 } from "@app/tools/pdfTextEditor/v2/types";
+import {
+  analyzePageFonts,
+  type FontStatusV2,
+} from "@app/tools/pdfTextEditor/v2/util/pageFonts";
 
 /**
  * Sidebar for the v2 text/image editor.
@@ -87,6 +93,84 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
     <Text size="xs" fw={600} c="dimmed" style={{ letterSpacing: "0.4px" }}>
       {children}
     </Text>
+  );
+}
+
+const FONT_STATUS_META: Record<
+  FontStatusV2,
+  { color: string; label: string; hint: string }
+> = {
+  standard: {
+    color: "green",
+    label: "Standard",
+    hint: "Standard PDF font (Helvetica / Times / Courier family) - always available, so edits and new text render correctly.",
+  },
+  embedded: {
+    color: "teal",
+    label: "Embedded",
+    hint: "Fully embedded font - the complete glyph set ships in the PDF, so existing edits and new characters render correctly.",
+  },
+  subset: {
+    color: "yellow",
+    label: "Subset",
+    hint: "Subset font - only the characters the document already uses are embedded. Existing text edits fine, but typing new characters may fall back to Helvetica.",
+  },
+};
+
+/**
+ * Lists the fonts found across the loaded pages with an at-a-glance status
+ * (standard / embedded / subset) so the user knows up front whether a given
+ * font is safe to edit - subset fonts are the ones that can drop new glyphs.
+ */
+function FontsSection({ pages }: { pages: PageSnapshot[] }) {
+  const fonts = analyzePageFonts(pages);
+  if (fonts.length === 0) return null;
+  const hasSubset = fonts.some((f) => f.status === "subset");
+  return (
+    <Stack gap="xs" data-testid="v2-fonts-panel">
+      <SectionLabel>Fonts</SectionLabel>
+      {fonts.map((f) => {
+        const meta = FONT_STATUS_META[f.status];
+        return (
+          <Group key={f.key} justify="space-between" wrap="nowrap" gap="xs">
+            <Text
+              size="xs"
+              style={{
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+              title={f.name}
+            >
+              {f.name}
+            </Text>
+            <Tooltip
+              label={meta.hint}
+              multiline
+              w={230}
+              withArrow
+              position="left"
+            >
+              <Badge
+                size="xs"
+                color={meta.color}
+                variant="light"
+                style={{ cursor: "help", flexShrink: 0 }}
+                data-testid={`v2-font-${f.status}`}
+              >
+                {meta.label}
+              </Badge>
+            </Tooltip>
+          </Group>
+        );
+      })}
+      {hasSubset && (
+        <Text size="xs" c="dimmed">
+          Subset fonts only embed their original glyphs; new characters may
+          render in a fallback font.
+        </Text>
+      )}
+    </Stack>
   );
 }
 
@@ -157,6 +241,7 @@ function LoadedSidebar({
         />
         <WidthModeControl mode={state.widthMode} onChange={onSetWidthMode} />
       </Stack>
+      <FontsSection pages={state.pages} />
       <MoveTip />
       {selectionLabel && (
         <Text size="xs" c="blue.6" data-testid="v2-selection-count">

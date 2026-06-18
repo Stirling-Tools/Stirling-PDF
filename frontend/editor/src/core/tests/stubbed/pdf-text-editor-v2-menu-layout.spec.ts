@@ -82,10 +82,10 @@ test.describe("v2 editor - menu-grouped layout", () => {
     // Enabled because something is selected, but the transforms are disabled
     // and an in-dropdown label explains why (reachable, unlike a tooltip on a
     // disabled button).
-    await expect(page.getByTestId("v2-image-menu")).toBeEnabled();
-    await page.getByTestId("v2-image-menu").click();
+    await expect(page.getByTestId("v2-imgop-menu")).toBeEnabled();
+    await page.getByTestId("v2-imgop-menu").click();
     await expect(page.getByText("Select an image first")).toBeVisible();
-    await expect(page.getByTestId("v2-image-rotate-cw")).toBeDisabled();
+    await expect(page.getByTestId("v2-imgop-rotate-cw")).toBeDisabled();
     await page.getByTestId("v2-zoom-percent").click();
   });
 
@@ -95,7 +95,7 @@ test.describe("v2 editor - menu-grouped layout", () => {
     await open(page, 0);
     // On load no object is selected, so both selection-scoped menus are off.
     await expect(page.getByTestId("v2-arrange-menu")).toBeDisabled();
-    await expect(page.getByTestId("v2-image-menu")).toBeDisabled();
+    await expect(page.getByTestId("v2-imgop-menu")).toBeDisabled();
   });
 
   test("lock and delete are icon buttons in the toolbar", async ({ page }) => {
@@ -157,5 +157,15 @@ test.describe("v2 editor - menu-grouped layout", () => {
     await page.getByTestId("v2-page-0").click({ position: { x: 200, y: 400 } });
     await expect(runs).toHaveCount(before + 1, { timeout: 5_000 });
     await expect(addText).toHaveText("Add text");
+  });
+
+  test("sidebar lists the page fonts with a status badge", async ({ page }) => {
+    await open(page, 0);
+    const panel = page.getByTestId("v2-fonts-panel");
+    await expect(panel).toBeVisible();
+    await expect(panel.getByText("Fonts", { exact: true })).toBeVisible();
+    // At least one font row with a status badge (standard / embedded / subset).
+    const badges = panel.locator('[data-testid^="v2-font-"]');
+    expect(await badges.count()).toBeGreaterThan(0);
   });
 });

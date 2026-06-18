@@ -454,7 +454,7 @@ export function Toolbar({
             leftSection={<ImageIcon fontSize="small" />}
             rightSection={<ExpandMoreIcon fontSize="small" />}
             disabled={disabled}
-            data-testid="v2-image-menu"
+            data-testid="v2-imgop-menu"
           >
             Image
           </Button>
@@ -465,7 +465,7 @@ export function Toolbar({
             leftSection={<RotateLeftIcon fontSize="small" />}
             disabled={imageDisabled}
             onClick={() => onTransformImage("rotate-ccw")}
-            data-testid="v2-image-rotate-ccw"
+            data-testid="v2-imgop-rotate-ccw"
           >
             Rotate 90° left
           </Menu.Item>
@@ -473,7 +473,7 @@ export function Toolbar({
             leftSection={<RotateRightIcon fontSize="small" />}
             disabled={imageDisabled}
             onClick={() => onTransformImage("rotate-cw")}
-            data-testid="v2-image-rotate-cw"
+            data-testid="v2-imgop-rotate-cw"
           >
             Rotate 90° right
           </Menu.Item>
@@ -481,7 +481,7 @@ export function Toolbar({
             leftSection={<FlipIcon fontSize="small" />}
             disabled={imageDisabled}
             onClick={() => onTransformImage("flip-h")}
-            data-testid="v2-image-flip-h"
+            data-testid="v2-imgop-flip-h"
           >
             Flip horizontal
           </Menu.Item>
@@ -494,7 +494,7 @@ export function Toolbar({
             }
             disabled={imageDisabled}
             onClick={() => onTransformImage("flip-v")}
-            data-testid="v2-image-flip-v"
+            data-testid="v2-imgop-flip-v"
           >
             Flip vertical
           </Menu.Item>

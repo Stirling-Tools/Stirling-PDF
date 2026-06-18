@@ -21,6 +21,13 @@ const USER_SAMPLE_PDF = path.join(
   __dirname,
   "../test-fixtures/user-sample.pdf",
 );
+// Carries an embedded font whose name table has the 6-letter "ABCDEF+"
+// subset tag, so the editor reliably flags a run as fontSubset (lets the
+// subset-fallback test run deterministically instead of skipping).
+const SUBSET_FONT_PDF = path.join(
+  __dirname,
+  "../test-fixtures/subset-font-sample.pdf",
+);
 
 /**
  * v2 PDF text editor regression suite.
@@ -2560,10 +2567,16 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
     // to Helvetica as documented (subset fonts can't be partial-
     // edited because they lack a stable Unicode→glyph mapping).
     //
-    // Skipped automatically if no subset-font run is present in
-    // sample.pdf - this is opportunistic coverage.
+    // Loads the dedicated subset-font fixture (its embedded font name
+    // table carries the "ABCDEF+" subset tag) so a subset run is always
+    // present - no opportunistic skip.
     await gotoV2(page);
-    await loadSamplePdf(page);
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(SUBSET_FONT_PDF);
+    await expect(page.getByTestId("v2-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
     await page.waitForTimeout(500);
 
     const subsetRun = await page.evaluate(() => {
@@ -2592,9 +2605,12 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
       }
       return null;
     });
+    // The fixture guarantees a subset run; a miss means subset detection
+    // regressed, so fail loudly rather than skip.
     if (!subsetRun) {
-      test.skip(true, "no subset-font run found");
-      return;
+      throw new Error(
+        "subset-font-sample.pdf must contain a subset-font run (subset detection regressed)",
+      );
     }
 
     // Type a char unlikely to be in the subset (a 9 - typical body
@@ -2731,18 +2747,30 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
     // them depending on the measured gap vs ABS_MAX_GAP_PT. Either way,
     // both halves and the inter-word gap must survive somewhere on
     // page 0 - collect every run's text and look for the pattern.
-    const allText = await page.evaluate(() => {
-      const store = (
-        window as unknown as {
-          __v2_editor_store?: {
-            state: { pages: { runs: { text: string }[] }[] };
-          };
-        }
-      ).__v2_editor_store!;
-      return (store.state.pages[0]?.runs ?? []).map((r) => r.text).join("\n");
-    });
-    // Both letters must come back. The "B" disappearing would mean a
-    // text object was lost in the round trip.
+    // After reopen the document re-reads asynchronously; saveAndReopen only
+    // waits for the first run to paint, so poll the model until BOTH halves
+    // of the edit are back (re-read settled) before asserting - otherwise the
+    // run carrying "B" may not exist yet and the test flakes.
+    const allText = await page
+      .waitForFunction(
+        () => {
+          const store = (
+            window as unknown as {
+              __v2_editor_store?: {
+                state: { pages: { runs: { text: string }[] }[] };
+              };
+            }
+          ).__v2_editor_store;
+          if (!store) return null;
+          const runs = store.state.pages[0]?.runs ?? [];
+          if (runs.length === 0) return null;
+          const joined = runs.map((r) => r.text).join("\n");
+          return joined.includes("A") && joined.includes("B") ? joined : null;
+        },
+        { timeout: 30_000, polling: 300 },
+      )
+      .then((h) => h.jsonValue() as Promise<string>);
+    // Both letters came back - no text object was lost in the round trip.
     expect(allText).toContain("A");
     expect(allText).toContain("B");
     // Multiple consecutive spaces must survive in at least one run
