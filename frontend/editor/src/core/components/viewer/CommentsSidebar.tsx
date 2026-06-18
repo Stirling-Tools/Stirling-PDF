@@ -185,6 +185,31 @@ function isCommentAnnotation(ann: any): boolean {
   return false;
 }
 
+function isLinkedCommentAnnotation(ann: any): boolean {
+  const type = ann?.type;
+  if (isStandaloneCommentType(type)) return false;
+  if (ann?.inReplyToId) return false;
+  return (
+    ann?.customData?.isComment === true ||
+    (type !== undefined && (ann?.contents ?? "").trim().length > 0)
+  );
+}
+
+function getAnnotationPageIndex(fallbackPageIndex: number, ann: any): number {
+  return typeof ann?.pageIndex === "number" ? ann.pageIndex : fallbackPageIndex;
+}
+
+function getRemoveCommentPatch(ann: any): Partial<PdfAnnotationObject> {
+  const customData = {
+    ...((ann?.customData ?? {}) as Record<string, unknown>),
+  };
+  delete customData.isComment;
+  return {
+    customData,
+    contents: "",
+  } as unknown as Partial<PdfAnnotationObject>;
+}
+
 function getAnnotationToolId(ann: any): string {
   return ann?.customData?.toolId ?? ann?.customData?.annotationToolId ?? "";
 }
@@ -419,20 +444,11 @@ export function CommentsSidebar({
     id: string;
     ann: any;
   } | null>(null);
-
-  const isLinkedAnnotation = (ann: any) => {
-    const type = ann?.type;
-    if (isStandaloneCommentType(type)) return false;
-    if (ann?.inReplyToId) return false;
-    return (
-      ann?.customData?.isComment === true ||
-      (type !== undefined && (ann?.contents ?? "").trim().length > 0)
-    );
-  };
+  const [clearAllModalOpen, setClearAllModalOpen] = useState(false);
 
   const handleDeleteClick = useCallback(
     (pageIndex: number, annotationId: string, ann: any) => {
-      if (isLinkedAnnotation(ann)) {
+      if (isLinkedCommentAnnotation(ann)) {
         setDeleteModal({ pageIndex, id: annotationId, ann });
       } else {
         provides?.deleteAnnotation?.(pageIndex, annotationId);
@@ -444,15 +460,10 @@ export function CommentsSidebar({
   const handleRemoveFromSidebar = useCallback(() => {
     if (!deleteModal || !provides?.updateAnnotation) return;
     const { pageIndex, id, ann } = deleteModal;
-    const existing = (ann?.customData ?? {}) as Record<string, unknown>;
-    const { isComment: _removed, ...rest } = existing;
     // Also clear contents: the contents field is the persisted signal for
     // post-reload linked annotations, so clearing it removes the annotation
     // from the sidebar (contents is not visually rendered on ink/shape/markup types).
-    provides.updateAnnotation(pageIndex, id, {
-      customData: rest,
-      contents: "",
-    } as unknown as Partial<PdfAnnotationObject>);
+    provides.updateAnnotation(pageIndex, id, getRemoveCommentPatch(ann));
     setDeleteModal(null);
   }, [deleteModal, provides]);
 
@@ -461,6 +472,73 @@ export function CommentsSidebar({
     provides?.deleteAnnotation?.(deleteModal.pageIndex, deleteModal.id);
     setDeleteModal(null);
   }, [deleteModal, provides]);
+
+  const handleClearAllComments = useCallback(() => {
+    const annotationsToDelete: Array<{ pageIndex: number; id: string }> = [];
+    const commentPatches: Array<{
+      pageIndex: number;
+      id: string;
+      patch: Partial<PdfAnnotationObject>;
+    }> = [];
+
+    for (const [page, entries] of Object.entries(byPage)) {
+      const fallbackPageIndex = Number(page);
+      for (const entry of entries) {
+        const ann = entry.annotation?.object;
+        const id = ann?.id;
+        if (!id) continue;
+
+        const pageIndex = getAnnotationPageIndex(fallbackPageIndex, ann);
+        if (isLinkedCommentAnnotation(ann)) {
+          commentPatches.push({
+            pageIndex,
+            id,
+            patch: getRemoveCommentPatch(ann),
+          });
+        } else {
+          annotationsToDelete.push({ pageIndex, id });
+        }
+
+        for (const reply of entry.replies ?? []) {
+          const replyObj = reply?.object;
+          const replyId = replyObj?.id;
+          if (!replyId) continue;
+          annotationsToDelete.push({
+            pageIndex: getAnnotationPageIndex(pageIndex, replyObj),
+            id: replyId,
+          });
+        }
+      }
+    }
+
+    if (commentPatches.length > 0) {
+      if (provides?.updateAnnotations) {
+        provides.updateAnnotations(commentPatches);
+      } else {
+        for (const { pageIndex, id, patch } of commentPatches) {
+          provides?.updateAnnotation?.(pageIndex, id, patch);
+        }
+      }
+    }
+
+    if (annotationsToDelete.length > 0) {
+      if (provides?.deleteAnnotations) {
+        provides.deleteAnnotations(annotationsToDelete);
+      } else {
+        for (const { pageIndex, id } of annotationsToDelete) {
+          provides?.deleteAnnotation?.(pageIndex, id);
+        }
+      }
+    }
+
+    setDraftContents({});
+    setReplyDrafts({});
+    setReplyEditDrafts({});
+    setEditingMainKey(null);
+    setEditingReplyKey(null);
+    setDeleteModal(null);
+    setClearAllModalOpen(false);
+  }, [byPage, provides]);
 
   const handleSendMainComment = useCallback(
     (pageIndex: number, annotationId: string, value: string) => {
@@ -566,16 +644,38 @@ export function CommentsSidebar({
           {t("viewer.comments.title", "Comments")}
         </Text>
         {totalCount > 0 && (
-          <Tooltip label={t("viewer.comments.addComment", "Add comment")}>
-            <ActionIcon
-              variant="subtle"
-              size="sm"
-              color="gray"
-              onClick={handleAddComment}
-            >
-              <LocalIcon icon="add" width="1.25rem" height="1.25rem" />
-            </ActionIcon>
-          </Tooltip>
+          <Group gap={2} wrap="nowrap" style={{ flexShrink: 0 }}>
+            <Tooltip label={t("viewer.comments.addComment", "Add comment")}>
+              <ActionIcon
+                variant="subtle"
+                size="sm"
+                color="gray"
+                onClick={handleAddComment}
+              >
+                <LocalIcon icon="add" width="1.25rem" height="1.25rem" />
+              </ActionIcon>
+            </Tooltip>
+            <Menu position="bottom-end" withArrow>
+              <Menu.Target>
+                <Tooltip
+                  label={t("viewer.comments.moreActions", "More actions")}
+                >
+                  <ActionIcon variant="subtle" size="sm" color="gray">
+                    <MoreHorizIcon style={{ fontSize: 20 }} />
+                  </ActionIcon>
+                </Tooltip>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item
+                  leftSection={<DeleteIcon style={{ fontSize: 18 }} />}
+                  color="red"
+                  onClick={() => setClearAllModalOpen(true)}
+                >
+                  {t("viewer.comments.clearAll", "Clear all comments")}
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+          </Group>
         )}
       </div>
       <ScrollArea style={{ flex: 1 }}>
@@ -1053,6 +1153,29 @@ export function CommentsSidebar({
               "viewer.comments.deleteAnnotationAndComment",
               "Delete annotation & comment",
             )}
+          </Button>
+        </Group>
+      </Modal>
+
+      <Modal
+        opened={clearAllModalOpen}
+        onClose={() => setClearAllModalOpen(false)}
+        title={t("viewer.comments.clearAllTitle", "Clear all comments?")}
+        centered
+        size="sm"
+      >
+        <Text size="sm" c="dimmed" mb="lg">
+          {t(
+            "viewer.comments.clearAllDescription",
+            "This removes comments and replies from the sidebar while keeping any attached annotations in the document.",
+          )}
+        </Text>
+        <Group justify="flex-end" gap="sm">
+          <Button variant="default" onClick={() => setClearAllModalOpen(false)}>
+            {t("viewer.comments.cancelClearAll", "Cancel")}
+          </Button>
+          <Button color="red" onClick={handleClearAllComments}>
+            {t("viewer.comments.clearAll", "Clear all comments")}
           </Button>
         </Group>
       </Modal>
