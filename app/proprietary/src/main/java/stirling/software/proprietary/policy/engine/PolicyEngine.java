@@ -9,6 +9,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 import org.slf4j.MDC;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -53,6 +54,7 @@ import stirling.software.proprietary.service.DownstreamEntitlementError;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Profile("saas")
 public class PolicyEngine {
 
     // Admission weight for one run. Weighted heavy: a run chains many tools and holds intermediate
