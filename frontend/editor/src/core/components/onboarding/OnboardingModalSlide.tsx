@@ -51,7 +51,7 @@ export default function OnboardingModalSlide({
         <div className={styles.heroIconsContainer}>
           <div className={styles.iconWrapper}>
             <img
-              src={`${BASE_PATH}/modern-logo/logo512.png`}
+              src={`${BASE_PATH}/logo/logo512.png`}
               alt="Stirling icon"
               className={styles.downloadIcon}
             />

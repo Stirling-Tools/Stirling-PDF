@@ -6,7 +6,6 @@ export interface AppConfig {
   appNameNavbar?: string;
   languages?: string[];
   defaultLocale?: string;
-  logoStyle?: "modern" | "classic";
   enableLogin?: boolean;
   showSettingsWhenNoLogin?: boolean;
   enableEmailInvites?: boolean;

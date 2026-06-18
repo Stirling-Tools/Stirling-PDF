@@ -208,7 +208,6 @@ public class ConfigController {
             // Extract values from ApplicationProperties
             configData.put("appNameNavbar", applicationProperties.getUi().getAppNameNavbar());
             configData.put("languages", applicationProperties.getUi().getLanguages());
-            configData.put("logoStyle", applicationProperties.getUi().getLogoStyle());
             configData.put("defaultLocale", applicationProperties.getSystem().getDefaultLocale());
 
             // User preference defaults

@@ -1034,14 +1034,6 @@ description = "Languages that users can select from (leave empty to enable all l
 label = "Available Languages"
 placeholder = "Select languages"
 
-[admin.settings.general.logoStyle]
-classic = "Classic"
-classicAlt = "Classic logo"
-description = "Set the default logo style for all users on this server. Users can override this setting in their personal preferences."
-label = "Logo Style"
-modern = "Modern"
-modernAlt = "Modern logo"
-
 [admin.settings.general.showUpdate]
 description = "Display notifications when a new version is available"
 label = "Show Update Notifications"

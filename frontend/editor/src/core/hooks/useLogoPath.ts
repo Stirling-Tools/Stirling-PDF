@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useLogoAssets } from "@app/hooks/useLogoAssets";
 
-/** Theme-specific no-text logo SVG URLs under the active variant folder (`modern-logo` / `classic-logo`). */
+/** Theme-specific no-text logo SVG URLs under the `logo` folder. */
 export function useLogoPath(): { dark: string; light: string } {
   const { folderPath } = useLogoAssets();
 

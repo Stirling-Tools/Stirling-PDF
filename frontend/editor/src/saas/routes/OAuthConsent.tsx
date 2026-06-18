@@ -190,12 +190,12 @@ export default function OAuthConsent() {
   const logoBlock = (
     <div className="auth-logo-block">
       <img
-        src={withBasePath("/modern-logo/LoginLightModeHeader.svg")}
+        src={withBasePath("/logo/LoginLightModeHeader.svg")}
         alt="Stirling PDF"
         className="auth-logo-header auth-logo-header--light"
       />
       <img
-        src={withBasePath("/modern-logo/LoginDarkModeHeader.svg")}
+        src={withBasePath("/logo/LoginDarkModeHeader.svg")}
         alt="Stirling PDF"
         className="auth-logo-header auth-logo-header--dark"
       />

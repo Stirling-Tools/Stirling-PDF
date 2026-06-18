@@ -70,7 +70,6 @@ ignore = [
     'admin.settings.connections.oauth2.label',
     'admin.settings.connections.saml2.label',
     'admin.settings.database.port.label',
-    'admin.settings.general.logoStyle.modern',
     'admin.settings.general.system',
     'admin.settings.legal.impressum.label',
     'admin.settings.premium.title',

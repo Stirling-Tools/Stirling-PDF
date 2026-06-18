@@ -1132,21 +1132,12 @@ public class ApplicationProperties {
     public static class Ui {
         private String appNameNavbar;
         private List<String> languages;
-        private String logoStyle = "classic"; // Options: "classic" (default) or "modern"
         private boolean defaultHideUnavailableTools = false;
         private boolean defaultHideUnavailableConversions = false;
         private HideDisabledTools hideDisabledTools = new HideDisabledTools();
 
         public String getAppNameNavbar() {
             return appNameNavbar != null && !appNameNavbar.trim().isEmpty() ? appNameNavbar : null;
-        }
-
-        public String getLogoStyle() {
-            // Validate and return either "modern" or "classic"
-            if ("modern".equalsIgnoreCase(logoStyle)) {
-                return "modern";
-            }
-            return "classic"; // default
         }
 
         @Data

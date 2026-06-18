@@ -1,11 +1,9 @@
 import { describe, expect, test } from "vitest";
 import * as fs from "fs";
 import * as path from "path";
-import { LOGO_FOLDER_BY_VARIANT } from "@app/constants/logo";
-import type { LogoVariant } from "@app/services/preferencesService";
 
 /**
- * Tests that all required logo assets exist for each logo variant.
+ * Tests that all required logo assets exist in the `logo` folder.
  * This ensures that when useLogoAssets returns paths, those files actually exist.
  */
 describe("useLogoAssets - Logo Asset Files", () => {
@@ -23,34 +21,21 @@ describe("useLogoAssets - Logo Asset Files", () => {
     "StirlingPDFLogoGreyText.svg",
   ];
 
-  const logoVariants: LogoVariant[] = ["modern", "classic"];
+  const folderPath = path.join(publicDir, "logo");
 
-  describe.each(logoVariants)("%s logo variant", (variant) => {
-    const folder = LOGO_FOLDER_BY_VARIANT[variant];
-    const folderPath = path.join(publicDir, folder);
-
-    test(`folder "${folder}" should exist`, () => {
-      expect(fs.existsSync(folderPath)).toBe(true);
-    });
-
-    test.each(requiredAssets)("should have %s", (assetName) => {
-      const assetPath = path.join(folderPath, assetName);
-      expect(
-        fs.existsSync(assetPath),
-        `Missing asset: ${folder}/${assetName}`,
-      ).toBe(true);
-    });
+  test('folder "logo" should exist', () => {
+    expect(fs.existsSync(folderPath)).toBe(true);
   });
 
-  describe("manifest files", () => {
-    test("manifest.json should exist for modern variant", () => {
-      const manifestPath = path.join(publicDir, "manifest.json");
-      expect(fs.existsSync(manifestPath)).toBe(true);
-    });
+  test.each(requiredAssets)("should have %s", (assetName) => {
+    const assetPath = path.join(folderPath, assetName);
+    expect(fs.existsSync(assetPath), `Missing asset: logo/${assetName}`).toBe(
+      true,
+    );
+  });
 
-    test("manifest-classic.json should exist for classic variant", () => {
-      const manifestPath = path.join(publicDir, "manifest-classic.json");
-      expect(fs.existsSync(manifestPath)).toBe(true);
-    });
+  test("manifest.json should exist", () => {
+    const manifestPath = path.join(publicDir, "manifest.json");
+    expect(fs.existsSync(manifestPath)).toBe(true);
   });
 });

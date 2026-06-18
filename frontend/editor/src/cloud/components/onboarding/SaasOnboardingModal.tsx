@@ -45,7 +45,7 @@ export default function SaasOnboardingModal(props: SaasOnboardingModalProps) {
         <div className={styles.heroIconsContainer}>
           <div className={styles.iconWrapper}>
             <img
-              src={`${BASE_PATH}/modern-logo/logo512.png`}
+              src={`${BASE_PATH}/logo/logo512.png`}
               alt="Stirling icon"
               className={styles.downloadIcon}
             />
@@ -57,7 +57,7 @@ export default function SaasOnboardingModal(props: SaasOnboardingModalProps) {
     if (slideDefinition.hero.type === "logo") {
       return (
         <img
-          src={`${BASE_PATH}/modern-logo/logo512.png`}
+          src={`${BASE_PATH}/logo/logo512.png`}
           alt="Stirling logo"
           className={styles.standaloneIcon}
         />
