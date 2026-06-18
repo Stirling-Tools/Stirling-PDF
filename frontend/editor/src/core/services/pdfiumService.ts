@@ -967,24 +967,22 @@ export async function renderPageToBitmap(
     // Render
     m.FPDF_RenderPageBitmap(bitmapPtr, pagePtr, 0, 0, w, h, 0, 0x01 | 0x10);
 
-    // Read pixel data
+    // Read pixel data, bulk row-copy avoids per-pixel getValue() FFI overhead.
     const bufferPtr = m.FPDFBitmap_GetBuffer(bitmapPtr);
     const stride = m.FPDFBitmap_GetStride(bitmapPtr);
+    const heap = new Uint8Array((m.pdfium.wasmExports as any).memory.buffer);
     const pixelData = new Uint8ClampedArray(w * h * 4);
 
     for (let y = 0; y < h; y++) {
-      for (let x = 0; x < w; x++) {
-        const srcOff = y * stride + x * 4;
-        const dstOff = (y * w + x) * 4;
-        // BGRA → RGBA
-        pixelData[dstOff] =
-          m.pdfium.getValue(bufferPtr + srcOff + 2, "i8") & 0xff;
-        pixelData[dstOff + 1] =
-          m.pdfium.getValue(bufferPtr + srcOff + 1, "i8") & 0xff;
-        pixelData[dstOff + 2] =
-          m.pdfium.getValue(bufferPtr + srcOff, "i8") & 0xff;
-        pixelData[dstOff + 3] =
-          m.pdfium.getValue(bufferPtr + srcOff + 3, "i8") & 0xff;
+      const srcRow = bufferPtr + y * stride;
+      const src = heap.subarray(srcRow, srcRow + w * 4);
+      const dstRow = y * w * 4;
+      for (let x = 0; x < w * 4; x += 4) {
+        // BGRA → RGBA channel swizzle
+        pixelData[dstRow + x] = src[x + 2]; // B→R
+        pixelData[dstRow + x + 1] = src[x + 1]; // G→G
+        pixelData[dstRow + x + 2] = src[x]; // R→B
+        pixelData[dstRow + x + 3] = src[x + 3]; // A→A
       }
     }
 

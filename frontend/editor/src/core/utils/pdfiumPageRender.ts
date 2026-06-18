@@ -11,6 +11,31 @@ import { getPdfiumModule } from "@app/services/pdfiumService";
 /** FPDF_ANNOT (0x01) | FPDF_LCD_TEXT (0x10). */
 const PDFIUM_RENDER_FLAGS = 0x01 | 0x10;
 
+/**
+ * Reusable canvas pool, avoids per-render createElement + GC pressure.
+ * During batch thumbnail generation (e.g. 50 pages) this reduces 50
+ * DOM element allocations to at most POOL_MAX reuses.
+ */
+const canvasPool: HTMLCanvasElement[] = [];
+const POOL_MAX = 4;
+
+function acquireCanvas(w: number, h: number): HTMLCanvasElement {
+  const canvas = canvasPool.pop() ?? document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  return canvas;
+}
+
+function releaseCanvas(canvas: HTMLCanvasElement): void {
+  if (canvasPool.length < POOL_MAX) {
+    // Clear dimensions to release pixel memory while keeping the element
+    canvas.width = 0;
+    canvas.height = 0;
+    canvasPool.push(canvas);
+  }
+  // else: let GC collect it
+}
+
 export interface RenderPdfiumPageOptions {
   /** When true (default), bake the page's own rotation into the bitmap.
    *  When false, render upright so callers can apply CSS rotation. */
@@ -82,15 +107,19 @@ export async function renderPdfiumPageDataUrl(
         pixels.set(heap.subarray(srcRow, srcRow + w * 4), y * w * 4);
       }
 
-      const canvas = document.createElement("canvas");
-      canvas.width = w;
-      canvas.height = h;
+      const canvas = acquireCanvas(w, h);
       const ctx = canvas.getContext("2d");
-      if (!ctx) return null;
+      if (!ctx) {
+        releaseCanvas(canvas);
+        return null;
+      }
       ctx.putImageData(new ImageData(pixels, w, h), 0, 0);
-      return format === "jpeg"
-        ? canvas.toDataURL("image/jpeg", quality ?? 0.8)
-        : canvas.toDataURL();
+      const dataUrl =
+        format === "jpeg"
+          ? canvas.toDataURL("image/jpeg", quality ?? 0.8)
+          : canvas.toDataURL();
+      releaseCanvas(canvas);
+      return dataUrl;
     } finally {
       m.FPDFBitmap_Destroy(bitmapPtr);
     }

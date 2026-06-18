@@ -567,6 +567,7 @@ const PageContent = React.memo(function PageContent({
             height,
             position: "relative",
             overflow: "hidden",
+            contain: "layout style paint",
             userSelect: "none",
             WebkitUserSelect: "none",
             MozUserSelect: "none",
