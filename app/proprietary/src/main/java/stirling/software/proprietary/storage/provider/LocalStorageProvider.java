@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Optional;
 import java.util.UUID;
@@ -24,6 +23,9 @@ public class LocalStorageProvider implements StorageProvider {
 
     @Override
     public StoredObject store(User owner, MultipartFile file) throws IOException {
+        if (owner == null || owner.getId() == null) {
+            throw new IllegalArgumentException("owner.id is required for local storage key");
+        }
         String originalFilename = sanitizeFilename(file.getOriginalFilename());
         String storageKey =
                 owner.getId()
@@ -77,6 +79,7 @@ public class LocalStorageProvider implements StorageProvider {
         if (filename == null || filename.isBlank()) {
             return "file";
         }
-        return Paths.get(filename).getFileName().toString();
+        String stripped = Path.of(filename).getFileName().toString().replaceAll("\\p{Cntrl}", "");
+        return stripped.isBlank() ? "file" : stripped;
     }
 }

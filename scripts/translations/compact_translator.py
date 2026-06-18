@@ -15,14 +15,14 @@ import tomllib  # Python 3.11+ (stdlib)
 class CompactTranslationExtractor:
     def __init__(
         self,
-        locales_dir: str = "frontend/public/locales",
+        locales_dir: str = "frontend/editor/public/locales",
         ignore_file: str = "scripts/ignore_translation.toml",
     ):
         self.locales_dir = Path(locales_dir)
-        self.golden_truth_file = self.locales_dir / "en-GB" / "translation.toml"
+        self.golden_truth_file = self.locales_dir / "en-US" / "translation.toml"
         if not self.golden_truth_file.exists():
             print(
-                f"Error: en-GB translation file not found at {self.golden_truth_file}",
+                f"Error: en-US translation file not found at {self.golden_truth_file}",
                 file=sys.stderr,
             )
             sys.exit(1)
@@ -95,7 +95,7 @@ class CompactTranslationExtractor:
         # Find missing translations
         missing_keys = set(golden_flat.keys()) - set(target_flat.keys()) - ignore_set
 
-        # Find untranslated entries (identical to en-GB or marked [UNTRANSLATED])
+        # Find untranslated entries (identical to en-US or marked [UNTRANSLATED])
         untranslated_keys = set()
         for key in target_flat:
             if key in golden_flat and key not in ignore_set:
@@ -143,7 +143,7 @@ def main():
     parser.add_argument("language", help="Language code (e.g., de-DE, fr-FR)")
     parser.add_argument(
         "--locales-dir",
-        default="frontend/public/locales",
+        default="frontend/editor/public/locales",
         help="Path to locales directory",
     )
     parser.add_argument(

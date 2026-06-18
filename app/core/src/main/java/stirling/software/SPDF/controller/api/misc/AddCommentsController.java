@@ -23,6 +23,7 @@ import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.misc.AddCommentsRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.comments.AnnotationLocation;
 import stirling.software.common.model.api.comments.StickyNoteSpec;
 import stirling.software.common.service.CustomPDFDocumentFactory;
@@ -66,7 +67,10 @@ public class AddCommentsController {
     private final PdfTextLocator pdfTextLocator;
     private final ObjectMapper objectMapper;
 
-    @AutoJobPostMapping(value = "/add-comments", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(
+            value = "/add-comments",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @StandardPdfResponse
     @Operation(
             summary = "Add sticky-note comments to a PDF at specified positions or anchored text",

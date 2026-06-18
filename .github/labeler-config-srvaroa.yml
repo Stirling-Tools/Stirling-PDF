@@ -51,7 +51,7 @@ labels:
 
   - label: 'Translation'
     files:
-      - 'frontend/public/locales/[a-zA-Z]{2}-[a-zA-Z\-]{2,7}/translation.toml'
+      - 'frontend/editor/public/locales/[a-zA-Z]{2}-[a-zA-Z\-]{2,7}/translation.toml'
       - 'scripts/ignore_translation.toml'
       - 'scripts/remove_translation_keys.sh'
       - 'scripts/replace_translation_line.sh'
@@ -69,8 +69,8 @@ labels:
 
   - label: 'Tauri'
     files:
-      - 'frontend/src-tauri/**'
-      - 'frontend/src-tauri/.*'
+      - 'frontend/editor/src-tauri/**'
+      - 'frontend/editor/src-tauri/.*'
 
   - label: 'engine'
     files:

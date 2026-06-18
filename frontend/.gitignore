@@ -11,16 +11,26 @@
 # production
 /build
 /dist
+/dist-portal
+/storybook-static
+
+/editor/build
+/editor/dist
 
 # misc
 .DS_Store
 .env.local
 .env.*.local
+/editor/.env.local
+/editor/.env.*.local
 
 # Root .gitignore ignores all .env* - whitelist our committed ones here
 !.env
 !.env.desktop
 !.env.saas
+!/editor/.env
+!/editor/.env.desktop
+!/editor/.env.saas
 
 npm-debug.log*
 yarn-debug.log*
@@ -30,5 +40,11 @@ playwright-report
 test-results
 
 # auto-generated files
-/src/assets/material-symbols-icons.json
-/src/assets/material-symbols-icons.d.ts
+/editor/src/assets/material-symbols-icons.json
+/editor/src/assets/material-symbols-icons.d.ts
+
+# dev update testing - keys, built bundles, screenshots, and generated config override
+/scripts/dev-update-test/.keys/
+/scripts/dev-update-test/.update-dist/
+/scripts/dev-update-test/screenshots/
+/editor/src-tauri/tauri.conf.dev-update.json

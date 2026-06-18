@@ -3,8 +3,8 @@ A script to update language progress status in README.md based on
 frontend locale TOML file comparisons.
 
 This script compares the default (reference) TOML file,
-`frontend/public/locales/en-GB/translation.toml`, with other translation
-files in `frontend/public/locales/*/translation.toml`.
+`frontend/editor/public/locales/en-US/translation.toml`, with other translation
+files in `frontend/editor/public/locales/*/translation.toml`.
 It determines how many keys are fully translated and automatically updates
 progress badges in the `README.md`.
 
@@ -21,7 +21,7 @@ Usage:
     $ python scripts/counter_translation_v3.py
 
     This will:
-        • Compare all files matching frontend/public/locales/*/translation.toml
+        • Compare all files matching frontend/editor/public/locales/*/translation.toml
         • Update progress badges in README.md
         • Update/format ignore_translation.toml automatically
 
@@ -345,8 +345,8 @@ def main() -> None:
 
     # Project layout assumptions
     cwd = os.getcwd()
-    locales_dir = os.path.join(cwd, "frontend", "public", "locales")
-    reference_file = os.path.join(locales_dir, "en-GB", "translation.toml")
+    locales_dir = os.path.join(cwd, "frontend", "editor", "public", "locales")
+    reference_file = os.path.join(locales_dir, "en-US", "translation.toml")
     scripts_directory = os.path.join(cwd, "scripts")
     translation_state_file = os.path.join(scripts_directory, "ignore_translation.toml")
 

@@ -11,21 +11,32 @@ on:
         required: false
         type: string
         default: "false"
+      depot_cores:
+        description: "Depot runner vCPU count (used in runs-on). Override for benchmarking. Tuned to 4 because bench showed 16 was within noise of 4."
+        required: false
+        type: string
+        default: "4"
 
 permissions:
   contents: read
 
 jobs:
+  pick:
+    uses: ./.github/workflows/_runner-pick.yml
+
   docker-compose-tests:
-    runs-on: ubuntu-latest
+    needs: pick
+    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || format('depot-ubuntu-24.04-{0}', inputs.depot_cores || '4') }}
     permissions:
       actions: write
       contents: read
       checks: write
+    env:
+      DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
         with:
           egress-policy: audit
 
@@ -50,7 +61,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
         with:
-          gradle-version: 9.3.1
+          gradle-version: 9.5.1
           cache-disabled: true
 
       - name: Set up Docker Buildx
@@ -76,6 +87,12 @@ jobs:
         run: |
           pip install --require-hashes --only-binary=:all: -r ./testing/cucumber/requirements.txt
 
+      - name: Extract JaCoCo agent for cucumber coverage
+        # Stages build/jacoco/jacocoagent.jar where the coverage override
+        # file bind-mounts it into the cucumber container. The agent jar
+        # never goes into the published image - this is host-only.
+        run: ./gradlew copyJacocoAgent -PnoSpotless
+
       - name: Run Docker Compose Tests
         run: |
           chmod +x ./testing/test_webpages.sh
@@ -87,6 +104,62 @@ jobs:
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
           MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
           DOCKER_BASE_CHANGED: ${{ inputs.docker-base-changed }}
+          # Tells test.sh to layer testing/compose/docker-compose-coverage.override.yml
+          # over the cucumber compose so the container starts with the
+          # JaCoCo agent attached via JAVA_CUSTOM_OPTS.
+          STIRLING_PDF_TEST_COVERAGE: "1"
+
+      - name: Generate cucumber JaCoCo report
+        # `if: always()` so a behave failure still produces partial
+        # coverage from whatever endpoints did run. The exec file only
+        # exists when the container shut down cleanly - guard so the step
+        # is silent on the (rare) crash path.
+        if: always()
+        id: cucumber-coverage
+        run: |
+          if [ -s testing/cucumber-coverage/cucumber.exec ]; then
+            ./gradlew jacocoReportFromExec \
+              -PexecFile=testing/cucumber-coverage/cucumber.exec \
+              -PreportDir=build/reports/jacoco/cucumber \
+              -PnoSpotless
+            echo "report=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::No cucumber .exec at testing/cucumber-coverage/cucumber.exec (container may have crashed before flushing)"
+            echo "report=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install defusedxml for coverage summary
+        # coverage-summary.py parses JaCoCo XML through defusedxml -
+        # see the script header for context.
+        if: always() && steps.cucumber-coverage.outputs.report == 'true'
+        run: python -m pip install --quiet defusedxml
+
+      - name: Cucumber coverage step summary
+        if: always() && steps.cucumber-coverage.outputs.report == 'true'
+        run: |
+          python scripts/coverage-summary.py \
+            --title "Cucumber (docker) JaCoCo coverage" \
+            --jacoco "cucumber=build/reports/jacoco/cucumber/jacocoTestReport.xml" \
+            --github-step-summary
+
+      - name: Upload cucumber JaCoCo report
+        if: always() && steps.cucumber-coverage.outputs.report == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: jacoco-cucumber-${{ github.run_id }}
+          path: build/reports/jacoco/cucumber/
+          retention-days: 7
+
+      - name: Upload raw cucumber .exec for aggregate merge
+        # Picked up by the coverage-aggregate workflow via the
+        # `jacoco-exec-*` artifact name pattern.
+        if: always() && steps.cucumber-coverage.outputs.report == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: jacoco-exec-cucumber
+          path: testing/cucumber-coverage/cucumber.exec
+          retention-days: 7
+          if-no-files-found: warn
 
       - name: Upload Cucumber Report
         if: always()

@@ -1,0 +1,33 @@
+.sui-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.sui-field__label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-section-label);
+}
+
+.sui-field__required {
+  color: var(--color-red);
+}
+
+.sui-field__control {
+  display: flex;
+  flex-direction: column;
+}
+
+.sui-field__help {
+  font-size: 0.6875rem;
+  color: var(--color-text-4);
+  line-height: 1.45;
+}
+
+.sui-field--error .sui-field__help {
+  color: var(--color-red);
+}

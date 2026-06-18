@@ -3,7 +3,6 @@ package stirling.software.proprietary.storage.config;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Locale;
 import java.util.Optional;
 
@@ -15,8 +14,11 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.cluster.s3.S3Clients;
+import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker;
 import stirling.software.proprietary.storage.provider.DatabaseStorageProvider;
 import stirling.software.proprietary.storage.provider.LocalStorageProvider;
+import stirling.software.proprietary.storage.provider.S3StorageProvider;
 import stirling.software.proprietary.storage.provider.StorageProvider;
 import stirling.software.proprietary.storage.repository.StoredFileBlobRepository;
 
@@ -27,8 +29,9 @@ public class StorageProviderConfig {
 
     private final ApplicationProperties applicationProperties;
     private final StoredFileBlobRepository storedFileBlobRepository;
+    private final LicenseKeyChecker licenseKeyChecker;
 
-    @Bean
+    @Bean(destroyMethod = "close")
     public StorageProvider storageProvider() {
         boolean storageEnabled = applicationProperties.getStorage().isEnabled();
         String providerName =
@@ -37,7 +40,12 @@ public class StorageProviderConfig {
                         .trim()
                         .toLowerCase(Locale.ROOT);
         if ("database".equals(providerName)) {
+            licenseKeyChecker.requireProOrEnterprise("storage.provider=database");
             return new DatabaseStorageProvider(storedFileBlobRepository);
+        }
+        if ("s3".equals(providerName)) {
+            licenseKeyChecker.requireProOrEnterprise("storage.provider=s3");
+            return buildS3Provider(applicationProperties.getStorage().getS3());
         }
         if (!"local".equals(providerName)) {
             throw new IllegalStateException("Storage provider not supported: " + providerName);
@@ -49,8 +57,8 @@ public class StorageProviderConfig {
             }
             basePathValue = InstallationPathConfig.getPath() + "storage";
         }
-        Path basePath = Paths.get(basePathValue).toAbsolutePath().normalize();
-        Path installRoot = Paths.get(InstallationPathConfig.getPath()).toAbsolutePath().normalize();
+        Path basePath = Path.of(basePathValue).toAbsolutePath().normalize();
+        Path installRoot = Path.of(InstallationPathConfig.getPath()).toAbsolutePath().normalize();
         if (!basePath.startsWith(installRoot)) {
             // Warn rather than hard-fail: admins may legitimately point storage at an external
             // volume, but an unexpected path could indicate a misconfiguration or traversal
@@ -70,5 +78,10 @@ public class StorageProviderConfig {
             }
         }
         return new LocalStorageProvider(basePath);
+    }
+
+    private S3StorageProvider buildS3Provider(ApplicationProperties.Storage.S3 cfg) {
+        S3Clients.Bundle bundle = S3Clients.build(cfg, "storage provider");
+        return new S3StorageProvider(bundle.client(), bundle.presigner(), cfg.getBucket());
     }
 }

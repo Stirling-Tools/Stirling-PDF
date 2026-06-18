@@ -22,8 +22,10 @@ import stirling.software.SPDF.model.api.misc.OverlayImageRequest;
 import stirling.software.SPDF.utils.SvgOverlayUtil;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.SvgSanitizer;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
@@ -35,8 +37,12 @@ public class OverlayImageController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
+    private final SvgSanitizer svgSanitizer;
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/add-image")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/add-image",
+            resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @Operation(
             summary = "Overlay image onto a PDF file",
             description =
@@ -57,6 +63,9 @@ public class OverlayImageController {
             byte[] imageBytes = imageFile.getBytes();
 
             boolean isSvg = SvgOverlayUtil.isSvgImage(imageBytes);
+            if (isSvg) {
+                imageBytes = svgSanitizer.sanitize(imageBytes);
+            }
 
             try (PDDocument document = pdfDocumentFactory.load(pdfBytes)) {
                 int pages = document.getNumberOfPages();

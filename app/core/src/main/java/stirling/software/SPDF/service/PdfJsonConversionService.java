@@ -588,7 +588,7 @@ public class PdfJsonConversionService {
                                                             .replaceAll("");
                                             return String.format("%s (%s)", cleanName, subtype);
                                         })
-                                .collect(java.util.stream.Collectors.toList());
+                                .toList();
                 long type3Fonts =
                         responseFonts.stream().filter(f -> "Type3".equals(f.getSubtype())).count();
 
@@ -1554,7 +1554,7 @@ public class PdfJsonConversionService {
                                                                 .glyphName(outline.getGlyphName())
                                                                 .unicode(outline.getUnicode())
                                                                 .build())
-                                        .collect(Collectors.toList());
+                                        .toList();
                     }
                 } catch (Exception ex) {
                     log.debug(
@@ -6490,7 +6490,8 @@ public class PdfJsonConversionService {
         objectMapper.writeValue(out, pageFonts);
     }
 
-    public byte[] exportUpdatedPages(String jobId, PdfJsonDocument updates) throws IOException {
+    public void exportUpdatedPages(String jobId, PdfJsonDocument updates, OutputStream outputStream)
+            throws IOException {
         if (jobId == null || jobId.isBlank()) {
             throw new IllegalArgumentException("jobId is required for incremental export");
         }
@@ -6513,7 +6514,8 @@ public class PdfJsonConversionService {
             log.debug(
                     "Incremental export requested with no page updates; returning cached PDF for jobId {}",
                     jobId);
-            return cached.getPdfBytes();
+            outputStream.write(cached.getPdfBytes());
+            return;
         }
 
         try (PDDocument document = pdfDocumentFactory.load(cached.getPdfBytes(), true)) {
@@ -6580,7 +6582,8 @@ public class PdfJsonConversionService {
                 log.debug(
                         "Incremental export for jobId {} resulted in no page updates; returning cached PDF",
                         jobId);
-                return cached.getPdfBytes();
+                outputStream.write(cached.getPdfBytes());
+                return;
             }
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -6603,7 +6606,7 @@ public class PdfJsonConversionService {
                     "Incremental export complete for jobId {} (pages updated: {})",
                     jobId,
                     updatedPages.stream().map(i -> i + 1).sorted().toList());
-            return updatedBytes;
+            outputStream.write(updatedBytes);
         }
     }
 

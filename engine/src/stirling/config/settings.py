@@ -15,7 +15,7 @@ ENV_FILE = ENGINE_ROOT / ".env"
 ENV_LOCAL_FILE = ENGINE_ROOT / ".env.local"
 
 
-class RagBackend(StrEnum):
+class DocumentsBackend(StrEnum):
     SQLITE = "sqlite"
     PGVECTOR = "pgvector"
 
@@ -27,16 +27,30 @@ class AppSettings(BaseSettings):
     fast_model_name: str = Field(validation_alias="STIRLING_FAST_MODEL")
     smart_model_max_tokens: int = Field(validation_alias="STIRLING_SMART_MODEL_MAX_TOKENS")
     fast_model_max_tokens: int = Field(validation_alias="STIRLING_FAST_MODEL_MAX_TOKENS")
+    # Process-wide ceiling on concurrent model API calls, shared by both model
+    # tiers. Per-request fan-outs (chunked reasoner, contradiction detection)
+    # carry their own per-request caps, but those multiply under concurrent
+    # traffic; this is the global backstop.
+    model_max_concurrency: int = Field(validation_alias="STIRLING_MODEL_MAX_CONCURRENCY")
 
-    # RAG settings — always on; the backend picks between embedded sqlite-vec and external pgvector.
-    rag_backend: RagBackend = Field(validation_alias="STIRLING_RAG_BACKEND")
+    # Document store: the one database holding vector chunks, ordered page
+    # text, and ACL rows - embedded sqlite-vec or external pgvector.
+    documents_backend: DocumentsBackend = Field(validation_alias="STIRLING_DOCUMENTS_BACKEND")
+    documents_sqlite_path: Path = Field(validation_alias="STIRLING_DOCUMENTS_SQLITE_PATH")
+    documents_pgvector_dsn: str = Field(validation_alias="STIRLING_DOCUMENTS_PGVECTOR_DSN")
+    documents_pgvector_pool_min_size: int = Field(validation_alias="STIRLING_DOCUMENTS_PGVECTOR_POOL_MIN_SIZE")
+    documents_pgvector_pool_max_size: int = Field(validation_alias="STIRLING_DOCUMENTS_PGVECTOR_POOL_MAX_SIZE")
+
+    # RAG settings - always on.
     rag_embedding_model: str = Field(validation_alias="STIRLING_RAG_EMBEDDING_MODEL")
-    rag_store_path: Path = Field(validation_alias="STIRLING_RAG_STORE_PATH")
-    rag_pgvector_dsn: str = Field(validation_alias="STIRLING_RAG_PGVECTOR_DSN")
     rag_chunk_size: int = Field(validation_alias="STIRLING_RAG_CHUNK_SIZE")
     rag_chunk_overlap: int = Field(validation_alias="STIRLING_RAG_CHUNK_OVERLAP")
     rag_default_top_k: int = Field(validation_alias="STIRLING_RAG_TOP_K")
     rag_max_searches: int = Field(validation_alias="STIRLING_RAG_MAX_SEARCHES")
+    documents_reaper_interval_seconds: int = Field(
+        default=900,
+        validation_alias="STIRLING_DOCUMENTS_REAPER_INTERVAL_SECONDS",
+    )
 
     # Chunked reasoner settings (whole-document map-reduce).
     chunked_reasoner_chars_per_slice: int = Field(validation_alias="STIRLING_CHUNKED_REASONER_CHARS_PER_SLICE")
@@ -51,8 +65,44 @@ class AppSettings(BaseSettings):
     # response budget.
     chunked_reasoner_notes_char_budget: int = Field(validation_alias="STIRLING_CHUNKED_REASONER_NOTES_CHAR_BUDGET")
 
+    # Contradiction-agent settings.
+    # Concurrency cap for per-bucket pair detection (stage 4). Independent from
+    # the chunked-reasoner pool so claim extraction and pair detection don't
+    # starve each other when both fire in the same request.
+    contradiction_detect_concurrency: int = Field(
+        default=5,
+        validation_alias="STIRLING_CONTRADICTION_DETECT_CONCURRENCY",
+    )
+    # Window size for splitting oversized claim buckets fed to the detector.
+    # Buckets with more than this many claims are sliced into overlapping
+    # windows so no claim is silently dropped from contradiction detection.
+    contradiction_bucket_chunk_size: int = Field(
+        default=12,
+        validation_alias="STIRLING_CONTRADICTION_BUCKET_CHUNK_SIZE",
+    )
+    # Overlap between adjacent bucket-detection windows so claims at the
+    # boundary are still paired with their neighbours.
+    contradiction_bucket_chunk_overlap: int = Field(
+        default=2,
+        validation_alias="STIRLING_CONTRADICTION_BUCKET_CHUNK_OVERLAP",
+    )
+    # Maximum number of unique subjects passed to a single canonicaliser
+    # LLM call. Audits over very long documents can surface thousands of
+    # unique subject phrases; batching keeps the per-call prompt size
+    # below the model's effective context window.
+    contradiction_canonicaliser_batch_size: int = Field(
+        default=500,
+        validation_alias="STIRLING_CONTRADICTION_CANONICALISER_BATCH_SIZE",
+    )
+
     max_pages: int = Field(validation_alias="STIRLING_MAX_PAGES")
     max_characters: int = Field(validation_alias="STIRLING_MAX_CHARACTERS")
+
+    # When true, API routes reject requests that lack an X-User-Id header at
+    # the boundary. Self-hosted deployments with security disabled have no
+    # user identity and leave this off; multi-tenant deployments turn it on so
+    # user-scoped work is never processed without a tenant attached.
+    require_user_id: bool = Field(validation_alias="STIRLING_REQUIRE_USER_ID")
 
     log_level: str = Field(default="INFO", validation_alias="STIRLING_LOG_LEVEL")
     log_file: str = Field(default="", validation_alias="STIRLING_LOG_FILE")
@@ -67,6 +117,11 @@ class AppSettings(BaseSettings):
     posthog_enabled: bool = Field(validation_alias="STIRLING_POSTHOG_ENABLED")
     posthog_api_key: str = Field(validation_alias="STIRLING_POSTHOG_API_KEY")
     posthog_host: str = Field(validation_alias="STIRLING_POSTHOG_HOST")
+
+    # Shared secret enforced by EngineSharedSecretMiddleware. Empty disables enforcement
+    # unless engine_require_auth is set, in which case the engine fails closed (503).
+    engine_shared_secret: str = Field(default="", validation_alias="STIRLING_ENGINE_SHARED_SECRET")
+    engine_require_auth: bool = Field(default=False, validation_alias="STIRLING_ENGINE_REQUIRE_AUTH")
 
 
 def _configure_logging(level_name: str, log_file: str, http_debug: bool) -> None:

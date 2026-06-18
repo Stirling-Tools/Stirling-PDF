@@ -37,7 +37,7 @@ def get_all_languages(locales_dir: Path) -> List[str]:
         return []
 
     for lang_dir in sorted(locales_dir.iterdir()):
-        if lang_dir.is_dir() and lang_dir.name != "en-GB":
+        if lang_dir.is_dir() and lang_dir.name != "en-US":
             toml_file = lang_dir / "translation.toml"
             if toml_file.exists():
                 languages.append(lang_dir.name)
@@ -57,10 +57,10 @@ def get_language_completion(locales_dir: Path, language: str) -> Optional[float]
         with open(toml_file, "rb") as f:
             target_data = tomllib.load(f)
 
-        # Load en-GB reference
-        en_gb_file = locales_dir / "en-GB" / "translation.toml"
-        with open(en_gb_file, "rb") as f:
-            en_gb_data = tomllib.load(f)
+        # Load en-US reference
+        en_us_file = locales_dir / "en-US" / "translation.toml"
+        with open(en_us_file, "rb") as f:
+            en_us_data = tomllib.load(f)
 
         # Flatten and count
         def flatten(d, parent=""):
@@ -73,16 +73,16 @@ def get_language_completion(locales_dir: Path, language: str) -> Optional[float]
                     items[key] = v
             return items
 
-        en_gb_flat = flatten(en_gb_data)
+        en_us_flat = flatten(en_us_data)
         target_flat = flatten(target_data)
 
-        # Count translated (not equal to en-GB)
+        # Count translated (not equal to en-US)
         translated = sum(
             1
-            for k in en_gb_flat
-            if k in target_flat and target_flat[k] != en_gb_flat[k]
+            for k in en_us_flat
+            if k in target_flat and target_flat[k] != en_us_flat[k]
         )
-        total = len(en_gb_flat)
+        total = len(en_us_flat)
 
         return (translated / total * 100) if total > 0 else 0.0
 
@@ -209,7 +209,7 @@ Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
     )
     parser.add_argument(
         "--locales-dir",
-        default="frontend/public/locales",
+        default="frontend/editor/public/locales",
         help="Path to locales directory",
     )
     parser.add_argument(
@@ -246,7 +246,7 @@ Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
         print(f"Translating specified languages: {', '.join(languages)}")
     else:
         languages = get_all_languages(locales_dir)
-        print(f"Found {len(languages)} languages (excluding en-GB)")
+        print(f"Found {len(languages)} languages (excluding en-US)")
 
     if not languages:
         print("No languages to translate!")

@@ -5,13 +5,13 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.CacheControl;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -40,6 +40,8 @@ public class ReactRoutingController {
     private boolean indexHtmlExists = false;
     private boolean useExternalIndexHtml = false;
     private boolean loggedMissingIndex = false;
+    private String cachedSaasLandingHtml;
+    private boolean saasLandingExists = false;
 
     @PostConstruct
     public void init() {
@@ -48,8 +50,22 @@ public class ReactRoutingController {
         // Always initialize callback HTML (used for OAuth desktop flow)
         this.cachedCallbackHtml = buildCallbackHtml();
 
+        // SaaS landing page: only present on the classpath when the :saas module is bundled
+        // (app/saas/src/main/resources/static/saas-landing.html). When present it replaces the
+        // root page so the SaaS API host shows its own landing instead of the OSS API-only page.
+        ClassPathResource saasLanding = new ClassPathResource("static/saas-landing.html");
+        if (saasLanding.exists()) {
+            try (InputStream in = saasLanding.getInputStream()) {
+                this.cachedSaasLandingHtml = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+                this.saasLandingExists = true;
+                log.info("SaaS landing page detected; serving it at '/' and '/index.html'");
+            } catch (Exception ex) {
+                log.warn("Failed to read saas-landing.html; falling back to index.html", ex);
+            }
+        }
+
         // Check for external index.html first (customFiles/static/)
-        Path externalIndexPath = Paths.get(InstallationPathConfig.getStaticPath(), "index.html");
+        Path externalIndexPath = Path.of(InstallationPathConfig.getStaticPath(), "index.html");
         log.debug("Checking for custom index.html at: {}", externalIndexPath);
         if (Files.exists(externalIndexPath) && Files.isReadable(externalIndexPath)) {
             log.info("Using custom index.html from: {}", externalIndexPath);
@@ -119,7 +135,7 @@ public class ReactRoutingController {
 
     private Resource getIndexHtmlResource() {
         // Check external location first
-        Path externalIndexPath = Paths.get(InstallationPathConfig.getStaticPath(), "index.html");
+        Path externalIndexPath = Path.of(InstallationPathConfig.getStaticPath(), "index.html");
         if (Files.exists(externalIndexPath) && Files.isReadable(externalIndexPath)) {
             return new FileSystemResource(externalIndexPath.toFile());
         }
@@ -131,16 +147,37 @@ public class ReactRoutingController {
     @GetMapping(
             value = {"/", "/index.html"},
             produces = MediaType.TEXT_HTML_VALUE)
+    public ResponseEntity<String> serveRootPage(HttpServletRequest request) {
+        // Swap ONLY the root page for SaaS. SPA entry points that delegate to serveIndexHtml
+        // (/auth/callback, /share/{token}, forwarded routes) keep serving the normal shell.
+        if (saasLandingExists && cachedSaasLandingHtml != null) {
+            return ResponseEntity.ok()
+                    .cacheControl(CacheControl.noCache().mustRevalidate())
+                    .contentType(MediaType.TEXT_HTML)
+                    .body(cachedSaasLandingHtml);
+        }
+        return serveIndexHtml(request);
+    }
+
     public ResponseEntity<String> serveIndexHtml(HttpServletRequest request) {
         try {
             if (indexHtmlExists && cachedIndexHtml != null) {
-                return ResponseEntity.ok().contentType(MediaType.TEXT_HTML).body(cachedIndexHtml);
+                return ResponseEntity.ok()
+                        .cacheControl(CacheControl.noCache().mustRevalidate())
+                        .contentType(MediaType.TEXT_HTML)
+                        .body(cachedIndexHtml);
             }
             // Fallback: process on each request (dev mode or cache failed)
-            return ResponseEntity.ok().contentType(MediaType.TEXT_HTML).body(processIndexHtml());
+            return ResponseEntity.ok()
+                    .cacheControl(CacheControl.noCache().mustRevalidate())
+                    .contentType(MediaType.TEXT_HTML)
+                    .body(processIndexHtml());
         } catch (Exception ex) {
             log.error("Failed to serve index.html, returning fallback", ex);
-            return ResponseEntity.ok().contentType(MediaType.TEXT_HTML).body(buildFallbackHtml());
+            return ResponseEntity.ok()
+                    .cacheControl(CacheControl.noCache().mustRevalidate())
+                    .contentType(MediaType.TEXT_HTML)
+                    .body(buildFallbackHtml());
         }
     }
 
@@ -160,14 +197,19 @@ public class ReactRoutingController {
         return ResponseEntity.ok().contentType(MediaType.TEXT_HTML).body(cachedCallbackHtml);
     }
 
+    // `files` was historically a backend static-asset directory and was therefore
+    // in the exclusion list - removing it lets /files and /files/<folder-uuid>
+    // forward to the SPA index.html, which is what FileManagerView expects.
+    // (Real storage endpoints live under /api/v1/storage/files, already
+    // excluded by the leading `api` token in the same regex.)
     @GetMapping(
-            "/{path:^(?!api|static|robots\\.txt|favicon\\.ico|manifest.*\\.json|pipeline|pdfjs|pdfjs-legacy|pdfium|vendor|fonts|images|files|css|js|assets|locales|modern-logo|classic-logo|Login|og_images|samples)[^\\.]*$}")
+            "/{path:^(?!api|static|robots\\.txt|favicon\\.ico|manifest.*\\.json|pipeline|pdfjs|pdfjs-legacy|pdfium|vendor|fonts|images|css|js|assets|locales|modern-logo|classic-logo|Login|og_images|samples)[^\\.]*$}")
     public ResponseEntity<String> forwardRootPaths(HttpServletRequest request) throws IOException {
         return serveIndexHtml(request);
     }
 
     @GetMapping(
-            "/{path:^(?!api|static|pipeline|pdfjs|pdfjs-legacy|pdfium|vendor|fonts|images|files|css|js|assets|locales|modern-logo|classic-logo|Login|og_images|samples)[^\\.]*}/{subpath:^(?!.*\\.).*$}")
+            "/{path:^(?!api|static|pipeline|pdfjs|pdfjs-legacy|pdfium|vendor|fonts|images|css|js|assets|locales|modern-logo|classic-logo|Login|og_images|samples)[^\\.]*}/{subpath:^(?!.*\\.).*$}")
     public ResponseEntity<String> forwardNestedPaths(HttpServletRequest request)
             throws IOException {
         return serveIndexHtml(request);

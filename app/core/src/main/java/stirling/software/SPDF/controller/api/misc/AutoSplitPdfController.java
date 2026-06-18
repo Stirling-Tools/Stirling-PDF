@@ -14,6 +14,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.pdfwriter.compress.CompressParameters;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
@@ -38,6 +39,7 @@ import stirling.software.SPDF.config.swagger.MultiFileResponse;
 import stirling.software.SPDF.model.api.misc.AutoSplitPdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
@@ -267,7 +269,10 @@ public class AutoSplitPdfController {
         return QR_DETECTION_DPI;
     }
 
-    @AutoJobPostMapping(value = "/auto-split-pdf", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(
+            value = "/auto-split-pdf",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @MultiFileResponse
     @Operation(
             summary = "Auto split PDF pages into separate documents",
@@ -353,7 +358,10 @@ public class AutoSplitPdfController {
                 for (int i = 0; i < splitDocuments.size(); i++) {
                     String fileName = filename + "_" + (i + 1) + ".pdf";
                     zipOut.putNextEntry(new ZipEntry(fileName));
-                    splitDocuments.get(i).save(zipOut);
+                    // NO_COMPRESSION: split docs are built by addPage()-ing pages copied from the
+                    // source document. PDFBox 3.0.7's compressed writer (PDFBOX-6203) drops shared
+                    // resources imported across documents, corrupting fonts. Revert once on 3.0.8.
+                    splitDocuments.get(i).save(zipOut, CompressParameters.NO_COMPRESSION);
                     zipOut.closeEntry();
                 }
             }

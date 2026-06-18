@@ -10,6 +10,7 @@ import java.util.Map;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.multipdf.Overlay;
+import org.apache.pdfbox.pdfwriter.compress.CompressParameters;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
@@ -25,6 +26,7 @@ import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.SPDF.model.api.general.OverlayPdfsRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -39,7 +41,10 @@ public class PdfOverlayController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
-    @AutoJobPostMapping(value = "/overlay-pdfs", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AutoJobPostMapping(
+            value = "/overlay-pdfs",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @StandardPdfResponse
     @Operation(
             summary = "Overlay PDF files in various modes",
@@ -153,7 +158,10 @@ public class PdfOverlayController {
                     PDDocument singlePageDocument = new PDDocument()) {
                 singlePageDocument.addPage(overlayPdf.getPage(pageCountInCurrentOverlay));
                 File tempFile = Files.createTempFile("overlay-page-", ".pdf").toFile();
-                singlePageDocument.save(tempFile);
+                // NO_COMPRESSION: this single-page doc holds a page copied from overlayPdf.
+                // PDFBox 3.0.7's compressed writer (PDFBOX-6203) drops shared resources imported
+                // across documents, corrupting overlay fonts. Revert once on 3.0.8.
+                singlePageDocument.save(tempFile, CompressParameters.NO_COMPRESSION);
 
                 overlayGuide.put(basePageIndex, tempFile.getAbsolutePath());
                 tempFiles.add(tempFile); // Keep track of the temporary file for cleanup

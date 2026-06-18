@@ -26,16 +26,17 @@ version_builds/
 node_modules/
 **/node_modules/
 frontend/node_modules/
-frontend/dist/
-frontend/playwright-report/
+frontend/editor/dist/
+frontend/dist-portal/
+frontend/editor/playwright-report/
 .npm/
 .yarn/
 
 # Tauri/desktop builds
 src-tauri/target/
 src-tauri/dist/
-frontend/src-tauri/target/
-frontend/src-tauri/dist/
+frontend/editor/src-tauri/target/
+frontend/editor/src-tauri/dist/
 
 # IDE and editor
 .idea/

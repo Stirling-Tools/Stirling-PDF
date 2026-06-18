@@ -52,7 +52,7 @@ import tools.jackson.databind.ObjectMapper;
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/audit")
-@PreAuthorize("hasRole('ROLE_ADMIN')")
+@PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
 @EnterpriseEndpoint
 @Tag(name = "Audit", description = "Only Enterprise - Audit related operations")
@@ -207,16 +207,14 @@ public class AuditDashboardController {
 
         // Include standard enum types in case they're not in the database yet
         List<String> enumTypes =
-                Arrays.stream(AuditEventType.values())
-                        .map(AuditEventType::name)
-                        .collect(Collectors.toList());
+                Arrays.stream(AuditEventType.values()).map(AuditEventType::name).toList();
 
         // Combine both sources, remove duplicates, and sort
         Set<String> combinedTypes = new HashSet<>();
         combinedTypes.addAll(dbTypes);
         combinedTypes.addAll(enumTypes);
 
-        return combinedTypes.stream().sorted().collect(Collectors.toList());
+        return combinedTypes.stream().sorted().toList();
     }
 
     /** Export audit data as CSV. */

@@ -4,9 +4,9 @@ Validate TOML structure and formatting of translation files.
 
 Checks for:
 - Valid TOML syntax
-- Consistent key structure with en-GB
+- Consistent key structure with en-US
 - Missing keys
-- Extra keys not in en-GB
+- Extra keys not in en-US
 - Malformed entries
 
 Usage:
@@ -43,18 +43,18 @@ def validate_translation_file(file_path: Path) -> tuple[bool, str]:
 
 
 def validate_structure(
-    en_gb_keys: Set[str], lang_keys: Set[str], lang_code: str
+    en_us_keys: Set[str], lang_keys: Set[str], lang_code: str
 ) -> Dict:
-    """Compare structure between en-GB and target language."""
-    missing_keys = en_gb_keys - lang_keys
-    extra_keys = lang_keys - en_gb_keys
+    """Compare structure between en-US and target language."""
+    missing_keys = en_us_keys - lang_keys
+    extra_keys = lang_keys - en_us_keys
 
     return {
         "language": lang_code,
         "missing_keys": sorted(missing_keys),
         "extra_keys": sorted(extra_keys),
         "total_keys": len(lang_keys),
-        "expected_keys": len(en_gb_keys),
+        "expected_keys": len(en_us_keys),
         "missing_count": len(missing_keys),
         "extra_count": len(extra_keys),
     }
@@ -68,12 +68,12 @@ def print_validation_result(result: Dict, verbose: bool = False):
     print(f"Language: {lang}")
     print(f"{'=' * 100}")
     print(f"  Total keys: {result['total_keys']}")
-    print(f"  Expected keys (en-GB): {result['expected_keys']}")
+    print(f"  Expected keys (en-US): {result['expected_keys']}")
     print(f"  Missing keys: {result['missing_count']}")
     print(f"  Extra keys: {result['extra_count']}")
 
     if result["missing_count"] == 0 and result["extra_count"] == 0:
-        print("  ✅ Structure matches en-GB perfectly!")
+        print("  ✅ Structure matches en-US perfectly!")
     else:
         if result["missing_count"] > 0:
             print(f"\n  ⚠️  Missing {result['missing_count']} key(s):")
@@ -86,7 +86,7 @@ def print_validation_result(result: Dict, verbose: bool = False):
                 print("     (use --verbose to see all)")
 
         if result["extra_count"] > 0:
-            print(f"\n  ⚠️  Extra {result['extra_count']} key(s) not in en-GB:")
+            print(f"\n  ⚠️  Extra {result['extra_count']} key(s) not in en-US:")
             if verbose or result["extra_count"] <= 20:
                 for key in result["extra_keys"][:50]:
                     print(f"     - {key}")
@@ -119,32 +119,32 @@ def main():
     args = parser.parse_args()
 
     # Define paths
-    locales_dir = Path("frontend/public/locales")
-    en_gb_path = locales_dir / "en-GB" / "translation.toml"
+    locales_dir = Path("frontend/editor/public/locales")
+    en_us_path = locales_dir / "en-US" / "translation.toml"
 
-    if not en_gb_path.exists():
-        print(f"❌ Error: en-GB translation file not found at {en_gb_path}")
+    if not en_us_path.exists():
+        print(f"❌ Error: en-US translation file not found at {en_us_path}")
         sys.exit(1)
 
-    # Validate en-GB itself
-    is_valid, message = validate_translation_file(en_gb_path)
+    # Validate en-US itself
+    is_valid, message = validate_translation_file(en_us_path)
     if not is_valid:
-        print(f"❌ Error in en-GB file: {message}")
+        print(f"❌ Error in en-US file: {message}")
         sys.exit(1)
 
-    # Load en-GB structure
-    en_gb = load_translation_file(en_gb_path)
+    # Load en-US structure
+    en_us = load_translation_file(en_us_path)
 
-    en_gb_keys = get_all_keys(en_gb)
+    en_us_keys = get_all_keys(en_us)
 
     # Get list of languages to validate
     if args.language:
         languages = [args.language]
     else:
-        # Validate all languages except en-GB
+        # Validate all languages except en-US
         languages = []
         for d in locales_dir.iterdir():
-            if d.is_dir() and d.name != "en-GB":
+            if d.is_dir() and d.name != "en-US":
                 if (d / "translation.toml").exists():
                     languages.append(d.name)
 
@@ -171,7 +171,7 @@ def main():
         lang_data = load_translation_file(lang_path)
 
         lang_keys = get_all_keys(lang_data)
-        result = validate_structure(en_gb_keys, lang_keys, lang_code)
+        result = validate_structure(en_us_keys, lang_keys, lang_code)
         results.append(result)
 
     # Output results

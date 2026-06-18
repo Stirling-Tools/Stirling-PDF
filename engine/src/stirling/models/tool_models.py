@@ -542,6 +542,18 @@ class HtmlToPdfParams(ApiModel):
     zoom: float = Field(1, description="Zoom level for displaying the website. Default is '1'.")
 
 
+class ImageBox(ApiModel):
+    """
+    Rectangular areas to black out, each defined by a page number and bounding box coordinates.
+    """
+
+    page_index: int = Field(..., description="0-indexed page number (first page = 0).")
+    x1: float = Field(..., description="Left x coordinate of the redaction rectangle in PDF user-space points.")
+    x2: float = Field(..., description="Right x coordinate of the redaction rectangle in PDF user-space points.")
+    y1: float = Field(..., description="Top y coordinate of the redaction rectangle in PDF user-space points.")
+    y2: float = Field(..., description="Bottom y coordinate of the redaction rectangle in PDF user-space points.")
+
+
 class ColorType(StrEnum):
     """
     The color type of the output image(s)
@@ -984,6 +996,27 @@ class RearrangePagesParams(ApiModel):
     )
 
 
+class Strategy(StrEnum):
+    """
+    Execution strategy hint for the redaction pipeline
+    """
+
+    auto = "AUTO"
+    overlay_only = "OVERLAY_ONLY"
+    image_finalize = "IMAGE_FINALIZE"
+
+
+class Style(ApiModel):
+    """
+    Redaction style options
+    """
+
+    color: str = Field("#000000", description="Hex redaction box color")
+    convert_to_image: bool = Field(False, description="Rasterize output to prevent text extraction")
+    padding: float = Field(0, description="Extra padding around each box in points")
+    strategy: Strategy = Field(Strategy.auto, description="Execution strategy hint for the redaction pipeline")
+
+
 class RedactionArea(ApiModel):
     """
     A list of areas that should be redacted
@@ -1094,6 +1127,15 @@ class SanitizePdfParams(ApiModel):
     remove_xmp_metadata: bool = Field(False, description="Remove XMP metadata from the PDF")
 
 
+class Orientation1(StrEnum):
+    """
+    Orientation to apply to the target page size. Ignored when pageSize is KEEP.
+    """
+
+    portrait = "PORTRAIT"
+    landscape = "LANDSCAPE"
+
+
 class PageSize(StrEnum):
     """
     The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER, LEGAL, KEEP.
@@ -1112,6 +1154,10 @@ class PageSize(StrEnum):
 
 
 class ScalePagesParams(ApiModel):
+    orientation: Orientation1 = Field(
+        Orientation1.portrait,
+        description="Orientation to apply to the target page size. Ignored when pageSize is KEEP.",
+    )
     page_size: PageSize = Field(
         ..., description="The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER, LEGAL, KEEP."
     )
@@ -1266,6 +1312,23 @@ class SvgToPdfParams(ApiModel):
     )
 
 
+class TextRange(ApiModel):
+    """
+    Text ranges to redact by specifying a start and end anchor phrase. All content between the two phrases (inclusive) is redacted. Anchors work best when short and unique. They must appear verbatim in the document.
+    """
+
+    end_string: str = Field(
+        ...,
+        description="A short, distinctive phrase (5–15 words) that marks where redaction ends (inclusive). Must appear verbatim in the document. Shorter phrases match more reliably.",
+        min_length=1,
+    )
+    start_string: str = Field(
+        ...,
+        description="A short, distinctive phrase (5–15 words) that marks where redaction begins (inclusive). Must appear verbatim in the document — e.g. a section heading or a unique sentence fragment.",
+        min_length=1,
+    )
+
+
 class TimestampPdfParams(ApiModel):
     tsa_url: str = Field(
         "http://timestamp.digicert.com",
@@ -1331,6 +1394,32 @@ class OutputFormat6(StrEnum):
 class VectorToPdfParams(ApiModel):
     output_format: OutputFormat6 = Field(OutputFormat6.eps, description="Target vector format extension")
     prepress: Prepress = Field(Prepress.boolean_false, description="Apply Ghostscript prepress settings")
+
+
+class RedactExecuteParams(ApiModel):
+    image_boxes: list[ImageBox] | None = Field(
+        None, description="Rectangular areas to black out, each defined by a page number and bounding box coordinates."
+    )
+    ranges: list[TextRange] | None = Field(
+        None,
+        description="Text ranges to redact by specifying a start and end anchor phrase. All content between the two phrases (inclusive) is redacted. Anchors work best when short and unique. They must appear verbatim in the document.",
+    )
+    redact_image_pages: list[int] | None = Field(
+        None,
+        description="1-indexed page numbers to redact all detected images from. Pass an empty list to redact images from every page. Omit or pass null to skip image redaction entirely.",
+    )
+    regex_patterns: list[str] | None = Field(
+        None,
+        description="Regex patterns to match and redact. Each match anywhere in the document is blacked out. Uses Java/PCRE regex syntax. Well-suited for strings that follow known patterns, like phone numbers, email addresses, national ID numbers, or dates (which can appear with different separators, optional country codes, etc.). For fixed known strings such as names, use textValues instead.",
+    )
+    style: Style | None = Field(None, description="Redaction style options")
+    text_values: list[str] | None = Field(
+        None,
+        description="Exact strings to find and black out. One entry per phrase to redact. Best for known names, identifiers, and specific text found in the document.",
+    )
+    wipe_pages: list[int] | None = Field(
+        None, description="1-indexed page numbers to wipe entirely (all content removed from those pages)."
+    )
 
 
 class RedactParams(ApiModel):
@@ -1407,6 +1496,7 @@ class Model(
         | SessionsParams
         | ValidateCertificateParams
         | RedactParams
+        | RedactExecuteParams
         | RemovePasswordParams
         | SanitizePdfParams
         | TimestampPdfParams
@@ -1475,6 +1565,7 @@ class Model(
         | SessionsParams
         | ValidateCertificateParams
         | RedactParams
+        | RedactExecuteParams
         | RemovePasswordParams
         | SanitizePdfParams
         | TimestampPdfParams
@@ -1544,6 +1635,7 @@ type ParamToolModel = (
     | SessionsParams
     | ValidateCertificateParams
     | RedactParams
+    | RedactExecuteParams
     | RemovePasswordParams
     | SanitizePdfParams
     | TimestampPdfParams
@@ -1614,6 +1706,7 @@ class ToolEndpoint(StrEnum):
     SESSIONS = "/api/v1/security/cert-sign/sessions"
     VALIDATE_CERTIFICATE = "/api/v1/security/cert-sign/validate-certificate"
     REDACT = "/api/v1/security/redact"
+    REDACT_EXECUTE = "/api/v1/security/redact-execute"
     REMOVE_PASSWORD = "/api/v1/security/remove-password"
     SANITIZE_PDF = "/api/v1/security/sanitize-pdf"
     TIMESTAMP_PDF = "/api/v1/security/timestamp-pdf"
@@ -1682,6 +1775,7 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.SESSIONS: SessionsParams,
     ToolEndpoint.VALIDATE_CERTIFICATE: ValidateCertificateParams,
     ToolEndpoint.REDACT: RedactParams,
+    ToolEndpoint.REDACT_EXECUTE: RedactExecuteParams,
     ToolEndpoint.REMOVE_PASSWORD: RemovePasswordParams,
     ToolEndpoint.SANITIZE_PDF: SanitizePdfParams,
     ToolEndpoint.TIMESTAMP_PDF: TimestampPdfParams,

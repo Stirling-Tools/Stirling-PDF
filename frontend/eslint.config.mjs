@@ -5,21 +5,50 @@ import globals from "globals";
 import { defineConfig } from "eslint/config";
 import tseslint from "typescript-eslint";
 
-const srcGlobs = ["src/**/*.{js,mjs,jsx,ts,tsx}"];
-const nodeGlobs = ["scripts/**/*.{js,ts,mjs}", "*.config.{js,ts,mjs}"];
+const srcGlobs = [
+  "editor/src/**/*.{js,mjs,jsx,ts,tsx}",
+  "portal/src/**/*.{js,mjs,jsx,ts,tsx}",
+  "portal/main.tsx",
+  "shared/**/*.{js,mjs,jsx,ts,tsx}",
+];
+const nodeGlobs = [
+  "scripts/**/*.{js,ts,mjs,mts}",
+  "editor/scripts/**/*.{js,ts,mjs,mts}",
+  "editor/*.config.{js,ts,mjs}",
+  "portal/*.config.{js,ts,mjs}",
+  "*.config.{js,ts,mjs}",
+  ".storybook/*.{js,ts,mjs,mts,tsx}",
+];
 
 const baseRestrictedImportPatterns = [
-  { regex: "^\\.", message: "Use @app/* imports instead of relative imports." },
+  {
+    regex: "^\\.",
+    message:
+      "Use a workspace alias (@app/* for editor, @portal/* for portal, @shared/*) instead of relative imports.",
+  },
   {
     regex: "^src/",
-    message: "Use @app/* imports instead of absolute src/ imports.",
+    message: "Use a workspace alias instead of absolute src/ imports.",
   },
 ];
 
 export default defineConfig(
   {
     // Everything that contains 3rd party code that we don't want to lint
-    ignores: ["dist", "node_modules", "public", "src-tauri"],
+    ignores: [
+      "dist",
+      "dist-portal",
+      "node_modules",
+      "playwright-report",
+      "storybook-static",
+      "test-results",
+      "editor/dist",
+      "editor/public",
+      "editor/src-tauri",
+      "editor/playwright-report",
+      "editor/test-results",
+      "portal/public",
+    ],
   },
   eslint.configs.recommended,
   tseslint.configs.recommended,
@@ -55,10 +84,10 @@ export default defineConfig(
     },
   },
   // Desktop-only packages must not be imported from core or proprietary code.
-  // Use the stub/shadow pattern instead: define a stub in src/core/ and override in src/desktop/.
+  // Use the stub/shadow pattern instead: define a stub in editor/src/core/ and override in editor/src/desktop/.
   {
     files: srcGlobs,
-    ignores: ["src/desktop/**"],
+    ignores: ["editor/src/desktop/**"],
     rules: {
       "no-restricted-imports": [
         "error",
@@ -68,30 +97,133 @@ export default defineConfig(
             {
               regex: "^@tauri-apps/",
               message:
-                "Tauri APIs are desktop-only. Review frontend/DeveloperGuide.md for structure advice.",
+                "Tauri APIs are desktop-only. Review frontend/editor/DeveloperGuide.md for structure advice.",
             },
           ],
         },
       ],
     },
   },
-  // Folders that have been cleaned up and are now conformant - stricter rules enforced here
+  // The cloud/ layer is the SHARED hosted/SaaS experience consumed by BOTH the
+  // saas and desktop leaves, so it must stay platform-portable. It must not
+  // reach platform-specific things directly (Supabase, Tauri, raw fetch,
+  // window.location, web storage, or import.meta.env.VITE_*) — those arrive via
+  // @app/* seams (services/apiClient, auth/session, platform/openExternal, ...)
+  // that each leaf provides for its own platform.
   {
-    files: [
-      "src/desktop/**/*.{js,mjs,jsx,ts,tsx}",
-      "src/proprietary/**/*.{js,mjs,jsx,ts,tsx}",
-      "src/saas/**/*.{js,mjs,jsx,ts,tsx}",
-      "src/prototypes/**/*.{js,mjs,jsx,ts,tsx}",
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: true,
-        tsconfigRootDir: import.meta.dirname,
-      },
+    files: ["editor/src/cloud/**/*.{js,mjs,jsx,ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            ...baseRestrictedImportPatterns,
+            {
+              regex: "^@supabase/",
+              message:
+                "cloud/ must stay platform-portable. Reach Supabase via an @app/* seam (e.g. @app/auth/supabase, @app/auth/session) provided per-platform in saas/ and desktop/.",
+            },
+            {
+              regex: "^@tauri-apps/",
+              message:
+                "cloud/ must stay platform-portable. Tauri APIs are desktop-only — reach native features via an @app/* seam (e.g. @app/platform/openExternal).",
+            },
+          ],
+        },
+      ],
+      "no-restricted-globals": [
+        "error",
+        {
+          name: "fetch",
+          message:
+            "cloud/ must not call raw fetch — use @app/services/apiClient so each platform supplies its own transport.",
+        },
+        {
+          name: "localStorage",
+          message:
+            "cloud/ must not touch localStorage — use an @app/* storage seam so desktop/web can differ.",
+        },
+        {
+          name: "sessionStorage",
+          message:
+            "cloud/ must not touch sessionStorage — use an @app/* storage seam so desktop/web can differ.",
+        },
+      ],
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "MemberExpression[object.name='window'][property.name='location']",
+          message:
+            "cloud/ must not touch window.location — use an @app/* seam (e.g. @app/platform/openExternal) so desktop/web can differ.",
+        },
+        {
+          selector:
+            "MemberExpression[property.name='env'][object.type='MetaProperty'][object.meta.name='import'][object.property.name='meta']",
+          message:
+            "cloud/ must not read import.meta.env — use @app/constants/app / @app/platform seams so config is supplied per-platform.",
+        },
+      ],
     },
+  },
+  // The shared/ layer is the seed of a future packages/shared-ui — it must
+  // only depend on third-party packages and on itself. If it ever imports
+  // from editor or portal layers, extraction to a standalone package later
+  // becomes a rewrite instead of a `git mv`.
+  {
+    files: ["shared/**/*.{js,mjs,jsx,ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            ...baseRestrictedImportPatterns,
+            {
+              regex: "^@app/",
+              message:
+                "shared/ must not depend on the editor layer (@app/* resolves into editor/src/).",
+            },
+            {
+              regex: "^@portal/",
+              message:
+                "shared/ must not depend on the portal layer. Use @shared/* or third-party imports only.",
+            },
+            {
+              regex: "^@core/",
+              message: "shared/ must not depend on editor/src/core/.",
+            },
+            {
+              regex: "^@proprietary/",
+              message: "shared/ must not depend on editor/src/proprietary/.",
+            },
+            {
+              regex: "^@tauri-apps/",
+              message: "shared/ must remain web-compatible (no Tauri APIs).",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // Stricter rules that not all sub-folders are conformant to yet.
+  // Keep this non-type-aware: `parserOptions.project`/`projectService` here OOMs
+  // the lint step (builds the whole TS program); tsc covers type correctness.
+  {
+    files: srcGlobs,
+    ignores: [
+      "editor/src/core/components/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/contexts/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/data/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/hooks/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/pages/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/services/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/tests/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/tools/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/types/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/utils/**/*.{js,mjs,jsx,ts,tsx}",
+    ],
     rules: {
       "@typescript-eslint/no-explicit-any": "error",
-      "@typescript-eslint/no-unnecessary-type-assertion": "error",
     },
   },
   // Config for browser scripts
