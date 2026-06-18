@@ -4,6 +4,7 @@ import type {
   ApiKey,
   AuditLogResponse,
   DeploymentRegion,
+  ModelsResponse,
   RecentDeployment,
   SecurityConfig,
   StorageConfig,
@@ -14,20 +15,32 @@ export type {
   ApiKey,
   ApiKeyPermission,
   ApiKeyStatus,
+  AttestationStatus,
   AuditCategory,
   AuditEvent,
   AuditLogResponse,
   AuditStatus,
   AuditSummary,
   CertStatus,
+  ComplianceAttestation,
   ComplianceCert,
   DataResidency,
   DeploymentRegion,
   DeploymentStatus,
   IpAllowEntry,
+  KeyManagement,
+  KeyMode,
+  ModelCostUnit,
+  ModelEntry,
+  ModelProvider,
+  ModelsResponse,
+  ModelsSummary,
+  ModelStatus,
+  ModelType,
   RecentDeployment,
   RegionStatus,
   RetentionWindow,
+  RoutingRule,
   SecurityConfig,
   StorageConfig,
   StorageProvider,
@@ -57,6 +70,11 @@ export async function fetchApiKeys(tier: Tier): Promise<ApiKey[]> {
 /** GET /v1/infrastructure/security?tier=… */
 export async function fetchSecurity(tier: Tier): Promise<SecurityConfig> {
   return httpJson<SecurityConfig>(`/v1/infrastructure/security${q(tier)}`);
+}
+
+/** GET /v1/infrastructure/models?tier=… */
+export async function fetchModels(tier: Tier): Promise<ModelsResponse> {
+  return httpJson<ModelsResponse>(`/v1/infrastructure/models${q(tier)}`);
 }
 
 /** GET /v1/infrastructure/storage?tier=… */
