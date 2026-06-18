@@ -2709,7 +2709,6 @@ splitOne = "Split this document"
 [chat.responses]
 cannot_continue = "Something went wrong and I can't continue."
 cannot_do = "I'm unable to do that."
-create_verify = "AI-generated documents can include mistakes, so double-check the details before sharing."
 done = "Done."
 need_clarification = "Could you clarify your request?"
 not_found = "I couldn't find the requested information."
