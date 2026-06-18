@@ -1,8 +1,7 @@
 name: Pre-commit
 
-# Runs `pre-commit run` for ruff / codespell / gitleaks / EOF / trailing-ws.
-# Called from build.yml on PRs and merge_group; also runnable on demand via
-# workflow_dispatch for manual local-equivalent linting.
+# Runs the repo-wide lint/format/secret checks via `task pre-commit`.
+# Called from build.yml on PRs and merge_group; also runnable on demand via workflow_dispatch.
 on:
   workflow_call:
   workflow_dispatch:
@@ -13,10 +12,6 @@ permissions:
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
-    env:
-      # Prevents sdist builds → no tar extraction
-      PIP_ONLY_BINARY: ":all:"
-      PIP_DISABLE_PIP_VERSION_CHECK: "1"
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
@@ -29,23 +24,13 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Set up Python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+      - name: Install uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
-          python-version: 3.12
-          cache: "pip" # caching pip dependencies
-          cache-dependency-path: ./.github/scripts/requirements_pre_commit.txt
+          enable-cache: true
 
-      - name: Run Pre-Commit Hooks
-        run: |
-          pip install --require-hashes --only-binary=:all: -r ./.github/scripts/requirements_pre_commit.txt
+      - name: Install Task
+        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
 
-      - name: Run Pre-Commit
-        run: |
-          pre-commit run ruff --all-files -c .pre-commit-config.yaml
-          pre-commit run ruff-format --all-files -c .pre-commit-config.yaml
-          pre-commit run codespell --all-files -c .pre-commit-config.yaml
-          pre-commit run gitleaks --all-files -c .pre-commit-config.yaml
-          pre-commit run end-of-file-fixer --all-files -c .pre-commit-config.yaml
-          pre-commit run trailing-whitespace --all-files -c .pre-commit-config.yaml
-          git diff --exit-code
+      - name: Run pre-commit checks
+        run: task pre-commit

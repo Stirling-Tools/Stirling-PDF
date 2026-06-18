@@ -490,10 +490,11 @@ export default function Login() {
             border: "1px solid rgba(37, 99, 235, 0.2)",
           }}
         >
-          <p
-            style={{ margin: "0 0 0.75rem 0", color: "rgba(15, 23, 42, 0.8)" }}
-          >
-            {t("backendStartup.unreachable")}
+          <p style={{ margin: "0 0 0.75rem 0", color: "var(--text-primary)" }}>
+            {t(
+              "backendStartup.unreachable",
+              "The application cannot currently connect to the backend. Verify the backend status and network connectivity, then try again.",
+            )}
           </p>
           <button
             type="button"
