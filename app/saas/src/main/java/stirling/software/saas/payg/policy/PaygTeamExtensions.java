@@ -71,6 +71,16 @@ public class PaygTeamExtensions implements Serializable {
     @Column(name = "payg_subscription_id", unique = true, length = 128)
     private String paygSubscriptionId;
 
+    /**
+     * Remaining one-time free documents for this team (the lifetime grant). Seeded from the
+     * effective pricing policy's {@code free_tier_units} when this row is created (V14 trigger,
+     * updated in V19); decremented by the charge pipeline when a billable charge is written and
+     * restored on a first-step refund. Never replenishes; survives subscribing. This counter — not
+     * the wallet ledger — is the source of truth for the grant, so old ledger rows can be pruned.
+     */
+    @Column(name = "free_units_remaining", nullable = false)
+    private Long freeUnitsRemaining = 0L;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

@@ -978,23 +978,35 @@ public class UserController {
         }
     }
 
-    /**
-     * List all enabled users for selection in signing workflows.
-     *
-     * @param principal The authenticated user
-     * @return List of user summaries
-     */
+    // Lists enabled users for the signing user picker, scoped by storage.signing.userListScope:
+    // 'org' (default) = whole instance, anything else = caller's team only (fail-closed).
     @GetMapping("/users")
     public ResponseEntity<List<UserSummaryDTO>> listUsers(Principal principal) {
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
+        // Fail-closed: only literal "org" opens the whole instance; anything else scopes to team.
+        String scope = applicationProperties.getStorage().getSigning().getUserListScope();
+        boolean teamScoped = !"org".equalsIgnoreCase(scope == null ? "" : scope.trim());
+
+        List<User> source;
+        if (teamScoped) {
+            Optional<User> callerOpt = userService.findByUsernameIgnoreCase(principal.getName());
+            if (callerOpt.isEmpty() || callerOpt.get().getTeam() == null) {
+                // No team: return only the caller rather than leak the org.
+                source = callerOpt.map(List::of).orElse(List.of());
+            } else {
+                // KNOWN LIMITATION: scopes the team via the single User.team FK - correct while
+                // acceptInvitation() collapses users to one team; revisit if multi-team enabled.
+                source = userRepository.findAllByTeamId(callerOpt.get().getTeam().getId());
+            }
+        } else {
+            source = userRepository.findAll();
+        }
+
         List<UserSummaryDTO> users =
-                userRepository.findAll().stream()
-                        .filter(User::isEnabled)
-                        .map(this::toUserSummaryDTO)
-                        .collect(java.util.stream.Collectors.toList());
+                source.stream().filter(User::isEnabled).map(this::toUserSummaryDTO).toList();
 
         return ResponseEntity.ok(users);
     }

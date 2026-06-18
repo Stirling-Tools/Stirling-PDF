@@ -7,14 +7,9 @@ import java.util.List;
 import stirling.software.proprietary.policy.model.InputSpec;
 
 /**
- * Resolves one of a policy's {@link InputSpec sources} into the files to run on - answering
- * <em>where</em> a run's files come from, independent of <em>when</em> it runs. The counterpart of
- * {@code PolicyOutputSink}: implementations are beans selected by {@link #supports(InputSpec)}, so
- * a new source kind (folder, S3) is just a new bean.
- *
- * <p>Driven by the {@code PolicyRunner}, which a trigger calls when a policy is due; a source is
- * passive and knows nothing about what triggered the run. A manual run may instead supply files
- * directly and bypass sources entirely.
+ * Resolves a policy {@link InputSpec} into the files to run on. Implementations are beans selected
+ * by {@link #supports(InputSpec)}, so a new source kind (folder, S3) is just a new bean. A manual
+ * run may supply files directly and bypass sources entirely.
  */
 public interface InputSource {
 
@@ -24,24 +19,18 @@ public interface InputSource {
     /** Whether this source can handle the given spec. */
     boolean supports(InputSpec spec);
 
-    /**
-     * Check that an input spec is usable, throwing {@link IllegalArgumentException} if not. Called
-     * when a policy is saved so misconfiguration fails fast rather than at run time.
-     */
+    /** Throws {@link IllegalArgumentException} on bad config. Called on save to fail fast. */
     default void validate(InputSpec spec) {}
 
     /**
-     * Resolve the spec into zero or more units of work, each carrying the files for one run and a
-     * completion hook. Returning an empty list means there is nothing to run right now.
+     * Resolve the spec into zero or more units of work, each carrying one run's files and a
+     * completion hook. Empty list means nothing to run right now.
      */
     List<ResolvedInput> resolve(InputSpec spec) throws IOException;
 
     /**
-     * The local filesystem directories this source draws from, if any, for triggers that want to
-     * react to changes there (the folder-watch trigger) rather than poll. Advisory only: it merely
-     * tells a trigger <em>where</em> to watch; resolving the spec into files is still this source's
-     * job via {@link #resolve}. Non-filesystem sources (S3, ...) return an empty list and so are
-     * simply not watchable. Default: nothing to watch.
+     * Filesystem dirs this source draws from, for the folder-watch trigger. Advisory: resolving is
+     * still done by {@link #resolve}. Non-filesystem sources return empty and are not watchable.
      */
     default List<Path> watchTargets(InputSpec spec) {
         return List.of();

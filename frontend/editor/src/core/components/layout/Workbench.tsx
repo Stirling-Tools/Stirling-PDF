@@ -11,11 +11,11 @@ import {
 import { isBaseWorkbench } from "@app/types/workbench";
 import { VIEWER_SUPPORTED_EXTENSIONS } from "@app/utils/fileUtils";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useCookieConsent } from "@app/hooks/useCookieConsent";
 import styles from "@app/components/layout/Workbench.module.css";
 
 import WorkbenchBar from "@app/components/shared/WorkbenchBar";
 import LandingPage from "@app/components/shared/LandingPage";
-import Footer from "@app/components/shared/Footer";
 import DismissAllErrorsButton from "@app/components/shared/DismissAllErrorsButton";
 import { ChatFAB } from "@app/components/chat/ChatFAB";
 
@@ -36,6 +36,10 @@ const FileManagerView = lazy(
 export default function Workbench() {
   const { isRainbowMode } = useRainbowThemeContext();
   const { config } = useAppConfig();
+
+  // The consent banner used to be initialised by the footer; the legal links
+  // now live in Settings → Legal, so the workbench owns the banner lifecycle.
+  useCookieConsent({ analyticsEnabled: config?.enableAnalytics === true });
 
   // Use context-based hooks to eliminate all prop drilling
   const { selectors } = useFileState();
@@ -252,15 +256,6 @@ export default function Workbench() {
           {renderMainContent()}
         </Suspense>
       </Box>
-
-      <Footer
-        analyticsEnabled={config?.enableAnalytics === true}
-        termsAndConditions={config?.termsAndConditions}
-        privacyPolicy={config?.privacyPolicy}
-        cookiePolicy={config?.cookiePolicy}
-        impressum={config?.impressum}
-        accessibilityStatement={config?.accessibilityStatement}
-      />
     </Box>
   );
 }
