@@ -8,5 +8,5 @@ import { getApiBaseUrl } from "@app/services/apiClientConfig";
  * the SaaS backend, since the AI engine only runs in the cloud.
  */
 export function getAiBaseUrl(): string {
-  return getApiBaseUrl();
+  return getApiBaseUrl().replace(/\/$/, ""); // Remove trailing slash
 }

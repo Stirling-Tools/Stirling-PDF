@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Button, EmptyState, Skeleton } from "@shared/components";
 import { useTier } from "@portal/contexts/TierContext";
+import { useView } from "@portal/contexts/ViewContext";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import { fetchSources, type SourcesResponse } from "@portal/api/sources";
+import { AgentBuilderIcon } from "@portal/components/icons";
 import { KpiStrip } from "@portal/components/sources/KpiStrip";
 import { SourcesTable } from "@portal/components/sources/SourcesTable";
 import { SourceDetailCard } from "@portal/components/sources/SourceDetailCard";
@@ -11,6 +13,7 @@ import "@portal/views/Sources.css";
 
 export function Sources() {
   const { tier } = useTier();
+  const { setActiveView } = useView();
   const state = useAsync<SourcesResponse>(() => fetchSources(tier), [tier]);
   const { data, loading } = state;
   const { isLoading, isEmpty } = useSectionFlags(state);
@@ -31,12 +34,21 @@ export function Sources() {
             webhooks, connectors and more. Click a row for type-specific detail.
           </p>
         </div>
-        <Button
-          onClick={() => setWizardOpen(true)}
-          leadingIcon={<span aria-hidden>+</span>}
-        >
-          Connect source
-        </Button>
+        <div className="portal-sources__actions">
+          <Button
+            variant="outline"
+            onClick={() => setActiveView("agent-builder")}
+            leadingIcon={<AgentBuilderIcon size={16} />}
+          >
+            Agent Builder
+          </Button>
+          <Button
+            onClick={() => setWizardOpen(true)}
+            leadingIcon={<span aria-hidden>+</span>}
+          >
+            Connect source
+          </Button>
+        </div>
       </header>
 
       <KpiStrip data={data} loading={loading} />
