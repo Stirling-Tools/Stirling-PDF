@@ -2,7 +2,7 @@ import {
   type ToolPanelMode,
   DEFAULT_TOOL_PANEL_MODE,
 } from "@app/constants/toolPanel";
-import { type ThemeMode, getSystemTheme } from "@app/constants/theme";
+import { type ThemeMode } from "@app/constants/theme";
 
 export type LogoVariant = "modern" | "classic";
 
@@ -46,7 +46,7 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   defaultToolPanelMode: DEFAULT_TOOL_PANEL_MODE,
   defaultStartupView: "tools",
   defaultViewerZoom: "auto",
-  theme: getSystemTheme(),
+  theme: "system",
   toolPanelModePromptSeen: false,
   hasSelectedToolPanelMode: false,
   showLegacyToolDescriptions: false,
