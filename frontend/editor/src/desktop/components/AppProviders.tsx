@@ -4,6 +4,8 @@ import { DesktopConfigSync } from "@app/components/DesktopConfigSync";
 import { DesktopBannerInitializer } from "@app/components/DesktopBannerInitializer";
 import { SaveShortcutListener } from "@app/components/SaveShortcutListener";
 import { DesktopOnboardingModal } from "@app/components/DesktopOnboardingModal";
+import { DesktopSaasOnboardingBootstrap } from "@app/components/DesktopSaasOnboardingBootstrap";
+import UsageLimitModalHost from "@app/components/UsageLimitModalHost";
 import { SignInModal } from "@app/components/SignInModal";
 import { OPEN_SIGN_IN_EVENT } from "@app/constants/signInEvents";
 import { ToolActionsContext } from "@app/contexts/ToolActionsContext";
@@ -22,9 +24,6 @@ import { endpointAvailabilityService } from "@app/services/endpointAvailabilityS
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { isTauri } from "@tauri-apps/api/core";
 import { SaaSTeamProvider } from "@app/contexts/SaaSTeamContext";
-import { SaasBillingProvider } from "@app/contexts/SaasBillingContext";
-import { SaaSCheckoutProvider } from "@app/contexts/SaaSCheckoutContext";
-import { CreditModalBootstrap } from "@app/components/shared/modals/CreditModalBootstrap";
 import UpdateModal from "@core/components/shared/UpdateModal";
 import { useDesktopUpdatePopup } from "@app/hooks/useDesktopUpdatePopup";
 
@@ -338,21 +337,24 @@ export function AppProviders({ children }: { children: ReactNode }) {
         }}
       >
         <SaaSTeamProvider key={appKey}>
-          <SaasBillingProvider>
-            <SaaSCheckoutProvider>
-              <DesktopConfigSync />
-              <DesktopBannerInitializer />
-              <SaveShortcutListener />
-              <CreditModalBootstrap />
-              {children}
-              {/* Desktop onboarding modal: welcome slide → sign-in slide, shown once on first launch */}
-              <DesktopOnboardingModal />
-              {/* Global sign-in modal, opened via stirling:open-sign-in event */}
-              <SignInModal />
-              {/* Desktop auto-update popup */}
-              {updatePopupModal}
-            </SaaSCheckoutProvider>
-          </SaasBillingProvider>
+          <DesktopConfigSync />
+          <DesktopBannerInitializer />
+          <SaveShortcutListener />
+          {children}
+          {/* Desktop onboarding modal: welcome slide → sign-in slide, shown once on first launch */}
+          <DesktopOnboardingModal />
+          {/* SaaS product onboarding (cloud flow, minus the desktop-download slide),
+              shown once after a SaaS sign-in. Mirrors saas's OnboardingBootstrap. */}
+          <DesktopSaasOnboardingBootstrap connectionMode={connectionMode} />
+          {/* Always-mounted host for the PAYG usage-limit modals (free-limit /
+              spend-cap). Resolves to the cloud implementation via @app; listens
+              for both the imperative open events (direct-call 402s) and the
+              usageLimitBridge event (server-side policy/AI run 402s). */}
+          <UsageLimitModalHost />
+          {/* Global sign-in modal, opened via stirling:open-sign-in event */}
+          <SignInModal />
+          {/* Desktop auto-update popup */}
+          {updatePopupModal}
         </SaaSTeamProvider>
       </ToolActionsContext.Provider>
     </ProprietaryAppProviders>

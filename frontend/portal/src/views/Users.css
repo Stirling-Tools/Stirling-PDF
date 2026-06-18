@@ -1,0 +1,255 @@
+.portal-users {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  padding: 1.5rem;
+  max-width: 84rem;
+  margin: 0 auto;
+}
+
+/* Header */
+.portal-users__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.portal-users__title {
+  margin: 0;
+  font-size: 1.375rem;
+  font-weight: 650;
+  color: var(--color-text-1);
+}
+
+.portal-users__sub {
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-text-3);
+  max-width: 46rem;
+}
+
+/* Shared section heads (roles, access) */
+.portal-users__section-head {
+  margin-bottom: 0.875rem;
+}
+
+.portal-users__section-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+
+.portal-users__section-sub {
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--color-text-3);
+}
+
+.portal-users__muted {
+  font-size: 0.8125rem;
+  color: var(--color-text-4);
+}
+
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Members table                                                            */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+.portal-users__member-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+}
+
+.portal-users__member-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.portal-users__member-text strong {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+
+.portal-users__row-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-text-4);
+  font-size: 1.125rem;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background var(--motion-fast),
+    color var(--motion-fast),
+    border-color var(--motion-fast);
+}
+
+.portal-users__row-action:hover {
+  background: var(--color-bg-hover);
+  border-color: var(--color-border);
+  color: var(--color-text-1);
+}
+
+.portal-users__table-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Roles grid                                                               */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+.portal-users__roles-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.875rem;
+}
+
+@media (max-width: 72rem) {
+  .portal-users__roles-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 40rem) {
+  .portal-users__roles-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.portal-users__role {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.portal-users__role-head {
+  display: flex;
+}
+
+.portal-users__role-summary {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--color-text-2);
+}
+
+.portal-users__role-perms {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.portal-users__role-perms li {
+  position: relative;
+  padding-left: 0.875rem;
+  font-size: 0.6875rem;
+  line-height: 1.4;
+  color: var(--color-text-3);
+}
+
+.portal-users__role-perms li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.4375rem;
+  width: 0.25rem;
+  height: 0.25rem;
+  border-radius: 50%;
+  background: var(--color-text-5);
+}
+
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Access & security                                                        */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+.portal-users__access {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.portal-users__access-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.875rem;
+}
+
+@media (max-width: 52rem) {
+  .portal-users__access-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.portal-users__access-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.portal-users__access-card-title {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+
+.portal-users__access-note {
+  margin: 0.5rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--color-text-4);
+}
+
+.portal-users__access-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin: 0.75rem 0 0.875rem;
+}
+
+.portal-users__toggle-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  margin-top: 0.75rem;
+}
+
+.portal-users__toggle-row {
+  display: flex;
+}
+
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Invite modal                                                             */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+.portal-users__invite-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.portal-users__modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  width: 100%;
+}
