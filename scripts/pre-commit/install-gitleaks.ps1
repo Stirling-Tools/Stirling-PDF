@@ -17,7 +17,9 @@ if (-not $Sha) {
 
 New-Item -ItemType Directory -Force -Path (Split-Path -Parent $Dest) | Out-Null
 
-$archive = New-TemporaryFile
+# A .zip name (not New-TemporaryFile's .tmp) so Expand-Archive accepts it, and
+# Join-Path avoids New-TemporaryFile, which is missing in some PowerShell builds.
+$archive = Join-Path $env:TEMP 'gitleaks.zip'
 $extract = Join-Path $env:TEMP 'gitleaks-extract'
 try {
     Invoke-WebRequest -Uri $Url -OutFile $archive
