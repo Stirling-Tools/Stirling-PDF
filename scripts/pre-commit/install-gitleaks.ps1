@@ -11,17 +11,34 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 
+function Get-Sha256 {
+    param([Parameter(Mandatory)] [string]$Path)
+
+    $stream = [System.IO.File]::OpenRead($Path)
+    try {
+        $sha256 = [System.Security.Cryptography.SHA256]::Create()
+        try {
+            $hash = $sha256.ComputeHash($stream)
+            return [System.BitConverter]::ToString($hash).Replace('-', '').ToLowerInvariant()
+        } finally {
+            $sha256.Dispose()
+        }
+    } finally {
+        $stream.Dispose()
+    }
+}
+
 if (-not $Sha) {
     throw 'No pinned gitleaks checksum for this platform'
 }
 
 New-Item -ItemType Directory -Force -Path (Split-Path -Parent $Dest) | Out-Null
 
-$archive = New-TemporaryFile
+$archive = Join-Path ([System.IO.Path]::GetTempPath()) ([System.IO.Path]::GetRandomFileName() + '.zip')
 $extract = Join-Path $env:TEMP 'gitleaks-extract'
 try {
     Invoke-WebRequest -Uri $Url -OutFile $archive
-    if ((Get-FileHash $archive -Algorithm SHA256).Hash -ne $Sha) {
+    if ((Get-Sha256 $archive) -ne $Sha.ToLowerInvariant()) {
         throw 'gitleaks checksum mismatch'
     }
     Expand-Archive -Force -Path $archive -DestinationPath $extract
