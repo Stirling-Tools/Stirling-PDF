@@ -168,4 +168,22 @@ test.describe("v2 editor - menu-grouped layout", () => {
     const badges = panel.locator('[data-testid^="v2-font-"]');
     expect(await badges.count()).toBeGreaterThan(0);
   });
+
+  test("fonts panel shows a compatibility summary and an info explainer", async ({
+    page,
+  }) => {
+    await open(page, 0);
+    const panel = page.getByTestId("v2-fonts-panel");
+    // The summary banner is present and carries an honest tone (ok / info /
+    // warn) - never claiming a blanket "no issues" for embedded fonts.
+    const compat = panel.getByTestId("v2-font-compat");
+    await expect(compat).toBeVisible();
+    const tone = await compat.getAttribute("data-compat");
+    expect(["ok", "info", "warn"]).toContain(tone);
+    // The (i) explainer is present and reveals the existing-vs-new guidance.
+    const info = panel.getByTestId("v2-fonts-info");
+    await expect(info).toBeVisible();
+    await info.hover();
+    await expect(page.getByText(/New characters/i).first()).toBeVisible();
+  });
 });

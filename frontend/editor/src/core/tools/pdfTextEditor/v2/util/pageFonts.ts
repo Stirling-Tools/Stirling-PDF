@@ -2,14 +2,27 @@ import type { PageSnapshot } from "@app/tools/pdfTextEditor/v2/types";
 
 /**
  * Editability status of a font as the v2 editor can determine it purely
- * client-side (from PDFium), without the backend JSON font model:
- *  - "standard": one of the base-14 PDF fonts (Helvetica/Times/Courier/...) -
- *    always available, so any edit (including brand-new characters) is safe.
- *  - "embedded": fully embedded, non-subset font - the whole glyph set ships
- *    in the PDF, so edits render correctly.
- *  - "subset": only the originally-used glyphs are embedded - existing text
- *    edits fine, but typing characters the document never used may fall back
- *    to Helvetica.
+ * client-side (from PDFium), without the backend JSON font model.
+ *
+ * In ALL three cases the EXISTING text edits perfectly - every glyph already
+ * on the page is reused as-is. The status describes what happens to BRAND-NEW
+ * characters the user types that the document didn't already contain:
+ *
+ *  - "standard": one of the base-14 PDF fonts (Helvetica/Times/Courier/...).
+ *    The full standard (WinAnsi/Latin-1) character set is always available, so
+ *    typing common new characters renders in the same font.
+ *  - "embedded": a full (non-subset) embedded font. Its glyph repertoire ships
+ *    in the PDF, but that repertoire is whatever the font file happens to hold
+ *    - NOT every possible character. A new character the font includes renders
+ *    in it; one it lacks (e.g. an accented or non-Latin glyph in a Latin-only
+ *    font) falls back to a standard font.
+ *  - "subset": only the glyphs the document already uses are embedded. A new
+ *    character the document never used is almost always absent, so it falls
+ *    back to a standard font.
+ *
+ * So "embedded" is NOT a guarantee of perfect new-character editing - it's
+ * "better than subset, not as universal as standard". The UI labels it
+ * accordingly rather than claiming zero issues.
  */
 export type FontStatusV2 = "standard" | "embedded" | "subset";
 

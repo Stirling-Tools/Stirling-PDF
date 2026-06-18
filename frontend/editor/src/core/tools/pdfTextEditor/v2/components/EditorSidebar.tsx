@@ -1,8 +1,10 @@
 import {
+  ActionIcon,
   Badge,
   Box,
   Button,
   Group,
+  HoverCard,
   Kbd,
   SegmentedControl,
   Stack,
@@ -15,6 +17,7 @@ import CallMergeIcon from "@mui/icons-material/CallMergeOutlined";
 import CallSplitIcon from "@mui/icons-material/CallSplitOutlined";
 import CheckCircleIcon from "@mui/icons-material/CheckCircleOutlined";
 import WarningIcon from "@mui/icons-material/WarningAmberOutlined";
+import InfoIcon from "@mui/icons-material/InfoOutlined";
 import type {
   EditorViewState,
   LoadProgress,
@@ -105,33 +108,41 @@ const FONT_STATUS_META: Record<
   standard: {
     color: "green",
     label: "Standard",
-    hint: "Standard PDF font (Helvetica / Times / Courier family) - always available, so edits and new text render correctly.",
+    hint: "Standard PDF font (Helvetica / Times / Courier family). The full standard character set is always available, so existing text AND new characters render in this font.",
   },
   embedded: {
-    color: "teal",
+    color: "blue",
     label: "Embedded",
-    hint: "Fully embedded font - the complete glyph set ships in the PDF, so existing edits and new characters render correctly.",
+    hint: "Full font embedded in the PDF. Existing text edits perfectly. New characters render in this font when it includes them - any it lacks (e.g. an accent or symbol the font never carried) fall back to a standard font.",
   },
   subset: {
     color: "yellow",
     label: "Subset",
-    hint: "Subset font - only the characters the document already uses are embedded. Existing text edits fine, but typing new characters may fall back to Helvetica.",
+    hint: "Only the characters the document already uses are embedded. Existing text edits fine, but a new character the document never used will usually fall back to a standard font.",
   },
 };
 
 /**
  * Lists the fonts found across the loaded pages with an at-a-glance status
- * (standard / embedded / subset) so the user knows up front whether a given
- * font is safe to edit - subset fonts are the ones that can drop new glyphs.
+ * (standard / embedded / subset) so the user knows up front how each font
+ * behaves when editing - subset (and, for rare glyphs, embedded) fonts are the
+ * ones that can drop a brand-new character to a standard fallback font.
  */
 function FontsSection({ pages }: { pages: PageSnapshot[] }) {
   const fonts = analyzePageFonts(pages);
   if (fonts.length === 0) return null;
   const subsetCount = fonts.filter((f) => f.status === "subset").length;
+  const embeddedCount = fonts.filter((f) => f.status === "embedded").length;
   return (
     <Stack gap="xs" data-testid="v2-fonts-panel">
-      <SectionLabel>Fonts</SectionLabel>
-      <FontCompatibilitySummary subsetCount={subsetCount} />
+      <Group justify="space-between" wrap="nowrap" gap={4}>
+        <SectionLabel>Fonts</SectionLabel>
+        <FontsHelp />
+      </Group>
+      <FontCompatibilitySummary
+        subsetCount={subsetCount}
+        embeddedCount={embeddedCount}
+      />
       {fonts.map((f) => {
         const meta = FONT_STATUS_META[f.status];
         return (
@@ -172,19 +183,52 @@ function FontsSection({ pages }: { pages: PageSnapshot[] }) {
 }
 
 /**
- * Top-level editor-compatibility summary for the Fonts section: a single
- * at-a-glance line saying whether the document's fonts are all safe to edit.
- * "Issues" here are purely about NEW characters - every font edits its
- * EXISTING text fine; only subset fonts can drop glyphs the document never
- * used (they fall back to Helvetica). Standard + fully-embedded fonts have
- * the whole glyph set available, so there's nothing to flag.
+ * Top-level editor-compatibility summary for the Fonts section. Every font
+ * edits its EXISTING text perfectly; the only nuance is what happens to a
+ * BRAND-NEW character the user types. Three honest states:
+ *  - subset present  -> yellow: new (unused) characters fall back to a
+ *    standard font.
+ *  - embedded present (no subset) -> blue info: existing text is perfect, but
+ *    an embedded font can still lack a specific new glyph, which falls back.
+ *  - all standard     -> green: the full standard character set is available,
+ *    so even new characters render in the original font.
  */
-function FontCompatibilitySummary({ subsetCount }: { subsetCount: number }) {
-  const ok = subsetCount === 0;
+function FontCompatibilitySummary({
+  subsetCount,
+  embeddedCount,
+}: {
+  subsetCount: number;
+  embeddedCount: number;
+}) {
+  const tone = subsetCount > 0 ? "warn" : embeddedCount > 0 ? "info" : "ok";
+  const meta = {
+    ok: {
+      bg: "var(--mantine-color-green-light)",
+      fg: "green.8",
+      iconColor: "var(--mantine-color-green-text)",
+      Icon: CheckCircleIcon,
+      text: "Standard fonts only - new characters render in the original font.",
+    },
+    info: {
+      bg: "var(--mantine-color-blue-light)",
+      fg: "blue.8",
+      iconColor: "var(--mantine-color-blue-text)",
+      Icon: InfoIcon,
+      text: "Existing text edits perfectly. A new character an embedded font doesn't include falls back to a standard font.",
+    },
+    warn: {
+      bg: "var(--mantine-color-yellow-light)",
+      fg: "yellow.8",
+      iconColor: "var(--mantine-color-yellow-text)",
+      Icon: WarningIcon,
+      text: `${subsetCount} subset font${subsetCount === 1 ? "" : "s"} - a new character the document never used will usually fall back to a standard font.`,
+    },
+  }[tone];
+  const Icon = meta.Icon;
   return (
     <Box
       data-testid="v2-font-compat"
-      data-compat={ok ? "ok" : "warn"}
+      data-compat={tone}
       style={{
         display: "flex",
         alignItems: "center",
@@ -192,28 +236,90 @@ function FontCompatibilitySummary({ subsetCount }: { subsetCount: number }) {
         border: "1px solid var(--mantine-color-default-border)",
         borderRadius: "var(--mantine-radius-sm)",
         padding: "6px 10px",
-        background: ok
-          ? "var(--mantine-color-green-light)"
-          : "var(--mantine-color-yellow-light)",
+        background: meta.bg,
       }}
     >
-      {ok ? (
-        <CheckCircleIcon
-          fontSize="small"
-          style={{ color: "var(--mantine-color-green-text)", flexShrink: 0 }}
-        />
-      ) : (
-        <WarningIcon
-          fontSize="small"
-          style={{ color: "var(--mantine-color-yellow-text)", flexShrink: 0 }}
-        />
-      )}
-      <Text size="xs" c={ok ? "green.8" : "yellow.8"}>
-        {ok
-          ? "No compatibility issues - every font is fully editable."
-          : `${subsetCount} subset font${subsetCount === 1 ? "" : "s"} - typing new characters may fall back to Helvetica.`}
+      <Icon fontSize="small" style={{ color: meta.iconColor, flexShrink: 0 }} />
+      <Text size="xs" c={meta.fg}>
+        {meta.text}
       </Text>
     </Box>
+  );
+}
+
+/**
+ * Info (i) popover that explains, in one place, how the editor treats fonts:
+ * existing text vs. brand-new characters, and what each status badge means.
+ * Surfaced next to the Fonts header so the badges/summary stay terse.
+ */
+function FontsHelp() {
+  return (
+    <HoverCard width={272} shadow="md" withArrow position="left-start">
+      <HoverCard.Target>
+        <ActionIcon
+          variant="subtle"
+          color="gray"
+          size="sm"
+          aria-label="What do the font statuses mean?"
+          data-testid="v2-fonts-info"
+        >
+          <InfoIcon fontSize="small" />
+        </ActionIcon>
+      </HoverCard.Target>
+      <HoverCard.Dropdown>
+        <Stack gap={6}>
+          <Text size="xs" fw={600}>
+            How fonts affect editing
+          </Text>
+          <Text size="xs" c="dimmed">
+            <Text span fw={600} c="dimmed">
+              Existing text
+            </Text>{" "}
+            always edits in its original font.{" "}
+            <Text span fw={600} c="dimmed">
+              New characters
+            </Text>{" "}
+            you type keep the original font only when that font includes them -
+            otherwise they fall back to a standard font (Helvetica).
+          </Text>
+          <Stack gap={4}>
+            <FontsHelpRow color="green" label="Standard">
+              base-14 PDF font - the full standard character set is always
+              available.
+            </FontsHelpRow>
+            <FontsHelpRow color="blue" label="Embedded">
+              full font shipped in the PDF - most new characters match; a glyph
+              the font lacks falls back.
+            </FontsHelpRow>
+            <FontsHelpRow color="yellow" label="Subset">
+              only the document's existing characters are embedded - new ones
+              usually fall back.
+            </FontsHelpRow>
+          </Stack>
+        </Stack>
+      </HoverCard.Dropdown>
+    </HoverCard>
+  );
+}
+
+function FontsHelpRow({
+  color,
+  label,
+  children,
+}: {
+  color: string;
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Group gap={6} wrap="nowrap" align="flex-start">
+      <Badge size="xs" color={color} variant="light" style={{ flexShrink: 0 }}>
+        {label}
+      </Badge>
+      <Text size="xs" c="dimmed">
+        {children}
+      </Text>
+    </Group>
   );
 }
 
