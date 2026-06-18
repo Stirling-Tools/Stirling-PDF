@@ -40,6 +40,21 @@ tasks:
     cmds:
       - node editor/scripts/generate-icons.js
 
+  prepare:og:
+    internal: true
+    run: when_changed
+    desc: "Regenerate OG/social-preview metadata from the tool registry"
+    cmds:
+      - node editor/scripts/generate-og-metadata.mjs
+    sources:
+      - editor/src/core/types/toolId.ts
+      - editor/src/core/utils/urlMapping.ts
+      - editor/src/core/data/useTranslatedToolRegistry.tsx
+      - editor/public/og_images/*.png
+    generates:
+      - editor/src/core/data/ogImageMap.json
+      - editor/public/og-metadata.json
+
   prepare:
     desc: "Set up dev environment"
     run: when_changed
@@ -49,6 +64,7 @@ tasks:
       - task: prepare:env
         vars: { MODE: '{{.MODE}}' }
       - prepare:icons
+      - prepare:og
 
   # ============================================================
   # Development
@@ -262,6 +278,12 @@ tasks:
     cmds:
       - npx tsc --noEmit --project editor/src/desktop/tsconfig.json
 
+  typecheck:cloud:
+    desc: "Typecheck cloud shared layer (standalone)"
+    deps: [prepare]
+    cmds:
+      - npx tsc --noEmit --project editor/src/cloud/tsconfig.json
+
   typecheck:scripts:
     desc: "Typecheck scripts"
     deps: [prepare]
@@ -293,6 +315,7 @@ tasks:
       - task: typecheck:proprietary
       - task: typecheck:saas
       - task: typecheck:desktop
+      - task: typecheck:cloud
       - task: typecheck:scripts
       - task: typecheck:prototypes
       - task: typecheck:portal
@@ -310,9 +333,17 @@ tasks:
       - task: format:check
       - task: test
 
+  og:check:
+    desc: "Fail if committed OG/social-preview metadata is out of date"
+    cmds:
+      - node editor/scripts/generate-og-metadata.mjs --check
+
   check:all:
     desc: "Full CI quality gate"
     cmds:
+      # Runs first, before prepare regenerates: guards the committed og-metadata.json /
+      # ogImageMap.json that the Cloudflare Pages (plain `vite build`) deploy relies on.
+      - task: og:check
       - task: typecheck:all
       - task: lint
       - task: format:check
@@ -367,3 +398,15 @@ tasks:
     deps: [install]
     cmds:
       - node editor/scripts/generate-licenses.js
+
+  # ============================================================
+  # Clean
+  # ============================================================
+
+  clean:
+    desc: "Clean build artifacts and caches"
+    cmds:
+      - cmd: powershell rm -Recurse -Force -ErrorAction SilentlyContinue node_modules/.vite, editor/dist, dist, dist-portal
+        platforms: [windows]
+      - cmd: rm -rf node_modules/.vite editor/dist dist dist-portal
+        platforms: [linux, darwin]
