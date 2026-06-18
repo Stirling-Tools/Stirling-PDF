@@ -9,7 +9,7 @@ import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 import LockIcon from "@mui/icons-material/Lock";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
-import { PanelHeader } from "@app/components/shared/PanelHeader";
+import { PanelHeader } from "@shared/components/PanelHeader";
 import { ROW_ACCENT } from "@app/components/policies/policyStatus";
 import { Card } from "@shared/components/Card";
 import { ChipFlow } from "@shared/components/ChipFlow";

@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import { PanelHeader } from "@app/components/shared/PanelHeader";
+import { PanelHeader } from "@shared/components/PanelHeader";
 import { ROW_ACCENT } from "@app/components/policies/policyStatus";
 import { Card } from "@shared/components/Card";
 import { Button } from "@shared/components/Button";

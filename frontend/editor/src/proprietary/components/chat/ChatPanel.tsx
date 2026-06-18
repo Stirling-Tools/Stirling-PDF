@@ -42,7 +42,7 @@ import { formatRelativeTime } from "@app/utils/timeUtils";
 import { useTranslatedToolCatalog } from "@app/data/useTranslatedToolRegistry";
 import { StirlingLogoAnimated } from "@app/components/agents/StirlingLogoAnimated";
 import { StirlingLogoOutline } from "@app/components/agents/StirlingLogoOutline";
-import { PanelHeader } from "@app/components/shared/PanelHeader";
+import { PanelHeader } from "@shared/components/PanelHeader";
 import { ChatQuickActions } from "@app/components/chat/ChatQuickActions";
 import "@app/components/chat/ChatPanel.css";
 
