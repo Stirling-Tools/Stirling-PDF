@@ -1551,7 +1551,7 @@ doc_summary_description = "Riassumi documenti lunghi"
 doc_summary_name = "Riassuntore"
 form_filler_description = "Compila i moduli PDF in modo intelligente"
 form_filler_name = "Compilatore di moduli"
-fullscreen_title = "Stirling Agents"
+fullscreen_title = "Agenti Stirling"
 pdf_to_markdown_description = "Converti PDF in Markdown pulito"
 pdf_to_markdown_name = "PDF in Markdown"
 section_title = "Agenti"
@@ -4692,9 +4692,9 @@ tags = "layout,disponi,combina"
 title = "Layout multipagina"
 
 [home.pdfCommentAgent]
-desc = "Chiedi all'AI di annotare un PDF con commenti in stile nota adesiva in base al tuo prompt"
-tags = "AI,agente,commento,annotazione,nota adesiva,revisione,feedback,note"
-title = "Aggiungi commenti AI"
+desc = "Chiedi all'IA di annotare un PDF con commenti in stile nota adesiva in base al tuo prompt"
+tags = "IA,agente,commento,annotazione,nota adesiva,revisione,feedback,note"
+title = "Aggiungi commenti IA"
 
 [home.pdfOrganiser]
 desc = "Rimuovi/Riordina le pagine in qualsiasi ordine."

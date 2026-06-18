@@ -587,60 +587,13 @@ export async function consumeFiles(
       );
   }
 
-  // Mark input files as processed in storage (no longer leaf nodes)
-  if (
-    !outputStirlingFileStubs.reduce(
-      (areAllV1, stub) => areAllV1 && stub.versionNumber == 1,
-      true,
-    )
-  ) {
-    await Promise.all(
-      inputFileIds.map(async (fileId) => {
-        try {
-          await fileStorage.markFileAsProcessed(fileId);
-          if (DEBUG)
-            console.log(
-              `📄 Marked file ${fileId} as processed (no longer leaf)`,
-            );
-        } catch (error) {
-          if (DEBUG)
-            console.warn(
-              `📄 Failed to mark file ${fileId} as processed:`,
-              error,
-            );
-        }
-      }),
-    );
-  }
-
-  // Save output files directly to fileStorage with complete metadata
-  for (let i = 0; i < outputStirlingFiles.length; i++) {
-    const stirlingFile = outputStirlingFiles[i];
-    const stub = outputStirlingFileStubs[i];
-
-    try {
-      // Use fileStorage directly with complete metadata from stub
-      await fileStorage.storeStirlingFile(stirlingFile, stub);
-
-      if (DEBUG)
-        console.log(
-          `📄 Saved StirlingFile ${stirlingFile.name} directly to storage with complete metadata:`,
-          {
-            fileId: stirlingFile.fileId,
-            versionNumber: stub.versionNumber,
-            originalFileId: stub.originalFileId,
-            parentFileId: stub.parentFileId,
-            toolChainLength: stub.toolHistory?.length || 0,
-          },
-        );
-    } catch (error) {
-      console.error(
-        "Failed to persist output file to fileStorage:",
-        stirlingFile.name,
-        error,
-      );
-    }
-  }
+  // Persist the durable half (mark inputs non-leaf + store output versions) via the shared
+  // storage helper, so a policy run recovered after a reload versions the file identically.
+  await fileStorage.persistVersionedOutputs(
+    inputFileIds,
+    outputStirlingFiles,
+    outputStirlingFileStubs,
+  );
 
   // Dispatch the consume action with pre-created stubs (no processing needed)
   dispatch({

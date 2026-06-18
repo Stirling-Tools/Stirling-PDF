@@ -16,6 +16,11 @@ interface UIContextValue {
   openAssistant: () => void;
   closeAssistant: () => void;
   toggleAssistant: () => void;
+
+  /** Settings is a modal overlay, not a route. */
+  settingsOpen: boolean;
+  openSettings: () => void;
+  closeSettings: () => void;
 }
 
 const UIContext = createContext<UIContextValue | null>(null);
@@ -23,6 +28,7 @@ const UIContext = createContext<UIContextValue | null>(null);
 export function UIProvider({ children }: { children: ReactNode }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [assistantOpen, setAssistantOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const value = useMemo<UIContextValue>(
     () => ({
@@ -35,8 +41,12 @@ export function UIProvider({ children }: { children: ReactNode }) {
       openAssistant: () => setAssistantOpen(true),
       closeAssistant: () => setAssistantOpen(false),
       toggleAssistant: () => setAssistantOpen((o) => !o),
+
+      settingsOpen,
+      openSettings: () => setSettingsOpen(true),
+      closeSettings: () => setSettingsOpen(false),
     }),
-    [searchOpen, assistantOpen],
+    [searchOpen, assistantOpen, settingsOpen],
   );
 
   return <UIContext.Provider value={value}>{children}</UIContext.Provider>;

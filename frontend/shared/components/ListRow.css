@@ -1,0 +1,88 @@
+.sui-listrow {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  width: 100%;
+  padding: 0.7rem 0.875rem;
+  text-align: left;
+  background: transparent;
+  color: var(--color-text-1);
+}
+.sui-listrow--divider {
+  border-top: 1px solid var(--color-border);
+}
+.sui-listrow--interactive {
+  cursor: pointer;
+  transition: background var(--motion-fast);
+}
+.sui-listrow--interactive:hover {
+  background: var(--color-bg-hover);
+}
+.sui-listrow--interactive:focus-visible {
+  outline: 0.125rem solid var(--color-blue);
+  outline-offset: -0.125rem;
+}
+
+.sui-listrow__leading {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+  margin-top: 0.05rem;
+  color: var(--color-text-4);
+  background: var(--color-bg-muted);
+}
+.sui-listrow__leading[data-tone="success"] {
+  color: var(--color-green);
+  background: color-mix(in srgb, var(--color-green) 14%, transparent);
+}
+.sui-listrow__leading[data-tone="warning"] {
+  color: var(--color-amber);
+  background: color-mix(in srgb, var(--color-amber) 14%, transparent);
+}
+.sui-listrow__leading[data-tone="danger"] {
+  color: var(--color-red);
+  background: color-mix(in srgb, var(--color-red) 14%, transparent);
+}
+.sui-listrow__leading[data-tone="info"] {
+  color: var(--color-blue);
+  background: color-mix(in srgb, var(--color-blue) 14%, transparent);
+}
+.sui-listrow__leading[data-tone="purple"] {
+  color: var(--color-purple);
+  background: color-mix(in srgb, var(--color-purple) 14%, transparent);
+}
+
+.sui-listrow__text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+.sui-listrow__title {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sui-listrow__desc {
+  font-size: 0.75rem;
+  color: var(--color-text-4);
+  margin-top: 0.125rem;
+}
+.sui-listrow__meta {
+  font-size: 0.6875rem;
+  color: var(--color-text-4);
+  margin-top: 0.125rem;
+}
+.sui-listrow__trailing {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-left: auto;
+}

@@ -8,17 +8,19 @@ import lombok.Getter;
 import stirling.software.common.model.job.ResultFile;
 
 /**
- * Live, mutable state of a single pipeline run, held in memory by {@code PolicyRunRegistry}.
- *
- * <p>This carries the rich execution state (status, step cursor, wait state) that the job system's
- * {@code JobResult} does not model. The run is also projected into {@code TaskManager} for
- * cluster-visible status, progress notes, and file download; this object is the authoritative
- * source of the state machine.
+ * Live, mutable state of one pipeline run, held in memory by {@code PolicyRunRegistry} and the
+ * authoritative source of the state machine. Carries execution state ({@code JobResult} does not
+ * model status/step cursor/wait state); also projected into {@code TaskManager} for cluster-visible
+ * status and download.
  */
 @Getter
 public class PolicyRun {
 
     private final String runId;
+
+    /** ID of the stored policy that produced this run; null for ad-hoc pipelines. */
+    private final String policyId;
+
     private final PipelineDefinition definition;
     private final Instant createdAt = Instant.now();
 
@@ -29,11 +31,27 @@ public class PolicyRun {
 
     private volatile WaitState waitState;
     private volatile String error;
+
+    /**
+     * Stable, machine-readable failure code the client can branch on — e.g. an entitlement-limit
+     * sentinel ({@code PAYG_LIMIT_REACHED} / {@code FEATURE_DEGRADED}) propagated from a downstream
+     * tool call's 402 — alongside the human-readable {@link #error}. Null unless set on failure.
+     */
+    private volatile String errorCode;
+
+    /**
+     * For an entitlement-limit failure, whether the team was subscribed (over its spending cap) vs
+     * un-subscribed (free allowance spent) — taken from the blocking 402 body. Drives which
+     * usage-limit modal the client shows. Null unless {@link #errorCode} is an entitlement code.
+     */
+    private volatile Boolean errorSubscribed;
+
     private volatile List<ResultFile> outputs = List.of();
     private volatile Instant updatedAt = Instant.now();
 
-    public PolicyRun(String runId, PipelineDefinition definition) {
+    public PolicyRun(String runId, String policyId, PipelineDefinition definition) {
         this.runId = runId;
+        this.policyId = policyId;
         this.definition = definition;
     }
 
@@ -63,15 +81,24 @@ public class PolicyRun {
         touch();
     }
 
+    /**
+     * Fail with a stable {@code errorCode} the client can branch on (e.g. an entitlement-limit
+     * sentinel from a downstream 402), plus the optional {@code subscribed} flag from that
+     * response, in addition to the human-readable message.
+     */
+    public synchronized void failWithCode(String message, String errorCode, Boolean subscribed) {
+        this.errorCode = errorCode;
+        this.errorSubscribed = subscribed;
+        fail(message);
+    }
+
     public synchronized void waitForInput(WaitState wait) {
         this.waitState = wait;
         this.status = PolicyRunStatus.WAITING_FOR_INPUT;
         touch();
     }
 
-    /**
-     * Mark cancelled if the run has not already reached a terminal state. Returns whether it did.
-     */
+    /** Cancels unless already terminal; returns whether it transitioned. */
     public synchronized boolean cancel() {
         if (status.isTerminal()) {
             return false;

@@ -6,7 +6,7 @@
   flex-wrap: wrap;
   align-items: center;
   align-content: flex-start;
-  min-height: 48px;
+  min-height: 40px;
   padding: 0 8px;
   background-color: var(--bg-toolbar);
   border-bottom: 1px solid var(--border-subtle);
@@ -21,7 +21,7 @@
   gap: 2px;
   flex-shrink: 0;
   order: 1;
-  height: 48px;
+  height: 40px;
   z-index: 0;
 }
 
@@ -88,7 +88,7 @@
   align-items: center;
   justify-content: center;
   gap: 2px;
-  height: 48px;
+  height: 40px;
   overflow: hidden;
 }
 
@@ -116,7 +116,7 @@
   gap: 2px;
   flex-shrink: 0;
   order: 3;
-  height: 48px;
+  height: 40px;
   margin-left: auto;
 }
 

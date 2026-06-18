@@ -1,0 +1,640 @@
+{
+  "default": {
+    "image": "/og_images/home.png",
+    "title": "Stirling PDF",
+    "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+  },
+  "byTool": {
+    "certSign": {
+      "image": "/og_images/certSign.png",
+      "title": "Certificate Sign - Stirling PDF",
+      "description": "Sign PDF documents using digital certificates"
+    },
+    "sign": {
+      "image": "/og_images/sign.png",
+      "title": "Sign - Stirling PDF",
+      "description": "Adds signature to PDF by drawing, text or image"
+    },
+    "addText": {
+      "image": "/og_images/add-text.png",
+      "title": "Add Text - Stirling PDF",
+      "description": "Add custom text anywhere in your PDF"
+    },
+    "addPassword": {
+      "image": "/og_images/add-password.png",
+      "title": "Add Password - Stirling PDF",
+      "description": "Add password protection and restrictions to PDF files"
+    },
+    "removePassword": {
+      "image": "/og_images/remove-password.png",
+      "title": "Remove Password - Stirling PDF",
+      "description": "Remove password protection from PDF documents"
+    },
+    "removePages": {
+      "image": "/og_images/remove.png",
+      "title": "Remove Pages - Stirling PDF",
+      "description": "Remove specific pages from a PDF document"
+    },
+    "removeBlanks": {
+      "image": "/og_images/remove-blank-pages.png",
+      "title": "Remove Blank Pages - Stirling PDF",
+      "description": "Remove blank pages from PDF documents"
+    },
+    "removeAnnotations": {
+      "image": "/og_images/remove-annotations.png",
+      "title": "Remove Annotations - Stirling PDF",
+      "description": "Remove annotations and comments from PDF documents"
+    },
+    "removeImage": {
+      "image": "/og_images/remove-image.png",
+      "title": "Remove Images - Stirling PDF",
+      "description": "Remove all images from a PDF document"
+    },
+    "changePermissions": {
+      "image": "/og_images/change-permissions.png",
+      "title": "Change Permissions - Stirling PDF",
+      "description": "Change document restrictions and permissions"
+    },
+    "watermark": {
+      "image": "/og_images/add-watermark.png",
+      "title": "Add Watermark - Stirling PDF",
+      "description": "Add a custom watermark to your PDF document."
+    },
+    "sanitize": {
+      "image": "/og_images/sanitize.png",
+      "title": "Sanitize - Stirling PDF",
+      "description": "Remove potentially harmful elements from PDF files"
+    },
+    "split": {
+      "image": "/og_images/split.png",
+      "title": "Split - Stirling PDF",
+      "description": "Split PDFs into multiple documents"
+    },
+    "merge": {
+      "image": "/og_images/mergePdfs.png",
+      "title": "Merge - Stirling PDF",
+      "description": "Merge multiple PDFs into a single document"
+    },
+    "convert": {
+      "image": "/og_images/convert.png",
+      "title": "Convert - Stirling PDF",
+      "description": "Convert files to and from PDF format"
+    },
+    "ocr": {
+      "image": "/og_images/ocr.png",
+      "title": "OCR - Stirling PDF",
+      "description": "Extract text from scanned PDFs using Optical Character Recognition"
+    },
+    "addImage": {
+      "image": "/og_images/add-image.png",
+      "title": "Add Image - Stirling PDF",
+      "description": "Add images anywhere in your PDF"
+    },
+    "rotate": {
+      "image": "/og_images/rotate.png",
+      "title": "Rotate - Stirling PDF",
+      "description": "Easily rotate your PDFs."
+    },
+    "annotate": {
+      "image": "/og_images/annotate.png",
+      "title": "Annotate - Stirling PDF",
+      "description": "Highlight, draw, add notes, and shapes directly in the viewer"
+    },
+    "scannerImageSplit": {
+      "image": "/og_images/detect-split-scanned-photos.png",
+      "title": "Detect & Split Scanned Photos - Stirling PDF",
+      "description": "Detect and split scanned photos into separate pages"
+    },
+    "editTableOfContents": {
+      "image": "/og_images/edit-table-of-contents.png",
+      "title": "Edit Table of Contents - Stirling PDF",
+      "description": "Add or edit bookmarks and table of contents in PDF documents"
+    },
+    "scannerEffect": {
+      "image": "/og_images/scanner-effect.png",
+      "title": "Scanner Effect - Stirling PDF",
+      "description": "Create a PDF that looks like it was scanned"
+    },
+    "autoRename": {
+      "image": "/og_images/auto-rename-pdf-file.png",
+      "title": "Auto Rename PDF File - Stirling PDF",
+      "description": "Automatically rename PDF files based on their content"
+    },
+    "pageLayout": {
+      "image": "/og_images/multi-page-layout.png",
+      "title": "Multi-Page Layout - Stirling PDF",
+      "description": "Merge multiple pages of a PDF document into a single page"
+    },
+    "scalePages": {
+      "image": "/og_images/adjust-page-size-scale.png",
+      "title": "Adjust page size/scale - Stirling PDF",
+      "description": "Change the size/scale of a page and/or its contents."
+    },
+    "adjustContrast": {
+      "image": "/og_images/adjust-colors-contrast.png",
+      "title": "Adjust Colors/Contrast - Stirling PDF",
+      "description": "Adjust colors and contrast of PDF documents"
+    },
+    "crop": {
+      "image": "/og_images/cropPdf.png",
+      "title": "Crop PDF - Stirling PDF",
+      "description": "Crop a PDF to reduce its size (maintains text!)"
+    },
+    "pdfToSinglePage": {
+      "image": "/og_images/single-large-page.png",
+      "title": "PDF to Single Large Page - Stirling PDF",
+      "description": "Merges all PDF pages into one large single page"
+    },
+    "repair": {
+      "image": "/og_images/repair.png",
+      "title": "Repair - Stirling PDF",
+      "description": "Repair corrupted or damaged PDF files"
+    },
+    "compare": {
+      "image": "/og_images/compare.png",
+      "title": "Compare - Stirling PDF",
+      "description": "Compare two PDF documents and highlight differences"
+    },
+    "addPageNumbers": {
+      "image": "/og_images/add-page-numbers.png",
+      "title": "Add Page Numbers - Stirling PDF",
+      "description": "Add Page numbers throughout a document in a set location"
+    },
+    "redact": {
+      "image": "/og_images/redact.png",
+      "title": "Redact - Stirling PDF",
+      "description": "Permanently remove sensitive information from PDF documents"
+    },
+    "flatten": {
+      "image": "/og_images/flatten.png",
+      "title": "Flatten - Stirling PDF",
+      "description": "Remove all interactive elements and forms from a PDF"
+    },
+    "removeCertSign": {
+      "image": "/og_images/remove-certificate-sign.png",
+      "title": "Remove Certificate Sign - Stirling PDF",
+      "description": "Remove digital signature from PDF documents"
+    },
+    "unlockPDFForms": {
+      "image": "/og_images/unlock-pdf-forms.png",
+      "title": "Unlock PDF Forms - Stirling PDF",
+      "description": "Remove read-only property of form fields in a PDF document."
+    },
+    "compress": {
+      "image": "/og_images/compress.png",
+      "title": "Compress - Stirling PDF",
+      "description": "Compress PDFs to reduce their file size."
+    },
+    "extractPages": {
+      "image": "/og_images/extract-pages.png",
+      "title": "Extract Pages - Stirling PDF",
+      "description": "Extract specific pages from a PDF document"
+    },
+    "reorganizePages": {
+      "image": "/og_images/reorganize-pages.png",
+      "title": "Reorganize Pages - Stirling PDF",
+      "description": "Rearrange, duplicate, or delete PDF pages with visual drag-and-drop control."
+    },
+    "extractImages": {
+      "image": "/og_images/extract-images.png",
+      "title": "Extract Images - Stirling PDF",
+      "description": "Extract images from PDF documents"
+    },
+    "addStamp": {
+      "image": "/og_images/add-stamp.png",
+      "title": "Add Stamp to PDF - Stirling PDF",
+      "description": "Add text or add image stamps at set locations"
+    },
+    "addAttachments": {
+      "image": "/og_images/add-attachments.png",
+      "title": "Add Attachments - Stirling PDF",
+      "description": "Add or remove embedded files (attachments) to/from a PDF"
+    },
+    "changeMetadata": {
+      "image": "/og_images/change-metadata.png",
+      "title": "Change Metadata - Stirling PDF",
+      "description": "Change/Remove/Add metadata from a PDF document"
+    },
+    "overlayPdfs": {
+      "image": "/og_images/overlay-pdfs.png",
+      "title": "Overlay Pdfs - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "getPdfInfo": {
+      "image": "/og_images/get-all-info-on-pdf.png",
+      "title": "Get ALL Info on PDF - Stirling PDF",
+      "description": "Grabs any and all information possible on PDFs"
+    },
+    "validateSignature": {
+      "image": "/og_images/validate-pdf-signature.png",
+      "title": "Validate PDF Signature - Stirling PDF",
+      "description": "Verify digital signatures and certificates in PDF documents"
+    },
+    "timestampPdf": {
+      "image": "/og_images/timestamp-pdf.png",
+      "title": "Timestamp PDF - Stirling PDF",
+      "description": "Add an RFC 3161 document timestamp to prove when your PDF existed"
+    },
+    "replaceColor": {
+      "image": "/og_images/replace-and-invert-color.png",
+      "title": "Replace & Invert Color - Stirling PDF",
+      "description": "Replace or invert colors in PDF documents"
+    },
+    "showJS": {
+      "image": "/og_images/show-javascript.png",
+      "title": "Show JavaScript - Stirling PDF",
+      "description": "Extract and display JavaScript code from PDF documents"
+    },
+    "bookletImposition": {
+      "image": "/og_images/booklet-imposition.png",
+      "title": "Booklet Imposition - Stirling PDF",
+      "description": "Create booklets with proper page ordering and multi-page layout for printing and binding"
+    },
+    "pdfTextEditor": {
+      "image": "/og_images/pdf-text-editor.png",
+      "title": "PDF Text Editor - Stirling PDF",
+      "description": "Review and edit text and images in PDFs with grouped text editing and PDF regeneration"
+    },
+    "formFill": {
+      "image": "/og_images/form-fill.png",
+      "title": "Fill Form - Stirling PDF",
+      "description": "Fill PDF form fields interactively with a visual editor"
+    },
+    "multiTool": {
+      "image": "/og_images/multi-tool.png",
+      "title": "Multi-Tool - Stirling PDF",
+      "description": "Use multiple tools on a single PDF document"
+    },
+    "read": {
+      "image": "/og_images/read.png",
+      "title": "Read - Stirling PDF",
+      "description": "View and annotate PDFs. Highlight text, draw, or insert comments for review and collaboration."
+    },
+    "automate": {
+      "image": "/og_images/automate.png",
+      "title": "Automate - Stirling PDF",
+      "description": "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."
+    },
+    "devApi": {
+      "image": "/og_images/dev-api.png",
+      "title": "API - Stirling PDF",
+      "description": "Link to API documentation"
+    },
+    "devFolderScanning": {
+      "image": "/og_images/dev-folder-scanning.png",
+      "title": "Automated Folder Scanning - Stirling PDF",
+      "description": "Link to automated folder scanning guide"
+    },
+    "devSsoGuide": {
+      "image": "/og_images/dev-sso-guide.png",
+      "title": "SSO Guide - Stirling PDF",
+      "description": "Link to SSO guide"
+    },
+    "devAirgapped": {
+      "image": "/og_images/dev-airgapped.png",
+      "title": "Air-gapped Setup - Stirling PDF",
+      "description": "Link to air-gapped setup guide"
+    },
+    "/login": {
+      "image": "/og_images/home.png",
+      "title": "Sign In - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/signup": {
+      "image": "/og_images/home.png",
+      "title": "Sign Up - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/mobile-scanner": {
+      "image": "/og_images/home.png",
+      "title": "Mobile Scanner - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/files": {
+      "image": "/og_images/home.png",
+      "title": "Files - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings": {
+      "image": "/og_images/home.png",
+      "title": "Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/preferences": {
+      "image": "/og_images/home.png",
+      "title": "Preferences Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/notifications": {
+      "image": "/og_images/home.png",
+      "title": "Notifications Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/connections": {
+      "image": "/og_images/home.png",
+      "title": "Connections Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/account": {
+      "image": "/og_images/home.png",
+      "title": "Account Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/general": {
+      "image": "/og_images/home.png",
+      "title": "General Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/people": {
+      "image": "/og_images/home.png",
+      "title": "People Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/teams": {
+      "image": "/og_images/home.png",
+      "title": "Teams Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/security": {
+      "image": "/og_images/home.png",
+      "title": "Security Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/identity": {
+      "image": "/og_images/home.png",
+      "title": "Identity Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/plan": {
+      "image": "/og_images/home.png",
+      "title": "Plan Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/payments": {
+      "image": "/og_images/home.png",
+      "title": "Payments Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/requests": {
+      "image": "/og_images/home.png",
+      "title": "Requests Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/developer": {
+      "image": "/og_images/home.png",
+      "title": "Developer Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/api-keys": {
+      "image": "/og_images/home.png",
+      "title": "Api Keys Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/hotkeys": {
+      "image": "/og_images/home.png",
+      "title": "Hotkeys Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/adminGeneral": {
+      "image": "/og_images/home.png",
+      "title": "Admin General Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/adminSecurity": {
+      "image": "/og_images/home.png",
+      "title": "Admin Security Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/adminConnections": {
+      "image": "/og_images/home.png",
+      "title": "Admin Connections Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/adminPrivacy": {
+      "image": "/og_images/home.png",
+      "title": "Admin Privacy Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/adminDatabase": {
+      "image": "/og_images/home.png",
+      "title": "Admin Database Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/adminAdvanced": {
+      "image": "/og_images/home.png",
+      "title": "Admin Advanced Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/adminLegal": {
+      "image": "/og_images/home.png",
+      "title": "Admin Legal Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/adminPremium": {
+      "image": "/og_images/home.png",
+      "title": "Admin Premium Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/adminFeatures": {
+      "image": "/og_images/home.png",
+      "title": "Admin Features Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/adminPlan": {
+      "image": "/og_images/home.png",
+      "title": "Admin Plan Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/adminAudit": {
+      "image": "/og_images/home.png",
+      "title": "Admin Audit Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/adminUsage": {
+      "image": "/og_images/home.png",
+      "title": "Admin Usage Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/adminEndpoints": {
+      "image": "/og_images/home.png",
+      "title": "Admin Endpoints Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/adminStorageSharing": {
+      "image": "/og_images/home.png",
+      "title": "Admin Storage Sharing Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/adminMcp": {
+      "image": "/og_images/home.png",
+      "title": "Admin Mcp Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/help": {
+      "image": "/og_images/home.png",
+      "title": "Help Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/legal": {
+      "image": "/og_images/home.png",
+      "title": "Legal Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/payg": {
+      "image": "/og_images/home.png",
+      "title": "Payg Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    }
+  },
+  "byPath": {
+    "/cert-sign": "certSign",
+    "/sign": "sign",
+    "/add-text": "addText",
+    "/add-password": "addPassword",
+    "/remove-password": "removePassword",
+    "/remove-pages": "removePages",
+    "/remove-blanks": "removeBlanks",
+    "/remove-annotations": "removeAnnotations",
+    "/remove-image": "removeImage",
+    "/change-permissions": "changePermissions",
+    "/watermark": "watermark",
+    "/sanitize": "sanitize",
+    "/split": "split",
+    "/merge": "merge",
+    "/convert": "convert",
+    "/ocr": "ocr",
+    "/add-image": "addImage",
+    "/rotate": "rotate",
+    "/annotate": "annotate",
+    "/scanner-image-split": "scannerImageSplit",
+    "/edit-table-of-contents": "editTableOfContents",
+    "/scanner-effect": "scannerEffect",
+    "/auto-rename": "autoRename",
+    "/page-layout": "pageLayout",
+    "/scale-pages": "scalePages",
+    "/adjust-contrast": "adjustContrast",
+    "/crop": "crop",
+    "/pdf-to-single-page": "pdfToSinglePage",
+    "/repair": "repair",
+    "/compare": "compare",
+    "/add-page-numbers": "addPageNumbers",
+    "/redact": "redact",
+    "/flatten": "flatten",
+    "/remove-cert-sign": "removeCertSign",
+    "/unlock-p-d-f-forms": "unlockPDFForms",
+    "/compress": "compress",
+    "/extract-pages": "extractPages",
+    "/reorganize-pages": "reorganizePages",
+    "/extract-images": "extractImages",
+    "/add-stamp": "addStamp",
+    "/add-attachments": "addAttachments",
+    "/change-metadata": "changeMetadata",
+    "/overlay-pdfs": "overlayPdfs",
+    "/get-pdf-info": "getPdfInfo",
+    "/validate-signature": "validateSignature",
+    "/timestamp-pdf": "timestampPdf",
+    "/replace-color": "replaceColor",
+    "/show-j-s": "showJS",
+    "/booklet-imposition": "bookletImposition",
+    "/pdf-text-editor": "pdfTextEditor",
+    "/form-fill": "formFill",
+    "/multi-tool": "multiTool",
+    "/read": "read",
+    "/automate": "automate",
+    "/dev-api": "devApi",
+    "/dev-folder-scanning": "devFolderScanning",
+    "/dev-sso-guide": "devSsoGuide",
+    "/dev-airgapped": "devAirgapped",
+    "/split-pdfs": "split",
+    "/merge-pdfs": "merge",
+    "/compress-pdf": "compress",
+    "/rotate-pdf": "rotate",
+    "/convert-pdf": "convert",
+    "/file-to-pdf": "convert",
+    "/eml-to-pdf": "convert",
+    "/html-to-pdf": "convert",
+    "/markdown-to-pdf": "convert",
+    "/pdf-to-csv": "convert",
+    "/pdf-to-xlsx": "convert",
+    "/pdf-to-img": "convert",
+    "/pdf-to-markdown": "convert",
+    "/pdf-to-pdfa": "convert",
+    "/pdf-to-word": "convert",
+    "/pdf-to-xml": "convert",
+    "/cbr-to-pdf": "convert",
+    "/pdf-to-cbr": "convert",
+    "/cbz-to-pdf": "convert",
+    "/pdf-to-cbz": "convert",
+    "/manage-signatures": "certSign",
+    "/remove-certificate-sign": "removeCertSign",
+    "/unlock-pdf-forms": "unlockPDFForms",
+    "/sanitize-pdf": "sanitize",
+    "/ocr-pdf": "ocr",
+    "/add-watermark": "watermark",
+    "/single-large-page": "pdfToSinglePage",
+    "/auto-split-pdf": "split",
+    "/auto-size-split-pdf": "split",
+    "/annotations": "annotate",
+    "/fake-scan": "scannerEffect",
+    "/replace-color-pdf": "replaceColor",
+    "/show-js": "showJS",
+    "/pdf-organizer": "reorganizePages",
+    "/multi-page-layout": "pageLayout",
+    "/extract-page": "extractPages",
+    "/img-to-pdf": "convert",
+    "/pdf-to-presentation": "convert",
+    "/pdf-to-text": "convert",
+    "/pdf-to-html": "convert",
+    "/auto-redact": "redact",
+    "/stamp": "addStamp",
+    "/view-pdf": "read",
+    "/get-info-on-pdf": "getPdfInfo",
+    "/remove-image-pdf": "removeImage",
+    "/replace-and-invert-color-pdf": "replaceColor",
+    "/pipeline": "automate",
+    "/extract-image-scans": "scannerImageSplit",
+    "/show-javascript": "showJS",
+    "/split-by-size-or-count": "split",
+    "/overlay-pdf": "overlayPdfs",
+    "/split-pdf-by-sections": "split",
+    "/split-pdf-by-chapters": "split",
+    "/login": "/login",
+    "/signup": "/signup",
+    "/mobile-scanner": "/mobile-scanner",
+    "/files": "/files",
+    "/settings": "/settings",
+    "/settings/preferences": "/settings/preferences",
+    "/settings/notifications": "/settings/notifications",
+    "/settings/connections": "/settings/connections",
+    "/settings/account": "/settings/account",
+    "/settings/general": "/settings/general",
+    "/settings/people": "/settings/people",
+    "/settings/teams": "/settings/teams",
+    "/settings/security": "/settings/security",
+    "/settings/identity": "/settings/identity",
+    "/settings/plan": "/settings/plan",
+    "/settings/payments": "/settings/payments",
+    "/settings/requests": "/settings/requests",
+    "/settings/developer": "/settings/developer",
+    "/settings/api-keys": "/settings/api-keys",
+    "/settings/hotkeys": "/settings/hotkeys",
+    "/settings/adminGeneral": "/settings/adminGeneral",
+    "/settings/adminSecurity": "/settings/adminSecurity",
+    "/settings/adminConnections": "/settings/adminConnections",
+    "/settings/adminPrivacy": "/settings/adminPrivacy",
+    "/settings/adminDatabase": "/settings/adminDatabase",
+    "/settings/adminAdvanced": "/settings/adminAdvanced",
+    "/settings/adminLegal": "/settings/adminLegal",
+    "/settings/adminPremium": "/settings/adminPremium",
+    "/settings/adminFeatures": "/settings/adminFeatures",
+    "/settings/adminPlan": "/settings/adminPlan",
+    "/settings/adminAudit": "/settings/adminAudit",
+    "/settings/adminUsage": "/settings/adminUsage",
+    "/settings/adminEndpoints": "/settings/adminEndpoints",
+    "/settings/adminStorageSharing": "/settings/adminStorageSharing",
+    "/settings/adminMcp": "/settings/adminMcp",
+    "/settings/help": "/settings/help",
+    "/settings/legal": "/settings/legal",
+    "/settings/payg": "/settings/payg"
+  }
+}
