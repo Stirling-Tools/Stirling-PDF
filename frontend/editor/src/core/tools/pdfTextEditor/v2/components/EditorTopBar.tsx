@@ -11,18 +11,26 @@ import type { PageSnapshot } from "@app/tools/pdfTextEditor/v2/types";
  * Stirling's dedicated tools and have intentionally been removed
  * from this surface so users don't see overlapping affordances.
  *
- * Kept controls here are app-level chrome only: zoom (editing
- * visibility), save PDF (canonical document output), and keyboard
- * help. The selection controls live in the toolbar below; insert and
- * paragraph actions live in the sidebar.
+ * Kept controls: zoom (editing visibility), add text, add image,
+ * group/ungroup paragraph runs, save PDF (canonical document output),
+ * keyboard help.
  */
 interface TopBarProps {
   store: EditorStore;
   hasDocument: boolean;
   dirty: boolean;
   renderScale: number;
+  mode: "select" | "addText";
   pages: PageSnapshot[];
   openedFileName: string | null;
+  /** True when ≥2 text runs are selected. */
+  canGroup: boolean;
+  /** True when exactly one paragraph-grouped run is selected. */
+  canUngroup: boolean;
+  onToggleAddText: () => void;
+  onPickImage: () => void;
+  onGroup: () => void;
+  onUngroup: () => void;
   onSave: () => void;
   onShowHelp: () => void;
 }
@@ -38,8 +46,15 @@ export function EditorTopBar(props: TopBarProps) {
     hasDocument,
     dirty,
     renderScale,
+    mode,
     pages,
     openedFileName,
+    canGroup,
+    canUngroup,
+    onToggleAddText,
+    onPickImage,
+    onGroup,
+    onUngroup,
     onSave,
     onShowHelp,
   } = props;
@@ -139,6 +154,56 @@ export function EditorTopBar(props: TopBarProps) {
               Fit
             </Button>
           </Group>
+          <Button
+            size="xs"
+            variant={mode === "addText" ? "filled" : "subtle"}
+            onClick={onToggleAddText}
+            data-testid="v2-add-text"
+          >
+            {mode === "addText" ? "Click page to add text" : "Add text"}
+          </Button>
+          <Button
+            size="xs"
+            variant="subtle"
+            onClick={onPickImage}
+            data-testid="v2-add-image"
+          >
+            Add image
+          </Button>
+          <Tooltip
+            label={
+              canGroup
+                ? "Merge selected runs into one paragraph (Ctrl+M)"
+                : "Select 2+ runs (Shift+Click or Ctrl+Shift+drag) to merge"
+            }
+          >
+            <Button
+              size="xs"
+              variant="subtle"
+              onClick={onGroup}
+              disabled={!canGroup}
+              data-testid="v2-group"
+            >
+              Group
+            </Button>
+          </Tooltip>
+          <Tooltip
+            label={
+              canUngroup
+                ? "Split this paragraph back into one line per source line"
+                : "Select a multi-line paragraph to ungroup"
+            }
+          >
+            <Button
+              size="xs"
+              variant="subtle"
+              onClick={onUngroup}
+              disabled={!canUngroup}
+              data-testid="v2-ungroup"
+            >
+              Ungroup
+            </Button>
+          </Tooltip>
           <Tooltip label="Download edited PDF (Ctrl+S)">
             <Button size="xs" onClick={onSave} data-testid="v2-save">
               Save PDF
@@ -149,7 +214,6 @@ export function EditorTopBar(props: TopBarProps) {
               size="xs"
               variant="subtle"
               onClick={onShowHelp}
-              aria-label="Keyboard shortcuts"
               data-testid="v2-help"
             >
               ?

@@ -1,17 +1,4 @@
-import {
-  Box,
-  Button,
-  Group,
-  Kbd,
-  SegmentedControl,
-  Stack,
-  Text,
-  Tooltip,
-} from "@mantine/core";
-import TextFieldsIcon from "@mui/icons-material/TextFieldsOutlined";
-import ImageIcon from "@mui/icons-material/ImageOutlined";
-import CallMergeIcon from "@mui/icons-material/CallMergeOutlined";
-import CallSplitIcon from "@mui/icons-material/CallSplitOutlined";
+import { Box, Kbd, SegmentedControl, Stack, Text } from "@mantine/core";
 import type {
   EditorViewState,
   LoadProgress,
@@ -23,25 +10,17 @@ import type {
 } from "@app/tools/pdfTextEditor/v2/types";
 
 /**
- * Sidebar for the v2 text/image editor.
+ * Sidebar status panel for the v2 text/image editor.
  *
- * Scope: the general (non-selection) editor tools - insert (add text /
- * image), paragraph grouping (group / ungroup), and the editor settings
- * (text grouping, text-box width) - plus a compact selection status and
- * the Ctrl+drag move tip. The per-selection formatting controls live in
- * the toolbar above; document-level page operations live in Stirling's
- * dedicated page tools.
+ * Scope: editing-session status (dirty state, selection count, usage hint)
+ * plus the text-level controls - grouping (Auto/Line) and text-box width
+ * (Grow/Wrap) - and the Ctrl+drag move tip. The document-level page
+ * navigator (thumbnails / click-to-jump) is intentionally NOT here; page
+ * operations live in Stirling's dedicated page tools.
  */
 interface SidebarProps {
   state: EditorViewState;
   selection: SelectionState;
-  mode: "select" | "addText";
-  canGroup: boolean;
-  canUngroup: boolean;
-  onToggleAddText: () => void;
-  onPickImage: () => void;
-  onGroup: () => void;
-  onUngroup: () => void;
   onSetGroupingMode: (mode: GroupingMode) => void;
   onSetWidthMode: (mode: WidthMode) => void;
 }
@@ -49,13 +28,6 @@ interface SidebarProps {
 export function EditorSidebar({
   state,
   selection,
-  mode,
-  canGroup,
-  canUngroup,
-  onToggleAddText,
-  onPickImage,
-  onGroup,
-  onUngroup,
   onSetGroupingMode,
   onSetWidthMode,
 }: SidebarProps) {
@@ -65,13 +37,6 @@ export function EditorSidebar({
         <LoadedSidebar
           state={state}
           selection={selection}
-          mode={mode}
-          canGroup={canGroup}
-          canUngroup={canUngroup}
-          onToggleAddText={onToggleAddText}
-          onPickImage={onPickImage}
-          onGroup={onGroup}
-          onUngroup={onUngroup}
           onSetGroupingMode={onSetGroupingMode}
           onSetWidthMode={onSetWidthMode}
         />
@@ -79,14 +44,6 @@ export function EditorSidebar({
         <EmptySidebar progress={state.progress} loading={state.loading} />
       )}
     </Box>
-  );
-}
-
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <Text size="xs" fw={600} c="dimmed" style={{ letterSpacing: "0.4px" }}>
-      {children}
-    </Text>
   );
 }
 
@@ -125,143 +82,47 @@ function EmptySidebar({
 function LoadedSidebar({
   state,
   selection,
-  mode,
-  canGroup,
-  canUngroup,
-  onToggleAddText,
-  onPickImage,
-  onGroup,
-  onUngroup,
   onSetGroupingMode,
   onSetWidthMode,
-}: Omit<SidebarProps, never>) {
+}: {
+  state: EditorViewState;
+  selection: SelectionState;
+  onSetGroupingMode: (mode: GroupingMode) => void;
+  onSetWidthMode: (mode: WidthMode) => void;
+}) {
   const selectionLabel = formatSelection(selection);
   return (
-    <Stack gap="lg" data-testid="v2-sidebar-status">
-      <InsertSection
-        mode={mode}
-        onToggleAddText={onToggleAddText}
-        onPickImage={onPickImage}
-      />
-      <ParagraphSection
-        canGroup={canGroup}
-        canUngroup={canUngroup}
-        onGroup={onGroup}
-        onUngroup={onUngroup}
-      />
-      <Stack gap="sm">
-        <SectionLabel>Editor settings</SectionLabel>
-        <GroupingModeControl
-          mode={state.groupingMode}
-          onChange={onSetGroupingMode}
-        />
-        <WidthModeControl mode={state.widthMode} onChange={onSetWidthMode} />
-      </Stack>
-      <MoveTip />
-      {selectionLabel && (
-        <Text size="xs" c="blue.6" data-testid="v2-selection-count">
-          {selectionLabel}
+    <Stack gap="md" data-testid="v2-sidebar-status">
+      <Stack gap="xs">
+        <Text size="xs" c="dimmed">
+          Click any text in the document to edit it inline. Selecting a run
+          enables the colour and font-size controls above.
         </Text>
-      )}
-    </Stack>
-  );
-}
-
-function InsertSection({
-  mode,
-  onToggleAddText,
-  onPickImage,
-}: {
-  mode: "select" | "addText";
-  onToggleAddText: () => void;
-  onPickImage: () => void;
-}) {
-  return (
-    <Stack gap="xs">
-      <SectionLabel>Insert</SectionLabel>
-      <Group grow gap="xs" wrap="nowrap">
-        <Button
-          size="xs"
-          variant={mode === "addText" ? "filled" : "default"}
-          leftSection={<TextFieldsIcon fontSize="small" />}
-          onClick={onToggleAddText}
-          data-testid="v2-add-text"
-        >
-          {mode === "addText" ? "Click page to add text" : "Add text"}
-        </Button>
-        <Button
-          size="xs"
-          variant="default"
-          leftSection={<ImageIcon fontSize="small" />}
-          onClick={onPickImage}
-          data-testid="v2-add-image"
-        >
-          Add image
-        </Button>
-      </Group>
-    </Stack>
-  );
-}
-
-function ParagraphSection({
-  canGroup,
-  canUngroup,
-  onGroup,
-  onUngroup,
-}: {
-  canGroup: boolean;
-  canUngroup: boolean;
-  onGroup: () => void;
-  onUngroup: () => void;
-}) {
-  return (
-    <Stack gap="xs">
-      <SectionLabel>Paragraph</SectionLabel>
-      <Group grow gap="xs" wrap="nowrap">
-        <Tooltip
-          label={
-            canGroup
-              ? "Merge selected runs into one paragraph (Ctrl+M)"
-              : "Select 2+ runs to merge"
-          }
-        >
-          <Button
-            size="xs"
-            variant="default"
-            leftSection={<CallMergeIcon fontSize="small" />}
-            onClick={onGroup}
-            disabled={!canGroup}
-            data-testid="v2-group"
-          >
-            Group
-          </Button>
-        </Tooltip>
-        <Tooltip
-          label={
-            canUngroup
-              ? "Split this paragraph into one run per line"
-              : "Select a multi-line paragraph to ungroup"
-          }
-        >
-          <Button
-            size="xs"
-            variant="default"
-            leftSection={<CallSplitIcon fontSize="small" />}
-            onClick={onUngroup}
-            disabled={!canUngroup}
-            data-testid="v2-ungroup"
-          >
-            Ungroup
-          </Button>
-        </Tooltip>
-      </Group>
+        <Text size="xs" c="dimmed">
+          {state.dirty
+            ? "Unsaved changes - press Save PDF to download."
+            : "No changes yet."}
+        </Text>
+        {selectionLabel && (
+          <Text size="xs" c="blue.6" data-testid="v2-selection-count">
+            {selectionLabel}
+          </Text>
+        )}
+      </Stack>
+      <GroupingModeControl
+        mode={state.groupingMode}
+        onChange={onSetGroupingMode}
+      />
+      <WidthModeControl mode={state.widthMode} onChange={onSetWidthMode} />
+      <MoveTip />
     </Stack>
   );
 }
 
 /**
  * Reminder that text boxes are repositioned with Ctrl + drag (the same
- * gesture the overlay listens for).
+ * gesture the overlay listens for). Styled as a subtle hint card so it
+ * sits comfortably beneath the grouping / width controls.
  */
 function MoveTip() {
   return (
@@ -275,7 +136,10 @@ function MoveTip() {
       }}
     >
       <Text size="xs" c="dimmed">
-        Hold <Kbd>Ctrl</Kbd> and drag a text box to move it.
+        <Text span fw={600} c="dimmed">
+          Tip:{" "}
+        </Text>
+        Hold <Kbd>Ctrl</Kbd> and drag a text box to move it around the page.
       </Text>
     </Box>
   );
@@ -311,8 +175,8 @@ function GroupingModeControl({
       />
       <Text size="xs" c="dimmed">
         {mode === "auto"
-          ? "Equal-spaced lines group into editable paragraphs."
-          : "Each source line is edited on its own. Switching clears undo history."}
+          ? "Equal-spaced lines are grouped into editable paragraphs."
+          : "Each source line is edited on its own. Switching re-reads the document and clears undo history."}
       </Text>
     </Stack>
   );
@@ -322,6 +186,7 @@ function GroupingModeControl({
  * Toggle how a text box resizes as you type past its current width.
  *  - Grow: the box widens to the right and never wraps.
  *  - Wrap: the box keeps its width and overflow wraps onto new lines.
+ * Styled to match `GroupingModeControl` and sits next to it.
  */
 function WidthModeControl({
   mode,

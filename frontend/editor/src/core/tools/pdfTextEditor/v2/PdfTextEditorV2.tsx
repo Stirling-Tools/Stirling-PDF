@@ -733,27 +733,6 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
     [state.pages, selection],
   );
 
-  const canGroup = selection.runIds.length >= 2;
-  const canUngroup = (() => {
-    if (selection.runIds.length !== 1) return false;
-    const run = state.pages
-      .flatMap((p) => p.runs)
-      .find((r) => r.id === selection.runIds[0]);
-    return !!run && (run.paragraphLineCount ?? 0) > 1;
-  })();
-  const handleToggleAddText = useCallback(
-    () =>
-      store.setMode(store.getState().mode === "addText" ? "select" : "addText"),
-    [store],
-  );
-  const handlePickImageClick = useCallback(() => {
-    (
-      document.querySelector(
-        '[data-testid="v2-image-input"]',
-      ) as HTMLInputElement | null
-    )?.click();
-  }, []);
-
   const onPickPdf = useCallback(
     (file: File) => {
       setOpenedFileName(file.name);
@@ -774,8 +753,30 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
         hasDocument={state.hasDocument}
         dirty={state.dirty}
         renderScale={state.renderScale}
+        mode={state.mode}
         pages={state.pages}
         openedFileName={openedFileName}
+        canGroup={selection.runIds.length >= 2}
+        canUngroup={(() => {
+          if (selection.runIds.length !== 1) return false;
+          const id = selection.runIds[0];
+          const run = state.pages
+            .flatMap((p) => p.runs)
+            .find((r) => r.id === id);
+          return !!run && (run.paragraphLineCount ?? 0) > 1;
+        })()}
+        onToggleAddText={() =>
+          store.setMode(state.mode === "addText" ? "select" : "addText")
+        }
+        onPickImage={() =>
+          (
+            document.querySelector(
+              '[data-testid="v2-image-input"]',
+            ) as HTMLInputElement | null
+          )?.click()
+        }
+        onGroup={handleMergeSelection}
+        onUngroup={handleUngroupSelection}
         onSave={handleSave}
         onShowHelp={() => setHelpOpen(true)}
       />
@@ -842,13 +843,6 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
       <EditorSidebar
         state={state}
         selection={selection}
-        mode={state.mode}
-        canGroup={canGroup}
-        canUngroup={canUngroup}
-        onToggleAddText={handleToggleAddText}
-        onPickImage={handlePickImageClick}
-        onGroup={handleMergeSelection}
-        onUngroup={handleUngroupSelection}
         onSetGroupingMode={(mode) => store.setGroupingMode(mode)}
         onSetWidthMode={(m) => store.setWidthMode(m)}
       />
