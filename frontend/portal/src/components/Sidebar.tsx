@@ -1,14 +1,20 @@
-import { NavItem } from "@shared/components";
+import { Dropdown, NavItem } from "@shared/components";
 import { useView, type ViewId } from "@portal/contexts/ViewContext";
 import { useTier } from "@portal/contexts/TierContext";
+import { useTheme } from "@portal/contexts/ThemeContext";
+import { useUI } from "@portal/contexts/UIContext";
 import { useAsync } from "@portal/hooks/useAsync";
 import { fetchHomeKpis, type KpiEntry } from "@portal/api/home";
+import markLight from "@shared/assets/stirling-mark-light.svg";
+import markDark from "@shared/assets/stirling-mark-dark.svg";
 import {
   HomeIcon,
-  EditorIcon,
+  UsersIcon,
   SourcesIcon,
+  PoliciesIcon,
   PipelinesIcon,
   DocumentsIcon,
+  ComponentsIcon,
   InfrastructureIcon,
   UsageIcon,
   DocsIcon,
@@ -16,6 +22,11 @@ import {
   ChevronDownIcon,
 } from "@portal/components/icons";
 import "@portal/components/Sidebar.css";
+
+// The editor is a separate Vite app with no shared shell, so switching apps is
+// a hard navigation — the editor's dev server in dev, the site root in prod.
+// A standalone portal deploy can gate this behind a configured editor URL.
+const EDITOR_URL = import.meta.env.DEV ? "http://localhost:5180/" : "/";
 
 interface NavEntry {
   id: ViewId;
@@ -28,10 +39,12 @@ const GROUP_PRIMARY: NavEntry[] = [
 ];
 
 const GROUP_OPERATIONAL: NavEntry[] = [
-  { id: "editor", label: "Editor", icon: <EditorIcon /> },
+  { id: "users", label: "Users", icon: <UsersIcon /> },
   { id: "sources", label: "Sources", icon: <SourcesIcon /> },
+  { id: "policies", label: "Policies", icon: <PoliciesIcon /> },
   { id: "pipelines", label: "Pipelines", icon: <PipelinesIcon /> },
   { id: "documents", label: "Documents", icon: <DocumentsIcon /> },
+  { id: "components", label: "Components", icon: <ComponentsIcon /> },
 ];
 
 const GROUP_PLATFORM: NavEntry[] = [
@@ -43,22 +56,6 @@ const GROUP_PLATFORM: NavEntry[] = [
   { id: "usage", label: "Usage & Billing", icon: <UsageIcon /> },
   { id: "docs", label: "Developer Docs", icon: <DocsIcon /> },
 ];
-
-function StirlingMark() {
-  // The Stirling brand mark — two stacked parallelograms in the brand blues.
-  return (
-    <svg
-      width="22"
-      height="22"
-      viewBox="0 0 22 22"
-      aria-hidden
-      role="presentation"
-    >
-      <path d="M5 4 L20 4 L17 11 L2 11 Z" fill="var(--color-blue)" />
-      <path d="M5 11 L17 11 L14 18 L2 18 Z" fill="var(--color-blue-border)" />
-    </svg>
-  );
-}
 
 function UsageFooter() {
   const { tier } = useTier();
@@ -117,6 +114,8 @@ function UsageFooter() {
 
 export function Sidebar() {
   const { activeView, setActiveView } = useView();
+  const { theme } = useTheme();
+  const { openSettings } = useUI();
 
   function renderGroup(entries: NavEntry[]) {
     return entries.map((entry) => (
@@ -134,15 +133,56 @@ export function Sidebar() {
   return (
     <aside className="portal-sidebar" aria-label="Primary navigation">
       <div className="portal-sidebar__logo">
-        <StirlingMark />
-        <span className="portal-sidebar__wordmark">Stirling</span>
-        <button
-          type="button"
-          className="portal-sidebar__workspace"
-          aria-label="Switch workspace"
-        >
-          <ChevronDownIcon size={14} />
-        </button>
+        <span className="portal-sidebar__brand">
+          <img
+            className="portal-sidebar__brand-mark"
+            src={theme === "dark" ? markDark : markLight}
+            alt="Stirling"
+          />
+          <span className="portal-sidebar__logo-suffix">
+            Stirling Processor
+          </span>
+        </span>
+
+        <Dropdown.Root align="end" className="portal-sidebar__app-switch">
+          <Dropdown.Trigger>
+            <button
+              type="button"
+              className="portal-sidebar__app-switch-btn"
+              aria-label="Switch app"
+            >
+              <ChevronDownIcon size={14} />
+            </button>
+          </Dropdown.Trigger>
+          <Dropdown.Menu width="11rem">
+            <Dropdown.Item
+              active
+              leading={
+                <img
+                  className="portal-sidebar__app-icon"
+                  src={theme === "dark" ? markDark : markLight}
+                  alt=""
+                />
+              }
+            >
+              Processor
+            </Dropdown.Item>
+            <Dropdown.Item
+              onSelect={() => {
+                window.location.href = EDITOR_URL;
+              }}
+              leading={
+                <img
+                  className="portal-sidebar__app-icon"
+                  src={theme === "dark" ? markDark : markLight}
+                  alt=""
+                />
+              }
+            >
+              Editor
+            </Dropdown.Item>
+          </Dropdown.Menu>
+        </Dropdown.Root>
       </div>
 
       <nav className="portal-sidebar__nav">
@@ -164,8 +204,7 @@ export function Sidebar() {
           id="settings"
           label="Settings"
           icon={<SettingsIcon />}
-          isActive={activeView === "settings"}
-          onClick={(id) => setActiveView(id as ViewId)}
+          onClick={() => openSettings()}
         />
         <UsageFooter />
       </div>

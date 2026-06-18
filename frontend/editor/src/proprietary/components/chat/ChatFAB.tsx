@@ -6,21 +6,20 @@ import { ChatFABButton } from "@shared/components/ChatFABButton";
 import { ChatFABWindow } from "@shared/components/ChatFABWindow";
 import { ChatPanel } from "@app/components/chat/ChatPanel";
 import { useChat } from "@app/components/chat/ChatContext";
-import { useAgentsEnabled } from "@app/components/agents/AgentsPanel";
+import { useAiEngineEnabled } from "@app/hooks/useAiEngineEnabled";
 import { Z_INDEX_CHAT_FAB_OVERLAY } from "@app/styles/zIndex";
+import {
+  PANEL_WIDTH_PX,
+  PANEL_HEIGHT_PX,
+  PANEL_MIN_WIDTH_PX,
+  PANEL_MIN_HEIGHT_PX,
+  RESET_MS,
+  RESET_TRANSITION,
+  RESIZE_HANDLES,
+  clampToOverlay,
+  defaultPanelPos,
+} from "@app/components/chat/chatFabLayout";
 import "@app/components/chat/ChatFAB.css";
-
-const PANEL_WIDTH_PX = 390;
-const PANEL_HEIGHT_PX = 520;
-const PANEL_MIN_WIDTH_PX = 300;
-const PANEL_MIN_HEIGHT_PX = 380;
-const FAB_GAP_PX = 16;
-// footer-height (2rem = 32px) + gap so the panel clears the footer
-const FAB_BOTTOM_OFFSET_PX = 32 + FAB_GAP_PX;
-
-const RESET_MS = 380;
-const RESET_EASING = "cubic-bezier(0.32, 0.72, 0, 1)";
-const RESET_TRANSITION = `transform ${RESET_MS}ms ${RESET_EASING}, width ${RESET_MS}ms ${RESET_EASING}, height ${RESET_MS}ms ${RESET_EASING}`;
 
 // Raise Mantine popup z-index so Menu/Popover portals appear above the FAB overlay.
 const FAB_PANEL_THEME = createTheme({
@@ -31,22 +30,6 @@ const FAB_PANEL_THEME = createTheme({
   },
 });
 
-// Resize handle strips sit half-inside / half-outside the 1px border.
-// zIndex: 1 ensures they appear above ChatFABWindow's stacking context
-// (which is created by the CSS open/close transform), so the resize cursor
-// is visible on hover — not just during active drag.
-// Corners get a 14×14 zone; edges get a 6px-wide strip.
-const RESIZE_HANDLES = {
-  top: { top: -3, left: 14, right: 14, height: 6, zIndex: 1 },
-  bottom: { bottom: -3, left: 14, right: 14, height: 6, zIndex: 1 },
-  left: { left: -3, top: 14, bottom: 14, width: 6, zIndex: 1 },
-  right: { right: -3, top: 14, bottom: 14, width: 6, zIndex: 1 },
-  topLeft: { top: -4, left: -4, width: 14, height: 14, zIndex: 1 },
-  topRight: { top: -4, right: -4, width: 14, height: 14, zIndex: 1 },
-  bottomLeft: { bottom: -4, left: -4, width: 14, height: 14, zIndex: 1 },
-  bottomRight: { bottom: -4, right: -4, width: 14, height: 14, zIndex: 1 },
-};
-
 export function ChatFAB() {
   const { t } = useTranslation();
   // Intentionally separate from useChat().isOpen — the FAB tracks its own
@@ -54,7 +37,9 @@ export function ChatFAB() {
   const [isOpen, setIsOpen] = useState(false);
   const [hasUnviewedResult, setHasUnviewedResult] = useState(false);
   const { isLoading } = useChat();
-  const enabled = useAgentsEnabled();
+  // Desktop sources this from the SaaS backend (cloud kill switch); web reads it
+  // from the local app-config. Either way the AI engine drives FAB visibility.
+  const enabled = useAiEngineEnabled();
 
   // Detect loading → done transition. If the FAB is closed when the agent
   // finishes, show the tick badge until the user opens the panel.
@@ -80,19 +65,55 @@ export function ChatFAB() {
   const [isAnimatingReset, setIsAnimatingReset] = useState(false);
   const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Anchored = at default home; re-homes on overlay resize. Drag/resize breaks anchor; double-click restores it.
+  const [isAnchored, setIsAnchored] = useState(true);
+
+  // Mirror the latest position/size/anchor into refs so the ResizeObserver below —
+  // set up once — always reads current values without re-subscribing on every drag/resize.
+  const rndPosRef = useRef(rndPos);
+  rndPosRef.current = rndPos;
+  const rndSizeRef = useRef(rndSize);
+  rndSizeRef.current = rndSize;
+  const isAnchoredRef = useRef(isAnchored);
+  isAnchoredRef.current = isAnchored;
+
   const getDefaultPos = () => {
     const el = overlayRef.current;
     if (!el) return null;
-    return {
-      x: el.offsetWidth - PANEL_WIDTH_PX - FAB_GAP_PX,
-      y: el.offsetHeight - PANEL_HEIGHT_PX - FAB_BOTTOM_OFFSET_PX,
-    };
+    return defaultPanelPos(el.offsetWidth, el.offsetHeight);
   };
 
   useLayoutEffect(() => {
+    // The overlay only mounts once the AI engine is enabled (config can load
+    // after first render), so re-measure when that flips true rather than only
+    // on initial mount, otherwise the default position never gets computed.
+    if (!enabled) return;
     const pos = getDefaultPos();
     if (pos) setRndPos(pos);
-  }, []);
+  }, [enabled]);
+
+  // bounds="parent" only clamps during active drag/resize; ResizeObserver keeps position valid when the overlay changes size.
+  useEffect(() => {
+    if (!enabled) return;
+    const el = overlayRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(() => {
+      const pos = rndPosRef.current;
+      if (!pos) return;
+      const base = isAnchoredRef.current
+        ? defaultPanelPos(el.offsetWidth, el.offsetHeight)
+        : pos;
+      const next = clampToOverlay(
+        base,
+        rndSizeRef.current,
+        el.offsetWidth,
+        el.offsetHeight,
+      );
+      if (next.x !== pos.x || next.y !== pos.y) setRndPos(next);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [enabled]);
 
   // Clear the reset timer on unmount to avoid state updates on dead components.
   // Also ensure body user-select is restored if we unmount mid-resize.
@@ -121,6 +142,8 @@ export function ChatFAB() {
       setIsAnimatingReset(true);
       setRndPos(pos);
       setRndSize({ width: PANEL_WIDTH_PX, height: PANEL_HEIGHT_PX });
+      // Back at the default home — re-enable corner-hugging on resize.
+      setIsAnchored(true);
       resetTimerRef.current = setTimeout(() => {
         setIsAnimatingReset(false);
         resetTimerRef.current = null;
@@ -140,6 +163,12 @@ export function ChatFAB() {
       <ChatFABButton
         className={`chat-fab-trigger${isOpen ? " chat-fab-trigger--hidden" : ""}`}
         onClick={() => {
+          // Fallback: ensure a position exists before opening, in case the
+          // layout effect measured before the overlay was laid out.
+          if (rndPos === null) {
+            const pos = getDefaultPos();
+            if (pos) setRndPos(pos);
+          }
           setIsOpen(true);
           setHasUnviewedResult(false);
         }}
@@ -163,7 +192,14 @@ export function ChatFAB() {
           dragHandleClassName="chat-panel__header"
           cancel="button, [role='button']"
           onDragStart={cancelResetAnimation}
-          onDragStop={(_e, d) => setRndPos({ x: d.x, y: d.y })}
+          onDragStop={(_e, d) => {
+            setRndPos({ x: d.x, y: d.y });
+            // A bare click on the header fires drag start/stop without movement;
+            // only break the anchor when the panel actually moved.
+            if (rndPos && (d.x !== rndPos.x || d.y !== rndPos.y)) {
+              setIsAnchored(false);
+            }
+          }}
           onResizeStart={() => {
             cancelResetAnimation();
             document.body.style.setProperty("user-select", "none");
@@ -174,6 +210,7 @@ export function ChatFAB() {
             document.body.style.removeProperty("-webkit-user-select");
             setRndSize({ width: ref.offsetWidth, height: ref.offsetHeight });
             setRndPos(pos);
+            setIsAnchored(false);
           }}
           // Invisible strips centred on the border — cursor change is the affordance.
           // zIndex: 1 lifts them above ChatFABWindow's stacking context.

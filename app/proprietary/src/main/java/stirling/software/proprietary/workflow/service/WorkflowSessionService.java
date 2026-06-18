@@ -553,7 +553,7 @@ public class WorkflowSessionService {
                             dto.setMyStatus(p.getStatus());
                             return dto;
                         })
-                .collect(java.util.stream.Collectors.toList());
+                .toList();
     }
 
     /**

@@ -26,10 +26,10 @@ vi.mock("react-i18next", () => ({
 // Mock i18n module to avoid initialization
 vi.mock("@app/i18n", () => ({
   updateSupportedLanguages: vi.fn(),
-  supportedLanguages: { "en-GB": "English" },
+  supportedLanguages: { "en-US": "English (US)" },
   rtlLanguages: [],
   default: {
-    language: "en-GB",
+    language: "en-US",
     changeLanguage: vi.fn(),
     options: {},
   },
@@ -110,6 +110,7 @@ describe("Login", () => {
       session: null,
       user: null,
       displayName: null,
+      isAnonymous: false,
       loading: false,
       error: null,
       signOut: vi.fn(),
@@ -157,6 +158,7 @@ describe("Login", () => {
       session: mockSession,
       user: mockSession.user,
       displayName: mockSession.user.username,
+      isAnonymous: false,
       loading: false,
       error: null,
       signOut: vi.fn(),
@@ -181,6 +183,7 @@ describe("Login", () => {
       session: null,
       user: null,
       displayName: null,
+      isAnonymous: false,
       loading: true,
       error: null,
       signOut: vi.fn(),

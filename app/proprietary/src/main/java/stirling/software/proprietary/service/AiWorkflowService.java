@@ -17,6 +17,8 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.MediaTypeFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
@@ -175,7 +177,6 @@ public class AiWorkflowService {
         initialRequest.setFiles(files);
         initialRequest.setConversationHistory(new ArrayList<>(request.getConversationHistory()));
         initialRequest.setEnabledEndpoints(endpointResolver.getEnabledEndpointUrls());
-
         listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.ANALYZING));
 
         WorkflowState state = new WorkflowState.Pending(initialRequest);
@@ -385,6 +386,13 @@ public class AiWorkflowService {
             return new WorkflowState.Terminal(
                     cannotContinue(toolTimeoutMessage(PDF_TO_MARKDOWN_ENDPOINT, e)));
         } catch (Exception e) {
+            AiWorkflowResponse limit = paygLimitResponseOrNull(e);
+            if (limit != null) {
+                log.info(
+                        "AI markdown conversion blocked by downstream entitlement gate ({})",
+                        limit.getErrorCode());
+                return new WorkflowState.Terminal(limit);
+            }
             log.error("Failed to convert PDF to Markdown: {}", e.getMessage(), e);
             return new WorkflowState.Terminal(
                     cannotContinue(toolFailureMessage(PDF_TO_MARKDOWN_ENDPOINT, e)));
@@ -470,6 +478,14 @@ public class AiWorkflowService {
             log.error("Tool {} timed out: {}", endpointPath, e.getMessage());
             return new WorkflowState.Terminal(cannotContinue(toolTimeoutMessage(endpointPath, e)));
         } catch (Exception e) {
+            AiWorkflowResponse limit = paygLimitResponseOrNull(e);
+            if (limit != null) {
+                log.info(
+                        "AI workflow tool {} blocked by downstream entitlement gate ({})",
+                        endpointPath,
+                        limit.getErrorCode());
+                return new WorkflowState.Terminal(limit);
+            }
             log.error("Failed to execute tool {}: {}", endpointPath, e.getMessage(), e);
             return new WorkflowState.Terminal(cannotContinue(toolFailureMessage(endpointPath, e)));
         }
@@ -580,7 +596,18 @@ public class AiWorkflowService {
             log.error("Plan step on tool {} timed out: {}", e.getEndpointPath(), e.getMessage());
             return new WorkflowState.Terminal(
                     cannotContinue(toolTimeoutMessage(e.getEndpointPath(), e)));
+        } catch (HttpServerErrorException e) {
+            String reason = extractDetailFromHttpError(e);
+            log.error("Plan step failed (HTTP {}): {}", e.getStatusCode(), reason);
+            return new WorkflowState.Terminal(cannotContinue(reason));
         } catch (Exception e) {
+            AiWorkflowResponse limit = paygLimitResponseOrNull(e);
+            if (limit != null) {
+                log.info(
+                        "AI workflow plan blocked by downstream entitlement gate ({})",
+                        limit.getErrorCode());
+                return new WorkflowState.Terminal(limit);
+            }
             log.error("Failed to execute plan: {}", e.getMessage(), e);
             return new WorkflowState.Terminal(
                     cannotContinue("Plan execution failed: " + e.getMessage()));
@@ -603,6 +630,27 @@ public class AiWorkflowService {
         String reason =
                 cause.getMessage() != null ? cause.getMessage() : cause.getClass().getSimpleName();
         return String.format("The %s tool failed: %s", endpointPath, reason);
+    }
+
+    /**
+     * Extracts the {@code detail} field from an HTTP error response body if it is valid JSON,
+     * otherwise falls back to the exception message. This lets controller-level error messages
+     * (e.g. missing system dependency) surface cleanly in the chat response.
+     */
+    private String extractDetailFromHttpError(HttpServerErrorException e) {
+        try {
+            String body = e.getResponseBodyAsString();
+            if (body != null && !body.isBlank()) {
+                JsonNode node = objectMapper.readTree(body);
+                JsonNode detail = node.get("detail");
+                if (detail != null && detail.isTextual() && !detail.asText().isBlank()) {
+                    return detail.asText();
+                }
+            }
+        } catch (Exception ignored) {
+            // fall through to generic message
+        }
+        return "The request could not be completed. Please try again or contact your system administrator.";
     }
 
     /**
@@ -694,6 +742,33 @@ public class AiWorkflowService {
         AiWorkflowResponse response = new AiWorkflowResponse();
         response.setOutcome(AiWorkflowOutcome.CANNOT_CONTINUE);
         response.setReason(reason);
+        return response;
+    }
+
+    /**
+     * If {@code e} is a downstream usage-limit block — a 401/402 from a tool call carrying the saas
+     * EntitlementGuard's {@code error} sentinel — build a terminal response that carries the
+     * structured code (+ {@code subscribed}) through to the client, so it can pop the matching
+     * usage-limit modal instead of surfacing the raw "tool failed: 402…" text. Returns null for any
+     * other failure, so the caller falls back to its normal tool-failure handling.
+     *
+     * <p>The agent's tool calls run server-side (loopback HTTP via {@link PolicyExecutor}), so this
+     * 402 never reaches the frontend's API-client interceptor that pops the modal for direct calls
+     * — same gap the policy auto-run path bridges in {@code PolicyEngine}.
+     */
+    private AiWorkflowResponse paygLimitResponseOrNull(Throwable e) {
+        if (!(e instanceof RestClientResponseException rce)) {
+            return null;
+        }
+        String code = DownstreamEntitlementError.extractCode(rce);
+        if (code == null) {
+            return null;
+        }
+        AiWorkflowResponse response = new AiWorkflowResponse();
+        response.setOutcome(AiWorkflowOutcome.CANNOT_CONTINUE);
+        response.setReason("You've reached your current usage limit.");
+        response.setErrorCode(code);
+        response.setErrorSubscribed(DownstreamEntitlementError.extractSubscribed(rce));
         return response;
     }
 

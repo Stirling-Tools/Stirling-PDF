@@ -3,22 +3,17 @@ package stirling.software.proprietary.policy.trigger;
 import java.util.List;
 
 import org.springframework.context.SmartLifecycle;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Starts and stops every {@link PolicyTrigger} with the application lifecycle. Background triggers
- * (schedule, and future folder/S3) begin watching on {@link #start()} and release resources on
- * {@link #stop()}; request-driven triggers (manual) are no-ops.
- *
- * <p>This is the single activation point for triggers - a new background trigger only has to be a
- * {@link PolicyTrigger} bean.
- */
+/** Starts and stops every {@link PolicyTrigger} with the application lifecycle. */
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Profile("saas")
 public class PolicyTriggerManager implements SmartLifecycle {
 
     private final List<PolicyTrigger> triggers;
