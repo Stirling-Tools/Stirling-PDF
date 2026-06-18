@@ -38,7 +38,8 @@ export interface PanelHeaderProps {
   accent?: IconBadgeAccent;
   /** Shows a pulsing status dot on the icon + a tinted border (e.g. AI running). */
   loading?: boolean;
-  /** Right-aligned content rendered before the close button (e.g. a status badge). */
+  /** Right-aligned content rendered inside the header bar, after the title
+   *  (e.g. a status badge). */
   actions?: ReactNode;
   /** Applied to the inner header element — e.g. to set a view-transition-name. */
   barClassName?: string;
@@ -93,6 +94,9 @@ export function PanelHeader({
         {loading && <span className="sui-panelhdr__dot" />}
       </span>
       <span className="sui-panelhdr__label">{title}</span>
+      {actions != null && (
+        <span className="sui-panelhdr__actions">{actions}</span>
+      )}
       {hasMenu && (
         <KeyboardArrowDownIcon
           className="sui-panelhdr__chevron"
@@ -130,23 +134,18 @@ export function PanelHeader({
         <div className={barClasses}>{barBody}</div>
       )}
 
-      {(actions != null || onClose != null) && (
-        <div className="sui-panelhdr__trail">
-          {actions}
-          {onClose && (
-            <ActionIcon
-              className="sui-panelhdr__close"
-              variant="subtle"
-              color="gray"
-              radius="xl"
-              size="md"
-              onClick={onClose}
-              aria-label={closeLabel}
-            >
-              <CloseIcon sx={{ fontSize: 18 }} />
-            </ActionIcon>
-          )}
-        </div>
+      {onClose && (
+        <ActionIcon
+          className="sui-panelhdr__close"
+          variant="subtle"
+          color="gray"
+          radius="xl"
+          size="md"
+          onClick={onClose}
+          aria-label={closeLabel}
+        >
+          <CloseIcon sx={{ fontSize: 18 }} />
+        </ActionIcon>
       )}
     </div>
   );

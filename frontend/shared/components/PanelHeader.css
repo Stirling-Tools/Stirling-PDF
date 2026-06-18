@@ -83,10 +83,11 @@ button.sui-panelhdr__bar:hover {
   color: var(--mantine-color-dimmed);
 }
 
-.sui-panelhdr__trail {
+/* Right-aligned content inside the bar (e.g. a status badge); the flexible
+   label pushes it to the trailing edge of the pill. */
+.sui-panelhdr__actions {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
   flex-shrink: 0;
 }
 
