@@ -1,0 +1,159 @@
+version: '3'
+
+# Repo-wide lint/format/secret checks - the single source of truth that the git
+# pre-commit hook (.pre-commit-config.yaml) and CI (pre_commit.yml) both call.
+
+vars:
+  GITLEAKS: '8.30.0'
+
+  # File selections as git pathspecs: git does the include/exclude matching, so
+  # there is no grep/xargs and it behaves identically on every platform.
+  PY_FILES: >-
+    'scripts/*.py'
+    '.github/scripts/*.py'
+    'app/core/src/main/resources/static/python/*.py'
+    ':(exclude)*split_photos.py'
+  SPELL_FILES: >-
+    '*.html'
+    '*.css'
+    '*.js'
+    '*.py'
+    '*.md'
+    ':(exclude).vscode/*'
+    ':(exclude).devcontainer/*'
+    ':(exclude)app/core/src/main/resources/*'
+    ':(exclude)app/proprietary/src/main/resources/*'
+    ':(exclude)frontend/editor/public/vendor/*'
+    ':(exclude)*Dockerfile*'
+    ':(exclude)*pdfjs*'
+    ':(exclude)*thirdParty*'
+    ':(exclude)*bootstrap*'
+    ':(exclude)*.min.*'
+    ':(exclude)*diff.js'
+  WS_FILES: >-
+    '*.js'
+    '*.java'
+    '*.py'
+    '*.yml'
+    ':(exclude)*pdfjs*'
+    ':(exclude)*thirdParty*'
+    ':(exclude)*bootstrap*'
+    ':(exclude)*.min.*'
+    ':(exclude)*diff.js'
+    ':(exclude).github/workflows/*'
+  LOCALE_TOML: 'frontend/editor/public/locales/*/translation.toml'
+
+  GITLEAKS_BIN: '.task/bin/gitleaks-{{.GITLEAKS}}{{if eq OS "windows"}}.exe{{end}}'
+
+tasks:
+  default:
+    desc: "Check formatting, spelling, and secrets across the repo"
+    cmds:
+      - task: ruff
+      - task: ruff-format
+      - task: codespell
+      - task: gitleaks
+      - task: whitespace
+      - task: toml-sort
+
+  fix:
+    desc: "Auto-fix formatting, spelling, and secrets issues across the repo"
+    cmds:
+      # Auto-fixers first, then the report-only tools (codespell, gitleaks) so a
+      # finding there does not stop the fixers from running.
+      - task: ruff
+        vars: { FIX: '1' }
+      - task: ruff-format
+        vars: { FIX: '1' }
+      - task: whitespace
+        vars: { FIX: '1' }
+      - task: toml-sort
+        vars: { FIX: '1' }
+      - task: codespell
+      - task: gitleaks
+
+  install:
+    desc: "Install the pinned pre-commit Python tools (ruff, codespell, toml-sort)"
+    run: once
+    cmds:
+      - uv sync --project scripts/pre-commit --locked
+    sources:
+      - scripts/pre-commit/uv.lock
+      - scripts/pre-commit/pyproject.toml
+    status:
+      - test -d scripts/pre-commit/.venv
+
+  clean:
+    desc: "Remove the cache/build artifacts"
+    cmds:
+      - task: '{{if eq OS "windows"}}clean-windows{{else}}clean-unix{{end}}'
+
+  clean-unix:
+    internal: true
+    cmds:
+      - rm -rf scripts/pre-commit/.venv .task/bin/gitleaks-*
+
+  # On Windows, use PowerShell so it matches the same paths and tolerates absent
+  # files without erroring.
+  clean-windows:
+    internal: true
+    ignore_error: true
+    cmds:
+      - powershell -NoProfile -Command "Remove-Item -Recurse -Force -ErrorAction SilentlyContinue scripts/pre-commit/.venv, .task/bin/gitleaks-*"
+
+  # Individual checks (hidden from `task --list`, but callable, e.g.
+  # `task pre-commit:toml-sort FIX=1`). Pass FIX=1 to auto-fix where supported.
+  ruff:
+    deps: [install]
+    cmds:
+      - uv run --project scripts/pre-commit --no-sync ruff check --line-length=127 {{if .FIX}}--fix {{end}}$(git ls-files {{.PY_FILES}})
+
+  ruff-format:
+    deps: [install]
+    cmds:
+      - uv run --project scripts/pre-commit --no-sync ruff format {{if .FIX}}{{else}}--check {{end}}$(git ls-files {{.PY_FILES}})
+
+  codespell:
+    deps: [install]
+    cmds:
+      - uv run --project scripts/pre-commit --no-sync codespell --ignore-words-list=thirdParty,tabEl,tabEls,Sie,ist,fulfilment --quiet-level=2 $(git ls-files {{.SPELL_FILES}})
+
+  toml-sort:
+    deps: [install]
+    cmds:
+      - uv run --project scripts/pre-commit --no-sync toml-sort --all --ignore-case {{if .FIX}}--in-place{{else}}--check{{end}} {{.LOCALE_TOML}}
+
+  whitespace:
+    cmds:
+      - uv run --no-project python scripts/pre-commit/whitespace.py {{if .FIX}}--fix {{end}}$(git ls-files {{.WS_FILES}})
+
+  gitleaks:
+    deps: [gitleaks-bin]
+    # Scan staged changes only, matching the old hook: the git-mode fingerprints
+    # in .gitleaksignore (file:rule:line) still apply, and with nothing staged
+    # this is a no-op. Secrets are never auto-fixed, so FIX has no effect.
+    cmds:
+      - "{{.GITLEAKS_BIN}} git --pre-commit --redact --staged --verbose"
+
+  gitleaks-bin:
+    internal: true
+    desc: "Ensure the pinned gitleaks binary is cached in .task/bin"
+    status:
+      - test -f {{.GITLEAKS_BIN}}
+    vars:
+      GL_ARCH: '{{if eq ARCH "amd64"}}x64{{else if eq ARCH "arm64"}}arm64{{else if eq ARCH "386"}}x32{{else}}{{ARCH}}{{end}}'
+      GL_PLATFORM: '{{OS}}_{{.GL_ARCH}}'
+      GL_URL: 'https://github.com/gitleaks/gitleaks/releases/download/v{{.GITLEAKS}}/gitleaks_{{.GITLEAKS}}_{{.GL_PLATFORM}}'
+      # SHA-256 of each release asset, from gitleaks_{{.GITLEAKS}}_checksums.txt.
+      GL_SHA: >-
+        {{if eq .GL_PLATFORM "linux_x64"}}79a3ab579b53f71efd634f3aaf7e04a0fa0cf206b7ed434638d1547a2470a66e
+        {{- else if eq .GL_PLATFORM "linux_arm64"}}b4cbbb6ddf7d1b2a603088cd03a4e3f7ce48ee7fd449b51f7de6ee2906f5fa2f
+        {{- else if eq .GL_PLATFORM "darwin_x64"}}ca221d012d247080c2f6f61f4b7a83bffa2453806b0c195c795bbe9a8c775ed5
+        {{- else if eq .GL_PLATFORM "darwin_arm64"}}b251ab2bcd4cd8ba9e56ff37698c033ebf38582b477d21ebd86586d927cf87e7
+        {{- else if eq .GL_PLATFORM "windows_x64"}}54fe94f644b832dd08e8c3a5915efb3bfa862386d59fb27ca0792cb687a83573
+        {{- end}}
+    cmds:
+      - cmd: bash scripts/pre-commit/install-gitleaks.sh "{{.GL_URL}}.tar.gz" "{{.GL_SHA}}" "{{.GITLEAKS_BIN}}"
+        platforms: [linux, darwin]
+      - cmd: powershell -NoProfile -File scripts/pre-commit/install-gitleaks.ps1 -Url "{{.GL_URL}}.zip" -Sha "{{.GL_SHA}}" -Dest "{{.GITLEAKS_BIN}}"
+        platforms: [windows]
