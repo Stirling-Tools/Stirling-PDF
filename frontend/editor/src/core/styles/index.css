@@ -81,3 +81,71 @@ code {
 .viewer-file-tab[data-active] {
   background-color: rgba(147, 197, 253, 0.5);
 }
+
+/* Page skeleton loader with CSS shimmer */
+.pdf-page-skeleton {
+  background: var(--pdf-page-bg, #ffffff);
+  position: relative;
+  overflow: hidden;
+}
+
+.pdf-page-skeleton::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--pdf-shimmer-mid, rgba(226, 232, 240, 0.4)) 20%,
+    var(--pdf-shimmer-peak, rgba(203, 213, 225, 0.5)) 60%,
+    transparent 100%
+  );
+  animation: pdf-page-shimmer 2.5s infinite;
+  pointer-events: none;
+}
+
+/* Light / dark theme tokens for shimmer background */
+:root {
+  --pdf-page-bg: #ffffff;
+  --pdf-shimmer-mid: rgba(226, 232, 240, 0.4);
+  --pdf-shimmer-peak: rgba(203, 213, 225, 0.5);
+}
+
+[data-theme="dark"] {
+  --pdf-page-bg: #1a1a1a;
+  --pdf-shimmer-mid: rgba(60, 65, 75, 0.4);
+  --pdf-shimmer-peak: rgba(75, 82, 95, 0.5);
+}
+
+/* Smooth fade-in for lazy-loaded/rendered tile images */
+.pdf-tile-layer img {
+  animation: pdf-tile-fade-in 0.2s ease-out forwards;
+}
+
+@keyframes pdf-page-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes pdf-tile-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pdf-page-skeleton::after {
+    animation: none;
+  }
+  .pdf-tile-layer img {
+    animation: none;
+  }
+}

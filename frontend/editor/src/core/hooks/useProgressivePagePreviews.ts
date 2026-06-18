@@ -38,8 +38,30 @@ export const useProgressivePagePreviews = ({
     loadingPages: new Set(),
   });
 
+  const pageBlobRegistryRef = useRef<Map<number, string>>(new Map());
+
+  const revokePageBlob = useCallback((pageNum: number) => {
+    const url = pageBlobRegistryRef.current.get(pageNum);
+    if (url) {
+      URL.revokeObjectURL(url);
+      pageBlobRegistryRef.current.delete(pageNum);
+    }
+  }, []);
+
   const pdfRef = useRef<PDFDocumentProxy | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const createdBlobUrlsRef = useRef<Set<string>>(new Set());
+
+  const revokeAll = useCallback(() => {
+    createdBlobUrlsRef.current.forEach((url) => {
+      URL.revokeObjectURL(url);
+    });
+    createdBlobUrlsRef.current.clear();
+    pageBlobRegistryRef.current.forEach((url) => {
+      URL.revokeObjectURL(url);
+    });
+    pageBlobRegistryRef.current.clear();
+  }, []);
 
   const renderPageBatch = useCallback(
     async (
@@ -74,13 +96,40 @@ export const useProgressivePagePreviews = ({
             viewport: renderViewport,
             canvas,
           }).promise;
-          previews.push({
-            pageNumber,
-            width: Math.round(displayViewport.width),
-            height: Math.round(displayViewport.height),
-            rotation: (page.rotate || 0) % 360,
-            url: canvas.toDataURL(),
+
+          const url = await new Promise<string>((resolve) => {
+            canvas.toBlob(
+              (blob) => {
+                if (blob) {
+                  // Revoke previous blob URL first if exists
+                  const existingUrl =
+                    pageBlobRegistryRef.current.get(pageNumber);
+                  if (existingUrl) {
+                    URL.revokeObjectURL(existingUrl);
+                    createdBlobUrlsRef.current.delete(existingUrl);
+                  }
+                  const bUrl = URL.createObjectURL(blob);
+                  pageBlobRegistryRef.current.set(pageNumber, bUrl);
+                  createdBlobUrlsRef.current.add(bUrl);
+                  resolve(bUrl);
+                } else {
+                  resolve("");
+                }
+              },
+              "image/webp",
+              0.85,
+            );
           });
+
+          if (url) {
+            previews.push({
+              pageNumber,
+              width: Math.round(displayViewport.width),
+              height: Math.round(displayViewport.height),
+              rotation: (page.rotate || 0) % 360,
+              url,
+            });
+          }
 
           page.cleanup();
           canvas.width = 0;
@@ -100,7 +149,6 @@ export const useProgressivePagePreviews = ({
 
   const loadPageRange = useCallback(
     async (startPage: number, endPage: number, signal: AbortSignal) => {
-      // Use the live PDF ref for bounds instead of possibly stale state
       const totalPages = pdfRef.current?.numPages ?? state.totalPages;
       if (startPage < 0 || endPage >= totalPages || startPage > endPage) {
         return;
@@ -186,6 +234,7 @@ export const useProgressivePagePreviews = ({
     let cancelled = false;
 
     if (!file || !enabled) {
+      revokeAll();
       setState({
         pages: [],
         loading: false,
@@ -246,10 +295,11 @@ export const useProgressivePagePreviews = ({
         pdfWorkerManager.destroyDocument(pdfRef.current);
         pdfRef.current = null;
       }
+      revokeAll();
     };
-  }, [file, enabled, cacheKey, loadPageRange]);
+  }, [file, enabled, cacheKey, loadPageRange, revokeAll]);
 
-  // Load pages based on visible range
+  // Load pages based on visible range and evict/revoke pages outside viewport (with ±3 page buffer)
   useEffect(() => {
     if (!visiblePageRange || state.totalPages === 0) return;
 
@@ -267,6 +317,38 @@ export const useProgressivePagePreviews = ({
 
     loadPageRange(startPage, endPage, abortController.signal);
 
+    // Evict pages outside ±3 of the visible viewport [start, end]
+    const keepStart = Math.max(1, start + 1 - 3);
+    const keepEnd = Math.min(state.totalPages, end + 1 + 3);
+
+    const toRevoke: number[] = [];
+    pageBlobRegistryRef.current.forEach((_, pageNum) => {
+      if (pageNum < keepStart || pageNum > keepEnd) {
+        toRevoke.push(pageNum);
+      }
+    });
+
+    if (toRevoke.length > 0) {
+      toRevoke.forEach((pageNum) => {
+        revokePageBlob(pageNum);
+      });
+
+      setState((prev) => {
+        const newPages = prev.pages.filter(
+          (p) => !toRevoke.includes(p.pageNumber),
+        );
+        const newLoadedPages = new Set(prev.loadedPages);
+        toRevoke.forEach((pageNum) => {
+          newLoadedPages.delete(pageNum - 1);
+        });
+        return {
+          ...prev,
+          pages: newPages,
+          loadedPages: newLoadedPages,
+        };
+      });
+    }
+
     return () => {
       abortController.abort();
     };
@@ -281,8 +363,9 @@ export const useProgressivePagePreviews = ({
       if (pdfRef.current) {
         pdfWorkerManager.destroyDocument(pdfRef.current);
       }
+      revokeAll();
     };
-  }, []);
+  }, [revokeAll]);
 
   return {
     pages: state.pages,

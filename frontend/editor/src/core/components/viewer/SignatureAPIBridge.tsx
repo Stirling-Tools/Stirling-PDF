@@ -71,16 +71,16 @@ const extractDataUrl = (
 const createTextStampImage = (
   config: SignParameters,
   displaySize?: { width: number; height: number } | null,
-): {
+): Promise<{
   dataUrl: string;
   pixelWidth: number;
   pixelHeight: number;
   displayWidth: number;
   displayHeight: number;
-} | null => {
+} | null> => {
   const text = (config.signerName ?? "").trim();
   if (!text) {
-    return null;
+    return Promise.resolve(null);
   }
 
   const fontSize = config.fontSize ?? 16;
@@ -93,7 +93,7 @@ const createTextStampImage = (
   const measureCanvas = document.createElement("canvas");
   const measureCtx = measureCanvas.getContext("2d");
   if (!measureCtx) {
-    return null;
+    return Promise.resolve(null);
   }
 
   measureCtx.font = `${fontSize}px ${fontFamily}`;
@@ -137,7 +137,7 @@ const createTextStampImage = (
 
   const ctx = canvas.getContext("2d");
   if (!ctx) {
-    return null;
+    return Promise.resolve(null);
   }
 
   const effectiveScale = scale * TEXT_OVERSAMPLE_FACTOR;
@@ -160,13 +160,22 @@ const createTextStampImage = (
 
   ctx.fillText(text, xPosition, verticalCenter);
 
-  return {
-    dataUrl: canvas.toDataURL("image/png"),
-    pixelWidth: canvasWidth,
-    pixelHeight: canvasHeight,
-    displayWidth,
-    displayHeight,
-  };
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        resolve(null);
+        return;
+      }
+      const dataUrl = URL.createObjectURL(blob);
+      resolve({
+        dataUrl,
+        pixelWidth: canvasWidth,
+        pixelHeight: canvasHeight,
+        displayWidth,
+        displayHeight,
+      });
+    }, "image/png");
+  });
 };
 
 interface SignatureAPIBridgeProps {
@@ -192,6 +201,20 @@ export const SignatureAPIBridge = forwardRef<
     () => getZoomState()?.currentZoom ?? 1,
   );
   const lastStampImageRef = useRef<string | null>(null);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      if (
+        lastStampImageRef.current &&
+        lastStampImageRef.current.startsWith("blob:")
+      ) {
+        URL.revokeObjectURL(lastStampImageRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     setCurrentZoom(getZoomState()?.currentZoom ?? 1);
@@ -257,16 +280,28 @@ export const SignatureAPIBridge = forwardRef<
         signatureConfig.signatureType === "text" &&
         signatureConfig.signerName
       ) {
-        const textStamp = createTextStampImage(
+        const textStamp = await createTextStampImage(
           signatureConfig,
           placementPreviewSize,
         );
+        if (!isMountedRef.current) {
+          if (textStamp?.dataUrl?.startsWith("blob:")) {
+            URL.revokeObjectURL(textStamp.dataUrl);
+          }
+          return;
+        }
         if (textStamp) {
           const displaySize = placementPreviewSize ?? {
             width: textStamp.displayWidth,
             height: textStamp.displayHeight,
           };
           const pdfSize = cssToPdfSize(displaySize);
+          if (
+            lastStampImageRef.current &&
+            lastStampImageRef.current.startsWith("blob:")
+          ) {
+            URL.revokeObjectURL(lastStampImageRef.current);
+          }
           lastStampImageRef.current = textStamp.dataUrl;
           applyStampDefaults(
             textStamp.dataUrl,

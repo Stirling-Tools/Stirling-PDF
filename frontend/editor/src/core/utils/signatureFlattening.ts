@@ -89,7 +89,8 @@ export async function flattenSignatures(
                 hasStoredImageData ||
                 (hasDirectImageData &&
                   typeof hasDirectImageData === "string" &&
-                  hasDirectImageData.startsWith("data:image"))
+                  (hasDirectImageData.startsWith("data:image") ||
+                    hasDirectImageData.startsWith("blob:")))
               );
             });
 
@@ -226,13 +227,15 @@ export async function flattenSignatures(
                         typeof imageDataUrl === "string" &&
                         imageDataUrl.startsWith("data:image/svg+xml")
                       ) {
-                        const pngBytes = await rasteriseSvgToPng(
+                        const svgBlobUrl = await rasteriseSvgToPngBlobUrl(
                           imageDataUrl,
                           width * 2,
                           height * 2,
                         );
-                        if (pngBytes) {
-                          imageDataUrl = await uint8ArrayToPngDataUrl(pngBytes);
+                        if (svgBlobUrl) {
+                          imageDataUrl = svgBlobUrl;
+                          // svgBlobUrl is a blob: URL that decodeImageDataUrl accepts;
+                          // it gets revoked together with imageDataUrl below.
                         } else {
                           drawPlaceholderRect(
                             m,
@@ -249,7 +252,8 @@ export async function flattenSignatures(
                       if (
                         imageDataUrl &&
                         typeof imageDataUrl === "string" &&
-                        imageDataUrl.startsWith("data:image")
+                        (imageDataUrl.startsWith("data:image") ||
+                          imageDataUrl.startsWith("blob:"))
                       ) {
                         // Decode the image data URL to raw pixels via canvas
                         const imageResult =
@@ -265,6 +269,9 @@ export async function flattenSignatures(
                             width,
                             height,
                           );
+                        }
+                        if (imageDataUrl.startsWith("blob:")) {
+                          URL.revokeObjectURL(imageDataUrl);
                         }
                       } else if (
                         annotation.type === FPDF_ANNOT_INK ||
@@ -344,25 +351,14 @@ export async function flattenSignatures(
 }
 
 /**
- * Convert Uint8Array PNG bytes to a data URL for canvas decoding.
+ * Rasterise an SVG data URL to a short-lived PNG blob URL via an offscreen canvas.
+ * Returns a blob URL (must be revoked by caller) or null on failure.
  */
-function uint8ArrayToPngDataUrl(pngBytes: Uint8Array): Promise<string> {
-  return new Promise((resolve) => {
-    const blob = new Blob([pngBytes as BlobPart], { type: "image/png" });
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result as string);
-    reader.readAsDataURL(blob);
-  });
-}
-
-/**
- * Rasterise an SVG data URL to PNG bytes via an offscreen canvas.
- */
-function rasteriseSvgToPng(
+function rasteriseSvgToPngBlobUrl(
   svgDataUrl: string,
   width: number,
   height: number,
-): Promise<Uint8Array | null> {
+): Promise<string | null> {
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => {
@@ -381,10 +377,7 @@ function rasteriseSvgToPng(
             resolve(null);
             return;
           }
-          blob.arrayBuffer().then(
-            (buf) => resolve(new Uint8Array(buf)),
-            () => resolve(null),
-          );
+          resolve(URL.createObjectURL(blob));
         }, "image/png");
       } catch {
         resolve(null);

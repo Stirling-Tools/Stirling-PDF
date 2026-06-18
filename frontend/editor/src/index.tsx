@@ -16,23 +16,18 @@ import "@app/i18n"; // Initialize i18next
 import posthog from "posthog-js";
 import { PostHogProvider } from "@posthog/react";
 import { BASE_PATH } from "@app/constants/app";
-
 import { startEagerWasmCompilation } from "@app/services/wasmPrecompiler";
 
-if (typeof window !== "undefined") {
-  const scheduleCompilation = () => {
-    if (typeof requestIdleCallback === "function") {
-      requestIdleCallback(() => startEagerWasmCompilation(), { timeout: 2000 });
-    } else {
-      setTimeout(startEagerWasmCompilation, 1000);
-    }
-  };
+startEagerWasmCompilation();
 
-  if (document.readyState === "complete") {
-    scheduleCompilation();
-  } else {
-    window.addEventListener("load", scheduleCompilation);
-  }
+if (typeof window !== "undefined") {
+  const originalDPR = window.devicePixelRatio;
+  Object.defineProperty(window, "devicePixelRatio", {
+    get() {
+      return Math.min(originalDPR || 1, 1.5);
+    },
+    configurable: true,
+  });
 }
 
 posthog.init(import.meta.env.VITE_PUBLIC_POSTHOG_KEY, {

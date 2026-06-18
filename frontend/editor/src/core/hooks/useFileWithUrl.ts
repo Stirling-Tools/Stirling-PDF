@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from "react";
+import { useMemo } from "react";
 import { isFileObject } from "@app/types/fileContext";
 
 /**
@@ -9,6 +9,17 @@ import { isFileObject } from "@app/types/fileContext";
  *   URL is only recreated when this key changes, not when the `file` object reference
  *   changes. This prevents spurious URL churn caused by getFiles() creating new
  *   StirlingFile references on every FileContext render.
+ */
+const globalUseFileWithUrlCache = new Map<string, string>();
+
+/**
+ * Hook to convert a File object to { file: File; url: string } format
+ * Creates blob URL on-demand and caches it globally to prevent URL churn and
+ * premature revocation during React unmount/remount/Suspense cycles.
+ *
+ * @param stableKey - Optional stable identity key (e.g. fileId). When provided, the blob
+ *   URL is only recreated when this key changes, not when the `file` object reference
+ *   changes.
  */
 export function useFileWithUrl(
   file: File | Blob | null,
@@ -23,27 +34,29 @@ export function useFileWithUrl(
       return null;
     }
 
-    try {
-      const url = URL.createObjectURL(file);
-      return { file, url };
-    } catch (error) {
-      console.error(
-        "useFileWithUrl: Failed to create object URL:",
-        error,
-        file,
-      );
-      return null;
-    }
-    // When stableKey is provided, only recreate when the file identity changes — not
-    // when getFiles() returns a new object reference for the same underlying file.
-  }, [stableKey != null ? stableKey : file]);
+    const key =
+      stableKey ||
+      (file instanceof File
+        ? `${file.name}-${file.size}-${file.lastModified}`
+        : `blob-${file.size}`);
 
-  useEffect(() => {
-    const url = result?.url;
-    return () => {
-      if (url) URL.revokeObjectURL(url);
-    };
-  }, [result]);
+    let url = globalUseFileWithUrlCache.get(key);
+    if (!url) {
+      try {
+        url = URL.createObjectURL(file);
+        globalUseFileWithUrlCache.set(key, url);
+      } catch (error) {
+        console.error(
+          "useFileWithUrl: Failed to create object URL:",
+          error,
+          file,
+        );
+        return null;
+      }
+    }
+
+    return { file, url };
+  }, [stableKey != null ? stableKey : file]);
 
   return result;
 }

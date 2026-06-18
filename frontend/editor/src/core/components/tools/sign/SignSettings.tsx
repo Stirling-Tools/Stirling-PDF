@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Stack,
@@ -126,6 +126,24 @@ const SignSettings = ({
   const [imageSignatureData, setImageSignatureData] = useState<
     string | undefined
   >();
+
+  // Cleanup blob URLs on change or unmount
+  useEffect(() => {
+    return () => {
+      if (canvasSignatureData?.startsWith("blob:")) {
+        URL.revokeObjectURL(canvasSignatureData);
+      }
+    };
+  }, [canvasSignatureData]);
+
+  useEffect(() => {
+    return () => {
+      if (imageSignatureData?.startsWith("blob:")) {
+        URL.revokeObjectURL(imageSignatureData);
+      }
+    };
+  }, [imageSignatureData]);
+
   const [signatureDrafts, setSignatureDrafts] = useState<SignatureDrafts>({});
   const lastSyncedTextDraft = useRef<SignatureDrafts["text"] | null>(null);
   const lastAppliedPlacementKey = useRef<string | null>(null);

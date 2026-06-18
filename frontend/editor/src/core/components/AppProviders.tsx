@@ -1,4 +1,5 @@
 import { ReactNode, useEffect } from "react";
+import "@app/debug/memoryTelemetry";
 import { RainbowThemeProvider } from "@app/components/shared/RainbowThemeProvider";
 import { FileContextProvider } from "@app/contexts/FileContext";
 import { NavigationProvider } from "@app/contexts/NavigationContext";
@@ -41,6 +42,9 @@ function ScarfTrackingInitializer() {
   useScarfTracking();
   return null;
 }
+
+import { PdfEngineProvider, usePdfiumEngine } from "@embedpdf/engines/react";
+import { pdfiumWasmUrl } from "@app/services/wasmPrecompiler";
 
 // Component to run app-level initialization (must be inside AppProviders for context access)
 function AppInitializer() {
@@ -112,6 +116,16 @@ export function AppProviders({
   appConfigRetryOptions,
   appConfigProviderProps,
 }: AppProvidersProps) {
+  const { engine, isLoading, error } = usePdfiumEngine({
+    wasmUrl: pdfiumWasmUrl,
+    worker: true,
+    encoderPoolSize:
+      typeof navigator !== "undefined" && navigator.hardwareConcurrency
+        ? Math.min(2, navigator.hardwareConcurrency)
+        : 1,
+    fontFallback: null,
+  });
+
   return (
     <PreferencesProvider>
       <RainbowThemeProvider>
@@ -127,48 +141,54 @@ export function AppProviders({
               {/* Auto-popup on startup when a newer Stirling-PDF release is available.
                   No-ops inside Tauri — the desktop popup handles that flow. */}
               <UpdateStartupPopup />
-              <FileContextProvider
-                enableUrlSync={true}
-                enablePersistence={true}
+              <PdfEngineProvider
+                engine={engine}
+                isLoading={isLoading}
+                error={error}
               >
-                <FolderProvider>
-                  <AppInitializer />
-                  <BrandingAssetManager />
-                  <ToolRegistryProvider>
-                    <NavigationProvider>
-                      <FilesModalProvider>
-                        <ToolWorkflowProvider>
-                          <HotkeyProvider>
-                            <SidebarProvider>
-                              <ViewerProvider>
-                                <PageEditorProvider>
-                                  <SignatureProvider>
-                                    <RedactionProvider>
-                                      <FormFillProvider>
-                                        <AnnotationProvider>
-                                          <WorkbenchBarProvider>
-                                            <TourOrchestrationProvider>
-                                              <AdminTourOrchestrationProvider>
-                                                <FolderFileContextProvider>
-                                                  {children}
-                                                </FolderFileContextProvider>
-                                              </AdminTourOrchestrationProvider>
-                                            </TourOrchestrationProvider>
-                                          </WorkbenchBarProvider>
-                                        </AnnotationProvider>
-                                      </FormFillProvider>
-                                    </RedactionProvider>
-                                  </SignatureProvider>
-                                </PageEditorProvider>
-                              </ViewerProvider>
-                            </SidebarProvider>
-                          </HotkeyProvider>
-                        </ToolWorkflowProvider>
-                      </FilesModalProvider>
-                    </NavigationProvider>
-                  </ToolRegistryProvider>
-                </FolderProvider>
-              </FileContextProvider>
+                <FileContextProvider
+                  enableUrlSync={true}
+                  enablePersistence={true}
+                >
+                  <FolderProvider>
+                    <AppInitializer />
+                    <BrandingAssetManager />
+                    <ToolRegistryProvider>
+                      <NavigationProvider>
+                        <FilesModalProvider>
+                          <ToolWorkflowProvider>
+                            <HotkeyProvider>
+                              <SidebarProvider>
+                                <ViewerProvider>
+                                  <PageEditorProvider>
+                                    <SignatureProvider>
+                                      <RedactionProvider>
+                                        <FormFillProvider>
+                                          <AnnotationProvider>
+                                            <WorkbenchBarProvider>
+                                              <TourOrchestrationProvider>
+                                                <AdminTourOrchestrationProvider>
+                                                  <FolderFileContextProvider>
+                                                    {children}
+                                                  </FolderFileContextProvider>
+                                                </AdminTourOrchestrationProvider>
+                                              </TourOrchestrationProvider>
+                                            </WorkbenchBarProvider>
+                                          </AnnotationProvider>
+                                        </FormFillProvider>
+                                      </RedactionProvider>
+                                    </SignatureProvider>
+                                  </PageEditorProvider>
+                                </ViewerProvider>
+                              </SidebarProvider>
+                            </HotkeyProvider>
+                          </ToolWorkflowProvider>
+                        </FilesModalProvider>
+                      </NavigationProvider>
+                    </ToolRegistryProvider>
+                  </FolderProvider>
+                </FileContextProvider>
+              </PdfEngineProvider>
             </AppConfigProvider>
           </BannerProvider>
         </ErrorBoundary>

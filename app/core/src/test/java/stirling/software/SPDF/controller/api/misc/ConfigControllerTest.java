@@ -240,9 +240,15 @@ class ConfigControllerTest {
         // Detected IP (if any) wins over loopback request host. We can't assert the
         // exact value (depends on the host running the test) but we can assert it
         // never returns "localhost".
-        String result = configController.resolveFrontendUrl(req, appConfig);
-        assertNotNull(result);
-        assertFalse(result.contains("localhost"));
+        try (org.mockito.MockedStatic<stirling.software.common.util.GeneralUtils> generalUtils =
+                mockStatic(stirling.software.common.util.GeneralUtils.class)) {
+            generalUtils
+                    .when(stirling.software.common.util.GeneralUtils::getLocalNetworkIp)
+                    .thenReturn("192.168.1.100");
+            String result = configController.resolveFrontendUrl(req, appConfig);
+            assertNotNull(result);
+            assertFalse(result.contains("localhost"));
+        }
     }
 
     @Test
@@ -265,10 +271,16 @@ class ConfigControllerTest {
         when(applicationContext.getEnvironment()).thenReturn(environment);
         when(environment.getProperty("local.server.port")).thenReturn("54321");
 
-        String result = configController.resolveFrontendUrl(req, appConfig);
-        assertNotNull(result);
-        assertTrue(result.endsWith(":54321"));
-        assertFalse(result.contains(":0"));
+        try (org.mockito.MockedStatic<stirling.software.common.util.GeneralUtils> generalUtils =
+                mockStatic(stirling.software.common.util.GeneralUtils.class)) {
+            generalUtils
+                    .when(stirling.software.common.util.GeneralUtils::getLocalNetworkIp)
+                    .thenReturn("192.168.1.100");
+            String result = configController.resolveFrontendUrl(req, appConfig);
+            assertNotNull(result);
+            assertTrue(result.endsWith(":54321"));
+            assertFalse(result.contains(":0"));
+        }
     }
 
     @Test

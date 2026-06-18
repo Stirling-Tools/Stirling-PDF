@@ -45,30 +45,43 @@ export function adjustFontSizeToFit(
   const minFontPx = baseFontPx * minScale;
   const stepPx = Math.max(0.5, baseFontPx * stepScale);
 
+  // Binary-search the font size to minimise forced-reflow count.
   const fit = () => {
-    // Reset to largest before measuring
+    // Calculate target height threshold for line limit (one read at max size)
     element.style.fontSize = `${baseFontPx}px`;
-
-    // Calculate target height threshold for line limit
     let maxHeight = Number.POSITIVE_INFINITY;
     if (typeof maxLines === "number" && maxLines > 0) {
-      const cs = window.getComputedStyle(element);
-      const lineHeight = parseFloat(cs.lineHeight) || baseFontPx * 1.2;
-      maxHeight = lineHeight * maxLines + 0.1; // small epsilon
+      const cs = globalThis.getComputedStyle(element);
+      const lineHeight = Number.parseFloat(cs.lineHeight) || baseFontPx * 1.2;
+      maxHeight = lineHeight * maxLines + 0.1;
     }
 
-    let current = baseFontPx;
-    // Guard against excessive loops
-    let iterations = 0;
-    while (iterations < 200) {
-      const fitsWidth = element.scrollWidth <= element.clientWidth + 1; // tolerance
-      const fitsHeight = element.scrollHeight <= maxHeight + 1;
-      const fits = fitsWidth && fitsHeight;
-      if (fits || current <= minFontPx) break;
-      current = Math.max(minFontPx, current - stepPx);
-      element.style.fontSize = `${current}px`;
-      iterations += 1;
+    const fitsAt = (size: number): boolean => {
+      element.style.fontSize = `${size}px`;
+      // Reading scrollWidth/scrollHeight here causes a single reflow per call.
+      return (
+        element.scrollWidth <= element.clientWidth + 1 &&
+        element.scrollHeight <= maxHeight + 1
+      );
+    };
+
+    // Fast path: already fits at maximum size
+    if (fitsAt(baseFontPx)) return;
+
+    // Binary search in [minFontPx, baseFontPx]
+    let lo = minFontPx;
+    let hi = baseFontPx;
+    // Precision: stop when range is smaller than stepPx
+    while (hi - lo > stepPx) {
+      const mid = (lo + hi) / 2;
+      if (fitsAt(mid)) {
+        lo = mid; // mid fits → search larger half
+      } else {
+        hi = mid; // mid doesn't fit → search smaller half
+      }
     }
+    // Settle on the largest fitting size found
+    element.style.fontSize = `${lo}px`;
   };
 
   // Defer to next frame to ensure layout is ready
@@ -78,18 +91,10 @@ export function adjustFontSizeToFit(
   ro.observe(element);
   if (element.parentElement) ro.observe(element.parentElement);
 
-  const mo = new MutationObserver(() => fit());
-  mo.observe(element, { characterData: true, childList: true, subtree: true });
-
   return () => {
     cancelAnimationFrame(raf);
     try {
       ro.disconnect();
-    } catch {
-      /* Ignore errors */
-    }
-    try {
-      mo.disconnect();
     } catch {
       /* Ignore errors */
     }

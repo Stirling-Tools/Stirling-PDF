@@ -90,7 +90,6 @@ export async function getPdfiumModule(): Promise<WrappedPdfiumModule> {
       locateFile: () => wasmUrl(),
     };
 
-    // Eagerly reuse pre-compiled WASM module from app boot if available
     overrides.instantiateWasm = (
       imports: WebAssembly.Imports,
       successCallback: (
@@ -99,13 +98,11 @@ export async function getPdfiumModule(): Promise<WrappedPdfiumModule> {
       ) => void,
     ) => {
       pdfiumWasmModulePromise
-        .then((wasmModule) => {
-          if (wasmModule) {
-            return WebAssembly.instantiate(wasmModule, imports).then(
-              (instance) => {
-                successCallback(instance, wasmModule);
-              },
-            );
+        .then(async (container) => {
+          if (container?.module) {
+            const wasmModule = container.module;
+            const instance = await WebAssembly.instantiate(wasmModule, imports);
+            successCallback(instance, wasmModule);
           } else {
             throw new Error("No pre-compiled WASM module found");
           }
@@ -131,6 +128,16 @@ export async function getPdfiumModule(): Promise<WrappedPdfiumModule> {
         /* already initialized */
       }
       _module = m;
+
+      // Null out the module reference in the container to release WebAssembly.Module (13MB) memory
+      pdfiumWasmModulePromise
+        .then((container) => {
+          if (container) {
+            container.module = null;
+          }
+        })
+        .catch(() => {});
+
       return m;
     });
   }

@@ -59,6 +59,23 @@ const WetSignatureInput = ({
     string | undefined
   >();
 
+  // Cleanup blob URLs on change or unmount
+  useEffect(() => {
+    return () => {
+      if (canvasSignatureData?.startsWith("blob:")) {
+        URL.revokeObjectURL(canvasSignatureData);
+      }
+    };
+  }, [canvasSignatureData]);
+
+  useEffect(() => {
+    return () => {
+      if (imageSignatureData?.startsWith("blob:")) {
+        URL.revokeObjectURL(imageSignatureData);
+      }
+    };
+  }, [imageSignatureData]);
+
   // Text signature state
   const [signerName, setSignerName] = useState("");
   const [fontSize, setFontSize] = useState(16);
@@ -107,22 +124,10 @@ const WetSignatureInput = ({
     async (file: File | null) => {
       if (file && !disabled) {
         try {
-          const result = await new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-              if (e.target?.result) {
-                resolve(e.target.result as string);
-              } else {
-                reject(new Error("Failed to read file"));
-              }
-            };
-            reader.onerror = () => reject(reader.error);
-            reader.readAsDataURL(file);
-          });
-
-          setImageSignatureData(result);
+          const blobUrl = URL.createObjectURL(file);
+          setImageSignatureData(blobUrl);
           if (signatureType === "image") {
-            onSignatureDataChange(result);
+            onSignatureDataChange(blobUrl);
           }
         } catch (error) {
           console.error("Error reading file:", error);

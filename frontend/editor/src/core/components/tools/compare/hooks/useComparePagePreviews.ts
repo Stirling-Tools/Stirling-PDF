@@ -38,7 +38,18 @@ const notify = (entry: CacheEntry) => {
 const subscribe = (key: string, fn: () => void): (() => void) => {
   const entry = getOrCreateEntry(key);
   entry.subscribers.add(fn);
-  return () => entry.subscribers.delete(fn);
+  return () => {
+    entry.subscribers.delete(fn);
+    if (entry.subscribers.size === 0) {
+      entry.pages.forEach((page) => {
+        if (page.url?.startsWith("blob:")) {
+          URL.revokeObjectURL(page.url);
+        }
+      });
+      previewCache.delete(key);
+      latestVersionMap.delete(key);
+    }
+  };
 };
 
 const appendBatchToCache = (
@@ -127,12 +138,21 @@ const renderPdfDocumentToImages = async (
         }).promise;
         if (shouldStop()) break;
 
+        const blob = await new Promise<Blob | null>((resolve) => {
+          canvas.toBlob(resolve, "image/webp", 0.85);
+        });
+        if (shouldStop()) {
+          break;
+        }
+        if (!blob) continue;
+        const url = URL.createObjectURL(blob);
+
         const preview: PagePreview = {
           pageNumber,
           width: Math.round(displayViewport.width),
           height: Math.round(displayViewport.height),
           rotation: (page.rotate || 0) % 360,
-          url: canvas.toDataURL(),
+          url,
         };
         previews.push(preview);
         if (onBatch) {
