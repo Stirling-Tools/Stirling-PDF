@@ -264,8 +264,8 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
         try {
             User saved = userService.saveUser(user);
             // Give the account its own team rather than the shared Default team.
-            saasTeamService.ensurePersonalTeam(saved);
-            return userService.findBySupabaseId(saved.getSupabaseId()).orElse(saved);
+            saved.setTeam(saasTeamService.ensurePersonalTeam(saved));
+            return saved;
         } catch (DataIntegrityViolationException e) {
             log.warn(
                     "Email collision upgrading anonymous user {} to {}: {}",
@@ -383,8 +383,7 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
         // Only the DB-race winner runs first-time init; the losers skip it.
         if (weCreatedThisUser) {
             try {
-                saasTeamService.ensurePersonalTeam(savedUser);
-                savedUser = userService.findBySupabaseId(supabaseId).orElse(savedUser);
+                savedUser.setTeam(saasTeamService.ensurePersonalTeam(savedUser));
             } catch (Exception e) {
                 log.warn(
                         "Failed to create personal team for new user {} ({}): {}",

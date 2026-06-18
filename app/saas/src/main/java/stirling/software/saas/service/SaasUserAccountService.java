@@ -175,8 +175,7 @@ public class SaasUserAccountService {
             }
             user = userService.saveUser(user);
             // Give the upgraded user their own team rather than the shared Default team.
-            saasTeamService.ensurePersonalTeam(user);
-            user = userService.findBySupabaseId(supabaseUser.getId()).orElse(user);
+            user.setTeam(saasTeamService.ensurePersonalTeam(user));
             log.info(
                     "Upgraded anonymous user {} to {} ({})",
                     user.getId(),
