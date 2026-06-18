@@ -42,16 +42,7 @@ const URL_PARAM = "charcodeStrategy";
  * user can flip a toggle and have it take effect on the next edit
  * without remounting the editor.
  */
-// Default to the synchronous, self-validating content-stream resolver: it
-// reuses each glyph's ACTUAL on-page charcode (validated against the rendered
-// advance), so editing existing text is always correct and never scrambles.
-// The "backend" strategy (async PDFBox round-trip) can return charcodes for a
-// mis-identified font on multi-font pages and, full-coverage, paints the whole
-// re-emitted line with the wrong glyphs - the source of the editing scramble.
-// content-stream falls back to Helvetica only for genuinely-new characters not
-// already present in the document, which is a graceful degradation, not a
-// scramble. Users can still opt into "backend" via ?charcodeStrategy=backend.
-export const DEFAULT_CHARCODE_STRATEGY: CharcodeStrategy = "content-stream";
+export const DEFAULT_CHARCODE_STRATEGY: CharcodeStrategy = "backend";
 
 export function getActiveCharcodeStrategy(): CharcodeStrategy {
   if (typeof window === "undefined") return DEFAULT_CHARCODE_STRATEGY;
