@@ -17,7 +17,7 @@ async function clickArrange(page: any, testid: string): Promise<void> {
   await page.getByTestId(testid).click();
 }
 async function clickImage(page: any, testid: string): Promise<void> {
-  await page.getByTestId("v2-imgop-menu").click();
+  await page.getByTestId("v2-image-menu").click();
   await page.getByTestId(testid).click();
 }
 
@@ -150,7 +150,7 @@ test.describe("v2 editor - combined feature set", () => {
       ins!.id,
     );
     await page.waitForTimeout(120);
-    await clickImage(page, "v2-imgop-rotate-cw");
+    await clickImage(page, "v2-image-rotate-cw");
     await page.waitForTimeout(300);
     const rotated = await imageMatrix(page, ins!.id);
     // A 90deg rotation swaps the axes: original diagonal (a,d) becomes off-diagonal (b,c).
@@ -175,7 +175,7 @@ test.describe("v2 editor - combined feature set", () => {
       ins!.id,
     );
     await page.waitForTimeout(120);
-    await clickImage(page, "v2-imgop-flip-h");
+    await clickImage(page, "v2-image-flip-h");
     await page.waitForTimeout(300);
     const flipped = await imageMatrix(page, ins!.id);
     expect(Math.sign(flipped.a), "flip-h negates horizontal scale").toBe(
@@ -393,7 +393,7 @@ test.describe("v2 editor - combined feature set", () => {
       ins!.id,
     );
     await page.waitForTimeout(120);
-    await clickImage(page, "v2-imgop-rotate-ccw");
+    await clickImage(page, "v2-image-rotate-ccw");
     await page.waitForTimeout(300);
     const rotated = await imageMatrix(page, ins!.id);
     expect(
@@ -419,7 +419,7 @@ test.describe("v2 editor - combined feature set", () => {
       ins!.id,
     );
     await page.waitForTimeout(120);
-    await clickImage(page, "v2-imgop-flip-v");
+    await clickImage(page, "v2-image-flip-v");
     await page.waitForTimeout(300);
     const flipped = await imageMatrix(page, ins!.id);
     expect(Math.sign(flipped.d), "flip-v negates vertical scale").toBe(
@@ -444,7 +444,7 @@ test.describe("v2 editor - combined feature set", () => {
     );
     await page.waitForTimeout(120);
     for (let i = 0; i < 4; i++) {
-      await clickImage(page, "v2-imgop-rotate-cw");
+      await clickImage(page, "v2-image-rotate-cw");
       await page.waitForTimeout(180);
     }
     const m = await imageMatrix(page, ins!.id);
