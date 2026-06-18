@@ -4333,9 +4333,9 @@ tags = "layout,disponi,combina"
 title = "Layout multipagina"
 
 [home.pdfCommentAgent]
-desc = "Chiedi all'AI di annotare un PDF con commenti in stile nota adesiva in base al tuo prompt"
-tags = "AI,agente,commento,annotazione,nota adesiva,revisione,feedback,note"
-title = "Aggiungi commenti AI"
+desc = "Chiedi all'IA di annotare un PDF con commenti in stile nota adesiva in base al tuo prompt"
+tags = "IA,agente,commento,annotazione,nota adesiva,revisione,feedback,note"
+title = "Aggiungi commenti IA"
 
 [home.pdfOrganiser]
 tags = "organizza,riordina,riorganizza"

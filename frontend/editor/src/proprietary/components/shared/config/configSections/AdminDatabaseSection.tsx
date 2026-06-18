@@ -587,6 +587,10 @@ export default function AdminDatabaseSection() {
                       { value: "mysql", label: "MySQL" },
                       { value: "mariadb", label: "MariaDB" },
                     ]}
+                    comboboxProps={{
+                      withinPortal: true,
+                      zIndex: Z_INDEX_OVER_CONFIG_MODAL,
+                    }}
                     disabled={!loginEnabled}
                   />
                 </div>
