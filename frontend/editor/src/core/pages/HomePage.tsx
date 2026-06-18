@@ -4,6 +4,7 @@ import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { Group } from "@mantine/core";
 import { useSidebarContext } from "@app/contexts/SidebarContext";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
+import { getToolOgImage } from "@app/data/ogImage";
 import { useBaseUrl } from "@app/hooks/useBaseUrl";
 import { useIsMobile, useIsTouch } from "@app/hooks/useIsMobile";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
@@ -294,9 +295,7 @@ export default function HomePage() {
         "app.description",
         "The Free Adobe Acrobat alternative (10M+ Downloads)",
       ),
-    ogImage: selectedToolKey
-      ? `${baseUrl}/og_images/${selectedToolKey}.png`
-      : `${baseUrl}/og_images/home.png`,
+    ogImage: getToolOgImage(baseUrl, selectedToolKey),
     ogUrl: selectedTool ? `${baseUrl}${window.location.pathname}` : baseUrl,
   });
 
