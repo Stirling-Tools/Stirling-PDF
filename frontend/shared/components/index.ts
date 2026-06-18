@@ -10,6 +10,7 @@ export * from "@shared/components/CodeBlock";
 export * from "@shared/components/SectionDivider";
 export * from "@shared/components/Card";
 export * from "@shared/components/Modal";
+export * from "@shared/components/SettingsShell";
 
 // Layout
 export * from "@shared/components/Stack";

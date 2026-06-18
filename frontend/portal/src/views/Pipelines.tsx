@@ -13,10 +13,12 @@ import {
   type Pipeline,
   type PipelinesResponse,
 } from "@portal/api/pipelines";
+import { DeployedPipelinesTable } from "@portal/components/pipelines/DeployedPipelinesTable";
 import { PipelineCard } from "@portal/components/pipelines/PipelineCard";
 import { PipelineComposer } from "@portal/components/pipelines/PipelineComposer";
 import { PipelineDetail } from "@portal/components/pipelines/PipelineDetail";
 import { PipelineListSkeleton } from "@portal/components/pipelines/PipelineListSkeleton";
+import { PromotedPipelines } from "@portal/components/pipelines/PromotedPipelines";
 import "@portal/views/Pipelines.css";
 
 export function Pipelines() {
@@ -30,6 +32,7 @@ export function Pipelines() {
 
   const pipelines = data?.pipelines ?? [];
   const evals = data?.evals ?? null;
+  const promoted = data?.promoted ?? [];
   const isEmpty = !isLoading && pipelines.length === 0;
 
   const fleetHealthy = useMemo(
@@ -95,11 +98,40 @@ export function Pipelines() {
       )}
 
       {pipelines.length > 0 && (
+        <section className="portal-pipelines__section">
+          <h2 className="portal-pipelines__section-h">
+            Golden-set reliability
+          </h2>
+          <p className="portal-pipelines__section-sub">
+            Pass rate against each pipeline's golden set, judged against its own
+            bound. Anything below bound shows amber or red.
+          </p>
+          <DeployedPipelinesTable
+            pipelines={pipelines}
+            onRowClick={setSelected}
+          />
+        </section>
+      )}
+
+      {pipelines.length > 0 && (
         <div className="portal-pipelines__list">
           {pipelines.map((p) => (
             <PipelineCard key={p.id} pipeline={p} onOpen={setSelected} />
           ))}
         </div>
+      )}
+
+      {promoted.length > 0 && (
+        <section className="portal-pipelines__section">
+          <h2 className="portal-pipelines__section-h">
+            Promoted from the Editor
+          </h2>
+          <p className="portal-pipelines__section-sub">
+            Watch-folder flows built in the Editor and promoted into the portal.
+            Promote one to a policy to apply its rules fleet-wide.
+          </p>
+          <PromotedPipelines promoted={promoted} />
+        </section>
       )}
 
       <Drawer
