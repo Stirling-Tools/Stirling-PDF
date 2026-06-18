@@ -294,9 +294,6 @@
   background-color: var(--bg-muted);
 }
 
-/* The active-tool header now renders via the shared PanelHeaderPill
-   (see PanelHeaderPill.css). */
-
 ::view-transition-old(tool-rail) {
   animation: vt-rail-fade-out 180ms ease-out forwards;
 }

@@ -25,9 +25,6 @@
   flex-shrink: 0;
 }
 
-/* The agent pill renders via the shared PanelHeaderPill (see PanelHeaderPill.css
-   for its visual styling). This class only carries the view-transition name so
-   the pill still morphs in/out with the chat panel. */
 .chat-panel__agent-pill-vt {
   view-transition-name: stirling-agent;
 }

@@ -62,11 +62,7 @@ export function usePoliciesEnabled(): boolean {
 }
 
 /**
- * Whether the right rail should show the Policies section. Everyone sees it when
- * the feature is on: admins / team leads get the full catalogue (coming-soon rows
- * greyed), regular users get the live policies only. It only disappears if there
- * are no rows to show for the current user — which can't happen while a live
- * (non-coming-soon) policy like Security exists, but is handled defensively.
+ * Whether the right rail should show the Policies section.
  */
 export function usePoliciesVisible(): boolean {
   const pol = usePolicies();
