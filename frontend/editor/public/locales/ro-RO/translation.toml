@@ -8544,14 +8544,14 @@ success = "Parola a fost actualizată cu succes"
 title = "Schimbă parola"
 
 [workspace.people.editMember]
-editing = "Se editează:"
+editing = "Editing: <0>{{username}}</0>"
 error = "Actualizarea utilizatorului a eșuat"
 role = "Rol"
-submit = "Actualizați membrul"
+submit = "Update User"
 success = "Utilizator actualizat cu succes"
 team = "Echipă (opțional)"
 teamPlaceholder = "Selectați o echipă"
-title = "Editați membrul"
+title = "Edit User"
 
 [workspace.people.emailInvite]
 allFailed = "Invitarea utilizatorilor a eșuat"
@@ -8605,8 +8605,7 @@ disableByAdmin = "Dezactivați MFA"
 
 [workspace.people.roleDescriptions]
 admin = "Poate gestiona setările și invita membri, cu acces administrativ complet."
-member = "Poate vizualiza și edita fișiere partajate, dar nu poate gestiona setările spațiului de lucru sau membrii."
-user = "Utilizator"
+user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]
 error = "Actualizarea stării utilizatorului a eșuat"

@@ -8544,14 +8544,14 @@ success = "གསང་གྲངས་གསར་བརྗེ་ལེགས་
 title = "གསང་གྲངས་བསྒྱུར་བ།"
 
 [workspace.people.editMember]
-editing = "རྩོམ་སྒྲིག།"
+editing = "Editing: <0>{{username}}</0>"
 error = "སྤྱོད་མཁན་གསར་བརྗེ་མ་ཐུབ་པ།"
 role = "འཁྲབ་ཚན"
-submit = "གསར་བརྗེའི་ཚོགས་མི།"
+submit = "Update User"
 success = "བེད་སྤྱོད་པ་ལེགས་འགྲུབ་བྱུང་བ།"
 team = "རུ་ཁག (གདམ་ག)"
 teamPlaceholder = "རུ་ཁག་འདེམས་པ།"
-title = "ཚོགས་མིར་རྩོམ་སྒྲིག་པ།"
+title = "Edit User"
 
 [workspace.people.emailInvite]
 allFailed = "སྤྱོད་མཁན་གདན་འདྲེན་མ་ཐུབ་པ།"
@@ -8605,8 +8605,7 @@ disableByAdmin = "MFA སྤྱོད་སྒོ་བརྒྱབ"
 
 [workspace.people.roleDescriptions]
 admin = "སྒྲིག་སྟངས་འཛིན་སྐྱོང་བྱེད་ཐུབ་པ་དང་ཚོགས་མི་གདན་འདྲེན་ཞུ་ཐུབ།"
-member = "མཉམ་སྤྱོད་ཡིག་ཆ་ལྟ་ཀློག་དང་རྩོམ་སྒྲིག་བྱེད་ཆོག འོན་ཀྱང་ལས་ཀའི་ས་ཁོངས་སྒྲིག་སྟངས་དང་ཚོགས་མི་དོ་དམ་བྱེད་མི་ཐུབ།"
-user = "བེད་སྤྱོད།"
+user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]
 error = "སྤྱོད་མཁན་གྱི་གནས་ཚུལ་གསར་བརྗེ་མ་ཐུབ་པ།"

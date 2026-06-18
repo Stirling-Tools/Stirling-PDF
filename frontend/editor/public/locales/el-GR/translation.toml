@@ -8544,14 +8544,14 @@ success = "Ο κωδικός πρόσβασης ενημερώθηκε με επ
 title = "Αλλαγή κωδικού πρόσβασης"
 
 [workspace.people.editMember]
-editing = "Επεξεργασία:"
+editing = "Editing: <0>{{username}}</0>"
 error = "Αποτυχία ενημέρωσης χρήστη"
 role = "Ρόλος"
-submit = "Ενημέρωση μέλους"
+submit = "Update User"
 success = "Ο χρήστης ενημερώθηκε με επιτυχία"
 team = "Ομάδα (Προαιρετικό)"
 teamPlaceholder = "Επιλέξτε ομάδα"
-title = "Επεξεργασία μέλους"
+title = "Edit User"
 
 [workspace.people.emailInvite]
 allFailed = "Αποτυχία πρόσκλησης χρηστών"
@@ -8605,8 +8605,7 @@ disableByAdmin = "Απενεργοποίηση MFA"
 
 [workspace.people.roleDescriptions]
 admin = "Μπορεί να διαχειρίζεται ρυθμίσεις και να προσκαλεί μέλη, με πλήρη δικαιώματα διαχείρισης."
-member = "Μπορεί να προβάλλει και να επεξεργάζεται κοινόχρηστα αρχεία, αλλά δεν μπορεί να διαχειριστεί ρυθμίσεις χώρου εργασίας ή μέλη."
-user = "Χρήστης"
+user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]
 error = "Αποτυχία ενημέρωσης κατάστασης χρήστη"

@@ -8544,14 +8544,14 @@ success = "Geslo je bilo uspešno posodobljeno"
 title = "Spremeni geslo"
 
 [workspace.people.editMember]
-editing = "Urejanje:"
+editing = "Editing: <0>{{username}}</0>"
 error = "Uporabnika ni bilo mogoče posodobiti"
 role = "Vloga"
-submit = "Posodobi člana"
+submit = "Update User"
 success = "Uporabnik uspešno posodobljen"
 team = "Skupina (neobvezno)"
 teamPlaceholder = "Izberite skupino"
-title = "Uredi člana"
+title = "Edit User"
 
 [workspace.people.emailInvite]
 allFailed = "Uporabnikov ni bilo mogoče povabiti"
@@ -8605,8 +8605,7 @@ disableByAdmin = "Onemogoči MFA"
 
 [workspace.people.roleDescriptions]
 admin = "Lahko upravlja nastavitve in vabi člane s polnim skrbniškim dostopom."
-member = "Lahko si ogleduje in ureja deljene datoteke, ne more pa upravljati nastavitev delovnega prostora ali članov."
-user = "Uporabnik"
+user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]
 error = "Stanja uporabnika ni bilo mogoče posodobiti"

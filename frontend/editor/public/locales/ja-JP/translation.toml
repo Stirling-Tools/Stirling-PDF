@@ -8544,14 +8544,14 @@ success = "パスワードを更新しました"
 title = "パスワードを変更"
 
 [workspace.people.editMember]
-editing = "編集中:"
+editing = "Editing: <0>{{username}}</0>"
 error = "ユーザーの更新に失敗しました"
 role = "ロール"
-submit = "メンバーを更新"
+submit = "Update User"
 success = "ユーザーを更新しました"
 team = "チーム（任意）"
 teamPlaceholder = "チームを選択"
-title = "メンバーを編集"
+title = "Edit User"
 
 [workspace.people.emailInvite]
 allFailed = "ユーザーの招待に失敗しました"
@@ -8605,8 +8605,7 @@ disableByAdmin = "MFA を無効化"
 
 [workspace.people.roleDescriptions]
 admin = "設定の管理とメンバーの招待が可能。管理者としてのフルアクセス権があります。"
-member = "共有ファイルの閲覧・編集はできますが、ワークスペースの設定やメンバーの管理はできません。"
-user = "ユーザー"
+user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]
 error = "ユーザーのステータスの更新に失敗しました"

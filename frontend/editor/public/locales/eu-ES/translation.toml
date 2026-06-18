@@ -8544,14 +8544,14 @@ success = "Pasahitza ongi eguneratu da"
 title = "Pasahitza aldatu"
 
 [workspace.people.editMember]
-editing = "Editatzen:"
+editing = "Editing: <0>{{username}}</0>"
 error = "Ezin izan da erabiltzailea eguneratu"
 role = "Rola"
-submit = "Eguneratu kidea"
+submit = "Update User"
 success = "Erabiltzailea ongi eguneratu da"
 team = "Taldea (aukerakoa)"
 teamPlaceholder = "Aukeratu talde bat"
-title = "Kidea editatu"
+title = "Edit User"
 
 [workspace.people.emailInvite]
 allFailed = "Ezin izan da erabiltzaileak gonbidatu"
@@ -8605,8 +8605,7 @@ disableByAdmin = "Desgaitu MFA"
 
 [workspace.people.roleDescriptions]
 admin = "Ezarpenak kudeatu eta kideak gonbidatu ditzake, administrazio-eskumen osoekin."
-member = "Fitxategi partekatuak ikusi eta editatu ditzake, baina ezin du lan-espazioko ezarpenak edo kideak kudeatu."
-user = "Erabiltzailea"
+user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]
 error = "Ezin izan da erabiltzailearen egoera eguneratu"

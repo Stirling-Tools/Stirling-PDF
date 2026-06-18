@@ -8544,14 +8544,14 @@ success = "Cập nhật mật khẩu thành công"
 title = "Đổi mật khẩu"
 
 [workspace.people.editMember]
-editing = "Đang chỉnh sửa:"
+editing = "Editing: <0>{{username}}</0>"
 error = "Cập nhật người dùng thất bại"
 role = "Vai trò"
-submit = "Cập nhật thành viên"
+submit = "Update User"
 success = "Cập nhật người dùng thành công"
 team = "Nhóm (Tùy chọn)"
 teamPlaceholder = "Chọn một nhóm"
-title = "Chỉnh sửa thành viên"
+title = "Edit User"
 
 [workspace.people.emailInvite]
 allFailed = "Mời người dùng thất bại"
@@ -8605,8 +8605,7 @@ disableByAdmin = "Tắt MFA"
 
 [workspace.people.roleDescriptions]
 admin = "Có thể quản lý cài đặt và mời thành viên, với quyền quản trị đầy đủ."
-member = "Có thể xem và chỉnh sửa tệp chia sẻ, nhưng không thể quản lý cài đặt hoặc thành viên của không gian làm việc."
-user = "Người dùng"
+user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]
 error = "Cập nhật trạng thái người dùng thất bại"

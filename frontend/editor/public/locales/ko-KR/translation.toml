@@ -8544,14 +8544,14 @@ success = "비밀번호가 성공적으로 업데이트되었습니다"
 title = "비밀번호 변경"
 
 [workspace.people.editMember]
-editing = "편집 중:"
+editing = "Editing: <0>{{username}}</0>"
 error = "사용자 업데이트에 실패했습니다"
 role = "역할"
-submit = "멤버 업데이트"
+submit = "Update User"
 success = "사용자가 성공적으로 업데이트되었습니다"
 team = "팀(선택 사항)"
 teamPlaceholder = "팀 선택"
-title = "멤버 편집"
+title = "Edit User"
 
 [workspace.people.emailInvite]
 allFailed = "사용자 초대에 실패했습니다"
@@ -8605,8 +8605,7 @@ disableByAdmin = "MFA 비활성화"
 
 [workspace.people.roleDescriptions]
 admin = "설정을 관리하고 멤버를 초대할 수 있으며, 전체 관리자 권한을 가집니다."
-member = "공유 파일을 보고 편집할 수 있지만, 워크스페이스 설정이나 멤버 관리는 할 수 없습니다."
-user = "사용자"
+user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]
 error = "사용자 상태 업데이트에 실패했습니다"

@@ -8544,14 +8544,14 @@ success = "Mot de passe mis à jour avec succès"
 title = "Changer le mot de passe"
 
 [workspace.people.editMember]
-editing = "Modification :"
+editing = "Editing: <0>{{username}}</0>"
 error = "Échec de la mise à jour de l’utilisateur"
 role = "Rôle"
-submit = "Mettre à jour le membre"
+submit = "Update User"
 success = "Utilisateur mis à jour avec succès"
 team = "Équipe (facultatif)"
 teamPlaceholder = "Sélectionner une équipe"
-title = "Modifier le membre"
+title = "Edit User"
 
 [workspace.people.emailInvite]
 allFailed = "Échec de l’invitation des utilisateurs"
@@ -8605,8 +8605,7 @@ disableByAdmin = "Désactiver la MFA"
 
 [workspace.people.roleDescriptions]
 admin = "Peut gérer les paramètres et inviter des membres, avec un accès administratif complet."
-member = "Peut afficher et modifier les fichiers partagés, mais ne peut pas gérer les paramètres de l’espace de travail ni les membres."
-user = "Utilisateur"
+user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]
 error = "Échec de la mise à jour du statut de l’utilisateur"

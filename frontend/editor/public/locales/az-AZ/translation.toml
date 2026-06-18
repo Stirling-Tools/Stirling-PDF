@@ -8544,14 +8544,14 @@ success = "Parol uğurla yeniləndi"
 title = "Parolu dəyiş"
 
 [workspace.people.editMember]
-editing = "Redaktə edilir:"
+editing = "Editing: <0>{{username}}</0>"
 error = "İstifadəçini yeniləmək alınmadı"
 role = "Rol"
-submit = "Üzvü yenilə"
+submit = "Update User"
 success = "İstifadəçi uğurla yeniləndi"
 team = "Komanda (İstəyə bağlı)"
 teamPlaceholder = "Komanda seçin"
-title = "Üzvü redaktə et"
+title = "Edit User"
 
 [workspace.people.emailInvite]
 allFailed = "İstifadəçiləri dəvət etmək alınmadı"
@@ -8605,8 +8605,7 @@ disableByAdmin = "MFA-nı deaktiv et"
 
 [workspace.people.roleDescriptions]
 admin = "Ayarları idarə edə və üzvləri dəvət edə bilər, tam inzibati girişə malikdir."
-member = "Paylaşılan fayllara baxa və redaktə edə bilər, lakin iş sahəsinin ayarlarını və üzvləri idarə edə bilməz."
-user = "İstifadəçi"
+user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]
 error = "İstifadəçi statusunu yeniləmək alınmadı"

@@ -8544,14 +8544,14 @@ success = "Паролата е актуализирана успешно"
 title = "Промяна на парола"
 
 [workspace.people.editMember]
-editing = "Редактиране:"
+editing = "Editing: <0>{{username}}</0>"
 error = "Неуспешно обновяване на потребител"
 role = "Роля"
-submit = "Обновяване на член"
+submit = "Update User"
 success = "Потребителят е обновен успешно"
 team = "Екип (незадължително)"
 teamPlaceholder = "Изберете екип"
-title = "Редактиране на член"
+title = "Edit User"
 
 [workspace.people.emailInvite]
 allFailed = "Неуспешно канене на потребители"
@@ -8605,8 +8605,7 @@ disableByAdmin = "Деактивиране на MFA"
 
 [workspace.people.roleDescriptions]
 admin = "Може да управлява настройки и да кани членове, с пълен административен достъп."
-member = "Може да преглежда и редактира споделени файлове, но не може да управлява настройките или членовете на работното пространство."
-user = "Потребител"
+user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]
 error = "Неуспешно обновяване на статус на потребител"

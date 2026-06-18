@@ -8544,14 +8544,14 @@ success = "Kata sandi berhasil diperbarui"
 title = "Ubah kata sandi"
 
 [workspace.people.editMember]
-editing = "Mengedit:"
+editing = "Editing: <0>{{username}}</0>"
 error = "Gagal memperbarui pengguna"
 role = "Peran"
-submit = "Perbarui Anggota"
+submit = "Update User"
 success = "Pengguna berhasil diperbarui"
 team = "Tim (Opsional)"
 teamPlaceholder = "Pilih tim"
-title = "Edit Anggota"
+title = "Edit User"
 
 [workspace.people.emailInvite]
 allFailed = "Gagal mengundang pengguna"
@@ -8605,8 +8605,7 @@ disableByAdmin = "Nonaktifkan MFA"
 
 [workspace.people.roleDescriptions]
 admin = "Dapat mengelola pengaturan dan mengundang anggota, dengan akses administratif penuh."
-member = "Dapat melihat dan mengedit file bersama, tetapi tidak dapat mengelola pengaturan atau anggota ruang kerja."
-user = "Pengguna"
+user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]
 error = "Gagal memperbarui status pengguna"

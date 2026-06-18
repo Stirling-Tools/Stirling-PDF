@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { isAxiosError } from "axios";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import {
   Stack,
   Text,
@@ -394,9 +394,9 @@ export default function PeopleSection() {
     },
     {
       value: "ROLE_USER",
-      label: t("workspace.people.member"),
+      label: t("workspace.people.user"),
       description: t(
-        "workspace.people.roleDescriptions.member",
+        "workspace.people.roleDescriptions.user",
         "Can view and edit shared files, but cannot manage workspace settings or members.",
       ),
       icon: "person",
@@ -999,8 +999,12 @@ export default function PeopleSection() {
                 {t("workspace.people.editMember.title")}
               </Text>
               <Text size="sm" c="dimmed" ta="center">
-                {t("workspace.people.editMember.editing")}{" "}
-                <strong>{selectedUser?.username}</strong>
+                <Trans
+                  i18nKey="workspace.people.editMember.editing"
+                  defaults="Editing: <0>{{username}}</0>"
+                  values={{ username: selectedUser?.username ?? "" }}
+                  components={[<strong />]}
+                />
               </Text>
             </Stack>
             <Select

@@ -8544,14 +8544,14 @@ success = "密码更新成功"
 title = "更改密码"
 
 [workspace.people.editMember]
-editing = "正在编辑："
+editing = "Editing: <0>{{username}}</0>"
 error = "更新用户失败"
 role = "角色"
-submit = "更新成员"
+submit = "Update User"
 success = "用户更新成功"
 team = "团队（可选）"
 teamPlaceholder = "选择一个团队"
-title = "编辑成员"
+title = "Edit User"
 
 [workspace.people.emailInvite]
 allFailed = "邀请用户失败"
@@ -8605,8 +8605,7 @@ disableByAdmin = "禁用 MFA"
 
 [workspace.people.roleDescriptions]
 admin = "可管理设置和邀请成员，拥有完整管理权限。"
-member = "可查看和编辑共享文件，但不能管理工作区设置或成员。"
-user = "用户"
+user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]
 error = "用户状态更新失败"

@@ -8544,14 +8544,14 @@ success = "La contrasenya s'ha actualitzat correctament"
 title = "Canvi de contrasenya"
 
 [workspace.people.editMember]
-editing = "S’està editant:"
+editing = "Editing: <0>{{username}}</0>"
 error = "No s’ha pogut actualitzar l’usuari"
 role = "Rol"
-submit = "Actualitza el membre"
+submit = "Update User"
 success = "Usuari actualitzat correctament"
 team = "Equip (opcional)"
 teamPlaceholder = "Seleccioneu un equip"
-title = "Edita membre"
+title = "Edit User"
 
 [workspace.people.emailInvite]
 allFailed = "No s’ha pogut convidar els usuaris"
@@ -8605,8 +8605,7 @@ disableByAdmin = "Desactiva l'MFA"
 
 [workspace.people.roleDescriptions]
 admin = "Pot gestionar paràmetres i convidar membres, amb accés administratiu complet."
-member = "Pot veure i editar fitxers compartits, però no pot gestionar els paràmetres de l’espai de treball ni els membres."
-user = "Usuari"
+user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]
 error = "No s’ha pogut actualitzar l’estat de l’usuari"

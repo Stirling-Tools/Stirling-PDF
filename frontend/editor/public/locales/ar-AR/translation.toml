@@ -8544,14 +8544,14 @@ success = "تم تحديث كلمة المرور بنجاح"
 title = "تغيير كلمة المرور"
 
 [workspace.people.editMember]
-editing = "تحرير:"
+editing = "Editing: <0>{{username}}</0>"
 error = "فشل تحديث المستخدم"
 role = "الدور"
-submit = "تحديث العضو"
+submit = "Update User"
 success = "تم تحديث المستخدم بنجاح"
 team = "الفريق (اختياري)"
 teamPlaceholder = "اختر فريقًا"
-title = "تحرير العضو"
+title = "Edit User"
 
 [workspace.people.emailInvite]
 allFailed = "فشلت دعوة المستخدمين"
@@ -8605,8 +8605,7 @@ disableByAdmin = "تعطيل MFA"
 
 [workspace.people.roleDescriptions]
 admin = "يمكنه إدارة الإعدادات ودعوة الأعضاء مع صلاحيات إدارية كاملة."
-member = "يمكنه عرض الملفات المشتركة وتحريرها، لكنه لا يستطيع إدارة إعدادات مساحة العمل أو الأعضاء."
-user = "مستخدم"
+user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]
 error = "فشل تحديث حالة المستخدم"

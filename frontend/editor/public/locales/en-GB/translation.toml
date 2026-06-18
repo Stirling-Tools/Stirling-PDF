@@ -8544,14 +8544,14 @@ success = "Password updated successfully"
 title = "Change password"
 
 [workspace.people.editMember]
-editing = "Editing:"
+editing = "Editing: <0>{{username}}</0>"
 error = "Failed to update user"
 role = "Role"
-submit = "Update Member"
+submit = "Update User"
 success = "User updated successfully"
 team = "Team (Optional)"
 teamPlaceholder = "Select a team"
-title = "Edit Member"
+title = "Edit User"
 
 [workspace.people.emailInvite]
 allFailed = "Failed to invite users"
@@ -8604,9 +8604,8 @@ adminDisableSuccess = "MFA disabled successfully for user"
 disableByAdmin = "Disable MFA"
 
 [workspace.people.roleDescriptions]
-admin = "Can manage settings and invite members, with full administrative access."
-member = "Can view and edit shared files, but cannot manage workspace settings or members."
-user = "User"
+admin = "Can manage settings and invite users, with full administrative access."
+user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]
 error = "Failed to update user status"

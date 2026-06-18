@@ -8544,14 +8544,14 @@ success = "Пароль успешно обновлён"
 title = "Изменить пароль"
 
 [workspace.people.editMember]
-editing = "Редактирование:"
+editing = "Editing: <0>{{username}}</0>"
 error = "Не удалось обновить пользователя"
 role = "Роль"
-submit = "Обновить участника"
+submit = "Update User"
 success = "Пользователь успешно обновлен"
 team = "Команда (необязательно)"
 teamPlaceholder = "Выберите команду"
-title = "Редактировать участника"
+title = "Edit User"
 
 [workspace.people.emailInvite]
 allFailed = "Не удалось пригласить пользователей"
@@ -8605,8 +8605,7 @@ disableByAdmin = "Отключить MFA"
 
 [workspace.people.roleDescriptions]
 admin = "Может управлять настройками и приглашать участников, имеет полный административный доступ."
-member = "Может просматривать и редактировать общие файлы, но не может управлять настройками рабочей области или участниками."
-user = "Пользователь"
+user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]
 error = "Не удалось обновить статус пользователя"

@@ -8544,14 +8544,14 @@ success = "Wachtwoord succesvol bijgewerkt"
 title = "Wachtwoord wijzigen"
 
 [workspace.people.editMember]
-editing = "Bewerken:"
+editing = "Editing: <0>{{username}}</0>"
 error = "Gebruiker bijwerken is mislukt"
 role = "Rol"
-submit = "Lid bijwerken"
+submit = "Update User"
 success = "Gebruiker succesvol bijgewerkt"
 team = "Team (optioneel)"
 teamPlaceholder = "Selecteer een team"
-title = "Lid bewerken"
+title = "Edit User"
 
 [workspace.people.emailInvite]
 allFailed = "Uitnodigen van gebruikers is mislukt"
@@ -8605,8 +8605,7 @@ disableByAdmin = "MFA uitschakelen"
 
 [workspace.people.roleDescriptions]
 admin = "Kan instellingen beheren en leden uitnodigen, met volledige beheerdersrechten."
-member = "Kan gedeelde bestanden bekijken en bewerken, maar kan geen instellingen of leden van de werkruimte beheren."
-user = "Gebruiker"
+user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]
 error = "Bijwerken van gebruikersstatus is mislukt"

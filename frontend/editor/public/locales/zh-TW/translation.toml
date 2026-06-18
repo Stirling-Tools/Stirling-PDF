@@ -8544,14 +8544,14 @@ success = "密碼已成功更新"
 title = "變更密碼"
 
 [workspace.people.editMember]
-editing = "正在編輯："
+editing = "Editing: <0>{{username}}</0>"
 error = "更新使用者失敗"
 role = "角色"
-submit = "更新成員"
+submit = "Update User"
 success = "已成功更新使用者"
 team = "團隊（選填）"
 teamPlaceholder = "選擇團隊"
-title = "編輯成員"
+title = "Edit User"
 
 [workspace.people.emailInvite]
 allFailed = "邀請使用者失敗"
@@ -8605,8 +8605,7 @@ disableByAdmin = "停用 MFA"
 
 [workspace.people.roleDescriptions]
 admin = "可管理設定並邀請成員，具完整的管理存取權。"
-member = "可檢視與編輯共用檔案，但無法管理工作空間設定或成員。"
-user = "使用者"
+user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]
 error = "更新使用者狀態失敗"

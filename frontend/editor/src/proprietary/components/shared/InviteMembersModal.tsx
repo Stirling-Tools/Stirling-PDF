@@ -118,11 +118,11 @@ export default function InviteMembersModal({
   const roleOptions = [
     {
       value: "ROLE_USER",
-      label: t("workspace.people.roleDescriptions.user", "User"),
+      label: t("workspace.people.user", "User"),
     },
     {
       value: "ROLE_ADMIN",
-      label: t("workspace.people.roleDescriptions.admin", "Admin"),
+      label: t("workspace.people.admin", "Admin"),
     },
   ];
 

@@ -8544,14 +8544,14 @@ success = "Lösenordet har uppdaterats"
 title = "Byt lösenord"
 
 [workspace.people.editMember]
-editing = "Redigerar:"
+editing = "Editing: <0>{{username}}</0>"
 error = "Misslyckades med att uppdatera användare"
 role = "Roll"
-submit = "Uppdatera medlem"
+submit = "Update User"
 success = "Användare uppdaterad"
 team = "Team (valfritt)"
 teamPlaceholder = "Välj ett team"
-title = "Redigera medlem"
+title = "Edit User"
 
 [workspace.people.emailInvite]
 allFailed = "Misslyckades med att bjuda in användare"
@@ -8605,8 +8605,7 @@ disableByAdmin = "Inaktivera MFA"
 
 [workspace.people.roleDescriptions]
 admin = "Kan hantera inställningar och bjuda in medlemmar, med full administrativ åtkomst."
-member = "Kan visa och redigera delade filer men kan inte hantera arbetsytans inställningar eller medlemmar."
-user = "Användare"
+user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]
 error = "Misslyckades med att uppdatera användarstatus"

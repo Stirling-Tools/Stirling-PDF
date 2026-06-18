@@ -8544,14 +8544,14 @@ success = "A jelszó sikeresen frissítve"
 title = "Jelszó módosítása"
 
 [workspace.people.editMember]
-editing = "Szerkesztés:"
+editing = "Editing: <0>{{username}}</0>"
 error = "Nem sikerült frissíteni a felhasználót"
 role = "Szerepkör"
-submit = "Tag frissítése"
+submit = "Update User"
 success = "Felhasználó sikeresen frissítve"
 team = "Csapat (opcionális)"
 teamPlaceholder = "Válasszon csapatot"
-title = "Tag szerkesztése"
+title = "Edit User"
 
 [workspace.people.emailInvite]
 allFailed = "Nem sikerült meghívni a felhasználókat"
@@ -8605,8 +8605,7 @@ disableByAdmin = "MFA letiltása"
 
 [workspace.people.roleDescriptions]
 admin = "Kezelheti a beállításokat és meghívhat tagokat, teljes adminisztratív hozzáféréssel."
-member = "Megtekintheti és szerkesztheti a megosztott fájlokat, de nem kezelheti a munkaterület beállításait vagy a tagokat."
-user = "Felhasználó"
+user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]
 error = "Nem sikerült frissíteni a felhasználói állapotot"

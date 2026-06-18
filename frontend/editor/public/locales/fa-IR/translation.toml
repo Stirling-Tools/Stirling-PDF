@@ -8544,14 +8544,14 @@ success = "گذرواژه با موفقیت به‌روزرسانی شد"
 title = "تغییر گذرواژه"
 
 [workspace.people.editMember]
-editing = "در حال ویرایش:"
+editing = "Editing: <0>{{username}}</0>"
 error = "به‌روزرسانی کاربر ناموفق بود"
 role = "نقش"
-submit = "به‌روزرسانی عضو"
+submit = "Update User"
 success = "کاربر با موفقیت به‌روزرسانی شد"
 team = "تیم (اختیاری)"
 teamPlaceholder = "یک تیم انتخاب کنید"
-title = "ویرایش عضو"
+title = "Edit User"
 
 [workspace.people.emailInvite]
 allFailed = "دعوت کاربران ناموفق بود"
@@ -8605,8 +8605,7 @@ disableByAdmin = "غیرفعال کردن MFA"
 
 [workspace.people.roleDescriptions]
 admin = "می‌تواند تنظیمات را مدیریت و اعضا را دعوت کند، با دسترسی کامل مدیریتی."
-member = "می‌تواند فایل‌های مشترک را مشاهده و ویرایش کند، اما نمی‌تواند تنظیمات فضای کاری یا اعضا را مدیریت کند."
-user = "کاربر"
+user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]
 error = "به‌روزرسانی وضعیت کاربر ناموفق بود"

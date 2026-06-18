@@ -8544,14 +8544,14 @@ success = "อัปเดตรหัสผ่านสำเร็จ"
 title = "เปลี่ยนรหัสผ่าน"
 
 [workspace.people.editMember]
-editing = "กำลังแก้ไข:"
+editing = "Editing: <0>{{username}}</0>"
 error = "อัปเดตผู้ใช้ไม่สำเร็จ"
 role = "บทบาท"
-submit = "อัปเดตสมาชิก"
+submit = "Update User"
 success = "อัปเดตผู้ใช้เรียบร้อยแล้ว"
 team = "ทีม (ไม่บังคับ)"
 teamPlaceholder = "เลือกทีม"
-title = "แก้ไขสมาชิก"
+title = "Edit User"
 
 [workspace.people.emailInvite]
 allFailed = "เชิญผู้ใช้ไม่สำเร็จ"
@@ -8605,8 +8605,7 @@ disableByAdmin = "ปิดใช้งาน MFA"
 
 [workspace.people.roleDescriptions]
 admin = "สามารถจัดการการตั้งค่าและเชิญสมาชิก พร้อมการเข้าถึงระดับผู้ดูแลทั้งหมด"
-member = "สามารถดูและแก้ไขไฟล์ที่แชร์ แต่ไม่สามารถจัดการการตั้งค่าหรือสมาชิกของพื้นที่ทำงานได้"
-user = "ผู้ใช้"
+user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]
 error = "อัปเดตสถานะผู้ใช้ไม่สำเร็จ"

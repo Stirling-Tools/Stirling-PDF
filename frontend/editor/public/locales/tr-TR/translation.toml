@@ -8544,14 +8544,14 @@ success = "Parola başarıyla güncellendi"
 title = "Parolayı değiştir"
 
 [workspace.people.editMember]
-editing = "Düzenleniyor:"
+editing = "Editing: <0>{{username}}</0>"
 error = "Kullanıcı güncellenemedi"
 role = "Rol"
-submit = "Üyeyi Güncelle"
+submit = "Update User"
 success = "Kullanıcı başarıyla güncellendi"
 team = "Takım (İsteğe bağlı)"
 teamPlaceholder = "Bir takım seçin"
-title = "Üyeyi Düzenle"
+title = "Edit User"
 
 [workspace.people.emailInvite]
 allFailed = "Kullanıcılar davet edilemedi"
@@ -8605,8 +8605,7 @@ disableByAdmin = "MFA'yı devre dışı bırak"
 
 [workspace.people.roleDescriptions]
 admin = "Ayarları yönetebilir ve üyeleri davet edebilir; tam yönetici erişimine sahiptir."
-member = "Paylaşılan dosyaları görüntüleyip düzenleyebilir, ancak çalışma alanı ayarlarını veya üyeleri yönetemez."
-user = "Kullanıcı"
+user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]
 error = "Kullanıcı durumu güncellenemedi"

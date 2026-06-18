@@ -8544,14 +8544,14 @@ success = "Lozinka je uspešno ažurirana"
 title = "Promenite lozinku"
 
 [workspace.people.editMember]
-editing = "Uređivanje:"
+editing = "Editing: <0>{{username}}</0>"
 error = "Ažuriranje korisnika nije uspelo"
 role = "Uloga"
-submit = "Ažuriraj člana"
+submit = "Update User"
 success = "Korisnik uspešno ažuriran"
 team = "Tim (opciono)"
 teamPlaceholder = "Izaberite tim"
-title = "Uredi člana"
+title = "Edit User"
 
 [workspace.people.emailInvite]
 allFailed = "Pozivanje korisnika nije uspelo"
@@ -8605,8 +8605,7 @@ disableByAdmin = "Onemogući MFA"
 
 [workspace.people.roleDescriptions]
 admin = "Može da upravlja podešavanjima i poziva članove, sa punim administratorskim pristupom."
-member = "Može da gleda i uređuje deljene fajlove, ali ne može da upravlja podešavanjima radnog prostora ili članovima."
-user = "Korisnik"
+user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]
 error = "Ažuriranje statusa korisnika nije uspelo"

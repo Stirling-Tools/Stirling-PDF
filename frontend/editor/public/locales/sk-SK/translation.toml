@@ -8544,14 +8544,14 @@ success = "Heslo bolo úspešne aktualizované"
 title = "Zmeniť heslo"
 
 [workspace.people.editMember]
-editing = "Úprava:"
+editing = "Editing: <0>{{username}}</0>"
 error = "Používateľa sa nepodarilo aktualizovať"
 role = "Rola"
-submit = "Aktualizovať člena"
+submit = "Update User"
 success = "Používateľ úspešne aktualizovaný"
 team = "Tím (voliteľné)"
 teamPlaceholder = "Vyberte tím"
-title = "Upraviť člena"
+title = "Edit User"
 
 [workspace.people.emailInvite]
 allFailed = "Nepodarilo sa pozvať používateľov"
@@ -8605,8 +8605,7 @@ disableByAdmin = "Zakázať MFA"
 
 [workspace.people.roleDescriptions]
 admin = "Môže spravovať nastavenia a pozývať členov, s plným administratívnym prístupom."
-member = "Môže zobrazovať a upravovať zdieľané súbory, ale nemôže spravovať nastavenia pracovného priestoru ani jeho členov."
-user = "Používateľ"
+user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]
 error = "Nepodarilo sa aktualizovať stav používateľa"

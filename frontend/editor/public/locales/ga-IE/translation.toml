@@ -8544,14 +8544,14 @@ success = "Nuashonraíodh an focal faire go rathúil"
 title = "Athraigh an focal faire"
 
 [workspace.people.editMember]
-editing = "Á chur in eagar:"
+editing = "Editing: <0>{{username}}</0>"
 error = "Theip ar an úsáideoir a nuashonrú"
 role = "Ról"
-submit = "Nuashonraigh Ball"
+submit = "Update User"
 success = "Nuashonraíodh an t-úsáideoir go rathúil"
 team = "Foireann (Roghnach)"
 teamPlaceholder = "Roghnaigh foireann"
-title = "Cuir Ball in Eagar"
+title = "Edit User"
 
 [workspace.people.emailInvite]
 allFailed = "Theip ar úsáideoirí a thabhairt isteach"
@@ -8605,8 +8605,7 @@ disableByAdmin = "Díchumasaigh MFA"
 
 [workspace.people.roleDescriptions]
 admin = "Is féidir socruithe a bhainistiú agus baill a thabhairt isteach, le rochtain riaracháin iomlán."
-member = "Is féidir comhaid roinnte a fheiceáil agus a chur in eagar, ach ní féidir socruithe an spáis oibre ná baill a bhainistiú."
-user = "Úsáideoir"
+user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]
 error = "Theip ar stádas úsáideora a nuashonrú"

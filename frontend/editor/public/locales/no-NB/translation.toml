@@ -8544,14 +8544,14 @@ success = "Passord oppdatert"
 title = "Endre passord"
 
 [workspace.people.editMember]
-editing = "Redigerer:"
+editing = "Editing: <0>{{username}}</0>"
 error = "Kunne ikke oppdatere bruker"
 role = "Rolle"
-submit = "Oppdater medlem"
+submit = "Update User"
 success = "Bruker oppdatert"
 team = "Team (valgfritt)"
 teamPlaceholder = "Velg et team"
-title = "Rediger medlem"
+title = "Edit User"
 
 [workspace.people.emailInvite]
 allFailed = "Kunne ikke invitere brukere"
@@ -8605,8 +8605,7 @@ disableByAdmin = "Deaktiver MFA"
 
 [workspace.people.roleDescriptions]
 admin = "Kan administrere innstillinger og invitere medlemmer, med full administrativ tilgang."
-member = "Kan vise og redigere delte filer, men kan ikke administrere arbeidsområdets innstillinger eller medlemmer."
-user = "Bruker"
+user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]
 error = "Kunne ikke oppdatere brukerstatus"
