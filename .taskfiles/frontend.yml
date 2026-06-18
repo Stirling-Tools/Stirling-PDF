@@ -130,10 +130,15 @@ tasks:
 
   dev:portal:
     desc: "Start developer portal dev server"
+    ignore_error: true
     deps: [install]
     vars:
       PORT: '{{.PORT | default "5173"}}'
       BACKEND_URL: '{{.BACKEND_URL | default "http://localhost:8080"}}'
+      # When set, overrides VITE_EDITOR_URL so the app switcher points at a
+      # running editor (used by dev:portal:all). Left empty for standalone runs
+      # so the committed portal/.env (and any .env.local) wins.
+      EDITOR_URL: '{{.EDITOR_URL | default ""}}'
       OPEN: '{{.OPEN | default ""}}'
     env:
       # Consumed by portal/vite.config.ts to proxy /api, /oauth2, /saml2 at the
@@ -141,7 +146,10 @@ tasks:
       # on (the dev default) the portal still runs standalone as a mock admin.
       BACKEND_URL: '{{.BACKEND_URL}}'
     cmds:
-      - npx vite portal --port {{.PORT}}{{if .OPEN}} --open{{end}}
+      # VITE_EDITOR_URL is prefixed inline only when EDITOR_URL is provided, so
+      # an empty value never overrides the .env default. Task's shell handles
+      # the inline assignment cross-platform.
+      - '{{if .EDITOR_URL}}VITE_EDITOR_URL={{.EDITOR_URL}} {{end}}npx vite portal --port {{.PORT}}{{if .OPEN}} --open{{end}}'
 
   # ============================================================
   # Build
