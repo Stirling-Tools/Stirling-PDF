@@ -4,6 +4,7 @@ import {
   Card,
   EmptyState,
   MetricCard,
+  MetricStrip,
   Skeleton,
   StatusBadge,
 } from "@shared/components";
@@ -25,6 +26,9 @@ import { PopularUseCases } from "@portal/components/PopularUseCases";
 import { UsageAreaChart } from "@portal/components/UsageAreaChart";
 import { RecentActivity } from "@portal/components/RecentActivity";
 import { SingleOpRunner } from "@portal/components/SingleOpRunner";
+import { ProcessingStatusStrip } from "@portal/components/ProcessingStatusStrip";
+import { PolicySummary } from "@portal/components/PolicySummary";
+import { PipelineForkWizard } from "@portal/components/PipelineForkWizard";
 import "@portal/views/Home.css";
 
 /* ──────────────────────────────────────────────────────────────────────── */
@@ -365,7 +369,7 @@ function TierKpiStrip() {
   );
 
   return (
-    <section className="portal-home__metrics">
+    <MetricStrip>
       {labels.map((spec, i) => {
         // useAsync keeps the previous tier's data during a refetch; ignore it
         // while loading so the new labels never pair with stale values.
@@ -381,7 +385,7 @@ function TierKpiStrip() {
           />
         );
       })}
-    </section>
+    </MetricStrip>
   );
 }
 
@@ -507,6 +511,7 @@ export function Home() {
   return (
     <div className="portal-home">
       <WelcomeCarousel onTryOp={() => setRunnerOpen(true)} />
+      <ProcessingStatusStrip />
 
       {tier === "free" && (
         <>
@@ -515,6 +520,8 @@ export function Home() {
             <FreeOnboarding onTryOp={() => setRunnerOpen(true)} />
             <QuickActions onTryOp={() => setRunnerOpen(true)} />
           </div>
+          <PolicySummary />
+          <PipelineForkWizard />
           <ProductGrid />
           <PopularUseCases />
         </>
@@ -528,6 +535,8 @@ export function Home() {
             <RecentActivity />
             <QuickActions onTryOp={() => setRunnerOpen(true)} />
           </div>
+          <PolicySummary />
+          <PipelineForkWizard />
           <ProductGrid />
           <PopularUseCases />
         </>
@@ -542,6 +551,8 @@ export function Home() {
             <RecentActivity />
             <QuickActions onTryOp={() => setRunnerOpen(true)} />
           </div>
+          <PolicySummary />
+          <PipelineForkWizard />
           <ProductGrid />
           <PopularUseCases />
         </>

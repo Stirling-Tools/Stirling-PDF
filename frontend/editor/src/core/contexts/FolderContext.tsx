@@ -38,6 +38,9 @@ import {
 } from "@app/types/folder";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useAuth } from "@app/auth/UseSession";
+import { useLocation } from "react-router-dom";
+import { isAuthRoute } from "@app/constants/routes";
 
 interface FolderContextValue {
   folders: FolderRecord[];
@@ -176,6 +179,40 @@ function formatServerError(err: unknown): string {
 function reachabilityFromError(err: unknown): boolean {
   const status = (err as { response?: { status?: number } })?.response?.status;
   return status !== undefined && status >= 400 && status < 500;
+}
+
+/** Root + every local descendant via parentFolderId. Bounded for corrupted chains. */
+function collectLocalSubtreeIds(
+  rootId: FolderId,
+  folders: FolderRecord[],
+): Set<FolderId> {
+  const childrenByParent = new Map<FolderId, FolderId[]>();
+  for (const f of folders) {
+    if (f.parentFolderId === null) continue;
+    const list = childrenByParent.get(f.parentFolderId) ?? [];
+    list.push(f.id);
+    childrenByParent.set(f.parentFolderId, list);
+  }
+  const result = new Set<FolderId>([rootId]);
+  const stack: FolderId[] = [rootId];
+  const MAX_LOCAL_SUBTREE_NODES = 10_000;
+  while (stack.length > 0 && result.size < MAX_LOCAL_SUBTREE_NODES) {
+    const cur = stack.pop()!;
+    const children = childrenByParent.get(cur);
+    if (!children) continue;
+    for (const childId of children) {
+      if (!result.has(childId)) {
+        result.add(childId);
+        stack.push(childId);
+      }
+    }
+  }
+  return result;
+}
+
+/** Extract HTTP status off an axios-style error, or undefined on network failure. */
+function errorStatus(err: unknown): number | undefined {
+  return (err as { response?: { status?: number } })?.response?.status;
 }
 
 /**
@@ -329,10 +366,28 @@ export function FolderProvider({ children }: FolderProviderProps) {
   // guaranteed-to-403 round-trip per session.
   const { config: appConfig } = useAppConfig();
   const storageBackedByServer = appConfig?.storageEnabled === true;
+  // Skip server pulls on auth routes: FolderProvider is mounted globally and
+  // /login has no session yet, so the pull would be a guaranteed 401.
+  const location = useLocation();
+  const onAuthRoute = isAuthRoute(location.pathname);
+  // Guests (anonymous sessions) have no server-side storage, so a pull is a
+  // guaranteed 401 - skip it once we know the session is anonymous. This is
+  // what keeps the "must sign in" affordance toast-free: with no folder request
+  // fired, there's no error to surface. We gate on `isAnonymous` (which is
+  // false for a real signed-in user) rather than the auth `loading` flag, which
+  // can stay true for an authenticated session and would otherwise block the
+  // pull for legitimate users.
+  const { user, isAnonymous } = useAuth();
   useEffect(() => {
-    if (!storageBackedByServer) return;
+    // Only pull once we have a confirmed, non-anonymous user. Skipping while
+    // `user` is still null avoids a stray 401 in the brief window before an
+    // anonymous session resolves (at which point `isAnonymous` flips true and
+    // keeps us out). `isAnonymous` alone isn't enough because it defaults false
+    // before the session loads; the auth `loading` flag is unreliable (it can
+    // stay true for a valid signed-in session), so we key off the user object.
+    if (!storageBackedByServer || onAuthRoute || !user || isAnonymous) return;
     void pullFromServer();
-  }, [pullFromServer, storageBackedByServer]);
+  }, [pullFromServer, storageBackedByServer, onAuthRoute, user, isAnonymous]);
 
   const foldersById = useMemo(() => {
     const map = new Map<FolderId, FolderRecord>();
@@ -390,24 +445,58 @@ export function FolderProvider({ children }: FolderProviderProps) {
 
   // ─── mutations: server-first, cache update on success ──────────────
 
+  // Lifted up so handleStaleFolder below can reuse the file-detach primitive.
+  const { clearFolderForFiles } = useIndexedDB();
+
+  /** Treat a per-folder 404 as "deleted elsewhere": drop subtree, strand-reset, pull. */
+  const handleStaleFolder = useCallback(
+    (staleId: FolderId, foldersSnapshot: FolderRecord[]) => {
+      const subtree = collectLocalSubtreeIds(staleId, foldersSnapshot);
+      if (mountedRef.current) {
+        setServerReachable(true);
+        setError(null);
+        setFolders((prev) => prev.filter((f) => !subtree.has(f.id)));
+        if (
+          currentFolderId !== null &&
+          shouldStrandedReset(currentFolderId, subtree, foldersSnapshot)
+        ) {
+          setCurrentFolderId(ROOT_FOLDER_ID);
+        }
+      }
+      const subtreeIds = [...subtree];
+      // Best-effort - pullFromServer is authoritative if these miss.
+      void folderStorage
+        .removeFolders(subtreeIds)
+        .catch((e) => console.warn("[FolderContext] stale cache cleanup", e));
+      void clearFolderForFiles(subtreeIds).catch((e) =>
+        console.warn("[FolderContext] stale file-folder cleanup", e),
+      );
+      bumpFolderRevision();
+      void pullFromServer();
+    },
+    [bumpFolderRevision, clearFolderForFiles, currentFolderId, pullFromServer],
+  );
+
   /**
-   * Centralised mutation wrapper:
-   *   1. Calls the server op.
-   *   2. On success: flips `serverReachable=true`, updates in-memory state
-   *      from the server response, then best-effort writes the cache (cache
-   *      failure does NOT roll back; the in-memory truth came from the server).
-   *   3. On failure: updates `serverReachable` per the error class, surfaces
-   *      via {@link setError}, re-throws so the caller's dialog can stay open.
+   * Server-first mutation wrapper. On 404 with `staleFolderId`, hands off to
+   * handleStaleFolder and resolves `null`; other errors surface + re-throw.
    */
   const runFolderMutation = useCallback(
     async <T,>(
       serverOp: () => Promise<T>,
       onSuccess: (result: T) => void | Promise<void>,
-    ): Promise<T> => {
+      staleFolderId: FolderId | null = null,
+    ): Promise<T | null> => {
       let result: T;
       try {
         result = await serverOp();
       } catch (err) {
+        if (errorStatus(err) === 404 && staleFolderId !== null) {
+          // `folders` is a closure snapshot; functional setFolders + the pull
+          // keep this race-safe even if a concurrent mutation shifted state.
+          handleStaleFolder(staleFolderId, folders);
+          return null;
+        }
         if (mountedRef.current) {
           setServerReachable(reachabilityFromError(err));
           setError(formatServerError(err));
@@ -421,18 +510,13 @@ export function FolderProvider({ children }: FolderProviderProps) {
       try {
         await onSuccess(result);
       } catch (cacheErr) {
-        // The server is authoritative - a cache write failure must not be
-        // surfaced as if the operation failed. Log + leave the in-memory
-        // state authoritative; next pullFromServer will re-seed the cache.
-        console.warn(
-          "[FolderContext] cache update failed after successful mutation",
-          cacheErr,
-        );
+        // Cache write failure is non-fatal; next pull re-seeds.
+        console.warn("[FolderContext] cache update after mutation", cacheErr);
       }
       bumpFolderRevision();
       return result;
     },
-    [bumpFolderRevision],
+    [bumpFolderRevision, folders, handleStaleFolder],
   );
 
   const createFolder = useCallback(
@@ -441,10 +525,9 @@ export function FolderProvider({ children }: FolderProviderProps) {
       parentFolderId: FolderId | null = currentFolderId,
     ): Promise<FolderRecord> => {
       const color = pickFolderColor(name);
-      // Generate id client-side so the server's idempotency check makes
-      // retries safe (network blip → second POST returns the same row).
+      // Client-side id makes server idempotency check safe on retry.
       const id = createFolderId();
-      return runFolderMutation(
+      const result = await runFolderMutation(
         () =>
           folderSyncService.create({
             id,
@@ -460,6 +543,11 @@ export function FolderProvider({ children }: FolderProviderProps) {
           await folderStorage.upsertFolder(record);
         },
       );
+      // No staleFolderId passed → null branch can't fire; defensive throw.
+      if (result === null) {
+        throw new Error("createFolder unexpectedly returned null");
+      }
+      return result;
     },
     [currentFolderId, runFolderMutation],
   );
@@ -474,6 +562,7 @@ export function FolderProvider({ children }: FolderProviderProps) {
           );
           await folderStorage.upsertFolder(record);
         },
+        id,
       );
     },
     [runFolderMutation],
@@ -493,6 +582,7 @@ export function FolderProvider({ children }: FolderProviderProps) {
           );
           await folderStorage.upsertFolder(record);
         },
+        id,
       );
     },
     [runFolderMutation],
@@ -515,12 +605,11 @@ export function FolderProvider({ children }: FolderProviderProps) {
           );
           await folderStorage.upsertFolder(record);
         },
+        id,
       );
     },
     [runFolderMutation],
   );
-
-  const { clearFolderForFiles } = useIndexedDB();
 
   const deleteFolder = useCallback(
     async (id: FolderId): Promise<FolderId[]> => {
@@ -532,6 +621,11 @@ export function FolderProvider({ children }: FolderProviderProps) {
       try {
         removed = await folderSyncService.delete(id);
       } catch (err) {
+        if (errorStatus(err) === 404) {
+          // Already gone; treat as success. Return [id]; pull is authoritative.
+          handleStaleFolder(id, folders);
+          return [id];
+        }
         if (mountedRef.current) {
           setServerReachable(reachabilityFromError(err));
           setError(formatServerError(err));
@@ -580,7 +674,13 @@ export function FolderProvider({ children }: FolderProviderProps) {
       }
       return removed;
     },
-    [bumpFolderRevision, clearFolderForFiles, currentFolderId, folders],
+    [
+      bumpFolderRevision,
+      clearFolderForFiles,
+      currentFolderId,
+      folders,
+      handleStaleFolder,
+    ],
   );
 
   const value = useMemo<FolderContextValue>(

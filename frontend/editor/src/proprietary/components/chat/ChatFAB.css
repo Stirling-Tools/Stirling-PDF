@@ -1,0 +1,60 @@
+/* Overlay layer ─────────────────────────────────────────────────────────── */
+
+.chat-fab-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* FAB trigger button ─────────────────────────────────────────────────────── */
+
+.chat-fab-trigger {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  pointer-events: auto;
+  opacity: 1;
+  /* Include box-shadow so the ChatFABButton hover shadow still animates */
+  transition:
+    opacity 160ms ease,
+    transform 180ms cubic-bezier(0.32, 0.72, 0, 1),
+    box-shadow 180ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-fab-trigger {
+    transition: none;
+  }
+}
+
+.chat-fab-trigger--hidden {
+  opacity: 0;
+  transform: scale(0.78);
+  pointer-events: none;
+}
+
+/* Panel layout ───────────────────────────────────────────────────────────── */
+
+/* ChatPanel fills remaining height when inside the FAB window */
+.chat-fab-panel-rnd .chat-panel--embedded {
+  flex: 1;
+  height: auto;
+  min-height: 0;
+}
+
+/* Header is the drag handle — grab cursor on background areas */
+.chat-fab-panel-rnd .chat-panel__header {
+  cursor: grab;
+  user-select: none;
+}
+
+.chat-fab-panel-rnd .chat-panel__header:active {
+  cursor: grabbing;
+}
+
+/* Buttons inside the header keep their pointer cursor */
+.chat-fab-panel-rnd .chat-panel__header button,
+.chat-fab-panel-rnd .chat-panel__header [role="button"] {
+  cursor: pointer;
+}

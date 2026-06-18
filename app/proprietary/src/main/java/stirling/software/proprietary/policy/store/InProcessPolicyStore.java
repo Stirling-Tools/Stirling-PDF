@@ -9,9 +9,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import stirling.software.proprietary.policy.model.Policy;
 
 /**
- * In-memory {@link PolicyStore}. Not the runtime bean - {@link JpaPolicyStore} is the durable
- * store. Kept as a lightweight, dependency-free implementation for tests and for any future no-
- * database mode.
+ * In-memory {@link PolicyStore} for tests and any future no-database mode. {@link JpaPolicyStore}
+ * is the runtime bean.
  */
 public class InProcessPolicyStore implements PolicyStore {
 
@@ -30,8 +29,10 @@ public class InProcessPolicyStore implements PolicyStore {
                         policy.owner(),
                         policy.enabled(),
                         policy.trigger(),
+                        policy.sources(),
                         policy.steps(),
-                        policy.output());
+                        policy.output(),
+                        policy.teamId());
         policies.put(id, stored);
         return stored;
     }
@@ -50,6 +51,7 @@ public class InProcessPolicyStore implements PolicyStore {
     public List<Policy> findByTriggerType(String triggerType) {
         return policies.values().stream()
                 .filter(Policy::enabled)
+                .filter(policy -> policy.trigger() != null)
                 .filter(policy -> triggerType.equals(policy.trigger().type()))
                 .toList();
     }

@@ -1,6 +1,6 @@
 repositories {
-    maven { url = "https://build.shibboleth.net/maven/releases" }
     maven { url = "https://repository.jboss.org/" }
+    maven { url = "https://build.shibboleth.net/maven/releases" }
 }
 
 ext {
@@ -52,6 +52,10 @@ dependencies {
     api 'org.springframework.boot:spring-boot-starter-security'
     api 'org.springframework.boot:spring-boot-starter-data-jpa'
     api 'org.springframework.boot:spring-boot-starter-security-oauth2-client'
+    // MCP server (RFC 8707 audience binding + RFC 9728 metadata) - resource-server side only.
+    // Brings nimbus-jose-jwt onto the proprietary classpath if not already transitive via
+    // oauth2-client; on Boot 4.0.6 the delta is around 130KB because nimbus is already pulled.
+    api 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
     api 'org.springframework.boot:spring-boot-starter-mail'
     api 'org.springframework.boot:spring-boot-starter-cache'
     api 'com.github.ben-manes.caffeine:caffeine'

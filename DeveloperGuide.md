@@ -52,6 +52,17 @@ This guide focuses on developing for Stirling 2.0, including both the React fron
 - Rust and Cargo (required for Tauri desktop app development)
 - Tauri CLI (install with `cargo install tauri-cli`)
 
+### Optional System Dependencies
+
+These are not required to run the app but enable specific features. The app detects them at startup and disables the relevant features if they are missing.
+
+| Dependency | Feature | Install |
+|---|---|---|
+| LibreOffice | File-to-PDF conversions | `brew install libreoffice` / `apt install libreoffice` |
+| Tesseract | OCR | `brew install tesseract` / `apt install tesseract-ocr` |
+| WeasyPrint | AI document creation | `brew install weasyprint` / `apt install weasyprint` |
+| qpdf | PDF optimisation | `brew install qpdf` / `apt install qpdf` |
+
 ### Setup Steps
 
 1. Clone the repository:
@@ -576,7 +587,7 @@ When adding a new feature or modifying existing ones in Stirling-PDF, you'll nee
 Find the existing `messages.properties` files in the `stirling-pdf/src/main/resources` directory. You'll see files like:
 
 - `messages.properties` (default, usually English)
-- `messages_en_GB.properties`
+- `messages_en_US.properties`
 - `messages_fr_FR.properties`
 - `messages_de_DE.properties`
 - etc.

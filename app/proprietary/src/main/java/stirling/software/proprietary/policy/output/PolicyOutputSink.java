@@ -9,11 +9,9 @@ import stirling.software.common.model.job.ResultFile;
 import stirling.software.proprietary.policy.model.OutputSpec;
 
 /**
- * Delivers a finished run's output files to a destination, returning durable {@link ResultFile}
- * descriptors (fileId + metadata) for the run record.
- *
- * <p>Implementations are Spring beans selected by {@link #supports(OutputSpec)}. New destinations
- * (folder, S3) are added as new beans without changing the engine.
+ * Delivers a finished run's outputs to a destination, returning {@link ResultFile} descriptors for
+ * the run record. Implementations are beans selected by {@link #supports(OutputSpec)}, so a new
+ * destination (folder, S3) is just a new bean.
  */
 public interface PolicyOutputSink {
 
@@ -23,13 +21,10 @@ public interface PolicyOutputSink {
     /** Whether this sink can handle the given output spec. */
     boolean supports(OutputSpec spec);
 
-    /**
-     * Persist/deliver the output files and return their descriptors.
-     *
-     * @param runId the run these outputs belong to
-     * @param outputs the final pipeline output resources
-     * @param spec the requested destination
-     */
+    /** Throws {@link IllegalArgumentException} on bad config. Called on save to fail fast. */
+    default void validate(OutputSpec spec) {}
+
+    /** Persist/deliver the output files and return their descriptors. */
     List<ResultFile> deliver(String runId, List<Resource> outputs, OutputSpec spec)
             throws IOException;
 }
