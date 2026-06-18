@@ -23,6 +23,39 @@ export interface NotificationDefault {
   enabled: boolean;
 }
 
+/** A device/browser with an active session, shown under Admin → Security. */
+export interface ActiveSession {
+  id: string;
+  device: string;
+  location: string;
+  lastActive: string;
+  /** The session viewing this modal — can't be revoked from here. */
+  current: boolean;
+}
+
+/**
+ * Org-wide authentication posture. SSO/SCIM are enterprise capabilities; lower
+ * tiers see them as locked rows with an upgrade nudge.
+ */
+export interface SecuritySettings {
+  mfaEnforced: boolean;
+  ssoEnabled: boolean;
+  scimEnabled: boolean;
+  /** Idle timeout before re-auth, in minutes. */
+  sessionTimeoutMins: number;
+  activeSessions: ActiveSession[];
+}
+
+/** An opt-in early-access feature flag. */
+export interface BetaFeature {
+  id: string;
+  label: string;
+  description: string;
+  enabled: boolean;
+  /** Gated to enterprise — rendered locked below it. */
+  enterpriseOnly?: boolean;
+}
+
 /**
  * Server snapshot of the account + workspace the modal opens onto. Editable
  * fields seed local form state; `planLabel` / `seats` are read-only context.
@@ -44,6 +77,10 @@ export interface SettingsSnapshot {
   /** Per-category notification toggles, server-default on/off. */
   notifications: NotificationDefault[];
   regions: RegionOption[];
+  /** Org-wide authentication + session posture (Admin scope). */
+  security: SecuritySettings;
+  /** Opt-in early-access features (Admin scope). */
+  betaFeatures: BetaFeature[];
 }
 
 const REGIONS: RegionOption[] = [
@@ -89,6 +126,75 @@ function notificationsFor(tier: Tier): NotificationDefault[] {
   ];
 }
 
+/** Session timeout shortens as the plan's security posture tightens. */
+const SESSION_TIMEOUT_MINS: Record<Tier, number> = {
+  free: 1440,
+  pro: 720,
+  enterprise: 480,
+};
+
+function securityFor(tier: Tier): SecuritySettings {
+  const base: ActiveSession[] = [
+    {
+      id: "sess-current",
+      device: "Chrome · macOS",
+      location: "London, UK",
+      lastActive: "Active now",
+      current: true,
+    },
+  ];
+  if (tier !== "free") {
+    base.push({
+      id: "sess-cli",
+      device: "Stirling CLI · CI runner",
+      location: "eu-west-1",
+      lastActive: "12 min ago",
+      current: false,
+    });
+  }
+  if (tier === "enterprise") {
+    base.push({
+      id: "sess-mobile",
+      device: "Safari · iPhone",
+      location: "London, UK",
+      lastActive: "3 h ago",
+      current: false,
+    });
+  }
+  return {
+    // Enterprise tenants enforce MFA + SSO/SCIM org-wide by default.
+    mfaEnforced: tier === "enterprise",
+    ssoEnabled: tier === "enterprise",
+    scimEnabled: tier === "enterprise",
+    sessionTimeoutMins: SESSION_TIMEOUT_MINS[tier],
+    activeSessions: base,
+  };
+}
+
+function betaFeaturesFor(tier: Tier): BetaFeature[] {
+  return [
+    {
+      id: "pipeline-canary",
+      label: "Pipeline canary rollouts",
+      description: "Shadow-run a new pipeline version before promoting it.",
+      enabled: false,
+    },
+    {
+      id: "component-sandboxes",
+      label: "Live component sandboxes",
+      description: "Interactive previews for embeddable components.",
+      enabled: tier !== "free",
+    },
+    {
+      id: "agent-evals-v2",
+      label: "Agent evals v2",
+      description: "Richer golden-set scoring with regression diffs.",
+      enabled: tier === "enterprise",
+      enterpriseOnly: true,
+    },
+  ];
+}
+
 export function buildSettingsSnapshot(tier: Tier): SettingsSnapshot {
   return {
     profile: {
@@ -105,5 +211,7 @@ export function buildSettingsSnapshot(tier: Tier): SettingsSnapshot {
     },
     notifications: notificationsFor(tier),
     regions: REGIONS,
+    security: securityFor(tier),
+    betaFeatures: betaFeaturesFor(tier),
   };
 }

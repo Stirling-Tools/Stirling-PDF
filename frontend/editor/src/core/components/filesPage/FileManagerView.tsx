@@ -28,7 +28,6 @@ import ViewListIcon from "@mui/icons-material/ViewList";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DriveFileMoveIcon from "@mui/icons-material/DriveFileMove";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import VisibilityIcon from "@mui/icons-material/Visibility";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
@@ -67,15 +66,14 @@ import { useIsMobile } from "@app/hooks/useIsMobile";
 import { MoveToFolderDialog } from "@app/components/filesPage/MoveToFolderDialog";
 import { FolderNameDialog } from "@app/components/filesPage/FolderNameDialog";
 import { DeleteFolderDialog } from "@app/components/filesPage/DeleteFolderDialog";
+import { DeleteFilesDialog } from "@app/components/filesPage/DeleteFilesDialog";
+import { VersionHistoryModal } from "@app/components/filesPage/VersionHistoryModal";
 import { materializeServerStubs } from "@app/services/fileSyncService";
 import {
   FILES_PAGE_DRAG_TYPE,
   parseFilesPageDragPayload,
 } from "@app/components/filesPage/dragDrop";
-import {
-  clearFilesPageReturnRoute,
-  setFilesPageReturnRoute,
-} from "@app/components/filesPage/filesPageReturnRoute";
+import { clearFilesPageReturnRoute } from "@app/components/filesPage/filesPageReturnRoute";
 import "@app/components/filesPage/FilesPage.css";
 
 export default function FileManagerView() {
@@ -96,6 +94,9 @@ export default function FileManagerView() {
   const [saveToServerTarget, setSaveToServerTarget] = useState<
     StirlingFileStub[] | null
   >(null);
+  // Version-history modal target (opened from the card kebab).
+  const [versionHistoryFile, setVersionHistoryFile] =
+    useState<StirlingFileStub | null>(null);
   const folders = useFolders();
   const { actions: fileActions } = useFileActions();
   const { fileIds: activeWorkspaceFileIds } = useAllFiles();
@@ -166,12 +167,25 @@ export default function FileManagerView() {
     moveFilesTo,
     moveFolderTo,
     removeFiles,
+    deleteDialogFileIds,
+    deleteDialogOpen,
+    closeDeleteDialog,
+    confirmRemoveFiles,
     promptDeleteFolder,
     deleteFolder,
     deleteFolderDialog,
     closeDeleteFolderDialog,
     setFolderAppearance,
   } = filesPage;
+
+  // Resolve queued delete ids into stubs for the DeleteFilesDialog.
+  const deleteDialogFiles = useMemo(
+    () =>
+      deleteDialogFileIds
+        .map((id) => fileMap.get(id))
+        .filter((s): s is StirlingFileStub => Boolean(s)),
+    [deleteDialogFileIds, fileMap],
+  );
 
   const setCurrentFolderId = folders.setCurrentFolderId;
   const foldersById = folders.foldersById;
@@ -538,30 +552,16 @@ export default function FileManagerView() {
     [handleNativeUpload],
   );
 
-  // ─── add to workspace vs quick view ─────────────────────────────────────
-  // addToWorkspace: commit; no back affordance.
-  // quickView: peek; "Back to My Files" pill in WorkbenchBar.
+  // ─── add to workspace ───────────────────────────────────────────────────
   const openFilesInWorkbench = useCallback(
-    async (fileIds: FileId[], options: { trackReturn: boolean }) => {
+    async (fileIds: FileId[]) => {
       const stubs = fileIds
         .map((id) => fileMap.get(id))
         .filter((s): s is StirlingFileStub => Boolean(s));
       if (stubs.length === 0) return;
 
       const proceed = async () => {
-        if (options.trackReturn) {
-          const returnRoute =
-            currentFolderId === null ? "/files" : `/files/${currentFolderId}`;
-          const folderRecord = currentFolderId
-            ? (foldersById.get(currentFolderId) ?? null)
-            : null;
-          const returnLabel = folderRecord
-            ? folderRecord.name
-            : t("filesPage.myFiles", "My Files");
-          setFilesPageReturnRoute(returnRoute, returnLabel);
-        } else {
-          clearFilesPageReturnRoute();
-        }
+        clearFilesPageReturnRoute();
 
         // Server-only stubs have no bytes in IDB; download + ingest first.
         const materialized = await materializeServerStubs(stubs, {
@@ -599,20 +599,12 @@ export default function FileManagerView() {
       navActions,
       navigate,
       requestNavigation,
-      currentFolderId,
-      foldersById,
-      t,
+      clearFilesPageReturnRoute,
     ],
   );
 
   const handleAddToWorkspace = useCallback(
-    (fileIds: FileId[]) =>
-      openFilesInWorkbench(fileIds, { trackReturn: false }),
-    [openFilesInWorkbench],
-  );
-
-  const handleQuickView = useCallback(
-    (fileId: FileId) => openFilesInWorkbench([fileId], { trackReturn: true }),
+    (fileIds: FileId[]) => openFilesInWorkbench(fileIds),
     [openFilesInWorkbench],
   );
 
@@ -1189,7 +1181,6 @@ export default function FileManagerView() {
                         );
                   const moveLabel = t("filesPage.moveTo", "Move to…");
                   const removeLabel = t("filesPage.remove", "Remove");
-                  const quickViewLabel = t("filesPage.quickView", "Quick view");
                   return (
                     // wrap="nowrap" keeps the row single-line.
                     <Group gap="xs" wrap="nowrap">
@@ -1204,19 +1195,6 @@ export default function FileManagerView() {
                           {addLabel}
                         </Button>
                       </Tooltip>
-                      {selectedFiles.length === 1 && (
-                        <Tooltip label={quickViewLabel} withinPortal>
-                          <Button
-                            size="sm"
-                            variant="subtle"
-                            leftSection={<VisibilityIcon fontSize="small" />}
-                            onClick={() => handleQuickView(selectedFiles[0]!)}
-                            aria-label={quickViewLabel}
-                          >
-                            {quickViewLabel}
-                          </Button>
-                        </Tooltip>
-                      )}
                       {/* Save to server; shown whenever local-only files are
                           selected. When storage is off it stays visible but
                           disabled, tooltip pointing at the admin. */}
@@ -1475,7 +1453,6 @@ export default function FileManagerView() {
               onSetSelection={setSelectedFileIds}
               onOpenFolder={handleOpenFolder}
               onOpenFile={handleOpenFile}
-              onQuickView={(file) => handleQuickView(file.id)}
               onMoveFiles={moveFilesTo}
               onMoveFolder={moveFolderTo}
               onRenameFolder={openRenameFolderDialog}
@@ -1498,6 +1475,7 @@ export default function FileManagerView() {
               onRemoveFiles={handleRemoveFiles}
               onPromptMoveFiles={promptMoveFiles}
               onSaveToServer={(file) => setSaveToServerTarget([file])}
+              onVersionHistory={(file) => setVersionHistoryFile(file)}
               saveToServerDisabledReason={saveToServerDisabledReason}
               // Center-of-grid CTAs when the empty state shows - same
               // handlers the corner header buttons use so behaviour
@@ -1540,7 +1518,6 @@ export default function FileManagerView() {
             currentFolder={currentFolderRecord}
             onClose={() => clearSelection()}
             onAddToWorkspace={handleAddToWorkspace}
-            onQuickView={handleQuickView}
             onMove={promptMoveFiles}
             onRemove={handleRemoveFiles}
             onSaveToServer={(files) => setSaveToServerTarget(files)}
@@ -1567,11 +1544,18 @@ export default function FileManagerView() {
               currentFolder={currentFolderRecord}
               onClose={() => setMobileDetailsOpen(false)}
               onAddToWorkspace={handleAddToWorkspace}
-              onQuickView={handleQuickView}
               onMove={promptMoveFiles}
               onRemove={handleRemoveFiles}
               onSaveToServer={(files) => setSaveToServerTarget(files)}
               saveToServerDisabledReason={saveToServerDisabledReason}
+              compactVersions
+              onOpenVersionHistory={() => {
+                const f = fileMap.get(selectedFiles[0]);
+                if (f) {
+                  setMobileDetailsOpen(false);
+                  setVersionHistoryFile(f);
+                }
+              }}
             />
           )}
         </Drawer>
@@ -1641,6 +1625,22 @@ export default function FileManagerView() {
             throw err;
           }
         }}
+      />
+
+      {/* Cloud-aware delete; offers local/cloud/both when a file lives in both. */}
+      <DeleteFilesDialog
+        opened={deleteDialogOpen}
+        files={deleteDialogFiles}
+        onClose={closeDeleteDialog}
+        onConfirm={confirmRemoveFiles}
+      />
+
+      {/* Version journey in a modal (opened from the card kebab). */}
+      <VersionHistoryModal
+        opened={Boolean(versionHistoryFile)}
+        onClose={() => setVersionHistoryFile(null)}
+        file={versionHistoryFile}
+        onChanged={refresh}
       />
 
       {/* Save-to-server modal; keyed on target so updates don't retarget. */}

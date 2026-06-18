@@ -15,6 +15,12 @@
   gap: 1rem;
 }
 
+.portal-sources__actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
 .portal-sources__title {
   margin: 0;
   font-size: 1.375rem;

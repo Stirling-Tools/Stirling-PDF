@@ -24,7 +24,7 @@ interface AppConfigModalProps {
 const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
   const isMobile = useMediaQuery("(max-width: 1024px)");
 
-  const { signOut, user, creditBalance, refreshCredits } = useAuth();
+  const { signOut, user } = useAuth();
   const { t } = useTranslation();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [active, setActive] = useState<NavKey>("overview");
@@ -94,35 +94,6 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
     return () =>
       window.removeEventListener("appConfig:overlay", handler as EventListener);
   }, []);
-
-  // When the modal opens to Plan, proactively refresh credits and log values
-  useEffect(() => {
-    if (!opened) return;
-    if (active !== "plan") return;
-    console.log(
-      "[AppConfigModal] Opening Plan section. Current creditBalance:",
-      creditBalance,
-    );
-    (async () => {
-      try {
-        await refreshCredits();
-      } catch (e) {
-        console.warn(
-          "[AppConfigModal] Failed to refresh credits on Plan open:",
-          e,
-        );
-      }
-    })();
-  }, [opened, active]);
-
-  useEffect(() => {
-    if (!opened) return;
-    if (active !== "plan") return;
-    console.log(
-      "[AppConfigModal] Credit balance updated while viewing Plan:",
-      creditBalance,
-    );
-  }, [opened, active, creditBalance]);
 
   const colors = useMemo(
     () => ({

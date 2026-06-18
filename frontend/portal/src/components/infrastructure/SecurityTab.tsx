@@ -1,7 +1,9 @@
 import { useState } from "react";
 import {
   Banner,
+  Button,
   Card,
+  Chip,
   EmptyState,
   RadioGroup,
   Skeleton,
@@ -20,8 +22,12 @@ import {
 } from "@portal/api/infrastructure";
 import { SectionHeader } from "@portal/components/infrastructure/SectionHeader";
 import {
+  ATTESTATION_LABEL,
+  ATTESTATION_TONE,
   CERT_LABEL,
   CERT_TONE,
+  KEY_MODE_LABEL,
+  KEY_MODE_TONE,
 } from "@portal/components/infrastructure/infraFormat";
 
 const ACCESS_OPTS: RadioOption<AccessPolicy>[] = [
@@ -148,6 +154,74 @@ export function SecurityTab() {
 
       <section>
         <SectionHeader
+          title="Encryption key management"
+          sub="Custody of the keys that encrypt documents at rest — who can decrypt, and how keys rotate."
+        />
+        <Card padding="loose" className="portal-infra__keymgmt">
+          <div className="portal-infra__keymgmt-head">
+            <div className="portal-infra__keymgmt-title">
+              <span className="portal-infra__cell-strong">
+                {data.keyManagement.provider}
+              </span>
+              <StatusBadge
+                tone={KEY_MODE_TONE[data.keyManagement.mode]}
+                size="sm"
+              >
+                {KEY_MODE_LABEL[data.keyManagement.mode]}
+              </StatusBadge>
+            </div>
+            {/* Rotation is a privileged backend action; disabled where Stirling
+                holds the keys (managed tiers can't rotate customer keys). */}
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!data.keyManagement.customerManaged}
+              onClick={() => {
+                // TODO(backend): POST /v1/infrastructure/security/keys/rotate
+              }}
+            >
+              Rotate key
+            </Button>
+          </div>
+
+          <dl className="portal-infra__kv">
+            <div className="portal-infra__kv-wide">
+              <dt>Key identifier</dt>
+              <dd>
+                <code className="portal-infra__cell-code">
+                  {data.keyManagement.keyId}
+                </code>
+              </dd>
+            </div>
+            <div>
+              <dt>Algorithm</dt>
+              <dd className="portal-infra__mono">
+                {data.keyManagement.algorithm}
+              </dd>
+            </div>
+            <div>
+              <dt>Last rotated</dt>
+              <dd>{data.keyManagement.lastRotated}</dd>
+            </div>
+            <div>
+              <dt>Rotation policy</dt>
+              <dd>{data.keyManagement.rotationPolicy}</dd>
+            </div>
+          </dl>
+
+          {!data.keyManagement.customerManaged && (
+            <Banner
+              tone="info"
+              className="portal-infra__banner"
+              title="Keys are managed by Stirling on your plan"
+              description="Bring-your-own-key (BYOK) and hold-your-own-key (HYOK) custody are available on Enterprise. Upgrade to supply keys from your own KMS."
+            />
+          )}
+        </Card>
+      </section>
+
+      <section>
+        <SectionHeader
           title="Compliance"
           sub="Attestations and certifications covering the Stirling platform."
         />
@@ -161,6 +235,45 @@ export function SecurityTab() {
                 </StatusBadge>
               </div>
               <p className="portal-infra__cert-detail">{c.detail}</p>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <SectionHeader
+          title="Compliance attestations"
+          sub="Framework-by-framework audit posture, with reports available on attested controls."
+        />
+        <div className="portal-infra__attestations">
+          {data.attestations.map((a) => (
+            <Card
+              key={a.id}
+              padding="default"
+              className="portal-infra__attestation"
+            >
+              <div className="portal-infra__cert-head">
+                <span className="portal-infra__cell-strong">{a.name}</span>
+                <StatusBadge tone={ATTESTATION_TONE[a.status]} size="sm">
+                  {ATTESTATION_LABEL[a.status]}
+                </StatusBadge>
+              </div>
+              <Chip tone="neutral" size="sm">
+                {a.framework}
+              </Chip>
+              <p className="portal-infra__cert-detail">{a.detail}</p>
+              {a.reportUrl ? (
+                <a
+                  className="portal-infra__attestation-link"
+                  href={a.reportUrl}
+                  // TODO(backend): GET /v1/infrastructure/security/reports/:id
+                  onClick={(e) => e.preventDefault()}
+                >
+                  View report →
+                </a>
+              ) : (
+                <span className="portal-infra__muted">No report available</span>
+              )}
             </Card>
           ))}
         </div>
