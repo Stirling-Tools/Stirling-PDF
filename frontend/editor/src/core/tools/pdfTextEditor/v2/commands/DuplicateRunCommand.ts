@@ -3,6 +3,7 @@ import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDoc
 import { TextRun } from "@app/tools/pdfTextEditor/v2/model/TextRun";
 import { writeUtf16 } from "@app/services/pdfiumService";
 import { helveticaVariantFor } from "@app/tools/pdfTextEditor/v2/util/helveticaVariant";
+import { sanitizeForBase14 } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
 
 /**
  * Clone a text run at a fixed offset (default 12pt right + 12pt down)
@@ -44,7 +45,12 @@ export class DuplicateRunCommand implements Command {
       Math.max(4, src.fontSize),
     );
     if (!newPtr) return;
-    const textPtr = writeUtf16(m, src.text.replace(/\r?\n/g, " "));
+    // Base-14 (WinAnsi) can't render >U+00FF; sanitize so non-Latin code
+    // points are dropped rather than persisted as U+00FF ydieresis tofu.
+    const textPtr = writeUtf16(
+      m,
+      sanitizeForBase14(src.text.replace(/\r?\n/g, " ")),
+    );
     try {
       m.FPDFText_SetText(newPtr, textPtr);
     } finally {

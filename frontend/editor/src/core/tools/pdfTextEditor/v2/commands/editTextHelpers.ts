@@ -531,6 +531,29 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     text: string,
   ): string | null {
     const strategy = getActiveCharcodeStrategy();
+    // The content-stream resolver is an untrusted sequential-CID GUESS. When it
+    // is the ACTIVE strategy (diagnostic builds) it would otherwise bypass the
+    // subset+single-codepoint gate that guards it as a fallback - so apply the
+    // same gate here. Anything outside it routes to SetText, which the width
+    // self-check above backstops with a base-14 re-emit. Without this, a
+    // re-encoded multi-char run could be scrambled by a same-width wrong glyph.
+    if (
+      strategy === "content-stream" &&
+      !(!!opts.originalFontSubset && [...text].length === 1)
+    ) {
+      emitCharcodeEvent({
+        timestamp: 0,
+        strategy,
+        text,
+        fontPtr: opts.originalFontPtr,
+        resolved: [],
+        missing: [...text],
+        note: "content-stream active but ungated (not subset+single-cp) - using SetText",
+        outcome: "partial-coverage-fallback",
+      });
+      setTextOn(m, ptr, text);
+      return null;
+    }
     if (!canReuse || !opts.originalFontPtr) {
       emitCharcodeEvent({
         timestamp: 0,

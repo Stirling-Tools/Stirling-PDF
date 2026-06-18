@@ -3,6 +3,7 @@ import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDoc
 import { TextRun } from "@app/tools/pdfTextEditor/v2/model/TextRun";
 import { BLACK } from "@app/tools/pdfTextEditor/v2/model/Color";
 import { writeUtf16 } from "@app/services/pdfiumService";
+import { sanitizeForBase14 } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
 
 const DEFAULT_FAMILY = "Helvetica";
 const DEFAULT_SIZE = 12;
@@ -53,7 +54,9 @@ export class InsertTextCommand implements Command {
     );
     if (!objPtr) return;
 
-    const textPtr = writeUtf16(m, this.text);
+    // Base-14 (WinAnsi) can't render >U+00FF; sanitize so pasted/inserted
+    // non-Latin code points are dropped rather than written as U+00FF tofu.
+    const textPtr = writeUtf16(m, sanitizeForBase14(this.text));
     try {
       m.FPDFText_SetText(objPtr, textPtr);
     } finally {

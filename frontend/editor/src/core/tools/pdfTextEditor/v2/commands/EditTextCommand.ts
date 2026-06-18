@@ -331,7 +331,14 @@ export class EditTextCommand implements Command {
     const m = doc.module;
 
     const bg = sampleBackground(m, page, run.bounds);
-    const safeChars = everyCharIn(this.nextText, this.prevText ?? "");
+    // \r/\n are split into separate output lines (never emitted as glyphs), so
+    // they must NOT gate font reuse - otherwise pressing Enter alone (which
+    // adds a \n the source font never "contained") flips the whole line to
+    // base-14 Helvetica even though every visible glyph is reusable.
+    const safeChars = everyCharIn(
+      this.nextText.replace(/[\r\n]/g, ""),
+      this.prevText ?? "",
+    );
     // Reusing the source font handle works when:
     //   * Every nextText char already appears in prevText (`safeChars`)
     //     - guarantees the font has a glyph for each char (it just
@@ -375,7 +382,12 @@ export class EditTextCommand implements Command {
       run.containerPtr,
     );
 
-    if (!allRemoved) {
+    // Only stamp a cover rect when the sampler is CONFIDENT it found a uniform
+    // background colour. When it isn't (gradient / image / branded region, or a
+    // failed sample), bg.fill defaults to white - painting that as an opaque box
+    // over a coloured or dark background is a worse, very visible artefact than
+    // the residual form-xobject glyphs it would mask. So skip it when unsure.
+    if (!allRemoved && bg.confident) {
       this.coverRectPtr = emitFillRect(m, page, run.bounds, bg.fill);
       if (this.coverRectPtr) {
         this.createdPtrs.push(this.coverRectPtr);

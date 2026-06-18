@@ -72,27 +72,6 @@ export class PdfiumTextWriter {
     }
     page.markNeedsGenerate();
   }
-
-  static commitRunFontSize(
-    doc: EditorDocument,
-    page: Page,
-    run: TextRun,
-  ): void {
-    // PDFium has no per-object SetFontSize. We instead scale the matrix.
-    // For the v0 we re-apply the original matrix's translation while
-    // replacing the scale with the requested size.
-    if (!run.pdfiumObjPtr) return;
-    const m = doc.module;
-    const sx = run.fontSize / Math.max(1, run.matrix.a || 1);
-    const sy = run.fontSize / Math.max(1, run.matrix.d || 1);
-    m.FPDFPageObj_Transform(run.pdfiumObjPtr, sx, 0, 0, sy, 0, 0);
-    run.matrix = {
-      ...run.matrix,
-      a: run.matrix.a * sx,
-      d: run.matrix.d * sy,
-    };
-    page.markNeedsGenerate();
-  }
 }
 
 /**
