@@ -50,6 +50,16 @@ public class SaasTeamService {
     public static final String DEFAULT_TEAM_NAME = "Default";
     public static final String INTERNAL_TEAM_NAME = "Internal";
 
+    /** Returns the user's personal team, creating one if they have none. Idempotent. */
+    @Transactional
+    public Team ensurePersonalTeam(User user) {
+        Team existing = user.getTeam();
+        if (existing != null && saasTeamExtensionService.isPersonal(existing)) {
+            return existing;
+        }
+        return createPersonalTeam(user);
+    }
+
     /**
      * Create personal team for new user during signup or migrate existing user from Default team
      *
