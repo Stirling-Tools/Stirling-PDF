@@ -44,6 +44,8 @@ export interface RenderPdfiumPageOptions {
   format?: "png" | "jpeg";
   /** JPEG quality [0,1]; ignored for PNG. */
   quality?: number;
+  /** Return a temporary Blob Object URL instead of a data URL. */
+  returnBlobUrl?: boolean;
 }
 
 /**
@@ -114,12 +116,26 @@ export async function renderPdfiumPageDataUrl(
         return null;
       }
       ctx.putImageData(new ImageData(pixels, w, h), 0, 0);
-      const dataUrl =
-        format === "jpeg"
-          ? canvas.toDataURL("image/jpeg", quality ?? 0.8)
-          : canvas.toDataURL();
+      let outputUrl: string | null = null;
+      if (options.returnBlobUrl) {
+        const blob = await new Promise<Blob | null>((resolve) => {
+          canvas.toBlob(
+            (b) => resolve(b),
+            format === "jpeg" ? "image/jpeg" : "image/png",
+            quality ?? 0.8,
+          );
+        });
+        if (blob) {
+          outputUrl = URL.createObjectURL(blob);
+        }
+      } else {
+        outputUrl =
+          format === "jpeg"
+            ? canvas.toDataURL("image/jpeg", quality ?? 0.8)
+            : canvas.toDataURL();
+      }
       releaseCanvas(canvas);
-      return dataUrl;
+      return outputUrl;
     } finally {
       m.FPDFBitmap_Destroy(bitmapPtr);
     }

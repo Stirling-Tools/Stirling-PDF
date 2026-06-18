@@ -183,7 +183,7 @@ export class ThumbnailGenerationService {
             docPtr,
             pageNumber - 1,
             scale,
-            { applyRotation: false, format: "jpeg", quality },
+            { applyRotation: false, format: "jpeg", quality, returnBlobUrl: true },
           );
           if (!thumbnail) {
             throw new Error(`Could not render page ${pageNumber}`);
@@ -239,7 +239,14 @@ export class ThumbnailGenerationService {
   }
 
   addThumbnailToCache(pageId: string, thumbnail: string): void {
-    const sizeBytes = thumbnail.length * 2; // Rough estimate for base64 string
+    const isBlob = thumbnail.startsWith("blob:");
+    const sizeBytes = isBlob ? 100 * 1024 : thumbnail.length * 2; // Estimate 100KB for blob vs actual Base64 string length
+
+    // Revoke any existing object URL for the same pageId if it changes
+    const existing = this.thumbnailCache.get(pageId);
+    if (existing && existing.thumbnail.startsWith("blob:") && existing.thumbnail !== thumbnail) {
+      URL.revokeObjectURL(existing.thumbnail);
+    }
 
     // Enforce cache size limits
     while (
@@ -272,6 +279,9 @@ export class ThumbnailGenerationService {
     if (oldestEntry) {
       this.thumbnailCache.delete(oldestEntry[0]);
       this.currentCacheSize -= oldestEntry[1].sizeBytes;
+      if (oldestEntry[1].thumbnail.startsWith("blob:")) {
+        URL.revokeObjectURL(oldestEntry[1].thumbnail);
+      }
     }
   }
 
@@ -288,6 +298,11 @@ export class ThumbnailGenerationService {
   }
 
   clearCache(): void {
+    for (const cached of this.thumbnailCache.values()) {
+      if (cached.thumbnail.startsWith("blob:")) {
+        URL.revokeObjectURL(cached.thumbnail);
+      }
+    }
     this.thumbnailCache.clear();
     this.currentCacheSize = 0;
   }
