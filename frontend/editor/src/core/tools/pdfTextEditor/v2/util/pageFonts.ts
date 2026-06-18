@@ -117,11 +117,39 @@ function stripSubsetTag(name: string): string {
   return name.replace(/^[A-Z]{6}\+/, "");
 }
 
-function isStandard14(family: string): boolean {
-  const f = stripSubsetTag(family)
+// Weight/width modifiers that mark a DIFFERENT font even when the name starts
+// with a base-14 root (e.g. "Arial Black", "Helvetica Neue Condensed"). Such a
+// font is NOT guaranteed to be the always-available base-14 family, so it must
+// fall through to the real coverage probe rather than be labelled "standard".
+const NON_BASE14_MODIFIERS = [
+  "black",
+  "rounded",
+  "narrow",
+  "condensed",
+  "light",
+  "thin",
+  "hairline",
+  "semibold",
+  "demibold",
+  "demi",
+  "medium",
+  "heavy",
+  "ultra",
+  "display",
+  "neue",
+];
+
+function isStandard14(fontId: string): boolean {
+  // Callers pass the full fontId (`pdf:<ptr>:Family`); reduce to the bare
+  // family first so the `pdf:<ptr>:` prefix can't defeat the prefix match.
+  const f = stripSubsetTag(familyOf(fontId))
     .toLowerCase()
     .replace(/[-_\s]/g, "");
-  return STANDARD_14.some((p) => f === p || f.includes(p));
+  if (NON_BASE14_MODIFIERS.some((mod) => f.includes(mod))) return false;
+  // Exact match, or a base-14 root followed only by a standard style suffix
+  // (Bold/Italic/Oblique/MT/PS…). `startsWith` (not `includes`) so a custom
+  // font that merely CONTAINS "arial" mid-name isn't mislabelled.
+  return STANDARD_14.some((p) => f === p || f.startsWith(p));
 }
 
 /**

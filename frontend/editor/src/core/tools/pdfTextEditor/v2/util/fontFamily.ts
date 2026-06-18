@@ -17,39 +17,53 @@ export function familyOf(fontId: string): string {
   return idx >= 0 ? fontId.slice(idx + 1) : fontId;
 }
 
-/**
- * Map a base-14 family to its bold variant (or back to the regular one).
- * Returns null if the swap isn't representable in base-14.
- */
-export function flipBold(currentFamily: string, on: boolean): string | null {
-  if (/^Helvetica/.test(currentFamily)) {
-    return on
-      ? currentFamily.replace(/(-Bold)?$/, "-Bold")
-      : currentFamily.replace(/-Bold$/, "");
-  }
-  if (/^Times/.test(currentFamily)) {
-    return on
-      ? currentFamily.replace(/-Roman$|$/, "-Bold")
-      : currentFamily.replace(/-Bold$/, "-Roman");
-  }
-  if (/^Courier/.test(currentFamily)) {
-    return on
-      ? currentFamily.replace(/(-Bold)?$/, "-Bold")
-      : currentFamily.replace(/-Bold$/, "");
-  }
+type Base14Root = "Helvetica" | "Times" | "Courier";
+
+/** Which base-14 family a name belongs to, or null if it isn't base-14. */
+function base14Root(family: string): Base14Root | null {
+  if (/^Helvetica/i.test(family)) return "Helvetica";
+  if (/^Times/i.test(family)) return "Times";
+  if (/^Courier/i.test(family)) return "Courier";
   return null;
 }
 
+/**
+ * Build the EXACT base-14 PostScript name for a root + bold/italic combo. The
+ * combined styles have specific spellings (Times uses Roman/Italic/BoldItalic;
+ * Helvetica/Courier use Oblique/BoldOblique) - concatenating "-Bold" onto
+ * "-Oblique" or "-Italic" produces a non-existent font that the viewer silently
+ * substitutes, so the names must be assembled, never string-spliced.
+ */
+function base14Name(root: Base14Root, bold: boolean, italic: boolean): string {
+  if (root === "Times") {
+    if (bold && italic) return "Times-BoldItalic";
+    if (bold) return "Times-Bold";
+    if (italic) return "Times-Italic";
+    return "Times-Roman";
+  }
+  // Helvetica + Courier share the Oblique spelling.
+  if (bold && italic) return `${root}-BoldOblique`;
+  if (bold) return `${root}-Bold`;
+  if (italic) return `${root}-Oblique`;
+  return root;
+}
+
+/**
+ * Map a base-14 family to its bold variant (or back), preserving the current
+ * italic/oblique state. Returns null if the family isn't base-14.
+ */
+export function flipBold(currentFamily: string, on: boolean): string | null {
+  const root = base14Root(currentFamily);
+  if (!root) return null;
+  return base14Name(root, on, isItalicFamily(currentFamily));
+}
+
+/**
+ * Map a base-14 family to its italic/oblique variant (or back), preserving the
+ * current bold state. Returns null if the family isn't base-14.
+ */
 export function flipItalic(currentFamily: string, on: boolean): string | null {
-  if (/^Helvetica/.test(currentFamily)) {
-    return on
-      ? currentFamily.replace(/(-Oblique)?$/, "-Oblique")
-      : currentFamily.replace(/-Oblique$/, "");
-  }
-  if (/^Times/.test(currentFamily)) {
-    return on
-      ? currentFamily.replace(/-Roman$|$/, "-Italic")
-      : currentFamily.replace(/-Italic$/, "-Roman");
-  }
-  return null;
+  const root = base14Root(currentFamily);
+  if (!root) return null;
+  return base14Name(root, isBoldFamily(currentFamily), on);
 }

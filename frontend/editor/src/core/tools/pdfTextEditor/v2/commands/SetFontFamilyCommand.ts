@@ -1,180 +1,172 @@
 import type { Command } from "@app/tools/pdfTextEditor/v2/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDocument";
-import { TextRun } from "@app/tools/pdfTextEditor/v2/model/TextRun";
-import { writeUtf16 } from "@app/services/pdfiumService";
+import type {
+  ParagraphLineSlot,
+  TextRun,
+} from "@app/tools/pdfTextEditor/v2/model/TextRun";
 import {
   collectContainersByPtr,
   collectMemberPtrs,
+  emitTextLine,
   removeMemberPtrs,
 } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
 
 /**
  * Swap a text run's font to one of PDFium's base-14 standard fonts.
  *
- * The implementation removes the existing FPDF_PAGEOBJ_TEXT and inserts
- * a fresh one with the same position, size, fill colour, and content but
- * using the requested font family. This is the PDFium-recommended path
- * for "change the font of an existing text object" because the C API
- * does not expose a SetFont accessor.
+ * Removes the existing FPDF_PAGEOBJ_TEXT object(s) and re-emits the run's text
+ * in the requested base-14 family at the same position, size and fill. PDFium's
+ * C API has no SetFont accessor, so re-emit is the recommended path.
  *
- * Base-14 fonts (Helvetica, Times-Roman, Courier and their bold/italic
- * variants) are universally available without bundling - any PDF reader
- * substitutes its own glyphs. The user trades exact glyph fidelity for
- * the ability to type arbitrary Latin characters that wouldn't have been
- * in the source subset.
+ * Re-emit goes through {@link emitTextLine}, which (a) emits ONE object PER
+ * VISUAL LINE at descending baselines - so a multi-line paragraph keeps its
+ * lines instead of collapsing onto one baseline - and (b) sanitizes the text
+ * for the base-14 (WinAnsi) charset, so a non-Latin character is dropped rather
+ * than persisted as a U+00FF ydieresis tofu glyph.
  *
- * For LineGrouper-merged runs (per-glyph originals collapsed into one
- * editable line) and paragraph runs (multiple sub-lines merged), we
- * remove EVERY member pointer - not just the run's primary. Removing
- * only `run.pdfiumObjPtr` leaves the other per-glyph objects on the
- * page, and the new Helvetica-Bold emit lands ON TOP of them - the
- * visible "multiple layers" / "broken text" bug the user reported when
- * hitting Bold on a tagline whose source PDF used per-character text
- * objects (the marketing tagline in user-sample.pdf is exactly this).
+ * Every member pointer (paragraph leaves / merged per-glyph originals) is
+ * removed first; leaving them would paint the old glyphs UNDER the new font.
  */
 export class SetFontFamilyCommand implements Command {
   readonly type = "set-font-family";
   private readonly pageIndex: number;
   private readonly runId: string;
   private readonly nextFamily: string;
-  /** Snapshot used for revert. */
-  private prevSnapshot: ReturnType<TextRun["snapshot"]> | null;
-  private prevObjPtr: number;
-  /**
-   * Every member ptr that was on the page at apply time (paragraph
-   * leaves, merged sub-runs, or just the primary). Revert re-inserts
-   * each one in original order to restore the source per-glyph layout.
-   */
+  /** Full pre-edit model snapshot for revert. */
+  private prev: RunModelSnapshot | null;
+  /** Original on-page member ptrs (re-inserted on revert). */
   private prevMemberPtrs: number[];
-  /** Snapshot of merged-from arrays so revert can rebuild the model. */
-  private prevMergedFromPtrs: number[];
-  private prevMergedFromTexts: string[];
-  private prevMergedFromBounds: Array<{ x: number; right: number }>;
-  private prevMergedFromCharStarts: number[];
-  /** New PDFium pointer for the replacement run; needed for revert. */
-  private nextObjPtr: number;
+  /** Every object this command created (removed on revert). */
+  private createdPtrs: number[];
 
   constructor(opts: { pageIndex: number; runId: string; nextFamily: string }) {
     this.pageIndex = opts.pageIndex;
     this.runId = opts.runId;
     this.nextFamily = opts.nextFamily;
-    this.prevSnapshot = null;
-    this.prevObjPtr = 0;
+    this.prev = null;
     this.prevMemberPtrs = [];
-    this.prevMergedFromPtrs = [];
-    this.prevMergedFromTexts = [];
-    this.prevMergedFromBounds = [];
-    this.prevMergedFromCharStarts = [];
-    this.nextObjPtr = 0;
+    this.createdPtrs = [];
   }
 
   apply(doc: EditorDocument): void {
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
     if (!run) return;
-
     const m = doc.module;
-    if (this.prevSnapshot === null) {
-      this.prevSnapshot = run.snapshot();
-      this.prevObjPtr = run.pdfiumObjPtr;
+
+    if (this.prev === null) {
+      this.prev = snapshotRun(run);
       this.prevMemberPtrs = collectMemberPtrs(run).slice();
-      this.prevMergedFromPtrs = [...run.mergedFromPtrs];
-      this.prevMergedFromTexts = [...run.mergedFromTexts];
-      this.prevMergedFromBounds = run.mergedFromBounds.map((b) => ({ ...b }));
-      this.prevMergedFromCharStarts = [...run.mergedFromCharStarts];
     }
 
-    // Detach EVERY member object so the page stops painting them. For
-    // a singleton run this is just `run.pdfiumObjPtr`; for a merged or
-    // paragraph run this is all 30+ per-glyph originals. Skipping the
-    // members produced the "multiple layers" overlap bug.
-    const containers = collectContainersByPtr(run);
+    // Detach every original object so the page stops painting them.
     removeMemberPtrs(
       m,
       page,
       this.prevMemberPtrs,
-      containers,
+      collectContainersByPtr(run),
       run.containerPtr,
     );
-    // Also clear the model arrays - the run is about to become a single
-    // base-14 text object so the merged-from bookkeeping is stale.
+
+    // Re-emit one base-14 object per visual line at descending baselines.
+    const lineHeight =
+      run.paragraphLineHeight > 0
+        ? run.paragraphLineHeight
+        : run.fontSize * 1.2;
+    const lines = run.text.split(/\r?\n/);
+    const lineAnchors: number[] = [];
+    const memberFs: number[] = [];
+    const leaf: number[] = [];
+    const created: number[] = [];
+    for (let i = 0; i < lines.length; i++) {
+      const y = run.matrix.f - i * lineHeight;
+      memberFs.push(y);
+      if (lines[i].length === 0) {
+        lineAnchors.push(0);
+        continue;
+      }
+      const ptrs = emitTextLine({
+        doc,
+        page,
+        text: lines[i],
+        x: run.matrix.e,
+        y,
+        fontSize: run.fontSize,
+        fill: run.fill,
+        originalFontPtr: 0, // base-14: never reuse the source font
+        fallbackFamily: this.nextFamily,
+      });
+      lineAnchors.push(ptrs[0] ?? 0);
+      leaf.push(...ptrs);
+      created.push(...ptrs);
+    }
+
+    if (created.length === 0) {
+      // Nothing emitted (e.g. all-whitespace dropped) - restore and bail.
+      this.reinsertOriginals(m, page);
+      restoreRun(run, this.prev);
+      return;
+    }
+
+    this.createdPtrs = created;
+    run.pdfiumObjPtr = lineAnchors.find((p) => p) ?? leaf[0];
+    run.fontId = `base14:${this.nextFamily}`;
+    run.fontSubset = false;
+    // Reset ALL model bookkeeping to the freshly-emitted objects so later
+    // commands (recolor, resize, next edit) act on the live objects, not the
+    // removed originals.
     run.mergedFromPtrs = [];
     run.mergedFromTexts = [];
     run.mergedFromBounds = [];
     run.mergedFromCharStarts = [];
-
-    // Create a new text object using the base-14 family name. PDFium's
-    // FPDFPageObj_NewTextObj accepts these names directly.
-    const newPtr = m.FPDFPageObj_NewTextObj(
-      doc.docPtr,
-      this.nextFamily,
-      run.fontSize,
-    );
-    if (!newPtr) {
-      // Re-insert every detached member so the page goes back to its
-      // pre-command state, not just the primary ptr.
-      for (const ptr of this.prevMemberPtrs) {
-        if (!ptr) continue;
-        try {
-          m.FPDFPage_InsertObject(page.pagePtr, ptr);
-        } catch {
-          /* best-effort */
-        }
-      }
-      run.mergedFromPtrs = [...this.prevMergedFromPtrs];
-      run.mergedFromTexts = [...this.prevMergedFromTexts];
-      run.mergedFromBounds = this.prevMergedFromBounds.map((b) => ({ ...b }));
-      run.mergedFromCharStarts = [...this.prevMergedFromCharStarts];
-      return;
+    run.paragraphLineSlots = [];
+    if (lines.length > 1) {
+      run.paragraphMemberPtrs = lineAnchors;
+      run.paragraphMemberContainers = lineAnchors.map(() => 0);
+      run.paragraphMemberFs = memberFs;
+      run.paragraphLeafPtrs = leaf;
+      run.paragraphLeafContainers = leaf.map(() => 0);
+      run.paragraphLineHeight = lineHeight;
+    } else {
+      run.paragraphMemberPtrs = [];
+      run.paragraphMemberContainers = [];
+      run.paragraphMemberFs = [];
+      run.paragraphLeafPtrs = [];
+      run.paragraphLeafContainers = [];
     }
-
-    const textPtr = writeUtf16(m, run.text);
-    try {
-      m.FPDFText_SetText(newPtr, textPtr);
-    } finally {
-      m.pdfium.wasmExports.free(textPtr);
-    }
-    m.FPDFPageObj_SetFillColor(
-      newPtr,
-      run.fill.r,
-      run.fill.g,
-      run.fill.b,
-      run.fill.a,
-    );
-    // Position the new object using the original run's matrix translation.
-    m.FPDFPageObj_Transform(
-      newPtr,
-      run.matrix.a || 1,
-      run.matrix.b || 0,
-      run.matrix.c || 0,
-      run.matrix.d || 1,
-      run.matrix.e,
-      run.matrix.f,
-    );
-    m.FPDFPage_InsertObject(page.pagePtr, newPtr);
-
-    run.pdfiumObjPtr = newPtr;
-    run.fontId = `base14:${this.nextFamily}`;
-    run.fontSubset = false;
+    run.containerPtr = 0;
     run.dirty = true;
     page.markDirty();
-    m.FPDFPage_GenerateContent(page.pagePtr);
-    this.nextObjPtr = newPtr;
+    page.markNeedsGenerate();
   }
 
   revert(doc: EditorDocument): void {
-    if (!this.prevSnapshot || !this.prevObjPtr) return;
+    if (!this.prev) return;
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
     if (!run) return;
     const m = doc.module;
 
-    if (this.nextObjPtr) {
-      m.FPDFPage_RemoveObject(page.pagePtr, this.nextObjPtr);
+    for (const ptr of this.createdPtrs) {
+      if (!ptr) continue;
+      try {
+        m.FPDFPage_RemoveObject(page.pagePtr, ptr);
+      } catch {
+        /* best-effort */
+      }
     }
-    // Re-insert every detached original (the primary AND any merged
-    // sub-objects / paragraph leaves) so the source per-glyph layout
-    // comes back, not just the singleton primary.
+    this.createdPtrs = [];
+    this.reinsertOriginals(m, page);
+    restoreRun(run, this.prev);
+    run.dirty = true;
+    page.markDirty();
+    page.markNeedsGenerate();
+  }
+
+  private reinsertOriginals(
+    m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+    page: import("@app/tools/pdfTextEditor/v2/model/Page").Page,
+  ): void {
     for (const ptr of this.prevMemberPtrs) {
       if (!ptr) continue;
       try {
@@ -183,18 +175,73 @@ export class SetFontFamilyCommand implements Command {
         /* best-effort */
       }
     }
-
-    run.pdfiumObjPtr = this.prevObjPtr;
-    run.fontId = this.prevSnapshot.fontId;
-    run.fontSubset = this.prevSnapshot.fontSubset;
-    run.text = this.prevSnapshot.text;
-    run.fill = { ...this.prevSnapshot.fill };
-    run.mergedFromPtrs = [...this.prevMergedFromPtrs];
-    run.mergedFromTexts = [...this.prevMergedFromTexts];
-    run.mergedFromBounds = this.prevMergedFromBounds.map((b) => ({ ...b }));
-    run.mergedFromCharStarts = [...this.prevMergedFromCharStarts];
-    run.dirty = true;
-    page.markDirty();
-    m.FPDFPage_GenerateContent(page.pagePtr);
   }
+}
+
+interface RunModelSnapshot {
+  text: string;
+  fontId: string;
+  fontSubset: boolean;
+  fill: { r: number; g: number; b: number; a: number };
+  pdfiumObjPtr: number;
+  containerPtr: number;
+  mergedFromPtrs: number[];
+  mergedFromTexts: string[];
+  mergedFromBounds: Array<{ x: number; right: number }>;
+  mergedFromCharStarts: number[];
+  paragraphMemberPtrs: number[];
+  paragraphMemberContainers: number[];
+  paragraphMemberFs: number[];
+  paragraphLeafPtrs: number[];
+  paragraphLeafContainers: number[];
+  paragraphLineSlots: ParagraphLineSlot[];
+  paragraphLineHeight: number;
+}
+
+function snapshotRun(run: TextRun): RunModelSnapshot {
+  return {
+    text: run.text,
+    fontId: run.fontId,
+    fontSubset: run.fontSubset,
+    fill: { ...run.fill },
+    pdfiumObjPtr: run.pdfiumObjPtr,
+    containerPtr: run.containerPtr,
+    mergedFromPtrs: [...run.mergedFromPtrs],
+    mergedFromTexts: [...run.mergedFromTexts],
+    mergedFromBounds: run.mergedFromBounds.map((b) => ({ ...b })),
+    mergedFromCharStarts: [...run.mergedFromCharStarts],
+    paragraphMemberPtrs: [...run.paragraphMemberPtrs],
+    paragraphMemberContainers: [...run.paragraphMemberContainers],
+    paragraphMemberFs: [...run.paragraphMemberFs],
+    paragraphLeafPtrs: [...run.paragraphLeafPtrs],
+    paragraphLeafContainers: [...run.paragraphLeafContainers],
+    paragraphLineSlots: run.paragraphLineSlots.map((s) => ({
+      ...s,
+      mergedFromPtrs: [...s.mergedFromPtrs],
+      mergedFromTexts: [...s.mergedFromTexts],
+      mergedFromBounds: s.mergedFromBounds.map((b) => ({ ...b })),
+      mergedFromCharStarts: [...s.mergedFromCharStarts],
+    })),
+    paragraphLineHeight: run.paragraphLineHeight,
+  };
+}
+
+function restoreRun(run: TextRun, snap: RunModelSnapshot): void {
+  run.text = snap.text;
+  run.fontId = snap.fontId;
+  run.fontSubset = snap.fontSubset;
+  run.fill = { ...snap.fill };
+  run.pdfiumObjPtr = snap.pdfiumObjPtr;
+  run.containerPtr = snap.containerPtr;
+  run.mergedFromPtrs = [...snap.mergedFromPtrs];
+  run.mergedFromTexts = [...snap.mergedFromTexts];
+  run.mergedFromBounds = snap.mergedFromBounds.map((b) => ({ ...b }));
+  run.mergedFromCharStarts = [...snap.mergedFromCharStarts];
+  run.paragraphMemberPtrs = [...snap.paragraphMemberPtrs];
+  run.paragraphMemberContainers = [...snap.paragraphMemberContainers];
+  run.paragraphMemberFs = [...snap.paragraphMemberFs];
+  run.paragraphLeafPtrs = [...snap.paragraphLeafPtrs];
+  run.paragraphLeafContainers = [...snap.paragraphLeafContainers];
+  run.paragraphLineSlots = snap.paragraphLineSlots.map((s) => ({ ...s }));
+  run.paragraphLineHeight = snap.paragraphLineHeight;
 }

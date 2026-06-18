@@ -39,7 +39,16 @@ export class SetFontSizeCommand implements Command {
       this.prevSize = run.fontSize;
     }
     const ratio = this.nextSize / Math.max(0.01, run.fontSize);
-    this.scaleAllPtrs(doc, collectMemberPtrs(run), ratio);
+    // Scale about the run's own baseline anchor, NOT the page origin - scaling
+    // about (0,0) moves the glyphs diagonally (toward/away from the corner) and
+    // the move persists on save. Anchor stays fixed; only the size changes.
+    this.scaleAllPtrs(
+      doc,
+      collectMemberPtrs(run),
+      ratio,
+      run.matrix.e,
+      run.matrix.f,
+    );
     run.fontSize = this.nextSize;
     run.matrix = scaleMatrix(
       run.matrix,
@@ -56,7 +65,13 @@ export class SetFontSizeCommand implements Command {
     const run = page.findRun(this.runId);
     if (!run || !run.pdfiumObjPtr) return;
     const ratio = this.prevSize / Math.max(0.01, run.fontSize);
-    this.scaleAllPtrs(doc, collectMemberPtrs(run), ratio);
+    this.scaleAllPtrs(
+      doc,
+      collectMemberPtrs(run),
+      ratio,
+      run.matrix.e,
+      run.matrix.f,
+    );
     run.fontSize = this.prevSize;
     run.matrix = scaleMatrix(run.matrix, ratio);
     run.dirty = true;
@@ -68,15 +83,29 @@ export class SetFontSizeCommand implements Command {
     doc: EditorDocument,
     ptrs: number[],
     relativeScale: number,
+    anchorX: number,
+    anchorY: number,
   ): void {
     if (!Number.isFinite(relativeScale) || relativeScale === 1) return;
     const m = doc.module;
+    // Scale about (anchorX, anchorY): translate(-a) · scale(s) · translate(+a)
+    // collapses to [s,0,0,s, ax*(1-s), ay*(1-s)] - a single Transform call.
+    const tx = anchorX * (1 - relativeScale);
+    const ty = anchorY * (1 - relativeScale);
     const seen = new Set<number>();
     for (const ptr of ptrs) {
       if (!ptr || seen.has(ptr)) continue;
       seen.add(ptr);
       try {
-        m.FPDFPageObj_Transform(ptr, relativeScale, 0, 0, relativeScale, 0, 0);
+        m.FPDFPageObj_Transform(
+          ptr,
+          relativeScale,
+          0,
+          0,
+          relativeScale,
+          tx,
+          ty,
+        );
       } catch {
         /* best-effort - missing ptr is silently skipped */
       }
@@ -89,12 +118,14 @@ function scaleMatrix(
   ratio: number,
 ) {
   if (!Number.isFinite(ratio) || ratio === 1) return m;
+  // Only the scale part changes; the anchor (e,f) stays put so the run keeps
+  // its on-page position (matches the anchored object Transform above).
   return {
     a: m.a * ratio,
     b: m.b * ratio,
     c: m.c * ratio,
     d: m.d * ratio,
-    e: m.e * ratio,
-    f: m.f * ratio,
+    e: m.e,
+    f: m.f,
   };
 }

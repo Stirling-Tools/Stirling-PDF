@@ -3,12 +3,29 @@ import { HistoryStack } from "@app/tools/pdfTextEditor/v2/store/HistoryStack";
 import { Selection } from "@app/tools/pdfTextEditor/v2/store/Selection";
 import { PdfiumTextReader } from "@app/tools/pdfTextEditor/v2/pdfium/PdfiumTextReader";
 import { resetBackendResolverCaches } from "@app/tools/pdfTextEditor/v2/charcode/BackendResolver";
+import { resetCmapCache } from "@app/tools/pdfTextEditor/v2/charcode/CmapResolver";
+import { resetContentStreamCache } from "@app/tools/pdfTextEditor/v2/charcode/ContentStreamResolver";
+import { resetOnPageAdvCache } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
 import type { Command } from "@app/tools/pdfTextEditor/v2/commands/Command";
 import type {
   GroupingMode,
   PageSnapshot,
   WidthMode,
 } from "@app/tools/pdfTextEditor/v2/types";
+
+/**
+ * Drop EVERY per-document charcode/glyph cache. All of these are keyed by raw
+ * PDFium font/page pointers, which PDFium reuses across documents - so on a
+ * document switch a stale entry from the previous doc would serve a reused
+ * pointer the WRONG glyph map / charcode / advance, scrambling or mislabeling
+ * the new document. Called from setDocument + clearDocument.
+ */
+function resetCharcodeCaches(): void {
+  resetBackendResolverCaches();
+  resetCmapCache();
+  resetContentStreamCache();
+  resetOnPageAdvCache();
+}
 
 export type InteractionMode = "select" | "addText";
 
@@ -211,9 +228,7 @@ export class EditorStore {
 
   async setDocument(doc: EditorDocument): Promise<void> {
     this.disposeDocumentIfAny();
-    // Charcode caches are keyed by raw PDFium font/page pointers, which the
-    // new document can reuse for different fonts - drop them on doc switch.
-    resetBackendResolverCaches();
+    resetCharcodeCaches();
     this.doc = doc;
     this.history.clear();
     this.savedUndoDepth = 0;
@@ -232,7 +247,7 @@ export class EditorStore {
 
   clearDocument(): void {
     this.disposeDocumentIfAny();
-    resetBackendResolverCaches();
+    resetCharcodeCaches();
     this.history.clear();
     this.savedUndoDepth = 0;
     this.bakedDirty = false;

@@ -68,6 +68,31 @@ describe("analyzePageFonts", () => {
     expect(fonts[0].status).toBe("standard");
   });
 
+  it("classifies base-14 bold/italic variants as standard", () => {
+    const fonts = analyzePageFonts([
+      mkPage(0, [
+        mkRun("a", "pdf:1:Helvetica-BoldOblique"),
+        mkRun("b", "pdf:2:Times-BoldItalic"),
+        mkRun("c", "pdf:3:Courier-Oblique"),
+        mkRun("d", "pdf:4:ArialMT"),
+      ]),
+    ]);
+    expect(fonts.every((f) => f.status === "standard")).toBe(true);
+  });
+
+  it("does NOT mislabel a custom font that merely contains a base-14 substring", () => {
+    // "Arial Black" / "Helvetica Neue" are distinct fonts, and a custom font
+    // with "arial" mid-name is not base-14 - all must fall through to embedded.
+    const fonts = analyzePageFonts([
+      mkPage(0, [
+        mkRun("a", "pdf:5:ArialBlack", false),
+        mkRun("b", "pdf:6:HelveticaNeue", false),
+        mkRun("c", "pdf:7:MyArialClone", false),
+      ]),
+    ]);
+    expect(fonts.every((f) => f.status !== "standard")).toBe(true);
+  });
+
   it("de-duplicates the same font across pages and records page numbers", () => {
     const fonts = analyzePageFonts([
       mkPage(0, [mkRun("a", "pdf:5:LMRoman12", false)]),

@@ -335,9 +335,19 @@ function onPageAdvanceEm(
   return pageMap.get(font)?.get(cp) ?? null;
 }
 
-/** Test-only: drop the on-page advance cache. */
-export function _clearOnPageAdvCacheForTests(): void {
+/**
+ * Drop the per-page on-page-advance cache. MUST be called on document switch:
+ * it's keyed by raw PDFium page/font pointers, which PDFium reuses across
+ * documents - a stale advance would mis-validate the next document's reused-
+ * glyph charcode guesses (accept a wrong glyph or reject a correct one).
+ */
+export function resetOnPageAdvCache(): void {
   onPageAdvCache.clear();
+}
+
+/** Test-only alias for {@link resetOnPageAdvCache}. */
+export function _clearOnPageAdvCacheForTests(): void {
+  resetOnPageAdvCache();
 }
 
 /**

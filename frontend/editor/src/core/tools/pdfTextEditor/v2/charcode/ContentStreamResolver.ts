@@ -169,7 +169,17 @@ function buildPageMap(ctx: ResolverContext): Map<number, Map<number, number>> {
   return out;
 }
 
-/** Test-only: clear the per-page cache. */
-export function _clearContentStreamCacheForTests(): void {
+/**
+ * Clear the per-page Unicode→charcode cache. MUST be called on document switch:
+ * the cache is keyed by raw PDFium page pointers, which PDFium reuses across
+ * documents - a stale entry would serve the previous document's charcode guess
+ * for a reused page pointer.
+ */
+export function resetContentStreamCache(): void {
   perPageCache.clear();
+}
+
+/** Test-only alias for {@link resetContentStreamCache}. */
+export function _clearContentStreamCacheForTests(): void {
+  resetContentStreamCache();
 }

@@ -206,10 +206,16 @@ export function parseTrueTypeCmap(
   }
   if (bestSubtableOffset === 0) return null;
 
-  const format = dv.getUint16(bestSubtableOffset);
-  if (format === 4) return parseFormat4(dv, bestSubtableOffset);
-  if (format === 6) return parseFormat6(dv, bestSubtableOffset);
-  if (format === 12) return parseFormat12(dv, bestSubtableOffset);
+  // A malformed subtable can read past the buffer (RangeError); never let one
+  // bad font throw out of the loader's synchronous prime - treat as no cmap.
+  try {
+    const format = dv.getUint16(bestSubtableOffset);
+    if (format === 4) return parseFormat4(dv, bestSubtableOffset);
+    if (format === 6) return parseFormat6(dv, bestSubtableOffset);
+    if (format === 12) return parseFormat12(dv, bestSubtableOffset);
+  } catch {
+    return null;
+  }
   return null;
 }
 
@@ -271,12 +277,25 @@ function parseFormat4(
   return out;
 }
 
+// Hard cap on entries built from any one cmap. This parser runs SYNCHRONOUSLY
+// in the loader's text-read phase; a corrupt/hostile font with a giant format-6
+// entryCount or a format-12 group spanning the whole plane (0..0x10FFFF) would
+// otherwise allocate ~1.1M entries and freeze the load. We only ever query
+// a-zA-Z0-9 + the occasional inserted char, so 70k is far more than enough.
+const MAX_CMAP_ENTRIES = 70_000;
+
 /** Format 6: trimmed table mapping. Compact contiguous range. */
 function parseFormat6(dv: DataView, offset: number): Map<number, number> {
   const firstCode = dv.getUint16(offset + 6);
   const entryCount = dv.getUint16(offset + 8);
   const out = new Map<number, number>();
-  for (let i = 0; i < entryCount; i++) {
+  // Bound the loop to the buffer AND the entry cap.
+  const safeCount = Math.min(
+    entryCount,
+    Math.max(0, Math.floor((dv.byteLength - (offset + 10)) / 2)),
+    MAX_CMAP_ENTRIES,
+  );
+  for (let i = 0; i < safeCount; i++) {
     const glyphId = dv.getUint16(offset + 10 + i * 2);
     if (glyphId !== 0) out.set(firstCode + i, glyphId);
   }
@@ -288,20 +307,43 @@ function parseFormat12(dv: DataView, offset: number): Map<number, number> {
   const numGroups = dv.getUint32(offset + 12);
   const groupsOffset = offset + 16;
   const out = new Map<number, number>();
-  for (let i = 0; i < numGroups; i++) {
+  // Bound group count to what actually fits in the buffer (12 bytes/group).
+  const safeGroups = Math.min(
+    numGroups,
+    Math.max(0, Math.floor((dv.byteLength - groupsOffset) / 12)),
+  );
+  for (let i = 0; i < safeGroups; i++) {
     const recordOffset = groupsOffset + i * 12;
     const startCharCode = dv.getUint32(recordOffset);
     const endCharCode = dv.getUint32(recordOffset + 4);
     const startGlyphId = dv.getUint32(recordOffset + 8);
-    for (let c = startCharCode; c <= endCharCode; c++) {
+    // Skip inverted ranges; cap a single group's span so one huge/corrupt
+    // group can't blow the entry budget.
+    if (endCharCode < startCharCode) continue;
+    const last = Math.min(
+      endCharCode,
+      startCharCode + (MAX_CMAP_ENTRIES - out.size) - 1,
+    );
+    for (let c = startCharCode; c <= last; c++) {
       const gid = startGlyphId + (c - startCharCode);
       if (gid !== 0) out.set(c, gid);
     }
+    if (out.size >= MAX_CMAP_ENTRIES) break;
   }
   return out;
 }
 
-/** Test-only: clear the per-font cache. */
-export function _clearCmapCacheForTests(): void {
+/**
+ * Clear the per-font cmap cache. MUST be called on document switch: the cache
+ * is keyed by raw PDFium font pointers, which PDFium reuses across documents -
+ * a stale entry would serve the previous document's glyph map (wrong coverage /
+ * wrong subset charcodes) for a reused pointer.
+ */
+export function resetCmapCache(): void {
   cmapCache.clear();
+}
+
+/** Test-only alias for {@link resetCmapCache}. */
+export function _clearCmapCacheForTests(): void {
+  resetCmapCache();
 }
