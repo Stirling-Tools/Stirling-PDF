@@ -1,18 +1,12 @@
 import type { AxiosInstance } from "axios";
-import { supabase } from "@app/auth/supabase";
+import { getAccessToken } from "@app/auth/session";
 
-/** SaaS auth headers for raw fetch() calls — Supabase access token from current session. */
+/** SaaS auth headers for raw fetch() calls — access token from current session. */
 export async function getAuthHeaders(): Promise<Record<string, string>> {
   const headers: Record<string, string> = {};
-  try {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    if (session?.access_token) {
-      headers["Authorization"] = `Bearer ${session.access_token}`;
-    }
-  } catch (e) {
-    console.warn("[apiClientSetup] Failed to read Supabase session", e);
+  const token = await getAccessToken();
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
   }
   return headers;
 }

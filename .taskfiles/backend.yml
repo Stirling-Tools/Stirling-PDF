@@ -23,6 +23,7 @@ tasks:
         vars:
           PORT: '{{.PORT}}'
           AIENGINE_URL: '{{.AIENGINE_URL}}'
+          AIENGINE_ENABLED: '{{.AIENGINE_ENABLED}}'
           AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS}}'
 
   dev:proprietary:
@@ -31,13 +32,14 @@ tasks:
     vars:
       PORT: '{{.PORT | default "8080"}}'
       AIENGINE_URL: '{{.AIENGINE_URL | default ""}}'
+      AIENGINE_ENABLED: '{{.AIENGINE_ENABLED | default "false"}}'
       AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS | default "120"}}'
     env:
       SERVER_PORT: '{{.PORT}}'
     cmds:
-      - cmd: '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED=true AIENGINE_TIMEOUTSECONDS={{.AIENGINE_TIMEOUTSECONDS}} {{end}}cmd /c ".\gradlew.bat :stirling-pdf:bootRun"'
+      - cmd: '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED={{.AIENGINE_ENABLED}} AIENGINE_TIMEOUTSECONDS={{.AIENGINE_TIMEOUTSECONDS}} {{end}}cmd /c ".\gradlew.bat :stirling-pdf:bootRun"'
         platforms: [windows]
-      - cmd: '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED=true AIENGINE_TIMEOUTSECONDS={{.AIENGINE_TIMEOUTSECONDS}} {{end}}./gradlew :stirling-pdf:bootRun'
+      - cmd: '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED={{.AIENGINE_ENABLED}} AIENGINE_TIMEOUTSECONDS={{.AIENGINE_TIMEOUTSECONDS}} {{end}}./gradlew :stirling-pdf:bootRun'
         platforms: [linux, darwin]
 
   dev:bundled:
@@ -60,12 +62,13 @@ tasks:
       # Override to "" to run the pure `saas` profile against your own SAAS_DB_*.
       PROFILES: '{{.PROFILES | default "dev"}}'
       AIENGINE_URL: '{{.AIENGINE_URL | default ""}}'
+      AIENGINE_ENABLED: '{{.AIENGINE_ENABLED | default "false"}}'
       AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS | default "120"}}'
     env:
       SERVER_PORT: '{{.PORT}}'
       STIRLING_FLAVOR: saas
       AIENGINE_URL: '{{.AIENGINE_URL}}'
-      AIENGINE_ENABLED: '{{if .AIENGINE_URL}}true{{else}}false{{end}}'
+      AIENGINE_ENABLED: '{{.AIENGINE_ENABLED}}'
       AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS}}'
     cmds:
       - cmd: cmd /c ".\gradlew.bat :stirling-pdf:bootRun {{if .PROFILES}}--args=\"--spring.profiles.include={{.PROFILES}}\"{{end}}"

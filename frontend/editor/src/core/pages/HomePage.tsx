@@ -486,7 +486,12 @@ export default function HomePage() {
             <MyFilesAwareFileSidebar
               ref={quickAccessRef}
               active={navigationState.workbench === "myFiles"}
-              collapsed={fileSidebarCollapsed}
+              // /files always shows the rail collapsed - force it here so a
+              // deep-link/reload onto /files (no workbench transition) still
+              // collapses, and a manual expand can't stick.
+              collapsed={
+                navigationState.workbench === "myFiles" || fileSidebarCollapsed
+              }
               toggleAriaLabel={
                 navigationState.workbench === "myFiles"
                   ? t("fileSidebar.leaveMyFiles", "Leave My Files")

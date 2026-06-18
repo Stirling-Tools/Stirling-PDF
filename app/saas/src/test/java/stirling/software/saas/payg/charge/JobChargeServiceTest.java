@@ -174,7 +174,7 @@ class JobChargeServiceTest {
         assertThat(row.getJobId()).isEqualTo(newJob.getId());
         assertThat(row.getPolicyId()).isEqualTo(policy.getId());
         assertThat(row.getPaygUnits()).isEqualTo(4);
-        // Legacy comparison not wired yet — zeroed until CreditService is wired in the follow-up.
+        // Legacy comparison removed with the legacy credit engine — always zeroed.
         assertThat(row.getLegacyCreditsCharged()).isZero();
         assertThat(row.getDiffPct()).isZero();
         // PAYG analytics axis: billing_category + job_source are copied from the context so the

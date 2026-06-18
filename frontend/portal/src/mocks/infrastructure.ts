@@ -281,11 +281,56 @@ export interface IpAllowEntry {
   added: string;
 }
 
+/**
+ * Where encryption keys live. Mirrors the {@link AccessPolicy} posture but is
+ * surfaced separately because the key *custody model* (who can decrypt) is the
+ * detail security teams scrutinise:
+ *   - `managed` — Stirling-owned KMS keys; zero key ops on the customer side.
+ *   - `byok` — customer key, but Stirling can use it to decrypt while processing.
+ *   - `hyok` — key never leaves the customer KMS; Stirling holds only ciphertext.
+ */
+export type KeyMode = "managed" | "byok" | "hyok";
+
+export interface KeyManagement {
+  mode: KeyMode;
+  /** Human-readable provider, e.g. "Stirling KMS" or "AWS KMS (customer)". */
+  provider: string;
+  /** ARN-style identifier for the active key. */
+  keyId: string;
+  /** Encryption algorithm in force. */
+  algorithm: string;
+  /** Relative last-rotation time, e.g. "32 days ago". */
+  lastRotated: string;
+  /** Rotation cadence summary, e.g. "Automatic · every 90 days". */
+  rotationPolicy: string;
+  /**
+   * Whether the customer may switch key custody (BYOK/HYOK). Stirling-managed
+   * tiers see the posture but cannot change provider — only enterprise can.
+   */
+  customerManaged: boolean;
+}
+
+export type AttestationStatus = "attested" | "in-scope" | "not-applicable";
+
+export interface ComplianceAttestation {
+  id: string;
+  name: string;
+  /** Framework family / short descriptor shown under the name. */
+  framework: string;
+  status: AttestationStatus;
+  /** Coverage or audit detail, e.g. "Type II · audited Apr 2026". */
+  detail: string;
+  /** Stub link to the downloadable report; null when none is available. */
+  reportUrl: string | null;
+}
+
 export interface SecurityConfig {
   accessPolicy: AccessPolicy;
   dataResidency: DataResidency;
   certs: ComplianceCert[];
   ipAllowlist: IpAllowEntry[];
+  keyManagement: KeyManagement;
+  attestations: ComplianceAttestation[];
 }
 
 const CERTS_FULL: ComplianceCert[] = [
@@ -366,6 +411,118 @@ const IP_ALLOWLIST: IpAllowEntry[] = [
   },
 ];
 
+// Stirling-managed key custody — what free/pro tiers run on. No key ops on the
+// customer side, so the provider/key fields describe Stirling's own KMS.
+const KEY_MANAGED: KeyManagement = {
+  mode: "managed",
+  provider: "Stirling KMS",
+  keyId: "arn:stirling:kms:us-east-1:platform/cmk-default",
+  algorithm: "AES-256-GCM",
+  lastRotated: "32 days ago",
+  rotationPolicy: "Automatic · every 90 days",
+  customerManaged: false,
+};
+
+const KEY_HYOK: KeyManagement = {
+  mode: "hyok",
+  provider: "AWS CloudHSM (customer)",
+  keyId: "arn:aws:kms:eu-west-1:418xxxx:key/2a7e-hyok",
+  algorithm: "AES-256-GCM · external key store",
+  lastRotated: "5 days ago",
+  rotationPolicy: "Customer-controlled · keys never leave your HSM",
+  customerManaged: true,
+};
+
+// Full attestation set an enterprise contract is covered by.
+const ATTESTATIONS_FULL: ComplianceAttestation[] = [
+  {
+    id: "soc2",
+    name: "SOC 2 Type II",
+    framework: "AICPA Trust Services",
+    status: "attested",
+    detail: "Type II · audited Apr 2026 · Coalfire",
+    reportUrl: "/v1/infrastructure/security/reports/soc2",
+  },
+  {
+    id: "iso27001",
+    name: "ISO 27001",
+    framework: "ISO/IEC 27001:2022",
+    status: "attested",
+    detail: "Cert #IS-774201 · valid to 2027",
+    reportUrl: "/v1/infrastructure/security/reports/iso27001",
+  },
+  {
+    id: "hipaa",
+    name: "HIPAA",
+    framework: "US healthcare · PHI",
+    status: "attested",
+    detail: "BAA signed · PHI-eligible workloads",
+    reportUrl: "/v1/infrastructure/security/reports/hipaa",
+  },
+  {
+    id: "gdpr",
+    name: "GDPR",
+    framework: "EU data protection",
+    status: "attested",
+    detail: "EU SCCs · DPA on file · EU residency",
+    reportUrl: "/v1/infrastructure/security/reports/gdpr",
+  },
+  {
+    id: "pci",
+    name: "PCI DSS",
+    framework: "Payment card data",
+    status: "in-scope",
+    detail: "SAQ-D in progress · QSA assessment Q3",
+    reportUrl: null,
+  },
+];
+
+// What lower tiers can claim: the platform-inherited attestations only. HIPAA
+// and PCI require a paid contract + signed paperwork, so they read as
+// not-applicable until the customer upgrades.
+const ATTESTATIONS_FREE: ComplianceAttestation[] = [
+  {
+    id: "soc2",
+    name: "SOC 2 Type II",
+    framework: "AICPA Trust Services",
+    status: "attested",
+    detail: "Inherited — Stirling platform",
+    reportUrl: "/v1/infrastructure/security/reports/soc2",
+  },
+  {
+    id: "iso27001",
+    name: "ISO 27001",
+    framework: "ISO/IEC 27001:2022",
+    status: "attested",
+    detail: "Inherited — Stirling platform",
+    reportUrl: "/v1/infrastructure/security/reports/iso27001",
+  },
+  {
+    id: "gdpr",
+    name: "GDPR",
+    framework: "EU data protection",
+    status: "in-scope",
+    detail: "Standard EU processing terms",
+    reportUrl: null,
+  },
+  {
+    id: "hipaa",
+    name: "HIPAA",
+    framework: "US healthcare · PHI",
+    status: "not-applicable",
+    detail: "Requires a paid plan + signed BAA",
+    reportUrl: null,
+  },
+  {
+    id: "pci",
+    name: "PCI DSS",
+    framework: "Payment card data",
+    status: "not-applicable",
+    detail: "Requires an enterprise contract",
+    reportUrl: null,
+  },
+];
+
 export function securityFor(tier: Tier): SecurityConfig {
   if (tier === "free") {
     return {
@@ -373,6 +530,8 @@ export function securityFor(tier: Tier): SecurityConfig {
       dataResidency: "us",
       certs: CERTS_FREE,
       ipAllowlist: [],
+      keyManagement: KEY_MANAGED,
+      attestations: ATTESTATIONS_FREE,
     };
   }
   if (tier === "pro") {
@@ -381,6 +540,9 @@ export function securityFor(tier: Tier): SecurityConfig {
       dataResidency: "us",
       certs: CERTS_FULL,
       ipAllowlist: IP_ALLOWLIST.slice(0, 2),
+      // Pro stays on Stirling-managed keys; BYOK/HYOK is an enterprise lever.
+      keyManagement: KEY_MANAGED,
+      attestations: ATTESTATIONS_FREE,
     };
   }
   return {
@@ -388,6 +550,8 @@ export function securityFor(tier: Tier): SecurityConfig {
     dataResidency: "eu",
     certs: CERTS_FULL,
     ipAllowlist: IP_ALLOWLIST,
+    keyManagement: KEY_HYOK,
+    attestations: ATTESTATIONS_FULL,
   };
 }
 
@@ -624,6 +788,252 @@ export interface AuditSummary {
 export interface AuditLogResponse {
   summary: AuditSummary;
   events: AuditEvent[];
+}
+
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Models                                                                   */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+export type ModelProvider = "stirling" | "openai" | "anthropic" | "on-prem";
+export type ModelType = "extraction" | "classification" | "ocr" | "llm";
+export type ModelStatus = "active" | "degraded" | "disabled";
+
+/** Whether a model's cost is billed per 1k documents or per individual call. */
+export type ModelCostUnit = "per-1k-docs" | "per-call";
+
+export interface ModelEntry {
+  id: string;
+  name: string;
+  provider: ModelProvider;
+  type: ModelType;
+  status: ModelStatus;
+  /** Median inference latency, ms. */
+  latencyMs: number;
+  /** Cost in USD for the model's billing unit (see {@link costUnit}). */
+  cost: number;
+  costUnit: ModelCostUnit;
+  version: string;
+  /** Share of capacity this model is currently absorbing (0–1). */
+  load: number;
+  /** True for customer-registered bring-your-own / on-prem models. */
+  managed: boolean;
+}
+
+/** A binding from a processing operation (optionally a doc-type) to a model. */
+export interface RoutingRule {
+  id: string;
+  /** The operation or pipeline stage this rule governs. */
+  operation: string;
+  /** Doc-type scope, or "All document types" for a catch-all. */
+  docType: string;
+  /** id of the {@link ModelEntry} this operation routes to. */
+  modelId: string;
+  modelName: string;
+  /** Marks the fallback rule applied when no narrower rule matches. */
+  isDefault: boolean;
+}
+
+export interface ModelsSummary {
+  activeModels: number;
+  /** Capacity-weighted average latency across active models, ms. */
+  avgLatencyMs: number;
+  /** Projected monthly model spend, USD. */
+  monthlySpend: number;
+}
+
+export interface ModelsResponse {
+  summary: ModelsSummary;
+  models: ModelEntry[];
+  routing: RoutingRule[];
+}
+
+const MODELS_ALL: ModelEntry[] = [
+  {
+    id: "m-extract-v3",
+    name: "Stirling Extract",
+    provider: "stirling",
+    type: "extraction",
+    status: "active",
+    latencyMs: 142,
+    cost: 0.9,
+    costUnit: "per-1k-docs",
+    version: "v3.4.2",
+    load: 0.71,
+    managed: true,
+  },
+  {
+    id: "m-classify-v2",
+    name: "Stirling Classify",
+    provider: "stirling",
+    type: "classification",
+    status: "active",
+    latencyMs: 61,
+    cost: 0.4,
+    costUnit: "per-1k-docs",
+    version: "v2.8.0",
+    load: 0.48,
+    managed: true,
+  },
+  {
+    id: "m-ocr-tess",
+    name: "Stirling OCR",
+    provider: "stirling",
+    type: "ocr",
+    status: "active",
+    latencyMs: 318,
+    cost: 1.2,
+    costUnit: "per-1k-docs",
+    version: "v3.1.0",
+    load: 0.55,
+    managed: true,
+  },
+  {
+    id: "m-gpt4o",
+    name: "GPT-4o",
+    provider: "openai",
+    type: "llm",
+    status: "active",
+    latencyMs: 880,
+    cost: 0.012,
+    costUnit: "per-call",
+    version: "2026-05",
+    load: 0.33,
+    managed: true,
+  },
+  {
+    id: "m-claude-sonnet",
+    name: "Claude Sonnet 4.5",
+    provider: "anthropic",
+    type: "llm",
+    status: "degraded",
+    latencyMs: 1240,
+    cost: 0.009,
+    costUnit: "per-call",
+    version: "2026-04",
+    load: 0.21,
+    managed: true,
+  },
+  {
+    id: "m-onprem-ocr",
+    name: "On-prem OCR (Tesseract)",
+    provider: "on-prem",
+    type: "ocr",
+    status: "active",
+    latencyMs: 502,
+    cost: 0,
+    costUnit: "per-1k-docs",
+    version: "byo-1.2",
+    load: 0.12,
+    managed: false,
+  },
+  // Registered but parked: a customer LLM weight kept warm without traffic.
+  {
+    id: "m-onprem-llm",
+    name: "On-prem Llama 3 70B",
+    provider: "on-prem",
+    type: "llm",
+    status: "disabled",
+    latencyMs: 0,
+    cost: 0,
+    costUnit: "per-call",
+    version: "byo-0.9",
+    load: 0,
+    managed: false,
+  },
+];
+
+export function modelsFor(tier: Tier): ModelEntry[] {
+  // Free sees only the two managed Stirling models it can actually use.
+  if (tier === "free")
+    return MODELS_ALL.filter(
+      (m) => m.id === "m-extract-v3" || m.id === "m-classify-v2",
+    );
+  // Pro gets the full managed catalogue but no bring-your-own / on-prem models.
+  if (tier === "pro") return MODELS_ALL.filter((m) => m.managed);
+  return MODELS_ALL;
+}
+
+const ROUTING_ALL: RoutingRule[] = [
+  {
+    id: "r-extract",
+    operation: "Field extraction",
+    docType: "Invoices",
+    modelId: "m-extract-v3",
+    modelName: "Stirling Extract",
+    isDefault: false,
+  },
+  {
+    id: "r-classify",
+    operation: "Document classification",
+    docType: "All document types",
+    modelId: "m-classify-v2",
+    modelName: "Stirling Classify",
+    isDefault: false,
+  },
+  {
+    id: "r-ocr",
+    operation: "Text recognition",
+    docType: "Scanned PDFs",
+    modelId: "m-ocr-tess",
+    modelName: "Stirling OCR",
+    isDefault: false,
+  },
+  {
+    id: "r-summarize",
+    operation: "Summarisation",
+    docType: "Contracts",
+    modelId: "m-gpt4o",
+    modelName: "GPT-4o",
+    isDefault: false,
+  },
+  // Catch-all: any operation without a narrower rule falls back here.
+  {
+    id: "r-default",
+    operation: "Default",
+    docType: "All document types",
+    modelId: "m-extract-v3",
+    modelName: "Stirling Extract",
+    isDefault: true,
+  },
+];
+
+export function routingFor(tier: Tier): RoutingRule[] {
+  // Free has no routing control — the table is locked behind an upgrade nudge,
+  // so there are no rules to surface.
+  if (tier === "free") return [];
+  if (tier === "pro") return ROUTING_ALL.filter((r) => r.modelId !== "m-gpt4o");
+  return ROUTING_ALL;
+}
+
+export function modelsResponseFor(tier: Tier): ModelsResponse {
+  const models = modelsFor(tier);
+  const active = models.filter((m) => m.status === "active");
+
+  // Average latency is capacity-weighted so a barely-used model doesn't skew
+  // the headline; falls back to a plain mean when nothing is taking load.
+  const totalLoad = active.reduce((sum, m) => sum + m.load, 0);
+  const avgLatencyMs =
+    totalLoad > 0
+      ? Math.round(
+          active.reduce((sum, m) => sum + m.latencyMs * m.load, 0) / totalLoad,
+        )
+      : active.length > 0
+        ? Math.round(
+            active.reduce((sum, m) => sum + m.latencyMs, 0) / active.length,
+          )
+        : 0;
+
+  const monthlySpend = tier === "free" ? 0 : tier === "pro" ? 1840 : 6120;
+
+  return {
+    summary: {
+      activeModels: active.length,
+      avgLatencyMs,
+      monthlySpend,
+    },
+    models,
+    routing: routingFor(tier),
+  };
 }
 
 export function auditLogFor(tier: Tier): AuditLogResponse {

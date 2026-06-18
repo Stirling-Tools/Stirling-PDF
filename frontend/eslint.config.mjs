@@ -104,6 +104,68 @@ export default defineConfig(
       ],
     },
   },
+  // The cloud/ layer is the SHARED hosted/SaaS experience consumed by BOTH the
+  // saas and desktop leaves, so it must stay platform-portable. It must not
+  // reach platform-specific things directly (Supabase, Tauri, raw fetch,
+  // window.location, web storage, or import.meta.env.VITE_*) — those arrive via
+  // @app/* seams (services/apiClient, auth/session, platform/openExternal, ...)
+  // that each leaf provides for its own platform.
+  {
+    files: ["editor/src/cloud/**/*.{js,mjs,jsx,ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            ...baseRestrictedImportPatterns,
+            {
+              regex: "^@supabase/",
+              message:
+                "cloud/ must stay platform-portable. Reach Supabase via an @app/* seam (e.g. @app/auth/supabase, @app/auth/session) provided per-platform in saas/ and desktop/.",
+            },
+            {
+              regex: "^@tauri-apps/",
+              message:
+                "cloud/ must stay platform-portable. Tauri APIs are desktop-only — reach native features via an @app/* seam (e.g. @app/platform/openExternal).",
+            },
+          ],
+        },
+      ],
+      "no-restricted-globals": [
+        "error",
+        {
+          name: "fetch",
+          message:
+            "cloud/ must not call raw fetch — use @app/services/apiClient so each platform supplies its own transport.",
+        },
+        {
+          name: "localStorage",
+          message:
+            "cloud/ must not touch localStorage — use an @app/* storage seam so desktop/web can differ.",
+        },
+        {
+          name: "sessionStorage",
+          message:
+            "cloud/ must not touch sessionStorage — use an @app/* storage seam so desktop/web can differ.",
+        },
+      ],
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "MemberExpression[object.name='window'][property.name='location']",
+          message:
+            "cloud/ must not touch window.location — use an @app/* seam (e.g. @app/platform/openExternal) so desktop/web can differ.",
+        },
+        {
+          selector:
+            "MemberExpression[property.name='env'][object.type='MetaProperty'][object.meta.name='import'][object.property.name='meta']",
+          message:
+            "cloud/ must not read import.meta.env — use @app/constants/app / @app/platform seams so config is supplied per-platform.",
+        },
+      ],
+    },
+  },
   // The shared/ layer is the seed of a future packages/shared-ui — it must
   // only depend on third-party packages and on itself. If it ever imports
   // from editor or portal layers, extraction to a standalone package later
