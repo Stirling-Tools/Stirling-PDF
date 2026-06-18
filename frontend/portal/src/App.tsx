@@ -1,11 +1,13 @@
 import { useEffect, type ReactNode } from "react";
 import { BrowserRouter } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
+import { AuthProvider } from "@shared/auth";
 import { ThemeProvider, useTheme } from "@portal/contexts/ThemeContext";
 import { TierProvider } from "@portal/contexts/TierContext";
 import { UIProvider, useUI } from "@portal/contexts/UIContext";
 import { mantineTheme } from "@portal/theme/mantineTheme";
 import { AppShell } from "@portal/components/AppShell";
+import { AuthGate } from "@portal/components/AuthGate";
 import { AssistantButton } from "@portal/components/AssistantButton";
 import { AssistantPanel } from "@portal/components/AssistantPanel";
 import { SearchModal } from "@portal/components/SearchModal";
@@ -63,20 +65,24 @@ export function App() {
   return (
     <ThemeProvider>
       <PortalMantineProvider>
-        <TierProvider initialTier="pro">
-          <BrowserRouter>
-            <UIProvider>
-              <GlobalShortcuts />
-              <AppShell>
-                <ViewRouter />
-              </AppShell>
-              <AssistantButton />
-              <AssistantPanel />
-              <SearchModal />
-              <SettingsHost />
-            </UIProvider>
-          </BrowserRouter>
-        </TierProvider>
+        <AuthProvider mode="spring">
+          <TierProvider initialTier="pro">
+            <BrowserRouter>
+              <UIProvider>
+                <GlobalShortcuts />
+                <AuthGate>
+                  <AppShell>
+                    <ViewRouter />
+                  </AppShell>
+                  <AssistantButton />
+                  <AssistantPanel />
+                  <SearchModal />
+                  <SettingsHost />
+                </AuthGate>
+              </UIProvider>
+            </BrowserRouter>
+          </TierProvider>
+        </AuthProvider>
       </PortalMantineProvider>
     </ThemeProvider>
   );

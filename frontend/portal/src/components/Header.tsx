@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Avatar, Dropdown } from "@shared/components";
+import { useAuth } from "@shared/auth";
 import { useTheme } from "@portal/contexts/ThemeContext";
 import { useTier, TIER_INFO, type Tier } from "@portal/contexts/TierContext";
 import { useView } from "@portal/contexts/ViewContext";
@@ -76,6 +77,29 @@ function TierSwitcher() {
   );
 }
 
+function UserMenu() {
+  const { displayName, signOut } = useAuth();
+  const name = displayName ?? "Account";
+  return (
+    <Dropdown.Root align="end">
+      <Dropdown.Trigger>
+        <button
+          type="button"
+          className="portal-header__user"
+          aria-label="Account menu"
+          title={name}
+        >
+          <Avatar name={name} size="md" tone="blue" />
+        </button>
+      </Dropdown.Trigger>
+      <Dropdown.Menu width="12rem">
+        <Dropdown.Item disabled>{name}</Dropdown.Item>
+        <Dropdown.Item onSelect={() => void signOut()}>Sign out</Dropdown.Item>
+      </Dropdown.Menu>
+    </Dropdown.Root>
+  );
+}
+
 export function Header() {
   const { activeView } = useView();
   const { openSearch } = useUI();
@@ -108,7 +132,7 @@ export function Header() {
         <ThemeToggle />
         <NotificationsDropdown />
         <TierSwitcher />
-        <Avatar name="Reece" size="md" tone="blue" />
+        <UserMenu />
       </div>
     </header>
   );
