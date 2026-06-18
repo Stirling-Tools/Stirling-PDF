@@ -10,6 +10,17 @@ import path from "path";
 const SAMPLE = path.join(__dirname, "../../../../public/samples/Sample.pdf");
 const PNG = path.join(__dirname, "../test-fixtures/sample.png");
 
+// z-order / align / distribute live in the toolbar's "Arrange" menu, and
+// image rotate/flip in the "Image" menu. Open the menu, then click the item.
+async function clickArrange(page: any, testid: string): Promise<void> {
+  await page.getByTestId("v2-arrange-menu").click();
+  await page.getByTestId(testid).click();
+}
+async function clickImage(page: any, testid: string): Promise<void> {
+  await page.getByTestId("v2-image-menu").click();
+  await page.getByTestId(testid).click();
+}
+
 async function open(page: any, firstPage = 0): Promise<void> {
   await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
   await expect(page.getByTestId("v2-root")).toBeVisible({ timeout: 15_000 });
@@ -139,7 +150,7 @@ test.describe("v2 editor - combined feature set", () => {
       ins!.id,
     );
     await page.waitForTimeout(120);
-    await page.getByTestId("v2-image-rotate-cw").click();
+    await clickImage(page, "v2-image-rotate-cw");
     await page.waitForTimeout(300);
     const rotated = await imageMatrix(page, ins!.id);
     // A 90deg rotation swaps the axes: original diagonal (a,d) becomes off-diagonal (b,c).
@@ -164,7 +175,7 @@ test.describe("v2 editor - combined feature set", () => {
       ins!.id,
     );
     await page.waitForTimeout(120);
-    await page.getByTestId("v2-image-flip-h").click();
+    await clickImage(page, "v2-image-flip-h");
     await page.waitForTimeout(300);
     const flipped = await imageMatrix(page, ins!.id);
     expect(Math.sign(flipped.a), "flip-h negates horizontal scale").toBe(
@@ -244,7 +255,7 @@ test.describe("v2 editor - combined feature set", () => {
     const a = await runId(page, 1, "Stirling\\s+PDF\\s+is\\s+a\\s+robust");
     const b = await runId(page, 1, "Comprehensive\\s+toolkit");
     await selectMany(page, [a, b]);
-    await page.getByTestId("v2-align-left").click();
+    await clickArrange(page, "v2-align-left");
     await page.waitForTimeout(300);
     const xs = await page.evaluate(
       ({ a, b }: { a: string; b: string }) => {
@@ -304,7 +315,7 @@ test.describe("v2 editor - combined feature set", () => {
     const undoBefore = await page.evaluate(
       () => (window as any).__v2_editor_store.history.size().undo,
     );
-    await page.getByTestId("v2-z-to-front").click();
+    await clickArrange(page, "v2-z-to-front");
     await page.waitForTimeout(300);
     const undoAfter = await page.evaluate(
       () => (window as any).__v2_editor_store.history.size().undo,
@@ -382,7 +393,7 @@ test.describe("v2 editor - combined feature set", () => {
       ins!.id,
     );
     await page.waitForTimeout(120);
-    await page.getByTestId("v2-image-rotate-ccw").click();
+    await clickImage(page, "v2-image-rotate-ccw");
     await page.waitForTimeout(300);
     const rotated = await imageMatrix(page, ins!.id);
     expect(
@@ -408,7 +419,7 @@ test.describe("v2 editor - combined feature set", () => {
       ins!.id,
     );
     await page.waitForTimeout(120);
-    await page.getByTestId("v2-image-flip-v").click();
+    await clickImage(page, "v2-image-flip-v");
     await page.waitForTimeout(300);
     const flipped = await imageMatrix(page, ins!.id);
     expect(Math.sign(flipped.d), "flip-v negates vertical scale").toBe(
@@ -433,7 +444,7 @@ test.describe("v2 editor - combined feature set", () => {
     );
     await page.waitForTimeout(120);
     for (let i = 0; i < 4; i++) {
-      await page.getByTestId("v2-image-rotate-cw").click();
+      await clickImage(page, "v2-image-rotate-cw");
       await page.waitForTimeout(180);
     }
     const m = await imageMatrix(page, ins!.id);
@@ -518,7 +529,7 @@ test.describe("v2 editor - combined feature set", () => {
     );
     await page.waitForTimeout(120);
     const undoBefore = await undoSize(page);
-    await page.getByTestId("v2-z-to-back").click();
+    await clickArrange(page, "v2-z-to-back");
     await page.waitForTimeout(300);
     expect(await undoSize(page), "send-to-back is one undo step").toBe(
       undoBefore + 1,
@@ -544,9 +555,9 @@ test.describe("v2 editor - combined feature set", () => {
     );
     await page.waitForTimeout(120);
     const base = await undoSize(page);
-    await page.getByTestId("v2-z-forward").click();
+    await clickArrange(page, "v2-z-forward");
     await page.waitForTimeout(250);
-    await page.getByTestId("v2-z-backward").click();
+    await clickArrange(page, "v2-z-backward");
     await page.waitForTimeout(250);
     expect(await undoSize(page), "two z-order steps recorded").toBe(base + 2);
     await page.getByTestId("v2-undo").click();
@@ -561,7 +572,7 @@ test.describe("v2 editor - combined feature set", () => {
     const a = await runId(page, 1, "Stirling\\s+PDF\\s+is\\s+a\\s+robust");
     const b = await runId(page, 1, "Comprehensive\\s+toolkit");
     await selectMany(page, [a, b]);
-    await page.getByTestId("v2-align-right").click();
+    await clickArrange(page, "v2-align-right");
     await page.waitForTimeout(300);
     const rights = await page.evaluate(
       ({ a, b }: { a: string; b: string }) => {
@@ -585,7 +596,7 @@ test.describe("v2 editor - combined feature set", () => {
     const a = await runId(page, 1, "Stirling\\s+PDF\\s+is\\s+a\\s+robust");
     const b = await runId(page, 1, "Comprehensive\\s+toolkit");
     await selectMany(page, [a, b]);
-    await page.getByTestId("v2-align-top").click();
+    await clickArrange(page, "v2-align-top");
     await page.waitForTimeout(300);
     const tops = await page.evaluate(
       ({ a, b }: { a: string; b: string }) => {
@@ -612,7 +623,7 @@ test.describe("v2 editor - combined feature set", () => {
     const ids = await firstRunIds(page, 1, 3);
     expect(ids.length, "need three runs to distribute").toBe(3);
     await selectMany(page, ids);
-    await page.getByTestId("v2-distribute-v").click();
+    await clickArrange(page, "v2-distribute-v");
     await page.waitForTimeout(300);
     const gaps = await page.evaluate((ids: string[]) => {
       const pg = (window as any).__v2_editor_store.doc.page(1);

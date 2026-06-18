@@ -3653,13 +3653,16 @@ test.describe("PDF text editor v2 - workbench tab UX", () => {
   });
 });
 
-test.describe("PDF text editor v2 - sidebar status", () => {
-  test("status panel reports clean/dirty state", async ({ page }) => {
+test.describe("PDF text editor v2 - dirty state", () => {
+  test("top bar marks the file dirty after an edit", async ({ page }) => {
     await gotoV2(page);
     await loadSamplePdf(page);
 
-    const status = page.getByTestId("v2-sidebar-status");
-    await expect(status).toContainText(/No changes yet/i);
+    // Save state lives on the top-bar filename (a trailing "*"); the sidebar
+    // no longer repeats it. Clean on load.
+    const filename = page.getByTestId("v2-filename");
+    await expect(filename).toBeVisible();
+    await expect(filename).not.toContainText("*");
 
     const firstRunTestId = await page
       .locator('[data-testid^="v2-run-p0-"]')
@@ -3667,7 +3670,7 @@ test.describe("PDF text editor v2 - sidebar status", () => {
       .getAttribute("data-testid");
     await typeIntoRun(page, firstRunTestId!, "X");
 
-    await expect(status).toContainText(/Unsaved changes/i);
+    await expect(filename).toContainText("*");
   });
 });
 

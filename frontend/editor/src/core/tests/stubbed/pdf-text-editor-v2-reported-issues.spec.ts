@@ -15,6 +15,27 @@ import path from "path";
  */
 const SAMPLE = path.join(__dirname, "../../../../public/samples/Sample.pdf");
 
+// Align / distribute / z-order now live inside the toolbar's "Arrange" menu.
+// Open the menu, then act on or inspect the item.
+async function clickArrange(page: any, testid: string): Promise<void> {
+  await page.getByTestId("v2-arrange-menu").click();
+  await page.getByTestId(testid).click();
+}
+async function arrangeItemDisabled(
+  page: any,
+  testid: string,
+): Promise<boolean> {
+  await page.getByTestId("v2-arrange-menu").click();
+  const item = page.getByTestId(testid);
+  await item.waitFor({ state: "visible" });
+  const disabled = await item.isDisabled();
+  // Close via a neutral click in the top bar, NOT Escape: the editor's global
+  // Escape handler also clears the selection, which would break the next check.
+  await page.getByTestId("v2-zoom-percent").click();
+  await item.waitFor({ state: "hidden" });
+  return disabled;
+}
+
 async function open(page: any, firstPage = 0): Promise<void> {
   await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
   await expect(page.getByTestId("v2-root")).toBeVisible({ timeout: 15_000 });
@@ -106,14 +127,14 @@ test.describe("v2 editor - reported issue: align multi-select (real UI)", () => 
     await page.getByTestId(`v2-run-${a}`).click();
     await page.waitForTimeout(150);
     expect(await selRunCount(page)).toBe(1);
-    await expect(page.getByTestId("v2-align-left")).toBeDisabled();
+    expect(await arrangeItemDisabled(page, "v2-align-left")).toBe(true);
     // Shift-click B must ADD it (the bug was it failed to add).
     await page.getByTestId(`v2-run-${b}`).click({ modifiers: ["Shift"] });
     await page.waitForTimeout(200);
     expect(await selRunCount(page), "shift-click adds a 2nd run").toBe(2);
-    await expect(page.getByTestId("v2-align-left")).toBeEnabled();
+    expect(await arrangeItemDisabled(page, "v2-align-left")).toBe(false);
     // And it actually aligns the two left edges.
-    await page.getByTestId("v2-align-left").click();
+    await clickArrange(page, "v2-align-left");
     await page.waitForTimeout(250);
     const xs = await page.evaluate(
       ({ a, b }: { a: string; b: string }) => {
@@ -138,12 +159,12 @@ test.describe("v2 editor - reported issue: align multi-select (real UI)", () => 
     await page.getByTestId(`v2-run-${b}`).click({ modifiers: ["Shift"] });
     await page.waitForTimeout(200);
     expect(await selRunCount(page)).toBe(2);
-    await expect(page.getByTestId("v2-align-left")).toBeEnabled();
+    expect(await arrangeItemDisabled(page, "v2-align-left")).toBe(false);
     // Shift-click B again removes it -> back to 1 single-line run -> disabled.
     await page.getByTestId(`v2-run-${b}`).click({ modifiers: ["Shift"] });
     await page.waitForTimeout(200);
     expect(await selRunCount(page)).toBe(1);
-    await expect(page.getByTestId("v2-align-left")).toBeDisabled();
+    expect(await arrangeItemDisabled(page, "v2-align-left")).toBe(true);
   });
 
   test("distribute needs three runs: enabled only after a 3rd shift-click", async ({
@@ -156,11 +177,11 @@ test.describe("v2 editor - reported issue: align multi-select (real UI)", () => 
     await page.getByTestId(`v2-run-${a}`).click();
     await page.getByTestId(`v2-run-${b}`).click({ modifiers: ["Shift"] });
     await page.waitForTimeout(150);
-    await expect(page.getByTestId("v2-distribute-v")).toBeDisabled();
+    expect(await arrangeItemDisabled(page, "v2-distribute-v")).toBe(true);
     await page.getByTestId(`v2-run-${c}`).click({ modifiers: ["Shift"] });
     await page.waitForTimeout(200);
     expect(await selRunCount(page)).toBe(3);
-    await expect(page.getByTestId("v2-distribute-v")).toBeEnabled();
+    expect(await arrangeItemDisabled(page, "v2-distribute-v")).toBe(false);
   });
 });
 
@@ -201,11 +222,11 @@ test.describe("v2 editor - reported issue: align a single paragraph's lines", ()
     const para = await runId(page, 1, "Stirling\\s+PDF\\s+is\\s+a\\s+robust");
     await selectOne(page, para);
     // Horizontal aligns enable on a single paragraph...
-    await expect(page.getByTestId("v2-align-left")).toBeEnabled();
-    await expect(page.getByTestId("v2-align-right")).toBeEnabled();
-    await expect(page.getByTestId("v2-align-center-h")).toBeEnabled();
+    expect(await arrangeItemDisabled(page, "v2-align-left")).toBe(false);
+    expect(await arrangeItemDisabled(page, "v2-align-right")).toBe(false);
+    expect(await arrangeItemDisabled(page, "v2-align-center-h")).toBe(false);
     // ...but vertical aligns still need 2+ objects.
-    await expect(page.getByTestId("v2-align-top")).toBeDisabled();
+    expect(await arrangeItemDisabled(page, "v2-align-top")).toBe(true);
   });
 
   test("align buttons stay disabled for a single single-line run", async ({
@@ -214,8 +235,8 @@ test.describe("v2 editor - reported issue: align a single paragraph's lines", ()
     await open(page, 1);
     const heading = await runId(page, 1, "What\\s+is\\s+Stirling");
     await selectOne(page, heading);
-    await expect(page.getByTestId("v2-align-left")).toBeDisabled();
-    await expect(page.getByTestId("v2-align-right")).toBeDisabled();
+    expect(await arrangeItemDisabled(page, "v2-align-left")).toBe(true);
+    expect(await arrangeItemDisabled(page, "v2-align-right")).toBe(true);
   });
 
   test("align-right flushes a paragraph's lines to a shared right edge; undo reverts", async ({
@@ -226,7 +247,7 @@ test.describe("v2 editor - reported issue: align a single paragraph's lines", ()
     await selectOne(page, para);
     const before = await lineRights(page, para);
     expect(before.length, "paragraph has multiple lines").toBeGreaterThan(1);
-    await page.getByTestId("v2-align-right").click();
+    await clickArrange(page, "v2-align-right");
     await page.waitForTimeout(300);
     const after = await lineRights(page, para);
     expect(
@@ -250,7 +271,7 @@ test.describe("v2 editor - reported issue: align a single paragraph's lines", ()
     await selectOne(page, para);
     const before = await lineLefts(page, para);
     expect(before.length).toBeGreaterThan(1);
-    await page.getByTestId("v2-align-left").click();
+    await clickArrange(page, "v2-align-left");
     await page.waitForTimeout(300);
     const after = await lineLefts(page, para);
     expect(
