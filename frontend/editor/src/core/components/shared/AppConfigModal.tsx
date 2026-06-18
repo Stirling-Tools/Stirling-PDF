@@ -12,6 +12,7 @@ import LocalIcon from "@app/components/shared/LocalIcon";
 import { useConfigNavSections } from "@app/components/shared/config/configNavSections";
 import { NavKey, VALID_NAV_KEYS } from "@app/components/shared/config/types";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { COOKIE_CONSENT_SCROLL_SHARD } from "@app/hooks/useCookieConsent";
 import "@app/components/shared/AppConfigModal.css";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import {
@@ -24,6 +25,7 @@ import {
   useUnsavedChanges,
 } from "@app/contexts/UnsavedChangesContext";
 import { SettingsSearchBar } from "@app/components/shared/config/SettingsSearchBar";
+import { stripBasePath, withBasePath } from "@app/constants/app";
 
 interface AppConfigModalProps {
   opened: boolean;
@@ -96,13 +98,14 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
   const switchSection = useCallback(
     (key: NavKey) => {
       setActive(key);
-      const alreadyInSettings =
-        window.location.pathname.startsWith("/settings");
+      const alreadyInSettings = stripBasePath(
+        window.location.pathname,
+      ).startsWith("/settings");
       if (alreadyInSettings) {
         window.history.replaceState(
           window.history.state,
           "",
-          `/settings/${key}`,
+          withBasePath(`/settings/${key}`),
         );
       } else {
         navigate(`/settings/${key}`);
@@ -214,6 +217,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
       padding={0}
       fullScreen={isMobile}
       styles={{ content: { overflowY: "hidden", overscrollBehavior: "none" } }}
+      removeScrollProps={{ shards: [COOKIE_CONSENT_SCROLL_SHARD] }}
     >
       <div className="modal-container">
         {/* Left navigation */}

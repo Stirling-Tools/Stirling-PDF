@@ -1,11 +1,13 @@
 package stirling.software.proprietary.security;
 
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
@@ -37,6 +39,17 @@ public class InitialSecuritySetup {
     private final ApplicationProperties applicationProperties;
     private final DatabaseServiceInterface databaseService;
     private final UserLicenseSettingsService licenseSettingsService;
+    private final Environment environment;
+
+    /**
+     * SaaS manages identity in Supabase and billing via PAYG, so the self-host bootstrap steps that
+     * scan/rewrite the whole user table (default-team backfill, seat-license grandfathering) don't
+     * apply - and against a large SaaS user table they stall startup with full-table loads +
+     * per-row saveAll. Per-user team assignment happens in SupabaseAuthenticationFilter instead.
+     */
+    private boolean isSaas() {
+        return Arrays.asList(environment.getActiveProfiles()).contains("saas");
+    }
 
     @PostConstruct
     public void init() {
@@ -51,9 +64,15 @@ public class InitialSecuritySetup {
             }
 
             configureJWTSettings();
-            assignUsersToDefaultTeamIfMissing();
             initializeInternalApiUser();
-            initializeUserLicenseSettings();
+            if (isSaas()) {
+                log.info(
+                        "SaaS profile active - skipping self-host user-table bootstrap"
+                                + " (default-team backfill, seat-license grandfathering).");
+            } else {
+                assignUsersToDefaultTeamIfMissing();
+                initializeUserLicenseSettings();
+            }
         } catch (IllegalArgumentException | SQLException | UnsupportedProviderException e) {
             log.error("Failed to initialize security setup.", e);
             System.exit(1);
