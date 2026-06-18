@@ -27,7 +27,10 @@ vi.mock("@app/services/policyApi", () => ({
   downloadPolicyOutput: vi.fn(),
 }));
 vi.mock("@app/services/fileStorage", () => ({
-  fileStorage: { getStirlingFile: vi.fn() },
+  fileStorage: { getStirlingFile: vi.fn(), getStirlingFileStub: vi.fn() },
+}));
+vi.mock("@app/contexts/IndexedDBContext", () => ({
+  useIndexedDB: () => ({ bumpRevision: vi.fn() }),
 }));
 
 import { usePolicyAutoRun } from "@app/components/policies/usePolicyAutoRun";

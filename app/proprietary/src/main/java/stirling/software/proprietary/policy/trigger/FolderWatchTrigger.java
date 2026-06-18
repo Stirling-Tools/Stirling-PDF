@@ -20,6 +20,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -45,6 +46,7 @@ import stirling.software.proprietary.policy.store.PolicyStore;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Profile("saas")
 public class FolderWatchTrigger implements PolicyTrigger {
 
     private static final String TYPE = "folder-watch";

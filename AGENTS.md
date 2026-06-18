@@ -193,6 +193,8 @@ What goes where:
 
 Rule of thumb — **move, don't copy**: share via `cloud/`, override by shadowing the same `@app/*` path in a leaf (`saas/` or `desktop/`).
 
+**Cloud feature flags on desktop.** The local `AppConfigContext` reads `/api/v1/config/app-config` from the LOCAL bundled backend, so cloud-only flags (`aiEngineEnabled`, `premiumEnabled`, …) are never seen on desktop. To read the cloud's view, use `useSaasAppConfig()` (`desktop/hooks/useSaasAppConfig.ts`, backed by the general `saasAppConfigService` — SaaS-mode-only, public endpoint, native HTTP, 5-min cache). It returns `null` outside SaaS mode, so cloud features stay off in local/self-hosted and the server keeps the on/off switch (no desktop release needed to flip a flag). Gate a feature behind a per-platform seam — e.g. `useAiEngineEnabled()` (core reads `useAppConfig()`, desktop reads `useSaasAppConfig()`) — rather than hardcoding the flag on.
+
 #### Component Override Pattern (Stub/Shadow)
 Use this pattern for desktop-specific or proprietary-specific features WITHOUT runtime checks or conditionals.
 

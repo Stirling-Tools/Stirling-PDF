@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,7 @@ import stirling.software.proprietary.policy.model.PolicyInputs;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Profile("saas")
 public class FolderInputSource implements InputSource {
 
     private static final String TYPE = FolderAccessGuard.FOLDER_TYPE;

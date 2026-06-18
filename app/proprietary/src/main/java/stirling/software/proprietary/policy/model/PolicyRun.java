@@ -17,6 +17,10 @@ import stirling.software.common.model.job.ResultFile;
 public class PolicyRun {
 
     private final String runId;
+
+    /** ID of the stored policy that produced this run; null for ad-hoc pipelines. */
+    private final String policyId;
+
     private final PipelineDefinition definition;
     private final Instant createdAt = Instant.now();
 
@@ -45,8 +49,9 @@ public class PolicyRun {
     private volatile List<ResultFile> outputs = List.of();
     private volatile Instant updatedAt = Instant.now();
 
-    public PolicyRun(String runId, PipelineDefinition definition) {
+    public PolicyRun(String runId, String policyId, PipelineDefinition definition) {
         this.runId = runId;
+        this.policyId = policyId;
         this.definition = definition;
     }
 

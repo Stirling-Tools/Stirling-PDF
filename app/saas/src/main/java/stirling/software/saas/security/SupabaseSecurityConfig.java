@@ -49,7 +49,6 @@ import stirling.software.common.util.RequestUriUtils;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
-import stirling.software.saas.service.CreditService;
 import stirling.software.saas.service.SaasTeamService;
 import stirling.software.saas.service.SupabaseUserService;
 
@@ -66,7 +65,6 @@ public class SupabaseSecurityConfig {
     private final UserService userService;
     private final TeamService teamService;
     private final SupabaseUserService supabaseUserService;
-    private final CreditService creditService;
     private final SaasTeamService saasTeamService;
     private final ApplicationProperties applicationProperties;
 
@@ -121,7 +119,6 @@ public class SupabaseSecurityConfig {
                                 teamService,
                                 userService,
                                 supabaseUserService,
-                                creditService,
                                 saasTeamService,
                                 jwtDecoder),
                         BearerTokenAuthenticationFilter.class)
@@ -300,7 +297,7 @@ public class SupabaseSecurityConfig {
                         "Accept",
                         "Origin",
                         "X-API-KEY"));
-        cfg.setExposedHeaders(List.of("WWW-Authenticate", "X-Credits-Remaining"));
+        cfg.setExposedHeaders(List.of("WWW-Authenticate"));
         cfg.setAllowCredentials(true);
         cfg.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

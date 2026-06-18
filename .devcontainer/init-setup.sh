@@ -20,8 +20,8 @@ set -e
 # - To build the project, use:
 #     ./gradlew build
 #
-# - For running pre-commit hooks (if configured), use:
-#     pre-commit run --all-files
+# - To run the lint/format/secret checks, use:
+#     task pre-commit
 #
 # Make sure you are in the project root directory after this script executes.
 # =============================================================================
@@ -70,6 +70,6 @@ echo ""
 echo "  To build the project: "
 echo -e "\e[34m    gradle build\e[0m"
 echo ""
-echo "  To run pre-commit hooks (if configured):"
-echo -e "\e[34m    pre-commit run --all-files -c .pre-commit-config.yaml\e[0m"
+echo "  To run the lint/format/secret checks:"
+echo -e "\e[34m    task pre-commit\e[0m"
 echo "=================================================================="

@@ -1,17 +1,8 @@
-/* The modal body scrolls; keep the tab strip pinned at the top of it. */
-.portal-settings__tabs {
-  position: sticky;
-  top: -1rem;
-  z-index: 1;
-  margin: -1rem -1.125rem 0;
-  padding: 0.5rem 1.125rem 0;
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border-light);
-}
-
-.portal-settings__panel {
-  padding-top: 1rem;
-  min-height: 18rem;
+/* The settings overlay hosts a full-bleed two-pane SettingsShell, so the
+   modal frame contributes no padding of its own and lets the shell scroll. */
+.portal-settings .sui-modal__body {
+  padding: 0;
+  overflow: hidden;
 }
 
 .portal-settings__section {
@@ -219,6 +210,13 @@
 .portal-settings__notif-text span {
   font-size: 0.75rem;
   color: var(--color-text-4);
+}
+
+/* Label paired with a gating badge (e.g. "SCIM provisioning" + Enterprise). */
+.portal-settings__row-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 /* ── Workspace plan card ──────────────────────────────────────────────── */

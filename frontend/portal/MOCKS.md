@@ -53,12 +53,17 @@ non-2xx). Views consume via `useAsync()` + `useSectionFlags()` (`hooks/useAsync.
 | Home | `GET /v1/activity` | — | `fetchRecentActivity` | `ActivityEvent[]` |
 | Home | `GET /v1/regions/health` | — | `fetchRegionHealth` | `RegionHealth[]` |
 | Home | `GET /v1/onboarding` | — | `fetchOnboarding` | `OnboardingStep[]` |
-| Documents | `GET /v1/endpoints` | `vertical?` | `fetchVerticals` | `Vertical[]` |
-| Pipelines | `GET /v1/pipelines` | `tier` | `fetchPipelines` | `PipelinesResponse` |
+| Users | `GET /v1/users` | `tier` | `fetchUsers` | `UsersResponse` |
+| Documents | `GET /v1/documents` | `tier` | `fetchDocuments` | `DocumentsResponse` |
+| Pipelines | `GET /v1/pipelines` · `POST /v1/pipelines/:id/promote-to-policy` | `tier` | `fetchPipelines` · `promoteToPolicy` | `PipelinesResponse` |
+| Policies | `GET/POST /api/v1/policies` · `GET/DELETE /api/v1/policies/{id}` · `POST /api/v1/policies/{id}/run` | — | `fetchPolicies` · `savePolicy` · `deletePolicy` · `runPolicy` | `PoliciesResponse` · `Policy` |
+| Agent Builder | `GET /v1/agents` | `tier` | `fetchAgents` | `AgentsResponse` |
 | Sources | `GET /v1/sources` | `tier` | `fetchSources` | `SourcesResponse` |
+| Components | `GET /v1/components` | `tier` | `fetchComponents` | `ComponentsResponse` |
 | Infrastructure | `GET /v1/infrastructure/deployments` | `tier` | `fetchDeployments` | `DeploymentsResponse` |
 | Infrastructure | `GET /v1/infrastructure/api-keys` | `tier` | `fetchApiKeys` | `ApiKey[]` |
 | Infrastructure | `GET /v1/infrastructure/security` | `tier` | `fetchSecurity` | `SecurityConfig` |
+| Infrastructure | `GET /v1/infrastructure/models` | `tier` | `fetchModels` | `ModelsResponse` |
 | Infrastructure | `GET /v1/infrastructure/storage` | `tier` | `fetchStorage` | `StorageConfig` |
 | Infrastructure | `GET /v1/infrastructure/audit-log` | `tier` | `fetchAuditLog` | `AuditLogResponse` |
 | Usage & Billing | `GET /v1/billing/usage` | — | `fetchBillingUsage` | `UsageSeriesResponse` |
@@ -66,6 +71,7 @@ non-2xx). Views consume via `useAsync()` + `useSectionFlags()` (`hooks/useAsync.
 | Usage & Billing | `GET /v1/billing/plans` | — | `fetchPlanOptions` | `PlanOption[]` |
 | Usage & Billing | `GET /v1/billing/history` | `tier` | `fetchBillingHistory` | `BillingHistoryRow[]` |
 | Developer Docs | `GET /v1/docs/nav` | — | `fetchDocsNav` | `DocsNavSection[]` |
+| Editor | `GET /v1/editor/deployment` | `tier` | `fetchEditorDeployment` | `EditorDeploymentResponse` |
 | Settings | `GET /v1/settings` | `tier` | `fetchSettings` | `UserSettings` |
 | Notifications | `GET /v1/notifications` · `POST /v1/notifications/mark-all-read` | — | — | `Notification[]` |
 | Ops | `GET /v1/ops/featured` · `POST /v1/ops/:opId/run` | — | — | — |
@@ -74,3 +80,7 @@ non-2xx). Views consume via `useAsync()` + `useSectionFlags()` (`hooks/useAsync.
 
 > Catalogue generated from `mocks/handlers/*.ts`. The `api/<surface>.ts` JSDoc on
 > each function is the authoritative per-endpoint reference.
+>
+> **Policies** targets the **real** backend base `/api/v1/policies` (Stirling's
+> `PolicyController`) rather than the mock `/v1/...` convention — its contract
+> mirrors the live policy engine, so MSW can be dropped with no code change.
