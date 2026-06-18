@@ -22,13 +22,10 @@ import stirling.software.proprietary.policy.config.FolderAccessGuard;
 import stirling.software.proprietary.policy.model.OutputSpec;
 
 /**
- * Writes a run's output files to a directory on disk. The destination is the {@code directory}
- * option of the {@link OutputSpec}.
- *
- * <p>Files are streamed to disk (so large outputs are not buffered) and given unique names to avoid
- * clobbering existing files. The returned {@link ResultFile}s describe what was written (path +
- * size); they carry a synthetic id because the deliverable is the file on disk, not a {@code
- * FileStorage} entry, so folder outputs are not downloadable via {@code /files/{id}}.
+ * Writes a run's outputs to the {@code directory} given in the {@link OutputSpec}. Files are
+ * streamed (not buffered) and uniquely named to avoid clobbering. Returned {@link ResultFile}s
+ * carry a synthetic id since the deliverable is the file on disk, not a {@code FileStorage} entry,
+ * so folder outputs are not downloadable via {@code /files/{id}}.
  */
 @Slf4j
 @Service
@@ -95,11 +92,7 @@ public class FolderOutputSink implements PolicyOutputSink {
         return Path.of(directory.toString());
     }
 
-    /**
-     * The resource's filename reduced to a bare, traversal-free name: any directory component or
-     * "../" is stripped so a crafted output name cannot escape {@code targetDir}. Falls back to a
-     * synthetic name when the filename is absent or reduces to nothing usable.
-     */
+    // Strip any directory component / "../" so a crafted output name cannot escape targetDir.
     private static String safeName(String filename, int index) {
         if (filename == null || filename.isBlank()) {
             return "output-" + index;
@@ -111,7 +104,7 @@ public class FolderOutputSink implements PolicyOutputSink {
         return name;
     }
 
-    /** Resolve a non-colliding path in {@code dir}, appending " (n)" before the extension. */
+    // Non-colliding path, appending " (n)" before the extension.
     private static Path uniqueTarget(Path dir, String filename) {
         Path candidate = dir.resolve(filename);
         if (!Files.exists(candidate)) {
