@@ -22,6 +22,42 @@
   overflow: hidden;
 }
 
+/* ---- Native file drag-and-drop ---- */
+.file-sidebar[data-file-drag-over] {
+  outline: 2px dashed var(--mantine-color-blue-6, #3b82f6);
+  outline-offset: -4px;
+}
+
+.file-sidebar-drop-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  text-align: center;
+  pointer-events: none;
+  background-color: color-mix(
+    in srgb,
+    var(--mantine-color-blue-6, #3b82f6) 12%,
+    var(--bg-toolbar)
+  );
+}
+
+.file-sidebar-drop-overlay-icon {
+  color: var(--mantine-color-blue-6, #3b82f6) !important;
+  font-size: 28px !important;
+}
+
+.file-sidebar-drop-overlay-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mantine-color-blue-6, #3b82f6);
+}
+
 /* ---- Header ---- */
 .file-sidebar-header {
   display: flex;

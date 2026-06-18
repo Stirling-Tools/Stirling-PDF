@@ -443,25 +443,77 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       ],
     );
 
-    const handleNativeFilePick = useCallback(
-      async (e: React.ChangeEvent<HTMLInputElement>) => {
-        // Per-tool validation happens downstream.
-        const files = Array.from(e.target.files ?? []);
-        if (files.length > 0) {
-          if (onUploadFiles) {
-            await onUploadFiles(files);
-          } else {
-            await addFiles(files);
-            if (!isMultiTool) {
-              navActions.setWorkbench(
-                files.length === 1 ? "viewer" : "fileEditor",
-              );
-            }
+    // Shared ingest path for both the native picker and drag-and-drop.
+    // Per-tool validation happens downstream.
+    const ingestFiles = useCallback(
+      async (files: File[]) => {
+        if (files.length === 0) return;
+        if (onUploadFiles) {
+          await onUploadFiles(files);
+        } else {
+          await addFiles(files);
+          if (!isMultiTool) {
+            navActions.setWorkbench(
+              files.length === 1 ? "viewer" : "fileEditor",
+            );
           }
         }
-        e.target.value = "";
       },
       [addFiles, navActions, isMultiTool, onUploadFiles],
+    );
+
+    const handleNativeFilePick = useCallback(
+      async (e: React.ChangeEvent<HTMLInputElement>) => {
+        await ingestFiles(Array.from(e.target.files ?? []));
+        e.target.value = "";
+      },
+      [ingestFiles],
+    );
+
+    // Native OS file drop onto the sidebar - mirrors the workbench drop zone.
+    // Only react to OS file drags ("Files" type); internal element drags (e.g.
+    // watched-folder file moves) set their own dataTransfer keys and must pass
+    // through untouched.
+    const [isFileDragOver, setIsFileDragOver] = useState(false);
+    const dragDepth = useRef(0);
+
+    const isNativeFileDrag = (e: React.DragEvent) =>
+      Array.from(e.dataTransfer.types).includes("Files");
+
+    const handleDragEnter = useCallback((e: React.DragEvent) => {
+      if (!isNativeFileDrag(e)) return;
+      e.preventDefault();
+      dragDepth.current += 1;
+      setIsFileDragOver(true);
+    }, []);
+
+    const handleDragOver = useCallback((e: React.DragEvent) => {
+      if (!isNativeFileDrag(e)) return;
+      // Required so the browser fires `drop` rather than opening the file.
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "copy";
+    }, []);
+
+    const handleDragLeave = useCallback((e: React.DragEvent) => {
+      if (!isNativeFileDrag(e)) return;
+      // dragenter/leave fire per child element; the counter keeps the overlay
+      // stable until the cursor genuinely leaves the sidebar.
+      dragDepth.current -= 1;
+      if (dragDepth.current <= 0) {
+        dragDepth.current = 0;
+        setIsFileDragOver(false);
+      }
+    }, []);
+
+    const handleDrop = useCallback(
+      async (e: React.DragEvent) => {
+        if (!isNativeFileDrag(e)) return;
+        e.preventDefault();
+        dragDepth.current = 0;
+        setIsFileDragOver(false);
+        await ingestFiles(Array.from(e.dataTransfer.files ?? []));
+      },
+      [ingestFiles],
     );
 
     const shouldHideGoogleDrive =
@@ -477,7 +529,22 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         data-collapsed={collapsed}
         data-sidebar="file-sidebar"
         data-tour="quick-access-bar"
+        data-file-drag-over={isFileDragOver || undefined}
+        onDragEnter={handleDragEnter}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
       >
+        {isFileDragOver && (
+          <div className="file-sidebar-drop-overlay" aria-hidden="true">
+            <UploadFileIcon className="file-sidebar-drop-overlay-icon" />
+            {!collapsed && (
+              <span className="file-sidebar-drop-overlay-text">
+                {t("fileSidebar.dropToAdd", "Drop files to add")}
+              </span>
+            )}
+          </div>
+        )}
         <div className="file-sidebar-inner">
           {/* Header: hamburger + branding */}
           <Tooltip
