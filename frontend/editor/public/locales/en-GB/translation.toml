@@ -7917,6 +7917,7 @@ valid = "Valid"
 
 [viewer]
 cannotPreviewFile = "Cannot Preview File"
+copyText = "Copy"
 disableColorFilter = "Disable Colour Filter"
 dualPageView = "Dual Page View"
 enableDarkFilter = "Enable Dark Filter"
