@@ -100,13 +100,18 @@ export async function renderPdfiumPageDataUrl(
       const bufferPtr = m.FPDFBitmap_GetBuffer(bitmapPtr);
       const stride = m.FPDFBitmap_GetStride(bitmapPtr);
       const heap = new Uint8Array((m.pdfium.wasmExports as any).memory.buffer);
-      const pixels = new Uint8ClampedArray(w * h * 4);
-
-      // @embedpdf/pdfium WASM stores pixels in RGBA byte order (not BGRA),
-      // so copy rows directly without channel swapping.
-      for (let y = 0; y < h; y++) {
-        const srcRow = bufferPtr + y * stride;
-        pixels.set(heap.subarray(srcRow, srcRow + w * 4), y * w * 4);
+      let pixels: Uint8ClampedArray;
+      if (stride === w * 4) {
+        // Zero-copy: Access WASM memory directly without a manual loop
+        const pixelData = heap.subarray(bufferPtr, bufferPtr + w * h * 4);
+        pixels = new Uint8ClampedArray(pixelData);
+      } else {
+        // Fallback row-by-row copy if stride has padding
+        pixels = new Uint8ClampedArray(w * h * 4);
+        for (let y = 0; y < h; y++) {
+          const srcRow = bufferPtr + y * stride;
+          pixels.set(heap.subarray(srcRow, srcRow + w * 4), y * w * 4);
+        }
       }
 
       const canvas = acquireCanvas(w, h);
@@ -115,7 +120,11 @@ export async function renderPdfiumPageDataUrl(
         releaseCanvas(canvas);
         return null;
       }
-      ctx.putImageData(new ImageData(pixels, w, h), 0, 0);
+      ctx.putImageData(
+        new ImageData(pixels as unknown as ImageDataArray, w, h),
+        0,
+        0,
+      );
       let outputUrl: string | null = null;
       if (options.returnBlobUrl) {
         const blob = await new Promise<Blob | null>((resolve) => {
