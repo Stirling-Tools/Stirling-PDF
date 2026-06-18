@@ -13,6 +13,8 @@ import { useSelectionActions } from "@app/tools/pdfTextEditor/v2/hooks/useSelect
 import { useEditorKeyboardShortcuts } from "@app/tools/pdfTextEditor/v2/hooks/useEditorKeyboardShortcuts";
 import { FindBar } from "@app/tools/pdfTextEditor/v2/components/FindBar";
 import { HelpOverlay } from "@app/tools/pdfTextEditor/v2/components/HelpOverlay";
+import { SaveRiskModal } from "@app/tools/pdfTextEditor/v2/components/SaveRiskModal";
+import { PasswordPromptModal } from "@app/tools/pdfTextEditor/v2/components/PasswordPromptModal";
 import { EditorTopBar } from "@app/tools/pdfTextEditor/v2/components/EditorTopBar";
 import { EditorSidebar } from "@app/tools/pdfTextEditor/v2/components/EditorSidebar";
 import { EditorFileInputs } from "@app/tools/pdfTextEditor/v2/components/EditorFileInputs";
@@ -23,6 +25,11 @@ import { DisplayTransform } from "@app/tools/pdfTextEditor/v2/model/DisplayTrans
 import { MergeRunsCommand } from "@app/tools/pdfTextEditor/v2/commands/MergeRunsCommand";
 import { UngroupParagraphCommand } from "@app/tools/pdfTextEditor/v2/commands/UngroupParagraphCommand";
 import { exportToBlob } from "@app/tools/pdfTextEditor/v2/util/exportPdf";
+import {
+  detectSaveRisks,
+  hasSaveRisks,
+  type SaveRisks,
+} from "@app/tools/pdfTextEditor/v2/util/documentRisks";
 import { visiblePageNumber } from "@app/tools/pdfTextEditor/v2/util/dom";
 import type { SelectionState } from "@app/tools/pdfTextEditor/v2/types";
 
@@ -58,8 +65,12 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
 
   // Guards against re-entrant saves while a (synchronous) serialize runs.
   const savingRef = useRef(false);
+  // Pending save-risk warning (signatures/XFA) shown before the actual save.
+  const [saveRisks, setSaveRisks] = useState<SaveRisks | null>(null);
+  // docPtr the user already acknowledged risks for, so we don't re-nag.
+  const ackedRiskDocRef = useRef<number | null>(null);
 
-  const handleSave = useCallback(async () => {
+  const doSave = useCallback(async () => {
     if (!store.document || savingRef.current) return;
     savingRef.current = true;
     store.setError(null);
@@ -78,6 +89,27 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
       savingRef.current = false;
     }
   }, [store]);
+
+  const handleSave = useCallback(async () => {
+    const doc = store.document;
+    if (!doc || savingRef.current) return;
+    // Warn once per document if the save would damage signatures/XFA.
+    if (ackedRiskDocRef.current !== doc.docPtr) {
+      const risks = detectSaveRisks(doc);
+      if (hasSaveRisks(risks)) {
+        setSaveRisks(risks);
+        return;
+      }
+      ackedRiskDocRef.current = doc.docPtr;
+    }
+    await doSave();
+  }, [store, doSave]);
+
+  const handleConfirmSaveRisk = useCallback(() => {
+    if (store.document) ackedRiskDocRef.current = store.document.docPtr;
+    setSaveRisks(null);
+    void doSave();
+  }, [store, doSave]);
 
   const handleInsertImage = useCallback(
     async (file: File) => {
@@ -361,6 +393,19 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
     [load],
   );
 
+  const handleSubmitPassword = useCallback(
+    (password: string) => {
+      const file = store.pendingPasswordFile;
+      if (file) void load(file, password);
+    },
+    [store, load],
+  );
+
+  const handleCancelPassword = useCallback(
+    () => store.clearPasswordPrompt(),
+    [store],
+  );
+
   return (
     <Stack
       gap={0}
@@ -392,6 +437,17 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
         />
       )}
       <HelpOverlay opened={helpOpen} onClose={() => setHelpOpen(false)} />
+      <SaveRiskModal
+        risks={saveRisks}
+        onConfirm={handleConfirmSaveRisk}
+        onCancel={() => setSaveRisks(null)}
+      />
+      <PasswordPromptModal
+        prompt={state.passwordPrompt}
+        loading={state.loading}
+        onSubmit={handleSubmitPassword}
+        onCancel={handleCancelPassword}
+      />
       <EditorSidebar
         state={state}
         selection={selection}

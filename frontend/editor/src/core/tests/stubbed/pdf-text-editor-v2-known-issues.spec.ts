@@ -451,7 +451,8 @@ test.describe("v2 editor - fixed-issue regressions", () => {
   });
 
   // ISSUE: opening an ENCRYPTED PDF fails silently - the editor shows "No
-  // document loaded" with no error message and no password prompt.
+  // document loaded" with no error message and no password prompt. It now
+  // prompts for the password (client-side decrypt) instead of dead-ending.
   test("opening an encrypted PDF surfaces an error or password prompt", async ({
     page,
   }) => {
@@ -463,8 +464,9 @@ test.describe("v2 editor - fixed-issue regressions", () => {
     await page.waitForTimeout(2500);
     const loaded = await page.getByTestId("v2-page-0").count();
     const error = await page.getByTestId("v2-error").count();
+    const prompt = await page.getByTestId("v2-password-modal").count();
     expect(
-      loaded > 0 || error > 0,
+      loaded > 0 || error > 0 || prompt > 0,
       "an encrypted PDF must either open or tell the user why it can't",
     ).toBe(true);
   });

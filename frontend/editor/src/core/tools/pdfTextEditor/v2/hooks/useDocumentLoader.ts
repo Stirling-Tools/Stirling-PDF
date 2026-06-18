@@ -1,6 +1,10 @@
 import { useCallback } from "react";
 import { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDocument";
 import { PdfiumTextReader } from "@app/tools/pdfTextEditor/v2/pdfium/PdfiumTextReader";
+import {
+  FPDF_ERR_PASSWORD,
+  PdfiumOpenError,
+} from "@app/services/pdfiumService";
 import type { EditorStore } from "@app/tools/pdfTextEditor/v2/store/EditorStore";
 import type { PageSnapshot } from "@app/tools/pdfTextEditor/v2/types";
 
@@ -25,7 +29,7 @@ const yieldToBrowser = () =>
  */
 export function useDocumentLoader(store: EditorStore) {
   return useCallback(
-    async (file: File): Promise<void> => {
+    async (file: File, password?: string): Promise<void> => {
       // Each load claims a token. A newer load() bumps it, so this run can
       // detect after every await that it lost the race and bail - never
       // disposing or publishing over the document the newer load installed.
@@ -46,7 +50,7 @@ export function useDocumentLoader(store: EditorStore) {
           total: 0,
         });
         await yieldToBrowser();
-        const doc = await EditorDocument.open(bytes);
+        const doc = await EditorDocument.open(bytes, password);
         if (!store.isCurrentLoad(token)) {
           // A newer load superseded us before we installed our doc - free
           // it ourselves (setDocument never took ownership).
@@ -108,7 +112,17 @@ export function useDocumentLoader(store: EditorStore) {
         });
       } catch (err) {
         if (store.isCurrentLoad(token)) {
-          store.setError(err instanceof Error ? err.message : String(err));
+          // A password-protected PDF isn't a hard error - prompt for the
+          // password and retry rather than dead-ending. `password !== undefined`
+          // means this WAS a retry, so flag it as a wrong-password reprompt.
+          if (
+            err instanceof PdfiumOpenError &&
+            err.code === FPDF_ERR_PASSWORD
+          ) {
+            store.setPasswordRequired(file, password !== undefined);
+          } else {
+            store.setError(err instanceof Error ? err.message : String(err));
+          }
         }
       } finally {
         // Only the winning load owns the loading/progress UI state.

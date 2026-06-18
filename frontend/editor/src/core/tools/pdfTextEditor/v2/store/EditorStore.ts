@@ -51,6 +51,12 @@ export interface EditorViewState {
   /** Detailed progress for the loading state. */
   progress: LoadProgress | null;
   error: string | null;
+  /**
+   * Set when a load hit a password-protected PDF and the UI should prompt.
+   * `retry` is true after a wrong password so the prompt can say so. The
+   * pending File itself is held privately (not view state).
+   */
+  passwordPrompt: { fileName: string; retry: boolean } | null;
   /** Pixel scale at which previews are rendered. */
   renderScale: number;
   /** What clicks on the page area do. */
@@ -75,6 +81,7 @@ const INITIAL: EditorViewState = {
   firstPageRendered: false,
   progress: null,
   error: null,
+  passwordPrompt: null,
   renderScale: 1.5,
   mode: "select",
   groupingMode: "auto",
@@ -101,6 +108,8 @@ export class EditorStore {
   private bakedDirty = false;
   /** Monotonic token so a superseded async load can detect it lost the race. */
   private loadToken = 0;
+  /** File awaiting a password retry; held off the view state (not serialisable). */
+  private _pendingPasswordFile: File | null = null;
 
   constructor() {
     this.history = new HistoryStack();
@@ -146,6 +155,29 @@ export class EditorStore {
 
   setError(error: string | null): void {
     this.patch({ error, loading: false });
+  }
+
+  /**
+   * A load needs a password. Stashes the File so the UI can retry it with the
+   * user's password, and shows the prompt instead of a hard error.
+   */
+  setPasswordRequired(file: File, retry: boolean): void {
+    this._pendingPasswordFile = file;
+    this.patch({
+      passwordPrompt: { fileName: file.name, retry },
+      loading: false,
+      error: null,
+    });
+  }
+
+  /** Dismiss the password prompt (cancel or success) and drop the pending file. */
+  clearPasswordPrompt(): void {
+    this._pendingPasswordFile = null;
+    if (this.state.passwordPrompt) this.patch({ passwordPrompt: null });
+  }
+
+  get pendingPasswordFile(): File | null {
+    return this._pendingPasswordFile;
   }
 
   setRenderScale(scale: number): void {
@@ -234,6 +266,7 @@ export class EditorStore {
     this.savedUndoDepth = 0;
     this.bakedDirty = false;
     this.selection.clear();
+    this._pendingPasswordFile = null;
     this.patch({
       hasDocument: true,
       pageCount: doc.pageCount,
@@ -242,6 +275,7 @@ export class EditorStore {
       loading: false,
       firstPageRendered: false,
       error: null,
+      passwordPrompt: null,
     });
   }
 
@@ -252,6 +286,7 @@ export class EditorStore {
     this.savedUndoDepth = 0;
     this.bakedDirty = false;
     this.selection.clear();
+    this._pendingPasswordFile = null;
     this.state = INITIAL;
     this.notify();
   }
