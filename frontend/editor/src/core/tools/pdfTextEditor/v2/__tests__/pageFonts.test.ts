@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { analyzePageFonts } from "@app/tools/pdfTextEditor/v2/util/pageFonts";
+import {
+  analyzePageFonts,
+  missingAlnumFromCmap,
+} from "@app/tools/pdfTextEditor/v2/util/pageFonts";
 import type { PageSnapshot } from "@app/tools/pdfTextEditor/v2/types";
 
 function mkRun(id: string, fontId: string, fontSubset = false) {
@@ -76,5 +79,53 @@ describe("analyzePageFonts", () => {
 
   it("returns nothing when there are no runs", () => {
     expect(analyzePageFonts([mkPage(0, [])])).toEqual([]);
+  });
+
+  it("reports standard fonts as full a-zA-Z0-9 coverage (no cmap read needed)", () => {
+    const fonts = analyzePageFonts([
+      mkPage(0, [mkRun("a", "base14:Helvetica")]),
+    ]);
+    expect(fonts[0].coverage).toEqual({ known: true, missing: [] });
+  });
+
+  it("reports coverage unknown for an embedded font with no primed cmap", () => {
+    const fonts = analyzePageFonts([
+      mkPage(0, [mkRun("a", "pdf:777777:LMRoman12", false)]),
+    ]);
+    expect(fonts[0].coverage.known).toBe(false);
+  });
+});
+
+describe("missingAlnumFromCmap", () => {
+  function cmapWith(...codepoints: number[]): Map<number, number> {
+    const m = new Map<number, number>();
+    for (const cp of codepoints) m.set(cp, cp + 1); // glyphId is arbitrary
+    return m;
+  }
+  const ALL = (() => {
+    const cps: number[] = [];
+    for (let c = 0x30; c <= 0x39; c++) cps.push(c);
+    for (let c = 0x41; c <= 0x5a; c++) cps.push(c);
+    for (let c = 0x61; c <= 0x7a; c++) cps.push(c);
+    return cps;
+  })();
+
+  it("returns [] when every a-zA-Z0-9 glyph is present", () => {
+    expect(missingAlnumFromCmap(cmapWith(...ALL))).toEqual([]);
+  });
+
+  it("lists exactly the absent alphanumerics", () => {
+    const present = ALL.filter((c) => c !== 0x71 && c !== 0x57 && c !== 0x37);
+    expect(missingAlnumFromCmap(cmapWith(...present)).sort()).toEqual(
+      ["7", "W", "q"].sort(),
+    );
+  });
+
+  it("reports all 62 missing for an empty cmap", () => {
+    expect(missingAlnumFromCmap(new Map()).length).toBe(62);
+  });
+
+  it("ignores non-alphanumeric glyphs in the cmap", () => {
+    expect(missingAlnumFromCmap(cmapWith(0x21, 0x2e, 0x2c)).length).toBe(62);
   });
 });

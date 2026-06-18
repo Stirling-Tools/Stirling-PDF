@@ -5,6 +5,7 @@ import type { Page } from "@app/tools/pdfTextEditor/v2/model/Page";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDocument";
 import { LineGrouper } from "@app/tools/pdfTextEditor/v2/pdfium/LineGrouper";
 import { ParagraphGrouper } from "@app/tools/pdfTextEditor/v2/pdfium/ParagraphGrouper";
+import { primeFontGlyphMap } from "@app/tools/pdfTextEditor/v2/charcode/CmapResolver";
 import type {
   Affine,
   GroupingMode,
@@ -369,6 +370,12 @@ function readTextRun(
 
     const fontPtr = m.FPDFTextObj_GetFont(objPtr);
     const { family, subset } = readFontFamily(m, fontPtr);
+    // Prime this font's glyph cmap here, in the loader's SERIALIZED text-read
+    // phase (before the page rasterizes). Reading embedded font data while
+    // PDFium renders corrupts the module, so the fonts panel must never do it
+    // at render time - it reads the cache primed here instead. Cached per font,
+    // so repeats across runs are free.
+    if (fontPtr) primeFontGlyphMap(fontPtr, m);
     // Treat the PDFium font handle pointer as a unique id within the doc.
     const fontId = fontPtr ? `pdf:${fontPtr}` : `pdf:unknown-${index}`;
 

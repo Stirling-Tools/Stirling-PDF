@@ -90,6 +90,33 @@ function getOrBuildCmap(
   return built;
 }
 
+/**
+ * Build + cache a font's cmap. Call this ONLY from the document loader's
+ * (serialized) text-read phase - reading embedded font data via PDFium while
+ * it concurrently rasterizes a page corrupts the WASM module. Priming during
+ * load (before raster) keeps the read safe and lets the fonts panel read the
+ * result with zero render-time WASM. No-op for fonts already cached.
+ */
+export function primeFontGlyphMap(
+  font: number,
+  module: import("@embedpdf/pdfium").WrappedPdfiumModule,
+): void {
+  if (!font) return;
+  getOrBuildCmap(font, { module, pagePtr: 0, docPtr: 0 });
+}
+
+/**
+ * Read a font's cached Unicode→glyphId cmap WITHOUT touching PDFium. Safe to
+ * call during render. Returns the cmap if {@link primeFontGlyphMap} cached one,
+ * or null if the font wasn't primed or has no parseable cmap (Type3 /
+ * custom-encoded Type1) - both mean "coverage unknown" to the caller.
+ */
+export function getCachedFontGlyphMap(
+  font: number,
+): Map<number, number> | null {
+  return cmapCache.get(font) ?? null;
+}
+
 function buildCmap(
   font: number,
   ctx: ResolverContext,

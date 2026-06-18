@@ -31,6 +31,7 @@ import type {
 import {
   analyzePageFonts,
   type FontStatusV2,
+  type PageFont,
 } from "@app/tools/pdfTextEditor/v2/util/pageFonts";
 
 /**
@@ -129,85 +130,113 @@ const FONT_STATUS_META: Record<
  * ones that can drop a brand-new character to a standard fallback font.
  */
 function FontsSection({ pages }: { pages: PageSnapshot[] }) {
+  // Pure: the font list AND coverage both come from snapshot data + the cmap
+  // cache the loader primed during its serialized read. No WASM here, so it's
+  // safe to run on every render.
   const fonts = analyzePageFonts(pages);
   if (fonts.length === 0) return null;
-  const subsetCount = fonts.filter((f) => f.status === "subset").length;
-  const embeddedCount = fonts.filter((f) => f.status === "embedded").length;
   return (
     <Stack gap="xs" data-testid="v2-fonts-panel">
       <Group justify="space-between" wrap="nowrap" gap={4}>
         <SectionLabel>Fonts</SectionLabel>
         <FontsHelp />
       </Group>
-      <FontCompatibilitySummary
-        subsetCount={subsetCount}
-        embeddedCount={embeddedCount}
-      />
-      {fonts.map((f) => {
-        const meta = FONT_STATUS_META[f.status];
-        return (
-          <Group key={f.key} justify="space-between" wrap="nowrap" gap="xs">
-            <Text
-              size="xs"
-              style={{
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-              title={f.name}
-            >
-              {f.name}
+      <FontCompatibilitySummary fonts={fonts} />
+      {fonts.map((f) => (
+        <FontRow key={f.key} font={f} />
+      ))}
+    </Stack>
+  );
+}
+
+/** Compact list of missing a-zA-Z0-9, e.g. "q W 7" (capped for width). */
+function formatMissing(missing: string[]): string {
+  const shown = missing.slice(0, 12).join(" ");
+  return missing.length > 12 ? `${shown} +${missing.length - 12}` : shown;
+}
+
+/**
+ * One font row: name + type badge, plus - when the font's glyphs were read -
+ * a concrete a-zA-Z0-9 coverage line ("all letters & numbers" or the specific
+ * missing ones). Fonts whose coverage is unknown (Type3 etc.) show just the
+ * type badge.
+ */
+function FontRow({ font }: { font: PageFont }) {
+  const meta = FONT_STATUS_META[font.status];
+  const { known, missing } = font.coverage;
+  const hasGap = known && missing.length > 0;
+  return (
+    <Stack gap={2}>
+      <Group justify="space-between" wrap="nowrap" gap="xs">
+        <Text
+          size="xs"
+          style={{
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+          title={font.name}
+        >
+          {font.name}
+        </Text>
+        <Tooltip label={meta.hint} multiline w={230} withArrow position="left">
+          <Badge
+            size="xs"
+            color={meta.color}
+            variant="light"
+            style={{ cursor: "help", flexShrink: 0 }}
+            data-testid={`v2-font-${font.status}`}
+          >
+            {meta.label}
+          </Badge>
+        </Tooltip>
+      </Group>
+      {known &&
+        (hasGap ? (
+          <Tooltip
+            label={`This font has no glyph for: ${missing.join(" ")}. Typing one uses a standard fallback font.`}
+            multiline
+            w={230}
+            withArrow
+            position="left"
+          >
+            <Text size="xs" c="yellow.8" data-testid="v2-font-missing">
+              Missing: {formatMissing(missing)}
             </Text>
-            <Tooltip
-              label={meta.hint}
-              multiline
-              w={230}
-              withArrow
-              position="left"
-            >
-              <Badge
-                size="xs"
-                color={meta.color}
-                variant="light"
-                style={{ cursor: "help", flexShrink: 0 }}
-                data-testid={`v2-font-${f.status}`}
-              >
-                {meta.label}
-              </Badge>
-            </Tooltip>
-          </Group>
-        );
-      })}
+          </Tooltip>
+        ) : (
+          <Text size="xs" c="dimmed" data-testid="v2-font-full">
+            All letters &amp; numbers present
+          </Text>
+        ))}
     </Stack>
   );
 }
 
 /**
  * Top-level editor-compatibility summary for the Fonts section. Every font
- * edits its EXISTING text perfectly; the only nuance is what happens to a
- * BRAND-NEW character the user types. Three honest states:
- *  - subset present  -> yellow: new (unused) characters fall back to a
- *    standard font.
- *  - embedded present (no subset) -> blue info: existing text is perfect, but
- *    an embedded font can still lack a specific new glyph, which falls back.
- *  - all standard     -> green: the full standard character set is available,
- *    so even new characters render in the original font.
+ * edits its EXISTING text perfectly; the nuance is what happens to a BRAND-NEW
+ * character. Coverage-driven, preferring the CONCRETE glyph probe over the
+ * font-type heuristic:
+ *  - any font with confirmed-missing a-zA-Z0-9 -> yellow (how many).
+ *  - every font confirmed to have the full alphabet+digits -> green.
+ *  - otherwise (some coverage unknown, e.g. Type3) -> blue info.
  */
-function FontCompatibilitySummary({
-  subsetCount,
-  embeddedCount,
-}: {
-  subsetCount: number;
-  embeddedCount: number;
-}) {
-  const tone = subsetCount > 0 ? "warn" : embeddedCount > 0 ? "info" : "ok";
+function FontCompatibilitySummary({ fonts }: { fonts: PageFont[] }) {
+  const withGaps = fonts.filter(
+    (f) => f.coverage.known && f.coverage.missing.length > 0,
+  );
+  const allConfirmedFull = fonts.every(
+    (f) => f.coverage.known && f.coverage.missing.length === 0,
+  );
+  const tone = withGaps.length > 0 ? "warn" : allConfirmedFull ? "ok" : "info";
   const meta = {
     ok: {
       bg: "var(--mantine-color-green-light)",
       fg: "green.8",
       iconColor: "var(--mantine-color-green-text)",
       Icon: CheckCircleIcon,
-      text: "Standard fonts only - new characters render in the original font.",
+      text: "Every font includes the full alphabet and digits - type freely.",
     },
     info: {
       bg: "var(--mantine-color-blue-light)",
@@ -221,7 +250,7 @@ function FontCompatibilitySummary({
       fg: "yellow.8",
       iconColor: "var(--mantine-color-yellow-text)",
       Icon: WarningIcon,
-      text: `${subsetCount} subset font${subsetCount === 1 ? "" : "s"} - a new character the document never used will usually fall back to a standard font.`,
+      text: `${withGaps.length} font${withGaps.length === 1 ? "" : "s"} missing some letters or numbers - typing those uses a standard fallback font.`,
     },
   }[tone];
   const Icon = meta.Icon;

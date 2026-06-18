@@ -1,4 +1,5 @@
 import type { PageSnapshot } from "@app/tools/pdfTextEditor/v2/types";
+import { getCachedFontGlyphMap } from "@app/tools/pdfTextEditor/v2/charcode/CmapResolver";
 
 /**
  * Editability status of a font as the v2 editor can determine it purely
@@ -26,6 +27,22 @@ import type { PageSnapshot } from "@app/tools/pdfTextEditor/v2/types";
  */
 export type FontStatusV2 = "standard" | "embedded" | "subset";
 
+/**
+ * Whether the font has real glyphs for the basic alphanumerics (a-z A-Z 0-9).
+ * Read CLIENT-SIDE from the embedded font's cmap, which the document loader
+ * primes into a cache during its serialized text-read phase (reading font data
+ * at render time corrupts PDFium - see CmapResolver.primeFontGlyphMap).
+ *  - `known: true`  -> the cmap was available; `missing` lists the
+ *    alphanumerics with no glyph (empty = full coverage).
+ *  - `known: false` -> coverage couldn't be read (font not primed, or a Type3 /
+ *    custom-encoded Type1 font with no parseable cmap).
+ * Standard (base-14) fonts are always `known` with full coverage.
+ */
+export interface GlyphCoverage {
+  known: boolean;
+  missing: string[];
+}
+
 export interface PageFont {
   /** Stable de-dupe key (display name + status). */
   key: string;
@@ -34,6 +51,46 @@ export interface PageFont {
   status: FontStatusV2;
   /** 1-based page numbers this font appears on (across loaded pages). */
   pages: number[];
+  /** Basic-alphanumeric glyph coverage (from the loader-primed cmap cache). */
+  coverage: GlyphCoverage;
+}
+
+/** Code points for a-z, A-Z, 0-9 - the "can I type a letter/number?" probe. */
+const ALNUM_CODEPOINTS: readonly number[] = (() => {
+  const out: number[] = [];
+  for (let c = 0x30; c <= 0x39; c++) out.push(c); // 0-9
+  for (let c = 0x41; c <= 0x5a; c++) out.push(c); // A-Z
+  for (let c = 0x61; c <= 0x7a; c++) out.push(c); // a-z
+  return out;
+})();
+
+/**
+ * Pure: which of a-z A-Z 0-9 are absent from a Unicode→glyphId cmap. Split out
+ * so the (font-free) logic is unit-testable without a real PDFium font.
+ */
+export function missingAlnumFromCmap(cmap: Map<number, number>): string[] {
+  const out: string[] = [];
+  for (const cp of ALNUM_CODEPOINTS)
+    if (!cmap.has(cp)) out.push(String.fromCodePoint(cp));
+  return out;
+}
+
+/** Parse the live PDFium font handle out of a `pdf:<ptr>:<family>` fontId. */
+function fontHandleOf(fontId: string): number {
+  if (!fontId.startsWith("pdf:")) return 0;
+  const n = Number(fontId.split(":")[1]);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
+
+/** a-zA-Z0-9 coverage for a font, from the loader-primed cache (no WASM). */
+function coverageFor(fontId: string, status: FontStatusV2): GlyphCoverage {
+  // Base-14 fonts carry the whole standard set - always full, no cmap needed.
+  if (status === "standard") return { known: true, missing: [] };
+  const handle = fontHandleOf(fontId);
+  if (!handle) return { known: false, missing: [] };
+  const cmap = getCachedFontGlyphMap(handle);
+  if (!cmap || cmap.size === 0) return { known: false, missing: [] };
+  return { known: true, missing: missingAlnumFromCmap(cmap) };
 }
 
 const STANDARD_14 = [
@@ -92,7 +149,13 @@ export function analyzePageFonts(pages: PageSnapshot[]): PageFont[] {
       if (existing) {
         if (!existing.pages.includes(pageNo)) existing.pages.push(pageNo);
       } else {
-        map.set(key, { key, name, status, pages: [pageNo] });
+        map.set(key, {
+          key,
+          name,
+          status,
+          pages: [pageNo],
+          coverage: coverageFor(run.fontId, status),
+        });
       }
     }
   }
