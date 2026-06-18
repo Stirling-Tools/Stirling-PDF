@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -66,7 +65,7 @@ public class ReactRoutingController {
         }
 
         // Check for external index.html first (customFiles/static/)
-        Path externalIndexPath = Paths.get(InstallationPathConfig.getStaticPath(), "index.html");
+        Path externalIndexPath = Path.of(InstallationPathConfig.getStaticPath(), "index.html");
         log.debug("Checking for custom index.html at: {}", externalIndexPath);
         if (Files.exists(externalIndexPath) && Files.isReadable(externalIndexPath)) {
             log.info("Using custom index.html from: {}", externalIndexPath);
@@ -136,7 +135,7 @@ public class ReactRoutingController {
 
     private Resource getIndexHtmlResource() {
         // Check external location first
-        Path externalIndexPath = Paths.get(InstallationPathConfig.getStaticPath(), "index.html");
+        Path externalIndexPath = Path.of(InstallationPathConfig.getStaticPath(), "index.html");
         if (Files.exists(externalIndexPath) && Files.isReadable(externalIndexPath)) {
             return new FileSystemResource(externalIndexPath.toFile());
         }

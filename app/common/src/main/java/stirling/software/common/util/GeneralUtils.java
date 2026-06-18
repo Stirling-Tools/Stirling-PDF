@@ -255,7 +255,7 @@ public class GeneralUtils {
         String pattern = locationPattern;
         if (pattern.startsWith("file:")) {
             String rawPath = pattern.substring(5).replace("\\*", "").replace("/*", "");
-            Path normalizePath = Paths.get(rawPath).normalize();
+            Path normalizePath = Path.of(rawPath).normalize();
             pattern = "file:" + normalizePath.toString().replace("\\", "/") + "/*";
         }
         return ResourcePatternUtils.getResourcePatternResolver(resourceLoader)
@@ -837,7 +837,7 @@ public class GeneralUtils {
     }
 
     public boolean createDir(String path) {
-        Path folder = Paths.get(path);
+        Path folder = Path.of(path);
         if (!Files.exists(folder)) {
             try {
                 Files.createDirectories(folder);
@@ -867,7 +867,7 @@ public class GeneralUtils {
 
     public void saveKeyToSettings(String key, Object newValue) throws IOException {
         String[] keyArray = key.split("\\.");
-        Path settingsPath = Paths.get(InstallationPathConfig.getSettingsPath());
+        Path settingsPath = Path.of(InstallationPathConfig.getSettingsPath());
         YamlHelper settingsYaml = new YamlHelper(settingsPath);
         settingsYaml.updateValue(Arrays.asList(keyArray), newValue);
         settingsYaml.saveOverride(settingsPath);
@@ -888,7 +888,7 @@ public class GeneralUtils {
             return;
         }
 
-        Path settingsPath = Paths.get(InstallationPathConfig.getSettingsPath());
+        Path settingsPath = Path.of(InstallationPathConfig.getSettingsPath());
         YamlHelper settingsYaml = new YamlHelper(settingsPath);
 
         // Apply all updates to the same YamlHelper instance
@@ -974,11 +974,11 @@ public class GeneralUtils {
      */
     public void extractPipeline() throws IOException {
         Path pipelineDir =
-                Paths.get(InstallationPathConfig.getPipelinePath(), DEFAULT_WEBUI_CONFIGS_DIR);
+                Path.of(InstallationPathConfig.getPipelinePath(), DEFAULT_WEBUI_CONFIGS_DIR);
         Files.createDirectories(pipelineDir);
 
         for (String name : DEFAULT_VALID_PIPELINE) {
-            if (!Paths.get(name).getFileName().toString().equals(name)) {
+            if (!Path.of(name).getFileName().toString().equals(name)) {
                 log.error("Invalid pipeline file name: {}", name);
                 throw new IllegalArgumentException("Invalid pipeline file name: " + name);
             }
@@ -1014,7 +1014,7 @@ public class GeneralUtils {
             throw new IllegalArgumentException(
                     "scriptName must not contain path traversal characters");
         }
-        if (!Paths.get(scriptName).getFileName().toString().equals(scriptName)) {
+        if (!Path.of(scriptName).getFileName().toString().equals(scriptName)) {
             throw new IllegalArgumentException(
                     "scriptName must not contain path traversal characters");
         }
@@ -1024,7 +1024,7 @@ public class GeneralUtils {
                     "scriptName must be either 'png_to_webp.py' or 'split_photos.py'");
         }
 
-        Path scriptsDir = Paths.get(InstallationPathConfig.getScriptsPath(), PYTHON_SCRIPTS_DIR);
+        Path scriptsDir = Path.of(InstallationPathConfig.getScriptsPath(), PYTHON_SCRIPTS_DIR);
         Files.createDirectories(scriptsDir);
 
         Path target = scriptsDir.resolve(scriptName);

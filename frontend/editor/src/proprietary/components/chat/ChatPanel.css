@@ -1,6 +1,10 @@
 .chat-panel {
   display: flex;
   flex-direction: column;
+  /* Clip + allow shrink so tall welcome content squeezes the scrollable
+     quick-actions block instead of pushing the composer off-screen. */
+  overflow: hidden;
+  min-height: 0;
   /* Match the right-rail toolbar background so dark-mode doesn't show a
      lighter card behind the chat, and so the agent-card → pill morph
      doesn't flash a different colour mid-transition. */
@@ -35,7 +39,6 @@
   transition:
     background 120ms ease-out,
     border-color 120ms ease-out;
-  /* Pair with .agent-button to morph between the card and the pill. */
   view-transition-name: stirling-agent;
 }
 
@@ -62,6 +65,36 @@
   color: var(--mantine-color-blue-filled);
   flex-shrink: 0;
   position: relative;
+}
+
+/* Running / in-progress status dot, anchored to the agent pill icon. */
+.agent-status-dot {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--mantine-color-blue-5);
+  border: 1.5px solid var(--mantine-color-body);
+  animation: agent-dot-pulse 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes agent-dot-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agent-status-dot {
+    animation: none;
+  }
 }
 
 .chat-panel__agent-pill--loading {
@@ -136,6 +169,16 @@
 .chat-panel-messages {
   flex: 1;
   min-height: 0;
+  /* Establish a size container so the message list's bottom padding can be
+     expressed relative to the scroll viewport height (cqh) below. */
+  container-type: size;
+}
+
+/* Extra room beneath the last message so that, scrolled to the bottom, the most
+   recent turn rests near the vertical centre of the conversation rather than
+   jammed against the composer. cqh is a fraction of the scroll viewport height. */
+.chat-panel-messages__content {
+  padding-bottom: 15cqh;
 }
 
 /* Quick action cards above the input. */
@@ -144,7 +187,12 @@
   flex-direction: column;
   gap: 0.5rem;
   padding: 0.75rem 0.75rem 0.25rem;
-  flex-shrink: 0;
+  /* When the panel is short, this block (file pills + actions) shrinks and
+     scrolls internally instead of pushing the composer off-screen — the input
+     must always stay pinned and visible at the bottom. */
+  flex-shrink: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .chat-panel__quick-actions-label {
@@ -253,12 +301,14 @@
   flex-shrink: 0;
 }
 
-/* Input area: textarea on top row, action icons on bottom row. */
+/* Input area: send button on the left, textarea fills the rest — one compact
+   row so the composer stays short when the welcome screen is fully populated. */
 .chat-panel-input {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
   gap: 0.5rem;
-  padding: 0.85rem 1rem 0.75rem;
+  padding: 0.7rem 0.8rem;
   margin: 0.75rem 0.75rem 1rem;
   border: none;
   border-radius: 1.1rem;
@@ -280,7 +330,7 @@
 .chat-panel-input__field,
 .chat-panel-input__field:focus,
 .chat-panel-input__field:focus-visible {
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   padding: 0.15rem 0 !important;
   background: transparent !important;
   border: none !important;
@@ -288,10 +338,49 @@
   box-shadow: none !important;
 }
 
-.chat-panel-input__actions {
+/* Textarea grows to fill the row; the send button keeps its size on the left. */
+.chat-panel-input__textarea {
+  flex: 1;
+  min-width: 0;
+}
+
+.chat-panel-input__send {
+  flex-shrink: 0;
+}
+
+/* AI disclaimer. Two presentations share one base:
+   - --banner: a soft grey card below the header on the welcome screen.
+   - --inline: a compact line pinned above the composer once a chat is underway. */
+.chat-panel-disclaimer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 0.45rem;
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+.chat-panel-disclaimer__icon {
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+/* Welcome-screen banner: a little grey box just under the header. */
+.chat-panel-disclaimer--banner {
+  margin: 0.35rem 0.75rem 0;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.65rem;
+  background: var(--mantine-color-gray-light);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+/* Compact line above the composer once the conversation has started. */
+.chat-panel-disclaimer--inline {
+  justify-content: center;
+  padding: 0.1rem 1.25rem 0;
+  font-size: 0.7rem;
+  line-height: 1.3;
 }
 
 /* Message layout */
@@ -396,109 +485,88 @@
   margin-bottom: 0;
 }
 
-/* ─── Progress step log ─────────────────────────────────────────────────── */
+/* ─── Live progress indicator ──────────────────────────────────────────── */
 
 /*
- * Shown while the AI is working. Each step slides in from below as events
- * arrive; the active (last) step is full-opacity with a pulsing icon, and
- * earlier completed steps are dimmed. Only the most-recent N steps are
- * rendered — there is no scrollable list.
+ * Shown while the AI works — one step at a time, no growing list. Our animated
+ * logo sits on the left, the current step's label shimmers in the middle, and
+ * the phase-specific icon (what it's doing right now) sits on the right.
  */
-
-.chat-progress-log {
+.chat-progress-live {
   display: flex;
-  flex-direction: column;
-  padding: 0.15rem 0.5rem 0.35rem;
-  /* No gap — the connector line div provides the inter-step spacing. */
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.2rem 0.5rem 0.35rem;
 }
 
-.chat-progress-step {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.65rem;
-  /*
-   * Use color rather than opacity for past-step dimming so the connector
-   * line (a sibling element inside __left, not a text node) is NOT affected
-   * and stays clearly visible. currentColor flows into SVG icon fills;
-   * color inherits into the label span automatically.
-   */
-  color: var(--text-muted);
-  transition: color 250ms ease-out;
-  animation: chat-step-enter 300ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-/*
- * Active step: white text on dark mode so currentColor feeds directly into
- * the StirlingLogoAnimated SVG paths and the label at the same time.
- * Light-mode falls back to the default text colour so it's not invisible.
- */
-/* Active step: icon and label are coloured independently so the logo can be
-   blue while the text uses the normal text colour. */
-.chat-progress-step--active .chat-progress-step__icon {
+.chat-progress-live__logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
   color: var(--mantine-color-blue-filled);
 }
 
-.chat-progress-step--active .chat-progress-step__label {
-  color: var(--mantine-color-text);
+/* Shimmer: a soft highlight sweeps left-to-right across the muted label. */
+.chat-progress-live__label {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  font-size: 0.875rem;
+  line-height: 1.35;
+  background: linear-gradient(
+    90deg,
+    var(--text-muted) 0%,
+    var(--text-muted) 40%,
+    var(--mantine-color-text) 50%,
+    var(--text-muted) 60%,
+    var(--text-muted) 100%
+  );
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: chat-shimmer 1.8s linear infinite;
 }
 
-[data-mantine-color-scheme="dark"]
-  .chat-progress-step--active
-  .chat-progress-step__label {
-  color: #ffffff;
-}
-
-.chat-progress-step__left {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  flex-shrink: 0;
-  width: 20px;
-}
-
-/* Icon cell — fixed height so the connector line aligns cleanly. */
-.chat-progress-step__icon {
-  width: 20px;
-  height: 24px;
-  display: flex;
+.chat-progress-live__phase-icon {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
   overflow: hidden;
-  flex-shrink: 0;
-  /* Inherits color from .chat-progress-step so currentColor flows into icons. */
+  color: var(--text-muted);
+  animation: chat-phase-pulse 1.6s ease-in-out infinite;
 }
 
-/*
- * Connector line between steps. Not a child of the label so it is unaffected
- * by the step's color; it sits on its own and reads clearly against the
- * toolbar background.
- */
-.chat-progress-step__line {
-  width: 1px;
-  height: 18px;
-  background: var(--border-subtle);
-  flex-shrink: 0;
-  margin-top: 2px;
+@keyframes chat-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
 }
 
-/* Active step label — slightly larger, inherits the active color. */
-.chat-progress-step__label {
-  font-size: 0.875rem;
-  padding-top: 3px;
-  line-height: 1.35;
-}
-
-/* Past step labels — a touch smaller so the active row reads as the primary. */
-.chat-progress-step:not(.chat-progress-step--active)
-  .chat-progress-step__label {
-  font-size: 0.8rem;
-  padding-top: 4px;
+@keyframes chat-phase-pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 /*
  * Wrapper that scales a registry tool icon (LocalIcon, typically 1.5rem/24px)
- * down to fit the 20px icon column. Transform does not affect layout, so the
- * parent overflow:hidden clips the un-scaled footprint cleanly.
+ * down to fit the compact icon slots used by the live indicator and the
+ * completed tool list. Transform does not affect layout, so the parent's
+ * overflow:hidden clips the un-scaled footprint cleanly.
  */
 .chat-step-icon-scaled {
   display: inline-flex;
@@ -509,22 +577,12 @@
   flex-shrink: 0;
 }
 
-/* Entry: steps slide up from a few pixels below their final position. */
-@keyframes chat-step-enter {
-  from {
-    transform: translateY(7px);
-  }
-  to {
-    transform: translateY(0);
-  }
-}
-
-/* ─── Completed progress log dropdown ──────────────────────────────────── */
+/* ─── Completed tool breakdown ─────────────────────────────────────────── */
 
 /*
  * Shown above each completed assistant turn. The toggle displays a small
- * "Ran for X seconds" label; expanding reveals the full ordered step list
- * for that turn in a compact, read-only format.
+ * "Ran for X seconds" label; expanding reveals a numbered list of just the
+ * tools that ran. Turns with no tools show the duration as a plain label.
  */
 
 .chat-completed-log {
@@ -544,31 +602,56 @@
   background: var(--mantine-color-default-hover);
 }
 
-.chat-completed-log__steps {
+.chat-completed-log__static {
+  display: inline-block;
+  padding: 0.1rem;
+}
+
+/* Numbered list of the tools that ran — icon + name, no connector lines. */
+.chat-completed-log__tools {
+  list-style: none;
+  margin: 0.25rem 0 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  padding: 0.35rem 0.4rem 0.2rem 0.25rem;
-  margin-top: 0.2rem;
+  gap: 0.1rem;
 }
 
-/* In the completed log every step is a past step — no active highlighting,
-   no entry animation (the content is static once opened). */
-.chat-completed-log__steps .chat-progress-step {
-  animation: none;
+.chat-completed-log__tool {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.2rem 0.25rem;
+  font-size: 0.8rem;
+  color: var(--mantine-color-text);
 }
 
-/* Tighten the icon and connector dimensions for the denser historical view. */
-.chat-completed-log__steps .chat-progress-step__icon {
-  height: 20px;
+.chat-completed-log__tool-num {
+  flex-shrink: 0;
+  min-width: 1.1rem;
+  text-align: right;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
 }
 
-.chat-completed-log__steps .chat-progress-step__line {
-  height: 14px;
+.chat-completed-log__tool-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  overflow: hidden;
+  color: var(--text-muted);
 }
 
-.chat-completed-log__steps .chat-progress-step__label {
-  font-size: 0.775rem;
-  padding-top: 2px;
+.chat-completed-log__tool-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Legacy thinking indicator (kept in case any other code references it). */
@@ -581,9 +664,15 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .chat-progress-step {
+  .chat-progress-live__label {
     animation: none;
-    transition: none;
+    background: none;
+    -webkit-text-fill-color: var(--text-muted);
+    color: var(--text-muted);
+  }
+  .chat-progress-live__phase-icon {
+    animation: none;
+    opacity: 0.85;
   }
 }
 
