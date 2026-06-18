@@ -31,6 +31,7 @@ public class SaasUserAccountService {
     private final SupabaseUserService supabaseUserService;
     private final SaasUserExtensionService saasUserExtensionService;
     private final SaasTeamExtensionService saasTeamExtensionService;
+    private final SaasTeamService saasTeamService;
 
     /**
      * Resolve a local {@link User} from a Supabase UUID string. Throws if the ID format is invalid
@@ -173,6 +174,9 @@ public class SaasUserAccountService {
                 user.setUsername(email);
             }
             user = userService.saveUser(user);
+            // Give the upgraded user their own team rather than the shared Default team.
+            saasTeamService.ensurePersonalTeam(user);
+            user = userService.findBySupabaseId(supabaseUser.getId()).orElse(user);
             log.info(
                     "Upgraded anonymous user {} to {} ({})",
                     user.getId(),
