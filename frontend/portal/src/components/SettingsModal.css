@@ -1,0 +1,255 @@
+/* The settings overlay hosts a full-bleed two-pane SettingsShell, so the
+   modal frame contributes no padding of its own and lets the shell scroll. */
+.portal-settings .sui-modal__body {
+  padding: 0;
+  overflow: hidden;
+}
+
+.portal-settings__section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Footer note pushes the action buttons to the right. */
+.portal-settings__footer-note {
+  margin-right: auto;
+  align-self: center;
+  font-size: 0.75rem;
+  color: var(--color-text-4);
+}
+
+/* ── Profile identity row ─────────────────────────────────────────────── */
+.portal-settings__identity {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.875rem;
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+}
+
+.portal-settings__identity-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.portal-settings__identity-name {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+
+.portal-settings__identity-email {
+  font-size: 0.8125rem;
+  color: var(--color-text-4);
+}
+
+/* ── Preference groups ────────────────────────────────────────────────── */
+.portal-settings__group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.portal-settings__group + .portal-settings__group {
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border-light);
+}
+
+.portal-settings__group-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.portal-settings__group-title {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+
+.portal-settings__group-sub {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--color-text-4);
+}
+
+/* ── Theme picker ─────────────────────────────────────────────────────── */
+.portal-settings__theme {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.625rem;
+}
+
+.portal-settings__theme-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  text-align: left;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition:
+    border-color var(--motion-fast),
+    background var(--motion-fast),
+    box-shadow var(--motion-fast);
+}
+
+.portal-settings__theme-card:hover {
+  border-color: var(--color-border-strong, var(--color-border));
+  background: var(--color-bg-hover);
+}
+
+.portal-settings__theme-card.is-active {
+  border-color: var(--color-blue);
+  box-shadow: 0 0 0 1px var(--color-blue);
+}
+
+.portal-settings__theme-swatch {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  flex: 0 0 auto;
+}
+
+.portal-settings__theme-swatch span {
+  border-radius: 2px;
+}
+
+.portal-settings__theme-swatch span:first-child {
+  flex: 0 0 35%;
+}
+
+.portal-settings__theme-swatch span:last-child {
+  flex: 1 1 auto;
+}
+
+.portal-settings__theme-swatch--light {
+  background: #ffffff;
+}
+.portal-settings__theme-swatch--light span:first-child {
+  background: #cbd5e1;
+}
+.portal-settings__theme-swatch--light span:last-child {
+  background: #eef2f7;
+}
+
+.portal-settings__theme-swatch--dark {
+  background: #0f172a;
+}
+.portal-settings__theme-swatch--dark span:first-child {
+  background: #475569;
+}
+.portal-settings__theme-swatch--dark span:last-child {
+  background: #1e293b;
+}
+
+.portal-settings__theme-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.portal-settings__theme-text strong {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+
+.portal-settings__theme-text span {
+  font-size: 0.75rem;
+  color: var(--color-text-4);
+}
+
+/* ── Notification rows ────────────────────────────────────────────────── */
+.portal-settings__notifs {
+  display: flex;
+  flex-direction: column;
+}
+
+.portal-settings__notif-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0;
+}
+
+.portal-settings__notif-row + .portal-settings__notif-row {
+  border-top: 1px solid var(--color-border-light);
+}
+
+.portal-settings__notif-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.portal-settings__notif-text strong {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text-1);
+}
+
+.portal-settings__notif-text span {
+  font-size: 0.75rem;
+  color: var(--color-text-4);
+}
+
+/* Label paired with a gating badge (e.g. "SCIM provisioning" + Enterprise). */
+.portal-settings__row-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* ── Workspace plan card ──────────────────────────────────────────────── */
+.portal-settings__plan {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding: 0.875rem;
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+}
+
+.portal-settings__plan-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.portal-settings__plan-label {
+  font-size: 0.8125rem;
+  color: var(--color-text-3);
+}
+
+.portal-settings__plan-value {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text-1);
+}
+
+@media (max-width: 40rem) {
+  .portal-settings__theme {
+    grid-template-columns: 1fr;
+  }
+}

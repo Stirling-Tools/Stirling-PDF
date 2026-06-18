@@ -45,17 +45,23 @@ export class OperationRouter {
   }
 
   /**
-   * Check if endpoint should route to SaaS backend (not local)
+   * Cloud-only endpoints: features the local bundled backend does NOT serve, so
+   * in SaaS mode they must ALWAYS hit the SaaS cloud backend (never local).
+   * These are not tool (PDF-processing) endpoints — they're account/billing/
+   * automation platform features — so they bypass the local-first tool routing.
    * @param endpoint - The endpoint path to check
-   * @returns true if endpoint should route to SaaS backend
+   * @returns true if endpoint must route to the SaaS backend
    */
   private isSaaSBackendEndpoint(endpoint?: string): boolean {
     if (!endpoint) return false;
 
     const saasBackendPatterns = [
-      /^\/api\/v1\/team\//, // Team endpoints
-      /^\/api\/v1\/auth\//, // Auth endpoints (Supabase auth in SaaS mode)
-      // Add more SaaS-specific patterns here as needed
+      /^\/api\/v1\/team\//, // Team management
+      /^\/api\/v1\/auth\//, // Supabase auth (SaaS mode)
+      /^\/api\/v1\/payg\//, // PAYG wallet / spend-cap / billing
+      /^\/api\/v1\/policies(?:\/|$)/, // Policy runs — must bill via the cloud
+      /^\/api\/v1\/ai\//, // AI engine (orchestrate, etc.) — runs in the cloud
+      // Add more cloud-only feature prefixes here as they land.
     ];
 
     return saasBackendPatterns.some((pattern) => pattern.test(endpoint));
