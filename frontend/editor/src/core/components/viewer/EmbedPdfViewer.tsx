@@ -1225,10 +1225,11 @@ const EmbedPdfViewerContent = ({
               position: "relative",
               flex: 1,
               overflow: "hidden",
-              minHeight: 0,
+              minHeight: "min(800px, 80vh)",
               minWidth: 0,
               marginRight: `${totalRightMargin}rem`,
               transition: "margin-right 0.3s ease",
+              contain: "layout style",
             }}
           >
             <LocalEmbedPDF

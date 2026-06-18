@@ -183,7 +183,12 @@ export class ThumbnailGenerationService {
             docPtr,
             pageNumber - 1,
             scale,
-            { applyRotation: false, format: "jpeg", quality, returnBlobUrl: true },
+            {
+              applyRotation: false,
+              format: "jpeg",
+              quality,
+              returnBlobUrl: true,
+            },
           );
           if (!thumbnail) {
             throw new Error(`Could not render page ${pageNumber}`);
@@ -244,7 +249,11 @@ export class ThumbnailGenerationService {
 
     // Revoke any existing object URL for the same pageId if it changes
     const existing = this.thumbnailCache.get(pageId);
-    if (existing && existing.thumbnail.startsWith("blob:") && existing.thumbnail !== thumbnail) {
+    if (
+      existing &&
+      existing.thumbnail.startsWith("blob:") &&
+      existing.thumbnail !== thumbnail
+    ) {
       URL.revokeObjectURL(existing.thumbnail);
     }
 
