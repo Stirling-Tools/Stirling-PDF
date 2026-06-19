@@ -11,6 +11,33 @@ import {
 import { getActiveCharcodeStrategy } from "@app/tools/pdfTextEditor/v2/charcode/CharcodeStrategy";
 
 /**
+ * Remove a PAGE-level object and FREE its PDFium allocation.
+ *
+ * `FPDFPage_RemoveObject` only detaches the object - it transfers ownership to
+ * the caller, who must `FPDFPageObj_Destroy` it (or re-insert) or it leaks for
+ * the document's lifetime. ONLY use this for objects that are permanently
+ * discarded; destroying an object still referenced by an undo snapshot would be
+ * a use-after-free.
+ */
+export function removeAndDestroyObject(
+  m: WrappedPdfiumModule,
+  pagePtr: number,
+  ptr: number,
+): void {
+  if (!ptr) return;
+  try {
+    m.FPDFPage_RemoveObject(pagePtr, ptr);
+  } catch {
+    /* best-effort */
+  }
+  try {
+    m.FPDFPageObj_Destroy(ptr);
+  } catch {
+    /* best-effort */
+  }
+}
+
+/**
  * Pointers freshly created by the per-char BACKEND emit branch in
  * `emitTextLine`. The partial-edit measure-and-fallback in
  * `applyPartialEditPlan` consults `isVerifiedPerCharPtr` before
@@ -475,11 +502,8 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     // per visible char means the reused font produced .notdef / 0-width.
     const minExpected = visible * size * 0.15;
     if (visible > 0 && right - x < minExpected) {
-      try {
-        m.FPDFPage_RemoveObject(opts.page.pagePtr, ptr);
-      } catch {
-        /* best-effort - the failed object is discarded */
-      }
+      // Discard the .notdef object and free it (we re-emit in base-14 next).
+      removeAndDestroyObject(m, opts.page.pagePtr, ptr);
       return emitBase14();
     }
     // Self-validate an UNTRUSTED content-stream charcode guess: that
@@ -508,11 +532,8 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
       if (known > 0 && expected > 0) {
         const ratio = (right - x) / expected;
         if (ratio < 0.6 || ratio > 1.7) {
-          try {
-            m.FPDFPage_RemoveObject(opts.page.pagePtr, ptr);
-          } catch {
-            /* best-effort */
-          }
+          // Wrong-glyph guess: discard + free, then re-emit in base-14.
+          removeAndDestroyObject(m, opts.page.pagePtr, ptr);
           return emitBase14();
         }
       }
@@ -744,13 +765,13 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
         if (!ptr) continue;
         const ok = setCharcodesOn(m, ptr, pc.charcodes);
         if (!ok) {
-          // Couldn't set charcodes - rare but possible. Remove the
-          // orphaned object and bail to the normal path.
-          try {
-            m.FPDFPage_RemoveObject(opts.page.pagePtr, ptr);
-          } catch {
-            /* best-effort */
-          }
+          // Couldn't set charcodes - rare but possible. Tear down the
+          // current orphan AND every per-char object already emitted this
+          // loop before bailing to the normal path. Leaving the earlier
+          // ptrs on the page would double-render the word (the fall-through
+          // re-emits it) and leak them.
+          removeAndDestroyObject(m, opts.page.pagePtr, ptr);
+          for (const p of ptrs) removeAndDestroyObject(m, opts.page.pagePtr, p);
           ptrs.length = 0;
           break;
         }
