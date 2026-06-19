@@ -131,6 +131,15 @@ export default function EmailPasswordForm({
         className="auth-button"
         fullWidth
         loading={isSubmitting}
+        styles={{
+          // Own the brand colour inline so the host app's Mantine primaryColor
+          // can't win over .auth-button (editor vs portal Mantine themes
+          // differ). The fallback keeps it red even if auth-theme.css is absent.
+          root: {
+            backgroundColor: "var(--auth-button-bg-light-only, #af3434)",
+            color: "var(--auth-button-text-light-only, #ffffff)",
+          },
+        }}
       >
         {submitButtonText}
       </Button>

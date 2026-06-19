@@ -1,15 +1,19 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import EmailPasswordForm from "@shared/auth/ui/EmailPasswordForm";
 import OAuthButtons from "@shared/auth/ui/OAuthButtons";
 import ErrorMessage from "@shared/auth/ui/ErrorMessage";
+import { AuthShell } from "@shared/auth/ui/AuthShell";
+import LoginRightCarousel from "@shared/auth/ui/LoginRightCarousel";
+import { buildDefaultLoginSlides } from "@shared/auth/ui/loginSlides";
 import {
   springAuth,
   getSpringAuthConfig,
   type OAuthProvider,
 } from "@shared/auth";
-import markLight from "@shared/assets/stirling-mark-light.svg";
-import "@portal/components/LoginScreen.css";
+import "@shared/auth/ui/auth-theme.css";
+import "@shared/auth/ui/auth.css";
+import loginHeader from "@shared/assets/login/LoginLightModeHeader.svg";
 
 interface LoginUiData {
   enableLogin?: boolean;
@@ -17,11 +21,26 @@ interface LoginUiData {
   providerList?: Record<string, unknown>;
 }
 
+const dividerStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: "0.75rem",
+  margin: "0.75rem 0",
+  color: "var(--auth-label-text-light-only)",
+  fontSize: "0.8125rem",
+  opacity: 0.7,
+};
+const lineStyle: CSSProperties = {
+  flex: 1,
+  height: 1,
+  background: "currentColor",
+  opacity: 0.4,
+};
+
 /**
- * Full-screen login shown by the auth gate when no session is present. Composes
- * the same login components the editor uses (shared @shared/auth/ui), driven by
- * the shared Spring auth client. On success the gate re-evaluates and either
- * reveals the portal (admin) or redirects to the editor (non-admin).
+ * Full-screen login shown by the auth gate. Renders the same screen as the
+ * editor - the shared AuthShell + carousel from @shared/auth/ui, with the form
+ * built from the shared auth atoms - driven by the shared Spring auth client.
  */
 export function LoginScreen() {
   const { t } = useTranslation();
@@ -36,8 +55,12 @@ export function LoginScreen() {
 
   const isUserPassAllowed = loginMethod === "all" || loginMethod === "normal";
   const hasProviders = providers.length > 0;
+  const slides = useMemo(
+    () => buildDefaultLoginSlides((key, fallback) => t(key, fallback)),
+    [t],
+  );
 
-  // Auth pages render in light mode (the shared form uses light-only tokens).
+  // Auth pages render in light mode (the shared screen uses light-only tokens).
   useEffect(() => {
     const html = document.documentElement;
     const previous = html.getAttribute("data-mantine-color-scheme");
@@ -121,46 +144,62 @@ export function LoginScreen() {
   };
 
   return (
-    <div className="portal-login">
-      <div className="portal-login__card">
-        <img className="portal-login__mark" src={markLight} alt="Stirling" />
-        <h1 className="portal-login__title">{t("login.title", "Sign in")}</h1>
-        <p className="portal-login__subtitle">
-          Sign in to the Stirling admin portal
-        </p>
-
-        <ErrorMessage error={error} />
-
-        {hasProviders && (
-          <OAuthButtons
-            onProviderClick={signInWithProvider}
-            isSubmitting={submitting}
-            layout="vertical"
-            enabledProviders={providers}
-            styleVariant="light"
-          />
-        )}
-
-        {isUserPassAllowed && (
-          <EmailPasswordForm
-            email={email}
-            password={password}
-            setEmail={setEmail}
-            setPassword={setPassword}
-            mfaCode={mfaCode}
-            setMfaCode={setMfaCode}
-            showMfaField={requiresMfa || Boolean(mfaCode)}
-            requiresMfa={requiresMfa}
-            onSubmit={signInWithEmail}
-            isSubmitting={submitting}
-            submitButtonText={
-              submitting
-                ? t("login.loggingIn", "Signing in…")
-                : t("login.login", "Sign in")
-            }
-          />
-        )}
+    <AuthShell
+      rightPanel={
+        <LoginRightCarousel
+          imageSlides={slides}
+          initialSeconds={5}
+          slideSeconds={8}
+        />
+      }
+    >
+      <div className="auth-logo-block">
+        <img
+          src={loginHeader}
+          alt="Stirling PDF"
+          className="auth-logo-header auth-logo-header--light"
+        />
       </div>
-    </div>
+
+      <ErrorMessage error={error} />
+
+      {hasProviders && (
+        <OAuthButtons
+          onProviderClick={signInWithProvider}
+          isSubmitting={submitting}
+          layout="vertical"
+          enabledProviders={providers}
+          styleVariant="light"
+        />
+      )}
+
+      {hasProviders && isUserPassAllowed && (
+        <div style={dividerStyle}>
+          <span style={lineStyle} aria-hidden />
+          {t("signup.or", "or")}
+          <span style={lineStyle} aria-hidden />
+        </div>
+      )}
+
+      {isUserPassAllowed && (
+        <EmailPasswordForm
+          email={email}
+          password={password}
+          setEmail={setEmail}
+          setPassword={setPassword}
+          mfaCode={mfaCode}
+          setMfaCode={setMfaCode}
+          showMfaField={requiresMfa || Boolean(mfaCode)}
+          requiresMfa={requiresMfa}
+          onSubmit={signInWithEmail}
+          isSubmitting={submitting}
+          submitButtonText={
+            submitting
+              ? t("login.loggingIn", "Signing in…")
+              : t("login.login", "Sign in")
+          }
+        />
+      )}
+    </AuthShell>
   );
 }
