@@ -296,7 +296,8 @@ public class SupabaseSecurityConfig {
                         "X-Requested-With",
                         "Accept",
                         "Origin",
-                        "X-API-KEY"));
+                        "X-API-KEY",
+                        "X-Browser-Id"));
         cfg.setExposedHeaders(List.of("WWW-Authenticate"));
         cfg.setAllowCredentials(true);
         cfg.setMaxAge(3600L);
