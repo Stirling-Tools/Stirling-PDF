@@ -5,11 +5,14 @@ import { useAsync } from "@portal/hooks/useAsync";
 import {
   fetchBillingSummary,
   fetchPlanOptions,
+  fetchWallet,
   type BillingSummary,
   type PlanOption,
+  type WalletContract,
 } from "@portal/api/usage";
 import { UsageChart } from "@portal/components/usage/UsageChart";
 import { BillingKpiStrip } from "@portal/components/usage/BillingKpiStrip";
+import { WalletContractCard } from "@portal/components/usage/WalletContractCard";
 import { CurrentPlanCard } from "@portal/components/usage/CurrentPlanCard";
 import { SpendCapControl } from "@portal/components/usage/SpendCapControl";
 import { AvailablePlans } from "@portal/components/usage/AvailablePlans";
@@ -30,6 +33,9 @@ export function Usage() {
 
   const plansState = useAsync<PlanOption[]>(() => fetchPlanOptions(), []);
   const { data: plans } = plansState;
+
+  const walletState = useAsync<WalletContract>(() => fetchWallet(tier), [tier]);
+  const wallet = walletState.loading ? null : walletState.data;
 
   function openUpgrade(target: PlanOption | null) {
     setModalTarget(target);
@@ -60,6 +66,8 @@ export function Usage() {
       </header>
 
       <UsageChart />
+
+      {wallet && <WalletContractCard wallet={wallet} />}
 
       <BillingKpiStrip summary={summary} />
 

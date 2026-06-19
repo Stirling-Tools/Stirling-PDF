@@ -17,6 +17,7 @@ import {
   ComponentsIcon,
   InfrastructureIcon,
   UsageIcon,
+  LinkIcon,
   DocsIcon,
   SettingsIcon,
   ChevronDownIcon,
@@ -54,6 +55,7 @@ const GROUP_PLATFORM: NavEntry[] = [
     icon: <InfrastructureIcon />,
   },
   { id: "usage", label: "Usage & Billing", icon: <UsageIcon /> },
+  { id: "account-link", label: "Account Link", icon: <LinkIcon /> },
   { id: "docs", label: "Developer Docs", icon: <DocsIcon /> },
 ];
 

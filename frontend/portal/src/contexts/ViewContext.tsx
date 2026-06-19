@@ -13,6 +13,7 @@ export type ViewId =
   | "components"
   | "infrastructure"
   | "usage"
+  | "account-link"
   | "docs"
   | "settings";
 
@@ -28,6 +29,7 @@ export const VIEW_LABELS: Record<ViewId, string> = {
   components: "Components",
   infrastructure: "Infrastructure",
   usage: "Usage & Billing",
+  "account-link": "Account Link",
   docs: "Developer Docs",
   settings: "Settings",
 };
@@ -44,6 +46,7 @@ export const VIEW_PATHS: Record<ViewId, string> = {
   components: "/components",
   infrastructure: "/infrastructure",
   usage: "/usage",
+  "account-link": "/account-link",
   docs: "/docs",
   settings: "/settings",
 };

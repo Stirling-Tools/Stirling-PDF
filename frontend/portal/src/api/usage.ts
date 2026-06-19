@@ -5,15 +5,19 @@ import type {
   BillingSummary,
   PlanOption,
   UsageSeriesResponse,
+  WalletContract,
 } from "@portal/mocks/usage";
 
 export type {
   BillingHistoryRow,
   BillingSummary,
+  EntitlementState,
   InvoiceStatus,
   PlanOption,
+  SubscriptionStatus,
   UsagePoint,
   UsageSeriesResponse,
+  WalletContract,
 } from "@portal/mocks/usage";
 export { OVERAGE_RATE } from "@portal/mocks/usage";
 
@@ -40,5 +44,16 @@ export async function fetchBillingHistory(
 ): Promise<BillingHistoryRow[]> {
   return httpJson<BillingHistoryRow[]>(
     `/v1/billing/history?tier=${encodeURIComponent(tier)}`,
+  );
+}
+
+/**
+ * GET /v1/billing/wallet?tier=… — live wallet contract (subscription, free pool,
+ * period spend/cap, state). The real billing shape the account-link surface
+ * gates against; mirrors the SaaS InstanceController entitlement read.
+ */
+export async function fetchWallet(tier: Tier): Promise<WalletContract> {
+  return httpJson<WalletContract>(
+    `/v1/billing/wallet?tier=${encodeURIComponent(tier)}`,
   );
 }

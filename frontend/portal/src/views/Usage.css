@@ -90,6 +90,27 @@
   color: var(--color-text-1);
 }
 
+/* Wallet contract card */
+.portal-usage__wallet {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.portal-usage__wallet-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.portal-usage__wallet-badges {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
 /* Cap progress (free) */
 .portal-usage__cap {
   display: flex;

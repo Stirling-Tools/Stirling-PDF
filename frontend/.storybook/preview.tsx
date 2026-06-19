@@ -14,6 +14,7 @@ import { MantineProvider } from "@mantine/core";
 void React;
 
 import { TierProvider, type Tier } from "@portal/contexts/TierContext";
+import { LinkProvider, type LinkState } from "@portal/contexts/LinkContext";
 import { ThemeProvider } from "@portal/contexts/ThemeContext";
 import { UIProvider } from "@portal/contexts/UIContext";
 import { mantineTheme } from "@portal/theme/mantineTheme";
@@ -67,6 +68,7 @@ function ThemeWatcher() {
 
 const withProviders: Decorator = (Story, context) => {
   const tier = (context.globals.tier as Tier) ?? "pro";
+  const linkState = (context.globals.linkState as LinkState) ?? "linked-subscribed";
   // withThemeByDataAttribute exposes the toolbar theme as the `theme` global.
   // Bind Mantine's color scheme to it so Mantine chrome (inputs, focus rings,
   // default surfaces) follows the dark toggle alongside the SUI CSS variables.
@@ -79,10 +81,12 @@ const withProviders: Decorator = (Story, context) => {
       <ThemeProvider>
         <MantineProvider theme={mantineTheme} forceColorScheme={colorScheme}>
           <TierKey tier={tier}>
-            <UIProvider>
-              <ThemeWatcher />
-              <Story />
-            </UIProvider>
+            <LinkProvider key={linkState} initialState={linkState}>
+              <UIProvider>
+                <ThemeWatcher />
+                <Story />
+              </UIProvider>
+            </LinkProvider>
           </TierKey>
         </MantineProvider>
       </ThemeProvider>
@@ -124,6 +128,20 @@ const preview: Preview = {
           { value: "free", title: "Free" },
           { value: "pro", title: "Pay-as-you-go" },
           { value: "enterprise", title: "Enterprise" },
+        ],
+        dynamicTitle: true,
+      },
+    },
+    linkState: {
+      name: "Link",
+      description: "Account-link state — drives useLink() everywhere",
+      defaultValue: "linked-subscribed",
+      toolbar: {
+        icon: "link",
+        items: [
+          { value: "unlinked", title: "Unlinked" },
+          { value: "linked-free", title: "Linked · Free" },
+          { value: "linked-subscribed", title: "Linked · PAYG" },
         ],
         dynamicTitle: true,
       },

@@ -55,5 +55,10 @@ export async function httpJson<T>(
     }
     throw new HttpError(res.status, res.statusText, body);
   }
-  return (await res.json()) as T;
+  // 204 / empty-body responses (e.g. revoke, delete) have nothing to parse.
+  if (res.status === 204 || res.headers.get("Content-Length") === "0") {
+    return undefined as T;
+  }
+  const text = await res.text();
+  return (text ? JSON.parse(text) : undefined) as T;
 }

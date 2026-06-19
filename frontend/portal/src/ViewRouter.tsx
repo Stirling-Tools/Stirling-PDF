@@ -10,6 +10,7 @@ import { Components } from "@portal/views/Components";
 import { EditorAdmin } from "@portal/views/EditorAdmin";
 import { Infrastructure } from "@portal/views/Infrastructure";
 import { Usage } from "@portal/views/Usage";
+import { AccountLink } from "@portal/views/AccountLink";
 import { DeveloperDocs } from "@portal/views/DeveloperDocs";
 import { VIEW_PATHS } from "@portal/contexts/ViewContext";
 
@@ -27,6 +28,7 @@ export function ViewRouter() {
       <Route path={VIEW_PATHS.editor} element={<EditorAdmin />} />
       <Route path={VIEW_PATHS.infrastructure} element={<Infrastructure />} />
       <Route path={VIEW_PATHS.usage} element={<Usage />} />
+      <Route path={VIEW_PATHS["account-link"]} element={<AccountLink />} />
       <Route path={VIEW_PATHS.docs} element={<DeveloperDocs />} />
       {/* Settings is a modal overlay, not a route (see AppShell + UIContext). */}
       {/* Unknown paths land on Home. */}

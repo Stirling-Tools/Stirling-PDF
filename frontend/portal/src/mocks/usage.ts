@@ -129,6 +129,70 @@ function nextMonthFirst(): string {
 }
 
 /* ──────────────────────────────────────────────────────────────────────── */
+/*  Wallet contract (the real PAYG/account-link billing shape)               */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+/**
+ * Live wallet state as the real PAYG backend reports it. This is the canonical
+ * billing shape the account-link surface gates against — it mirrors
+ * InstanceController.EntitlementResponse + TeamBillingContext on the SaaS side,
+ * not the demo-oriented {@link BillingSummary} above. Components that need true
+ * billing facts (subscription, free pool, period spend/cap, degradation state)
+ * read this; the doc-count demo cards keep using BillingSummary.
+ *
+ * Once the real backend is wired the MSW handler stops being registered and this
+ * shape is served verbatim — no consumer change.
+ */
+export interface WalletContract {
+  /** Subscription lifecycle — drives linked-free vs linked-subscribed. */
+  subscriptionStatus: SubscriptionStatus;
+  /** One-time free-grant units still available. 0 = grant exhausted. */
+  freeUnitsRemaining: number;
+  /** Subscribed monthly paid-unit ceiling; null = uncapped or not subscribed. */
+  monthlyCapUnits: number | null;
+  /** Paid units consumed in the current billing window. */
+  periodSpend: number;
+  /** Degradation state the local gate enforces against. */
+  state: EntitlementState;
+}
+
+/** Mirrors the subscription lifecycle the backend exposes. */
+export type SubscriptionStatus = "none" | "active" | "past_due" | "canceled";
+
+/** Mirrors EntitlementState on the backend (FULL/WARNED/DEGRADED). */
+export type EntitlementState = "FULL" | "WARNED" | "DEGRADED";
+
+/** Builds a deterministic wallet contract for a tier (dev/MSW fixture). */
+export function buildWalletContract(tier: Tier): WalletContract {
+  if (tier === "free") {
+    return {
+      subscriptionStatus: "none",
+      freeUnitsRemaining: 37,
+      monthlyCapUnits: null,
+      periodSpend: 0,
+      state: "WARNED",
+    };
+  }
+  if (tier === "enterprise") {
+    return {
+      subscriptionStatus: "active",
+      freeUnitsRemaining: 0,
+      monthlyCapUnits: null,
+      periodSpend: 1_240_511,
+      state: "FULL",
+    };
+  }
+  // Pro: subscribed PAYG, free grant spent, a generous monthly cap, comfortably under.
+  return {
+    subscriptionStatus: "active",
+    freeUnitsRemaining: 0,
+    monthlyCapUnits: 50_000,
+    periodSpend: 31_402,
+    state: "FULL",
+  };
+}
+
+/* ──────────────────────────────────────────────────────────────────────── */
 /*  Plan catalogue (current + available plan cards)                          */
 /* ──────────────────────────────────────────────────────────────────────── */
 

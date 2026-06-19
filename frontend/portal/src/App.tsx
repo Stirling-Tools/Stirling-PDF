@@ -3,6 +3,7 @@ import { BrowserRouter } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
 import { ThemeProvider, useTheme } from "@portal/contexts/ThemeContext";
 import { TierProvider } from "@portal/contexts/TierContext";
+import { LinkProvider } from "@portal/contexts/LinkContext";
 import { UIProvider, useUI } from "@portal/contexts/UIContext";
 import { mantineTheme } from "@portal/theme/mantineTheme";
 import { AppShell } from "@portal/components/AppShell";
@@ -64,18 +65,20 @@ export function App() {
     <ThemeProvider>
       <PortalMantineProvider>
         <TierProvider initialTier="pro">
-          <BrowserRouter>
-            <UIProvider>
-              <GlobalShortcuts />
-              <AppShell>
-                <ViewRouter />
-              </AppShell>
-              <AssistantButton />
-              <AssistantPanel />
-              <SearchModal />
-              <SettingsHost />
-            </UIProvider>
-          </BrowserRouter>
+          <LinkProvider initialState="unlinked">
+            <BrowserRouter>
+              <UIProvider>
+                <GlobalShortcuts />
+                <AppShell>
+                  <ViewRouter />
+                </AppShell>
+                <AssistantButton />
+                <AssistantPanel />
+                <SearchModal />
+                <SettingsHost />
+              </UIProvider>
+            </BrowserRouter>
+          </LinkProvider>
         </TierProvider>
       </PortalMantineProvider>
     </ThemeProvider>

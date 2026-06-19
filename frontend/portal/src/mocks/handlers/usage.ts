@@ -4,6 +4,7 @@ import {
   buildBillingHistory,
   buildBillingSummary,
   buildUsagePayload,
+  buildWalletContract,
   PLAN_OPTIONS,
 } from "@portal/mocks/usage";
 
@@ -31,5 +32,10 @@ export const usageHandlers = [
   http.get("/v1/billing/history", async ({ request }) => {
     await delay(120);
     return HttpResponse.json(buildBillingHistory(tierFrom(request)));
+  }),
+
+  http.get("/v1/billing/wallet", async ({ request }) => {
+    await delay(120);
+    return HttpResponse.json(buildWalletContract(tierFrom(request)));
   }),
 ];
