@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   MethodBadge,
   Tabs,
@@ -11,10 +12,15 @@ import { DocsSection } from "@portal/components/docs/DocsSection";
 type VerticalFilter = "all" | (typeof VERTICALS)[number]["key"];
 
 export function EndpointReferenceSection() {
+  const { t } = useTranslation();
   const [filter, setFilter] = useState<VerticalFilter>("all");
 
   const tabItems: TabItem<VerticalFilter>[] = [
-    { key: "all", label: "All", count: ALL_ENDPOINTS.length },
+    {
+      key: "all",
+      label: t("docs.endpoints.filterAll"),
+      count: ALL_ENDPOINTS.length,
+    },
     ...VERTICALS.map<TabItem<VerticalFilter>>((v) => ({
       key: v.key,
       label: v.label,
@@ -33,15 +39,15 @@ export function EndpointReferenceSection() {
   return (
     <DocsSection
       id="endpoints"
-      eyebrow="API REFERENCE"
-      title="Endpoints"
-      lead="Every document type is a typed endpoint. POST a file, receive schema-validated JSON. Filter by vertical below."
+      eyebrow={t("docs.endpoints.eyebrow")}
+      title={t("docs.endpoints.title")}
+      lead={t("docs.endpoints.lead")}
     >
       <Tabs
         items={tabItems}
         activeKey={filter}
         onChange={setFilter}
-        ariaLabel="Filter endpoints by vertical"
+        ariaLabel={t("docs.endpoints.filterAriaLabel")}
       />
       <div className="portal-docs__endpoints">
         {shown.map((v) => (
@@ -60,7 +66,9 @@ export function EndpointReferenceSection() {
                 <code className="portal-docs__endpoint-path">{e.endpoint}</code>
                 <span className="portal-docs__endpoint-name">{e.name}</span>
                 <span className="portal-docs__endpoint-fields">
-                  {Object.keys(e.schema).length} fields
+                  {t("docs.endpoints.fieldCount", {
+                    count: Object.keys(e.schema).length,
+                  })}
                 </span>
               </div>
             ))}
