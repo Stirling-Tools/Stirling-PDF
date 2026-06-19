@@ -5,7 +5,6 @@ import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useSidebarContext } from "@app/contexts/SidebarContext";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import ToolPanel from "@app/components/tools/ToolPanel";
-import ToolSearch from "@app/components/tools/toolPicker/ToolSearch";
 import {
   PoliciesCollapsedButton,
   PoliciesSection,
@@ -48,7 +47,6 @@ export default function RightSidebar() {
   const {
     leftPanelView,
     isPanelVisible,
-    searchQuery,
     filteredTools,
     toolRegistry,
     setSearchQuery,
@@ -118,13 +116,6 @@ export default function RightSidebar() {
   // Policies sit above the tool list in the default tool-picker view.
   const showPolicies =
     policiesEnabled && !allToolsView && leftPanelView === "toolPicker";
-  // When Policies are shown, the search moves OUT of the header to sit between
-  // the Policies and Tools sections (separating them); otherwise it stays in the
-  // header. Show the header search when there's a close button, or in the
-  // default tool-picker view.
-  const showInlineSearch = showPolicies && !showCloseButton;
-  const showHeaderSearch =
-    !showInlineSearch && (showCloseButton || leftPanelView === "toolPicker");
 
   const handleHeaderBack = () => {
     if (inToolView) {
@@ -138,24 +129,16 @@ export default function RightSidebar() {
     withViewTransition(() => handleToolSelect(id));
   };
 
-  // Typing in the header search while inside a tool exits the tool and lifts the
-  // panel into the all-tools view so the user immediately sees search results.
-  const handleHeaderSearchChange = (value: string) => {
-    if (inToolView) {
-      withViewTransition(() => {
-        handleBackToTools();
-        setAllToolsView(true);
-        setSearchQuery(value);
-      });
-      return;
-    }
-    setSearchQuery(value);
-  };
-
   const activeTool: ToolRegistryEntry | null =
     inToolView && selectedToolKey
       ? (toolRegistry[selectedToolKey as ToolId] ?? null)
       : null;
+
+  // Tool search now lives in the global super search, so the panel header
+  // carries only the active-tool pill or the collapse/close control. When it's
+  // just the collapse chevron, float it into the corner (see CSS) so the tool
+  // list starts at the top instead of below an empty band.
+  const headerCollapseOnly = !activeTool && !showCloseButton;
 
   // The detail takeover replaces the tool list ONLY in the same default view —
   // never over an open tool or the all-tools view (which must keep priority).
@@ -273,6 +256,7 @@ export default function RightSidebar() {
             flexShrink: 0,
             display: "flex",
             flexDirection: "column",
+            position: "relative",
           }}
         >
           {policyDetailActive ? (
@@ -282,7 +266,13 @@ export default function RightSidebar() {
           ) : (
             <>
               {!showPolicies && (
-                <div className="tool-panel__compact-header">
+                <div
+                  className={`tool-panel__compact-header${
+                    headerCollapseOnly
+                      ? " tool-panel__compact-header--collapse-only"
+                      : ""
+                  }`}
+                >
                   {activeTool ? (
                     <div
                       className="tool-panel__active-tool-pill"
@@ -298,16 +288,6 @@ export default function RightSidebar() {
                       <span className="tool-panel__active-tool-pill-label">
                         {activeTool.name}
                       </span>
-                    </div>
-                  ) : showHeaderSearch ? (
-                    <div className="tool-panel__compact-header-search">
-                      <ToolSearch
-                        value={searchQuery}
-                        onChange={handleHeaderSearchChange}
-                        toolRegistry={toolRegistry}
-                        mode="filter"
-                        autoFocus={allToolsView && !inToolView}
-                      />
                     </div>
                   ) : null}
                   {showCloseButton ? (
@@ -356,17 +336,6 @@ export default function RightSidebar() {
                     </ActionIcon>
                   }
                 />
-              )}
-
-              {showInlineSearch && (
-                <div className="tool-panel__between-search">
-                  <ToolSearch
-                    value={searchQuery}
-                    onChange={handleHeaderSearchChange}
-                    toolRegistry={toolRegistry}
-                    mode="filter"
-                  />
-                </div>
               )}
 
               <ToolPanel

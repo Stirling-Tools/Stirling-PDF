@@ -117,7 +117,7 @@ export function FileGrid(props: FileGridProps & { loading?: boolean }) {
   }
 
   if (entries.length === 0) {
-    return (
+    const emptyState = (
       <EmptyState
         tab={currentTab}
         searchActive={searchActive}
@@ -127,6 +127,18 @@ export function FileGrid(props: FileGridProps & { loading?: boolean }) {
         newFolderDisabledReason={newFolderDisabledReason}
       />
     );
+    // When a filter empties the list view, keep the column headers in place and
+    // show the no-results message beneath them, rather than replacing the whole
+    // table. Grid view (cards, no headers) just shows the empty state.
+    if (viewMode === "list" && searchActive) {
+      return (
+        <>
+          <ListView {...props} />
+          {emptyState}
+        </>
+      );
+    }
+    return emptyState;
   }
 
   if (viewMode === "list") {

@@ -265,6 +265,18 @@
   box-sizing: border-box;
 }
 
+/* When the header holds only the collapse chevron (no active tool, no search),
+   float it into the corner instead of reserving an empty band, so the tool list
+   starts at the top of the panel. */
+.tool-panel__compact-header--collapse-only {
+  position: absolute;
+  top: 0;
+  right: 0;
+  min-height: 0;
+  padding: 0.5rem;
+  z-index: 5;
+}
+
 .tool-panel__compact-header .tool-panel__expand-btn {
   margin-left: auto;
 }
