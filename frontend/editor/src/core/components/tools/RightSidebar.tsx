@@ -7,7 +7,6 @@ import { useSidebarContext } from "@app/contexts/SidebarContext";
 import rainbowStyles from "@app/styles/rainbow.module.css";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import ToolPanel from "@app/components/tools/ToolPanel";
-import ToolSearch from "@app/components/tools/toolPicker/ToolSearch";
 import {
   AgentsChatOverlay,
   AgentsCollapsedButton,
@@ -49,7 +48,6 @@ export default function RightSidebar() {
   const {
     leftPanelView,
     isPanelVisible,
-    searchQuery,
     filteredTools,
     toolRegistry,
     setSearchQuery,
@@ -102,10 +100,6 @@ export default function RightSidebar() {
   const inToolView = leftPanelView !== "toolPicker";
   // Show X (close) button only when there's somewhere to go back to.
   const showCloseButton = inToolView || allToolsView;
-  // Show search input whenever there's a close button, or when agents are off and
-  // we're in the default tool-picker view (search filters the full list inline).
-  const showHeaderSearch =
-    showCloseButton || (!agentsEnabled && leftPanelView === "toolPicker");
 
   const handleHeaderBack = () => {
     if (inToolView) {
@@ -119,20 +113,6 @@ export default function RightSidebar() {
     withViewTransition(() => handleToolSelect(id));
   };
 
-  // Typing in the header search while inside a tool exits the tool and lifts the
-  // panel into the all-tools view so the user immediately sees search results.
-  const handleHeaderSearchChange = (value: string) => {
-    if (inToolView) {
-      withViewTransition(() => {
-        handleBackToTools();
-        setAllToolsView(true);
-        setSearchQuery(value);
-      });
-      return;
-    }
-    setSearchQuery(value);
-  };
-
   const activeTool: ToolRegistryEntry | null =
     inToolView && selectedToolKey
       ? (toolRegistry[selectedToolKey as ToolId] ?? null)
@@ -144,6 +124,11 @@ export default function RightSidebar() {
   //  - a specific tool is being rendered (leftPanelView ≠ "toolPicker").
   const showAgents =
     agentsEnabled && !allToolsView && leftPanelView === "toolPicker";
+
+  // With agents off and no active tool, the header carries only the collapse
+  // chevron. Rather than reserve a full empty band above the tool list, float
+  // the chevron into the corner so the list starts at the top.
+  const headerCollapseOnly = !activeTool && !showAgents && !showCloseButton;
 
   const computedWidth = () => {
     if (isMobile) return "100%";
@@ -249,9 +234,14 @@ export default function RightSidebar() {
             flexShrink: 0,
             display: "flex",
             flexDirection: "column",
+            position: "relative",
           }}
         >
-          <div className="tool-panel__compact-header">
+          <div
+            className={`tool-panel__compact-header${
+              headerCollapseOnly ? " tool-panel__compact-header--collapse-only" : ""
+            }`}
+          >
             {activeTool ? (
               <div
                 className="tool-panel__active-tool-pill"
@@ -267,16 +257,6 @@ export default function RightSidebar() {
                 <span className="tool-panel__active-tool-pill-label">
                   {activeTool.name}
                 </span>
-              </div>
-            ) : showHeaderSearch ? (
-              <div className="tool-panel__compact-header-search">
-                <ToolSearch
-                  value={searchQuery}
-                  onChange={handleHeaderSearchChange}
-                  toolRegistry={toolRegistry}
-                  mode="filter"
-                  autoFocus={allToolsView && !inToolView}
-                />
               </div>
             ) : (
               showAgents && (

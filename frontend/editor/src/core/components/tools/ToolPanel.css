@@ -258,6 +258,18 @@
   box-sizing: border-box;
 }
 
+/* Agents off + no active tool: the header holds only the collapse chevron, so
+   float it into the corner instead of reserving an empty 52px band. The tool
+   list then starts at the top of the panel. */
+.tool-panel__compact-header--collapse-only {
+  position: absolute;
+  top: 0;
+  right: 0;
+  min-height: 0;
+  padding: 0.5rem;
+  z-index: 5;
+}
+
 .tool-panel__compact-header .tool-panel__expand-btn {
   margin-left: auto;
 }
