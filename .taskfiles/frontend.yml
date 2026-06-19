@@ -331,7 +331,14 @@ tasks:
       - task: typecheck
       - task: lint
       - task: format:check
+      - task: i18n:check:portal
       - task: test
+
+  i18n:check:portal:
+    desc: "Fail if any portal t() key is missing from the en-US locale"
+    deps: [install]
+    cmds:
+      - node portal/scripts/check-i18n.mjs
 
   og:check:
     desc: "Fail if committed OG/social-preview metadata is out of date"
@@ -347,6 +354,7 @@ tasks:
       - task: typecheck:all
       - task: lint
       - task: format:check
+      - task: i18n:check:portal
       - task: build
       - task: build:portal
       - task: test
