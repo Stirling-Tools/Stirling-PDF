@@ -1,7 +1,8 @@
 .super-search {
   position: relative;
-  flex: 0 1 560px;
+  flex: 1 1 auto;
   min-width: 0;
+  max-width: 560px;
 }
 
 /* Keyboard-shortcut hint pinned to the right of the input. */
