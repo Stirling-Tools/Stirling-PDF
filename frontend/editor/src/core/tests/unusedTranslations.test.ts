@@ -18,6 +18,7 @@ const IGNORED_FILE_PATTERNS = [
   /\.spec\./,
   /\.stories\./,
 ];
+const PLURAL_SUFFIX_PATTERN = /_(zero|one|two|few|many|other)$/;
 
 /**
  * Keys that look unused to the heuristic but are genuinely used: keep them.
@@ -149,6 +150,15 @@ const isIgnored = (key: string): boolean => {
   return IGNORED_KEY_PATTERNS.some((re) => re.test(key));
 };
 
+const getTranslationLookupKeys = (key: string): string[] => {
+  const pluralBaseKey = key.replace(PLURAL_SUFFIX_PATTERN, "");
+  if (pluralBaseKey === key) {
+    return [key];
+  }
+
+  return [key, pluralBaseKey];
+};
+
 describe("Unused translation coverage", () => {
   test(
     "fails if any en-US translation key has no source references",
@@ -175,12 +185,19 @@ describe("Unused translation coverage", () => {
 
       const unused = availableKeys.filter((key) => {
         if (isIgnored(key)) return false;
+        const lookupKeys = getTranslationLookupKeys(key);
         // Direct: the full key text appears anywhere in source (catches
         // static t() calls, i18nKey props, constants, and any other place
-        // the literal string sits in code or comments).
-        if (source.includes(key)) return false;
+        // the literal string sits in code or comments). Plural variants also
+        // count as used when their base key is referenced because i18next
+        // resolves suffixes like _one/_other from a single base lookup.
+        if (lookupKeys.some((lookupKey) => source.includes(lookupKey))) {
+          return false;
+        }
         // Dynamic: the key matches a template-literal shape from source.
-        return !shapeMatchers.some((re) => re.test(key));
+        return !lookupKeys.some((lookupKey) =>
+          shapeMatchers.some((re) => re.test(lookupKey)),
+        );
       });
 
       const localeRelative = path
