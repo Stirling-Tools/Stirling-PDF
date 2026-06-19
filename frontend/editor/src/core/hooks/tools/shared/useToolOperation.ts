@@ -155,18 +155,13 @@ export const useToolOperation = <TParams>(
           fileActions.openEncryptedUnlockPrompt(ef.fileId);
         }
         actions.setError(
-          encryptedFiles.length === 1
-            ? t(
-                "encryptedFileBlocked",
-                "File is password-protected. Unlock it first.",
-              )
-            : t(
-                "encryptedFilesBlocked",
-                "{{count}} files are password-protected. Unlock them first.",
-                {
-                  count: encryptedFiles.length,
-                },
-              ),
+          t(
+            "encryptedFilesBlocked",
+            "{{count}} files are password-protected. Unlock them first.",
+            {
+              count: encryptedFiles.length,
+            },
+          ),
         );
         return;
       }
