@@ -24,7 +24,7 @@ import {
   MachineInfo,
 } from "@app/services/updateService";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
-import { openExternal } from "@app/platform/openExternal";
+import { handleExternalLinkClick } from "@app/platform/externalLinkClick";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -36,19 +36,6 @@ import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
-
-/**
- * Best-effort Tauri detection without importing `@tauri-apps/api` into the
- * core bundle (which must stay runnable on plain web). Tauri v2 injects
- * `__TAURI_INTERNALS__` before any user code runs. Mirrors UpdateStartupPopup.
- */
-function isRunningInTauri(): boolean {
-  if (typeof window === "undefined") return false;
-  return (
-    typeof (window as unknown as { __TAURI_INTERNALS__?: unknown })
-      .__TAURI_INTERNALS__ !== "undefined"
-  );
-}
 
 export type DesktopInstallState =
   | "idle"
@@ -211,18 +198,10 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
     onClose();
   };
 
-  // External links (release notes, migration guides, download fallback) use
-  // real anchors so they open a new tab on web. Inside Tauri the webview traps
-  // target="_blank", so on desktop we intercept and hand the URL to the OS
-  // browser via the platform seam. stopPropagation keeps links nested in the
-  // clickable version-history rows from toggling the row.
   const handleExternalLink =
     (url: string) => (e: React.MouseEvent<HTMLElement>) => {
       e.stopPropagation();
-      if (isRunningInTauri()) {
-        e.preventDefault();
-        void openExternal(url);
-      }
+      handleExternalLinkClick(url, e);
     };
 
   // Sort versions newest first, skip the latest (already shown in header)
