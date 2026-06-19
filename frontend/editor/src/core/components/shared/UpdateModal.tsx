@@ -24,6 +24,7 @@ import {
   MachineInfo,
 } from "@app/services/updateService";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
+import { handleExternalLinkClick } from "@app/platform/externalLinkClick";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -197,6 +198,12 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
     onClose();
   };
 
+  const handleExternalLink =
+    (url: string) => (e: React.MouseEvent<HTMLElement>) => {
+      e.stopPropagation();
+      handleExternalLinkClick(url, e);
+    };
+
   // Sort versions newest first, skip the latest (already shown in header)
   const sortedVersions = fullUpdateInfo?.new_versions
     ? [...fullUpdateInfo.new_versions].sort((a, b) =>
@@ -323,11 +330,25 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
             </Group>
           </Box>
 
-          {/* Priority badge + recommendation — compact single line */}
+          {/* Priority badge + recommendation — compact single line. When the
+              update contains breaking changes we surface a compact inline
+              chip here rather than a separate full-width orange banner; the
+              specific per-version detail lives in Version History below. */}
           <Group gap="sm" align="center" px={4}>
             <Badge color={priorityColor} variant="filled" size="lg" radius="sm">
               {getPriorityLabel(updateSummary.max_priority)}
             </Badge>
+            {updateSummary.any_breaking && (
+              <Badge
+                color="orange"
+                variant="light"
+                size="lg"
+                radius="sm"
+                leftSection={<WarningAmberIcon style={{ fontSize: 14 }} />}
+              >
+                {t("update.breaking", "Breaking")}
+              </Badge>
+            )}
             <Text size="sm" c="dimmed" style={{ flex: 1 }}>
               {updateSummary.recommended_action ||
                 t(
@@ -362,6 +383,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                   href={WINDOWS_INSTALL_DOCS_URL}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={handleExternalLink(WINDOWS_INSTALL_DOCS_URL)}
                 >
                   {t(
                     "desktopUpdate.blocked.docsLink",
@@ -402,6 +424,9 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                   component="a"
                   href={`https://github.com/Stirling-Tools/Stirling-PDF/releases/tag/v${updateSummary.latest_version}`}
                   target="_blank"
+                  onClick={handleExternalLink(
+                    `https://github.com/Stirling-Tools/Stirling-PDF/releases/tag/v${updateSummary.latest_version}`,
+                  )}
                   c="blue"
                   style={{
                     textDecoration: "none",
@@ -418,6 +443,9 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                   component="a"
                   href="https://github.com/Stirling-Tools/Stirling-PDF/releases"
                   target="_blank"
+                  onClick={handleExternalLink(
+                    "https://github.com/Stirling-Tools/Stirling-PDF/releases",
+                  )}
                   c="dimmed"
                   style={{
                     textDecoration: "none",
@@ -432,25 +460,6 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
               </Group>
             </Group>
           </Box>
-
-          {/* Breaking changes */}
-          {updateSummary.any_breaking && (
-            <Alert
-              variant="light"
-              color="orange"
-              radius="md"
-              icon={<WarningAmberIcon style={{ fontSize: 18 }} />}
-              title={t(
-                "update.breakingChangesDetected",
-                "Breaking Changes Detected",
-              )}
-            >
-              {t(
-                "update.breakingChangesMessage",
-                "Some versions contain breaking changes. Please review the migration guides below before updating.",
-              )}
-            </Alert>
-          )}
 
           {/* Migration guides */}
           {updateSummary.migration_guides &&
@@ -505,6 +514,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                           component="a"
                           href={guide.url}
                           target="_blank"
+                          onClick={handleExternalLink(guide.url)}
                           variant="default"
                           size="xs"
                           rightSection={
@@ -603,7 +613,9 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                             variant="subtle"
                             size="xs"
                             px={6}
-                            onClick={(e) => e.stopPropagation()}
+                            onClick={handleExternalLink(
+                              `https://github.com/Stirling-Tools/Stirling-PDF/releases/tag/v${version.version}`,
+                            )}
                             rightSection={
                               <OpenInNewIcon style={{ fontSize: 11 }} />
                             }
@@ -673,6 +685,10 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                                       version.compatibility.migration_guide_url
                                     }
                                     target="_blank"
+                                    onClick={handleExternalLink(
+                                      version.compatibility
+                                        .migration_guide_url ?? "",
+                                    )}
                                     variant="light"
                                     color="orange"
                                     size="xs"
@@ -844,6 +860,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                       component="a"
                       href={downloadUrl}
                       target="_blank"
+                      onClick={handleExternalLink(downloadUrl)}
                       variant="default"
                       radius="md"
                       size="md"
@@ -884,6 +901,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                 component="a"
                 href={downloadUrl}
                 target="_blank"
+                onClick={handleExternalLink(downloadUrl)}
                 color="blue"
                 radius="md"
                 size="lg"

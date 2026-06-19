@@ -14,7 +14,6 @@ import {
   ActionIcon,
   Button,
   Badge,
-  Alert,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { usePreferences } from "@app/contexts/PreferencesContext";
@@ -458,26 +457,6 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                   }}
                 />
               </Stack>
-            )}
-
-            {updateSummary?.any_breaking && (
-              <Alert
-                color="orange"
-                title={t(
-                  "update.breakingChangesDetected",
-                  "Breaking Changes Detected",
-                )}
-                styles={{
-                  title: { fontWeight: 600 },
-                }}
-              >
-                <Text size="sm">
-                  {t(
-                    "update.breakingChangesMessage",
-                    "Some versions contain breaking changes. Please review the migration guides before updating.",
-                  )}
-                </Text>
-              </Alert>
             )}
           </Stack>
         </Paper>
