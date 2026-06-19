@@ -89,6 +89,7 @@ tasks:
       - task: backend:dev
         vars:
           PORT: '{{.BACKEND_PORT}}'
+          SECURITY_ENABLELOGIN: "true"
       - task: frontend:dev:portal
         vars:
           PORT: '{{.PORTAL_PORT}}'
@@ -107,6 +108,7 @@ tasks:
       - task: backend:dev
         vars:
           PORT: '{{.BACKEND_PORT}}'
+          SECURITY_ENABLELOGIN: "true"
       - task: frontend:dev:portal
         vars:
           PORT: '{{.PORTAL_PORT}}'
