@@ -20,6 +20,7 @@ export const supportedLanguages = {
   "fa-IR": "فارسی",
   "fr-FR": "Français",
   "ga-IE": "Gaeilge",
+  "he-IL": "עברית",
   "hi-IN": "हिंदी",
   "hr-HR": "Hrvatski",
   "hu-HU": "Magyar",
@@ -49,7 +50,7 @@ export const supportedLanguages = {
 };
 
 // RTL languages (based on your existing language.direction property)
-export const rtlLanguages = ["ar-AR", "fa-IR"];
+export const rtlLanguages = ["ar-AR", "fa-IR", "he-IL"];
 
 // LocalStorage keys for i18next
 export const I18N_STORAGE_KEYS = {
