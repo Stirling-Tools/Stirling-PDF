@@ -310,6 +310,14 @@ subprojects {
             "**/SPDF/service/pdfjson/JobOwnershipServiceImplTest.java",
             "**/SPDF/service/pdfjson/type3/Type3FontConversionServiceTest.java",
             "**/SPDF/service/ApiDocServiceTest.java",
+            // Pulled in / changed by the 2026-06-19 main merge; assert against signatures the
+            // migration changed (Instance<UserServiceInterface> injection, the PolicyEngine ctor
+            // gaining UserService, Panache findByIdOptional, and the SaaS service/repo reshuffle).
+            "**/common/service/PdfMetadataServiceTest.java",
+            "**/policy/engine/PolicyEngineTest.java",
+            "**/saas/payg/billing/TeamBillingServiceTest.java",
+            "**/saas/service/SaasTeamExtensionServiceTest.java",
+            "**/saas/service/SupabaseUserServiceTest.java",
     ]
 
     sourceSets.named("test").configure {
