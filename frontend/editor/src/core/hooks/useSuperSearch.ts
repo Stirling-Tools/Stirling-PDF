@@ -1,4 +1,11 @@
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -66,8 +73,12 @@ export function useSuperSearch(
 ): UseSuperSearchResult {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { toolRegistry, handleToolSelect, handleToolSelectForced, toolAvailability } =
-    useToolWorkflow();
+  const {
+    toolRegistry,
+    handleToolSelect,
+    handleToolSelectForced,
+    toolAvailability,
+  } = useToolWorkflow();
   const { actions: navActions } = useNavigationActions();
   const { addFiles } = useFileHandler();
   const { config } = useAppConfig();
@@ -251,10 +262,7 @@ export function useSuperSearch(
     })).filter((g) => g.results.length > 0);
   }, [fileResults, toolResults, settingsResults, t]);
 
-  const flatResults = useMemo(
-    () => groups.flatMap((g) => g.results),
-    [groups],
-  );
+  const flatResults = useMemo(() => groups.flatMap((g) => g.results), [groups]);
 
   return { groups, flatResults, loadingFiles };
 }

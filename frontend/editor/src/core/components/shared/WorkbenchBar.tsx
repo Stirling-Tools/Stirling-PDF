@@ -402,133 +402,137 @@ export default function WorkbenchBar({
       {/* Tool buttons - second row, only rendered when buttons exist. In the
           viewer the row is retractable: a handle on its right edge hides the
           whole row; Workbench then shows a tab below the bar to bring it back. */}
-      {sectionsWithButtons.length > 0 && !(isViewer && viewerToolbarCollapsed) && (
-        <div className="workbench-bar-center">
-          {sectionsWithButtons.map(
-            ({ section, buttons: sectionButtons }, idx) => (
-              <React.Fragment key={section}>
-                {idx > 0 && <div className="workbench-bar-divider" />}
-                {sectionButtons.map((btn) => {
-                  const content = renderButton(btn);
-                  if (!content) return null;
-                  return (
-                    <div key={btn.id} className="workbench-bar-action-wrapper">
-                      {content}
-                    </div>
-                  );
-                })}
-              </React.Fragment>
-            ),
-          )}
-          {isViewer && onCollapseViewerToolbar && (
-            <button
-              type="button"
-              className="workbench-bar-toolbar-handle workbench-bar-toolbar-handle-retract"
-              onClick={() => onCollapseViewerToolbar(true)}
-              aria-expanded
-              aria-label={t("workbenchBar.hideToolbar", "Hide toolbar")}
-              title={t("workbenchBar.hideToolbar", "Hide toolbar")}
-            >
-              <KeyboardArrowUpIcon sx={{ fontSize: "1rem" }} />
-            </button>
-          )}
-        </div>
-      )}
+      {sectionsWithButtons.length > 0 &&
+        !(isViewer && viewerToolbarCollapsed) && (
+          <div className="workbench-bar-center">
+            {sectionsWithButtons.map(
+              ({ section, buttons: sectionButtons }, idx) => (
+                <React.Fragment key={section}>
+                  {idx > 0 && <div className="workbench-bar-divider" />}
+                  {sectionButtons.map((btn) => {
+                    const content = renderButton(btn);
+                    if (!content) return null;
+                    return (
+                      <div
+                        key={btn.id}
+                        className="workbench-bar-action-wrapper"
+                      >
+                        {content}
+                      </div>
+                    );
+                  })}
+                </React.Fragment>
+              ),
+            )}
+            {isViewer && onCollapseViewerToolbar && (
+              <button
+                type="button"
+                className="workbench-bar-toolbar-handle workbench-bar-toolbar-handle-retract"
+                onClick={() => onCollapseViewerToolbar(true)}
+                aria-expanded
+                aria-label={t("workbenchBar.hideToolbar", "Hide toolbar")}
+                title={t("workbenchBar.hideToolbar", "Hide toolbar")}
+              >
+                <KeyboardArrowUpIcon sx={{ fontSize: "1rem" }} />
+              </button>
+            )}
+          </div>
+        )}
 
       {/* Right: Global buttons - export group left, close anchored right.
           File-only; hidden on the homepage so only the search shows. */}
       {hasFiles && (
-      <div className="workbench-bar-globals">
-        {/* Print */}
-        {currentView === "viewer" &&
-          renderWithTooltip(
-            <ActionIcon
-              variant="subtle"
-              radius="md"
-              className="workbench-bar-action-icon"
-              onClick={handlePrint}
-              disabled={
-                totalItems === 0 || allButtonsDisabled || disableForFullscreen
-              }
-              aria-label={t("workbenchBar.print", "Print PDF")}
-            >
-              <PrintIcon sx={{ fontSize: "1rem" }} />
-            </ActionIcon>,
-            t("workbenchBar.print", "Print PDF"),
+        <div className="workbench-bar-globals">
+          {/* Print */}
+          {currentView === "viewer" &&
+            renderWithTooltip(
+              <ActionIcon
+                variant="subtle"
+                radius="md"
+                className="workbench-bar-action-icon"
+                onClick={handlePrint}
+                disabled={
+                  totalItems === 0 || allButtonsDisabled || disableForFullscreen
+                }
+                aria-label={t("workbenchBar.print", "Print PDF")}
+              >
+                <PrintIcon sx={{ fontSize: "1rem" }} />
+              </ActionIcon>,
+              t("workbenchBar.print", "Print PDF"),
+            )}
+
+          {/* Download (file-level action — not relevant in custom views) */}
+          {!isCustomView &&
+            renderWithTooltip(
+              <ActionIcon
+                variant="subtle"
+                radius="md"
+                className="workbench-bar-action-icon"
+                onClick={() => handleExportAll()}
+                disabled={
+                  disableForFullscreen || totalItems === 0 || allButtonsDisabled
+                }
+              >
+                <LocalIcon
+                  icon={icons.downloadIconName}
+                  width="1rem"
+                  height="1rem"
+                />
+              </ActionIcon>,
+              downloadTooltip,
+            )}
+
+          {/* Save As */}
+          {!isCustomView &&
+            icons.saveAsIconName &&
+            renderWithTooltip(
+              <ActionIcon
+                variant="subtle"
+                radius="md"
+                className="workbench-bar-action-icon"
+                onClick={() => handleExportAll(true)}
+                disabled={
+                  disableForFullscreen || totalItems === 0 || allButtonsDisabled
+                }
+              >
+                <LocalIcon
+                  icon={icons.saveAsIconName}
+                  width="1rem"
+                  height="1rem"
+                />
+              </ActionIcon>,
+              t("workbenchBar.saveAs", "Save As"),
+            )}
+
+          {/* Separator: export group | close */}
+          {!isCustomView && (
+            <div className="workbench-bar-divider workbench-bar-globals-sep" />
           )}
 
-        {/* Download (file-level action — not relevant in custom views) */}
-        {!isCustomView &&
-          renderWithTooltip(
-            <ActionIcon
-              variant="subtle"
-              radius="md"
-              className="workbench-bar-action-icon"
-              onClick={() => handleExportAll()}
-              disabled={
-                disableForFullscreen || totalItems === 0 || allButtonsDisabled
-              }
-            >
-              <LocalIcon
-                icon={icons.downloadIconName}
-                width="1rem"
-                height="1rem"
-              />
-            </ActionIcon>,
-            downloadTooltip,
-          )}
-
-        {/* Save As */}
-        {!isCustomView &&
-          icons.saveAsIconName &&
-          renderWithTooltip(
-            <ActionIcon
-              variant="subtle"
-              radius="md"
-              className="workbench-bar-action-icon"
-              onClick={() => handleExportAll(true)}
-              disabled={
-                disableForFullscreen || totalItems === 0 || allButtonsDisabled
-              }
-            >
-              <LocalIcon
-                icon={icons.saveAsIconName}
-                width="1rem"
-                height="1rem"
-              />
-            </ActionIcon>,
-            t("workbenchBar.saveAs", "Save As"),
-          )}
-
-        {/* Separator: export group | close */}
-        {!isCustomView && (
-          <div className="workbench-bar-divider workbench-bar-globals-sep" />
-        )}
-
-        {/* Close (context-aware: close all / close viewer file / close page editor) */}
-        {!isCustomView &&
-          renderWithTooltip(
-            <ActionIcon
-              variant="subtle"
-              radius="md"
-              className="workbench-bar-action-icon"
-              onClick={handleClose}
-              disabled={
-                totalItems === 0 || allButtonsDisabled || disableForFullscreen
-              }
-              aria-label={
-                currentView === "fileEditor"
-                  ? t("workbenchBar.closeAll", "Close All")
-                  : t("workbenchBar.closePdf", "Close PDF")
-              }
-            >
-              <CloseIcon sx={{ fontSize: "1rem" }} />
-            </ActionIcon>,
-            currentView === "fileEditor"
-              ? t("workbenchBar.closeAll", "Close All")
-              : t("workbenchBar.closePdf", "Close PDF"),
-          )}
-      </div>
+          {/* Close (context-aware: close all / close viewer file / close page editor) */}
+          {!isCustomView &&
+            renderWithTooltip(
+              <ActionIcon
+                variant="subtle"
+                radius="md"
+                className="workbench-bar-action-icon"
+                onClick={handleClose}
+                disabled={
+                  totalItems === 0 || allButtonsDisabled || disableForFullscreen
+                }
+                aria-label={
+                  currentView === "fileEditor"
+                    ? t("workbenchBar.closeAll", "Close All")
+                    : t("workbenchBar.closePdf", "Close PDF")
+                }
+              >
+                <CloseIcon sx={{ fontSize: "1rem" }} />
+              </ActionIcon>,
+              currentView === "fileEditor"
+                ? t("workbenchBar.closeAll", "Close All")
+                : t("workbenchBar.closePdf", "Close PDF"),
+            )}
+        </div>
       )}
     </div>
   );

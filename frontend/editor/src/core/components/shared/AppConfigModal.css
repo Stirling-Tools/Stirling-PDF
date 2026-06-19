@@ -5,7 +5,11 @@
 @keyframes settings-focus-pulse {
   0% {
     box-shadow: 0 0 0 3px var(--mantine-color-blue-5);
-    background: color-mix(in srgb, var(--mantine-color-blue-5) 16%, transparent);
+    background: color-mix(
+      in srgb,
+      var(--mantine-color-blue-5) 16%,
+      transparent
+    );
   }
   100% {
     box-shadow: 0 0 0 6px transparent;

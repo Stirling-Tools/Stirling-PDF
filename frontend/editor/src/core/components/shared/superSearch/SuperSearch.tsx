@@ -234,7 +234,9 @@ export default function SuperSearch() {
           "superSearch.placeholder",
           "Search files, tools and settings…",
         )}
-        icon={<LocalIcon icon="search-rounded" width="1.1rem" height="1.1rem" />}
+        icon={
+          <LocalIcon icon="search-rounded" width="1.1rem" height="1.1rem" />
+        }
         autoComplete="off"
         aria-label={t("superSearch.ariaLabel", "Super search")}
         onFocus={() => setOpen(true)}

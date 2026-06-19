@@ -1380,10 +1380,7 @@ export default function FileManagerView() {
                     </ActionIcon>
                   ) : null
                 }
-                aria-label={t(
-                  "filesPage.search.label",
-                  "Filter files by name",
-                )}
+                aria-label={t("filesPage.search.label", "Filter files by name")}
                 style={{ width: 180 }}
               />
               <Select
