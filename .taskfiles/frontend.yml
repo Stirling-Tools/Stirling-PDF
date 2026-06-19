@@ -370,6 +370,7 @@ tasks:
     desc: "Typecheck scripts"
     deps: [prepare]
     cmds:
+      - npx tsc --noEmit --project scripts/tsconfig.json
       - npx tsc --noEmit --project editor/scripts/tsconfig.json
 
   typecheck:prototypes:
