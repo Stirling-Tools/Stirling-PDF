@@ -1,5 +1,6 @@
 import { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from "axios";
 import { withBasePath } from "@app/constants/app";
+import { getBrowserId } from "@app/utils/browserIdentifier";
 
 let isRefreshing = false;
 let failedQueue: Array<{
@@ -124,6 +125,8 @@ export function setupApiInterceptors(client: AxiosInstance): void {
           config.headers[key] = value;
         }
       }
+
+      config.headers["X-Browser-Id"] = getBrowserId();
 
       return config;
     },
