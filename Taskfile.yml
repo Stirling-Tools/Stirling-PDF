@@ -122,21 +122,33 @@ tasks:
           BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
 
   dev:portal:proxy:
-    desc: "Serve editor + portal on ONE origin + backend (test shared-token login)"
+    desc: "Editor + portal on ONE origin + backend via live dev servers (shared-token login)"
     vars:
       PORTS:
-        sh: '{{if eq OS "windows"}}{{.FIND_FREE_PORT_PS}} 8080 3000{{else}}{{.FIND_FREE_PORT_SH}} 8080 3000{{end}}'
+        sh: '{{if eq OS "windows"}}{{.FIND_FREE_PORT_PS}} 8080 3000 5173 5174{{else}}{{.FIND_FREE_PORT_SH}} 8080 3000 5173 5174{{end}}'
       BACKEND_PORT: '{{index (splitList "\n" .PORTS) 0}}'
       PROXY_PORT: '{{index (splitList "\n" .PORTS) 1}}'
+      EDITOR_PORT: '{{index (splitList "\n" .PORTS) 2}}'
+      PORTAL_PORT: '{{index (splitList "\n" .PORTS) 3}}'
     deps:
       - task: backend:dev
         vars:
           PORT: '{{.BACKEND_PORT}}'
           SECURITY_ENABLELOGIN: "true"
-      - task: frontend:dev:portal:proxy
+      - task: frontend:dev:portal:proxy:editor
+        vars:
+          PORT: '{{.EDITOR_PORT}}'
+          BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
+      - task: frontend:dev:portal:proxy:portal
+        vars:
+          PORT: '{{.PORTAL_PORT}}'
+          BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
+      - task: frontend:dev:portal:proxy:serve
         vars:
           PORT: '{{.PROXY_PORT}}'
           BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
+          EDITOR_DEV_URL: 'http://localhost:{{.EDITOR_PORT}}'
+          PORTAL_DEV_URL: 'http://localhost:{{.PORTAL_PORT}}'
 
   dev:saas:
     desc: "Start SaaS backend + frontend concurrently on free ports"
@@ -183,6 +195,23 @@ tasks:
     cmds:
       - task: backend:build
       - task: frontend:build
+
+  preview:portal:proxy:
+    desc: "Build + serve editor + portal on ONE origin + backend (prod-like auth test)"
+    vars:
+      PORTS:
+        sh: '{{if eq OS "windows"}}{{.FIND_FREE_PORT_PS}} 8080 3000{{else}}{{.FIND_FREE_PORT_SH}} 8080 3000{{end}}'
+      BACKEND_PORT: '{{index (splitList "\n" .PORTS) 0}}'
+      PROXY_PORT: '{{index (splitList "\n" .PORTS) 1}}'
+    deps:
+      - task: backend:dev
+        vars:
+          PORT: '{{.BACKEND_PORT}}'
+          SECURITY_ENABLELOGIN: "true"
+      - task: frontend:preview:portal:proxy
+        vars:
+          PORT: '{{.PROXY_PORT}}'
+          BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
 
   # ============================================================
   # Test
