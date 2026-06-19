@@ -160,7 +160,7 @@ export function useSigningSessionController(enabled: boolean) {
     const signedFile = new File([response.data], filename, {
       type: "application/pdf",
     });
-    await fileActions.addFiles([signedFile]);
+    await fileActions.addFiles([signedFile], { skipUploadTracking: true });
     alert({
       alertType: "success",
       title: t("success"),
@@ -189,7 +189,7 @@ export function useSigningSessionController(enabled: boolean) {
     const signedFile = new File([response.data], filename, {
       type: "application/pdf",
     });
-    await fileActions.addFiles([signedFile]);
+    await fileActions.addFiles([signedFile], { skipUploadTracking: true });
     alert({
       alertType: "success",
       title: t("success"),

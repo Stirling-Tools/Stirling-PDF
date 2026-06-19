@@ -49,6 +49,7 @@ app/core/src/main/resources/static/index.html
 # Prerendered per-route SPA pages (OG/social-preview), e.g. compress.html. api-landing.html is source.
 app/core/src/main/resources/static/*.html
 !app/core/src/main/resources/static/api-landing.html
+!app/core/src/main/resources/static/mobile-upload.html
 # Prerendered nested-route pages (e.g. settings/people.html)
 app/core/src/main/resources/static/settings/
 app/core/src/main/resources/static/locales/

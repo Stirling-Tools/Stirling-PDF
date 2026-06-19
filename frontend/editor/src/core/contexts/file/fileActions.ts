@@ -20,6 +20,7 @@ import { StirlingFile } from "@app/types/fileContext";
 import { fileStorage } from "@app/services/fileStorage";
 import { zipFileService } from "@app/services/zipFileService";
 import { FileAnalyzer } from "@app/services/fileAnalyzer";
+import { trackPdfUploaded } from "@app/services/analytics";
 const DEBUG = process.env.NODE_ENV === "development";
 const HYDRATION_CONCURRENCY = 2;
 let activeHydrations = 0;
@@ -252,6 +253,7 @@ interface AddFileOptions {
     fileName: string,
   ) => Promise<boolean>; // Optional callback to confirm extraction of large ZIP files
   allowDuplicates?: boolean;
+  skipUploadTracking?: boolean;
 }
 
 /**
@@ -536,6 +538,10 @@ export async function addFiles(
           }
         }),
       );
+    }
+
+    if (!options.skipUploadTracking && stirlingFiles.length > 0) {
+      trackPdfUploaded(stirlingFiles);
     }
 
     return stirlingFiles;
