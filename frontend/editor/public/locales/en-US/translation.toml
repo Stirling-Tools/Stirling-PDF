@@ -7596,6 +7596,16 @@ title = "Upload to Server"
 updateButton = "Update on Server"
 uploadButton = "Upload to Server"
 
+[superSearch]
+ariaLabel = "Super search"
+hint = "Type to search across your files, tools and settings"
+placeholder = "Search files, tools and settings…"
+
+[superSearch.group]
+files = "Files"
+settings = "Settings"
+tools = "Tools"
+
 [survey]
 title = "Stirling-PDF Survey"
 
@@ -8392,16 +8402,6 @@ bullet2 = "Transparent backgrounds recommended for best results"
 bullet3 = "Image will be resized to fit signature area"
 description = "Upload a pre-created signature image. Ideal if you have a scanned signature or company logo."
 title = "Upload Signature Image"
-
-[superSearch]
-ariaLabel = "Super search"
-hint = "Type to search across your files, tools and settings"
-placeholder = "Search files, tools and settings…"
-
-[superSearch.group]
-files = "Files"
-settings = "Settings"
-tools = "Tools"
 
 [workbenchBar]
 activeFiles = "Active Files"
