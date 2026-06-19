@@ -87,15 +87,12 @@ export default function MobileUploadModal({
   // Build the QR-code URL the phone opens. It must land on the public
   // /mobile-scanner route under the app's base path, otherwise the phone hits
   // the auth-gated catch-all route and is bounced to the login page.
-  const isDesktop = config?.isDesktop === true;
   const mobileUrl = buildMobileScannerUrl({
-    configuredUrl: isDesktop
-      ? config?.frontendUrl || ""
-      : localStorage.getItem("server_url") || config?.frontendUrl || "",
+    configuredUrl:
+      localStorage.getItem("server_url") || config?.frontendUrl || "",
     sessionId,
     origin: window.location.origin,
     basePath: BASE_PATH,
-    useStaticUploadPage: isDesktop,
   });
 
   // Create session on backend

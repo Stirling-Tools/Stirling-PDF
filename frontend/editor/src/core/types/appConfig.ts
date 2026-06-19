@@ -38,7 +38,6 @@ export interface AppConfig {
   mobileScannerStretchToFit?: boolean;
   appVersion?: string;
   machineType?: string;
-  isDesktop?: boolean;
   activeSecurity?: boolean;
   dependenciesReady?: boolean;
   error?: string;
