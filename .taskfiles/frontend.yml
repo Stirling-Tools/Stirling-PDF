@@ -151,6 +151,21 @@ tasks:
       # the inline assignment cross-platform.
       - '{{if .EDITOR_URL}}VITE_EDITOR_URL={{.EDITOR_URL}} {{end}}npx vite portal --port {{.PORT}}{{if .OPEN}} --open{{end}}'
 
+  dev:portal:proxy:
+    desc: "Serve editor + portal builds behind one origin (single-origin auth testing)"
+    deps: [prepare]
+    vars:
+      PORT: '{{.PORT | default "3000"}}'
+      BACKEND_URL: '{{.BACKEND_URL | default "http://localhost:8080"}}'
+    env:
+      # Consumed by scripts/dev-origin-proxy.mjs.
+      PORT: '{{.PORT}}'
+      BACKEND_URL: '{{.BACKEND_URL}}'
+    cmds:
+      - VITE_BUILD_FOR_PREVIEW=1 npx vite build editor --mode proprietary
+      - RUN_SUBPATH=portal npx vite build portal
+      - node scripts/dev-origin-proxy.mjs
+
   # ============================================================
   # Build
   # ============================================================

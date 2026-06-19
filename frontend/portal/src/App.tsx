@@ -62,12 +62,18 @@ function SettingsHost() {
 }
 
 export function App() {
+  // Honour the Vite base path so the portal routes correctly when served under a
+  // subpath (e.g. "/portal" behind the single-origin proxy). BASE_URL is "./"
+  // for a standalone build, which isn't a valid router basename, so only pass it
+  // when it's an absolute subpath.
+  const baseUrl = import.meta.env.BASE_URL;
+  const basename = baseUrl.startsWith("/") ? baseUrl : undefined;
   return (
     <ThemeProvider>
       <PortalMantineProvider>
         <AuthProvider mode="spring">
           <TierProvider initialTier="pro">
-            <BrowserRouter>
+            <BrowserRouter basename={basename}>
               <UIProvider>
                 <GlobalShortcuts />
                 <AuthGate>

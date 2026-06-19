@@ -121,6 +121,23 @@ tasks:
           PORT: '{{.EDITOR_PORT}}'
           BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
 
+  dev:portal:proxy:
+    desc: "Serve editor + portal on ONE origin + backend (test shared-token login)"
+    vars:
+      PORTS:
+        sh: '{{if eq OS "windows"}}{{.FIND_FREE_PORT_PS}} 8080 3000{{else}}{{.FIND_FREE_PORT_SH}} 8080 3000{{end}}'
+      BACKEND_PORT: '{{index (splitList "\n" .PORTS) 0}}'
+      PROXY_PORT: '{{index (splitList "\n" .PORTS) 1}}'
+    deps:
+      - task: backend:dev
+        vars:
+          PORT: '{{.BACKEND_PORT}}'
+          SECURITY_ENABLELOGIN: "true"
+      - task: frontend:dev:portal:proxy
+        vars:
+          PORT: '{{.PROXY_PORT}}'
+          BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
+
   dev:saas:
     desc: "Start SaaS backend + frontend concurrently on free ports"
     cmds:
