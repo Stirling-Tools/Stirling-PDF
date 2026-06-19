@@ -177,35 +177,24 @@ function maybeAutoPrefetch(
       const pdfBase64 = uint8ToBase64(bytes);
       const pageIdx = pageIdxOfPagePtr(ctx);
 
-      // Per-char prefetch: for each missing char, ask the backend for
-      // a font whose ToUnicode CMap maps SOME charcode to THIS char.
-      // The backend's findFontByToUnicode (Java side) scans every font
-      // on the page and returns the first match - so for a per-glyph
-      // Type3 PDF like Sample.pdf this picks the right font per char.
-      //
-      // Earlier design used a single locator + text query, which only
-      // worked when one font covered every char. Type3-per-glyph PDFs
-      // (Chrome/Skia output) split chars across many fonts, so per-char
-      // queries are essential.
-      //
-      // The resolved charcode is cached under BOTH:
-      //   - (borrowedFont, ch): so the legacy single-text emit path
-      //     (writeViaCharcodesOrSetText) still finds it. This produces
-      //     wrong visuals for cross-font glyphs but at least keeps the
-      //     value reachable.
-      //   - (perCharFont, ch) where perCharFont is the PDFium font
-      //     handle that already renders this char on the page (probed
-      //     via findFontForChar). This is what the per-char emit
-      //     branch in editTextHelpers looks up after probing per-char
-      //     font - giving Sample.pdf a visually-matching M.
+      // Per-char prefetch: for each missing char, resolve the font that
+      // actually renders it on the page (findFontForChar), name that font, and
+      // ask the backend for THAT font's charcode. The result is cached ONLY
+      // under the rendering font - never the borrowed querying font, whose
+      // charcode would be a different font's (the cross-font wrong-glyph bug).
+      // Naming the font also disambiguates pages where two fonts render the
+      // same char. Single-font pages and Sample.pdf's per-glyph fonts are
+      // unaffected (rendering font == the only font with the char).
       await Promise.all(
         chars.map(async (ch) => {
+          const perCharFont = findFontForChar(ch, ctx) || fontPtr;
           const json = await postCharcodes({
             pdfBase64,
             pageIndex: pageIdx >= 0 ? pageIdx : 0,
             locatorChar: ch,
             locatorX: 1,
             locatorY: 1,
+            fontName: readFontName(ctx.module, perCharFont),
             text: ch,
           });
           if (
@@ -214,17 +203,10 @@ function maybeAutoPrefetch(
             !json.charcodes ||
             json.charcodes.length === 0
           ) {
-            charCache.set(cacheKey(fontPtr, ch), null);
+            charCache.set(cacheKey(perCharFont, ch), null);
             return;
           }
-          const code = json.charcodes[0];
-          charCache.set(cacheKey(fontPtr, ch), code);
-          // Also cache under the per-char font handle so the
-          // per-char emit branch in editTextHelpers can find it.
-          const perCharFont = findFontForChar(ch, ctx);
-          if (perCharFont && perCharFont !== fontPtr) {
-            charCache.set(cacheKey(perCharFont, ch), code);
-          }
+          charCache.set(cacheKey(perCharFont, ch), json.charcodes[0]);
         }),
       );
     } catch (err) {
@@ -346,6 +328,37 @@ export function findFontForChar(
 /** Test-only: clear the per-char-font cache. */
 export function _clearFontForCharCacheForTests(): void {
   fontForCharCache.clear();
+}
+
+interface FontNameModule {
+  FPDFFont_GetBaseFontName?: (font: number, buf: number, len: number) => number;
+}
+
+/**
+ * Read a font's /BaseFont name so the backend can disambiguate WHICH font to
+ * encode against when two fonts on the page render the same char. Returns
+ * undefined if unavailable (then the backend keeps its first-match behaviour).
+ */
+function readFontName(
+  m: ResolverContext["module"],
+  fontPtr: number,
+): string | undefined {
+  if (!fontPtr) return undefined;
+  const fn = (m as unknown as FontNameModule).FPDFFont_GetBaseFontName;
+  if (typeof fn !== "function") return undefined;
+  try {
+    const len = fn(fontPtr, 0, 0);
+    if (len <= 1) return undefined;
+    const buf = m.pdfium.wasmExports.malloc(len);
+    try {
+      fn(fontPtr, buf, len);
+      return m.pdfium.UTF8ToString(buf) || undefined;
+    } finally {
+      m.pdfium.wasmExports.free(buf);
+    }
+  } catch {
+    return undefined;
+  }
 }
 
 /**
@@ -498,6 +511,9 @@ export async function prewarmBackendCacheForPage(
                 locatorChar: ch,
                 locatorX: 1,
                 locatorY: 1,
+                // Name the target font so a page with two fonts rendering `ch`
+                // encodes against THIS one, not whichever appears first.
+                fontName: readFontName(m, perCharFont),
                 text: ch,
               });
               if (!json || json.error || !json.charcodes?.length) {

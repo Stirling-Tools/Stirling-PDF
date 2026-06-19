@@ -752,12 +752,33 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
       [];
     let allOk = true;
     for (const ch of opts.text) {
-      const charFont = findFontForChar(ch, ctx);
-      if (!charFont) {
-        allOk = false;
-        break;
+      // Prefer the run's OWN font when it renders this char: it is the
+      // authoritative font for the run's text, so it can't alias to a
+      // different font that happens to render the same Unicode elsewhere on the
+      // page (the cross-font wrong-glyph bug). The cache is keyed by the font a
+      // charcode is valid for, so a hit on originalFontPtr means it genuinely
+      // renders ch. Fall back to scanning the page when it doesn't.
+      let charFont = 0;
+      let resolved = null;
+      if (opts.originalFontPtr) {
+        const own = tryResolveCharcodes(opts.originalFontPtr, ch, ctx);
+        if (
+          own?.result &&
+          own.result.charcodes.length === 1 &&
+          own.result.missing.length === 0
+        ) {
+          charFont = opts.originalFontPtr;
+          resolved = own;
+        }
       }
-      const resolved = tryResolveCharcodes(charFont, ch, ctx);
+      if (!charFont) {
+        charFont = findFontForChar(ch, ctx) || 0;
+        if (!charFont) {
+          allOk = false;
+          break;
+        }
+        resolved = tryResolveCharcodes(charFont, ch, ctx);
+      }
       if (
         !resolved?.result ||
         resolved.result.charcodes.length !== 1 ||

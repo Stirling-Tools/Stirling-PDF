@@ -109,6 +109,14 @@ public class PdfTextEditorV2CharcodeController {
         /** PDF-space y of the existing locatorChar. */
         private double locatorY;
 
+        /**
+         * Optional /BaseFont name of the target font (as PDFium's FPDFFont_GetBaseFontName reports
+         * it). When a page has TWO fonts that both render {@code locatorChar}, this disambiguates
+         * which one to encode against - otherwise the first font found wins and a cross-font edit
+         * gets the wrong font's charcode. Null = keep the legacy first-match behaviour.
+         */
+        private String fontName;
+
         /** Unicode text the frontend wants to encode. */
         private String text;
     }
@@ -178,7 +186,8 @@ public class PdfTextEditorV2CharcodeController {
             // pick the first one whose ToUnicode CMap maps SOME charcode to the locator char.
             // For Chrome/Skia-printed PDFs that emit one Type3 font per glyph, this lands on
             // the exact font that renders the locator char.
-            PDFont font = findFontByToUnicode(page, request.getLocatorChar(), doc);
+            PDFont font =
+                    findFontByToUnicode(page, request.getLocatorChar(), request.getFontName(), doc);
             if (font == null) {
                 resp.setError(
                         "no text fragment matching locatorChar="
@@ -262,10 +271,19 @@ public class PdfTextEditorV2CharcodeController {
      * PDFStreamEngine.processPage, which throws UnsupportedOperationException on Type3 font glyph
      * rendering. The PDFont lookup itself is purely metadata-driven and works on all subtypes.
      */
-    private static PDFont findFontByToUnicode(PDPage page, String wantChar, PDDocument doc) {
+    private static PDFont findFontByToUnicode(
+            PDPage page, String wantChar, String fontName, PDDocument doc) {
         try {
             PDResources resources = page.getResources();
-            PDFont match = scanResources(resources, wantChar);
+            // First pass: if a target font name was supplied, prefer the font
+            // whose /BaseFont matches AND renders the char. This disambiguates a
+            // cross-font edit (two fonts both rendering wantChar). Falls through
+            // to the legacy first-match when fontName is null or doesn't match.
+            if (fontName != null && !fontName.isEmpty()) {
+                PDFont named = scanResources(resources, wantChar, fontName);
+                if (named != null) return named;
+            }
+            PDFont match = scanResources(resources, wantChar, null);
             if (match != null) return match;
             // For Chrome/Skia PDFs the per-glyph Type3 fonts often live on the page directly,
             // so the scan above is enough. Future: walk Form XObjects too.
@@ -275,8 +293,15 @@ public class PdfTextEditorV2CharcodeController {
         return null;
     }
 
-    private static PDFont scanResources(PDResources resources, String wantChar) {
+    /**
+     * Return a font on the page that renders {@code wantChar}. When {@code wantName} is non-null,
+     * only a font whose /BaseFont equals it qualifies (cross-font disambiguation); otherwise the
+     * first font with the char wins. The subset tag ("ABCDEF+") is ignored when comparing names so
+     * a re-saved subset still matches.
+     */
+    private static PDFont scanResources(PDResources resources, String wantChar, String wantName) {
         if (resources == null) return null;
+        String wantBase = stripSubsetTag(wantName);
         for (org.apache.pdfbox.cos.COSName name : resources.getFontNames()) {
             PDFont font;
             try {
@@ -285,6 +310,9 @@ public class PdfTextEditorV2CharcodeController {
                 continue;
             }
             if (font == null) continue;
+            if (wantBase != null && !wantBase.equals(stripSubsetTag(font.getName()))) {
+                continue;
+            }
             // Cheap inverse-CMap probe: iterate codes until we hit one whose toUnicode is wantChar.
             // For Type3 with at most ~16 glyphs, this is microseconds. For full Type0 subsets
             // it's a few-thousand-iteration scan.
@@ -300,6 +328,17 @@ public class PdfTextEditorV2CharcodeController {
             }
         }
         return null;
+    }
+
+    /** Drop the 6-letter "ABCDEF+" subset prefix PDF puts on subset /BaseFont names. */
+    private static String stripSubsetTag(String fontName) {
+        if (fontName == null) return null;
+        if (fontName.length() > 7
+                && fontName.charAt(6) == '+'
+                && fontName.chars().limit(6).allMatch(c -> c >= 'A' && c <= 'Z')) {
+            return fontName.substring(7);
+        }
+        return fontName;
     }
 
     /**
