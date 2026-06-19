@@ -1,0 +1,14 @@
+# Portal translations — US English is the source of truth. Other languages are
+# produced from this file by the Crowdin pipeline. Keys are grouped by
+# view/feature; shared strings live under [common].
+
+[common]
+inviteMember = "Invite member"
+
+[users]
+title = "Users"
+subtitle = "The people in your organization and the access they hold — roles, status and security controls."
+
+[users.empty]
+title = "No members yet"
+description = "Invite your team to start collaborating on documents and pipelines."
