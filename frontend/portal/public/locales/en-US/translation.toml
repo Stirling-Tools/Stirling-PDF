@@ -1545,3 +1545,195 @@ coldStorage = "cold storage"
 deleted = "Deleted"
 never = "never"
 purged = "purged"
+
+[recentActivity]
+title = "Recent activity"
+viewAll = "View all"
+
+[recentActivity.empty]
+title = "Nothing here yet"
+description = "Pipeline runs, deploys and agent events will appear here."
+
+[useCases]
+title = "Popular use cases"
+viewAll = "View all pipelines"
+
+[useCases.items.autoRouting]
+eyebrow = "AUTO-ROUTING"
+title = "Auto-classify and route incoming documents"
+blurb = "One classifier reads what arrived — KYC form, invoice, contract, COI — and routes to the right downstream pipeline. No manual triage, no docs in the wrong workflow."
+cta = "Build a classifier pipeline"
+
+[useCases.items.piiRedaction]
+eyebrow = "PII REDACTION"
+title = "Redact PII before it leaves your stack"
+blurb = "Strip sensitive fields before storage, indexing, or LLM processing. Schema-aware, per-field audit, BYOK or HYOK keys. Compliance at the document boundary, not per pipeline."
+cta = "See redaction pipelines"
+
+[useCases.items.trainingData]
+eyebrow = "TRAINING DATA"
+title = "Turn PDFs into training data"
+blurb = "Batch-import an archive, redact PII, classify, chunk, and emit ready-to-load JSON for fine-tuning, eval sets, or RAG. Self-completing and replayable."
+cta = "Build a training-data pipeline"
+
+[useCases.items.authenticity]
+eyebrow = "AUTHENTICITY"
+title = "Verify signatures and detect tampering"
+blurb = "Cryptographic checks at the document boundary — signature validation, tamper detection, signing flows for outbound documents. Trust decisions in the pipeline, not your app code."
+cta = "Try authenticity check"
+
+[policySummary]
+title = "What runs on your PDFs"
+subtitle = "Standing automations every document passes through, regardless of which pipeline handles it."
+activeSummary = "{{active}} / {{total}} active"
+noRule = "No rule enforced yet"
+
+[policySummary.state]
+active = "Active"
+off = "Off"
+soon = "Soon"
+
+[policySummary.column]
+policy = "Policy"
+status = "Status"
+activeRule = "Active rule"
+
+[policySummary.action]
+comingSoon = "Coming soon"
+configure = "Configure"
+setUp = "Set up"
+
+[policySummary.empty]
+title = "No policies yet"
+description = "Once policies are configured, the categories appear here."
+
+[opRunner]
+title = "Try a PDF operation"
+subtitle = "Drop a sample, pick an op, see what Stirling returns."
+featuredOps = "Featured ops"
+durationMs = "{{ms}} ms"
+
+[opRunner.action]
+close = "Close"
+runAgain = "Run again"
+openBuilder = "Open the pipeline builder"
+run = "Run operation"
+running = "Running…"
+
+[opRunner.status]
+failed = "Failed"
+completed = "Completed"
+
+[opRunner.drop]
+title = "Drop a PDF here"
+hint = "or use a sample document."
+replaceHint = "Drop again or pick another sample to replace."
+pickAnother = "Pick another sample"
+useSample = "Use a sample"
+
+[opRunner.empty]
+title = "No featured ops yet"
+description = "Once operations are published, they'll show up here."
+
+[opRunner.hint]
+ready = "Ready"
+aSample = "a sample"
+press = "Press"
+toInvoke = "to invoke"
+
+[opRunner.hint.runOn]
+before = "Run"
+middle = "on"
+
+[opRunner.running]
+title = "Running {{label}}…"
+
+[opRunner.error]
+title = "The operation didn't complete"
+unknown = "Unknown error"
+
+[welcome]
+ariaLabel = "Stirling product highlights"
+pagination = "Carousel pagination"
+slideLabel = "Slide {{number}}: {{title}}"
+
+[welcome.ornament.editor]
+critical = "Critical"
+signed = "signed"
+ocrClean = "OCR-clean"
+schemaMatch = "schema match 0.97"
+
+[welcome.slides.editor]
+eyebrow = "PDF Editor"
+title = "The #1 PDF Editor on GitHub"
+sub = "Annotate, sign, redact, and review locally or in the cloud. Brought to the platform as the credibility anchor of the Stirling control plane."
+primary = "Install PDF Editor"
+secondary = "Connect an instance"
+
+[welcome.slides.platform]
+eyebrow = "Platform"
+title = "PDF Infrastructure for Developers"
+sub = "Ingest from agents, APIs and connectors. Run composable pipelines with evals and golden sets. Land in a vault with zero-standing-access controls."
+primary = "Try a PDF operation"
+secondary = "Get an API key"
+
+[welcome.slides.agents]
+eyebrow = "AI Agents"
+title = "PDF Processor for AI Agents"
+sub = "Wire your agent via MCP, REST or tool definitions. Deterministic operations and guardrails — test with scenarios and evals before you ship."
+primary = "Try PDF Processor"
+secondary = "View MCP docs"
+
+[notifications]
+title = "Notifications"
+markAllRead = "Mark all read"
+viewAll = "View all"
+
+[notifications.ariaLabel]
+unread_one = "Notifications, {{count}} unread"
+unread_other = "Notifications, {{count}} unread"
+none = "Notifications, no unread"
+
+[notifications.count]
+new_one = "{{count}} new"
+new_other = "{{count}} new"
+loading = "loading"
+allRead = "all read"
+
+[notifications.empty]
+title = "You're all caught up"
+description = "No new notifications."
+
+[mocks.label]
+on = "Mocks ON"
+off = "Mocks OFF"
+
+[mocks.tooltip]
+on = "Mock data ON — fetch calls are intercepted by MSW. Click to switch to the real network (reloads the page)."
+off = "Mock data OFF — fetch calls go to the real network. Click to re-enable mocks (reloads the page)."
+
+[forkWizard]
+title = "Fork a starter pipeline"
+subtitle = "Clone a proven workflow and tune it — every template ships the same four-stage backbone."
+
+[forkWizard.status]
+ready = "Ready to deploy"
+building = "Building…"
+
+[forkWizard.action]
+pickAnother = "Pick another"
+cancel = "Cancel"
+deploy = "Deploy pipeline"
+
+[processingStatus]
+upgrade = "Upgrade"
+pdfsThisMonth = "PDFs this month"
+progressLabel = "{{used}} of {{cap}} PDFs used this month"
+volumeSuffix = "PDFs processed · last 30 days"
+managePlan = "Manage plan"
+
+[usageChart]
+defaultLabel = "Docs processed · last 30 days"
+delta = "{{pct}}% vs prior 30d"
+docsValue = "{{value}} docs"
+srAnnounce = "{{date}}: {{value}} docs"
