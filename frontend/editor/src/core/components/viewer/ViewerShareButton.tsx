@@ -78,10 +78,15 @@ export default function ViewerShareButton({
         remoteOwnedByCurrentUser: true,
         remoteSharedViaLink: false,
       };
-      for (const s of chain) {
-        actions.updateStirlingFileStub(s.id, metadata);
-        await fileStorage.updateFileMetadata(s.id, metadata);
-      }
+      // Stub updates are synchronous React dispatches; the IndexedDB writes
+      // each touch a distinct file id, so run them in parallel rather than
+      // awaiting serially (avoids N× round-trip latency).
+      await Promise.all(
+        chain.map((s) => {
+          actions.updateStirlingFileStub(s.id, metadata);
+          return fileStorage.updateFileMetadata(s.id, metadata);
+        }),
+      );
       setConfirmOpen(false);
       openShare({ ...stub, ...metadata });
     } catch (error) {
