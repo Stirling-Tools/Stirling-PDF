@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { BrowserRouter, MemoryRouter } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
@@ -26,10 +26,10 @@ vi.mock("react-i18next", () => ({
 // Mock i18n module to avoid initialization
 vi.mock("@app/i18n", () => ({
   updateSupportedLanguages: vi.fn(),
-  supportedLanguages: { "en-GB": "English" },
+  supportedLanguages: { "en-US": "English (US)" },
   rtlLanguages: [],
   default: {
-    language: "en-GB",
+    language: "en-US",
     changeLanguage: vi.fn(),
     options: {},
   },
@@ -110,6 +110,7 @@ describe("Login", () => {
       session: null,
       user: null,
       displayName: null,
+      isAnonymous: false,
       loading: false,
       error: null,
       signOut: vi.fn(),
@@ -157,6 +158,7 @@ describe("Login", () => {
       session: mockSession,
       user: mockSession.user,
       displayName: mockSession.user.username,
+      isAnonymous: false,
       loading: false,
       error: null,
       signOut: vi.fn(),
@@ -176,24 +178,27 @@ describe("Login", () => {
     });
   });
 
-  it("should show loading state while auth is loading", () => {
+  it("should show loading state while auth is loading", async () => {
     vi.mocked(useAuth).mockReturnValue({
       session: null,
       user: null,
       displayName: null,
+      isAnonymous: false,
       loading: true,
       error: null,
       signOut: vi.fn(),
       refreshSession: vi.fn(),
     });
 
-    render(
-      <TestWrapper>
-        <BrowserRouter>
-          <Login />
-        </BrowserRouter>
-      </TestWrapper>,
-    );
+    await act(async () => {
+      render(
+        <TestWrapper>
+          <BrowserRouter>
+            <Login />
+          </BrowserRouter>
+        </TestWrapper>,
+      );
+    });
 
     // Component shouldn't redirect or show form while loading
     expect(mockNavigate).not.toHaveBeenCalled();
@@ -510,26 +515,30 @@ describe("Login", () => {
     expect(springAuth.signInWithPassword).not.toHaveBeenCalled();
   });
 
-  it("should display session expired message from URL param", () => {
-    render(
-      <TestWrapper>
-        <MemoryRouter initialEntries={["/login?expired=true"]}>
-          <Login />
-        </MemoryRouter>
-      </TestWrapper>,
-    );
+  it("should display session expired message from URL param", async () => {
+    await act(async () => {
+      render(
+        <TestWrapper>
+          <MemoryRouter initialEntries={["/login?expired=true"]}>
+            <Login />
+          </MemoryRouter>
+        </TestWrapper>,
+      );
+    });
 
     expect(screen.getByText(/session.*expired/i)).toBeInTheDocument();
   });
 
-  it("should display account created success message", () => {
-    render(
-      <TestWrapper>
-        <MemoryRouter initialEntries={["/login?messageType=accountCreated"]}>
-          <Login />
-        </MemoryRouter>
-      </TestWrapper>,
-    );
+  it("should display account created success message", async () => {
+    await act(async () => {
+      render(
+        <TestWrapper>
+          <MemoryRouter initialEntries={["/login?messageType=accountCreated"]}>
+            <Login />
+          </MemoryRouter>
+        </TestWrapper>,
+      );
+    });
 
     expect(screen.getByText(/account created/i)).toBeInTheDocument();
   });

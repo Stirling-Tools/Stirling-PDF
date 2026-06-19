@@ -24,7 +24,7 @@ import { WorkbenchType, isBaseWorkbench } from "@app/types/workbench";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
-import { downloadFile } from "@app/services/downloadService";
+import { downloadFileWithPolicy as downloadFile } from "@app/services/exportWithPolicy";
 import {
   WorkbenchBarButtonConfig,
   WorkbenchBarRenderContext,
@@ -153,6 +153,7 @@ export default function WorkbenchBar({
             data: new Blob([buffer], { type: "application/pdf" }),
             filename: fileToExport.name,
             localPath: forceNewFile ? undefined : stub?.localFilePath,
+            fileId: stub?.id,
           });
           if (!forceNewFile && !result.cancelled && stub && result.savedPath) {
             fileActions.updateStirlingFileStub(stub.id, {
@@ -182,6 +183,7 @@ export default function WorkbenchBar({
             data: file,
             filename: file.name,
             localPath: forceNewFile ? undefined : stub?.localFilePath,
+            fileId: stub?.id,
           });
           if (result.cancelled) continue;
           if (!forceNewFile && stub && result.savedPath) {
@@ -377,7 +379,7 @@ export default function WorkbenchBar({
             <div className="workbench-bar-divider" />
           </>
         )}
-        {hasFiles &&
+        {(hasFiles || isCustomView) &&
           viewOptions.map((opt) => (
             <button
               key={opt.value}
@@ -455,28 +457,30 @@ export default function WorkbenchBar({
             t("workbenchBar.print", "Print PDF"),
           )}
 
-        {/* Download */}
-        {renderWithTooltip(
-          <ActionIcon
-            variant="subtle"
-            radius="md"
-            className="workbench-bar-action-icon"
-            onClick={() => handleExportAll()}
-            disabled={
-              disableForFullscreen || totalItems === 0 || allButtonsDisabled
-            }
-          >
-            <LocalIcon
-              icon={icons.downloadIconName}
-              width="1rem"
-              height="1rem"
-            />
-          </ActionIcon>,
-          downloadTooltip,
-        )}
+        {/* Download (file-level action — not relevant in custom views) */}
+        {!isCustomView &&
+          renderWithTooltip(
+            <ActionIcon
+              variant="subtle"
+              radius="md"
+              className="workbench-bar-action-icon"
+              onClick={() => handleExportAll()}
+              disabled={
+                disableForFullscreen || totalItems === 0 || allButtonsDisabled
+              }
+            >
+              <LocalIcon
+                icon={icons.downloadIconName}
+                width="1rem"
+                height="1rem"
+              />
+            </ActionIcon>,
+            downloadTooltip,
+          )}
 
         {/* Save As */}
-        {icons.saveAsIconName &&
+        {!isCustomView &&
+          icons.saveAsIconName &&
           renderWithTooltip(
             <ActionIcon
               variant="subtle"

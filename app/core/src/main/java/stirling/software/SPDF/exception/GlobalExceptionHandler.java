@@ -24,6 +24,7 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -979,6 +980,49 @@ public class GlobalExceptionHandler {
         problemDetail.setTitle(title);
         problemDetail.setProperty("title", title); // Ensure serialization
         problemDetail.setProperty("method", ex.getHttpMethod());
+        addStandardHints(
+                problemDetail,
+                "error.notFound.hints",
+                List.of(
+                        "Verify the URL path and HTTP method are correct.",
+                        "Check the API base path and version if applicable.",
+                        "Ensure there are no typos in the endpoint path."));
+        problemDetail.setProperty("actionRequired", "Use a valid endpoint URL and method.");
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .contentType(PROBLEM_JSON)
+                .body(problemDetail);
+    }
+
+    /** Unmapped path → clean 404 instead of falling through to the generic 500 catch-all. */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ProblemDetail> handleNoResourceFound(
+            NoResourceFoundException ex, HttpServletRequest request) {
+        // /api/* miss = likely missing controller (operator-relevant); other paths = favicons,
+        // robots.txt, scanner noise. Demote the latter so prod logs aren't flooded.
+        String uri = request.getRequestURI();
+        if (uri != null && uri.startsWith("/api/")) {
+            log.warn("No resource at {}: {}", uri, ex.getMessage());
+        } else {
+            log.debug("No resource at {}: {}", uri, ex.getMessage());
+        }
+
+        String title = getLocalizedMessage("error.notFound.title", ErrorTitles.NOT_FOUND_DEFAULT);
+        String detail =
+                getLocalizedMessage(
+                        "error.notFound.detail",
+                        String.format(
+                                "No endpoint found for %s %s",
+                                request.getMethod(), request.getRequestURI()),
+                        request.getMethod(),
+                        request.getRequestURI());
+
+        ProblemDetail problemDetail =
+                createBaseProblemDetail(HttpStatus.NOT_FOUND, detail, request);
+        problemDetail.setType(URI.create(ErrorTypes.NOT_FOUND));
+        problemDetail.setTitle(title);
+        problemDetail.setProperty("title", title);
+        problemDetail.setProperty("method", request.getMethod());
         addStandardHints(
                 problemDetail,
                 "error.notFound.hints",

@@ -9,6 +9,7 @@ import {
 import { useAllFiles, useFileActions } from "@app/contexts/FileContext";
 import { generateId } from "@app/utils/generateId";
 import apiClient from "@app/services/apiClient";
+import { getAiBaseUrl } from "@app/services/aiBaseUrl";
 import { getAuthHeaders } from "@app/services/apiClientSetup";
 import { createChildStub } from "@app/contexts/file/fileActions";
 import {
@@ -365,32 +366,32 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
       const files = await Promise.all(descriptors.map(downloadFile));
 
-      const operation: ToolOperation = {
-        toolId: "ai-workflow",
-        timestamp: Date.now(),
-      };
-      const isVersionMapping =
-        sourceStubs.length > 0 && files.length === sourceStubs.length;
-      const stubs = files.map((file, i) =>
-        isVersionMapping
-          ? createChildStub(sourceStubs[i], operation, file)
-          : createNewStirlingFileStub(file),
-      );
-      const stirlingFiles = files.map((file, i) =>
-        createStirlingFile(file, stubs[i].id),
-      );
-
       if (sourceStubs.length > 0) {
         // Always consume the inputs so merge/split inputs are removed from the workbench.
         // For 1:1 operations (rotate, compress) the outputs carry the version chain; for
         // merge/split they're fresh roots.
+        const operation: ToolOperation = {
+          toolId: "ai-workflow",
+          timestamp: Date.now(),
+        };
+        const isVersionMapping = files.length === sourceStubs.length;
+        const stubs = files.map((file, i) =>
+          isVersionMapping
+            ? createChildStub(sourceStubs[i], operation, file)
+            : createNewStirlingFileStub(file),
+        );
+        const stirlingFiles = files.map((file, i) =>
+          createStirlingFile(file, stubs[i].id),
+        );
         await fileActions.consumeFiles(
           sourceStubs.map((s) => s.id),
           stirlingFiles,
           stubs,
         );
       } else {
-        // No inputs were provided (unlikely for completed workflows, but handle it safely).
+        // No inputs: pass raw files so addFiles assigns consistent IDs. Pre-assigning stub IDs
+        // here would cause a fileId mismatch in filesRef, making getFiles() clone the file
+        // on every render and breaking useFileWithUrl's memoisation (continuous PDF reloads).
         await fileActions.addFiles(files, { selectFiles: true });
       }
     },
@@ -440,13 +441,16 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           formData.append(`conversationHistory[${i}].content`, message.content);
         });
 
-        const response = await fetch("/api/v1/ai/orchestrate/stream", {
-          method: "POST",
-          body: formData,
-          headers: getAuthHeaders(),
-          credentials: "include",
-          signal: controller.signal,
-        });
+        const response = await fetch(
+          `${getAiBaseUrl()}/api/v1/ai/orchestrate/stream`,
+          {
+            method: "POST",
+            body: formData,
+            headers: await getAuthHeaders(),
+            credentials: "include",
+            signal: controller.signal,
+          },
+        );
 
         if (!response.ok) {
           throw new Error(`AI engine request failed: ${response.status}`);

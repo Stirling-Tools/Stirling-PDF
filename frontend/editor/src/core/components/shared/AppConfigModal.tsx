@@ -7,10 +7,12 @@ import React, {
 } from "react";
 import { Badge, Modal, Text, ActionIcon, Tooltip, Group } from "@mantine/core";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useConfigNavSections } from "@app/components/shared/config/configNavSections";
 import { NavKey, VALID_NAV_KEYS } from "@app/components/shared/config/types";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { COOKIE_CONSENT_SCROLL_SHARD } from "@app/hooks/useCookieConsent";
 import "@app/components/shared/AppConfigModal.css";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import {
@@ -23,17 +25,33 @@ import {
   useUnsavedChanges,
 } from "@app/contexts/UnsavedChangesContext";
 import { SettingsSearchBar } from "@app/components/shared/config/SettingsSearchBar";
+import { stripBasePath, withBasePath } from "@app/constants/app";
 
 interface AppConfigModalProps {
   opened: boolean;
   onClose: () => void;
 }
 
+// Extract section from URL path (e.g., /settings/people -> people)
+const getSectionFromPath = (pathname: string): NavKey | null => {
+  const match = pathname.match(/\/settings\/([^/]+)/);
+  if (match && match[1]) {
+    const section = match[1] as NavKey;
+    return VALID_NAV_KEYS.includes(section as NavKey) ? section : null;
+  }
+  return null;
+};
+
 const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
   opened,
   onClose,
 }) => {
-  const [active, setActive] = useState<NavKey>("general");
+  const { t } = useTranslation();
+  // Initialize from the URL so a deep link (`/settings/people`) lands on the
+  // right tab without a one-frame "general" flicker.
+  const [active, setActive] = useState<NavKey>(
+    () => getSectionFromPath(window.location.pathname) ?? "general",
+  );
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const location = useLocation();
@@ -42,17 +60,10 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
   const { confirmIfDirty } = useUnsavedChanges();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
-  // Extract section from URL path (e.g., /settings/people -> people)
-  const getSectionFromPath = (pathname: string): NavKey | null => {
-    const match = pathname.match(/\/settings\/([^/]+)/);
-    if (match && match[1]) {
-      const section = match[1] as NavKey;
-      return VALID_NAV_KEYS.includes(section as NavKey) ? section : null;
-    }
-    return null;
-  };
-
-  // Sync active state with URL path
+  // Sync active state with URL path. Runs on open, on external URL changes,
+  // and on the redirect path below - NOT on intra-modal tab clicks, because
+  // those update the URL via `history.replaceState` directly and never push
+  // a new React Router location.
   useEffect(() => {
     const section = getSectionFromPath(location.pathname);
     if (opened && section) {
@@ -73,6 +84,35 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
       closeButtonRef.current?.focus();
     }
   }, [opened]);
+
+  // Switch tab without forcing every `useLocation()` subscriber (HomePage and
+  // its FileSidebar/Workbench/RightSidebar/FileManager tree) to re-render.
+  //
+  // First entry into /settings/* still goes through React Router so HomePage's
+  // location-watching effect opens the modal and pushes a real history entry -
+  // so the back button can close us. Subsequent tab clicks bypass React Router
+  // and mutate the URL bar via `history.replaceState`. The browser sees the
+  // URL update (deep-link / refresh still work) but React Router never fires a
+  // location change, so the layer behind the Mantine overlay never repaints
+  // and the backdrop-filter blur stops flashing.
+  const switchSection = useCallback(
+    (key: NavKey) => {
+      setActive(key);
+      const alreadyInSettings = stripBasePath(
+        window.location.pathname,
+      ).startsWith("/settings");
+      if (alreadyInSettings) {
+        window.history.replaceState(
+          window.history.state,
+          "",
+          withBasePath(`/settings/${key}`),
+        );
+      } else {
+        navigate(`/settings/${key}`);
+      }
+    },
+    [navigate],
+  );
 
   // Deep-link: /settings/{section}?focus={anchor} scrolls to and briefly
   // highlights the matching control (used by the global super search to jump
@@ -101,18 +141,13 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
     };
   }, [opened, active, location.search]);
 
-  // Handle custom events for backwards compatibility.
-  // Use replace when already on /settings/* so external tab-switches
-  // don't pile up history entries that would break close-by-back.
+  // Backwards-compat: external `appConfig:navigate` events route through the
+  // same switchSection path so they get the no-flash treatment too.
   useEffect(() => {
     const handler = (ev: Event) => {
       const detail = (ev as CustomEvent).detail as { key?: NavKey } | undefined;
       if (detail?.key) {
-        const alreadyInSettings =
-          window.location.pathname.startsWith("/settings");
-        navigate(`/settings/${detail.key}`, {
-          replace: alreadyInSettings,
-        });
+        switchSection(detail.key);
       }
     };
     window.addEventListener("appConfig:navigate", handler as EventListener);
@@ -121,7 +156,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
         "appConfig:navigate",
         handler as EventListener,
       );
-  }, [navigate]);
+  }, [switchSection]);
 
   const colors = useMemo(
     () => ({
@@ -145,17 +180,18 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
     const canProceed = await confirmIfDirty();
     if (!canProceed) return;
 
-    // Pop back to whatever the user came from (files / viewer / tools).
-    // location.key === "default" means /settings was the first entry in
-    // this tab (deep link / refresh), so there's nothing to pop to;
-    // fall back to home in that case.
-    if (location.key === "default") {
-      navigate("/", { replace: true });
-    } else {
-      navigate(-1);
+    // Only unwind history if settings was opened via the URL; opened via state
+    // there's no /settings entry to pop and navigate(-1) would jump to /files.
+    if (location.pathname.startsWith("/settings")) {
+      // "default" key = first entry (deep link/refresh); nothing to pop to.
+      if (location.key === "default") {
+        navigate("/", { replace: true });
+      } else {
+        navigate(-1);
+      }
     }
     onClose();
-  }, [confirmIfDirty, location.key, navigate, onClose]);
+  }, [confirmIfDirty, location.key, location.pathname, navigate, onClose]);
 
   // Synchronous wrapper for contexts (e.g. tour buttons) that need () => void
   const handleCloseSync = useCallback(() => {
@@ -190,23 +226,9 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
     async (key: NavKey) => {
       const canProceed = await confirmIfDirty();
       if (!canProceed) return;
-
-      setActive(key);
-      // First in-modal nav (when current path isn't `/settings/*` yet) must
-      // PUSH so the originating page stays in history and close-by-back can
-      // return to it. Subsequent tab switches REPLACE so they don't pile up
-      // history entries that handleClose's navigate(-1) can't unwind.
-      //
-      // Read window.location.pathname directly (not the React hook's
-      // location.pathname) so rapid successive clicks pick up the URL
-      // change from the previous click immediately. The hook snapshot is
-      // stale between render cycles - relying on it lets a second click
-      // PUSH again before React re-renders, producing a history pile-up.
-      const alreadyInSettings =
-        window.location.pathname.startsWith("/settings");
-      navigate(`/settings/${key}`, { replace: alreadyInSettings });
+      switchSection(key);
     },
-    [confirmIfDirty, navigate],
+    [confirmIfDirty, switchSection],
   );
 
   return (
@@ -223,6 +245,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
       padding={0}
       fullScreen={isMobile}
       styles={{ content: { overflowY: "hidden", overscrollBehavior: "none" } }}
+      removeScrollProps={{ shards: [COOKIE_CONSENT_SCROLL_SHARD] }}
     >
       <div className="modal-container">
         {/* Left navigation */}
@@ -267,7 +290,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
                             handleNavigation(item.key);
                           }
                         }}
-                        className={`modal-nav-item ${isMobile ? "mobile" : ""}`}
+                        className={`modal-nav-item ${isActive ? "active" : ""} ${isMobile ? "mobile" : ""}`}
                         style={{
                           background: isActive
                             ? colors.navItemActiveBg
@@ -284,8 +307,19 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
                           style={{ color }}
                         />
                         {!isMobile && (
-                          <Group gap={4} align="center" wrap="nowrap">
-                            <Text size="sm" fw={500} style={{ color }}>
+                          <Group
+                            gap={4}
+                            align="center"
+                            wrap="nowrap"
+                            style={{ minWidth: 0, flex: 1 }}
+                          >
+                            <Text
+                              size="sm"
+                              fw={500}
+                              truncate
+                              style={{ color, minWidth: 0, flex: 1 }}
+                              title={item.label}
+                            >
                               {item.label}
                             </Text>
                             {item.badge && (
@@ -293,6 +327,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
                                 size="xs"
                                 variant="light"
                                 color={item.badgeColor ?? "orange"}
+                                className="modal-nav-item-badge"
                                 style={{ flexShrink: 0 }}
                               >
                                 {item.badge}
@@ -359,7 +394,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
                   ref={closeButtonRef}
                   variant="subtle"
                   onClick={handleClose}
-                  aria-label="Close"
+                  aria-label={t("settings.close", "Close")}
                   data-autofocus
                 >
                   <LocalIcon icon="close-rounded" width={18} height={18} />

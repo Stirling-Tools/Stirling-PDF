@@ -4,8 +4,9 @@ import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { Group } from "@mantine/core";
 import { useSidebarContext } from "@app/contexts/SidebarContext";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
+import { getToolOgImage } from "@app/data/ogImage";
 import { useBaseUrl } from "@app/hooks/useBaseUrl";
-import { useIsMobile } from "@app/hooks/useIsMobile";
+import { useIsMobile, useIsTouch } from "@app/hooks/useIsMobile";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { LogoIcon } from "@app/components/shared/LogoIcon";
 import { Wordmark } from "@app/components/shared/Wordmark";
@@ -84,6 +85,7 @@ export default function HomePage() {
   const navigate = useNavigate();
   const { config } = useAppConfig();
   const isMobile = useIsMobile();
+  const isTouch = useIsTouch();
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const [activeMobileView, setActiveMobileView] = useState<MobileView>("tools");
   const isProgrammaticScroll = useRef(false);
@@ -293,9 +295,7 @@ export default function HomePage() {
         "app.description",
         "The Free Adobe Acrobat alternative (10M+ Downloads)",
       ),
-    ogImage: selectedToolKey
-      ? `${baseUrl}/og_images/${selectedToolKey}.png`
-      : `${baseUrl}/og_images/home.png`,
+    ogImage: getToolOgImage(baseUrl, selectedToolKey),
     ogUrl: selectedTool ? `${baseUrl}${window.location.pathname}` : baseUrl,
   });
 
@@ -352,12 +352,14 @@ export default function HomePage() {
                     {t("home.mobile.workspace", "Workspace")}
                   </button>
                 </div>
-                <span className="mobile-toggle-hint">
-                  {t(
-                    "home.mobile.swipeHint",
-                    "Swipe left or right to switch views",
-                  )}
-                </span>
+                {isTouch && (
+                  <span className="mobile-toggle-hint">
+                    {t(
+                      "home.mobile.swipeHint",
+                      "Swipe left or right to switch views",
+                    )}
+                  </span>
+                )}
               </div>
             )}
             {navigationState.workbench === "myFiles" ? (
@@ -483,7 +485,12 @@ export default function HomePage() {
             <MyFilesAwareFileSidebar
               ref={quickAccessRef}
               active={navigationState.workbench === "myFiles"}
-              collapsed={fileSidebarCollapsed}
+              // /files always shows the rail collapsed - force it here so a
+              // deep-link/reload onto /files (no workbench transition) still
+              // collapses, and a manual expand can't stick.
+              collapsed={
+                navigationState.workbench === "myFiles" || fileSidebarCollapsed
+              }
               toggleAriaLabel={
                 navigationState.workbench === "myFiles"
                   ? t("fileSidebar.leaveMyFiles", "Leave My Files")

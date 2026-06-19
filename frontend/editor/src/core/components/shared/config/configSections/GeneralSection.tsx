@@ -14,13 +14,13 @@ import {
   ActionIcon,
   Button,
   Badge,
-  Alert,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useRainbowThemeContext } from "@app/components/shared/RainbowThemeProvider";
+import { useTheme } from "@app/components/shared/ThemeProvider";
 import LanguageSelector from "@app/components/shared/LanguageSelector";
+import type { ThemeMode } from "@app/constants/theme";
 import type { ToolPanelMode } from "@app/constants/toolPanel";
 import type {
   StartupView,
@@ -85,7 +85,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
   const { t } = useTranslation();
   const { preferences, updatePreference } = usePreferences();
   const { config } = useAppConfig();
-  const { toggleTheme, themeMode } = useRainbowThemeContext();
+  const { setTheme, themeMode } = useTheme();
   const [fileLimitInput, setFileLimitInput] = useState<number | string>(
     preferences.autoUnzipFileLimit,
   );
@@ -451,28 +451,12 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                     },
                   ]}
                   maw={360}
+                  comboboxProps={{
+                    withinPortal: true,
+                    zIndex: Z_INDEX_OVER_CONFIG_MODAL,
+                  }}
                 />
               </Stack>
-            )}
-
-            {updateSummary?.any_breaking && (
-              <Alert
-                color="orange"
-                title={t(
-                  "update.breakingChangesDetected",
-                  "Breaking Changes Detected",
-                )}
-                styles={{
-                  title: { fontWeight: 600 },
-                }}
-              >
-                <Text size="sm">
-                  {t(
-                    "update.breakingChangesMessage",
-                    "Some versions contain breaking changes. Please review the migration guides before updating.",
-                  )}
-                </Text>
-              </Alert>
             )}
           </Stack>
         </Paper>
@@ -489,22 +473,20 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               justifyContent: "space-between",
             }}
           >
-            <div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <Text fw={500} size="sm">
                 {t("settings.general.theme", "Theme")}
               </Text>
               <Text size="xs" c="dimmed" mt={4}>
                 {t(
                   "settings.general.themeDescription",
-                  "Switch between light and dark mode",
+                  "Choose light, dark, or follow your system",
                 )}
               </Text>
             </div>
             <SegmentedControl
-              value={themeMode === "rainbow" ? "dark" : themeMode}
-              onChange={(val) => {
-                if ((themeMode === "dark") !== (val === "dark")) toggleTheme();
-              }}
+              value={themeMode}
+              onChange={(val) => setTheme(val as ThemeMode)}
               data={[
                 {
                   label: t("settings.general.themeLight", "Light"),
@@ -513,6 +495,10 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                 {
                   label: t("settings.general.themeDark", "Dark"),
                   value: "dark",
+                },
+                {
+                  label: t("settings.general.themeSystem", "System"),
+                  value: "system",
                 },
               ]}
             />
@@ -525,7 +511,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               justifyContent: "space-between",
             }}
           >
-            <div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <Text fw={500} size="sm">
                 {t("settings.general.language", "Language")}
               </Text>
@@ -551,7 +537,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               justifyContent: "space-between",
             }}
           >
-            <div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <Text fw={500} size="sm">
                 {t(
                   "settings.general.defaultToolPickerMode",
@@ -590,7 +576,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               justifyContent: "space-between",
             }}
           >
-            <div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <Text fw={500} size="sm">
                 {t(
                   "settings.general.defaultStartupView",
@@ -633,7 +619,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               justifyContent: "space-between",
             }}
           >
-            <div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <Text fw={500} size="sm">
                 {t("settings.general.defaultViewerZoom", "Default reader zoom")}
               </Text>
@@ -689,7 +675,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               justifyContent: "space-between",
             }}
           >
-            <div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <Text fw={500} size="sm">
                 {t(
                   "settings.general.hideUnavailableTools",
@@ -721,7 +707,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               justifyContent: "space-between",
             }}
           >
-            <div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <Text fw={500} size="sm">
                 {t(
                   "settings.general.hideUnavailableConversions",
@@ -763,7 +749,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                 cursor: "help",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t("settings.general.autoUnzip", "Auto-unzip API responses")}
                 </Text>
@@ -801,7 +787,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                 cursor: "help",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "settings.general.autoUnzipFileLimit",

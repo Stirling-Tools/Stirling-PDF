@@ -6,9 +6,9 @@ import { parse } from "smol-toml";
 
 const REPO_ROOT = path.join(__dirname, "../../../..");
 const SRC_ROOT = path.join(__dirname, "../..");
-const EN_GB_FILE = path.join(
+const EN_US_FILE = path.join(
   __dirname,
-  "../../../public/locales/en-GB/translation.toml",
+  "../../../public/locales/en-US/translation.toml",
 );
 
 const IGNORED_DIRS = new Set(["tests", "__mocks__"]);
@@ -22,6 +22,7 @@ const IGNORED_KEYS = new Set<string>([
   // If the script has found a false-positive that shouldn't be in the translations, include it here
 ]);
 const LIKELY_TRANSLATION_USAGE_RE = /(?:^|[^\w$])t\s*\(|\.t\s*\(|\bi18nKey\b/;
+const PLURAL_SUFFIX_RE = /_(zero|one|two|few|many|other)$/;
 
 type FoundKey = {
   key: string;
@@ -52,6 +53,12 @@ const flattenKeys = (
 
   return acc;
 };
+
+const hasPluralCoverage = (key: string, availableKeys: Set<string>): boolean =>
+  [...availableKeys].some(
+    (availableKey) =>
+      availableKey.startsWith(`${key}_`) && PLURAL_SUFFIX_RE.test(availableKey),
+  );
 
 const listSourceFiles = (): string[] => {
   const files = ts.sys.readDirectory(
@@ -174,21 +181,24 @@ const extractKeys = (file: string): FoundKey[] => {
 
 describe("Missing translation coverage", () => {
   test(
-    "fails if any en-GB translation key used in source is missing",
+    "fails if any en-US translation key used in source is missing",
     { timeout: 10000 },
     () => {
-      expect(fs.existsSync(EN_GB_FILE)).toBe(true);
+      expect(fs.existsSync(EN_US_FILE)).toBe(true);
 
-      const localeContent = fs.readFileSync(EN_GB_FILE, "utf8");
-      const enGb = parse(localeContent);
-      const availableKeys = flattenKeys(enGb);
+      const localeContent = fs.readFileSync(EN_US_FILE, "utf8");
+      const enUs = parse(localeContent);
+      const availableKeys = flattenKeys(enUs);
 
       const usedKeys = listSourceFiles()
         .flatMap(extractKeys)
         .filter(({ key }) => !IGNORED_KEYS.has(key));
       expect(usedKeys.length).toBeGreaterThan(100); // Sanity check
 
-      const missingKeys = usedKeys.filter(({ key }) => !availableKeys.has(key));
+      const missingKeys = usedKeys.filter(
+        ({ key }) =>
+          !availableKeys.has(key) && !hasPluralCoverage(key, availableKeys),
+      );
 
       const annotations = missingKeys.map(
         ({ key, fallback, file, line, column }) => {
@@ -211,7 +221,7 @@ describe("Missing translation coverage", () => {
       // Output errors in GitHub Annotations format so they appear tagged in the code in CI
       for (const { key, fallback, file, line, column } of annotations) {
         process.stderr.write(
-          `::error file=${file},line=${line},col=${column}::Missing en-GB translation for ${key} (${fallback})\n`,
+          `::error file=${file},line=${line},col=${column}::Missing en-US translation for ${key} (${fallback})\n`,
         );
       }
 

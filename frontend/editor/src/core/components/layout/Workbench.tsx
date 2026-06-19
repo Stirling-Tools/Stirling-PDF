@@ -2,7 +2,6 @@ import { useEffect, useState, Suspense, lazy } from "react";
 import { useTranslation } from "react-i18next";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { Box, Loader, Center } from "@mantine/core";
-import { useRainbowThemeContext } from "@app/components/shared/RainbowThemeProvider";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useFileState } from "@app/contexts/FileContext";
@@ -13,12 +12,13 @@ import {
 import { isBaseWorkbench } from "@app/types/workbench";
 import { VIEWER_SUPPORTED_EXTENSIONS } from "@app/utils/fileUtils";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useCookieConsent } from "@app/hooks/useCookieConsent";
 import styles from "@app/components/layout/Workbench.module.css";
 
 import WorkbenchBar from "@app/components/shared/WorkbenchBar";
 import LandingPage from "@app/components/shared/LandingPage";
-import Footer from "@app/components/shared/Footer";
 import DismissAllErrorsButton from "@app/components/shared/DismissAllErrorsButton";
+import { ChatFAB } from "@app/components/chat/ChatFAB";
 
 // Workbench panels are loaded on demand. Viewer pulls in pdfjs-dist and the
 // full @embedpdf plugin set; FileEditor/PageEditor are only needed once a file
@@ -35,8 +35,11 @@ const FileManagerView = lazy(
 
 // No props needed - component uses contexts directly
 export default function Workbench() {
-  const { isRainbowMode } = useRainbowThemeContext();
   const { config } = useAppConfig();
+
+  // The consent banner used to be initialised by the footer; the legal links
+  // now live in Settings → Legal, so the workbench owns the banner lifecycle.
+  useCookieConsent({ analyticsEnabled: config?.enableAnalytics === true });
 
   // Use context-based hooks to eliminate all prop drilling
   const { selectors } = useFileState();
@@ -199,14 +202,7 @@ export default function Workbench() {
     <Box
       className="flex-1 h-full min-w-0 relative flex flex-col"
       data-tour="workbench"
-      style={
-        isRainbowMode
-          ? // No background color in rainbow mode, but still pin min-width:0
-            // so inner flex children (files-page toolbar, etc.) actually
-            // shrink on narrow viewports.
-            { minWidth: 0 }
-          : { backgroundColor: "var(--bg-background)", minWidth: 0 }
-      }
+      style={{ backgroundColor: "var(--bg-background)", minWidth: 0 }}
     >
       {/* Workbench Bar - animates in/out based on file presence */}
       {currentView !== "myFiles" &&
@@ -248,6 +244,9 @@ export default function Workbench() {
       {/* Dismiss All Errors Button */}
       <DismissAllErrorsButton />
 
+      {/* Floating AI chat button + panel */}
+      <ChatFAB />
+
       {/* Main content area */}
       <Box
         className={`flex-1 min-h-0 z-10 ${currentView === "pageEditor" ? "relative flex flex-col" : `relative ${styles.workbenchScrollable}`}`}
@@ -271,15 +270,6 @@ export default function Workbench() {
           {renderMainContent()}
         </Suspense>
       </Box>
-
-      <Footer
-        analyticsEnabled={config?.enableAnalytics === true}
-        termsAndConditions={config?.termsAndConditions}
-        privacyPolicy={config?.privacyPolicy}
-        cookiePolicy={config?.cookiePolicy}
-        impressum={config?.impressum}
-        accessibilityStatement={config?.accessibilityStatement}
-      />
     </Box>
   );
 }

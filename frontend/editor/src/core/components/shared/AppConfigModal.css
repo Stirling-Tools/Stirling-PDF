@@ -126,6 +126,15 @@
   margin-bottom: 0.25rem; /* 4px */
 }
 
+.modal-nav-item-badge {
+  display: none;
+}
+.modal-nav-item:hover .modal-nav-item-badge,
+.modal-nav-item:focus-within .modal-nav-item-badge,
+.modal-nav-item.active .modal-nav-item-badge {
+  display: inline-flex;
+}
+
 .modal-content {
   flex: 1;
   display: flex;

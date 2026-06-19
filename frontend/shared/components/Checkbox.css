@@ -75,6 +75,12 @@
   display: block;
 }
 
+.sui-check__icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-text-4);
+  flex-shrink: 0;
+}
 .sui-check__text {
   display: flex;
   flex-direction: column;

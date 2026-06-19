@@ -18,8 +18,11 @@ from stirling.agents import (
 )
 from stirling.agents.ledger import MathAuditorAgent
 from stirling.agents.pdf_comment import PdfCommentAgent
+from stirling.api.dependencies import enforce_required_user_id
+from stirling.api.engine_auth import EngineSharedSecretMiddleware
 from stirling.api.middleware import UserIdMiddleware
 from stirling.api.routes import (
+    agent_capabilities_router,
     agent_draft_router,
     document_router,
     execution_router,
@@ -115,14 +118,19 @@ async def lifespan(fast_api: FastAPI):
 
 app = FastAPI(title="Stirling AI Engine", lifespan=lifespan, version="0.1.0")
 app.add_middleware(UserIdMiddleware)
-app.include_router(orchestrator_router)
-app.include_router(pdf_edit_router)
-app.include_router(pdf_question_router)
-app.include_router(agent_draft_router)
-app.include_router(execution_router)
-app.include_router(document_router)
-app.include_router(ledger_router)
-app.include_router(pdf_comments_router)
+app.add_middleware(EngineSharedSecretMiddleware)
+# Every router gets the same configurable identity gate; /health stays open
+# for liveness probes. See enforce_required_user_id for the policy.
+_user_gate = [Depends(enforce_required_user_id)]
+app.include_router(orchestrator_router, dependencies=_user_gate)
+app.include_router(pdf_edit_router, dependencies=_user_gate)
+app.include_router(pdf_question_router, dependencies=_user_gate)
+app.include_router(agent_draft_router, dependencies=_user_gate)
+app.include_router(execution_router, dependencies=_user_gate)
+app.include_router(document_router, dependencies=_user_gate)
+app.include_router(ledger_router, dependencies=_user_gate)
+app.include_router(pdf_comments_router, dependencies=_user_gate)
+app.include_router(agent_capabilities_router, dependencies=_user_gate)
 
 
 @app.get("/health", response_model=HealthResponse)

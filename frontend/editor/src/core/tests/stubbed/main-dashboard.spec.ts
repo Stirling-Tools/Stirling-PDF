@@ -1,5 +1,6 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 import { mockAppApis, seedCookieConsent } from "@app/tests/helpers/api-stubs";
+import { openSettings } from "@app/tests/helpers/ui-helpers";
 
 test.describe("2. Main Dashboard / Home Page", () => {
   test.beforeEach(async ({ page }) => {
@@ -87,36 +88,29 @@ test.describe("2. Main Dashboard / Home Page", () => {
     });
   });
 
-  test.describe("2.4 Dashboard - Footer Links", () => {
-    test("should display footer links with correct URLs", async ({ page }) => {
-      await expect(page.getByText("Survey").first()).toBeVisible({
-        timeout: 10000,
-      });
+  test.describe("2.4 Dashboard - Legal Links", () => {
+    test("legal links live in Settings → Legal, not in a footer", async ({
+      page,
+    }) => {
+      await expect(
+        page.locator('[data-testid="config-button"]').first(),
+      ).toBeVisible({ timeout: 10000 });
+
+      // The dashboard footer (survey + legal links) was removed
+      await expect(page.locator(".footer-link")).toHaveCount(0);
+      await expect(page.getByText("Survey")).toHaveCount(0);
+
+      await openSettings(page);
+      const legalNav = page.locator('[data-tour="admin-legal-nav"]').first();
+      await expect(legalNav).toBeVisible({ timeout: 10000 });
+      await legalNav.click();
+
       await expect(page.getByText("Privacy Policy").first()).toBeVisible({
         timeout: 10000,
       });
       await expect(page.getByText(/Terms/i).first()).toBeVisible({
         timeout: 10000,
       });
-      await expect(page.getByText("Discord").first()).toBeVisible({
-        timeout: 10000,
-      });
-      await expect(page.getByText("GitHub").first()).toBeVisible({
-        timeout: 10000,
-      });
-      await expect(page.getByText("Accessibility").first()).toBeVisible({
-        timeout: 10000,
-      });
-
-      const githubLink = page
-        .locator('a[href*="github.com/Stirling-Tools/Stirling-PDF"]')
-        .first();
-      await expect(githubLink).toBeVisible();
-
-      const discordLink = page
-        .locator('a[href*="discord.gg/Cn8pWhQRxZ"]')
-        .first();
-      await expect(discordLink).toBeVisible();
     });
   });
 

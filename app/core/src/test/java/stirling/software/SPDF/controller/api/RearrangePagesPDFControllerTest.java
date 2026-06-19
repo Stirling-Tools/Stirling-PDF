@@ -4,10 +4,14 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
 
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.junit.jupiter.api.BeforeEach;
@@ -56,6 +60,38 @@ class RearrangePagesPDFControllerTest {
                 "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, new byte[] {1, 2, 3});
     }
 
+    /** Build a real, in-memory PDDocument with the requested number of blank pages. */
+    private PDDocument buildRealPdf(int pageCount) throws IOException {
+        PDDocument doc = new PDDocument();
+        for (int i = 0; i < pageCount; i++) {
+            doc.addPage(new PDPage());
+        }
+        return doc;
+    }
+
+    /**
+     * Returns the underlying {@link org.apache.pdfbox.cos.COSDictionary} for each page in document
+     * order. PDPageTree returns a fresh PDPage wrapper per get(), so comparing wrappers with
+     * assertSame is unreliable - the COSDictionary identity is the stable handle.
+     */
+    private List<Object> snapshotCosPages(PDDocument doc) {
+        List<Object> snapshot = new ArrayList<>();
+        for (PDPage p : doc.getPages()) {
+            snapshot.add(p.getCOSObject());
+        }
+        return snapshot;
+    }
+
+    private List<Object> reloadAndSnapshot(ResponseEntity<Resource> response) throws IOException {
+        try (var in = response.getBody().getInputStream();
+                var baos = new ByteArrayOutputStream()) {
+            in.transferTo(baos);
+            try (PDDocument out = Loader.loadPDF(baos.toByteArray())) {
+                return snapshotCosPages(out);
+            }
+        }
+    }
+
     @Test
     void testDeletePages_Success() throws IOException {
         MockMultipartFile file = createMockPdf();
@@ -83,27 +119,23 @@ class RearrangePagesPDFControllerTest {
         request.setPageNumbers("");
         request.setCustomMode("REVERSE_ORDER");
 
-        PDDocument mockDoc = mock(PDDocument.class);
-        PDDocument mockNewDoc = mock(PDDocument.class);
-        PDPage page0 = mock(PDPage.class);
-        PDPage page1 = mock(PDPage.class);
-        PDPage page2 = mock(PDPage.class);
+        try (PDDocument realDoc = buildRealPdf(3)) {
+            List<Object> originals = snapshotCosPages(realDoc);
+            when(pdfDocumentFactory.load(file)).thenReturn(realDoc);
 
-        when(pdfDocumentFactory.load(file)).thenReturn(mockDoc);
-        when(mockDoc.getNumberOfPages()).thenReturn(3);
-        when(mockDoc.getPage(0)).thenReturn(page0);
-        when(mockDoc.getPage(1)).thenReturn(page1);
-        when(mockDoc.getPage(2)).thenReturn(page2);
-        when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(mockDoc))
-                .thenReturn(mockNewDoc);
+            ResponseEntity<Resource> response = controller.rearrangePages(request);
 
-        ResponseEntity<Resource> response = controller.rearrangePages(request);
-
-        assertNotNull(response);
-        assertEquals(200, response.getStatusCode().value());
-        verify(mockNewDoc).addPage(page2);
-        verify(mockNewDoc).addPage(page1);
-        verify(mockNewDoc).addPage(page0);
+            assertNotNull(response);
+            assertEquals(200, response.getStatusCode().value());
+            List<Object> finalOrder = reloadAndSnapshot(response);
+            assertEquals(3, finalOrder.size());
+            // We can no longer compare references after a save/reload, so compare via
+            // the in-memory snapshot taken *after* the controller mutated the source.
+            List<Object> mutatedSource = snapshotCosPages(realDoc);
+            assertSame(originals.get(2), mutatedSource.get(0));
+            assertSame(originals.get(1), mutatedSource.get(1));
+            assertSame(originals.get(0), mutatedSource.get(2));
+        }
     }
 
     @Test
@@ -114,25 +146,18 @@ class RearrangePagesPDFControllerTest {
         request.setPageNumbers("");
         request.setCustomMode("REMOVE_FIRST");
 
-        PDDocument mockDoc = mock(PDDocument.class);
-        PDDocument mockNewDoc = mock(PDDocument.class);
-        PDPage page0 = mock(PDPage.class);
-        PDPage page1 = mock(PDPage.class);
-        PDPage page2 = mock(PDPage.class);
+        try (PDDocument realDoc = buildRealPdf(3)) {
+            List<Object> originals = snapshotCosPages(realDoc);
+            when(pdfDocumentFactory.load(file)).thenReturn(realDoc);
 
-        when(pdfDocumentFactory.load(file)).thenReturn(mockDoc);
-        when(mockDoc.getNumberOfPages()).thenReturn(3);
-        when(mockDoc.getPage(1)).thenReturn(page1);
-        when(mockDoc.getPage(2)).thenReturn(page2);
-        when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(mockDoc))
-                .thenReturn(mockNewDoc);
+            ResponseEntity<Resource> response = controller.rearrangePages(request);
 
-        ResponseEntity<Resource> response = controller.rearrangePages(request);
-
-        assertNotNull(response);
-        verify(mockNewDoc).addPage(page1);
-        verify(mockNewDoc).addPage(page2);
-        verify(mockNewDoc, never()).addPage(page0);
+            assertNotNull(response);
+            List<Object> mutated = snapshotCosPages(realDoc);
+            assertEquals(2, mutated.size());
+            assertSame(originals.get(1), mutated.get(0));
+            assertSame(originals.get(2), mutated.get(1));
+        }
     }
 
     @Test
@@ -143,23 +168,18 @@ class RearrangePagesPDFControllerTest {
         request.setPageNumbers("");
         request.setCustomMode("REMOVE_LAST");
 
-        PDDocument mockDoc = mock(PDDocument.class);
-        PDDocument mockNewDoc = mock(PDDocument.class);
-        PDPage page0 = mock(PDPage.class);
-        PDPage page1 = mock(PDPage.class);
+        try (PDDocument realDoc = buildRealPdf(3)) {
+            List<Object> originals = snapshotCosPages(realDoc);
+            when(pdfDocumentFactory.load(file)).thenReturn(realDoc);
 
-        when(pdfDocumentFactory.load(file)).thenReturn(mockDoc);
-        when(mockDoc.getNumberOfPages()).thenReturn(3);
-        when(mockDoc.getPage(0)).thenReturn(page0);
-        when(mockDoc.getPage(1)).thenReturn(page1);
-        when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(mockDoc))
-                .thenReturn(mockNewDoc);
+            ResponseEntity<Resource> response = controller.rearrangePages(request);
 
-        ResponseEntity<Resource> response = controller.rearrangePages(request);
-
-        assertNotNull(response);
-        verify(mockNewDoc).addPage(page0);
-        verify(mockNewDoc).addPage(page1);
+            assertNotNull(response);
+            List<Object> mutated = snapshotCosPages(realDoc);
+            assertEquals(2, mutated.size());
+            assertSame(originals.get(0), mutated.get(0));
+            assertSame(originals.get(1), mutated.get(1));
+        }
     }
 
     @Test
@@ -170,21 +190,19 @@ class RearrangePagesPDFControllerTest {
         request.setPageNumbers("");
         request.setCustomMode("REMOVE_FIRST_AND_LAST");
 
-        PDDocument mockDoc = mock(PDDocument.class);
-        PDDocument mockNewDoc = mock(PDDocument.class);
-        PDPage page1 = mock(PDPage.class);
+        try (PDDocument realDoc = buildRealPdf(4)) {
+            List<Object> originals = snapshotCosPages(realDoc);
+            when(pdfDocumentFactory.load(file)).thenReturn(realDoc);
 
-        when(pdfDocumentFactory.load(file)).thenReturn(mockDoc);
-        when(mockDoc.getNumberOfPages()).thenReturn(4);
-        when(mockDoc.getPage(1)).thenReturn(page1);
-        when(mockDoc.getPage(2)).thenReturn(page1);
-        when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(mockDoc))
-                .thenReturn(mockNewDoc);
+            ResponseEntity<Resource> response = controller.rearrangePages(request);
 
-        ResponseEntity<Resource> response = controller.rearrangePages(request);
-
-        assertNotNull(response);
-        assertEquals(200, response.getStatusCode().value());
+            assertNotNull(response);
+            assertEquals(200, response.getStatusCode().value());
+            List<Object> mutated = snapshotCosPages(realDoc);
+            assertEquals(2, mutated.size());
+            assertSame(originals.get(1), mutated.get(0));
+            assertSame(originals.get(2), mutated.get(1));
+        }
     }
 
     @Test
@@ -195,23 +213,15 @@ class RearrangePagesPDFControllerTest {
         request.setPageNumbers("");
         request.setCustomMode("DUPLEX_SORT");
 
-        PDDocument mockDoc = mock(PDDocument.class);
-        PDDocument mockNewDoc = mock(PDDocument.class);
-        PDPage page0 = mock(PDPage.class);
-        PDPage page1 = mock(PDPage.class);
-        PDPage page2 = mock(PDPage.class);
-        PDPage page3 = mock(PDPage.class);
+        try (PDDocument realDoc = buildRealPdf(4)) {
+            when(pdfDocumentFactory.load(file)).thenReturn(realDoc);
 
-        when(pdfDocumentFactory.load(file)).thenReturn(mockDoc);
-        when(mockDoc.getNumberOfPages()).thenReturn(4);
-        when(mockDoc.getPage(anyInt())).thenReturn(page0);
-        when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(mockDoc))
-                .thenReturn(mockNewDoc);
+            ResponseEntity<Resource> response = controller.rearrangePages(request);
 
-        ResponseEntity<Resource> response = controller.rearrangePages(request);
-
-        assertNotNull(response);
-        assertEquals(200, response.getStatusCode().value());
+            assertNotNull(response);
+            assertEquals(200, response.getStatusCode().value());
+            assertEquals(4, realDoc.getNumberOfPages());
+        }
     }
 
     @Test
@@ -222,20 +232,15 @@ class RearrangePagesPDFControllerTest {
         request.setPageNumbers("");
         request.setCustomMode("BOOKLET_SORT");
 
-        PDDocument mockDoc = mock(PDDocument.class);
-        PDDocument mockNewDoc = mock(PDDocument.class);
-        PDPage page = mock(PDPage.class);
+        try (PDDocument realDoc = buildRealPdf(4)) {
+            when(pdfDocumentFactory.load(file)).thenReturn(realDoc);
 
-        when(pdfDocumentFactory.load(file)).thenReturn(mockDoc);
-        when(mockDoc.getNumberOfPages()).thenReturn(4);
-        when(mockDoc.getPage(anyInt())).thenReturn(page);
-        when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(mockDoc))
-                .thenReturn(mockNewDoc);
+            ResponseEntity<Resource> response = controller.rearrangePages(request);
 
-        ResponseEntity<Resource> response = controller.rearrangePages(request);
-
-        assertNotNull(response);
-        assertEquals(200, response.getStatusCode().value());
+            assertNotNull(response);
+            assertEquals(200, response.getStatusCode().value());
+            assertEquals(4, realDoc.getNumberOfPages());
+        }
     }
 
     @Test
@@ -246,20 +251,15 @@ class RearrangePagesPDFControllerTest {
         request.setPageNumbers("");
         request.setCustomMode("ODD_EVEN_SPLIT");
 
-        PDDocument mockDoc = mock(PDDocument.class);
-        PDDocument mockNewDoc = mock(PDDocument.class);
-        PDPage page = mock(PDPage.class);
+        try (PDDocument realDoc = buildRealPdf(4)) {
+            when(pdfDocumentFactory.load(file)).thenReturn(realDoc);
 
-        when(pdfDocumentFactory.load(file)).thenReturn(mockDoc);
-        when(mockDoc.getNumberOfPages()).thenReturn(4);
-        when(mockDoc.getPage(anyInt())).thenReturn(page);
-        when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(mockDoc))
-                .thenReturn(mockNewDoc);
+            ResponseEntity<Resource> response = controller.rearrangePages(request);
 
-        ResponseEntity<Resource> response = controller.rearrangePages(request);
-
-        assertNotNull(response);
-        assertEquals(200, response.getStatusCode().value());
+            assertNotNull(response);
+            assertEquals(200, response.getStatusCode().value());
+            assertEquals(4, realDoc.getNumberOfPages());
+        }
     }
 
     @Test
@@ -270,24 +270,20 @@ class RearrangePagesPDFControllerTest {
         request.setPageNumbers("3,1,2");
         request.setCustomMode("custom");
 
-        PDDocument mockDoc = mock(PDDocument.class);
-        PDDocument mockNewDoc = mock(PDDocument.class);
-        PDPage page0 = mock(PDPage.class);
-        PDPage page1 = mock(PDPage.class);
-        PDPage page2 = mock(PDPage.class);
+        try (PDDocument realDoc = buildRealPdf(3)) {
+            List<Object> originals = snapshotCosPages(realDoc);
+            when(pdfDocumentFactory.load(file)).thenReturn(realDoc);
 
-        when(pdfDocumentFactory.load(file)).thenReturn(mockDoc);
-        when(mockDoc.getNumberOfPages()).thenReturn(3);
-        when(mockDoc.getPage(0)).thenReturn(page0);
-        when(mockDoc.getPage(1)).thenReturn(page1);
-        when(mockDoc.getPage(2)).thenReturn(page2);
-        when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(mockDoc))
-                .thenReturn(mockNewDoc);
+            ResponseEntity<Resource> response = controller.rearrangePages(request);
 
-        ResponseEntity<Resource> response = controller.rearrangePages(request);
-
-        assertNotNull(response);
-        assertEquals(200, response.getStatusCode().value());
+            assertNotNull(response);
+            assertEquals(200, response.getStatusCode().value());
+            List<Object> mutated = snapshotCosPages(realDoc);
+            assertEquals(3, mutated.size());
+            assertSame(originals.get(2), mutated.get(0));
+            assertSame(originals.get(0), mutated.get(1));
+            assertSame(originals.get(1), mutated.get(2));
+        }
     }
 
     @Test
@@ -298,21 +294,15 @@ class RearrangePagesPDFControllerTest {
         request.setPageNumbers("3");
         request.setCustomMode("DUPLICATE");
 
-        PDDocument mockDoc = mock(PDDocument.class);
-        PDDocument mockNewDoc = mock(PDDocument.class);
-        PDPage page = mock(PDPage.class);
+        try (PDDocument realDoc = buildRealPdf(2)) {
+            when(pdfDocumentFactory.load(file)).thenReturn(realDoc);
 
-        when(pdfDocumentFactory.load(file)).thenReturn(mockDoc);
-        when(mockDoc.getNumberOfPages()).thenReturn(2);
-        when(mockDoc.getPage(anyInt())).thenReturn(page);
-        when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(mockDoc))
-                .thenReturn(mockNewDoc);
+            ResponseEntity<Resource> response = controller.rearrangePages(request);
 
-        ResponseEntity<Resource> response = controller.rearrangePages(request);
-
-        assertNotNull(response);
-        // 2 pages * 3 duplicates = 6 addPage calls
-        verify(mockNewDoc, times(6)).addPage(page);
+            assertNotNull(response);
+            // 2 pages * 3 duplicates = 6 final pages
+            assertEquals(6, realDoc.getNumberOfPages());
+        }
     }
 
     @Test
@@ -323,19 +313,14 @@ class RearrangePagesPDFControllerTest {
         request.setPageNumbers("");
         request.setCustomMode("SIDE_STITCH_BOOKLET_SORT");
 
-        PDDocument mockDoc = mock(PDDocument.class);
-        PDDocument mockNewDoc = mock(PDDocument.class);
-        PDPage page = mock(PDPage.class);
+        try (PDDocument realDoc = buildRealPdf(4)) {
+            when(pdfDocumentFactory.load(file)).thenReturn(realDoc);
 
-        when(pdfDocumentFactory.load(file)).thenReturn(mockDoc);
-        when(mockDoc.getNumberOfPages()).thenReturn(4);
-        when(mockDoc.getPage(anyInt())).thenReturn(page);
-        when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(mockDoc))
-                .thenReturn(mockNewDoc);
+            ResponseEntity<Resource> response = controller.rearrangePages(request);
 
-        ResponseEntity<Resource> response = controller.rearrangePages(request);
-
-        assertNotNull(response);
-        assertEquals(200, response.getStatusCode().value());
+            assertNotNull(response);
+            assertEquals(200, response.getStatusCode().value());
+            assertEquals(4, realDoc.getNumberOfPages());
+        }
     }
 }

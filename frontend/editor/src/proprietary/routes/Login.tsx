@@ -17,12 +17,11 @@ import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
 import AuthLayout from "@app/routes/authShared/AuthLayout";
 import { useBackendProbe } from "@app/hooks/useBackendProbe";
 import apiClient from "@app/services/apiClient";
-import { BASE_PATH } from "@app/constants/app";
+import { BASE_PATH, withBasePath } from "@app/constants/app";
 import { type OAuthProvider } from "@app/auth/oauthTypes";
 import { updateSupportedLanguages } from "@app/i18n";
 
 // Import login components
-import LoginHeader from "@app/routes/login/LoginHeader";
 import ErrorMessage from "@app/routes/login/ErrorMessage";
 import EmailPasswordForm from "@app/routes/login/EmailPasswordForm";
 import OAuthButtons, {
@@ -74,7 +73,6 @@ export default function Login() {
   const autoLoginErrorRecorded = useRef(false);
   const isUserPassAllowed = loginMethod === "all" || loginMethod === "normal";
   const isSsoOnlyMode = loginMethod !== "all" && loginMethod !== "normal";
-  const isSingleSsoOnly = !isUserPassAllowed && enabledProviders.length === 1;
 
   const AUTO_LOGIN_ATTEMPTS_KEY = "stirling_sso_auto_login_attempts";
   const AUTO_LOGIN_ERRORS_KEY = "stirling_sso_auto_login_errors";
@@ -287,8 +285,6 @@ export default function Login() {
         setPostLoginRedirectPath(returnPath);
       }
 
-      console.log(`[Login] Signing in with provider: ${provider}`);
-
       // Redirect to Spring OAuth2 endpoint using the actual provider ID from backend
       // The backend returns the correct registration ID (e.g., 'authentik', 'oidc', 'keycloak')
       const { error } = await springAuth.signInWithOAuth({
@@ -463,7 +459,6 @@ export default function Login() {
 
   // If backend isn't ready yet, show a lightweight status screen instead of the form
   if (backendProbe.status !== "up" && !loginDisabled) {
-    const backendTitle = t("backendStartup.notFoundTitle", "Backend not found");
     const handleRetry = async () => {
       const result = await backendProbe.probe();
       if (result.status === "up") {
@@ -473,7 +468,18 @@ export default function Login() {
     };
     return (
       <AuthLayout>
-        <LoginHeader title={backendTitle} />
+        <div className="auth-logo-block">
+          <img
+            src={withBasePath("/modern-logo/LoginLightModeHeader.svg")}
+            alt="Stirling PDF"
+            className="auth-logo-header auth-logo-header--light"
+          />
+          <img
+            src={withBasePath("/modern-logo/LoginDarkModeHeader.svg")}
+            alt="Stirling PDF"
+            className="auth-logo-header auth-logo-header--dark"
+          />
+        </div>
         <div
           className="auth-section"
           style={{
@@ -484,10 +490,11 @@ export default function Login() {
             border: "1px solid rgba(37, 99, 235, 0.2)",
           }}
         >
-          <p
-            style={{ margin: "0 0 0.75rem 0", color: "rgba(15, 23, 42, 0.8)" }}
-          >
-            {t("backendStartup.unreachable")}
+          <p style={{ margin: "0 0 0.75rem 0", color: "var(--text-primary)" }}>
+            {t(
+              "backendStartup.unreachable",
+              "The application cannot currently connect to the backend. Verify the backend status and network connectivity, then try again.",
+            )}
           </p>
           <button
             type="button"
@@ -520,8 +527,6 @@ export default function Login() {
       setError(null);
       clearLogoutBlock();
 
-      console.log("[Login] Signing in with email:", email);
-
       const { user, session, error } = await springAuth.signInWithPassword({
         email: email.trim(),
         password: password,
@@ -529,13 +534,11 @@ export default function Login() {
       });
 
       if (error) {
-        console.error("[Login] Email sign in error:", error);
         setError(error.message);
         if (error.mfaRequired || error.code === "invalid_mfa_code") {
           setRequiresMfa(true);
         }
       } else if (user && session) {
-        console.log("[Login] Email sign in successful");
         clearLogoutBlock();
         setRequiresMfa(false);
         setMfaCode("");
@@ -561,10 +564,18 @@ export default function Login() {
 
   return (
     <AuthLayout>
-      <LoginHeader
-        title={isSingleSsoOnly ? "" : t("login.login") || "Sign in"}
-        centerOnly={isSingleSsoOnly}
-      />
+      <div className="auth-logo-block">
+        <img
+          src={withBasePath("/modern-logo/LoginLightModeHeader.svg")}
+          alt="Stirling PDF"
+          className="auth-logo-header auth-logo-header--light"
+        />
+        <img
+          src={withBasePath("/modern-logo/LoginDarkModeHeader.svg")}
+          alt="Stirling PDF"
+          className="auth-logo-header auth-logo-header--dark"
+        />
+      </div>
 
       {/* Success message */}
       {successMessage && (

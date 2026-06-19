@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { isAxiosError } from "axios";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import {
   Stack,
   Text,
@@ -84,8 +84,11 @@ export default function PeopleSection() {
     ? t("workspace.people.loginRequired", "Enable login mode first")
     : hasNoSlots
       ? t(
-          "workspace.people.license.noSlotsAvailable",
+          "workspace.people.license.slotsAvailable",
           "No user slots available",
+          {
+            count: 0,
+          },
         )
       : null;
 
@@ -391,9 +394,9 @@ export default function PeopleSection() {
     },
     {
       value: "ROLE_USER",
-      label: t("workspace.people.member"),
+      label: t("workspace.people.user"),
       description: t(
-        "workspace.people.roleDescriptions.member",
+        "workspace.people.roleDescriptions.user",
         "Can view and edit shared files, but cannot manage workspace settings or members.",
       ),
       icon: "person",
@@ -479,8 +482,11 @@ export default function PeopleSection() {
             <Group gap="xs" wrap="nowrap" align="center">
               <Badge color="red" variant="light" size="sm">
                 {t(
-                  "workspace.people.license.noSlotsAvailable",
-                  "No slots available",
+                  "workspace.people.license.slotsAvailable",
+                  "No user slots available",
+                  {
+                    count: 0,
+                  },
                 )}
               </Badge>
               <Button
@@ -585,9 +591,12 @@ export default function PeopleSection() {
               {t("workspace.people.user")}
             </Table.Th>
             <Table.Th
-              style={{ fontWeight: 600, color: "var(--mantine-color-gray-7)" }}
+              style={{
+                fontWeight: 600,
+                color: "var(--mantine-color-gray-7)",
+                whiteSpace: "nowrap",
+              }}
               fz="sm"
-              w={100}
             >
               {t("workspace.people.role")}
             </Table.Th>
@@ -690,7 +699,7 @@ export default function PeopleSection() {
                     </Box>
                   </Group>
                 </Table.Td>
-                <Table.Td w={100}>
+                <Table.Td style={{ whiteSpace: "nowrap" }}>
                   <Badge
                     size="sm"
                     variant="light"
@@ -699,10 +708,14 @@ export default function PeopleSection() {
                         ? "blue"
                         : "cyan"
                     }
+                    styles={{
+                      root: { maxWidth: "none" },
+                      label: { overflow: "visible" },
+                    }}
                   >
                     {(user.rolesAsString || "").includes("ROLE_ADMIN")
                       ? t("workspace.people.admin", "Admin")
-                      : t("workspace.people.member", "Member")}
+                      : t("workspace.people.user", "User")}
                   </Badge>
                 </Table.Td>
                 <Table.Td>
@@ -986,8 +999,12 @@ export default function PeopleSection() {
                 {t("workspace.people.editMember.title")}
               </Text>
               <Text size="sm" c="dimmed" ta="center">
-                {t("workspace.people.editMember.editing")}{" "}
-                <strong>{selectedUser?.username}</strong>
+                <Trans
+                  i18nKey="workspace.people.editMember.editing"
+                  defaults="Editing: <0>{{username}}</0>"
+                  values={{ username: selectedUser?.username ?? "" }}
+                  components={[<strong />]}
+                />
               </Text>
             </Stack>
             <Select
