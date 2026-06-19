@@ -1,4 +1,6 @@
 import { useEffect, useState, Suspense, lazy } from "react";
+import { useTranslation } from "react-i18next";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { Box, Loader, Center } from "@mantine/core";
 import { useRainbowThemeContext } from "@app/components/shared/RainbowThemeProvider";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
@@ -62,6 +64,13 @@ export default function Workbench() {
   const selectedTool = selectedToolId ? toolRegistry[selectedToolId] : null;
   const { addFiles } = useFileHandler();
   const hasFiles = activeFiles.length > 0;
+  const { t } = useTranslation();
+
+  // The viewer's tool row can be retracted to give the document more height.
+  // State lives here (not in WorkbenchBar) so the reopen tab can hang below the
+  // bar, outside the bar's overflow-clipped wrapper. Scoped to the viewer.
+  const [viewerToolbarCollapsed, setViewerToolbarCollapsed] = useState(false);
+  const showReopenTab = currentView === "viewer" && viewerToolbarCollapsed;
 
   // Enable bar transitions after first paint so the initial hidden state shows
   // without animating (landing page on load shouldn't animate the bar up).
@@ -203,18 +212,36 @@ export default function Workbench() {
       {currentView !== "myFiles" &&
         !customWorkbenchViews.find((v) => v.workbenchId === currentView)
           ?.hideTopControls && (
-          <div
-            className={styles.workbenchBarWrapper}
-            data-hidden="false"
-            data-no-transition={String(!barTransitionEnabled)}
-          >
-            <div className={styles.workbenchBarInner}>
-              <WorkbenchBar
-                currentView={currentView}
-                setCurrentView={setCurrentView}
-                hasFiles={hasFiles}
-              />
+          <div className={styles.workbenchBarShell}>
+            <div
+              className={styles.workbenchBarWrapper}
+              data-hidden="false"
+              data-no-transition={String(!barTransitionEnabled)}
+            >
+              <div className={styles.workbenchBarInner}>
+                <WorkbenchBar
+                  currentView={currentView}
+                  setCurrentView={setCurrentView}
+                  hasFiles={hasFiles}
+                  viewerToolbarCollapsed={viewerToolbarCollapsed}
+                  onCollapseViewerToolbar={setViewerToolbarCollapsed}
+                />
+              </div>
             </div>
+            {/* Reopen tab: a little handle hanging off the bar's bottom-right
+                while the viewer tool row is retracted. */}
+            {showReopenTab && (
+              <button
+                type="button"
+                className={styles.workbenchBarReopenTab}
+                onClick={() => setViewerToolbarCollapsed(false)}
+                aria-expanded={false}
+                aria-label={t("workbenchBar.showToolbar", "Show toolbar")}
+                title={t("workbenchBar.showToolbar", "Show toolbar")}
+              >
+                <KeyboardArrowDownIcon sx={{ fontSize: "1rem" }} />
+              </button>
+            )}
           </div>
         )}
 
