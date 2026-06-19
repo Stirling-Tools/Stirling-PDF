@@ -185,6 +185,10 @@ public class ConfigController {
             String frontendUrl = applicationProperties.getSystem().getFrontendUrl();
             configData.put("frontendUrl", resolveFrontendUrl(request, appConfig));
 
+            configData.put(
+                    "isDesktop",
+                    Boolean.parseBoolean(System.getProperty("STIRLING_PDF_TAURI_MODE", "false")));
+
             // Add mobile scanner settings
             configData.put(
                     "enableMobileScanner",

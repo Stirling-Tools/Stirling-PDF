@@ -112,4 +112,40 @@ describe("buildMobileScannerUrl", () => {
       }),
     ).toBe("https://app.stirlingpdf.com/app/mobile-scanner?session=abc-123");
   });
+
+  test("desktop targets the static upload page on the LAN origin", () => {
+    expect(
+      buildMobileScannerUrl({
+        configuredUrl: "http://192.168.1.50:8080",
+        sessionId,
+        origin: "http://localhost:8080",
+        basePath: "",
+        useStaticUploadPage: true,
+      }),
+    ).toBe("http://192.168.1.50:8080/mobile-upload.html?session=abc-123");
+  });
+
+  test("desktop static upload page still honours a configured subpath", () => {
+    expect(
+      buildMobileScannerUrl({
+        configuredUrl: "http://192.168.1.50:8080/app",
+        sessionId,
+        origin: "http://localhost:8080",
+        basePath: "/app",
+        useStaticUploadPage: true,
+      }),
+    ).toBe("http://192.168.1.50:8080/app/mobile-upload.html?session=abc-123");
+  });
+
+  test("desktop static upload page falls back to origin + base path", () => {
+    expect(
+      buildMobileScannerUrl({
+        configuredUrl: "",
+        sessionId,
+        origin: "http://localhost:8080",
+        basePath: "",
+        useStaticUploadPage: true,
+      }),
+    ).toBe("http://localhost:8080/mobile-upload.html?session=abc-123");
+  });
 });

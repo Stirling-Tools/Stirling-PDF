@@ -23,10 +23,15 @@ export function buildMobileScannerUrl(params: {
   sessionId: string;
   origin: string;
   basePath: string;
+  useStaticUploadPage?: boolean;
 }): string {
-  const { configuredUrl, sessionId, origin, basePath } = params;
+  const { configuredUrl, sessionId, origin, basePath, useStaticUploadPage } =
+    params;
   const query = `?session=${sessionId}`;
-  const route = `${basePath}/mobile-scanner`;
+  const pageSegment = useStaticUploadPage
+    ? "/mobile-upload.html"
+    : "/mobile-scanner";
+  const route = `${basePath}${pageSegment}`;
 
   const trimmed = configuredUrl.trim();
   if (trimmed) {
@@ -35,7 +40,7 @@ export function buildMobileScannerUrl(params: {
       if (parsed.protocol === "http:" || parsed.protocol === "https:") {
         const subpath = parsed.pathname.replace(/\/+$/, "");
         return subpath
-          ? `${parsed.origin}${subpath}/mobile-scanner${query}`
+          ? `${parsed.origin}${subpath}${pageSegment}${query}`
           : `${parsed.origin}${route}${query}`;
       }
     } catch {
