@@ -673,17 +673,6 @@ export class EditTextCommand implements Command {
         }
       }
       this.partialInsertedPtrs = [];
-      // Pure-insert edit: restore the exact pre-edit model so redo re-engages
-      // the partial path and reproduces identical output (no overlay re-emit).
-      if (planIsPureInsert(this.partialPlan) && this.editSnapshot) {
-        restoreRunModel(run, this.editSnapshot);
-        run.text = this.prevText;
-        run.dirty = true;
-        this.partialPlan = null;
-        page.markDirty();
-        page.markNeedsGenerate();
-        return;
-      }
       // In-place "modify" sub-runs kept their object (and font); restore
       // their original text so undo shows the pre-edit characters.
       for (const op of this.partialPlan.ops) {
@@ -694,6 +683,20 @@ export class EditTextCommand implements Command {
             this.prevMergedFromTexts[op.subRunIdx] ?? "",
           );
         }
+      }
+      // No original objects were destroyed (pure insert, or in-place modifies
+      // whose objects we just restored above): restore the EXACT pre-edit model
+      // so undo keeps the original embedded fonts AND redo re-engages the
+      // partial path identically. Only edits that actually freed objects fall
+      // through to the Helvetica overlay rebuild below (their glyphs are gone).
+      if (this.partialPlan.removePtrs.length === 0 && this.editSnapshot) {
+        restoreRunModel(run, this.editSnapshot);
+        run.text = this.prevText;
+        run.dirty = true;
+        this.partialPlan = null;
+        page.markDirty();
+        page.markNeedsGenerate();
+        return;
       }
       const revertFallback = helveticaVariantFor(this.prevFontId ?? run.fontId);
       const removed = new Set(this.partialPlan.removePtrs.map((r) => r.ptr));

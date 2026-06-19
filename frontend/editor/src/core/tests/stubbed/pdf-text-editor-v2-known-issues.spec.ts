@@ -439,15 +439,23 @@ test.describe("v2 editor - fixed-issue regressions", () => {
     await caretEndInsert(page, id, "\n");
     await caretEndInsert(page, id, "Z");
     await page.getByTestId("v2-undo").click();
-    await page.waitForTimeout(200);
-    const after = await page.evaluate(
-      (rid: string) =>
-        (window as any).__v2_editor_store.doc
-          .page(1)
-          .runs.find((x: any) => x.id === rid).text as string,
-      id,
-    );
-    expect(after, "one undo should fully revert Enter+type").toBe(before);
+    // Poll for the revert rather than a fixed wait - the undo's store update can
+    // lag the click under load, which made a single fixed timeout flaky.
+    await expect
+      .poll(
+        () =>
+          page.evaluate(
+            (rid: string) =>
+              ((window as any).__v2_editor_store.doc
+                .page(1)
+                .runs.find((x: any) => x.id === rid)?.text ?? null) as
+                | string
+                | null,
+            id,
+          ),
+        { timeout: 6000, message: "one undo should fully revert Enter+type" },
+      )
+      .toBe(before);
   });
 
   // ISSUE: opening an ENCRYPTED PDF fails silently - the editor shows "No
