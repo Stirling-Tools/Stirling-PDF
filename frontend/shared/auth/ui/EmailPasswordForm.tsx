@@ -86,7 +86,7 @@ export default function EmailPasswordForm({
               label={t("login.password", "Password")}
               name="current-password"
               autoComplete="current-password"
-              placeholder={t("login.enterPassword", "Enter password")}
+              placeholder={t("login.enterPassword", "Enter your password")}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               error={fieldErrors.password}
@@ -99,7 +99,7 @@ export default function EmailPasswordForm({
           <div className="auth-field">
             <TextInput
               id="mfaCode"
-              label={t("login.mfaCode", "Authentication code")}
+              label={t("login.mfaCode", "Authentication Code")}
               type="text"
               name="mfaCode"
               autoComplete="one-time-code"

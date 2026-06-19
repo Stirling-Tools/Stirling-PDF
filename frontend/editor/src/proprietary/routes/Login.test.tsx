@@ -8,6 +8,8 @@ import { useAuth } from "@app/auth/UseSession";
 import { springAuth } from "@shared/auth/spring/springAuthClient";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
 import apiClient from "@app/services/apiClient";
+import { configureSpringAuth } from "@shared/auth/config";
+import type { AxiosInstance } from "axios";
 
 // Mock i18n to return fallback text
 vi.mock("react-i18next", () => ({
@@ -126,6 +128,11 @@ describe("Login", () => {
         providerList: {},
       },
     });
+
+    // The shared login hook reads getSpringAuthConfig().http; in the real app,
+    // startup points that at apiClient. Mirror that here so the mocked apiClient
+    // serves the login-ui-data fetch.
+    configureSpringAuth({ http: apiClient as unknown as AxiosInstance });
   });
 
   it("should render login form", async () => {
