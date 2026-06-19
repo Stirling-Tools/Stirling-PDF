@@ -1,7 +1,6 @@
 package stirling.software.common.model;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -15,22 +14,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
-import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.core.env.PropertySource;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.EncodedResource;
-import org.springframework.stereotype.Component;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.Data;
 import lombok.Getter;
@@ -39,9 +27,11 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.configuration.InstallationPathConfig;
-import stirling.software.common.configuration.YamlPropertySourceFactory;
 import stirling.software.common.constants.JwtConstants;
 import stirling.software.common.model.exception.UnsupportedProviderException;
+import stirling.software.common.model.io.ClassPathResource;
+import stirling.software.common.model.io.FileSystemResource;
+import stirling.software.common.model.io.Resource;
 import stirling.software.common.model.oauth2.GitHubProvider;
 import stirling.software.common.model.oauth2.GoogleProvider;
 import stirling.software.common.model.oauth2.KeycloakProvider;
@@ -51,9 +41,12 @@ import stirling.software.common.util.ValidationUtils;
 
 @Data
 @Slf4j
-@Component
-@Order(Ordered.HIGHEST_PRECEDENCE)
-@ConfigurationProperties(prefix = "")
+@ApplicationScoped
+// TODO: Migration required - rebind via @io.smallrye.config.ConfigMapping or
+// @io.quarkus.arc.config.ConfigProperties. Was Spring @ConfigurationProperties(prefix = ""),
+// kept here as a plain CDI bean POJO; the property binding is not yet wired in Quarkus.
+// TODO: Migration required - Spring @Order(Ordered.HIGHEST_PRECEDENCE) controlled
+// configuration-bean ordering; there is no equivalent CDI ordering annotation for this bean.
 public class ApplicationProperties {
 
     private Legal legal = new Legal();
@@ -82,38 +75,17 @@ public class ApplicationProperties {
     private Cluster cluster = new Cluster();
     private Policies policies = new Policies();
 
-    @Bean
-    public PropertySource<?> dynamicYamlPropertySource(ConfigurableEnvironment environment)
-            throws IOException {
-        String configPath = InstallationPathConfig.getSettingsPath();
-        log.debug("Attempting to load settings from: {}", configPath);
-
-        File file = new File(configPath);
-        if (!file.exists()) {
-            log.error("Warning: Settings file does not exist at: {}", configPath);
-        }
-
-        Resource resource = new FileSystemResource(configPath);
-        if (!resource.exists()) {
-            throw new FileNotFoundException("Settings file not found at: " + configPath);
-        }
-
-        EncodedResource encodedResource = new EncodedResource(resource);
-        PropertySource<?> propertySource =
-                new YamlPropertySourceFactory().createPropertySource(null, encodedResource);
-
-        boolean saasActive = Arrays.asList(environment.getActiveProfiles()).contains("saas");
-        if (saasActive) {
-            // Saas-pinned values in application-saas.properties must beat settings.yml.
-            environment.getPropertySources().addLast(propertySource);
-        } else {
-            environment.getPropertySources().addFirst(propertySource);
-        }
-
-        log.debug("Loaded properties: {}", propertySource.getSource());
-
-        return propertySource;
-    }
+    // REMOVED (Spring -> Quarkus): dynamicYamlPropertySource(ConfigurableEnvironment).
+    // This was a Spring @Bean that registered settings.yml as an extra runtime PropertySource on
+    // the
+    // ConfigurableEnvironment (added first, or last under the "saas" profile). Quarkus has no
+    // ConfigurableEnvironment/PropertySource model and the @Bean had already been removed, so the
+    // method was dead code referencing Spring-only types.
+    // TODO: Migration required - reimplement external settings.yml loading as a custom
+    // org.eclipse.microprofile.config.spi.ConfigSource (registered via a ConfigSourceProvider /
+    // META-INF/services), giving it an ordinal that reproduces the old precedence: higher than the
+    // application defaults normally, but lower than application-saas.properties under the saas
+    // profile. Wire it in ConfigInitializer.
 
     /**
      * Initialize fileUploadLimit from environment variables if not set in settings.yml. Supports
@@ -522,8 +494,12 @@ public class ApplicationProperties {
         private InitialLogin initialLogin = new InitialLogin();
         private OAUTH2 oauth2 = new OAUTH2();
         private SAML2 saml2 = new SAML2();
-        private int loginAttemptCount;
-        private long loginResetTimeMinutes;
+        // Defaults mirror settings.yml.template. These primitives are not bound from the template
+        // by the current Quarkus config path, so an unset 0 means "lock after 0 attempts" (every
+        // login blocked, and the lockout never accumulates a window) - same class of bug as
+        // maxDPI=0. See the settings.yml binding TODO.
+        private int loginAttemptCount = 5;
+        private long loginResetTimeMinutes = 120;
         private String loginMethod = "all";
         private String customGlobalAPIKey;
         private Jwt jwt = new Jwt();
@@ -608,8 +584,9 @@ public class ApplicationProperties {
             @JsonIgnore
             public InputStream getIdpMetadataUri() throws IOException {
                 if (idpMetadataUri.startsWith("classpath:")) {
-                    return new ClassPathResource(idpMetadataUri.substring("classpath:".length()))
-                            .getInputStream();
+                    return getClass()
+                            .getClassLoader()
+                            .getResourceAsStream(idpMetadataUri.substring("classpath:".length()));
                 }
                 try {
                     URI uri = new URI(idpMetadataUri);
@@ -622,6 +599,9 @@ public class ApplicationProperties {
                 }
             }
 
+            // TODO: Migration required - returns org.springframework.core.io.Resource, a public
+            // signature relied on by callers. Converting to InputStream/byte[]/java.nio would
+            // ripple to those call sites, so the Spring Resource type is retained for now.
             @JsonIgnore
             public Resource getSpCert() {
                 if (spCert == null) return null;
@@ -632,6 +612,9 @@ public class ApplicationProperties {
                 }
             }
 
+            // TODO: Migration required - returns org.springframework.core.io.Resource, a public
+            // signature relied on by callers. Converting to InputStream/byte[]/java.nio would
+            // ripple to those call sites, so the Spring Resource type is retained for now.
             @JsonIgnore
             public Resource getIdpCert() {
                 if (idpCert == null) return null;
@@ -642,6 +625,9 @@ public class ApplicationProperties {
                 }
             }
 
+            // TODO: Migration required - returns org.springframework.core.io.Resource, a public
+            // signature relied on by callers. Converting to InputStream/byte[]/java.nio would
+            // ripple to those call sites, so the Spring Resource type is retained for now.
             @JsonIgnore
             public Resource getPrivateKey() {
                 if (privateKey == null) return null;
@@ -881,7 +867,10 @@ public class ApplicationProperties {
         private Boolean enableDesktopInstallSlide;
         private Datasource datasource;
         private boolean disableSanitize;
-        private int maxDPI;
+        // Default mirrors settings.yml.template (maxDPI: 500). Without an explicit default this
+        // primitive is 0, which makes every DPI check (dpi > maxDPI) fail with "maximum safe limit
+        // of 0" when the value is not populated from settings.
+        private int maxDPI = 500;
         private boolean enableUrlToPDF;
         private Html html = new Html();
         private CustomPaths customPaths = new CustomPaths();

@@ -6,11 +6,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.env.Environment;
-import org.springframework.stereotype.Component;
+import org.eclipse.microprofile.config.ConfigProvider;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import jakarta.annotation.PostConstruct;
+import io.quarkus.runtime.StartupEvent;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,19 +30,18 @@ import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
 
 @Slf4j
-@Component
+@ApplicationScoped
 @RequiredArgsConstructor
 public class InitialSecuritySetup {
 
-    @Value("${v2:false}")
-    private boolean v2Enabled = false;
+    @ConfigProperty(name = "v2", defaultValue = "false")
+    boolean v2Enabled;
 
     private final UserService userService;
     private final TeamService teamService;
     private final ApplicationProperties applicationProperties;
     private final DatabaseServiceInterface databaseService;
     private final UserLicenseSettingsService licenseSettingsService;
-    private final Environment environment;
 
     /**
      * SaaS manages identity in Supabase and billing via PAYG, so the self-host bootstrap steps that
@@ -48,10 +50,27 @@ public class InitialSecuritySetup {
      * per-row saveAll. Per-user team assignment happens in SupabaseAuthenticationFilter instead.
      */
     private boolean isSaas() {
-        return Arrays.asList(environment.getActiveProfiles()).contains("saas");
+        // Spring @Profile("saas") -> read the Quarkus active profile(s) from MicroProfile Config.
+        String activeProfiles =
+                ConfigProvider.getConfig()
+                        .getOptionalValue("quarkus.profile", String.class)
+                        .orElse("");
+        return Arrays.asList(activeProfiles.split(",")).contains("saas");
     }
 
-    @PostConstruct
+    // Runs eagerly at startup. The original Spring @Component was eagerly instantiated so its
+    // @PostConstruct ran on every boot; a lazy @ApplicationScoped @PostConstruct would never run
+    // (nothing injects this bean), leaving no admin user. Observe StartupEvent to restore that.
+    // @Transactional: Spring Data implicitly wrapped repository.save() in a transaction; Panache
+    // persist() needs an ambient one, and the StartupEvent observer has none by default. The
+    // interceptor binding sits on the observer (the container-invoked entry point) so the
+    // transaction is active when init() runs; init() stays parameterless so it can be unit-tested
+    // directly.
+    @Transactional
+    void onStart(@Observes StartupEvent event) {
+        init();
+    }
+
     public void init() {
         try {
 

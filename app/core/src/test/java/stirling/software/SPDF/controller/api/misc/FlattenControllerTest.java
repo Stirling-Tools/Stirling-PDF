@@ -1,9 +1,11 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -18,6 +20,7 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,28 +28,30 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
 
-import stirling.software.SPDF.model.api.misc.FlattenRequest;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.StreamingOutput;
+
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.testsupport.TestFileUploads;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
 @ExtendWith(MockitoExtension.class)
 class FlattenControllerTest {
-    private static ResponseEntity<Resource> streamingOk(byte[] bytes) {
-        return ResponseEntity.ok(new ByteArrayResource(bytes));
-    }
 
-    private static byte[] drainBody(ResponseEntity<Resource> response) throws java.io.IOException {
-        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-        try (java.io.InputStream __in = response.getBody().getInputStream()) {
-            __in.transferTo(baos);
+    private static byte[] drainBody(Response response) throws IOException {
+        Object entity = response.getEntity();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        if (entity instanceof byte[] bytes) {
+            baos.write(bytes);
+        } else if (entity instanceof StreamingOutput streaming) {
+            streaming.write(baos);
+        } else {
+            throw new IllegalStateException(
+                    "Unexpected response entity type: "
+                            + (entity == null ? "null" : entity.getClass().getName()));
         }
         return baos.toByteArray();
     }
@@ -72,8 +77,7 @@ class FlattenControllerTest {
                         });
     }
 
-    private MockMultipartFile createPdf() throws IOException {
-        Path path = tempDir.resolve("test.pdf");
+    private byte[] createPdfBytes() throws IOException {
         try (PDDocument doc = new PDDocument()) {
             PDPage page = new PDPage(PDRectangle.LETTER);
             doc.addPage(page);
@@ -84,150 +88,134 @@ class FlattenControllerTest {
                 cs.showText("Test content");
                 cs.endText();
             }
-            doc.save(path.toFile());
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            doc.save(baos);
+            return baos.toByteArray();
         }
-        return new MockMultipartFile(
-                "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, Files.readAllBytes(path));
     }
 
     @Test
     void flatten_formsOnly_withAcroForm() throws Exception {
-        MockMultipartFile file = createPdf();
-        FlattenRequest request = new FlattenRequest();
-        request.setFileInput(file);
-        request.setFlattenOnlyForms(true);
+        byte[] bytes = createPdfBytes();
+        FileUpload file = TestFileUploads.pdf(bytes);
 
-        PDDocument doc = Loader.loadPDF(file.getBytes());
-        when(pdfDocumentFactory.load(file)).thenReturn(doc);
+        PDDocument doc = Loader.loadPDF(bytes);
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(doc);
 
-        ResponseEntity<Resource> response = controller.flatten(request);
+        Response response = controller.flatten(file, null, true, null);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getStatus()).isEqualTo(200);
         assertThat(drainBody(response)).isNotEmpty();
     }
 
     @Test
     void flatten_formsOnly_noAcroForm() throws Exception {
-        MockMultipartFile file = createPdf();
-        FlattenRequest request = new FlattenRequest();
-        request.setFileInput(file);
-        request.setFlattenOnlyForms(true);
+        byte[] bytes = createPdfBytes();
+        FileUpload file = TestFileUploads.pdf(bytes);
 
         // Mock doc without acro form
         PDDocument doc = mock(PDDocument.class);
         PDDocumentCatalog catalog = mock(PDDocumentCatalog.class);
-        when(pdfDocumentFactory.load(file)).thenReturn(doc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(doc);
         when(doc.getDocumentCatalog()).thenReturn(catalog);
         when(catalog.getAcroForm()).thenReturn(null);
 
-        ResponseEntity<Resource> response = controller.flatten(request);
+        Response response = controller.flatten(file, null, true, null);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getStatus()).isEqualTo(200);
         verify(doc).close();
     }
 
     @Test
     void flatten_formsOnly_withEmptyAcroForm() throws Exception {
-        MockMultipartFile file = createPdf();
-        FlattenRequest request = new FlattenRequest();
-        request.setFileInput(file);
-        request.setFlattenOnlyForms(true);
+        byte[] bytes = createPdfBytes();
+        FileUpload file = TestFileUploads.pdf(bytes);
 
         PDDocument doc = mock(PDDocument.class);
         PDDocumentCatalog catalog = mock(PDDocumentCatalog.class);
         PDAcroForm form = mock(PDAcroForm.class);
-        when(pdfDocumentFactory.load(file)).thenReturn(doc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(doc);
         when(doc.getDocumentCatalog()).thenReturn(catalog);
         when(catalog.getAcroForm()).thenReturn(form);
 
-        ResponseEntity<Resource> response = controller.flatten(request);
+        Response response = controller.flatten(file, null, true, null);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getStatus()).isEqualTo(200);
         verify(form).flatten();
     }
 
     @Test
     void flatten_ioException() throws Exception {
-        MockMultipartFile file = createPdf();
-        FlattenRequest request = new FlattenRequest();
-        request.setFileInput(file);
-        request.setFlattenOnlyForms(true);
+        byte[] bytes = createPdfBytes();
+        FileUpload file = TestFileUploads.pdf(bytes);
 
-        when(pdfDocumentFactory.load(file)).thenThrow(new IOException("corrupt"));
+        when(pdfDocumentFactory.load(any(MultipartFile.class)))
+                .thenThrow(new IOException("corrupt"));
 
-        assertThatThrownBy(() -> controller.flatten(request)).isInstanceOf(IOException.class);
+        assertThatThrownBy(() -> controller.flatten(file, null, true, null))
+                .isInstanceOf(IOException.class);
     }
 
     @Test
     void flatten_formsOnlyNull_treatedAsFalse() throws Exception {
-        MockMultipartFile file = createPdf();
-        FlattenRequest request = new FlattenRequest();
-        request.setFileInput(file);
-        request.setFlattenOnlyForms(null);
+        byte[] bytes = createPdfBytes();
+        FileUpload file = TestFileUploads.pdf(bytes);
 
         // When flattenOnlyForms is null/false, it does full flatten (render to image)
         // This requires real PDF rendering, so we use a real doc
-        PDDocument doc = Loader.loadPDF(file.getBytes());
+        PDDocument doc = Loader.loadPDF(bytes);
         PDDocument newDoc = new PDDocument();
-        when(pdfDocumentFactory.load(file)).thenReturn(doc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(doc);
         when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(doc)).thenReturn(newDoc);
 
-        ResponseEntity<Resource> response = controller.flatten(request);
+        Response response = controller.flatten(file, null, null, null);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getStatus()).isEqualTo(200);
         assertThat(drainBody(response)).isNotEmpty();
     }
 
     @Test
     void flatten_formsOnlyFalse_fullFlatten() throws Exception {
-        MockMultipartFile file = createPdf();
-        FlattenRequest request = new FlattenRequest();
-        request.setFileInput(file);
-        request.setFlattenOnlyForms(false);
+        byte[] bytes = createPdfBytes();
+        FileUpload file = TestFileUploads.pdf(bytes);
 
-        PDDocument doc = Loader.loadPDF(file.getBytes());
+        PDDocument doc = Loader.loadPDF(bytes);
         PDDocument newDoc = new PDDocument();
-        when(pdfDocumentFactory.load(file)).thenReturn(doc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(doc);
         when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(doc)).thenReturn(newDoc);
 
-        ResponseEntity<Resource> response = controller.flatten(request);
+        Response response = controller.flatten(file, null, false, null);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getStatus()).isEqualTo(200);
     }
 
     @Test
     void flatten_fullFlatten_withCustomDpi() throws Exception {
-        MockMultipartFile file = createPdf();
-        FlattenRequest request = new FlattenRequest();
-        request.setFileInput(file);
-        request.setFlattenOnlyForms(false);
-        request.setRenderDpi(150);
+        byte[] bytes = createPdfBytes();
+        FileUpload file = TestFileUploads.pdf(bytes);
 
-        PDDocument doc = Loader.loadPDF(file.getBytes());
+        PDDocument doc = Loader.loadPDF(bytes);
         PDDocument newDoc = new PDDocument();
-        when(pdfDocumentFactory.load(file)).thenReturn(doc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(doc);
         when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(doc)).thenReturn(newDoc);
 
-        ResponseEntity<Resource> response = controller.flatten(request);
+        Response response = controller.flatten(file, null, false, 150);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getStatus()).isEqualTo(200);
     }
 
     @Test
     void flatten_fullFlatten_lowDpiClampedTo72() throws Exception {
-        MockMultipartFile file = createPdf();
-        FlattenRequest request = new FlattenRequest();
-        request.setFileInput(file);
-        request.setFlattenOnlyForms(false);
-        request.setRenderDpi(10); // Below minimum of 72
+        byte[] bytes = createPdfBytes();
+        FileUpload file = TestFileUploads.pdf(bytes);
 
-        PDDocument doc = Loader.loadPDF(file.getBytes());
+        PDDocument doc = Loader.loadPDF(bytes);
         PDDocument newDoc = new PDDocument();
-        when(pdfDocumentFactory.load(file)).thenReturn(doc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(doc);
         when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(doc)).thenReturn(newDoc);
 
-        ResponseEntity<Resource> response = controller.flatten(request);
+        Response response = controller.flatten(file, null, false, 10); // Below minimum of 72
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getStatus()).isEqualTo(200);
     }
 }

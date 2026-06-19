@@ -1,6 +1,5 @@
 package stirling.software.SPDF.controller.api.security;
 
-import java.beans.PropertyEditorSupport;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.cert.CertificateException;
@@ -24,14 +23,17 @@ import org.bouncycastle.cms.SignerInformation;
 import org.bouncycastle.cms.SignerInformationStore;
 import org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoVerifierBuilder;
 import org.bouncycastle.util.Store;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.InitBinder;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,28 +45,20 @@ import stirling.software.SPDF.service.CertificateValidationService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 
 @Slf4j
 @SecurityApi
+@ApplicationScoped
+@Path("/api/v1/security")
 @RequiredArgsConstructor
 public class ValidateSignatureController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final CertificateValidationService certValidationService;
-
-    @InitBinder
-    public void initBinder(WebDataBinder binder) {
-        binder.registerCustomEditor(
-                MultipartFile.class,
-                new PropertyEditorSupport() {
-                    @Override
-                    public void setAsText(String text) throws IllegalArgumentException {
-                        setValue(null);
-                    }
-                });
-    }
 
     @JsonDataResponse
     @Operation(
@@ -73,12 +67,23 @@ public class ValidateSignatureController {
                     "Validates the digital signatures in a PDF file using PKIX path building"
                             + " and time-of-signing semantics. Supports custom trust anchors."
                             + " Input:PDF Output:JSON Type:SISO")
+    @POST
+    @Path("/validate-signature")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
             value = "/validate-signature",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
-    public ResponseEntity<List<SignatureValidationResult>> validateSignature(
-            @ModelAttribute SignatureValidationRequest request) throws IOException {
+    public Response validateSignature(
+            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("fileId") String fileId,
+            @RestForm("certFile") FileUpload certFileUpload)
+            throws IOException {
+        SignatureValidationRequest request = new SignatureValidationRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        request.setFileId(fileId);
+        request.setCertFile(FileUploadMultipartFile.of(certFileUpload));
+
         List<SignatureValidationResult> results = new ArrayList<>();
         MultipartFile file = request.getFileInput();
 
@@ -280,6 +285,6 @@ public class ValidateSignatureController {
             }
         }
 
-        return ResponseEntity.ok(results);
+        return Response.ok(results).build();
     }
 }

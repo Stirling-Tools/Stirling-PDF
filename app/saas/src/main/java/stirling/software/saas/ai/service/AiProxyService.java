@@ -11,10 +11,11 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.Part;
 
@@ -23,8 +24,8 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.service.UserService;
 
-@Service
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 @Slf4j
 public class AiProxyService {
 
@@ -37,7 +38,7 @@ public class AiProxyService {
     private final UserService userService;
 
     public AiProxyService(
-            @Value("${app.ai.service-base-url:" + DEFAULT_AI_BASE_URL + "}")
+            @ConfigProperty(name = "app.ai.service-base-url", defaultValue = DEFAULT_AI_BASE_URL)
                     String aiServiceBaseUrl,
             UserRepository userRepository,
             UserService userService) {

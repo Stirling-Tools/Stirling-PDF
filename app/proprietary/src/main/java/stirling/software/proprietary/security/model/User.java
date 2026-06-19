@@ -1,6 +1,7 @@
 package stirling.software.proprietary.security.model;
 
 import java.io.Serializable;
+import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -12,7 +13,6 @@ import java.util.stream.Collectors;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -34,9 +34,25 @@ import stirling.software.proprietary.model.Team;
 @Setter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(onlyExplicitlyIncluded = true)
-public class User implements UserDetails, Serializable {
+// TODO: Migration required - this entity previously implemented
+// org.springframework.security.core.userdetails.UserDetails. Quarkus has no UserDetails
+// contract; the user-loading/principal adaptation must be rehosted in a Quarkus
+// IdentityProvider (or SecurityIdentityAugmentor) that builds a SecurityIdentity from this
+// entity. The Lombok getters still expose getUsername()/getPassword()/getAuthorities()/
+// isEnabled() so that adapter can read them directly. isEnabled() override below is retained
+// as plain business logic (null-safe enabled flag).
+public class User implements Serializable, Principal {
 
     private static final long serialVersionUID = 1L;
+
+    // Principal#getName - lets the User entity itself be the Quarkus SecurityIdentity principal, so
+    // the many `principal instanceof User` call sites (folders, file storage, sessions, audit) keep
+    // working. @JsonIgnore so it does not add a "name" field to serialized User JSON.
+    @Override
+    @JsonIgnore
+    public String getName() {
+        return username;
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -121,7 +137,7 @@ public class User implements UserDetails, Serializable {
         return Role.getRoleNameByRoleId(getRolesAsString());
     }
 
-    @Override
+    // No longer @Override: previously satisfied UserDetails.isEnabled().
     public boolean isEnabled() {
         return enabled == null || enabled;
     }

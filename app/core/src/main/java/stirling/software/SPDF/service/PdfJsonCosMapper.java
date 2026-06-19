@@ -26,7 +26,8 @@ import org.apache.pdfbox.cos.COSStream;
 import org.apache.pdfbox.cos.COSString;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.common.PDStream;
-import org.springframework.stereotype.Component;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,7 +35,7 @@ import stirling.software.SPDF.model.json.PdfJsonCosValue;
 import stirling.software.SPDF.model.json.PdfJsonStream;
 
 @Slf4j
-@Component
+@ApplicationScoped
 public class PdfJsonCosMapper {
 
     public enum SerializationContext {

@@ -12,23 +12,27 @@ import java.util.Set;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
-import stirling.software.SPDF.model.api.converters.ConvertEbookToPdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
@@ -38,6 +42,8 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @ConvertApi
+@ApplicationScoped
+@jakarta.ws.rs.Path("/api/v1/convert")
 @RequiredArgsConstructor
 @Slf4j
 public class ConvertEbookToPDFController {
@@ -57,8 +63,11 @@ public class ConvertEbookToPDFController {
         return endpointConfiguration.isGroupEnabled("Ghostscript");
     }
 
+    @POST
+    @jakarta.ws.rs.Path("/ebook/pdf")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/ebook/pdf",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @Operation(
@@ -66,27 +75,32 @@ public class ConvertEbookToPDFController {
             description =
                     "This endpoint converts common eBook formats (EPUB, MOBI, AZW3, FB2, TXT, DOCX)"
                             + " to PDF using Calibre. Input:BOOK Output:PDF Type:SISO")
-    public ResponseEntity<Resource> convertEbookToPdf(
-            @ModelAttribute ConvertEbookToPdfRequest request) throws Exception {
+    public Response convertEbookToPdf(
+            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("embedAllFonts") Boolean embedAllFonts,
+            @RestForm("includeTableOfContents") Boolean includeTableOfContents,
+            @RestForm("includePageNumbers") Boolean includePageNumbers,
+            @RestForm("optimizeForEbook") Boolean optimizeForEbook)
+            throws Exception {
         if (!isCalibreEnabled()) {
             throw new IllegalStateException("Calibre support is disabled");
         }
 
-        MultipartFile inputFile = request.getFileInput();
+        MultipartFile inputFile = FileUploadMultipartFile.of(fileUpload);
         if (inputFile == null || inputFile.isEmpty()) {
             throw new IllegalArgumentException("No input file provided");
         }
 
-        boolean optimizeForEbook = Boolean.TRUE.equals(request.getOptimizeForEbook());
-        if (optimizeForEbook && !isGhostscriptEnabled()) {
+        boolean optimizeForEbookFlag = Boolean.TRUE.equals(optimizeForEbook);
+        if (optimizeForEbookFlag && !isGhostscriptEnabled()) {
             log.warn(
                     "Ghostscript optimization requested but Ghostscript is not enabled/available"
                             + " for ebook conversion");
-            optimizeForEbook = false;
+            optimizeForEbookFlag = false;
         }
-        boolean embedAllFonts = Boolean.TRUE.equals(request.getEmbedAllFonts());
-        boolean includeTableOfContents = Boolean.TRUE.equals(request.getIncludeTableOfContents());
-        boolean includePageNumbers = Boolean.TRUE.equals(request.getIncludePageNumbers());
+        boolean embedAllFontsFlag = Boolean.TRUE.equals(embedAllFonts);
+        boolean includeTableOfContentsFlag = Boolean.TRUE.equals(includeTableOfContents);
+        boolean includePageNumbersFlag = Boolean.TRUE.equals(includePageNumbers);
 
         String originalFilename = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
         if (originalFilename == null || originalFilename.isBlank()) {
@@ -120,9 +134,9 @@ public class ConvertEbookToPDFController {
                 buildCalibreCommand(
                         inputPath,
                         outputPath,
-                        embedAllFonts,
-                        includeTableOfContents,
-                        includePageNumbers);
+                        embedAllFontsFlag,
+                        includeTableOfContentsFlag,
+                        includePageNumbersFlag);
         ProcessExecutorResult result =
                 ProcessExecutor.getInstance(ProcessExecutor.Processes.CALIBRE)
                         .runCommandWithOutputHandling(command, workingDirectory.toFile());
@@ -149,7 +163,7 @@ public class ConvertEbookToPDFController {
         TempFile tempOut = null;
         try {
             tempOut = tempFileManager.createManagedTempFile(".pdf");
-            if (optimizeForEbook) {
+            if (optimizeForEbookFlag) {
                 byte[] pdfBytes = Files.readAllBytes(outputPath);
                 try {
                     byte[] optimizedPdf = GeneralUtils.optimizePdfWithGhostscript(pdfBytes);
@@ -166,8 +180,7 @@ public class ConvertEbookToPDFController {
                     document.save(tempOut.getFile());
                 }
             }
-            ResponseEntity<Resource> response =
-                    WebResponseUtils.pdfFileToWebResponse(tempOut, outputFilename);
+            Response response = WebResponseUtils.pdfFileToWebResponse(tempOut, outputFilename);
             tempOut = null;
             return response;
         } catch (Exception e) {

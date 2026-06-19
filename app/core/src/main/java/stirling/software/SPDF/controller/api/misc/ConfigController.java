@@ -5,14 +5,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.context.ApplicationContext;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.eclipse.microprofile.config.ConfigProvider;
 
 import io.swagger.v3.oas.annotations.Hidden;
+import io.vertx.core.http.HttpServerRequest;
 
-import jakarta.servlet.http.HttpServletRequest;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.Response;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,38 +31,50 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.ServerCertificateServiceInterface;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.SpringContextHolder;
 
 @ConfigApi
+@Path("/api/v1/config")
+@ApplicationScoped
 @Hidden
 @Slf4j
 public class ConfigController {
 
     private final ApplicationProperties applicationProperties;
-    private final ApplicationContext applicationContext;
     private final EndpointConfiguration endpointConfiguration;
-    private final ServerCertificateServiceInterface serverCertificateService;
-    private final UserServiceInterface userService;
-    private final stirling.software.common.service.LicenseServiceInterface licenseService;
     private final stirling.software.SPDF.config.ExternalAppDepConfig externalAppDepConfig;
 
+    // @Autowired(required=false) -> Instance<T> for optional (possibly-absent) CDI beans.
+    private final Instance<ServerCertificateServiceInterface> serverCertificateService;
+    private final Instance<UserServiceInterface> userService;
+    private final Instance<stirling.software.common.service.LicenseServiceInterface> licenseService;
+
+    @Inject
     public ConfigController(
             ApplicationProperties applicationProperties,
-            ApplicationContext applicationContext,
             EndpointConfiguration endpointConfiguration,
-            @org.springframework.beans.factory.annotation.Autowired(required = false)
-                    ServerCertificateServiceInterface serverCertificateService,
-            @org.springframework.beans.factory.annotation.Autowired(required = false)
-                    UserServiceInterface userService,
-            @org.springframework.beans.factory.annotation.Autowired(required = false)
-                    stirling.software.common.service.LicenseServiceInterface licenseService,
+            Instance<ServerCertificateServiceInterface> serverCertificateService,
+            Instance<UserServiceInterface> userService,
+            Instance<stirling.software.common.service.LicenseServiceInterface> licenseService,
             stirling.software.SPDF.config.ExternalAppDepConfig externalAppDepConfig) {
         this.applicationProperties = applicationProperties;
-        this.applicationContext = applicationContext;
         this.endpointConfiguration = endpointConfiguration;
         this.serverCertificateService = serverCertificateService;
         this.userService = userService;
         this.licenseService = licenseService;
         this.externalAppDepConfig = externalAppDepConfig;
+    }
+
+    private ServerCertificateServiceInterface serverCertificateService() {
+        return serverCertificateService.isResolvable() ? serverCertificateService.get() : null;
+    }
+
+    private UserServiceInterface userService() {
+        return userService.isResolvable() ? userService.get() : null;
+    }
+
+    private stirling.software.common.service.LicenseServiceInterface licenseService() {
+        return licenseService.isResolvable() ? licenseService.get() : null;
     }
 
     /**
@@ -66,31 +83,25 @@ public class ConfigController {
      */
     private String getCurrentLicenseType() {
         // Use LicenseService for fresh license status if available
-        if (licenseService != null) {
-            return licenseService.getLicenseTypeName();
+        stirling.software.common.service.LicenseServiceInterface license = licenseService();
+        if (license != null) {
+            return license.getLicenseTypeName();
         }
 
         // Fallback to cached bean if service not available
-        if (applicationContext.containsBean("license")) {
-            return applicationContext.getBean("license", String.class);
-        }
-
-        return null;
+        return SpringContextHolder.getBean("license");
     }
 
     /** Check if running Pro or higher (SERVER or ENTERPRISE license) dynamically. */
     private Boolean isRunningProOrHigher() {
         // Use LicenseService for fresh license status if available
-        if (licenseService != null) {
-            return licenseService.isRunningProOrHigher();
+        stirling.software.common.service.LicenseServiceInterface license = licenseService();
+        if (license != null) {
+            return license.isRunningProOrHigher();
         }
 
         // Fallback to cached bean
-        if (applicationContext.containsBean("runningProOrHigher")) {
-            return applicationContext.getBean("runningProOrHigher", Boolean.class);
-        }
-
-        return null;
+        return SpringContextHolder.getBean("runningProOrHigher");
     }
 
     /**
@@ -100,16 +111,21 @@ public class ConfigController {
      * IPv4, then empty.
      */
     // visible for testing
-    String resolveFrontendUrl(HttpServletRequest request, AppConfig appConfig) {
+    String resolveFrontendUrl(HttpServerRequest request, AppConfig appConfig) {
         String configured = applicationProperties.getSystem().getFrontendUrl();
         if (configured != null && !configured.isBlank()) {
             return configured;
         }
-        if (request != null) {
-            String host = request.getServerName();
+        if (request != null && request.authority() != null) {
+            String host = request.authority().host();
             if (host != null && !host.isBlank() && !isLoopbackHost(host)) {
-                String scheme = request.getScheme();
-                int port = request.getServerPort();
+                String scheme = request.scheme();
+                // Vert.x HostAndPort.port() returns -1 when the authority carries no explicit port;
+                // fall back to the scheme default so the comparison/URL stays correct.
+                int port = request.authority().port();
+                if (port <= 0) {
+                    port = "https".equals(scheme) ? 443 : 80;
+                }
                 boolean defaultPort =
                         ("http".equals(scheme) && port == 80)
                                 || ("https".equals(scheme) && port == 443);
@@ -127,18 +143,22 @@ public class ConfigController {
     /**
      * The port the embedded server is actually listening on. With {@code server.port=0} (an
      * ephemeral port, which the desktop bundle uses to dodge port clashes) the configured value
-     * stays {@code "0"} while Spring publishes the real bound port as {@code local.server.port}
-     * once the server is up. Advertised URLs (the mobile-scanner QR, share links) must carry the
-     * real port - a literal {@code :0} is unreachable and browsers reject it as ERR_UNSAFE_PORT.
+     * stays {@code "0"}. Advertised URLs (the mobile-scanner QR, share links) must carry a real,
+     * reachable port - a literal {@code :0} is unreachable and browsers reject it as
+     * ERR_UNSAFE_PORT.
      */
     // visible for testing
     String resolveEffectiveServerPort(AppConfig appConfig) {
         String configured = appConfig.getServerPort();
         if (configured == null || "0".equals(configured.trim())) {
-            String actual = applicationContext.getEnvironment().getProperty("local.server.port");
-            if (actual != null && !actual.isBlank()) {
-                return actual;
-            }
+            // Quarkus binds via quarkus.http.port (not Spring's local.server.port). Read the bound
+            // port from config; if it is itself 0/absent (ephemeral, no static value to advertise)
+            // fall back to the conventional default rather than emitting an unreachable :0 URL.
+            int port =
+                    ConfigProvider.getConfig()
+                            .getOptionalValue("quarkus.http.port", Integer.class)
+                            .orElse(0);
+            return port > 0 ? Integer.toString(port) : "8080";
         }
         return configured;
     }
@@ -153,20 +173,18 @@ public class ConfigController {
     /** Check if running Enterprise edition dynamically. */
     private Boolean isRunningEE() {
         // Use LicenseService for fresh license status if available
-        if (licenseService != null) {
-            return licenseService.isRunningEE();
+        stirling.software.common.service.LicenseServiceInterface license = licenseService();
+        if (license != null) {
+            return license.isRunningEE();
         }
 
         // Fallback to cached bean
-        if (applicationContext.containsBean("runningEE")) {
-            return applicationContext.getBean("runningEE", Boolean.class);
-        }
-
-        return null;
+        return SpringContextHolder.getBean("runningEE");
     }
 
-    @GetMapping("/app-config")
-    public ResponseEntity<Map<String, Object>> getAppConfig(HttpServletRequest request) {
+    @GET
+    @Path("/app-config")
+    public Response getAppConfig(@Context HttpServerRequest request) {
         Map<String, Object> configData = new HashMap<>();
 
         try {
@@ -174,7 +192,7 @@ public class ConfigController {
             configData.put("dependenciesReady", externalAppDepConfig.isDependenciesChecked());
 
             // Get AppConfig bean
-            AppConfig appConfig = applicationContext.getBean(AppConfig.class);
+            AppConfig appConfig = SpringContextHolder.getBean(AppConfig.class);
 
             // Extract key configuration values from AppConfig
             // Note: Frontend expects "baseUrl" field name for compatibility
@@ -241,8 +259,9 @@ public class ConfigController {
             // enableLogin requires both the config flag AND proprietary features to be loaded
             // If userService is null, proprietary module isn't loaded
             // (DISABLE_ADDITIONAL_FEATURES=true or DOCKER_ENABLE_SECURITY=false)
+            UserServiceInterface user = userService();
             boolean enableLogin =
-                    applicationProperties.getSecurity().isEnableLogin() && userService != null;
+                    applicationProperties.getSecurity().isEnableLogin() && user != null;
             configData.put("enableLogin", enableLogin);
             configData.put(
                     "showSettingsWhenNoLogin",
@@ -286,9 +305,9 @@ public class ConfigController {
 
             // Check if user is admin using UserServiceInterface
             boolean isAdmin = false;
-            if (userService != null) {
+            if (user != null) {
                 try {
-                    isAdmin = userService.isCurrentUserAdmin();
+                    isAdmin = user.isCurrentUserAdmin();
                 } catch (Exception e) {
                     // If there's an error, isAdmin remains false
                 }
@@ -301,9 +320,9 @@ public class ConfigController {
             // Check if the current user is a first-time user
             boolean isNewUser =
                     false; // Default to false when security is disabled or user not found
-            if (userService != null) {
+            if (user != null) {
                 try {
-                    isNewUser = userService.isCurrentUserFirstLogin();
+                    isNewUser = user.isCurrentUserFirstLogin();
                 } catch (Exception e) {
                     // If there's an error, assume not new user for safety
                     isNewUser = false;
@@ -337,9 +356,9 @@ public class ConfigController {
             configData.put("timestampTsaPresets", TimestampController.TSA_PRESETS);
 
             // Server certificate settings
+            ServerCertificateServiceInterface certService = serverCertificateService();
             configData.put(
-                    "serverCertificateEnabled",
-                    serverCertificateService != null && serverCertificateService.isEnabled());
+                    "serverCertificateEnabled", certService != null && certService.isEnabled());
 
             // Legal settings
             configData.put(
@@ -369,10 +388,9 @@ public class ConfigController {
                     configData.put("license", licenseType);
                 }
 
-                if (applicationContext.containsBean("SSOAutoLogin")) {
-                    configData.put(
-                            "SSOAutoLogin",
-                            applicationContext.getBean("SSOAutoLogin", Boolean.class));
+                Boolean ssoAutoLogin = SpringContextHolder.getBean("SSOAutoLogin");
+                if (ssoAutoLogin != null) {
+                    configData.put("SSOAutoLogin", ssoAutoLogin);
                 }
             } catch (Exception e) {
                 // EE features not available, continue without them
@@ -380,54 +398,53 @@ public class ConfigController {
 
             // Add version and machine info for update checking
             try {
-                if (applicationContext.containsBean("appVersion")) {
-                    configData.put(
-                            "appVersion", applicationContext.getBean("appVersion", String.class));
+                String appVersion = SpringContextHolder.getBean("appVersion");
+                if (appVersion != null) {
+                    configData.put("appVersion", appVersion);
                 }
-                if (applicationContext.containsBean("machineType")) {
-                    configData.put(
-                            "machineType", applicationContext.getBean("machineType", String.class));
+                String machineType = SpringContextHolder.getBean("machineType");
+                if (machineType != null) {
+                    configData.put("machineType", machineType);
                 }
-                if (applicationContext.containsBean("activeSecurity")) {
-                    configData.put(
-                            "activeSecurity",
-                            applicationContext.getBean("activeSecurity", Boolean.class));
+                Boolean activeSecurity = SpringContextHolder.getBean("activeSecurity");
+                if (activeSecurity != null) {
+                    configData.put("activeSecurity", activeSecurity);
                 }
             } catch (Exception e) {
                 // Version/machine info not available
             }
 
-            return ResponseEntity.ok(configData);
+            return Response.ok(configData).build();
 
         } catch (Exception e) {
             // Return basic config if there are any issues
             configData.put("error", "Unable to retrieve full configuration");
-            return ResponseEntity.ok(configData);
+            return Response.ok(configData).build();
         }
     }
 
-    @GetMapping("/endpoint-enabled")
-    public ResponseEntity<Boolean> isEndpointEnabled(
-            @RequestParam(name = "endpoint") String endpoint) {
+    @GET
+    @Path("/endpoint-enabled")
+    public Response isEndpointEnabled(@QueryParam("endpoint") String endpoint) {
         boolean enabled = endpointConfiguration.isEndpointEnabled(endpoint);
-        return ResponseEntity.ok(enabled);
+        return Response.ok(enabled).build();
     }
 
-    @GetMapping("/endpoints-enabled")
-    public ResponseEntity<Map<String, Boolean>> areEndpointsEnabled(
-            @RequestParam(name = "endpoints") String endpoints) {
+    @GET
+    @Path("/endpoints-enabled")
+    public Response areEndpointsEnabled(@QueryParam("endpoints") String endpoints) {
         Map<String, Boolean> result = new HashMap<>();
         String[] endpointArray = endpoints.split(",");
         for (String endpoint : endpointArray) {
             String trimmedEndpoint = endpoint.trim();
             result.put(trimmedEndpoint, endpointConfiguration.isEndpointEnabled(trimmedEndpoint));
         }
-        return ResponseEntity.ok(result);
+        return Response.ok(result).build();
     }
 
-    @GetMapping("/endpoints-availability")
-    public ResponseEntity<Map<String, EndpointAvailability>> getEndpointAvailability(
-            @RequestParam(name = "endpoints", required = false) List<String> endpoints) {
+    @GET
+    @Path("/endpoints-availability")
+    public Response getEndpointAvailability(@QueryParam("endpoints") List<String> endpoints) {
         Collection<String> toCheck =
                 (endpoints == null || endpoints.isEmpty())
                         ? endpointConfiguration.getAllEndpoints()
@@ -439,12 +456,13 @@ public class ConfigController {
                     trimmedEndpoint,
                     endpointConfiguration.getEndpointAvailability(trimmedEndpoint));
         }
-        return ResponseEntity.ok(result);
+        return Response.ok(result).build();
     }
 
-    @GetMapping("/group-enabled")
-    public ResponseEntity<Boolean> isGroupEnabled(@RequestParam(name = "group") String group) {
+    @GET
+    @Path("/group-enabled")
+    public Response isGroupEnabled(@QueryParam("group") String group) {
         boolean enabled = endpointConfiguration.isGroupEnabled(group);
-        return ResponseEntity.ok(enabled);
+        return Response.ok(enabled).build();
     }
 }

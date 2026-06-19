@@ -14,12 +14,17 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.util.Matrix;
-import org.springframework.core.io.Resource;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +34,8 @@ import stirling.software.SPDF.model.api.general.PosterPdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -37,6 +44,8 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @GeneralApi
+@Path("/api/v1/general")
+@ApplicationScoped
 @Slf4j
 @RequiredArgsConstructor
 public class PosterPdfController {
@@ -44,9 +53,12 @@ public class PosterPdfController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
+    @POST
+    @Path("/split-for-poster-print")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
             value = "/split-for-poster-print",
-            consumes = "multipart/form-data",
+            consumes = MediaType.MULTIPART_FORM_DATA,
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @MultiFileResponse
     @Operation(
@@ -56,8 +68,30 @@ public class PosterPdfController {
                             + "suitable for printing on standard paper sizes (e.g., A4, Letter). "
                             + "Divides each page into a grid of smaller pages using Apache PDFBox. "
                             + "Input: PDF Output: ZIP-PDF Type: SISO")
-    public ResponseEntity<Resource> posterPdf(@ModelAttribute PosterPdfRequest request)
+    public Response posterPdf(
+            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("fileId") String fileId,
+            @RestForm("pageSize") String pageSize,
+            @RestForm("xFactor") Integer xFactor,
+            @RestForm("yFactor") Integer yFactor,
+            @RestForm("rightToLeft") Boolean rightToLeft)
             throws Exception {
+
+        PosterPdfRequest request = new PosterPdfRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        request.setFileId(fileId);
+        if (pageSize != null) {
+            request.setPageSize(pageSize);
+        }
+        if (xFactor != null) {
+            request.setXFactor(xFactor);
+        }
+        if (yFactor != null) {
+            request.setYFactor(yFactor);
+        }
+        if (rightToLeft != null) {
+            request.setRightToLeft(rightToLeft);
+        }
 
         log.debug("Starting PDF poster split process with request: {}", request);
         MultipartFile file = request.getFileInput();
@@ -84,16 +118,16 @@ public class PosterPdfController {
                 LayerUtility layerUtility = new LayerUtility(outputDocument);
 
                 int totalPages = sourceDocument.getNumberOfPages();
-                int xFactor = request.getXFactor();
-                int yFactor = request.getYFactor();
-                boolean rightToLeft = request.isRightToLeft();
+                int xGrid = request.getXFactor();
+                int yGrid = request.getYFactor();
+                boolean splitRightToLeft = request.isRightToLeft();
 
                 log.debug(
                         "Processing {} pages with grid {}x{}, RTL={}",
                         totalPages,
-                        xFactor,
-                        yFactor,
-                        rightToLeft);
+                        xGrid,
+                        yGrid,
+                        splitRightToLeft);
 
                 // Process each page
                 for (int pageIndex = 0; pageIndex < totalPages; pageIndex++) {
@@ -145,14 +179,14 @@ public class PosterPdfController {
                     sourcePage.setCropBox(originalCropBox);
 
                     // Calculate cell dimensions in source page coordinates
-                    float cellWidth = sourceWidth / xFactor;
-                    float cellHeight = sourceHeight / yFactor;
+                    float cellWidth = sourceWidth / xGrid;
+                    float cellHeight = sourceHeight / yGrid;
 
                     // Create grid cells (rows × columns)
-                    for (int row = 0; row < yFactor; row++) {
-                        for (int col = 0; col < xFactor; col++) {
+                    for (int row = 0; row < yGrid; row++) {
+                        for (int col = 0; col < xGrid; col++) {
                             // Apply RTL ordering for columns if enabled
-                            int actualCol = rightToLeft ? (xFactor - 1 - col) : col;
+                            int actualCol = splitRightToLeft ? (xGrid - 1 - col) : col;
 
                             // Calculate crop rectangle in source coordinates
                             // PDF coordinates start at bottom-left
@@ -160,7 +194,7 @@ public class PosterPdfController {
                             // For Y: invert so row 0 shows TOP (following
                             // SplitPdfBySectionsController
                             // pattern)
-                            float cropY = (yFactor - 1 - row) * cellHeight;
+                            float cropY = (yGrid - 1 - row) * cellHeight;
 
                             // Create new output page with target size
                             PDPage outputPage = new PDPage(targetPageSize);

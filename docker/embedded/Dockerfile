@@ -54,25 +54,19 @@ RUN JPDFIUM_PLATFORM="$([ "$TARGETARCH" = arm64 ] && echo linux-arm64 || echo li
       -x spotlessApply -x spotlessCheck -x test -x sonarqube \
       --no-daemon
 
-# Stage 2: Extract Spring Boot Layers
-FROM eclipse-temurin:25-jre-noble@sha256:b27ca47660a8fa837e47a8533b9b1a3a430295cf29ca28d91af4fd121572dc29 AS jar-extract
-WORKDIR /tmp
-COPY --from=app-build /app/app/core/build/libs/*.jar app.jar
-RUN java -Djarmode=tools -jar app.jar extract --layers --destination /layers
-
-
-# Stage 3: Final runtime image on top of pre-built base
+# Stage 2: Final runtime image on top of pre-built base
 FROM ${BASE_IMAGE}
 
 ARG VERSION_TAG
 
 WORKDIR /app
 
-# Application layers
-COPY --link --from=jar-extract --chown=1000:1000 /layers/dependencies/           /app/
-COPY --link --from=jar-extract --chown=1000:1000 /layers/spring-boot-loader/     /app/
-COPY --link --from=jar-extract --chown=1000:1000 /layers/snapshot-dependencies/  /app/
-COPY --link --from=jar-extract --chown=1000:1000 /layers/application/            /app/
+# Quarkus uber runner-jar (self-contained, all dependencies inside). init-without-ocr.sh launches
+# it with `java -jar /app/app.jar`. Replaces the former Spring Boot layered-jar extraction
+# (java -Djarmode=tools extract --layers + spring-boot-loader layers), which the Quarkus uber-jar
+# does not support.
+COPY --link --from=app-build --chown=1000:1000 \
+     /app/app/core/build/stirling-pdf-*-runner.jar /app/app.jar
 
 COPY --link --from=app-build --chown=1000:1000 \
      /app/build/libs/restart-helper.jar /restart-helper.jar

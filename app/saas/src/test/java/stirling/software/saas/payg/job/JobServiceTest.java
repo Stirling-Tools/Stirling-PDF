@@ -3,6 +3,7 @@ package stirling.software.saas.payg.job;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.never;
@@ -56,9 +57,8 @@ class JobServiceTest {
         detector = new FakeDetector();
         jobRepo = Mockito.mock(ProcessingJobRepository.class);
         stepRepo = Mockito.mock(ProcessingJobStepRepository.class);
-        // save() returns the same instance so the service can introspect post-write state.
-        when(jobRepo.save(any(ProcessingJob.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(stepRepo.save(any(ProcessingJobStep.class))).thenAnswer(inv -> inv.getArgument(0));
+        // Panache persist(...) returns void and mutates the entity in place; the service operates
+        // on the entity instances it already holds, so no save/persist stubbing is needed here.
         service = new JobService(detector, jobRepo, stepRepo, WINDOW);
     }
 
@@ -98,7 +98,7 @@ class JobServiceTest {
     void joinOrOpen_singleMatch_joinsExistingJob(@TempDir Path tmp) throws IOException {
         UUID existingId = UUID.randomUUID();
         ProcessingJob existing = openJob(existingId, 42L, 3, LocalDateTime.now());
-        when(jobRepo.findById(existingId)).thenReturn(Optional.of(existing));
+        when(jobRepo.findByIdOptional(existingId)).thenReturn(Optional.of(existing));
 
         Path input = givenFile(tmp, "in.bin");
         detector.willMatch(
@@ -119,7 +119,7 @@ class JobServiceTest {
         // Inputs A and B; A matches existing job; B is unrelated. Should join A's job.
         UUID jobAId = UUID.randomUUID();
         ProcessingJob jobA = openJob(jobAId, 42L, 2, LocalDateTime.now());
-        when(jobRepo.findById(jobAId)).thenReturn(Optional.of(jobA));
+        when(jobRepo.findByIdOptional(jobAId)).thenReturn(Optional.of(jobA));
 
         Path inA = givenFile(tmp, "a.bin");
         Path inB = givenFile(tmp, "b.bin");
@@ -144,7 +144,7 @@ class JobServiceTest {
         LocalDateTime newer = LocalDateTime.now();
         ProcessingJob olderJob = openJob(olderId, 42L, 1, older);
         ProcessingJob newerJob = openJob(newerId, 42L, 1, newer);
-        when(jobRepo.findById(newerId)).thenReturn(Optional.of(newerJob));
+        when(jobRepo.findByIdOptional(newerId)).thenReturn(Optional.of(newerJob));
 
         Path inA = givenFile(tmp, "a.bin");
         Path inB = givenFile(tmp, "b.bin");
@@ -165,7 +165,7 @@ class JobServiceTest {
         UUID existingId = UUID.randomUUID();
         // stepCount equal to limit (10) → can't append, must spawn new.
         ProcessingJob existing = openJob(existingId, 42L, 10, LocalDateTime.now());
-        when(jobRepo.findById(existingId)).thenReturn(Optional.of(existing));
+        when(jobRepo.findByIdOptional(existingId)).thenReturn(Optional.of(existing));
 
         Path input = givenFile(tmp, "in.bin");
         detector.willMatch(
@@ -194,7 +194,7 @@ class JobServiceTest {
     void joinOrOpen_matchPointsAtMissingJob_throwsStateException(@TempDir Path tmp)
             throws IOException {
         UUID staleId = UUID.randomUUID();
-        when(jobRepo.findById(staleId)).thenReturn(Optional.empty());
+        when(jobRepo.findByIdOptional(staleId)).thenReturn(Optional.empty());
 
         Path input = givenFile(tmp, "in.bin");
         detector.willMatch(
@@ -219,7 +219,7 @@ class JobServiceTest {
     void close_idempotent() {
         UUID jobId = UUID.randomUUID();
         ProcessingJob open = openJob(jobId, 42L, 5, LocalDateTime.now());
-        when(jobRepo.findById(jobId)).thenReturn(Optional.of(open));
+        when(jobRepo.findByIdOptional(jobId)).thenReturn(Optional.of(open));
 
         ProcessingJob first = service.close(jobId);
         assertThat(first.getStatus()).isEqualTo(JobStatus.CLOSED);
@@ -228,14 +228,14 @@ class JobServiceTest {
         // Re-call: status already CLOSED, should return the same row without saving again.
         ProcessingJob second = service.close(jobId);
         assertThat(second.getStatus()).isEqualTo(JobStatus.CLOSED);
-        // save was called exactly once across both close() calls.
-        verify(jobRepo, times(1)).save(any(ProcessingJob.class));
+        // persist was called exactly once across both close() calls.
+        verify(jobRepo, times(1)).persist(any(ProcessingJob.class));
     }
 
     @Test
     void close_unknownJob_throws() {
         UUID unknown = UUID.randomUUID();
-        when(jobRepo.findById(unknown)).thenReturn(Optional.empty());
+        when(jobRepo.findByIdOptional(unknown)).thenReturn(Optional.empty());
         assertThatThrownBy(() -> service.close(unknown))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("No ProcessingJob");
@@ -263,14 +263,14 @@ class JobServiceTest {
         assertThat(closed).isEqualTo(2);
         assertThat(a.getStatus()).isEqualTo(JobStatus.CLOSED);
         assertThat(b.getStatus()).isEqualTo(JobStatus.CLOSED);
-        verify(jobRepo).saveAll(List.of(a, b));
+        verify(jobRepo).persist(List.of(a, b));
     }
 
     @Test
     void closeStale_emptyResult_noSave() {
         when(jobRepo.findStale(eq(JobStatus.OPEN), any(LocalDateTime.class))).thenReturn(List.of());
         assertThat(service.closeStale()).isZero();
-        verify(jobRepo, never()).saveAll(any());
+        verify(jobRepo, never()).persist(anyList());
     }
 
     @Test
@@ -286,7 +286,7 @@ class JobServiceTest {
                 12_345L,
                 null);
 
-        verify(stepRepo, atLeastOnce()).save(captor.capture());
+        verify(stepRepo, atLeastOnce()).persist(captor.capture());
         ProcessingJobStep saved = captor.getValue();
         assertThat(saved.getJobId()).isEqualTo(jobId);
         assertThat(saved.getToolId()).isEqualTo("/api/v1/general/split");

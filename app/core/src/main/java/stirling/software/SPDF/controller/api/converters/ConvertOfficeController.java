@@ -13,14 +13,17 @@ import java.util.Locale;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +33,9 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.api.GeneralFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.CustomHtmlSanitizer;
 import stirling.software.common.util.ExceptionUtils;
@@ -44,6 +49,8 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @ConvertApi
+@ApplicationScoped
+@jakarta.ws.rs.Path("/api/v1/convert")
 @RequiredArgsConstructor
 @Slf4j
 public class ConvertOfficeController {
@@ -205,8 +212,11 @@ public class ConvertOfficeController {
                 .matches();
     }
 
+    @POST
+    @jakarta.ws.rs.Path("/file/pdf")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/file/pdf",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @Operation(
@@ -214,8 +224,9 @@ public class ConvertOfficeController {
             description =
                     "This endpoint converts a given file to a PDF using LibreOffice API  Input:ANY"
                             + " Output:PDF Type:SISO")
-    public ResponseEntity<Resource> processFileToPDF(@ModelAttribute GeneralFile generalFile)
-            throws Exception {
+    public Response processFileToPDF(@RestForm("fileInput") FileUpload fileInput) throws Exception {
+        GeneralFile generalFile = new GeneralFile();
+        generalFile.setFileInput(FileUploadMultipartFile.of(fileInput));
         MultipartFile inputFile = generalFile.getFileInput();
         // unused but can start server instance if startup time is to long
         // LibreOfficeListener.getInstance().start();
@@ -231,8 +242,7 @@ public class ConvertOfficeController {
             String filename =
                     GeneralUtils.generateFilename(
                             inputFile.getOriginalFilename(), "_convertedToPDF.pdf");
-            ResponseEntity<Resource> response =
-                    WebResponseUtils.pdfFileToWebResponse(tempOut, filename);
+            Response response = WebResponseUtils.pdfFileToWebResponse(tempOut, filename);
             tempOut = null;
             return response;
         } catch (Exception e) {

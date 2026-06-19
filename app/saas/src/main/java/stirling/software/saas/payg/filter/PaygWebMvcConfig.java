@@ -1,43 +1,23 @@
 package stirling.software.saas.payg.filter;
 
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import io.quarkus.arc.profile.IfBuildProfile;
 
-import lombok.RequiredArgsConstructor;
-
-import stirling.software.saas.payg.entitlement.EntitlementGuard;
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
- * Wires the PAYG filter + interceptor into Spring MVC. Two registrations:
+ * Holds the PAYG hot-path ordering constants. Under Spring MVC these registered {@link
+ * PaygChargeInterceptor} and the entitlement guard as ordered interceptors; under Quarkus the
+ * interceptor/guard are JAX-RS filters that self-order via {@code @Priority}. The order constants
+ * remain the single source of truth for that relative ordering.
  *
- * <ul>
- *   <li>{@link PaygResponseBodyWrapperFilter} as a Servlet filter — registered with no explicit
- *       order so it sits at the end of the Spring filter chain (after all security filters). Pure
- *       response-wrapping plumbing.
- *   <li>{@link PaygChargeInterceptor} as a Spring MVC interceptor — intercepts {@code /api/**} with
- *       admin/info/health exclusions.
- * </ul>
+ * <p>// TODO: Migration required - the Spring {@code WebMvcConfigurer#addInterceptors} registration
+ * was removed. Re-express it as JAX-RS {@code @Provider} ContainerRequest/ResponseFilters annotated
+ * with {@code @Priority(ENTITLEMENT_GUARD_ORDER)} / {@code @Priority(INTERCEPTOR_ORDER)} (and a
+ * {@code @WebFilter} for {@link PaygResponseBodyWrapperFilter}) once the interceptor is converted.
  */
-@Configuration
-@Profile("saas")
-@RequiredArgsConstructor
-public class PaygWebMvcConfig implements WebMvcConfigurer {
-
-    private final PaygChargeInterceptor paygChargeInterceptor;
-    private final EntitlementGuard entitlementGuard;
-
-    @Bean
-    public FilterRegistrationBean<PaygResponseBodyWrapperFilter>
-            paygResponseBodyWrapperFilterRegistration(PaygResponseBodyWrapperFilter filter) {
-        FilterRegistrationBean<PaygResponseBodyWrapperFilter> reg =
-                new FilterRegistrationBean<>(filter);
-        reg.addUrlPatterns("/api/*");
-        return reg;
-    }
+@ApplicationScoped
+@IfBuildProfile("saas")
+public class PaygWebMvcConfig {
 
     /**
      * The {@code PaygChargeInterceptor} runs after the {@link #ENTITLEMENT_GUARD_ORDER guard}, so
@@ -47,27 +27,11 @@ public class PaygWebMvcConfig implements WebMvcConfigurer {
     public static final int INTERCEPTOR_ORDER = 1000;
 
     /**
-     * The {@code EntitlementGuard} runs BEFORE the charge interceptor. Spring runs interceptors in
-     * ascending order on the way in and skips a later interceptor's {@code preHandle} (and its
-     * {@code afterCompletion}) entirely once an earlier one returns {@code false} — so a request
-     * the guard refuses (over its free allowance / spending cap, or with no subscription to bill)
-     * short-circuits with its 402 before the charge interceptor ever runs. A blocked request
-     * therefore never opens a process, materialises inputs, or writes a charge: a refused operation
-     * must not bill, and running the guard first guarantees that structurally rather than by
-     * compensating after the fact.
+     * The {@code EntitlementGuard} runs BEFORE the charge interceptor. A request the guard refuses
+     * (over its free allowance / spending cap, or with no subscription to bill) short-circuits with
+     * its 402 before the charge interceptor ever runs. A blocked request therefore never opens a
+     * process, materialises inputs, or writes a charge: running the guard first guarantees that
+     * structurally rather than by compensating after the fact.
      */
     public static final int ENTITLEMENT_GUARD_ORDER = 900;
-
-    @Override
-    public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(paygChargeInterceptor)
-                .addPathPatterns("/api/**")
-                .excludePathPatterns("/api/v1/config/**", "/api/v1/info/**", "/api/v1/admin/**")
-                .order(INTERCEPTOR_ORDER);
-
-        registry.addInterceptor(entitlementGuard)
-                .addPathPatterns("/api/**")
-                .excludePathPatterns("/api/v1/config/**", "/api/v1/info/**", "/api/v1/admin/**")
-                .order(ENTITLEMENT_GUARD_ORDER);
-    }
 }

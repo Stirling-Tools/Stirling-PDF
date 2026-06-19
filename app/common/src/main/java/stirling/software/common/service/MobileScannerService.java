@@ -10,17 +10,19 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
+import io.quarkus.scheduler.Scheduled;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.common.model.MultipartFile;
 
 /**
  * Service for handling mobile scanner file uploads and temporary storage. Files are stored
  * temporarily and automatically cleaned up after 10 minutes or upon retrieval.
  */
-@Service
+@ApplicationScoped
 @Slf4j
 public class MobileScannerService {
 
@@ -252,7 +254,7 @@ public class MobileScannerService {
     }
 
     /** Scheduled cleanup of expired sessions (runs every 5 minutes) */
-    @Scheduled(fixedRate = 5 * 60 * 1000)
+    @Scheduled(every = "5m")
     public void cleanupExpiredSessions() {
         long now = System.currentTimeMillis();
         List<String> expiredSessions = new ArrayList<>();

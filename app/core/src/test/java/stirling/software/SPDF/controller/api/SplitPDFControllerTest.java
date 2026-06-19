@@ -8,6 +8,7 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -36,14 +37,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
 
-import stirling.software.SPDF.model.api.SplitPagesRequest;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.StreamingOutput;
+
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.testsupport.TestFileUploads;
 import stirling.software.common.util.TempFileManager;
 
 @ExtendWith(MockitoExtension.class)
@@ -130,10 +129,15 @@ class SplitPDFControllerTest {
         }
     }
 
-    private List<byte[]> unzip(Resource zipResource) throws IOException {
+    private static byte[] toBytes(Response response) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ((StreamingOutput) response.getEntity()).write(baos);
+        return baos.toByteArray();
+    }
+
+    private List<byte[]> unzip(Response response) throws IOException {
         List<byte[]> entries = new ArrayList<>();
-        try (ZipInputStream zis =
-                new ZipInputStream(new ByteArrayInputStream(zipResource.getContentAsByteArray()))) {
+        try (ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(toBytes(response)))) {
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {
                 entries.add(zis.readAllBytes());
@@ -157,18 +161,10 @@ class SplitPDFControllerTest {
     @DisplayName("Should split 6-page PDF at page 3 into 2 parts")
     void shouldSplitAtPage3() throws Exception {
         byte[] pdfBytes = createPdf(6);
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+        Response response = controller.splitPdf(List.of(TestFileUploads.pdf(pdfBytes)), null, "3");
 
-        SplitPagesRequest request = new SplitPagesRequest();
-        request.setFileInput(file);
-        request.setPageNumbers("3");
-
-        ResponseEntity<Resource> response = controller.splitPdf(request);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        List<byte[]> outputs = unzip(response.getBody());
+        assertThat(response.getStatus()).isEqualTo(200);
+        List<byte[]> outputs = unzip(response);
         assertThat(outputs).hasSize(2);
         assertThat(pageCountsOf(outputs)).containsExactly(3, 3);
     }
@@ -177,18 +173,11 @@ class SplitPDFControllerTest {
     @DisplayName("Should split all pages individually")
     void shouldSplitAllPages() throws Exception {
         byte[] pdfBytes = createPdf(3);
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+        Response response =
+                controller.splitPdf(List.of(TestFileUploads.pdf(pdfBytes)), null, "1,2,3");
 
-        SplitPagesRequest request = new SplitPagesRequest();
-        request.setFileInput(file);
-        request.setPageNumbers("1,2,3");
-
-        ResponseEntity<Resource> response = controller.splitPdf(request);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        List<byte[]> outputs = unzip(response.getBody());
+        assertThat(response.getStatus()).isEqualTo(200);
+        List<byte[]> outputs = unzip(response);
         assertThat(outputs).hasSize(3);
         assertThat(pageCountsOf(outputs)).containsExactly(1, 1, 1);
     }
@@ -197,18 +186,10 @@ class SplitPDFControllerTest {
     @DisplayName("Should handle single page PDF")
     void shouldHandleSinglePage() throws Exception {
         byte[] pdfBytes = createPdf(1);
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+        Response response = controller.splitPdf(List.of(TestFileUploads.pdf(pdfBytes)), null, "1");
 
-        SplitPagesRequest request = new SplitPagesRequest();
-        request.setFileInput(file);
-        request.setPageNumbers("1");
-
-        ResponseEntity<Resource> response = controller.splitPdf(request);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        List<byte[]> outputs = unzip(response.getBody());
+        assertThat(response.getStatus()).isEqualTo(200);
+        List<byte[]> outputs = unzip(response);
         assertThat(outputs).hasSize(1);
         assertThat(pageCountsOf(outputs)).containsExactly(1);
     }
@@ -217,18 +198,11 @@ class SplitPDFControllerTest {
     @DisplayName("Should split with multiple split points")
     void shouldSplitWithRange() throws Exception {
         byte[] pdfBytes = createPdf(10);
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+        Response response =
+                controller.splitPdf(List.of(TestFileUploads.pdf(pdfBytes)), null, "3,7");
 
-        SplitPagesRequest request = new SplitPagesRequest();
-        request.setFileInput(file);
-        request.setPageNumbers("3,7");
-
-        ResponseEntity<Resource> response = controller.splitPdf(request);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        List<byte[]> outputs = unzip(response.getBody());
+        assertThat(response.getStatus()).isEqualTo(200);
+        List<byte[]> outputs = unzip(response);
         assertThat(outputs).hasSize(3);
         assertThat(pageCountsOf(outputs)).containsExactly(3, 4, 3);
     }
@@ -237,20 +211,11 @@ class SplitPDFControllerTest {
     @DisplayName("Should split 4-page PDF into 2 documents")
     void shouldSplitIntoTwoDocs() throws Exception {
         byte[] pdfBytes = createPdf(4);
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+        Response response = controller.splitPdf(List.of(TestFileUploads.pdf(pdfBytes)), null, "2");
 
-        SplitPagesRequest request = new SplitPagesRequest();
-        request.setFileInput(file);
-        request.setPageNumbers("2");
-
-        ResponseEntity<Resource> response = controller.splitPdf(request);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getHeaders().getContentType())
-                .isEqualTo(MediaType.APPLICATION_OCTET_STREAM);
-        List<byte[]> outputs = unzip(response.getBody());
+        assertThat(response.getStatus()).isEqualTo(200);
+        assertThat(response.getMediaType().toString()).isEqualTo("application/octet-stream");
+        List<byte[]> outputs = unzip(response);
         assertThat(outputs).hasSize(2);
         assertThat(pageCountsOf(outputs)).containsExactly(2, 2);
     }
@@ -259,18 +224,10 @@ class SplitPDFControllerTest {
     @DisplayName("Should split 5-page PDF at last page boundary")
     void shouldSplitAtLastPage() throws Exception {
         byte[] pdfBytes = createPdf(5);
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+        Response response = controller.splitPdf(List.of(TestFileUploads.pdf(pdfBytes)), null, "5");
 
-        SplitPagesRequest request = new SplitPagesRequest();
-        request.setFileInput(file);
-        request.setPageNumbers("5");
-
-        ResponseEntity<Resource> response = controller.splitPdf(request);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        List<byte[]> outputs = unzip(response.getBody());
+        assertThat(response.getStatus()).isEqualTo(200);
+        List<byte[]> outputs = unzip(response);
         assertThat(outputs).hasSize(1);
         assertThat(pageCountsOf(outputs)).containsExactly(5);
     }
@@ -279,18 +236,11 @@ class SplitPDFControllerTest {
     @DisplayName("Should handle PDF with all keyword")
     void shouldHandleAllKeyword() throws Exception {
         byte[] pdfBytes = createPdf(3);
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+        Response response =
+                controller.splitPdf(List.of(TestFileUploads.pdf(pdfBytes)), null, "all");
 
-        SplitPagesRequest request = new SplitPagesRequest();
-        request.setFileInput(file);
-        request.setPageNumbers("all");
-
-        ResponseEntity<Resource> response = controller.splitPdf(request);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        List<byte[]> outputs = unzip(response.getBody());
+        assertThat(response.getStatus()).isEqualTo(200);
+        List<byte[]> outputs = unzip(response);
         assertThat(outputs).hasSize(3);
         assertThat(pageCountsOf(outputs)).containsExactly(1, 1, 1);
     }
@@ -299,18 +249,10 @@ class SplitPDFControllerTest {
     @DisplayName("Should preserve AcroForm and per-page widgets when splitting form PDF")
     void shouldSplitFormPdf() throws Exception {
         byte[] pdfBytes = createPdfWithForm(4);
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+        Response response = controller.splitPdf(List.of(TestFileUploads.pdf(pdfBytes)), null, "2");
 
-        SplitPagesRequest request = new SplitPagesRequest();
-        request.setFileInput(file);
-        request.setPageNumbers("2");
-
-        ResponseEntity<Resource> response = controller.splitPdf(request);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        List<byte[]> outputs = unzip(response.getBody());
+        assertThat(response.getStatus()).isEqualTo(200);
+        List<byte[]> outputs = unzip(response);
         assertThat(outputs).hasSize(2);
         assertThat(pageCountsOf(outputs)).containsExactly(2, 2);
 

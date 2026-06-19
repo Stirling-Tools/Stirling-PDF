@@ -2,12 +2,14 @@ package stirling.software.SPDF.controller.api.converters;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -15,13 +17,13 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
+
+import jakarta.ws.rs.core.Response;
 
 import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.SPDF.pdf.parser.TabulaTableParser;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.testsupport.TestFileUploads;
 import stirling.software.common.util.GeneralUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,18 +36,13 @@ class ExtractCSVControllerTest {
 
     @Test
     void pdfToCsv_noTablesReturnsNoContent() throws Exception {
-        MockMultipartFile pdfFile =
-                new MockMultipartFile(
-                        "fileInput", "data.pdf", "application/pdf", "content".getBytes());
-
-        PDFWithPageNums request = new PDFWithPageNums();
-        request.setFileInput(pdfFile);
-        request.setPageNumbers("all");
+        FileUpload pdfFile =
+                TestFileUploads.of("content".getBytes(), "data.pdf", "application/pdf");
 
         PDDocument emptyDoc = new PDDocument();
         emptyDoc.addPage(new PDPage());
 
-        when(pdfDocumentFactory.load(request)).thenReturn(emptyDoc);
+        when(pdfDocumentFactory.load(any(PDFWithPageNums.class))).thenReturn(emptyDoc);
 
         try (MockedStatic<GeneralUtils> guMock = Mockito.mockStatic(GeneralUtils.class)) {
             guMock.when(() -> GeneralUtils.removeExtension("data.pdf")).thenReturn("data");
@@ -57,13 +54,12 @@ class ExtractCSVControllerTest {
                                             Mockito.eq(true)))
                     .thenReturn(List.of(1));
 
-            ResponseEntity<?> response = controller.pdfToCsv(request);
+            Response response = controller.pdfToCsv(pdfFile, null, "all");
 
             assertNotNull(response);
-            // Empty page may produce NO_CONTENT or OK with content
+            // Empty page may produce NO_CONTENT (204) or OK (200) with content
             org.junit.jupiter.api.Assertions.assertTrue(
-                    response.getStatusCode() == HttpStatus.NO_CONTENT
-                            || response.getStatusCode() == HttpStatus.OK);
+                    response.getStatus() == 204 || response.getStatus() == 200);
         }
     }
 

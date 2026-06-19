@@ -24,23 +24,21 @@ import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationText;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
 
-import stirling.software.SPDF.model.api.misc.AddCommentsRequest;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
+
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfAnnotationService;
+import stirling.software.common.testsupport.TestFileUploads;
 import stirling.software.common.util.PdfTextLocator;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -88,21 +86,20 @@ class AddCommentsControllerTest {
 
     @Test
     void appliesEachCommentSpecAsStickyNote() throws Exception {
-        MockMultipartFile file = pdf("doc.pdf", twoPagePdfBytes());
+        byte[] bytes = twoPagePdfBytes();
+        FileUpload file = TestFileUploads.pdf(bytes);
         when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                .thenAnswer(inv -> Loader.loadPDF(file.getBytes()));
+                .thenAnswer(inv -> Loader.loadPDF(bytes));
 
-        AddCommentsRequest request = new AddCommentsRequest();
-        request.setFileInput(file);
-        request.setComments(
+        String comments =
                 """
                 [{"pageIndex":0,"x":72,"y":700,"width":20,"height":20,"text":"First","author":"me","subject":"S1"},
                  {"pageIndex":1,"x":100,"y":650,"width":20,"height":20,"text":"Second"}]
-                """);
+                """;
 
-        ResponseEntity<Resource> response = controller.addComments(request);
+        Response response = controller.addComments(file, comments);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getStatus()).isEqualTo(200);
         byte[] result = drainBody(response);
         try (PDDocument reloaded = Loader.loadPDF(result)) {
             List<PDAnnotationText> p0 = textAnnotations(reloaded.getPage(0).getAnnotations());
@@ -117,23 +114,21 @@ class AddCommentsControllerTest {
     @Test
     void anchorsStickyNoteAtLocatedTextWhenAnchorTextMatches() throws Exception {
         byte[] pdfBytes = singlePagePdfWithLine("Revenue: $215,000");
-        MockMultipartFile file = pdf("doc.pdf", pdfBytes);
+        FileUpload file = TestFileUploads.pdf(pdfBytes);
         when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                .thenAnswer(inv -> Loader.loadPDF(file.getBytes()));
+                .thenAnswer(inv -> Loader.loadPDF(pdfBytes));
 
-        AddCommentsRequest request = new AddCommentsRequest();
-        request.setFileInput(file);
         // Fallback coords deliberately far from the line so we can tell which path ran.
-        request.setComments(
+        String comments =
                 """
                 [{"pageIndex":0,"x":10,"y":10,"width":5,"height":5,
                   "text":"Check this total","author":"tester","subject":"S",
                   "anchorText":"215000"}]
-                """);
+                """;
 
-        ResponseEntity<Resource> response = controller.addComments(request);
+        Response response = controller.addComments(file, comments);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getStatus()).isEqualTo(200);
         try (PDDocument reloaded = Loader.loadPDF(drainBody(response))) {
             List<PDAnnotationText> notes = textAnnotations(reloaded.getPage(0).getAnnotations());
             assertThat(notes).hasSize(1);
@@ -150,19 +145,17 @@ class AddCommentsControllerTest {
     @Test
     void fallsBackToAbsoluteCoordsWhenAnchorTextMisses() throws Exception {
         byte[] pdfBytes = singlePagePdfWithLine("Revenue: $215,000");
-        MockMultipartFile file = pdf("doc.pdf", pdfBytes);
+        FileUpload file = TestFileUploads.pdf(pdfBytes);
         when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                .thenAnswer(inv -> Loader.loadPDF(file.getBytes()));
+                .thenAnswer(inv -> Loader.loadPDF(pdfBytes));
 
-        AddCommentsRequest request = new AddCommentsRequest();
-        request.setFileInput(file);
-        request.setComments(
+        String comments =
                 """
                 [{"pageIndex":0,"x":55,"y":33,"width":7,"height":9,
                   "text":"No match","anchorText":"not-on-this-page"}]
-                """);
+                """;
 
-        ResponseEntity<Resource> response = controller.addComments(request);
+        Response response = controller.addComments(file, comments);
 
         try (PDDocument reloaded = Loader.loadPDF(drainBody(response))) {
             List<PDAnnotationText> notes = textAnnotations(reloaded.getPage(0).getAnnotations());
@@ -177,37 +170,30 @@ class AddCommentsControllerTest {
 
     @Test
     void rejectsBlankCommentsJson() {
-        AddCommentsRequest request = new AddCommentsRequest();
-        request.setFileInput(pdf("doc.pdf", new byte[] {1, 2, 3}));
-        request.setComments("");
+        FileUpload file = TestFileUploads.pdf(new byte[] {1, 2, 3});
 
-        assertThatThrownBy(() -> controller.addComments(request))
-                .isInstanceOf(ResponseStatusException.class)
-                .extracting(e -> ((ResponseStatusException) e).getStatusCode())
-                .isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThatThrownBy(() -> controller.addComments(file, ""))
+                .isInstanceOf(WebApplicationException.class)
+                .extracting(e -> ((WebApplicationException) e).getResponse().getStatus())
+                .isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
     }
 
     @Test
     void rejectsInvalidJson() {
-        AddCommentsRequest request = new AddCommentsRequest();
-        request.setFileInput(pdf("doc.pdf", new byte[] {1, 2, 3}));
-        request.setComments("not-json");
+        FileUpload file = TestFileUploads.pdf(new byte[] {1, 2, 3});
 
-        assertThatThrownBy(() -> controller.addComments(request))
-                .isInstanceOf(ResponseStatusException.class)
-                .extracting(e -> ((ResponseStatusException) e).getStatusCode())
-                .isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThatThrownBy(() -> controller.addComments(file, "not-json"))
+                .isInstanceOf(WebApplicationException.class)
+                .extracting(e -> ((WebApplicationException) e).getResponse().getStatus())
+                .isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
     }
 
     @Test
     void rejectsMissingFileInput() {
-        AddCommentsRequest request = new AddCommentsRequest();
-        request.setComments("[]");
-
-        assertThatThrownBy(() -> controller.addComments(request))
-                .isInstanceOf(ResponseStatusException.class)
-                .extracting(e -> ((ResponseStatusException) e).getStatusCode())
-                .isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThatThrownBy(() -> controller.addComments(null, "[]"))
+                .isInstanceOf(WebApplicationException.class)
+                .extracting(e -> ((WebApplicationException) e).getResponse().getStatus())
+                .isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
     }
 
     @Test
@@ -215,17 +201,14 @@ class AddCommentsControllerTest {
         // An empty JSON array is a valid payload — nothing to annotate, but the caller
         // should still get back the input PDF without any error so pipelines that
         // produce zero comments don't have to special-case the empty result.
-        MockMultipartFile file = pdf("doc.pdf", twoPagePdfBytes());
+        byte[] bytes = twoPagePdfBytes();
+        FileUpload file = TestFileUploads.pdf(bytes);
         when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                .thenAnswer(inv -> Loader.loadPDF(file.getBytes()));
+                .thenAnswer(inv -> Loader.loadPDF(bytes));
 
-        AddCommentsRequest request = new AddCommentsRequest();
-        request.setFileInput(file);
-        request.setComments("[]");
+        Response response = controller.addComments(file, "[]");
 
-        ResponseEntity<Resource> response = controller.addComments(request);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getStatus()).isEqualTo(200);
         try (PDDocument reloaded = Loader.loadPDF(drainBody(response))) {
             assertThat(textAnnotations(reloaded.getPage(0).getAnnotations())).isEmpty();
             assertThat(textAnnotations(reloaded.getPage(1).getAnnotations())).isEmpty();
@@ -233,10 +216,6 @@ class AddCommentsControllerTest {
     }
 
     // --- helpers ---
-
-    private static MockMultipartFile pdf(String name, byte[] bytes) {
-        return new MockMultipartFile("fileInput", name, MediaType.APPLICATION_PDF_VALUE, bytes);
-    }
 
     private static byte[] twoPagePdfBytes() throws Exception {
         try (PDDocument doc = new PDDocument()) {
@@ -266,10 +245,17 @@ class AddCommentsControllerTest {
         }
     }
 
-    private static byte[] drainBody(ResponseEntity<Resource> response) throws java.io.IOException {
+    private static byte[] drainBody(Response response) throws java.io.IOException {
+        Object entity = response.getEntity();
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try (java.io.InputStream is = response.getBody().getInputStream()) {
-            is.transferTo(baos);
+        if (entity instanceof byte[] bytes) {
+            baos.write(bytes);
+        } else if (entity instanceof jakarta.ws.rs.core.StreamingOutput streaming) {
+            streaming.write(baos);
+        } else {
+            throw new IllegalStateException(
+                    "Unexpected response entity type: "
+                            + (entity == null ? "null" : entity.getClass().getName()));
         }
         return baos.toByteArray();
     }

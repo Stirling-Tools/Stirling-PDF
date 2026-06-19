@@ -2,20 +2,20 @@ package stirling.software.proprietary.mcp;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.Arrays;
+import java.io.IOException;
+import java.io.InputStream;
 
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
+import org.jboss.jandex.Index;
+import org.jboss.jandex.Indexer;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Profile;
 
-import stirling.software.proprietary.mcp.catalog.McpToolCatalog;
-import stirling.software.proprietary.mcp.engine.EngineCapabilityClient;
-import stirling.software.proprietary.mcp.security.McpSecurityConfig;
 import stirling.software.proprietary.mcp.tools.DescribeOperationTool;
-import stirling.software.proprietary.mcp.tools.McpOperationExecutor;
 import stirling.software.proprietary.mcp.tools.StirlingAiTool;
 import stirling.software.proprietary.mcp.tools.StirlingConvertTool;
 import stirling.software.proprietary.mcp.tools.StirlingDownloadTool;
@@ -24,76 +24,86 @@ import stirling.software.proprietary.mcp.tools.StirlingPagesTool;
 import stirling.software.proprietary.mcp.tools.StirlingSecurityTool;
 import stirling.software.proprietary.mcp.tools.StirlingUploadTool;
 
-/** Verifies MCP beans are gated behind {@code @ConditionalOnProperty(name="mcp.enabled")}. */
+/**
+ * Verifies MCP beans are gated behind the runtime property {@code mcp.enabled=true}.
+ *
+ * <p>MIGRATION (Spring -&gt; Quarkus): gating moved from Spring {@code @ConditionalOnProperty} to
+ * Quarkus {@code @io.quarkus.arc.lookup.LookupIfProperty}, and the category tools are now
+ * individually-gated CDI beans (they were previously plain {@code @Component}s wired only into the
+ * gated controller). The annotation is read from bytecode via Jandex rather than reflection because
+ * Arc lookup annotations are not guaranteed to be runtime-retained.
+ *
+ * <p>Two assertions from the Spring-era test were intentionally not carried over: that {@code
+ * McpSecurityConfig} itself carries the gate, and that no MCP bean is profile-restricted. The MCP
+ * security wiring is dormant pending a Quarkus re-implementation (see the {@code McpSecurityConfig}
+ * "Migration required" TODOs), and some MCP beans now legitimately use {@code @IfBuildProfile}.
+ * This test guards the gating that exists today.
+ */
 class McpConditionalTest {
+
+    private static final DotName LOOKUP_IF_PROPERTY =
+            DotName.createSimple("io.quarkus.arc.lookup.LookupIfProperty");
+
+    private static final Class<?>[] GATED_BEANS = {
+        McpServerController.class,
+        DescribeOperationTool.class,
+        StirlingConvertTool.class,
+        StirlingPagesTool.class,
+        StirlingMiscTool.class,
+        StirlingSecurityTool.class,
+        StirlingAiTool.class,
+        StirlingUploadTool.class,
+        StirlingDownloadTool.class
+    };
+
+    private static Index index;
+
+    @BeforeAll
+    static void indexBeans() throws IOException {
+        Indexer indexer = new Indexer();
+        for (Class<?> bean : GATED_BEANS) {
+            String resource = bean.getName().replace('.', '/') + ".class";
+            try (InputStream in = bean.getClassLoader().getResourceAsStream(resource)) {
+                assertNotNull(in, "class bytes not found for " + bean.getName());
+                indexer.index(in);
+            }
+        }
+        index = indexer.complete();
+    }
 
     @Test
     void serverController_isGatedByMcpEnabled() {
-        assertGatedByEnabled(McpServerController.class);
+        assertGatedByMcpEnabled(McpServerController.class);
     }
 
     @Test
-    void securityConfig_isGatedByMcpEnabled() {
-        assertGatedByEnabled(McpSecurityConfig.class);
-    }
-
-    @Test
-    void categoryToolsAndDescribeOperation_doNotNeedOwnGate() {
-        // The tool beans are only wired into the gated controller; sanity-check their signatures.
-        Class<?>[] tools = {
-            DescribeOperationTool.class,
-            StirlingConvertTool.class,
-            StirlingPagesTool.class,
-            StirlingMiscTool.class,
-            StirlingSecurityTool.class,
-            StirlingAiTool.class
-        };
-        for (Class<?> t : tools) {
+    void categoryTools_areGatedAndImplementMcpTool() {
+        for (Class<?> bean : GATED_BEANS) {
+            if (bean.equals(McpServerController.class)) {
+                continue;
+            }
             assertTrue(
-                    McpTool.class.isAssignableFrom(t),
-                    t.getSimpleName() + " must implement McpTool");
-            assertNotNull(
-                    t.getAnnotation(org.springframework.stereotype.Component.class),
-                    t.getSimpleName() + " must be @Component");
+                    McpTool.class.isAssignableFrom(bean),
+                    bean.getSimpleName() + " must implement McpTool");
+            assertGatedByMcpEnabled(bean);
         }
     }
 
-    @Test
-    void mcpBeans_areNotSaasProfileRestricted() {
-        // Beans gate on mcp.enabled only; no @Profile, so MCP can run under the saas profile too.
-        Class<?>[] beans = {
-            McpServerController.class,
-            McpSecurityConfig.class,
-            McpToolCatalog.class,
-            EngineCapabilityClient.class,
-            McpOperationExecutor.class,
-            DescribeOperationTool.class,
-            StirlingAiTool.class,
-            StirlingConvertTool.class,
-            StirlingMiscTool.class,
-            StirlingPagesTool.class,
-            StirlingSecurityTool.class,
-            StirlingUploadTool.class,
-            StirlingDownloadTool.class
-        };
-        for (Class<?> bean : beans) {
-            assertNull(
-                    bean.getAnnotation(Profile.class),
-                    bean.getSimpleName()
-                            + " must not be @Profile-restricted so MCP can run under saas");
-        }
-    }
-
-    private static void assertGatedByEnabled(Class<?> beanClass) {
-        ConditionalOnProperty conditional = beanClass.getAnnotation(ConditionalOnProperty.class);
-        assertNotNull(conditional, beanClass.getSimpleName() + " missing @ConditionalOnProperty");
-        assertTrue(
-                Arrays.asList(conditional.name()).contains("mcp.enabled")
-                        || Arrays.asList(conditional.value()).contains("mcp.enabled"),
+    private static void assertGatedByMcpEnabled(Class<?> beanClass) {
+        ClassInfo info = index.getClassByName(DotName.createSimple(beanClass.getName()));
+        assertNotNull(info, beanClass.getSimpleName() + " was not indexed");
+        AnnotationInstance gate = info.declaredAnnotation(LOOKUP_IF_PROPERTY);
+        assertNotNull(
+                gate,
+                beanClass.getSimpleName()
+                        + " must be gated with @LookupIfProperty(name=\"mcp.enabled\")");
+        assertEquals(
+                "mcp.enabled",
+                gate.value("name").asString(),
                 beanClass.getSimpleName() + " must gate on mcp.enabled");
         assertEquals(
                 "true",
-                conditional.havingValue(),
+                gate.value("stringValue").asString(),
                 beanClass.getSimpleName() + " must require mcp.enabled=true");
     }
 }

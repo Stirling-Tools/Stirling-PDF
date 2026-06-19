@@ -1,14 +1,17 @@
 package stirling.software.saas.payg.test;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
+import io.quarkus.arc.profile.IfBuildProfile;
 import io.swagger.v3.oas.annotations.Hidden;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -53,24 +56,29 @@ import stirling.software.common.enumeration.ResourceWeight;
  * 500 reach the wire.
  */
 @Slf4j
-@RestController
-@Profile("payg-cucumber")
-@RequestMapping("/api/v1/payg-cucumber")
+@ApplicationScoped
+@IfBuildProfile("payg-cucumber")
+@Path("/api/v1/payg-cucumber")
 @Hidden
 public class PaygCucumberThrowController {
 
+    // TODO: Migration required - declared return type was ResponseEntity<Void> so the AutoJobAspect
+    // @Around 500 reached the wire (see class javadoc). Verify the JAX-RS return-value handling of
+    // Response preserves the advice's 500 status under Quarkus.
+    @POST
+    @Path("/throw-500")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
             value = "/throw-500",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
-    public ResponseEntity<Void> throw500(
-            @RequestParam(value = "fileInput", required = false) MultipartFile fileInput) {
+    public Response throw500(@RestForm("fileInput") FileUpload fileInput) {
         // The file is read by the PAYG filter via getMultiFileMap() before we get here; the
-        // controller param is just to keep Spring's multipart binding happy. We don't touch it.
+        // controller param is just to keep the multipart binding happy. We don't touch it.
         log.warn(
                 "PAYG cucumber forced 500 (fileInput name='{}' size={} bytes)",
-                fileInput != null ? fileInput.getOriginalFilename() : null,
-                fileInput != null ? fileInput.getSize() : 0);
+                fileInput != null ? fileInput.fileName() : null,
+                fileInput != null ? fileInput.size() : 0);
         throw new IllegalStateException("PAYG cucumber forced 500");
         // unreachable — kept as a type signature so AutoJobAspect's @Around return value (the
         // 500 ResponseEntity from JobExecutorService) actually reaches the wire.

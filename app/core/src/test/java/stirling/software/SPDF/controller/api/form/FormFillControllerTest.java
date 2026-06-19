@@ -14,6 +14,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -22,13 +23,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
 
+import jakarta.ws.rs.core.Response;
+
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.ByteArrayMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.testsupport.TestFileUploads;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
@@ -38,17 +39,6 @@ import tools.jackson.databind.json.JsonMapper;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("FormFillController Tests")
 class FormFillControllerTest {
-    private static ResponseEntity<Resource> streamingOk(byte[] bytes) {
-        return ResponseEntity.ok(new ByteArrayResource(bytes));
-    }
-
-    private static byte[] drainBody(ResponseEntity<Resource> response) throws java.io.IOException {
-        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-        try (java.io.InputStream __in = response.getBody().getInputStream()) {
-            __in.transferTo(baos);
-        }
-        return baos.toByteArray();
-    }
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
@@ -94,8 +84,12 @@ class FormFillControllerTest {
         }
     }
 
-    private MockMultipartFile pdfFile() throws IOException {
-        return new MockMultipartFile("file", "test.pdf", "application/pdf", pdfBytes());
+    private FileUpload pdfFile() throws IOException {
+        return TestFileUploads.of(pdfBytes(), "test.pdf", "application/pdf");
+    }
+
+    private static FileUpload jsonPart(byte[] bytes) {
+        return TestFileUploads.of(bytes, "data.json", "application/json");
     }
 
     // ── listFields ─────────────────────────────────────────────────────
@@ -107,14 +101,14 @@ class FormFillControllerTest {
         @Test
         @DisplayName("returns OK with field extraction for valid PDF")
         void validPdf() throws Exception {
-            MockMultipartFile file = pdfFile();
+            FileUpload file = pdfFile();
             PDDocument doc = createMinimalPdf();
-            when(pdfDocumentFactory.load(eq(file), eq(true))).thenReturn(doc);
+            when(pdfDocumentFactory.load(any(MultipartFile.class), eq(true))).thenReturn(doc);
 
-            ResponseEntity<?> response = controller.listFields(file);
+            Response response = controller.listFields(file);
 
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(response.getBody()).isNotNull();
+            assertThat(response.getStatus()).isEqualTo(200);
+            assertThat(response.getEntity()).isNotNull();
         }
 
         @Test
@@ -127,8 +121,7 @@ class FormFillControllerTest {
         @Test
         @DisplayName("throws for empty file")
         void emptyFile() {
-            MockMultipartFile empty =
-                    new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[0]);
+            FileUpload empty = TestFileUploads.of(new byte[0], "test.pdf", "application/pdf");
             assertThatThrownBy(() -> controller.listFields(empty))
                     .isInstanceOf(IllegalArgumentException.class);
         }
@@ -143,14 +136,14 @@ class FormFillControllerTest {
         @Test
         @DisplayName("returns OK with coordinates for valid PDF")
         void validPdf() throws Exception {
-            MockMultipartFile file = pdfFile();
+            FileUpload file = pdfFile();
             PDDocument doc = createMinimalPdf();
-            when(pdfDocumentFactory.load(eq(file), eq(true))).thenReturn(doc);
+            when(pdfDocumentFactory.load(any(MultipartFile.class), eq(true))).thenReturn(doc);
 
-            ResponseEntity<?> response = controller.listFieldsWithCoordinates(file);
+            Response response = controller.listFieldsWithCoordinates(file);
 
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(response.getBody()).isNotNull();
+            assertThat(response.getStatus()).isEqualTo(200);
+            assertThat(response.getEntity()).isNotNull();
         }
 
         @Test
@@ -170,15 +163,15 @@ class FormFillControllerTest {
         @Test
         @DisplayName("returns CSV response for valid PDF without data")
         void validPdfNullData() throws Exception {
-            MockMultipartFile file = pdfFile();
+            FileUpload file = pdfFile();
             PDDocument doc = createMinimalPdf();
-            when(pdfDocumentFactory.load(eq(file), eq(true))).thenReturn(doc);
+            when(pdfDocumentFactory.load(any(MultipartFile.class), eq(true))).thenReturn(doc);
 
-            ResponseEntity<byte[]> response = controller.extractCsv(file, null);
+            Response response = controller.extractCsv(file, null);
 
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(response.getBody()).isNotNull();
-            String csv = new String(response.getBody());
+            assertThat(response.getStatus()).isEqualTo(200);
+            assertThat(response.getEntity()).isNotNull();
+            String csv = new String((byte[]) response.getEntity());
             assertThat(csv).contains("Field Name");
         }
 
@@ -199,22 +192,21 @@ class FormFillControllerTest {
         @Test
         @DisplayName("returns XLSX response for valid PDF without data")
         void validPdfNullData() throws Exception {
-            MockMultipartFile file = pdfFile();
+            FileUpload file = pdfFile();
             PDDocument doc = createMinimalPdf();
-            when(pdfDocumentFactory.load(eq(file), eq(true))).thenReturn(doc);
+            when(pdfDocumentFactory.load(any(MultipartFile.class), eq(true))).thenReturn(doc);
 
-            ResponseEntity<byte[]> response = controller.extractXlsx(file, null);
+            Response response = controller.extractXlsx(file, null);
 
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(response.getBody()).isNotNull();
-            assertThat(response.getBody().length).isGreaterThan(0);
+            assertThat(response.getStatus()).isEqualTo(200);
+            assertThat(response.getEntity()).isNotNull();
+            assertThat(((byte[]) response.getEntity()).length).isGreaterThan(0);
         }
 
         @Test
         @DisplayName("throws for empty file")
         void emptyFile() {
-            MockMultipartFile empty =
-                    new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[0]);
+            FileUpload empty = TestFileUploads.of(new byte[0], "test.pdf", "application/pdf");
             assertThatThrownBy(() -> controller.extractXlsx(empty, null))
                     .isInstanceOf(IllegalArgumentException.class);
         }
@@ -229,27 +221,27 @@ class FormFillControllerTest {
         @Test
         @DisplayName("returns filled PDF for valid input")
         void validInput() throws Exception {
-            MockMultipartFile file = pdfFile();
+            FileUpload file = pdfFile();
             PDDocument doc = createMinimalPdf();
-            when(pdfDocumentFactory.load(eq(file))).thenReturn(doc);
+            when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(doc);
 
-            byte[] payload = "{\"field1\":\"value1\"}".getBytes();
-            ResponseEntity<Resource> response = controller.fillForm(file, payload, false);
+            FileUpload payload = jsonPart("{\"field1\":\"value1\"}".getBytes());
+            Response response = controller.fillForm(file, payload, false);
 
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(response.getBody()).isNotNull();
+            assertThat(response.getStatus()).isEqualTo(200);
+            assertThat(response.getEntity()).isNotNull();
         }
 
         @Test
         @DisplayName("handles null payload gracefully")
         void nullPayload() throws Exception {
-            MockMultipartFile file = pdfFile();
+            FileUpload file = pdfFile();
             PDDocument doc = createMinimalPdf();
-            when(pdfDocumentFactory.load(eq(file))).thenReturn(doc);
+            when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(doc);
 
-            ResponseEntity<Resource> response = controller.fillForm(file, null, false);
+            Response response = controller.fillForm(file, null, false);
 
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getStatus()).isEqualTo(200);
         }
 
         @Test
@@ -276,21 +268,21 @@ class FormFillControllerTest {
         @Test
         @DisplayName("throws when names payload is empty JSON array")
         void emptyPayload() {
-            assertThatThrownBy(() -> controller.deleteFields(pdfFile(), "[]".getBytes()))
+            assertThatThrownBy(() -> controller.deleteFields(pdfFile(), jsonPart("[]".getBytes())))
                     .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
         @DisplayName("processes valid name list")
         void validPayload() throws Exception {
-            MockMultipartFile file = pdfFile();
+            FileUpload file = pdfFile();
             PDDocument doc = createMinimalPdf();
-            when(pdfDocumentFactory.load(eq(file))).thenReturn(doc);
+            when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(doc);
 
-            byte[] payload = "[\"field1\"]".getBytes();
-            ResponseEntity<Resource> response = controller.deleteFields(file, payload);
+            FileUpload payload = jsonPart("[\"field1\"]".getBytes());
+            Response response = controller.deleteFields(file, payload);
 
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getStatus()).isEqualTo(200);
         }
     }
 
@@ -310,23 +302,23 @@ class FormFillControllerTest {
         @Test
         @DisplayName("throws when updates payload is empty list")
         void emptyPayload() {
-            assertThatThrownBy(() -> controller.modifyFields(pdfFile(), "[]".getBytes()))
+            assertThatThrownBy(() -> controller.modifyFields(pdfFile(), jsonPart("[]".getBytes())))
                     .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
         @DisplayName("processes valid modification payload")
         void validPayload() throws Exception {
-            MockMultipartFile file = pdfFile();
+            FileUpload file = pdfFile();
             PDDocument doc = createMinimalPdf();
-            when(pdfDocumentFactory.load(eq(file))).thenReturn(doc);
+            when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(doc);
 
             String json =
                     "[{\"targetName\":\"f1\",\"name\":null,\"label\":null,\"type\":null,"
                             + "\"required\":null,\"multiSelect\":null,\"options\":null,\"defaultValue\":\"newVal\",\"tooltip\":null}]";
-            ResponseEntity<Resource> response = controller.modifyFields(file, json.getBytes());
+            Response response = controller.modifyFields(file, jsonPart(json.getBytes()));
 
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getStatus()).isEqualTo(200);
         }
     }
 
@@ -341,13 +333,12 @@ class FormFillControllerTest {
         void stripsExtension() throws Exception {
             var method =
                     FormFillController.class.getDeclaredMethod(
-                            "buildBaseName",
-                            org.springframework.web.multipart.MultipartFile.class,
-                            String.class);
+                            "buildBaseName", MultipartFile.class, String.class);
             method.setAccessible(true);
 
-            MockMultipartFile file =
-                    new MockMultipartFile("file", "report.pdf", "application/pdf", new byte[] {1});
+            MultipartFile file =
+                    new ByteArrayMultipartFile(
+                            "file", "report.pdf", "application/pdf", new byte[] {1});
             String result = (String) method.invoke(null, file, "filled");
             assertThat(result).isEqualTo("report_filled");
         }
@@ -357,13 +348,12 @@ class FormFillControllerTest {
         void noPdfExtension() throws Exception {
             var method =
                     FormFillController.class.getDeclaredMethod(
-                            "buildBaseName",
-                            org.springframework.web.multipart.MultipartFile.class,
-                            String.class);
+                            "buildBaseName", MultipartFile.class, String.class);
             method.setAccessible(true);
 
-            MockMultipartFile file =
-                    new MockMultipartFile("file", "report.docx", "application/pdf", new byte[] {1});
+            MultipartFile file =
+                    new ByteArrayMultipartFile(
+                            "file", "report.docx", "application/pdf", new byte[] {1});
             String result = (String) method.invoke(null, file, "filled");
             assertThat(result).isEqualTo("report.docx_filled");
         }
@@ -373,13 +363,11 @@ class FormFillControllerTest {
         void nullFilename() throws Exception {
             var method =
                     FormFillController.class.getDeclaredMethod(
-                            "buildBaseName",
-                            org.springframework.web.multipart.MultipartFile.class,
-                            String.class);
+                            "buildBaseName", MultipartFile.class, String.class);
             method.setAccessible(true);
 
-            MockMultipartFile file =
-                    new MockMultipartFile("file", null, "application/pdf", new byte[] {1});
+            MultipartFile file =
+                    new ByteArrayMultipartFile("file", null, "application/pdf", new byte[] {1});
             String result = (String) method.invoke(null, file, "filled");
             assertThat(result).isEqualTo("document_filled");
         }

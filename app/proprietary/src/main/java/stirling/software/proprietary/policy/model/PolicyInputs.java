@@ -3,7 +3,7 @@ package stirling.software.proprietary.policy.model;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.core.io.Resource;
+import stirling.software.common.model.io.Resource;
 
 /**
  * A run's files. {@code primary} documents flow step to step; {@code supportingFiles} are auxiliary

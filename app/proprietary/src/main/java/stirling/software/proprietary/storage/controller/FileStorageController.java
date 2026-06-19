@@ -1,36 +1,45 @@
 package stirling.software.proprietary.storage.controller;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.UUID;
 
-import org.springframework.http.ContentDisposition;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
+import io.quarkus.security.identity.SecurityIdentity;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-import lombok.RequiredArgsConstructor;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.PATCH;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.StreamingOutput;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.storage.model.FileShare;
 import stirling.software.proprietary.storage.model.StoredFile;
@@ -42,10 +51,12 @@ import stirling.software.proprietary.storage.model.api.ShareWithUserRequest;
 import stirling.software.proprietary.storage.model.api.StoredFileResponse;
 import stirling.software.proprietary.storage.provider.StorageProvider;
 import stirling.software.proprietary.storage.service.FileStorageService;
+import stirling.software.proprietary.storage.service.FolderService;
 
-@RestController
-@RequestMapping("/api/v1/storage")
-@RequiredArgsConstructor
+// IMPORTANT: this class also references java.nio-style paths indirectly; @jakarta.ws.rs.Path is
+// fully-qualified on the class/methods to avoid any clash with collaborator types.
+@ApplicationScoped
+@jakarta.ws.rs.Path("/api/v1/storage")
 @Slf4j
 @Tag(
         name = "File Storage",
@@ -54,74 +65,139 @@ public class FileStorageController {
 
     private static final Duration SIGNED_URL_TTL = Duration.ofMinutes(5);
 
-    private final FileStorageService fileStorageService;
-    private final StorageProvider storageProvider;
+    private static final int BULK_MOVE_MAX_FILES = 1000;
 
-    @PostMapping(
-            value = "/files",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE)
+    @Inject FileStorageService fileStorageService;
+    @Inject StorageProvider storageProvider;
+    @Inject FolderService folderService;
+
+    // TODO: Migration required - SecurityIdentity replaces Spring's Authentication. The
+    // collaborator
+    // FileStorageService still exposes canAccessShareLink(FileShare, org.springframework.security
+    // .core.Authentication) and recordShareAccess(FileShare, Authentication, boolean). Once that
+    // service is migrated those methods should accept SecurityIdentity (or io.quarkus.security
+    // SecurityContext) and this injected identity can be passed through directly.
+    @Inject SecurityIdentity securityIdentity;
+
+    @POST
+    @jakarta.ws.rs.Path("/files")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_JSON)
     public StoredFileResponse uploadFile(
-            @RequestPart("file") MultipartFile file,
-            @RequestPart(name = "historyBundle", required = false) MultipartFile historyBundle,
-            @RequestPart(name = "auditLog", required = false) MultipartFile auditLog) {
+            @RestForm("file") FileUpload file,
+            @RestForm("historyBundle") FileUpload historyBundle,
+            @RestForm("auditLog") FileUpload auditLog) {
         User user = fileStorageService.requireAuthenticatedUser();
-        return fileStorageService.storeFileResponse(user, file, historyBundle, auditLog);
+        // TODO: Migration required - storeFileResponse(...) still accepts Spring
+        // org.springframework.web.multipart.MultipartFile. Migrate FileStorageService to accept
+        // stirling.software.common.model.MultipartFile, then this wrapping is type-compatible.
+        return fileStorageService.storeFileResponse(
+                user,
+                FileUploadMultipartFile.of(file),
+                FileUploadMultipartFile.of(historyBundle),
+                FileUploadMultipartFile.of(auditLog));
     }
 
-    @PutMapping(
-            value = "/files/{fileId}",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE)
+    @PUT
+    @jakarta.ws.rs.Path("/files/{fileId}")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_JSON)
     public StoredFileResponse updateFile(
-            @PathVariable Long fileId,
-            @RequestPart("file") MultipartFile file,
-            @RequestPart(name = "historyBundle", required = false) MultipartFile historyBundle,
-            @RequestPart(name = "auditLog", required = false) MultipartFile auditLog) {
+            @jakarta.ws.rs.PathParam("fileId") Long fileId,
+            @RestForm("file") FileUpload file,
+            @RestForm("historyBundle") FileUpload historyBundle,
+            @RestForm("auditLog") FileUpload auditLog) {
         User user = fileStorageService.requireAuthenticatedUser();
-        return fileStorageService.updateFileResponse(user, fileId, file, historyBundle, auditLog);
+        // TODO: Migration required - updateFileResponse(...) still accepts Spring MultipartFile;
+        // migrate FileStorageService to stirling.software.common.model.MultipartFile.
+        return fileStorageService.updateFileResponse(
+                user,
+                fileId,
+                FileUploadMultipartFile.of(file),
+                FileUploadMultipartFile.of(historyBundle),
+                FileUploadMultipartFile.of(auditLog));
     }
 
-    @GetMapping(value = "/files", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GET
+    @jakarta.ws.rs.Path("/files")
+    @Produces(MediaType.APPLICATION_JSON)
     public List<StoredFileResponse> listFiles() {
         User user = fileStorageService.requireAuthenticatedUser();
         return fileStorageService.listAccessibleFileResponses(user);
     }
 
-    @GetMapping(value = "/files/{fileId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public StoredFileResponse getFileMetadata(@PathVariable Long fileId) {
+    @GET
+    @jakarta.ws.rs.Path("/files/{fileId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public StoredFileResponse getFileMetadata(@jakarta.ws.rs.PathParam("fileId") Long fileId) {
         User user = fileStorageService.requireAuthenticatedUser();
         return fileStorageService.getAccessibleFileResponse(user, fileId);
     }
 
-    @GetMapping("/files/{fileId}/download")
-    public ResponseEntity<org.springframework.core.io.Resource> downloadFile(
-            @PathVariable Long fileId,
-            @RequestParam(name = "inline", defaultValue = "false") boolean inline) {
+    // ─── File ↔ folder placement ──────────────────────────────────────────────────────────────
+    // These live here (rather than in a separate @Path("/api/v1/storage/files") resource) so a
+    // single JAX-RS resource owns the whole /api/v1/storage/files sub-tree. Splitting them across
+    // two resource classes made the more-specific class shadow this one, so POST /files (upload)
+    // resolved to a class with only @PATCH methods and returned 405. Authentication, the
+    // storage-gate, ownership checks and the bulk cap all live on FolderService (with
+    // @Transactional)
+    // so the JDBC connection isn't held through JSON serialization.
+
+    /** Move a single file to a folder (or to root when folderId is null). */
+    @PATCH
+    @jakarta.ws.rs.Path("/files/{fileId}/folder")
+    public Response moveFileToFolder(
+            @jakarta.ws.rs.PathParam("fileId") Long fileId, @Valid FolderPlacement body) {
+        folderService.moveFileToFolder(fileId, body.getFolderId());
+        return Response.noContent().build();
+    }
+
+    /**
+     * Bulk move - fewer round-trips than calling the single endpoint N times. Returns 200 on full
+     * success, 207 (Multi-Status) when some files were skipped (typically because they don't belong
+     * to the caller).
+     */
+    @PATCH
+    @jakarta.ws.rs.Path("/files/folder")
+    public Response bulkMove(@Valid BulkMoveRequest body) {
+        FolderService.BulkMoveResult result =
+                folderService.bulkMoveFilesToFolder(body.getFolderId(), body.getFileIds());
+        // 207 Multi-Status has no Response.Status constant; use the numeric code directly.
+        int status = result.skippedFileIds().isEmpty() ? Response.Status.OK.getStatusCode() : 207;
+        return Response.status(status)
+                .entity(new BulkMoveResponse(result.movedFileIds(), result.skippedFileIds()))
+                .build();
+    }
+
+    @GET
+    @jakarta.ws.rs.Path("/files/{fileId}/download")
+    public Response downloadFile(
+            @jakarta.ws.rs.PathParam("fileId") Long fileId,
+            @QueryParam("inline") @jakarta.ws.rs.DefaultValue("false") boolean inline) {
         User user = fileStorageService.requireAuthenticatedUser();
         StoredFile file = fileStorageService.getAccessibleFile(user, fileId);
         fileStorageService.requireReadAccess(user, file);
-        Optional<ResponseEntity<org.springframework.core.io.Resource>> redirect =
-                tryRedirectToSignedUrl(file, inline);
+        Optional<Response> redirect = tryRedirectToSignedUrl(file, inline);
         return redirect.orElseGet(() -> buildFileResponse(file, inline));
     }
 
-    @DeleteMapping("/files/{fileId}")
-    public ResponseEntity<Void> deleteFile(@PathVariable Long fileId) {
+    @DELETE
+    @jakarta.ws.rs.Path("/files/{fileId}")
+    public Response deleteFile(@jakarta.ws.rs.PathParam("fileId") Long fileId) {
         User user = fileStorageService.requireAuthenticatedUser();
         StoredFile file = fileStorageService.getOwnedFile(user, fileId);
         fileStorageService.deleteFile(user, file);
-        return ResponseEntity.noContent().build();
+        return Response.noContent().build();
     }
 
-    @PostMapping(
-            value = "/files/{fileId}/shares/users",
-            produces = MediaType.APPLICATION_JSON_VALUE)
+    @POST
+    @jakarta.ws.rs.Path("/files/{fileId}/shares/users")
+    @Produces(MediaType.APPLICATION_JSON)
     public StoredFileResponse shareWithUser(
-            @PathVariable Long fileId, @RequestBody ShareWithUserRequest request) {
+            @jakarta.ws.rs.PathParam("fileId") Long fileId, ShareWithUserRequest request) {
         User owner = fileStorageService.requireAuthenticatedUser();
         if (request == null || request.getUsername() == null || request.getUsername().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username is required");
+            throw new WebApplicationException("Username is required", Response.Status.BAD_REQUEST);
         }
         return fileStorageService.shareWithUserResponse(
                 owner,
@@ -130,28 +206,31 @@ public class FileStorageController {
                 fileStorageService.normalizeShareRole(request.getAccessRole()));
     }
 
-    @DeleteMapping("/files/{fileId}/shares/users/{username}")
-    public ResponseEntity<Void> revokeUserShare(
-            @PathVariable Long fileId, @PathVariable String username) {
+    @DELETE
+    @jakarta.ws.rs.Path("/files/{fileId}/shares/users/{username}")
+    public Response revokeUserShare(
+            @jakarta.ws.rs.PathParam("fileId") Long fileId,
+            @jakarta.ws.rs.PathParam("username") String username) {
         User owner = fileStorageService.requireAuthenticatedUser();
         StoredFile file = fileStorageService.getOwnedFile(owner, fileId);
         fileStorageService.revokeUserShare(owner, file, username);
-        return ResponseEntity.noContent().build();
+        return Response.noContent().build();
     }
 
-    @DeleteMapping("/files/{fileId}/shares/self")
-    public ResponseEntity<Void> leaveUserShare(@PathVariable Long fileId) {
+    @DELETE
+    @jakarta.ws.rs.Path("/files/{fileId}/shares/self")
+    public Response leaveUserShare(@jakarta.ws.rs.PathParam("fileId") Long fileId) {
         User user = fileStorageService.requireAuthenticatedUser();
         StoredFile file = fileStorageService.getAccessibleFile(user, fileId);
         fileStorageService.leaveUserShare(user, file);
-        return ResponseEntity.noContent().build();
+        return Response.noContent().build();
     }
 
-    @PostMapping(
-            value = "/files/{fileId}/shares/links",
-            produces = MediaType.APPLICATION_JSON_VALUE)
+    @POST
+    @jakarta.ws.rs.Path("/files/{fileId}/shares/links")
+    @Produces(MediaType.APPLICATION_JSON)
     public ShareLinkResponse createShareLink(
-            @PathVariable Long fileId, @RequestBody CreateShareLinkRequest request) {
+            @jakarta.ws.rs.PathParam("fileId") Long fileId, CreateShareLinkRequest request) {
         User owner = fileStorageService.requireAuthenticatedUser();
         StoredFile file = fileStorageService.getOwnedFile(owner, fileId);
         FileShare share =
@@ -171,56 +250,59 @@ public class FileStorageController {
                 .build();
     }
 
-    @DeleteMapping("/files/{fileId}/shares/links/{token}")
-    public ResponseEntity<Void> revokeShareLink(
-            @PathVariable Long fileId, @PathVariable String token) {
+    @DELETE
+    @jakarta.ws.rs.Path("/files/{fileId}/shares/links/{token}")
+    public Response revokeShareLink(
+            @jakarta.ws.rs.PathParam("fileId") Long fileId,
+            @jakarta.ws.rs.PathParam("token") String token) {
         User owner = fileStorageService.requireAuthenticatedUser();
         StoredFile file = fileStorageService.getOwnedFile(owner, fileId);
         fileStorageService.revokeShareLink(owner, file, token);
-        return ResponseEntity.noContent().build();
+        return Response.noContent().build();
     }
 
-    @GetMapping("/share-links/{token}")
-    public ResponseEntity<org.springframework.core.io.Resource> downloadShareLink(
-            @PathVariable String token,
-            Authentication authentication,
-            @RequestParam(name = "inline", defaultValue = "false") boolean inline) {
+    @GET
+    @jakarta.ws.rs.Path("/share-links/{token}")
+    public Response downloadShareLink(
+            @jakarta.ws.rs.PathParam("token") String token,
+            @QueryParam("inline") @jakarta.ws.rs.DefaultValue("false") boolean inline) {
         fileStorageService.ensureShareLinksEnabled();
         FileShare share = fileStorageService.getShareByToken(token);
-        if (!fileStorageService.canAccessShareLink(share, authentication)) {
-            HttpStatus status =
-                    isAuthenticated(authentication)
-                            ? HttpStatus.FORBIDDEN
-                            : HttpStatus.UNAUTHORIZED;
+        // TODO: Migration required - canAccessShareLink/recordShareAccess still take Spring
+        // Authentication. Passing null preserves the anonymous-deny behavior until the service is
+        // migrated to SecurityIdentity; once migrated, pass `securityIdentity` through instead.
+        if (!fileStorageService.canAccessShareLink(share, null)) {
+            Response.Status status =
+                    isAuthenticated() ? Response.Status.FORBIDDEN : Response.Status.UNAUTHORIZED;
             String message =
-                    status == HttpStatus.FORBIDDEN
+                    status == Response.Status.FORBIDDEN
                             ? "Access denied for this share link"
                             : "Authentication required for this share link";
-            throw new ResponseStatusException(status, message);
+            throw new WebApplicationException(message, status);
         }
         fileStorageService.requireReadAccess(share);
-        fileStorageService.recordShareAccess(share, authentication, inline);
+        fileStorageService.recordShareAccess(share, null, inline);
         StoredFile file = share.getFile();
-        Optional<ResponseEntity<org.springframework.core.io.Resource>> redirect =
-                tryRedirectToSignedUrl(file, inline);
+        Optional<Response> redirect = tryRedirectToSignedUrl(file, inline);
         return redirect.orElseGet(() -> buildFileResponse(file, inline));
     }
 
-    @GetMapping("/share-links/{token}/metadata")
+    @GET
+    @jakarta.ws.rs.Path("/share-links/{token}/metadata")
     public ShareLinkMetadataResponse getShareLinkMetadata(
-            @PathVariable String token, Authentication authentication) {
+            @jakarta.ws.rs.PathParam("token") String token) {
         fileStorageService.ensureShareLinksEnabled();
         FileShare share = fileStorageService.getShareByToken(token);
-        if (!fileStorageService.canAccessShareLink(share, authentication)) {
-            HttpStatus status =
-                    isAuthenticated(authentication)
-                            ? HttpStatus.FORBIDDEN
-                            : HttpStatus.UNAUTHORIZED;
+        // TODO: Migration required - canAccessShareLink still takes Spring Authentication; pass
+        // `securityIdentity` once FileStorageService is migrated.
+        if (!fileStorageService.canAccessShareLink(share, null)) {
+            Response.Status status =
+                    isAuthenticated() ? Response.Status.FORBIDDEN : Response.Status.UNAUTHORIZED;
             String message =
-                    status == HttpStatus.FORBIDDEN
+                    status == Response.Status.FORBIDDEN
                             ? "Access denied for this share link"
                             : "Authentication required for this share link";
-            throw new ResponseStatusException(status, message);
+            throw new WebApplicationException(message, status);
         }
         StoredFile file = share.getFile();
         User currentUser = fileStorageService.requireAuthenticatedUser();
@@ -243,52 +325,64 @@ public class FileStorageController {
                 .build();
     }
 
-    @GetMapping("/share-links/accessed")
+    @GET
+    @jakarta.ws.rs.Path("/share-links/accessed")
+    @Produces(MediaType.APPLICATION_JSON)
     public List<ShareLinkMetadataResponse> listAccessedShareLinks() {
         fileStorageService.ensureShareLinksEnabled();
         User user = fileStorageService.requireAuthenticatedUser();
         return fileStorageService.listAccessedShareLinkResponses(user);
     }
 
-    @GetMapping("/files/{fileId}/shares/links/{token}/accesses")
+    @GET
+    @jakarta.ws.rs.Path("/files/{fileId}/shares/links/{token}/accesses")
+    @Produces(MediaType.APPLICATION_JSON)
     public List<ShareLinkAccessResponse> listShareAccesses(
-            @PathVariable Long fileId, @PathVariable String token) {
+            @jakarta.ws.rs.PathParam("fileId") Long fileId,
+            @jakarta.ws.rs.PathParam("token") String token) {
         fileStorageService.ensureShareLinksEnabled();
         User owner = fileStorageService.requireAuthenticatedUser();
         StoredFile file = fileStorageService.getOwnedFile(owner, fileId);
         return fileStorageService.listShareAccessResponses(owner, file, token);
     }
 
-    private ResponseEntity<org.springframework.core.io.Resource> buildFileResponse(
-            StoredFile file, boolean inline) {
-        org.springframework.core.io.Resource resource = fileStorageService.loadFile(file);
+    private Response buildFileResponse(StoredFile file, boolean inline) {
+        final stirling.software.common.model.io.Resource resource =
+                fileStorageService.loadFile(file);
         String contentType =
                 file.getContentType() == null
-                        ? MediaType.APPLICATION_OCTET_STREAM_VALUE
+                        ? MediaType.APPLICATION_OCTET_STREAM
                         : file.getContentType();
-        ContentDisposition disposition =
-                ContentDisposition.builder(inline ? "inline" : "attachment")
-                        .filename(file.getOriginalFilename())
-                        .build();
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentDisposition(disposition);
+        MediaType mediaType;
         try {
-            headers.setContentType(MediaType.parseMediaType(contentType));
+            mediaType = MediaType.valueOf(contentType);
         } catch (IllegalArgumentException ex) {
-            headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+            mediaType = MediaType.APPLICATION_OCTET_STREAM_TYPE;
         }
-        headers.setContentLength(file.getSizeBytes());
-        return ResponseEntity.ok().headers(headers).body(resource);
+        String disposition =
+                (inline ? "inline" : "attachment")
+                        + "; filename=\""
+                        + file.getOriginalFilename()
+                        + "\"";
+        StreamingOutput stream =
+                output -> {
+                    try (InputStream in = resource.getInputStream()) {
+                        in.transferTo(output);
+                    }
+                };
+        return Response.ok(stream, mediaType)
+                .header(HttpHeaders.CONTENT_DISPOSITION, disposition)
+                .header(HttpHeaders.CONTENT_LENGTH, file.getSizeBytes())
+                .build();
     }
 
-    private boolean isAuthenticated(Authentication authentication) {
-        return authentication != null
-                && authentication.isAuthenticated()
-                && !"anonymousUser".equals(authentication.getPrincipal());
+    private boolean isAuthenticated() {
+        // TODO: Migration required - Spring's Authentication-based anonymous check is replaced by
+        // SecurityIdentity. Verify "anonymous" semantics match once the security layer is migrated.
+        return securityIdentity != null && !securityIdentity.isAnonymous();
     }
 
-    private Optional<ResponseEntity<org.springframework.core.io.Resource>> tryRedirectToSignedUrl(
-            StoredFile file, boolean inline) {
+    private Optional<Response> tryRedirectToSignedUrl(StoredFile file, boolean inline) {
         if (file == null || file.getStorageKey() == null || file.getStorageKey().isBlank()) {
             return Optional.empty();
         }
@@ -302,10 +396,8 @@ public class FileStorageController {
             if (signed.isEmpty()) {
                 return Optional.empty();
             }
-            HttpHeaders headers = new HttpHeaders();
-            headers.setLocation(signed.get());
-            ResponseEntity<org.springframework.core.io.Resource> response =
-                    ResponseEntity.status(HttpStatus.FOUND).headers(headers).build();
+            Response response =
+                    Response.status(Response.Status.FOUND).location(signed.get()).build();
             return Optional.of(response);
         } catch (IOException e) {
             log.warn(
@@ -315,5 +407,34 @@ public class FileStorageController {
                     e);
             return Optional.empty();
         }
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class FolderPlacement {
+        private UUID folderId;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class BulkMoveRequest {
+        private UUID folderId;
+
+        @NotNull
+        @Size(
+                min = 1,
+                max = BULK_MOVE_MAX_FILES,
+                message = "fileIds must contain between 1 and 1000 entries")
+        private List<Long> fileIds;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class BulkMoveResponse {
+        private List<Long> movedFileIds;
+        private List<Long> skippedFileIds;
     }
 }

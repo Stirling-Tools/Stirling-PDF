@@ -11,16 +11,15 @@ import static org.mockito.Mockito.when;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.server.ResponseStatusException;
+
+import io.quarkus.security.identity.SecurityIdentity;
+
+import jakarta.ws.rs.WebApplicationException;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.model.User;
@@ -51,6 +50,7 @@ class FolderServiceTest {
     @Mock private ApplicationProperties applicationProperties;
     @Mock private ApplicationProperties.Security security;
     @Mock private ApplicationProperties.Storage storage;
+    @Mock private SecurityIdentity securityIdentity;
 
     private FolderService service;
     private User user;
@@ -64,30 +64,31 @@ class FolderServiceTest {
         lenient().when(security.isEnableLogin()).thenReturn(true);
         lenient().when(storage.isEnabled()).thenReturn(true);
 
-        service = new FolderService(folderRepository, storedFileRepository, applicationProperties);
+        service =
+                new FolderService(
+                        folderRepository,
+                        storedFileRepository,
+                        applicationProperties,
+                        securityIdentity);
 
         user = new User();
         user.setId(42L);
         user.setUsername("alice");
-        SecurityContext ctx = SecurityContextHolder.createEmptyContext();
-        ctx.setAuthentication(
-                new UsernamePasswordAuthenticationToken(user, null, java.util.List.of()));
-        SecurityContextHolder.setContext(ctx);
-    }
-
-    @AfterEach
-    void tearDown() {
-        SecurityContextHolder.clearContext();
+        // Spring's SecurityContextHolder principal is replaced by Quarkus SecurityIdentity; the
+        // User entity itself is the principal (it implements java.security.Principal), matching
+        // FolderService.requireAuthenticatedUser which expects principal instanceof User.
+        lenient().when(securityIdentity.isAnonymous()).thenReturn(false);
+        lenient().when(securityIdentity.getPrincipal()).thenReturn(user);
     }
 
     @Test
     void listFolders_rejects_when_login_disabled() {
         when(security.isEnableLogin()).thenReturn(false);
         assertThatThrownBy(() -> service.listFolders())
-                .isInstanceOf(ResponseStatusException.class)
+                .isInstanceOf(WebApplicationException.class)
                 .satisfies(
                         e ->
-                                assertThat(((ResponseStatusException) e).getStatusCode().value())
+                                assertThat(((WebApplicationException) e).getResponse().getStatus())
                                         .isEqualTo(403));
     }
 
@@ -95,10 +96,10 @@ class FolderServiceTest {
     void listFolders_rejects_when_storage_disabled() {
         when(storage.isEnabled()).thenReturn(false);
         assertThatThrownBy(() -> service.listFolders())
-                .isInstanceOf(ResponseStatusException.class)
+                .isInstanceOf(WebApplicationException.class)
                 .satisfies(
                         e ->
-                                assertThat(((ResponseStatusException) e).getStatusCode().value())
+                                assertThat(((WebApplicationException) e).getResponse().getStatus())
                                         .isEqualTo(403));
     }
 
@@ -116,12 +117,12 @@ class FolderServiceTest {
         req.setParentFolderId(foreignParentId);
 
         assertThatThrownBy(() -> service.createFolder(req))
-                .isInstanceOf(ResponseStatusException.class)
+                .isInstanceOf(WebApplicationException.class)
                 .satisfies(
                         e -> {
-                            ResponseStatusException rse = (ResponseStatusException) e;
-                            assertThat(rse.getStatusCode().value()).isEqualTo(400);
-                            assertThat(rse.getReason()).doesNotContain(foreignParentId.toString());
+                            WebApplicationException rse = (WebApplicationException) e;
+                            assertThat(rse.getResponse().getStatus()).isEqualTo(400);
+                            assertThat(rse.getMessage()).doesNotContain(foreignParentId.toString());
                         });
     }
 
@@ -139,10 +140,10 @@ class FolderServiceTest {
         req.setId(newId);
 
         assertThatThrownBy(() -> service.createFolder(req))
-                .isInstanceOf(ResponseStatusException.class)
+                .isInstanceOf(WebApplicationException.class)
                 .satisfies(
                         e ->
-                                assertThat(((ResponseStatusException) e).getStatusCode().value())
+                                assertThat(((WebApplicationException) e).getResponse().getStatus())
                                         .isEqualTo(409));
     }
 
@@ -169,12 +170,12 @@ class FolderServiceTest {
         req.setParentFolderId(deepest.getId());
 
         assertThatThrownBy(() -> service.createFolder(req))
-                .isInstanceOf(ResponseStatusException.class)
+                .isInstanceOf(WebApplicationException.class)
                 .satisfies(
                         e -> {
-                            ResponseStatusException rse = (ResponseStatusException) e;
-                            assertThat(rse.getStatusCode().value()).isEqualTo(400);
-                            assertThat(rse.getReason()).containsIgnoringCase("nesting limit");
+                            WebApplicationException rse = (WebApplicationException) e;
+                            assertThat(rse.getResponse().getStatus()).isEqualTo(400);
+                            assertThat(rse.getMessage()).containsIgnoringCase("nesting limit");
                         });
     }
 
@@ -197,12 +198,12 @@ class FolderServiceTest {
         req.setReparent(true);
 
         assertThatThrownBy(() -> service.updateFolder(a.getId(), req))
-                .isInstanceOf(ResponseStatusException.class)
+                .isInstanceOf(WebApplicationException.class)
                 .satisfies(
                         e -> {
-                            ResponseStatusException rse = (ResponseStatusException) e;
-                            assertThat(rse.getStatusCode().value()).isEqualTo(400);
-                            assertThat(rse.getReason()).containsIgnoringCase("descendants");
+                            WebApplicationException rse = (WebApplicationException) e;
+                            assertThat(rse.getResponse().getStatus()).isEqualTo(400);
+                            assertThat(rse.getMessage()).containsIgnoringCase("descendants");
                         });
     }
 
@@ -220,10 +221,10 @@ class FolderServiceTest {
         req.setName("Renamed");
 
         assertThatThrownBy(() -> service.updateFolder(foreignId, req))
-                .isInstanceOf(ResponseStatusException.class)
+                .isInstanceOf(WebApplicationException.class)
                 .satisfies(
                         e ->
-                                assertThat(((ResponseStatusException) e).getStatusCode().value())
+                                assertThat(((WebApplicationException) e).getResponse().getStatus())
                                         .isEqualTo(404));
     }
 
@@ -240,10 +241,10 @@ class FolderServiceTest {
                 .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.moveFileToFolder(100L, foreignFolderId))
-                .isInstanceOf(ResponseStatusException.class)
+                .isInstanceOf(WebApplicationException.class)
                 .satisfies(
                         e ->
-                                assertThat(((ResponseStatusException) e).getStatusCode().value())
+                                assertThat(((WebApplicationException) e).getResponse().getStatus())
                                         .isEqualTo(400));
     }
 
@@ -255,10 +256,10 @@ class FolderServiceTest {
         for (int i = 0; i < 1001; i++) tooMany.add((long) i);
 
         assertThatThrownBy(() -> service.bulkMoveFilesToFolder(null, tooMany))
-                .isInstanceOf(ResponseStatusException.class)
+                .isInstanceOf(WebApplicationException.class)
                 .satisfies(
                         e ->
-                                assertThat(((ResponseStatusException) e).getStatusCode().value())
+                                assertThat(((WebApplicationException) e).getResponse().getStatus())
                                         .isEqualTo(400));
     }
 

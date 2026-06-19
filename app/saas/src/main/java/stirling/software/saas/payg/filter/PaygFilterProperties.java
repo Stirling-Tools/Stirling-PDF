@@ -1,8 +1,8 @@
 package stirling.software.saas.payg.filter;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Component;
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -21,9 +21,10 @@ import lombok.Setter;
  *       OUTPUT recording in {@code afterCompletion}. {@code null} = unbounded.
  * </ul>
  */
-@Component
-@Profile("saas")
-@ConfigurationProperties(prefix = "payg.filter")
+// TODO: Migration required - @ConfigurationProperties(prefix="payg.filter"); bind via
+// @ConfigProperty or @ConfigMapping
+@ApplicationScoped
+@IfBuildProfile("saas")
 @Getter
 @Setter
 public class PaygFilterProperties {

@@ -15,12 +15,6 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
-import org.springframework.core.io.support.ResourcePatternUtils;
-import org.springframework.web.multipart.MultipartFile;
-
 import com.fathzer.soft.javaluator.DoubleEvaluator;
 
 import io.github.pixee.security.HostValidator;
@@ -30,6 +24,9 @@ import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.configuration.InstallationPathConfig;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.io.FileSystemResource;
+import stirling.software.common.model.io.Resource;
 
 @Slf4j
 @UtilityClass
@@ -248,18 +245,60 @@ public class GeneralUtils {
         return safeName;
     }
 
-    // Get resources from a location pattern
-    public Resource[] getResourcesFromLocationPattern(
-            String locationPattern, ResourceLoader resourceLoader) throws Exception {
-        // Normalize the path for file resources
-        String pattern = locationPattern;
-        if (pattern.startsWith("file:")) {
-            String rawPath = pattern.substring(5).replace("\\*", "").replace("/*", "");
-            Path normalizePath = Path.of(rawPath).normalize();
-            pattern = "file:" + normalizePath.toString().replace("\\", "/") + "/*";
+    /**
+     * Resolve files matching a location pattern. Supports {@code file:<dir>/<glob>} and {@code
+     * classpath:<dir>/<glob>} (e.g. {@code *} or {@code *.woff2}).
+     *
+     * <p>MIGRATION (Spring -> Quarkus): replaced Spring's {@code ResourceLoader} + {@code
+     * ResourcePatternUtils} pattern resolver. The {@code ResourceLoader} parameter was removed.
+     * {@code file:} patterns are resolved with {@link java.nio.file.Files#list}; {@code classpath:}
+     * patterns are resolved via the classloader and only support directory resources that live on
+     * the filesystem.
+     *
+     * <p>TODO: Migration required - {@code classpath:} resolution does not enumerate entries inside
+     * a packaged JAR. For uber-jar deployments, prefer serving these assets from {@code
+     * META-INF/resources/} or build a Jandex/build-time index of the matching files.
+     */
+    public static Resource[] getResourcesFromLocationPattern(String locationPattern)
+            throws Exception {
+        String body = locationPattern;
+        boolean classpath = false;
+        if (body.startsWith("file:")) {
+            body = body.substring(5);
+        } else if (body.startsWith("classpath:")) {
+            body = body.substring(10);
+            classpath = true;
         }
-        return ResourcePatternUtils.getResourcePatternResolver(resourceLoader)
-                .getResources(pattern);
+        body = body.replace("\\", "/");
+        int lastSlash = body.lastIndexOf('/');
+        String dirPart = lastSlash >= 0 ? body.substring(0, lastSlash) : "";
+        String glob = lastSlash >= 0 ? body.substring(lastSlash + 1) : body;
+        if (glob.isEmpty()) {
+            glob = "*";
+        }
+
+        Path dir;
+        if (classpath) {
+            URL url = GeneralUtils.class.getClassLoader().getResource(dirPart);
+            if (url == null || !"file".equals(url.getProtocol())) {
+                // Not a filesystem-backed classpath dir (e.g. inside a jar) - see TODO above.
+                return new Resource[0];
+            }
+            dir = Paths.get(url.toURI());
+        } else {
+            dir = Paths.get(dirPart).normalize();
+        }
+
+        if (!Files.isDirectory(dir)) {
+            return new Resource[0];
+        }
+        PathMatcher matcher = dir.getFileSystem().getPathMatcher("glob:" + glob);
+        List<Resource> resources = new ArrayList<>();
+        try (var stream = Files.list(dir)) {
+            stream.filter(p -> Files.isRegularFile(p) && matcher.matches(p.getFileName()))
+                    .forEach(p -> resources.add(new FileSystemResource(p)));
+        }
+        return resources.toArray(new Resource[0]);
     }
 
     /**
@@ -837,7 +876,7 @@ public class GeneralUtils {
     }
 
     public boolean createDir(String path) {
-        Path folder = Path.of(path);
+        Path folder = Paths.get(path);
         if (!Files.exists(folder)) {
             try {
                 Files.createDirectories(folder);
@@ -867,7 +906,7 @@ public class GeneralUtils {
 
     public void saveKeyToSettings(String key, Object newValue) throws IOException {
         String[] keyArray = key.split("\\.");
-        Path settingsPath = Path.of(InstallationPathConfig.getSettingsPath());
+        Path settingsPath = Paths.get(InstallationPathConfig.getSettingsPath());
         YamlHelper settingsYaml = new YamlHelper(settingsPath);
         settingsYaml.updateValue(Arrays.asList(keyArray), newValue);
         settingsYaml.saveOverride(settingsPath);
@@ -888,7 +927,7 @@ public class GeneralUtils {
             return;
         }
 
-        Path settingsPath = Path.of(InstallationPathConfig.getSettingsPath());
+        Path settingsPath = Paths.get(InstallationPathConfig.getSettingsPath());
         YamlHelper settingsYaml = new YamlHelper(settingsPath);
 
         // Apply all updates to the same YamlHelper instance
@@ -974,23 +1013,21 @@ public class GeneralUtils {
      */
     public void extractPipeline() throws IOException {
         Path pipelineDir =
-                Path.of(InstallationPathConfig.getPipelinePath(), DEFAULT_WEBUI_CONFIGS_DIR);
+                Paths.get(InstallationPathConfig.getPipelinePath(), DEFAULT_WEBUI_CONFIGS_DIR);
         Files.createDirectories(pipelineDir);
 
         for (String name : DEFAULT_VALID_PIPELINE) {
-            if (!Path.of(name).getFileName().toString().equals(name)) {
+            if (!Paths.get(name).getFileName().toString().equals(name)) {
                 log.error("Invalid pipeline file name: {}", name);
                 throw new IllegalArgumentException("Invalid pipeline file name: " + name);
             }
             Path target = pipelineDir.resolve(name);
-            ClassPathResource res =
-                    new ClassPathResource(
-                            "static/pipeline/" + DEFAULT_WEBUI_CONFIGS_DIR + "/" + name);
-            if (!res.exists()) {
-                log.error("Resource not found: {}", res.getPath());
-                throw new IOException("Resource not found: " + res.getPath());
+            String resourcePath = "static/pipeline/" + DEFAULT_WEBUI_CONFIGS_DIR + "/" + name;
+            if (GeneralUtils.class.getClassLoader().getResource(resourcePath) == null) {
+                log.error("Resource not found: {}", resourcePath);
+                throw new IOException("Resource not found: " + resourcePath);
             }
-            copyResourceToFile(res, target);
+            copyResourceToFile(resourcePath, target);
         }
     }
 
@@ -1014,7 +1051,7 @@ public class GeneralUtils {
             throw new IllegalArgumentException(
                     "scriptName must not contain path traversal characters");
         }
-        if (!Path.of(scriptName).getFileName().toString().equals(scriptName)) {
+        if (!Paths.get(scriptName).getFileName().toString().equals(scriptName)) {
             throw new IllegalArgumentException(
                     "scriptName must not contain path traversal characters");
         }
@@ -1024,31 +1061,34 @@ public class GeneralUtils {
                     "scriptName must be either 'png_to_webp.py' or 'split_photos.py'");
         }
 
-        Path scriptsDir = Path.of(InstallationPathConfig.getScriptsPath(), PYTHON_SCRIPTS_DIR);
+        Path scriptsDir = Paths.get(InstallationPathConfig.getScriptsPath(), PYTHON_SCRIPTS_DIR);
         Files.createDirectories(scriptsDir);
 
         Path target = scriptsDir.resolve(scriptName);
-        ClassPathResource res =
-                new ClassPathResource("static/" + PYTHON_SCRIPTS_DIR + "/" + scriptName);
-        if (!res.exists()) {
-            log.error("Resource not found: {}", res.getPath());
-            throw new IOException("Resource not found: " + res.getPath());
+        String resourcePath = "static/" + PYTHON_SCRIPTS_DIR + "/" + scriptName;
+        if (GeneralUtils.class.getClassLoader().getResource(resourcePath) == null) {
+            log.error("Resource not found: {}", resourcePath);
+            throw new IOException("Resource not found: " + resourcePath);
         }
-        copyResourceToFile(res, target);
+        copyResourceToFile(resourcePath, target);
         return target;
     }
 
     /*
-     * Copies a resource from the classpath to a specified target file.
+     * Copies a classpath resource to a specified target file.
      *
-     * @param resource the ClassPathResource to copy
+     * @param resourcePath the classpath resource location to copy
      * @param target the target Path where the resource will be copied
      * @throws IOException if an I/O error occurs during the copy operation
      */
-    private void copyResourceToFile(ClassPathResource resource, Path target) throws IOException {
+    private void copyResourceToFile(String resourcePath, Path target) throws IOException {
         Path dir = target.getParent();
         Path tmp = Files.createTempFile(dir, target.getFileName().toString(), ".tmp");
-        try (InputStream in = resource.getInputStream()) {
+        try (InputStream in =
+                GeneralUtils.class.getClassLoader().getResourceAsStream(resourcePath)) {
+            if (in == null) {
+                throw new IOException("Resource not found: " + resourcePath);
+            }
             Files.copy(in, tmp, StandardCopyOption.REPLACE_EXISTING);
             try {
                 Files.move(tmp, target, StandardCopyOption.ATOMIC_MOVE);

@@ -1,8 +1,10 @@
 package stirling.software.proprietary.mcp.tools;
 
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
+import io.quarkus.arc.lookup.LookupIfProperty;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 
 import stirling.software.proprietary.mcp.McpCallContext;
 import stirling.software.proprietary.mcp.McpTool;
@@ -15,14 +17,15 @@ import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
 /** Returns the JSON Schema for one operation's parameters, from the live {@link McpToolCatalog}. */
-@Component
-@ConditionalOnProperty(name = "mcp.enabled", havingValue = "true")
+@ApplicationScoped
+@LookupIfProperty(name = "mcp.enabled", stringValue = "true")
 public class DescribeOperationTool implements McpTool {
 
     private final ObjectMapper mapper;
-    private final ObjectProvider<McpToolCatalog> catalogProvider;
+    private final Instance<McpToolCatalog> catalogProvider;
 
-    public DescribeOperationTool(ObjectMapper mapper, ObjectProvider<McpToolCatalog> catalog) {
+    @Inject
+    public DescribeOperationTool(ObjectMapper mapper, Instance<McpToolCatalog> catalog) {
         this.mapper = mapper;
         this.catalogProvider = catalog;
     }
@@ -63,7 +66,7 @@ public class DescribeOperationTool implements McpTool {
             return McpResponses.error(mapper, "Missing required argument: operation");
         }
         String opId = opNode.asText();
-        McpToolCatalog catalog = catalogProvider.getIfAvailable();
+        McpToolCatalog catalog = catalogProvider.isResolvable() ? catalogProvider.get() : null;
         if (catalog == null) {
             return McpResponses.error(mapper, "MCP catalog is not available");
         }

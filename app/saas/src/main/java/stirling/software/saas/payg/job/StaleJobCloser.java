@@ -2,9 +2,10 @@ package stirling.software.saas.payg.job;
 
 import java.util.List;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
+import io.quarkus.arc.profile.IfBuildProfile;
+import io.quarkus.scheduler.Scheduled;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,8 +33,8 @@ import stirling.software.saas.payg.charge.JobChargeService;
  * tracked in design § 9 as a separate cleanup; the per-job close + meter idempotency key mean a
  * double-fire across pods reads a shrinking stale set and never double-bills.
  */
-@Component
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 @Slf4j
 public class StaleJobCloser {
 
@@ -45,7 +46,11 @@ public class StaleJobCloser {
         this.chargeService = chargeService;
     }
 
-    @Scheduled(fixedRateString = "${payg.job.stale-close-interval-ms:60000}")
+    // TODO: Migration required - was configurable via property payg.job.stale-close-interval-ms
+    // (default 60000ms). io.quarkus.scheduler.Scheduled#every is a fixed string; restore
+    // configurability with @Scheduled(every = "{payg.job.stale-close-interval}") + a Duration
+    // config property if the interval must stay tunable.
+    @Scheduled(every = "60s")
     public void closeStale() {
         List<ProcessingJob> stale = jobService.findStale();
         if (stale.isEmpty()) {

@@ -1,14 +1,20 @@
 package stirling.software.common.util;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.ApplicationArguments;
 
+/**
+ * MIGRATION (Spring -&gt; Quarkus): {@code AppArgsCapture} replaced the Spring {@code
+ * ApplicationRunner.run(ApplicationArguments)} hook with a CDI {@code @Observes StartupEvent}
+ * observer reading a {@code @CommandLineArguments String[]} field. The tests drive that observer
+ * directly: the {@code args} field and {@code onStart} method are package-private, so they are set
+ * and invoked without a running CDI container (the {@code StartupEvent} payload is unused).
+ */
 class AppArgsCaptureTest {
 
     private AppArgsCapture capture;
@@ -20,31 +26,27 @@ class AppArgsCaptureTest {
     }
 
     @Test
-    void run_withArgs_capturesArgs() {
-        ApplicationArguments args = mock(ApplicationArguments.class);
-        when(args.getSourceArgs()).thenReturn(new String[] {"--server.port=8080", "--debug"});
-        capture.run(args);
+    void onStart_withArgs_capturesArgs() {
+        capture.args = new String[] {"--server.port=8080", "--debug"};
+        capture.onStart(null);
         assertEquals(List.of("--server.port=8080", "--debug"), AppArgsCapture.APP_ARGS.get());
     }
 
     @Test
-    void run_withNoArgs_capturesEmptyList() {
-        ApplicationArguments args = mock(ApplicationArguments.class);
-        when(args.getSourceArgs()).thenReturn(new String[] {});
-        capture.run(args);
+    void onStart_withNoArgs_capturesEmptyList() {
+        capture.args = new String[] {};
+        capture.onStart(null);
         assertEquals(List.of(), AppArgsCapture.APP_ARGS.get());
     }
 
     @Test
-    void run_calledTwice_overwritesPreviousArgs() {
-        ApplicationArguments args1 = mock(ApplicationArguments.class);
-        when(args1.getSourceArgs()).thenReturn(new String[] {"--first"});
-        capture.run(args1);
+    void onStart_calledTwice_overwritesPreviousArgs() {
+        capture.args = new String[] {"--first"};
+        capture.onStart(null);
         assertEquals(List.of("--first"), AppArgsCapture.APP_ARGS.get());
 
-        ApplicationArguments args2 = mock(ApplicationArguments.class);
-        when(args2.getSourceArgs()).thenReturn(new String[] {"--second", "--third"});
-        capture.run(args2);
+        capture.args = new String[] {"--second", "--third"};
+        capture.onStart(null);
         assertEquals(List.of("--second", "--third"), AppArgsCapture.APP_ARGS.get());
     }
 

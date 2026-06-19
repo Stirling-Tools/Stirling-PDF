@@ -1,8 +1,7 @@
 package stirling.software.proprietary.config;
 
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -14,10 +13,12 @@ import stirling.software.proprietary.audit.AuditLevel;
  * Configuration properties for the audit system. Reads values from the ApplicationProperties under
  * premium.enterpriseFeatures.audit
  */
+// TODO: Migration required - Spring @Order(HIGHEST_PRECEDENCE + 10) had no direct CDI
+// equivalent; bean ordering/precedence must be handled via @Priority or explicit ordering at
+// injection points if it was relied upon.
 @Slf4j
 @Getter
-@Component
-@Order(Ordered.HIGHEST_PRECEDENCE + 10)
+@ApplicationScoped
 public class AuditConfigurationProperties {
 
     private final boolean enabled;
@@ -27,6 +28,7 @@ public class AuditConfigurationProperties {
     private final boolean capturePdfAuthor;
     private final boolean captureOperationResults;
 
+    @Inject
     public AuditConfigurationProperties(ApplicationProperties applicationProperties) {
         ApplicationProperties.Premium.EnterpriseFeatures.Audit auditConfig =
                 applicationProperties.getPremium().getEnterpriseFeatures().getAudit();

@@ -16,14 +16,18 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import org.springframework.web.util.UriComponentsBuilder;
+import org.jboss.resteasy.reactive.RestForm;
 
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +48,8 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @ConvertApi
+@jakarta.ws.rs.Path("/api/v1/convert")
+@ApplicationScoped
 @Slf4j
 @RequiredArgsConstructor
 public class ConvertWebsiteToPDF {
@@ -59,28 +65,34 @@ public class ConvertWebsiteToPDF {
     private static final Pattern NUMERIC_HTML_ENTITY_PATTERN = Pattern.compile("&#(x?[0-9a-f]+);");
 
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/url/pdf",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
+    @POST
+    @jakarta.ws.rs.Path("/url/pdf")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Operation(
             summary = "Convert a URL to a PDF",
             description =
                     "This endpoint fetches content from a URL and converts it to a PDF format."
                             + " Input:N/A Output:PDF Type:SISO")
-    public ResponseEntity<?> urlToPdf(@ModelAttribute UrlToPdfRequest request)
+    public Response urlToPdf(@RestForm("urlInput") String urlInput, @Context UriInfo uriInfo)
             throws IOException, InterruptedException {
+        UrlToPdfRequest request = new UrlToPdfRequest();
+        request.setUrlInput(urlInput);
+
         String URL = request.getUrlInput();
-        UriComponentsBuilder uriComponentsBuilder =
-                ServletUriComponentsBuilder.fromCurrentContextPath().path("/url-to-pdf");
+        UriBuilder uriComponentsBuilder =
+                uriInfo.getBaseUriBuilder().replacePath("/url-to-pdf").replaceQuery(null);
         URI location = null;
-        HttpStatus status = HttpStatus.SEE_OTHER;
+        int status = Response.Status.SEE_OTHER.getStatusCode();
 
         if (!applicationProperties.getSystem().isEnableUrlToPDF()) {
             location =
                     uriComponentsBuilder
+                            .clone()
                             .queryParam("error", "error.endpointDisabled")
-                            .build()
-                            .toUri();
+                            .build();
         } else {
             // Validate the URL format (relaxed: only invalid if BOTH checks fail)
             boolean patternValid =
@@ -89,22 +101,22 @@ public class ConvertWebsiteToPDF {
             if (!patternValid && !generalValid) {
                 location =
                         uriComponentsBuilder
+                                .clone()
                                 .queryParam("error", "error.invalidUrlFormat")
-                                .build()
-                                .toUri();
+                                .build();
             } else if (!GeneralUtils.isURLReachable(URL)) {
                 // validate the URL is reachable
                 location =
                         uriComponentsBuilder
+                                .clone()
                                 .queryParam("error", "error.urlNotReachable")
-                                .build()
-                                .toUri();
+                                .build();
             }
         }
 
         if (location != null) {
             log.info("Redirecting to: {}", location.toString());
-            return ResponseEntity.status(status).location(location).build();
+            return Response.status(status).location(location).build();
         }
 
         Path tempOutputFile = null;
@@ -116,11 +128,11 @@ public class ConvertWebsiteToPDF {
             if (containsDisallowedUriScheme(htmlContent)) {
                 URI rejectionLocation =
                         uriComponentsBuilder
+                                .clone()
                                 .queryParam("error", "error.disallowedUrlContent")
-                                .build()
-                                .toUri();
+                                .build();
                 log.warn("Rejected URL to PDF conversion due to disallowed content references");
-                return ResponseEntity.status(status).location(rejectionLocation).build();
+                return Response.status(status).location(rejectionLocation).build();
             }
 
             tempHtmlInput = Files.createTempFile("url_input_", ".html");

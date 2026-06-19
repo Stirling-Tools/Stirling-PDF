@@ -1,33 +1,30 @@
 package stirling.software.saas.ai.service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Service;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
-import org.springframework.web.server.ResponseStatusException;
+import io.quarkus.arc.profile.IfBuildProfile;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.SecurityContextHolder;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.saas.ai.model.AiCreateSession;
 import stirling.software.saas.ai.model.AiCreateSessionStatus;
 import stirling.software.saas.ai.repository.AiCreateSessionRepository;
 import stirling.software.saas.util.AuthenticationUtils;
 
-@Service
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 @RequiredArgsConstructor
 @Slf4j
 public class AiCreateSessionService {
@@ -35,7 +32,15 @@ public class AiCreateSessionService {
 
     private final AiCreateSessionRepository repository;
 
-    private final Optional<UserServiceInterface> userService;
+    // Optional dependency: Quarkus CDI does not auto-inject Optional<T>, so use Instance<T> and
+    // resolve it where used (isResolvable()/get()), mirroring the former Optional semantics.
+    private final Instance<UserServiceInterface> userService;
+
+    // TODO: Migration required - Spring MVC RequestContextHolder/ServletRequestAttributes replaced
+    // with a CDI-injected request-scoped HttpServletRequest (quarkus-undertow). Wrapped in Instance
+    // so resolution outside an active HTTP request (e.g. scheduled/startup contexts) is a safe
+    // no-op.
+    @jakarta.inject.Inject Instance<HttpServletRequest> currentRequest;
 
     public AiCreateSession createSession(
             String prompt,
@@ -60,18 +65,18 @@ public class AiCreateSessionService {
 
     public AiCreateSession getSession(String sessionId) {
         return repository
-                .findById(sessionId)
+                .findByIdOptional(sessionId)
                 .orElseThrow(
                         () ->
-                                new ResponseStatusException(
-                                        HttpStatus.NOT_FOUND, "AI session not found"));
+                                new WebApplicationException(
+                                        "AI session not found", Response.Status.NOT_FOUND));
     }
 
     public AiCreateSession getSessionForCurrentUser(String sessionId) {
         AiCreateSession session = getSession(sessionId);
         String userId = resolveUserId();
         if (!userId.equals(session.getUserId())) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "AI session not found");
+            throw new WebApplicationException("AI session not found", Response.Status.NOT_FOUND);
         }
         return session;
     }
@@ -182,28 +187,28 @@ public class AiCreateSessionService {
         return repository.findByUserIdOrderByUpdatedAtDesc(userId);
     }
 
-    public List<AiCreateSession> listSessionsForCurrentUser(Pageable pageable) {
+    public List<AiCreateSession> listSessionsForCurrentUser(int page, int size) {
         String userId = resolveUserId();
-        return repository.findByUserIdOrderByUpdatedAtDesc(userId, pageable);
+        return repository.findByUserIdOrderByUpdatedAtDesc(userId, page, size);
     }
 
     public List<AiCreateSession> listSessionsForCurrentUser(
-            Pageable pageable, boolean includeDrafts) {
+            int page, int size, boolean includeDrafts) {
         String userId = resolveUserId();
         if (includeDrafts) {
-            return repository.findByUserIdOrderByUpdatedAtDesc(userId, pageable);
+            return repository.findByUserIdOrderByUpdatedAtDesc(userId, page, size);
         }
-        return repository.findByUserIdAndPdfUrlIsNotNullOrderByUpdatedAtDesc(userId, pageable);
+        return repository.findByUserIdAndPdfUrlIsNotNullOrderByUpdatedAtDesc(userId, page, size);
     }
 
     public List<AiCreateSessionRepository.AiCreateSessionSummaryProjection>
-            listSessionSummariesForCurrentUser(Pageable pageable, boolean includeDrafts) {
+            listSessionSummariesForCurrentUser(int page, int size, boolean includeDrafts) {
         String userId = resolveUserId();
         if (includeDrafts) {
-            return repository.findSummariesByUserIdOrderByUpdatedAtDesc(userId, pageable);
+            return repository.findSummariesByUserIdOrderByUpdatedAtDesc(userId, page, size);
         }
         return repository.findSummariesByUserIdAndPdfUrlIsNotNullOrderByUpdatedAtDesc(
-                userId, pageable);
+                userId, page, size);
     }
 
     public String resolveUserId() {
@@ -229,7 +234,7 @@ public class AiCreateSessionService {
     }
 
     private String resolveFromUserService() {
-        if (userService.isEmpty()) {
+        if (!userService.isResolvable()) {
             return null;
         }
         try {
@@ -244,12 +249,16 @@ public class AiCreateSessionService {
     }
 
     private String resolveSessionScopedId() {
-        ServletRequestAttributes attributes =
-                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        if (attributes == null) {
+        if (currentRequest == null || !currentRequest.isResolvable()) {
             return null;
         }
-        HttpServletRequest request = attributes.getRequest();
+        HttpServletRequest request;
+        try {
+            request = currentRequest.get();
+        } catch (RuntimeException exc) {
+            // No active request context (e.g. invoked outside an HTTP request).
+            return null;
+        }
         if (request == null) {
             return null;
         }

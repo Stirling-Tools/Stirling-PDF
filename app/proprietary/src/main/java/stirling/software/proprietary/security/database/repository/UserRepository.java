@@ -6,107 +6,168 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
+import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.model.User;
 
-@Repository
-public interface UserRepository extends JpaRepository<User, Long> {
-    Optional<User> findByUsernameIgnoreCase(String username);
+/**
+ * Quarkus Panache repository for {@link User}.
+ *
+ * <p>Migrated from a Spring Data {@code JpaRepository<User, Long>}. Derived finders are
+ * reimplemented as Panache queries and the {@code @Query} methods keep their original JPQL/native
+ * strings passed to Panache {@code find}/{@code getEntityManager().createNativeQuery(...)}.
+ */
+@ApplicationScoped
+public class UserRepository implements PanacheRepositoryBase<User, Long> {
 
-    @Query("FROM User u LEFT JOIN FETCH u.settings where upper(u.username) = upper(:username)")
-    Optional<User> findByUsernameIgnoreCaseWithSettings(@Param("username") String username);
+    public Optional<User> findByUsernameIgnoreCase(String username) {
+        return find("upper(username) = upper(?1)", username).firstResultOptional();
+    }
 
-    @Query("FROM User u LEFT JOIN FETCH u.settings where u.id = :id")
-    Optional<User> findByIdWithSettings(@Param("id") Long id);
+    public Optional<User> findByUsernameIgnoreCaseWithSettings(String username) {
+        return find(
+                        "FROM User u LEFT JOIN FETCH u.settings where upper(u.username) = upper(?1)",
+                        username)
+                .firstResultOptional();
+    }
 
-    Optional<User> findByUsername(String username);
+    public Optional<User> findByIdWithSettings(Long id) {
+        return find("FROM User u LEFT JOIN FETCH u.settings where u.id = ?1", id)
+                .firstResultOptional();
+    }
 
-    Optional<User> findByApiKey(String apiKey);
+    public Optional<User> findByUsername(String username) {
+        return find("username", username).firstResultOptional();
+    }
 
-    Optional<User> findByEmail(String email);
+    public Optional<User> findByApiKey(String apiKey) {
+        return find("apiKey", apiKey).firstResultOptional();
+    }
 
-    Optional<User> findBySupabaseId(UUID supabaseId);
+    public Optional<User> findByEmail(String email) {
+        return find("email", email).firstResultOptional();
+    }
 
-    Optional<User> findBySsoProviderAndSsoProviderId(String ssoProvider, String ssoProviderId);
+    public Optional<User> findBySupabaseId(UUID supabaseId) {
+        return find("supabaseId", supabaseId).firstResultOptional();
+    }
 
-    List<User> findByAuthenticationTypeIgnoreCase(String authenticationType);
+    public Optional<User> findBySsoProviderAndSsoProviderId(
+            String ssoProvider, String ssoProviderId) {
+        return find("ssoProvider = ?1 and ssoProviderId = ?2", ssoProvider, ssoProviderId)
+                .firstResultOptional();
+    }
 
-    @Query("SELECT u FROM User u WHERE u.team IS NULL")
-    List<User> findAllWithoutTeam();
+    public List<User> findByAuthenticationTypeIgnoreCase(String authenticationType) {
+        return list("upper(authenticationType) = upper(?1)", authenticationType);
+    }
 
-    @Query(value = "SELECT u FROM User u LEFT JOIN FETCH u.team")
-    List<User> findAllWithTeam();
+    public List<User> findAllWithoutTeam() {
+        return list("SELECT u FROM User u WHERE u.team IS NULL");
+    }
 
-    @Query(
-            "SELECT u FROM User u JOIN FETCH u.authorities JOIN FETCH u.team WHERE u.team.id = :teamId")
-    List<User> findAllByTeamId(@Param("teamId") Long teamId);
+    public List<User> findAllWithTeam() {
+        return list("SELECT u FROM User u LEFT JOIN FETCH u.team");
+    }
 
-    long countByTeam(Team team);
+    public List<User> findAllByTeamId(Long teamId) {
+        return list(
+                "SELECT u FROM User u JOIN FETCH u.authorities JOIN FETCH u.team WHERE u.team.id ="
+                        + " ?1",
+                teamId);
+    }
 
-    List<User> findAllByTeam(Team team);
+    public long countByTeam(Team team) {
+        return count("team", team);
+    }
+
+    public List<User> findAllByTeam(Team team) {
+        return list("team", team);
+    }
 
     // OAuth grandfathering queries
-    long countBySsoProviderIsNotNull();
+    public long countBySsoProviderIsNotNull() {
+        return count("ssoProvider IS NOT NULL");
+    }
 
-    long countByOauthGrandfatheredTrue();
+    public long countByOauthGrandfatheredTrue() {
+        return count("oauthGrandfathered = true");
+    }
 
-    List<User> findAllBySsoProviderIsNotNull();
+    public List<User> findAllBySsoProviderIsNotNull() {
+        return list("ssoProvider IS NOT NULL");
+    }
 
     /**
      * Finds all SSO users - those with sso_provider set OR authenticationType is sso/oauth2/saml2.
      * This catches V1 users who were created via SSO but never signed in (sso_provider is null).
      */
-    @Query(
-            "SELECT u FROM User u WHERE u.ssoProvider IS NOT NULL "
-                    + "OR LOWER(u.authenticationType) IN ('sso', 'oauth2', 'saml2')")
-    List<User> findAllSsoUsers();
+    public List<User> findAllSsoUsers() {
+        return list(
+                "SELECT u FROM User u WHERE u.ssoProvider IS NOT NULL "
+                        + "OR LOWER(u.authenticationType) IN ('sso', 'oauth2', 'saml2')");
+    }
 
     /**
      * Finds SSO users who have never created a session (pending activation) and are not yet
      * grandfathered.
      */
-    @Query(
-            "SELECT u FROM User u "
-                    + "LEFT JOIN SessionEntity s ON u.username = s.principalName "
-                    + "WHERE (u.ssoProvider IS NOT NULL "
-                    + "OR LOWER(u.authenticationType) IN ('sso', 'oauth2', 'saml2')) "
-                    + "AND (u.oauthGrandfathered IS NULL OR u.oauthGrandfathered = false) "
-                    + "AND s.sessionId IS NULL")
-    List<User> findPendingSsoUsersWithoutSession();
+    public List<User> findPendingSsoUsersWithoutSession() {
+        return list(
+                "SELECT u FROM User u "
+                        + "LEFT JOIN SessionEntity s ON u.username = s.principalName "
+                        + "WHERE (u.ssoProvider IS NOT NULL "
+                        + "OR LOWER(u.authenticationType) IN ('sso', 'oauth2', 'saml2')) "
+                        + "AND (u.oauthGrandfathered IS NULL OR u.oauthGrandfathered = false) "
+                        + "AND s.sessionId IS NULL");
+    }
 
     /**
      * Counts all SSO users - those with sso_provider set OR authenticationType is sso/oauth2/saml2.
      */
-    @Query(
-            "SELECT COUNT(u) FROM User u WHERE u.ssoProvider IS NOT NULL "
-                    + "OR LOWER(u.authenticationType) IN ('sso', 'oauth2', 'saml2')")
-    long countSsoUsers();
+    public long countSsoUsers() {
+        return count(
+                "ssoProvider IS NOT NULL "
+                        + "OR LOWER(authenticationType) IN ('sso', 'oauth2', 'saml2')");
+    }
 
-    @Query(
-            "SELECT COUNT(u) FROM User u JOIN u.settings settings "
-                    + "WHERE KEY(settings) = :key AND settings = :value")
-    long countUsersBySetting(@Param("key") String key, @Param("value") String value);
+    public long countUsersBySetting(String key, String value) {
+        return count(
+                "SELECT COUNT(u) FROM User u JOIN u.settings settings "
+                        + "WHERE KEY(settings) = ?1 AND settings = ?2",
+                key,
+                value);
+    }
 
-    @Modifying
-    @Query(
-            value = "DELETE FROM user_settings WHERE user_id = :userId AND setting_key IN (:keys)",
-            nativeQuery = true)
-    void deleteSettingsByUserIdAndKeys(
-            @Param("userId") Long userId, @Param("keys") List<String> keys);
+    @Transactional
+    public void deleteSettingsByUserIdAndKeys(Long userId, List<String> keys) {
+        getEntityManager()
+                .createNativeQuery(
+                        "DELETE FROM user_settings WHERE user_id = :userId AND setting_key IN"
+                                + " (:keys)")
+                .setParameter("userId", userId)
+                .setParameter("keys", keys)
+                .executeUpdate();
+    }
 
     /** Anonymous users (no username) created before the cut-off, streamed for batch cleanup. */
-    @Query("SELECT u.id FROM User u WHERE u.username IS NULL AND u.createdAt < :cutoffDate")
-    Stream<Long> findByUsernameIsNullAndCreatedAtBefore(
-            @Param("cutoffDate") LocalDateTime cutoffDate);
+    public Stream<Long> findByUsernameIsNullAndCreatedAtBefore(LocalDateTime cutoffDate) {
+        return getEntityManager()
+                .createQuery(
+                        "SELECT u.id FROM User u WHERE u.username IS NULL AND u.createdAt <"
+                                + " :cutoffDate",
+                        Long.class)
+                .setParameter("cutoffDate", cutoffDate)
+                .getResultStream();
+    }
 
     /** Single-shot UPDATE that reassigns a user to a different team. */
-    @Modifying
-    @Query("UPDATE User u SET u.team.id = :teamId WHERE u.id = :userId")
-    int updateUserTeamId(@Param("userId") Long userId, @Param("teamId") Long teamId);
+    @Transactional
+    public int updateUserTeamId(Long userId, Long teamId) {
+        return update("team.id = ?1 WHERE id = ?2", teamId, userId);
+    }
 }

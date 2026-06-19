@@ -19,8 +19,6 @@ import java.util.stream.Stream;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.api.methods.GetFile;
@@ -36,6 +34,7 @@ import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -47,9 +46,13 @@ import stirling.software.common.model.ApplicationProperties;
  *
  * @since 2.2.x
  */
+// TODO: Migration required - the original class was guarded by Spring's
+// @ConditionalOnProperty(prefix="telegram", name="enabled", havingValue="true"). Migrated to a
+// runtime guard: the bean is always created, but register() (the @PostConstruct startup hook)
+// short-circuits when the bot token/username are not configured, so an unconfigured Telegram
+// integration stays inert. This is a true runtime toggle (no build-time pinning required).
 @Slf4j
-@Component
-@ConditionalOnProperty(prefix = "telegram", name = "enabled", havingValue = "true")
+@ApplicationScoped
 public class TelegramPipelineBot extends TelegramLongPollingBot {
 
     private static final String CHAT_PRIVATE = "private";

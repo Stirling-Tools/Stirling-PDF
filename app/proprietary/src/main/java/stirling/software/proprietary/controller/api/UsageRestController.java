@@ -4,10 +4,13 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,8 +26,10 @@ import tools.jackson.databind.ObjectMapper;
 
 /** REST API controller for usage analytics data used by React frontend. */
 @Slf4j
+@ApplicationScoped
 @ProprietaryUiDataApi
-@PreAuthorize("hasRole('ADMIN')")
+@Path("/api/v1/proprietary/ui-data")
+@RolesAllowed("ADMIN")
 @RequiredArgsConstructor
 @EnterpriseEndpoint
 public class UsageRestController {
@@ -42,11 +47,12 @@ public class UsageRestController {
      * @param days Lookback window in days (default 30, clamped to 1-365)
      * @return Endpoint statistics response
      */
-    @GetMapping("/usage-endpoint-statistics")
-    public ResponseEntity<EndpointStatisticsResponse> getEndpointStatistics(
-            @RequestParam(value = "limit", required = false) Integer limit,
-            @RequestParam(value = "dataType", defaultValue = "all") String dataType,
-            @RequestParam(value = "days", defaultValue = "30") Integer days) {
+    @GET
+    @Path("/usage-endpoint-statistics")
+    public Response getEndpointStatistics(
+            @QueryParam("limit") Integer limit,
+            @QueryParam("dataType") @DefaultValue("all") String dataType,
+            @QueryParam("days") @DefaultValue("30") Integer days) {
 
         int lookbackDays = Math.max(1, Math.min(days, 365));
 
@@ -98,7 +104,7 @@ public class UsageRestController {
                         .totalVisits((int) totalVisits)
                         .build();
 
-        return ResponseEntity.ok(response);
+        return Response.ok(response).build();
     }
 
     /**

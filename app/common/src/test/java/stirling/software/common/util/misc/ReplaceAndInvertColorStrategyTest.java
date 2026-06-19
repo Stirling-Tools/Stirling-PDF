@@ -5,12 +5,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.io.IOException;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.core.io.InputStreamResource;
-import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.multipart.MultipartFile;
 
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.api.misc.ReplaceAndInvert;
+import stirling.software.common.model.io.InputStreamResource;
+import stirling.software.common.model.multipart.ByteArrayMultipartFile;
 
 class ReplaceAndInvertColorStrategyTest {
 
@@ -34,11 +33,8 @@ class ReplaceAndInvertColorStrategyTest {
     void testConstructor() {
         // Arrange
         MultipartFile mockFile =
-                new MockMultipartFile(
-                        "file",
-                        "test.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        "test content".getBytes());
+                new ByteArrayMultipartFile(
+                        "file", "test.pdf", "application/pdf", "test content".getBytes());
         ReplaceAndInvert replaceAndInvert = ReplaceAndInvert.CUSTOM_COLOR;
 
         // Act
@@ -59,7 +55,7 @@ class ReplaceAndInvertColorStrategyTest {
         // Arrange
         byte[] content = "test pdf content".getBytes();
         MultipartFile mockFile =
-                new MockMultipartFile("file", "test.pdf", MediaType.APPLICATION_PDF_VALUE, content);
+                new ByteArrayMultipartFile("file", "test.pdf", "application/pdf", content);
         ReplaceAndInvert replaceAndInvert = ReplaceAndInvert.CUSTOM_COLOR;
 
         ReplaceAndInvertColorStrategy strategy =
@@ -76,17 +72,11 @@ class ReplaceAndInvertColorStrategyTest {
     void testGettersAndSetters() {
         // Arrange
         MultipartFile mockFile1 =
-                new MockMultipartFile(
-                        "file1",
-                        "test1.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        "content1".getBytes());
+                new ByteArrayMultipartFile(
+                        "file1", "test1.pdf", "application/pdf", "content1".getBytes());
         MultipartFile mockFile2 =
-                new MockMultipartFile(
-                        "file2",
-                        "test2.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        "content2".getBytes());
+                new ByteArrayMultipartFile(
+                        "file2", "test2.pdf", "application/pdf", "content2".getBytes());
 
         // Act
         ReplaceAndInvertColorStrategy strategy =

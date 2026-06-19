@@ -1,5 +1,6 @@
 package stirling.software.proprietary.storage.service;
 
+import java.security.Principal;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -10,13 +11,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
+import io.quarkus.security.identity.SecurityIdentity;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.persistence.PersistenceException;
+import jakarta.transaction.Transactional;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +36,7 @@ import stirling.software.proprietary.storage.repository.StoredFileRepository;
  * Phase A folder operations. Each call is scoped to the authenticated user - folders are private to
  * their owner. Folder-level sharing is a Phase 3 feature.
  */
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 @Slf4j
 public class FolderService {
@@ -57,15 +58,16 @@ public class FolderService {
 
     /**
      * Hard cap on bulk-move payload size, mirroring the request-validation cap on {@code
-     * FileFolderPlacementController.BulkMoveRequest.fileIds}. Re-asserted at the service layer
-     * because controller-level @Valid bounds aren't enforced when the service is called directly
-     * (e.g. by future internal callers or tests).
+     * FileStorageController.BulkMoveRequest.fileIds}. Re-asserted at the service layer because
+     * controller-level @Valid bounds aren't enforced when the service is called directly (e.g. by
+     * future internal callers or tests).
      */
     private static final int BULK_MOVE_MAX_FILES = 1000;
 
     private final FolderRepository folderRepository;
     private final StoredFileRepository storedFileRepository;
     private final ApplicationProperties applicationProperties;
+    private final SecurityIdentity securityIdentity;
 
     /**
      * Gate every public method on storage being enabled, mirroring {@code
@@ -75,16 +77,20 @@ public class FolderService {
      */
     private void ensureStorageEnabled() {
         if (!applicationProperties.getSecurity().isEnableLogin()) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN, "Storage requires login to be enabled");
+            throw new WebApplicationException(
+                    "Storage requires login to be enabled", Response.Status.FORBIDDEN);
         }
         if (!applicationProperties.getStorage().isEnabled()) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Storage is disabled");
+            throw new WebApplicationException("Storage is disabled", Response.Status.FORBIDDEN);
         }
     }
 
     /** List every folder owned by the current user, alphabetical. */
-    @Transactional(readOnly = true)
+    // Spring @Transactional(readOnly = true) -> jakarta.transaction.Transactional. JTA's
+    // @Transactional has no readOnly attribute; the read-only optimization is a Hibernate/JDBC
+    // session hint with no jakarta equivalent. Behavior is preserved (still a single TX); the
+    // hint is dropped.
+    @Transactional
     public List<FolderResponse> listFolders() {
         ensureStorageEnabled();
         User user = requireAuthenticatedUser();
@@ -103,8 +109,8 @@ public class FolderService {
         // parentFolderId they sent was ignored. For new ids the parent lookup would
         // 404, but the message is misleading.
         if (request.getId() != null && request.getId().equals(request.getParentFolderId())) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "A folder cannot be its own parent");
+            throw new WebApplicationException(
+                    "A folder cannot be its own parent", Response.Status.BAD_REQUEST);
         }
         Folder parent = resolveParent(request.getParentFolderId(), user, null);
 
@@ -122,15 +128,15 @@ public class FolderService {
         // with a constraint-violation stack trace leaks far too much; convert to 409 Conflict so
         // the caller can pick a fresh id.
         if (folderRepository.existsById(id)) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "A folder with this id already exists; choose a different id");
+            throw new WebApplicationException(
+                    "A folder with this id already exists; choose a different id",
+                    Response.Status.CONFLICT);
         }
 
         if (folderRepository.countByOwner(user) >= MAX_FOLDERS_PER_USER) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "Folder limit reached (max " + MAX_FOLDERS_PER_USER + " per user)");
+            throw new WebApplicationException(
+                    "Folder limit reached (max " + MAX_FOLDERS_PER_USER + " per user)",
+                    Response.Status.CONFLICT);
         }
 
         Folder folder = new Folder();
@@ -166,8 +172,8 @@ public class FolderService {
                 // Bean validation should already catch this via @Pattern, but be explicit so
                 // an empty-after-trim payload reaches the user as a 400 instead of being
                 // silently dropped.
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST, "Folder name cannot be blank");
+                throw new WebApplicationException(
+                        "Folder name cannot be blank", Response.Status.BAD_REQUEST);
             }
             folder.setName(trimmed);
         }
@@ -255,10 +261,13 @@ public class FolderService {
                         .findByIdAndOwner(fileId, user)
                         .orElseThrow(
                                 () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.NOT_FOUND,
-                                                "File not found or not owned by current user"));
+                                        new WebApplicationException(
+                                                "File not found or not owned by current user",
+                                                Response.Status.NOT_FOUND));
         file.setFolder(resolveOwnedFolder(folderId, user));
+        // TODO: Migration required - StoredFileRepository is still a Spring Data JpaRepository;
+        // save()/saveAll()/flush() resolve against it for now. When that repository is ported to
+        // a Panache repository, map these to persist()/flush() accordingly.
         storedFileRepository.save(file);
     }
 
@@ -273,9 +282,9 @@ public class FolderService {
             return new BulkMoveResult(List.of(), List.of());
         }
         if (fileIds.size() > BULK_MOVE_MAX_FILES) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "fileIds must contain between 1 and " + BULK_MOVE_MAX_FILES + " entries");
+            throw new WebApplicationException(
+                    "fileIds must contain between 1 and " + BULK_MOVE_MAX_FILES + " entries",
+                    Response.Status.BAD_REQUEST);
         }
         User user = requireAuthenticatedUser();
         Folder target = resolveOwnedFolder(folderId, user);
@@ -287,16 +296,18 @@ public class FolderService {
             ownedIds.add(f.getId());
         }
         // If the target folder was deleted concurrently between resolveOwnedFolder and the
-        // flush, the FK constraint fires as DataIntegrityViolationException. Surface that as
-        // 409 Conflict so the caller sees an actionable error instead of a 500 stack.
+        // flush, the FK constraint fires. Spring surfaced this as DataIntegrityViolationException;
+        // under Hibernate ORM the JPA equivalent is jakarta.persistence.PersistenceException (the
+        // root of constraint-violation exceptions). Surface as 409 Conflict so the caller sees an
+        // actionable error instead of a 500 stack.
         try {
             storedFileRepository.saveAll(owned);
             storedFileRepository.flush();
-        } catch (DataIntegrityViolationException ex) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
+        } catch (PersistenceException ex) {
+            throw new WebApplicationException(
                     "Target folder no longer exists; refresh and try again",
-                    ex);
+                    ex,
+                    Response.Status.CONFLICT);
         }
 
         List<Long> moved = owned.stream().map(StoredFile::getId).toList();
@@ -327,9 +338,9 @@ public class FolderService {
                 .findByIdAndOwner(folderId, user)
                 .orElseThrow(
                         () ->
-                                new ResponseStatusException(
-                                        HttpStatus.BAD_REQUEST,
-                                        "Folder does not exist or is not owned by you"));
+                                new WebApplicationException(
+                                        "Folder does not exist or is not owned by you",
+                                        Response.Status.BAD_REQUEST));
     }
 
     private Folder requireOwnedFolder(UUID id, User user) {
@@ -337,25 +348,25 @@ public class FolderService {
                 .findByIdAndOwner(id, user)
                 .orElseThrow(
                         () ->
-                                new ResponseStatusException(
-                                        HttpStatus.NOT_FOUND,
-                                        "Folder not found or not owned by current user"));
+                                new WebApplicationException(
+                                        "Folder not found or not owned by current user",
+                                        Response.Status.NOT_FOUND));
     }
 
     private Folder resolveParent(UUID parentId, User user, UUID forbidId) {
         if (parentId == null) return null;
         if (forbidId != null && parentId.equals(forbidId)) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "A folder cannot be its own parent");
+            throw new WebApplicationException(
+                    "A folder cannot be its own parent", Response.Status.BAD_REQUEST);
         }
         Folder parent =
                 folderRepository
                         .findByIdAndOwner(parentId, user)
                         .orElseThrow(
                                 () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.BAD_REQUEST,
-                                                "Parent folder does not exist or is not owned by you"));
+                                        new WebApplicationException(
+                                                "Parent folder does not exist or is not owned by you",
+                                                Response.Status.BAD_REQUEST));
         // Reject before the child is created/moved if attaching it would push the chain past the
         // depth cap. Done in one pass that also returns the cycle answer so we don't walk the
         // lazy-proxy chain twice.
@@ -379,39 +390,57 @@ public class FolderService {
         int depth = 0;
         while (cursor != null) {
             if (cursor.getOwner() == null || !cursor.getOwner().getId().equals(user.getId())) {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST, "Folder hierarchy is corrupted; contact support");
+                throw new WebApplicationException(
+                        "Folder hierarchy is corrupted; contact support",
+                        Response.Status.BAD_REQUEST);
             }
             if (forbidId != null && cursor.getId().equals(forbidId)) {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
-                        "Cannot move a folder inside one of its descendants");
+                throw new WebApplicationException(
+                        "Cannot move a folder inside one of its descendants",
+                        Response.Status.BAD_REQUEST);
             }
             if (!seen.add(cursor.getId())) {
                 // broken graph (cycle in stored data)
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST, "Folder hierarchy is corrupted; contact support");
+                throw new WebApplicationException(
+                        "Folder hierarchy is corrupted; contact support",
+                        Response.Status.BAD_REQUEST);
             }
             depth += 1;
             // candidateParent is at depth 1 from the new child's perspective. After the walk,
             // `depth` equals the number of ancestors including candidateParent, which is the
             // depth at which the new child would live. Reject before exceeding the cap.
             if (depth >= MAX_FOLDER_DEPTH) {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
-                        "Folder nesting limit reached (max " + MAX_FOLDER_DEPTH + " levels)");
+                throw new WebApplicationException(
+                        "Folder nesting limit reached (max " + MAX_FOLDER_DEPTH + " levels)",
+                        Response.Status.BAD_REQUEST);
             }
             cursor = cursor.getParent();
         }
     }
 
+    /**
+     * Resolve the current authenticated {@link User}.
+     *
+     * <p>Spring's {@code SecurityContextHolder.getContext().getAuthentication().getPrincipal()}
+     * returned the {@link User} entity directly (it used to implement {@code UserDetails}). Under
+     * Quarkus the principal is exposed via {@link SecurityIdentity}. We pull the principal and
+     * adapt it to the {@link User} entity.
+     */
     private User requireAuthenticatedUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null
-                || !authentication.isAuthenticated()
-                || !(authentication.getPrincipal() instanceof User user)) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
+        if (securityIdentity == null || securityIdentity.isAnonymous()) {
+            throw new WebApplicationException(
+                    "Authentication required", Response.Status.UNAUTHORIZED);
         }
-        return user;
+        Principal principal = securityIdentity.getPrincipal();
+        // TODO: Migration required - a Quarkus SecurityIdentityAugmentor/IdentityProvider must
+        // attach the stirling.software.proprietary.security.model.User entity as the
+        // SecurityIdentity principal (Spring exposed it directly via Authentication#getPrincipal,
+        // since User used to implement UserDetails). Until that augmentor exists, this only
+        // resolves when the principal IS the User entity; otherwise it rejects as 401 rather than
+        // guessing at a username->User lookup.
+        if (principal instanceof User user) {
+            return user;
+        }
+        throw new WebApplicationException("Authentication required", Response.Status.UNAUTHORIZED);
     }
 }

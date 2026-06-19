@@ -15,12 +15,12 @@ import java.util.Optional;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.springframework.core.io.Resource;
-import org.springframework.mock.web.MockMultipartFile;
 import org.testcontainers.containers.MinIOContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import stirling.software.common.model.io.Resource;
+import stirling.software.common.model.multipart.ByteArrayMultipartFile;
 import stirling.software.proprietary.security.model.User;
 
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
@@ -96,8 +96,8 @@ class S3StorageProviderTest {
         User owner = new User();
         owner.setId(42L);
         byte[] content = "hello s3 round trip".getBytes(StandardCharsets.UTF_8);
-        MockMultipartFile file =
-                new MockMultipartFile("file", "sample.pdf", "application/pdf", content);
+        ByteArrayMultipartFile file =
+                new ByteArrayMultipartFile("file", "sample.pdf", "application/pdf", content);
 
         StoredObject stored = provider.store(owner, file);
 
@@ -133,8 +133,8 @@ class S3StorageProviderTest {
         owner.setId(99L);
         String unicodeName = "résumé-日本語-é.pdf";
         byte[] payload = "u".getBytes(StandardCharsets.UTF_8);
-        MockMultipartFile file =
-                new MockMultipartFile("file", unicodeName, "application/pdf", payload);
+        ByteArrayMultipartFile file =
+                new ByteArrayMultipartFile("file", unicodeName, "application/pdf", payload);
 
         StoredObject stored = provider.store(owner, file);
 
@@ -151,8 +151,8 @@ class S3StorageProviderTest {
     void delete_removesObject() throws Exception {
         User owner = new User();
         owner.setId(7L);
-        MockMultipartFile file =
-                new MockMultipartFile(
+        ByteArrayMultipartFile file =
+                new ByteArrayMultipartFile(
                         "file", "todelete.bin", "application/octet-stream", new byte[] {1, 2, 3});
 
         StoredObject stored = provider.store(owner, file);
@@ -174,7 +174,8 @@ class S3StorageProviderTest {
         byte[] content = "presigned payload".getBytes(StandardCharsets.UTF_8);
         StoredObject stored =
                 provider.store(
-                        owner, new MockMultipartFile("file", "presign.txt", "text/plain", content));
+                        owner,
+                        new ByteArrayMultipartFile("file", "presign.txt", "text/plain", content));
 
         Optional<URI> signed =
                 provider.signedDownloadUrl(stored.getStorageKey(), Duration.ofMinutes(2));
@@ -208,7 +209,7 @@ class S3StorageProviderTest {
         StoredObject stored =
                 provider.store(
                         owner,
-                        new MockMultipartFile(
+                        new ByteArrayMultipartFile(
                                 "file",
                                 "ttl.txt",
                                 "text/plain",
@@ -227,7 +228,7 @@ class S3StorageProviderTest {
         StoredObject stored =
                 provider.store(
                         owner,
-                        new MockMultipartFile(
+                        new ByteArrayMultipartFile(
                                 "file",
                                 "stored-name.pdf",
                                 "application/pdf",

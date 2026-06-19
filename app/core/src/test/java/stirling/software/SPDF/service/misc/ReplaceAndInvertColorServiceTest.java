@@ -10,12 +10,12 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.core.io.InputStreamResource;
-import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.SPDF.Factories.ReplaceAndInvertColorFactory;
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.api.misc.HighContrastColorCombination;
 import stirling.software.common.model.api.misc.ReplaceAndInvert;
+import stirling.software.common.model.io.InputStreamResource;
 import stirling.software.common.util.misc.ReplaceAndInvertColorStrategy;
 
 class ReplaceAndInvertColorServiceTest {

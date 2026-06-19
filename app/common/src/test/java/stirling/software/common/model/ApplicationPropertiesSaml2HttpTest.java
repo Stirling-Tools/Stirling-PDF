@@ -9,14 +9,22 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
+
+import stirling.software.common.model.io.FileSystemResource;
+import stirling.software.common.model.io.Resource;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 
+/**
+ * MIGRATION (Spring -> Quarkus): {@code ApplicationProperties.Security.SAML2#getSpCert()}/{@code
+ * getIdpCert()} now return the migration-shim {@code stirling.software.common.model.io.Resource}
+ * ({@code FileSystemResource} for filesystem paths). {@code MediaType.APPLICATION_XML_VALUE} is
+ * inlined as the {@code "application/xml"} string. Behaviour is otherwise unchanged.
+ */
 class ApplicationPropertiesSaml2HttpTest {
+
+    private static final String APPLICATION_XML = "application/xml";
 
     @Test
     void idpMetadataUri_http_is_resolved_via_mockwebserver() throws Exception {
@@ -24,7 +32,7 @@ class ApplicationPropertiesSaml2HttpTest {
             server.enqueue(
                     new MockResponse()
                             .setResponseCode(200)
-                            .addHeader("Content-Type", MediaType.APPLICATION_XML_VALUE)
+                            .addHeader("Content-Type", APPLICATION_XML)
                             .setBody("<EntityDescriptor/>"));
             server.start();
 

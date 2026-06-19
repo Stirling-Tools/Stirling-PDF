@@ -14,10 +14,12 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,8 +41,8 @@ import stirling.software.saas.payg.repository.ProcessingJobStepRepository;
  * #joinOrOpen}, and decides whether to record a shadow charge based on the resulting {@link
  * JoinOrOpenResult.Disposition}.
  */
-@Service
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 @Slf4j
 public class JobService {
 
@@ -53,7 +55,8 @@ public class JobService {
             HashLineageDetector detector,
             ProcessingJobRepository jobRepository,
             ProcessingJobStepRepository stepRepository,
-            @Value("${payg.lineage.workflow-window:PT5M}") Duration workflowWindow) {
+            @ConfigProperty(name = "payg.lineage.workflow-window", defaultValue = "PT5M")
+                    Duration workflowWindow) {
         this.detector = Objects.requireNonNull(detector, "detector");
         this.jobRepository = Objects.requireNonNull(jobRepository, "jobRepository");
         this.stepRepository = Objects.requireNonNull(stepRepository, "stepRepository");
@@ -103,7 +106,7 @@ public class JobService {
         if (bestMatch.isPresent()) {
             ProcessingJob existing =
                     jobRepository
-                            .findById(bestMatch.get().jobId())
+                            .findByIdOptional(bestMatch.get().jobId())
                             .orElseThrow(
                                     () ->
                                             new IllegalStateException(
@@ -160,7 +163,8 @@ public class JobService {
         step.setInputPages(inputPages);
         step.setInputBytes(inputBytes);
         step.setErrorCode(errorCode);
-        return stepRepository.save(step);
+        stepRepository.persist(step);
+        return step;
     }
 
     /**
@@ -173,7 +177,7 @@ public class JobService {
         Objects.requireNonNull(jobId, "jobId");
         ProcessingJob job =
                 jobRepository
-                        .findById(jobId)
+                        .findByIdOptional(jobId)
                         .orElseThrow(
                                 () ->
                                         new IllegalArgumentException(
@@ -183,11 +187,12 @@ public class JobService {
         }
         job.setStatus(JobStatus.CLOSED);
         job.setClosedAt(LocalDateTime.now());
-        return jobRepository.save(job);
+        jobRepository.persist(job);
+        return job;
     }
 
     /** Returns open jobs whose {@code last_step_at} is older than the workflow window. */
-    @Transactional(readOnly = true)
+    @Transactional
     public List<ProcessingJob> findStale() {
         return jobRepository.findStale(JobStatus.OPEN, LocalDateTime.now().minus(workflowWindow));
     }
@@ -206,7 +211,7 @@ public class JobService {
             j.setClosedAt(now);
         }
         if (!stale.isEmpty()) {
-            jobRepository.saveAll(stale);
+            jobRepository.persist(stale);
         }
         return stale.size();
     }
@@ -224,9 +229,9 @@ public class JobService {
             ProcessingJob existing, Map<Path, Set<LineageSignature>> signaturesByInput) {
         existing.setStepCount(existing.getStepCount() + 1);
         existing.setLastStepAt(LocalDateTime.now());
-        ProcessingJob saved = jobRepository.save(existing);
-        recordAllInputs(saved.getId(), signaturesByInput);
-        return new JoinOrOpenResult(saved, JoinOrOpenResult.Disposition.JOINED);
+        jobRepository.persist(existing);
+        recordAllInputs(existing.getId(), signaturesByInput);
+        return new JoinOrOpenResult(existing, JoinOrOpenResult.Disposition.JOINED);
     }
 
     /**
@@ -257,9 +262,9 @@ public class JobService {
         fresh.setStartedAt(now);
         fresh.setLastStepAt(now);
         fresh.setStatus(JobStatus.OPEN);
-        ProcessingJob saved = jobRepository.save(fresh);
-        recordAllInputs(saved.getId(), signaturesByInput);
-        return new JoinOrOpenResult(saved, JoinOrOpenResult.Disposition.OPENED);
+        jobRepository.persist(fresh);
+        recordAllInputs(fresh.getId(), signaturesByInput);
+        return new JoinOrOpenResult(fresh, JoinOrOpenResult.Disposition.OPENED);
     }
 
     private void recordAllInputs(UUID jobId, Map<Path, Set<LineageSignature>> signaturesByInput) {

@@ -6,13 +6,12 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,10 +20,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-import org.springframework.web.multipart.MultipartFile;
 
-import stirling.software.SPDF.model.api.misc.MetadataRequest;
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.testsupport.TestFileUploads;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -36,16 +35,15 @@ class MetadataControllerTest {
     private PDDocument mockDocument;
     private PDDocumentInformation mockInfo;
     private PDDocumentCatalog mockCatalog;
-    private MultipartFile mockFile;
+    private FileUpload fileUpload;
 
     @BeforeEach
     void setUp() throws IOException {
         mockDocument = mock(PDDocument.class);
         mockInfo = mock(PDDocumentInformation.class);
         mockCatalog = mock(PDDocumentCatalog.class);
-        mockFile = mock(MultipartFile.class);
-
-        when(mockFile.getOriginalFilename()).thenReturn("test.pdf");
+        // Backed by a real temp file named test.pdf so the controller's filename derivation works.
+        fileUpload = TestFileUploads.pdf("PDF content".getBytes());
     }
 
     @Test
@@ -78,12 +76,9 @@ class MetadataControllerTest {
         COSDictionary cosDict = mock(COSDictionary.class);
         when(mockCatalog.getCOSObject()).thenReturn(cosDict);
 
-        MetadataRequest request = new MetadataRequest();
-        request.setFileInput(mockFile);
-        request.setDeleteAll(true);
-
         try {
-            metadataController.metadata(request);
+            metadataController.metadata(
+                    fileUpload, true, null, null, null, null, null, null, null, null, null, null);
         } catch (Exception e) {
             // WebResponseUtils.pdfDocToWebResponse may fail in test context
             // but we verify the delete-all logic executed
@@ -99,20 +94,20 @@ class MetadataControllerTest {
         when(mockDocument.getDocumentInformation()).thenReturn(mockInfo);
         when(mockDocument.getDocumentCatalog()).thenReturn(mockCatalog);
 
-        MetadataRequest request = new MetadataRequest();
-        request.setFileInput(mockFile);
-        request.setDeleteAll(false);
-        request.setAuthor("TestAuthor");
-        request.setTitle("TestTitle");
-        request.setSubject("TestSubject");
-        request.setKeywords("key1,key2");
-        request.setCreator("TestCreator");
-        request.setProducer("TestProducer");
-        request.setTrapped("True");
-        request.setAllRequestParams(new HashMap<>());
-
         try {
-            metadataController.metadata(request);
+            metadataController.metadata(
+                    fileUpload,
+                    false,
+                    "TestAuthor",
+                    null,
+                    "TestCreator",
+                    "key1,key2",
+                    null,
+                    "TestProducer",
+                    "TestSubject",
+                    "TestTitle",
+                    "True",
+                    null);
         } catch (Exception e) {
             // Expected - pdfDocToWebResponse may fail
         }
@@ -132,15 +127,20 @@ class MetadataControllerTest {
         when(mockDocument.getDocumentInformation()).thenReturn(mockInfo);
         when(mockDocument.getDocumentCatalog()).thenReturn(mockCatalog);
 
-        MetadataRequest request = new MetadataRequest();
-        request.setFileInput(mockFile);
-        request.setDeleteAll(false);
-        request.setAuthor("undefined");
-        request.setTitle("undefined");
-        request.setAllRequestParams(new HashMap<>());
-
         try {
-            metadataController.metadata(request);
+            metadataController.metadata(
+                    fileUpload,
+                    false,
+                    "undefined",
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    "undefined",
+                    null,
+                    null);
         } catch (Exception e) {
             // Expected
         }
@@ -155,17 +155,22 @@ class MetadataControllerTest {
         when(mockDocument.getDocumentInformation()).thenReturn(mockInfo);
         when(mockDocument.getDocumentCatalog()).thenReturn(mockCatalog);
 
-        Map<String, String> params = new HashMap<>();
-        params.put("customKey1", "myKey");
-        params.put("customValue1", "myValue");
-
-        MetadataRequest request = new MetadataRequest();
-        request.setFileInput(mockFile);
-        request.setDeleteAll(false);
-        request.setAllRequestParams(params);
+        String params = "{\"customKey1\":\"myKey\",\"customValue1\":\"myValue\"}";
 
         try {
-            metadataController.metadata(request);
+            metadataController.metadata(
+                    fileUpload,
+                    false,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    params);
         } catch (Exception e) {
             // Expected
         }
@@ -179,13 +184,9 @@ class MetadataControllerTest {
         when(mockDocument.getDocumentInformation()).thenReturn(mockInfo);
         when(mockDocument.getDocumentCatalog()).thenReturn(mockCatalog);
 
-        MetadataRequest request = new MetadataRequest();
-        request.setFileInput(mockFile);
-        request.setDeleteAll(false);
-        request.setAllRequestParams(null);
-
         try {
-            metadataController.metadata(request);
+            metadataController.metadata(
+                    fileUpload, false, null, null, null, null, null, null, null, null, null, null);
         } catch (Exception e) {
             // Expected
         }
@@ -200,16 +201,22 @@ class MetadataControllerTest {
         when(mockDocument.getDocumentInformation()).thenReturn(mockInfo);
         when(mockDocument.getDocumentCatalog()).thenReturn(mockCatalog);
 
-        Map<String, String> params = new HashMap<>();
-        params.put("MyCustomField", "MyCustomValue");
-
-        MetadataRequest request = new MetadataRequest();
-        request.setFileInput(mockFile);
-        request.setDeleteAll(false);
-        request.setAllRequestParams(params);
+        String params = "{\"MyCustomField\":\"MyCustomValue\"}";
 
         try {
-            metadataController.metadata(request);
+            metadataController.metadata(
+                    fileUpload,
+                    false,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    params);
         } catch (Exception e) {
             // Expected
         }
@@ -222,12 +229,22 @@ class MetadataControllerTest {
         when(pdfDocumentFactory.load(any(MultipartFile.class), eq(true)))
                 .thenThrow(new IOException("corrupt"));
 
-        MetadataRequest request = new MetadataRequest();
-        request.setFileInput(mockFile);
-        request.setDeleteAll(false);
-        request.setAllRequestParams(new HashMap<>());
-
-        assertThrows(IOException.class, () -> metadataController.metadata(request));
+        assertThrows(
+                IOException.class,
+                () ->
+                        metadataController.metadata(
+                                fileUpload,
+                                false,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null));
     }
 
     @Test
@@ -236,18 +253,24 @@ class MetadataControllerTest {
         when(mockDocument.getDocumentInformation()).thenReturn(mockInfo);
         when(mockDocument.getDocumentCatalog()).thenReturn(mockCatalog);
 
-        Map<String, String> params = new HashMap<>();
-        params.put("Author", "ShouldBeIgnored");
-        params.put("Title", "ShouldBeIgnored");
-        params.put("Subject", "ShouldBeIgnored");
-
-        MetadataRequest request = new MetadataRequest();
-        request.setFileInput(mockFile);
-        request.setDeleteAll(false);
-        request.setAllRequestParams(params);
+        String params =
+                "{\"Author\":\"ShouldBeIgnored\",\"Title\":\"ShouldBeIgnored\","
+                        + "\"Subject\":\"ShouldBeIgnored\"}";
 
         try {
-            metadataController.metadata(request);
+            metadataController.metadata(
+                    fileUpload,
+                    false,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    params);
         } catch (Exception e) {
             // Expected
         }
@@ -264,13 +287,9 @@ class MetadataControllerTest {
         when(mockDocument.getDocumentInformation()).thenReturn(mockInfo);
         when(mockDocument.getDocumentCatalog()).thenReturn(mockCatalog);
 
-        MetadataRequest request = new MetadataRequest();
-        request.setFileInput(mockFile);
-        request.setDeleteAll(null); // null should be treated as false
-        request.setAllRequestParams(new HashMap<>());
-
         try {
-            metadataController.metadata(request);
+            metadataController.metadata(
+                    fileUpload, null, null, null, null, null, null, null, null, null, null, null);
         } catch (Exception e) {
             // Expected
         }
@@ -285,14 +304,20 @@ class MetadataControllerTest {
         when(mockDocument.getDocumentInformation()).thenReturn(mockInfo);
         when(mockDocument.getDocumentCatalog()).thenReturn(mockCatalog);
 
-        MetadataRequest request = new MetadataRequest();
-        request.setFileInput(mockFile);
-        request.setDeleteAll(false);
-        request.setCreationDate("2023/10/01 12:00:00");
-        request.setAllRequestParams(new HashMap<>());
-
         try {
-            metadataController.metadata(request);
+            metadataController.metadata(
+                    fileUpload,
+                    false,
+                    null,
+                    "2023/10/01 12:00:00",
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null);
         } catch (Exception e) {
             // Expected
         }

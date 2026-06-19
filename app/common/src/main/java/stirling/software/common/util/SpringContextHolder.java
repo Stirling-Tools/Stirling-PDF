@@ -1,82 +1,92 @@
 package stirling.software.common.util;
 
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
-import org.springframework.stereotype.Component;
+import io.quarkus.arc.Arc;
+import io.quarkus.arc.ArcContainer;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.inject.literal.NamedLiteral;
 
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Utility class to access Spring managed beans from non-Spring managed classes. This is especially
- * useful for classes that are instantiated by frameworks or created dynamically.
+ * Utility class to access CDI managed beans from non-CDI managed classes. This is especially useful
+ * for classes that are instantiated by frameworks or created dynamically.
  */
-@Component
+@ApplicationScoped
 @Slf4j
-public class SpringContextHolder implements ApplicationContextAware {
-
-    private static ApplicationContext applicationContext;
-
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        SpringContextHolder.applicationContext = applicationContext;
-        log.debug("Spring context holder initialized");
-    }
+public class SpringContextHolder {
 
     /**
-     * Get a Spring bean by class type
+     * Get a CDI bean by class type
      *
      * @param <T> The bean type
      * @param beanClass The bean class
      * @return The bean instance, or null if not found
      */
     public static <T> T getBean(Class<T> beanClass) {
-        if (applicationContext == null) {
+        ArcContainer container = Arc.container();
+        if (container == null || !container.isRunning()) {
             log.warn(
-                    "Application context not initialized when attempting to get bean of type {}",
+                    "CDI container not initialized when attempting to get bean of type {}",
                     beanClass.getName());
             return null;
         }
 
         try {
-            return applicationContext.getBean(beanClass);
-        } catch (BeansException e) {
+            Instance<T> instance = container.select(beanClass);
+            if (!instance.isResolvable()) {
+                log.error(
+                        "Error getting bean of type {}: bean is not resolvable",
+                        beanClass.getName());
+                return null;
+            }
+            return instance.get();
+        } catch (RuntimeException e) {
             log.error("Error getting bean of type {}: {}", beanClass.getName(), e.getMessage());
             return null;
         }
     }
 
     /**
-     * Get a Spring bean by name
+     * Get a CDI bean by name
      *
      * @param <T> The bean type
      * @param beanName The bean name
      * @return The bean instance, or null if not found
      */
     public static <T> T getBean(String beanName) {
-        if (applicationContext == null) {
-            log.warn(
-                    "Application context not initialized when attempting to get bean '{}'",
-                    beanName);
+        ArcContainer container = Arc.container();
+        if (container == null || !container.isRunning()) {
+            log.warn("CDI container not initialized when attempting to get bean '{}'", beanName);
             return null;
         }
 
         try {
+            // TODO: Migration required - Spring looked up by bean name across all types; here we
+            // resolve a @Named CDI bean of Object.class. Verify named beans are registered with a
+            // matching @jakarta.inject.Named qualifier so this lookup resolves the intended bean.
+            Instance<Object> instance = container.select(Object.class, NamedLiteral.of(beanName));
+            if (!instance.isResolvable()) {
+                log.error("Error getting bean '{}': bean is not resolvable", beanName);
+                return null;
+            }
             @SuppressWarnings("unchecked")
-            T bean = (T) applicationContext.getBean(beanName);
+            T bean = (T) instance.get();
             return bean;
-        } catch (BeansException e) {
+        } catch (RuntimeException e) {
             log.error("Error getting bean '{}': {}", beanName, e.getMessage());
             return null;
         }
     }
 
     /**
-     * Check if the application context is initialized
+     * Check if the CDI container is initialized
      *
      * @return true if initialized, false otherwise
      */
     public static boolean isInitialized() {
-        return applicationContext != null;
+        ArcContainer container = Arc.container();
+        return container != null && container.isRunning();
     }
 }

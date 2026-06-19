@@ -5,6 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 
+import java.util.List;
+
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -12,14 +15,13 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
+
+import jakarta.ws.rs.core.Response;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
-import stirling.software.SPDF.model.api.converters.ConvertToPdfRequest;
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.testsupport.TestFileUploads;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PdfUtils;
 import stirling.software.common.util.TempFileManager;
@@ -27,17 +29,6 @@ import stirling.software.common.util.WebResponseUtils;
 
 @ExtendWith(MockitoExtension.class)
 class ConvertImgPDFControllerTest {
-    private static ResponseEntity<Resource> streamingOk(byte[] bytes) {
-        return ResponseEntity.ok(new ByteArrayResource(bytes));
-    }
-
-    private static byte[] drainBody(ResponseEntity<Resource> response) throws java.io.IOException {
-        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-        try (java.io.InputStream __in = response.getBody().getInputStream()) {
-            __in.transferTo(baos);
-        }
-        return baos.toByteArray();
-    }
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
@@ -50,16 +41,9 @@ class ConvertImgPDFControllerTest {
         byte[] imgContent = "fake-image".getBytes();
         byte[] pdfBytes = "pdf-output".getBytes();
 
-        MockMultipartFile imgFile =
-                new MockMultipartFile("fileInput", "photo.jpg", "image/jpeg", imgContent);
+        FileUpload imgFile = TestFileUploads.of(imgContent, "photo.jpg", "image/jpeg");
 
-        ConvertToPdfRequest request = new ConvertToPdfRequest();
-        request.setFileInput(new MockMultipartFile[] {imgFile});
-        request.setFitOption("fillPage");
-        request.setColorType("color");
-        request.setAutoRotate(false);
-
-        ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(pdfBytes);
+        Response expectedResponse = Response.ok(pdfBytes).build();
 
         try (MockedStatic<PdfUtils> puMock = Mockito.mockStatic(PdfUtils.class);
                 MockedStatic<GeneralUtils> guMock = Mockito.mockStatic(GeneralUtils.class);
@@ -69,7 +53,7 @@ class ConvertImgPDFControllerTest {
             puMock.when(
                             () ->
                                     PdfUtils.imageToPdf(
-                                            any(MockMultipartFile[].class),
+                                            any(MultipartFile[].class),
                                             eq("fillPage"),
                                             eq(false),
                                             eq("color"),
@@ -82,7 +66,8 @@ class ConvertImgPDFControllerTest {
             wrMock.when(() -> WebResponseUtils.bytesToWebResponse(pdfBytes, "photo_converted.pdf"))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<byte[]> response = controller.convertToPdf(request);
+            Response response =
+                    controller.convertToPdf(List.of(imgFile), "fillPage", "color", false);
 
             assertSame(expectedResponse, response);
         }
@@ -93,16 +78,9 @@ class ConvertImgPDFControllerTest {
         byte[] imgContent = "fake-image".getBytes();
         byte[] pdfBytes = "pdf-output".getBytes();
 
-        MockMultipartFile imgFile =
-                new MockMultipartFile("fileInput", "photo.png", "image/png", imgContent);
+        FileUpload imgFile = TestFileUploads.of(imgContent, "photo.png", "image/png");
 
-        ConvertToPdfRequest request = new ConvertToPdfRequest();
-        request.setFileInput(new MockMultipartFile[] {imgFile});
-        request.setFitOption(null);
-        request.setColorType(null);
-        request.setAutoRotate(null);
-
-        ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(pdfBytes);
+        Response expectedResponse = Response.ok(pdfBytes).build();
 
         try (MockedStatic<PdfUtils> puMock = Mockito.mockStatic(PdfUtils.class);
                 MockedStatic<GeneralUtils> guMock = Mockito.mockStatic(GeneralUtils.class);
@@ -112,7 +90,7 @@ class ConvertImgPDFControllerTest {
             puMock.when(
                             () ->
                                     PdfUtils.imageToPdf(
-                                            any(MockMultipartFile[].class),
+                                            any(MultipartFile[].class),
                                             eq("fillPage"),
                                             eq(false),
                                             eq("color"),
@@ -125,7 +103,7 @@ class ConvertImgPDFControllerTest {
             wrMock.when(() -> WebResponseUtils.bytesToWebResponse(pdfBytes, "photo_converted.pdf"))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<byte[]> response = controller.convertToPdf(request);
+            Response response = controller.convertToPdf(List.of(imgFile), null, null, null);
 
             assertSame(expectedResponse, response);
         }
@@ -136,16 +114,9 @@ class ConvertImgPDFControllerTest {
         byte[] imgContent = "fake-image".getBytes();
         byte[] pdfBytes = "pdf-output".getBytes();
 
-        MockMultipartFile imgFile =
-                new MockMultipartFile("fileInput", "photo.jpg", "image/jpeg", imgContent);
+        FileUpload imgFile = TestFileUploads.of(imgContent, "photo.jpg", "image/jpeg");
 
-        ConvertToPdfRequest request = new ConvertToPdfRequest();
-        request.setFileInput(new MockMultipartFile[] {imgFile});
-        request.setFitOption("fitDocumentToImage");
-        request.setColorType("greyscale");
-        request.setAutoRotate(true);
-
-        ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(pdfBytes);
+        Response expectedResponse = Response.ok(pdfBytes).build();
 
         try (MockedStatic<PdfUtils> puMock = Mockito.mockStatic(PdfUtils.class);
                 MockedStatic<GeneralUtils> guMock = Mockito.mockStatic(GeneralUtils.class);
@@ -155,7 +126,7 @@ class ConvertImgPDFControllerTest {
             puMock.when(
                             () ->
                                     PdfUtils.imageToPdf(
-                                            any(MockMultipartFile[].class),
+                                            any(MultipartFile[].class),
                                             eq("fitDocumentToImage"),
                                             eq(true),
                                             eq("greyscale"),
@@ -168,7 +139,9 @@ class ConvertImgPDFControllerTest {
             wrMock.when(() -> WebResponseUtils.bytesToWebResponse(pdfBytes, "photo_converted.pdf"))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<byte[]> response = controller.convertToPdf(request);
+            Response response =
+                    controller.convertToPdf(
+                            List.of(imgFile), "fitDocumentToImage", "greyscale", true);
 
             assertSame(expectedResponse, response);
         }

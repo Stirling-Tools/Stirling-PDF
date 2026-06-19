@@ -6,15 +6,18 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +29,7 @@ import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.comments.AnnotationLocation;
 import stirling.software.common.model.api.comments.StickyNoteSpec;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfAnnotationService;
 import stirling.software.common.util.GeneralUtils;
@@ -55,6 +59,8 @@ import tools.jackson.databind.ObjectMapper;
  */
 @Slf4j
 @MiscApi
+@ApplicationScoped
+@Path("/api/v1/misc")
 @RequiredArgsConstructor
 public class AddCommentsController {
 
@@ -67,9 +73,12 @@ public class AddCommentsController {
     private final PdfTextLocator pdfTextLocator;
     private final ObjectMapper objectMapper;
 
+    @POST
+    @Path("/add-comments")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
             value = "/add-comments",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @StandardPdfResponse
     @Operation(
@@ -80,24 +89,30 @@ public class AddCommentsController {
                             + " `anchorText` hint; when provided, the tool locates the first matching"
                             + " line on the target page and anchors the icon there (falling back to"
                             + " the coordinates if no match). Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<Resource> addComments(@ModelAttribute AddCommentsRequest request)
+    public Response addComments(
+            @RestForm("fileInput") FileUpload fileUpload, @RestForm("comments") String comments)
             throws IOException {
+        AddCommentsRequest request = new AddCommentsRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        request.setComments(comments);
 
-        MultipartFile file = request.getFileInput();
+        stirling.software.common.model.MultipartFile file = request.getFileInput();
         if (file == null || file.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "fileInput is required");
+            throw new WebApplicationException("fileInput is required", Response.Status.BAD_REQUEST);
         }
         String commentsJson = request.getComments();
         if (commentsJson == null || commentsJson.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "comments JSON is required");
+            throw new WebApplicationException(
+                    "comments JSON is required", Response.Status.BAD_REQUEST);
         }
 
         List<CommentSpecDto> dtos;
         try {
             dtos = objectMapper.readValue(commentsJson, new TypeReference<>() {});
         } catch (JacksonException e) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "comments must be a JSON array of CommentSpec objects");
+            throw new WebApplicationException(
+                    "comments must be a JSON array of CommentSpec objects",
+                    Response.Status.BAD_REQUEST);
         }
 
         try (PDDocument document = pdfDocumentFactory.load(file)) {

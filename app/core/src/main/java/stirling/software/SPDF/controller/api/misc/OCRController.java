@@ -22,14 +22,17 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFTextStripper;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +44,8 @@ import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -52,6 +57,8 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @MiscApi
+@jakarta.ws.rs.Path("/api/v1/misc")
+@ApplicationScoped
 @Slf4j
 @RequiredArgsConstructor
 public class OCRController {
@@ -84,8 +91,11 @@ public class OCRController {
                 .toList();
     }
 
+    @POST
+    @jakarta.ws.rs.Path("/ocr-pdf")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/ocr-pdf",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @Operation(
@@ -95,24 +105,48 @@ public class OCRController {
                             + " specify languages, sidecar, deskew, clean, cleanFinal, ocrType, ocrRenderType,"
                             + " and removeImagesAfter options. Uses OCRmyPDF if available, falls back to"
                             + " Tesseract. Input:PDF Output:PDF Type:SI-Conditional")
-    public ResponseEntity<Resource> processPdfWithOCR(
-            @ModelAttribute ProcessPdfWithOcrRequest request)
+    public Response processPdfWithOCR(
+            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("fileId") String fileId,
+            // Multipart binding of a List<String>: each "languages" form part contributes one
+            // entry.
+            @RestForm("languages") List<String> languages,
+            @RestForm("sidecar") boolean sidecar,
+            @RestForm("deskew") boolean deskew,
+            @RestForm("clean") boolean clean,
+            @RestForm("cleanFinal") boolean cleanFinal,
+            @RestForm("ocrType") String ocrType,
+            @RestForm("ocrRenderType") String ocrRenderType,
+            @RestForm("removeImagesAfter") boolean removeImagesAfter)
             throws IOException, InterruptedException {
+
+        ProcessPdfWithOcrRequest request = new ProcessPdfWithOcrRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        request.setFileId(fileId);
+        request.setLanguages(languages);
+        request.setSidecar(sidecar);
+        request.setDeskew(deskew);
+        request.setClean(clean);
+        request.setCleanFinal(cleanFinal);
+        request.setOcrType(ocrType);
+        request.setOcrRenderType(ocrRenderType);
+        request.setRemoveImagesAfter(removeImagesAfter);
+
         MultipartFile inputFile = request.getFileInput();
         List<String> selectedLanguages = request.getLanguages();
-        boolean sidecar = request.isSidecar();
-        Boolean deskew = request.isDeskew();
-        Boolean clean = request.isClean();
-        Boolean cleanFinal = request.isCleanFinal();
-        String ocrType = request.getOcrType();
-        String ocrRenderType = request.getOcrRenderType();
-        Boolean removeImagesAfter = request.isRemoveImagesAfter();
+        boolean sidecarFlag = request.isSidecar();
+        Boolean deskewFlag = request.isDeskew();
+        Boolean cleanFlag = request.isClean();
+        Boolean cleanFinalFlag = request.isCleanFinal();
+        String ocrTypeValue = request.getOcrType();
+        String ocrRenderTypeValue = request.getOcrRenderType();
+        Boolean removeImagesAfterFlag = request.isRemoveImagesAfter();
 
         if (selectedLanguages == null || selectedLanguages.isEmpty()) {
             throw ExceptionUtils.createOcrLanguageRequiredException();
         }
 
-        if (!"hocr".equals(ocrRenderType) && !"sandwich".equals(ocrRenderType)) {
+        if (!"hocr".equals(ocrRenderTypeValue) && !"sandwich".equals(ocrRenderTypeValue)) {
             throw ExceptionUtils.createOcrInvalidRenderTypeException();
         }
 
@@ -132,7 +166,8 @@ public class OCRController {
         boolean pdfOwnershipTransferred = false;
         boolean zipOwnershipTransferred = false;
         try (TempFile tempInputFile = new TempFile(tempFileManager, ".pdf");
-                TempFile sidecarTextFile = sidecar ? new TempFile(tempFileManager, ".txt") : null) {
+                TempFile sidecarTextFile =
+                        sidecarFlag ? new TempFile(tempFileManager, ".txt") : null) {
 
             inputFile.transferTo(tempInputFile.getFile());
 
@@ -140,13 +175,13 @@ public class OCRController {
             if (isOcrMyPdfEnabled()) {
                 processWithOcrMyPdf(
                         selectedLanguages,
-                        sidecar,
-                        deskew,
-                        clean,
-                        cleanFinal,
-                        ocrType,
-                        ocrRenderType,
-                        removeImagesAfter,
+                        sidecarFlag,
+                        deskewFlag,
+                        cleanFlag,
+                        cleanFinalFlag,
+                        ocrTypeValue,
+                        ocrRenderTypeValue,
+                        removeImagesAfterFlag,
                         tempInputFile.getPath(),
                         tempOutputFile.getPath(),
                         sidecarTextFile != null ? sidecarTextFile.getPath() : null);
@@ -156,7 +191,7 @@ public class OCRController {
             else if (isTesseractEnabled()) {
                 processWithTesseract(
                         selectedLanguages,
-                        ocrType,
+                        ocrTypeValue,
                         tempInputFile.getPath(),
                         tempOutputFile.getPath());
                 log.info("Tesseract processing completed successfully");
@@ -170,7 +205,7 @@ public class OCRController {
                                     Filenames.toSimpleFileName(inputFile.getOriginalFilename()))
                             + "_OCR.pdf";
 
-            if (sidecar && sidecarTextFile != null) {
+            if (sidecarFlag && sidecarTextFile != null) {
                 // Create a zip file containing both the PDF and the text file
                 String outputZipFilename =
                         GeneralUtils.removeExtension(
@@ -199,13 +234,15 @@ public class OCRController {
                 // The intermediate PDF temp file is no longer needed; only the zip is streamed.
                 tempOutputFile.close();
                 pdfOwnershipTransferred = true;
-                ResponseEntity<Resource> response =
+                Response response =
                         WebResponseUtils.fileToWebResponse(
-                                tempZipFile, outputZipFilename, MediaType.APPLICATION_OCTET_STREAM);
+                                tempZipFile,
+                                outputZipFilename,
+                                MediaType.valueOf(MediaType.APPLICATION_OCTET_STREAM));
                 zipOwnershipTransferred = true;
                 return response;
             } else {
-                ResponseEntity<Resource> response =
+                Response response =
                         WebResponseUtils.pdfFileToWebResponse(tempOutputFile, outputFilename);
                 pdfOwnershipTransferred = true;
                 return response;

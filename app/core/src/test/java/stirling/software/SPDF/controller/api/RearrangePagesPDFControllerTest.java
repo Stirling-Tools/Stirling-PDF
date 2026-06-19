@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -14,20 +15,20 @@ import java.util.List;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
 
-import stirling.software.SPDF.model.api.PDFWithPageNums;
-import stirling.software.SPDF.model.api.general.RearrangePagesRequest;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.StreamingOutput;
+
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.testsupport.TestFileUploads;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
@@ -55,9 +56,8 @@ class RearrangePagesPDFControllerTest {
                         });
     }
 
-    private MockMultipartFile createMockPdf() {
-        return new MockMultipartFile(
-                "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, new byte[] {1, 2, 3});
+    private FileUpload createMockPdf() {
+        return TestFileUploads.of(new byte[] {1, 2, 3}, "test.pdf", "application/pdf");
     }
 
     /** Build a real, in-memory PDDocument with the requested number of blank pages. */
@@ -82,10 +82,10 @@ class RearrangePagesPDFControllerTest {
         return snapshot;
     }
 
-    private List<Object> reloadAndSnapshot(ResponseEntity<Resource> response) throws IOException {
-        try (var in = response.getBody().getInputStream();
-                var baos = new ByteArrayOutputStream()) {
-            in.transferTo(baos);
+    private List<Object> reloadAndSnapshot(Response response) throws IOException {
+        StreamingOutput streaming = (StreamingOutput) response.getEntity();
+        try (var baos = new ByteArrayOutputStream()) {
+            streaming.write(baos);
             try (PDDocument out = Loader.loadPDF(baos.toByteArray())) {
                 return snapshotCosPages(out);
             }
@@ -94,39 +94,32 @@ class RearrangePagesPDFControllerTest {
 
     @Test
     void testDeletePages_Success() throws IOException {
-        MockMultipartFile file = createMockPdf();
-        PDFWithPageNums request = new PDFWithPageNums();
-        request.setFileInput(file);
-        request.setPageNumbers("1,3");
+        FileUpload file = createMockPdf();
 
         PDDocument mockDoc = mock(PDDocument.class);
-        when(pdfDocumentFactory.load(file)).thenReturn(mockDoc);
+        when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(mockDoc);
         when(mockDoc.getNumberOfPages()).thenReturn(5);
 
-        ResponseEntity<Resource> response = controller.deletePages(request);
+        Response response = controller.deletePages(file, null, "1,3");
 
         assertNotNull(response);
-        assertEquals(200, response.getStatusCode().value());
+        assertEquals(200, response.getStatus());
         verify(mockDoc).removePage(2); // page 3 (0-indexed = 2) removed first (descending)
         verify(mockDoc).removePage(0); // page 1 (0-indexed = 0)
     }
 
     @Test
     void testRearrangePages_ReverseOrder() throws IOException {
-        MockMultipartFile file = createMockPdf();
-        RearrangePagesRequest request = new RearrangePagesRequest();
-        request.setFileInput(file);
-        request.setPageNumbers("");
-        request.setCustomMode("REVERSE_ORDER");
+        FileUpload file = createMockPdf();
 
         try (PDDocument realDoc = buildRealPdf(3)) {
             List<Object> originals = snapshotCosPages(realDoc);
-            when(pdfDocumentFactory.load(file)).thenReturn(realDoc);
+            when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(realDoc);
 
-            ResponseEntity<Resource> response = controller.rearrangePages(request);
+            Response response = controller.rearrangePages(file, null, "", "REVERSE_ORDER");
 
             assertNotNull(response);
-            assertEquals(200, response.getStatusCode().value());
+            assertEquals(200, response.getStatus());
             List<Object> finalOrder = reloadAndSnapshot(response);
             assertEquals(3, finalOrder.size());
             // We can no longer compare references after a save/reload, so compare via
@@ -140,17 +133,13 @@ class RearrangePagesPDFControllerTest {
 
     @Test
     void testRearrangePages_RemoveFirst() throws IOException {
-        MockMultipartFile file = createMockPdf();
-        RearrangePagesRequest request = new RearrangePagesRequest();
-        request.setFileInput(file);
-        request.setPageNumbers("");
-        request.setCustomMode("REMOVE_FIRST");
+        FileUpload file = createMockPdf();
 
         try (PDDocument realDoc = buildRealPdf(3)) {
             List<Object> originals = snapshotCosPages(realDoc);
-            when(pdfDocumentFactory.load(file)).thenReturn(realDoc);
+            when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(realDoc);
 
-            ResponseEntity<Resource> response = controller.rearrangePages(request);
+            Response response = controller.rearrangePages(file, null, "", "REMOVE_FIRST");
 
             assertNotNull(response);
             List<Object> mutated = snapshotCosPages(realDoc);
@@ -162,17 +151,13 @@ class RearrangePagesPDFControllerTest {
 
     @Test
     void testRearrangePages_RemoveLast() throws IOException {
-        MockMultipartFile file = createMockPdf();
-        RearrangePagesRequest request = new RearrangePagesRequest();
-        request.setFileInput(file);
-        request.setPageNumbers("");
-        request.setCustomMode("REMOVE_LAST");
+        FileUpload file = createMockPdf();
 
         try (PDDocument realDoc = buildRealPdf(3)) {
             List<Object> originals = snapshotCosPages(realDoc);
-            when(pdfDocumentFactory.load(file)).thenReturn(realDoc);
+            when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(realDoc);
 
-            ResponseEntity<Resource> response = controller.rearrangePages(request);
+            Response response = controller.rearrangePages(file, null, "", "REMOVE_LAST");
 
             assertNotNull(response);
             List<Object> mutated = snapshotCosPages(realDoc);
@@ -184,20 +169,16 @@ class RearrangePagesPDFControllerTest {
 
     @Test
     void testRearrangePages_RemoveFirstAndLast() throws IOException {
-        MockMultipartFile file = createMockPdf();
-        RearrangePagesRequest request = new RearrangePagesRequest();
-        request.setFileInput(file);
-        request.setPageNumbers("");
-        request.setCustomMode("REMOVE_FIRST_AND_LAST");
+        FileUpload file = createMockPdf();
 
         try (PDDocument realDoc = buildRealPdf(4)) {
             List<Object> originals = snapshotCosPages(realDoc);
-            when(pdfDocumentFactory.load(file)).thenReturn(realDoc);
+            when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(realDoc);
 
-            ResponseEntity<Resource> response = controller.rearrangePages(request);
+            Response response = controller.rearrangePages(file, null, "", "REMOVE_FIRST_AND_LAST");
 
             assertNotNull(response);
-            assertEquals(200, response.getStatusCode().value());
+            assertEquals(200, response.getStatus());
             List<Object> mutated = snapshotCosPages(realDoc);
             assertEquals(2, mutated.size());
             assertSame(originals.get(1), mutated.get(0));
@@ -207,77 +188,61 @@ class RearrangePagesPDFControllerTest {
 
     @Test
     void testRearrangePages_DuplexSort() throws IOException {
-        MockMultipartFile file = createMockPdf();
-        RearrangePagesRequest request = new RearrangePagesRequest();
-        request.setFileInput(file);
-        request.setPageNumbers("");
-        request.setCustomMode("DUPLEX_SORT");
+        FileUpload file = createMockPdf();
 
         try (PDDocument realDoc = buildRealPdf(4)) {
-            when(pdfDocumentFactory.load(file)).thenReturn(realDoc);
+            when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(realDoc);
 
-            ResponseEntity<Resource> response = controller.rearrangePages(request);
+            Response response = controller.rearrangePages(file, null, "", "DUPLEX_SORT");
 
             assertNotNull(response);
-            assertEquals(200, response.getStatusCode().value());
+            assertEquals(200, response.getStatus());
             assertEquals(4, realDoc.getNumberOfPages());
         }
     }
 
     @Test
     void testRearrangePages_BookletSort() throws IOException {
-        MockMultipartFile file = createMockPdf();
-        RearrangePagesRequest request = new RearrangePagesRequest();
-        request.setFileInput(file);
-        request.setPageNumbers("");
-        request.setCustomMode("BOOKLET_SORT");
+        FileUpload file = createMockPdf();
 
         try (PDDocument realDoc = buildRealPdf(4)) {
-            when(pdfDocumentFactory.load(file)).thenReturn(realDoc);
+            when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(realDoc);
 
-            ResponseEntity<Resource> response = controller.rearrangePages(request);
+            Response response = controller.rearrangePages(file, null, "", "BOOKLET_SORT");
 
             assertNotNull(response);
-            assertEquals(200, response.getStatusCode().value());
+            assertEquals(200, response.getStatus());
             assertEquals(4, realDoc.getNumberOfPages());
         }
     }
 
     @Test
     void testRearrangePages_OddEvenSplit() throws IOException {
-        MockMultipartFile file = createMockPdf();
-        RearrangePagesRequest request = new RearrangePagesRequest();
-        request.setFileInput(file);
-        request.setPageNumbers("");
-        request.setCustomMode("ODD_EVEN_SPLIT");
+        FileUpload file = createMockPdf();
 
         try (PDDocument realDoc = buildRealPdf(4)) {
-            when(pdfDocumentFactory.load(file)).thenReturn(realDoc);
+            when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(realDoc);
 
-            ResponseEntity<Resource> response = controller.rearrangePages(request);
+            Response response = controller.rearrangePages(file, null, "", "ODD_EVEN_SPLIT");
 
             assertNotNull(response);
-            assertEquals(200, response.getStatusCode().value());
+            assertEquals(200, response.getStatus());
             assertEquals(4, realDoc.getNumberOfPages());
         }
     }
 
     @Test
     void testRearrangePages_CustomPageOrder() throws IOException {
-        MockMultipartFile file = createMockPdf();
-        RearrangePagesRequest request = new RearrangePagesRequest();
-        request.setFileInput(file);
-        request.setPageNumbers("3,1,2");
-        request.setCustomMode("custom");
+        FileUpload file = createMockPdf();
 
         try (PDDocument realDoc = buildRealPdf(3)) {
             List<Object> originals = snapshotCosPages(realDoc);
-            when(pdfDocumentFactory.load(file)).thenReturn(realDoc);
+            when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(realDoc);
 
-            ResponseEntity<Resource> response = controller.rearrangePages(request);
+            Response response = controller.rearrangePages(file, null, "3,1,2", "custom");
 
             assertNotNull(response);
-            assertEquals(200, response.getStatusCode().value());
+            assertEquals(200, response.getStatus());
             List<Object> mutated = snapshotCosPages(realDoc);
             assertEquals(3, mutated.size());
             assertSame(originals.get(2), mutated.get(0));
@@ -288,16 +253,12 @@ class RearrangePagesPDFControllerTest {
 
     @Test
     void testRearrangePages_Duplicate() throws IOException {
-        MockMultipartFile file = createMockPdf();
-        RearrangePagesRequest request = new RearrangePagesRequest();
-        request.setFileInput(file);
-        request.setPageNumbers("3");
-        request.setCustomMode("DUPLICATE");
+        FileUpload file = createMockPdf();
 
         try (PDDocument realDoc = buildRealPdf(2)) {
-            when(pdfDocumentFactory.load(file)).thenReturn(realDoc);
+            when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(realDoc);
 
-            ResponseEntity<Resource> response = controller.rearrangePages(request);
+            Response response = controller.rearrangePages(file, null, "3", "DUPLICATE");
 
             assertNotNull(response);
             // 2 pages * 3 duplicates = 6 final pages
@@ -307,19 +268,16 @@ class RearrangePagesPDFControllerTest {
 
     @Test
     void testRearrangePages_SideStitchBooklet() throws IOException {
-        MockMultipartFile file = createMockPdf();
-        RearrangePagesRequest request = new RearrangePagesRequest();
-        request.setFileInput(file);
-        request.setPageNumbers("");
-        request.setCustomMode("SIDE_STITCH_BOOKLET_SORT");
+        FileUpload file = createMockPdf();
 
         try (PDDocument realDoc = buildRealPdf(4)) {
-            when(pdfDocumentFactory.load(file)).thenReturn(realDoc);
+            when(pdfDocumentFactory.load(any(MultipartFile.class))).thenReturn(realDoc);
 
-            ResponseEntity<Resource> response = controller.rearrangePages(request);
+            Response response =
+                    controller.rearrangePages(file, null, "", "SIDE_STITCH_BOOKLET_SORT");
 
             assertNotNull(response);
-            assertEquals(200, response.getStatusCode().value());
+            assertEquals(200, response.getStatus());
             assertEquals(4, realDoc.getNumberOfPages());
         }
     }

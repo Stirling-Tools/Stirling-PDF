@@ -2,12 +2,15 @@ package stirling.software.proprietary.policy.config;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.core.env.Environment;
-import org.springframework.stereotype.Component;
+import org.eclipse.microprofile.config.Config;
+
+import io.quarkus.arc.profile.IfBuildProfile;
+import io.smallrye.config.SmallRyeConfig;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
@@ -27,8 +30,8 @@ import stirling.software.proprietary.policy.model.Policy;
  * <p>Compared after normalisation so {@code ..} cannot escape a root. Symlink escape is not
  * defended: an operator who roots an allowlist on a symlink to a sensitive location is trusted.
  */
-@Component
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 public class FolderAccessGuard {
 
     public static final String FOLDER_TYPE = "folder";
@@ -37,8 +40,11 @@ public class FolderAccessGuard {
     private final List<Path> allowedRoots;
     private final List<Path> protectedRoots;
 
-    public FolderAccessGuard(ApplicationProperties applicationProperties, Environment environment) {
-        this.saasActive = Arrays.asList(environment.getActiveProfiles()).contains("saas");
+    @Inject
+    public FolderAccessGuard(ApplicationProperties applicationProperties, Config config) {
+        // Spring's Environment.getActiveProfiles() maps to SmallRye's profile list; the "saas"
+        // build/runtime profile is matched the same way Spring matched the "saas" Spring profile.
+        this.saasActive = config.unwrap(SmallRyeConfig.class).getProfiles().contains("saas");
         this.allowedRoots =
                 normalizeAll(applicationProperties.getPolicies().getAllowedFolderRoots());
         this.protectedRoots = List.of(normalize(Path.of(InstallationPathConfig.getConfigPath())));

@@ -12,11 +12,13 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -25,29 +27,30 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.multipart.MultipartFile;
 
-import stirling.software.SPDF.model.api.general.OverlayPdfsRequest;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.StreamingOutput;
+
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.testsupport.TestFileUploads;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
 @ExtendWith(MockitoExtension.class)
 class PdfOverlayControllerTest {
-    private static ResponseEntity<Resource> streamingOk(byte[] bytes) {
-        return ResponseEntity.ok(new ByteArrayResource(bytes));
-    }
 
-    private static byte[] drainBody(ResponseEntity<Resource> response) throws java.io.IOException {
-        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-        try (java.io.InputStream __in = response.getBody().getInputStream()) {
-            __in.transferTo(baos);
+    private static byte[] drainBody(Response response) throws IOException {
+        Object entity = response.getEntity();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        if (entity instanceof byte[] bytes) {
+            baos.write(bytes);
+        } else if (entity instanceof StreamingOutput streaming) {
+            streaming.write(baos);
+        } else {
+            throw new IllegalStateException(
+                    "Unexpected response entity type: "
+                            + (entity == null ? "null" : entity.getClass().getName()));
         }
         return baos.toByteArray();
     }
@@ -84,254 +87,153 @@ class PdfOverlayControllerTest {
         }
     }
 
+    private void stubLoadFromBytes() throws IOException {
+        when(pdfDocumentFactory.load(any(MultipartFile.class)))
+                .thenAnswer(inv -> Loader.loadPDF(((MultipartFile) inv.getArgument(0)).getBytes()));
+    }
+
     @Test
     @DisplayName("Should overlay with SequentialOverlay mode")
     void testSequentialOverlay() throws Exception {
-        byte[] baseBytes = createPdf(2);
-        byte[] overlayBytes = createPdf(2);
+        FileUpload baseFile = TestFileUploads.of(createPdf(2), "base.pdf", "application/pdf");
+        FileUpload overlayFile = TestFileUploads.of(createPdf(2), "overlay.pdf", "application/pdf");
 
-        MockMultipartFile baseFile =
-                new MockMultipartFile(
-                        "fileInput", "base.pdf", MediaType.APPLICATION_PDF_VALUE, baseBytes);
-        MockMultipartFile overlayFile =
-                new MockMultipartFile(
-                        "overlayFile",
-                        "overlay.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        overlayBytes);
+        stubLoadFromBytes();
 
-        OverlayPdfsRequest request = new OverlayPdfsRequest();
-        request.setFileInput(baseFile);
-        request.setOverlayFiles(new MultipartFile[] {overlayFile});
-        request.setOverlayMode("SequentialOverlay");
-        request.setOverlayPosition(0);
-
-        when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                .thenAnswer(inv -> Loader.loadPDF(((MultipartFile) inv.getArgument(0)).getBytes()));
-
-        ResponseEntity<Resource> response = controller.overlayPdfs(request);
+        Response response =
+                controller.overlayPdfs(
+                        baseFile, List.of(overlayFile), "SequentialOverlay", null, 0);
 
         assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
+        assertEquals(200, response.getStatus());
+        assertNotNull(response.getEntity());
         assertTrue(drainBody(response).length > 0);
     }
 
     @Test
     @DisplayName("Should overlay with InterleavedOverlay mode")
     void testInterleavedOverlay() throws Exception {
-        byte[] baseBytes = createPdf(3);
-        byte[] overlay1Bytes = createPdf(1);
-        byte[] overlay2Bytes = createPdf(1);
+        FileUpload baseFile = TestFileUploads.of(createPdf(3), "base.pdf", "application/pdf");
+        FileUpload overlay1 = TestFileUploads.of(createPdf(1), "overlay1.pdf", "application/pdf");
+        FileUpload overlay2 = TestFileUploads.of(createPdf(1), "overlay2.pdf", "application/pdf");
 
-        MockMultipartFile baseFile =
-                new MockMultipartFile(
-                        "fileInput", "base.pdf", MediaType.APPLICATION_PDF_VALUE, baseBytes);
-        MockMultipartFile overlay1 =
-                new MockMultipartFile(
-                        "overlay1", "overlay1.pdf", MediaType.APPLICATION_PDF_VALUE, overlay1Bytes);
-        MockMultipartFile overlay2 =
-                new MockMultipartFile(
-                        "overlay2", "overlay2.pdf", MediaType.APPLICATION_PDF_VALUE, overlay2Bytes);
+        stubLoadFromBytes();
 
-        OverlayPdfsRequest request = new OverlayPdfsRequest();
-        request.setFileInput(baseFile);
-        request.setOverlayFiles(new MultipartFile[] {overlay1, overlay2});
-        request.setOverlayMode("InterleavedOverlay");
-        request.setOverlayPosition(0);
-
-        when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                .thenAnswer(inv -> Loader.loadPDF(((MultipartFile) inv.getArgument(0)).getBytes()));
-
-        ResponseEntity<Resource> response = controller.overlayPdfs(request);
+        Response response =
+                controller.overlayPdfs(
+                        baseFile, List.of(overlay1, overlay2), "InterleavedOverlay", null, 0);
 
         assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(200, response.getStatus());
     }
 
     @Test
     @DisplayName("Should overlay with FixedRepeatOverlay mode")
     void testFixedRepeatOverlay() throws Exception {
-        byte[] baseBytes = createPdf(4);
-        byte[] overlayBytes = createPdf(1);
+        FileUpload baseFile = TestFileUploads.of(createPdf(4), "base.pdf", "application/pdf");
+        FileUpload overlayFile = TestFileUploads.of(createPdf(1), "overlay.pdf", "application/pdf");
 
-        MockMultipartFile baseFile =
-                new MockMultipartFile(
-                        "fileInput", "base.pdf", MediaType.APPLICATION_PDF_VALUE, baseBytes);
-        MockMultipartFile overlayFile =
-                new MockMultipartFile(
-                        "overlayFile",
-                        "overlay.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        overlayBytes);
+        stubLoadFromBytes();
 
-        OverlayPdfsRequest request = new OverlayPdfsRequest();
-        request.setFileInput(baseFile);
-        request.setOverlayFiles(new MultipartFile[] {overlayFile});
-        request.setOverlayMode("FixedRepeatOverlay");
-        request.setOverlayPosition(0);
-        request.setCounts(new int[] {4});
-
-        when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                .thenAnswer(inv -> Loader.loadPDF(((MultipartFile) inv.getArgument(0)).getBytes()));
-
-        ResponseEntity<Resource> response = controller.overlayPdfs(request);
+        Response response =
+                controller.overlayPdfs(
+                        baseFile, List.of(overlayFile), "FixedRepeatOverlay", new int[] {4}, 0);
 
         assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(200, response.getStatus());
     }
 
     @Test
     @DisplayName("Should use background position when overlayPosition is 1")
     void testBackgroundOverlayPosition() throws Exception {
-        byte[] baseBytes = createPdf(1);
-        byte[] overlayBytes = createPdf(1);
+        FileUpload baseFile = TestFileUploads.of(createPdf(1), "base.pdf", "application/pdf");
+        FileUpload overlayFile = TestFileUploads.of(createPdf(1), "overlay.pdf", "application/pdf");
 
-        MockMultipartFile baseFile =
-                new MockMultipartFile(
-                        "fileInput", "base.pdf", MediaType.APPLICATION_PDF_VALUE, baseBytes);
-        MockMultipartFile overlayFile =
-                new MockMultipartFile(
-                        "overlayFile",
-                        "overlay.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        overlayBytes);
+        stubLoadFromBytes();
 
-        OverlayPdfsRequest request = new OverlayPdfsRequest();
-        request.setFileInput(baseFile);
-        request.setOverlayFiles(new MultipartFile[] {overlayFile});
-        request.setOverlayMode("InterleavedOverlay");
-        request.setOverlayPosition(1); // Background
-
-        when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                .thenAnswer(inv -> Loader.loadPDF(((MultipartFile) inv.getArgument(0)).getBytes()));
-
-        ResponseEntity<Resource> response = controller.overlayPdfs(request);
+        Response response =
+                controller.overlayPdfs(
+                        baseFile,
+                        List.of(overlayFile),
+                        "InterleavedOverlay",
+                        null,
+                        1); // Background
 
         assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(200, response.getStatus());
     }
 
     @Test
     @DisplayName("Should throw exception for invalid overlay mode")
     void testInvalidOverlayMode() throws Exception {
-        byte[] baseBytes = createPdf(1);
-        byte[] overlayBytes = createPdf(1);
+        FileUpload baseFile = TestFileUploads.of(createPdf(1), "base.pdf", "application/pdf");
+        FileUpload overlayFile = TestFileUploads.of(createPdf(1), "overlay.pdf", "application/pdf");
 
-        MockMultipartFile baseFile =
-                new MockMultipartFile(
-                        "fileInput", "base.pdf", MediaType.APPLICATION_PDF_VALUE, baseBytes);
-        MockMultipartFile overlayFile =
-                new MockMultipartFile(
-                        "overlayFile",
-                        "overlay.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        overlayBytes);
+        stubLoadFromBytes();
 
-        OverlayPdfsRequest request = new OverlayPdfsRequest();
-        request.setFileInput(baseFile);
-        request.setOverlayFiles(new MultipartFile[] {overlayFile});
-        request.setOverlayMode("InvalidMode");
-        request.setOverlayPosition(0);
-
-        when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                .thenAnswer(inv -> Loader.loadPDF(((MultipartFile) inv.getArgument(0)).getBytes()));
-
-        assertThrows(IllegalArgumentException.class, () -> controller.overlayPdfs(request));
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        controller.overlayPdfs(
+                                baseFile, List.of(overlayFile), "InvalidMode", null, 0));
     }
 
     @Test
     @DisplayName("Should throw exception for mismatched counts in FixedRepeatOverlay")
     void testFixedRepeatOverlay_MismatchedCounts() throws Exception {
-        byte[] baseBytes = createPdf(2);
-        byte[] overlay1Bytes = createPdf(1);
-        byte[] overlay2Bytes = createPdf(1);
+        FileUpload baseFile = TestFileUploads.of(createPdf(2), "base.pdf", "application/pdf");
+        FileUpload overlay1 = TestFileUploads.of(createPdf(1), "o1.pdf", "application/pdf");
+        FileUpload overlay2 = TestFileUploads.of(createPdf(1), "o2.pdf", "application/pdf");
 
-        MockMultipartFile baseFile =
-                new MockMultipartFile(
-                        "fileInput", "base.pdf", MediaType.APPLICATION_PDF_VALUE, baseBytes);
-        MockMultipartFile overlay1 =
-                new MockMultipartFile(
-                        "overlay1", "o1.pdf", MediaType.APPLICATION_PDF_VALUE, overlay1Bytes);
-        MockMultipartFile overlay2 =
-                new MockMultipartFile(
-                        "overlay2", "o2.pdf", MediaType.APPLICATION_PDF_VALUE, overlay2Bytes);
+        stubLoadFromBytes();
 
-        OverlayPdfsRequest request = new OverlayPdfsRequest();
-        request.setFileInput(baseFile);
-        request.setOverlayFiles(new MultipartFile[] {overlay1, overlay2});
-        request.setOverlayMode("FixedRepeatOverlay");
-        request.setOverlayPosition(0);
-        request.setCounts(new int[] {1}); // Mismatched: 2 files but 1 count
-
-        when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                .thenAnswer(inv -> Loader.loadPDF(((MultipartFile) inv.getArgument(0)).getBytes()));
-
-        assertThrows(IllegalArgumentException.class, () -> controller.overlayPdfs(request));
+        // Mismatched: 2 files but 1 count
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        controller.overlayPdfs(
+                                baseFile,
+                                List.of(overlay1, overlay2),
+                                "FixedRepeatOverlay",
+                                new int[] {1},
+                                0));
     }
 
     @Test
     @DisplayName("Should handle single page base with multiple overlay files")
     void testSinglePageBaseMultipleOverlays() throws Exception {
-        byte[] baseBytes = createPdf(1);
-        byte[] overlay1Bytes = createPdf(1);
-        byte[] overlay2Bytes = createPdf(1);
+        FileUpload baseFile = TestFileUploads.of(createPdf(1), "base.pdf", "application/pdf");
+        FileUpload overlay1 = TestFileUploads.of(createPdf(1), "o1.pdf", "application/pdf");
+        FileUpload overlay2 = TestFileUploads.of(createPdf(1), "o2.pdf", "application/pdf");
 
-        MockMultipartFile baseFile =
-                new MockMultipartFile(
-                        "fileInput", "base.pdf", MediaType.APPLICATION_PDF_VALUE, baseBytes);
-        MockMultipartFile overlay1 =
-                new MockMultipartFile(
-                        "overlay1", "o1.pdf", MediaType.APPLICATION_PDF_VALUE, overlay1Bytes);
-        MockMultipartFile overlay2 =
-                new MockMultipartFile(
-                        "overlay2", "o2.pdf", MediaType.APPLICATION_PDF_VALUE, overlay2Bytes);
+        stubLoadFromBytes();
 
-        OverlayPdfsRequest request = new OverlayPdfsRequest();
-        request.setFileInput(baseFile);
-        request.setOverlayFiles(new MultipartFile[] {overlay1, overlay2});
-        request.setOverlayMode("SequentialOverlay");
-        request.setOverlayPosition(0);
-
-        when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                .thenAnswer(inv -> Loader.loadPDF(((MultipartFile) inv.getArgument(0)).getBytes()));
-
-        ResponseEntity<Resource> response = controller.overlayPdfs(request);
+        Response response =
+                controller.overlayPdfs(
+                        baseFile, List.of(overlay1, overlay2), "SequentialOverlay", null, 0);
 
         assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(200, response.getStatus());
     }
 
     @Test
     @DisplayName("Should handle FixedRepeatOverlay with multiple files and counts")
     void testFixedRepeatOverlay_MultipleFiles() throws Exception {
-        byte[] baseBytes = createPdf(4);
-        byte[] overlay1Bytes = createPdf(1);
-        byte[] overlay2Bytes = createPdf(1);
+        FileUpload baseFile = TestFileUploads.of(createPdf(4), "base.pdf", "application/pdf");
+        FileUpload overlay1 = TestFileUploads.of(createPdf(1), "o1.pdf", "application/pdf");
+        FileUpload overlay2 = TestFileUploads.of(createPdf(1), "o2.pdf", "application/pdf");
 
-        MockMultipartFile baseFile =
-                new MockMultipartFile(
-                        "fileInput", "base.pdf", MediaType.APPLICATION_PDF_VALUE, baseBytes);
-        MockMultipartFile overlay1 =
-                new MockMultipartFile(
-                        "overlay1", "o1.pdf", MediaType.APPLICATION_PDF_VALUE, overlay1Bytes);
-        MockMultipartFile overlay2 =
-                new MockMultipartFile(
-                        "overlay2", "o2.pdf", MediaType.APPLICATION_PDF_VALUE, overlay2Bytes);
+        stubLoadFromBytes();
 
-        OverlayPdfsRequest request = new OverlayPdfsRequest();
-        request.setFileInput(baseFile);
-        request.setOverlayFiles(new MultipartFile[] {overlay1, overlay2});
-        request.setOverlayMode("FixedRepeatOverlay");
-        request.setOverlayPosition(0);
-        request.setCounts(new int[] {2, 2});
-
-        when(pdfDocumentFactory.load(any(MultipartFile.class)))
-                .thenAnswer(inv -> Loader.loadPDF(((MultipartFile) inv.getArgument(0)).getBytes()));
-
-        ResponseEntity<Resource> response = controller.overlayPdfs(request);
+        Response response =
+                controller.overlayPdfs(
+                        baseFile,
+                        List.of(overlay1, overlay2),
+                        "FixedRepeatOverlay",
+                        new int[] {2, 2},
+                        0);
 
         assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(200, response.getStatus());
     }
 }

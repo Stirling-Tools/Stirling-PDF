@@ -20,15 +20,12 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.caffeine.CaffeineCache;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import com.github.benmanes.caffeine.cache.Caffeine;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,24 +34,28 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.model.JwtVerificationKey;
 
 @Slf4j
-@Service
+@ApplicationScoped
 public class KeyPersistenceService implements KeyPersistenceServiceInterface {
 
     public static final String KEY_SUFFIX = ".key";
     public static final String PUB_KEY_SUFFIX = ".pub";
 
     private final ApplicationProperties.Security.Jwt jwtProperties;
-    private final CacheManager cacheManager;
-    private final Cache verifyingKeyCache;
+
+    // TODO: Migration required - Spring's CacheManager/Cache("verifyingKeys") and
+    // org.springframework.cache.caffeine.CaffeineCache (which exposed getNativeCache()) have no
+    // direct Quarkus-cache equivalent. getKeysEligibleForCleanup() needs to enumerate ALL cached
+    // values, which io.quarkus.cache.Cache does not support. Replaced with a directly-managed
+    // Caffeine cache so all original logic (put/get/evict + full iteration) is preserved. If a
+    // shared/named Quarkus cache is desired, rebind via @io.quarkus.cache.CacheResult and friends.
+    private final com.github.benmanes.caffeine.cache.Cache<Object, Object> verifyingKeyCache =
+            Caffeine.newBuilder().build();
 
     private volatile JwtVerificationKey activeKey;
 
-    @Autowired
-    public KeyPersistenceService(
-            ApplicationProperties applicationProperties, CacheManager cacheManager) {
+    @Inject
+    public KeyPersistenceService(ApplicationProperties applicationProperties) {
         this.jwtProperties = applicationProperties.getSecurity().getJwt();
-        this.cacheManager = cacheManager;
-        this.verifyingKeyCache = cacheManager.getCache("verifyingKeys");
     }
 
     @PostConstruct
@@ -177,8 +178,16 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
         }
     }
 
+    // TODO: Migration required - jakarta.transaction.@Transactional is a CDI interceptor binding
+    // and (like Spring's @Transactional) is not applied to private methods via the bean proxy. This
+    // method performs no JPA writes (only disk I/O + in-memory cache), so the annotation was a
+    // no-op
+    // under Spring too; kept for parity. If transactional semantics are ever needed, make the
+    // method
+    // public or extract it to a separate bean.
     @Transactional
-    private JwtVerificationKey generateAndStoreKeypair() {
+    // package-private so the CDI @Transactional interceptor applies (was private under Spring)
+    JwtVerificationKey generateAndStoreKeypair() {
         JwtVerificationKey verifyingKey = null;
 
         try {
@@ -213,7 +222,7 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
 
         try {
             JwtVerificationKey verifyingKey =
-                    verifyingKeyCache.get(keyId, JwtVerificationKey.class);
+                    (JwtVerificationKey) verifyingKeyCache.getIfPresent(keyId);
 
             if (verifyingKey == null) {
                 log.warn("No signing key found in database for keyId: {}", keyId);
@@ -241,26 +250,22 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
     }
 
     @Override
-    @CacheEvict(
-            value = {"verifyingKeys"},
-            key = "#keyId",
-            condition = "#root.target.isKeystoreEnabled()")
     public void removeKey(String keyId) {
-        verifyingKeyCache.evict(keyId);
+        // Spring's @CacheEvict(condition="#root.target.isKeystoreEnabled()") is replicated here as
+        // an explicit guard since the cache is now managed directly.
+        if (isKeystoreEnabled()) {
+            verifyingKeyCache.invalidate(keyId);
+        }
     }
 
     @Override
     public List<JwtVerificationKey> getKeysEligibleForCleanup(LocalDateTime cutoffDate) {
-        CaffeineCache caffeineCache = (CaffeineCache) verifyingKeyCache;
-        com.github.benmanes.caffeine.cache.Cache<Object, Object> nativeCache =
-                caffeineCache.getNativeCache();
-
         log.debug(
                 "Cache size: {}, Checking {} keys for cleanup",
-                nativeCache.estimatedSize(),
-                nativeCache.asMap().size());
+                verifyingKeyCache.estimatedSize(),
+                verifyingKeyCache.asMap().size());
 
-        return nativeCache.asMap().values().stream()
+        return verifyingKeyCache.asMap().values().stream()
                 .filter(value -> value instanceof JwtVerificationKey)
                 .map(value -> (JwtVerificationKey) value)
                 .filter(

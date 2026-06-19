@@ -12,15 +12,16 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
+import io.quarkus.scheduler.Scheduled;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Named;
 
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.configuration.RuntimePathConfig;
 
-@Component
+@ApplicationScoped
 @Slf4j
 public class FileMonitor {
 
@@ -38,7 +39,7 @@ public class FileMonitor {
      *     monitored, false otherwise
      */
     public FileMonitor(
-            @Qualifier("directoryFilter") Predicate<Path> pathFilter,
+            @Named("directoryFilter") Predicate<Path> pathFilter,
             RuntimePathConfig runtimePathConfig)
             throws IOException {
         this.newlyDiscoveredFiles = new HashSet<>();
@@ -106,7 +107,7 @@ public class FileMonitor {
         }
     }
 
-    @Scheduled(fixedRate = 5000)
+    @Scheduled(every = "5s")
     public void trackFiles() {
         /*
          All files observed changes in the last iteration will be considered as staging files.

@@ -6,15 +6,16 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 
-@Service
+@ApplicationScoped
 @Slf4j
 public class EndpointConfiguration {
 
@@ -52,9 +53,10 @@ public class EndpointConfiguration {
     private Map<String, Set<String>> endpointAlternatives = new ConcurrentHashMap<>();
     private final boolean runningProOrHigher;
 
+    @Inject
     public EndpointConfiguration(
             ApplicationProperties applicationProperties,
-            @Qualifier("runningProOrHigher") boolean runningProOrHigher) {
+            @Named("runningProOrHigher") boolean runningProOrHigher) {
         this.applicationProperties = applicationProperties;
         this.runningProOrHigher = runningProOrHigher;
         init();

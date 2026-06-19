@@ -19,10 +19,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.server.ResponseStatusException;
+
+import jakarta.ws.rs.WebApplicationException;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.multipart.ByteArrayMultipartFile;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.storage.model.FileShare;
@@ -54,6 +55,11 @@ class FileStorageServiceTest {
     @Mock private ApplicationProperties.Storage.Sharing sharingProperties;
     @Mock private ApplicationProperties.Storage.Quotas quotasProperties;
 
+    @Mock
+    private jakarta.enterprise.inject.Instance<
+                    stirling.software.proprietary.security.service.EmailService>
+            emailServiceInstance;
+
     private FileStorageService service;
 
     @BeforeEach
@@ -66,7 +72,7 @@ class FileStorageServiceTest {
                         userRepository,
                         applicationProperties,
                         storageProvider,
-                        Optional.empty(),
+                        emailServiceInstance,
                         storageCleanupEntryRepository);
 
         // Default: storage and sharing fully enabled, share links enabled, no expiry
@@ -141,8 +147,8 @@ class FileStorageServiceTest {
         when(storedFileRepository.findByIdWithShares(100L)).thenReturn(Optional.of(f));
 
         assertThatThrownBy(() -> service.getAccessibleFile(requester, 100L))
-                .isInstanceOf(ResponseStatusException.class)
-                .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                .isInstanceOf(WebApplicationException.class)
+                .extracting(e -> ((WebApplicationException) e).getResponse().getStatus())
                 .isEqualTo(403);
     }
 
@@ -152,8 +158,8 @@ class FileStorageServiceTest {
         when(storedFileRepository.findByIdWithShares(999L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.getAccessibleFile(owner, 999L))
-                .isInstanceOf(ResponseStatusException.class)
-                .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                .isInstanceOf(WebApplicationException.class)
+                .extracting(e -> ((WebApplicationException) e).getResponse().getStatus())
                 .isEqualTo(404);
     }
 
@@ -190,8 +196,8 @@ class FileStorageServiceTest {
                 .thenReturn(Optional.of(share));
 
         assertThatThrownBy(() -> service.requireEditorAccess(requester, f))
-                .isInstanceOf(ResponseStatusException.class)
-                .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                .isInstanceOf(WebApplicationException.class)
+                .extracting(e -> ((WebApplicationException) e).getResponse().getStatus())
                 .isEqualTo(403);
     }
 
@@ -204,8 +210,8 @@ class FileStorageServiceTest {
                 .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.requireEditorAccess(requester, f))
-                .isInstanceOf(ResponseStatusException.class)
-                .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                .isInstanceOf(WebApplicationException.class)
+                .extracting(e -> ((WebApplicationException) e).getResponse().getStatus())
                 .isEqualTo(403);
     }
 
@@ -244,13 +250,12 @@ class FileStorageServiceTest {
         when(userRepository.findByUsernameIgnoreCase("user2")).thenReturn(Optional.of(target));
         when(fileShareRepository.findByFileAndSharedWithUser(f, target))
                 .thenReturn(Optional.empty());
-        when(fileShareRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         FileShare result = service.shareWithUser(owner, f, "user2", ShareAccessRole.VIEWER);
 
         assertThat(result.getSharedWithUser()).isEqualTo(target);
         assertThat(result.getAccessRole()).isEqualTo(ShareAccessRole.VIEWER);
-        verify(fileShareRepository).save(any(FileShare.class));
+        verify(fileShareRepository).persist(any(FileShare.class));
     }
 
     @Test
@@ -262,12 +267,11 @@ class FileStorageServiceTest {
         when(userRepository.findByUsernameIgnoreCase("user2")).thenReturn(Optional.of(target));
         when(fileShareRepository.findByFileAndSharedWithUser(f, target))
                 .thenReturn(Optional.of(existing));
-        when(fileShareRepository.save(existing)).thenReturn(existing);
 
         service.shareWithUser(owner, f, "user2", ShareAccessRole.EDITOR);
 
         assertThat(existing.getAccessRole()).isEqualTo(ShareAccessRole.EDITOR);
-        verify(fileShareRepository).save(existing);
+        verify(fileShareRepository).persist(existing);
     }
 
     @Test
@@ -277,8 +281,8 @@ class FileStorageServiceTest {
         when(userRepository.findByUsernameIgnoreCase("user1")).thenReturn(Optional.of(owner));
 
         assertThatThrownBy(() -> service.shareWithUser(owner, f, "user1", ShareAccessRole.VIEWER))
-                .isInstanceOf(ResponseStatusException.class)
-                .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                .isInstanceOf(WebApplicationException.class)
+                .extracting(e -> ((WebApplicationException) e).getResponse().getStatus())
                 .isEqualTo(400);
     }
 
@@ -290,8 +294,8 @@ class FileStorageServiceTest {
 
         assertThatThrownBy(
                         () -> service.shareWithUser(nonOwner, f, "user1", ShareAccessRole.VIEWER))
-                .isInstanceOf(ResponseStatusException.class)
-                .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                .isInstanceOf(WebApplicationException.class)
+                .extracting(e -> ((WebApplicationException) e).getResponse().getStatus())
                 .isEqualTo(403);
     }
 
@@ -335,8 +339,8 @@ class FileStorageServiceTest {
         StoredFile f = ownedFile(owner);
 
         assertThatThrownBy(() -> service.revokeUserShare(nonOwner, f, "user2"))
-                .isInstanceOf(ResponseStatusException.class)
-                .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                .isInstanceOf(WebApplicationException.class)
+                .extracting(e -> ((WebApplicationException) e).getResponse().getStatus())
                 .isEqualTo(403);
     }
 
@@ -348,13 +352,12 @@ class FileStorageServiceTest {
     void createShareLink_owner_tokenGenerated() {
         User owner = user(1L);
         StoredFile f = ownedFile(owner);
-        when(fileShareRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         FileShare result = service.createShareLink(owner, f, ShareAccessRole.VIEWER);
 
         assertThat(result.getShareToken()).isNotNull();
         assertThat(result.getAccessRole()).isEqualTo(ShareAccessRole.VIEWER);
-        verify(fileShareRepository).save(any(FileShare.class));
+        verify(fileShareRepository).persist(any(FileShare.class));
     }
 
     @Test
@@ -364,8 +367,8 @@ class FileStorageServiceTest {
         StoredFile f = ownedFile(owner);
 
         assertThatThrownBy(() -> service.createShareLink(nonOwner, f, ShareAccessRole.VIEWER))
-                .isInstanceOf(ResponseStatusException.class)
-                .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                .isInstanceOf(WebApplicationException.class)
+                .extracting(e -> ((WebApplicationException) e).getResponse().getStatus())
                 .isEqualTo(403);
     }
 
@@ -399,8 +402,8 @@ class FileStorageServiceTest {
         when(fileShareRepository.findByShareToken("token")).thenReturn(Optional.of(share));
 
         assertThatThrownBy(() -> service.revokeShareLink(owner, f, "token"))
-                .isInstanceOf(ResponseStatusException.class)
-                .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                .isInstanceOf(WebApplicationException.class)
+                .extracting(e -> ((WebApplicationException) e).getResponse().getStatus())
                 .isEqualTo(403);
     }
 
@@ -411,8 +414,8 @@ class FileStorageServiceTest {
         when(fileShareRepository.findByShareToken("unknown")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.revokeShareLink(owner, f, "unknown"))
-                .isInstanceOf(ResponseStatusException.class)
-                .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                .isInstanceOf(WebApplicationException.class)
+                .extracting(e -> ((WebApplicationException) e).getResponse().getStatus())
                 .isEqualTo(404);
     }
 
@@ -424,8 +427,8 @@ class FileStorageServiceTest {
     void storeFile_nullQuotas_passes() throws IOException {
         when(storageProperties.getQuotas()).thenReturn(null);
         User owner = user(1L);
-        MockMultipartFile file =
-                new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[] {1});
+        ByteArrayMultipartFile file =
+                new ByteArrayMultipartFile("file", "test.pdf", "application/pdf", new byte[] {1});
         when(storageProvider.store(any(), any()))
                 .thenReturn(
                         StoredObject.builder()
@@ -434,7 +437,6 @@ class FileStorageServiceTest {
                                 .contentType("application/pdf")
                                 .sizeBytes(1L)
                                 .build());
-        when(storedFileRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         service.storeFile(owner, file);
 
@@ -449,13 +451,13 @@ class FileStorageServiceTest {
         when(quotasProperties.getMaxStorageMbTotal()).thenReturn(-1L);
         User owner = user(1L);
         // 2 MB file exceeds the 1 MB limit
-        MockMultipartFile file =
-                new MockMultipartFile(
+        ByteArrayMultipartFile file =
+                new ByteArrayMultipartFile(
                         "file", "big.pdf", "application/pdf", new byte[2 * 1024 * 1024]);
 
         assertThatThrownBy(() -> service.storeFile(owner, file))
-                .isInstanceOf(ResponseStatusException.class)
-                .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                .isInstanceOf(WebApplicationException.class)
+                .extracting(e -> ((WebApplicationException) e).getResponse().getStatus())
                 .isEqualTo(413);
     }
 
@@ -468,13 +470,13 @@ class FileStorageServiceTest {
         User owner = user(1L);
         // user already has 9 MB stored; a 2 MB upload pushes to 11 MB > 10 MB cap
         when(storedFileRepository.sumStorageBytesByOwner(owner)).thenReturn(9L * 1024 * 1024);
-        MockMultipartFile file =
-                new MockMultipartFile(
+        ByteArrayMultipartFile file =
+                new ByteArrayMultipartFile(
                         "file", "f.pdf", "application/pdf", new byte[2 * 1024 * 1024]);
 
         assertThatThrownBy(() -> service.storeFile(owner, file))
-                .isInstanceOf(ResponseStatusException.class)
-                .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                .isInstanceOf(WebApplicationException.class)
+                .extracting(e -> ((WebApplicationException) e).getResponse().getStatus())
                 .isEqualTo(413);
     }
 
@@ -487,13 +489,13 @@ class FileStorageServiceTest {
         User owner = user(1L);
         // system already has 99 MB; a 2 MB upload pushes to 101 MB > 100 MB cap
         when(storedFileRepository.sumStorageBytesTotal()).thenReturn(99L * 1024 * 1024);
-        MockMultipartFile file =
-                new MockMultipartFile(
+        ByteArrayMultipartFile file =
+                new ByteArrayMultipartFile(
                         "file", "f.pdf", "application/pdf", new byte[2 * 1024 * 1024]);
 
         assertThatThrownBy(() -> service.storeFile(owner, file))
-                .isInstanceOf(ResponseStatusException.class)
-                .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                .isInstanceOf(WebApplicationException.class)
+                .extracting(e -> ((WebApplicationException) e).getResponse().getStatus())
                 .isEqualTo(413);
     }
 
@@ -506,8 +508,8 @@ class FileStorageServiceTest {
         StoredFile existing = ownedFile(owner);
         existing.setSizeBytes(5L * 1024 * 1024);
         existing.setStorageKey("old-key");
-        MockMultipartFile newFile =
-                new MockMultipartFile(
+        ByteArrayMultipartFile newFile =
+                new ByteArrayMultipartFile(
                         "file", "small.pdf", "application/pdf", new byte[1 * 1024 * 1024]);
         when(storageProvider.store(any(), any()))
                 .thenReturn(
@@ -517,7 +519,6 @@ class FileStorageServiceTest {
                                 .contentType("application/pdf")
                                 .sizeBytes(1L * 1024 * 1024)
                                 .build());
-        when(storedFileRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         service.replaceFile(owner, existing, newFile);
 
@@ -538,8 +539,8 @@ class FileStorageServiceTest {
         f.setWorkflowSession(session);
 
         assertThatThrownBy(() -> service.deleteFile(owner, f))
-                .isInstanceOf(ResponseStatusException.class)
-                .extracting(e -> ((ResponseStatusException) e).getStatusCode().value())
+                .isInstanceOf(WebApplicationException.class)
+                .extracting(e -> ((WebApplicationException) e).getResponse().getStatus())
                 .isEqualTo(400);
 
         verify(storedFileRepository, never()).delete(any());

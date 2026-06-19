@@ -28,7 +28,8 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImage;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.util.Matrix;
-import org.springframework.stereotype.Service;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,7 +39,7 @@ import stirling.software.SPDF.model.json.PdfJsonImageElement;
 /**
  * Service for handling PDF image operations for JSON conversion (extraction, encoding, rendering).
  */
-@Service
+@ApplicationScoped
 @Slf4j
 public class PdfJsonImageService {
 

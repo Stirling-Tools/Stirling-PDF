@@ -14,13 +14,16 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +33,8 @@ import stirling.software.SPDF.model.api.SplitPagesRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.FormUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -40,6 +45,8 @@ import stirling.software.jpdfium.PdfDocument;
 import stirling.software.jpdfium.PdfSplit;
 
 @GeneralApi
+@jakarta.ws.rs.Path("/api/v1/general")
+@ApplicationScoped
 @Slf4j
 @RequiredArgsConstructor
 public class SplitPDFController {
@@ -47,8 +54,11 @@ public class SplitPDFController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
+    @POST
+    @jakarta.ws.rs.Path("/split-pages")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/split-pages",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @MultiFileResponse
@@ -59,8 +69,18 @@ public class SplitPDFController {
                             + " specified page numbers or ranges. Users can specify pages using"
                             + " individual numbers, ranges, or 'all' for every page. Input:PDF"
                             + " Output:PDF Type:SIMO")
-    public ResponseEntity<Resource> splitPdf(@ModelAttribute SplitPagesRequest request)
+    public Response splitPdf(
+            @RestForm("fileInput") List<FileUpload> fileUpload,
+            @RestForm("fileId") String fileId,
+            @RestForm("pageNumbers") String pageNumbersForm)
             throws IOException {
+
+        SplitPagesRequest request = new SplitPagesRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        request.setFileId(fileId);
+        if (pageNumbersForm != null) {
+            request.setPageNumbers(pageNumbersForm);
+        }
 
         MultipartFile file = request.getFileInput();
         TempFile outputTempFile = new TempFile(tempFileManager, ".zip");

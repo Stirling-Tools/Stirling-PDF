@@ -1,6 +1,10 @@
 {
   "allowedLicenses": [
     {
+      "moduleName": "org.jboss:jboss-transaction-spi",
+      "moduleLicense": "Public Domain"
+    },
+    {
       "moduleName": ".*",
       "moduleLicense": "BSD License"
     },

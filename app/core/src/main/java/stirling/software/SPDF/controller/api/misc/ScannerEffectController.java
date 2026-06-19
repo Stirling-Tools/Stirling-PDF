@@ -30,15 +30,16 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.rendering.PDFRenderer;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.swagger.v3.oas.annotations.Operation;
 
-import jakarta.validation.Valid;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +49,8 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.ExceptionUtils;
@@ -56,6 +59,8 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @MiscApi
+@jakarta.ws.rs.Path("/api/v1/misc")
+@ApplicationScoped
 @RequiredArgsConstructor
 @Slf4j
 public class ScannerEffectController {
@@ -560,16 +565,75 @@ public class ScannerEffectController {
         }
     }
 
+    @POST
+    @jakarta.ws.rs.Path("/scanner-effect")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
             value = "/scanner-effect",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @Operation(
             summary = "Apply scanner effect to PDF",
             description =
                     "Applies various effects to simulate a scanned document, including rotation, noise, and edge softening. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<Resource> scannerEffect(
-            @Valid @ModelAttribute ScannerEffectRequest request) throws IOException {
+    public Response scannerEffect(
+            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("quality") ScannerEffectRequest.Quality quality,
+            @RestForm("rotation") ScannerEffectRequest.Rotation rotation,
+            @RestForm("colorspace") ScannerEffectRequest.Colorspace colorspace,
+            @RestForm("border") Integer border,
+            @RestForm("rotate") Integer rotate,
+            @RestForm("rotateVariance") Integer rotateVariance,
+            @RestForm("brightness") Float brightness,
+            @RestForm("contrast") Float contrast,
+            @RestForm("blur") Float blur,
+            @RestForm("noise") Float noise,
+            @RestForm("yellowish") Boolean yellowish,
+            @RestForm("resolution") Integer resolution,
+            @RestForm("advancedEnabled") Boolean advancedEnabled)
+            throws IOException {
+        ScannerEffectRequest request = new ScannerEffectRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        if (quality != null) {
+            request.setQuality(quality);
+        }
+        if (rotation != null) {
+            request.setRotation(rotation);
+        }
+        if (colorspace != null) {
+            request.setColorspace(colorspace);
+        }
+        if (border != null) {
+            request.setBorder(border);
+        }
+        if (rotate != null) {
+            request.setRotate(rotate);
+        }
+        if (rotateVariance != null) {
+            request.setRotateVariance(rotateVariance);
+        }
+        if (brightness != null) {
+            request.setBrightness(brightness);
+        }
+        if (contrast != null) {
+            request.setContrast(contrast);
+        }
+        if (blur != null) {
+            request.setBlur(blur);
+        }
+        if (noise != null) {
+            request.setNoise(noise);
+        }
+        if (yellowish != null) {
+            request.setYellowish(yellowish);
+        }
+        if (resolution != null) {
+            request.setResolution(resolution);
+        }
+        if (advancedEnabled != null) {
+            request.setAdvancedEnabled(advancedEnabled);
+        }
+
         MultipartFile file = request.getFileInput();
 
         List<Path> tempFiles = new ArrayList<>();
@@ -591,16 +655,16 @@ public class ScannerEffectController {
             }
 
             int baseRotation = request.getRotationValue() + request.getRotate();
-            int rotateVariance = request.getRotateVariance();
+            int effRotateVariance = request.getRotateVariance();
             int borderPx = request.getBorder();
-            float brightness = request.getBrightness();
-            float contrast = request.getContrast();
-            float blur = request.getBlur();
-            float noise = request.getNoise();
-            boolean yellowish = request.isYellowish();
-            int resolution = request.getResolution();
+            float effBrightness = request.getBrightness();
+            float effContrast = request.getContrast();
+            float effBlur = request.getBlur();
+            float effNoise = request.getNoise();
+            boolean effYellowish = request.isYellowish();
+            int effResolution = request.getResolution();
             int renderResolution = determineRenderResolution(request);
-            ScannerEffectRequest.Colorspace colorspace = request.getColorspace();
+            ScannerEffectRequest.Colorspace effColorspace = request.getColorspace();
 
             long inputFileSize = Files.size(processingInput);
             byte[] renderingPdfBytes = null;
@@ -617,12 +681,12 @@ public class ScannerEffectController {
             if (properties != null && properties.getSystem() != null) {
                 maxSafeDpi = properties.getSystem().getMaxDPI();
             }
-            if (resolution > maxSafeDpi) {
+            if (effResolution > maxSafeDpi) {
                 throw ExceptionUtils.createIllegalArgumentException(
                         "error.dpiExceedsLimit",
                         "DPI value {0} exceeds maximum safe limit of {1}. High DPI values can cause"
                                 + " memory issues and crashes. Please use a lower DPI value.",
-                        resolution,
+                        effResolution,
                         maxSafeDpi);
             }
 
@@ -680,15 +744,15 @@ public class ScannerEffectController {
                                                                                 renderingResources
                                                                                         .get(),
                                                                                 baseRotation,
-                                                                                rotateVariance,
+                                                                                effRotateVariance,
                                                                                 borderPx,
-                                                                                brightness,
-                                                                                contrast,
-                                                                                blur,
-                                                                                noise,
-                                                                                yellowish,
+                                                                                effBrightness,
+                                                                                effContrast,
+                                                                                effBlur,
+                                                                                effNoise,
+                                                                                effYellowish,
                                                                                 renderResolution,
-                                                                                colorspace))
+                                                                                effColorspace))
                                         .toList();
 
                         List<Future<ProcessedPage>> futures = customPool.invokeAll(tasks);

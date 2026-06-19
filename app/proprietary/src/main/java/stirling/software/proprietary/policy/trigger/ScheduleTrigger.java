@@ -10,8 +10,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,9 +31,9 @@ import tools.jackson.databind.ObjectMapper;
  * <p>Last-fire times are in memory, so this assumes a single node and resets on restart.
  */
 @Slf4j
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
-@Profile("saas")
+@IfBuildProfile("saas")
 public class ScheduleTrigger implements PolicyTrigger {
 
     private static final String TYPE = "schedule";

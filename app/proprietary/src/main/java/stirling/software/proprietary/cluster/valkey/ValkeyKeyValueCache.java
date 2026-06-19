@@ -4,54 +4,65 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
-import org.springframework.data.redis.core.Cursor;
-import org.springframework.data.redis.core.ScanOptions;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.stereotype.Component;
+import io.quarkus.redis.datasource.RedisDataSource;
+import io.quarkus.redis.datasource.keys.KeyScanArgs;
+import io.quarkus.redis.datasource.keys.KeyScanCursor;
+import io.quarkus.redis.datasource.value.SetArgs;
+import io.quarkus.redis.datasource.value.ValueCommands;
 
-import lombok.RequiredArgsConstructor;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import stirling.software.common.cluster.KeyValueCache;
 
-@Component
-@RequiredArgsConstructor
-@ConditionalOnValkeyBackplane
+// TODO: Migration required - @ConditionalOnValkeyBackplane (a Spring @ConditionalOnExpression
+// composite on cluster.enabled + cluster.backplane=valkey) has no direct CDI equivalent. Once that
+// collaborator annotation is migrated, re-guard this bean (e.g.
+// @io.quarkus.arc.lookup.LookupIfProperty
+// or @io.quarkus.arc.profile.IfBuildProfile, or a runtime guard) so Valkey beans only load when
+// cluster.enabled=true AND cluster.backplane=valkey.
+// Build-time gating: included in the build only when cluster.backplane=valkey; otherwise this bean
+// (and its RedisDataSource dependency) is removed so no eager Redis startup observer is generated
+// and the in-process @DefaultBean KeyValueCache satisfies the interface.
+@io.quarkus.arc.properties.IfBuildProperty(name = "cluster.backplane", stringValue = "valkey")
+@ApplicationScoped
 public class ValkeyKeyValueCache implements KeyValueCache {
 
     private static final String PREFIX = "stirling:kv:";
 
-    private final StringRedisTemplate template;
+    private final RedisDataSource redis;
+    private final ValueCommands<String, String> values;
+
+    public ValkeyKeyValueCache(RedisDataSource redis) {
+        this.redis = redis;
+        this.values = redis.value(String.class, String.class);
+    }
 
     @Override
     public void put(String namespace, String key, String value, Duration ttl) {
-        template.opsForValue()
-                .set(buildKey(namespace, key), value, ttl.toMillis(), TimeUnit.MILLISECONDS);
+        values.set(buildKey(namespace, key), value, new SetArgs().px(ttl.toMillis()));
     }
 
     @Override
     public Optional<String> get(String namespace, String key) {
-        return Optional.ofNullable(template.opsForValue().get(buildKey(namespace, key)));
+        return Optional.ofNullable(values.get(buildKey(namespace, key)));
     }
 
     @Override
     public void evict(String namespace, String key) {
-        template.delete(buildKey(namespace, key));
+        redis.key(String.class).del(buildKey(namespace, key));
     }
 
     @Override
     public void evictNamespace(String namespace) {
-        ScanOptions options =
-                ScanOptions.scanOptions().match(PREFIX + namespace + ":*").count(256).build();
+        KeyScanArgs options = new KeyScanArgs().match(PREFIX + namespace + ":*").count(256);
         List<String> keys = new ArrayList<>();
-        try (Cursor<String> cursor = template.scan(options)) {
-            while (cursor.hasNext()) {
-                keys.add(cursor.next());
-            }
+        KeyScanCursor<String> cursor = redis.key(String.class).scan(options);
+        while (cursor.hasNext()) {
+            keys.addAll(cursor.next());
         }
         if (!keys.isEmpty()) {
-            template.delete(keys);
+            redis.key(String.class).del(keys.toArray(new String[0]));
         }
     }
 

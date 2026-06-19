@@ -5,14 +5,15 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.lang.reflect.Method;
 import java.util.function.Supplier;
 
-import org.aspectj.lang.ProceedingJoinPoint;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,16 +21,32 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.multipart.MultipartFile;
 
-import jakarta.servlet.http.HttpServletRequest;
+import io.quarkus.vertx.http.runtime.CurrentVertxRequest;
+import io.vertx.core.http.HttpMethod;
+import io.vertx.core.http.HttpServerRequest;
+import io.vertx.ext.web.RoutingContext;
+
+import jakarta.interceptor.InvocationContext;
+import jakarta.ws.rs.core.Response;
 
 import stirling.software.common.aop.AutoJobAspect;
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.JobExecutorService;
 
+/**
+ * MIGRATION (Spring AOP -> CDI interceptor): {@code AutoJobAspect} is now a CDI
+ * {@code @AroundInvoke} interceptor. The advice method is {@code
+ * wrapWithJobExecution(InvocationContext)} (was {@code (ProceedingJoinPoint, AutoJobPostMapping)});
+ * the annotation/attributes are read reflectively from {@code ctx.getMethod()}, parameters from
+ * {@code ctx.getParameters()}, and the call proceeds via {@code ctx.proceed()}. Request params
+ * (e.g. {@code async}) come from the Vert.x request, not {@code HttpServletRequest}. The
+ * collaborators ({@code JobExecutorService.runJobGeneric}) now return JAX-RS {@link Response}.
+ * Tests are reworked to mock {@link InvocationContext} + the Vert.x request chain while preserving
+ * the original verification intent (file resolution, async persistence, retries).
+ */
 @ExtendWith(MockitoExtension.class)
 class AutoJobPostMappingIntegrationTest {
 
@@ -37,18 +54,15 @@ class AutoJobPostMappingIntegrationTest {
 
     @Mock private JobExecutorService jobExecutorService;
 
-    @Mock private HttpServletRequest request;
+    @Mock private CurrentVertxRequest currentVertxRequest;
+
+    @Mock private RoutingContext routingContext;
+
+    @Mock private HttpServerRequest httpServerRequest;
 
     @Mock private FileStorage fileStorage;
 
-    @BeforeEach
-    void setUp() {
-        autoJobAspect = new AutoJobAspect(jobExecutorService, request, fileStorage);
-    }
-
-    @Mock private ProceedingJoinPoint joinPoint;
-
-    @Mock private AutoJobPostMapping autoJobPostMapping;
+    @Mock private InvocationContext invocationContext;
 
     @Captor private ArgumentCaptor<Supplier<Object>> workCaptor;
 
@@ -60,6 +74,39 @@ class AutoJobPostMappingIntegrationTest {
 
     @Captor private ArgumentCaptor<Integer> resourceWeightCaptor;
 
+    @BeforeEach
+    void setUp() {
+        autoJobAspect = new AutoJobAspect(jobExecutorService, currentVertxRequest, fileStorage);
+
+        // Wire the Vert.x request chain used for reading the "async" query param and for logging.
+        lenient().when(currentVertxRequest.getCurrent()).thenReturn(routingContext);
+        lenient().when(routingContext.request()).thenReturn(httpServerRequest);
+        lenient().when(httpServerRequest.method()).thenReturn(HttpMethod.POST);
+        lenient().when(httpServerRequest.path()).thenReturn("/api/v1/test");
+        lenient().when(routingContext.get("jobId")).thenReturn(null);
+    }
+
+    // Real annotated methods so ctx.getMethod().getAnnotation(AutoJobPostMapping.class) returns the
+    // attribute values each scenario needs (annotation attributes cannot be stubbed on a mock).
+
+    @AutoJobPostMapping(
+            timeout = 60000L,
+            retryCount = 3,
+            trackProgress = true,
+            queueable = true,
+            resourceWeight = 75)
+    void customParametersTarget() {}
+
+    @AutoJobPostMapping(timeout = -1L, retryCount = 2, trackProgress = false, queueable = false)
+    void retryTarget() {}
+
+    @AutoJobPostMapping(retryCount = 1)
+    void asyncPersistTarget() {}
+
+    private static Method method(String name) throws NoSuchMethodException {
+        return AutoJobPostMappingIntegrationTest.class.getDeclaredMethod(name);
+    }
+
     @Test
     void shouldExecuteWithCustomParameters() throws Throwable {
         // Given
@@ -67,26 +114,23 @@ class AutoJobPostMappingIntegrationTest {
         pdfFile.setFileId("test-file-id");
         Object[] args = {pdfFile};
 
-        when(joinPoint.getArgs()).thenReturn(args);
-        when(request.getParameter("async")).thenReturn("true");
-        when(autoJobPostMapping.timeout()).thenReturn(60000L);
-        when(autoJobPostMapping.retryCount()).thenReturn(3);
-        when(autoJobPostMapping.trackProgress()).thenReturn(true);
-        when(autoJobPostMapping.queueable()).thenReturn(true);
-        when(autoJobPostMapping.resourceWeight()).thenReturn(75);
+        when(invocationContext.getMethod()).thenReturn(method("customParametersTarget"));
+        when(invocationContext.getParameters()).thenReturn(args);
+        when(httpServerRequest.getParam("async")).thenReturn("true");
 
         MultipartFile mockFile = mock(MultipartFile.class);
         when(fileStorage.retrieveFile("test-file-id")).thenReturn(mockFile);
 
+        Response stubResponse = Response.ok("success").build();
         when(jobExecutorService.runJobGeneric(
                         anyBoolean(), any(Supplier.class), anyLong(), anyBoolean(), anyInt()))
-                .thenReturn(ResponseEntity.ok("success"));
+                .thenReturn(stubResponse);
 
         // When
-        Object result = autoJobAspect.wrapWithJobExecution(joinPoint, autoJobPostMapping);
+        Object result = autoJobAspect.wrapWithJobExecution(invocationContext);
 
         // Then
-        assertEquals(ResponseEntity.ok("success"), result);
+        assertSame(stubResponse, result);
 
         verify(jobExecutorService)
                 .runJobGeneric(
@@ -108,18 +152,15 @@ class AutoJobPostMappingIntegrationTest {
     @Test
     void shouldRetryOnError() throws Throwable {
         // Given
-        when(joinPoint.getArgs()).thenReturn(new Object[0]);
-        when(request.getParameter("async")).thenReturn("false");
-        when(autoJobPostMapping.timeout()).thenReturn(-1L);
-        when(autoJobPostMapping.retryCount()).thenReturn(2);
-        when(autoJobPostMapping.trackProgress()).thenReturn(false);
-        when(autoJobPostMapping.queueable()).thenReturn(false);
-        when(autoJobPostMapping.resourceWeight()).thenReturn(50);
+        when(invocationContext.getMethod()).thenReturn(method("retryTarget"));
+        when(invocationContext.getParameters()).thenReturn(new Object[0]);
+        when(httpServerRequest.getParam("async")).thenReturn("false");
 
         // First call throws exception, second succeeds
-        when(joinPoint.proceed(any()))
+        Response retrySucceeded = Response.ok("retry succeeded").build();
+        when(invocationContext.proceed())
                 .thenThrow(new RuntimeException("First attempt failed"))
-                .thenReturn(ResponseEntity.ok("retry succeeded"));
+                .thenReturn(retrySucceeded);
 
         // Mock jobExecutorService to execute the work immediately
         when(jobExecutorService.runJobGeneric(
@@ -131,13 +172,13 @@ class AutoJobPostMappingIntegrationTest {
                         });
 
         // When
-        Object result = autoJobAspect.wrapWithJobExecution(joinPoint, autoJobPostMapping);
+        Object result = autoJobAspect.wrapWithJobExecution(invocationContext);
 
         // Then
-        assertEquals(ResponseEntity.ok("retry succeeded"), result);
+        assertSame(retrySucceeded, result);
 
         // Verify that proceed was called twice (initial attempt + 1 retry)
-        verify(joinPoint, times(2)).proceed(any());
+        verify(invocationContext, times(2)).proceed();
     }
 
     @Test
@@ -147,9 +188,9 @@ class AutoJobPostMappingIntegrationTest {
         pdfFile.setFileInput(mock(MultipartFile.class));
         Object[] args = {pdfFile};
 
-        when(joinPoint.getArgs()).thenReturn(args);
-        when(request.getParameter("async")).thenReturn("true");
-        when(autoJobPostMapping.retryCount()).thenReturn(1);
+        when(invocationContext.getMethod()).thenReturn(method("asyncPersistTarget"));
+        when(invocationContext.getParameters()).thenReturn(args);
+        when(httpServerRequest.getParam("async")).thenReturn("true");
 
         when(fileStorage.storeFile(any(MultipartFile.class))).thenReturn("stored-file-id");
         when(fileStorage.retrieveFile("stored-file-id")).thenReturn(mock(MultipartFile.class));
@@ -157,10 +198,10 @@ class AutoJobPostMappingIntegrationTest {
         // Mock job executor to return a successful response
         when(jobExecutorService.runJobGeneric(
                         anyBoolean(), any(Supplier.class), anyLong(), anyBoolean(), anyInt()))
-                .thenReturn(ResponseEntity.ok("success"));
+                .thenReturn(Response.ok("success").build());
 
         // When
-        autoJobAspect.wrapWithJobExecution(joinPoint, autoJobPostMapping);
+        autoJobAspect.wrapWithJobExecution(invocationContext);
 
         // Then
         assertEquals(

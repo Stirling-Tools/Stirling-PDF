@@ -10,8 +10,9 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 import java.util.Set;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Component;
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * SHA-256 of the file's bytes. The simplest universally-applicable signature — works for every
@@ -22,8 +23,8 @@ import org.springframework.stereotype.Component;
  * PdfMetadataSignatureExtractor} would be a separate bean and add its own signature type — composed
  * at the detector layer, no interaction needed here.
  */
-@Component
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 public class ByteHashSignatureExtractor implements LineageSignatureExtractor {
 
     private static final String ALGORITHM = "SHA-256";

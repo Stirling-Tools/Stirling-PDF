@@ -2,21 +2,25 @@ package stirling.software.SPDF.controller.api.misc;
 
 import java.io.IOException;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,18 +30,31 @@ import stirling.software.SPDF.model.api.misc.MetadataRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfMetadataService;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
-import stirling.software.common.util.propertyeditor.StringToMapPropertyEditor;
+
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 @MiscApi
 @Slf4j
+@ApplicationScoped
+@Path("/api/v1/misc")
 @RequiredArgsConstructor
 public class MetadataController {
+
+    // MIGRATION (Spring -> JAX-RS): the @InitBinder + StringToMapPropertyEditor that turned the
+    // "allRequestParams" form field (a JSON string) into a Map is replaced by parsing the same JSON
+    // string with this Jackson mapper inside the handler (see parseAllRequestParams). This mirrors
+    // StringToMapPropertyEditor exactly (HashMap<String, String> via TypeReference).
+    private static final ObjectMapper OBJECT_MAPPER = JsonMapper.builder().build();
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
@@ -52,13 +69,29 @@ public class MetadataController {
         return entry;
     }
 
-    @InitBinder
-    public void initBinder(WebDataBinder binder) {
-        binder.registerCustomEditor(Map.class, "allRequestParams", new StringToMapPropertyEditor());
+    /**
+     * MIGRATION (Spring -> JAX-RS): port of {@code StringToMapPropertyEditor}. The
+     * "allRequestParams" form field is a JSON object string; parse it into a {@code Map<String,
+     * String>}, returning an empty map when the field is absent/blank.
+     */
+    private Map<String, String> parseAllRequestParams(String allRequestParamsJson) {
+        if (allRequestParamsJson == null || allRequestParamsJson.isBlank()) {
+            return new HashMap<>();
+        }
+        try {
+            TypeReference<HashMap<String, String>> typeRef = new TypeReference<>() {};
+            return OBJECT_MAPPER.readValue(allRequestParamsJson, typeRef);
+        } catch (Exception e) {
+            throw new IllegalArgumentException(
+                    "Failed to convert java.lang.String to java.util.Map", e);
+        }
     }
 
+    @POST
+    @Path("/update-metadata")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/update-metadata",
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @StandardPdfResponse
@@ -68,23 +101,51 @@ public class MetadataController {
                     "This endpoint allows you to update the metadata of a given PDF file. You can"
                             + " add, modify, or delete standard and custom metadata fields. Input:PDF"
                             + " Output:PDF Type:SISO")
-    public ResponseEntity<Resource> metadata(@ModelAttribute MetadataRequest request)
+    public Response metadata(
+            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("deleteAll") Boolean deleteAllParam,
+            @RestForm("author") String author,
+            @RestForm("creationDate") String creationDate,
+            @RestForm("creator") String creator,
+            @RestForm("keywords") String keywords,
+            @RestForm("modificationDate") String modificationDate,
+            @RestForm("producer") String producer,
+            @RestForm("subject") String subject,
+            @RestForm("title") String title,
+            @RestForm("trapped") String trapped,
+            @RestForm("allRequestParams") String allRequestParamsJson)
             throws IOException {
+
+        // Rebuild the request model from the multipart form fields (mirrors the former
+        // @ModelAttribute MetadataRequest binding).
+        MetadataRequest request = new MetadataRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        request.setDeleteAll(deleteAllParam);
+        request.setAuthor(author);
+        request.setCreationDate(creationDate);
+        request.setCreator(creator);
+        request.setKeywords(keywords);
+        request.setModificationDate(modificationDate);
+        request.setProducer(producer);
+        request.setSubject(subject);
+        request.setTitle(title);
+        request.setTrapped(trapped);
+        request.setAllRequestParams(parseAllRequestParams(allRequestParamsJson));
 
         // Extract PDF file from the request object
         MultipartFile pdfFile = request.getFileInput();
 
         // Extract metadata information
         boolean deleteAll = Boolean.TRUE.equals(request.getDeleteAll());
-        String author = request.getAuthor();
-        String creationDate = request.getCreationDate();
-        String creator = request.getCreator();
-        String keywords = request.getKeywords();
-        String modificationDate = request.getModificationDate();
-        String producer = request.getProducer();
-        String subject = request.getSubject();
-        String title = request.getTitle();
-        String trapped = request.getTrapped();
+        author = request.getAuthor();
+        creationDate = request.getCreationDate();
+        creator = request.getCreator();
+        keywords = request.getKeywords();
+        modificationDate = request.getModificationDate();
+        producer = request.getProducer();
+        subject = request.getSubject();
+        title = request.getTitle();
+        trapped = request.getTrapped();
 
         // Extract additional custom parameters
         Map<String, String> allRequestParams = request.getAllRequestParams();

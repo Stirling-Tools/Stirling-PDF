@@ -7,11 +7,12 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
-
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -49,8 +50,8 @@ import stirling.software.saas.payg.wallet.WalletPolicy;
  * is for display + the entitlement gate, where 30s staleness is the accepted cap-evaluation floor.
  */
 @Slf4j
-@Service
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 public class TeamBillingService {
 
     static final int CACHE_TTL_SECONDS = 30;
@@ -107,7 +108,7 @@ public class TeamBillingService {
     }
 
     private TeamBillingContext compute(Long teamId) {
-        Optional<PaygTeamExtensions> extOpt = extensionsRepository.findById(teamId);
+        Optional<PaygTeamExtensions> extOpt = extensionsRepository.findByIdOptional(teamId);
         Optional<WalletPolicy> walletPolicyOpt = walletPolicyRepository.findByTeamId(teamId);
 
         String subscriptionId = extOpt.map(PaygTeamExtensions::getPaygSubscriptionId).orElse(null);

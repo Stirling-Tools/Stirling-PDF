@@ -5,18 +5,19 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Locale;
 
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.util.HtmlUtils;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +28,7 @@ import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.converters.EmlToPdfRequest;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.CustomHtmlSanitizer;
 import stirling.software.common.util.EmlToPdf;
@@ -35,9 +37,13 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @ConvertApi
+@Path("/api/v1/convert")
+@ApplicationScoped
 @Slf4j
 @RequiredArgsConstructor
 public class ConvertEmlToPDF {
+
+    private static final MediaType TEXT_HTML_TYPE = MediaType.valueOf(MediaType.TEXT_HTML);
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final RuntimePathConfig runtimePathConfig;
@@ -45,9 +51,12 @@ public class ConvertEmlToPDF {
     private final CustomHtmlSanitizer customHtmlSanitizer;
 
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/eml/pdf",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
+    @POST
+    @Path("/eml/pdf")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @StandardPdfResponse
     @Operation(
             summary = "Convert EML/MSG to PDF",
@@ -56,27 +65,47 @@ public class ConvertEmlToPDF {
                             + " with extensive customization options. Features include font settings,"
                             + " image constraints, display modes, attachment handling, and HTML debug"
                             + " output. Input: EML or MSG file, Output: PDF or HTML file. Type: SISO")
-    public ResponseEntity<Resource> convertEmlToPdf(@ModelAttribute EmlToPdfRequest request) {
+    public Response convertEmlToPdf(
+            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("fileId") String fileId,
+            @RestForm("includeAttachments") boolean includeAttachments,
+            @RestForm("maxAttachmentSizeMB") Integer maxAttachmentSizeMB,
+            @RestForm("downloadHtml") boolean downloadHtml,
+            @RestForm("includeAllRecipients") Boolean includeAllRecipients) {
 
-        MultipartFile inputFile = request.getFileInput();
-        String originalFilename = inputFile.getOriginalFilename();
+        EmlToPdfRequest request = new EmlToPdfRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        request.setFileId(fileId);
+        request.setIncludeAttachments(includeAttachments);
+        if (maxAttachmentSizeMB != null) {
+            request.setMaxAttachmentSizeMB(maxAttachmentSizeMB);
+        }
+        request.setDownloadHtml(downloadHtml);
+        if (includeAllRecipients != null) {
+            request.setIncludeAllRecipients(includeAllRecipients);
+        }
+
+        var inputFile = request.getFileInput();
 
         // Validate input
-        if (inputFile.isEmpty()) {
+        if (inputFile == null || inputFile.isEmpty()) {
             log.error("No file provided for EML/MSG to PDF conversion.");
-            return errorResponse(HttpStatus.BAD_REQUEST, "No file provided");
+            return errorResponse(Response.Status.BAD_REQUEST, "No file provided");
         }
+
+        String originalFilename = inputFile.getOriginalFilename();
 
         if (originalFilename == null || originalFilename.trim().isEmpty()) {
             log.error("Filename is null or empty.");
-            return errorResponse(HttpStatus.BAD_REQUEST, "Please provide a valid filename");
+            return errorResponse(Response.Status.BAD_REQUEST, "Please provide a valid filename");
         }
 
         // Validate file type - support EML and MSG (Outlook) files
         String lowerFilename = originalFilename.toLowerCase(Locale.ROOT);
         if (!lowerFilename.endsWith(".eml") && !lowerFilename.endsWith(".msg")) {
             log.error("Invalid file type for EML/MSG to PDF: {}", originalFilename);
-            return errorResponse(HttpStatus.BAD_REQUEST, "Please upload a valid EML or MSG file");
+            return errorResponse(
+                    Response.Status.BAD_REQUEST, "Please upload a valid EML or MSG file");
         }
 
         String baseFilename = Filenames.toSimpleFileName(originalFilename); // Use Filenames utility
@@ -97,11 +126,11 @@ public class ConvertEmlToPDF {
                         throw ex;
                     }
                     return WebResponseUtils.fileToWebResponse(
-                            tempOut, baseFilename + ".html", MediaType.TEXT_HTML);
+                            tempOut, baseFilename + ".html", TEXT_HTML_TYPE);
                 } catch (IOException | IllegalArgumentException e) {
                     log.error("HTML conversion failed for {}", originalFilename, e);
                     return errorResponse(
-                            HttpStatus.INTERNAL_SERVER_ERROR,
+                            Response.Status.INTERNAL_SERVER_ERROR,
                             "HTML conversion failed: " + e.getMessage());
                 }
             }
@@ -121,7 +150,7 @@ public class ConvertEmlToPDF {
                 if (pdfBytes == null || pdfBytes.length == 0) {
                     log.error("PDF conversion failed - empty output for {}", originalFilename);
                     return errorResponse(
-                            HttpStatus.INTERNAL_SERVER_ERROR,
+                            Response.Status.INTERNAL_SERVER_ERROR,
                             "PDF conversion failed - empty output");
                 }
                 log.info("Successfully converted email to PDF: {}", originalFilename);
@@ -138,7 +167,7 @@ public class ConvertEmlToPDF {
                 Thread.currentThread().interrupt();
                 log.error("Email to PDF conversion was interrupted for {}", originalFilename, e);
                 return errorResponse(
-                        HttpStatus.INTERNAL_SERVER_ERROR, "Conversion was interrupted");
+                        Response.Status.INTERNAL_SERVER_ERROR, "Conversion was interrupted");
             } catch (IllegalArgumentException e) {
                 String errorMessage = buildErrorMessage(e, originalFilename);
                 log.error(
@@ -146,7 +175,7 @@ public class ConvertEmlToPDF {
                         originalFilename,
                         errorMessage,
                         e);
-                return errorResponse(HttpStatus.INTERNAL_SERVER_ERROR, errorMessage);
+                return errorResponse(Response.Status.INTERNAL_SERVER_ERROR, errorMessage);
             } catch (RuntimeException e) {
                 String errorMessage = buildErrorMessage(e, originalFilename);
                 log.error(
@@ -154,27 +183,29 @@ public class ConvertEmlToPDF {
                         originalFilename,
                         errorMessage,
                         e);
-                return errorResponse(HttpStatus.INTERNAL_SERVER_ERROR, errorMessage);
+                return errorResponse(Response.Status.INTERNAL_SERVER_ERROR, errorMessage);
             }
 
         } catch (IOException e) {
             log.error("File processing error for email to PDF: {}", originalFilename, e);
-            return errorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "File processing error");
+            return errorResponse(Response.Status.INTERNAL_SERVER_ERROR, "File processing error");
         }
     }
 
-    private ResponseEntity<Resource> errorResponse(HttpStatus status, String message) {
+    private Response errorResponse(Response.Status status, String message) {
         byte[] body = message.getBytes(StandardCharsets.UTF_8);
-        return ResponseEntity.status(status)
-                .contentLength(body.length)
-                .body(new ByteArrayResource(body));
+        return Response.status(status)
+                .header("Content-Length", body.length)
+                .type(MediaType.TEXT_PLAIN)
+                .entity(body)
+                .build();
     }
 
     private static @NotNull String buildErrorMessage(Exception e, String originalFilename) {
-        String safeFilename = HtmlUtils.htmlEscape(originalFilename);
+        String safeFilename = htmlEscape(originalFilename);
         String exceptionMessage = e.getMessage();
         String safeExceptionMessage =
-                exceptionMessage == null ? "Unknown error" : HtmlUtils.htmlEscape(exceptionMessage);
+                exceptionMessage == null ? "Unknown error" : htmlEscape(exceptionMessage);
         String errorMessage;
         if (exceptionMessage != null && exceptionMessage.contains("Invalid EML")) {
             errorMessage =
@@ -191,5 +222,27 @@ public class ConvertEmlToPDF {
             errorMessage = "Conversion failed for " + safeFilename + ": " + safeExceptionMessage;
         }
         return errorMessage;
+    }
+
+    // MIGRATION (Spring -> JAX-RS): replaces org.springframework.web.util.HtmlUtils#htmlEscape,
+    // which has no Quarkus/JAX-RS equivalent. Escapes the five XML/HTML significant characters so
+    // user-controlled filenames/exception messages cannot inject markup into error responses.
+    private static String htmlEscape(String input) {
+        if (input == null) {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder(input.length());
+        for (int i = 0; i < input.length(); i++) {
+            char c = input.charAt(i);
+            switch (c) {
+                case '&' -> sb.append("&amp;");
+                case '<' -> sb.append("&lt;");
+                case '>' -> sb.append("&gt;");
+                case '"' -> sb.append("&quot;");
+                case '\'' -> sb.append("&#39;");
+                default -> sb.append(c);
+            }
+        }
+        return sb.toString();
     }
 }

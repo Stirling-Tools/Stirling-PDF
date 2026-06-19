@@ -19,11 +19,8 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.rendering.PDFRenderer;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import com.google.zxing.*;
 import com.google.zxing.common.GlobalHistogramBinarizer;
@@ -31,6 +28,13 @@ import com.google.zxing.common.HybridBinarizer;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +45,8 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -49,6 +55,8 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @MiscApi
+@Path("/api/v1/misc")
+@ApplicationScoped
 @Slf4j
 @RequiredArgsConstructor
 public class AutoSplitPdfController {
@@ -269,9 +277,12 @@ public class AutoSplitPdfController {
         return QR_DETECTION_DPI;
     }
 
+    @POST
+    @Path("/auto-split-pdf")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
             value = "/auto-split-pdf",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @MultiFileResponse
     @Operation(
@@ -281,8 +292,17 @@ public class AutoSplitPdfController {
                             + " splits the document at the QR code boundaries. The output is a zip"
                             + " file containing each separate PDF document. Input:PDF Output:ZIP-PDF"
                             + " Type:SISO")
-    public ResponseEntity<Resource> autoSplitPdf(@ModelAttribute AutoSplitPdfRequest request)
+    public Response autoSplitPdf(
+            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("fileId") String fileId,
+            @RestForm("duplexMode") Boolean duplexModeForm)
             throws IOException {
+
+        AutoSplitPdfRequest request = new AutoSplitPdfRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        request.setFileId(fileId);
+        request.setDuplexMode(duplexModeForm);
+
         MultipartFile file = request.getFileInput();
         boolean duplexMode = Boolean.TRUE.equals(request.getDuplexMode());
 

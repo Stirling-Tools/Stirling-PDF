@@ -1,6 +1,7 @@
 package stirling.software.proprietary.service;
 
 import java.io.IOException;
+import java.net.URLConnection;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -11,22 +12,22 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.MediaTypeFactory;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.RestClientResponseException;
-import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.io.FileSystemResource;
+import stirling.software.common.model.io.InputStreamResource;
+import stirling.software.common.model.io.Resource;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.InternalApiTimeoutException;
@@ -64,7 +65,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 @Slf4j
-@Service
+@ApplicationScoped
 public class AiWorkflowService {
 
     private static final String DOCUMENTS_ENDPOINT = "/api/v1/documents";
@@ -79,9 +80,12 @@ public class AiWorkflowService {
     private final FileIdStrategy fileIdStrategy;
     private final AiEngineEndpointResolver endpointResolver;
     private final PolicyExecutor policyExecutor;
+    // @Autowired(required = false) -> Instance<T> for the optional UserServiceInterface bean
+    // (present only when security is enabled). Resolved once in the constructor.
     private final UserServiceInterface userService;
     private final ApplicationProperties applicationProperties;
 
+    @Inject
     public AiWorkflowService(
             CustomPDFDocumentFactory pdfDocumentFactory,
             AiEngineClient aiEngineClient,
@@ -92,7 +96,7 @@ public class AiWorkflowService {
             FileIdStrategy fileIdStrategy,
             AiEngineEndpointResolver endpointResolver,
             PolicyExecutor policyExecutor,
-            @Autowired(required = false) UserServiceInterface userService,
+            Instance<UserServiceInterface> userService,
             ApplicationProperties applicationProperties) {
         this.pdfDocumentFactory = pdfDocumentFactory;
         this.aiEngineClient = aiEngineClient;
@@ -103,7 +107,7 @@ public class AiWorkflowService {
         this.fileIdStrategy = fileIdStrategy;
         this.endpointResolver = endpointResolver;
         this.policyExecutor = policyExecutor;
-        this.userService = userService;
+        this.userService = userService.isResolvable() ? userService.get() : null;
         this.applicationProperties = applicationProperties;
     }
 
@@ -525,13 +529,8 @@ public class AiWorkflowService {
         listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.PROCESSING));
         String safeFilename = Filenames.toSimpleFileName(filename);
         byte[] bytes = content.getBytes(java.nio.charset.StandardCharsets.UTF_8);
-        org.springframework.core.io.Resource resource =
-                new org.springframework.core.io.ByteArrayResource(bytes) {
-                    @Override
-                    public String getFilename() {
-                        return safeFilename;
-                    }
-                };
+        Resource resource =
+                new InputStreamResource(new java.io.ByteArrayInputStream(bytes), safeFilename);
         return new WorkflowState.Terminal(
                 buildCompletedResponse(response.getSummary(), List.of(resource), List.of(), null));
     }
@@ -596,10 +595,6 @@ public class AiWorkflowService {
             log.error("Plan step on tool {} timed out: {}", e.getEndpointPath(), e.getMessage());
             return new WorkflowState.Terminal(
                     cannotContinue(toolTimeoutMessage(e.getEndpointPath(), e)));
-        } catch (HttpServerErrorException e) {
-            String reason = extractDetailFromHttpError(e);
-            log.error("Plan step failed (HTTP {}): {}", e.getStatusCode(), reason);
-            return new WorkflowState.Terminal(cannotContinue(reason));
         } catch (Exception e) {
             AiWorkflowResponse limit = paygLimitResponseOrNull(e);
             if (limit != null) {
@@ -630,27 +625,6 @@ public class AiWorkflowService {
         String reason =
                 cause.getMessage() != null ? cause.getMessage() : cause.getClass().getSimpleName();
         return String.format("The %s tool failed: %s", endpointPath, reason);
-    }
-
-    /**
-     * Extracts the {@code detail} field from an HTTP error response body if it is valid JSON,
-     * otherwise falls back to the exception message. This lets controller-level error messages
-     * (e.g. missing system dependency) surface cleanly in the chat response.
-     */
-    private String extractDetailFromHttpError(HttpServerErrorException e) {
-        try {
-            String body = e.getResponseBodyAsString();
-            if (body != null && !body.isBlank()) {
-                JsonNode node = objectMapper.readTree(body);
-                JsonNode detail = node.get("detail");
-                if (detail != null && detail.isTextual() && !detail.asText().isBlank()) {
-                    return detail.asText();
-                }
-            }
-        } catch (Exception ignored) {
-            // fall through to generic message
-        }
-        return "The request could not be completed. Please try again or contact your system administrator.";
     }
 
     /**
@@ -704,10 +678,11 @@ public class AiWorkflowService {
             } else {
                 name = "result-" + (i + 1);
             }
-            String contentType =
-                    MediaTypeFactory.getMediaType(name)
-                            .orElse(MediaType.APPLICATION_OCTET_STREAM)
-                            .toString();
+            // Spring's MediaTypeFactory.getMediaType(name) did extension-based content-type
+            // guessing; jakarta.ws.rs.core.MediaType has no equivalent factory, so use the JDK's
+            // URLConnection.guessContentTypeFromName and fall back to application/octet-stream.
+            String guessed = URLConnection.guessContentTypeFromName(name);
+            String contentType = guessed != null ? guessed : "application/octet-stream";
             String fileId;
             try (java.io.InputStream is = resource.getInputStream()) {
                 fileId = fileStorage.storeInputStream(is, name).fileId();
@@ -757,10 +732,14 @@ public class AiWorkflowService {
      * — same gap the policy auto-run path bridges in {@code PolicyEngine}.
      */
     private AiWorkflowResponse paygLimitResponseOrNull(Throwable e) {
-        if (!(e instanceof RestClientResponseException rce)) {
+        // Migrated PolicyExecutor rethrows a non-OK tool response as a WebApplicationException
+        // carrying status + body (was Spring's RestClientResponseException); unwrap the cause
+        // chain.
+        WebApplicationException wae = findWebApplicationException(e);
+        if (wae == null) {
             return null;
         }
-        String code = DownstreamEntitlementError.extractCode(rce);
+        String code = DownstreamEntitlementError.extractCode(wae);
         if (code == null) {
             return null;
         }
@@ -768,8 +747,17 @@ public class AiWorkflowService {
         response.setOutcome(AiWorkflowOutcome.CANNOT_CONTINUE);
         response.setReason("You've reached your current usage limit.");
         response.setErrorCode(code);
-        response.setErrorSubscribed(DownstreamEntitlementError.extractSubscribed(rce));
+        response.setErrorSubscribed(DownstreamEntitlementError.extractSubscribed(wae));
         return response;
+    }
+
+    private static WebApplicationException findWebApplicationException(Throwable e) {
+        for (Throwable t = e; t != null; t = t.getCause()) {
+            if (t instanceof WebApplicationException wae) {
+                return wae;
+            }
+        }
+        return null;
     }
 
     /**

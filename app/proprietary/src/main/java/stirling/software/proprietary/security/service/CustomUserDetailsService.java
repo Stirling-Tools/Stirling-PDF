@@ -2,22 +2,29 @@ package stirling.software.proprietary.security.service;
 
 import java.util.Locale;
 
-import org.springframework.security.authentication.LockedException;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.security.UsernameNotFoundException;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.User;
 
-@Service
+// TODO: Migration required - this class implemented
+// org.springframework.security.core.userdetails.UserDetailsService and returned a
+// org.springframework.security.core.userdetails.UserDetails. Quarkus has no UserDetailsService
+// contract; the user-loading logic below should be invoked from a Quarkus IdentityProvider
+// (or SecurityIdentityAugmentor) that turns the returned User into a SecurityIdentity. The method
+// is retained as a plain service returning the User entity. Former Spring exceptions are mapped to
+// the migration shim runtime exceptions: UsernameNotFoundException (user not found) and
+// LockedException -> IllegalStateException (account locked); the IdentityProvider / AuthController
+// translate these into the appropriate unauthorized responses.
+@ApplicationScoped
 @RequiredArgsConstructor
-public class CustomUserDetailsService implements UserDetailsService {
+public class CustomUserDetailsService {
 
     private final UserRepository userRepository;
 
@@ -25,8 +32,8 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     private final ApplicationProperties.Security securityProperties;
 
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    @Transactional
+    public User loadUserByUsername(String username) {
         User user =
                 userRepository
                         .findByUsername(username)
@@ -36,7 +43,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                                                 "No user found with username: " + username));
 
         if (loginAttemptService.isBlocked(username)) {
-            throw new LockedException(
+            throw new IllegalStateException(
                     "Your account has been locked due to too many failed login attempts.");
         }
 
@@ -58,7 +65,7 @@ public class CustomUserDetailsService implements UserDetailsService {
             authTypeStr = detectedType.name();
             // Update the user record to set the detected authentication type
             user.setAuthenticationType(detectedType);
-            userRepository.save(user);
+            userRepository.persist(user);
         }
 
         AuthenticationType userAuthenticationType =

@@ -9,17 +9,17 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 import org.slf4j.MDC;
-import org.springframework.context.annotation.Profile;
-import org.springframework.core.io.Resource;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClientResponseException;
 
-import lombok.RequiredArgsConstructor;
+import io.quarkus.arc.All;
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
+
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.io.Resource;
 import stirling.software.common.model.job.ResultFile;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.InternalApiTimeoutException;
@@ -37,6 +37,7 @@ import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.WaitState;
 import stirling.software.proprietary.policy.output.PolicyOutputSink;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
+import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.service.DownstreamEntitlementError;
 
 /**
@@ -52,9 +53,8 @@ import stirling.software.proprietary.service.DownstreamEntitlementError;
  * control so heavy runs queue under load.
  */
 @Slf4j
-@Service
-@RequiredArgsConstructor
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 public class PolicyEngine {
 
     // Admission weight for one run. Weighted heavy: a run chains many tools and holds intermediate
@@ -65,16 +65,51 @@ public class PolicyEngine {
     // client treats it as "busy" and retries, rather than as a terminal processing failure.
     private static final String QUEUE_FULL_CODE = "POLICY_QUEUE_FULL";
 
+    /**
+     * MDC key {@code UserService.getCurrentUsername()} reads as its async fallback (stamped by the
+     * controller audit aspect on request threads). We reuse it to carry the billing identity onto
+     * the policy worker thread.
+     */
+    private static final String AUDIT_PRINCIPAL_MDC_KEY = "auditPrincipal";
+
     private final PolicyExecutor stepExecutor;
     private final TaskManager taskManager;
     private final PolicyRunRegistry registry;
     private final FileStorage fileStorage;
     private final JobOwnershipService jobOwnershipService;
+    private final UserService userService;
     private final List<PolicyOutputSink> outputSinks;
     private final ResourceMonitor resourceMonitor;
     private final JobQueue jobQueue;
 
     private final ExecutorService asyncExecutor = ExecutorFactory.newVirtualThreadExecutor();
+
+    // MIGRATION: replaced Lombok @RequiredArgsConstructor with an explicit @Inject constructor so
+    // the @io.quarkus.arc.All qualifier can be applied to the List<PolicyOutputSink> injection
+    // point
+    // (Spring auto-collected all beans of the type; CDI needs @All, which also yields an empty list
+    // when there are no sinks instead of an unsatisfied dependency).
+    @Inject
+    public PolicyEngine(
+            PolicyExecutor stepExecutor,
+            TaskManager taskManager,
+            PolicyRunRegistry registry,
+            FileStorage fileStorage,
+            JobOwnershipService jobOwnershipService,
+            UserService userService,
+            @All List<PolicyOutputSink> outputSinks,
+            ResourceMonitor resourceMonitor,
+            JobQueue jobQueue) {
+        this.stepExecutor = stepExecutor;
+        this.taskManager = taskManager;
+        this.registry = registry;
+        this.fileStorage = fileStorage;
+        this.jobOwnershipService = jobOwnershipService;
+        this.userService = userService;
+        this.outputSinks = outputSinks;
+        this.resourceMonitor = resourceMonitor;
+        this.jobQueue = jobQueue;
+    }
 
     /**
      * Submit a pipeline to run asynchronously. The handle's run id scopes a {@link TaskManager} job
@@ -99,9 +134,8 @@ public class PolicyEngine {
             String policyId) {
         // Ad-hoc run (no stored policy): bill whoever kicked it off and own the outputs as them
         // too.
-        // Capture the principal on this (request) thread — it does not survive the hop onto the
-        // async
-        // worker.
+        // Capture the principal on this (request) thread - it does not survive the hop onto the
+        // async worker.
         String principal = currentActingPrincipal();
         return submitForPrincipal(principal, principal, policyId, definition, inputs, listener);
     }
@@ -111,7 +145,7 @@ public class PolicyEngine {
             Policy policy, PolicyInputs inputs, PolicyProgressListener listener) {
         // Bill the policy owner: trigger-fired runs have no security context, and the async worker
         // doesn't inherit the caller's, so the owner (stamped at policy creation) is the reliable
-        // billing identity — and for org-wide policies the org/owner is meant to pay. But own the
+        // billing identity - and for org-wide policies the org/owner is meant to pay. But own the
         // OUTPUT files as the user who triggered the run (captured here on the request thread) so
         // they can download their enforced file; otherwise an org-wide policy's output is owned by
         // the admin and the triggering user is denied it. Trigger-fired runs have no such user, so
@@ -139,7 +173,7 @@ public class PolicyEngine {
         PolicyProgressListener tracking = trackingListener(runId, run, listener);
         // Re-establish the acting principal as the audit principal on the worker thread. Each tool
         // step dispatches via InternalApiClient, which resolves the caller from
-        // UserService.getCurrentUsername() — that has an MDC `auditPrincipal` fallback for async
+        // UserService.getCurrentUsername() - that has an MDC `auditPrincipal` fallback for async
         // threads. Without this the worker has no identity, tool calls fall back to the
         // INTERNAL_API_USER, and PAYG charges that system account instead of the owner's team.
         Runnable task =
@@ -222,11 +256,11 @@ public class PolicyEngine {
                     e.getMessage());
             run.fail(message);
             taskManager.setError(runId, message);
-        } catch (RestClientResponseException e) {
+        } catch (WebApplicationException e) {
             // A downstream tool call returned an error status. When it's a structured entitlement
             // response (401/402 with a JSON `error` sentinel), surface that code onto the run so
             // the
-            // client can react — e.g. pop the usage-limit modal — instead of only seeing a generic
+            // client can react - e.g. pop the usage-limit modal - instead of only seeing a generic
             // failure. We don't interpret the code here (that would couple this module to the saas
             // billing layer); we just pass it through for the client to map. Other statuses fall
             // through to the generic failure below.
@@ -253,7 +287,7 @@ public class PolicyEngine {
         }
     }
 
-    private ResponseEntity<?> failRejectedRun(
+    private jakarta.ws.rs.core.Response failRejectedRun(
             PolicyRun run, CompletableFuture<PolicyRun> completion, Throwable ex) {
         // Only reached if the run never started (e.g. queue full); a started run resolves its own
         // completion in runToCompletion.
@@ -326,42 +360,31 @@ public class PolicyEngine {
     }
 
     /**
-     * MDC key {@code UserService.getCurrentUsername()} reads as its async fallback (stamped by the
-     * controller audit aspect on request threads). We reuse it to carry the billing identity onto
-     * the policy worker thread.
+     * The username to bill a run to, captured on the submitting (request) thread. {@code
+     * UserService.getCurrentUsername()} resolves it from the request-scoped SecurityIdentity (or
+     * the MDC audit principal off-request) and returns null when there is no identity, so we don't
+     * try to bill anonymous traffic.
      */
-    private static final String AUDIT_PRINCIPAL_MDC_KEY = "auditPrincipal";
-
-    /**
-     * The username to bill an ad-hoc run to, captured on the submitting (request) thread. Prefers
-     * the audit principal the controller aspect already stamped; falls back to the security context
-     * name. {@code anonymousUser} (and no identity) resolve to null so we don't try to bill it.
-     */
-    private static String currentActingPrincipal() {
-        String mdc = MDC.get(AUDIT_PRINCIPAL_MDC_KEY);
-        if (mdc != null && !mdc.isBlank()) {
-            return mdc;
-        }
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null) {
+    private String currentActingPrincipal() {
+        String name = userService.getCurrentUsername();
+        if (name == null || name.isBlank() || "anonymousUser".equals(name)) {
             return null;
         }
-        String name = auth.getName();
-        return "anonymousUser".equals(name) ? null : name;
+        return name;
     }
 
     /**
-     * Run {@code body} with {@code principal} set as the audit principal in MDC, so async tool
-     * dispatch attributes (and charges) usage to that user. A null/blank principal runs as-is.
-     * Restores the previous MDC value afterward (defensive — worker threads aren't pooled).
+     * Run {@code body} with the billing/file-owner identities established for the worker thread, so
+     * async tool dispatch attributes (and charges) usage to the right user and stores outputs under
+     * the right owner. Restores the previous MDC/JobContext values afterward.
      */
     private static void runAsPrincipal(String billingPrincipal, String fileOwner, Runnable body) {
         // Billing identity (MDC auditPrincipal) and output-file ownership (JobContext owner) are
         // set
         // independently: usage is charged to billingPrincipal, but stored output files are owned by
-        // fileOwner — the user who triggered an org-wide policy — so they can fetch their results.
+        // fileOwner - the user who triggered an org-wide policy - so they can fetch their results.
         // Either may be null (e.g. login disabled, or a trigger-fired run); each is applied only
-        // when present and restored afterward (defensive — worker threads aren't pooled).
+        // when present and restored afterward (defensive - worker threads aren't pooled).
         String previousPrincipal = MDC.get(AUDIT_PRINCIPAL_MDC_KEY);
         String previousOwner = JobContext.getOwner();
         if (billingPrincipal != null && !billingPrincipal.isBlank()) {

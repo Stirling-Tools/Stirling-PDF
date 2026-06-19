@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -13,20 +15,28 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.microprofile.config.Config;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.env.StandardEnvironment;
+
+import io.smallrye.config.SmallRyeConfig;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.FileReadinessChecker;
 import stirling.software.proprietary.policy.config.FolderAccessGuard;
 import stirling.software.proprietary.policy.model.InputSpec;
 
-/** Tests for {@link FolderInputSource}: consume (claim + route) and snapshot (read-only) modes. */
+/**
+ * Tests for {@link FolderInputSource}: consume (claim + route) and snapshot (read-only) modes.
+ *
+ * <p>MIGRATION (Spring -> Quarkus): {@link FolderAccessGuard} now reads active profiles from
+ * MicroProfile {@link Config} instead of Spring's {@code StandardEnvironment}; a {@code Config}
+ * reporting no active profile is supplied here.
+ */
 @ExtendWith(MockitoExtension.class)
 class FolderInputSourceTest {
 
@@ -40,10 +50,19 @@ class FolderInputSourceTest {
     void setUp() {
         ApplicationProperties properties = new ApplicationProperties();
         properties.getPolicies().setAllowedFolderRoots(List.of(tempDir.toString()));
-        FolderAccessGuard guard = new FolderAccessGuard(properties, new StandardEnvironment());
+        FolderAccessGuard guard = new FolderAccessGuard(properties, configWithNoProfiles());
         source = new FolderInputSource(readinessChecker, guard);
         // Lenient: the missing-dir / nonexistent-dir cases return before any readiness check.
         lenient().when(readinessChecker.isReady(any())).thenReturn(true);
+    }
+
+    /** A {@link Config} whose unwrapped {@link SmallRyeConfig} reports no active profile. */
+    private static Config configWithNoProfiles() {
+        SmallRyeConfig smallRyeConfig = mock(SmallRyeConfig.class);
+        when(smallRyeConfig.getProfiles()).thenReturn(List.of());
+        Config config = mock(Config.class);
+        when(config.unwrap(SmallRyeConfig.class)).thenReturn(smallRyeConfig);
+        return config;
     }
 
     @Test

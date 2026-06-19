@@ -5,8 +5,13 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
+/**
+ * MIGRATION (Spring -> Quarkus): {@link ApiKeyAuthenticationToken} was reduced from a Spring
+ * Security {@code AbstractAuthenticationToken} to a plain POJO. Authorities are now a {@code
+ * Collection<String>} (was {@code Collection<? extends GrantedAuthority>}), so the role is supplied
+ * and read as a bare string rather than a {@code SimpleGrantedAuthority}.
+ */
 class ApiKeyAuthenticationTokenTest {
 
     @Test
@@ -17,15 +22,16 @@ class ApiKeyAuthenticationTokenTest {
         assertFalse(token.isAuthenticated(), "should be unauthenticated");
         assertNull(token.getPrincipal(), "principal should be null for unauthenticated ctor");
         assertEquals(apiKey, token.getCredentials(), "credentials should store api key");
-        // Authorities: do not check version-dependent behavior (can be null or empty depending on
-        // Spring Security)
+        // The single-arg constructor stores an empty (non-null) authorities collection.
+        assertNotNull(token.getAuthorities());
+        assertTrue(token.getAuthorities().isEmpty());
     }
 
     @Test
     void ctor_withPrincipalAndAuthorities_isAuthenticated_andStoresAll() {
         String apiKey = "xyz-999";
         Object principal = new Object();
-        var authorities = List.of(new SimpleGrantedAuthority("ROLE_API"));
+        var authorities = List.of("ROLE_API");
 
         ApiKeyAuthenticationToken token =
                 new ApiKeyAuthenticationToken(principal, apiKey, authorities);
@@ -35,7 +41,7 @@ class ApiKeyAuthenticationTokenTest {
         assertEquals(apiKey, token.getCredentials(), "credentials should store api key");
         assertNotNull(token.getAuthorities());
         assertEquals(1, token.getAuthorities().size());
-        assertEquals("ROLE_API", token.getAuthorities().iterator().next().getAuthority());
+        assertEquals("ROLE_API", token.getAuthorities().iterator().next());
     }
 
     @Test
@@ -53,8 +59,7 @@ class ApiKeyAuthenticationTokenTest {
     void setAuthenticated_false_isAllowed_andUnsetsFlag() {
         Object principal = new Object();
         ApiKeyAuthenticationToken token =
-                new ApiKeyAuthenticationToken(
-                        principal, "k", List.of(new SimpleGrantedAuthority("ROLE_API")));
+                new ApiKeyAuthenticationToken(principal, "k", List.of("ROLE_API"));
 
         assertTrue(token.isAuthenticated());
 
@@ -70,8 +75,7 @@ class ApiKeyAuthenticationTokenTest {
     void eraseCredentials_setsCredentialsNull_butKeepsPrincipal() {
         Object principal = new Object();
         ApiKeyAuthenticationToken token =
-                new ApiKeyAuthenticationToken(
-                        principal, "top-secret", List.of(new SimpleGrantedAuthority("ROLE_API")));
+                new ApiKeyAuthenticationToken(principal, "top-secret", List.of("ROLE_API"));
 
         assertEquals("top-secret", token.getCredentials());
         assertSame(principal, token.getPrincipal());

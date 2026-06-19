@@ -9,12 +9,13 @@ import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
-import org.springframework.web.filter.OncePerRequestFilter;
-
+import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ReadListener;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletInputStream;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
@@ -23,7 +24,11 @@ import jakarta.servlet.http.HttpServletResponse;
  * Caps MCP request body size (via Content-Length and by buffering up to the cap) and rejects
  * oversized bodies with a clean 413 before JSON parsing.
  */
-public class McpRequestSizeFilter extends OncePerRequestFilter {
+// TODO: Migration required - this filter was a Spring OncePerRequestFilter; under Quarkus
+// (quarkus-undertow) register it as a jakarta.servlet.Filter via @WebFilter or a programmatic
+// FilterRegistrationBean equivalent, and ensure it runs once per request and before the MCP
+// endpoint. Registration ordering must be verified by the collaborator wiring the servlet filters.
+public class McpRequestSizeFilter implements Filter {
 
     private final long maxBodyBytes;
 
@@ -32,9 +37,11 @@ public class McpRequestSizeFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    public void doFilter(
+            ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
             throws ServletException, IOException {
+        HttpServletRequest request = (HttpServletRequest) servletRequest;
+        HttpServletResponse response = (HttpServletResponse) servletResponse;
         long declared = request.getContentLengthLong();
         if (declared > maxBodyBytes) {
             tooLarge(response);

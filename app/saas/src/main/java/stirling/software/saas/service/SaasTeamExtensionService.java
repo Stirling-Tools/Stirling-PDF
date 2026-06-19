@@ -1,8 +1,9 @@
 package stirling.software.saas.service;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,8 +16,8 @@ import stirling.software.saas.repository.SaasTeamExtensionsRepository;
  * Read/write access to {@link SaasTeamExtensions}. Reads return safe defaults (non-personal team,
  * seat fields zeroed) when no row exists; writes create the row lazily.
  */
-@Service
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 @RequiredArgsConstructor
 @Slf4j
 public class SaasTeamExtensionService {
@@ -26,7 +27,12 @@ public class SaasTeamExtensionService {
     public SaasTeamExtensions getOrCreate(Team team) {
         return repository
                 .findByTeamId(team.getId())
-                .orElseGet(() -> repository.save(new SaasTeamExtensions(team)));
+                .orElseGet(
+                        () -> {
+                            SaasTeamExtensions ext = new SaasTeamExtensions(team);
+                            repository.persist(ext);
+                            return ext;
+                        });
     }
 
     /** Whether the team is personal (1-seat owned by a single user). Defaults to false. */
@@ -108,7 +114,7 @@ public class SaasTeamExtensionService {
                 personal
                         ? SaasTeamExtensions.TEAM_TYPE_PERSONAL
                         : SaasTeamExtensions.TEAM_TYPE_STANDARD);
-        repository.save(ext);
+        repository.persist(ext);
     }
 
     @Transactional
@@ -116,13 +122,13 @@ public class SaasTeamExtensionService {
         SaasTeamExtensions ext = getOrCreate(team);
         ext.setSeatCount(seatCount);
         ext.setMaxSeats(maxSeats);
-        repository.save(ext);
+        repository.persist(ext);
     }
 
     @Transactional
     public void setCreatedByUserId(Team team, Long createdByUserId) {
         SaasTeamExtensions ext = getOrCreate(team);
         ext.setCreatedByUserId(createdByUserId);
-        repository.save(ext);
+        repository.persist(ext);
     }
 }

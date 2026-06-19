@@ -1,95 +1,126 @@
 package stirling.software.proprietary.audit;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
-import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.Around;
-import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.MDC;
-import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
+import jakarta.annotation.Priority;
+import jakarta.inject.Inject;
+import jakarta.interceptor.AroundInvoke;
+import jakarta.interceptor.Interceptor;
+import jakarta.interceptor.InvocationContext;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.proprietary.config.AuditConfigurationProperties;
 import stirling.software.proprietary.service.AuditService;
 
 /**
- * Aspect for automatically auditing controller methods with web mappings (GetMapping, PostMapping,
- * etc.)
+ * Interceptor for automatically auditing controller methods with web mappings.
+ *
+ * <p>MIGRATION (Spring AOP -&gt; CDI interceptor): was an {@code @Aspect}/{@code @Component} with
+ * multiple {@code @Around} advices whose pointcuts matched <em>any</em> method annotated with
+ * Spring's {@code @GetMapping}/{@code @PostMapping}/{@code @PutMapping}/{@code @DeleteMapping}/
+ * {@code @PatchMapping}/{@code @AutoJobPostMapping}, plus an {@code execution(...)} expression on
+ * Spring's {@code ResourceHttpRequestHandler}. {@code @Around}/{@code ProceedingJoinPoint} + {@code
+ * MethodSignature} became {@code @AroundInvoke}/{@link InvocationContext}, and {@code
+ * RequestContextHolder}/{@code ServletRequestAttributes} were replaced by an injected {@link
+ * HttpServletRequest}/{@link HttpServletResponse} (provided by quarkus-undertow). The Spring
+ * {@code @Order(0)} (highest precedence, runs before {@code AutoJobAspect}) maps to
+ * {@code @Priority} with a value lower than {@code AutoJobAspect}'s {@code @Priority(20)} so this
+ * interceptor still populates MDC first.
+ *
+ * <p>TODO: Migration required - CDI interceptors are bound by an {@code @InterceptorBinding}
+ * annotation declared on the target class/method; there is NO CDI equivalent for AspectJ's broad,
+ * expression-based pointcuts. The original advices fired for every Spring-MVC mapping annotation
+ * and for the static-resource handler, none of which exist on JAX-RS controllers. To retain "audit
+ * every HTTP endpoint" behaviour in Quarkus, do ONE of:
+ *
+ * <ul>
+ *   <li>register a JAX-RS {@code @Provider} pair of {@code ContainerRequestFilter}/{@code
+ *       ContainerResponseFilter} (or RESTEasy Reactive
+ *       {@code @ServerRequestFilter}/{@code @ServerResponseFilter}) that calls this same {@code
+ *       AuditService} logic around every resource method (preferred - covers all endpoints without
+ *       per-method annotations); OR
+ *   <li>introduce an explicit {@code @InterceptorBinding} (e.g. {@code @AuditedHttp}) and stamp it
+ *       on the controller classes/methods that should be audited, then bind this interceptor with
+ *       it.
+ * </ul>
+ *
+ * As an interim binding this interceptor is bound by the existing {@link AutoJobPostMapping}
+ * {@code @InterceptorBinding} (one of the six original pointcuts) so the class is valid CDI and
+ * still audits auto-job POST endpoints. <b>This does NOT cover plain GET/POST/PUT/DELETE/PATCH or
+ * static-resource requests</b> the way the Spring aspect did - that requires the JAX-RS filter or
+ * dedicated binding described above. NOTE: it must NOT be bound to {@link Audited}, because the
+ * body deliberately skips {@code @Audited} methods (those are handled by {@code AuditAspect}). The
+ * {@code auditController(...)} body below is preserved verbatim; the static-resource and
+ * static-GET-skip handling (originally driven by the {@code ResourceHttpRequestHandler} pointcut)
+ * still works via {@link AuditService#isStaticResourceRequest(HttpServletRequest)}.
  */
-@Aspect
-@Component
+@Interceptor
+@AutoJobPostMapping
+@Priority(0) // Highest precedence - runs BEFORE AutoJobAspect (@Priority(20)) to populate MDC
 @Slf4j
-@RequiredArgsConstructor
-@org.springframework.core.annotation.Order(
-        0) // Highest precedence - runs BEFORE AutoJobAspect to populate MDC
 public class ControllerAuditAspect {
 
     private final AuditService auditService;
     private final AuditConfigurationProperties auditConfig;
+    private final HttpServletRequest request;
+    private final HttpServletResponse response;
 
-    @Around(
-            "execution(* org.springframework.web.servlet.resource.ResourceHttpRequestHandler.handleRequest(..))")
-    public Object auditStaticResource(ProceedingJoinPoint jp) throws Throwable {
-        return auditController(jp, "GET");
+    @Inject
+    public ControllerAuditAspect(
+            AuditService auditService,
+            AuditConfigurationProperties auditConfig,
+            HttpServletRequest request,
+            HttpServletResponse response) {
+        this.auditService = auditService;
+        this.auditConfig = auditConfig;
+        this.request = request;
+        this.response = response;
     }
 
-    /** Intercept all methods with GetMapping annotation */
-    @Around("@annotation(org.springframework.web.bind.annotation.GetMapping)")
-    public Object auditGetMethod(ProceedingJoinPoint joinPoint) throws Throwable {
-        return auditController(joinPoint, "GET");
+    /**
+     * TODO: Migration required - this single {@code @AroundInvoke} replaces the five Spring
+     * {@code @Around} advices (GET/POST/PUT/DELETE/PATCH + AutoJobPostMapping) and the
+     * static-resource {@code execution(...)} advice. Because CDI cannot inspect Spring/JAX-RS
+     * mapping annotations to derive the HTTP verb at bind time, the verb is resolved from the live
+     * request ({@link HttpServletRequest#getMethod()}); if the request is unavailable (non-web
+     * invocation) it falls back to POST to mirror the most common audited mapping.
+     */
+    @AroundInvoke
+    public Object auditEndpoint(InvocationContext ctx) throws Throwable {
+        // Reactive-safe: the injected HttpServletRequest proxy is never null but throws UT000048
+        // ("No request is currently active") when touched on a RESTEasy Reactive worker thread.
+        // Resolve the verb through the guarded AuditService.getCurrentRequest() (returns null off a
+        // servlet request) and fall back to POST, mirroring the original non-web behaviour.
+        HttpServletRequest current = auditService.getCurrentRequest();
+        String httpMethod = current != null ? current.getMethod() : "POST";
+        return auditController(ctx, httpMethod != null ? httpMethod : "POST");
     }
 
-    /** Intercept all methods with PostMapping annotation */
-    @Around("@annotation(org.springframework.web.bind.annotation.PostMapping)")
-    public Object auditPostMethod(ProceedingJoinPoint joinPoint) throws Throwable {
-        return auditController(joinPoint, "POST");
+    // Reactive-safe accessor for the response proxy: touching it off an active servlet request
+    // throws UT000048, so treat that (and an unsatisfied proxy) as "no response available".
+    private HttpServletResponse safeResponse() {
+        try {
+            if (response == null) {
+                return null;
+            }
+            response.getStatus();
+            return response;
+        } catch (RuntimeException e) {
+            return null;
+        }
     }
 
-    /** Intercept all methods with PutMapping annotation */
-    @Around("@annotation(org.springframework.web.bind.annotation.PutMapping)")
-    public Object auditPutMethod(ProceedingJoinPoint joinPoint) throws Throwable {
-        return auditController(joinPoint, "PUT");
-    }
-
-    /** Intercept all methods with DeleteMapping annotation */
-    @Around("@annotation(org.springframework.web.bind.annotation.DeleteMapping)")
-    public Object auditDeleteMethod(ProceedingJoinPoint joinPoint) throws Throwable {
-        return auditController(joinPoint, "DELETE");
-    }
-
-    /** Intercept all methods with PatchMapping annotation */
-    @Around("@annotation(org.springframework.web.bind.annotation.PatchMapping)")
-    public Object auditPatchMethod(ProceedingJoinPoint joinPoint) throws Throwable {
-        return auditController(joinPoint, "PATCH");
-    }
-
-    /** Intercept all methods with AutoJobPostMapping annotation */
-    @Around("@annotation(stirling.software.common.annotations.AutoJobPostMapping)")
-    public Object auditAutoJobMethod(ProceedingJoinPoint joinPoint) throws Throwable {
-        return auditController(joinPoint, "POST");
-    }
-
-    private Object auditController(ProceedingJoinPoint joinPoint, String httpMethod)
+    private Object auditController(InvocationContext joinPoint, String httpMethod)
             throws Throwable {
-        MethodSignature sig = (MethodSignature) joinPoint.getSignature();
-        Method method = sig.getMethod();
+        Method method = joinPoint.getMethod();
 
         // Fast path: check if auditing is enabled before doing any work
         // This avoids all data collection if auditing is disabled
@@ -123,10 +154,8 @@ public class ControllerAuditAspect {
             }
         }
 
-        ServletRequestAttributes attrs =
-                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        HttpServletRequest req = attrs != null ? attrs.getRequest() : null;
-        HttpServletResponse resp = attrs != null ? attrs.getResponse() : null;
+        HttpServletRequest req = auditService.getCurrentRequest();
+        HttpServletResponse resp = safeResponse();
 
         String previousPrincipal = MDC.get("auditPrincipal");
         String previousOrigin = MDC.get("auditOrigin");
@@ -163,6 +192,13 @@ public class ControllerAuditAspect {
 
             long start = System.currentTimeMillis();
 
+            // TODO: Migration required (collaborator) -
+            // AuditService.createBaseAuditData/addFileData/
+            // addMethodArguments/resolveEventType still take org.aspectj.lang.ProceedingJoinPoint
+            // (AuditService is not yet migrated). Once AuditService is converted, change those
+            // signatures to accept jakarta.interceptor.InvocationContext (getMethod/getParameters/
+            // getTarget cover the data used). These calls pass the InvocationContext and will only
+            // typecheck after that collaborator change.
             // Use auditService to create the base audit data
             Map<String, Object> data = auditService.createBaseAuditData(joinPoint, level);
 
@@ -254,35 +290,21 @@ public class ControllerAuditAspect {
     // Using AuditUtils.determineAuditEventType instead
 
     private String getRequestPath(Method method, String httpMethod) {
-        // Prefer actual request URI over annotation patterns (which may contain regex)
-        ServletRequestAttributes attrs =
-                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        if (attrs != null) {
-            HttpServletRequest request = attrs.getRequest();
-            if (request != null) {
-                return request.getRequestURI();
-            }
+        // Prefer actual request URI over annotation patterns (which may contain regex).
+        // Reactive-safe: go through the guarded accessor (the raw proxy throws UT000048
+        // off-thread).
+        HttpServletRequest current = auditService.getCurrentRequest();
+        if (current != null) {
+            return current.getRequestURI();
         }
-
-        // Fallback: reconstruct from annotations when not in web context
-        String base = "";
-        RequestMapping cm = method.getDeclaringClass().getAnnotation(RequestMapping.class);
-        if (cm != null && cm.value().length > 0) base = cm.value()[0];
-        String mp = "";
-        Annotation ann =
-                switch (httpMethod) {
-                    case "GET" -> method.getAnnotation(GetMapping.class);
-                    case "POST" -> method.getAnnotation(PostMapping.class);
-                    case "PUT" -> method.getAnnotation(PutMapping.class);
-                    case "DELETE" -> method.getAnnotation(DeleteMapping.class);
-                    case "PATCH" -> method.getAnnotation(PatchMapping.class);
-                    default -> null;
-                };
-        if (ann instanceof GetMapping gm && gm.value().length > 0) mp = gm.value()[0];
-        if (ann instanceof PostMapping pm && pm.value().length > 0) mp = pm.value()[0];
-        if (ann instanceof PutMapping pum && pum.value().length > 0) mp = pum.value()[0];
-        if (ann instanceof DeleteMapping dm && dm.value().length > 0) mp = dm.value()[0];
-        if (ann instanceof PatchMapping pam && pam.value().length > 0) mp = pam.value()[0];
+        // Fallback: try JAX-RS @Path annotation on method/class; return empty string if not present
+        // TODO: Migration required - resolve path from jakarta.ws.rs.@Path on the declaring class
+        // and method once all controllers are fully on JAX-RS. The Spring fallback was removed.
+        jakarta.ws.rs.Path classPath =
+                method.getDeclaringClass().getAnnotation(jakarta.ws.rs.Path.class);
+        jakarta.ws.rs.Path methodPath = method.getAnnotation(jakarta.ws.rs.Path.class);
+        String base = (classPath != null) ? classPath.value() : "";
+        String mp = (methodPath != null) ? methodPath.value() : "";
         return base + mp;
     }
 

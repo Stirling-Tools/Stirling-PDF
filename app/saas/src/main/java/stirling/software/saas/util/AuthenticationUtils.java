@@ -1,8 +1,8 @@
 package stirling.software.saas.util;
 
-import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.jwt.Jwt;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 
+import stirling.software.common.security.Authentication;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
@@ -91,9 +91,12 @@ public class AuthenticationUtils {
                     .orElseThrow(() -> new SecurityException("User not found"));
         }
 
-        // Jwt principal from oauth2ResourceServer
-        if (principal instanceof Jwt jwt) {
-            String email = jwt.getClaimAsString("email");
+        // JsonWebToken principal from the Quarkus OIDC/JWT resource server
+        // TODO: Migration required - was Spring's org.springframework.security.oauth2.jwt.Jwt;
+        // getClaimAsString("email") replaced with MicroProfile JsonWebToken.getClaim("email").
+        if (principal instanceof JsonWebToken jwt) {
+            Object emailClaim = jwt.getClaim("email");
+            String email = emailClaim != null ? emailClaim.toString() : null;
             if (email != null) {
                 return userRepository
                         .findByUsername(email)

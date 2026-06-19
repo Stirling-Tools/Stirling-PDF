@@ -2,9 +2,9 @@ package stirling.software.proprietary.policy.engine;
 
 import java.util.List;
 
-import org.springframework.core.io.Resource;
-
 import lombok.Getter;
+
+import stirling.software.common.model.io.Resource;
 
 /**
  * Thrown by a step that needs further user input, pausing the run in {@code WAITING_FOR_INPUT}

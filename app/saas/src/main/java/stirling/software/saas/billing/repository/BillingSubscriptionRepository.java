@@ -4,49 +4,45 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
+import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import stirling.software.saas.billing.model.BillingSubscription;
 
 /** Read/write access to the Stripe subscription mirror table. */
-@Repository
-public interface BillingSubscriptionRepository extends JpaRepository<BillingSubscription, String> {
+@ApplicationScoped
+public class BillingSubscriptionRepository
+        implements PanacheRepositoryBase<BillingSubscription, String> {
 
-    List<BillingSubscription> findByUserId(UUID userId);
+    public List<BillingSubscription> findByUserId(UUID userId) {
+        return find("userId = ?1", userId).list();
+    }
 
-    @Query(
-            "SELECT s FROM BillingSubscription s "
-                    + "WHERE s.userId = :userId "
-                    + "AND s.status IN ('active', 'trialing', 'past_due') "
-                    + "ORDER BY s.createdAt DESC")
-    List<BillingSubscription> findActiveSubscriptionsByUserId(@Param("userId") UUID userId);
+    public List<BillingSubscription> findActiveSubscriptionsByUserId(UUID userId) {
+        return find(
+                        "userId = ?1 and status IN ('active', 'trialing', 'past_due') ORDER BY createdAt DESC",
+                        userId)
+                .list();
+    }
 
-    @Query(
-            "SELECT COUNT(s) > 0 FROM BillingSubscription s "
-                    + "WHERE s.userId = :userId "
-                    + "AND s.status IN ('active', 'trialing', 'past_due')")
-    boolean existsActiveSubscriptionForUser(@Param("userId") UUID userId);
+    public boolean existsActiveSubscriptionForUser(UUID userId) {
+        return count("userId = ?1 and status IN ('active', 'trialing', 'past_due')", userId) > 0;
+    }
 
     /**
      * Active PAID subscription (excludes trials). 'active' and 'past_due' count as paid; 'trialing'
-     * does not, because trial users can be invited to teams without becoming payers.
+     * does not.
      */
-    @Query(
-            "SELECT COUNT(s) > 0 FROM BillingSubscription s "
-                    + "WHERE s.userId = :userId "
-                    + "AND s.status IN ('active', 'past_due')")
-    boolean existsActivePaidSubscriptionForUser(@Param("userId") UUID userId);
+    public boolean existsActivePaidSubscriptionForUser(UUID userId) {
+        return count("userId = ?1 and status IN ('active', 'past_due')", userId) > 0;
+    }
 
-    default Optional<BillingSubscription> findLatestActiveSubscription(UUID userId) {
+    public Optional<BillingSubscription> findLatestActiveSubscription(UUID userId) {
         return findActiveSubscriptionsByUserId(userId).stream().findFirst();
     }
 
-    @Query(
-            "SELECT COUNT(s) > 0 FROM BillingSubscription s "
-                    + "WHERE s.teamId = :teamId "
-                    + "AND s.status IN ('active', 'trialing', 'past_due')")
-    boolean existsActiveSubscriptionForTeam(@Param("teamId") Long teamId);
+    public boolean existsActiveSubscriptionForTeam(Long teamId) {
+        return count("teamId = ?1 and status IN ('active', 'trialing', 'past_due')", teamId) > 0;
+    }
 }

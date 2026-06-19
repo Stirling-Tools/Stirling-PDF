@@ -3,34 +3,31 @@ package stirling.software.proprietary.security.controller.api;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
+import io.quarkus.security.identity.SecurityIdentity;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import io.vertx.core.http.HttpServerRequest;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.Response;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.constants.JwtConstants;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.security.AuthenticationException;
+import stirling.software.common.security.UsernameNotFoundException;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
+import stirling.software.proprietary.security.annotation.DenyDemoUser;
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.model.api.user.MfaCodeRequest;
@@ -47,23 +44,24 @@ import stirling.software.proprietary.security.util.DesktopClientUtils;
 import stirling.software.proprietary.service.AiUserDataService;
 
 /** REST API Controller for authentication operations. */
-@RestController
-@RequestMapping("/api/v1/auth")
-@RequiredArgsConstructor
+@ApplicationScoped
+@Path("/api/v1/auth")
 @Slf4j
 @Tag(name = "Authentication", description = "Endpoints for user authentication and registration")
 public class AuthController {
 
-    private final UserService userService;
-    private final JwtServiceInterface jwtService;
-    private final CustomUserDetailsService userDetailsService;
-    private final LoginAttemptService loginAttemptService;
-    private final MfaService mfaService;
-    private final TotpService totpService;
-    private final RefreshRateLimitService refreshRateLimitService;
-    private final ApplicationProperties.Security securityProperties;
-    private final ApplicationProperties applicationProperties;
-    private final AiUserDataService aiUserDataService;
+    @Inject UserService userService;
+    @Inject JwtServiceInterface jwtService;
+    @Inject CustomUserDetailsService userDetailsService;
+    @Inject LoginAttemptService loginAttemptService;
+    @Inject MfaService mfaService;
+    @Inject TotpService totpService;
+    @Inject RefreshRateLimitService refreshRateLimitService;
+    @Inject ApplicationProperties.Security securityProperties;
+    @Inject ApplicationProperties applicationProperties;
+    @Inject AiUserDataService aiUserDataService;
+
+    @Inject SecurityIdentity securityIdentity;
 
     /**
      * Login endpoint - replaces Supabase signInWithPassword
@@ -72,66 +70,76 @@ public class AuthController {
      * @param response HTTP response to set JWT cookie
      * @return User and session information
      */
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
-    @PostMapping("/login")
+    @DenyDemoUser
+    @POST
+    @Path("/login")
     @Audited(type = AuditEventType.USER_LOGIN, level = AuditLevel.BASIC)
-    public ResponseEntity<?> login(
-            @RequestBody UsernameAndPassMfa request,
-            HttpServletRequest httpRequest,
-            HttpServletResponse response) {
+    public Response login(
+            UsernameAndPassMfa request,
+            @Context HttpServerRequest httpRequest,
+            @Context HttpHeaders httpHeaders) {
         try {
             // Check if username/password authentication is allowed
             if (!securityProperties.isUserPass()) {
                 log.warn(
                         "Username/password login attempted but not allowed by current login method configuration");
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(
+                return Response.status(Response.Status.FORBIDDEN)
+                        .entity(
                                 Map.of(
                                         "error",
-                                        "Username/password authentication is not enabled. Please use the configured authentication method."));
+                                        "Username/password authentication is not enabled. Please use the configured authentication method."))
+                        .build();
             }
 
             // Validate input parameters
             if (request.getUsername() == null || request.getUsername().trim().isEmpty()) {
                 log.warn("Login attempt with null or empty username");
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(Map.of("error", "Username is required"));
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(Map.of("error", "Username is required"))
+                        .build();
             }
 
             if (request.getPassword() == null || request.getPassword().isEmpty()) {
                 log.warn(
                         "Login attempt with null or empty password for user: {}",
                         request.getUsername());
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(Map.of("error", "Password is required"));
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(Map.of("error", "Password is required"))
+                        .build();
             }
 
             String username = request.getUsername().trim();
-            String ip = httpRequest.getRemoteAddr();
+            String ip =
+                    httpRequest.remoteAddress() != null ? httpRequest.remoteAddress().host() : null;
 
             // Check if account is blocked due to too many failed attempts
             if (loginAttemptService.isBlocked(username)) {
                 log.warn("Blocked account login attempt for user: {} from IP: {}", username, ip);
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "Account is locked due to too many failed attempts"));
+                return Response.status(Response.Status.UNAUTHORIZED)
+                        .entity(
+                                Map.of(
+                                        "error",
+                                        "Account is locked due to too many failed attempts"))
+                        .build();
             }
 
             log.debug("Login attempt for user: {} from IP: {}", username, ip);
 
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            User user = (User) userDetails;
+            User user = userDetailsService.loadUserByUsername(username);
 
             if (!userService.isPasswordCorrect(user, request.getPassword())) {
                 log.warn("Invalid password for user: {} from IP: {}", username, ip);
                 loginAttemptService.loginFailed(username);
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "Invalid username or password"));
+                return Response.status(Response.Status.UNAUTHORIZED)
+                        .entity(Map.of("error", "Invalid username or password"))
+                        .build();
             }
 
             if (!user.isEnabled()) {
                 log.warn("Disabled user attempted login: {} from IP: {}", username, ip);
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "User account is disabled"));
+                return Response.status(Response.Status.UNAUTHORIZED)
+                        .entity(Map.of("error", "User account is disabled"))
+                        .build();
             }
 
             if (mfaService.isMfaEnabled(user)) {
@@ -142,36 +150,40 @@ public class AuthController {
                             username,
                             ip);
                     // loginAttemptService.loginFailed(username);
-                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                            .body(
+                    return Response.status(Response.Status.UNAUTHORIZED)
+                            .entity(
                                     Map.of(
                                             "error", "mfa_required",
-                                            "message", "Two-factor code required"));
+                                            "message", "Two-factor code required"))
+                            .build();
                 }
                 String secret = mfaService.getSecret(user);
                 if (secret == null || secret.isBlank()) {
                     log.error("MFA enabled but no secret stored for user: {}", username);
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .body(Map.of("error", "MFA configuration error"));
+                    return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                            .entity(Map.of("error", "MFA configuration error"))
+                            .build();
                 }
                 Long timeStep = totpService.getValidTimeStep(secret, code);
                 if (timeStep == null) {
                     log.warn("Invalid MFA code for user: {} from IP: {}", username, ip);
                     loginAttemptService.loginFailed(username);
-                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                            .body(
+                    return Response.status(Response.Status.UNAUTHORIZED)
+                            .entity(
                                     Map.of(
                                             "error", "invalid_mfa_code",
-                                            "message", "Invalid two-factor code"));
+                                            "message", "Invalid two-factor code"))
+                            .build();
                 }
                 if (!mfaService.markTotpStepUsed(user, timeStep)) {
                     log.warn("Replay MFA code detected for user: {} from IP: {}", username, ip);
                     loginAttemptService.loginFailed(username);
-                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                            .body(
+                    return Response.status(Response.Status.UNAUTHORIZED)
+                            .entity(
                                     Map.of(
                                             "error", "invalid_mfa_code",
-                                            "message", "Invalid two-factor code"));
+                                            "message", "Invalid two-factor code"))
+                            .build();
                 }
             }
 
@@ -181,7 +193,9 @@ public class AuthController {
 
             // Detect desktop client and issue longer-lived tokens for better UX
             // Desktop apps run on personal devices with OS-level encryption (secure storage)
-            boolean isDesktopClient = DesktopClientUtils.isDesktopClient(httpRequest);
+            boolean isDesktopClient =
+                    DesktopClientUtils.isDesktopClientByUserAgent(
+                            httpHeaders.getHeaderString("User-Agent"));
             String token;
             int keyRetentionDays = securityProperties.getJwt().getKeyRetentionDays();
             if (isDesktopClient) {
@@ -216,32 +230,36 @@ public class AuthController {
                     ip,
                     isDesktopClient);
 
-            return ResponseEntity.ok(
-                    Map.of(
-                            "user", buildUserResponse(user),
-                            "session",
-                                    Map.of(
-                                            "access_token",
-                                            token,
-                                            "expires_in",
-                                            getTokenExpirySeconds(isDesktopClient))));
+            return Response.ok(
+                            Map.of(
+                                    "user", buildUserResponse(user),
+                                    "session",
+                                            Map.of(
+                                                    "access_token",
+                                                    token,
+                                                    "expires_in",
+                                                    getTokenExpirySeconds(isDesktopClient))))
+                    .build();
 
         } catch (UsernameNotFoundException e) {
             String username = request.getUsername();
             log.warn("User not found: {}", username);
             loginAttemptService.loginFailed(username);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Invalid username or password"));
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity(Map.of("error", "Invalid username or password"))
+                    .build();
         } catch (AuthenticationException e) {
             String username = request.getUsername();
             log.error("Authentication failed for user: {}", username, e);
             loginAttemptService.loginFailed(username);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Invalid credentials"));
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity(Map.of("error", "Invalid credentials"))
+                    .build();
         } catch (Exception e) {
             log.error("Login error for user: {}", request.getUsername(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Internal server error"));
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(Map.of("error", "Internal server error"))
+                    .build();
         }
     }
 
@@ -250,28 +268,34 @@ public class AuthController {
      *
      * @return Current authenticated user information
      */
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
-    @GetMapping("/me")
-    public ResponseEntity<?> getCurrentUser() {
+    @DenyDemoUser
+    @GET
+    @Path("/me")
+    public Response getCurrentUser() {
         try {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-            if (auth == null
-                    || !auth.isAuthenticated()
-                    || "anonymousUser".equals(auth.getPrincipal())) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "Not authenticated"));
+            // TODO: Migration required - was
+            // SecurityContextHolder.getContext().getAuthentication().
+            // Quarkus SecurityIdentity has no Spring UserDetails principal; loading the full User
+            // here requires a SecurityIdentityAugmentor that attaches the User (or re-loading via
+            // userDetailsService by name). Until then we re-load the user from the identity name.
+            if (securityIdentity == null
+                    || securityIdentity.isAnonymous()
+                    || securityIdentity.getPrincipal() == null) {
+                return Response.status(Response.Status.UNAUTHORIZED)
+                        .entity(Map.of("error", "Not authenticated"))
+                        .build();
             }
 
-            UserDetails userDetails = (UserDetails) auth.getPrincipal();
-            User user = (User) userDetails;
+            String username = securityIdentity.getPrincipal().getName();
+            User user = userDetailsService.loadUserByUsername(username);
 
-            return ResponseEntity.ok(Map.of("user", buildUserResponse(user)));
+            return Response.ok(Map.of("user", buildUserResponse(user))).build();
 
         } catch (Exception e) {
             log.error("Get current user error", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Internal server error"));
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(Map.of("error", "Internal server error"))
+                    .build();
         }
     }
 
@@ -281,22 +305,36 @@ public class AuthController {
      * @param response HTTP response
      * @return Success message
      */
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
-    @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
+    @DenyDemoUser
+    @POST
+    @Path("/logout")
+    public Response logout(@Context HttpHeaders httpHeaders) {
         try {
-            String username = jwtService.extractUsernameFromRequestAllowExpired(request);
-            SecurityContextHolder.clearContext();
+            // RESTEasy Reactive: the servlet HttpServletRequest is not active on the request
+            // thread,
+            // so extract the bearer token from the Authorization header and resolve the username
+            // via
+            // the String-based JWT API instead of
+            // jwtService.extractUsernameFromRequestAllowExpired.
+            String token = extractBearerToken(httpHeaders);
+            String username =
+                    (token != null && !token.isBlank())
+                            ? jwtService.extractUsernameAllowExpired(token)
+                            : null;
+            // TODO: Migration required - SecurityContextHolder.clearContext() has no Quarkus
+            // equivalent; SecurityIdentity is request-scoped and not cleared imperatively. Cookie/
+            // token invalidation is handled by the JWT cookie being dropped by the client/filter.
             aiUserDataService.purgeUserDocuments(username);
 
             log.debug("User logged out successfully (username={})", username);
 
-            return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
+            return Response.ok(Map.of("message", "Logged out successfully")).build();
 
         } catch (Exception e) {
             log.error("Logout error", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Internal server error"));
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(Map.of("error", "Internal server error"))
+                    .build();
         }
     }
 
@@ -307,15 +345,20 @@ public class AuthController {
      * @param response HTTP response to set new JWT cookie
      * @return New token information
      */
-    @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
-    @PostMapping("/refresh")
-    public ResponseEntity<?> refresh(HttpServletRequest request, HttpServletResponse response) {
+    @DenyDemoUser
+    @POST
+    @Path("/refresh")
+    public Response refresh(@Context HttpHeaders httpHeaders) {
         try {
-            String token = jwtService.extractToken(request);
+            // RESTEasy Reactive: extract the bearer token from the Authorization header rather than
+            // calling jwtService.extractToken(HttpServletRequest), which is not active on the
+            // reactive request thread.
+            String token = extractBearerToken(httpHeaders);
 
             if (token == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "No token found"));
+                return Response.status(Response.Status.UNAUTHORIZED)
+                        .entity(Map.of("error", "No token found"))
+                        .build();
             }
 
             // Generate token hash for rate limiting (avoid storing actual tokens)
@@ -324,8 +367,9 @@ public class AuthController {
             Map<String, Object> claims = jwtService.extractClaimsAllowExpired(token);
             if (!isRefreshWithinGrace(claims)) {
                 log.warn("Token refresh rejected: token expired beyond configured grace window");
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "Token refresh failed"));
+                return Response.status(Response.Status.UNAUTHORIZED)
+                        .entity(Map.of("error", "Token refresh failed"))
+                        .build();
             }
 
             // Only apply rate limiting if token is actually expired (not for valid tokens)
@@ -338,32 +382,37 @@ public class AuthController {
                 log.warn(
                         "Token refresh rejected: rate limit exceeded (max {} attempts allowed)",
                         JwtConstants.MAX_REFRESH_ATTEMPTS_IN_GRACE);
-                return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
-                        .body(
+                // HTTP 429 TOO_MANY_REQUESTS is not in JAX-RS Response.Status enum; use numeric
+                // code
+                return Response.status(429)
+                        .entity(
                                 Map.of(
                                         "error",
                                         "Too many refresh attempts",
                                         "max_attempts",
-                                        JwtConstants.MAX_REFRESH_ATTEMPTS_IN_GRACE));
+                                        JwtConstants.MAX_REFRESH_ATTEMPTS_IN_GRACE))
+                        .build();
             }
 
             Object usernameClaim = claims.get("sub");
             String username = usernameClaim != null ? usernameClaim.toString() : null;
             if (username == null || username.isBlank()) {
                 log.warn("Token refresh rejected: missing subject claim");
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "Token refresh failed"));
+                return Response.status(Response.Status.UNAUTHORIZED)
+                        .entity(Map.of("error", "Token refresh failed"))
+                        .build();
             }
 
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            User user = (User) userDetails;
+            User user = userDetailsService.loadUserByUsername(username);
 
             Map<String, Object> newClaims = new HashMap<>();
             newClaims.put("authType", user.getAuthenticationType());
             newClaims.put("role", user.getRolesAsString());
 
             // Detect desktop client and issue longer-lived tokens
-            boolean isDesktopClient = DesktopClientUtils.isDesktopClient(request);
+            boolean isDesktopClient =
+                    DesktopClientUtils.isDesktopClientByUserAgent(
+                            httpHeaders.getHeaderString("User-Agent"));
             String newToken;
             if (isDesktopClient) {
                 int desktopExpiryMinutes =
@@ -390,48 +439,54 @@ public class AuthController {
 
             log.debug("Token refreshed for user: {}", username);
 
-            return ResponseEntity.ok(
-                    Map.of(
-                            "user", buildUserResponse(user),
-                            "session",
-                                    Map.of(
-                                            "access_token",
-                                            newToken,
-                                            "expires_in",
-                                            getTokenExpirySeconds(isDesktopClient))));
+            return Response.ok(
+                            Map.of(
+                                    "user", buildUserResponse(user),
+                                    "session",
+                                            Map.of(
+                                                    "access_token",
+                                                    newToken,
+                                                    "expires_in",
+                                                    getTokenExpirySeconds(isDesktopClient))))
+                    .build();
 
         } catch (AuthenticationFailureException e) {
             log.warn("Token refresh failed: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Token refresh failed"));
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity(Map.of("error", "Token refresh failed"))
+                    .build();
         } catch (Exception e) {
             log.error("Token refresh error", e);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Token refresh failed"));
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity(Map.of("error", "Token refresh failed"))
+                    .build();
         }
     }
 
-    @PreAuthorize("isAuthenticated() && !hasAuthority('ROLE_DEMO_USER')")
-    @GetMapping("/mfa/setup")
-    public ResponseEntity<?> setupMfa(Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Not authenticated"));
+    @DenyDemoUser
+    @GET
+    @Path("/mfa/setup")
+    public Response setupMfa() {
+        if (securityIdentity == null || securityIdentity.isAnonymous()) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity(Map.of("error", "Not authenticated"))
+                    .build();
         }
 
-        String username = authentication.getName();
+        String username = securityIdentity.getPrincipal().getName();
         User user =
                 userService
                         .findByUsernameIgnoreCaseWithSettings(username)
                         .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        ResponseEntity<?> authTypeResponse = ensureWebAuth(user);
+        Response authTypeResponse = ensureWebAuth(user);
         if (authTypeResponse != null) {
             return authTypeResponse;
         }
 
         if (mfaService.isMfaEnabled(user)) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(Map.of("error", "MFA already enabled"));
+            return Response.status(Response.Status.CONFLICT)
+                    .entity(Map.of("error", "MFA already enabled"))
+                    .build();
         }
 
         try {
@@ -439,147 +494,164 @@ public class AuthController {
             mfaService.setSecret(user, secret);
             String otpAuthUri = totpService.buildOtpAuthUri(username, secret);
 
-            return ResponseEntity.ok(Map.of("secret", secret, "otpauthUri", otpAuthUri));
+            return Response.ok(Map.of("secret", secret, "otpauthUri", otpAuthUri)).build();
         } catch (Exception e) {
             log.error("Failed to setup MFA for user: {}", username, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to setup MFA"));
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(Map.of("error", "Failed to setup MFA"))
+                    .build();
         }
     }
 
-    @PreAuthorize("isAuthenticated() && !hasAuthority('ROLE_DEMO_USER')")
-    @PostMapping("/mfa/enable")
-    public ResponseEntity<?> enableMfa(
-            @RequestBody MfaCodeRequest request, Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Not authenticated"));
+    @DenyDemoUser
+    @POST
+    @Path("/mfa/enable")
+    public Response enableMfa(MfaCodeRequest request) {
+        if (securityIdentity == null || securityIdentity.isAnonymous()) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity(Map.of("error", "Not authenticated"))
+                    .build();
         }
 
-        String username = authentication.getName();
+        String username = securityIdentity.getPrincipal().getName();
         User user =
                 userService
                         .findByUsernameIgnoreCaseWithSettings(username)
                         .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        ResponseEntity<?> authTypeResponse = ensureWebAuth(user);
+        Response authTypeResponse = ensureWebAuth(user);
         if (authTypeResponse != null) {
             return authTypeResponse;
         }
 
         String secret = mfaService.getSecret(user);
         if (secret == null || secret.isBlank()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "MFA setup required"));
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", "MFA setup required"))
+                    .build();
         }
 
         if (request == null || request.getCode() == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "MFA code is required"));
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", "MFA code is required"))
+                    .build();
         }
 
         Long timeStep = totpService.getValidTimeStep(secret, request.getCode());
         if (timeStep == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Invalid two-factor code"));
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity(Map.of("error", "Invalid two-factor code"))
+                    .build();
         }
 
         try {
             if (!mfaService.isTotpStepUsable(user, timeStep)) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "Invalid two-factor code"));
+                return Response.status(Response.Status.UNAUTHORIZED)
+                        .entity(Map.of("error", "Invalid two-factor code"))
+                        .build();
             }
             mfaService.enableMfa(user);
             mfaService.markTotpStepUsed(user, timeStep);
             mfaService.setMfaRequired(user, false);
-            return ResponseEntity.ok(Map.of("enabled", true));
+            return Response.ok(Map.of("enabled", true)).build();
         } catch (Exception e) {
             log.error("Failed to enable MFA for user: {}", username, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to enable MFA"));
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(Map.of("error", "Failed to enable MFA"))
+                    .build();
         }
     }
 
-    @PreAuthorize("isAuthenticated() && !hasAuthority('ROLE_DEMO_USER')")
-    @PostMapping("/mfa/disable")
-    public ResponseEntity<?> disableMfa(
-            @RequestBody MfaCodeRequest request, Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Not authenticated"));
+    @DenyDemoUser
+    @POST
+    @Path("/mfa/disable")
+    public Response disableMfa(MfaCodeRequest request) {
+        if (securityIdentity == null || securityIdentity.isAnonymous()) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity(Map.of("error", "Not authenticated"))
+                    .build();
         }
 
-        String username = authentication.getName();
+        String username = securityIdentity.getPrincipal().getName();
         User user =
                 userService
                         .findByUsernameIgnoreCaseWithSettings(username)
                         .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        ResponseEntity<?> authTypeResponse = ensureWebAuth(user);
+        Response authTypeResponse = ensureWebAuth(user);
         if (authTypeResponse != null) {
             return authTypeResponse;
         }
 
         if (!mfaService.isMfaEnabled(user)) {
-            return ResponseEntity.ok(Map.of("enabled", false));
+            return Response.ok(Map.of("enabled", false)).build();
         }
 
         String secret = mfaService.getSecret(user);
         if (secret == null || secret.isBlank()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "MFA configuration missing"));
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", "MFA configuration missing"))
+                    .build();
         }
 
         if (request == null || request.getCode() == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "MFA code is required"));
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", "MFA code is required"))
+                    .build();
         }
 
         Long timeStep = totpService.getValidTimeStep(secret, request.getCode());
         if (timeStep == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Invalid two-factor code"));
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity(Map.of("error", "Invalid two-factor code"))
+                    .build();
         }
 
         try {
             if (!mfaService.isTotpStepUsable(user, timeStep)) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "Invalid two-factor code"));
+                return Response.status(Response.Status.UNAUTHORIZED)
+                        .entity(Map.of("error", "Invalid two-factor code"))
+                        .build();
             }
             mfaService.disableMfa(user);
             mfaService.markTotpStepUsed(user, timeStep);
-            return ResponseEntity.ok(Map.of("enabled", false));
+            return Response.ok(Map.of("enabled", false)).build();
         } catch (Exception e) {
             log.error("Failed to disable MFA for user: {}", username, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to disable MFA"));
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(Map.of("error", "Failed to disable MFA"))
+                    .build();
         }
     }
 
-    @PreAuthorize("isAuthenticated() && !hasAuthority('ROLE_DEMO_USER')")
-    @PostMapping("/mfa/setup/cancel")
-    public ResponseEntity<?> cancelMfaSetup(Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Not authenticated"));
+    @DenyDemoUser
+    @POST
+    @Path("/mfa/setup/cancel")
+    public Response cancelMfaSetup() {
+        if (securityIdentity == null || securityIdentity.isAnonymous()) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                    .entity(Map.of("error", "Not authenticated"))
+                    .build();
         }
 
-        String username = authentication.getName();
+        String username = securityIdentity.getPrincipal().getName();
         User user =
                 userService
                         .findByUsernameIgnoreCaseWithSettings(username)
                         .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         if (mfaService.isMfaEnabled(user)) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(Map.of("error", "MFA already enabled"));
+            return Response.status(Response.Status.CONFLICT)
+                    .entity(Map.of("error", "MFA already enabled"))
+                    .build();
         }
 
         try {
             mfaService.clearPendingSecret(user);
-            return ResponseEntity.ok(Map.of("cleared", true));
+            return Response.ok(Map.of("cleared", true)).build();
         } catch (Exception e) {
             log.error("Failed to clear MFA setup for user: {}", username, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to clear MFA setup"));
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(Map.of("error", "Failed to clear MFA setup"))
+                    .build();
         }
     }
 
@@ -589,9 +661,10 @@ public class AuthController {
      * @param username Username of the user to disable MFA for
      * @return Response indicating success or failure
      */
-    @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/mfa/disable/admin/{username}")
-    public ResponseEntity<?> disableMfaByAdmin(@PathVariable String username) {
+    @RolesAllowed("ADMIN")
+    @POST
+    @Path("/mfa/disable/admin/{username}")
+    public Response disableMfaByAdmin(@PathParam("username") String username) {
         try {
             User user =
                     userService
@@ -599,19 +672,21 @@ public class AuthController {
                             .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
             if (!mfaService.isMfaEnabled(user)) {
-                return ResponseEntity.ok(Map.of("enabled", false));
+                return Response.ok(Map.of("enabled", false)).build();
             }
 
             mfaService.disableMfa(user);
-            return ResponseEntity.ok(Map.of("enabled", false));
+            return Response.ok(Map.of("enabled", false)).build();
         } catch (UsernameNotFoundException e) {
             log.warn("User not found for MFA disable: {}", username);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "User not found"));
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(Map.of("error", "User not found"))
+                    .build();
         } catch (Exception e) {
             log.error("Failed to disable MFA for user: {}", username, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to disable MFA"));
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(Map.of("error", "Failed to disable MFA"))
+                    .build();
         }
     }
 
@@ -734,10 +809,29 @@ public class AuthController {
         }
     }
 
-    private ResponseEntity<?> ensureWebAuth(User user) {
+    /**
+     * Extract the JWT bearer token from the Authorization header.
+     *
+     * <p>RESTEasy Reactive helper that mirrors {@code JwtService.extractToken(HttpServletRequest)}
+     * but reads from JAX-RS {@link HttpHeaders} so it works on the reactive request thread (the
+     * servlet request context is not active there).
+     *
+     * @param httpHeaders the JAX-RS request headers
+     * @return the bearer token, or null if no valid Authorization: Bearer header is present
+     */
+    private String extractBearerToken(HttpHeaders httpHeaders) {
+        String authHeader = httpHeaders.getHeaderString(HttpHeaders.AUTHORIZATION);
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
+        }
+        return null;
+    }
+
+    private Response ensureWebAuth(User user) {
         if (!AuthenticationType.WEB.name().equalsIgnoreCase(user.getAuthenticationType())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", "MFA settings are only available for web accounts"));
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity(Map.of("error", "MFA settings are only available for web accounts"))
+                    .build();
         }
         return null;
     }

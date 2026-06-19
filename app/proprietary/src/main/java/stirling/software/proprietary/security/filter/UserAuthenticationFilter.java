@@ -6,51 +6,56 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Profile;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.session.SessionInformation;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.stereotype.Component;
-import org.springframework.web.filter.OncePerRequestFilter;
-
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.ws.rs.core.Response;
 
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Security.OAUTH2;
 import stirling.software.common.model.ApplicationProperties.Security.SAML2;
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.AuthenticationException;
+import stirling.software.common.security.OAuth2User;
+import stirling.software.common.security.SecurityContextHolder;
+import stirling.software.common.security.SessionInformation;
+import stirling.software.common.security.UserDetails;
 import stirling.software.common.util.RequestUriUtils;
-import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 
+// TODO: Migration required - @Profile("!saas") had no direct annotation equivalent here. Gate this
+// filter's activation on the "saas" build profile (e.g. via
+// @io.quarkus.arc.profile.UnlessBuildProfile
+// or a runtime check) and register it through Quarkus (quarkus-undertow @WebFilter or a
+// jakarta.ws.rs.container.ContainerRequestFilter @Provider). Registration ordering relative to the
+// other security filters (JwtAuthenticationFilter, *RateLimitingFilter) must be preserved.
 @Slf4j
-@Component
-@Profile("!saas")
-public class UserAuthenticationFilter extends OncePerRequestFilter {
+@ApplicationScoped
+public class UserAuthenticationFilter implements Filter {
 
     private final ApplicationProperties.Security securityProp;
     private final UserService userService;
     private final SessionPersistentRegistry sessionPersistentRegistry;
     private final boolean loginEnabledValue;
 
+    @Inject
     public UserAuthenticationFilter(
-            @Lazy ApplicationProperties.Security securityProp,
-            @Lazy UserService userService,
+            ApplicationProperties.Security securityProp,
+            UserService userService,
             SessionPersistentRegistry sessionPersistentRegistry,
-            @Qualifier("loginEnabled") boolean loginEnabledValue) {
+            @Named("loginEnabled") boolean loginEnabledValue) {
         this.securityProp = securityProp;
         this.userService = userService;
         this.sessionPersistentRegistry = sessionPersistentRegistry;
@@ -58,9 +63,21 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    public void doFilter(
+            ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
             throws ServletException, IOException {
+
+        HttpServletRequest request = (HttpServletRequest) servletRequest;
+        HttpServletResponse response = (HttpServletResponse) servletResponse;
+
+        // Spring's OncePerRequestFilter#shouldNotFilter behavior: skip the filter body for static
+        // resources, SPA routes and public API endpoints. TODO: Migration required - ensure the
+        // Quarkus filter registration does not run this filter more than once per request (the
+        // OncePerRequestFilter guarantee).
+        if (shouldNotFilter(request)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         if (!loginEnabledValue) {
             // If login is not enabled, just pass all requests without authentication
@@ -93,17 +110,29 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                     // provider for API keys.
                     Optional<User> user = userService.getUserByApiKey(apiKey);
                     if (user.isEmpty()) {
-                        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                        response.setStatus(Response.Status.UNAUTHORIZED.getStatusCode());
                         response.getWriter().write("Invalid API Key.");
                         return;
                     }
+                    // ApiKeyAuthenticationToken is a plain POJO (not Authentication); wrap in
+                    // UsernamePasswordAuthenticationToken so the Authentication variable stays
+                    // typed.
                     authentication =
-                            new ApiKeyAuthenticationToken(
-                                    user.get(), apiKey, user.get().getAuthorities());
+                            new stirling.software.common.security
+                                    .UsernamePasswordAuthenticationToken(
+                                    user.get(),
+                                    apiKey,
+                                    user.get().getAuthorities().stream()
+                                            .map(
+                                                    a ->
+                                                            new stirling.software.common.security
+                                                                    .SimpleGrantedAuthority(
+                                                                    a.getAuthority()))
+                                            .collect(java.util.stream.Collectors.toSet()));
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 } catch (AuthenticationException e) {
                     // If API key authentication fails, deny the request
-                    response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                    response.setStatus(Response.Status.UNAUTHORIZED.getStatusCode());
                     response.getWriter().write("Invalid API Key.");
                     return;
                 }
@@ -122,7 +151,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             }
 
             // For API requests, return 401 with JSON response (no redirects)
-            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+            response.setStatus(Response.Status.UNAUTHORIZED.getStatusCode());
             response.setContentType("application/json");
             response.getWriter()
                     .write(
@@ -182,7 +211,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                 if (blockRegistration && !isUserExists) {
                     log.warn("Blocked registration for OAuth2/SAML user: {}", username);
                     SecurityContextHolder.clearContext();
-                    response.setStatus(HttpStatus.FORBIDDEN.value());
+                    response.setStatus(Response.Status.FORBIDDEN.getStatusCode());
                     response.setContentType("application/json");
                     response.getWriter()
                             .write(
@@ -209,7 +238,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                 // Return 401 if credentials are invalid (no redirects)
                 if (!isUserExists && notSsoLogin) {
                     SecurityContextHolder.clearContext();
-                    response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                    response.setStatus(Response.Status.UNAUTHORIZED.getStatusCode());
                     response.setContentType("application/json");
                     response.getWriter()
                             .write(
@@ -224,7 +253,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                 }
                 if (isUserDisabled) {
                     SecurityContextHolder.clearContext();
-                    response.setStatus(HttpStatus.FORBIDDEN.value());
+                    response.setStatus(Response.Status.FORBIDDEN.getStatusCode());
                     response.setContentType("application/json");
                     response.getWriter()
                             .write(
@@ -262,8 +291,10 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
         }
     }
 
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
+    // Was Spring's OncePerRequestFilter#shouldNotFilter; now called explicitly at the top of
+    // doFilter. TODO: Migration required - if registered as a ContainerRequestFilter instead of a
+    // servlet Filter, fold this skip logic into the request filter using UriInfo.
+    private boolean shouldNotFilter(HttpServletRequest request) {
         String uri = request.getRequestURI();
         String contextPath = request.getContextPath();
 

@@ -7,16 +7,18 @@ import java.util.Objects;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPageTree;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.InitBinder;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +34,9 @@ import stirling.software.SPDF.model.api.security.RedactPdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.api.security.RedactionArea;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.PdfUtils;
@@ -45,6 +49,8 @@ import stirling.software.common.util.propertyeditor.JsonObjectPropertyEditor;
 import tools.jackson.core.type.TypeReference;
 
 @SecurityApi
+@Path("/api/v1/security")
+@ApplicationScoped
 @Slf4j
 @RequiredArgsConstructor
 public class RedactController {
@@ -59,27 +65,31 @@ public class RedactController {
         return stirling.software.common.util.GeneralUtils.removeExtension(filename);
     }
 
-    @InitBinder
-    public void initBinder(WebDataBinder binder) {
-        binder.registerCustomEditor(
-                List.class,
-                "redactions",
-                new JsonListPropertyEditor<>(new TypeReference<List<RedactionArea>>() {}));
-        binder.registerCustomEditor(
-                List.class,
-                "ranges",
-                new JsonListPropertyEditor<>(new TypeReference<List<TextRange>>() {}));
-        binder.registerCustomEditor(
-                List.class,
-                "imageBoxes",
-                new JsonListPropertyEditor<>(new TypeReference<List<ImageBox>>() {}));
-        binder.registerCustomEditor(
-                RedactStyle.class, "style", new JsonObjectPropertyEditor<>(RedactStyle.class));
+    // MIGRATION (Spring->JAX-RS): the Spring @InitBinder/WebDataBinder mechanism that registered
+    // JsonListPropertyEditor/JsonObjectPropertyEditor for the JSON form fields ("redactions",
+    // "ranges", "imageBoxes", "style") is not available under RESTEasy Reactive. The form fields
+    // are now received as raw JSON strings via @RestForm and parsed inline below with the same
+    // property editors, preserving the original parsing behaviour.
+    @SuppressWarnings("unchecked")
+    private static <T> List<T> parseJsonList(String value, TypeReference<List<T>> typeRef) {
+        JsonListPropertyEditor<T> editor = new JsonListPropertyEditor<>(typeRef);
+        editor.setAsText(value);
+        return (List<T>) editor.getValue();
     }
 
+    private static RedactStyle parseStyle(String value) {
+        JsonObjectPropertyEditor<RedactStyle> editor =
+                new JsonObjectPropertyEditor<>(RedactStyle.class);
+        editor.setAsText(value);
+        return (RedactStyle) editor.getValue();
+    }
+
+    @POST
+    @Path("/redact")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
             value = "/redact",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @StandardPdfResponse
     @Operation(
@@ -89,8 +99,23 @@ public class RedactController {
                     "This endpoint redacts content from a PDF file based on manually specified areas. "
                             + "Users can specify areas to redact and optionally convert the PDF to an image. "
                             + "Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<Resource> redactPDF(@ModelAttribute ManualRedactPdfRequest request)
+    public Response redactPDF(
+            @RestForm("fileInput") FileUpload fileInput,
+            @RestForm("fileId") String fileId,
+            @RestForm("pageNumbers") String pageNumbers,
+            @RestForm("redactions") String redactions,
+            @RestForm("convertPDFToImage") Boolean convertPDFToImage,
+            @RestForm("pageRedactionColor") String pageRedactionColor)
             throws IOException {
+
+        ManualRedactPdfRequest request = new ManualRedactPdfRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileInput));
+        request.setFileId(fileId);
+        request.setPageNumbers(pageNumbers);
+        request.setRedactions(
+                parseJsonList(redactions, new TypeReference<List<RedactionArea>>() {}));
+        request.setConvertPDFToImage(convertPDFToImage);
+        request.setPageRedactionColor(pageRedactionColor);
 
         MultipartFile file = request.getFileInput();
 
@@ -123,9 +148,12 @@ public class RedactController {
         }
     }
 
+    @POST
+    @Path("/auto-redact")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
             value = "/auto-redact",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @StandardPdfResponse
     @Operation(
@@ -135,7 +163,25 @@ public class RedactController {
                     "This endpoint automatically redacts text from a PDF file based on specified patterns. "
                             + "Users can provide text patterns to redact, with options for regex and whole word matching. "
                             + "Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<Resource> redactPdf(@ModelAttribute RedactPdfRequest request) {
+    public Response redactPdf(
+            @RestForm("fileInput") FileUpload fileInput,
+            @RestForm("fileId") String fileId,
+            @RestForm("listOfText") String listOfTextParam,
+            @RestForm("useRegex") Boolean useRegexParam,
+            @RestForm("wholeWordSearch") Boolean wholeWordSearchParam,
+            @RestForm("redactColor") String redactColor,
+            @RestForm("customPadding") float customPadding,
+            @RestForm("convertPDFToImage") Boolean convertPDFToImage) {
+        RedactPdfRequest request = new RedactPdfRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileInput));
+        request.setFileId(fileId);
+        request.setListOfText(listOfTextParam);
+        request.setUseRegex(useRegexParam);
+        request.setWholeWordSearch(wholeWordSearchParam);
+        request.setRedactColor(redactColor);
+        request.setCustomPadding(customPadding);
+        request.setConvertPDFToImage(convertPDFToImage);
+
         String[] listOfText = request.getListOfText().split("\n");
         boolean useRegex = Boolean.TRUE.equals(request.getUseRegex());
         boolean wholeWordSearchBool = Boolean.TRUE.equals(request.getWholeWordSearch());
@@ -261,9 +307,12 @@ public class RedactController {
         }
     }
 
+    @POST
+    @Path("/redact-execute")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
             value = "/redact-execute",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @StandardPdfResponse
     @Operation(
@@ -273,8 +322,35 @@ public class RedactController {
                     "Unified redaction endpoint that accepts exact strings, regex patterns, and "
                             + "page numbers in a single request. Supports execution strategy hints. "
                             + "Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<Resource> executeRedaction(@ModelAttribute RedactExecuteRequest request)
+    public Response executeRedaction(
+            @RestForm("fileInput") FileUpload fileInput,
+            @RestForm("fileId") String fileId,
+            @RestForm("textValues") String textValues,
+            @RestForm("regexPatterns") String regexPatterns,
+            @RestForm("wipePages") String wipePages,
+            @RestForm("ranges") String ranges,
+            @RestForm("imageBoxes") String imageBoxes,
+            @RestForm("redactImagePages") String redactImagePages,
+            @RestForm("style") String style)
             throws IOException {
+
+        RedactExecuteRequest request = new RedactExecuteRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileInput));
+        request.setFileId(fileId);
+        request.setTextValues(parseJsonList(textValues, new TypeReference<List<String>>() {}));
+        request.setRegexPatterns(
+                parseJsonList(regexPatterns, new TypeReference<List<String>>() {}));
+        request.setWipePages(parseJsonList(wipePages, new TypeReference<List<Integer>>() {}));
+        request.setRanges(parseJsonList(ranges, new TypeReference<List<TextRange>>() {}));
+        request.setImageBoxes(parseJsonList(imageBoxes, new TypeReference<List<ImageBox>>() {}));
+        // redactImagePages is nullable: null = skip image redaction, [] = all pages.
+        if (redactImagePages != null) {
+            request.setRedactImagePages(
+                    parseJsonList(redactImagePages, new TypeReference<List<Integer>>() {}));
+        }
+        if (style != null) {
+            request.setStyle(parseStyle(style));
+        }
 
         if (request.getFileInput() == null) {
             throw ExceptionUtils.createFileNullOrEmptyException();

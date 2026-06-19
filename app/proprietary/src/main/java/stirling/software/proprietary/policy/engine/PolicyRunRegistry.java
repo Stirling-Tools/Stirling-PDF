@@ -9,10 +9,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
+import io.quarkus.arc.profile.IfBuildProfile;
 
 import jakarta.annotation.PreDestroy;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,8 +28,8 @@ import stirling.software.proprietary.policy.model.PolicyRun;
  * shared {@code TaskManager} job owns file-lifecycle cleanup.
  */
 @Slf4j
-@Service
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 public class PolicyRunRegistry {
 
     private final Map<String, PolicyRun> runs = new ConcurrentHashMap<>();

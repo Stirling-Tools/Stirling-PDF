@@ -4,8 +4,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
@@ -17,15 +19,16 @@ import tools.jackson.databind.ObjectMapper;
  * Durable {@link PolicyStore} backed by JPA; the runtime store. Policies are persisted as JSON via
  * {@link PolicyEntity}, with scalar columns kept in sync for querying.
  */
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
-@Profile("saas")
+@IfBuildProfile("saas")
 public class JpaPolicyStore implements PolicyStore {
 
     private final PolicyRepository repository;
     private final ObjectMapper objectMapper;
 
     @Override
+    @Transactional
     public Policy save(Policy policy) {
         String id =
                 policy.id() == null || policy.id().isBlank()
@@ -50,34 +53,36 @@ public class JpaPolicyStore implements PolicyStore {
         entity.setEnabled(stored.enabled());
         entity.setTriggerType(stored.trigger() == null ? null : stored.trigger().type());
         entity.setPolicyJson(objectMapper.writeValueAsString(stored));
-        repository.save(entity);
+        repository.persist(entity);
         return stored;
     }
 
     @Override
     public Optional<Policy> get(String id) {
-        return repository.findById(id).map(this::toPolicy);
+        return repository.findByIdOptional(id).map(this::toPolicy);
     }
 
     @Override
+    @Transactional
     public List<Policy> all() {
-        return repository.findAll().stream().map(this::toPolicy).toList();
+        return repository.listAll().stream().map(this::toPolicy).toList();
     }
 
     @Override
+    @Transactional
     public List<Policy> findByTriggerType(String triggerType) {
+        // @Transactional is required even for reads: the scheduled folder-watch/schedule triggers
+        // call this from a background virtual-thread executor where no request context or
+        // transaction is active, so Panache would otherwise throw ContextNotActiveException.
         return repository.findByTriggerTypeAndEnabledTrue(triggerType).stream()
                 .map(this::toPolicy)
                 .toList();
     }
 
     @Override
+    @Transactional
     public boolean delete(String id) {
-        if (!repository.existsById(id)) {
-            return false;
-        }
-        repository.deleteById(id);
-        return true;
+        return repository.deleteById(id);
     }
 
     private Policy toPolicy(PolicyEntity entity) {

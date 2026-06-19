@@ -1,29 +1,24 @@
 package stirling.software.SPDF.controller.web;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
 
 import java.lang.reflect.Field;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 
-import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 class ReactRoutingControllerTest {
 
     private ReactRoutingController controller;
-    private HttpServletRequest request;
 
     @BeforeEach
     void setUp() throws Exception {
         controller = new ReactRoutingController();
-        request = mock(HttpServletRequest.class);
 
-        // Set contextPath via reflection (normally injected by Spring @Value)
+        // Set contextPath via reflection (normally injected by @ConfigProperty)
         setField("contextPath", "/");
     }
 
@@ -40,11 +35,11 @@ class ReactRoutingControllerTest {
         // In test env, no classpath static/index.html and no external file
         controller.init();
 
-        ResponseEntity<String> response = controller.serveIndexHtml(request);
+        Response response = controller.serveIndexHtml();
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(MediaType.TEXT_HTML, response.getHeaders().getContentType());
-        String body = response.getBody();
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(MediaType.TEXT_HTML_TYPE, response.getMediaType());
+        String body = (String) response.getEntity();
         assertNotNull(body);
         assertTrue(body.contains("Stirling PDF"));
     }
@@ -53,20 +48,20 @@ class ReactRoutingControllerTest {
     void serveIndexHtml_returnsCachedContent() {
         controller.init();
 
-        ResponseEntity<String> response1 = controller.serveIndexHtml(request);
-        ResponseEntity<String> response2 = controller.serveIndexHtml(request);
+        Response response1 = controller.serveIndexHtml();
+        Response response2 = controller.serveIndexHtml();
 
         // Both should return the same cached content
-        assertEquals(response1.getBody(), response2.getBody());
+        assertEquals(response1.getEntity(), response2.getEntity());
     }
 
     @Test
     void serveIndexHtml_contentTypeIsHtml() {
         controller.init();
 
-        ResponseEntity<String> response = controller.serveIndexHtml(request);
+        Response response = controller.serveIndexHtml();
 
-        assertEquals(MediaType.TEXT_HTML, response.getHeaders().getContentType());
+        assertEquals(MediaType.TEXT_HTML_TYPE, response.getMediaType());
     }
 
     // --- auth callback ---
@@ -75,22 +70,23 @@ class ReactRoutingControllerTest {
     void serveAuthCallback_returnsIndexHtml() {
         controller.init();
 
-        ResponseEntity<String> response = controller.serveAuthCallback(request);
+        Response response = controller.serveAuthCallback();
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertTrue(response.getBody().contains("Stirling PDF"));
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        String body = (String) response.getEntity();
+        assertNotNull(body);
+        assertTrue(body.contains("Stirling PDF"));
     }
 
     @Test
     void serveShareLinkPage_returnsIndexHtml() {
         controller.init();
 
-        ResponseEntity<String> response = controller.serveShareLinkPage(request);
+        Response response = controller.serveShareLinkPage("token123");
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(MediaType.TEXT_HTML, response.getHeaders().getContentType());
-        String body = response.getBody();
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(MediaType.TEXT_HTML_TYPE, response.getMediaType());
+        String body = (String) response.getEntity();
         assertNotNull(body);
         assertTrue(body.contains("Stirling PDF"));
     }
@@ -101,11 +97,11 @@ class ReactRoutingControllerTest {
     void serveTauriAuthCallback_returnsCallbackHtml() {
         controller.init();
 
-        ResponseEntity<String> response = controller.serveTauriAuthCallback(request);
+        Response response = controller.serveTauriAuthCallback();
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(MediaType.TEXT_HTML, response.getHeaders().getContentType());
-        String body = response.getBody();
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(MediaType.TEXT_HTML_TYPE, response.getMediaType());
+        String body = (String) response.getEntity();
         assertNotNull(body);
         assertTrue(body.contains("Authentication"));
     }
@@ -114,9 +110,9 @@ class ReactRoutingControllerTest {
     void serveTauriAuthCallback_containsDeepLinkScript() {
         controller.init();
 
-        ResponseEntity<String> response = controller.serveTauriAuthCallback(request);
+        Response response = controller.serveTauriAuthCallback();
 
-        String body = response.getBody();
+        String body = (String) response.getEntity();
         assertNotNull(body);
         assertTrue(body.contains("stirlingpdf://auth/sso-complete"));
     }
@@ -127,20 +123,20 @@ class ReactRoutingControllerTest {
     void forwardRootPaths_servesIndexHtml() throws Exception {
         controller.init();
 
-        ResponseEntity<String> response = controller.forwardRootPaths(request);
+        Response response = controller.forwardRootPaths("tools");
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertNotNull(response.getEntity());
     }
 
     @Test
     void forwardNestedPaths_servesIndexHtml() throws Exception {
         controller.init();
 
-        ResponseEntity<String> response = controller.forwardNestedPaths(request);
+        Response response = controller.forwardNestedPaths("tools", "merge");
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertNotNull(response.getEntity());
     }
 
     // --- context path handling ---
@@ -150,9 +146,9 @@ class ReactRoutingControllerTest {
         setField("contextPath", "/myapp");
         controller.init();
 
-        ResponseEntity<String> response = controller.serveIndexHtml(request);
+        Response response = controller.serveIndexHtml();
 
-        String body = response.getBody();
+        String body = (String) response.getEntity();
         assertNotNull(body);
         assertTrue(body.contains("/myapp/"));
     }
@@ -162,9 +158,9 @@ class ReactRoutingControllerTest {
         setField("contextPath", "/myapp/");
         controller.init();
 
-        ResponseEntity<String> response = controller.serveIndexHtml(request);
+        Response response = controller.serveIndexHtml();
 
-        String body = response.getBody();
+        String body = (String) response.getEntity();
         assertNotNull(body);
         assertTrue(body.contains("/myapp/"));
     }
@@ -173,9 +169,9 @@ class ReactRoutingControllerTest {
     void callbackHtml_containsBaseHref() {
         controller.init();
 
-        ResponseEntity<String> response = controller.serveTauriAuthCallback(request);
+        Response response = controller.serveTauriAuthCallback();
 
-        String body = response.getBody();
+        String body = (String) response.getEntity();
         assertNotNull(body);
         assertTrue(body.contains("<base href="));
     }

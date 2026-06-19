@@ -25,6 +25,7 @@ import org.apache.pdfbox.pdmodel.interactive.action.PDActionJavaScript;
 import org.apache.pdfbox.pdmodel.interactive.action.PDActionLaunch;
 import org.apache.pdfbox.pdmodel.interactive.action.PDActionURI;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -34,16 +35,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.multipart.MultipartFile;
+
+import jakarta.ws.rs.core.Response;
 
 import stirling.software.SPDF.model.api.security.PDFVerificationResult;
 import stirling.software.SPDF.service.VeraPDFService;
-import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.testsupport.TestFileUploads;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -68,8 +67,8 @@ class GetInfoOnPDFTest {
         objectMapper = JsonMapper.builder().build();
     }
 
-    /** Helper method to load a PDF file from test resources */
-    private MockMultipartFile loadPdfFromResources(String filename) throws IOException {
+    /** Helper method to load PDF bytes from test resources */
+    private byte[] loadPdfBytesFromResources(String filename) throws IOException {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         if (classLoader == null) {
             classLoader = getClass().getClassLoader();
@@ -78,9 +77,7 @@ class GetInfoOnPDFTest {
         if (classLoader != null) {
             try (InputStream resourceStream = classLoader.getResourceAsStream(filename)) {
                 if (resourceStream != null) {
-                    byte[] content = resourceStream.readAllBytes();
-                    return new MockMultipartFile(
-                            "file", filename, MediaType.APPLICATION_PDF_VALUE, content);
+                    return resourceStream.readAllBytes();
                 }
             }
         }
@@ -98,9 +95,7 @@ class GetInfoOnPDFTest {
         for (Path directory : searchDirectories) {
             Path filePath = directory.resolve(filename);
             if (Files.exists(filePath)) {
-                byte[] content = Files.readAllBytes(filePath);
-                return new MockMultipartFile(
-                        "file", filename, MediaType.APPLICATION_PDF_VALUE, content);
+                return Files.readAllBytes(filePath);
             }
         }
 
@@ -170,14 +165,17 @@ class GetInfoOnPDFTest {
         return document;
     }
 
-    /** Helper method to convert PDDocument to MockMultipartFile */
-    private MockMultipartFile documentToMultipartFile(PDDocument document, String filename)
-            throws IOException {
+    /** Helper method to serialize a PDDocument to bytes (and close it). */
+    private byte[] documentToBytes(PDDocument document) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         document.save(baos);
         document.close();
-        return new MockMultipartFile(
-                "file", filename, MediaType.APPLICATION_PDF_VALUE, baos.toByteArray());
+        return baos.toByteArray();
+    }
+
+    /** Helper method to build a FileUpload PDF part from raw bytes. */
+    private FileUpload pdfUpload(byte[] bytes, String filename) {
+        return TestFileUploads.of(bytes, filename, "application/pdf");
     }
 
     @Nested
@@ -187,26 +185,24 @@ class GetInfoOnPDFTest {
         @Test
         @DisplayName("Should successfully extract info from a valid PDF")
         void testGetPdfInfo_ValidPdf() throws IOException {
-            PDDocument document = createPdfWithMetadata();
-            MockMultipartFile mockFile = documentToMultipartFile(document, "test.pdf");
+            byte[] pdfBytes = documentToBytes(createPdfWithMetadata());
+            FileUpload upload = pdfUpload(pdfBytes, "test.pdf");
 
-            PDFFile request = new PDFFile();
-            request.setFileInput(mockFile);
-
-            try (PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes())) {
+            try (PDDocument loadedDoc = Loader.loadPDF(pdfBytes)) {
                 Mockito.when(
                                 pdfDocumentFactory.load(
                                         ArgumentMatchers.any(MultipartFile.class),
                                         ArgumentMatchers.anyBoolean()))
                         .thenReturn(loadedDoc);
 
-                ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
+                Response response = getInfoOnPDF.getPdfInfo(upload, null);
 
                 Assertions.assertNotNull(response);
-                Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
-                Assertions.assertNotNull(response.getBody());
+                Assertions.assertEquals(200, response.getStatus());
+                Assertions.assertNotNull(response.getEntity());
 
-                String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+                String jsonResponse =
+                        new String((byte[]) response.getEntity(), StandardCharsets.UTF_8);
                 JsonNode jsonNode = objectMapper.readTree(jsonResponse);
 
                 Assertions.assertTrue(jsonNode.has("Metadata"));
@@ -225,22 +221,21 @@ class GetInfoOnPDFTest {
         @Test
         @DisplayName("Should extract basic info correctly")
         void testGetPdfInfo_BasicInfo() throws IOException {
-            PDDocument document = createSimplePdfWithText("Test content with some words");
-            MockMultipartFile mockFile = documentToMultipartFile(document, "basic.pdf");
+            byte[] pdfBytes =
+                    documentToBytes(createSimplePdfWithText("Test content with some words"));
+            FileUpload upload = pdfUpload(pdfBytes, "basic.pdf");
 
-            PDFFile request = new PDFFile();
-            request.setFileInput(mockFile);
-
-            try (PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes())) {
+            try (PDDocument loadedDoc = Loader.loadPDF(pdfBytes)) {
                 Mockito.when(
                                 pdfDocumentFactory.load(
                                         ArgumentMatchers.any(MultipartFile.class),
                                         ArgumentMatchers.anyBoolean()))
                         .thenReturn(loadedDoc);
 
-                ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
+                Response response = getInfoOnPDF.getPdfInfo(upload, null);
 
-                String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+                String jsonResponse =
+                        new String((byte[]) response.getEntity(), StandardCharsets.UTF_8);
                 JsonNode jsonNode = objectMapper.readTree(jsonResponse);
                 JsonNode basicInfo = jsonNode.get("BasicInfo");
 
@@ -262,20 +257,20 @@ class GetInfoOnPDFTest {
             document.addPage(new PDPage(PDRectangle.A4));
             document.addPage(new PDPage(PDRectangle.LETTER));
 
-            MockMultipartFile mockFile = documentToMultipartFile(document, "multipage.pdf");
-            PDFFile request = new PDFFile();
-            request.setFileInput(mockFile);
+            byte[] pdfBytes = documentToBytes(document);
+            FileUpload upload = pdfUpload(pdfBytes, "multipage.pdf");
 
-            try (PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes())) {
+            try (PDDocument loadedDoc = Loader.loadPDF(pdfBytes)) {
                 Mockito.when(
                                 pdfDocumentFactory.load(
                                         ArgumentMatchers.any(MultipartFile.class),
                                         ArgumentMatchers.anyBoolean()))
                         .thenReturn(loadedDoc);
 
-                ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
+                Response response = getInfoOnPDF.getPdfInfo(upload, null);
 
-                String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+                String jsonResponse =
+                        new String((byte[]) response.getEntity(), StandardCharsets.UTF_8);
                 JsonNode jsonNode = objectMapper.readTree(jsonResponse);
 
                 Assertions.assertEquals(
@@ -297,22 +292,19 @@ class GetInfoOnPDFTest {
         @Test
         @DisplayName("Should extract all metadata fields")
         void testExtractMetadata_AllFields() throws IOException {
-            PDDocument document = createPdfWithMetadata();
-            MockMultipartFile mockFile = documentToMultipartFile(document, "metadata.pdf");
+            byte[] pdfBytes = documentToBytes(createPdfWithMetadata());
+            FileUpload upload = pdfUpload(pdfBytes, "metadata.pdf");
 
-            PDFFile request = new PDFFile();
-            request.setFileInput(mockFile);
-
-            PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes());
+            PDDocument loadedDoc = Loader.loadPDF(pdfBytes);
             Mockito.when(
                             pdfDocumentFactory.load(
                                     ArgumentMatchers.any(MultipartFile.class),
                                     ArgumentMatchers.anyBoolean()))
                     .thenReturn(loadedDoc);
 
-            ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
+            Response response = getInfoOnPDF.getPdfInfo(upload, null);
 
-            String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            String jsonResponse = new String((byte[]) response.getEntity(), StandardCharsets.UTF_8);
             JsonNode jsonNode = objectMapper.readTree(jsonResponse);
             JsonNode metadata = jsonNode.get("Metadata");
 
@@ -331,25 +323,22 @@ class GetInfoOnPDFTest {
         @Test
         @DisplayName("Should handle PDF with missing metadata")
         void testExtractMetadata_MissingFields() throws IOException {
-            PDDocument document = createSimplePdfWithText("No metadata");
-            MockMultipartFile mockFile = documentToMultipartFile(document, "no-metadata.pdf");
+            byte[] pdfBytes = documentToBytes(createSimplePdfWithText("No metadata"));
+            FileUpload upload = pdfUpload(pdfBytes, "no-metadata.pdf");
 
-            PDFFile request = new PDFFile();
-            request.setFileInput(mockFile);
-
-            PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes());
+            PDDocument loadedDoc = Loader.loadPDF(pdfBytes);
             Mockito.when(
                             pdfDocumentFactory.load(
                                     ArgumentMatchers.any(MultipartFile.class),
                                     ArgumentMatchers.anyBoolean()))
                     .thenReturn(loadedDoc);
 
-            ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
+            Response response = getInfoOnPDF.getPdfInfo(upload, null);
 
             Assertions.assertNotNull(response);
-            Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
+            Assertions.assertEquals(200, response.getStatus());
 
-            String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            String jsonResponse = new String((byte[]) response.getEntity(), StandardCharsets.UTF_8);
             JsonNode jsonNode = objectMapper.readTree(jsonResponse);
             JsonNode metadata = jsonNode.get("Metadata");
 
@@ -366,22 +355,19 @@ class GetInfoOnPDFTest {
         @Test
         @DisplayName("Should detect unencrypted PDF")
         void testEncryption_UnencryptedPdf() throws IOException {
-            PDDocument document = createSimplePdfWithText("Not encrypted");
-            MockMultipartFile mockFile = documentToMultipartFile(document, "unencrypted.pdf");
+            byte[] pdfBytes = documentToBytes(createSimplePdfWithText("Not encrypted"));
+            FileUpload upload = pdfUpload(pdfBytes, "unencrypted.pdf");
 
-            PDFFile request = new PDFFile();
-            request.setFileInput(mockFile);
-
-            PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes());
+            PDDocument loadedDoc = Loader.loadPDF(pdfBytes);
             Mockito.when(
                             pdfDocumentFactory.load(
                                     ArgumentMatchers.any(MultipartFile.class),
                                     ArgumentMatchers.anyBoolean()))
                     .thenReturn(loadedDoc);
 
-            ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
+            Response response = getInfoOnPDF.getPdfInfo(upload, null);
 
-            String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            String jsonResponse = new String((byte[]) response.getEntity(), StandardCharsets.UTF_8);
             JsonNode jsonNode = objectMapper.readTree(jsonResponse);
             JsonNode encryption = jsonNode.get("Encryption");
 
@@ -393,22 +379,19 @@ class GetInfoOnPDFTest {
         @Test
         @DisplayName("Should extract all permissions")
         void testPermissions_AllPermissions() throws IOException {
-            PDDocument document = createSimplePdfWithText("Test permissions");
-            MockMultipartFile mockFile = documentToMultipartFile(document, "permissions.pdf");
+            byte[] pdfBytes = documentToBytes(createSimplePdfWithText("Test permissions"));
+            FileUpload upload = pdfUpload(pdfBytes, "permissions.pdf");
 
-            PDFFile request = new PDFFile();
-            request.setFileInput(mockFile);
-
-            PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes());
+            PDDocument loadedDoc = Loader.loadPDF(pdfBytes);
             Mockito.when(
                             pdfDocumentFactory.load(
                                     ArgumentMatchers.any(MultipartFile.class),
                                     ArgumentMatchers.anyBoolean()))
                     .thenReturn(loadedDoc);
 
-            ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
+            Response response = getInfoOnPDF.getPdfInfo(upload, null);
 
-            String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            String jsonResponse = new String((byte[]) response.getEntity(), StandardCharsets.UTF_8);
             JsonNode jsonNode = objectMapper.readTree(jsonResponse);
             JsonNode permissions = jsonNode.get("Permissions");
 
@@ -429,22 +412,21 @@ class GetInfoOnPDFTest {
         @Test
         @DisplayName("Should extract form fields section from PDF")
         void testFormFields_Structure() throws IOException {
-            PDDocument document = createSimplePdfWithText("Document to test form fields section");
-            MockMultipartFile mockFile = documentToMultipartFile(document, "test-forms.pdf");
+            byte[] pdfBytes =
+                    documentToBytes(
+                            createSimplePdfWithText("Document to test form fields section"));
+            FileUpload upload = pdfUpload(pdfBytes, "test-forms.pdf");
 
-            PDFFile request = new PDFFile();
-            request.setFileInput(mockFile);
-
-            PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes());
+            PDDocument loadedDoc = Loader.loadPDF(pdfBytes);
             Mockito.when(
                             pdfDocumentFactory.load(
                                     ArgumentMatchers.any(MultipartFile.class),
                                     ArgumentMatchers.anyBoolean()))
                     .thenReturn(loadedDoc);
 
-            ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
+            Response response = getInfoOnPDF.getPdfInfo(upload, null);
 
-            String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            String jsonResponse = new String((byte[]) response.getEntity(), StandardCharsets.UTF_8);
             JsonNode jsonNode = objectMapper.readTree(jsonResponse);
 
             Assertions.assertTrue(jsonNode.has("FormFields"));
@@ -457,22 +439,19 @@ class GetInfoOnPDFTest {
         @Test
         @DisplayName("Should handle PDF without form fields")
         void testFormFields_NoFields() throws IOException {
-            PDDocument document = createSimplePdfWithText("No form fields");
-            MockMultipartFile mockFile = documentToMultipartFile(document, "no-forms.pdf");
+            byte[] pdfBytes = documentToBytes(createSimplePdfWithText("No form fields"));
+            FileUpload upload = pdfUpload(pdfBytes, "no-forms.pdf");
 
-            PDFFile request = new PDFFile();
-            request.setFileInput(mockFile);
-
-            PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes());
+            PDDocument loadedDoc = Loader.loadPDF(pdfBytes);
             Mockito.when(
                             pdfDocumentFactory.load(
                                     ArgumentMatchers.any(MultipartFile.class),
                                     ArgumentMatchers.anyBoolean()))
                     .thenReturn(loadedDoc);
 
-            ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
+            Response response = getInfoOnPDF.getPdfInfo(upload, null);
 
-            String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            String jsonResponse = new String((byte[]) response.getEntity(), StandardCharsets.UTF_8);
             JsonNode jsonNode = objectMapper.readTree(jsonResponse);
             JsonNode formFields = jsonNode.get("FormFields");
 
@@ -493,20 +472,19 @@ class GetInfoOnPDFTest {
             document.addPage(new PDPage(PDRectangle.A4));
             document.addPage(new PDPage(PDRectangle.LETTER));
 
-            MockMultipartFile mockFile = documentToMultipartFile(document, "dimensions.pdf");
-            PDFFile request = new PDFFile();
-            request.setFileInput(mockFile);
+            byte[] pdfBytes = documentToBytes(document);
+            FileUpload upload = pdfUpload(pdfBytes, "dimensions.pdf");
 
-            PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes());
+            PDDocument loadedDoc = Loader.loadPDF(pdfBytes);
             Mockito.when(
                             pdfDocumentFactory.load(
                                     ArgumentMatchers.any(MultipartFile.class),
                                     ArgumentMatchers.anyBoolean()))
                     .thenReturn(loadedDoc);
 
-            ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
+            Response response = getInfoOnPDF.getPdfInfo(upload, null);
 
-            String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            String jsonResponse = new String((byte[]) response.getEntity(), StandardCharsets.UTF_8);
             JsonNode jsonNode = objectMapper.readTree(jsonResponse);
             JsonNode perPageInfo = jsonNode.get("PerPageInfo");
 
@@ -529,20 +507,19 @@ class GetInfoOnPDFTest {
             page.setRotation(90);
             document.addPage(page);
 
-            MockMultipartFile mockFile = documentToMultipartFile(document, "rotated.pdf");
-            PDFFile request = new PDFFile();
-            request.setFileInput(mockFile);
+            byte[] pdfBytes = documentToBytes(document);
+            FileUpload upload = pdfUpload(pdfBytes, "rotated.pdf");
 
-            PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes());
+            PDDocument loadedDoc = Loader.loadPDF(pdfBytes);
             Mockito.when(
                             pdfDocumentFactory.load(
                                     ArgumentMatchers.any(MultipartFile.class),
                                     ArgumentMatchers.anyBoolean()))
                     .thenReturn(loadedDoc);
 
-            ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
+            Response response = getInfoOnPDF.getPdfInfo(upload, null);
 
-            String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            String jsonResponse = new String((byte[]) response.getEntity(), StandardCharsets.UTF_8);
             JsonNode jsonNode = objectMapper.readTree(jsonResponse);
             JsonNode page1 = jsonNode.get("PerPageInfo").get("Page 1");
 
@@ -559,14 +536,10 @@ class GetInfoOnPDFTest {
         @Test
         @DisplayName("Should reject null file")
         void testValidation_NullFile() throws IOException {
-            PDFFile request = new PDFFile();
-            request.setFileInput(null);
+            Response response = getInfoOnPDF.getPdfInfo(null, null);
 
-            ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
-
-            Assertions.assertEquals(
-                    HttpStatus.OK, response.getStatusCode()); // Returns error JSON with 200
-            String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            Assertions.assertEquals(200, response.getStatus()); // Returns error JSON with 200
+            String jsonResponse = new String((byte[]) response.getEntity(), StandardCharsets.UTF_8);
             JsonNode jsonNode = objectMapper.readTree(jsonResponse);
 
             Assertions.assertTrue(jsonNode.has("error"));
@@ -577,16 +550,11 @@ class GetInfoOnPDFTest {
         @Test
         @DisplayName("Should reject empty file")
         void testValidation_EmptyFile() throws IOException {
-            MockMultipartFile emptyFile =
-                    new MockMultipartFile(
-                            "file", "empty.pdf", MediaType.APPLICATION_PDF_VALUE, new byte[0]);
+            FileUpload emptyFile = pdfUpload(new byte[0], "empty.pdf");
 
-            PDFFile request = new PDFFile();
-            request.setFileInput(emptyFile);
+            Response response = getInfoOnPDF.getPdfInfo(emptyFile, null);
 
-            ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
-
-            String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            String jsonResponse = new String((byte[]) response.getEntity(), StandardCharsets.UTF_8);
             JsonNode jsonNode = objectMapper.readTree(jsonResponse);
 
             Assertions.assertTrue(jsonNode.has("error"));
@@ -595,54 +563,15 @@ class GetInfoOnPDFTest {
         @Test
         @DisplayName("Should reject file that exceeds max size")
         void testValidation_TooLargeFile() throws IOException {
-            MultipartFile largeFile =
-                    new MultipartFile() {
-                        @Override
-                        public String getName() {
-                            return "file";
-                        }
+            // Report 101 MB without allocating memory: a FileUpload whose size() exceeds the limit.
+            FileUpload largeFile = Mockito.mock(FileUpload.class);
+            Mockito.lenient().when(largeFile.fileName()).thenReturn("large.pdf");
+            Mockito.lenient().when(largeFile.contentType()).thenReturn("application/pdf");
+            Mockito.lenient().when(largeFile.size()).thenReturn(101L * 1024L * 1024L);
 
-                        @Override
-                        public String getOriginalFilename() {
-                            return "large.pdf";
-                        }
+            Response response = getInfoOnPDF.getPdfInfo(largeFile, null);
 
-                        @Override
-                        public String getContentType() {
-                            return MediaType.APPLICATION_PDF_VALUE;
-                        }
-
-                        @Override
-                        public boolean isEmpty() {
-                            return false;
-                        }
-
-                        @Override
-                        public long getSize() {
-                            // Report 101 MB without allocating memory
-                            return 101L * 1024L * 1024L;
-                        }
-
-                        @Override
-                        public byte[] getBytes() {
-                            return new byte[0];
-                        }
-
-                        @Override
-                        public java.io.InputStream getInputStream() {
-                            return java.io.InputStream.nullInputStream();
-                        }
-
-                        @Override
-                        public void transferTo(java.io.File dest) throws IllegalStateException {}
-                    };
-
-            PDFFile request = new PDFFile();
-            request.setFileInput(largeFile);
-
-            ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
-
-            String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            String jsonResponse = new String((byte[]) response.getEntity(), StandardCharsets.UTF_8);
             JsonNode jsonNode = objectMapper.readTree(jsonResponse);
 
             Assertions.assertTrue(jsonNode.has("error"));
@@ -684,24 +613,23 @@ class GetInfoOnPDFTest {
         @DisplayName("Should process example.pdf from test resources")
         void testRealPdf_Example() {
             try {
-                MockMultipartFile mockFile = loadPdfFromResources("example.pdf");
+                byte[] pdfBytes = loadPdfBytesFromResources("example.pdf");
+                FileUpload upload = pdfUpload(pdfBytes, "example.pdf");
 
-                PDFFile request = new PDFFile();
-                request.setFileInput(mockFile);
-
-                try (PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes())) {
+                try (PDDocument loadedDoc = Loader.loadPDF(pdfBytes)) {
                     Mockito.when(
                                     pdfDocumentFactory.load(
                                             ArgumentMatchers.any(MultipartFile.class),
                                             ArgumentMatchers.anyBoolean()))
                             .thenReturn(loadedDoc);
 
-                    ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
+                    Response response = getInfoOnPDF.getPdfInfo(upload, null);
 
                     Assertions.assertNotNull(response);
-                    Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
+                    Assertions.assertEquals(200, response.getStatus());
 
-                    String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+                    String jsonResponse =
+                            new String((byte[]) response.getEntity(), StandardCharsets.UTF_8);
                     JsonNode jsonNode = objectMapper.readTree(jsonResponse);
 
                     Assertions.assertFalse(
@@ -721,22 +649,21 @@ class GetInfoOnPDFTest {
         @DisplayName("Should process tables.pdf")
         void testRealPdf_Tables() {
             try {
-                MockMultipartFile mockFile = loadPdfFromResources("tables.pdf");
+                byte[] pdfBytes = loadPdfBytesFromResources("tables.pdf");
+                FileUpload upload = pdfUpload(pdfBytes, "tables.pdf");
 
-                PDFFile request = new PDFFile();
-                request.setFileInput(mockFile);
-
-                try (PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes())) {
+                try (PDDocument loadedDoc = Loader.loadPDF(pdfBytes)) {
                     Mockito.when(
                                     pdfDocumentFactory.load(
                                             ArgumentMatchers.any(MultipartFile.class),
                                             ArgumentMatchers.anyBoolean()))
                             .thenReturn(loadedDoc);
 
-                    ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
+                    Response response = getInfoOnPDF.getPdfInfo(upload, null);
 
                     Assertions.assertNotNull(response);
-                    String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+                    String jsonResponse =
+                            new String((byte[]) response.getEntity(), StandardCharsets.UTF_8);
                     JsonNode jsonNode = objectMapper.readTree(jsonResponse);
 
                     Assertions.assertFalse(jsonNode.has("error"));
@@ -756,13 +683,10 @@ class GetInfoOnPDFTest {
         @Test
         @DisplayName("Should extract compliance info using VeraPDF")
         void testCompliance_PdfA() throws Exception {
-            PDDocument document = createSimplePdfWithText("Test PDF/A");
-            MockMultipartFile mockFile = documentToMultipartFile(document, "pdfa.pdf");
+            byte[] pdfBytes = documentToBytes(createSimplePdfWithText("Test PDF/A"));
+            FileUpload upload = pdfUpload(pdfBytes, "pdfa.pdf");
 
-            PDFFile request = new PDFFile();
-            request.setFileInput(mockFile);
-
-            PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes());
+            PDDocument loadedDoc = Loader.loadPDF(pdfBytes);
             Mockito.when(
                             pdfDocumentFactory.load(
                                     ArgumentMatchers.any(MultipartFile.class),
@@ -777,9 +701,9 @@ class GetInfoOnPDFTest {
             Mockito.when(veraPDFService.validatePDF(ArgumentMatchers.any(InputStream.class)))
                     .thenReturn(List.of(result));
 
-            ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
+            Response response = getInfoOnPDF.getPdfInfo(upload, null);
 
-            String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            String jsonResponse = new String((byte[]) response.getEntity(), StandardCharsets.UTF_8);
             JsonNode jsonNode = objectMapper.readTree(jsonResponse);
             JsonNode compliancy = jsonNode.get("Compliancy");
 
@@ -797,22 +721,20 @@ class GetInfoOnPDFTest {
         @Test
         @DisplayName("Should extract image statistics from PDF")
         void testImageStatistics() throws IOException {
-            PDDocument document = createSimplePdfWithText("Document for image statistics");
-            MockMultipartFile mockFile = documentToMultipartFile(document, "no-images.pdf");
+            byte[] pdfBytes =
+                    documentToBytes(createSimplePdfWithText("Document for image statistics"));
+            FileUpload upload = pdfUpload(pdfBytes, "no-images.pdf");
 
-            PDFFile request = new PDFFile();
-            request.setFileInput(mockFile);
-
-            PDDocument loadedDoc = Loader.loadPDF(mockFile.getBytes());
+            PDDocument loadedDoc = Loader.loadPDF(pdfBytes);
             Mockito.when(
                             pdfDocumentFactory.load(
                                     ArgumentMatchers.any(MultipartFile.class),
                                     ArgumentMatchers.anyBoolean()))
                     .thenReturn(loadedDoc);
 
-            ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
+            Response response = getInfoOnPDF.getPdfInfo(upload, null);
 
-            String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            String jsonResponse = new String((byte[]) response.getEntity(), StandardCharsets.UTF_8);
             JsonNode jsonNode = objectMapper.readTree(jsonResponse);
             JsonNode basicInfo = jsonNode.get("BasicInfo");
 
@@ -912,12 +834,10 @@ class GetInfoOnPDFTest {
                                     ArgumentMatchers.anyBoolean()))
                     .thenReturn(Loader.loadPDF(bytes));
 
-            PDFFile request = new PDFFile();
-            request.setFileInput(
-                    new MockMultipartFile("file", "test.pdf", "application/pdf", bytes));
-            ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
+            FileUpload upload = pdfUpload(bytes, "test.pdf");
+            Response response = getInfoOnPDF.getPdfInfo(upload, null);
 
-            String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
+            String jsonResponse = new String((byte[]) response.getEntity(), StandardCharsets.UTF_8);
             JsonNode jsonNode = objectMapper.readTree(jsonResponse);
             boolean actual = jsonNode.get("Compliancy").get("IsPDF/SECCompliant").asBoolean();
 

@@ -1,30 +1,35 @@
 package stirling.software.proprietary.controller.api;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.validation.Valid;
+import jakarta.ws.rs.BeanParam;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.sse.OutboundSseEvent;
+import jakarta.ws.rs.sse.Sse;
+import jakarta.ws.rs.sse.SseEventSink;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,6 +37,7 @@ import stirling.software.common.model.job.ResultFile;
 import stirling.software.common.service.JobOwnershipService;
 import stirling.software.common.service.TaskManager;
 import stirling.software.common.service.UserServiceInterface;
+import stirling.software.proprietary.model.api.ai.AiWorkflowFileInput;
 import stirling.software.proprietary.model.api.ai.AiWorkflowProgressEvent;
 import stirling.software.proprietary.model.api.ai.AiWorkflowRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResponse;
@@ -47,8 +53,8 @@ import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
 @Slf4j
-@RestController
-@RequestMapping("/api/v1/ai")
+@ApplicationScoped
+@jakarta.ws.rs.Path("/api/v1/ai")
 @Hidden
 @Tag(name = "AI Engine", description = "Endpoints for AI-powered PDF workflows")
 public class AiEngineController {
@@ -60,25 +66,31 @@ public class AiEngineController {
     private final TaskManager taskManager;
     private final JobOwnershipService jobOwnershipService;
     private final AiEngineEndpointResolver endpointResolver;
-    private final UserServiceInterface userService;
+    private final Instance<UserServiceInterface> userService;
 
     /**
      * SSE emitter timeout. Long enough to accommodate multi-gigabyte PDF workflows (OCR on a
      * 1000-page scan, splitting a huge PDF, etc.) without the emitter completing out from under the
      * executor. Configurable via {@code stirling.ai.streamTimeoutMs}.
+     *
+     * <p>TODO: Migration required - the JAX-RS SSE API has no per-emitter timeout equivalent to
+     * Spring's {@code SseEmitter} constructor argument. Enforce this timeout against the background
+     * orchestration task (e.g. a scheduled cancellation / Future.get with timeout) if a hard cap is
+     * required; for now it only drives the timeout error frame's wording.
      */
-    @Value("${stirling.ai.streamTimeoutMs:1800000}")
-    private long streamTimeoutMs;
+    @ConfigProperty(name = "stirling.ai.streamTimeoutMs", defaultValue = "1800000")
+    long streamTimeoutMs;
 
+    @Inject
     public AiEngineController(
             AiEngineClient aiEngineClient,
             AiWorkflowService aiWorkflowService,
             ObjectMapper objectMapper,
-            @Qualifier("aiStreamExecutor") Executor aiStreamExecutor,
+            @Named("aiStreamExecutor") Executor aiStreamExecutor,
             TaskManager taskManager,
             JobOwnershipService jobOwnershipService,
             AiEngineEndpointResolver endpointResolver,
-            @Autowired(required = false) UserServiceInterface userService) {
+            Instance<UserServiceInterface> userService) {
         this.aiEngineClient = aiEngineClient;
         this.aiWorkflowService = aiWorkflowService;
         this.objectMapper = objectMapper;
@@ -90,71 +102,82 @@ public class AiEngineController {
     }
 
     private String currentUserId() {
-        return userService != null ? userService.getCurrentUsername() : null;
+        return userService.isResolvable() ? userService.get().getCurrentUsername() : null;
     }
 
-    @GetMapping("/health")
+    @GET
+    @jakarta.ws.rs.Path("/health")
     @Operation(
             summary = "AI engine health check",
             description = "Returns the health status of the AI engine including configured models")
-    public ResponseEntity<String> health() throws IOException {
+    public Response health() throws IOException {
         String response = aiEngineClient.get("/health", currentUserId());
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(response);
+        return Response.ok(response, MediaType.APPLICATION_JSON).build();
     }
 
-    @PostMapping(value = "/orchestrate", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @POST
+    @jakarta.ws.rs.Path("/orchestrate")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Operation(
             summary = "Run an AI workflow against a PDF",
             description =
                     "Accepts PDF uploads and a user message and returns an AI workflow result."
                             + " When the workflow produces files, they are registered with the job"
                             + " system and downloadable via GET /api/v1/general/files/{fileId}.")
-    public AiWorkflowResponse orchestrate(@Valid @ModelAttribute AiWorkflowRequest request)
+    // The @BeanParam binds userMessage; the repeated multipart "fileInput" parts bind as a separate
+    // List<FileUpload> (RESTEasy Reactive cannot map a List of POJOs-with-files), which we wrap
+    // into
+    // the request's fileInputs.
+    public AiWorkflowResponse orchestrate(
+            @Valid @BeanParam AiWorkflowRequest request,
+            @RestForm("fileInput") List<FileUpload> fileInputs)
             throws IOException {
+        request.setFileInputs(toFileInputs(fileInputs));
         AiWorkflowResponse result = aiWorkflowService.orchestrate(request);
         registerFileResultAsJob(result);
         return result;
     }
 
-    @PostMapping(value = "/orchestrate/stream", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    private static List<AiWorkflowFileInput> toFileInputs(List<FileUpload> uploads) {
+        List<AiWorkflowFileInput> inputs = new ArrayList<>();
+        if (uploads != null) {
+            for (FileUpload upload : uploads) {
+                if (upload != null) {
+                    inputs.add(new AiWorkflowFileInput(upload));
+                }
+            }
+        }
+        return inputs;
+    }
+
+    @POST
+    @jakarta.ws.rs.Path("/orchestrate/stream")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @org.jboss.resteasy.reactive.RestStreamElementType(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Run an AI workflow with streaming progress",
             description =
                     "Accepts a PDF upload and a user message, returns SSE events with progress"
                             + " updates followed by the final AI workflow result")
-    public SseEmitter orchestrateStream(@Valid @ModelAttribute AiWorkflowRequest request) {
-        SseEmitter emitter = new SseEmitter(streamTimeoutMs);
-
-        emitter.onTimeout(
-                () -> {
-                    // Emit an explicit error frame so the frontend reports a timeout rather than
-                    // silently seeing the stream end without a result.
-                    log.warn(
-                            "SSE emitter timed out for AI orchestration stream after {} ms",
-                            streamTimeoutMs);
-                    sendEvent(
-                            emitter,
-                            "error",
-                            Map.of(
-                                    "message",
-                                    "AI workflow timed out after "
-                                            + (streamTimeoutMs / 1000)
-                                            + " seconds"));
-                    emitter.complete();
-                });
-        emitter.onError(e -> log.warn("SSE emitter error for AI orchestration stream", e));
-
-        aiStreamExecutor.execute(() -> runOrchestrationStream(request, emitter));
-
-        return emitter;
+    public void orchestrateStream(
+            @Valid @BeanParam AiWorkflowRequest request,
+            @RestForm("fileInput") List<FileUpload> fileInputs,
+            @Context Sse sse,
+            @Context SseEventSink sink) {
+        request.setFileInputs(toFileInputs(fileInputs));
+        // The JAX-RS SseEventSink replaces Spring's SseEmitter. There is no onTimeout/onError
+        // callback registration; sink.send(...) returns a CompletionStage and a disconnected
+        // client surfaces as a failed send / closed sink, which the orchestration loop detects
+        // via ClientDisconnectedException below.
+        aiStreamExecutor.execute(() -> runOrchestrationStream(request, sse, sink));
     }
 
-    private void runOrchestrationStream(AiWorkflowRequest request, SseEmitter emitter) {
+    private void runOrchestrationStream(AiWorkflowRequest request, Sse sse, SseEventSink sink) {
         AiWorkflowService.ProgressListener listener =
                 new AiWorkflowService.ProgressListener() {
                     @Override
                     public void onProgress(AiWorkflowProgressEvent event) {
-                        sendEvent(emitter, "progress", event);
+                        sendEvent(sse, sink, "progress", event);
                     }
 
                     @Override
@@ -163,26 +186,27 @@ public class AiEngineController {
                         // real progress events; if the frontend has gone away, sendEvent throws,
                         // which propagates up through the stream consumer and closes our upstream
                         // engine connection so the engine can cancel its in-flight workflow.
-                        sendEvent(emitter, "heartbeat", Map.of());
+                        sendEvent(sse, sink, "heartbeat", Map.of());
                     }
                 };
         try {
             AiWorkflowResponse result = aiWorkflowService.orchestrate(request, listener);
             registerFileResultAsJob(result);
-            sendEvent(emitter, "result", result);
-            emitter.complete();
+            sendEvent(sse, sink, "result", result);
+            sink.close();
         } catch (ClientDisconnectedException e) {
             // The frontend gave up mid-stream. The exception unwinding through orchestrate()
             // already closed the upstream engine connection (engine sees disconnect and cancels).
-            // The emitter is already toast; nothing useful left to send.
+            // The sink is already toast; nothing useful left to send.
             log.debug("Client disconnected mid-stream; aborting workflow", e);
         } catch (Exception e) {
             log.error("AI orchestration stream failed", e);
-            // Emit an error frame for the frontend and then complete normally. Using
-            // completeWithError here as well would double-complete the emitter - the error
+            // Emit an error frame for the frontend and then complete normally. The error
             // frame already conveys the failure to the client.
-            sendEvent(emitter, "error", Map.of("message", e.getMessage()));
-            emitter.complete();
+            sendEvent(sse, sink, "error", Map.of("message", e.getMessage()));
+            if (!sink.isClosed()) {
+                sink.close();
+            }
         }
     }
 
@@ -217,21 +241,30 @@ public class AiEngineController {
         taskManager.setComplete(jobKey);
     }
 
-    private void sendEvent(SseEmitter emitter, String name, Object data) {
+    private void sendEvent(Sse sse, SseEventSink sink, String name, Object data) {
+        if (sink.isClosed()) {
+            throw new ClientDisconnectedException("Client disconnected from SSE stream", null);
+        }
+        OutboundSseEvent event =
+                sse.newEventBuilder()
+                        .name(name)
+                        .mediaType(MediaType.APPLICATION_JSON_TYPE)
+                        .data(data)
+                        .build();
         try {
-            emitter.send(SseEmitter.event().name(name).data(data, MediaType.APPLICATION_JSON));
-        } catch (IOException e) {
-            // Surface the disconnect so the streaming pipeline unwinds: callers higher up close
-            // the upstream engine connection, which lets the engine cancel its in-flight workflow.
-            // Without this, the engine would keep producing (and billing for) tokens whose results
-            // nobody is reading.
+            // CompletionStage join surfaces a delivery failure (client gone) synchronously so the
+            // streaming pipeline unwinds: callers higher up close the upstream engine connection,
+            // which lets the engine cancel its in-flight workflow. Without this, the engine would
+            // keep producing (and billing for) tokens whose results nobody is reading.
+            sink.send(event).toCompletableFuture().join();
+        } catch (RuntimeException e) {
             throw new ClientDisconnectedException("Client disconnected from SSE stream", e);
         }
     }
 
     /**
-     * Thrown by {@link #sendEvent} when the SSE emitter's underlying connection is gone. Treated as
-     * a signal to abort the workflow, not as an error to report.
+     * Thrown by {@link #sendEvent} when the SSE sink's underlying connection is gone. Treated as a
+     * signal to abort the workflow, not as an error to report.
      */
     private static final class ClientDisconnectedException extends RuntimeException {
         ClientDisconnectedException(String message, Throwable cause) {
@@ -239,29 +272,31 @@ public class AiEngineController {
         }
     }
 
-    @PostMapping(value = "/pdf/edit", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @POST
+    @jakarta.ws.rs.Path("/pdf/edit")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Generate a PDF edit plan",
             description =
                     "Sends a user message to the PDF edit agent which returns a structured plan"
                             + " of tool operations to perform")
-    public ResponseEntity<String> pdfEdit(@RequestBody String requestBody) throws IOException {
+    public Response pdfEdit(String requestBody) throws IOException {
         JsonNode parsed = parseJson(requestBody);
         if (!parsed.isObject()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Request body must be a JSON object");
+            throw new WebApplicationException(
+                    "Request body must be a JSON object", Response.Status.BAD_REQUEST);
         }
         String forwardedBody = withEnabledEndpoints((ObjectNode) parsed);
         String response = aiEngineClient.post("/api/v1/pdf/edit", forwardedBody, currentUserId());
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(response);
+        return Response.ok(response, MediaType.APPLICATION_JSON).build();
     }
 
     private JsonNode parseJson(String body) {
         try {
             return objectMapper.readValue(body, JsonNode.class);
         } catch (JacksonException e) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Request body is not valid JSON");
+            throw new WebApplicationException(
+                    "Request body is not valid JSON", Response.Status.BAD_REQUEST);
         }
     }
 

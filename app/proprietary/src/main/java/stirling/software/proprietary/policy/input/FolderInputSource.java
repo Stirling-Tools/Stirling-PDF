@@ -9,14 +9,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
-import org.springframework.stereotype.Service;
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.io.FileSystemResource;
+import stirling.software.common.model.io.Resource;
 import stirling.software.common.util.FileReadinessChecker;
 import stirling.software.proprietary.policy.config.FolderAccessGuard;
 import stirling.software.proprietary.policy.model.InputSpec;
@@ -32,9 +33,9 @@ import stirling.software.proprietary.policy.model.PolicyInputs;
  * is checked first so files mid-write are skipped.
  */
 @Slf4j
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
-@Profile("saas")
+@IfBuildProfile("saas")
 public class FolderInputSource implements InputSource {
 
     private static final String TYPE = FolderAccessGuard.FOLDER_TYPE;
@@ -136,7 +137,7 @@ public class FolderInputSource implements InputSource {
 
     private static Resource fileResource(Path path) {
         String name = path.getFileName().toString();
-        return new FileSystemResource(path.toFile()) {
+        return new FileSystemResource(path) {
             @Override
             public String getFilename() {
                 return name;

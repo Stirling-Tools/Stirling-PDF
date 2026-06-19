@@ -5,6 +5,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import jakarta.enterprise.util.Nonbinding;
+import jakarta.interceptor.InterceptorBinding;
+
 /**
  * Annotation for methods that should be audited.
  *
@@ -26,32 +29,23 @@ import java.lang.annotation.Target;
  * }
  * }</pre>
  */
-@Target(ElementType.METHOD)
+@Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
+@InterceptorBinding
 public @interface Audited {
 
-    /**
-     * The type of audit event using the standardized AuditEventType enum. This is the preferred way
-     * to specify the event type.
-     *
-     * <p>If both type() and typeString() are specified, type() takes precedence.
-     */
+    @Nonbinding
     AuditEventType type() default AuditEventType.HTTP_REQUEST;
 
-    /**
-     * The type of audit event as a string (e.g., "FILE_UPLOAD", "USER_REGISTRATION"). Provided for
-     * backward compatibility and custom event types not in the enum.
-     *
-     * <p>If both type() and typeString() are specified, type() takes precedence.
-     */
+    @Nonbinding
     String typeString() default "";
 
-    /** The audit level at which this event should be logged */
+    @Nonbinding
     AuditLevel level() default AuditLevel.STANDARD;
 
-    /** Should method arguments be included in the audit event */
+    @Nonbinding
     boolean includeArgs() default true;
 
-    /** Should the method return value be included in the audit event */
+    @Nonbinding
     boolean includeResult() default false;
 }

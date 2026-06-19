@@ -14,9 +14,9 @@ import java.util.Map;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.web.multipart.MultipartFile;
 
 import stirling.software.SPDF.model.json.PdfJsonFont;
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.TaskManager;
 

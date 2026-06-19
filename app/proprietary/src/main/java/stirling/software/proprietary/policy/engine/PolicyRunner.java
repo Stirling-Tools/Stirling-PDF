@@ -4,10 +4,11 @@ import java.io.IOException;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
+import io.quarkus.arc.All;
+import io.quarkus.arc.profile.IfBuildProfile;
 
-import lombok.RequiredArgsConstructor;
+import jakarta.enterprise.context.ApplicationScoped;
+
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.policy.input.InputSource;
@@ -25,13 +26,18 @@ import stirling.software.proprietary.policy.progress.PolicyProgressListener;
  * and call {@link #run(Policy)}; the controller uses the supplied-input and ad-hoc entry points.
  */
 @Slf4j
-@Service
-@RequiredArgsConstructor
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 public class PolicyRunner {
 
     private final PolicyEngine policyEngine;
     private final List<InputSource> inputSources;
+
+    @jakarta.inject.Inject
+    public PolicyRunner(PolicyEngine policyEngine, @All List<InputSource> inputSources) {
+        this.policyEngine = policyEngine;
+        this.inputSources = inputSources;
+    }
 
     /**
      * Trigger entry point. Pulls every configured source; each yielded unit becomes its own run so

@@ -8,19 +8,29 @@ import java.util.*;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.search.Search;
 
+import jakarta.enterprise.inject.Instance;
+import jakarta.ws.rs.core.Response;
+
 import stirling.software.SPDF.config.EndpointInspector;
 import stirling.software.SPDF.config.StartupApplicationListener;
 import stirling.software.SPDF.service.WeeklyActiveUsersService;
 import stirling.software.common.model.ApplicationProperties;
 
+/**
+ * Unit tests for {@link MetricsController}.
+ *
+ * <p>Migrated off Spring: endpoints now return {@code jakarta.ws.rs.core.Response} (asserted via
+ * {@code getStatus()}/{@code getEntity()}), the nullable {@code endpoint} parameter is a plain
+ * {@code @QueryParam String} instead of {@code Optional<String>}, and the optional WAU collaborator
+ * is injected as a CDI {@code Instance<WeeklyActiveUsersService>} rather than {@code
+ * Optional<WeeklyActiveUsersService>} (empty modelled with {@code isUnsatisfied() == true}).
+ */
 class MetricsControllerTest {
 
     private ApplicationProperties applicationProperties;
@@ -39,10 +49,18 @@ class MetricsControllerTest {
         when(applicationProperties.getMetrics()).thenReturn(metrics);
     }
 
+    @SuppressWarnings("unchecked")
+    private Instance<WeeklyActiveUsersService> wau(Optional<WeeklyActiveUsersService> service) {
+        Instance<WeeklyActiveUsersService> instance = mock(Instance.class);
+        when(instance.isUnsatisfied()).thenReturn(service.isEmpty());
+        service.ifPresent(s -> when(instance.get()).thenReturn(s));
+        return instance;
+    }
+
     private MetricsController createController(Optional<WeeklyActiveUsersService> wauService) {
         MetricsController ctrl =
                 new MetricsController(
-                        applicationProperties, meterRegistry, endpointInspector, wauService);
+                        applicationProperties, meterRegistry, endpointInspector, wau(wauService));
         ctrl.init();
         return ctrl;
     }
@@ -54,11 +72,11 @@ class MetricsControllerTest {
         when(metrics.isEnabled()).thenReturn(false);
         controller = createController(Optional.empty());
 
-        ResponseEntity<?> response = controller.getStatus();
+        Response response = controller.getStatus();
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
         @SuppressWarnings("unchecked")
-        Map<String, String> body = (Map<String, String>) response.getBody();
+        Map<String, String> body = (Map<String, String>) response.getEntity();
         assertNotNull(body);
         assertEquals("UP", body.get("status"));
         // version key should exist (may be null in test env)
@@ -70,11 +88,11 @@ class MetricsControllerTest {
         when(metrics.isEnabled()).thenReturn(false);
         controller = createController(Optional.empty());
 
-        ResponseEntity<?> response = controller.getHealth();
+        Response response = controller.getHealth();
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
         @SuppressWarnings("unchecked")
-        Map<String, String> body = (Map<String, String>) response.getBody();
+        Map<String, String> body = (Map<String, String>) response.getEntity();
         assertNotNull(body);
         assertEquals("UP", body.get("status"));
     }
@@ -86,10 +104,10 @@ class MetricsControllerTest {
         when(metrics.isEnabled()).thenReturn(false);
         controller = createController(Optional.empty());
 
-        ResponseEntity<?> response = controller.getPageLoads(Optional.empty());
+        Response response = controller.getPageLoads(null);
 
-        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
-        assertEquals("This endpoint is disabled.", response.getBody());
+        assertEquals(Response.Status.FORBIDDEN.getStatusCode(), response.getStatus());
+        assertEquals("This endpoint is disabled.", response.getEntity());
     }
 
     @Test
@@ -97,9 +115,9 @@ class MetricsControllerTest {
         when(metrics.isEnabled()).thenReturn(false);
         controller = createController(Optional.empty());
 
-        ResponseEntity<?> response = controller.getTotalRequests(Optional.empty());
+        Response response = controller.getTotalRequests(null);
 
-        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertEquals(Response.Status.FORBIDDEN.getStatusCode(), response.getStatus());
     }
 
     @Test
@@ -107,9 +125,9 @@ class MetricsControllerTest {
         when(metrics.isEnabled()).thenReturn(false);
         controller = createController(Optional.empty());
 
-        ResponseEntity<?> response = controller.getUptime();
+        Response response = controller.getUptime();
 
-        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertEquals(Response.Status.FORBIDDEN.getStatusCode(), response.getStatus());
     }
 
     @Test
@@ -117,9 +135,9 @@ class MetricsControllerTest {
         when(metrics.isEnabled()).thenReturn(false);
         controller = createController(Optional.empty());
 
-        ResponseEntity<?> response = controller.getUniquePageLoads(Optional.empty());
+        Response response = controller.getUniquePageLoads(null);
 
-        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertEquals(Response.Status.FORBIDDEN.getStatusCode(), response.getStatus());
     }
 
     @Test
@@ -127,9 +145,9 @@ class MetricsControllerTest {
         when(metrics.isEnabled()).thenReturn(false);
         controller = createController(Optional.empty());
 
-        ResponseEntity<?> response = controller.getAllEndpointLoads();
+        Response response = controller.getAllEndpointLoads();
 
-        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertEquals(Response.Status.FORBIDDEN.getStatusCode(), response.getStatus());
     }
 
     @Test
@@ -137,9 +155,9 @@ class MetricsControllerTest {
         when(metrics.isEnabled()).thenReturn(false);
         controller = createController(Optional.empty());
 
-        ResponseEntity<?> response = controller.getAllUniqueEndpointLoads();
+        Response response = controller.getAllUniqueEndpointLoads();
 
-        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertEquals(Response.Status.FORBIDDEN.getStatusCode(), response.getStatus());
     }
 
     // --- metrics enabled, load endpoints ---
@@ -158,10 +176,10 @@ class MetricsControllerTest {
         when(taggedSearch.counters()).thenReturn(List.of(counter));
         when(endpointInspector.getValidGetEndpoints()).thenReturn(Collections.emptySet());
 
-        ResponseEntity<?> response = controller.getPageLoads(Optional.empty());
+        Response response = controller.getPageLoads(null);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(5.0, response.getBody());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(5.0, response.getEntity());
     }
 
     @Test
@@ -179,10 +197,10 @@ class MetricsControllerTest {
         when(taggedSearch.counters()).thenReturn(List.of(counter1, counter2));
         when(endpointInspector.getValidGetEndpoints()).thenReturn(Collections.emptySet());
 
-        ResponseEntity<?> response = controller.getPageLoads(Optional.of("/page-a"));
+        Response response = controller.getPageLoads("/page-a");
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(3.0, response.getBody());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(3.0, response.getEntity());
     }
 
     @Test
@@ -198,10 +216,10 @@ class MetricsControllerTest {
         Counter counter = mockCounter("/api/v1/convert", "POST", null, 10.0);
         when(taggedSearch.counters()).thenReturn(List.of(counter));
 
-        ResponseEntity<?> response = controller.getTotalRequests(Optional.empty());
+        Response response = controller.getTotalRequests(null);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(10.0, response.getBody());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(10.0, response.getEntity());
     }
 
     @Test
@@ -217,10 +235,10 @@ class MetricsControllerTest {
         Counter counter = mockCounter("/some-non-api", "POST", null, 10.0);
         when(taggedSearch.counters()).thenReturn(List.of(counter));
 
-        ResponseEntity<?> response = controller.getTotalRequests(Optional.empty());
+        Response response = controller.getTotalRequests(null);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(0.0, response.getBody());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(0.0, response.getEntity());
     }
 
     @Test
@@ -237,10 +255,10 @@ class MetricsControllerTest {
         when(taggedSearch.counters()).thenReturn(List.of(counter));
         when(endpointInspector.getValidGetEndpoints()).thenReturn(Collections.emptySet());
 
-        ResponseEntity<?> response = controller.getPageLoads(Optional.empty());
+        Response response = controller.getPageLoads(null);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(0.0, response.getBody());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(0.0, response.getEntity());
     }
 
     // --- uptime ---
@@ -252,10 +270,10 @@ class MetricsControllerTest {
 
         StartupApplicationListener.startTime = LocalDateTime.now().minusHours(2).minusMinutes(30);
 
-        ResponseEntity<?> response = controller.getUptime();
+        Response response = controller.getUptime();
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        String body = (String) response.getBody();
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        String body = (String) response.getEntity();
         assertNotNull(body);
         assertTrue(body.contains("0d 2h 30m"));
     }
@@ -267,9 +285,9 @@ class MetricsControllerTest {
         when(metrics.isEnabled()).thenReturn(true);
         controller = createController(Optional.empty());
 
-        ResponseEntity<?> response = controller.getWeeklyActiveUsers();
+        Response response = controller.getWeeklyActiveUsers();
 
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
     }
 
     @Test
@@ -282,11 +300,11 @@ class MetricsControllerTest {
         when(wauService.getStartTime()).thenReturn(java.time.Instant.parse("2025-01-01T00:00:00Z"));
         controller = createController(Optional.of(wauService));
 
-        ResponseEntity<?> response = controller.getWeeklyActiveUsers();
+        Response response = controller.getWeeklyActiveUsers();
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
         @SuppressWarnings("unchecked")
-        Map<String, Object> body = (Map<String, Object>) response.getBody();
+        Map<String, Object> body = (Map<String, Object>) response.getEntity();
         assertNotNull(body);
         assertEquals(42L, body.get("weeklyActiveUsers"));
         assertEquals(100L, body.get("totalUniqueBrowsers"));
@@ -299,9 +317,9 @@ class MetricsControllerTest {
         WeeklyActiveUsersService wauService = mock(WeeklyActiveUsersService.class);
         controller = createController(Optional.of(wauService));
 
-        ResponseEntity<?> response = controller.getWeeklyActiveUsers();
+        Response response = controller.getWeeklyActiveUsers();
 
-        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertEquals(Response.Status.FORBIDDEN.getStatusCode(), response.getStatus());
     }
 
     // --- EndpointCount ---

@@ -3,9 +3,6 @@ package stirling.software.proprietary.cluster.valkey;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
-import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
-import org.springframework.stereotype.Component;
-
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.ConsumptionProbe;
 import io.github.bucket4j.distributed.BucketProxy;
@@ -14,9 +11,12 @@ import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.redis.lettuce.Bucket4jLettuce;
 import io.lettuce.core.AbstractRedisClient;
 import io.lettuce.core.RedisClient;
+import io.quarkus.arc.properties.IfBuildProperty;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import stirling.software.common.cluster.RateLimitStore;
 
@@ -25,22 +25,35 @@ import stirling.software.common.cluster.RateLimitStore;
  * refills continuously and enforces one global limit across nodes, with the same semantics as the
  * in-process {@code InProcessRateLimitStore} (which also uses Bucket4j).
  */
-@Component
+// Build-time gating: included in the build only when cluster.backplane=valkey; otherwise this bean
+// (and its RedisClient dependency) is removed so no eager Redis startup observer is generated and
+// the in-process @DefaultBean RateLimitStore wins. @ConditionalOnValkeyBackplane is documentary
+// only.
+@ApplicationScoped
 @ConditionalOnValkeyBackplane
+@IfBuildProperty(name = "cluster.backplane", stringValue = "valkey")
 public class ValkeyRateLimitStore implements RateLimitStore {
 
     private static final String PREFIX = "stirling:rl:";
 
-    private final LettuceConnectionFactory connectionFactory;
+    // TODO: Migration required - this previously received a spring-data-redis
+    // LettuceConnectionFactory (produced by the not-yet-migrated ValkeyConnectionConfiguration)
+    // and unwrapped its native io.lettuce.core.RedisClient. Bucket4j's Lettuce ProxyManager only
+    // needs that raw RedisClient. Once ValkeyConnectionConfiguration is migrated to a Quarkus
+    // producer (exposing a RedisClient or io.quarkus.redis.datasource.RedisDataSource), inject it
+    // here directly and drop the AbstractRedisClient unwrap below. The RedisClient is injected as a
+    // CDI bean for now so the Bucket4j logic stays intact and the file compiles.
+    private final AbstractRedisClient nativeRedisClient;
     private ProxyManager<byte[]> proxyManager;
 
-    public ValkeyRateLimitStore(LettuceConnectionFactory connectionFactory) {
-        this.connectionFactory = connectionFactory;
+    @Inject
+    public ValkeyRateLimitStore(AbstractRedisClient nativeRedisClient) {
+        this.nativeRedisClient = nativeRedisClient;
     }
 
     @PostConstruct
     void initProxyManager() {
-        AbstractRedisClient client = connectionFactory.getNativeClient();
+        AbstractRedisClient client = nativeRedisClient;
         if (!(client instanceof RedisClient redisClient)) {
             throw new IllegalStateException(
                     "ValkeyRateLimitStore requires a standalone Lettuce RedisClient; got "

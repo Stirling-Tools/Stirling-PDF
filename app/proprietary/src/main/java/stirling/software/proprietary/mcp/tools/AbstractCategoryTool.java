@@ -2,7 +2,7 @@ package stirling.software.proprietary.mcp.tools;
 
 import java.util.List;
 
-import org.springframework.beans.factory.ObjectProvider;
+import jakarta.enterprise.inject.Instance;
 
 import stirling.software.proprietary.mcp.McpCallContext;
 import stirling.software.proprietary.mcp.McpTool;
@@ -22,13 +22,13 @@ import tools.jackson.databind.node.ObjectNode;
 abstract class AbstractCategoryTool implements McpTool {
 
     protected final ObjectMapper mapper;
-    protected final ObjectProvider<McpToolCatalog> catalogProvider;
-    protected final ObjectProvider<McpOperationExecutor> executorProvider;
+    protected final Instance<McpToolCatalog> catalogProvider;
+    protected final Instance<McpOperationExecutor> executorProvider;
 
     protected AbstractCategoryTool(
             ObjectMapper mapper,
-            ObjectProvider<McpToolCatalog> catalog,
-            ObjectProvider<McpOperationExecutor> executor) {
+            Instance<McpToolCatalog> catalog,
+            Instance<McpOperationExecutor> executor) {
         this.mapper = mapper;
         this.catalogProvider = catalog;
         this.executorProvider = executor;
@@ -37,7 +37,7 @@ abstract class AbstractCategoryTool implements McpTool {
     protected abstract OperationCategory category();
 
     protected List<OperationMeta> enabledOperations() {
-        McpToolCatalog catalog = catalogProvider.getIfAvailable();
+        McpToolCatalog catalog = catalogProvider.isResolvable() ? catalogProvider.get() : null;
         if (catalog == null) {
             return List.of();
         }
@@ -104,7 +104,7 @@ abstract class AbstractCategoryTool implements McpTool {
             return operationListError(null);
         }
         String opId = opNode.asText();
-        McpToolCatalog catalog = catalogProvider.getIfAvailable();
+        McpToolCatalog catalog = catalogProvider.isResolvable() ? catalogProvider.get() : null;
         if (catalog == null) {
             return McpResponses.error(mapper, "MCP catalog is not available");
         }
@@ -118,7 +118,8 @@ abstract class AbstractCategoryTool implements McpTool {
                     mapper,
                     "Insufficient scope: this operation requires '" + meta.requiredScope() + "'.");
         }
-        McpOperationExecutor executor = executorProvider.getIfAvailable();
+        McpOperationExecutor executor =
+                executorProvider.isResolvable() ? executorProvider.get() : null;
         if (executor == null) {
             return McpResponses.error(mapper, "MCP execution is not available.");
         }

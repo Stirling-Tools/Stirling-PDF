@@ -9,40 +9,69 @@ import java.util.Properties;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Profile;
-import org.springframework.context.annotation.Scope;
-import org.springframework.core.env.Environment;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
-import org.springframework.util.ClassUtils;
+import org.eclipse.microprofile.config.Config;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 
-@Lazy
+/**
+ * Central CDI producer hub (migrated from a Spring {@code @Configuration} class).
+ *
+ * <p>MIGRATION NOTES (Spring -> Quarkus CDI):
+ *
+ * <ul>
+ *   <li>{@code @Bean} -> {@code @Produces}; {@code @Bean(name="x")} ->
+ *       {@code @Produces @Named("x")}.
+ *   <li>{@code @Value} -> {@code @ConfigProperty}; Spring {@code Environment} -> MicroProfile
+ *       {@code Config}.
+ *   <li>{@code @Profile("default")} flavor-default beans -> {@code @DefaultBean}: the :proprietary
+ *       / :saas modules provide the "real" producer and automatically win when present, exactly
+ *       like the old profile override (this is the Quarkus idiom for "default unless overridden").
+ *   <li>{@code @Scope("request")} on {@code boolean} producers -> {@code @Dependent}. CDI normal
+ *       scopes (e.g. {@code @RequestScoped}) require a client proxy, which is impossible for
+ *       primitives/finals, so Spring's request-scoped primitive beans cannot be reproduced
+ *       directly. {@code @Dependent} recomputes the value at each injection point, which is the
+ *       closest behaviour. TODO: Migration required - if true per-HTTP-request semantics are
+ *       needed, wrap the value in a {@code @RequestScoped} holder object instead of producing a
+ *       bare boolean.
+ *   <li>{@code @Lazy} dropped - CDI beans are initialised lazily by default.
+ * </ul>
+ */
 @Slf4j
-@Configuration
-@RequiredArgsConstructor
+@ApplicationScoped
 public class AppConfig {
 
-    private final Environment env;
+    private final Config config;
 
     private final ApplicationProperties applicationProperties;
 
     @Getter
-    @Value("${server.servlet.context-path:/}")
-    private String contextPath;
+    @ConfigProperty(name = "server.servlet.context-path", defaultValue = "/")
+    String contextPath;
 
     @Getter
-    @Value("${server.port:8080}")
-    private String serverPort;
+    @ConfigProperty(name = "quarkus.http.port", defaultValue = "8080")
+    String serverPort;
+
+    @ConfigProperty(name = "v2")
+    boolean v2Enabled;
+
+    @Inject
+    public AppConfig(Config config, ApplicationProperties applicationProperties) {
+        this.config = config;
+        this.applicationProperties = applicationProperties;
+    }
 
     /**
      * Get the backend URL from system configuration. Falls back to http://localhost if not
@@ -55,76 +84,111 @@ public class AppConfig {
         return (backendUrl != null && !backendUrl.isBlank()) ? backendUrl : "http://localhost";
     }
 
-    @Value("${v2}")
-    public boolean v2Enabled;
-
-    @Bean
+    @Produces
+    @Named("v2Enabled")
     public boolean v2Enabled() {
         return v2Enabled;
     }
 
-    @Bean(name = "loginEnabled")
+    // MIGRATION: many beans inject tools.jackson.databind.ObjectMapper (Jackson 3, inherited from
+    // Spring Boot 4). Quarkus' container only produces a com.fasterxml.jackson (Jackson 2)
+    // ObjectMapper for REST (de)serialization, so the Jackson 3 type is an unsatisfied CDI
+    // dependency. This producer supplies a single application-scoped Jackson 3 mapper built the
+    // same
+    // way the codebase builds them ad hoc (JsonMapper.builder().build()). REST bodies still go
+    // through Quarkus' Jackson 2 mapper; this is only for code that uses the Jackson 3 API
+    // directly.
+    // TODO: Migration required - converge the codebase on one Jackson line (drop Jackson 3) later.
+    @Produces
+    @ApplicationScoped
+    public tools.jackson.databind.ObjectMapper jackson3ObjectMapper() {
+        return tools.jackson.databind.json.JsonMapper.builder().build();
+    }
+
+    @Produces
+    @Named("contextPath")
+    public String contextPathBean() {
+        return contextPath;
+    }
+
+    @Produces
+    @Named("loginEnabled")
     public boolean loginEnabled() {
         return applicationProperties.getSecurity().isEnableLogin();
     }
 
-    @Bean(name = "appName")
+    // MIGRATION: CDI has no producer for the nested ApplicationProperties.Security.SAML2 config
+    // object, so beans that inject it directly (e.g. CustomSaml2AuthenticationSuccessHandler) were
+    // unsatisfied. Expose it from the already-injected ApplicationProperties. May be null/disabled;
+    // that is fine for injection.
+    @Produces
+    public ApplicationProperties.Security.SAML2 saml2Config() {
+        return applicationProperties.getSecurity().getSaml2();
+    }
+
+    @Produces
+    @Named("appName")
     public String appName() {
         return "Stirling PDF";
     }
 
-    @Bean(name = "appVersion")
+    @Produces
+    @Named("appVersion")
     public String appVersion() {
-        Resource resource = new ClassPathResource("version.properties");
+        // MIGRATION: Spring ClassPathResource -> plain classloader resource lookup.
         Properties props = new Properties();
-        try {
-            props.load(resource.getInputStream());
-            return props.getProperty("version");
+        try (var in = getClass().getClassLoader().getResourceAsStream("version.properties")) {
+            if (in != null) {
+                props.load(in);
+                return props.getProperty("version");
+            }
         } catch (IOException e) {
             log.error("exception", e);
         }
         return "0.0.0";
     }
 
-    @Bean(name = "homeText")
+    @Produces
+    @Named("homeText")
     public String homeText() {
         return "null";
     }
 
-    @Bean(name = "languages")
+    @Produces
+    @Named("languages")
     public List<String> languages() {
         return applicationProperties.getUi().getLanguages();
     }
 
-    @Bean
-    public String contextPath(@Value("${server.servlet.context-path}") String contextPath) {
-        return contextPath;
-    }
-
-    @Bean(name = "navBarText")
+    @Produces
+    @Named("navBarText")
     public String navBarText() {
         String navBar = applicationProperties.getUi().getAppNameNavbar();
         return (navBar != null) ? navBar : "Stirling PDF";
     }
 
-    @Bean(name = "enableAlphaFunctionality")
+    @Produces
+    @Named("enableAlphaFunctionality")
     public boolean enableAlphaFunctionality() {
         return applicationProperties.getSystem().isEnableAlphaFunctionality();
     }
 
-    @Bean(name = "rateLimit")
+    @Produces
+    @Named("rateLimit")
     public boolean rateLimit() {
         String rateLimit = System.getProperty("rateLimit");
         if (rateLimit == null) rateLimit = System.getenv("rateLimit");
         return Boolean.parseBoolean(rateLimit);
     }
 
-    @Bean(name = "RunningInDocker")
+    @Produces
+    @Named("RunningInDocker")
     public boolean runningInDocker() {
         return Files.exists(Path.of("/.dockerenv"));
     }
 
-    @Bean(name = "configDirMounted")
+    @Produces
+    @Named("configDirMounted")
     public boolean isRunningInDockerWithConfig() {
         Path dockerEnv = Path.of("/.dockerenv");
         // default to true if not docker
@@ -143,14 +207,23 @@ public class AppConfig {
         }
     }
 
-    @Bean(name = "activeSecurity")
+    @Produces
+    @Named("activeSecurity")
     public boolean missingActiveSecurity() {
-        return ClassUtils.isPresent(
-                "stirling.software.proprietary.security.configuration.SecurityConfiguration",
-                this.getClass().getClassLoader());
+        // MIGRATION: Spring ClassUtils.isPresent -> manual Class.forName presence check.
+        try {
+            Class.forName(
+                    "stirling.software.proprietary.security.configuration.SecurityConfiguration",
+                    false,
+                    this.getClass().getClassLoader());
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
     }
 
-    @Bean(name = "directoryFilter")
+    @Produces
+    @Named("directoryFilter")
     public Predicate<Path> processOnlyFiles() {
         return path -> {
             if (Files.isDirectory(path)) {
@@ -161,113 +234,138 @@ public class AppConfig {
         };
     }
 
-    @Bean(name = "termsAndConditions")
+    @Produces
+    @Named("termsAndConditions")
     public String termsAndConditions() {
         return applicationProperties.getLegal().getTermsAndConditions();
     }
 
-    @Bean(name = "privacyPolicy")
+    @Produces
+    @Named("privacyPolicy")
     public String privacyPolicy() {
         return applicationProperties.getLegal().getPrivacyPolicy();
     }
 
-    @Bean(name = "cookiePolicy")
+    @Produces
+    @Named("cookiePolicy")
     public String cookiePolicy() {
         return applicationProperties.getLegal().getCookiePolicy();
     }
 
-    @Bean(name = "impressum")
+    @Produces
+    @Named("impressum")
     public String impressum() {
         return applicationProperties.getLegal().getImpressum();
     }
 
-    @Bean(name = "accessibilityStatement")
+    @Produces
+    @Named("accessibilityStatement")
     public String accessibilityStatement() {
         return applicationProperties.getLegal().getAccessibilityStatement();
     }
 
-    @Bean(name = "analyticsPrompt")
-    @Scope("request")
+    @Produces
+    @Dependent
+    @Named("analyticsPrompt")
     public boolean analyticsPrompt() {
         return applicationProperties.getSystem().getEnableAnalytics() == null;
     }
 
-    @Bean(name = "analyticsEnabled")
-    @Scope("request")
+    @Produces
+    @Dependent
+    @Named("analyticsEnabled")
     public boolean analyticsEnabled() {
         if (applicationProperties.getPremium().isEnabled()) return true;
         return applicationProperties.getSystem().isAnalyticsEnabled();
     }
 
-    @Bean(name = "StirlingPDFLabel")
+    @Produces
+    @Named("StirlingPDFLabel")
     public String stirlingPDFLabel() {
         return "Stirling-PDF" + " v" + appVersion();
     }
 
-    @Bean(name = "UUID")
+    @Produces
+    @Named("UUID")
     public String uuid() {
         return applicationProperties.getAutomaticallyGenerated().getUUID();
     }
 
-    @Bean
+    @Produces
     public ApplicationProperties.Security security() {
         return applicationProperties.getSecurity();
     }
 
-    @Bean
+    @Produces
     public ApplicationProperties.Security.OAUTH2 oAuth2() {
         return applicationProperties.getSecurity().getOauth2();
     }
 
-    @Bean
+    @Produces
     public ApplicationProperties.Premium premium() {
         return applicationProperties.getPremium();
     }
 
-    @Bean
+    @Produces
     public ApplicationProperties.System system() {
         return applicationProperties.getSystem();
     }
 
-    @Bean
+    @Produces
     public ApplicationProperties.Datasource datasource() {
         return applicationProperties.getSystem().getDatasource();
     }
 
-    @Bean(name = "runningProOrHigher")
-    @Profile("default")
+    // @IfBuildProfile("core"): these NORMAL/default license @Named beans apply only to the core
+    // flavor. In proprietary EEAppConfig provides them (security profile) and in saas
+    // SaasLicenseOverride does (saas profile); registering this producer alongside those trips
+    // Qute's named-bean validation ("Duplicate key runningEE"), which does not honour @DefaultBean
+    // suppression - so gate to core outright. (In core, EEAppConfig/SaasLicenseOverride are not
+    // even on the classpath.)
+    @Produces
+    @IfBuildProfile("core")
+    @Named("runningProOrHigher")
     public boolean runningProOrHigher() {
         return false;
     }
 
-    @Bean(name = "runningEE")
-    @Profile("default")
+    @Produces
+    @IfBuildProfile("core")
+    @Named("runningEE")
     public boolean runningEnterprise() {
         return false;
     }
 
-    @Bean(name = "license")
-    @Profile("default")
+    @Produces
+    @IfBuildProfile("core")
+    @Named("license")
     public String licenseType() {
         return "NORMAL";
     }
 
-    @Bean(name = "scarfEnabled")
+    @Produces
+    @Named("scarfEnabled")
     public boolean scarfEnabled() {
         return applicationProperties.getSystem().isScarfEnabled();
     }
 
-    @Bean(name = "posthogEnabled")
+    @Produces
+    @Named("posthogEnabled")
     public boolean posthogEnabled() {
         return applicationProperties.getSystem().isPosthogEnabled();
     }
 
-    @Bean(name = "machineType")
+    @Produces
+    @Named("machineType")
     public String determineMachineType() {
         try {
             boolean isDocker = runningInDocker();
             boolean isKubernetes = System.getenv("KUBERNETES_SERVICE_HOST") != null;
-            boolean isBrowserOpen = "true".equalsIgnoreCase(env.getProperty("BROWSER_OPEN"));
+            boolean isBrowserOpen =
+                    "true"
+                            .equalsIgnoreCase(
+                                    config.getOptionalValue("BROWSER_OPEN", String.class)
+                                            .orElse(null));
 
             if (isKubernetes) {
                 return "Kubernetes";

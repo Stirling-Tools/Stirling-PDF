@@ -5,18 +5,20 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.springframework.security.oauth2.core.OAuth2Error;
-import org.springframework.security.oauth2.core.OAuth2TokenValidator;
-import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
-import org.springframework.security.oauth2.jwt.Jwt;
-
 /**
  * RFC 8707 audience binding: a JWT at the MCP endpoint must list this server's resource id (or one
  * of the explicitly accepted additional audiences) in its {@code aud} claim. The additional list
  * exists for IdPs that cannot mint resource-specific audiences - e.g. Supabase's OAuth server
  * always issues {@code aud=authenticated}. Fails closed when nothing is configured.
+ *
+ * <p>TODO: Migration required - this was a Spring Security {@code OAuth2TokenValidator<Jwt>}.
+ * Quarkus-oidc has no equivalent validator SPI; the standard way to enforce audience binding is
+ * configuration: {@code quarkus.oidc.token.audience=<resource-id>} (combined with {@code
+ * mp.jwt.verify.audiences} for smallrye-jwt). The pure audience-check logic below is preserved so
+ * it can be invoked from a {@code SecurityIdentityAugmentor} or a custom {@code
+ * jakarta.ws.rs.container.ContainerRequestFilter}.
  */
-public class McpAudienceValidator implements OAuth2TokenValidator<Jwt> {
+public class McpAudienceValidator {
 
     private final Set<String> acceptedAudiences;
 
@@ -37,27 +39,39 @@ public class McpAudienceValidator implements OAuth2TokenValidator<Jwt> {
         this.acceptedAudiences = accepted;
     }
 
-    @Override
-    public OAuth2TokenValidatorResult validate(Jwt token) {
+    /**
+     * Validates that the supplied token audience claim contains this server's resource id or an
+     * accepted audience.
+     *
+     * @param audience the {@code aud} claim values from the JWT
+     * @return a result describing success or the failure reason
+     */
+    public Result validate(List<String> audience) {
         if (acceptedAudiences.isEmpty()) {
-            return OAuth2TokenValidatorResult.failure(
-                    new OAuth2Error(
-                            "invalid_token",
-                            "MCP audience binding is not configured; rejecting all tokens until"
-                                    + " mcp.auth.resource-id or mcp.auth.accepted-audiences is set.",
-                            null));
+            return Result.failure(
+                    "invalid_token",
+                    "MCP audience binding is not configured; rejecting all tokens until"
+                            + " mcp.auth.resource-id or mcp.auth.accepted-audiences is set.");
         }
-        List<String> aud = token.getAudience();
-        if (aud == null || aud.stream().noneMatch(acceptedAudiences::contains)) {
-            return OAuth2TokenValidatorResult.failure(
-                    new OAuth2Error(
-                            "invalid_token",
-                            "Token audience does not include this server's resource id or an"
-                                    + " accepted audience ("
-                                    + String.join(", ", acceptedAudiences)
-                                    + ").",
-                            null));
+        if (audience == null || audience.stream().noneMatch(acceptedAudiences::contains)) {
+            return Result.failure(
+                    "invalid_token",
+                    "Token audience does not include this server's resource id or an accepted"
+                            + " audience ("
+                            + String.join(", ", acceptedAudiences)
+                            + ").");
         }
-        return OAuth2TokenValidatorResult.success();
+        return Result.success();
+    }
+
+    /** Outcome of an audience validation, replacing Spring's OAuth2TokenValidatorResult. */
+    public record Result(boolean valid, String errorCode, String description) {
+        static Result success() {
+            return new Result(true, null, null);
+        }
+
+        static Result failure(String errorCode, String description) {
+            return new Result(false, errorCode, description);
+        }
     }
 }

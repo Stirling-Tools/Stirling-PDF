@@ -16,25 +16,22 @@ import java.util.stream.IntStream;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
-import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.MDC;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.actuate.audit.AuditEvent;
-import org.springframework.boot.actuate.audit.AuditEventRepository;
-import org.springframework.http.MediaType;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Service;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
-import org.springframework.web.multipart.MultipartFile;
 
+import io.quarkus.security.identity.SecurityIdentity;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+import jakarta.interceptor.InvocationContext;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.ws.rs.core.MediaType;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.RegexPatternUtils;
@@ -43,7 +40,7 @@ import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
 import stirling.software.proprietary.config.AuditConfigurationProperties;
-import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
+import stirling.software.proprietary.config.CustomAuditEventRepository;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 
 /**
@@ -51,26 +48,41 @@ import stirling.software.proprietary.security.service.JwtServiceInterface;
  * with data collection utilities for comprehensive audit trail management.
  */
 @Slf4j
-@Service
+@ApplicationScoped
 public class AuditService {
 
-    private final AuditEventRepository repository;
+    private final CustomAuditEventRepository repository;
     private final AuditConfigurationProperties auditConfig;
     private final boolean runningEE;
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final JwtServiceInterface jwtService;
 
+    // Quarkus migration: replaces Spring's SecurityContextHolder.getContext().getAuthentication().
+    // SecurityIdentity is request-scoped, so it is injected as Instance<T> to allow safe (lazy)
+    // resolution from non-request / async threads where no identity is active.
+    private final Instance<SecurityIdentity> securityIdentity;
+
+    // Quarkus migration: replaces Spring's RequestContextHolder/ServletRequestAttributes for
+    // accessing the current request. Injected as Instance<T> so it can be resolved lazily and
+    // tolerate absence of an active request (returns null below, mirroring the old null checks).
+    private final Instance<HttpServletRequest> currentRequest;
+
+    @Inject
     public AuditService(
-            AuditEventRepository repository,
+            CustomAuditEventRepository repository,
             AuditConfigurationProperties auditConfig,
-            @Qualifier("runningEE") boolean runningEE,
+            @Named("runningEE") boolean runningEE,
             CustomPDFDocumentFactory pdfDocumentFactory,
-            JwtServiceInterface jwtService) {
+            JwtServiceInterface jwtService,
+            Instance<SecurityIdentity> securityIdentity,
+            Instance<HttpServletRequest> currentRequest) {
         this.repository = repository;
         this.auditConfig = auditConfig;
         this.runningEE = runningEE;
         this.pdfDocumentFactory = pdfDocumentFactory;
         this.jwtService = jwtService;
+        this.securityIdentity = securityIdentity;
+        this.currentRequest = currentRequest;
     }
 
     // ========== PERSISTENCE METHODS ==========
@@ -97,7 +109,7 @@ public class AuditService {
         Map<String, Object> enrichedData = new java.util.HashMap<>(data);
         enrichedData.put("__origin", determineOrigin());
 
-        repository.add(new AuditEvent(principal, type.name(), enrichedData));
+        repository.add(principal, type.name(), Instant.now(), enrichedData);
     }
 
     /**
@@ -128,7 +140,7 @@ public class AuditService {
             return;
         }
 
-        repository.add(new AuditEvent(principal, type.name(), data));
+        repository.add(principal, type.name(), Instant.now(), data);
     }
 
     /**
@@ -164,7 +176,7 @@ public class AuditService {
         Map<String, Object> enrichedData = new java.util.HashMap<>(data);
         enrichedData.put("__origin", determineOrigin());
 
-        repository.add(new AuditEvent(principal, type, enrichedData));
+        repository.add(principal, type, Instant.now(), enrichedData);
     }
 
     /**
@@ -194,7 +206,7 @@ public class AuditService {
             return;
         }
 
-        repository.add(new AuditEvent(principal, type, data));
+        repository.add(principal, type, Instant.now(), data);
     }
 
     /**
@@ -233,7 +245,7 @@ public class AuditService {
             enrichedData.put("__ipAddress", ipAddress);
         }
 
-        repository.add(new AuditEvent(principal, type.name(), enrichedData));
+        repository.add(principal, type.name(), Instant.now(), enrichedData);
     }
 
     /**
@@ -260,7 +272,7 @@ public class AuditService {
             enrichedData.put("__ipAddress", ipAddress);
         }
 
-        repository.add(new AuditEvent(principal, type, enrichedData));
+        repository.add(principal, type, Instant.now(), enrichedData);
     }
 
     // ========== DATA COLLECTION METHODS ==========
@@ -272,8 +284,7 @@ public class AuditService {
      * @param auditLevel The current audit level
      * @return A map with standard audit data
      */
-    public Map<String, Object> createBaseAuditData(
-            ProceedingJoinPoint joinPoint, AuditLevel auditLevel) {
+    public Map<String, Object> createBaseAuditData(InvocationContext ctx, AuditLevel auditLevel) {
         Map<String, Object> data = new HashMap<>();
 
         // Common data for all levels
@@ -283,18 +294,17 @@ public class AuditService {
         // This ensures consistency in async contexts where SecurityContext may not be available
         String principal = MDC.get("auditPrincipal");
         if (principal == null) {
-            // Fallback: capture from SecurityContext if running in request thread
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            principal = (auth != null && auth.getName() != null) ? auth.getName() : "system";
+            // Fallback: capture from the active SecurityIdentity if running in a request thread.
+            // Quarkus migration: was SecurityContextHolder.getContext().getAuthentication().
+            String identityName = currentIdentityName();
+            principal = (identityName != null) ? identityName : "system";
         }
         data.put("principal", principal);
 
         // Add class name and method name only at VERBOSE level
         if (auditLevel.includes(AuditLevel.VERBOSE)) {
-            data.put("className", joinPoint.getTarget().getClass().getName());
-            data.put(
-                    "methodName",
-                    ((MethodSignature) joinPoint.getSignature()).getMethod().getName());
+            data.put("className", ctx.getTarget().getClass().getName());
+            data.put("methodName", ctx.getMethod().getName());
         }
 
         return data;
@@ -318,16 +328,10 @@ public class AuditService {
         data.put("httpMethod", httpMethod);
         data.put("path", path);
 
-        // Get request attributes safely
-        ServletRequestAttributes attrs =
-                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        if (attrs == null) {
-            return; // No request context available
-        }
-
-        HttpServletRequest req = attrs.getRequest();
+        // Get request safely. Quarkus migration: was RequestContextHolder.getRequestAttributes().
+        HttpServletRequest req = getCurrentRequest();
         if (req == null) {
-            return; // No request available
+            return; // No request context available
         }
 
         // STANDARD level HTTP data
@@ -346,8 +350,8 @@ public class AuditService {
                     && req.getContentType() != null) {
 
                 String contentType = req.getContentType();
-                if (contentType.contains(MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-                        || contentType.contains(MediaType.MULTIPART_FORM_DATA_VALUE)) {
+                if (contentType.contains(MediaType.APPLICATION_FORM_URLENCODED)
+                        || contentType.contains(MediaType.MULTIPART_FORM_DATA)) {
 
                     Map<String, String[]> params = new HashMap<>(req.getParameterMap());
                     // Remove CSRF token from logged parameters
@@ -369,12 +373,12 @@ public class AuditService {
      * @param auditLevel The current audit level
      */
     public void addFileData(
-            Map<String, Object> data, ProceedingJoinPoint joinPoint, AuditLevel auditLevel) {
+            Map<String, Object> data, InvocationContext ctx, AuditLevel auditLevel) {
         if (auditLevel.includes(AuditLevel.STANDARD)) {
             List<MultipartFile> files = new ArrayList<>();
 
             // Extract files from multiple sources:
-            for (Object arg : joinPoint.getArgs()) {
+            for (Object arg : ctx.getParameters()) {
                 // 1. Direct MultipartFile arguments
                 if (arg instanceof MultipartFile) {
                     files.add((MultipartFile) arg);
@@ -476,20 +480,19 @@ public class AuditService {
      * @param auditLevel The current audit level
      */
     public void addMethodArguments(
-            Map<String, Object> data, ProceedingJoinPoint joinPoint, AuditLevel auditLevel) {
+            Map<String, Object> data, InvocationContext ctx, AuditLevel auditLevel) {
         if (auditLevel.includes(AuditLevel.VERBOSE)) {
-            MethodSignature sig = (MethodSignature) joinPoint.getSignature();
-            String[] names = sig.getParameterNames();
-            Object[] vals = joinPoint.getArgs();
-            if (names != null && vals != null) {
-                IntStream.range(0, names.length)
+            java.lang.reflect.Parameter[] params = ctx.getMethod().getParameters();
+            Object[] vals = ctx.getParameters();
+            if (params != null && vals != null) {
+                IntStream.range(0, params.length)
                         .forEach(
                                 i -> {
+                                    String name = params[i].getName();
                                     if (vals[i] != null) {
-                                        // Convert objects to safe string representation
-                                        data.put("arg_" + names[i], safeToString(vals[i], 500));
+                                        data.put("arg_" + name, safeToString(vals[i], 500));
                                     } else {
-                                        data.put("arg_" + names[i], null);
+                                        data.put("arg_" + name, null);
                                     }
                                 });
             }
@@ -719,9 +722,20 @@ public class AuditService {
      * @return The current request or null if not in a request context
      */
     public HttpServletRequest getCurrentRequest() {
-        ServletRequestAttributes attrs =
-                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        return attrs != null ? attrs.getRequest() : null;
+        // Quarkus migration: was RequestContextHolder.getRequestAttributes().getRequest().
+        // securityIdentity/currentRequest are request-scoped; outside an active request the
+        // proxy resolution throws, so we treat that as "no request" (mirrors the old null check).
+        try {
+            if (currentRequest.isUnsatisfied()) {
+                return null;
+            }
+            HttpServletRequest req = currentRequest.get();
+            // Touch the proxy to force resolution; if no request is active this throws.
+            req.getRequestURI();
+            return req;
+        } catch (RuntimeException e) {
+            return null;
+        }
     }
 
     /**
@@ -812,9 +826,10 @@ public class AuditService {
 
     /** Get the current authenticated username or "system" if none */
     private String getCurrentUsername() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.getName() != null && !"anonymousUser".equals(auth.getName())) {
-            return auth.getName();
+        // Quarkus migration: was SecurityContextHolder.getContext().getAuthentication().getName().
+        String name = currentIdentityName();
+        if (name != null && !"anonymousUser".equals(name)) {
+            return name;
         }
 
         // Refresh endpoint runs without normal JWT authentication so SecurityContext may be
@@ -826,7 +841,29 @@ public class AuditService {
             return tokenSubject;
         }
 
-        return (auth != null && auth.getName() != null) ? auth.getName() : "system";
+        return (name != null) ? name : "system";
+    }
+
+    /**
+     * Quarkus migration helper: resolve the current principal name from the active
+     * SecurityIdentity, or null if no identity / anonymous / no active request. Replaces Spring's
+     * SecurityContextHolder.getContext().getAuthentication().getName().
+     */
+    private String currentIdentityName() {
+        try {
+            if (securityIdentity.isUnsatisfied()) {
+                return null;
+            }
+            SecurityIdentity identity = securityIdentity.get();
+            if (identity == null || identity.isAnonymous() || identity.getPrincipal() == null) {
+                return null;
+            }
+            String name = identity.getPrincipal().getName();
+            return StringUtils.isNotBlank(name) ? name : null;
+        } catch (RuntimeException e) {
+            // No active request scope (e.g. async/background thread) - treat as no identity.
+            return null;
+        }
     }
 
     /**
@@ -855,16 +892,31 @@ public class AuditService {
      */
     private String determineOrigin() {
         try {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            // Quarkus migration: was SecurityContextHolder.getContext().getAuthentication().
+            // TODO: Migration required - the original code distinguished API-key auth from web/JWT
+            // auth via `instanceof ApiKeyAuthenticationToken`. Under Quarkus the runtime principal
+            // is io.quarkus.security.identity.SecurityIdentity and ApiKeyAuthenticationToken has
+            // been reduced to a plain POJO (it is no longer the identity type), so the API-key vs
+            // WEB distinction can no longer be made by instanceof here. Once the API-key auth path
+            // is migrated (custom IdentityProvider / SecurityIdentityAugmentor), re-derive "API" by
+            // inspecting a SecurityIdentity attribute/role set by that augmentor (e.g.
+            // identity.getAttribute("authType") or a dedicated role) instead of an instanceof
+            // check.
+            // Until then, any authenticated non-anonymous identity is reported as "WEB"; the
+            // refresh-token claim inspection below still recovers "API" for refresh requests.
+            if (securityIdentity.isResolvable()) {
+                SecurityIdentity identity = securityIdentity.get();
+                String authType = String.valueOf(identity.getAttribute("authType"));
+                if ("API".equalsIgnoreCase(authType)) {
+                    return "API";
+                }
 
-            // Check if authenticated via API key
-            if (auth instanceof ApiKeyAuthenticationToken) {
-                return "API";
-            }
-
-            // Check if authenticated via JWT (web user)
-            if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getName())) {
-                return "WEB";
+                // Check if authenticated (web user)
+                String name =
+                        identity.getPrincipal() != null ? identity.getPrincipal().getName() : null;
+                if (!identity.isAnonymous() && name != null && !"anonymousUser".equals(name)) {
+                    return "WEB";
+                }
             }
 
             // Refresh endpoint may still be anonymous in SecurityContext; infer origin from a

@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 import java.io.File;
 import java.nio.file.Files;
 
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,15 +21,13 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
+
+import jakarta.ws.rs.core.Response;
 
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.api.converters.HTMLToPdfRequest;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.testsupport.TestFileUploads;
 import stirling.software.common.util.CustomHtmlSanitizer;
 import stirling.software.common.util.FileToPdf;
 import stirling.software.common.util.GeneralUtils;
@@ -38,16 +37,9 @@ import stirling.software.common.util.WebResponseUtils;
 
 @ExtendWith(MockitoExtension.class)
 class ConvertHtmlToPDFTest {
-    private static ResponseEntity<Resource> streamingOk(byte[] bytes) {
-        return ResponseEntity.ok(new ByteArrayResource(bytes));
-    }
 
-    private static byte[] drainBody(ResponseEntity<Resource> response) throws java.io.IOException {
-        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-        try (java.io.InputStream __in = response.getBody().getInputStream()) {
-            __in.transferTo(baos);
-        }
-        return baos.toByteArray();
+    private static Response streamingOk(byte[] bytes) {
+        return Response.ok(bytes).build();
     }
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
@@ -75,20 +67,14 @@ class ConvertHtmlToPDFTest {
 
     @Test
     void htmlToPdf_nullFileInputThrows() {
-        HTMLToPdfRequest request = new HTMLToPdfRequest();
-        request.setFileInput(null);
-
-        assertThrows(Exception.class, () -> controller.HtmlToPdf(request));
+        assertThrows(Exception.class, () -> controller.HtmlToPdf(null, null, 1f));
     }
 
     @Test
     void htmlToPdf_invalidExtensionThrows() {
-        MockMultipartFile file =
-                new MockMultipartFile("fileInput", "test.txt", "text/plain", "content".getBytes());
-        HTMLToPdfRequest request = new HTMLToPdfRequest();
-        request.setFileInput(file);
+        FileUpload file = TestFileUploads.of("content".getBytes(), "test.txt", "text/plain");
 
-        assertThrows(Exception.class, () -> controller.HtmlToPdf(request));
+        assertThrows(Exception.class, () -> controller.HtmlToPdf(file, null, 1f));
     }
 
     @Test
@@ -97,16 +83,13 @@ class ConvertHtmlToPDFTest {
         byte[] pdfBytes = "pdf-content".getBytes();
         byte[] processedPdf = "processed-pdf".getBytes();
 
-        MockMultipartFile file =
-                new MockMultipartFile("fileInput", "test.html", "text/html", htmlContent);
-        HTMLToPdfRequest request = new HTMLToPdfRequest();
-        request.setFileInput(file);
+        FileUpload file = TestFileUploads.of(htmlContent, "test.html", "text/html");
 
         when(runtimePathConfig.getWeasyPrintPath()).thenReturn("/usr/bin/weasyprint");
         when(pdfDocumentFactory.createNewBytesBasedOnOldDocument(pdfBytes))
                 .thenReturn(processedPdf);
 
-        ResponseEntity<Resource> expectedResponse = streamingOk(processedPdf);
+        Response expectedResponse = streamingOk(processedPdf);
 
         try (MockedStatic<FileToPdf> ftpMock = Mockito.mockStatic(FileToPdf.class);
                 MockedStatic<GeneralUtils> guMock = Mockito.mockStatic(GeneralUtils.class);
@@ -117,7 +100,7 @@ class ConvertHtmlToPDFTest {
                             () ->
                                     FileToPdf.convertHtmlToPdf(
                                             eq("/usr/bin/weasyprint"),
-                                            eq(request),
+                                            any(HTMLToPdfRequest.class),
                                             any(byte[].class),
                                             eq("test.html"),
                                             eq(tempFileManager),
@@ -133,9 +116,9 @@ class ConvertHtmlToPDFTest {
                                             any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<Resource> response = controller.HtmlToPdf(request);
+            Response response = controller.HtmlToPdf(file, null, 1f);
 
-            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
         }
     }
 
@@ -145,16 +128,13 @@ class ConvertHtmlToPDFTest {
         byte[] pdfBytes = "pdf-content".getBytes();
         byte[] processedPdf = "processed-pdf".getBytes();
 
-        MockMultipartFile file =
-                new MockMultipartFile("fileInput", "archive.zip", "application/zip", zipContent);
-        HTMLToPdfRequest request = new HTMLToPdfRequest();
-        request.setFileInput(file);
+        FileUpload file = TestFileUploads.of(zipContent, "archive.zip", "application/zip");
 
         when(runtimePathConfig.getWeasyPrintPath()).thenReturn("/usr/bin/weasyprint");
         when(pdfDocumentFactory.createNewBytesBasedOnOldDocument(pdfBytes))
                 .thenReturn(processedPdf);
 
-        ResponseEntity<Resource> expectedResponse = streamingOk(processedPdf);
+        Response expectedResponse = streamingOk(processedPdf);
 
         try (MockedStatic<FileToPdf> ftpMock = Mockito.mockStatic(FileToPdf.class);
                 MockedStatic<GeneralUtils> guMock = Mockito.mockStatic(GeneralUtils.class);
@@ -165,7 +145,7 @@ class ConvertHtmlToPDFTest {
                             () ->
                                     FileToPdf.convertHtmlToPdf(
                                             eq("/usr/bin/weasyprint"),
-                                            eq(request),
+                                            any(HTMLToPdfRequest.class),
                                             any(byte[].class),
                                             eq("archive.zip"),
                                             eq(tempFileManager),
@@ -181,19 +161,16 @@ class ConvertHtmlToPDFTest {
                                             any(TempFile.class), anyString()))
                     .thenReturn(expectedResponse);
 
-            ResponseEntity<Resource> response = controller.HtmlToPdf(request);
+            Response response = controller.HtmlToPdf(file, null, 1f);
 
-            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
         }
     }
 
     @Test
     void htmlToPdf_nullFilenameThrows() {
-        MockMultipartFile file =
-                new MockMultipartFile("fileInput", null, "text/html", "content".getBytes());
-        HTMLToPdfRequest request = new HTMLToPdfRequest();
-        request.setFileInput(file);
+        FileUpload file = TestFileUploads.of("content".getBytes(), null, "text/html");
 
-        assertThrows(Exception.class, () -> controller.HtmlToPdf(request));
+        assertThrows(Exception.class, () -> controller.HtmlToPdf(file, null, 1f));
     }
 }

@@ -2,41 +2,52 @@ package stirling.software.proprietary.mcp.security;
 
 import java.io.IOException;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
-import org.springframework.security.oauth2.core.OAuth2Error;
-import org.springframework.security.web.AuthenticationEntryPoint;
-
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.ws.rs.core.Response;
 
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * Emits 401 + {@code WWW-Authenticate: Bearer resource_metadata="..."} (RFC 9728) from
- * X-Forwarded-* headers. A rejected token also logs the OAuth2 reason and echoes it as {@code
+ * X-Forwarded-* headers. A rejected token also logs the reason and echoes it as {@code
  * error_description}.
+ *
+ * <p>TODO: Migration required - this was a Spring Security {@code AuthenticationEntryPoint}
+ * (commence(...) invoked by the SecurityFilterChain on authentication failure). Quarkus has no
+ * SecurityFilterChain equivalent. The 401 response must instead be produced by a Quarkus auth
+ * mechanism / failure handler (e.g. an {@link io.quarkus.security.AuthenticationFailedException}
+ * mapper, or a custom HttpAuthenticationMechanism sendChallenge). The reusable header-building
+ * logic below has been preserved; wire {@link #commence(HttpServletRequest, HttpServletResponse,
+ * String)} into that handler, passing the rejection reason when a token was supplied and rejected.
  */
 @Slf4j
-public class McpAuthenticationEntryPoint implements AuthenticationEntryPoint {
+@ApplicationScoped
+public class McpAuthenticationEntryPoint {
 
     private final String metadataPath;
+
+    public McpAuthenticationEntryPoint() {
+        this("/.well-known/oauth-protected-resource");
+    }
 
     public McpAuthenticationEntryPoint(String metadataPath) {
         this.metadataPath =
                 metadataPath == null ? "/.well-known/oauth-protected-resource" : metadataPath;
     }
 
-    @Override
+    public void commence(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        commence(request, response, null);
+    }
+
     public void commence(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            AuthenticationException authException)
+            HttpServletRequest request, HttpServletResponse response, String rejectionReason)
             throws IOException {
         // Tokenless 401 is the normal discovery handshake; only a rejected token is a real failure.
         boolean tokenPresented = request.getHeader("Authorization") != null;
-        String reason = rejectionReason(authException);
+        String reason = sanitizeReason(rejectionReason);
         if (tokenPresented) {
             log.warn("MCP rejected bearer token: {}", reason != null ? reason : "invalid_token");
         } else {
@@ -53,26 +64,15 @@ public class McpAuthenticationEntryPoint implements AuthenticationEntryPoint {
         }
         header.append(", resource_metadata=\"").append(metadataUrl).append('"');
         response.setHeader("WWW-Authenticate", header.toString());
-        response.sendError(HttpStatus.UNAUTHORIZED.value(), "Unauthorized");
+        response.sendError(Response.Status.UNAUTHORIZED.getStatusCode(), "Unauthorized");
     }
 
-    /**
-     * OAuth2 error as {@code "code - description"}, sanitized for a header/log line; null if none.
-     */
-    private static String rejectionReason(AuthenticationException ex) {
-        if (!(ex instanceof OAuth2AuthenticationException oae)) {
+    /** Sanitize a rejection reason for a header/log line; null if blank. */
+    private static String sanitizeReason(String reason) {
+        if (reason == null || reason.isBlank()) {
             return null;
         }
-        OAuth2Error error = oae.getError();
-        if (error == null) {
-            return null;
-        }
-        String description = error.getDescription();
-        String combined =
-                (description == null || description.isBlank())
-                        ? error.getErrorCode()
-                        : error.getErrorCode() + " - " + description;
-        return combined == null ? null : combined.replaceAll("[\\r\\n\"]", " ").trim();
+        return reason.replaceAll("[\\r\\n\"]", " ").trim();
     }
 
     /** host[:port] from forwarded headers when present, else the servlet host/port. */

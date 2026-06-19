@@ -3,8 +3,9 @@ package stirling.software.proprietary.policy.config;
 import java.util.List;
 import java.util.Objects;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Component;
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 
@@ -14,15 +15,15 @@ import stirling.software.proprietary.policy.model.Policy;
 
 /**
  * Policies are scoped to a team: a user may view, run, edit, and delete only the policies belonging
- * to their own team (the team a policy is stamped with at creation). This binds everyone — admins
- * included — so no one sees or touches another team's policies. <em>Whether</em> a user may edit
+ * to their own team (the team a policy is stamped with at creation). This binds everyone - admins
+ * included - so no one sees or touches another team's policies. <em>Whether</em> a user may edit
  * (vs only view/run) is a separate check gated at the controller ({@code
- * PolicyController#requirePolicyEditingAllowed} → team leader). Enforced only when login is
+ * PolicyController#requirePolicyEditingAllowed} -> team leader). Enforced only when login is
  * enabled; single-user deployments (login disabled) pass every check.
  */
-@Component
+@ApplicationScoped
 @RequiredArgsConstructor
-@Profile("saas")
+@IfBuildProfile("saas")
 public class PolicyAccessGuard {
 
     private final UserServiceInterface userService;
@@ -34,7 +35,7 @@ public class PolicyAccessGuard {
         return enforced() ? userService.getCurrentUsername() : null;
     }
 
-    /** Team a new policy is stamped with — the creator's team. {@code null} when login disabled. */
+    /** Team a new policy is stamped with - the creator's team. {@code null} when login disabled. */
     public Long teamForNewPolicy() {
         return enforced() ? policyManagementAuthority.currentUserTeamId() : null;
     }

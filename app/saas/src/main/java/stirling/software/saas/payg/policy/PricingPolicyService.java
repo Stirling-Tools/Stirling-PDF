@@ -5,15 +5,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
-
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Event;
+import jakarta.enterprise.event.Observes;
+import jakarta.enterprise.event.TransactionPhase;
+import jakarta.transaction.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,7 +40,7 @@ import stirling.software.saas.payg.repository.PricingPolicyRepository;
  * read-only. We accept this rather than wrapping in a DTO to keep the PR small; if mutation becomes
  * a footgun, swap the cache value type for an immutable snapshot.
  */
-@Service
+@ApplicationScoped
 @Slf4j
 public class PricingPolicyService {
 
@@ -50,7 +49,7 @@ public class PricingPolicyService {
 
     private final PricingPolicyRepository policyRepository;
     private final PaygTeamExtensionsRepository teamExtensionsRepository;
-    private final ApplicationEventPublisher eventPublisher;
+    private final Event<PolicyChangedEvent> eventPublisher;
 
     /**
      * Cache keyed by {@code teamId}. Null teamId not supported (caller's bug). Value is the
@@ -61,7 +60,7 @@ public class PricingPolicyService {
     public PricingPolicyService(
             PricingPolicyRepository policyRepository,
             PaygTeamExtensionsRepository teamExtensionsRepository,
-            ApplicationEventPublisher eventPublisher) {
+            Event<PolicyChangedEvent> eventPublisher) {
         this.policyRepository = Objects.requireNonNull(policyRepository, "policyRepository");
         this.teamExtensionsRepository =
                 Objects.requireNonNull(teamExtensionsRepository, "teamExtensionsRepository");
@@ -87,7 +86,7 @@ public class PricingPolicyService {
      * <p>{@link Transactional}({@code readOnly = true}) so the eager-loaded {@code stepLimits} and
      * {@code stripePriceIds} collections initialize inside the same session.
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public PricingPolicy getEffectivePolicy(Long teamId) {
         if (teamId == null) {
             return loadDefaultPolicy();
@@ -96,7 +95,7 @@ public class PricingPolicyService {
     }
 
     /** Bypasses the cache. Useful for admin endpoints that want a fresh read after a mutation. */
-    @Transactional(readOnly = true)
+    @Transactional
     public PricingPolicy getEffectivePolicyUncached(Long teamId) {
         if (teamId == null) {
             return loadDefaultPolicy();
@@ -105,19 +104,19 @@ public class PricingPolicyService {
     }
 
     /** Lists every policy (admin read). Not cached — admin pages should always see fresh state. */
-    @Transactional(readOnly = true)
+    @Transactional
     public List<PricingPolicy> listAll() {
-        return policyRepository.findAll();
+        return policyRepository.listAll();
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public Optional<PricingPolicy> findByVersion(String version) {
         return policyRepository.findByVersion(version);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public Optional<PricingPolicy> findById(Long policyId) {
-        return policyRepository.findById(policyId);
+        return policyRepository.findByIdOptional(policyId);
     }
 
     /** Creates a new policy row. Publishes {@link PolicyChangedEvent} after commit. */
@@ -136,9 +135,9 @@ public class PricingPolicyService {
                     "Create with is_default=true is not allowed; create the row then call"
                             + " setDefault(id).");
         }
-        PricingPolicy saved = policyRepository.save(draft);
-        publishOnCommit("create:" + saved.getId());
-        return saved;
+        policyRepository.persist(draft);
+        publishOnCommit("create:" + draft.getId());
+        return draft;
     }
 
     /**
@@ -151,7 +150,7 @@ public class PricingPolicyService {
         Objects.requireNonNull(newDefaultId, "newDefaultId");
         PricingPolicy target =
                 policyRepository
-                        .findById(newDefaultId)
+                        .findByIdOptional(newDefaultId)
                         .orElseThrow(
                                 () ->
                                         new IllegalArgumentException(
@@ -161,9 +160,9 @@ public class PricingPolicyService {
         }
         policyRepository.clearDefaultFlag();
         target.setIsDefault(true);
-        PricingPolicy saved = policyRepository.save(target);
-        publishOnCommit("setDefault:" + saved.getId());
-        return saved;
+        policyRepository.persist(target);
+        publishOnCommit("setDefault:" + target.getId());
+        return target;
     }
 
     /**
@@ -173,12 +172,12 @@ public class PricingPolicyService {
     @Transactional
     public void setTeamOverride(Long teamId, Long policyId) {
         Objects.requireNonNull(teamId, "teamId");
-        if (policyId != null && !policyRepository.existsById(policyId)) {
+        if (policyId != null && policyRepository.findByIdOptional(policyId).isEmpty()) {
             throw new IllegalArgumentException("No pricing_policy with id " + policyId);
         }
         PaygTeamExtensions extensions =
                 teamExtensionsRepository
-                        .findById(teamId)
+                        .findByIdOptional(teamId)
                         .orElseThrow(
                                 () ->
                                         new IllegalStateException(
@@ -187,7 +186,7 @@ public class PricingPolicyService {
                                                         + " — should have been created on first"
                                                         + " PAYG access."));
         extensions.setPricingPolicyId(policyId);
-        teamExtensionsRepository.save(extensions);
+        teamExtensionsRepository.persist(extensions);
         publishOnCommit("teamOverride:" + teamId);
     }
 
@@ -196,8 +195,13 @@ public class PricingPolicyService {
      * changed — cache hit rate is already team-scoped so the cost of a clear is bounded by how many
      * active teams there are.
      */
-    @EventListener
-    public void onPolicyChanged(PolicyChangedEvent event) {
+    // TODO: Migration required - after-commit delivery is now expressed on the observer side via
+    // CDI's TransactionPhase.AFTER_SUCCESS (replacing the firing-side
+    // TransactionSynchronizationManager.registerSynchronization afterCommit hook). When no
+    // transaction is active (e.g. test paths calling write methods without a tx), CDI delivers the
+    // event immediately, matching the former else-branch behavior.
+    public void onPolicyChanged(
+            @Observes(during = TransactionPhase.AFTER_SUCCESS) PolicyChangedEvent event) {
         long evicted = byTeamCache.estimatedSize();
         byTeamCache.invalidateAll();
         log.debug(
@@ -212,34 +216,28 @@ public class PricingPolicyService {
     }
 
     /**
-     * Schedules a {@link PolicyChangedEvent} to fire after the current transaction commits, or
-     * fires immediately if no transaction is active (e.g. test paths calling write methods without
-     * a tx). Inside-transaction firing would have listeners clearing caches before the row change
-     * is visible to other connections — racing them into re-reading stale state.
+     * Fires a {@link PolicyChangedEvent}. The after-commit timing that the Spring implementation
+     * achieved with {@code TransactionSynchronizationManager.registerSynchronization(afterCommit)}
+     * is now expressed on the observer side: {@link #onPolicyChanged} observes {@code during =
+     * TransactionPhase.AFTER_SUCCESS}, so CDI defers delivery until the active transaction commits
+     * (and delivers immediately when no transaction is active). Firing inside the tx is therefore
+     * safe — the listener still only clears caches once the row change is committed and visible.
      */
     private void publishOnCommit(String payload) {
-        if (TransactionSynchronizationManager.isSynchronizationActive()) {
-            TransactionSynchronizationManager.registerSynchronization(
-                    new TransactionSynchronization() {
-                        @Override
-                        public void afterCommit() {
-                            eventPublisher.publishEvent(
-                                    new PolicyChangedEvent(PricingPolicyService.this, payload));
-                        }
-                    });
-        } else {
-            eventPublisher.publishEvent(new PolicyChangedEvent(this, payload));
-        }
+        // TODO: Migration required - was TransactionSynchronizationManager-driven after-commit
+        // dispatch; now a plain Event.fire() whose after-commit timing is enforced by the
+        // AFTER_SUCCESS observer phase on onPolicyChanged.
+        eventPublisher.fire(new PolicyChangedEvent(this, payload));
     }
 
     private PricingPolicy loadEffectivePolicy(Long teamId) {
         Optional<Long> overrideId =
                 teamExtensionsRepository
-                        .findById(teamId)
+                        .findByIdOptional(teamId)
                         .map(PaygTeamExtensions::getPricingPolicyId);
         if (overrideId.isPresent()) {
             Long id = overrideId.get();
-            Optional<PricingPolicy> override = policyRepository.findById(id);
+            Optional<PricingPolicy> override = policyRepository.findByIdOptional(id);
             if (override.isPresent()) {
                 return override.get();
             }

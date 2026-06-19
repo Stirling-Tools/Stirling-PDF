@@ -3,8 +3,8 @@ package stirling.software.proprietary.workflow.service;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,10 +25,12 @@ import stirling.software.proprietary.workflow.repository.WorkflowParticipantRepo
  * <p>This service bridges the gap between the file sharing infrastructure and workflow-specific
  * access control.
  */
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 @Slf4j
-@Transactional(readOnly = true)
+// TODO: Migration note - jakarta.transaction.Transactional has no readOnly attribute;
+// mapped to SUPPORTS so read methods join an existing tx without forcing a new one.
+@Transactional(Transactional.TxType.SUPPORTS)
 public class UnifiedAccessControlService {
 
     private final FileShareRepository fileShareRepository;

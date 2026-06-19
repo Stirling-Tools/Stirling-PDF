@@ -1,11 +1,11 @@
 package stirling.software.SPDF.Factories;
 
-import org.springframework.stereotype.Component;
-import org.springframework.web.multipart.MultipartFile;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.api.misc.HighContrastColorCombination;
 import stirling.software.common.model.api.misc.ReplaceAndInvert;
 import stirling.software.common.util.TempFileManager;
@@ -14,7 +14,7 @@ import stirling.software.common.util.misc.CustomColorReplaceStrategy;
 import stirling.software.common.util.misc.InvertFullColorStrategy;
 import stirling.software.common.util.misc.ReplaceAndInvertColorStrategy;
 
-@Component
+@ApplicationScoped
 @RequiredArgsConstructor
 public class ReplaceAndInvertColorFactory {
 

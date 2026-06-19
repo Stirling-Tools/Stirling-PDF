@@ -1,6 +1,8 @@
 package stirling.software.saas.payg.entitlement;
 
 import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -9,28 +11,21 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
-import org.springframework.web.method.HandlerMethod;
-import org.springframework.web.servlet.HandlerInterceptor;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.quarkus.arc.profile.IfBuildProfile;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.SecurityContextHolder;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
@@ -40,35 +35,32 @@ import stirling.software.saas.payg.model.FeatureGate;
 import stirling.software.saas.util.AuthenticationUtils;
 
 /**
- * Hot-path entitlement check. Runs after {@code PaygChargeInterceptor} in the MVC chain and short-
- * circuits the request before any handler work happens when the team's snapshot is missing one of
- * the gates the route declared via {@link RequiresFeature}.
+ * Hot-path entitlement check. Runs after {@code PaygChargeInterceptor} in the request chain and
+ * short-circuits the request before any handler work happens when the team's snapshot is missing
+ * one of the gates the route declared via {@link RequiresFeature}.
  *
  * <p>Scope: routes whose handler method (or bean type) carries either {@link AutoJobPostMapping}
  * (multipart tool POSTs) or {@link RequiresFeature} (AI controllers, future non-multipart gated
- * routes). Admin / info / config endpoints are excluded by the path-pattern in {@code
- * PaygWebMvcConfig} and are additionally skipped here when they carry neither annotation, so non-
- * billable infra never trips the guard.
- *
- * <p>Decision matrix:
- *
- * <table>
- *   <tr><th>auth</th><th>required gates</th><th>snapshot enabled?</th><th>outcome</th></tr>
- *   <tr><td>anonymous</td><td>AUTOMATION or AI_SUPPORT</td><td>n/a</td><td>401 SIGNUP_REQUIRED</td></tr>
- *   <tr><td>anonymous</td><td>OFFSITE_PROCESSING / CLIENT_SIDE</td><td>n/a</td><td>200 (pass through)</td></tr>
- *   <tr><td>authenticated</td><td>required ⊆ enabled</td><td>yes</td><td>200</td></tr>
- *   <tr><td>authenticated</td><td>required ⊄ enabled</td><td>no</td><td>402 FEATURE_DEGRADED</td></tr>
- * </table>
+ * routes). Admin / info / config endpoints carry neither annotation and never trip the guard.
  *
  * <p>Fail-open: any unexpected exception is logged at WARN and the request passes through. The cap
  * pipeline must never block a customer because the guard tripped on a transient DB error.
+ *
+ * <p>// TODO: Migration required - was a Spring {@code @Component} implementing {@code
+ * HandlerInterceptor}. Convert to a JAX-RS {@code @Provider} ContainerRequestFilter (priority
+ * {@code PaygWebMvcConfig.ENTITLEMENT_GUARD_ORDER}). Handler-annotation introspection now uses a
+ * reflective {@link Method} fallback; HTTP status/header/media-type constants are inlined literals.
  */
 @Slf4j
-@Component
-@Profile("saas")
-public class EntitlementGuard implements HandlerInterceptor {
+@ApplicationScoped
+@IfBuildProfile("saas")
+public class EntitlementGuard {
 
     private static final FeatureGate[] DEFAULT_REQUIRED_GATES = {FeatureGate.OFFSITE_PROCESSING};
+
+    private static final int HTTP_UNAUTHORIZED = 401;
+    private static final int HTTP_PAYMENT_REQUIRED = 402;
+    private static final String APPLICATION_JSON = "application/json";
 
     private final EntitlementService entitlementService;
     private final UserRepository userRepository;
@@ -115,27 +107,24 @@ public class EntitlementGuard implements HandlerInterceptor {
                         .register(meterRegistry);
     }
 
-    @Override
     public boolean preHandle(
             HttpServletRequest request, HttpServletResponse response, Object handler) {
-        if (!(handler instanceof HandlerMethod hm)) {
+        Method resourceMethod = resolveResourceMethod(handler);
+        Class<?> beanType = resolveBeanType(handler, resourceMethod);
+        if (resourceMethod == null) {
             return true;
         }
         // Scope: AutoJobPostMapping routes (multipart tool POSTs) OR routes that explicitly
         // declare @RequiresFeature (e.g. AI controllers — JSON-bodied, no AutoJobPostMapping).
         // Admin / info / config endpoints carry neither annotation and never trip the guard.
         boolean hasAutoJobPostMapping =
-                AnnotationUtils.findAnnotation(hm.getMethod(), AutoJobPostMapping.class) != null
-                        || AnnotationUtils.findAnnotation(
-                                        hm.getBeanType(), AutoJobPostMapping.class)
-                                != null;
+                findAnnotation(resourceMethod, beanType, AutoJobPostMapping.class) != null;
         boolean hasRequiresFeature =
-                AnnotationUtils.findAnnotation(hm.getMethod(), RequiresFeature.class) != null
-                        || AnnotationUtils.findAnnotation(hm.getBeanType(), RequiresFeature.class)
-                                != null;
+                findAnnotation(resourceMethod, beanType, RequiresFeature.class) != null;
         // AI document tools (/api/v1/ai/tools/**) live in the proprietary module and can't carry
         // @RequiresFeature; recognise them by path so they're gated on AI_SUPPORT — see
-        // AiToolRoutes and PaygChargeInterceptor, which classify the same routes as AI.
+        // AiToolRoutes
+        // and PaygChargeInterceptor, which classify the same routes as AI.
         boolean aiToolRoute = AiToolRoutes.matches(request);
         if (!hasAutoJobPostMapping && !hasRequiresFeature && !aiToolRoute) {
             skippedNoAnnotationCounter.increment();
@@ -143,7 +132,9 @@ public class EntitlementGuard implements HandlerInterceptor {
         }
 
         FeatureGate[] required =
-                aiToolRoute ? new FeatureGate[] {FeatureGate.AI_SUPPORT} : resolveRequiredGates(hm);
+                aiToolRoute
+                        ? new FeatureGate[] {FeatureGate.AI_SUPPORT}
+                        : resolveRequiredGates(resourceMethod, beanType);
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         boolean anonymous = isAnonymous(auth);
@@ -169,8 +160,7 @@ public class EntitlementGuard implements HandlerInterceptor {
         }
         if (teamId == null) {
             // Defensive: authenticated principal with no team — shouldn't happen post-migration,
-            // but we don't want to lock those users out. PaygChargeInterceptor short-circuits the
-            // same shape upstream.
+            // but we don't want to lock those users out.
             passCounter.increment();
             return true;
         }
@@ -184,13 +174,10 @@ public class EntitlementGuard implements HandlerInterceptor {
             return true;
         }
 
-        // API-key calls are always billable usage (BillingCategory.API) — there is no "free
-        // manual" path for a programmatic client the way there is for a JWT/web user, whose
-        // everyday tool calls are BYPASSED and never reach a gate. So once the team is over its
-        // free allowance / spending cap (DEGRADED), every API-key call hard-stops, regardless of
-        // which gate the route declares. The gate loop below would otherwise wave through an API
-        // call to a plain server tool (it needs only OFFSITE_PROCESSING, which survives DEGRADED),
-        // letting an unsubscribed team keep consuming the API for free past its allowance.
+        // API-key calls are always billable usage (BillingCategory.API). Once the team is over its
+        // free allowance / spending cap (DEGRADED), every API-key call hard-stops regardless of the
+        // gate the route declares — otherwise a plain server tool (needs only OFFSITE_PROCESSING,
+        // which survives DEGRADED) would let an unsubscribed team keep consuming the API for free.
         if (auth instanceof ApiKeyAuthenticationToken && snapshot.isDegraded()) {
             return write402PaygLimitReached(response, snapshot);
         }
@@ -205,11 +192,17 @@ public class EntitlementGuard implements HandlerInterceptor {
         return true;
     }
 
-    static FeatureGate[] resolveRequiredGates(HandlerMethod hm) {
-        RequiresFeature ann = AnnotationUtils.findAnnotation(hm.getMethod(), RequiresFeature.class);
-        if (ann == null) {
-            ann = AnnotationUtils.findAnnotation(hm.getBeanType(), RequiresFeature.class);
-        }
+    /**
+     * Test seam: accepts a handler (Spring HandlerMethod shape) and resolves its required gates.
+     */
+    static FeatureGate[] resolveRequiredGates(Object handler) {
+        Method method = resolveResourceMethodStatic(handler);
+        Class<?> beanType = resolveBeanTypeStatic(handler, method);
+        return resolveRequiredGates(method, beanType);
+    }
+
+    static FeatureGate[] resolveRequiredGates(Method method, Class<?> beanType) {
+        RequiresFeature ann = findAnnotation(method, beanType, RequiresFeature.class);
         if (ann != null && ann.value().length > 0) {
             return ann.value();
         }
@@ -220,7 +213,7 @@ public class EntitlementGuard implements HandlerInterceptor {
         if (auth == null || !auth.isAuthenticated()) {
             return true;
         }
-        // Spring's anonymous filter installs a token whose name is "anonymousUser".
+        // The anonymous token's name is "anonymousUser".
         return "anonymousUser".equals(auth.getName());
     }
 
@@ -260,16 +253,14 @@ public class EntitlementGuard implements HandlerInterceptor {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("error", "SIGNUP_REQUIRED");
         body.put("category", inferCategory(required));
-        writeJson(response, HttpStatus.UNAUTHORIZED, body);
+        writeJson(response, HTTP_UNAUTHORIZED, body);
         return false;
     }
 
     /**
      * 402 for a billable API-key call once the team is over its allowance / cap. The message is
-     * tailored by subscription state: an un-subscribed team is told to subscribe (their free
-     * allowance is spent); a subscribed team is told it hit its own spending cap. Programmatic
-     * clients get a stable {@code error} code plus the spend/cap numbers so they can surface
-     * something actionable.
+     * tailored by subscription state: an un-subscribed team is told to subscribe; a subscribed team
+     * is told it hit its own spending cap.
      */
     private boolean write402PaygLimitReached(
             HttpServletResponse response, EntitlementSnapshot snapshot) {
@@ -290,7 +281,7 @@ public class EntitlementGuard implements HandlerInterceptor {
         body.put(
                 "periodEnd",
                 Optional.ofNullable(snapshot.periodEnd()).map(Object::toString).orElse(null));
-        writeJson(response, HttpStatus.PAYMENT_REQUIRED, body);
+        writeJson(response, HTTP_PAYMENT_REQUIRED, body);
         return false;
     }
 
@@ -299,9 +290,6 @@ public class EntitlementGuard implements HandlerInterceptor {
         deniedDegradedCounter.increment();
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("error", "FEATURE_DEGRADED");
-        // subscribed tells the client which usage-limit modal to show: a subscribed team is over
-        // its spending cap; an un-subscribed one has spent its free allowance. (PAYG_LIMIT_REACHED
-        // already carries this; mirror it here so the JWT/web path can pick the right modal too.)
         body.put("subscribed", snapshot.subscribed());
         body.put("missingGates", missingGates(required, snapshot.enabledGates()));
         body.put("state", snapshot.state().name());
@@ -310,7 +298,7 @@ public class EntitlementGuard implements HandlerInterceptor {
                 Optional.ofNullable(snapshot.periodEnd()).map(Object::toString).orElse(null));
         body.put("capUnits", snapshot.periodCapUnits());
         body.put("spendUnits", snapshot.periodSpendUnits());
-        writeJson(response, HttpStatus.PAYMENT_REQUIRED, body);
+        writeJson(response, HTTP_PAYMENT_REQUIRED, body);
         return false;
     }
 
@@ -337,14 +325,13 @@ public class EntitlementGuard implements HandlerInterceptor {
         return "OFFSITE_PROCESSING";
     }
 
-    private void writeJson(
-            HttpServletResponse response, HttpStatus status, Map<String, Object> body) {
-        response.setStatus(status.value());
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+    private void writeJson(HttpServletResponse response, int status, Map<String, Object> body) {
+        response.setStatus(status);
+        response.setContentType(APPLICATION_JSON);
         response.setCharacterEncoding("UTF-8");
         try {
             byte[] payload = objectMapper.writeValueAsBytes(body);
-            response.setHeader(HttpHeaders.CONTENT_LENGTH, Integer.toString(payload.length));
+            response.setHeader("Content-Length", Integer.toString(payload.length));
             response.getOutputStream().write(payload);
             response.getOutputStream().flush();
         } catch (IOException e) {
@@ -353,5 +340,77 @@ public class EntitlementGuard implements HandlerInterceptor {
             log.warn("EntitlementGuard write response body failed", e);
             errorsCounter.increment();
         }
+    }
+
+    /**
+     * // TODO: Migration required - resolves the resource {@link Method} the original code read
+     * from Spring's {@code HandlerMethod}. Until wired to JAX-RS {@code ResourceInfo}, supports a
+     * handler that is already a {@link Method} or exposes a no-arg {@code getMethod()} returning
+     * one.
+     */
+    private Method resolveResourceMethod(Object handler) {
+        return resolveResourceMethodStatic(handler);
+    }
+
+    private static Method resolveResourceMethodStatic(Object handler) {
+        if (handler instanceof Method m) {
+            return m;
+        }
+        if (handler == null) {
+            return null;
+        }
+        try {
+            Method getter = handler.getClass().getMethod("getMethod");
+            Object result = getter.invoke(handler);
+            if (result instanceof Method m) {
+                return m;
+            }
+        } catch (ReflectiveOperationException ignored) {
+            // Handler does not expose a resolvable resource method.
+        }
+        return null;
+    }
+
+    private Class<?> resolveBeanType(Object handler, Method resourceMethod) {
+        return resolveBeanTypeStatic(handler, resourceMethod);
+    }
+
+    private static Class<?> resolveBeanTypeStatic(Object handler, Method resourceMethod) {
+        if (handler != null) {
+            try {
+                Method getter = handler.getClass().getMethod("getBeanType");
+                Object result = getter.invoke(handler);
+                if (result instanceof Class<?> c) {
+                    return c;
+                }
+            } catch (ReflectiveOperationException ignored) {
+                // Handler does not expose a bean type; fall back below.
+            }
+        }
+        return resourceMethod == null ? null : resourceMethod.getDeclaringClass();
+    }
+
+    /**
+     * Method-then-class annotation lookup replacing Spring's {@code
+     * AnnotationUtils.findAnnotation}. Checks the resource method first, then walks the bean type's
+     * superclass chain.
+     */
+    private static <A extends Annotation> A findAnnotation(
+            Method method, Class<?> beanType, Class<A> annotationType) {
+        if (method != null) {
+            A onMethod = method.getAnnotation(annotationType);
+            if (onMethod != null) {
+                return onMethod;
+            }
+        }
+        Class<?> type = beanType;
+        while (type != null && type != Object.class) {
+            A onType = type.getAnnotation(annotationType);
+            if (onType != null) {
+                return onType;
+            }
+            type = type.getSuperclass();
+        }
+        return null;
     }
 }

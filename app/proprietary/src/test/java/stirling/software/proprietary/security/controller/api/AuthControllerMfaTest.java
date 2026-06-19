@@ -1,33 +1,30 @@
 package stirling.software.proprietary.security.controller.api;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.util.List;
+import java.security.Principal;
 import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.MediaType;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import io.quarkus.security.identity.SecurityIdentity;
+
+import jakarta.ws.rs.core.Response;
 
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.model.api.user.MfaCodeRequest;
 import stirling.software.proprietary.security.service.CustomUserDetailsService;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
@@ -35,19 +32,19 @@ import stirling.software.proprietary.security.service.MfaService;
 import stirling.software.proprietary.security.service.TotpService;
 import stirling.software.proprietary.security.service.UserService;
 
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.json.JsonMapper;
-
+/**
+ * Migration (Spring MockMvc -> direct JAX-RS calls): {@code AuthController} MFA endpoints now
+ * return {@code jakarta.ws.rs.core.Response} and read the caller from the injected Quarkus {@code
+ * SecurityIdentity} (was a Spring {@code Authentication}/{@code Principal} via {@code
+ * .principal()}). The enable/disable endpoints bind a typed {@code MfaCodeRequest} body (was a JSON
+ * string). The controller has no constructor (field injection only), so the collaborators and the
+ * {@code SecurityIdentity} are assigned directly. Anonymous access is simulated with {@code
+ * isAnonymous()==true}.
+ */
 @ExtendWith(MockitoExtension.class)
 class AuthControllerMfaTest {
 
     private static final String USERNAME = "user@example.com";
-
-    private final ObjectMapper objectMapper = JsonMapper.builder().build();
-
-    private MockMvc mockMvc;
-    private Authentication authentication;
-    private User user;
 
     @Mock private UserService userService;
     @Mock private JwtServiceInterface jwtService;
@@ -55,98 +52,130 @@ class AuthControllerMfaTest {
     @Mock private LoginAttemptService loginAttemptService;
     @Mock private MfaService mfaService;
     @Mock private TotpService totpService;
+    @Mock private SecurityIdentity securityIdentity;
 
-    @InjectMocks private AuthController authController;
+    private AuthController authController;
+    private User user;
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(authController).build();
-        authentication = new UsernamePasswordAuthenticationToken(USERNAME, "password", List.of());
+        authController = new AuthController();
+        // @Inject fields are not populated without a CDI container; wire them directly.
+        authController.userService = userService;
+        authController.jwtService = jwtService;
+        authController.userDetailsService = userDetailsService;
+        authController.loginAttemptService = loginAttemptService;
+        authController.mfaService = mfaService;
+        authController.totpService = totpService;
+        authController.securityIdentity = securityIdentity;
+
         user = new User();
         user.setUsername(USERNAME);
         user.setAuthenticationType(AuthenticationType.WEB);
     }
 
+    /** Make {@code securityIdentity} report an authenticated principal named {@link #USERNAME}. */
+    private void authenticated() {
+        Principal principal = mock(Principal.class);
+        lenient().when(principal.getName()).thenReturn(USERNAME);
+        lenient().when(securityIdentity.isAnonymous()).thenReturn(false);
+        lenient().when(securityIdentity.getPrincipal()).thenReturn(principal);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> body(Response response) {
+        return (Map<String, Object>) response.getEntity();
+    }
+
+    private static MfaCodeRequest code(String value) {
+        MfaCodeRequest request = new MfaCodeRequest();
+        request.setCode(value);
+        return request;
+    }
+
     @Test
-    void setupMfaRequiresAuthentication() throws Exception {
-        mockMvc.perform(get("/api/v1/auth/mfa/setup"))
-                .andExpect(status().isUnauthorized())
-                .andExpect(content().json("{\"error\":\"Not authenticated\"}"));
+    void setupMfaRequiresAuthentication() {
+        when(securityIdentity.isAnonymous()).thenReturn(true);
+
+        Response response = authController.setupMfa();
+
+        assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), response.getStatus());
+        assertEquals("Not authenticated", body(response).get("error"));
     }
 
     @Test
     void setupMfaReturnsSecretAndUri() throws Exception {
+        authenticated();
         when(userService.findByUsernameIgnoreCaseWithSettings(USERNAME))
                 .thenReturn(Optional.of(user));
         when(mfaService.isMfaEnabled(user)).thenReturn(false);
         when(totpService.generateSecret()).thenReturn("SECRET");
         when(totpService.buildOtpAuthUri(USERNAME, "SECRET")).thenReturn("otpauth://test");
 
-        mockMvc.perform(get("/api/v1/auth/mfa/setup").principal(authentication))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.secret").value("SECRET"))
-                .andExpect(jsonPath("$.otpauthUri").value("otpauth://test"));
+        Response response = authController.setupMfa();
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals("SECRET", body(response).get("secret"));
+        assertEquals("otpauth://test", body(response).get("otpauthUri"));
 
         verify(mfaService).setSecret(user, "SECRET");
     }
 
     @Test
-    void setupMfaReturnsConflictWhenAlreadyEnabled() throws Exception {
+    void setupMfaReturnsConflictWhenAlreadyEnabled() {
+        authenticated();
         when(userService.findByUsernameIgnoreCaseWithSettings(USERNAME))
                 .thenReturn(Optional.of(user));
         when(mfaService.isMfaEnabled(user)).thenReturn(true);
 
-        mockMvc.perform(get("/api/v1/auth/mfa/setup").principal(authentication))
-                .andExpect(status().isConflict())
-                .andExpect(content().json("{\"error\":\"MFA already enabled\"}"));
+        Response response = authController.setupMfa();
+
+        assertEquals(Response.Status.CONFLICT.getStatusCode(), response.getStatus());
+        assertEquals("MFA already enabled", body(response).get("error"));
 
         verify(totpService, never()).generateSecret();
     }
 
     @Test
-    void setupMfaRejectsNonWebAuthenticationType() throws Exception {
+    void setupMfaRejectsNonWebAuthenticationType() {
         user.setAuthenticationType(AuthenticationType.OAUTH2);
+        authenticated();
         when(userService.findByUsernameIgnoreCaseWithSettings(USERNAME))
                 .thenReturn(Optional.of(user));
 
-        mockMvc.perform(get("/api/v1/auth/mfa/setup").principal(authentication))
-                .andExpect(status().isForbidden())
-                .andExpect(
-                        content()
-                                .json(
-                                        "{\"error\":\"MFA settings are only available for web accounts\"}"));
+        Response response = authController.setupMfa();
+
+        assertEquals(Response.Status.FORBIDDEN.getStatusCode(), response.getStatus());
+        assertEquals(
+                "MFA settings are only available for web accounts", body(response).get("error"));
     }
 
     @Test
-    void enableMfaRejectsMissingCode() throws Exception {
+    void enableMfaRejectsMissingCode() {
+        authenticated();
         when(userService.findByUsernameIgnoreCaseWithSettings(USERNAME))
                 .thenReturn(Optional.of(user));
         when(mfaService.getSecret(user)).thenReturn("SECRET");
 
-        mockMvc.perform(
-                        post("/api/v1/auth/mfa/enable")
-                                .principal(authentication)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content("{}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().json("{\"error\":\"MFA code is required\"}"));
+        Response response = authController.enableMfa(code(null));
+
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+        assertEquals("MFA code is required", body(response).get("error"));
     }
 
     @Test
     void enableMfaCompletesWorkflow() throws Exception {
+        authenticated();
         when(userService.findByUsernameIgnoreCaseWithSettings(USERNAME))
                 .thenReturn(Optional.of(user));
         when(mfaService.getSecret(user)).thenReturn("SECRET");
         when(totpService.getValidTimeStep("SECRET", "123456")).thenReturn(42L);
         when(mfaService.isTotpStepUsable(user, 42L)).thenReturn(true);
 
-        mockMvc.perform(
-                        post("/api/v1/auth/mfa/enable")
-                                .principal(authentication)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(Map.of("code", "123456"))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.enabled").value(true));
+        Response response = authController.enableMfa(code("123456"));
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(true, body(response).get("enabled"));
 
         verify(mfaService).enableMfa(user);
         verify(mfaService).markTotpStepUsed(user, 42L);
@@ -155,6 +184,7 @@ class AuthControllerMfaTest {
 
     @Test
     void disableMfaCompletesWorkflow() throws Exception {
+        authenticated();
         when(userService.findByUsernameIgnoreCaseWithSettings(USERNAME))
                 .thenReturn(Optional.of(user));
         when(mfaService.isMfaEnabled(user)).thenReturn(true);
@@ -162,31 +192,26 @@ class AuthControllerMfaTest {
         when(totpService.getValidTimeStep("SECRET", "654321")).thenReturn(7L);
         when(mfaService.isTotpStepUsable(user, 7L)).thenReturn(true);
 
-        mockMvc.perform(
-                        post("/api/v1/auth/mfa/disable")
-                                .principal(authentication)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(Map.of("code", "654321"))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.enabled").value(false));
+        Response response = authController.disableMfa(code("654321"));
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(false, body(response).get("enabled"));
 
         verify(mfaService).disableMfa(user);
         verify(mfaService).markTotpStepUsed(user, 7L);
     }
 
     @Test
-    void disableMfaReturnsDisabledWhenNotEnabled() throws Exception {
+    void disableMfaReturnsDisabledWhenNotEnabled() {
+        authenticated();
         when(userService.findByUsernameIgnoreCaseWithSettings(USERNAME))
                 .thenReturn(Optional.of(user));
         when(mfaService.isMfaEnabled(user)).thenReturn(false);
 
-        mockMvc.perform(
-                        post("/api/v1/auth/mfa/disable")
-                                .principal(authentication)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(Map.of("code", "654321"))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.enabled").value(false));
+        Response response = authController.disableMfa(code("654321"));
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(false, body(response).get("enabled"));
 
         verify(mfaService, never()).getSecret(user);
         verifyNoInteractions(totpService);
@@ -194,25 +219,29 @@ class AuthControllerMfaTest {
 
     @Test
     void cancelMfaSetupClearsPendingSecret() throws Exception {
+        authenticated();
         when(userService.findByUsernameIgnoreCaseWithSettings(USERNAME))
                 .thenReturn(Optional.of(user));
 
-        mockMvc.perform(post("/api/v1/auth/mfa/setup/cancel").principal(authentication))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.cleared").value(true));
+        Response response = authController.cancelMfaSetup();
+
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+        assertEquals(true, body(response).get("cleared"));
 
         verify(mfaService).clearPendingSecret(user);
     }
 
     @Test
     void cancelMfaSetupReturnsConflictWhenEnabled() throws Exception {
+        authenticated();
         when(userService.findByUsernameIgnoreCaseWithSettings(USERNAME))
                 .thenReturn(Optional.of(user));
         when(mfaService.isMfaEnabled(user)).thenReturn(true);
 
-        mockMvc.perform(post("/api/v1/auth/mfa/setup/cancel").principal(authentication))
-                .andExpect(status().isConflict())
-                .andExpect(content().json("{\"error\":\"MFA already enabled\"}"));
+        Response response = authController.cancelMfaSetup();
+
+        assertEquals(Response.Status.CONFLICT.getStatusCode(), response.getStatus());
+        assertEquals("MFA already enabled", body(response).get("error"));
 
         verify(mfaService, never()).clearPendingSecret(user);
     }

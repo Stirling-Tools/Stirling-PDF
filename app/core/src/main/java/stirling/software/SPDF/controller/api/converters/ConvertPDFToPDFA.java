@@ -71,16 +71,18 @@ import org.apache.xmpbox.schema.PDFAIdentificationSchema;
 import org.apache.xmpbox.schema.XMPBasicSchema;
 import org.apache.xmpbox.xml.DomXmpParser;
 import org.apache.xmpbox.xml.XmpSerializer;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -91,6 +93,8 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
@@ -99,6 +103,8 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @ConvertApi
+@jakarta.ws.rs.Path("/api/v1/convert")
+@ApplicationScoped
 @Slf4j
 @RequiredArgsConstructor
 public class ConvertPDFToPDFA {
@@ -573,21 +579,31 @@ public class ConvertPDFToPDFA {
         }
     }
 
+    @POST
+    @jakarta.ws.rs.Path("/pdf/pdfa")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/pdf/pdfa",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @Operation(
             summary = "Convert a PDF to a PDF/A or PDF/X",
             description =
                     "This endpoint converts a PDF file to a PDF/A or PDF/X file using Ghostscript (preferred) or PDFBox/LibreOffice (fallback). PDF/A is a format designed for long-term archiving, while PDF/X is optimized for print production. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<Resource> pdfToPdfA(@ModelAttribute PdfToPdfARequest request)
+    public Response pdfToPdfA(
+            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("outputFormat") String outputFormat,
+            @RestForm("strict") Boolean strict)
             throws Exception {
+        PdfToPdfARequest request = new PdfToPdfARequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        request.setOutputFormat(outputFormat);
+        request.setStrict(strict);
+
         MultipartFile inputFile = request.getFileInput();
-        String outputFormat = request.getOutputFormat();
 
         // Validate input file type
-        if (!MediaType.APPLICATION_PDF_VALUE.equals(inputFile.getContentType())) {
+        if (!"application/pdf".equals(inputFile.getContentType())) {
             log.error("Invalid input file type: {}", inputFile.getContentType());
             throw ExceptionUtils.createPdfFileRequiredException();
         }
@@ -617,8 +633,8 @@ public class ConvertPDFToPDFA {
         return missing;
     }
 
-    private ResponseEntity<Resource> handlePdfXConversion(
-            MultipartFile inputFile, String outputFormat) throws Exception {
+    private Response handlePdfXConversion(MultipartFile inputFile, String outputFormat)
+            throws Exception {
         PdfXProfile profile = PdfXProfile.fromRequest(outputFormat);
 
         String originalFileName = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
@@ -1810,7 +1826,7 @@ public class ConvertPDFToPDFA {
         return Files.readAllBytes(outputPdf);
     }
 
-    private ResponseEntity<Resource> handlePdfAConversion(
+    private Response handlePdfAConversion(
             MultipartFile inputFile, String outputFormat, boolean strict) throws Exception {
         PdfaProfile profile = PdfaProfile.fromRequest(outputFormat);
 
@@ -1894,18 +1910,19 @@ public class ConvertPDFToPDFA {
                         results.stream()
                                 .map(r -> r.getStandard() + ": " + r.getComplianceSummary())
                                 .collect(Collectors.joining("; "));
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
+                throw new WebApplicationException(
                         "Strict PDF/A mode enabled: Conversion is not perfectly compliant. Details: "
-                                + details);
+                                + details,
+                        Response.Status.BAD_REQUEST);
             }
         } catch (Exception e) {
-            if (e instanceof ResponseStatusException) {
-                throw (ResponseStatusException) e;
+            if (e instanceof WebApplicationException) {
+                throw (WebApplicationException) e;
             }
             log.error("Error during strict PDF/A verification", e);
-            throw new ResponseStatusException(
-                    HttpStatus.INTERNAL_SERVER_ERROR, "Error during strict PDF/A verification");
+            throw new WebApplicationException(
+                    "Error during strict PDF/A verification",
+                    Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 

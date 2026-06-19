@@ -11,14 +11,18 @@ import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.AttributeProvider;
 import org.commonmark.renderer.html.HtmlRenderer;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 
@@ -27,11 +31,15 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.api.GeneralFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.*;
 
 @ConvertApi
+@Path("/api/v1/convert")
+@ApplicationScoped
 @RequiredArgsConstructor
 public class ConvertMarkdownToPdf {
 
@@ -42,8 +50,11 @@ public class ConvertMarkdownToPdf {
 
     private final CustomHtmlSanitizer customHtmlSanitizer;
 
+    @POST
+    @Path("/markdown/pdf")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/markdown/pdf",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @StandardPdfResponse
@@ -52,8 +63,9 @@ public class ConvertMarkdownToPdf {
             description =
                     "This endpoint takes a Markdown file or ZIP (containing Markdown + images) input, converts it to HTML, and then to"
                             + " PDF format. Input:MARKDOWN Output:PDF Type:SISO")
-    public ResponseEntity<Resource> markdownToPdf(@ModelAttribute GeneralFile generalFile)
-            throws Exception {
+    public Response markdownToPdf(@RestForm("fileInput") FileUpload fileUpload) throws Exception {
+        GeneralFile generalFile = new GeneralFile();
+        generalFile.setFileInput(FileUploadMultipartFile.of(fileUpload));
         MultipartFile fileInput = generalFile.getFileInput();
 
         if (fileInput == null) {

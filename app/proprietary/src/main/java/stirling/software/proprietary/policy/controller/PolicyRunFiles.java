@@ -3,18 +3,18 @@ package stirling.software.proprietary.policy.controller;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.web.multipart.MultipartFile;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import jakarta.validation.Valid;
 
 import lombok.Data;
 
+import stirling.software.common.model.MultipartFile;
+
 /**
  * The files supplied to a policy run: the primary documents and any keyed supporting assets. Bound
- * from the multipart request via {@code @ModelAttribute}; the pipeline definition itself travels as
- * a separate typed {@code json} part.
+ * from the multipart request by the controller; the pipeline definition itself travels as a
+ * separate typed {@code json} part.
  *
  * <p>Wire form: {@code fileInput} (repeated) for primaries, and {@code assets[i].key} / {@code
  * assets[i].file} for each supporting asset.

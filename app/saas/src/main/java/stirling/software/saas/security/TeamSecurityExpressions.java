@@ -3,14 +3,14 @@ package stirling.software.saas.security;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Named;
 
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.common.model.enumeration.TeamRole;
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.SecurityContextHolder;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.saas.repository.TeamMembershipRepository;
@@ -24,8 +24,10 @@ import stirling.software.saas.repository.TeamMembershipRepository;
  * EnhancedJwtAuthenticationToken} from a Supabase JWT, or our existing API-key path) and looks the
  * local {@link User} row up via {@link UserService#findBySupabaseId(UUID)}.
  */
-@Component("teamSecurity")
-@Profile("saas")
+// TODO: Migration required - @Profile("saas") had no Quarkus equivalent here; gate bean
+// availability via build profile / @IfBuildProfile if saas-only activation is required.
+@ApplicationScoped
+@Named("teamSecurity")
 @RequiredArgsConstructor
 public class TeamSecurityExpressions {
 

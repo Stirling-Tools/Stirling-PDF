@@ -11,13 +11,16 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.util.Matrix;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +29,8 @@ import stirling.software.SPDF.model.api.general.ScalePagesRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -33,6 +38,8 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @GeneralApi
+@Path("/api/v1/general")
+@jakarta.enterprise.context.ApplicationScoped
 @Slf4j
 @RequiredArgsConstructor
 public class ScalePagesController {
@@ -83,17 +90,37 @@ public class ScalePagesController {
         return sizeMap;
     }
 
+    @POST
+    @Path("/scale-pages")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
             value = "/scale-pages",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @Operation(
             summary = "Change the size of a PDF page/document",
             description =
                     "This operation takes an input PDF file and the size to scale the pages to in"
                             + " the output PDF file. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<Resource> scalePages(@ModelAttribute ScalePagesRequest request)
+    public Response scalePages(
+            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("fileId") String fileId,
+            @RestForm("pageSize") String pageSizeForm,
+            @RestForm("orientation") String orientationForm,
+            @RestForm("scaleFactor") Float scaleFactorForm)
             throws IOException {
+
+        ScalePagesRequest request = new ScalePagesRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        request.setFileId(fileId);
+        request.setPageSize(pageSizeForm);
+        if (orientationForm != null) {
+            request.setOrientation(orientationForm);
+        }
+        if (scaleFactorForm != null) {
+            request.setScaleFactor(scaleFactorForm);
+        }
+
         MultipartFile file = request.getFileInput();
         String targetPDRectangle = request.getPageSize();
         String orientation = request.getOrientation();

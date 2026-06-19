@@ -17,13 +17,16 @@ import javax.imageio.ImageIO;
 import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +37,7 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.CheckProgramInstall;
@@ -47,6 +51,8 @@ import stirling.software.common.util.WebResponseUtils;
 
 @MiscApi
 @Slf4j
+@ApplicationScoped
+@jakarta.ws.rs.Path("/api/v1/misc")
 @RequiredArgsConstructor
 public class ExtractImageScansController {
 
@@ -56,9 +62,12 @@ public class ExtractImageScansController {
     private final TempFileManager tempFileManager;
 
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/extract-image-scans",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
+    @POST
+    @jakarta.ws.rs.Path("/extract-image-scans")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @MultiFileResponse
     @Operation(
             summary = "Extract image scans from an input file",
@@ -67,10 +76,23 @@ public class ExtractImageScansController {
                             + " parameters. Users can specify angle threshold, tolerance, minimum area,"
                             + " minimum contour area, and border size. Input:PDF Output:IMAGE/ZIP"
                             + " Type:SIMO")
-    public ResponseEntity<Resource> extractImageScans(
-            @ModelAttribute ExtractImageScansRequest request)
+    public Response extractImageScans(
+            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("angleThreshold") int angleThreshold,
+            @RestForm("tolerance") int tolerance,
+            @RestForm("minArea") int minArea,
+            @RestForm("minContourArea") int minContourArea,
+            @RestForm("borderSize") int borderSize)
             throws IOException, InterruptedException {
-        MultipartFile inputFile = request.getFileInput();
+        ExtractImageScansRequest request = new ExtractImageScansRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        request.setAngleThreshold(angleThreshold);
+        request.setTolerance(tolerance);
+        request.setMinArea(minArea);
+        request.setMinContourArea(minContourArea);
+        request.setBorderSize(borderSize);
+
+        var inputFile = request.getFileInput();
 
         String fileName = inputFile.getOriginalFilename();
         String extension = fileName.substring(fileName.lastIndexOf('.') + 1);
@@ -200,7 +222,7 @@ public class ExtractImageScansController {
                     }
                 }
 
-                ResponseEntity<Resource> response =
+                Response response =
                         WebResponseUtils.zipFileToWebResponse(finalOutput, outputZipFilename);
                 finalOutputOwnershipTransferred = true;
                 return response;
@@ -217,11 +239,11 @@ public class ExtractImageScansController {
                     out.write(imageBytes);
                 }
 
-                ResponseEntity<Resource> response =
+                Response response =
                         WebResponseUtils.fileToWebResponse(
                                 finalOutput,
                                 GeneralUtils.generateFilename(fileName, ".png"),
-                                MediaType.IMAGE_PNG);
+                                MediaType.valueOf("image/png"));
                 finalOutputOwnershipTransferred = true;
                 return response;
             }

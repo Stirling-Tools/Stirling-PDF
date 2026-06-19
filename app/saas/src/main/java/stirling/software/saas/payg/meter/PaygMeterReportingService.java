@@ -1,20 +1,23 @@
 package stirling.software.saas.payg.meter;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Profile;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,36 +36,35 @@ import stirling.software.saas.payg.repository.PaygMeterEventLogRepository;
  * <p>Failure mode: we owe Stripe an event but the customer's bill via the ledger is correct. Log
  * WARN, bump {@code payg.meter.errors}, and swallow — durability comes from the {@code
  * payg_meter_event_log} row written around every attempt (pending → posted/failed) and {@link
- * PaygMeterReconcileScheduler}, which retries unposted rows, not from retries here. Caller's {@code
- * close()} must not roll back because Stripe wobbled.
+ * PaygMeterReconcileScheduler}, which retries unposted rows, not from retries here.
  *
  * <p>Both config keys default to empty so unit tests / local dev never crash on missing env. When
- * blank, this service no-ops at WARN-debug level — useful for SaaS smoke tests that don't want to
- * touch the real edge function.
+ * blank, this service no-ops at WARN-debug level.
  */
-@Service
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 @Slf4j
 public class PaygMeterReportingService {
 
     private final String endpoint;
     private final String authToken;
-    private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final HttpClient httpClient =
+            HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
     private final PaygMeterEventLogRepository eventLogRepository;
     private final Counter errorsCounter;
 
     /** Stripe error bodies can be large; the column is TEXT but we cap to keep rows sane. */
     private static final int MAX_ERROR_BODY = 4000;
 
+    @Inject
     public PaygMeterReportingService(
-            @Value("${payg.meter.endpoint:}") String endpoint,
-            @Value("${payg.meter.auth-token:}") String authToken,
-            RestTemplate saasRestTemplate,
+            @ConfigProperty(name = "payg.meter.endpoint", defaultValue = "") String endpoint,
+            @ConfigProperty(name = "payg.meter.auth-token", defaultValue = "") String authToken,
             PaygMeterEventLogRepository eventLogRepository,
             MeterRegistry meterRegistry) {
         this.endpoint = endpoint;
         this.authToken = authToken;
-        this.restTemplate = saasRestTemplate;
         this.eventLogRepository = eventLogRepository;
         this.errorsCounter =
                 Counter.builder("payg.meter.errors")
@@ -77,9 +79,7 @@ public class PaygMeterReportingService {
      * pods never charges twice.
      *
      * <p>Flow: write a pending {@code payg_meter_event_log} row (idempotent), POST to the edge fn,
-     * then stamp the row posted or record the Stripe error. The row is what {@link
-     * PaygMeterReconcileScheduler} retries, so a failed POST is recoverable rather than silently
-     * dropped.
+     * then stamp the row posted or record the Stripe error.
      *
      * <p>Never throws. The wallet ledger entry is the source of truth for what the customer is
      * billed; if the POST fails the only loss is that Stripe doesn't see this event until reconcile
@@ -110,9 +110,8 @@ public class PaygMeterReportingService {
         }
 
         // Durable pending row before the POST so a failure leaves a record the reconcile scheduler
-        // can retry. Idempotent insert (ON CONFLICT DO NOTHING) — the completion + stale-close
-        // triggers and reconcile retries all share the key. Best-effort: a logging failure must
-        // never stop us from actually metering.
+        // can retry. Idempotent insert (ON CONFLICT DO NOTHING). Best-effort: a logging failure
+        // must never stop us from actually metering.
         try {
             eventLogRepository.insertPending(teamId, jobId, idempotencyKey, units);
         } catch (Exception e) {
@@ -151,12 +150,6 @@ public class PaygMeterReportingService {
             BillingCategory category,
             String idempotencyKey) {
         try {
-            HttpHeaders headers = new HttpHeaders();
-            if (authToken != null && !authToken.isBlank()) {
-                headers.setBearerAuth(authToken);
-            }
-            headers.setContentType(MediaType.APPLICATION_JSON);
-
             Map<String, Object> body =
                     Map.of(
                             "team_id",
@@ -170,26 +163,42 @@ public class PaygMeterReportingService {
                             idempotencyKey,
                             "metadata",
                             Map.of("category", category == null ? "UNKNOWN" : category.name()));
+            String json = objectMapper.writeValueAsString(body);
 
-            ResponseEntity<String> response =
-                    restTemplate.exchange(
-                            endpoint,
-                            HttpMethod.POST,
-                            new HttpEntity<>(body, headers),
-                            String.class);
+            HttpRequest.Builder builder =
+                    HttpRequest.newBuilder()
+                            .uri(URI.create(endpoint))
+                            .header("Content-Type", "application/json")
+                            .timeout(Duration.ofSeconds(30))
+                            .POST(HttpRequest.BodyPublishers.ofString(json));
+            if (authToken != null && !authToken.isBlank()) {
+                builder.header("Authorization", "Bearer " + authToken);
+            }
 
-            if (response.getStatusCode().is2xxSuccessful()) {
+            HttpResponse<String> response =
+                    httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+
+            int statusCode = response.statusCode();
+            if (statusCode >= 200 && statusCode < 300) {
                 return PostOutcome.ok();
             }
             log.warn(
                     "Meter event POST returned {} for team {} key {}: {}",
-                    response.getStatusCode(),
+                    statusCode,
                     teamId,
                     idempotencyKey,
-                    response.getBody());
+                    response.body());
             errorsCounter.increment();
-            return PostOutcome.error(
-                    String.valueOf(response.getStatusCode().value()), response.getBody());
+            return PostOutcome.error(String.valueOf(statusCode), response.body());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.warn(
+                    "Meter event POST interrupted for team {} key {}: {}",
+                    teamId,
+                    idempotencyKey,
+                    e.getMessage());
+            errorsCounter.increment();
+            return PostOutcome.error("exception", e.getMessage());
         } catch (Exception e) {
             // Catch-all by design: this method MUST NOT propagate. The customer's bill via the
             // ledger is correct; we just owe Stripe an event the reconcile scheduler will retry.

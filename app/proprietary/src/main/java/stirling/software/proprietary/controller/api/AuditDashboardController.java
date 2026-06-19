@@ -13,25 +13,23 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.springdoc.core.annotations.ParameterObject;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
+import io.quarkus.panache.common.Page;
+import io.quarkus.panache.common.Sort;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.BeanParam;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -50,9 +48,9 @@ import tools.jackson.databind.ObjectMapper;
 
 /** REST endpoints for the audit dashboard. */
 @Slf4j
-@RestController
-@RequestMapping("/api/v1/audit")
-@PreAuthorize("hasRole('ADMIN')")
+@ApplicationScoped
+@jakarta.ws.rs.Path("/api/v1/audit")
+@RolesAllowed("ADMIN")
 @RequiredArgsConstructor
 @EnterpriseEndpoint
 @Tag(name = "Audit", description = "Only Enterprise - Audit related operations")
@@ -62,14 +60,20 @@ public class AuditDashboardController {
     private final ObjectMapper objectMapper;
 
     /** Get audit events data for the dashboard tables. */
-    @GetMapping("/data")
+    @GET
+    @jakarta.ws.rs.Path("/data")
     @Operation(summary = "Get audit events data")
-    public AuditDataResponse getAuditData(@ParameterObject AuditDataRequest request) {
+    public AuditDataResponse getAuditData(@BeanParam AuditDataRequest request) {
 
-        Pageable pageable =
-                PageRequest.of(
-                        request.getPage(), request.getSize(), Sort.by("timestamp").descending());
-        Page<PersistentAuditEvent> events;
+        // TODO: Migration required - PersistentAuditEventRepository is a collaborator that must be
+        // migrated to io.quarkus.hibernate.orm.panache.PanacheRepositoryBase<PersistentAuditEvent,
+        // Long>. Its paged finders should return io.quarkus.panache.common.PanacheQuery (or apply
+        // the Page/Sort built here) instead of org.springframework.data.domain.Page. The pagination
+        // request below is expressed with Panache Page/Sort; once the repository accepts these the
+        // .page(...)/.list()/.count()/.pageCount() calls used here will resolve.
+        Page page = Page.of(request.getPage(), request.getSize());
+        Sort sort = Sort.by("timestamp", Sort.Direction.Descending);
+        io.quarkus.hibernate.orm.panache.PanacheQuery<PersistentAuditEvent> query;
 
         String type = request.getType();
         String principal = request.getPrincipal();
@@ -79,49 +83,53 @@ public class AuditDashboardController {
         if (type != null && principal != null && startDate != null && endDate != null) {
             Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
             Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
-            events =
-                    auditRepository.findByPrincipalAndTypeAndTimestampBetween(
-                            principal, type, start, end, pageable);
+            query =
+                    auditRepository
+                            .findByPrincipalAndTypeAndTimestampBetween(principal, type, start, end)
+                            .page(page);
         } else if (type != null && principal != null) {
-            events = auditRepository.findByPrincipalAndType(principal, type, pageable);
+            query = auditRepository.findByPrincipalAndType(principal, type).page(page);
         } else if (type != null && startDate != null && endDate != null) {
             Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
             Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
-            events = auditRepository.findByTypeAndTimestampBetween(type, start, end, pageable);
+            query = auditRepository.findByTypeAndTimestampBetween(type, start, end).page(page);
         } else if (principal != null && startDate != null && endDate != null) {
             Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
             Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
-            events =
-                    auditRepository.findByPrincipalAndTimestampBetween(
-                            principal, start, end, pageable);
+            query =
+                    auditRepository
+                            .findByPrincipalAndTimestampBetween(principal, start, end)
+                            .page(page);
         } else if (startDate != null && endDate != null) {
             Instant start = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
             Instant end = endDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
-            events = auditRepository.findByTimestampBetween(start, end, pageable);
+            query = auditRepository.findByTimestampBetween(start, end).page(page);
         } else if (type != null) {
-            events = auditRepository.findByType(type, pageable);
+            query = auditRepository.findByType(type).page(page);
         } else if (principal != null) {
-            events = auditRepository.findByPrincipal(principal, pageable);
+            query = auditRepository.findByPrincipal(principal).page(page);
         } else {
-            events = auditRepository.findAll(pageable);
+            query = auditRepository.findAll(sort).page(page);
         }
 
         // Logging
-        List<PersistentAuditEvent> content = events.getContent();
+        List<PersistentAuditEvent> content = query.list();
 
-        return new AuditDataResponse(
-                content, events.getTotalPages(), events.getTotalElements(), events.getNumber());
+        return new AuditDataResponse(content, query.pageCount(), query.count(), query.page().index);
     }
 
     /** Get statistics for charts (last X days). Existing behavior preserved. */
-    @GetMapping("/stats")
+    @GET
+    @jakarta.ws.rs.Path("/stats")
+    @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Get audit statistics for the last N days")
     public AuditStatsResponse getAuditStats(
             @Schema(
                             description = "Number of days to look back for audit events",
                             example = "7",
                             requiredMode = Schema.RequiredMode.REQUIRED)
-                    @RequestParam(value = "days", defaultValue = "7")
+                    @QueryParam("days")
+                    @DefaultValue("7")
                     int days) {
 
         // Get events from the last X days
@@ -158,9 +166,10 @@ public class AuditDashboardController {
     }
 
     // /** Advanced statistics using repository aggregations, with explicit date range. */
-    // @GetMapping("/stats/range")
+    // @GET
+    // @Path("/stats/range")
     // @Operation(summary = "Get audit statistics for a date range (aggregated in DB)")
-    // public Map<String, Object> getAuditStatsRange(@ParameterObject AuditDateExportRequest
+    // public Map<String, Object> getAuditStatsRange(@BeanParam AuditDateExportRequest
     // request) {
 
     //     LocalDate startDate = request.getStartDate();
@@ -199,7 +208,9 @@ public class AuditDashboardController {
     // }
 
     /** Get all unique event types from the database for filtering. */
-    @GetMapping("/types")
+    @GET
+    @jakarta.ws.rs.Path("/types")
+    @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Get all unique audit event types")
     public List<String> getAuditTypes() {
         // Get distinct event types from the database
@@ -218,9 +229,10 @@ public class AuditDashboardController {
     }
 
     /** Export audit data as CSV. */
-    @GetMapping("/export/csv")
+    @GET
+    @jakarta.ws.rs.Path("/export/csv")
     @Operation(summary = "Export audit data as CSV")
-    public ResponseEntity<byte[]> exportAuditData(@ParameterObject AuditExportRequest request) {
+    public Response exportAuditData(@BeanParam AuditExportRequest request) {
 
         List<PersistentAuditEvent> events = getAuditEventsByCriteria(request);
 
@@ -241,17 +253,19 @@ public class AuditDashboardController {
         byte[] csvBytes = csv.toString().getBytes(StandardCharsets.UTF_8);
 
         // Set up HTTP headers for download
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-        headers.setContentDispositionFormData("attachment", "audit_export.csv");
-
-        return ResponseEntity.ok().headers(headers).body(csvBytes);
+        return Response.ok(csvBytes)
+                .type(MediaType.APPLICATION_OCTET_STREAM)
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "form-data; name=\"attachment\"; filename=\"audit_export.csv\"")
+                .build();
     }
 
     /** Export audit data as JSON. */
-    @GetMapping("/export/json")
+    @GET
+    @jakarta.ws.rs.Path("/export/json")
     @Operation(summary = "Export audit data as JSON")
-    public ResponseEntity<byte[]> exportAuditDataJson(@ParameterObject AuditExportRequest request) {
+    public Response exportAuditDataJson(@BeanParam AuditExportRequest request) {
 
         List<PersistentAuditEvent> events = getAuditEventsByCriteria(request);
 
@@ -260,66 +274,71 @@ public class AuditDashboardController {
             byte[] jsonBytes = objectMapper.writeValueAsBytes(events);
 
             // Set up HTTP headers for download
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.setContentDispositionFormData("attachment", "audit_export.json");
-
-            return ResponseEntity.ok().headers(headers).body(jsonBytes);
+            return Response.ok(jsonBytes)
+                    .type(MediaType.APPLICATION_JSON)
+                    .header(
+                            HttpHeaders.CONTENT_DISPOSITION,
+                            "form-data; name=\"attachment\"; filename=\"audit_export.json\"")
+                    .build();
         } catch (JacksonException e) {
             log.error("Error serializing audit events to JSON", e);
-            return ResponseEntity.internalServerError().build();
+            return Response.serverError().build();
         }
     }
 
     // /** Get all unique principals. */
-    // @GetMapping("/principals")
+    // @GET
+    // @Path("/principals")
     // @Operation(summary = "Get all distinct principals")
     // public List<String> getPrincipals() {
     //     return auditRepository.findDistinctPrincipals();
     // }
 
     // /** Get principals by event type. */
-    // @GetMapping("/types/{type}/principals")
+    // @GET
+    // @Path("/types/{type}/principals")
     // @Operation(summary = "Get distinct principals for a given type")
-    // public List<String> getPrincipalsByType(@PathVariable("type") String type) {
+    // public List<String> getPrincipalsByType(@PathParam("type") String type) {
     //     return auditRepository.findDistinctPrincipalsByType(type);
     // }
 
     // /** Latest helpers */
-    // @GetMapping("/latest")
+    // @GET
+    // @Path("/latest")
     // @Operation(summary = "Get the latest audit event, optionally filtered by type or principal")
-    // public ResponseEntity<PersistentAuditEvent> getLatest(
-    //         @RequestParam(value = "type", required = false) String type,
-    //         @RequestParam(value = "principal", required = false) String principal) {
+    // public Response getLatest(
+    //         @QueryParam("type") String type,
+    //         @QueryParam("principal") String principal) {
     //     if (type != null) {
     //         return auditRepository
     //                 .findTopByTypeOrderByTimestampDesc(type)
-    //                 .map(ResponseEntity::ok)
-    //                 .orElse(ResponseEntity.noContent().build());
+    //                 .map(e -> Response.ok(e).build())
+    //                 .orElse(Response.noContent().build());
     //     } else if (principal != null) {
     //         return auditRepository
     //                 .findTopByPrincipalOrderByTimestampDesc(principal)
-    //                 .map(ResponseEntity::ok)
-    //                 .orElse(ResponseEntity.noContent().build());
+    //                 .map(e -> Response.ok(e).build())
+    //                 .orElse(Response.noContent().build());
     //     }
     //     return auditRepository
     //             .findTopByOrderByTimestampDesc()
-    //             .map(ResponseEntity::ok)
-    //             .orElse(ResponseEntity.noContent().build());
+    //             .map(e -> Response.ok(e).build())
+    //             .orElse(Response.noContent().build());
     // }
 
     /** Cleanup endpoints data before a certain date */
-    @DeleteMapping("/cleanup/before")
+    @DELETE
+    @jakarta.ws.rs.Path("/cleanup/before")
+    @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Cleanup audit events before a certain date",
             description = "Deletes all audit events before the specified date.")
     public Map<String, Object> cleanupBefore(
-            @RequestParam(value = "date", required = true)
+            @QueryParam("date")
                     @Schema(
                             description = "The cutoff date for cleanup",
                             example = "2025-01-01",
                             format = "date")
-                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
                     LocalDate date) {
         if (date != null && !date.isAfter(LocalDate.now())) {
             Instant cutoff = date.atStartOfDay(ZoneId.systemDefault()).toInstant();
@@ -388,7 +407,7 @@ public class AuditDashboardController {
         } else if (principal != null) {
             events = auditRepository.findAllByPrincipalForExport(principal);
         } else {
-            events = auditRepository.findAll();
+            events = auditRepository.listAll();
         }
         return events;
     }

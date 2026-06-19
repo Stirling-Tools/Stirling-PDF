@@ -1,7 +1,5 @@
 package stirling.software.saas.payg.cap;
 
-import org.springframework.web.servlet.HandlerMapping;
-
 import jakarta.servlet.http.HttpServletRequest;
 
 /**
@@ -28,6 +26,12 @@ public final class AiToolRoutes {
     /** Trailing slash so it matches the tool sub-paths, not a bare {@code /api/v1/ai/tools}. */
     public static final String PREFIX = "/api/v1/ai/tools/";
 
+    // TODO: Migration required - literal value of the former Spring constant
+    // HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE. Replace with the JAX-RS route template
+    // (UriInfo / ResourceInfo) once the interceptor is converted to a @Provider filter.
+    private static final String BEST_MATCHING_PATTERN_ATTRIBUTE =
+            "org.springframework.web.servlet.HandlerMapping.bestMatchingPattern";
+
     private AiToolRoutes() {}
 
     /**
@@ -35,7 +39,7 @@ public final class AiToolRoutes {
      * pattern (context-path independent, set by Spring MVC) and falls back to the raw request URI.
      */
     public static boolean matches(HttpServletRequest request) {
-        Object pattern = request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+        Object pattern = request.getAttribute(BEST_MATCHING_PATTERN_ATTRIBUTE);
         String path = pattern instanceof String s ? s : request.getRequestURI();
         return path != null && path.startsWith(PREFIX);
     }

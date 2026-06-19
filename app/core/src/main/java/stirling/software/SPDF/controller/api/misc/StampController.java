@@ -2,7 +2,6 @@ package stirling.software.SPDF.controller.api.misc;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.beans.PropertyEditorSupport;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -30,16 +29,17 @@ import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.apache.pdfbox.util.Matrix;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.InitBinder;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 
@@ -47,6 +47,9 @@ import stirling.software.SPDF.model.api.misc.AddStampRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.io.ClassPathResource;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -56,6 +59,8 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @MiscApi
+@Path("/api/v1/misc")
+@ApplicationScoped
 @RequiredArgsConstructor
 public class StampController {
 
@@ -70,25 +75,16 @@ public class StampController {
     // Placeholder for escaped @ symbol (using Unicode private use area)
     private static final String ESCAPED_AT_PLACEHOLDER = "\uE000ESCAPED_AT\uE000";
 
-    /**
-     * Initialize data binder for multipart file uploads. This method registers a custom editor for
-     * MultipartFile to handle file uploads. It sets the MultipartFile to null if the uploaded file
-     * is empty. This is necessary to avoid binding errors when the file is not present.
-     */
-    @InitBinder
-    public void initBinder(WebDataBinder binder) {
-        binder.registerCustomEditor(
-                MultipartFile.class,
-                new PropertyEditorSupport() {
-                    @Override
-                    public void setAsText(String text) throws IllegalArgumentException {
-                        setValue(null);
-                    }
-                });
-    }
+    // MIGRATION (Spring->JAX-RS): the @InitBinder/PropertyEditorSupport that nulled out empty
+    // MultipartFile uploads has been removed. With RESTEasy Reactive multipart binding, an absent
+    // "stampImage" form part simply yields a null FileUpload, so FileUploadMultipartFile.of(...)
+    // returns null and the existing null-checks below cover the empty-file case.
 
+    @POST
+    @Path("/add-stamp")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/add-stamp",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @Operation(
@@ -97,8 +93,54 @@ public class StampController {
                     "This endpoint adds a stamp to a given PDF file. Users can specify the stamp"
                             + " type (text or image), rotation, opacity, width spacer, and height"
                             + " spacer. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<Resource> addStamp(@ModelAttribute AddStampRequest request)
+    public Response addStamp(
+            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("fileId") String fileId,
+            @RestForm("pageNumbers") String pageNumbers,
+            @RestForm("stampType") String stampType,
+            @RestForm("stampText") String stampText,
+            @RestForm("stampImage") FileUpload stampImageUpload,
+            @RestForm("alphabet") String alphabet,
+            @RestForm("fontSize") Float fontSizeForm,
+            @RestForm("rotation") Float rotationForm,
+            @RestForm("opacity") Float opacityForm,
+            @RestForm("position") Integer positionForm,
+            @RestForm("overrideX") Float overrideXForm,
+            @RestForm("overrideY") Float overrideYForm,
+            @RestForm("customMargin") String customMargin,
+            @RestForm("customColor") String customColor)
             throws IOException, Exception {
+        AddStampRequest request = new AddStampRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        request.setFileId(fileId);
+        request.setPageNumbers(pageNumbers);
+        request.setStampType(stampType);
+        request.setStampText(stampText);
+        request.setStampImage(FileUploadMultipartFile.of(stampImageUpload));
+        if (alphabet != null) {
+            request.setAlphabet(alphabet);
+        }
+        if (fontSizeForm != null) {
+            request.setFontSize(fontSizeForm);
+        }
+        if (rotationForm != null) {
+            request.setRotation(rotationForm);
+        }
+        if (opacityForm != null) {
+            request.setOpacity(opacityForm);
+        }
+        if (positionForm != null) {
+            request.setPosition(positionForm);
+        }
+        if (overrideXForm != null) {
+            request.setOverrideX(overrideXForm);
+        }
+        if (overrideYForm != null) {
+            request.setOverrideY(overrideYForm);
+        }
+        request.setCustomMargin(customMargin);
+        request.setCustomColor(customColor);
+
         MultipartFile pdfFile = request.getFileInput();
         String pdfFileName = pdfFile.getOriginalFilename();
         if (pdfFileName.contains("..") || pdfFileName.startsWith("/")) {
@@ -106,8 +148,6 @@ public class StampController {
                     "error.invalid.filepath", "Invalid PDF file path: " + pdfFileName);
         }
 
-        String stampType = request.getStampType();
-        String stampText = request.getStampText();
         MultipartFile stampImage = request.getStampImage();
         if ("image".equalsIgnoreCase(stampType)) {
             if (stampImage == null) {
@@ -126,7 +166,6 @@ public class StampController {
                         stampImageName);
             }
         }
-        String alphabet = request.getAlphabet();
         float fontSize = request.getFontSize();
         float rotation = request.getRotation();
         float opacity = request.getOpacity();
@@ -134,7 +173,6 @@ public class StampController {
         float overrideX = request.getOverrideX(); // New field for X override
         float overrideY = request.getOverrideY(); // New field for Y override
 
-        String customColor = request.getCustomColor();
         float marginFactor =
                 switch (request.getCustomMargin().toLowerCase(Locale.ROOT)) {
                     case "small" -> 0.02f;
@@ -147,9 +185,9 @@ public class StampController {
         // Load the input PDF
         try (PDDocument document = pdfDocumentFactory.load(pdfFile)) {
 
-            List<Integer> pageNumbers = request.getPageNumbersList(document, true);
+            List<Integer> pageNumberList = request.getPageNumbersList(document, true);
 
-            for (int pageIndex : pageNumbers) {
+            for (int pageIndex : pageNumberList) {
                 int zeroBasedIndex = pageIndex - 1;
                 if (zeroBasedIndex >= 0 && zeroBasedIndex < document.getNumberOfPages()) {
                     PDPage page = document.getPage(zeroBasedIndex);
@@ -177,7 +215,7 @@ public class StampController {
                                 rotation,
                                 position,
                                 fontSize,
-                                alphabet,
+                                request.getAlphabet(),
                                 overrideX,
                                 overrideY,
                                 margin,

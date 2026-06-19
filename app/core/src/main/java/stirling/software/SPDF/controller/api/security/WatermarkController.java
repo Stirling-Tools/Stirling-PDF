@@ -2,7 +2,6 @@ package stirling.software.SPDF.controller.api.security;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.beans.PropertyEditorSupport;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -23,18 +22,17 @@ import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.apache.pdfbox.util.Matrix;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.InitBinder;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.swagger.v3.oas.annotations.Operation;
 
-import jakarta.validation.Valid;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 
@@ -43,6 +41,9 @@ import stirling.software.SPDF.model.api.security.AddWatermarkRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.io.ClassPathResource;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PdfUtils;
@@ -51,26 +52,19 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @SecurityApi
+@Path("/api/v1/security")
+@ApplicationScoped
 @RequiredArgsConstructor
 public class WatermarkController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
-    @InitBinder
-    public void initBinder(WebDataBinder binder) {
-        binder.registerCustomEditor(
-                MultipartFile.class,
-                new PropertyEditorSupport() {
-                    @Override
-                    public void setAsText(String text) throws IllegalArgumentException {
-                        setValue(null);
-                    }
-                });
-    }
-
+    @POST
+    @Path("/add-watermark")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/add-watermark",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @StandardPdfResponse
@@ -80,15 +74,53 @@ public class WatermarkController {
                     "This endpoint adds a watermark to a given PDF file. Users can specify the"
                             + " watermark type (text or image), rotation, opacity, width spacer, and"
                             + " height spacer. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<Resource> addWatermark(@Valid @ModelAttribute AddWatermarkRequest request)
+    public Response addWatermark(
+            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("fileId") String fileId,
+            @RestForm("watermarkType") String watermarkType,
+            @RestForm("watermarkText") String watermarkText,
+            @RestForm("watermarkImage") FileUpload watermarkImageUpload,
+            @RestForm("alphabet") String alphabet,
+            @RestForm("fontSize") Float fontSizeForm,
+            @RestForm("rotation") Float rotationForm,
+            @RestForm("opacity") Float opacityForm,
+            @RestForm("widthSpacer") Integer widthSpacerForm,
+            @RestForm("heightSpacer") Integer heightSpacerForm,
+            @RestForm("customColor") String customColor,
+            @RestForm("convertPDFToImage") Boolean convertPDFToImageForm)
             throws IOException, Exception {
+        AddWatermarkRequest request = new AddWatermarkRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        request.setFileId(fileId);
+        request.setWatermarkType(watermarkType);
+        request.setWatermarkText(watermarkText);
+        request.setWatermarkImage(FileUploadMultipartFile.of(watermarkImageUpload));
+        request.setAlphabet(alphabet);
+        if (fontSizeForm != null) {
+            request.setFontSize(fontSizeForm);
+        }
+        if (rotationForm != null) {
+            request.setRotation(rotationForm);
+        }
+        if (opacityForm != null) {
+            request.setOpacity(opacityForm);
+        }
+        if (widthSpacerForm != null) {
+            request.setWidthSpacer(widthSpacerForm);
+        }
+        if (heightSpacerForm != null) {
+            request.setHeightSpacer(heightSpacerForm);
+        }
+        request.setCustomColor(customColor);
+        request.setConvertPDFToImage(convertPDFToImageForm);
+
         MultipartFile pdfFile = request.getFileInput();
         String pdfFileName = pdfFile.getOriginalFilename();
         if (pdfFileName != null && (pdfFileName.contains("..") || pdfFileName.startsWith("/"))) {
             throw new SecurityException("Invalid file path in pdfFile");
         }
-        String watermarkType = request.getWatermarkType();
-        String watermarkText = request.getWatermarkText();
+        String watermarkTypeValue = request.getWatermarkType();
+        String watermarkTextValue = request.getWatermarkText();
         MultipartFile watermarkImage = request.getWatermarkImage();
         if (watermarkImage != null) {
             String watermarkImageFileName = watermarkImage.getOriginalFilename();
@@ -98,13 +130,13 @@ public class WatermarkController {
                 throw new SecurityException("Invalid file path in watermarkImage");
             }
         }
-        String alphabet = request.getAlphabet();
+        String alphabetValue = request.getAlphabet();
         float fontSize = request.getFontSize();
         float rotation = request.getRotation();
         float opacity = request.getOpacity();
         int widthSpacer = request.getWidthSpacer();
         int heightSpacer = request.getHeightSpacer();
-        String customColor = request.getCustomColor();
+        String customColorValue = request.getCustomColor();
         boolean convertPdfToImage = Boolean.TRUE.equals(request.getConvertPDFToImage());
 
         // Load the input PDF with proper resource management
@@ -126,19 +158,19 @@ public class WatermarkController {
                     graphicsState.setNonStrokingAlphaConstant(opacity);
                     contentStream.setGraphicsStateParameters(graphicsState);
 
-                    if ("text".equalsIgnoreCase(watermarkType)) {
+                    if ("text".equalsIgnoreCase(watermarkTypeValue)) {
                         addTextWatermark(
                                 contentStream,
-                                watermarkText,
+                                watermarkTextValue,
                                 document,
                                 page,
                                 rotation,
                                 widthSpacer,
                                 heightSpacer,
                                 fontSize,
-                                alphabet,
-                                customColor);
-                    } else if ("image".equalsIgnoreCase(watermarkType)) {
+                                alphabetValue,
+                                customColorValue);
+                    } else if ("image".equalsIgnoreCase(watermarkTypeValue)) {
                         addImageWatermark(
                                 contentStream,
                                 watermarkImage,

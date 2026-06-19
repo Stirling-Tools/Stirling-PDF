@@ -3,36 +3,31 @@ package stirling.software.saas.payg.filter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.method.HandlerMethod;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.MultipartHttpServletRequest;
-import org.springframework.web.servlet.AsyncHandlerInterceptor;
-import org.springframework.web.servlet.HandlerMapping;
-
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.Part;
 
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.SecurityContextHolder;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.proprietary.security.database.repository.UserRepository;
@@ -70,14 +65,16 @@ import stirling.software.saas.util.AuthenticationUtils;
  * <p>Fail-open everywhere: any unexpected {@link RuntimeException} is swallowed, logged at WARN,
  * and counted on {@code payg.filter.errors}. The customer's tool call always proceeds.
  *
- * <p>Async controllers ({@code DeferredResult}, {@code CompletableFuture}) are handled
- * transparently — {@link AsyncHandlerInterceptor#afterConcurrentHandlingStarted} is a no-op; the
- * normal {@code afterCompletion} fires when the async work resolves.
+ * <p>// TODO: Migration required - was a Spring {@code @Component} ({@code @Profile("saas")})
+ * implementing {@code AsyncHandlerInterceptor}. Convert to a JAX-RS {@code @Provider}
+ * request/response filter pair. Handler-annotation introspection now uses a reflective {@link
+ * Method} fallback (see {@link #resolveResourceMethod}); multipart access uses the servlet-native
+ * {@link Part} API ({@code request.getParts()}); the best-matching-pattern attribute uses a literal
+ * key constant ({@link #BEST_MATCHING_PATTERN_ATTRIBUTE}).
  */
 @Slf4j
-@Component
-@Profile("saas")
-public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
+@ApplicationScoped
+public class PaygChargeInterceptor {
 
     static final String ATTR_JOB_ID = PaygChargeInterceptor.class.getName() + ".JOB_ID";
     static final String ATTR_DISPOSITION = PaygChargeInterceptor.class.getName() + ".DISPOSITION";
@@ -88,6 +85,14 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
     static final String ATTR_TOOL_ID = PaygChargeInterceptor.class.getName() + ".TOOL_ID";
 
     private static final String AUTOMATION_HEADER = "X-Stirling-Automation";
+
+    /**
+     * // TODO: Migration required - literal value of the former Spring constant {@code
+     * HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE}. Replace with the JAX-RS route template
+     * obtained from {@code @Context UriInfo} / {@code ResourceInfo} during the filter conversion.
+     */
+    private static final String BEST_MATCHING_PATTERN_ATTRIBUTE =
+            "org.springframework.web.servlet.HandlerMapping.bestMatchingPattern";
 
     /**
      * Optional header the Tauri desktop shell sets so saas-side traffic from the embedded client
@@ -172,7 +177,8 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
                         .register(meterRegistry);
     }
 
-    @Override
+    // TODO: Migration required - was @Override AsyncHandlerInterceptor#preHandle(request, response,
+    // handler). Convert to a JAX-RS ContainerRequestFilter.
     public boolean preHandle(
             HttpServletRequest request, HttpServletResponse response, Object handler) {
         Timer.Sample sample = Timer.start();
@@ -180,7 +186,9 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
             if (!properties.isEnabled()) {
                 return true;
             }
-            if (!(handler instanceof HandlerMethod hm)) {
+            Method resourceMethod = resolveResourceMethod(handler);
+            Class<?> beanType = resolveBeanType(handler, resourceMethod);
+            if (resourceMethod == null) {
                 callsShortCircuit.increment();
                 return true;
             }
@@ -189,15 +197,9 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
             // these the interceptor short-circuits — admin / info / static routes never run
             // determineCategory.
             boolean hasAutoJobPostMapping =
-                    AnnotationUtils.findAnnotation(hm.getMethod(), AutoJobPostMapping.class) != null
-                            || AnnotationUtils.findAnnotation(
-                                            hm.getBeanType(), AutoJobPostMapping.class)
-                                    != null;
+                    findAnnotation(resourceMethod, beanType, AutoJobPostMapping.class) != null;
             boolean hasRequiresFeature =
-                    AnnotationUtils.findAnnotation(hm.getMethod(), RequiresFeature.class) != null
-                            || AnnotationUtils.findAnnotation(
-                                            hm.getBeanType(), RequiresFeature.class)
-                                    != null;
+                    findAnnotation(resourceMethod, beanType, RequiresFeature.class) != null;
             // AI document tools (/api/v1/ai/tools/**) live in the proprietary module and can't
             // carry @RequiresFeature, so they're recognised by path — see AiToolRoutes.
             boolean aiToolRoute = AiToolRoutes.matches(request);
@@ -209,7 +211,7 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
             // materialisation or openProcess call. Manual UI tool calls (BYPASSED) skip the
             // entire ledger/shadow pipeline — no temp files, no DB writes.
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            BillingCategory category = determineCategory(hm, request, auth);
+            BillingCategory category = determineCategory(resourceMethod, beanType, request, auth);
             if (category == BillingCategory.BYPASSED) {
                 callsBypassed.increment();
                 return true;
@@ -236,19 +238,24 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
             return;
         }
 
-        if (!(request instanceof MultipartHttpServletRequest mreq)) {
-            callsShortCircuit.increment();
-            return;
-        }
-
-        MultiValueMap<String, MultipartFile> map = mreq.getMultiFileMap();
-        List<MultipartFile> nonEmpty = new ArrayList<>();
-        for (List<MultipartFile> bucket : map.values()) {
-            for (MultipartFile mp : bucket) {
-                if (mp.getSize() > 0) {
-                    nonEmpty.add(mp);
+        // TODO: Migration required - was `request instanceof MultipartHttpServletRequest mreq` +
+        // mreq.getMultiFileMap(). Now uses servlet-native request.getParts(). A non-multipart
+        // request yields no file parts and short-circuits, preserving the original behavior.
+        List<Part> nonEmpty = new ArrayList<>();
+        try {
+            Collection<Part> parts = request.getParts();
+            if (parts != null) {
+                for (Part part : parts) {
+                    // Only treat parts that carry an uploaded file (have a filename) and have bytes
+                    // as inputs, matching the prior MultipartFile getSize() > 0 filter.
+                    if (part.getSubmittedFileName() != null && part.getSize() > 0) {
+                        nonEmpty.add(part);
+                    }
                 }
             }
+        } catch (IOException | jakarta.servlet.ServletException e) {
+            callsShortCircuit.increment();
+            return;
         }
         if (nonEmpty.isEmpty()) {
             callsShortCircuit.increment();
@@ -259,14 +266,14 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
         List<JobInput> inputs = new ArrayList<>(nonEmpty.size());
         long totalInputBytes = 0L;
         try {
-            for (MultipartFile mp : nonEmpty) {
+            for (Part mp : nonEmpty) {
                 TempFile tf = tempFileManager.createManagedTempFile(".upload");
                 tempFiles.add(tf);
                 try (InputStream in = mp.getInputStream();
                         OutputStream out = Files.newOutputStream(tf.getPath())) {
                     in.transferTo(out);
                 }
-                inputs.add(new JobInput(mp, tf.getPath()));
+                inputs.add(buildJobInput(mp, tf.getPath()));
                 totalInputBytes += mp.getSize();
             }
         } catch (IOException e) {
@@ -308,7 +315,20 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
         }
     }
 
-    @Override
+    /**
+     * // TODO: Migration required - the {@link JobInput} record's first component is still Spring's
+     * {@code MultipartFile} (owned by another module). This interceptor now sources inputs from the
+     * servlet {@link Part} API. Once {@code JobInput} is migrated to carry a {@link Part} (or a
+     * neutral size+content-type holder), construct it directly here: {@code return new
+     * JobInput(part, path);}. Kept as a single adaptation seam so the rest of the charge flow is
+     * untouched.
+     */
+    private JobInput buildJobInput(Part part, Path path) {
+        return new JobInput(part, path);
+    }
+
+    // TODO: Migration required - was @Override AsyncHandlerInterceptor#afterCompletion(request,
+    // response, handler, Exception). Convert to a JAX-RS ContainerResponseFilter.
     public void afterCompletion(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -452,7 +472,9 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
         }
     }
 
-    @Override
+    // TODO: Migration required - was @Override
+    // AsyncHandlerInterceptor#afterConcurrentHandlingStarted. JAX-RS handles async dispatch
+    // differently; no direct equivalent required.
     public void afterConcurrentHandlingStarted(
             HttpServletRequest request, HttpServletResponse response, Object handler) {
         // Async handoff: don't touch state. afterCompletion will fire when the async work resolves.
@@ -514,6 +536,75 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
     }
 
     /**
+     * // TODO: Migration required - resolves the resource {@link Method} the original code read
+     * from Spring's {@code HandlerMethod} (via {@code hm.getMethod()}). Until wired to JAX-RS
+     * {@code ResourceInfo}, supports a handler that is already a {@link Method} or exposes a no-arg
+     * {@code getMethod()} returning one, preserving the {@code @AutoJobPostMapping} gating.
+     */
+    private Method resolveResourceMethod(Object handler) {
+        if (handler instanceof Method m) {
+            return m;
+        }
+        if (handler == null) {
+            return null;
+        }
+        try {
+            Method getter = handler.getClass().getMethod("getMethod");
+            Object result = getter.invoke(handler);
+            if (result instanceof Method m) {
+                return m;
+            }
+        } catch (ReflectiveOperationException ignored) {
+            // Handler does not expose a resolvable resource method.
+        }
+        return null;
+    }
+
+    /**
+     * Resolve the controller (bean) type that carries class-level annotations. Prefers the
+     * handler's reflective {@code getBeanType()} (Spring HandlerMethod shape); falls back to the
+     * resource method's declaring class.
+     */
+    private Class<?> resolveBeanType(Object handler, Method resourceMethod) {
+        if (handler != null) {
+            try {
+                Method getter = handler.getClass().getMethod("getBeanType");
+                Object result = getter.invoke(handler);
+                if (result instanceof Class<?> c) {
+                    return c;
+                }
+            } catch (ReflectiveOperationException ignored) {
+                // Handler does not expose a bean type; fall back below.
+            }
+        }
+        return resourceMethod == null ? null : resourceMethod.getDeclaringClass();
+    }
+
+    /**
+     * Method-then-class annotation lookup replacing Spring's {@code
+     * AnnotationUtils.findAnnotation}. Checks the resource method first, then walks the bean type's
+     * superclass chain (method-level wins over class-level).
+     */
+    private static <A extends Annotation> A findAnnotation(
+            Method method, Class<?> beanType, Class<A> annotationType) {
+        if (method != null) {
+            A onMethod = method.getAnnotation(annotationType);
+            if (onMethod != null) {
+                return onMethod;
+            }
+        }
+        Class<?> type = beanType;
+        while (type != null && type != Object.class) {
+            A onType = type.getAnnotation(annotationType);
+            if (onType != null) {
+                return onType;
+            }
+            type = type.getSuperclass();
+        }
+        return null;
+    }
+
+    /**
      * Resolve the {@link BillingCategory} for this request. Precedence: {@code
      * X-Stirling-Automation: true} or {@code @RequiresFeature(AUTOMATION)} → AUTOMATION;
      * {@code @RequiresFeature(AI_SUPPORT)} → AI; an AI document-tool route ({@link AiToolRoutes}) →
@@ -526,16 +617,15 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
      * while a direct call to it bills as AI.
      */
     private static BillingCategory determineCategory(
-            HandlerMethod handler, HttpServletRequest request, Authentication auth) {
+            Method resourceMethod,
+            Class<?> beanType,
+            HttpServletRequest request,
+            Authentication auth) {
         String automationHeader = request.getHeader(AUTOMATION_HEADER);
         if (automationHeader != null && "true".equalsIgnoreCase(automationHeader.trim())) {
             return BillingCategory.AUTOMATION;
         }
-        RequiresFeature ann =
-                AnnotationUtils.findAnnotation(handler.getMethod(), RequiresFeature.class);
-        if (ann == null) {
-            ann = AnnotationUtils.findAnnotation(handler.getBeanType(), RequiresFeature.class);
-        }
+        RequiresFeature ann = findAnnotation(resourceMethod, beanType, RequiresFeature.class);
         if (ann != null) {
             boolean ai = false;
             for (FeatureGate gate : ann.value()) {
@@ -573,7 +663,7 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
      * notices the {@code tool_id} they expected isn't what we stored.
      */
     private String resolveToolId(HttpServletRequest request) {
-        Object pattern = request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+        Object pattern = request.getAttribute(BEST_MATCHING_PATTERN_ATTRIBUTE);
         String value = pattern instanceof String s ? s : request.getRequestURI();
         if (value == null) {
             return "unknown";

@@ -14,14 +14,15 @@ import java.util.TimeZone;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.apache.pdfbox.pdmodel.common.PDMetadata;
-import org.springframework.stereotype.Service;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.json.PdfJsonMetadata;
 
 /** Service for extracting and applying PDF metadata (document info and XMP) for JSON conversion. */
-@Service
+@ApplicationScoped
 @Slf4j
 public class PdfJsonMetadataService {
 

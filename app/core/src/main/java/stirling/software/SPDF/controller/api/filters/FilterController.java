@@ -5,17 +5,21 @@ import java.io.IOException;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 
@@ -28,6 +32,8 @@ import stirling.software.SPDF.model.api.filter.PageSizeRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.FilterApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.PdfUtils;
@@ -35,14 +41,21 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @FilterApi
+@Path("/api/v1/filter")
+@ApplicationScoped
 @RequiredArgsConstructor
 public class FilterController {
+
+    private static final String APPLICATION_PDF_VALUE = "application/pdf";
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
+    @POST
+    @Path("/filter-contains-text")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/filter-contains-text",
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @Operation(
@@ -52,31 +65,44 @@ public class FilterController {
         @ApiResponse(
                 responseCode = "200",
                 description = "PDF passed filter",
-                content = @Content(mediaType = MediaType.APPLICATION_PDF_VALUE)),
+                content = @Content(mediaType = APPLICATION_PDF_VALUE)),
         @ApiResponse(
                 responseCode = "204",
                 description = "PDF did not pass filter",
                 content = @Content())
     })
-    public ResponseEntity<Resource> containsText(@ModelAttribute ContainsTextRequest request)
+    public Response containsText(
+            @RestForm("fileInput") FileUpload fileInput,
+            @RestForm("fileId") String fileId,
+            @RestForm("pageNumbers") String pageNumbers,
+            @RestForm("text") String text)
             throws IOException, InterruptedException {
+        ContainsTextRequest request = new ContainsTextRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileInput));
+        request.setFileId(fileId);
+        request.setPageNumbers(pageNumbers);
+        request.setText(text);
+
         MultipartFile inputFile = request.getFileInput();
-        String text = request.getText();
+        String requestedText = request.getText();
         String pageNumber = request.getPageNumbers();
 
         try (PDDocument pdfDocument = pdfDocumentFactory.load(inputFile)) {
-            if (PdfUtils.hasText(pdfDocument, pageNumber, text)) {
+            if (PdfUtils.hasText(pdfDocument, pageNumber, requestedText)) {
                 return WebResponseUtils.pdfDocToWebResponse(
                         pdfDocument,
                         Filenames.toSimpleFileName(inputFile.getOriginalFilename()),
                         tempFileManager);
             }
         }
-        return ResponseEntity.noContent().build();
+        return Response.noContent().build();
     }
 
+    @POST
+    @Path("/filter-contains-image")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/filter-contains-image",
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @Operation(
@@ -86,14 +112,22 @@ public class FilterController {
         @ApiResponse(
                 responseCode = "200",
                 description = "PDF passed filter",
-                content = @Content(mediaType = MediaType.APPLICATION_PDF_VALUE)),
+                content = @Content(mediaType = APPLICATION_PDF_VALUE)),
         @ApiResponse(
                 responseCode = "204",
                 description = "PDF did not pass filter",
                 content = @Content())
     })
-    public ResponseEntity<Resource> containsImage(@ModelAttribute PDFWithPageNums request)
+    public Response containsImage(
+            @RestForm("fileInput") FileUpload fileInput,
+            @RestForm("fileId") String fileId,
+            @RestForm("pageNumbers") String pageNumbers)
             throws IOException, InterruptedException {
+        PDFWithPageNums request = new PDFWithPageNums();
+        request.setFileInput(FileUploadMultipartFile.of(fileInput));
+        request.setFileId(fileId);
+        request.setPageNumbers(pageNumbers);
+
         MultipartFile inputFile = request.getFileInput();
         String pageNumber = request.getPageNumbers();
 
@@ -105,11 +139,14 @@ public class FilterController {
                         tempFileManager);
             }
         }
-        return ResponseEntity.noContent().build();
+        return Response.noContent().build();
     }
 
+    @POST
+    @Path("/filter-page-count")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/filter-page-count",
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @Operation(
@@ -119,14 +156,24 @@ public class FilterController {
         @ApiResponse(
                 responseCode = "200",
                 description = "PDF passed filter",
-                content = @Content(mediaType = MediaType.APPLICATION_PDF_VALUE)),
+                content = @Content(mediaType = APPLICATION_PDF_VALUE)),
         @ApiResponse(
                 responseCode = "204",
                 description = "PDF did not pass filter",
                 content = @Content())
     })
-    public ResponseEntity<byte[]> pageCount(@ModelAttribute PDFComparisonAndCount request)
+    public Response pageCount(
+            @RestForm("fileInput") FileUpload fileInput,
+            @RestForm("fileId") String fileId,
+            @RestForm("comparator") String comparatorParam,
+            @RestForm("pageCount") int pageCountParam)
             throws IOException, InterruptedException {
+        PDFComparisonAndCount request = new PDFComparisonAndCount();
+        request.setFileInput(FileUploadMultipartFile.of(fileInput));
+        request.setFileId(fileId);
+        request.setComparator(comparatorParam);
+        request.setPageCount(pageCountParam);
+
         MultipartFile inputFile = request.getFileInput();
         int pageCount = request.getPageCount();
         String comparator = request.getComparator();
@@ -139,11 +186,14 @@ public class FilterController {
 
         return valid
                 ? WebResponseUtils.multiPartFileToWebResponse(inputFile)
-                : ResponseEntity.noContent().build();
+                : Response.noContent().build();
     }
 
+    @POST
+    @Path("/filter-page-size")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/filter-page-size",
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @Operation(
@@ -153,14 +203,24 @@ public class FilterController {
         @ApiResponse(
                 responseCode = "200",
                 description = "PDF passed filter",
-                content = @Content(mediaType = MediaType.APPLICATION_PDF_VALUE)),
+                content = @Content(mediaType = APPLICATION_PDF_VALUE)),
         @ApiResponse(
                 responseCode = "204",
                 description = "PDF did not pass filter",
                 content = @Content())
     })
-    public ResponseEntity<byte[]> pageSize(@ModelAttribute PageSizeRequest request)
+    public Response pageSize(
+            @RestForm("fileInput") FileUpload fileInput,
+            @RestForm("fileId") String fileId,
+            @RestForm("comparator") String comparatorParam,
+            @RestForm("standardPageSize") String standardPageSizeParam)
             throws IOException, InterruptedException {
+        PageSizeRequest request = new PageSizeRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileInput));
+        request.setFileId(fileId);
+        request.setComparator(comparatorParam);
+        request.setStandardPageSize(standardPageSizeParam);
+
         MultipartFile inputFile = request.getFileInput();
         String standardPageSize = request.getStandardPageSize();
         String comparator = request.getComparator();
@@ -179,11 +239,14 @@ public class FilterController {
 
         return valid
                 ? WebResponseUtils.multiPartFileToWebResponse(inputFile)
-                : ResponseEntity.noContent().build();
+                : Response.noContent().build();
     }
 
+    @POST
+    @Path("/filter-file-size")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/filter-file-size",
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @Operation(
@@ -193,14 +256,24 @@ public class FilterController {
         @ApiResponse(
                 responseCode = "200",
                 description = "PDF passed filter",
-                content = @Content(mediaType = MediaType.APPLICATION_PDF_VALUE)),
+                content = @Content(mediaType = APPLICATION_PDF_VALUE)),
         @ApiResponse(
                 responseCode = "204",
                 description = "PDF did not pass filter",
                 content = @Content())
     })
-    public ResponseEntity<byte[]> fileSize(@ModelAttribute FileSizeRequest request)
+    public Response fileSize(
+            @RestForm("fileInput") FileUpload fileInput,
+            @RestForm("fileId") String fileId,
+            @RestForm("comparator") String comparatorParam,
+            @RestForm("fileSize") long fileSizeParam)
             throws IOException, InterruptedException {
+        FileSizeRequest request = new FileSizeRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileInput));
+        request.setFileId(fileId);
+        request.setComparator(comparatorParam);
+        request.setFileSize(fileSizeParam);
+
         MultipartFile inputFile = request.getFileInput();
         long fileSize = request.getFileSize();
         String comparator = request.getComparator();
@@ -210,11 +283,14 @@ public class FilterController {
 
         return valid
                 ? WebResponseUtils.multiPartFileToWebResponse(inputFile)
-                : ResponseEntity.noContent().build();
+                : Response.noContent().build();
     }
 
+    @POST
+    @Path("/filter-page-rotation")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/filter-page-rotation",
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @Operation(
@@ -224,14 +300,24 @@ public class FilterController {
         @ApiResponse(
                 responseCode = "200",
                 description = "PDF passed filter",
-                content = @Content(mediaType = MediaType.APPLICATION_PDF_VALUE)),
+                content = @Content(mediaType = APPLICATION_PDF_VALUE)),
         @ApiResponse(
                 responseCode = "204",
                 description = "PDF did not pass filter",
                 content = @Content())
     })
-    public ResponseEntity<byte[]> pageRotation(@ModelAttribute PageRotationRequest request)
+    public Response pageRotation(
+            @RestForm("fileInput") FileUpload fileInput,
+            @RestForm("fileId") String fileId,
+            @RestForm("comparator") String comparatorParam,
+            @RestForm("rotation") int rotationParam)
             throws IOException, InterruptedException {
+        PageRotationRequest request = new PageRotationRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileInput));
+        request.setFileId(fileId);
+        request.setComparator(comparatorParam);
+        request.setRotation(rotationParam);
+
         MultipartFile inputFile = request.getFileInput();
         int rotation = request.getRotation();
         String comparator = request.getComparator();
@@ -245,7 +331,7 @@ public class FilterController {
 
         return valid
                 ? WebResponseUtils.multiPartFileToWebResponse(inputFile)
-                : ResponseEntity.noContent().build();
+                : Response.noContent().build();
     }
 
     /**

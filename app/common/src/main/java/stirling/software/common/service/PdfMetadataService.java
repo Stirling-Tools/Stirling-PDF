@@ -7,26 +7,32 @@ import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Service;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.PdfMetadata;
 
-@Service
+@ApplicationScoped
 public class PdfMetadataService {
 
     private final ApplicationProperties applicationProperties;
     private final String stirlingPDFLabel;
-    private final UserServiceInterface userService;
+    // MIGRATION: Spring's @Autowired(required=false) optional bean -> CDI Instance<>
+    // (UserServiceInterface
+    // is only present in security-enabled flavors). Resolve via isResolvable()/get().
+    private final Instance<UserServiceInterface> userService;
     private final boolean runningProOrHigher;
 
+    @Inject
     public PdfMetadataService(
             ApplicationProperties applicationProperties,
-            @Qualifier("StirlingPDFLabel") String stirlingPDFLabel,
-            @Qualifier("runningProOrHigher") boolean runningProOrHigher,
-            @Autowired(required = false) UserServiceInterface userService) {
+            @Named("StirlingPDFLabel") String stirlingPDFLabel,
+            @Named("runningProOrHigher") boolean runningProOrHigher,
+            Instance<UserServiceInterface> userService) {
         this.applicationProperties = applicationProperties;
         this.stirlingPDFLabel = stirlingPDFLabel;
         this.userService = userService;
@@ -168,8 +174,8 @@ public class PdfMetadataService {
                             .getCustomMetadata()
                             .getAuthor();
 
-            if (userService != null) {
-                String username = userService.getCurrentUsername();
+            if (userService.isResolvable()) {
+                String username = userService.get().getCurrentUsername();
                 if (username != null) {
                     author = author.replace("username", username);
                 }

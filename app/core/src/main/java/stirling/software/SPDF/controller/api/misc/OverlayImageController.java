@@ -6,14 +6,17 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +26,8 @@ import stirling.software.SPDF.utils.SvgOverlayUtil;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.SvgSanitizer;
@@ -31,6 +36,8 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @MiscApi
+@Path("/api/v1/misc")
+@ApplicationScoped
 @Slf4j
 @RequiredArgsConstructor
 public class OverlayImageController {
@@ -39,8 +46,11 @@ public class OverlayImageController {
     private final TempFileManager tempFileManager;
     private final SvgSanitizer svgSanitizer;
 
+    @POST
+    @Path("/add-image")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             value = "/add-image",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @Operation(
@@ -51,7 +61,19 @@ public class OverlayImageController {
                             + "SVG files are rendered as vector graphics for crisp output at any resolution. "
                             + "The image can be overlaid on every page of the PDF if specified. "
                             + "Input:PDF/IMAGE/SVG Output:PDF Type:SISO")
-    public ResponseEntity<Resource> overlayImage(@ModelAttribute OverlayImageRequest request) {
+    public Response overlayImage(
+            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("imageFile") FileUpload imageFileUpload,
+            @RestForm("x") float xForm,
+            @RestForm("y") float yForm,
+            @RestForm("everyPage") Boolean everyPageForm) {
+        OverlayImageRequest request = new OverlayImageRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        request.setImageFile(FileUploadMultipartFile.of(imageFileUpload));
+        request.setX(xForm);
+        request.setY(yForm);
+        request.setEveryPage(everyPageForm);
+
         MultipartFile pdfFile = request.getFileInput();
         MultipartFile imageFile = request.getImageFile();
         float x = request.getX();
@@ -111,7 +133,7 @@ public class OverlayImageController {
 
         } catch (IOException e) {
             log.error("Failed to add image to PDF", e);
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            return Response.status(Response.Status.BAD_REQUEST).build();
         }
     }
 }

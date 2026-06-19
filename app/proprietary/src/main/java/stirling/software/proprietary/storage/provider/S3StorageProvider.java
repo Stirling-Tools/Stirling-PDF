@@ -9,12 +9,11 @@ import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.core.io.InputStreamResource;
-import org.springframework.core.io.Resource;
-import org.springframework.web.multipart.MultipartFile;
-
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.io.InputStreamResource;
+import stirling.software.common.model.io.Resource;
 import stirling.software.proprietary.security.model.User;
 
 import software.amazon.awssdk.core.ResponseInputStream;

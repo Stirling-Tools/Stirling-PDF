@@ -13,13 +13,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.stereotype.Service;
-
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -27,12 +20,18 @@ import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.SignatureException;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.constants.JwtConstants;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.OAuth2User;
+import stirling.software.common.security.UserDetails;
 import stirling.software.proprietary.security.model.JwtVerificationKey;
 import stirling.software.proprietary.security.model.exception.AuthenticationFailureException;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
@@ -41,7 +40,7 @@ import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
 @Slf4j
-@Service
+@ApplicationScoped
 public class JwtService implements JwtServiceInterface {
 
     private final ObjectMapper objectMapper;
@@ -49,10 +48,10 @@ public class JwtService implements JwtServiceInterface {
     private final boolean v2Enabled;
     private final ApplicationProperties.Security securityProperties;
 
-    @Autowired
+    @Inject
     public JwtService(
             ObjectMapper objectMapper,
-            @Qualifier("v2Enabled") boolean v2Enabled,
+            @Named("v2Enabled") boolean v2Enabled,
             KeyPersistenceServiceInterface keyPersistenceService,
             ApplicationProperties applicationProperties) {
         this.objectMapper = objectMapper;
@@ -62,6 +61,15 @@ public class JwtService implements JwtServiceInterface {
     }
 
     @Override
+    public String generateToken(
+            io.quarkus.security.identity.SecurityIdentity identity, Map<String, Object> claims) {
+        String username =
+                (identity != null && identity.getPrincipal() != null)
+                        ? identity.getPrincipal().getName()
+                        : "";
+        return generateToken(username, claims);
+    }
+
     public String generateToken(Authentication authentication, Map<String, Object> claims) {
         Object principal = authentication.getPrincipal();
         String username = "";

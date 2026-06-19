@@ -25,24 +25,31 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.ZipSecurity;
 
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.StreamingOutput;
+
 import stirling.software.common.configuration.RuntimePathConfig;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.ByteArrayMultipartFile;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 
 /**
  * Tests for PDFToFile utility class. This includes both invalid content type cases and positive
  * test cases that mock external process execution.
+ *
+ * <p>MIGRATION (Spring -> JAX-RS): production now returns {@link Response} (body is a {@link
+ * StreamingOutput} for the file-backed responses) instead of {@code ResponseEntity<Resource>}, and
+ * accepts the {@code stirling.software.common.model.MultipartFile} shim. Assertions updated to the
+ * JAX-RS status/header/body API.
  */
 @ExtendWith(MockitoExtension.class)
 class PDFToFileTest {
+
+    private static final String APPLICATION_PDF = "application/pdf";
+    private static final String TEXT_PLAIN = "text/plain";
 
     @TempDir Path tempDir;
 
@@ -83,46 +90,51 @@ class PDFToFileTest {
         pdfToFile = new PDFToFile(mockTempFileManager, mockRuntimePathConfig);
     }
 
-    private static byte[] drain(ResponseEntity<Resource> response) throws IOException {
+    private static byte[] drain(Response response) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try (java.io.InputStream __in = response.getBody().getInputStream()) {
-            __in.transferTo(baos);
+        Object entity = response.getEntity();
+        if (entity instanceof StreamingOutput streaming) {
+            streaming.write(baos);
+        } else if (entity instanceof byte[] bytes) {
+            baos.write(bytes);
+        } else {
+            throw new IllegalStateException(
+                    "Unexpected response entity type: "
+                            + (entity == null ? "null" : entity.getClass().getName()));
         }
         return baos.toByteArray();
+    }
+
+    private static String contentDisposition(Response response) {
+        return response.getHeaderString("Content-Disposition");
     }
 
     @Test
     void testProcessPdfToMarkdown_InvalidContentType() throws IOException, InterruptedException {
         // Prepare
         MultipartFile nonPdfFile =
-                new MockMultipartFile(
-                        "file",
-                        "test.txt",
-                        MediaType.TEXT_PLAIN_VALUE,
-                        "This is not a PDF".getBytes());
+                new ByteArrayMultipartFile(
+                        "file", "test.txt", TEXT_PLAIN, "This is not a PDF".getBytes());
 
         // Execute
-        ResponseEntity<Resource> response = pdfToFile.processPdfToMarkdown(nonPdfFile);
+        Response response = pdfToFile.processPdfToMarkdown(nonPdfFile);
 
         // Verify
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
     }
 
     @Test
     void testProcessPdfToHtml_InvalidContentType() throws IOException, InterruptedException {
         // Prepare
         MultipartFile nonPdfFile =
-                new MockMultipartFile(
-                        "file",
-                        "test.txt",
-                        MediaType.TEXT_PLAIN_VALUE,
-                        "This is not a PDF".getBytes());
+                new ByteArrayMultipartFile(
+                        "file", "test.txt", TEXT_PLAIN, "This is not a PDF".getBytes());
 
         // Execute
-        ResponseEntity<Resource> response = pdfToFile.processPdfToHtml(nonPdfFile);
+        Response response = pdfToFile.processPdfToHtml(nonPdfFile);
 
         // Verify
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
     }
 
     @Test
@@ -130,18 +142,15 @@ class PDFToFileTest {
             throws IOException, InterruptedException {
         // Prepare
         MultipartFile nonPdfFile =
-                new MockMultipartFile(
-                        "file",
-                        "test.txt",
-                        MediaType.TEXT_PLAIN_VALUE,
-                        "This is not a PDF".getBytes());
+                new ByteArrayMultipartFile(
+                        "file", "test.txt", TEXT_PLAIN, "This is not a PDF".getBytes());
 
         // Execute
-        ResponseEntity<Resource> response =
+        Response response =
                 pdfToFile.processPdfToOfficeFormat(nonPdfFile, "docx", "draw_pdf_import");
 
         // Verify
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
     }
 
     @Test
@@ -149,18 +158,15 @@ class PDFToFileTest {
             throws IOException, InterruptedException {
         // Prepare
         MultipartFile pdfFile =
-                new MockMultipartFile(
-                        "file",
-                        "test.pdf",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        "Fake PDF content".getBytes());
+                new ByteArrayMultipartFile(
+                        "file", "test.pdf", APPLICATION_PDF, "Fake PDF content".getBytes());
 
         // Execute with invalid format
-        ResponseEntity<Resource> response =
+        Response response =
                 pdfToFile.processPdfToOfficeFormat(pdfFile, "invalid_format", "draw_pdf_import");
 
         // Verify
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
     }
 
     @Test
@@ -170,11 +176,8 @@ class PDFToFileTest {
                 mockStatic(ProcessExecutor.class)) {
             // Create a mock PDF file
             MultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "file",
-                            "test.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            "Fake PDF content".getBytes());
+                    new ByteArrayMultipartFile(
+                            "file", "test.pdf", APPLICATION_PDF, "Fake PDF content".getBytes());
 
             // Create a mock HTML output file with image references
             Path htmlOutputFile = tempDir.resolve("test.html");
@@ -207,20 +210,16 @@ class PDFToFileTest {
                             });
 
             // Execute the method
-            ResponseEntity<Resource> response = pdfToFile.processPdfToMarkdown(pdfFile);
+            Response response = pdfToFile.processPdfToMarkdown(pdfFile);
 
             // Verify - should now return a ZIP file instead of plain markdown
-            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
             byte[] bodyBytes = drain(response);
             assertNotNull(bodyBytes);
             assertTrue(bodyBytes.length > 0);
 
             // Verify content disposition indicates a ZIP file
-            assertTrue(
-                    response.getHeaders()
-                            .getContentDisposition()
-                            .toString()
-                            .contains("ToMarkdown.zip"));
+            assertTrue(contentDisposition(response).contains("ToMarkdown.zip"));
 
             // Verify the content by unzipping it
             try (ZipInputStream zipStream =
@@ -264,10 +263,10 @@ class PDFToFileTest {
                 mockStatic(ProcessExecutor.class)) {
             // Create a mock PDF file
             MultipartFile pdfFile =
-                    new MockMultipartFile(
+                    new ByteArrayMultipartFile(
                             "file",
                             "multipage.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
+                            APPLICATION_PDF,
                             "Fake PDF content".getBytes());
 
             // Setup ProcessExecutor mock
@@ -299,20 +298,16 @@ class PDFToFileTest {
                             });
 
             // Execute the method
-            ResponseEntity<Resource> response = pdfToFile.processPdfToMarkdown(pdfFile);
+            Response response = pdfToFile.processPdfToMarkdown(pdfFile);
 
             // Verify
-            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
             byte[] bodyBytes = drain(response);
             assertNotNull(bodyBytes);
             assertTrue(bodyBytes.length > 0);
 
             // Verify content disposition indicates a zip file
-            assertTrue(
-                    response.getHeaders()
-                            .getContentDisposition()
-                            .toString()
-                            .contains("ToMarkdown.zip"));
+            assertTrue(contentDisposition(response).contains("ToMarkdown.zip"));
 
             // Verify the content by unzipping it
             try (ZipInputStream zipStream =
@@ -345,11 +340,8 @@ class PDFToFileTest {
                 mockStatic(ProcessExecutor.class)) {
             // Create a mock PDF file
             MultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "file",
-                            "test.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            "Fake PDF content".getBytes());
+                    new ByteArrayMultipartFile(
+                            "file", "test.pdf", APPLICATION_PDF, "Fake PDF content".getBytes());
 
             // Setup ProcessExecutor mock
             mockedStaticProcessExecutor
@@ -377,20 +369,16 @@ class PDFToFileTest {
                             });
 
             // Execute the method
-            ResponseEntity<Resource> response = pdfToFile.processPdfToHtml(pdfFile);
+            Response response = pdfToFile.processPdfToHtml(pdfFile);
 
             // Verify
-            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
             byte[] bodyBytes = drain(response);
             assertNotNull(bodyBytes);
             assertTrue(bodyBytes.length > 0);
 
             // Verify content disposition indicates a zip file
-            assertTrue(
-                    response.getHeaders()
-                            .getContentDisposition()
-                            .toString()
-                            .contains("testToHtml.zip"));
+            assertTrue(contentDisposition(response).contains("testToHtml.zip"));
 
             // Verify the content by unzipping it
             try (ZipInputStream zipStream =
@@ -424,11 +412,8 @@ class PDFToFileTest {
                 mockStatic(ProcessExecutor.class)) {
             // Create a mock PDF file
             MultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "file",
-                            "document.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            "Fake PDF content".getBytes());
+                    new ByteArrayMultipartFile(
+                            "file", "document.pdf", APPLICATION_PDF, "Fake PDF content".getBytes());
 
             // Setup ProcessExecutor mock
             mockedStaticProcessExecutor
@@ -463,21 +448,17 @@ class PDFToFileTest {
                             });
 
             // Execute the method with docx format
-            ResponseEntity<Resource> response =
+            Response response =
                     pdfToFile.processPdfToOfficeFormat(pdfFile, "docx", "draw_pdf_import");
 
             // Verify
-            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
             byte[] bodyBytes = drain(response);
             assertNotNull(bodyBytes);
             assertTrue(bodyBytes.length > 0);
 
             // Verify content disposition has correct filename
-            assertTrue(
-                    response.getHeaders()
-                            .getContentDisposition()
-                            .toString()
-                            .contains("document.docx"));
+            assertTrue(contentDisposition(response).contains("document.docx"));
         }
     }
 
@@ -489,11 +470,8 @@ class PDFToFileTest {
                 mockStatic(ProcessExecutor.class)) {
             // Create a mock PDF file
             MultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "file",
-                            "document.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            "Fake PDF content".getBytes());
+                    new ByteArrayMultipartFile(
+                            "file", "document.pdf", APPLICATION_PDF, "Fake PDF content".getBytes());
 
             // Setup ProcessExecutor mock
             mockedStaticProcessExecutor
@@ -535,21 +513,17 @@ class PDFToFileTest {
                             });
 
             // Execute the method with ODP format
-            ResponseEntity<Resource> response =
+            Response response =
                     pdfToFile.processPdfToOfficeFormat(pdfFile, "odp", "draw_pdf_import");
 
             // Verify
-            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
             byte[] bodyBytes = drain(response);
             assertNotNull(bodyBytes);
             assertTrue(bodyBytes.length > 0);
 
             // Verify content disposition for zip file
-            assertTrue(
-                    response.getHeaders()
-                            .getContentDisposition()
-                            .toString()
-                            .contains("documentToodp.zip"));
+            assertTrue(contentDisposition(response).contains("documentToodp.zip"));
 
             // Verify the content by unzipping it
             try (ZipInputStream zipStream =
@@ -581,11 +555,8 @@ class PDFToFileTest {
                 mockStatic(ProcessExecutor.class)) {
             // Create a mock PDF file
             MultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "file",
-                            "document.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            "Fake PDF content".getBytes());
+                    new ByteArrayMultipartFile(
+                            "file", "document.pdf", APPLICATION_PDF, "Fake PDF content".getBytes());
 
             // Setup ProcessExecutor mock
             mockedStaticProcessExecutor
@@ -620,21 +591,17 @@ class PDFToFileTest {
                             });
 
             // Execute the method with text format
-            ResponseEntity<Resource> response =
+            Response response =
                     pdfToFile.processPdfToOfficeFormat(pdfFile, "txt:Text", "draw_pdf_import");
 
             // Verify
-            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
             byte[] bodyBytes = drain(response);
             assertNotNull(bodyBytes);
             assertTrue(bodyBytes.length > 0);
 
             // Verify content disposition has txt extension
-            assertTrue(
-                    response.getHeaders()
-                            .getContentDisposition()
-                            .toString()
-                            .contains("document.txt"));
+            assertTrue(contentDisposition(response).contains("document.txt"));
         }
     }
 
@@ -645,11 +612,8 @@ class PDFToFileTest {
                 mockStatic(ProcessExecutor.class)) {
             // Create a mock PDF file with no filename
             MultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "file",
-                            "",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            "Fake PDF content".getBytes());
+                    new ByteArrayMultipartFile(
+                            "file", "", APPLICATION_PDF, "Fake PDF content".getBytes());
 
             // Setup ProcessExecutor mock
             mockedStaticProcessExecutor
@@ -679,21 +643,17 @@ class PDFToFileTest {
                             });
 
             // Execute the method
-            ResponseEntity<Resource> response =
+            Response response =
                     pdfToFile.processPdfToOfficeFormat(pdfFile, "docx", "draw_pdf_import");
 
             // Verify
-            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
             byte[] bodyBytes = drain(response);
             assertNotNull(bodyBytes);
             assertTrue(bodyBytes.length > 0);
 
             // Verify content disposition contains output.docx
-            assertTrue(
-                    response.getHeaders()
-                            .getContentDisposition()
-                            .toString()
-                            .contains("output.docx"));
+            assertTrue(contentDisposition(response).contains("output.docx"));
         }
     }
 
@@ -706,11 +666,8 @@ class PDFToFileTest {
         try (MockedStatic<ProcessExecutor> mockedStaticProcessExecutor =
                 mockStatic(ProcessExecutor.class)) {
             MultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "file",
-                            "document.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            "Fake PDF content".getBytes());
+                    new ByteArrayMultipartFile(
+                            "file", "document.pdf", APPLICATION_PDF, "Fake PDF content".getBytes());
 
             mockedStaticProcessExecutor
                     .when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE))
@@ -726,18 +683,14 @@ class PDFToFileTest {
                                 return mockExecutorResult;
                             });
 
-            ResponseEntity<Resource> response =
+            Response response =
                     pdfToFileWithUno.processPdfToOfficeFormat(pdfFile, "docx", "writer_pdf_import");
 
-            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
             byte[] bodyBytes = drain(response);
             assertNotNull(bodyBytes);
             assertTrue(bodyBytes.length > 0);
-            assertTrue(
-                    response.getHeaders()
-                            .getContentDisposition()
-                            .toString()
-                            .contains("document.docx"));
+            assertTrue(contentDisposition(response).contains("document.docx"));
         }
     }
 
@@ -750,11 +703,8 @@ class PDFToFileTest {
         try (MockedStatic<ProcessExecutor> mockedStaticProcessExecutor =
                 mockStatic(ProcessExecutor.class)) {
             MultipartFile pdfFile =
-                    new MockMultipartFile(
-                            "file",
-                            "document.pdf",
-                            MediaType.APPLICATION_PDF_VALUE,
-                            "Fake PDF content".getBytes());
+                    new ByteArrayMultipartFile(
+                            "file", "document.pdf", APPLICATION_PDF, "Fake PDF content".getBytes());
 
             mockedStaticProcessExecutor
                     .when(() -> ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE))
@@ -790,18 +740,14 @@ class PDFToFileTest {
                                 return mockExecutorResult;
                             });
 
-            ResponseEntity<Resource> response =
+            Response response =
                     pdfToFileWithUno.processPdfToOfficeFormat(pdfFile, "docx", "writer_pdf_import");
 
-            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
             byte[] bodyBytes = drain(response);
             assertNotNull(bodyBytes);
             assertTrue(bodyBytes.length > 0);
-            assertTrue(
-                    response.getHeaders()
-                            .getContentDisposition()
-                            .toString()
-                            .contains("document.docx"));
+            assertTrue(contentDisposition(response).contains("document.docx"));
         }
     }
 }

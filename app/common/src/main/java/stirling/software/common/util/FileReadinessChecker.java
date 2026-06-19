@@ -10,7 +10,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
 
-import org.springframework.stereotype.Component;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,7 +40,7 @@ import stirling.software.common.model.ApplicationProperties.AutoPipeline.FileRea
  * ApplicationProperties.AutoPipeline}. Setting {@code enabled: false} makes every call return
  * {@code true} so the checker is a no-op drop-in.
  */
-@Component
+@ApplicationScoped
 @RequiredArgsConstructor
 @Slf4j
 public class FileReadinessChecker {

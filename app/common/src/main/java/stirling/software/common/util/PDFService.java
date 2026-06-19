@@ -5,13 +5,14 @@ import java.util.List;
 
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.springframework.stereotype.Service;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.common.service.CustomPDFDocumentFactory;
 
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 public class PDFService {
 

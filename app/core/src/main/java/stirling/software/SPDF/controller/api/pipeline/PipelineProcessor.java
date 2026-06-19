@@ -6,20 +6,17 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.*;
-import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.multipart.MultipartFile;
-
 import io.github.pixee.security.Filenames;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.Response;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,11 +24,14 @@ import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.PipelineOperation;
 import stirling.software.SPDF.model.PipelineResult;
 import stirling.software.SPDF.service.ApiDocService;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.io.FileSystemResource;
+import stirling.software.common.model.io.Resource;
 import stirling.software.common.service.InternalApiClient;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.ZipExtractionUtils;
 
-@Service
+@ApplicationScoped
 @Slf4j
 public class PipelineProcessor {
 
@@ -67,6 +67,15 @@ public class PipelineProcessor {
         }
         // Removing the last part and reattaching the extension
         return name.substring(0, underscoreIndex) + extension;
+    }
+
+    /**
+     * Add a value to a multi-value form body. The body is a {@code Map<String, List<Object>>}
+     * (replacing Spring's {@code MultiValueMap}) because the migrated {@link InternalApiClient}
+     * encodes the multipart body from that shape.
+     */
+    private static void addToBody(Map<String, List<Object>> body, String key, Object value) {
+        body.computeIfAbsent(key, k -> new ArrayList<>()).add(value);
     }
 
     PipelineResult runPipelineAgainstFiles(List<Resource> outputFiles, PipelineConfig config)
@@ -106,38 +115,38 @@ public class PipelineProcessor {
                                         .toLowerCase(Locale.ROOT)
                                         .endsWith(extension)) {
                             hasInputFileType = true;
-                            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-                            body.add("fileInput", file);
+                            Map<String, List<Object>> body = new LinkedHashMap<>();
+                            addToBody(body, "fileInput", file);
                             for (Entry<String, Object> entry : parameters.entrySet()) {
                                 if (entry.getValue() instanceof List<?> entryList) {
                                     for (Object item : entryList) {
-                                        body.add(entry.getKey(), item);
+                                        addToBody(body, entry.getKey(), item);
                                     }
                                 } else {
-                                    body.add(entry.getKey(), entry.getValue());
+                                    addToBody(body, entry.getKey(), entry.getValue());
                                 }
                             }
-                            ResponseEntity<Resource> response =
-                                    internalApiClient.post(operation, body);
+                            Response response = internalApiClient.post(operation, body);
+                            Resource responseBody = (Resource) response.getEntity();
                             // If the operation is filter and the response body is null or empty,
                             // skip
                             // this
                             // file
-                            if (response.getBody()
+                            if (responseBody
                                     instanceof
                                     InternalApiClient.TempFileResource tempFileResource) {
                                 result.addTempFile(tempFileResource.getTempFile());
                             }
 
                             if (operation.startsWith("/api/v1/filter/filter-")
-                                    && (response.getBody() == null
-                                            || response.getBody().contentLength() == 0)) {
+                                    && (responseBody == null
+                                            || responseBody.contentLength() == 0)) {
                                 filtersApplied = true;
                                 log.info("Skipping file due to filtering {}", operation);
                                 continue;
                             }
-                            if (!HttpStatus.OK.equals(response.getStatusCode())) {
-                                logPrintStream.println("Error: " + response.getBody());
+                            if (response.getStatus() != Response.Status.OK.getStatusCode()) {
+                                logPrintStream.println("Error: " + responseBody);
                                 hasErrors = true;
                                 continue;
                             }
@@ -187,33 +196,33 @@ public class PipelineProcessor {
                 }
                 // Check if there are matching files
                 if (!matchingFiles.isEmpty()) {
-                    // Create a new MultiValueMap for the request body
-                    MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+                    // Create a new multi-value body for the request
+                    Map<String, List<Object>> body = new LinkedHashMap<>();
                     // Add all matching files to the body
                     for (Resource file : matchingFiles) {
-                        body.add("fileInput", file);
+                        addToBody(body, "fileInput", file);
                     }
                     for (Entry<String, Object> entry : parameters.entrySet()) {
                         if (entry.getValue() instanceof List<?> entryList) {
                             for (Object item : entryList) {
-                                body.add(entry.getKey(), item);
+                                addToBody(body, entry.getKey(), item);
                             }
                         } else {
-                            body.add(entry.getKey(), entry.getValue());
+                            addToBody(body, entry.getKey(), entry.getValue());
                         }
                     }
-                    ResponseEntity<Resource> response = internalApiClient.post(operation, body);
-                    if (response.getBody()
+                    Response response = internalApiClient.post(operation, body);
+                    Resource responseBody = (Resource) response.getEntity();
+                    if (responseBody
                             instanceof InternalApiClient.TempFileResource tempFileResource) {
                         result.addTempFile(tempFileResource.getTempFile());
                     }
                     // Handle the response
-                    if (HttpStatus.OK.equals(response.getStatusCode())) {
+                    if (response.getStatus() == Response.Status.OK.getStatusCode()) {
                         processOutputFiles(operation, response, newOutputFiles, result);
                     } else {
                         // Log error if the response status is not OK
-                        logPrintStream.println(
-                                "Error in multi-input operation: " + response.getBody());
+                        logPrintStream.println("Error in multi-input operation: " + responseBody);
                         hasErrors = true;
                     }
                 } else {
@@ -260,7 +269,7 @@ public class PipelineProcessor {
 
     private List<Resource> processOutputFiles(
             String operation,
-            ResponseEntity<Resource> response,
+            Response response,
             List<Resource> newOutputFiles,
             PipelineResult result)
             throws IOException {
@@ -275,14 +284,16 @@ public class PipelineProcessor {
             // Otherwise, keep the original filename.
             newFilename = removeTrailingNaming(extractFilename(response));
         }
+        final String finalNewFilename = newFilename;
+        Resource responseBody = (Resource) response.getEntity();
         // Check if the response body is a zip file
-        if (ZipExtractionUtils.isZip(response.getBody(), newFilename)) {
+        if (ZipExtractionUtils.isZip(responseBody, newFilename)) {
             // Unzip the file and add all the files to the new output files
             newOutputFiles.addAll(
                     ZipExtractionUtils.extractZip(
-                            response.getBody(), tempFileManager, result::addTempFile));
+                            responseBody, tempFileManager, result::addTempFile));
         } else {
-            final Resource tempResource = response.getBody();
+            final Resource tempResource = responseBody;
             if (tempResource instanceof InternalApiClient.TempFileResource tfr) {
                 result.addTempFile(tfr.getTempFile());
             }
@@ -291,7 +302,7 @@ public class PipelineProcessor {
 
                         @Override
                         public String getFilename() {
-                            return newFilename;
+                            return finalNewFilename;
                         }
                     };
             newOutputFiles.add(outputResource);
@@ -299,11 +310,10 @@ public class PipelineProcessor {
         return newOutputFiles;
     }
 
-    public String extractFilename(ResponseEntity<Resource> response) {
+    public String extractFilename(Response response) {
         // Default filename if not found
         String filename = "default-filename.ext";
-        HttpHeaders headers = response.getHeaders();
-        String contentDisposition = headers.getFirst(HttpHeaders.CONTENT_DISPOSITION);
+        String contentDisposition = response.getHeaderString(HttpHeaders.CONTENT_DISPOSITION);
         if (contentDisposition != null && !contentDisposition.isEmpty()) {
             String[] parts = contentDisposition.split(";");
             for (String part : parts) {

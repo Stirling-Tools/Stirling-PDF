@@ -7,10 +7,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.net.URI;
 import java.time.Duration;
@@ -21,33 +17,42 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.Response;
 
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.storage.model.StoredFile;
 import stirling.software.proprietary.storage.provider.StorageProvider;
 import stirling.software.proprietary.storage.service.FileStorageService;
 
+/**
+ * Migration (Spring MockMvc -> direct JAX-RS calls): {@code FileStorageController.downloadFile} now
+ * returns {@code jakarta.ws.rs.core.Response}. When the storage provider yields a signed URL the
+ * controller replies with a 302 ({@code Response.Status.FOUND}) carrying only a {@code Location}
+ * header. The collaborators are injected fields (no constructor), so the two used mocks are
+ * assigned directly. The regression fence (no session credentials forwarded on the redirect) is
+ * preserved by asserting the redirect Response carries no Authorization/Cookie/Set-Cookie headers.
+ */
 @ExtendWith(MockitoExtension.class)
 class FileStorageControllerTest {
 
+    private static final int FOUND = Response.Status.FOUND.getStatusCode();
     private static final String SIGNED_URL =
             "https://test-bucket.s3.example.com/signed-blob?X-Amz-Signature=abc";
 
     @Mock private FileStorageService fileStorageService;
     @Mock private StorageProvider storageProvider;
 
-    private MockMvc mockMvc;
+    private FileStorageController controller;
 
     @BeforeEach
     void setUp() {
-        FileStorageController controller =
-                new FileStorageController(fileStorageService, storageProvider);
-        mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+        controller = new FileStorageController();
+        // @Inject fields are not populated without a CDI container; wire the mocks the download
+        // path uses directly (folderService / securityIdentity are not exercised here).
+        controller.fileStorageService = fileStorageService;
+        controller.storageProvider = storageProvider;
     }
 
     @Test
@@ -61,18 +66,16 @@ class FileStorageControllerTest {
                         eq("11/abc-doc.pdf"), any(Duration.class), anyBoolean(), anyString()))
                 .thenReturn(Optional.of(URI.create(SIGNED_URL)));
 
-        MvcResult result =
-                mockMvc.perform(get("/api/v1/storage/files/{fileId}/download", 77L))
-                        .andExpect(status().is(HttpStatus.FOUND.value()))
-                        .andExpect(header().string(HttpHeaders.LOCATION, SIGNED_URL))
-                        .andExpect(redirectedUrl(SIGNED_URL))
-                        .andReturn();
+        Response response = controller.downloadFile(77L, false);
+
+        assertThat(response.getStatus()).isEqualTo(FOUND);
+        assertThat(response.getLocation()).isEqualTo(URI.create(SIGNED_URL));
 
         // Regression fence: signed URLs delegate auth to the URL itself, so the redirect
         // response must NOT carry any session credentials forward.
-        assertThat(result.getResponse().getHeader(HttpHeaders.AUTHORIZATION)).isNull();
-        assertThat(result.getResponse().getHeader(HttpHeaders.COOKIE)).isNull();
-        assertThat(result.getResponse().getHeader(HttpHeaders.SET_COOKIE)).isNull();
+        assertThat(response.getHeaderString(HttpHeaders.AUTHORIZATION)).isNull();
+        assertThat(response.getHeaderString("Cookie")).isNull();
+        assertThat(response.getHeaderString("Set-Cookie")).isNull();
     }
 
     @Test
@@ -85,9 +88,10 @@ class FileStorageControllerTest {
                         eq("11/abc-doc.pdf"), any(Duration.class), eq(false), eq("doc.pdf")))
                 .thenReturn(Optional.of(URI.create(SIGNED_URL)));
 
-        mockMvc.perform(get("/api/v1/storage/files/{fileId}/download", 77L))
-                .andExpect(status().is(HttpStatus.FOUND.value()))
-                .andExpect(header().string(HttpHeaders.LOCATION, SIGNED_URL));
+        Response response = controller.downloadFile(77L, false);
+
+        assertThat(response.getStatus()).isEqualTo(FOUND);
+        assertThat(response.getLocation()).isEqualTo(URI.create(SIGNED_URL));
 
         verify(storageProvider)
                 .signedDownloadUrl(
@@ -104,9 +108,10 @@ class FileStorageControllerTest {
                         eq("11/abc-doc.pdf"), any(Duration.class), eq(true), eq("doc.pdf")))
                 .thenReturn(Optional.of(URI.create(SIGNED_URL)));
 
-        mockMvc.perform(get("/api/v1/storage/files/{fileId}/download", 77L).param("inline", "true"))
-                .andExpect(status().is(HttpStatus.FOUND.value()))
-                .andExpect(header().string(HttpHeaders.LOCATION, SIGNED_URL));
+        Response response = controller.downloadFile(77L, true);
+
+        assertThat(response.getStatus()).isEqualTo(FOUND);
+        assertThat(response.getLocation()).isEqualTo(URI.create(SIGNED_URL));
 
         verify(storageProvider)
                 .signedDownloadUrl(

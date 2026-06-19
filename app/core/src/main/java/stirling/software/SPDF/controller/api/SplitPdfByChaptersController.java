@@ -13,13 +13,16 @@ import java.util.zip.ZipOutputStream;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -33,7 +36,9 @@ import stirling.software.SPDF.model.api.SplitPdfByChaptersRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.PdfMetadata;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfMetadataService;
 import stirling.software.common.util.ExceptionUtils;
@@ -46,6 +51,8 @@ import stirling.software.jpdfium.PdfDocument;
 import stirling.software.jpdfium.PdfSplit;
 
 @GeneralApi
+@jakarta.ws.rs.Path("/api/v1/general")
+@ApplicationScoped
 @Slf4j
 @RequiredArgsConstructor
 public class SplitPdfByChaptersController {
@@ -88,9 +95,12 @@ public class SplitPdfByChaptersController {
         }
     }
 
+    @POST
+    @jakarta.ws.rs.Path("/split-pdf-by-chapters")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
             value = "/split-pdf-by-chapters",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @MultiFileResponse
     @Operation(
@@ -98,8 +108,20 @@ public class SplitPdfByChaptersController {
             description =
                     "Splits a PDF into chapters and returns a ZIP file. Input:PDF Output:ZIP-PDF"
                             + " Type:SISO")
-    public ResponseEntity<Resource> splitPdf(@ModelAttribute SplitPdfByChaptersRequest request)
+    public Response splitPdf(
+            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("fileId") String fileId,
+            @RestForm("includeMetadata") Boolean includeMetadataForm,
+            @RestForm("allowDuplicates") Boolean allowDuplicatesForm,
+            @RestForm("bookmarkLevel") Integer bookmarkLevelForm)
             throws Exception {
+        SplitPdfByChaptersRequest request = new SplitPdfByChaptersRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        request.setFileId(fileId);
+        request.setIncludeMetadata(includeMetadataForm);
+        request.setAllowDuplicates(allowDuplicatesForm);
+        request.setBookmarkLevel(bookmarkLevelForm);
+
         MultipartFile file = request.getFileInput();
 
         boolean includeMetadata = Boolean.TRUE.equals(request.getIncludeMetadata());

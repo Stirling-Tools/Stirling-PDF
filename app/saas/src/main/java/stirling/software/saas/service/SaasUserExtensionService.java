@@ -2,9 +2,10 @@ package stirling.software.saas.service;
 
 import java.time.LocalDateTime;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,8 +18,8 @@ import stirling.software.saas.repository.SaasUserExtensionsRepository;
  * Read/write access to {@link SaasUserExtensions}. Reads return safe defaults when no row exists
  * for the user; writes create the row lazily.
  */
-@Service
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 @RequiredArgsConstructor
 @Slf4j
 public class SaasUserExtensionService {
@@ -28,7 +29,12 @@ public class SaasUserExtensionService {
     public SaasUserExtensions getOrCreate(User user) {
         return repository
                 .findByUserId(user.getId())
-                .orElseGet(() -> repository.save(new SaasUserExtensions(user)));
+                .orElseGet(
+                        () -> {
+                            SaasUserExtensions ext = new SaasUserExtensions(user);
+                            repository.persist(ext);
+                            return ext;
+                        });
     }
 
     public boolean isMeteredBillingEnabled(User user) {
@@ -42,7 +48,7 @@ public class SaasUserExtensionService {
     public void setMeteredBillingEnabled(User user, boolean enabled) {
         SaasUserExtensions ext = getOrCreate(user);
         ext.setHasMeteredBillingEnabled(enabled);
-        repository.save(ext);
+        repository.persist(ext);
     }
 
     public LocalDateTime getApiKeyFirstUsedAt(User user) {
@@ -58,7 +64,7 @@ public class SaasUserExtensionService {
         SaasUserExtensions ext = getOrCreate(user);
         if (ext.getApiKeyFirstUsedAt() == null) {
             ext.setApiKeyFirstUsedAt(LocalDateTime.now());
-            repository.save(ext);
+            repository.persist(ext);
         }
     }
 }

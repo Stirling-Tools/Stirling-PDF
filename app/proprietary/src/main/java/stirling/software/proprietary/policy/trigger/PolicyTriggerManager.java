@@ -1,27 +1,34 @@
 package stirling.software.proprietary.policy.trigger;
 
-import java.util.List;
+import io.quarkus.arc.profile.IfBuildProfile;
+import io.quarkus.runtime.ShutdownEvent;
+import io.quarkus.runtime.StartupEvent;
 
-import org.springframework.context.SmartLifecycle;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/** Starts and stops every {@link PolicyTrigger} with the application lifecycle. */
+/**
+ * Starts and stops every {@link PolicyTrigger} with the application lifecycle. Background triggers
+ * (schedule, and future folder/S3) begin watching on startup and release resources on shutdown;
+ * request-driven triggers (manual) are no-ops.
+ *
+ * <p>This is the single activation point for triggers - a new background trigger only has to be a
+ * {@link PolicyTrigger} bean.
+ */
 @Slf4j
-@Service
-@RequiredArgsConstructor
-@Profile("saas")
-public class PolicyTriggerManager implements SmartLifecycle {
+@ApplicationScoped
+@IfBuildProfile("saas")
+public class PolicyTriggerManager {
 
-    private final List<PolicyTrigger> triggers;
+    @Inject Instance<PolicyTrigger> triggers;
 
     private volatile boolean running;
 
-    @Override
-    public void start() {
+    public void start(@Observes StartupEvent event) {
         for (PolicyTrigger trigger : triggers) {
             try {
                 trigger.start();
@@ -32,8 +39,7 @@ public class PolicyTriggerManager implements SmartLifecycle {
         running = true;
     }
 
-    @Override
-    public void stop() {
+    public void stop(@Observes ShutdownEvent event) {
         for (PolicyTrigger trigger : triggers) {
             try {
                 trigger.stop();
@@ -44,7 +50,6 @@ public class PolicyTriggerManager implements SmartLifecycle {
         running = false;
     }
 
-    @Override
     public boolean isRunning() {
         return running;
     }

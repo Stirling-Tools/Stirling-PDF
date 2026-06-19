@@ -1,22 +1,35 @@
 package stirling.software.proprietary.model.api.ai;
 
-import org.springframework.http.MediaType;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-import jakarta.validation.constraints.NotNull;
-
 import lombok.Data;
+
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 
 @Data
 @Schema(description = "A single PDF file input")
 public class AiWorkflowFileInput {
 
-    @NotNull
+    // The controller binds the repeated multipart "fileInput" parts as List<FileUpload> and wraps
+    // each into this model (RESTEasy Reactive cannot bind a List of POJOs-with-files directly). The
+    // getFileInput() accessor adapts the FileUpload back to the MultipartFile shim the AI workflow
+    // service consumes.
+    private FileUpload fileInputUpload;
+
+    public AiWorkflowFileInput() {}
+
+    public AiWorkflowFileInput(FileUpload fileInputUpload) {
+        this.fileInputUpload = fileInputUpload;
+    }
+
     @Schema(
             description = "The input PDF file",
-            contentMediaType = MediaType.APPLICATION_PDF_VALUE,
+            contentMediaType = "application/pdf",
             format = "binary")
-    private MultipartFile fileInput;
+    public MultipartFile getFileInput() {
+        return FileUploadMultipartFile.of(fileInputUpload);
+    }
 }

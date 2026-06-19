@@ -2,24 +2,27 @@ package stirling.software.proprietary.controller.api;
 
 import java.io.IOException;
 
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-import lombok.RequiredArgsConstructor;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.proprietary.service.AiToolResponseHeaders;
 import stirling.software.proprietary.service.PdfCommentAgentOrchestrator;
 import stirling.software.proprietary.service.PdfCommentAgentOrchestrator.AnnotatedPdf;
@@ -39,19 +42,18 @@ import tools.jackson.databind.node.ObjectNode;
  * <p>The raw PDF never leaves Java. Python only receives positioned text chunks.
  */
 @Slf4j
-@RestController
-@RequestMapping("/api/v1/ai/tools")
-@RequiredArgsConstructor
+@ApplicationScoped
+@Path("/api/v1/ai/tools")
 @Tag(name = "AI Tools", description = "Dispatchable AI-backed tools.")
 public class PdfCommentAgentController {
 
-    private final PdfCommentAgentOrchestrator orchestrator;
-    private final ObjectMapper objectMapper;
+    @Inject PdfCommentAgentOrchestrator orchestrator;
+    @Inject ObjectMapper objectMapper;
 
-    @PostMapping(
-            value = "/pdf-comment-agent",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            produces = MediaType.APPLICATION_PDF_VALUE)
+    @POST
+    @Path("/pdf-comment-agent")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces("application/pdf")
     @Operation(
             summary = "Annotate a PDF with AI-generated sticky-note comments",
             description =
@@ -66,17 +68,19 @@ public class PdfCommentAgentController {
 
                     Input: PDF + prompt  Output: PDF  Type: SISO
                     """)
-    public ResponseEntity<Resource> pdfCommentAgent(
+    public Response pdfCommentAgent(
             @Parameter(description = "The PDF document to annotate", required = true)
-                    @RequestParam("fileInput")
-                    MultipartFile fileInput,
+                    @RestForm("fileInput")
+                    FileUpload fileInputUpload,
             @Parameter(
                             description =
-                                    "Natural-language instructions for the AI — what to comment on",
+                                    "Natural-language instructions for the AI - what to comment on",
                             required = true)
-                    @RequestParam("prompt")
+                    @RestForm("prompt")
                     String prompt)
             throws IOException {
+
+        MultipartFile fileInput = FileUploadMultipartFile.of(fileInputUpload);
 
         String safeName =
                 fileInput.getOriginalFilename() != null
@@ -87,15 +91,17 @@ public class PdfCommentAgentController {
                 safeName,
                 prompt == null ? 0 : prompt.length());
 
-        // ResponseStatusException (validation errors) propagates to Spring's default handler;
+        // ResponseStatusException (validation errors) propagates to the default handler;
         // IOException is re-thrown to produce a 500. Other RuntimeExceptions likewise propagate.
         AnnotatedPdf annotated = orchestrator.applyComments(fileInput, prompt);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_PDF);
-        headers.setContentDispositionFormData("attachment", annotated.fileName());
-        headers.setContentLength(annotated.bytes().length);
-        headers.set(AiToolResponseHeaders.TOOL_REPORT, buildReportHeader(annotated));
-        return ResponseEntity.ok().headers(headers).body(new ByteArrayResource(annotated.bytes()));
+        return Response.ok(annotated.bytes())
+                .type("application/pdf")
+                .header(HttpHeaders.CONTENT_LENGTH, annotated.bytes().length)
+                .header(
+                        "Content-Disposition",
+                        "form-data; name=\"attachment\"; filename=\"" + annotated.fileName() + "\"")
+                .header(AiToolResponseHeaders.TOOL_REPORT, buildReportHeader(annotated))
+                .build();
     }
 
     /**

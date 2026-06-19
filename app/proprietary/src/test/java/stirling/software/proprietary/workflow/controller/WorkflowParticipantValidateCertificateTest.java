@@ -1,27 +1,29 @@
 package stirling.software.proprietary.workflow.controller;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.Date;
 import java.util.Optional;
 
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.server.ResponseStatusException;
 
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
+
+import stirling.software.common.testsupport.TestFileUploads;
 import stirling.software.proprietary.workflow.dto.CertificateInfo;
+import stirling.software.proprietary.workflow.dto.CertificateValidationResponse;
 import stirling.software.proprietary.workflow.model.WorkflowParticipant;
 import stirling.software.proprietary.workflow.repository.WorkflowParticipantRepository;
 import stirling.software.proprietary.workflow.service.CertificateSubmissionValidator;
@@ -30,6 +32,17 @@ import stirling.software.proprietary.workflow.service.WorkflowSessionService;
 
 import tools.jackson.databind.ObjectMapper;
 
+/**
+ * MIGRATION (Spring -> Quarkus): {@code WorkflowParticipantController} is a JAX-RS resource using
+ * field injection, so collaborators are wired by assigning the package-private {@code @Inject}
+ * fields directly (no constructor). The handler binds RESTEasy Reactive {@code FileUpload} args
+ * (stubbed via {@link TestFileUploads}) and returns {@link Response}.
+ *
+ * <p>Error semantics mirror the production handler: a missing file / invalid token throw {@code
+ * WebApplicationException} (asserted with {@code assertThrows}), while a validator failure is
+ * caught and returned as HTTP 200 with {@code valid:false}, so those are read off the {@code
+ * CertificateValidationResponse} entity.
+ */
 @ExtendWith(MockitoExtension.class)
 class WorkflowParticipantValidateCertificateTest {
 
@@ -38,21 +51,19 @@ class WorkflowParticipantValidateCertificateTest {
     @Mock private MetadataEncryptionService metadataEncryptionService;
     @Mock private CertificateSubmissionValidator certificateSubmissionValidator;
 
-    private MockMvc mockMvc;
+    private WorkflowParticipantController controller;
 
     private static final String VALID_TOKEN = "valid-share-token-abc123";
     private static final byte[] DUMMY_CERT = "dummy-cert-bytes".getBytes();
 
     @BeforeEach
     void setUp() {
-        WorkflowParticipantController controller =
-                new WorkflowParticipantController(
-                        workflowSessionService,
-                        participantRepository,
-                        new ObjectMapper(),
-                        metadataEncryptionService,
-                        certificateSubmissionValidator);
-        mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+        controller = new WorkflowParticipantController();
+        controller.workflowSessionService = workflowSessionService;
+        controller.participantRepository = participantRepository;
+        controller.objectMapper = new ObjectMapper();
+        controller.metadataEncryptionService = metadataEncryptionService;
+        controller.certificateSubmissionValidator = certificateSubmissionValidator;
     }
 
     private WorkflowParticipant activeParticipant() {
@@ -61,10 +72,14 @@ class WorkflowParticipantValidateCertificateTest {
         return p;
     }
 
+    private static FileUpload p12Upload() {
+        return TestFileUploads.of(DUMMY_CERT, "cert.p12", "application/octet-stream");
+    }
+
     // ---- Happy path: valid cert ----
 
     @Test
-    void validCertificate_returns200WithValidTrue() throws Exception {
+    void validCertificate_returns200WithValidTrue() {
         when(participantRepository.findByShareToken(VALID_TOKEN))
                 .thenReturn(Optional.of(activeParticipant()));
 
@@ -78,82 +93,65 @@ class WorkflowParticipantValidateCertificateTest {
         when(certificateSubmissionValidator.validateAndExtractInfo(any(), eq("P12"), eq("secret")))
                 .thenReturn(info);
 
-        MockMultipartFile certFile =
-                new MockMultipartFile(
-                        "p12File", "cert.p12", "application/octet-stream", DUMMY_CERT);
+        Response resp =
+                controller.validateCertificate(VALID_TOKEN, "P12", "secret", p12Upload(), null);
 
-        mockMvc.perform(
-                        multipart("/api/v1/workflow/participant/validate-certificate")
-                                .file(certFile)
-                                .param("participantToken", VALID_TOKEN)
-                                .param("certType", "P12")
-                                .param("password", "secret"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.valid").value(true))
-                .andExpect(jsonPath("$.subjectName").value("Test Signer"));
+        assertEquals(200, resp.getStatus());
+        CertificateValidationResponse body = (CertificateValidationResponse) resp.getEntity();
+        assertTrue(body.valid());
+        assertEquals("Test Signer", body.subjectName());
     }
 
-    // ---- Bad password / invalid cert → validator throws 400, we return 200 valid:false ----
+    // ---- Bad password / invalid cert -> validator throws 400, we return 200 valid:false ----
 
     @Test
-    void invalidCertificate_returns200WithValidFalseAndErrorMessage() throws Exception {
+    void invalidCertificate_returns200WithValidFalseAndErrorMessage() {
         when(participantRepository.findByShareToken(VALID_TOKEN))
                 .thenReturn(Optional.of(activeParticipant()));
 
         when(certificateSubmissionValidator.validateAndExtractInfo(any(), any(), any()))
                 .thenThrow(
-                        new ResponseStatusException(
-                                HttpStatus.BAD_REQUEST,
-                                "Invalid certificate password or corrupt keystore file"));
+                        new WebApplicationException(
+                                "Invalid certificate password or corrupt keystore file",
+                                Response.Status.BAD_REQUEST));
 
-        MockMultipartFile certFile =
-                new MockMultipartFile(
-                        "p12File", "cert.p12", "application/octet-stream", DUMMY_CERT);
+        Response resp =
+                controller.validateCertificate(VALID_TOKEN, "P12", "wrong", p12Upload(), null);
 
-        mockMvc.perform(
-                        multipart("/api/v1/workflow/participant/validate-certificate")
-                                .file(certFile)
-                                .param("participantToken", VALID_TOKEN)
-                                .param("certType", "P12")
-                                .param("password", "wrong"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.valid").value(false))
-                .andExpect(
-                        jsonPath("$.error")
-                                .value("Invalid certificate password or corrupt keystore file"));
+        assertEquals(200, resp.getStatus());
+        CertificateValidationResponse body = (CertificateValidationResponse) resp.getEntity();
+        assertFalse(body.valid());
+        assertEquals("Invalid certificate password or corrupt keystore file", body.error());
     }
 
-    // ---- No file → 400 bad request ----
+    // ---- No file -> 400 bad request ----
 
     @Test
-    void missingCertFile_returns400() throws Exception {
+    void missingCertFile_returns400() {
         when(participantRepository.findByShareToken(VALID_TOKEN))
                 .thenReturn(Optional.of(activeParticipant()));
 
-        mockMvc.perform(
-                        multipart("/api/v1/workflow/participant/validate-certificate")
-                                .param("participantToken", VALID_TOKEN)
-                                .param("certType", "P12")
-                                .param("password", "pass"))
-                .andExpect(status().isBadRequest());
+        WebApplicationException ex =
+                assertThrows(
+                        WebApplicationException.class,
+                        () ->
+                                controller.validateCertificate(
+                                        VALID_TOKEN, "P12", "pass", null, null));
+        assertEquals(400, ex.getResponse().getStatus());
     }
 
-    // ---- Invalid / expired token → 403 ----
+    // ---- Invalid / expired token -> 403 ----
 
     @Test
-    void invalidToken_returns403() throws Exception {
+    void invalidToken_returns403() {
         when(participantRepository.findByShareToken("bad-token")).thenReturn(Optional.empty());
 
-        MockMultipartFile certFile =
-                new MockMultipartFile(
-                        "p12File", "cert.p12", "application/octet-stream", DUMMY_CERT);
-
-        mockMvc.perform(
-                        multipart("/api/v1/workflow/participant/validate-certificate")
-                                .file(certFile)
-                                .param("participantToken", "bad-token")
-                                .param("certType", "P12")
-                                .param("password", "pass"))
-                .andExpect(status().isForbidden());
+        WebApplicationException ex =
+                assertThrows(
+                        WebApplicationException.class,
+                        () ->
+                                controller.validateCertificate(
+                                        "bad-token", "P12", "pass", p12Upload(), null));
+        assertEquals(403, ex.getResponse().getStatus());
     }
 }

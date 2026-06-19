@@ -18,12 +18,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.context.MessageSource;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.exception.UnsupportedProviderException;
+import stirling.software.common.security.PasswordEncoder;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.database.repository.AuthorityRepository;
 import stirling.software.proprietary.security.database.repository.PersistentLoginRepository;
@@ -44,6 +43,14 @@ import stirling.software.proprietary.workflow.repository.WorkflowParticipantRepo
 import stirling.software.proprietary.workflow.repository.WorkflowSessionRepository;
 import stirling.software.proprietary.workflow.service.UserServerCertificateService;
 
+/**
+ * MIGRATION (Spring -> Quarkus): {@link UserService} now depends on the {@code
+ * stirling.software.common.security.PasswordEncoder} shim (was Spring's {@code
+ * org.springframework.security.crypto.password.PasswordEncoder}); the Spring {@code MessageSource}
+ * dependency was removed (localization deferred), so it is no longer mocked. Persistence uses the
+ * Panache repository API: {@code persist(...)} (void) for inserts/updates and per-item {@code
+ * delete(...)} for cleanup, replacing Spring Data's {@code save(...)} / {@code deleteAll(List)}.
+ */
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
@@ -51,7 +58,6 @@ class UserServiceTest {
     @Mock private TeamRepository teamRepository;
     @Mock private AuthorityRepository authorityRepository;
     @Mock private PasswordEncoder passwordEncoder;
-    @Mock private MessageSource messageSource;
     @Mock private SessionPersistentRegistry sessionRegistry;
     @Mock private DatabaseServiceInterface databaseService;
     @Mock private ApplicationProperties.Security.OAUTH2 oAuth2;
@@ -72,10 +78,8 @@ class UserServiceTest {
         Long teamId = 42L;
         Team team = new Team();
         team.setId(teamId);
-        when(teamRepository.findById(teamId)).thenReturn(Optional.of(team));
+        when(teamRepository.findByIdOptional(teamId)).thenReturn(Optional.of(team));
         when(passwordEncoder.encode("plain")).thenReturn("encoded");
-        when(userRepository.save(any(User.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
 
         SaveUserRequest request =
                 SaveUserRequest.builder()
@@ -96,8 +100,9 @@ class UserServiceTest {
 
         User saved = userService.saveUserCore(request);
 
+        // saveUserCore persists via Panache (void) and returns the same instance it built.
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
-        verify(userRepository).save(userCaptor.capture());
+        verify(userRepository).persist(userCaptor.capture());
         verify(databaseService).exportDatabase();
 
         User persisted = userCaptor.getValue();
@@ -137,15 +142,13 @@ class UserServiceTest {
         Team defaultTeam = new Team();
         defaultTeam.setName("Default");
         when(teamRepository.findByName("Default")).thenReturn(Optional.of(defaultTeam));
-        when(userRepository.save(any(User.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
 
         SaveUserRequest request = SaveUserRequest.builder().username("anotherUser").build();
 
         User saved = userService.saveUserCore(request);
 
         verify(teamRepository).findByName("Default");
-        verify(teamRepository, never()).findById(anyLong());
+        verify(teamRepository, never()).findByIdOptional(anyLong());
         verify(databaseService).exportDatabase();
         assertEquals(defaultTeam, saved.getTeam(), "Default team should be applied");
     }
@@ -179,13 +182,11 @@ class UserServiceTest {
         user.setUsername("user");
         when(userRepository.findByUsernameIgnoreCase("user")).thenReturn(Optional.of(user));
         when(userRepository.findByApiKey(any())).thenReturn(Optional.empty());
-        when(userRepository.save(any(User.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
 
         User updated = userService.addApiKeyToUser("user");
 
         assertNotNull(updated.getApiKey());
-        verify(userRepository).save(user);
+        verify(userRepository).persist(user);
     }
 
     @Test
@@ -194,13 +195,11 @@ class UserServiceTest {
         user.setUsername("user");
         when(userRepository.findByUsernameIgnoreCase("user")).thenReturn(Optional.of(user));
         when(userRepository.findByApiKey(any())).thenReturn(Optional.empty());
-        when(userRepository.save(any(User.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
 
         String apiKey = userService.getApiKeyForUser("user");
 
         assertNotNull(apiKey);
-        verify(userRepository).save(user);
+        verify(userRepository).persist(user);
     }
 
     @Test
@@ -240,18 +239,20 @@ class UserServiceTest {
         verify(fileShareAccessRepository).deleteByUser(user);
         // Inbound share (file shared with this user by others) cleaned up
         verify(fileShareAccessRepository).deleteByFileShare(inboundShare);
-        verify(fileShareRepository).deleteAll(List.of(inboundShare));
+        verify(fileShareRepository).delete(inboundShare);
         // Participant records in others' sessions de-linked (not deleted) to preserve audit trail
         verify(workflowParticipantRepository).clearUserReferences(user);
         verify(storedFileRepository).clearWorkflowSessionReferencesByOwner(user);
-        verify(workflowSessionRepository).deleteAll(List.of(session));
+        verify(workflowSessionRepository).delete(session);
         verify(fileShareAccessRepository).deleteByFileShare(share);
-        verify(storedFileRepository).deleteAll(List.of(ownedFile));
+        verify(storedFileRepository).delete(ownedFile);
         verify(userRepository).delete(user);
         // Persistent login (remember-me) tokens revoked
         verify(persistentLoginRepository).deleteByUsername("target");
-        // Storage blobs scheduled for physical deletion
-        verify(storageCleanupEntryRepository, times(2)).save(any());
+        // Storage blobs scheduled for physical deletion (main + history; audit key was null)
+        verify(storageCleanupEntryRepository, times(2))
+                .persist(
+                        any(stirling.software.proprietary.storage.model.StorageCleanupEntry.class));
         verify(userService).invalidateUserSessions("target");
     }
 
@@ -269,9 +270,9 @@ class UserServiceTest {
         userService.deleteUser("clean");
 
         verify(userRepository).delete(user);
-        verify(fileShareAccessRepository, never()).deleteByFileShare(any());
-        verify(workflowSessionRepository).deleteAll(List.of());
-        verify(storedFileRepository).deleteAll(List.of());
+        verify(fileShareAccessRepository, never()).deleteByFileShare(any(FileShare.class));
+        verify(workflowSessionRepository, never()).delete(any(WorkflowSession.class));
+        verify(storedFileRepository, never()).delete(any(StoredFile.class));
     }
 
     @Test
@@ -287,7 +288,7 @@ class UserServiceTest {
 
         userService.deleteUser("internal");
 
-        verify(userRepository, never()).delete(any());
+        verify(userRepository, never()).delete(any(User.class));
         verify(workflowSessionRepository, never()).findByOwnerOrderByCreatedAtDesc(any());
     }
 }

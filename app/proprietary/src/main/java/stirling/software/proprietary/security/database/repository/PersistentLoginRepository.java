@@ -1,11 +1,17 @@
 package stirling.software.proprietary.security.database.repository;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import stirling.software.proprietary.security.model.PersistentLogin;
 
-@Repository
-public interface PersistentLoginRepository extends JpaRepository<PersistentLogin, String> {
-    void deleteByUsername(String username);
+@ApplicationScoped
+public class PersistentLoginRepository implements PanacheRepositoryBase<PersistentLogin, String> {
+
+    @Transactional
+    public void deleteByUsername(String username) {
+        delete("username", username);
+    }
 }

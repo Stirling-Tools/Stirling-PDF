@@ -2,12 +2,10 @@ package stirling.software.SPDF.controller.api.converters;
 
 import java.nio.charset.StandardCharsets;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ControllerAdvice;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseBody;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.ext.ExceptionMapper;
+import jakarta.ws.rs.ext.Provider;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,16 +14,18 @@ import stirling.software.SPDF.exception.CacheUnavailableException;
 
 import tools.jackson.databind.ObjectMapper;
 
-@ControllerAdvice(assignableTypes = ConvertPdfJsonController.class)
+// NOTE: The original @ControllerAdvice was scoped to ConvertPdfJsonController only
+// (assignableTypes). JAX-RS ExceptionMappers are global; CacheUnavailableException is
+// expected to be specific to this controller's flow, so global mapping is acceptable.
+@Provider
 @Slf4j
 @RequiredArgsConstructor
-public class ConvertPdfJsonExceptionHandler {
+public class ConvertPdfJsonExceptionHandler implements ExceptionMapper<CacheUnavailableException> {
 
     private final ObjectMapper objectMapper;
 
-    @ExceptionHandler(CacheUnavailableException.class)
-    @ResponseBody
-    public ResponseEntity<byte[]> handleCacheUnavailable(CacheUnavailableException ex) {
+    @Override
+    public Response toResponse(CacheUnavailableException ex) {
         try {
             byte[] body =
                     objectMapper.writeValueAsBytes(
@@ -33,9 +33,10 @@ public class ConvertPdfJsonExceptionHandler {
                                     "error", "cache_unavailable",
                                     "action", "reupload",
                                     "message", ex.getMessage()));
-            return ResponseEntity.status(HttpStatus.GONE)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(body);
+            return Response.status(Response.Status.GONE)
+                    .type(MediaType.APPLICATION_JSON)
+                    .entity(body)
+                    .build();
         } catch (Exception e) {
             log.warn("Failed to serialize cache_unavailable response", e);
             var fallbackBody =
@@ -44,16 +45,18 @@ public class ConvertPdfJsonExceptionHandler {
                             "action", "reupload",
                             "message", String.valueOf(ex.getMessage()));
             try {
-                return ResponseEntity.status(HttpStatus.GONE)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body(objectMapper.writeValueAsBytes(fallbackBody));
+                return Response.status(Response.Status.GONE)
+                        .type(MediaType.APPLICATION_JSON)
+                        .entity(objectMapper.writeValueAsBytes(fallbackBody))
+                        .build();
             } catch (Exception ignored) {
                 // Truly last-ditch fallback
-                return ResponseEntity.status(HttpStatus.GONE)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body(
+                return Response.status(Response.Status.GONE)
+                        .type(MediaType.APPLICATION_JSON)
+                        .entity(
                                 "{\"error\":\"cache_unavailable\",\"action\":\"reupload\",\"message\":\"Cache unavailable\"}"
-                                        .getBytes(StandardCharsets.UTF_8));
+                                        .getBytes(StandardCharsets.UTF_8))
+                        .build();
             }
         }
     }

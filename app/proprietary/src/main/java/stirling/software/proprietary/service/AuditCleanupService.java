@@ -3,13 +3,12 @@ package stirling.software.proprietary.service;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import io.quarkus.panache.common.Page;
+import io.quarkus.scheduler.Scheduled;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +18,7 @@ import stirling.software.proprietary.repository.PersistentAuditEventRepository;
 
 /** Service to periodically clean up old audit events based on retention policy. */
 @Slf4j
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 public class AuditCleanupService {
 
@@ -33,7 +32,7 @@ public class AuditCleanupService {
      * Scheduled task that runs daily to clean up old audit events. The retention period is
      * configurable in settings.yml.
      */
-    @Scheduled(fixedDelay = 1, initialDelay = 1, timeUnit = TimeUnit.DAYS)
+    @Scheduled(every = "24h", delay = 24, delayUnit = java.util.concurrent.TimeUnit.HOURS)
     public void cleanupOldAuditEvents() {
         if (!auditConfig.isEnabled()) {
             return;
@@ -87,21 +86,26 @@ public class AuditCleanupService {
     }
 
     /** Finds a batch of IDs to delete. */
-    @Transactional(readOnly = true)
-    private List<Long> findBatchOfIdsToDelete(Instant cutoffDate) {
-        PageRequest pageRequest = PageRequest.of(0, BATCH_SIZE, Sort.by("id"));
-        return auditRepository.findIdsForBatchDeletion(cutoffDate, pageRequest);
+    @Transactional
+    // package-private so the CDI @Transactional interceptor applies (was private under Spring)
+    List<Long> findBatchOfIdsToDelete(Instant cutoffDate) {
+        // Spring Data PageRequest.of(0, BATCH_SIZE, Sort.by("id")) -> Panache Page (first page,
+        // BATCH_SIZE rows). The repository's JPQL already applies "ORDER BY e.id".
+        Page page = Page.of(0, BATCH_SIZE);
+        return auditRepository.findIdsForBatchDeletion(cutoffDate, page);
     }
 
     /** Deletes a batch of events by ID. Each batch is in its own transaction. */
     @Transactional
-    private int deleteBatch(List<Long> batchIds) {
+    // package-private so the CDI @Transactional interceptor applies (was private under Spring)
+    int deleteBatch(List<Long> batchIds) {
         if (batchIds.isEmpty()) {
             return 0;
         }
 
         int batchSize = batchIds.size();
-        auditRepository.deleteAllByIdInBatch(batchIds);
+        // Spring Data deleteAllByIdInBatch(ids) -> Panache bulk delete by id collection.
+        auditRepository.delete("id IN ?1", batchIds);
         log.debug("Deleted batch of {} audit events", batchSize);
 
         return batchSize;

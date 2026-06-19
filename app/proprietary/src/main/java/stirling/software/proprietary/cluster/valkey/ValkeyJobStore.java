@@ -11,17 +11,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.springframework.data.redis.core.Cursor;
-import org.springframework.data.redis.core.RedisCallback;
-import org.springframework.data.redis.core.ScanOptions;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.stereotype.Component;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import lombok.RequiredArgsConstructor;
+import io.quarkus.redis.datasource.RedisDataSource;
+import io.quarkus.redis.datasource.hash.HashCommands;
+import io.quarkus.redis.datasource.keys.KeyCommands;
+import io.quarkus.redis.datasource.keys.KeyScanArgs;
+import io.quarkus.redis.datasource.keys.KeyScanCursor;
+import io.quarkus.redis.datasource.transactions.OptimisticLockingTransactionResult;
+import io.quarkus.redis.datasource.value.SetArgs;
+import io.quarkus.redis.datasource.value.ValueCommands;
+
+import jakarta.enterprise.context.ApplicationScoped;
+
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.cluster.JobStore;
@@ -31,11 +35,22 @@ import stirling.software.common.cluster.JobStoreEntry;
  * Valkey-backed {@link JobStore}. Each job is one hash; a reverse index maps fileId to jobId.
  *
  * <p><b>put() atomicity:</b> the hash fields, the per-job TTL, and the reverse-index entries are
- * issued inside a single pipelined Redis transaction (MULTI/EXEC). A partial failure cannot leave
- * the hash without a TTL or with half the file→job index entries written.
+ * issued inside a single Redis transaction (MULTI/EXEC). A partial failure cannot leave the hash
+ * without a TTL or with half the file->job index entries written.
  */
-@Component
-@RequiredArgsConstructor
+// TODO: Migration required - @ConditionalOnValkeyBackplane (Spring @ConditionalOnExpression) is a
+// runtime toggle on cluster.enabled + cluster.backplane=valkey. Quarkus has no direct equivalent
+// for the composite expression; either reimplement ConditionalOnValkeyBackplane as a Quarkus
+// build-time condition (@io.quarkus.arc.profile.IfBuildProfile /
+// @io.quarkus.arc.lookup.LookupIfProperty) or guard bean activation at runtime. Annotation left in
+// place pending that collaborator change.
+// Build-time gating: included in the build only when cluster.backplane=valkey; otherwise this bean
+// (and its RedisDataSource dependency) is removed so no eager Redis startup observer is generated
+// and the in-process @DefaultBean JobStore satisfies the interface. @ConditionalOnValkeyBackplane
+// is
+// kept for documentation only (it does not propagate guards through Arc).
+@io.quarkus.arc.properties.IfBuildProperty(name = "cluster.backplane", stringValue = "valkey")
+@ApplicationScoped
 @ConditionalOnValkeyBackplane
 @Slf4j
 public class ValkeyJobStore implements JobStore {
@@ -47,7 +62,21 @@ public class ValkeyJobStore implements JobStore {
     private static final TypeReference<List<String>> LIST_STRING = new TypeReference<>() {};
     private static final TypeReference<Map<String, String>> MAP_STRING = new TypeReference<>() {};
 
-    private final StringRedisTemplate template;
+    // String-keyed, byte-valued command groups mirror the original byte-level access so JSON
+    // payloads and ids round-trip exactly as they did via StringRedisTemplate's byte commands.
+    private final RedisDataSource redis;
+    private final HashCommands<String, String, byte[]> hash;
+    private final ValueCommands<String, byte[]> value;
+    private final KeyCommands<String> keys;
+    private final ValueCommands<String, String> stringValue;
+
+    public ValkeyJobStore(RedisDataSource redis) {
+        this.redis = redis;
+        this.hash = redis.hash(String.class, String.class, byte[].class);
+        this.value = redis.value(String.class, byte[].class);
+        this.keys = redis.key(String.class);
+        this.stringValue = redis.value(String.class, String.class);
+    }
 
     @Override
     public void put(JobStoreEntry entry, Duration ttl) {
@@ -71,37 +100,30 @@ public class ValkeyJobStore implements JobStore {
                 "resultMeta",
                 writeJson(entry.resultMeta() == null ? Map.of() : entry.resultMeta()));
 
-        // Build pipelined MULTI/EXEC so the hash, its TTL, and every reverse-index entry
-        // commit atomically.
-        template.execute(
-                (RedisCallback<Object>)
-                        connection -> {
-                            connection.multi();
-                            byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
-                            Map<byte[], byte[]> hashBytes = new LinkedHashMap<>();
-                            for (Map.Entry<String, String> f : fields.entrySet()) {
-                                hashBytes.put(
-                                        f.getKey().getBytes(StandardCharsets.UTF_8),
-                                        f.getValue().getBytes(StandardCharsets.UTF_8));
-                            }
-                            connection.hashCommands().hMSet(keyBytes, hashBytes);
-                            connection.keyCommands().pExpire(keyBytes, ttlMs);
-                            if (entry.fileIds() != null) {
-                                for (String fileId : entry.fileIds()) {
-                                    byte[] idxKey =
-                                            (FILE_INDEX_PREFIX + fileId)
-                                                    .getBytes(StandardCharsets.UTF_8);
-                                    connection
-                                            .stringCommands()
-                                            .set(
-                                                    idxKey,
-                                                    entry.jobId().getBytes(StandardCharsets.UTF_8));
-                                    connection.keyCommands().pExpire(idxKey, ttlMs);
-                                }
-                            }
-                            connection.exec();
-                            return null;
-                        });
+        Map<String, byte[]> hashBytes = new LinkedHashMap<>();
+        for (Map.Entry<String, String> f : fields.entrySet()) {
+            hashBytes.put(f.getKey(), f.getValue().getBytes(StandardCharsets.UTF_8));
+        }
+
+        // Build MULTI/EXEC so the hash, its TTL, and every reverse-index entry commit atomically.
+        // Quarkus' withTransaction enqueues commands issued on the transactional datasource between
+        // MULTI and EXEC. SetArgs.px(ttl) sets the value-with-TTL in one SET (the original issued a
+        // separate pExpire after SET); pexpire keeps the original two-step shape for the hash.
+        redis.withTransaction(
+                tx -> {
+                    tx.hash(String.class, String.class, byte[].class).hset(key, hashBytes);
+                    tx.key(String.class).pexpire(key, ttlMs);
+                    if (entry.fileIds() != null) {
+                        for (String fileId : entry.fileIds()) {
+                            String idxKey = FILE_INDEX_PREFIX + fileId;
+                            tx.value(String.class, byte[].class)
+                                    .set(
+                                            idxKey,
+                                            entry.jobId().getBytes(StandardCharsets.UTF_8),
+                                            new SetArgs().px(ttlMs));
+                        }
+                    }
+                });
     }
 
     @Override
@@ -118,54 +140,38 @@ public class ValkeyJobStore implements JobStore {
         // case; further contention falls through to lazy TTL cleanup (acceptable - this is an
         // eviction path, not a correctness primitive).
         String jobKey = JOB_PREFIX + jobId;
-        byte[] jobKeyBytes = jobKey.getBytes(StandardCharsets.UTF_8);
         for (int attempt = 0; attempt < 2; attempt++) {
-            Boolean committed =
-                    template.execute(
-                            (RedisCallback<Boolean>)
-                                    connection -> {
-                                        connection.watch(jobKeyBytes);
-                                        // Read the single fileIds field with hGet rather than
-                                        // hGetAll + map.get: hGetAll returns a Map<byte[],byte[]>
-                                        // whose keys compare by identity, so a fresh
-                                        // "fileIds".getBytes() lookup never matches and the reverse
-                                        // index would be left orphaned. hGet resolves the field
-                                        // server-side.
-                                        byte[] fileIdsBytes =
-                                                connection
-                                                        .hashCommands()
-                                                        .hGet(
-                                                                jobKeyBytes,
-                                                                "fileIds"
-                                                                        .getBytes(
-                                                                                StandardCharsets
-                                                                                        .UTF_8));
-                                        List<byte[]> keysToDelete = new ArrayList<>();
-                                        keysToDelete.add(jobKeyBytes);
-                                        if (fileIdsBytes != null) {
-                                            List<String> fileIds =
-                                                    readJsonList(
-                                                            new String(
-                                                                    fileIdsBytes,
-                                                                    StandardCharsets.UTF_8),
-                                                            jobKey);
-                                            for (String fileId : fileIds) {
-                                                keysToDelete.add(
-                                                        (FILE_INDEX_PREFIX + fileId)
-                                                                .getBytes(StandardCharsets.UTF_8));
-                                            }
-                                        }
-                                        connection.multi();
-                                        for (byte[] key : keysToDelete) {
-                                            connection.keyCommands().del(key);
-                                        }
-                                        List<Object> results = connection.exec();
-                                        // exec() returns null when WATCH detected a concurrent
-                                        // write; spring-data-redis surfaces this as either null
-                                        // or empty depending on the driver path.
-                                        return results != null && !results.isEmpty();
-                                    });
-            if (Boolean.TRUE.equals(committed)) {
+            // withTransaction(preTxBlock, watchedKeys...): the preTxBlock runs after WATCH and
+            // before MULTI; its result feeds the transactional block. If a watched key changes
+            // before EXEC, Quarkus aborts and the result reports discarded() == true.
+            // withTransaction(preTxBlock, biConsumer, watchedKeys): preTxBlock result I is
+            // passed as the first arg to the BiConsumer along with the transactional datasource.
+            OptimisticLockingTransactionResult<List<String>> result =
+                    redis.withTransaction(
+                            (io.quarkus.redis.datasource.RedisDataSource ds) -> {
+                                byte[] fileIdsBytes =
+                                        ds.hash(String.class, String.class, byte[].class)
+                                                .hget(jobKey, "fileIds");
+                                if (fileIdsBytes == null) {
+                                    return List.<String>of();
+                                }
+                                return readJsonList(
+                                        new String(fileIdsBytes, StandardCharsets.UTF_8), jobKey);
+                            },
+                            (List<String> fileIds,
+                                    io.quarkus.redis.datasource.transactions
+                                                    .TransactionalRedisDataSource
+                                            tx) -> {
+                                List<String> keysToDelete = new ArrayList<>();
+                                keysToDelete.add(jobKey);
+                                for (String fileId : fileIds) {
+                                    keysToDelete.add(FILE_INDEX_PREFIX + fileId);
+                                }
+                                tx.key(String.class).del(keysToDelete.toArray(new String[0]));
+                            },
+                            jobKey);
+            // EXEC returns discarded when WATCH detected a concurrent write.
+            if (!result.discarded()) {
                 return;
             }
         }
@@ -177,34 +183,40 @@ public class ValkeyJobStore implements JobStore {
 
     @Override
     public boolean exists(String jobId) {
-        Boolean exists = template.hasKey(JOB_PREFIX + jobId);
-        return Boolean.TRUE.equals(exists);
+        return keys.exists(JOB_PREFIX + jobId);
     }
 
     @Override
     public Optional<String> findJobIdByFileId(String fileId) {
-        return Optional.ofNullable(template.opsForValue().get(FILE_INDEX_PREFIX + fileId));
+        return Optional.ofNullable(stringValue.get(FILE_INDEX_PREFIX + fileId));
     }
 
     @Override
     public Collection<JobStoreEntry> all() {
         // SCAN, not KEYS - KEYS blocks the Valkey server for the duration of the walk.
-        ScanOptions options = ScanOptions.scanOptions().match(JOB_PREFIX + "*").count(256).build();
+        KeyScanCursor<String> cursor =
+                keys.scan(new KeyScanArgs().match(JOB_PREFIX + "*").count(256));
         List<JobStoreEntry> result = new ArrayList<>();
-        try (Cursor<String> cursor = template.scan(options)) {
-            while (cursor.hasNext()) {
-                readEntry(cursor.next()).ifPresent(result::add);
+        while (cursor.hasNext()) {
+            for (String key : cursor.next()) {
+                readEntry(key).ifPresent(result::add);
             }
         }
         return result;
     }
 
     private Optional<JobStoreEntry> readEntry(String key) {
-        Map<Object, Object> entries = template.opsForHash().entries(key);
-        if (entries == null || entries.isEmpty()) {
+        Map<String, byte[]> raw = hash.hgetall(key);
+        if (raw == null || raw.isEmpty()) {
             return Optional.empty();
         }
-        Object jobId = entries.get("jobId");
+        Map<String, String> entries = new HashMap<>();
+        for (Map.Entry<String, byte[]> e : raw.entrySet()) {
+            entries.put(
+                    e.getKey(),
+                    e.getValue() == null ? null : new String(e.getValue(), StandardCharsets.UTF_8));
+        }
+        String jobId = entries.get("jobId");
         if (jobId == null) {
             return Optional.empty();
         }
@@ -223,10 +235,10 @@ public class ValkeyJobStore implements JobStore {
             state = JobStoreEntry.JobState.PENDING;
         }
         String owningNodeId = String.valueOf(entries.getOrDefault("owningNodeId", ""));
-        String error = entries.get("error") == null ? null : entries.get("error").toString();
+        String error = entries.get("error") == null ? null : entries.get("error");
         return Optional.of(
                 new JobStoreEntry(
-                        jobId.toString(),
+                        jobId,
                         state,
                         owningNodeId,
                         createdAt,

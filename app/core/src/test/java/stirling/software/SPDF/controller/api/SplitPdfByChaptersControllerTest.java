@@ -9,6 +9,7 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -35,15 +36,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
 
-import stirling.software.SPDF.model.api.SplitPdfByChaptersRequest;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.StreamingOutput;
+
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfMetadataService;
+import stirling.software.common.testsupport.TestFileUploads;
 import stirling.software.common.util.TempFileManager;
 
 @ExtendWith(MockitoExtension.class)
@@ -98,10 +97,15 @@ class SplitPdfByChaptersControllerTest {
         }
     }
 
-    private List<byte[]> unzip(Resource zipResource) throws IOException {
+    private static byte[] toBytes(Response response) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ((StreamingOutput) response.getEntity()).write(baos);
+        return baos.toByteArray();
+    }
+
+    private List<byte[]> unzip(Response response) throws IOException {
         List<byte[]> entries = new ArrayList<>();
-        try (ZipInputStream zis =
-                new ZipInputStream(new ByteArrayInputStream(zipResource.getContentAsByteArray()))) {
+        try (ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(toBytes(response)))) {
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {
                 entries.add(zis.readAllBytes());
@@ -125,20 +129,12 @@ class SplitPdfByChaptersControllerTest {
     @DisplayName("Should split PDF by chapters")
     void shouldSplitByChapters() throws Exception {
         byte[] pdfBytes = createPdfWithBookmarks(6, "Chapter 1", "Chapter 2", "Chapter 3");
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
-        SplitPdfByChaptersRequest request = new SplitPdfByChaptersRequest();
-        request.setFileInput(file);
-        request.setBookmarkLevel(0);
-        request.setIncludeMetadata(false);
-        request.setAllowDuplicates(false);
+        Response response =
+                controller.splitPdf(TestFileUploads.pdf(pdfBytes), null, false, false, 0);
 
-        ResponseEntity<Resource> response = controller.splitPdf(request);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        List<byte[]> outputs = unzip(response.getBody());
+        assertThat(response.getStatus()).isEqualTo(200);
+        List<byte[]> outputs = unzip(response);
         assertThat(outputs).hasSize(3);
         assertThat(totalPagesOf(outputs)).isEqualTo(6);
     }
@@ -147,20 +143,12 @@ class SplitPdfByChaptersControllerTest {
     @DisplayName("Should split PDF by chapters with duplicates allowed")
     void shouldSplitByChaptersWithDuplicates() throws Exception {
         byte[] pdfBytes = createPdfWithBookmarks(4, "Chapter 1", "Chapter 2");
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
-        SplitPdfByChaptersRequest request = new SplitPdfByChaptersRequest();
-        request.setFileInput(file);
-        request.setBookmarkLevel(0);
-        request.setIncludeMetadata(false);
-        request.setAllowDuplicates(true);
+        Response response =
+                controller.splitPdf(TestFileUploads.pdf(pdfBytes), null, false, true, 0);
 
-        ResponseEntity<Resource> response = controller.splitPdf(request);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        List<byte[]> outputs = unzip(response.getBody());
+        assertThat(response.getStatus()).isEqualTo(200);
+        List<byte[]> outputs = unzip(response);
         assertThat(outputs).hasSize(2);
         assertThat(totalPagesOf(outputs)).isEqualTo(4);
     }
@@ -169,17 +157,10 @@ class SplitPdfByChaptersControllerTest {
     @DisplayName("Should throw for negative bookmark level")
     void shouldThrowForNegativeBookmarkLevel() throws Exception {
         byte[] pdfBytes = createPdfWithBookmarks(2, "Ch1");
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
-        SplitPdfByChaptersRequest request = new SplitPdfByChaptersRequest();
-        request.setFileInput(file);
-        request.setBookmarkLevel(-1);
-        request.setIncludeMetadata(false);
-        request.setAllowDuplicates(false);
-
-        assertThrows(IllegalArgumentException.class, () -> controller.splitPdf(request));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> controller.splitPdf(TestFileUploads.pdf(pdfBytes), null, false, false, -1));
     }
 
     @Test
@@ -191,17 +172,11 @@ class SplitPdfByChaptersControllerTest {
             doc.save(pdfPath.toFile());
             byte[] pdfBytes = Files.readAllBytes(pdfPath);
 
-            MockMultipartFile file =
-                    new MockMultipartFile(
-                            "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
-
-            SplitPdfByChaptersRequest request = new SplitPdfByChaptersRequest();
-            request.setFileInput(file);
-            request.setBookmarkLevel(0);
-            request.setIncludeMetadata(false);
-            request.setAllowDuplicates(false);
-
-            assertThrows(IllegalArgumentException.class, () -> controller.splitPdf(request));
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () ->
+                            controller.splitPdf(
+                                    TestFileUploads.pdf(pdfBytes), null, false, false, 0));
         }
     }
 
@@ -209,20 +184,12 @@ class SplitPdfByChaptersControllerTest {
     @DisplayName("Should split single chapter PDF")
     void shouldSplitSingleChapter() throws Exception {
         byte[] pdfBytes = createPdfWithBookmarks(3, "Only Chapter");
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
-        SplitPdfByChaptersRequest request = new SplitPdfByChaptersRequest();
-        request.setFileInput(file);
-        request.setBookmarkLevel(0);
-        request.setIncludeMetadata(false);
-        request.setAllowDuplicates(false);
+        Response response =
+                controller.splitPdf(TestFileUploads.pdf(pdfBytes), null, false, false, 0);
 
-        ResponseEntity<Resource> response = controller.splitPdf(request);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        List<byte[]> outputs = unzip(response.getBody());
+        assertThat(response.getStatus()).isEqualTo(200);
+        List<byte[]> outputs = unzip(response);
         assertThat(outputs).hasSize(1);
         assertThat(totalPagesOf(outputs)).isEqualTo(3);
     }
@@ -231,24 +198,16 @@ class SplitPdfByChaptersControllerTest {
     @DisplayName("Should split with metadata included")
     void shouldSplitWithMetadata() throws Exception {
         byte[] pdfBytes = createPdfWithBookmarks(4, "Chapter 1", "Chapter 2");
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
-
-        SplitPdfByChaptersRequest request = new SplitPdfByChaptersRequest();
-        request.setFileInput(file);
-        request.setBookmarkLevel(0);
-        request.setIncludeMetadata(true);
-        request.setAllowDuplicates(false);
 
         lenient()
                 .when(pdfMetadataService.extractMetadataFromPdf(any(PDDocument.class)))
                 .thenReturn(new stirling.software.common.model.PdfMetadata());
 
-        ResponseEntity<Resource> response = controller.splitPdf(request);
+        Response response =
+                controller.splitPdf(TestFileUploads.pdf(pdfBytes), null, true, false, 0);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        List<byte[]> outputs = unzip(response.getBody());
+        assertThat(response.getStatus()).isEqualTo(200);
+        List<byte[]> outputs = unzip(response);
         assertThat(totalPagesOf(outputs)).isEqualTo(4);
     }
 
@@ -256,20 +215,12 @@ class SplitPdfByChaptersControllerTest {
     @DisplayName("Should handle bookmark level 0")
     void shouldHandleBookmarkLevel0() throws Exception {
         byte[] pdfBytes = createPdfWithBookmarks(6, "Part 1", "Part 2", "Part 3");
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
-        SplitPdfByChaptersRequest request = new SplitPdfByChaptersRequest();
-        request.setFileInput(file);
-        request.setBookmarkLevel(0);
-        request.setIncludeMetadata(false);
-        request.setAllowDuplicates(false);
+        Response response =
+                controller.splitPdf(TestFileUploads.pdf(pdfBytes), null, false, false, 0);
 
-        ResponseEntity<Resource> response = controller.splitPdf(request);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        List<byte[]> outputs = unzip(response.getBody());
+        assertThat(response.getStatus()).isEqualTo(200);
+        List<byte[]> outputs = unzip(response);
         assertThat(outputs).hasSize(3);
         assertThat(totalPagesOf(outputs)).isEqualTo(6);
     }
@@ -278,20 +229,12 @@ class SplitPdfByChaptersControllerTest {
     @DisplayName("Should handle many chapters")
     void shouldHandleManyChapters() throws Exception {
         byte[] pdfBytes = createPdfWithBookmarks(10, "Ch1", "Ch2", "Ch3", "Ch4", "Ch5");
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
 
-        SplitPdfByChaptersRequest request = new SplitPdfByChaptersRequest();
-        request.setFileInput(file);
-        request.setBookmarkLevel(0);
-        request.setIncludeMetadata(false);
-        request.setAllowDuplicates(true);
+        Response response =
+                controller.splitPdf(TestFileUploads.pdf(pdfBytes), null, false, true, 0);
 
-        ResponseEntity<Resource> response = controller.splitPdf(request);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        List<byte[]> outputs = unzip(response.getBody());
+        assertThat(response.getStatus()).isEqualTo(200);
+        List<byte[]> outputs = unzip(response);
         assertThat(outputs).hasSize(5);
         assertThat(totalPagesOf(outputs)).isEqualTo(10);
     }

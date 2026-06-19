@@ -9,6 +9,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
@@ -17,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,13 +26,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
+
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.StreamingOutput;
 
 import stirling.software.SPDF.config.EndpointConfiguration;
-import stirling.software.SPDF.model.api.converters.PdfVectorExportRequest;
+import stirling.software.common.testsupport.TestFileUploads;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
 import stirling.software.common.util.TempFile;
@@ -107,25 +109,25 @@ class PdfVectorExportControllerTest {
         return result;
     }
 
+    private static byte[] drainBody(Response response) throws Exception {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ((StreamingOutput) response.getEntity()).write(baos);
+        return baos.toByteArray();
+    }
+
     @Test
     void convertGhostscript_psToPdf_success() throws Exception {
         when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(true);
         ProcessExecutorResult result = mockResult(0);
         when(ghostscriptExecutor.runCommandWithOutputHandling(any())).thenReturn(result);
 
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput",
-                        "sample.ps",
-                        MediaType.APPLICATION_OCTET_STREAM_VALUE,
-                        new byte[] {1});
-        PdfVectorExportRequest request = new PdfVectorExportRequest();
-        request.setFileInput(file);
+        FileUpload file =
+                TestFileUploads.of(new byte[] {1}, "sample.ps", MediaType.APPLICATION_OCTET_STREAM);
 
-        ResponseEntity<Resource> response = controller.convertGhostscriptInputsToPdf(request);
+        Response response = controller.convertGhostscriptInputsToPdf(file, null);
 
-        assertThat(response.getStatusCode()).isEqualTo(org.springframework.http.HttpStatus.OK);
-        assertThat(response.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_PDF);
+        assertThat(response.getStatus()).isEqualTo(200);
+        assertThat(response.getMediaType()).isEqualTo(MediaType.valueOf("application/pdf"));
     }
 
     @Test
@@ -133,34 +135,22 @@ class PdfVectorExportControllerTest {
         when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(false);
 
         byte[] content = {1};
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, content);
-        PdfVectorExportRequest request = new PdfVectorExportRequest();
-        request.setFileInput(file);
+        FileUpload file = TestFileUploads.of(content, "input.pdf", "application/pdf");
 
-        ResponseEntity<Resource> response = controller.convertGhostscriptInputsToPdf(request);
+        Response response = controller.convertGhostscriptInputsToPdf(file, null);
 
-        assertThat(response.getStatusCode()).isEqualTo(org.springframework.http.HttpStatus.OK);
-        assertThat(response.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_PDF);
-        java.io.ByteArrayOutputStream baosVerify = new java.io.ByteArrayOutputStream();
-        try (java.io.InputStream __in = response.getBody().getInputStream()) {
-            __in.transferTo(baosVerify);
-        }
-        assertThat(baosVerify.toByteArray()).contains(content);
+        assertThat(response.getStatus()).isEqualTo(200);
+        assertThat(response.getMediaType()).isEqualTo(MediaType.valueOf("application/pdf"));
+        assertThat(drainBody(response)).contains(content);
     }
 
     @Test
     void convertGhostscript_unsupportedFormatThrows() {
         when(endpointConfiguration.isGroupEnabled("Ghostscript")).thenReturn(false);
-        MockMultipartFile file =
-                new MockMultipartFile(
-                        "fileInput", "vector.svg", MediaType.APPLICATION_XML_VALUE, new byte[] {1});
-        PdfVectorExportRequest request = new PdfVectorExportRequest();
-        request.setFileInput(file);
+        FileUpload file = TestFileUploads.of(new byte[] {1}, "vector.svg", "application/xml");
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> controller.convertGhostscriptInputsToPdf(request));
+                () -> controller.convertGhostscriptInputsToPdf(file, null));
     }
 }

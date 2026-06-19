@@ -19,13 +19,18 @@ import org.apache.pdfbox.pdmodel.font.PDFontFactory;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.text.TextPosition;
-import org.springframework.core.io.InputStreamResource;
-import org.springframework.web.multipart.MultipartFile;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.model.api.misc.HighContrastColorCombination;
 import stirling.software.common.model.api.misc.ReplaceAndInvert;
+import stirling.software.common.model.io.InputStreamResource;
+
+// TODO: Migration required - MultipartFile is the constructor parameter type that must match
+// the parent ReplaceAndInvertColorStrategy(MultipartFile, ReplaceAndInvert) constructor (not in
+// scope for this migration). There is no JAX-RS drop-in for this widely used public signature;
+// retained until the parent and its callers are migrated together.
 
 @Slf4j
 public class CustomColorReplaceStrategy extends ReplaceAndInvertColorStrategy {

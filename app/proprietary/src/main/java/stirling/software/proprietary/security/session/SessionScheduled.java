@@ -5,13 +5,15 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.security.core.session.SessionInformation;
-import org.springframework.stereotype.Component;
+import io.quarkus.scheduler.Scheduled;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 
-@Component
+import stirling.software.common.security.SessionInformation;
+
+@ApplicationScoped
 @RequiredArgsConstructor
 public class SessionScheduled {
 

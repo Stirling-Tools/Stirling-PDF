@@ -2,28 +2,30 @@ package stirling.software.saas.payg.repository;
 
 import java.util.Optional;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.stereotype.Repository;
+import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import stirling.software.saas.payg.policy.PricingPolicy;
 
-@Repository
-public interface PricingPolicyRepository extends JpaRepository<PricingPolicy, Long> {
+@ApplicationScoped
+public class PricingPolicyRepository implements PanacheRepositoryBase<PricingPolicy, Long> {
 
-    Optional<PricingPolicy> findByVersion(String version);
+    public Optional<PricingPolicy> findByVersion(String version) {
+        return find("version = ?1", version).firstResultOptional();
+    }
 
-    Optional<PricingPolicy> findFirstByIsDefaultTrue();
+    public Optional<PricingPolicy> findFirstByIsDefaultTrue() {
+        return find("isDefault = true").firstResultOptional();
+    }
 
     /**
-     * Atomically clears the {@code is_default} flag on whichever row currently carries it. Used by
-     * {@code setDefault(newId)} to free the slot before flipping the new row's flag — the {@code
-     * uq_pricing_policy_default} partial unique index would otherwise reject the second row.
-     *
-     * <p>Returns the count of rows updated (0 if no default existed yet, 1 normally).
+     * Atomically clears the isDefault flag on whichever row currently carries it. Returns the count
+     * of rows updated (0 if no default existed yet, 1 normally).
      */
-    @Modifying
-    @Query("UPDATE PricingPolicy p SET p.isDefault = false WHERE p.isDefault = true")
-    int clearDefaultFlag();
+    @Transactional
+    public int clearDefaultFlag() {
+        return (int) update("isDefault = false WHERE isDefault = true");
+    }
 }

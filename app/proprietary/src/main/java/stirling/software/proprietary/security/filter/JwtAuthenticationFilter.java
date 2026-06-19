@@ -8,30 +8,32 @@ import static stirling.software.proprietary.security.model.AuthenticationType.WE
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.web.AuthenticationEntryPoint;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.web.filter.OncePerRequestFilter;
-
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.exception.UnsupportedProviderException;
-import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.AuthenticationException;
+import stirling.software.common.security.GrantedAuthority;
+import stirling.software.common.security.SecurityContextHolder;
+import stirling.software.common.security.SimpleGrantedAuthority;
+import stirling.software.common.security.UsernameNotFoundException;
+import stirling.software.common.security.UsernamePasswordAuthenticationToken;
+import stirling.software.proprietary.security.JwtAuthenticationEntryPoint;
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.model.exception.AuthenticationFailureException;
@@ -39,20 +41,33 @@ import stirling.software.proprietary.security.service.CustomUserDetailsService;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.UserService;
 
+// TODO: Migration required - registration/ordering. As a Spring OncePerRequestFilter
+// this ran once per request at a Spring-defined position in the security filter chain.
+// On Quarkus (quarkus-undertow) a jakarta.servlet.Filter needs explicit registration
+// and ordering (e.g. a @WebFilter with urlPatterns, or a FilterRegistrationBean-style
+// producer). Confirm this filter is registered ahead of the resource layer and that the
+// once-per-request semantics are preserved (Undertow does not re-enter servlet filters
+// per forward by default, so the OncePerRequestFilter base is not strictly required).
 @Slf4j
-@RequiredArgsConstructor
-public class JwtAuthenticationFilter extends OncePerRequestFilter {
+@ApplicationScoped
+public class JwtAuthenticationFilter implements Filter {
 
-    private final JwtServiceInterface jwtService;
-    private final UserService userService;
-    private final CustomUserDetailsService userDetailsService;
-    private final AuthenticationEntryPoint authenticationEntryPoint;
-    private final ApplicationProperties.Security securityProperties;
+    @Inject JwtServiceInterface jwtService;
+    @Inject UserService userService;
+    @Inject CustomUserDetailsService userDetailsService;
+    // JwtAuthenticationEntryPoint is now a plain CDI bean (it only writes a 401
+    // JSON/error to the response); inject the concrete type instead of the former
+    // Spring Security AuthenticationEntryPoint interface.
+    @Inject JwtAuthenticationEntryPoint authenticationEntryPoint;
+    @Inject ApplicationProperties.Security securityProperties;
 
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
+    public void doFilter(
+            ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
+            throws IOException, ServletException {
+        HttpServletRequest request = (HttpServletRequest) servletRequest;
+        HttpServletResponse response = (HttpServletResponse) servletResponse;
+
         if (!jwtService.isJwtEnabled()) {
             filterChain.doFilter(request, response);
             return;
@@ -124,6 +139,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private boolean apiKeyExists(HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException {
+        // TODO: Migration required - SecurityContextHolder has no Quarkus equivalent.
+        // This reads/writes the Spring thread-local security context. On Quarkus, the
+        // identity should come from SecurityIdentity (injected) and API-key auth should be
+        // handled by a custom IdentityProvider rather than imperatively setting the context.
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -141,9 +160,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         return false;
                     }
 
+                    // TODO: Migration required - the previous ApiKeyAuthenticationToken
+                    // extended Spring Security's AbstractAuthenticationToken. It is now a
+                    // plain POJO that does not implement the security-compat Authentication
+                    // contract, so it cannot be stored in the SecurityContext. Build a
+                    // compat UsernamePasswordAuthenticationToken from the user's authorities
+                    // to keep the API-key authentication intent; in Quarkus this should be a
+                    // SecurityIdentity produced by a custom IdentityProvider for the API key.
+                    List<GrantedAuthority> authorities =
+                            user.get().getAuthorities().stream()
+                                    .map(
+                                            a ->
+                                                    (GrantedAuthority)
+                                                            new SimpleGrantedAuthority(
+                                                                    a.getAuthority()))
+                                    .toList();
                     authentication =
-                            new ApiKeyAuthenticationToken(
-                                    user.get(), apiKey, user.get().getAuthorities());
+                            new UsernamePasswordAuthenticationToken(
+                                    user.get(), apiKey, authorities);
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                     return true;
                 } catch (AuthenticationException e) {
@@ -165,16 +199,34 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws SQLException, UnsupportedProviderException {
         String username = claims.get("sub").toString();
 
+        // TODO: Migration required - SecurityContextHolder/UsernamePasswordAuthenticationToken.
+        // Building a Spring authentication token and pushing it into the thread-local context
+        // must be replaced by producing a Quarkus SecurityIdentity (via IdentityProvider/
+        // SecurityIdentityAugmentor) from the validated JWT claims. The user-loading logic
+        // (userDetailsService.loadUserByUsername) can be kept as a plain service call.
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             processUserAuthenticationType(claims, username);
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            // loadUserByUsername now returns the User entity directly (the former
+            // UserDetailsService/UserDetails Spring contract was dropped during migration).
+            User userDetails = userDetailsService.loadUserByUsername(username);
 
             if (userDetails != null) {
+                List<GrantedAuthority> authorities =
+                        userDetails.getAuthorities().stream()
+                                .map(
+                                        a ->
+                                                (GrantedAuthority)
+                                                        new SimpleGrantedAuthority(
+                                                                a.getAuthority()))
+                                .toList();
                 UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails, null, userDetails.getAuthorities());
+                        new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
 
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                // TODO: Migration required - Spring's WebAuthenticationDetailsSource
+                // (remote address + session id) has no Quarkus equivalent. Storing the
+                // request as the details object keeps the call compile-safe; in Quarkus
+                // this metadata is available from the RoutingContext / SecurityIdentity.
+                authToken.setDetails(request);
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             } else {
                 throw new UsernameNotFoundException("User not found: " + username);
@@ -209,10 +261,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
     }
 
+    // Accepts any Exception so both the application's AuthenticationFailureException
+    // (extends RuntimeException) and the security-compat AuthenticationException can be
+    // passed through to the entry point, which shapes the 401 response.
     private void handleAuthenticationFailure(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            AuthenticationException authException)
+            HttpServletRequest request, HttpServletResponse response, Exception authException)
             throws IOException, ServletException {
         authenticationEntryPoint.commence(request, response, authException);
     }

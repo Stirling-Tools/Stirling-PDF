@@ -32,8 +32,6 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFTextStripper;
-import org.springframework.http.MediaType;
-import org.springframework.web.multipart.MultipartFile;
 
 import io.github.pixee.security.Filenames;
 
@@ -41,6 +39,7 @@ import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.MultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 
 @Slf4j
@@ -466,8 +465,11 @@ public class PdfUtils {
                     BufferedImage convertedImage =
                             ImageProcessingUtils.convertColorType(image, colorType);
                     // Use JPEGFactory if it's JPEG since JPEG is lossy
+                    // org.springframework.http.MediaType.IMAGE_JPEG_VALUE was the String constant
+                    // "image/jpeg"; jakarta.ws.rs.core.MediaType has no equivalent String constant,
+                    // so the literal is used here to preserve behavior.
                     PDImageXObject pdImage =
-                            (contentType != null && MediaType.IMAGE_JPEG_VALUE.equals(contentType))
+                            (contentType != null && "image/jpeg".equals(contentType))
                                     ? JPEGFactory.createFromImage(doc, convertedImage)
                                     : LosslessFactory.createFromImage(doc, convertedImage);
                     addImageToDocument(doc, pdImage, fitOption, autoRotate);

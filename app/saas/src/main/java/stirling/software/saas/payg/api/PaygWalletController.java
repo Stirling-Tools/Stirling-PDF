@@ -11,26 +11,26 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
+import io.quarkus.arc.profile.IfBuildProfile;
 import io.swagger.v3.oas.annotations.Hidden;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.PATCH;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.enumeration.TeamRole;
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.SecurityContextHolder;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.saas.model.TeamMembership;
@@ -64,21 +64,20 @@ import stirling.software.saas.util.AuthenticationUtils;
  *
  * <p>{@code PATCH /api/v1/payg/cap} updates {@code wallet_policy.cap_units} (no Stripe call — the
  * cap is enforced application-side via the entitlement guard) and invalidates the team's snapshot
- * cache so the next read reflects the change immediately. Only leaders may call this; the team is
- * derived from the caller, so we authorise inside the method rather than via {@code @PreAuthorize}
- * — the team id never appears on the path or query string.
+ * cache. Only leaders may call this; the team is derived from the caller, so we authorise inside
+ * the method — the team id never appears on the path or query string.
  *
- * <p>Subscription state is sourced from {@code payg_team_extensions.payg_subscription_id} (added in
- * V14): {@code stripeSubscriptionId} echoes it via {@link TeamBillingService}, and a team reads as
- * {@link #STATUS_SUBSCRIBED} once {@code billing.subscribed()} is true — i.e. it has a subscription
- * id, or a Stripe customer id as the pre-webhook bridge for a just-completed checkout whose
- * subscription-created webhook hasn't landed yet (see {@code TeamBillingService.compute}).
+ * <p>// TODO: Migration required - was a Spring {@code @RestController} with method-injected {@code
+ * Authentication} and {@code @PreAuthorize("isAuthenticated()")}. Now JAX-RS: auth comes from the
+ * {@link SecurityContextHolder} thread-local shim (populated by the SaaS auth filter), and the
+ * unauthenticated case maps to 401 via {@link AuthenticationUtils#getCurrentUser}'s {@link
+ * SecurityException}.
  */
 @Slf4j
 @Hidden
-@RestController
-@RequestMapping("/api/v1/payg")
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
+@Path("/api/v1/payg")
 public class PaygWalletController {
 
     static final String STATUS_FREE = "free";
@@ -127,16 +126,18 @@ public class PaygWalletController {
     // GET /wallet — the single FE fetch
     // ---------------------------------------------------------------------------------------
 
-    @GetMapping("/wallet")
-    @PreAuthorize("isAuthenticated()")
-    @Transactional(readOnly = true)
-    public ResponseEntity<WalletSnapshotResponse> getWallet(Authentication auth) {
+    @GET
+    @Path("/wallet")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
+    public Response getWallet() {
         User user;
         try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             user = AuthenticationUtils.getCurrentUser(auth, userRepository);
         } catch (SecurityException e) {
             // SecurityException maps to 401 per the existing controller convention.
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return Response.status(Response.Status.UNAUTHORIZED).build();
         }
 
         Optional<TeamMembership> primary = primaryMembership(user.getId());
@@ -144,7 +145,7 @@ public class PaygWalletController {
             // Authenticated user without a team — shouldn't happen post-migration, but we don't
             // want to 500. Return a free-tier-shaped empty snapshot so the FE renders the gated UI
             // rather than blowing up on a null body.
-            return ResponseEntity.ok(emptySnapshot());
+            return Response.ok(emptySnapshot()).build();
         }
 
         TeamMembership membership = primary.get();
@@ -167,8 +168,7 @@ public class PaygWalletController {
 
         // Per-state by construction (see EntitlementService.computeSnapshot): free team → spend is
         // lifetime free used, cap is the grant size; subscribed → spend is this month's net
-        // billable
-        // docs, cap is the monthly paid-doc ceiling (null = uncapped).
+        // billable docs, cap is the monthly paid-doc ceiling (null = uncapped).
         int spend = clampToInt(snap.periodSpendUnits());
         Integer limit = snap.periodCapUnits() != null ? clampToInt(snap.periodCapUnits()) : null;
 
@@ -205,7 +205,7 @@ public class PaygWalletController {
                         breakdown,
                         members,
                         buildActivity(teamId));
-        return ResponseEntity.ok(body);
+        return Response.ok(body).build();
     }
 
     private CategoryBreakdown buildBreakdown(
@@ -265,25 +265,26 @@ public class PaygWalletController {
     // PATCH /cap — leader-only, cap is application-layer, no Stripe call
     // ---------------------------------------------------------------------------------------
 
-    @PatchMapping("/cap")
-    @PreAuthorize("isAuthenticated()")
+    @PATCH
+    @Path("/cap")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Transactional
-    public ResponseEntity<Void> updateCap(
-            @Valid @RequestBody UpdateCapRequest req, Authentication auth) {
+    public Response updateCap(@Valid UpdateCapRequest req) {
         User user;
         try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             user = AuthenticationUtils.getCurrentUser(auth, userRepository);
         } catch (SecurityException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return Response.status(Response.Status.UNAUTHORIZED).build();
         }
         Optional<TeamMembership> primary = primaryMembership(user.getId());
         if (primary.isEmpty()) {
             // No team → can't have a wallet to cap.
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            return Response.status(Response.Status.FORBIDDEN).build();
         }
         TeamMembership membership = primary.get();
         if (membership.getRole() != TeamRole.LEADER) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            return Response.status(Response.Status.FORBIDDEN).build();
         }
         Long teamId = membership.getTeam().getId();
 
@@ -322,7 +323,7 @@ public class PaygWalletController {
         }
         policyRepo.save(policy);
         entitlementService.invalidate(teamId);
-        return ResponseEntity.noContent().build();
+        return Response.noContent().build();
     }
 
     /** Request body for {@link #updateCap}. */

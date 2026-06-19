@@ -14,26 +14,23 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.context.ApplicationContext;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.util.HtmlUtils;
-
+import io.quarkus.runtime.Quarkus;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.validation.Valid;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Response;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.annotations.api.AdminApi;
@@ -49,15 +46,18 @@ import stirling.software.proprietary.security.model.api.admin.UpdateSettingsRequ
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
+// @AdminApi carries only the OpenAPI @Tag under JAX-RS; the @Path the removed @RequestMapping
+// supplied must be declared explicitly. Fully-qualified @jakarta.ws.rs.Path is used to avoid a
+// clash with the java.nio.file.Path import.
 @AdminApi
-@RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')")
+@ApplicationScoped
+@jakarta.ws.rs.Path("/api/v1/admin/settings")
+@RolesAllowed("ADMIN")
 @Slf4j
 public class AdminSettingsController {
 
-    private final ApplicationProperties applicationProperties;
-    private final ObjectMapper objectMapper;
-    private final ApplicationContext applicationContext;
+    @Inject ApplicationProperties applicationProperties;
+    @Inject ObjectMapper objectMapper;
 
     // Track settings that have been modified but not yet applied (require restart)
     private static final ConcurrentHashMap<String, Object> pendingChanges =
@@ -86,7 +86,7 @@ public class AdminSettingsController {
                             "enterprisekey",
                             "licensekey"));
 
-    @GetMapping
+    @GET
     @Operation(
             summary = "Get all application settings",
             description =
@@ -99,9 +99,8 @@ public class AdminSettingsController {
                         responseCode = "403",
                         description = "Access denied - Admin role required")
             })
-    public ResponseEntity<?> getSettings(
-            @RequestParam(value = "includePending", defaultValue = "false")
-                    boolean includePending) {
+    public Response getSettings(
+            @QueryParam("includePending") @DefaultValue("false") boolean includePending) {
         log.debug("Admin requested all application settings (includePending={})", includePending);
 
         // Convert ApplicationProperties to Map
@@ -117,10 +116,11 @@ public class AdminSettingsController {
         // Mask sensitive fields after merging
         Map<String, Object> maskedSettings = maskSensitiveFields(settings);
 
-        return ResponseEntity.ok(maskedSettings);
+        return Response.ok(maskedSettings).build();
     }
 
-    @GetMapping("/delta")
+    @GET
+    @jakarta.ws.rs.Path("/delta")
     @Operation(
             summary = "Get pending settings changes",
             description =
@@ -135,7 +135,7 @@ public class AdminSettingsController {
                         responseCode = "403",
                         description = "Access denied - Admin role required")
             })
-    public ResponseEntity<?> getSettingsDelta() {
+    public Response getSettingsDelta() {
         Map<String, Object> response = new HashMap<>();
         // Mask sensitive fields in pending changes
         response.put("pendingChanges", maskSensitiveFields(new HashMap<>(pendingChanges)));
@@ -143,10 +143,10 @@ public class AdminSettingsController {
         response.put("count", pendingChanges.size());
 
         log.debug("Admin requested pending changes - found {} settings", pendingChanges.size());
-        return ResponseEntity.ok(response);
+        return Response.ok(response).build();
     }
 
-    @PutMapping
+    @PUT
     @Operation(
             summary = "Update application settings (delta updates)",
             description =
@@ -163,13 +163,13 @@ public class AdminSettingsController {
                         responseCode = "500",
                         description = "Failed to save settings to configuration file")
             })
-    public ResponseEntity<Map<String, Object>> updateSettings(
-            @Valid @RequestBody UpdateSettingsRequest request) {
+    public Response updateSettings(@Valid UpdateSettingsRequest request) {
         try {
             Map<String, Object> settings = request.getSettings();
             if (settings == null || settings.isEmpty()) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("error", "No settings provided to update"));
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(Map.of("error", "No settings provided to update"))
+                        .build();
             }
 
             // Validate all settings first before applying any changes
@@ -178,19 +178,20 @@ public class AdminSettingsController {
                 Object value = entry.getValue();
 
                 if (!isValidSettingKey(key)) {
-                    return ResponseEntity.badRequest()
-                            .body(
+                    return Response.status(Response.Status.BAD_REQUEST)
+                            .entity(
                                     Map.of(
                                             "error",
-                                            "Invalid setting key format: "
-                                                    + HtmlUtils.htmlEscape(key)));
+                                            "Invalid setting key format: " + htmlEscape(key)))
+                            .build();
                 }
 
                 // Validate pipeline path settings
                 String validationError = validatePipelinePathSetting(key, value);
                 if (validationError != null) {
-                    return ResponseEntity.badRequest()
-                            .body(Map.of("error", HtmlUtils.htmlEscape(validationError)));
+                    return Response.status(Response.Status.BAD_REQUEST)
+                            .entity(Map.of("error", htmlEscape(validationError)))
+                            .build();
                 }
             }
 
@@ -206,31 +207,36 @@ public class AdminSettingsController {
                 pendingChanges.put(key, value != null ? value : "");
             }
 
-            return ResponseEntity.ok(
-                    Map.of(
-                            "message",
-                            String.format(
-                                    "Successfully updated %d setting(s). Changes will take effect on"
-                                            + " application restart.",
-                                    settings.size())));
+            return Response.ok(
+                            Map.of(
+                                    "message",
+                                    String.format(
+                                            "Successfully updated %d setting(s). Changes will take effect on"
+                                                    + " application restart.",
+                                            settings.size())))
+                    .build();
 
         } catch (IOException e) {
             log.error("Failed to save settings to file: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", GENERIC_FILE_ERROR));
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(Map.of("error", GENERIC_FILE_ERROR))
+                    .build();
 
         } catch (IllegalArgumentException e) {
             log.error("Invalid setting key or value: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", GENERIC_INVALID_SETTING));
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", GENERIC_INVALID_SETTING))
+                    .build();
         } catch (Exception e) {
             log.error("Unexpected error while updating settings: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", GENERIC_SERVER_ERROR));
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(Map.of("error", GENERIC_SERVER_ERROR))
+                    .build();
         }
     }
 
-    @GetMapping("/section/{sectionName}")
+    @GET
+    @jakarta.ws.rs.Path("/section/{sectionName}")
     @Operation(
             summary = "Get specific settings section",
             description =
@@ -246,18 +252,19 @@ public class AdminSettingsController {
                         responseCode = "403",
                         description = "Access denied - Admin role required")
             })
-    public ResponseEntity<?> getSettingsSection(
-            @PathVariable String sectionName,
-            @RequestParam(defaultValue = "true") boolean includePending) {
+    public Response getSettingsSection(
+            @PathParam("sectionName") String sectionName,
+            @QueryParam("includePending") @DefaultValue("true") boolean includePending) {
         try {
             Object sectionData = getSectionData(sectionName);
             if (sectionData == null) {
-                return ResponseEntity.badRequest()
-                        .body(
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(
                                 "Invalid section name: "
-                                        + HtmlUtils.htmlEscape(sectionName)
+                                        + htmlEscape(sectionName)
                                         + ". Valid sections: "
-                                        + String.join(", ", VALID_SECTION_NAMES));
+                                        + String.join(", ", VALID_SECTION_NAMES))
+                        .build();
             }
 
             // Convert to Map for manipulation
@@ -279,19 +286,22 @@ public class AdminSettingsController {
                     "Admin requested settings section: {} (includePending={})",
                     sectionName,
                     includePending);
-            return ResponseEntity.ok(sectionMap);
+            return Response.ok(sectionMap).build();
         } catch (IllegalArgumentException e) {
             log.error("Invalid section name {}: {}", sectionName, e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Invalid section name: " + HtmlUtils.htmlEscape(sectionName));
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Invalid section name: " + htmlEscape(sectionName))
+                    .build();
         } catch (Exception e) {
             log.error("Error retrieving section {}: {}", sectionName, e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to retrieve section.");
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Failed to retrieve section.")
+                    .build();
         }
     }
 
-    @PutMapping("/section/{sectionName}")
+    @PUT
+    @jakarta.ws.rs.Path("/section/{sectionName}")
     @Operation(
             summary = "Update specific settings section",
             description = "Update all settings within a specific section. Admin access required.")
@@ -306,23 +316,25 @@ public class AdminSettingsController {
                         description = "Access denied - Admin role required"),
                 @ApiResponse(responseCode = "500", description = "Failed to save settings")
             })
-    public ResponseEntity<Map<String, Object>> updateSettingsSection(
-            @PathVariable String sectionName, @Valid @RequestBody Map<String, Object> sectionData) {
+    public Response updateSettingsSection(
+            @PathParam("sectionName") String sectionName, @Valid Map<String, Object> sectionData) {
         try {
             if (sectionData == null || sectionData.isEmpty()) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("error", "No section data provided to update"));
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(Map.of("error", "No section data provided to update"))
+                        .build();
             }
 
             if (!isValidSectionName(sectionName)) {
-                return ResponseEntity.badRequest()
-                        .body(
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(
                                 Map.of(
                                         "error",
                                         "Invalid section name: "
-                                                + HtmlUtils.htmlEscape(sectionName)
+                                                + htmlEscape(sectionName)
                                                 + ". Valid sections: "
-                                                + String.join(", ", VALID_SECTION_NAMES)));
+                                                + String.join(", ", VALID_SECTION_NAMES)))
+                        .build();
             }
 
             // Auto-enable premium features if license key is provided
@@ -342,12 +354,12 @@ public class AdminSettingsController {
                 Object value = entry.getValue();
 
                 if (!isValidSettingKey(fullKey)) {
-                    return ResponseEntity.badRequest()
-                            .body(
+                    return Response.status(Response.Status.BAD_REQUEST)
+                            .entity(
                                     Map.of(
                                             "error",
-                                            "Invalid setting key format: "
-                                                    + HtmlUtils.htmlEscape(fullKey)));
+                                            "Invalid setting key format: " + htmlEscape(fullKey)))
+                            .build();
                 }
 
                 log.info("Admin updating section setting: {} = {}", fullKey, value);
@@ -359,31 +371,36 @@ public class AdminSettingsController {
                 updatedCount++;
             }
 
-            String escapedSectionName = HtmlUtils.htmlEscape(sectionName);
-            return ResponseEntity.ok(
-                    Map.of(
-                            "message",
-                            String.format(
-                                    "Successfully updated %d setting(s) in section '%s'. Changes will take"
-                                            + " effect on application restart.",
-                                    updatedCount, escapedSectionName)));
+            String escapedSectionName = htmlEscape(sectionName);
+            return Response.ok(
+                            Map.of(
+                                    "message",
+                                    String.format(
+                                            "Successfully updated %d setting(s) in section '%s'. Changes will take"
+                                                    + " effect on application restart.",
+                                            updatedCount, escapedSectionName)))
+                    .build();
 
         } catch (IOException e) {
             log.error("Failed to save section settings to file: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", GENERIC_FILE_ERROR));
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(Map.of("error", GENERIC_FILE_ERROR))
+                    .build();
         } catch (IllegalArgumentException e) {
             log.error("Invalid section data: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", GENERIC_INVALID_SECTION));
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", GENERIC_INVALID_SECTION))
+                    .build();
         } catch (Exception e) {
             log.error("Unexpected error while updating section settings: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", GENERIC_SERVER_ERROR));
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(Map.of("error", GENERIC_SERVER_ERROR))
+                    .build();
         }
     }
 
-    @GetMapping("/key/{key}")
+    @GET
+    @jakarta.ws.rs.Path("/key/{key}")
     @Operation(
             summary = "Get specific setting value",
             description =
@@ -399,17 +416,19 @@ public class AdminSettingsController {
                         responseCode = "403",
                         description = "Access denied - Admin role required")
             })
-    public ResponseEntity<?> getSettingValue(@PathVariable String key) {
+    public Response getSettingValue(@PathParam("key") String key) {
         try {
             if (!isValidSettingKey(key)) {
-                return ResponseEntity.badRequest()
-                        .body("Invalid setting key format: " + HtmlUtils.htmlEscape(key));
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity("Invalid setting key format: " + htmlEscape(key))
+                        .build();
             }
 
             Object value = getSettingByKey(key);
             if (value == null) {
-                return ResponseEntity.badRequest()
-                        .body("Setting key not found: " + HtmlUtils.htmlEscape(key));
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity("Setting key not found: " + htmlEscape(key))
+                        .build();
             }
 
             // Mask sensitive values before returning
@@ -419,19 +438,22 @@ public class AdminSettingsController {
             }
 
             log.debug("Admin requested setting: {}", key);
-            return ResponseEntity.ok(new SettingValueResponse(key, value));
+            return Response.ok(new SettingValueResponse(key, value)).build();
         } catch (IllegalArgumentException e) {
             log.error("Invalid setting key {}: {}", key, e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Invalid setting key: " + HtmlUtils.htmlEscape(key));
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Invalid setting key: " + htmlEscape(key))
+                    .build();
         } catch (Exception e) {
             log.error("Error retrieving setting {}: {}", key, e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to retrieve setting.");
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Failed to retrieve setting.")
+                    .build();
         }
     }
 
-    @PutMapping("/key/{key}")
+    @PUT
+    @jakarta.ws.rs.Path("/key/{key}")
     @Operation(
             summary = "Update specific setting value",
             description =
@@ -446,12 +468,13 @@ public class AdminSettingsController {
                         description = "Access denied - Admin role required"),
                 @ApiResponse(responseCode = "500", description = "Failed to save setting")
             })
-    public ResponseEntity<String> updateSettingValue(
-            @PathVariable String key, @Valid @RequestBody UpdateSettingValueRequest request) {
+    public Response updateSettingValue(
+            @PathParam("key") String key, @Valid UpdateSettingValueRequest request) {
         try {
             if (!isValidSettingKey(key)) {
-                return ResponseEntity.badRequest()
-                        .body("Invalid setting key format: " + HtmlUtils.htmlEscape(key));
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity("Invalid setting key format: " + htmlEscape(key))
+                        .build();
             }
 
             Object value = request.getValue();
@@ -463,9 +486,10 @@ public class AdminSettingsController {
                     log.warn(
                             "Admin attempted to save masked value for sensitive field: {}. This operation is blocked to prevent data loss.",
                             key);
-                    return ResponseEntity.badRequest()
-                            .body(
-                                    "Cannot save masked values for sensitive settings. Please provide the actual value.");
+                    return Response.status(Response.Status.BAD_REQUEST)
+                            .entity(
+                                    "Cannot save masked values for sensitive settings. Please provide the actual value.")
+                            .build();
                 }
             }
 
@@ -475,31 +499,38 @@ public class AdminSettingsController {
             // Track this as a pending change
             pendingChanges.put(key, value);
 
-            String escapedKey = HtmlUtils.htmlEscape(key);
-            return ResponseEntity.ok(
-                    String.format(
-                            "Successfully updated setting '%s'. Changes will take effect on"
-                                    + " application restart.",
-                            escapedKey));
+            String escapedKey = htmlEscape(key);
+            return Response.ok(
+                            String.format(
+                                    "Successfully updated setting '%s'. Changes will take effect on"
+                                            + " application restart.",
+                                    escapedKey))
+                    .build();
 
         } catch (IOException e) {
             log.error("Failed to save setting to file: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(GENERIC_FILE_ERROR);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(GENERIC_FILE_ERROR)
+                    .build();
         } catch (IllegalArgumentException e) {
             log.error("Invalid setting key or value: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(GENERIC_INVALID_SETTING);
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(GENERIC_INVALID_SETTING)
+                    .build();
         } catch (Exception e) {
             log.error("Unexpected error while updating setting: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(GENERIC_SERVER_ERROR);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(GENERIC_SERVER_ERROR)
+                    .build();
         }
     }
 
-    @PostMapping("/restart")
+    @POST
+    @jakarta.ws.rs.Path("/restart")
     @Operation(
             summary = "Restart the application",
             description =
-                    "Triggers a graceful restart of the Spring Boot application to apply pending settings changes. Uses a restart helper to ensure proper restart. Admin access required.")
+                    "Triggers a graceful restart of the application to apply pending settings changes. Uses a restart helper to ensure proper restart. Admin access required.")
     @ApiResponses(
             value = {
                 @ApiResponse(responseCode = "200", description = "Restart initiated successfully"),
@@ -508,7 +539,7 @@ public class AdminSettingsController {
                         description = "Access denied - Admin role required"),
                 @ApiResponse(responseCode = "500", description = "Failed to initiate restart")
             })
-    public ResponseEntity<Map<String, Object>> restartApplication() {
+    public Response restartApplication() {
         try {
             log.warn("Admin initiated application restart");
 
@@ -518,20 +549,22 @@ public class AdminSettingsController {
 
             if (appJar == null) {
                 log.error("Cannot restart: not running from JAR (likely development mode)");
-                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                        .body(
+                return Response.status(Response.Status.SERVICE_UNAVAILABLE)
+                        .entity(
                                 Map.of(
                                         "error",
-                                        "Restart not available in development mode. Please restart the application manually."));
+                                        "Restart not available in development mode. Please restart the application manually."))
+                        .build();
             }
 
             if (helperJar == null || !Files.isRegularFile(helperJar)) {
                 log.error("Cannot restart: restart-helper.jar not found at expected location");
-                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                        .body(
+                return Response.status(Response.Status.SERVICE_UNAVAILABLE)
+                        .entity(
                                 Map.of(
                                         "error",
-                                        "Restart helper not found. Cannot perform application restart."));
+                                        "Restart helper not found. Cannot perform application restart."))
+                        .build();
             }
 
             // Get current application arguments
@@ -577,26 +610,29 @@ public class AdminSettingsController {
                                 try {
                                     Thread.sleep(1000);
                                     log.info("Shutting down for restart...");
-                                    SpringApplication.exit(applicationContext, () -> 0);
-                                    System.exit(0);
+                                    // Trigger a graceful Quarkus shutdown (fires ShutdownEvent /
+                                    // @PreDestroy); equivalent to SpringApplication.exit(context).
+                                    Quarkus.asyncExit(0);
                                 } catch (InterruptedException e) {
                                     log.error("Restart interrupted: {}", e.getMessage(), e);
                                     Thread.currentThread().interrupt();
                                 }
                             });
 
-            return ResponseEntity.ok(
-                    Map.of(
-                            "message",
-                            "Application restart initiated. The server will be back online shortly."));
+            return Response.ok(
+                            Map.of(
+                                    "message",
+                                    "Application restart initiated. The server will be back online shortly."))
+                    .build();
 
         } catch (Exception e) {
             log.error("Failed to initiate restart: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(
                             Map.of(
                                     "error",
-                                    "Failed to initiate application restart: " + e.getMessage()));
+                                    "Failed to initiate application restart: " + e.getMessage()))
+                    .build();
         }
     }
 
@@ -952,5 +988,27 @@ public class AdminSettingsController {
 
         // Set the final value
         current.put(parts[parts.length - 1], value);
+    }
+
+    // Replacement for Spring's org.springframework.web.util.HtmlUtils.htmlEscape (no
+    // Quarkus/Jakarta equivalent and commons-text is not a dependency). Mirrors the subset of
+    // behavior required to escape user-supplied keys/section names echoed into error messages.
+    private static String htmlEscape(String input) {
+        if (input == null) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder(input.length());
+        for (int i = 0; i < input.length(); i++) {
+            char c = input.charAt(i);
+            switch (c) {
+                case '&' -> sb.append("&amp;");
+                case '<' -> sb.append("&lt;");
+                case '>' -> sb.append("&gt;");
+                case '"' -> sb.append("&quot;");
+                case '\'' -> sb.append("&#39;");
+                default -> sb.append(c);
+            }
+        }
+        return sb.toString();
     }
 }

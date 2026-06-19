@@ -1,18 +1,19 @@
 package stirling.software.saas.config;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Component;
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 /** Supabase configuration ({@code app.supabase.*}) for saas mode. */
+// TODO: Migration required - @ConfigurationProperties(prefix="app.supabase"); bind via
+// @ConfigProperty or @ConfigMapping
 @Slf4j
 @Data
-@Component
-@Profile("saas")
-@ConfigurationProperties(prefix = "app.supabase")
+@ApplicationScoped
+@IfBuildProfile("saas")
 public class SupabaseConfigurationProperties {
 
     /** Supabase project issuer URL, e.g. {@code https://abcd1234.supabase.co/auth/v1}. */

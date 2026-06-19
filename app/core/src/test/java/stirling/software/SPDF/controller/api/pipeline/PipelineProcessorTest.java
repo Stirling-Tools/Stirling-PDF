@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -14,16 +16,15 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+
+import jakarta.ws.rs.core.Response;
 
 import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.PipelineOperation;
 import stirling.software.SPDF.model.PipelineResult;
 import stirling.software.SPDF.service.ApiDocService;
+import stirling.software.common.model.io.FileSystemResource;
+import stirling.software.common.model.io.Resource;
 import stirling.software.common.service.InternalApiClient;
 import stirling.software.common.util.TempFileManager;
 
@@ -65,7 +66,7 @@ class PipelineProcessorTest {
         Resource emptyResource = new FileSystemResource(emptyTemp.toFile());
 
         when(internalApiClient.post(anyString(), any()))
-                .thenReturn(new ResponseEntity<>(emptyResource, HttpStatus.OK));
+                .thenReturn(Response.ok(emptyResource).build());
 
         PipelineResult result = pipelineProcessor.runPipelineAgainstFiles(files, config);
 
@@ -104,7 +105,7 @@ class PipelineProcessorTest {
         when(apiDocService.isValidOperation(anyString(), anyMap())).thenReturn(true);
 
         when(internalApiClient.post(anyString(), any()))
-                .thenReturn(new ResponseEntity<>(outputResource, HttpStatus.OK));
+                .thenReturn(Response.ok(outputResource).build());
 
         PipelineResult result = pipelineProcessor.runPipelineAgainstFiles(files, config);
 
@@ -115,14 +116,38 @@ class PipelineProcessorTest {
         Files.deleteIfExists(tempPath);
     }
 
-    private static class MyFileByteArrayResource extends ByteArrayResource {
-        public MyFileByteArrayResource() {
-            super("data".getBytes());
+    /**
+     * In-memory {@link Resource} reporting a {@code .pdf} filename. Replaces the former Spring
+     * {@code ByteArrayResource} subclass: the pipeline only consults {@link #getFilename()} for
+     * extension matching here, the mocked {@link InternalApiClient} ignores the request body.
+     */
+    private static class MyFileByteArrayResource implements Resource {
+
+        private final byte[] data = "data".getBytes();
+
+        @Override
+        public InputStream getInputStream() {
+            return new ByteArrayInputStream(data);
+        }
+
+        @Override
+        public boolean exists() {
+            return true;
         }
 
         @Override
         public String getFilename() {
             return "test.pdf";
+        }
+
+        @Override
+        public long contentLength() {
+            return data.length;
+        }
+
+        @Override
+        public java.io.File getFile() throws java.io.IOException {
+            throw new java.io.IOException("not file-backed");
         }
     }
 }

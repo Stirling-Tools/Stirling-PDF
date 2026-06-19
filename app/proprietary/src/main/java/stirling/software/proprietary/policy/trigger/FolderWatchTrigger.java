@@ -20,10 +20,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
+import io.quarkus.arc.All;
+import io.quarkus.arc.profile.IfBuildProfile;
 
-import lombok.RequiredArgsConstructor;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
@@ -44,9 +46,8 @@ import stirling.software.proprietary.policy.store.PolicyStore;
  * <p>Watch state is in memory, so this assumes a single node and rebuilds registrations on restart.
  */
 @Slf4j
-@Service
-@RequiredArgsConstructor
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 public class FolderWatchTrigger implements PolicyTrigger {
 
     private static final String TYPE = "folder-watch";
@@ -55,6 +56,18 @@ public class FolderWatchTrigger implements PolicyTrigger {
     private final PolicyRunner policyRunner;
     private final List<InputSource> inputSources;
     private final ApplicationProperties applicationProperties;
+
+    @Inject
+    public FolderWatchTrigger(
+            PolicyStore policyStore,
+            PolicyRunner policyRunner,
+            @All List<InputSource> inputSources,
+            ApplicationProperties applicationProperties) {
+        this.policyStore = policyStore;
+        this.policyRunner = policyRunner;
+        this.inputSources = inputSources;
+        this.applicationProperties = applicationProperties;
+    }
 
     private final Map<Path, WatchKey> keysByDir = new ConcurrentHashMap<>();
     private final Map<WatchKey, Path> dirByKey = new ConcurrentHashMap<>();

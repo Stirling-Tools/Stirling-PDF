@@ -3,15 +3,16 @@ package stirling.software.proprietary.policy.output;
 import java.io.IOException;
 import java.util.List;
 
-import org.springframework.core.io.Resource;
-
+import stirling.software.common.model.io.Resource;
 import stirling.software.common.model.job.ResultFile;
 import stirling.software.proprietary.policy.model.OutputSpec;
 
 /**
- * Delivers a finished run's outputs to a destination, returning {@link ResultFile} descriptors for
- * the run record. Implementations are beans selected by {@link #supports(OutputSpec)}, so a new
- * destination (folder, S3) is just a new bean.
+ * Delivers a finished run's output files to a destination, returning durable {@link ResultFile}
+ * descriptors (fileId + metadata) for the run record.
+ *
+ * <p>Implementations are CDI beans selected by {@link #supports(OutputSpec)}. New destinations
+ * (folder, S3) are added as new beans without changing the engine.
  */
 public interface PolicyOutputSink {
 

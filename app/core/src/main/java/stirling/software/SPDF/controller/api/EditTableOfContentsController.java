@@ -9,13 +9,17 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDDocumentOutline;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineItem;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import io.swagger.v3.oas.annotations.Operation;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +30,8 @@ import stirling.software.SPDF.model.api.EditTableOfContentsRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.multipart.FileUploadMultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.TempFileManager;
@@ -35,6 +41,8 @@ import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
 @GeneralApi
+@Path("/api/v1/general")
+@ApplicationScoped
 @Slf4j
 @RequiredArgsConstructor
 public class EditTableOfContentsController {
@@ -43,25 +51,28 @@ public class EditTableOfContentsController {
     private final ObjectMapper objectMapper;
     private final TempFileManager tempFileManager;
 
+    @POST
+    @Path("/extract-bookmarks")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
             value = "/extract-bookmarks",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @Operation(
             summary = "Extract PDF Bookmarks",
             description = "Extracts bookmarks/table of contents from a PDF document as JSON.")
-    public ResponseEntity<List<Map<String, Object>>> extractBookmarks(
-            @RequestParam("file") MultipartFile file) throws Exception {
+    public Response extractBookmarks(@RestForm("file") FileUpload fileUpload) throws Exception {
+        MultipartFile file = FileUploadMultipartFile.of(fileUpload);
         try (PDDocument document = pdfDocumentFactory.load(file)) {
             PDDocumentOutline outline = document.getDocumentCatalog().getDocumentOutline();
 
             if (outline == null) {
                 log.info("No outline/bookmarks found in PDF");
-                return ResponseEntity.ok(new ArrayList<>());
+                return Response.ok(new ArrayList<>()).build();
             }
 
             List<Map<String, Object>> bookmarks = extractBookmarkItems(document, outline);
-            return ResponseEntity.ok(bookmarks);
+            return Response.ok(bookmarks).build();
         }
     }
 
@@ -147,15 +158,28 @@ public class EditTableOfContentsController {
         return bookmark;
     }
 
+    @POST
+    @Path("/edit-table-of-contents")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @AutoJobPostMapping(
             value = "/edit-table-of-contents",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA,
             resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @Operation(
             summary = "Edit Table of Contents",
             description = "Add or edit bookmarks/table of contents in a PDF document.")
-    public ResponseEntity<Resource> editTableOfContents(
-            @ModelAttribute EditTableOfContentsRequest request) throws Exception {
+    public Response editTableOfContents(
+            @RestForm("fileInput") FileUpload fileUpload,
+            @RestForm("fileId") String fileId,
+            @RestForm("bookmarkData") String bookmarkData,
+            @RestForm("replaceExisting") Boolean replaceExisting)
+            throws Exception {
+        EditTableOfContentsRequest request = new EditTableOfContentsRequest();
+        request.setFileInput(FileUploadMultipartFile.of(fileUpload));
+        request.setFileId(fileId);
+        request.setBookmarkData(bookmarkData);
+        request.setReplaceExisting(replaceExisting);
+
         MultipartFile file = request.getFileInput();
 
         try (PDDocument document = pdfDocumentFactory.load(file)) {

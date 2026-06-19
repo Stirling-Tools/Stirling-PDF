@@ -13,10 +13,14 @@ import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemReader;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.core.io.Resource;
 
-@ConditionalOnProperty(name = "security.saml2.enabled", havingValue = "true")
+import stirling.software.common.model.io.Resource;
+
+// TODO: Migration required - the original @ConditionalOnProperty(name =
+// "security.saml2.enabled", havingValue = "true") gated this class on a runtime property. This is a
+// utility holding only static methods (not a CDI bean), so the annotation was a no-op for
+// instantiation and is dropped. Callers must enforce the security.saml2.enabled runtime toggle
+// (e.g. via a runtime guard at the SAML SP entry point); see the SAML2 migration notes.
 public class CertificateUtils {
 
     public static X509Certificate readCertificate(Resource certificateResource) throws Exception {

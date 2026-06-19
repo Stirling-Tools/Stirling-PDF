@@ -7,12 +7,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+
+import io.quarkus.arc.profile.IfBuildProfile;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,8 +39,8 @@ import stirling.software.saas.payg.wallet.WalletPolicy;
  * immediately on the originating instance.
  */
 @Slf4j
-@Service
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 public class EntitlementService {
 
     static final int CACHE_TTL_SECONDS = 30;
@@ -100,7 +101,7 @@ public class EntitlementService {
         return snapshotCache.estimatedSize();
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     EntitlementSnapshot computeSnapshot(Long teamId) {
         TeamBillingContext billing = teamBillingService.forTeam(teamId);
         Optional<WalletPolicy> walletPolicyOpt = walletPolicyRepository.findByTeamId(teamId);

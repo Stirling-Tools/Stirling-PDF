@@ -116,9 +116,11 @@ COPY --chown=1000:1000 scripts/init-without-ocr.sh /scripts/init-without-ocr.sh
 COPY --chown=1000:1000 scripts/installFonts.sh /scripts/installFonts.sh
 COPY --chown=1000:1000 scripts/stirling-diagnostics.sh /scripts/stirling-diagnostics.sh
 
-# Copy built JARs from build stage
+# Copy the Quarkus uber runner-jar (self-contained). build/libs/*.jar is the thin jar (app classes
+# only, not runnable); the runnable artifact is build/<name>-runner.jar. init-without-ocr.sh runs
+# it via `java -jar /app.jar`.
 COPY --from=build --chown=1000:1000 \
-     /app/app/core/build/libs/*.jar /app.jar
+     /app/app/core/build/stirling-pdf-*-runner.jar /app.jar
 COPY --from=build --chown=1000:1000 \
      /app/build/libs/restart-helper.jar /restart-helper.jar
 

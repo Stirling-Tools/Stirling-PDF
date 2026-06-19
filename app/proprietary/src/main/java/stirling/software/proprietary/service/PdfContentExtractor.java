@@ -20,10 +20,11 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
-import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonValue;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -41,7 +42,7 @@ import stirling.software.proprietary.model.api.ai.AiWorkflowTextSelection;
 import stirling.software.proprietary.model.api.ai.FolioType;
 
 @Slf4j
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 public class PdfContentExtractor {
 

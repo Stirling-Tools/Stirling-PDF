@@ -5,6 +5,7 @@ import static stirling.software.proprietary.security.service.MfaService.MFA_LAST
 import static stirling.software.proprietary.security.service.MfaService.MFA_REQUIRED_KEY;
 import static stirling.software.proprietary.security.service.MfaService.MFA_SECRET_KEY;
 
+import java.security.Principal;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -17,19 +18,12 @@ import java.util.UUID;
 import java.util.function.Supplier;
 
 import org.slf4j.MDC;
-import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.session.SessionInformation;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+
+import io.quarkus.security.identity.SecurityIdentity;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +31,15 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.exception.UnsupportedProviderException;
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.GrantedAuthority;
+import stirling.software.common.security.OAuth2User;
+import stirling.software.common.security.PasswordEncoder;
+import stirling.software.common.security.SessionInformation;
+import stirling.software.common.security.SimpleGrantedAuthority;
+import stirling.software.common.security.UserDetails;
+import stirling.software.common.security.UsernameNotFoundException;
+import stirling.software.common.security.UsernamePasswordAuthenticationToken;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.proprietary.model.Team;
@@ -60,7 +63,7 @@ import stirling.software.proprietary.workflow.repository.WorkflowParticipantRepo
 import stirling.software.proprietary.workflow.repository.WorkflowSessionRepository;
 import stirling.software.proprietary.workflow.service.UserServerCertificateService;
 
-@Service
+@ApplicationScoped
 @Slf4j
 @RequiredArgsConstructor
 public class UserService implements UserServiceInterface {
@@ -71,7 +74,13 @@ public class UserService implements UserServiceInterface {
 
     private final PasswordEncoder passwordEncoder;
 
-    private final MessageSource messageSource;
+    // TODO: Migration required - org.springframework.context.MessageSource and
+    // LocaleContextHolder (Spring i18n) have no Quarkus equivalent on the classpath. Rebind to a
+    // Quarkus message bundle (io.quarkus.qute / @org.eclipse.microprofile.config or a
+    // jakarta.enterprise localization helper) and an explicit Locale source. The injected field is
+    // removed for now and getInvalidUsernameMessage() returns a constant fallback so the bean can
+    // be
+    // constructed; localization must be restored when the i18n layer is ported.
 
     private final SessionPersistentRegistry sessionRegistry;
 
@@ -87,6 +96,11 @@ public class UserService implements UserServiceInterface {
     private final StorageCleanupEntryRepository storageCleanupEntryRepository;
     private final FileShareRepository fileShareRepository;
     private final FileShareAccessRepository fileShareAccessRepository;
+
+    // Quarkus replacement for Spring's SecurityContextHolder: the authenticated principal (the User
+    // entity, via UserSecurityIdentityAugmentor) and its roles live on SecurityIdentity. Field
+    // injection (not a constructor arg) keeps the @RequiredArgsConstructor signature stable.
+    @Inject SecurityIdentity securityIdentity;
 
     @Transactional
     public void processSSOPostLogin(
@@ -121,7 +135,7 @@ public class UserService implements UserServiceInterface {
                 log.info("Migrating user {} to use SSO provider ID: {}", username, ssoProviderId);
                 user.setSsoProviderId(ssoProviderId);
                 user.setSsoProvider(ssoProvider);
-                userRepository.save(user);
+                userRepository.persist(user);
                 databaseService.exportDatabase();
             }
             return;
@@ -144,6 +158,8 @@ public class UserService implements UserServiceInterface {
             throw new UsernameNotFoundException("API key is not valid");
         }
         // Convert the user into an Authentication object
+        // TODO: Migration required - emits a Spring Security Authentication consumed by the auth
+        // filters; replace with a SecurityIdentity construction once the filter layer is ported.
         return new UsernamePasswordAuthenticationToken( // principal (typically the user)
                 user, // credentials (we don't expose the password or API key here)
                 null, // user's authorities (roles/permissions)
@@ -151,7 +167,11 @@ public class UserService implements UserServiceInterface {
     }
 
     private Collection<? extends GrantedAuthority> getAuthorities(User user) {
-        return user.getAuthorities();
+        // User.getAuthorities() returns Set<Authority> (a JPA entity) which does not implement the
+        // GrantedAuthority shim; adapt each Authority's role string into a SimpleGrantedAuthority.
+        return user.getAuthorities().stream()
+                .map(authority -> new SimpleGrantedAuthority(authority.getAuthority()))
+                .toList();
     }
 
     private String generateApiKey() {
@@ -163,6 +183,7 @@ public class UserService implements UserServiceInterface {
         return apiKey;
     }
 
+    @Transactional
     public User addApiKeyToUser(String username) {
         Optional<User> userOpt = findByUsernameIgnoreCase(username);
         User user = saveUser(userOpt, generateApiKey());
@@ -176,8 +197,10 @@ public class UserService implements UserServiceInterface {
 
     private User saveUser(Optional<User> user, String apiKey) {
         if (user.isPresent()) {
-            user.get().setApiKey(apiKey);
-            return userRepository.save(user.get());
+            User existing = user.get();
+            existing.setApiKey(apiKey);
+            userRepository.persist(existing);
+            return existing;
         }
         throw new UsernameNotFoundException("User not found");
     }
@@ -211,6 +234,7 @@ public class UserService implements UserServiceInterface {
         return userRepository.findByApiKey(apiKey).isPresent();
     }
 
+    @Transactional
     public Optional<User> getUserByApiKey(String apiKey) {
         return userRepository.findByApiKey(apiKey);
     }
@@ -259,7 +283,7 @@ public class UserService implements UserServiceInterface {
         // FileShareAccess for those shares must be cleared first (no cascade from FileShare side).
         List<FileShare> sharesTargetingUser = fileShareRepository.findBySharedWithUser(user);
         sharesTargetingUser.forEach(fileShareAccessRepository::deleteByFileShare);
-        fileShareRepository.deleteAll(sharesTargetingUser);
+        sharesTargetingUser.forEach(fileShareRepository::delete);
 
         // Null out WorkflowParticipant.user for sessions this user participates in but does not
         // own.
@@ -270,8 +294,9 @@ public class UserService implements UserServiceInterface {
         storedFileRepository.clearWorkflowSessionReferencesByOwner(user);
 
         // Delete WorkflowSessions (CascadeType.ALL cascades to WorkflowParticipant)
-        workflowSessionRepository.deleteAll(
-                workflowSessionRepository.findByOwnerOrderByCreatedAtDesc(user));
+        workflowSessionRepository
+                .findByOwnerOrderByCreatedAtDesc(user)
+                .forEach(workflowSessionRepository::delete);
 
         // Collect storage keys for physical cleanup before deleting DB records
         List<StoredFile> files = storedFileRepository.findAllByOwner(user);
@@ -291,13 +316,13 @@ public class UserService implements UserServiceInterface {
         for (StoredFile file : files) {
             file.getShares().forEach(fileShareAccessRepository::deleteByFileShare);
         }
-        storedFileRepository.deleteAll(files);
+        files.forEach(storedFileRepository::delete);
 
         // Schedule physical deletion of all storage blobs; StorageCleanupService handles retry
         for (String key : storageKeys) {
             StorageCleanupEntry entry = new StorageCleanupEntry();
             entry.setStorageKey(key);
-            storageCleanupEntryRepository.save(entry);
+            storageCleanupEntryRepository.persist(entry);
         }
     }
 
@@ -329,7 +354,7 @@ public class UserService implements UserServiceInterface {
             settingsMap.clear();
             settingsMap.putAll(updates);
             user.setSettings(settingsMap);
-            userRepository.save(user);
+            userRepository.persist(user);
             databaseService.exportDatabase();
         }
     }
@@ -351,9 +376,11 @@ public class UserService implements UserServiceInterface {
     /** Low-level user persistence; bypasses {@link #saveUserCore}'s settings/audit lifecycle. */
     @Transactional
     public User saveUser(User user) {
-        return userRepository.save(user);
+        userRepository.persist(user);
+        return user;
     }
 
+    @Transactional
     public Optional<User> findByUsernameIgnoreCase(String username) {
         return userRepository.findByUsernameIgnoreCase(username);
     }
@@ -372,36 +399,48 @@ public class UserService implements UserServiceInterface {
             throw new IllegalArgumentException(getInvalidUsernameMessage());
         }
         user.setUsername(newUsername);
-        userRepository.save(user);
+        userRepository.persist(user);
         databaseService.exportDatabase();
     }
 
+    @Transactional
     public void changePassword(User user, String newPassword)
             throws SQLException, UnsupportedProviderException {
         user.setPassword(passwordEncoder.encode(newPassword));
-        userRepository.save(user);
+        // Spring Data save() upserted; Panache persist() rejects an already-persisted (detached)
+        // entity ("Detached entity passed to persist"). The user was loaded in the request context,
+        // so re-attach via merge to update it.
+        userRepository.getEntityManager().merge(user);
         databaseService.exportDatabase();
     }
 
+    @Transactional
     public void changeFirstUse(User user, boolean firstUse)
             throws SQLException, UnsupportedProviderException {
         user.setFirstLogin(firstUse);
-        userRepository.save(user);
+        userRepository.getEntityManager().merge(user);
         databaseService.exportDatabase();
     }
 
+    @Transactional
     public void changeRole(User user, String newRole)
             throws SQLException, UnsupportedProviderException {
         Authority userAuthority = this.findRole(user);
         userAuthority.setAuthority(newRole);
-        authorityRepository.save(userAuthority);
+        // The authority was loaded in a prior request/transaction, so it is detached; Panache
+        // persist() rejects a detached entity. Re-attach via merge (see changeUserEnabled).
+        authorityRepository.getEntityManager().merge(userAuthority);
         databaseService.exportDatabase();
     }
 
+    @Transactional
     public void changeUserEnabled(User user, Boolean enbeled)
             throws SQLException, UnsupportedProviderException {
         user.setEnabled(enbeled);
-        userRepository.save(user);
+        // The user was loaded in a prior request/transaction, so it is detached here; Panache
+        // persist() rejects a detached entity ("Detached entity passed to persist"). Re-attach via
+        // merge to update it (same fix as changePassword / changeFirstUse).
+        userRepository.getEntityManager().merge(user);
         databaseService.exportDatabase();
     }
 
@@ -411,7 +450,8 @@ public class UserService implements UserServiceInterface {
             team = getDefaultTeam();
         }
         user.setTeam(team);
-        userRepository.save(user);
+        // Detached entity -> merge, not persist (see changeUserEnabled).
+        userRepository.getEntityManager().merge(user);
         databaseService.exportDatabase();
     }
 
@@ -433,7 +473,7 @@ public class UserService implements UserServiceInterface {
         }
 
         return teamRepository
-                .findById(teamId)
+                .findByIdOptional(teamId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid team ID: " + teamId));
     }
 
@@ -449,7 +489,8 @@ public class UserService implements UserServiceInterface {
                         () -> {
                             Team team = new Team();
                             team.setName("Default");
-                            return teamRepository.save(team);
+                            teamRepository.persist(team);
+                            return team;
                         });
     }
 
@@ -462,6 +503,7 @@ public class UserService implements UserServiceInterface {
      * @throws SQLException If a database error occurs
      * @throws UnsupportedProviderException If an unsupported provider is specified
      */
+    @Transactional
     public User saveUserCore(SaveUserRequest request)
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
 
@@ -522,7 +564,7 @@ public class UserService implements UserServiceInterface {
         }
 
         // Save user
-        userRepository.save(user);
+        userRepository.persist(user);
 
         // Export database
         databaseService.exportDatabase();
@@ -556,8 +598,12 @@ public class UserService implements UserServiceInterface {
     }
 
     private String getInvalidUsernameMessage() {
-        return messageSource.getMessage(
-                "invalidUsernameMessage", null, LocaleContextHolder.getLocale());
+        // TODO: Migration required - was messageSource.getMessage("invalidUsernameMessage", null,
+        // LocaleContextHolder.getLocale()). Spring's MessageSource / LocaleContextHolder are not on
+        // the Quarkus classpath; rebind to a Quarkus localization mechanism (message bundle +
+        // request Locale) and restore the localized lookup. Returning the message key as a fallback
+        // preserves behavior shape until i18n is ported.
+        return "invalidUsernameMessage";
     }
 
     public boolean hasPassword(String username) {
@@ -604,6 +650,10 @@ public class UserService implements UserServiceInterface {
     }
 
     public void invalidateUserSessions(String username) {
+        // TODO: Migration required - SessionPersistentRegistry still exposes Spring Security types
+        // (SessionInformation, UserDetails, OAuth2User). Once that collaborator is ported to a
+        // Quarkus session store, drop these Spring Security imports and adjust the principal type
+        // checks accordingly.
         String usernameP = "";
 
         for (Object principal : sessionRegistry.getAllPrincipals()) {
@@ -627,30 +677,23 @@ public class UserService implements UserServiceInterface {
 
     @Override
     public String getCurrentUsername() {
-        // Try SecurityContext first (normal request context)
+        // The authenticated principal is exposed via SecurityIdentity (the User entity, set by
+        // UserSecurityIdentityAugmentor) - Spring's SecurityContextHolder is never populated on
+        // RESTEasy Reactive threads. Guarded so off-request callers (async job threads, where no
+        // request-scoped SecurityIdentity is bound) fall through to the MDC principal instead.
         try {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            if (auth != null) {
-                Object principal = auth.getPrincipal();
-
-                if (principal instanceof UserDetails detailsUser) {
-                    return detailsUser.getUsername();
-                } else if (principal instanceof User domainUser) {
-                    return domainUser.getUsername();
-                } else if (principal instanceof OAuth2User oAuth2User) {
-                    return oAuth2User.getAttribute(oAuth2.getUseAsUsername());
-                } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
-                    return saml2User.name();
-                } else if (principal instanceof String stringUser) {
-                    return stringUser;
+            if (securityIdentity != null && !securityIdentity.isAnonymous()) {
+                Principal principal = securityIdentity.getPrincipal();
+                if (principal != null && principal.getName() != null) {
+                    return principal.getName();
                 }
             }
         } catch (Exception e) {
-            log.trace("Error retrieving username from SecurityContext, falling back to MDC", e);
+            log.trace("No active SecurityIdentity, falling back to MDC", e);
         }
 
-        // Fallback to MDC for async contexts (e.g., when called from async job threads)
-        // ControllerAuditAspect captures principal in MDC and AutoJobAspect propagates it
+        // Fallback to MDC for async contexts (e.g., when called from async job threads).
+        // ControllerAuditAspect captures principal in MDC and AutoJobAspect propagates it.
         String mdcPrincipal = MDC.get("auditPrincipal");
         if (mdcPrincipal != null && !mdcPrincipal.isEmpty()) {
             return mdcPrincipal;
@@ -661,18 +704,20 @@ public class UserService implements UserServiceInterface {
 
     @Override
     public boolean isCurrentUserAdmin() {
+        // Roles live on SecurityIdentity (assigned by
+        // JwtTokenIdentityProvider/ApiKeyIdentityProvider,
+        // which add both "ROLE_ADMIN" and the prefix-stripped "ADMIN"). Spring's
+        // SecurityContextHolder
+        // is never populated on reactive threads, so reading it always returned false.
         try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication != null
-                    && authentication.isAuthenticated()
-                    && !"anonymousUser".equals(authentication.getPrincipal())) {
-                return authentication.getAuthorities().stream()
-                        .anyMatch(auth -> Role.ADMIN.getRoleId().equals(auth.getAuthority()));
-            }
+            return securityIdentity != null
+                    && !securityIdentity.isAnonymous()
+                    && (securityIdentity.hasRole(Role.ADMIN.getRoleId())
+                            || securityIdentity.hasRole("ADMIN"));
         } catch (Exception e) {
             log.debug("Error checking admin status", e);
+            return false;
         }
-        return false;
     }
 
     @Override
@@ -707,7 +752,7 @@ public class UserService implements UserServiceInterface {
 
                     if (!customApiKey.equals(updatedUser.getApiKey())) {
                         updatedUser.setApiKey(customApiKey);
-                        userRepository.save(updatedUser);
+                        userRepository.persist(updatedUser);
                     }
                 },
                 () -> {
@@ -720,7 +765,7 @@ public class UserService implements UserServiceInterface {
                     user.setAuthenticationType(AuthenticationType.WEB);
                     user.setApiKey(customApiKey);
                     user.addAuthority(new Authority(Role.INTERNAL_API_USER.getRoleId(), user));
-                    userRepository.save(user);
+                    userRepository.persist(user);
                 });
 
         try {
@@ -745,8 +790,9 @@ public class UserService implements UserServiceInterface {
         return userRepository.findAllWithoutTeam();
     }
 
+    @Transactional
     public void saveAll(List<User> users) {
-        userRepository.saveAll(users);
+        userRepository.persist(users);
     }
 
     /**
@@ -787,7 +833,7 @@ public class UserService implements UserServiceInterface {
         }
 
         if (updated > 0) {
-            userRepository.saveAll(ssoUsers);
+            userRepository.persist(ssoUsers);
         }
 
         return updated;
@@ -813,7 +859,7 @@ public class UserService implements UserServiceInterface {
         }
 
         if (updated > 0) {
-            userRepository.saveAll(pendingUsers);
+            userRepository.persist(pendingUsers);
         }
 
         return updated;

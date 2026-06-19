@@ -4,9 +4,10 @@ import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
+import io.quarkus.arc.profile.IfBuildProfile;
+import io.quarkus.scheduler.Scheduled;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -14,8 +15,8 @@ import lombok.extern.slf4j.Slf4j;
  * Simple in-memory rate limiting service. Tracks attempts per key (e.g., user ID or team ID) and
  * enforces limits.
  */
-@Service
-@Profile("saas")
+@ApplicationScoped
+@IfBuildProfile("saas")
 @Slf4j
 public class RateLimitService {
 
@@ -109,7 +110,7 @@ public class RateLimitService {
     }
 
     /** Cleanup expired buckets every hour. */
-    @Scheduled(fixedRate = 3600000) // 1 hour
+    @Scheduled(every = "1h")
     public void cleanupExpiredBuckets() {
         long now = System.currentTimeMillis();
 

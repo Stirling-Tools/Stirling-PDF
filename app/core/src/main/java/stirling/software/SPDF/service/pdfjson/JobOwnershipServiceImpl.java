@@ -2,9 +2,9 @@ package stirling.software.SPDF.service.pdfjson;
 
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -15,14 +15,31 @@ import stirling.software.common.service.UserServiceInterface;
  * enabled, jobs are scoped to authenticated users. When security is disabled, jobs are globally
  * accessible.
  */
+// MIGRATION: Spring's @ConditionalOnProperty(name="security.enable-login", havingValue="true")
+// gated this bean. It is now @IfBuildProperty(security.enable-login=true) - the exact build-time
+// complement of NoOpJobOwnershipService (@IfBuildProperty security.enable-login=false,
+// enableIfMissing=true). The two are mutually exclusive at build time, so exactly one
+// JobOwnershipService bean exists and callers can inject it directly (no Instance<> needed).
+// A previous @LookupIfProperty here left both impls registered at build time and caused an
+// ambiguous dependency.
+// TODO: Migration required - this trades runtime toggling for a build-time decision; if
+// security.enable-login must be switched without a rebuild, reintroduce @LookupIfProperty on both
+// impls and switch every JobOwnershipService injection point to Instance<>.
 @Slf4j
-@Service
-@ConditionalOnProperty(name = "security.enable-login", havingValue = "true", matchIfMissing = false)
+@ApplicationScoped
+@io.quarkus.arc.properties.IfBuildProperty(name = "security.enable-login", stringValue = "true")
 public class JobOwnershipServiceImpl
         implements stirling.software.common.service.JobOwnershipService {
 
-    @Autowired(required = false)
-    private UserServiceInterface userService;
+    // MIGRATION: Spring's @Autowired(required=false) optional bean -> CDI Instance<>
+    // (UserServiceInterface is only present in security-enabled flavors). Resolve via
+    // isResolvable()/get().
+    private final Instance<UserServiceInterface> userService;
+
+    @Inject
+    public JobOwnershipServiceImpl(Instance<UserServiceInterface> userService) {
+        this.userService = userService;
+    }
 
     /**
      * Get the current authenticated user's identifier. Returns empty if no user is authenticated.
@@ -30,13 +47,13 @@ public class JobOwnershipServiceImpl
      * @return Optional containing user identifier, or empty if not authenticated
      */
     public Optional<String> getCurrentUserId() {
-        if (userService == null) {
+        if (userService == null || !userService.isResolvable()) {
             log.debug("UserService not available");
             return Optional.empty();
         }
 
         try {
-            String username = userService.getCurrentUsername();
+            String username = userService.get().getCurrentUsername();
             if (username != null && !username.isEmpty() && !"anonymousUser".equals(username)) {
                 log.debug("Current authenticated user: {}", username);
                 return Optional.of(username);

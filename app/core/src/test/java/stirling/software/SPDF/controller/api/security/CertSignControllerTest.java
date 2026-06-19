@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.security;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -16,41 +17,32 @@ import java.nio.file.Files;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.multipart.MultipartFile;
 
-import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
+import jakarta.enterprise.inject.Instance;
+import jakarta.ws.rs.core.Response;
+
+import stirling.software.common.model.MultipartFile;
+import stirling.software.common.model.io.ClassPathResource;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.ServerCertificateServiceInterface;
+import stirling.software.common.testsupport.TestFileUploads;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
 @ExtendWith(MockitoExtension.class)
 class CertSignControllerTest {
-    private static ResponseEntity<Resource> streamingOk(byte[] bytes) {
-        return ResponseEntity.ok(new ByteArrayResource(bytes));
-    }
-
-    private static byte[] drainBody(ResponseEntity<Resource> response) throws java.io.IOException {
-        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-        try (java.io.InputStream __in = response.getBody().getInputStream()) {
-            __in.transferTo(baos);
-        }
-        return baos.toByteArray();
-    }
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
+
+    @Mock private Instance<ServerCertificateServiceInterface> serverCertificateService;
 
     @InjectMocks private CertSignController certSignController;
 
@@ -64,6 +56,15 @@ class CertSignControllerTest {
     private byte[] crtCertBytes;
     private byte[] cerCertBytes;
     private byte[] derCertBytes;
+
+    private static byte[] readClasspath(String path) throws Exception {
+        ClassPathResource resource = new ClassPathResource(path);
+        try (InputStream is = resource.getInputStream();
+                ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            is.transferTo(baos);
+            return baos.toByteArray();
+        }
+    }
 
     @BeforeEach
     void setUp() throws Exception {
@@ -85,60 +86,15 @@ class CertSignControllerTest {
             doc.save(baos);
             pdfBytes = baos.toByteArray();
         }
-        ClassPathResource pfxResource = new ClassPathResource("certs/test-cert.pfx");
-        try (InputStream is = pfxResource.getInputStream();
-                ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-            is.transferTo(baos);
-            pfxBytes = baos.toByteArray();
-        }
-        ClassPathResource p12Resource = new ClassPathResource("certs/test-cert.p12");
-        try (InputStream is = p12Resource.getInputStream();
-                ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-            is.transferTo(baos);
-            p12Bytes = baos.toByteArray();
-        }
-        ClassPathResource jksResource = new ClassPathResource("certs/test-cert.jks");
-        try (InputStream is = jksResource.getInputStream();
-                ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-            is.transferTo(baos);
-            jksBytes = baos.toByteArray();
-        }
-        ClassPathResource pemKeyResource = new ClassPathResource("certs/test-key.pem");
-        try (InputStream is = pemKeyResource.getInputStream();
-                ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-            is.transferTo(baos);
-            pemKeyBytes = baos.toByteArray();
-        }
-        ClassPathResource pemCertResource = new ClassPathResource("certs/test-cert.pem");
-        try (InputStream is = pemCertResource.getInputStream();
-                ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-            is.transferTo(baos);
-            pemCertBytes = baos.toByteArray();
-        }
-        ClassPathResource keyResource = new ClassPathResource("certs/test-key.key");
-        try (InputStream is = keyResource.getInputStream();
-                ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-            is.transferTo(baos);
-            keyBytes = baos.toByteArray();
-        }
-        ClassPathResource crtResource = new ClassPathResource("certs/test-cert.crt");
-        try (InputStream is = crtResource.getInputStream();
-                ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-            is.transferTo(baos);
-            crtCertBytes = baos.toByteArray();
-        }
-        ClassPathResource cerResource = new ClassPathResource("certs/test-cert.cer");
-        try (InputStream is = cerResource.getInputStream();
-                ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-            is.transferTo(baos);
-            cerCertBytes = baos.toByteArray();
-        }
-        ClassPathResource derCertResource = new ClassPathResource("certs/test-cert.der");
-        try (InputStream is = derCertResource.getInputStream();
-                ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-            is.transferTo(baos);
-            derCertBytes = baos.toByteArray();
-        }
+        pfxBytes = readClasspath("certs/test-cert.pfx");
+        p12Bytes = readClasspath("certs/test-cert.p12");
+        jksBytes = readClasspath("certs/test-cert.jks");
+        pemKeyBytes = readClasspath("certs/test-key.pem");
+        pemCertBytes = readClasspath("certs/test-cert.pem");
+        keyBytes = readClasspath("certs/test-key.key");
+        crtCertBytes = readClasspath("certs/test-cert.crt");
+        cerCertBytes = readClasspath("certs/test-cert.cer");
+        derCertBytes = readClasspath("certs/test-cert.der");
 
         lenient()
                 .when(pdfDocumentFactory.load(any(MultipartFile.class)))
@@ -151,229 +107,220 @@ class CertSignControllerTest {
 
     @Test
     void testSignPdfWithPfx() throws Exception {
-        MockMultipartFile pdfFile =
-                new MockMultipartFile(
-                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
-        MockMultipartFile pfxFile =
-                new MockMultipartFile("p12File", "test-cert.pfx", "application/x-pkcs12", pfxBytes);
+        FileUpload pdfFile = TestFileUploads.pdf(pdfBytes);
+        FileUpload pfxFile = TestFileUploads.of(pfxBytes, "test-cert.pfx", "application/x-pkcs12");
 
-        SignPDFWithCertRequest request = new SignPDFWithCertRequest();
-        request.setFileInput(pdfFile);
-        request.setCertType("PFX");
-        request.setP12File(pfxFile);
-        request.setPassword("password");
-        request.setShowSignature(false);
-        request.setReason("test");
-        request.setLocation("test");
-        request.setName("tester");
-        request.setPageNumber(1);
-        request.setShowLogo(false);
+        Response response =
+                certSignController.signPDFWithCert(
+                        pdfFile,
+                        null,
+                        "PFX",
+                        null,
+                        null,
+                        pfxFile,
+                        null,
+                        "password",
+                        false,
+                        "test",
+                        "test",
+                        "tester",
+                        1,
+                        false);
 
-        ResponseEntity<Resource> response = certSignController.signPDFWithCert(request);
-
-        assertNotNull(response.getBody());
-        assertTrue(drainBody(response).length > 0);
+        assertNotNull(response.getEntity());
+        assertEquals(200, response.getStatus());
     }
 
     @Test
     void testSignPdfWithPkcs12() throws Exception {
-        MockMultipartFile pdfFile =
-                new MockMultipartFile(
-                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
-        MockMultipartFile p12File =
-                new MockMultipartFile("p12File", "test-cert.p12", "application/x-pkcs12", p12Bytes);
+        FileUpload pdfFile = TestFileUploads.pdf(pdfBytes);
+        FileUpload p12File = TestFileUploads.of(p12Bytes, "test-cert.p12", "application/x-pkcs12");
 
-        SignPDFWithCertRequest request = new SignPDFWithCertRequest();
-        request.setFileInput(pdfFile);
-        request.setCertType("PKCS12");
-        request.setP12File(p12File);
-        request.setPassword("password");
-        request.setShowSignature(false);
-        request.setReason("test");
-        request.setLocation("test");
-        request.setName("tester");
-        request.setPageNumber(1);
-        request.setShowLogo(false);
+        Response response =
+                certSignController.signPDFWithCert(
+                        pdfFile,
+                        null,
+                        "PKCS12",
+                        null,
+                        null,
+                        p12File,
+                        null,
+                        "password",
+                        false,
+                        "test",
+                        "test",
+                        "tester",
+                        1,
+                        false);
 
-        ResponseEntity<Resource> response = certSignController.signPDFWithCert(request);
-
-        assertNotNull(response.getBody());
-        assertTrue(drainBody(response).length > 0);
+        assertNotNull(response.getEntity());
+        assertEquals(200, response.getStatus());
     }
 
     @Test
     void testSignPdfWithMissingPkcs12FileThrowsError() {
-        MockMultipartFile pdfFile =
-                new MockMultipartFile(
-                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
-
-        SignPDFWithCertRequest request = new SignPDFWithCertRequest();
-        request.setFileInput(pdfFile);
-        request.setCertType("PFX");
-        request.setPassword("password");
-        request.setShowSignature(false);
-        request.setReason("test");
-        request.setLocation("test");
-        request.setName("tester");
-        request.setPageNumber(1);
-        request.setShowLogo(false);
+        FileUpload pdfFile = TestFileUploads.pdf(pdfBytes);
 
         IllegalArgumentException exception =
                 assertThrows(
                         IllegalArgumentException.class,
-                        () -> certSignController.signPDFWithCert(request));
+                        () ->
+                                certSignController.signPDFWithCert(
+                                        pdfFile,
+                                        null,
+                                        "PFX",
+                                        null,
+                                        null,
+                                        null,
+                                        null,
+                                        "password",
+                                        false,
+                                        "test",
+                                        "test",
+                                        "tester",
+                                        1,
+                                        false));
 
         assertTrue(exception.getMessage().contains("PKCS12 keystore"));
     }
 
     @Test
     void testSignPdfWithJks() throws Exception {
-        MockMultipartFile pdfFile =
-                new MockMultipartFile(
-                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
-        MockMultipartFile jksFile =
-                new MockMultipartFile(
-                        "jksFile", "test-cert.jks", "application/octet-stream", jksBytes);
+        FileUpload pdfFile = TestFileUploads.pdf(pdfBytes);
+        FileUpload jksFile =
+                TestFileUploads.of(jksBytes, "test-cert.jks", "application/octet-stream");
 
-        SignPDFWithCertRequest request = new SignPDFWithCertRequest();
-        request.setFileInput(pdfFile);
-        request.setCertType("JKS");
-        request.setJksFile(jksFile);
-        request.setPassword("password");
-        request.setShowSignature(false);
-        request.setReason("test");
-        request.setLocation("test");
-        request.setName("tester");
-        request.setPageNumber(1);
-        request.setShowLogo(false);
+        Response response =
+                certSignController.signPDFWithCert(
+                        pdfFile,
+                        null,
+                        "JKS",
+                        null,
+                        null,
+                        null,
+                        jksFile,
+                        "password",
+                        false,
+                        "test",
+                        "test",
+                        "tester",
+                        1,
+                        false);
 
-        ResponseEntity<Resource> response = certSignController.signPDFWithCert(request);
-
-        assertNotNull(response.getBody());
-        assertTrue(drainBody(response).length > 0);
+        assertNotNull(response.getEntity());
+        assertEquals(200, response.getStatus());
     }
 
     @Test
     void testSignPdfWithPem() throws Exception {
-        MockMultipartFile pdfFile =
-                new MockMultipartFile(
-                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
-        MockMultipartFile keyFile =
-                new MockMultipartFile(
-                        "privateKeyFile", "test-key.pem", "application/x-pem-file", pemKeyBytes);
-        MockMultipartFile certFile =
-                new MockMultipartFile(
-                        "certFile", "test-cert.pem", "application/x-pem-file", pemCertBytes);
+        FileUpload pdfFile = TestFileUploads.pdf(pdfBytes);
+        FileUpload keyFile =
+                TestFileUploads.of(pemKeyBytes, "test-key.pem", "application/x-pem-file");
+        FileUpload certFile =
+                TestFileUploads.of(pemCertBytes, "test-cert.pem", "application/x-pem-file");
 
-        SignPDFWithCertRequest request = new SignPDFWithCertRequest();
-        request.setFileInput(pdfFile);
-        request.setCertType("PEM");
-        request.setPrivateKeyFile(keyFile);
-        request.setCertFile(certFile);
-        request.setPassword("password");
-        request.setShowSignature(false);
-        request.setReason("test");
-        request.setLocation("test");
-        request.setName("tester");
-        request.setPageNumber(1);
-        request.setShowLogo(false);
+        Response response =
+                certSignController.signPDFWithCert(
+                        pdfFile,
+                        null,
+                        "PEM",
+                        keyFile,
+                        certFile,
+                        null,
+                        null,
+                        "password",
+                        false,
+                        "test",
+                        "test",
+                        "tester",
+                        1,
+                        false);
 
-        ResponseEntity<Resource> response = certSignController.signPDFWithCert(request);
-
-        assertNotNull(response.getBody());
-        assertTrue(drainBody(response).length > 0);
+        assertNotNull(response.getEntity());
+        assertEquals(200, response.getStatus());
     }
 
     @Test
     void testSignPdfWithCrt() throws Exception {
-        MockMultipartFile pdfFile =
-                new MockMultipartFile(
-                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
-        MockMultipartFile keyFile =
-                new MockMultipartFile(
-                        "privateKeyFile", "test-key.key", "application/x-pem-file", keyBytes);
-        MockMultipartFile certFile =
-                new MockMultipartFile(
-                        "certFile", "test-cert.crt", "application/x-x509-ca-cert", crtCertBytes);
+        FileUpload pdfFile = TestFileUploads.pdf(pdfBytes);
+        FileUpload keyFile = TestFileUploads.of(keyBytes, "test-key.key", "application/x-pem-file");
+        FileUpload certFile =
+                TestFileUploads.of(crtCertBytes, "test-cert.crt", "application/x-x509-ca-cert");
 
-        SignPDFWithCertRequest request = new SignPDFWithCertRequest();
-        request.setFileInput(pdfFile);
-        request.setCertType("PEM");
-        request.setPrivateKeyFile(keyFile);
-        request.setCertFile(certFile);
-        request.setPassword("password");
-        request.setShowSignature(false);
-        request.setReason("test");
-        request.setLocation("test");
-        request.setName("tester");
-        request.setPageNumber(1);
-        request.setShowLogo(false);
+        Response response =
+                certSignController.signPDFWithCert(
+                        pdfFile,
+                        null,
+                        "PEM",
+                        keyFile,
+                        certFile,
+                        null,
+                        null,
+                        "password",
+                        false,
+                        "test",
+                        "test",
+                        "tester",
+                        1,
+                        false);
 
-        ResponseEntity<Resource> response = certSignController.signPDFWithCert(request);
-
-        assertNotNull(response.getBody());
-        assertTrue(drainBody(response).length > 0);
+        assertNotNull(response.getEntity());
+        assertEquals(200, response.getStatus());
     }
 
     @Test
     void testSignPdfWithCer() throws Exception {
-        MockMultipartFile pdfFile =
-                new MockMultipartFile(
-                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
-        MockMultipartFile keyFile =
-                new MockMultipartFile(
-                        "privateKeyFile", "test-key.key", "application/x-pem-file", keyBytes);
-        MockMultipartFile certFile =
-                new MockMultipartFile(
-                        "certFile", "test-cert.cer", "application/x-x509-ca-cert", cerCertBytes);
+        FileUpload pdfFile = TestFileUploads.pdf(pdfBytes);
+        FileUpload keyFile = TestFileUploads.of(keyBytes, "test-key.key", "application/x-pem-file");
+        FileUpload certFile =
+                TestFileUploads.of(cerCertBytes, "test-cert.cer", "application/x-x509-ca-cert");
 
-        SignPDFWithCertRequest request = new SignPDFWithCertRequest();
-        request.setFileInput(pdfFile);
-        request.setCertType("PEM");
-        request.setPrivateKeyFile(keyFile);
-        request.setCertFile(certFile);
-        request.setPassword("password");
-        request.setShowSignature(false);
-        request.setReason("test");
-        request.setLocation("test");
-        request.setName("tester");
-        request.setPageNumber(1);
-        request.setShowLogo(false);
+        Response response =
+                certSignController.signPDFWithCert(
+                        pdfFile,
+                        null,
+                        "PEM",
+                        keyFile,
+                        certFile,
+                        null,
+                        null,
+                        "password",
+                        false,
+                        "test",
+                        "test",
+                        "tester",
+                        1,
+                        false);
 
-        ResponseEntity<Resource> response = certSignController.signPDFWithCert(request);
-
-        assertNotNull(response.getBody());
-        assertTrue(drainBody(response).length > 0);
+        assertNotNull(response.getEntity());
+        assertEquals(200, response.getStatus());
     }
 
     @Test
     void testSignPdfWithDer() throws Exception {
-        MockMultipartFile pdfFile =
-                new MockMultipartFile(
-                        "fileInput", "test.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
-        MockMultipartFile keyFile =
-                new MockMultipartFile(
-                        "privateKeyFile", "test-key.key", "application/x-pem-file", keyBytes);
-        MockMultipartFile certFile =
-                new MockMultipartFile(
-                        "certFile", "test-cert.der", "application/x-x509-ca-cert", derCertBytes);
+        FileUpload pdfFile = TestFileUploads.pdf(pdfBytes);
+        FileUpload keyFile = TestFileUploads.of(keyBytes, "test-key.key", "application/x-pem-file");
+        FileUpload certFile =
+                TestFileUploads.of(derCertBytes, "test-cert.der", "application/x-x509-ca-cert");
 
-        SignPDFWithCertRequest request = new SignPDFWithCertRequest();
-        request.setFileInput(pdfFile);
-        request.setCertType("PEM");
-        request.setPrivateKeyFile(keyFile);
-        request.setCertFile(certFile);
-        request.setPassword("password");
-        request.setShowSignature(false);
-        request.setReason("test");
-        request.setLocation("test");
-        request.setName("tester");
-        request.setPageNumber(1);
-        request.setShowLogo(false);
+        Response response =
+                certSignController.signPDFWithCert(
+                        pdfFile,
+                        null,
+                        "PEM",
+                        keyFile,
+                        certFile,
+                        null,
+                        null,
+                        "password",
+                        false,
+                        "test",
+                        "test",
+                        "tester",
+                        1,
+                        false);
 
-        ResponseEntity<Resource> response = certSignController.signPDFWithCert(request);
-
-        assertNotNull(response.getBody());
-        assertTrue(drainBody(response).length > 0);
+        assertNotNull(response.getEntity());
+        assertEquals(200, response.getStatus());
     }
 }

@@ -7,36 +7,35 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.quarkus.arc.profile.IfBuildProfile;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.StreamingOutput;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.security.Authentication;
+import stirling.software.common.security.SecurityContextHolder;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
@@ -53,9 +52,9 @@ import stirling.software.saas.payg.model.JobSource;
 import stirling.software.saas.payg.model.ProcessType;
 import stirling.software.saas.util.AuthenticationUtils;
 
-@RestController
-@Profile("saas")
-@RequestMapping("/api/v1/ai/create")
+@ApplicationScoped
+@IfBuildProfile("saas")
+@Path("/api/v1/ai/create")
 @Tag(name = "AI")
 @Hidden
 @RequiredArgsConstructor
@@ -69,11 +68,12 @@ public class AiCreateController {
     private final UserRepository userRepository;
     private final JobChargeService jobChargeService;
 
-    @PostMapping("/sessions")
-    public ResponseEntity<CreateSessionResponse> createSession(
-            @RequestBody CreateSessionRequest request) {
+    @POST
+    @Path("/sessions")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response createSession(CreateSessionRequest request) {
         if (request.prompt() == null || request.prompt().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Prompt is required");
+            throw new WebApplicationException("Prompt is required", Response.Status.BAD_REQUEST);
         }
         AiCreateSession session =
                 sessionService.createSession(
@@ -89,18 +89,13 @@ public class AiCreateController {
                 session.getDocType(),
                 session.getTemplateId());
         chargeForCreate(session);
-        return ResponseEntity.ok(new CreateSessionResponse(session.getSessionId()));
+        return Response.ok(new CreateSessionResponse(session.getSessionId())).build();
     }
 
     /**
-     * Bill one document for a new AI Create session — creating a document is the charge point;
-     * follow-up edits on the same session (outline / reprompt / draft / template / stream) carry no
-     * charge. AI usage is billable, so a JWT (web) session counts the same as an API-key one.
-     *
-     * <p>Best-effort: a charge failure must not block the user's session. Entitlement is already
-     * enforced upstream — this controller is {@code @RequiresFeature(AI_SUPPORT)}, so the
-     * EntitlementGuard 402s a team with no AI allowance before we ever get here; this call only
-     * does the accounting (free-grant draw + Stripe meter).
+     * Bill one document for a new AI Create session - creating a document is the charge point;
+     * follow-up edits on the same session carry no charge. Best-effort: a charge failure must not
+     * block the user's session. Entitlement is already enforced upstream via @RequiresFeature.
      */
     private void chargeForCreate(AiCreateSession session) {
         try {
@@ -127,39 +122,48 @@ public class AiCreateController {
         }
     }
 
-    @DeleteMapping("/sessions/{sessionId}")
-    public ResponseEntity<Void> deleteSession(@PathVariable String sessionId) {
+    @DELETE
+    @Path("/sessions/{sessionId}")
+    public Response deleteSession(@PathParam("sessionId") String sessionId) {
         sessionService.deleteSessionForCurrentUser(sessionId);
-        return ResponseEntity.noContent().build();
+        return Response.noContent().build();
     }
 
-    @GetMapping("/sessions/{sessionId}")
-    @Transactional(readOnly = true)
-    public ResponseEntity<AiCreateSessionResponse> getSession(@PathVariable String sessionId) {
+    // TODO: Migration required - @Transactional(readOnly = true): jakarta.transaction.Transactional
+    // has no readOnly attribute; using a plain transaction.
+    @GET
+    @Path("/sessions/{sessionId}")
+    @Transactional
+    public Response getSession(@PathParam("sessionId") String sessionId) {
         AiCreateSession session = sessionService.getSessionForCurrentUser(sessionId);
-        return ResponseEntity.ok(toResponse(session));
+        return Response.ok(toResponse(session)).build();
     }
 
-    @GetMapping("/sessions")
-    @Transactional(readOnly = true)
-    public ResponseEntity<List<AiCreateSessionSummary>> listSessions(
-            @RequestParam(name = "page", defaultValue = "0") int page,
-            @RequestParam(name = "size", defaultValue = "10") int size,
-            @RequestParam(name = "includeDrafts", defaultValue = "false") boolean includeDrafts) {
+    // TODO: Migration required - @Transactional(readOnly = true): jakarta.transaction.Transactional
+    // has no readOnly attribute; using a plain transaction.
+    @GET
+    @Path("/sessions")
+    @Transactional
+    public Response listSessions(
+            @QueryParam("page") @DefaultValue("0") int page,
+            @QueryParam("size") @DefaultValue("10") int size,
+            @QueryParam("includeDrafts") @DefaultValue("false") boolean includeDrafts) {
         int safePage = Math.max(0, page);
         int safeSize = Math.max(1, Math.min(size, 50));
         List<AiCreateSessionRepository.AiCreateSessionSummaryProjection> sessions =
                 sessionService.listSessionSummariesForCurrentUser(
-                        org.springframework.data.domain.PageRequest.of(safePage, safeSize),
-                        includeDrafts);
-        return ResponseEntity.ok(sessions.stream().map(this::toSummary).toList());
+                        safePage, safeSize, includeDrafts);
+        return Response.ok(sessions.stream().map(this::toSummary).toList()).build();
     }
 
-    @PostMapping("/sessions/{sessionId}/outline")
-    public ResponseEntity<AiCreateSessionResponse> updateOutline(
-            @PathVariable String sessionId, @RequestBody OutlineRequest request) {
+    @POST
+    @Path("/sessions/{sessionId}/outline")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response updateOutline(
+            @PathParam("sessionId") String sessionId, OutlineRequest request) {
         if (request.outlineText() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Outline text is required");
+            throw new WebApplicationException(
+                    "Outline text is required", Response.Status.BAD_REQUEST);
         }
         // Allow empty string to indicate "use AI-generated outline"
         String constraintsPayload = null;
@@ -167,8 +171,8 @@ public class AiCreateController {
             try {
                 constraintsPayload = objectMapper.writeValueAsString(request.constraints());
             } catch (JsonProcessingException exc) {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST, "Invalid constraints payload", exc);
+                throw new WebApplicationException(
+                        "Invalid constraints payload", exc, Response.Status.BAD_REQUEST);
             }
         }
         AiCreateSession session =
@@ -177,108 +181,122 @@ public class AiCreateController {
                         request.outlineText(),
                         request.outlineFilename(),
                         constraintsPayload);
-        return ResponseEntity.ok(toResponse(session));
+        return Response.ok(toResponse(session)).build();
     }
 
-    @PostMapping("/sessions/{sessionId}/reprompt")
-    public ResponseEntity<AiCreateSessionResponse> reprompt(
-            @PathVariable String sessionId, @RequestBody RepromptRequest request) {
+    @POST
+    @Path("/sessions/{sessionId}/reprompt")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response reprompt(@PathParam("sessionId") String sessionId, RepromptRequest request) {
         if (request.prompt() == null || request.prompt().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Prompt is required");
+            throw new WebApplicationException("Prompt is required", Response.Status.BAD_REQUEST);
         }
         AiCreateSession session = sessionService.reprompt(sessionId, request.prompt());
-        return ResponseEntity.ok(toResponse(session));
+        return Response.ok(toResponse(session)).build();
     }
 
-    @PostMapping("/sessions/{sessionId}/draft")
-    public ResponseEntity<AiCreateSessionResponse> updateDraft(
-            @PathVariable String sessionId, @RequestBody DraftRequest request) {
+    @POST
+    @Path("/sessions/{sessionId}/draft")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response updateDraft(@PathParam("sessionId") String sessionId, DraftRequest request) {
         if (request.draftSections() == null) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Draft sections are required");
+            throw new WebApplicationException(
+                    "Draft sections are required", Response.Status.BAD_REQUEST);
         }
         // Allow empty list to indicate "use AI-generated sections"
         String payload;
         try {
             payload = objectMapper.writeValueAsString(request.draftSections());
         } catch (JsonProcessingException exc) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Invalid draft sections payload", exc);
+            throw new WebApplicationException(
+                    "Invalid draft sections payload", exc, Response.Status.BAD_REQUEST);
         }
         AiCreateSession session = sessionService.updateDraftSections(sessionId, payload);
-        return ResponseEntity.ok(toResponse(session));
+        return Response.ok(toResponse(session)).build();
     }
 
-    @PostMapping("/sessions/{sessionId}/template")
-    public ResponseEntity<AiCreateSessionResponse> updateTemplate(
-            @PathVariable String sessionId, @RequestBody TemplateRequest request) {
+    @POST
+    @Path("/sessions/{sessionId}/template")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response updateTemplate(
+            @PathParam("sessionId") String sessionId, TemplateRequest request) {
         if ((request.docType() == null || request.docType().isBlank())
                 && (request.templateId() == null || request.templateId().isBlank())) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "docType or templateId is required");
+            throw new WebApplicationException(
+                    "docType or templateId is required", Response.Status.BAD_REQUEST);
         }
         AiCreateSession session =
                 sessionService.updateTemplate(sessionId, request.docType(), request.templateId());
-        return ResponseEntity.ok(toResponse(session));
+        return Response.ok(toResponse(session)).build();
     }
 
-    @PostMapping("/sessions/{sessionId}/fields")
-    public ResponseEntity<StreamingResponseBody> fillFields(
-            @PathVariable String sessionId, HttpServletRequest request) {
+    @POST
+    @Path("/sessions/{sessionId}/fields")
+    public Response fillFields(
+            @PathParam("sessionId") String sessionId, HttpServletRequest request) {
         sessionService.getSessionForCurrentUser(sessionId);
         log.info("AI create fillFields sessionId={}", sessionId);
         return proxy("POST", "/api/create/sessions/" + sessionId + "/fields", request, false);
     }
 
-    @GetMapping(
-            value = "/sessions/{sessionId}/stream",
-            produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public ResponseEntity<StreamingResponseBody> stream(
-            @PathVariable String sessionId, HttpServletRequest request) {
+    @GET
+    @Path("/sessions/{sessionId}/stream")
+    @Produces(MediaType.SERVER_SENT_EVENTS)
+    public Response stream(@PathParam("sessionId") String sessionId, HttpServletRequest request) {
         sessionService.getSessionForCurrentUser(sessionId);
         return proxy("GET", "/api/create/sessions/" + sessionId + "/stream", request, true);
     }
 
-    private ResponseEntity<StreamingResponseBody> proxy(
+    private Response proxy(
             String method, String path, HttpServletRequest request, boolean acceptEventStream) {
         try {
             HttpResponse<InputStream> response =
                     proxyService.forward(method, path, request, acceptEventStream);
-            HttpHeaders headers = new HttpHeaders();
-            copyHeader(response, headers, HttpHeaders.CONTENT_TYPE);
-            copyHeader(response, headers, HttpHeaders.CACHE_CONTROL);
-            copyHeader(response, headers, "X-Accel-Buffering");
-            copyHeader(response, headers, HttpHeaders.CONTENT_DISPOSITION);
-            copyHeader(response, headers, HttpHeaders.CONTENT_LENGTH);
-            if (acceptEventStream && !headers.containsHeader(HttpHeaders.CONTENT_TYPE)) {
-                headers.set(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_EVENT_STREAM_VALUE);
+
+            int statusCode = response.statusCode();
+            if (statusCode < 100 || statusCode > 599) {
+                statusCode = Response.Status.BAD_GATEWAY.getStatusCode();
             }
 
-            StreamingResponseBody body =
+            StreamingOutput body =
                     outputStream -> {
                         try (InputStream inputStream = response.body()) {
                             inputStream.transferTo(outputStream);
                         }
                     };
-            HttpStatus status =
-                    Optional.ofNullable(HttpStatus.resolve(response.statusCode()))
-                            .orElse(HttpStatus.BAD_GATEWAY);
-            return new ResponseEntity<>(body, headers, status);
+
+            Response.ResponseBuilder builder = Response.status(statusCode).entity(body);
+            boolean hasContentType = copyHeader(response, builder, "Content-Type");
+            copyHeader(response, builder, "Cache-Control");
+            copyHeader(response, builder, "X-Accel-Buffering");
+            copyHeader(response, builder, "Content-Disposition");
+            copyHeader(response, builder, "Content-Length");
+            if (acceptEventStream && !hasContentType) {
+                builder.header("Content-Type", MediaType.SERVER_SENT_EVENTS);
+            }
+
+            return builder.build();
         } catch (Exception exc) {
             log.error("AI create proxy failed path={}", path, exc);
-            StreamingResponseBody body =
+            StreamingOutput body =
                     outputStream ->
                             outputStream.write("{\"error\":\"AI backend unavailable\"}".getBytes());
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            return new ResponseEntity<>(body, headers, HttpStatus.SERVICE_UNAVAILABLE);
+            return Response.status(Response.Status.SERVICE_UNAVAILABLE)
+                    .entity(body)
+                    .header("Content-Type", MediaType.APPLICATION_JSON)
+                    .build();
         }
     }
 
-    private void copyHeader(HttpResponse<?> response, HttpHeaders headers, String headerName) {
-        response.headers()
-                .firstValue(headerName)
-                .ifPresent(value -> headers.set(headerName, value));
+    /** Copies a single header onto the response builder; returns true if a value was copied. */
+    private boolean copyHeader(
+            HttpResponse<?> response, Response.ResponseBuilder builder, String headerName) {
+        Optional<String> value = response.headers().firstValue(headerName);
+        if (value.isPresent()) {
+            builder.header(headerName, value.get());
+            return true;
+        }
+        return false;
     }
 
     public record CreateSessionRequest(

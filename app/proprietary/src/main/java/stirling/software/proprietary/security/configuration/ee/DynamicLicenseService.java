@@ -1,6 +1,6 @@
 package stirling.software.proprietary.security.configuration.ee;
 
-import org.springframework.stereotype.Service;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
 
@@ -18,7 +18,7 @@ import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVeri
  * changes in production typically warrant a restart anyway 3. UI reflects changes immediately
  * (banner disappears, license status updates)
  */
-@Service
+@ApplicationScoped
 @RequiredArgsConstructor
 public class DynamicLicenseService implements LicenseServiceInterface {
 

@@ -4,13 +4,13 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
-
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import stirling.software.common.cluster.StickyMissRecorder;
 import stirling.software.common.model.ApplicationProperties;
@@ -19,8 +19,12 @@ import stirling.software.common.model.ApplicationProperties;
  * Cluster operation metrics exposed via {@code /actuator/prometheus}. Registered only when cluster
  * mode is on.
  */
-@Component
-@ConditionalOnProperty(name = "cluster.enabled", havingValue = "true")
+// TODO: Migration required - original @ConditionalOnProperty(name = "cluster.enabled",
+// havingValue = "true") was a runtime toggle. Quarkus @IfBuildProfile/@LookupIfProperty are
+// build-time only. Either gate registration with a runtime guard on
+// applicationProperties.getCluster().isEnabled() (e.g. skip meter registration when disabled),
+// or use @io.quarkus.arc.lookup.LookupIfProperty if a build-time switch is acceptable.
+@ApplicationScoped
 public class ClusterMetrics implements StickyMissRecorder {
 
     private final MeterRegistry registry;
@@ -38,6 +42,7 @@ public class ClusterMetrics implements StickyMissRecorder {
 
     private final AtomicLong jobsInflight = new AtomicLong();
 
+    @Inject
     public ClusterMetrics(MeterRegistry registry, ApplicationProperties applicationProperties) {
         this.registry = registry;
         this.applicationProperties = applicationProperties;

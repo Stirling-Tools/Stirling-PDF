@@ -10,17 +10,14 @@ import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.regex.Pattern;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.core.Response;
 
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -32,8 +29,8 @@ import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
 @Slf4j
-@RestController
-@RequestMapping("/api/v1/ui-data")
+@ApplicationScoped
+@jakarta.ws.rs.Path("/api/v1/ui-data")
 @RequiredArgsConstructor
 @Tag(name = "UI Data")
 public class UIDataTessdataController {
@@ -45,25 +42,27 @@ public class UIDataTessdataController {
     private static volatile long cachedRemoteTessdataExpiry = 0L;
     private static final long REMOTE_TESSDATA_TTL_MS = 10 * 60 * 1000; // 10 minutes
 
-    @GetMapping("/tessdata-languages")
-    @PreAuthorize("hasRole('ADMIN')")
+    @GET
+    @jakarta.ws.rs.Path("/tessdata-languages")
+    @RolesAllowed("ADMIN")
     @Operation(summary = "List installed and remotely available tessdata languages")
-    public ResponseEntity<TessdataLanguagesResponse> getTessdataLanguages() {
+    public Response getTessdataLanguages() {
         TessdataLanguagesResponse response = new TessdataLanguagesResponse();
         response.setInstalled(getAvailableTesseractLanguages());
         response.setAvailable(getRemoteTessdataLanguages());
         response.setWritable(isWritableDirectory(Path.of(runtimePathConfig.getTessDataPath())));
-        return ResponseEntity.ok(response);
+        return Response.ok(response).build();
     }
 
-    @PostMapping("/tessdata/download")
-    @PreAuthorize("hasRole('ADMIN')")
+    @POST
+    @jakarta.ws.rs.Path("/tessdata/download")
+    @RolesAllowed("ADMIN")
     @Operation(summary = "Download selected tessdata languages from the official repository")
-    public ResponseEntity<Map<String, Object>> downloadTessdataLanguages(
-            @RequestBody TessdataDownloadRequest request) {
+    public Response downloadTessdataLanguages(TessdataDownloadRequest request) {
         if (request.getLanguages() == null || request.getLanguages().isEmpty()) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("message", "No languages provided for download"));
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("message", "No languages provided for download"))
+                    .build();
         }
 
         Path tessdataDir = Path.of(runtimePathConfig.getTessDataPath());
@@ -71,13 +70,15 @@ public class UIDataTessdataController {
             Files.createDirectories(tessdataDir);
         } catch (IOException e) {
             log.error("Failed to create tessdata directory {}", tessdataDir, e);
-            return ResponseEntity.internalServerError()
-                    .body(Map.of("message", "Failed to prepare tessdata directory"));
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(Map.of("message", "Failed to prepare tessdata directory"))
+                    .build();
         }
 
         if (!isWritableDirectory(tessdataDir)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("message", tessdataDir.toString()));
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity(Map.of("message", tessdataDir.toString()))
+                    .build();
         }
 
         List<String> downloaded = new ArrayList<>();
@@ -138,11 +139,13 @@ public class UIDataTessdataController {
                         "tessdataDir", tessdataDir.toString());
 
         if (!downloaded.isEmpty() && failed.isEmpty()) {
-            return ResponseEntity.ok(response);
+            return Response.ok(response).build();
         } else if (!downloaded.isEmpty()) {
-            return ResponseEntity.status(207).body(response); // Multi-Status for partial success
+            return Response.status(207)
+                    .entity(response)
+                    .build(); // Multi-Status for partial success
         } else {
-            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(response);
+            return Response.status(Response.Status.BAD_GATEWAY).entity(response).build();
         }
     }
 
