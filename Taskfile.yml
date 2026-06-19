@@ -31,6 +31,23 @@ includes:
 
 tasks:
   # ============================================================
+  # Help (shown when you run `task` with no arguments)
+  # ============================================================
+
+  default:
+    desc: "List the most common commands"
+    silent: true
+    cmds:
+      - |
+        echo "Common commands (run 'task --list' to see all):"
+        echo ""
+        echo "  task dev            Start backend & frontend on free ports"
+        echo "  task backend:dev    Start backend on default port"
+        echo "  task frontend:dev   Start frontend on default port"
+        echo "  task desktop:dev    Start desktop app"
+        echo "  task check          Quality gate (lint, typecheck, test, etc.)"
+
+  # ============================================================
   # Setup & Prerequisites
   # ============================================================
 
