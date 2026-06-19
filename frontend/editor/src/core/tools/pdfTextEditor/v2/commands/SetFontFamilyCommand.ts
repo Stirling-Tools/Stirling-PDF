@@ -10,6 +10,7 @@ import {
   collectMemberPtrs,
   emitTextLine,
   removeMemberPtrs,
+  rotationFromMatrix,
 } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
 
 /**
@@ -96,6 +97,8 @@ export class SetFontFamilyCommand implements Command {
         fill: run.fill,
         originalFontPtr: 0, // base-14: never reuse the source font
         fallbackFamily: this.nextFamily,
+        // Keep the run's rotation on re-emit (no-op for upright text).
+        rotation: rotationFromMatrix(run.matrix),
       });
       lineAnchors.push(ptrs[0] ?? 0);
       leaf.push(...ptrs);

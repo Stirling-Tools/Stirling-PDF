@@ -9,6 +9,7 @@ import {
   emitTextLine,
   everyCharIn,
   removeMemberPtrs,
+  rotationFromMatrix,
 } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
 import {
   applyParagraphEditPlan,
@@ -150,6 +151,11 @@ export class EditTextCommand implements Command {
     if (this.prevText === this.nextText) return;
 
     const alreadyBase14 = /^base14:/.test(run.fontId);
+    // A run rotated within the page (text matrix has rotation/skew) can't use
+    // the surgical partial/paragraph paths - those assume horizontal layout
+    // (axis-aligned offsets, x-only kept-object shifts). Route rotated runs to
+    // the full re-emit below, which is rotation-aware (rotationFromMatrix).
+    const isRotated = !!rotationFromMatrix(run.matrix);
 
     // PARAGRAPH-AWARE PARTIAL PATH: paragraphs (multi-line runs) keep
     // per-line sub-run data in `paragraphLineSlots`. Walk each slot,
@@ -159,7 +165,8 @@ export class EditTextCommand implements Command {
     if (
       this.partialPlan === null &&
       this.paragraphPlan === null &&
-      run.paragraphLineSlots.length > 1
+      run.paragraphLineSlots.length > 1 &&
+      !isRotated
     ) {
       const paraPlan = planParagraphEdit(
         run,
@@ -258,7 +265,8 @@ export class EditTextCommand implements Command {
       this.partialPlan === null &&
       run.mergedFromPtrs.length > 0 &&
       run.paragraphLineSlots.length < 2 &&
-      !/\r?\n/.test(this.nextText)
+      !/\r?\n/.test(this.nextText) &&
+      !isRotated
     ) {
       const partial = planPartialEdit(run, this.prevText ?? "", this.nextText);
       // An in-place "modify" op that re-SetTexts whitespace paints „ on an
@@ -436,6 +444,8 @@ export class EditTextCommand implements Command {
         originalFontPtr,
         originalFontSubset: run.fontSubset,
         fallbackFamily,
+        // Keep the run's rotation on re-emit (no-op for upright text).
+        rotation: rotationFromMatrix(run.matrix),
       });
       if (ptrs.length === 0) continue;
       this.createdPtrs.push(...ptrs);

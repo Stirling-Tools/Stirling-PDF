@@ -3,7 +3,11 @@ import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDoc
 import { TextRun } from "@app/tools/pdfTextEditor/v2/model/TextRun";
 import { BLACK } from "@app/tools/pdfTextEditor/v2/model/Color";
 import { writeUtf16 } from "@app/services/pdfiumService";
-import { sanitizeForBase14 } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
+import {
+  counterPageRotation,
+  rotateObjectAbout,
+  sanitizeForBase14,
+} from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
 import { emitFallbackTextObject } from "@app/tools/pdfTextEditor/v2/util/fallbackFont";
 
 const DEFAULT_FAMILY = "Helvetica";
@@ -84,6 +88,22 @@ export class InsertTextCommand implements Command {
       m.FPDFPage_InsertObject(page.pagePtr, objPtr);
     }
 
+    // On a /Rotate page, counter-rotate the new object about its anchor so it
+    // reads upright in the displayed (rotated) orientation rather than landing
+    // sideways. No-op on an unrotated page, so the common case is unchanged.
+    const rot = counterPageRotation(page.display.rotate);
+    if (rot) rotateObjectAbout(m, objPtr, this.x, this.y, rot.cos, rot.sin);
+    const matrix = rot
+      ? {
+          a: rot.cos,
+          b: rot.sin,
+          c: -rot.sin,
+          d: rot.cos,
+          e: this.x,
+          f: this.y,
+        }
+      : { a: 1, b: 0, c: 0, d: 1, e: this.x, f: this.y };
+
     const runId = `p${page.index}-new-${page.runs.length}-${objPtr}`;
     const run = new TextRun({
       id: runId,
@@ -95,7 +115,7 @@ export class InsertTextCommand implements Command {
         width: this.text.length * DEFAULT_SIZE * 0.6,
         height: DEFAULT_SIZE * 1.2,
       },
-      matrix: { a: 1, b: 0, c: 0, d: 1, e: this.x, f: this.y },
+      matrix,
       text: this.text,
       fontId: `base14:${DEFAULT_FAMILY}`,
       fontSize: DEFAULT_SIZE,

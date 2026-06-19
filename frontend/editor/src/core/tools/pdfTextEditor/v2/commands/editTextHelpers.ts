@@ -205,6 +205,13 @@ interface CreatedTextOptions {
   originalFontSubset?: boolean;
   /** Base-14 family used when `originalFontPtr` is zero. Defaults to Helvetica. */
   fallbackFamily?: string;
+  /**
+   * The run's on-page rotation (normalised cos/sin of its text matrix). When
+   * set, every emitted object is rotated about the line anchor (opts.x, opts.y)
+   * so an edit keeps the run's orientation instead of forcing it upright.
+   * Omit (or undefined) for axis-aligned text - then emit is unchanged.
+   */
+  rotation?: { cos: number; sin: number };
 }
 
 interface CreateTextObjModule {
@@ -453,12 +460,85 @@ export function splitIntoWordChunks(
  * `pdfiumObjPtr`); the rest live alongside it and must be tracked for
  * revert.
  */
+/**
+ * Normalised rotation of a text matrix, or undefined for upright text. Strips
+ * the scale (which already lives in the emitted font size) so only the
+ * rotation/flip is re-applied at emit time. Upright runs return undefined so
+ * the emit path stays byte-for-byte unchanged.
+ */
+export function rotationFromMatrix(matrix: {
+  a: number;
+  b: number;
+}): { cos: number; sin: number } | undefined {
+  const scale = Math.hypot(matrix.a, matrix.b);
+  if (!scale) return undefined;
+  const cos = matrix.a / scale;
+  const sin = matrix.b / scale;
+  if (Math.abs(sin) < 1e-4 && cos > 0) return undefined; // upright, no flip
+  return { cos, sin };
+}
+
+/**
+ * The rotation a NEW object needs so it reads upright on a page displayed with
+ * `/Rotate` (quarter-turns CW). The object is counter-rotated in raw space so
+ * the page's display rotation nets it back to horizontal. Undefined for an
+ * unrotated page (so insertion stays axis-aligned / unchanged).
+ */
+export function counterPageRotation(
+  rotateQuarterTurnsCw: number,
+): { cos: number; sin: number } | undefined {
+  switch (((rotateQuarterTurnsCw % 4) + 4) % 4) {
+    case 1:
+      return { cos: 0, sin: 1 };
+    case 2:
+      return { cos: -1, sin: 0 };
+    case 3:
+      return { cos: 0, sin: -1 };
+    default:
+      return undefined;
+  }
+}
+
+/** Rotate a page object about (ax, ay). Identity (no-op) when cos=1, sin=0. */
+export function rotateObjectAbout(
+  m: WrappedPdfiumModule,
+  ptr: number,
+  ax: number,
+  ay: number,
+  cos: number,
+  sin: number,
+): void {
+  m.FPDFPageObj_Transform(
+    ptr,
+    cos,
+    sin,
+    -sin,
+    cos,
+    ax - ax * cos + ay * sin,
+    ay - ax * sin - ay * cos,
+  );
+}
+
 export function emitTextLine(opts: CreatedTextOptions): number[] {
   const m = opts.doc.module;
   const size = Math.max(4, opts.fontSize);
   const family = opts.fallbackFamily ?? "Helvetica";
   const m2 = m as unknown as CreateTextObjModule;
   const canReuse = opts.originalFontPtr !== 0 && !!m2.FPDFPageObj_CreateTextObj;
+
+  // Words are laid out horizontally from (opts.x, opts.y). When the run is
+  // rotated, rotate every emitted object about that anchor so the line keeps
+  // its orientation AND its words march along the rotated baseline. No-op for
+  // upright text (rotation undefined), so axis-aligned emits are unchanged.
+  const withRotation = (ptrs: number[]): number[] => {
+    const rot = opts.rotation;
+    if (rot) {
+      for (const p of ptrs) {
+        if (p) rotateObjectAbout(m, p, opts.x, opts.y, rot.cos, rot.sin);
+      }
+    }
+    return ptrs;
+  };
 
   // Emit ONE word at (x, y) and return its pointer (0 on failure).
   //
@@ -844,7 +924,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
         // form-xobject combinations, leaving visible stripes).
         perCharBranchPtrs.add(ptr);
       }
-      if (ptrs.length === opts.text.length) return ptrs;
+      if (ptrs.length === opts.text.length) return withRotation(ptrs);
     }
     // fall through to the normal path if per-char attempt didn't work
   }
@@ -853,7 +933,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
   const hasAnyWhitespace = /\s/.test(opts.text);
   if (!hasAnyWhitespace) {
     const ptr = emitWord(opts.text, opts.x);
-    return ptr ? [ptr] : [];
+    return withRotation(ptr ? [ptr] : []);
   }
 
   // Per-chunk emit (split on ANY whitespace run). After each emit we
@@ -879,7 +959,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     }
     cursor += chunk.gapAfterPt;
   }
-  return ptrs;
+  return withRotation(ptrs);
 }
 
 export function measureObjRightEdgePt(
