@@ -15,10 +15,12 @@ import {
   MultiSelect,
   SegmentedControl,
   Select,
+  TextInput,
   Tooltip,
 } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import CloseIcon from "@mui/icons-material/Close";
+import SearchIcon from "@mui/icons-material/Search";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import QrCode2Icon from "@mui/icons-material/QrCode2";
 import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
@@ -136,6 +138,7 @@ export default function FileManagerView() {
     sortMode,
     setSortMode,
     search,
+    setSearch,
     originFilter,
     setOriginFilter,
     typeFilter,
@@ -1360,6 +1363,30 @@ export default function FileManagerView() {
                   aria-label={t("filesPage.typeFilter.label", "Filter by type")}
                 />
               )}
+              <TextInput
+                size="xs"
+                value={search}
+                onChange={(e) => setSearch(e.currentTarget.value)}
+                placeholder={t("filesPage.search.placeholder", "Filter files…")}
+                leftSection={<SearchIcon sx={{ fontSize: "1rem" }} />}
+                rightSection={
+                  search ? (
+                    <ActionIcon
+                      variant="subtle"
+                      size="sm"
+                      onClick={() => setSearch("")}
+                      aria-label={t("filesPage.search.clear", "Clear filter")}
+                    >
+                      <CloseIcon sx={{ fontSize: "0.9rem" }} />
+                    </ActionIcon>
+                  ) : null
+                }
+                aria-label={t(
+                  "filesPage.search.label",
+                  "Filter files by name",
+                )}
+                style={{ width: 180 }}
+              />
               <Select
                 size="xs"
                 value={sortMode}
@@ -1451,6 +1478,7 @@ export default function FileManagerView() {
               entries={entries}
               loading={loading}
               currentTab={currentTab}
+              searchActive={search.trim().length > 0}
               serverReachable={folders.serverReachable}
               selectedFileIds={selectedFileIds}
               activeWorkspaceFileIds={activeWorkspaceFileIdSet}
