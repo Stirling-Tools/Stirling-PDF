@@ -159,7 +159,9 @@ export const DesktopOAuthButtons: React.FC<DesktopOAuthButtonsProps> = ({
               <span className="oauth-button-left-desktop">
                 <span className="oauth-icon-wrapper-desktop">
                   <img
-                    src={oauthIconUrl(iconConfig?.file || GENERIC_PROVIDER_ICON)}
+                    src={oauthIconUrl(
+                      iconConfig?.file || GENERIC_PROVIDER_ICON,
+                    )}
                     alt={label}
                     className="oauth-icon-tiny-desktop"
                   />

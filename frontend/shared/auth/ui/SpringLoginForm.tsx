@@ -69,7 +69,8 @@ export default function SpringLoginForm({
     signInWithProvider,
   } = state;
 
-  const renderEmailForm = (showEmailForm ?? isUserPassAllowed) && isUserPassAllowed;
+  const renderEmailForm =
+    (showEmailForm ?? isUserPassAllowed) && isUserPassAllowed;
   const submitLabel =
     submitButtonText ??
     (isSubmitting

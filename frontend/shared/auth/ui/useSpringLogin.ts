@@ -121,15 +121,21 @@ export function useSpringLogin(
       setIsSubmitting(true);
       setError(null);
       optionsRef.current.onSignInStart?.();
-      const { user, session, error: signInError } =
-        await springAuth.signInWithPassword({
-          email: email.trim(),
-          password,
-          mfaCode: requiresMfa ? mfaCode.trim() : undefined,
-        });
+      const {
+        user,
+        session,
+        error: signInError,
+      } = await springAuth.signInWithPassword({
+        email: email.trim(),
+        password,
+        mfaCode: requiresMfa ? mfaCode.trim() : undefined,
+      });
       if (signInError) {
         setError(signInError.message);
-        if (signInError.mfaRequired || signInError.code === "invalid_mfa_code") {
+        if (
+          signInError.mfaRequired ||
+          signInError.code === "invalid_mfa_code"
+        ) {
           setRequiresMfa(true);
         }
       } else if (user && session) {
