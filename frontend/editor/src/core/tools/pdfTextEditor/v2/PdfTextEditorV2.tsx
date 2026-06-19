@@ -139,6 +139,16 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
         );
         return;
       }
+      // Keep the original JPEG bytes so the insert embeds them as-is
+      // (DCTDecode) instead of re-encoding decoded RGBA - far smaller output.
+      let jpegBytes: Uint8Array | undefined;
+      if (file.type === "image/jpeg") {
+        try {
+          jpegBytes = new Uint8Array(await file.arrayBuffer());
+        } catch {
+          jpegBytes = undefined; // fall back to the bitmap path
+        }
+      }
       // The document may have been reloaded while the image decoded; bail
       // rather than insert against geometry from the wrong document.
       if (store.document !== doc) return;
@@ -167,6 +177,7 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
         y: ll.y,
         width: w,
         height: h,
+        jpegBytes,
       });
       store.dispatch(cmd);
       if (cmd.insertedImageId) {

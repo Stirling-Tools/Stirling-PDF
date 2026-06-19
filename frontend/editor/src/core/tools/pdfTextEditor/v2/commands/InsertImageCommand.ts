@@ -1,7 +1,10 @@
 import type { Command } from "@app/tools/pdfTextEditor/v2/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDocument";
 import { ImageObject } from "@app/tools/pdfTextEditor/v2/model/ImageObject";
-import { embedBitmapImageOnPage } from "@app/utils/pdfiumBitmapUtils";
+import {
+  embedBitmapImageOnPage,
+  embedJpegImageOnPage,
+} from "@app/utils/pdfiumBitmapUtils";
 
 /**
  * Insert a decoded raster image onto a page at the given lower-left
@@ -18,6 +21,8 @@ export class InsertImageCommand implements Command {
   private readonly y: number;
   private readonly width: number;
   private readonly height: number;
+  /** Original JPEG bytes; when present, embedded as-is (DCTDecode) to keep the file small. */
+  private readonly jpegBytes?: Uint8Array;
   private createdImageId: string | null;
   private createdObjPtr: number;
 
@@ -30,6 +35,7 @@ export class InsertImageCommand implements Command {
     y: number;
     width: number;
     height: number;
+    jpegBytes?: Uint8Array;
   }) {
     this.pageIndex = opts.pageIndex;
     this.rgba = opts.rgba;
@@ -39,6 +45,7 @@ export class InsertImageCommand implements Command {
     this.y = opts.y;
     this.width = opts.width;
     this.height = opts.height;
+    this.jpegBytes = opts.jpegBytes;
     this.createdImageId = null;
     this.createdObjPtr = 0;
   }
@@ -50,27 +57,43 @@ export class InsertImageCommand implements Command {
   apply(doc: EditorDocument): void {
     const page = doc.page(this.pageIndex);
     const m = doc.module;
+    // JPEG sources embed as-is (DCTDecode) to keep the output small; fall back
+    // to the RGBA bitmap path if the JPEG API is unavailable or the load fails.
     // The embed helper returns the new object pointer directly. Looking it up
     // afterwards via FPDFPage_GetObject failed because the content stream
     // isn't regenerated until save, so the object index wasn't yet resolvable.
-    const newObjPtr = embedBitmapImageOnPage(
-      m,
-      doc.docPtr,
-      page.pagePtr,
-      {
-        rgba: new Uint8Array(
-          this.rgba.buffer,
-          this.rgba.byteOffset,
-          this.rgba.byteLength,
-        ),
-        width: this.pixelWidth,
-        height: this.pixelHeight,
-      },
-      this.x,
-      this.y,
-      this.width,
-      this.height,
-    );
+    let newObjPtr = this.jpegBytes
+      ? embedJpegImageOnPage(
+          m,
+          doc.docPtr,
+          page.pagePtr,
+          this.jpegBytes,
+          this.x,
+          this.y,
+          this.width,
+          this.height,
+        )
+      : 0;
+    if (!newObjPtr) {
+      newObjPtr = embedBitmapImageOnPage(
+        m,
+        doc.docPtr,
+        page.pagePtr,
+        {
+          rgba: new Uint8Array(
+            this.rgba.buffer,
+            this.rgba.byteOffset,
+            this.rgba.byteLength,
+          ),
+          width: this.pixelWidth,
+          height: this.pixelHeight,
+        },
+        this.x,
+        this.y,
+        this.width,
+        this.height,
+      );
+    }
     if (!newObjPtr) return;
     const imageId = `p${page.index}-new-img-${page.images.length}-${newObjPtr}`;
     const created = new ImageObject({
