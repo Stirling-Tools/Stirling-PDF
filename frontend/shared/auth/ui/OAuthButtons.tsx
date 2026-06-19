@@ -1,14 +1,10 @@
 import { useTranslation } from "react-i18next";
 import { type OAuthProvider } from "@shared/auth/spring/oauthTypes";
 import { Button } from "@mantine/core";
-import googleIcon from "@shared/assets/login/google.svg";
-import githubIcon from "@shared/assets/login/github.svg";
-import appleIcon from "@shared/assets/login/apple.svg";
-import microsoftIcon from "@shared/assets/login/microsoft.svg";
-import keycloakIcon from "@shared/assets/login/keycloak.svg";
-import cloudronIcon from "@shared/assets/login/cloudron.svg";
-import authentikIcon from "@shared/assets/login/authentik.svg";
-import oidcIcon from "@shared/assets/login/oidc.svg";
+import {
+  oauthIconUrl,
+  GENERIC_PROVIDER_ICON,
+} from "@shared/auth/ui/oauthIcons";
 
 // Debug flag to show all providers for UI testing
 // Set to true to see all SSO options regardless of backend configuration
@@ -30,25 +26,7 @@ export const oauthProviderConfig: Record<
   oidc: { label: "OIDC", file: "oidc.svg" },
 };
 
-// Bundled icon URLs keyed by the filenames in oauthProviderConfig. Importing as
-// modules (rather than reading from /Login/*.svg under a build-time BASE_PATH)
-// lets the same component work in both the editor and the portal.
-const ICON_BY_FILE: Record<string, string> = {
-  "google.svg": googleIcon,
-  "github.svg": githubIcon,
-  "apple.svg": appleIcon,
-  "microsoft.svg": microsoftIcon,
-  "keycloak.svg": keycloakIcon,
-  "cloudron.svg": cloudronIcon,
-  "authentik.svg": authentikIcon,
-  "oidc.svg": oidcIcon,
-};
-
-// Generic fallback for unknown providers
-const GENERIC_PROVIDER_ICON = "oidc.svg";
-
-const iconUrl = (file: string): string =>
-  ICON_BY_FILE[file] ?? ICON_BY_FILE[GENERIC_PROVIDER_ICON];
+// Icon URLs + GENERIC_PROVIDER_ICON come from the shared oauthIcons resolver.
 
 interface OAuthButtonsProps {
   onProviderClick: (provider: OAuthProvider) => void;
@@ -136,7 +114,7 @@ export default function OAuthButtons({
               variant="default"
             >
               <img
-                src={iconUrl(p.file)}
+                src={oauthIconUrl(p.file)}
                 alt={p.label}
                 className="oauth-icon-small"
               />
@@ -163,7 +141,7 @@ export default function OAuthButtons({
               variant="default"
             >
               <img
-                src={iconUrl(p.file)}
+                src={oauthIconUrl(p.file)}
                 alt={p.label}
                 className="oauth-icon-medium"
               />
@@ -200,7 +178,7 @@ export default function OAuthButtons({
             <span className="oauth-button-left">
               <span className="oauth-icon-wrapper">
                 <img
-                  src={iconUrl(p.file)}
+                  src={oauthIconUrl(p.file)}
                   alt={p.label}
                   className="oauth-icon-tiny"
                 />
