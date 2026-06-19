@@ -135,14 +135,16 @@ tasks:
         vars:
           PORT: '{{.BACKEND_PORT}}'
           SECURITY_ENABLELOGIN: "true"
-      - task: frontend:dev:portal:proxy:editor
+      - task: frontend:dev:proprietary
         vars:
           PORT: '{{.EDITOR_PORT}}'
           BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
-      - task: frontend:dev:portal:proxy:portal
+      - task: frontend:dev:portal
         vars:
           PORT: '{{.PORTAL_PORT}}'
           BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
+          SUBPATH: portal
+          MOCKS: 'false'
       - task: frontend:dev:portal:proxy:serve
         vars:
           PORT: '{{.PROXY_PORT}}'

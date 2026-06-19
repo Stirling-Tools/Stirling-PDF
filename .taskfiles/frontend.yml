@@ -135,25 +135,15 @@ tasks:
     vars:
       PORT: '{{.PORT | default "5173"}}'
       BACKEND_URL: '{{.BACKEND_URL | default "http://localhost:8080"}}'
-      # When set, overrides VITE_EDITOR_URL so the app switcher points at a
-      # running editor (used by dev:portal:all). Left empty for standalone runs
-      # so the committed portal/.env (and any .env.local) wins.
       EDITOR_URL: '{{.EDITOR_URL | default ""}}'
       OPEN: '{{.OPEN | default ""}}'
+      SUBPATH: '{{.SUBPATH | default ""}}'
+      MOCKS: '{{.MOCKS | default ""}}'
     env:
-      # Consumed by portal/vite.config.ts to proxy /api, /oauth2, /saml2 at the
-      # backend so real auth (mocks off) shares the editor's session. With mocks
-      # on (the dev default) the portal still runs standalone as a mock admin.
       BACKEND_URL: '{{.BACKEND_URL}}'
     cmds:
-      # VITE_EDITOR_URL is prefixed inline only when EDITOR_URL is provided, so
-      # an empty value never overrides the .env default. Task's shell handles
-      # the inline assignment cross-platform.
-      - '{{if .EDITOR_URL}}VITE_EDITOR_URL={{.EDITOR_URL}} {{end}}npx vite portal --port {{.PORT}}{{if .OPEN}} --open{{end}}'
+      - '{{if .SUBPATH}}RUN_SUBPATH={{.SUBPATH}} {{end}}{{if .MOCKS}}VITE_PORTAL_MOCKS={{.MOCKS}} {{end}}{{if .EDITOR_URL}}VITE_EDITOR_URL={{.EDITOR_URL}} {{end}}npx vite portal --port {{.PORT}}{{if .OPEN}} --open{{end}}'
 
-  # Single-origin dev servers: the editor (/) and portal (/portal) plus a backend
-  # proxy on one port, so the stirling_jwt token is shared. Building blocks for
-  # the orchestrated root task `dev:portal:proxy`.
   dev:portal:proxy:serve:
     internal: true
     vars:
@@ -168,35 +158,6 @@ tasks:
       PORTAL_DEV_URL: '{{.PORTAL_DEV_URL}}'
     cmds:
       - npx tsx scripts/dev-origin-proxy.ts
-
-  # Editor dev server with an absolute base (/) so every route resolves cleanly
-  # when served at "/" behind the single-origin proxy.
-  dev:portal:proxy:editor:
-    internal: true
-    ignore_error: true
-    deps: [prepare]
-    vars:
-      PORT: '{{.PORT | default "5173"}}'
-      BACKEND_URL: '{{.BACKEND_URL | default "http://localhost:8080"}}'
-    env:
-      BACKEND_URL: '{{.BACKEND_URL}}'
-    cmds:
-      - VITE_BUILD_FOR_PREVIEW=1 npx vite editor --mode proprietary --port {{.PORT}}
-
-  # Portal dev server under the /portal base so it shares the editor's origin.
-  # Mocks are forced off so it uses the real backend (otherwise the portal's dev
-  # mock worker seeds a fake token over the shared real one).
-  dev:portal:proxy:portal:
-    internal: true
-    ignore_error: true
-    deps: [install]
-    vars:
-      PORT: '{{.PORT | default "5174"}}'
-      BACKEND_URL: '{{.BACKEND_URL | default "http://localhost:8080"}}'
-    env:
-      BACKEND_URL: '{{.BACKEND_URL}}'
-    cmds:
-      - RUN_SUBPATH=portal VITE_PORTAL_MOCKS=false npx vite portal --port {{.PORT}}
 
   # ============================================================
   # Build
@@ -217,8 +178,10 @@ tasks:
   build:proprietary:
     desc: "Build for proprietary mode"
     deps: [prepare]
+    vars:
+      PREVIEW: '{{.PREVIEW | default ""}}'
     cmds:
-      - npx vite build editor --mode proprietary
+      - '{{if .PREVIEW}}VITE_BUILD_FOR_PREVIEW=1 {{end}}npx vite build editor --mode proprietary'
 
   build:saas:
     desc: "Build for SaaS mode"
@@ -245,13 +208,11 @@ tasks:
   build:portal:
     desc: "Build developer portal"
     deps: [install]
+    vars:
+      SUBPATH: '{{.SUBPATH | default ""}}'
     cmds:
-      - npx vite build portal
+      - '{{if .SUBPATH}}RUN_SUBPATH={{.SUBPATH}} {{end}}npx vite build portal'
 
-  # Build editor + portal and serve both (plus a backend proxy) on one origin -
-  # the production-fidelity version of the single-origin auth test (mocks off via
-  # the prod build; no hot reload). The live dev-server version is the root
-  # `dev:portal:proxy` task.
   preview:portal:proxy:
     desc: "Build + serve editor + portal behind one origin (prod-like auth testing)"
     deps: [prepare]
@@ -262,8 +223,10 @@ tasks:
       PORT: '{{.PORT}}'
       BACKEND_URL: '{{.BACKEND_URL}}'
     cmds:
-      - VITE_BUILD_FOR_PREVIEW=1 npx vite build editor --mode proprietary
-      - RUN_SUBPATH=portal npx vite build portal
+      - task: build:proprietary
+        vars: { PREVIEW: '1' }
+      - task: build:portal
+        vars: { SUBPATH: portal }
       - npx tsx scripts/dev-origin-proxy.ts
 
   storybook:
