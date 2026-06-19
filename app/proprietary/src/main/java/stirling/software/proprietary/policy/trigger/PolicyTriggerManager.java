@@ -1,5 +1,6 @@
 package stirling.software.proprietary.policy.trigger;
 
+import io.quarkus.arc.profile.IfBuildProfile;
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
 
@@ -20,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @ApplicationScoped
+@IfBuildProfile("saas")
 public class PolicyTriggerManager {
 
     @Inject Instance<PolicyTrigger> triggers;

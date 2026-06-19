@@ -6,6 +6,8 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.quarkus.arc.profile.IfBuildProfile;
+
 import jakarta.enterprise.context.ApplicationScoped;
 
 import lombok.RequiredArgsConstructor;
@@ -16,12 +18,12 @@ import stirling.software.common.service.FileStorage;
 import stirling.software.proprietary.policy.model.OutputSpec;
 
 /**
- * Default output sink: stores each output file in {@code FileStorage} so it is downloadable via
- * {@code GET /api/v1/general/files/{fileId}}. This is the destination for manually-triggered runs
- * whose results are returned to the caller.
+ * Default sink: stores each output in {@code FileStorage} so it is downloadable via {@code GET
+ * /api/v1/general/files/{fileId}}. Used for manual runs whose results return to the caller.
  */
 @ApplicationScoped
 @RequiredArgsConstructor
+@IfBuildProfile("saas")
 public class InlineOutputSink implements PolicyOutputSink {
 
     private static final String TYPE = "inline";

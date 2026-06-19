@@ -1,6 +1,6 @@
 repositories {
-    maven { url = "https://build.shibboleth.net/maven/releases" }
     maven { url = "https://repository.jboss.org/" }
+    maven { url = "https://build.shibboleth.net/maven/releases" }
 }
 
 ext {

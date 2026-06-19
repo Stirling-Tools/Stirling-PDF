@@ -118,7 +118,8 @@ class McpOAuthIntegrationTest {
         assertThat(response.statusCode()).isEqualTo(401);
         String wwwAuth = response.headers().firstValue("WWW-Authenticate").orElse("");
         assertThat(wwwAuth).contains("resource_metadata=");
-        assertThat(wwwAuth).contains("/.well-known/oauth-protected-resource");
+        // The advertised URL must be the RFC 9728 path-inserted form for the /mcp resource.
+        assertThat(wwwAuth).contains("/.well-known/oauth-protected-resource/mcp");
     }
 
     @Test
@@ -245,6 +246,24 @@ class McpOAuthIntegrationTest {
         HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString());
         assertThat(response.statusCode()).isEqualTo(200);
         assertThat(response.body()).contains(RESOURCE_ID);
+        assertThat(response.body()).contains(ISSUER);
+        assertThat(response.body()).contains("mcp.tools.read");
+    }
+
+    @Test
+    void pathInsertedMetadataEndpoint_servesCustomizedMetadata() throws Exception {
+        // RFC 9728 path-inserted form for the /mcp resource. Must be served by the MCP chain
+        // with authorization_servers populated; a default/uncustomized document here makes MCP
+        // clients fall back to treating this server as its own authorization server.
+        HttpRequest request =
+                HttpRequest.newBuilder()
+                        .uri(URI.create(base() + "/.well-known/oauth-protected-resource/mcp"))
+                        .GET()
+                        .build();
+        HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString());
+        assertThat(response.statusCode()).isEqualTo(200);
+        assertThat(response.body()).contains(RESOURCE_ID);
+        assertThat(response.body()).contains("authorization_servers");
         assertThat(response.body()).contains(ISSUER);
         assertThat(response.body()).contains("mcp.tools.read");
     }

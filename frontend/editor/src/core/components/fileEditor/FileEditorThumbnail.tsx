@@ -18,6 +18,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import UnarchiveIcon from "@mui/icons-material/Unarchive";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import LinkIcon from "@mui/icons-material/Link";
+import HistoryIcon from "@mui/icons-material/History";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
@@ -36,10 +37,11 @@ import ToolChain from "@app/components/shared/ToolChain";
 import HoverActionMenu, {
   HoverAction,
 } from "@app/components/shared/HoverActionMenu";
-import { downloadFile } from "@app/services/downloadService";
+import { downloadFileWithPolicy as downloadFile } from "@app/services/exportWithPolicy";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import UploadToServerModal from "@app/components/shared/UploadToServerModal";
 import ShareFileModal from "@app/components/shared/ShareFileModal";
+import { VersionHistoryModal } from "@app/components/filesPage/VersionHistoryModal";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useFileThumbnail } from "@app/hooks/useFileThumbnail";
 import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbnail";
@@ -248,6 +250,7 @@ const FileEditorThumbnail = ({
           data: fileToSave,
           filename: file.name,
           localPath: file.localFilePath,
+          fileId: file.id,
         });
         if (!result.cancelled && result.savedPath) {
           fileActions.updateStirlingFileStub(file.id, {
@@ -286,6 +289,8 @@ const FileEditorThumbnail = ({
     selectors,
     fileActions,
   ]);
+
+  const [showVersionHistory, setShowVersionHistory] = useState(false);
 
   const hoverActions = useMemo<HoverAction[]>(
     () => [
@@ -384,6 +389,16 @@ const FileEditorThumbnail = ({
         hidden: !isZipFile || !onUnzipFile || isCBZ || isCBR,
       },
       {
+        id: "versionHistory",
+        icon: <HistoryIcon style={{ fontSize: 20 }} />,
+        label: t("fileManager.versionHistory", "Version history"),
+        onClick: (e) => {
+          e.stopPropagation();
+          setShowVersionHistory(true);
+        },
+        hidden: (file.versionNumber ?? 1) <= 1,
+      },
+      {
         id: "close",
         icon: <CloseIcon style={{ fontSize: 20 }} />,
         label: t("close", "Close"),
@@ -398,6 +413,7 @@ const FileEditorThumbnail = ({
       t,
       file.id,
       file.name,
+      file.versionNumber,
       isZipFile,
       isCBZ,
       isCBR,
@@ -670,6 +686,11 @@ const FileEditorThumbnail = ({
           file={file}
         />
       )}
+      <VersionHistoryModal
+        opened={showVersionHistory}
+        onClose={() => setShowVersionHistory(false)}
+        file={file}
+      />
     </div>
   );
 };

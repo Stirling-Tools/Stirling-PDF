@@ -2,6 +2,7 @@ package stirling.software.proprietary.policy.engine;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
@@ -32,15 +34,11 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Runs an ordered chain of tool steps, chaining each step's output files into the next step's
- * input.
+ * Runs an ordered chain of tool steps, feeding each step's output files into the next.
  *
- * <p>This is the single execution loop for the proprietary surface (AI plans now;
- * manually-triggered runs and watched folders later). Each step is dispatched synchronously via
- * {@link InternalApiClient} loopback HTTP: the tool runs in its own handler and returns its file
- * inline. The caller decides how to run the executor itself (the AI turn loop calls it directly;
- * the engine runs it on a virtual thread for async runs). Files cross step boundaries as {@link
- * Resource} temp files; they are only persisted to durable storage at the run boundaries by the
+ * <p>Steps dispatch synchronously via {@link InternalApiClient} loopback HTTP (each tool runs in
+ * its own handler, returns its file inline). The caller controls threading. Files cross step
+ * boundaries as {@link Resource} temp files and are only persisted at the run boundaries by the
  * caller.
  */
 @Slf4j
@@ -55,25 +53,16 @@ public class PolicyExecutor {
     private final TempFileManager tempFileManager;
     private final ObjectMapper objectMapper;
 
-    /**
-     * Internal value-class for tool responses. {@code files} holds any result files (typically one;
-     * multiple for ZIP-response tools). {@code report} holds an optional structured metadata
-     * payload the tool chose to surface alongside (or instead of) a file.
-     */
+    // files: result files (one, or many for ZIP-response tools). report: optional structured
+    // payload the tool surfaced alongside or instead of a file.
     private record ToolResult(List<Resource> files, JsonNode report) {}
 
     /**
-     * Execute every step in {@code definition} in order, feeding each step's output into the next.
-     * Supporting files supplied in {@code inputs} are bound to steps' named file fields and never
-     * enter the document stream.
+     * Run every step in order, feeding each step's output into the next. Supporting files in {@code
+     * inputs} bind to named file fields and never enter the document stream.
      *
-     * @param definition the pipeline to run (must have at least one step)
-     * @param inputs the primary documents plus the named supporting-file store
-     * @param listener receives per-step progress
-     * @return the final output files plus the last structured report produced, if any
      * @throws InternalApiTimeoutException if a tool does not respond within its read timeout
-     * @throws IOException if a tool returns a non-OK response, references a missing supporting
-     *     file, or a file cannot be read
+     * @throws IOException on a non-OK tool response, a missing supporting file, or a read failure
      */
     public PolicyExecutionResult execute(
             PipelineDefinition definition, PolicyInputs inputs, PolicyProgressListener listener)
@@ -85,7 +74,7 @@ public class PolicyExecutor {
 
         List<Resource> currentFiles = inputs.primary();
         Map<String, List<Resource>> supportingFiles = inputs.supportingFiles();
-        // Propagate the *last* non-null report; the terminal step defines the output.
+        // Last non-null report wins: the terminal step defines the output.
         JsonNode lastReport = null;
         String lastReportTool = null;
 
@@ -110,13 +99,9 @@ public class PolicyExecutor {
     }
 
     /**
-     * Execute a single tool step. If the endpoint accepts multiple files, all files are sent in one
-     * call. Otherwise, the endpoint is called once per file. ZIP responses are unpacked so each
-     * inner file is treated as its own result (e.g. split outputs a ZIP of pages).
-     *
-     * <p>A structured {@code report} may be returned alongside (or instead of) files; see {@link
-     * ToolResult}. For per-file dispatch (single-input endpoints called once per input), the first
-     * non-null report wins.
+     * Multi-input endpoints get all files in one call; others are called once per file. ZIP
+     * responses are unpacked so each inner file is its own result (e.g. split). For per-file
+     * dispatch the first non-null report wins.
      */
     private ToolResult executeStep(
             PipelineStep step,
@@ -143,17 +128,10 @@ public class PolicyExecutor {
     }
 
     /**
-     * Call an endpoint and return its result files and optional report.
-     *
-     * <ul>
-     *   <li>JSON body (Content-Type: application/json): the entire body is the report, no files are
-     *       returned.
-     *   <li>File body (PDF etc.): the file is returned; if an {@link
-     *       AiToolResponseHeaders#TOOL_REPORT} header is present, its (minified JSON) value is
-     *       parsed as the report.
-     *   <li>ZIP responses declared by the tool metadata service are unpacked so callers always see
-     *       a flat list of result files.
-     * </ul>
+     * Call an endpoint, returning result files and optional report. Response handling: JSON body is
+     * the report with no file; a file body returns the file plus any {@link
+     * AiToolResponseHeaders#TOOL_REPORT} header report; ZIP responses (per tool metadata) are
+     * unpacked to a flat file list.
      */
     private ToolResult callEndpoint(
             PipelineStep step, List<Resource> files, Map<String, List<Resource>> supportingFiles)
@@ -163,8 +141,8 @@ public class PolicyExecutor {
         for (Resource file : files) {
             addToBody(body, "fileInput", file);
         }
-        // Bind supporting files to their named tool fields (e.g. stampImage, overlayFiles). These
-        // come from the run's named asset store, not the document stream.
+        // Bind supporting files to named tool fields (e.g. stampImage); from the asset store, not
+        // the document stream.
         for (Map.Entry<String, String> binding : step.fileParameters().entrySet()) {
             String fieldName = binding.getKey();
             String assetKey = binding.getValue();
@@ -204,13 +182,18 @@ public class PolicyExecutor {
         Response response = internalApiClient.post(endpointPath, body);
         if (response.getStatus() != Response.Status.OK.getStatusCode()
                 || response.getEntity() == null) {
-            throw new IOException(
-                    "Tool returned HTTP " + response.getStatus() + " for " + endpointPath);
+            // The client returns the upstream status rather than throwing (Spring's RestTemplate
+            // threw RestClientResponseException). Rethrow as a WebApplicationException carrying the
+            // status + body so callers (PolicyEngine/AiWorkflowService) can read a downstream
+            // entitlement code off it via DownstreamEntitlementError.
+            throw new WebApplicationException(
+                    "Tool returned HTTP " + response.getStatus() + " for " + endpointPath,
+                    Response.status(response.getStatus()).entity(readErrorBody(response)).build());
         }
         Resource resource = (Resource) response.getEntity();
 
-        // Filter operations return an empty body to signal the file was filtered out: drop it
-        // rather than forwarding a zero-byte document.
+        // Filter ops return an empty body to mean "filtered out": drop it rather than forward a
+        // zero-byte document.
         if (isFilterOperation(endpointPath) && isEmpty(resource)) {
             return new ToolResult(List.of(), null);
         }
@@ -268,8 +251,7 @@ public class PolicyExecutor {
     }
 
     /**
-     * Fail the run if any document in the primary stream is not a file type the step accepts. An
-     * endpoint that declares no specific input type accepts anything.
+     * Fail if any primary-stream file is a type the step rejects. No declared type means anything.
      */
     private void requireAcceptedTypes(String operation, List<Resource> files) throws IOException {
         List<String> accepted = toolMetadataService.getExtensionTypes(false, operation);
@@ -312,5 +294,18 @@ public class PolicyExecutor {
         } catch (IOException e) {
             return false;
         }
+    }
+
+    /** Read a non-OK response body to a string (best-effort) for downstream error inspection. */
+    private static String readErrorBody(Response response) {
+        Object entity = response.getEntity();
+        if (entity instanceof Resource resource) {
+            try (InputStream is = resource.getInputStream()) {
+                return new String(is.readAllBytes(), StandardCharsets.UTF_8);
+            } catch (IOException e) {
+                return null;
+            }
+        }
+        return entity == null ? null : entity.toString();
     }
 }

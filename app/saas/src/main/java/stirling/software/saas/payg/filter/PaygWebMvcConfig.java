@@ -4,36 +4,34 @@ import io.quarkus.arc.profile.IfBuildProfile;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
-import lombok.RequiredArgsConstructor;
-
 /**
- * Wires the PAYG filter + interceptor into Spring MVC. Two registrations:
+ * Holds the PAYG hot-path ordering constants. Under Spring MVC these registered {@link
+ * PaygChargeInterceptor} and the entitlement guard as ordered interceptors; under Quarkus the
+ * interceptor/guard are JAX-RS filters that self-order via {@code @Priority}. The order constants
+ * remain the single source of truth for that relative ordering.
  *
- * <ul>
- *   <li>{@link PaygResponseBodyWrapperFilter} as a Servlet filter — registered with no explicit
- *       order so it sits at the end of the Spring filter chain (after all security filters). Pure
- *       response-wrapping plumbing.
- *   <li>{@link PaygChargeInterceptor} as a Spring MVC interceptor — registered AFTER {@code
- *       UnifiedCreditInterceptor} so legacy credit rejections short-circuit before we hash inputs.
- *       Both intercept {@code /api/**} with the same admin/info/health exclusions as the legacy
- *       config.
- * </ul>
+ * <p>// TODO: Migration required - the Spring {@code WebMvcConfigurer#addInterceptors} registration
+ * was removed. Re-express it as JAX-RS {@code @Provider} ContainerRequest/ResponseFilters annotated
+ * with {@code @Priority(ENTITLEMENT_GUARD_ORDER)} / {@code @Priority(INTERCEPTOR_ORDER)} (and a
+ * {@code @WebFilter} for {@link PaygResponseBodyWrapperFilter}) once the interceptor is converted.
  */
-// TODO: Migration required - interceptor registration moved to @Provider JAX-RS filters; filter
-// registration (PaygResponseBodyWrapperFilter on /api/*) now via @WebFilter or quarkus filter
-// config
 @ApplicationScoped
 @IfBuildProfile("saas")
-@RequiredArgsConstructor
 public class PaygWebMvcConfig {
 
-    private final PaygChargeInterceptor paygChargeInterceptor;
-
     /**
-     * Interceptor ordering: the legacy {@code UnifiedCreditInterceptor} (registered with default
-     * order = 0 in {@code CreditInterceptorConfig}) must run BEFORE this one so credit rejections
-     * short-circuit before we hash inputs. Explicit positive order guarantees this regardless of
-     * filter discovery order.
+     * The {@code PaygChargeInterceptor} runs after the {@link #ENTITLEMENT_GUARD_ORDER guard}, so
+     * {@code openProcess} only fires for requests the guard has admitted. See {@link
+     * #ENTITLEMENT_GUARD_ORDER} for the full ordering rationale.
      */
     public static final int INTERCEPTOR_ORDER = 1000;
+
+    /**
+     * The {@code EntitlementGuard} runs BEFORE the charge interceptor. A request the guard refuses
+     * (over its free allowance / spending cap, or with no subscription to bill) short-circuits with
+     * its 402 before the charge interceptor ever runs. A blocked request therefore never opens a
+     * process, materialises inputs, or writes a charge: running the guard first guarantees that
+     * structurally rather than by compensating after the fact.
+     */
+    public static final int ENTITLEMENT_GUARD_ORDER = 900;
 }

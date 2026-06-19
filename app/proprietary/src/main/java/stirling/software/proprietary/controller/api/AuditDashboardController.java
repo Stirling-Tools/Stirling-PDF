@@ -218,16 +218,14 @@ public class AuditDashboardController {
 
         // Include standard enum types in case they're not in the database yet
         List<String> enumTypes =
-                Arrays.stream(AuditEventType.values())
-                        .map(AuditEventType::name)
-                        .collect(Collectors.toList());
+                Arrays.stream(AuditEventType.values()).map(AuditEventType::name).toList();
 
         // Combine both sources, remove duplicates, and sort
         Set<String> combinedTypes = new HashSet<>();
         combinedTypes.addAll(dbTypes);
         combinedTypes.addAll(enumTypes);
 
-        return combinedTypes.stream().sorted().collect(Collectors.toList());
+        return combinedTypes.stream().sorted().toList();
     }
 
     /** Export audit data as CSV. */

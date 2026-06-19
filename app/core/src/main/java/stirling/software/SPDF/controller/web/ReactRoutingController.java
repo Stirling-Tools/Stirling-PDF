@@ -577,10 +577,9 @@ public class ReactRoutingController {
                 .formatted(escapedBaseUrlHtml, serverUrl);
     }
 
-    // Replacements for Spring's org.springframework.web.util.HtmlUtils.htmlEscape and
-    // org.springframework.web.util.JavaScriptUtils.javaScriptEscape (no Quarkus/Jakarta equivalent
-    // and commons-text is not a dependency). These mirror the subset of behavior required for the
-    // context-path string injected into the fallback/callback HTML.
+    // Local replacements for the former Spring HtmlUtils/JavaScriptUtils escapers (no Quarkus or
+    // Jakarta equivalent and commons-text is not a dependency). These mirror the subset of behavior
+    // required for the context-path string injected into the fallback/callback HTML.
     private static String htmlEscape(String input) {
         if (input == null) {
             return "";

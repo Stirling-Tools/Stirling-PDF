@@ -5,7 +5,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -100,7 +99,7 @@ public class LoginAttemptService {
         return attemptsCache.entrySet().stream()
                 .filter(entry -> entry.getValue().getAttemptCount() >= MAX_ATTEMPT)
                 .map(Map.Entry::getKey)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public int getRemainingAttempts(String key) {

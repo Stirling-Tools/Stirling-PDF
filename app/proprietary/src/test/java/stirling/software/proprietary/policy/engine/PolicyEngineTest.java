@@ -65,8 +65,7 @@ import tools.jackson.databind.json.JsonMapper;
  * full run path is exercised.
  *
  * <p>MIGRATION (Spring -> Quarkus): {@link InternalApiClient} now returns a {@link Response} (was
- * {@code ResponseEntity<Resource>}) and file parts are the {@link Resource} shim (was Spring's
- * {@code org.springframework.core.io.Resource}).
+ * ResponseEntity) and file parts are the {@link Resource} shim (was the old Spring core Resource).
  */
 @ExtendWith(MockitoExtension.class)
 class PolicyEngineTest {

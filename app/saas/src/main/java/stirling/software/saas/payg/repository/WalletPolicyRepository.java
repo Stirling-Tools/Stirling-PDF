@@ -14,4 +14,13 @@ public class WalletPolicyRepository implements PanacheRepositoryBase<WalletPolic
     public Optional<WalletPolicy> findByTeamId(Long teamId) {
         return find("teamId = ?1", teamId).firstResultOptional();
     }
+
+    // Spring-Data save() shim: persist when new, merge when detached.
+    public WalletPolicy save(WalletPolicy entity) {
+        if (entity.getId() == null) {
+            persist(entity);
+            return entity;
+        }
+        return getEntityManager().merge(entity);
+    }
 }

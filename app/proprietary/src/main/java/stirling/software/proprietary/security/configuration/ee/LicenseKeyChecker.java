@@ -3,7 +3,6 @@ package stirling.software.proprietary.security.configuration.ee;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import io.quarkus.runtime.StartupEvent;
 import io.quarkus.scheduler.Scheduled;
@@ -111,7 +110,7 @@ public class LicenseKeyChecker {
         if (keyOrFilePath.startsWith(FILE_PREFIX)) {
             String filePath = keyOrFilePath.substring(FILE_PREFIX.length());
             try {
-                Path path = Paths.get(filePath);
+                Path path = Path.of(filePath);
                 if (!Files.exists(path)) {
                     log.error("License file does not exist: {}", filePath);
                     return null;

@@ -11,6 +11,9 @@ import java.util.UUID;
 import io.quarkus.arc.profile.IfBuildProfile;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Status;
+import jakarta.transaction.Synchronization;
+import jakarta.transaction.TransactionSynchronizationRegistry;
 import jakarta.transaction.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
@@ -22,14 +25,23 @@ import stirling.software.saas.payg.job.JobContext;
 import stirling.software.saas.payg.job.JobService;
 import stirling.software.saas.payg.job.JoinOrOpenResult;
 import stirling.software.saas.payg.job.ProcessingJob;
+import stirling.software.saas.payg.meter.PaygMeterReportingService;
+import stirling.software.saas.payg.model.BillingCategory;
 import stirling.software.saas.payg.model.JobSource;
 import stirling.software.saas.payg.model.JobStatus;
+import stirling.software.saas.payg.model.LedgerBucket;
+import stirling.software.saas.payg.model.LedgerEntryType;
+import stirling.software.saas.payg.model.ReferenceType;
 import stirling.software.saas.payg.model.ShadowChargeStatus;
+import stirling.software.saas.payg.policy.PaygTeamExtensions;
 import stirling.software.saas.payg.policy.PricingPolicy;
 import stirling.software.saas.payg.policy.PricingPolicyService;
 import stirling.software.saas.payg.repository.PaygShadowChargeRepository;
+import stirling.software.saas.payg.repository.PaygTeamExtensionsRepository;
 import stirling.software.saas.payg.repository.ProcessingJobRepository;
+import stirling.software.saas.payg.repository.WalletLedgerRepository;
 import stirling.software.saas.payg.shadow.PaygShadowCharge;
+import stirling.software.saas.payg.wallet.WalletLedgerEntry;
 
 /**
  * Orchestrates a tool call's open-process decision: look up the team's effective policy, resolve
@@ -41,10 +53,9 @@ import stirling.software.saas.payg.shadow.PaygShadowCharge;
  * The real-charging path lives in a separate follow-up and reuses the same orchestration — only the
  * side-effect (shadow row vs ledger entry + Stripe call) differs.
  *
- * <p>The {@code legacyCreditsCharged} field on the shadow row is set to {@code 0} here. When the
- * legacy {@code CreditService} is wired to call this service (separate PR), the legacy debit amount
- * becomes available and {@code diffPct} can be computed against it; until then the shadow row
- * captures the PAYG units only.
+ * <p>The {@code legacyCreditsCharged} field on the shadow row is set to {@code 0}: the legacy
+ * credit engine has been removed, so there is no legacy debit to compare against and {@code
+ * diffPct} stays {@code 0}. The shadow row captures the PAYG units only.
  */
 @ApplicationScoped
 @IfBuildProfile("saas")
@@ -56,18 +67,54 @@ public class JobChargeService {
     private final DocumentClassifier classifier;
     private final PaygShadowChargeRepository shadowRepository;
     private final ProcessingJobRepository jobRepository;
+    private final PaygTeamExtensionsRepository teamExtensionsRepository;
+    private final PaygMeterReportingService meterReportingService;
+    private final WalletLedgerRepository ledgerRepository;
+    private final TransactionSynchronizationRegistry txSyncRegistry;
 
     public JobChargeService(
             JobService jobService,
             PricingPolicyService policyService,
             DocumentClassifier classifier,
             PaygShadowChargeRepository shadowRepository,
-            ProcessingJobRepository jobRepository) {
+            ProcessingJobRepository jobRepository,
+            PaygTeamExtensionsRepository teamExtensionsRepository,
+            PaygMeterReportingService meterReportingService,
+            WalletLedgerRepository ledgerRepository) {
+        this(
+                jobService,
+                policyService,
+                classifier,
+                shadowRepository,
+                jobRepository,
+                teamExtensionsRepository,
+                meterReportingService,
+                ledgerRepository,
+                null);
+    }
+
+    @jakarta.inject.Inject
+    public JobChargeService(
+            JobService jobService,
+            PricingPolicyService policyService,
+            DocumentClassifier classifier,
+            PaygShadowChargeRepository shadowRepository,
+            ProcessingJobRepository jobRepository,
+            PaygTeamExtensionsRepository teamExtensionsRepository,
+            PaygMeterReportingService meterReportingService,
+            WalletLedgerRepository ledgerRepository,
+            TransactionSynchronizationRegistry txSyncRegistry) {
         this.jobService = Objects.requireNonNull(jobService, "jobService");
         this.policyService = Objects.requireNonNull(policyService, "policyService");
         this.classifier = Objects.requireNonNull(classifier, "classifier");
         this.shadowRepository = Objects.requireNonNull(shadowRepository, "shadowRepository");
         this.jobRepository = Objects.requireNonNull(jobRepository, "jobRepository");
+        this.teamExtensionsRepository =
+                Objects.requireNonNull(teamExtensionsRepository, "teamExtensionsRepository");
+        this.meterReportingService =
+                Objects.requireNonNull(meterReportingService, "meterReportingService");
+        this.ledgerRepository = Objects.requireNonNull(ledgerRepository, "ledgerRepository");
+        this.txSyncRegistry = txSyncRegistry;
     }
 
     /**
@@ -105,9 +152,113 @@ public class JobChargeService {
         int units = computeUnits(inputs, policy);
         result.job().setDocUnits(units);
 
-        recordShadowRow(ctx, result.job().getId(), policy.getId(), units);
+        int freeUsed = consumeFreeGrant(ctx, units);
+        recordShadowRow(ctx, result.job().getId(), policy.getId(), units, freeUsed);
+        recordLedgerDebit(ctx, result.job().getId(), policy.getId(), units);
 
         return new ChargeOutcome(result.job().getId(), units, ChargeOutcome.Disposition.OPENED);
+    }
+
+    /**
+     * Charge a fixed number of units for a billable action that isn't file/lineage-driven — e.g. an
+     * AI Create session, billed once per document at session creation. Opens a standalone
+     * bookkeeping job (no lineage inputs, so follow-up calls never lineage-join it), draws the
+     * free-grant split, and writes the shadow + ledger rows exactly as {@link #openProcess} does,
+     * then closes the job so the paid portion meters to Stripe via the same {@code afterCommit}
+     * path and idempotency key ({@code process:<jobId>:close}).
+     *
+     * <p>Each call is independent: there is no join/dedup, so two sessions charge twice (correct —
+     * each is a distinct document). The caller passes the unit count; the policy {@code
+     * minChargeUnits} floor still applies. Must not be called for {@link BillingCategory#BYPASSED}.
+     *
+     * @return the bookkeeping job id (mostly useful for tests / tracing)
+     */
+    @Transactional
+    public UUID chargeStandalone(ChargeContext ctx, int units) {
+        Objects.requireNonNull(ctx, "ctx");
+        if (ctx.billingCategory() == BillingCategory.BYPASSED) {
+            throw new IllegalArgumentException("chargeStandalone must not be called for BYPASSED");
+        }
+
+        PricingPolicy policy = policyService.getEffectivePolicy(ctx.ownerTeamId());
+        int chargeUnits = Math.max(units, policy.getMinChargeUnits());
+        int stepLimit = resolveStepLimit(policy, ctx.source());
+
+        JobContext jobCtx =
+                new JobContext(
+                        ctx.ownerUserId(),
+                        ctx.ownerTeamId(),
+                        ctx.source(),
+                        ctx.processType(),
+                        policy.getId(),
+                        stepLimit);
+        ProcessingJob job = jobService.open(jobCtx, chargeUnits);
+
+        int freeUsed = consumeFreeGrant(ctx, chargeUnits);
+        recordShadowRow(ctx, job.getId(), policy.getId(), chargeUnits, freeUsed);
+        recordLedgerDebit(ctx, job.getId(), policy.getId(), chargeUnits);
+
+        // Close immediately — nothing will lineage-join a standalone job — so the paid portion
+        // meters via the same afterCommit hook + idempotency key as a normal process completion.
+        close(job.getId());
+        return job.getId();
+    }
+
+    /**
+     * Draw this job's free portion from the team's one-time lifetime grant, atomically, and return
+     * the units taken (0..{@code units}); the remainder is the paid portion that will be metered to
+     * Stripe. Runs inside {@code openProcess}'s transaction with a pessimistic row lock so
+     * concurrent same-team charges split the grant exactly — no two jobs can both claim the last
+     * free unit. The grant is a soft floor: it never goes below 0, and the single job that crosses
+     * the boundary takes whatever's left (its remaining units bill). Skipped for non-billable /
+     * team-less calls (BYPASSED never reaches openProcess; guarded defensively).
+     */
+    private int consumeFreeGrant(ChargeContext ctx, int units) {
+        BillingCategory category = ctx.billingCategory();
+        if (category == null || category == BillingCategory.BYPASSED || ctx.ownerTeamId() == null) {
+            return 0;
+        }
+        Optional<PaygTeamExtensions> extOpt =
+                teamExtensionsRepository.findByIdForUpdate(ctx.ownerTeamId());
+        if (extOpt.isEmpty()) {
+            return 0;
+        }
+        PaygTeamExtensions ext = extOpt.get();
+        long remaining = ext.getFreeUnitsRemaining() == null ? 0L : ext.getFreeUnitsRemaining();
+        int freeUsed = (int) Math.min(units, Math.max(0L, remaining));
+        if (freeUsed > 0) {
+            ext.setFreeUnitsRemaining(remaining - freeUsed);
+            teamExtensionsRepository.save(ext);
+        }
+        return freeUsed;
+    }
+
+    /**
+     * The live spend record. Everything the customer-facing side reads — the wallet endpoint's
+     * {@code spendUnitsThisPeriod}, the per-category breakdown ({@code wallet_category_summary}
+     * view), and the cap evaluator's period sum — derives from {@code wallet_ledger} DEBITs. Shadow
+     * rows are the comparison audit trail; this row is what actually counts.
+     *
+     * <p>Sign convention: debits are stored NEGATIVE (the entitlement snapshot negates the sum).
+     * Skipped for {@code BYPASSED} / uncategorised calls — manual UI work is never billed.
+     */
+    private void recordLedgerDebit(
+            ChargeContext ctx, java.util.UUID jobId, Long policyId, int units) {
+        BillingCategory category = ctx.billingCategory();
+        if (category == null || category == BillingCategory.BYPASSED) {
+            return;
+        }
+        WalletLedgerEntry entry = new WalletLedgerEntry();
+        entry.setTeamId(ctx.ownerTeamId());
+        entry.setActorUserId(ctx.ownerUserId());
+        entry.setEntryType(LedgerEntryType.DEBIT);
+        entry.setBucket(LedgerBucket.CYCLE);
+        entry.setAmountUnits(-units);
+        entry.setReferenceType(ReferenceType.JOB);
+        entry.setReferenceId(jobId.toString());
+        entry.setPolicyId(policyId);
+        entry.setBillingCategory(category);
+        ledgerRepository.save(entry);
     }
 
     private int resolveStepLimit(PricingPolicy policy, JobSource source) {
@@ -143,18 +294,28 @@ public class JobChargeService {
     }
 
     private void recordShadowRow(
-            ChargeContext ctx, java.util.UUID jobId, Long policyId, int units) {
+            ChargeContext ctx,
+            java.util.UUID jobId,
+            Long policyId,
+            int units,
+            int freeUnitsConsumed) {
         PaygShadowCharge row = new PaygShadowCharge();
         row.setTeamId(ctx.ownerTeamId());
         row.setJobId(jobId);
         row.setPolicyId(policyId);
         row.setPaygUnits(units);
-        // No legacy comparison yet — wired when the shadow path is connected to the legacy
-        // CreditService in the follow-up PR. Until then, diff stays at 0.
+        // Free-vs-paid split fixed at charge time: paid (metered) = paygUnits - freeUnitsConsumed,
+        // and a refund restores freeUnitsConsumed to the team's grant.
+        row.setFreeUnitsConsumed(freeUnitsConsumed);
+        // No legacy comparison: the legacy credit engine has been removed, so diff stays at 0.
         row.setLegacyCreditsCharged(0);
         row.setDiffPct(0);
         row.setStatus(ShadowChargeStatus.CHARGED);
-        shadowRepository.persist(row);
+        // PAYG analytics axis + caller surface — copied from ctx so the row stays self-describing
+        // after processing_job is pruned. Never affects what Stripe meters (single flat meter).
+        row.setBillingCategory(ctx.billingCategory());
+        row.setJobSource(ctx.source());
+        shadowRepository.save(row);
     }
 
     /**
@@ -182,7 +343,32 @@ public class JobChargeService {
                 row.setStatus(ShadowChargeStatus.REFUNDED);
                 row.setRefundedAt(now);
                 row.setRefundReason(trimReason(refundReason));
-                shadowRepository.persist(row);
+                shadowRepository.save(row);
+                // Compensate the live ledger DEBIT written at openProcess so the period spend
+                // nets to zero for the failed work. Positive amount mirrors the negative debit;
+                // same JOB reference ties the pair together. The idempotency guard above (only
+                // on the CHARGED→REFUNDED transition) prevents double-credits on re-invocation.
+                BillingCategory category = row.getBillingCategory();
+                if (category != null && category != BillingCategory.BYPASSED) {
+                    WalletLedgerEntry refund = new WalletLedgerEntry();
+                    refund.setTeamId(row.getTeamId());
+                    refund.setEntryType(LedgerEntryType.REFUND);
+                    refund.setBucket(LedgerBucket.CYCLE);
+                    refund.setAmountUnits(row.getPaygUnits());
+                    refund.setReferenceType(ReferenceType.JOB);
+                    refund.setReferenceId(jobId.toString());
+                    refund.setPolicyId(row.getPolicyId());
+                    refund.setBillingCategory(category);
+                    ledgerRepository.save(refund);
+                    // Hand back the free units this job consumed (first-step failures are
+                    // pre-meter, so nothing was billed to Stripe — only the grant moved). Exactly
+                    // what was taken at charge time, so the counter can't drift above the grant.
+                    int freeConsumed =
+                            row.getFreeUnitsConsumed() == null ? 0 : row.getFreeUnitsConsumed();
+                    if (freeConsumed > 0 && row.getTeamId() != null) {
+                        teamExtensionsRepository.restoreFreeUnits(row.getTeamId(), freeConsumed);
+                    }
+                }
             }
         }
 
@@ -196,6 +382,150 @@ public class JobChargeService {
             job.setClosedAt(now);
             jobRepository.persist(job);
         }
+    }
+
+    /**
+     * Closes a process and — as a fallback — meters its usage. The primary meter trigger is the
+     * charge interceptor's {@code afterCompletion} on a successful request (see {@link
+     * #meterJobUsage(UUID)}); this close-time meter exists to catch processes that were never
+     * cleanly completed (request thread died before {@code afterCompletion}) and are swept up later
+     * by {@code StaleJobCloser}. The deterministic idempotency key means a job already metered at
+     * completion is deduped here at Stripe, so the two paths never double-bill.
+     *
+     * <p>Idempotent w.r.t. process state (delegates to {@link JobService#close(UUID)}, which
+     * silently no-ops on an already-closed row). The meter POST runs in an {@code afterCommit} hook
+     * so a failed POST does not roll back the close; the reconciliation backfill (separate chunk)
+     * is the durability mechanism.
+     */
+    @Transactional
+    public ProcessingJob close(UUID jobId) {
+        Objects.requireNonNull(jobId, "jobId");
+        ProcessingJob closed = jobService.close(jobId);
+
+        // The afterCommit hook only fires if there's an active JTA transaction. If we're called
+        // outside one — e.g. a test using the raw bean, or no sync registry injected — fall through
+        // with a debug log; the close() above already happened, but there's no commit to hook.
+        if (txSyncRegistry == null
+                || txSyncRegistry.getTransactionStatus() != Status.STATUS_ACTIVE) {
+            log.debug("close({}): no active synchronization; skipping meter POST", jobId);
+            return closed;
+        }
+
+        txSyncRegistry.registerInterposedSynchronization(
+                new Synchronization() {
+                    @Override
+                    public void beforeCompletion() {
+                        // no-op
+                    }
+
+                    @Override
+                    public void afterCompletion(int status) {
+                        if (status != Status.STATUS_COMMITTED) {
+                            return;
+                        }
+                        try {
+                            meterJobUsage(jobId);
+                        } catch (RuntimeException e) {
+                            // PaygMeterReportingService should already swallow; defence in depth so
+                            // a thrown exception out of afterCompletion doesn't leak past the
+                            // synchronization boundary and bubble into the caller.
+                            log.warn(
+                                    "afterCommit meter post for job {} threw unexpectedly: {}",
+                                    jobId,
+                                    e.getMessage());
+                        }
+                    }
+                });
+
+        return closed;
+    }
+
+    /**
+     * Post this job's billable usage to Stripe. The primary caller is the charge interceptor's
+     * {@code afterCompletion} on a successful OPENED request — i.e. the moment the work finishes —
+     * so the meter moves promptly. {@link #close(UUID)} also calls this from its {@code
+     * afterCommit} hook as the fallback for processes that were never cleanly completed (e.g. the
+     * request thread died); the deterministic idempotency key ({@code process:<id>:close}) makes
+     * the two paths dedup at Stripe, so a job metered at completion isn't billed again when it's
+     * later stale-closed.
+     *
+     * <p>Safe to call outside a transaction: it only reads (the job's openProcess DEBIT is already
+     * committed by the time either caller runs) and the POST is best-effort. Never throws — see
+     * {@link PaygMeterReportingService}.
+     *
+     * <p>Skips: no shadow row (not PAYG-tracked), REFUNDED row (first-step failure — never billed),
+     * BYPASSED/uncategorised, zero units, free-tier team (no Stripe customer), or usage still
+     * within the app-side free allowance.
+     */
+    public void meterJobUsage(UUID jobId) {
+        Optional<PaygShadowCharge> rowOpt = shadowRepository.findFirstByJobIdOrderByIdAsc(jobId);
+        if (rowOpt.isEmpty()) {
+            // No shadow row → not a PAYG-tracked job; nothing to meter.
+            return;
+        }
+        PaygShadowCharge row = rowOpt.get();
+        if (row.getStatus() == ShadowChargeStatus.REFUNDED) {
+            // Refunded rows are zero-net charges; do not emit a meter event.
+            return;
+        }
+        BillingCategory category = row.getBillingCategory();
+        if (category == null || category == BillingCategory.BYPASSED) {
+            // Defensive: BYPASSED rows shouldn't exist (interceptor short-circuits before
+            // openProcess), but tolerate if a future caller writes one.
+            log.debug("close({}): shadow row category={} → no meter event", jobId, category);
+            return;
+        }
+        Integer units = row.getPaygUnits();
+        if (units == null || units <= 0) {
+            return;
+        }
+        Long teamId = row.getTeamId();
+        if (teamId == null) {
+            return;
+        }
+        PaygTeamExtensions ext = teamExtensionsRepository.findByIdOptional(teamId).orElse(null);
+        if (ext == null) {
+            return;
+        }
+        // payg_subscription_id is the single switch that says "this team is billed" (see
+        // PaygTeamExtensions). Gate on it directly now that V14 ships the column: a team with a
+        // Stripe customer but no live subscription — e.g. the brief window after checkout but
+        // before the subscription-created webhook lands — must not post meter events against a
+        // subscription that doesn't exist. A job finishing in that window is still metered later
+        // via the stale-close fallback, once the subscription has landed (same idempotency key).
+        String subscriptionId = ext.getPaygSubscriptionId();
+        if (subscriptionId == null || subscriptionId.isBlank()) {
+            log.debug(
+                    "close({}): team {} has no active subscription → no meter event",
+                    jobId,
+                    teamId);
+            return;
+        }
+        String stripeCustomerId = ext.getStripeCustomerId();
+        if (stripeCustomerId == null || stripeCustomerId.isBlank()) {
+            // Subscribed but no customer id is a data inconsistency — we can't address the event.
+            log.warn(
+                    "close({}): team {} has a subscription but no stripeCustomerId → cannot meter",
+                    jobId,
+                    teamId);
+            return;
+        }
+
+        // Paid portion = units beyond the team's one-time free grant, fixed at charge time. The
+        // free grant is app-side only (Stripe's Prices are plain per-unit, no free tier), so the
+        // free units were already withheld when this row's free_units_consumed was set.
+        int freeConsumed = row.getFreeUnitsConsumed() == null ? 0 : row.getFreeUnitsConsumed();
+        int paidUnits = units - freeConsumed;
+        if (paidUnits <= 0) {
+            log.debug(
+                    "close({}): all {} units came from the free grant → no meter event",
+                    jobId,
+                    units);
+            return;
+        }
+        String idempotencyKey = "process:" + jobId + ":close";
+        meterReportingService.recordUsage(
+                teamId, stripeCustomerId, paidUnits, category, idempotencyKey, jobId);
     }
 
     /**

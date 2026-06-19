@@ -3,7 +3,6 @@ package stirling.software.common.service;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,7 +36,7 @@ public class MobileScannerService {
     public MobileScannerService() throws IOException {
         // Create temp directory for mobile scanner uploads
         this.tempDirectory =
-                Paths.get(System.getProperty("java.io.tmpdir"), "stirling-mobile-scanner");
+                Path.of(System.getProperty("java.io.tmpdir"), "stirling-mobile-scanner");
         Files.createDirectories(tempDirectory);
         log.info("Mobile scanner temp directory: {}", tempDirectory);
     }

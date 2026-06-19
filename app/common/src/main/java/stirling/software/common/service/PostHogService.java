@@ -8,7 +8,7 @@ import java.lang.management.OperatingSystemMXBean;
 import java.lang.management.RuntimeMXBean;
 import java.lang.management.ThreadMXBean;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -167,7 +167,7 @@ public class PostHogService {
     }
 
     private boolean isRunningInDocker() {
-        return Files.exists(Paths.get("/.dockerenv"));
+        return Files.exists(Path.of("/.dockerenv"));
     }
 
     private Map<String, Object> getDockerMetrics() {

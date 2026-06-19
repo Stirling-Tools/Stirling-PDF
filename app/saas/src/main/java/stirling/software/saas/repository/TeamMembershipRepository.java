@@ -29,9 +29,22 @@ public class TeamMembershipRepository implements PanacheRepositoryBase<TeamMembe
         return find("user.id = ?1", userId).list();
     }
 
+    /**
+     * Resolve the single membership a user belongs to, earliest-created first. In steady state
+     * there is exactly one; ordering picks the primary row deterministically if multiple exist.
+     */
+    public List<TeamMembership> findPrimaryMembership(Long userId) {
+        return find("user.id = ?1 order by createdAt asc", userId).list();
+    }
+
     /** Find all members with a specific role in a team */
     public List<TeamMembership> findByTeamIdAndRole(Long teamId, TeamRole role) {
         return find("team.id = ?1 and role = ?2", teamId, role).list();
+    }
+
+    /** Count members with a specific role in a team. */
+    public long countByTeamIdAndRole(Long teamId, TeamRole role) {
+        return count("team.id = ?1 and role = ?2", teamId, role);
     }
 
     /** Check if a user is a member of a team */

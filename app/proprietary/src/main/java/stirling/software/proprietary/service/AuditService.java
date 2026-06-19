@@ -11,7 +11,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.apache.commons.lang3.StringUtils;
@@ -417,7 +416,7 @@ public class AuditService {
 
                                             return m;
                                         })
-                                .collect(Collectors.toList());
+                                .toList();
 
                 data.put("files", fileInfos);
             }

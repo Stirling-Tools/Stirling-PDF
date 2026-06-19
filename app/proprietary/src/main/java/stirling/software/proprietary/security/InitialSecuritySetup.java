@@ -1,10 +1,12 @@
 package stirling.software.proprietary.security;
 
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import io.quarkus.runtime.StartupEvent;
@@ -41,6 +43,21 @@ public class InitialSecuritySetup {
     private final DatabaseServiceInterface databaseService;
     private final UserLicenseSettingsService licenseSettingsService;
 
+    /**
+     * SaaS manages identity in Supabase and billing via PAYG, so the self-host bootstrap steps that
+     * scan/rewrite the whole user table (default-team backfill, seat-license grandfathering) don't
+     * apply - and against a large SaaS user table they stall startup with full-table loads +
+     * per-row saveAll. Per-user team assignment happens in SupabaseAuthenticationFilter instead.
+     */
+    private boolean isSaas() {
+        // Spring @Profile("saas") -> read the Quarkus active profile(s) from MicroProfile Config.
+        String activeProfiles =
+                ConfigProvider.getConfig()
+                        .getOptionalValue("quarkus.profile", String.class)
+                        .orElse("");
+        return Arrays.asList(activeProfiles.split(",")).contains("saas");
+    }
+
     // Runs eagerly at startup. The original Spring @Component was eagerly instantiated so its
     // @PostConstruct ran on every boot; a lazy @ApplicationScoped @PostConstruct would never run
     // (nothing injects this bean), leaving no admin user. Observe StartupEvent to restore that.
@@ -66,9 +83,15 @@ public class InitialSecuritySetup {
             }
 
             configureJWTSettings();
-            assignUsersToDefaultTeamIfMissing();
             initializeInternalApiUser();
-            initializeUserLicenseSettings();
+            if (isSaas()) {
+                log.info(
+                        "SaaS profile active - skipping self-host user-table bootstrap"
+                                + " (default-team backfill, seat-license grandfathering).");
+            } else {
+                assignUsersToDefaultTeamIfMissing();
+                initializeUserLicenseSettings();
+            }
         } catch (IllegalArgumentException | SQLException | UnsupportedProviderException e) {
             log.error("Failed to initialize security setup.", e);
             System.exit(1);

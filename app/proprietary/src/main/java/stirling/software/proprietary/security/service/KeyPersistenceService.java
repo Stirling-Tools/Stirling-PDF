@@ -3,7 +3,6 @@ package stirling.software.proprietary.security.service;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -20,7 +19,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 
@@ -83,7 +81,7 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
      */
     private void loadExistingKeysFromDisk() {
         try {
-            Path keyDirectory = Paths.get(InstallationPathConfig.getPrivateKeyPath());
+            Path keyDirectory = Path.of(InstallationPathConfig.getPrivateKeyPath());
 
             if (!Files.exists(keyDirectory)) {
                 log.info("No existing keys found, generating new keypair");
@@ -100,7 +98,7 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
                                                 b.getFileName().compareTo(a.getFileName())) // Most
                                 // recent
                                 // first
-                                .collect(Collectors.toList());
+                                .toList();
             }
 
             if (keyFiles.isEmpty()) {
@@ -280,7 +278,7 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
                                     eligible);
                             return eligible;
                         })
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private String generateKeyId() {
@@ -289,20 +287,17 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
     }
 
     private KeyPair generateRSAKeypair() {
-        KeyPairGenerator keyPairGenerator = null;
-
         try {
-            keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
             keyPairGenerator.initialize(2048);
+            return keyPairGenerator.generateKeyPair();
         } catch (NoSuchAlgorithmException e) {
-            log.error("Failed to initialize RSA key pair generator", e);
+            throw new IllegalStateException("RSA key pair generator is not available", e);
         }
-
-        return keyPairGenerator.generateKeyPair();
     }
 
     private void ensurePrivateKeyDirectoryExists() throws IOException {
-        Path keyPath = Paths.get(InstallationPathConfig.getPrivateKeyPath());
+        Path keyPath = Path.of(InstallationPathConfig.getPrivateKeyPath());
 
         if (!Files.exists(keyPath)) {
             Files.createDirectories(keyPath);
@@ -317,7 +312,7 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
      * <p>Public key stored as: keyId.pub
      */
     private void storeKeyPair(String keyId, KeyPair keyPair) throws IOException {
-        Path keyDirectory = Paths.get(InstallationPathConfig.getPrivateKeyPath());
+        Path keyDirectory = Path.of(InstallationPathConfig.getPrivateKeyPath());
 
         // Store private key
         Path privateKeyFile = keyDirectory.resolve(keyId + KEY_SUFFIX);
@@ -351,7 +346,7 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
     private PrivateKey loadPrivateKey(String keyId)
             throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
         Path keyFile =
-                Paths.get(InstallationPathConfig.getPrivateKeyPath()).resolve(keyId + KEY_SUFFIX);
+                Path.of(InstallationPathConfig.getPrivateKeyPath()).resolve(keyId + KEY_SUFFIX);
 
         if (!Files.exists(keyFile)) {
             throw new IOException("Private key not found: " + keyFile);
@@ -374,8 +369,7 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
      */
     private String loadPublicKey(String keyId) throws IOException {
         Path publicKeyFile =
-                Paths.get(InstallationPathConfig.getPrivateKeyPath())
-                        .resolve(keyId + PUB_KEY_SUFFIX);
+                Path.of(InstallationPathConfig.getPrivateKeyPath()).resolve(keyId + PUB_KEY_SUFFIX);
 
         if (!Files.exists(publicKeyFile)) {
             throw new IOException("Public key not found: " + publicKeyFile);

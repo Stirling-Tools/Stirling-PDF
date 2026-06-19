@@ -20,11 +20,13 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.security.AbstractAuthenticationToken;
+import stirling.software.common.security.Authentication;
 import stirling.software.common.security.GrantedAuthority;
+import stirling.software.common.security.SecurityContextHolder;
 import stirling.software.common.security.SimpleGrantedAuthority;
+import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
-import stirling.software.saas.service.CreditService;
 import stirling.software.saas.service.SaasTeamService;
 import stirling.software.saas.service.SupabaseUserService;
 
@@ -50,7 +52,6 @@ public class SupabaseSecurityConfig {
     private final UserService userService;
     private final TeamService teamService;
     private final SupabaseUserService supabaseUserService;
-    private final CreditService creditService;
     private final SaasTeamService saasTeamService;
     private final ApplicationProperties applicationProperties;
 
@@ -69,10 +70,10 @@ public class SupabaseSecurityConfig {
     // saasSecurityFilterChain(...)
     // configured CSRF-disabled, CORS, STATELESS sessions, permitAll matchers for
     // OPTIONS/actuator-health/config/static/public-auth/frontend routes,
-    // anyRequest().authenticated(),
-    // registered SupabaseAuthenticationFilter before BearerTokenAuthenticationFilter, set a
-    // BearerTokenAuthenticationEntryPoint + BearerTokenAccessDeniedHandler, and wired
-    // oauth2ResourceServer().jwt() with this JwtDecoder and
+    // anyRequest().authenticated(), registered SupabaseAuthenticationFilter before
+    // BearerTokenAuthenticationFilter, set a BearerTokenAuthenticationEntryPoint +
+    // BearerTokenAccessDeniedHandler, and wired oauth2ResourceServer().jwt() with this JwtDecoder
+    // and
     // SupabaseSecurityConfig::toAuthentication.
     // Re-express this via quarkus.http.auth.permission.* + quarkus.http.cors.* config and Quarkus
     // OIDC (mp.jwt). SupabaseAuthenticationFilter must be registered as a JAX-RS @Provider filter.
@@ -162,16 +163,16 @@ public class SupabaseSecurityConfig {
     }
 
     // TODO: Migration required - original @Bean CorsConfigurationSource configured CORS for the
-    // Spring SecurityFilterChain (allowed origins/methods/headers, exposed headers
-    // WWW-Authenticate + X-Credits-Remaining, allowCredentials=true, maxAge=3600). Re-express via
-    // quarkus.http.cors.* properties. The origin-resolution logic (operator override vs. defaults
-    // and wildcard warning) is retained below as a helper for that translation.
+    // Spring SecurityFilterChain (allowed origins/methods/headers, exposed header WWW-Authenticate,
+    // allowCredentials=true, maxAge=3600). Re-express via quarkus.http.cors.* properties. The
+    // origin-resolution logic (operator override vs. defaults, the Tauri desktop origins, and the
+    // wildcard warning) is retained below as a helper for that translation.
     List<String> resolveCorsOrigins() {
         boolean operatorOverride =
                 applicationProperties.getSystem() != null
                         && applicationProperties.getSystem().getCorsAllowedOrigins() != null
                         && !applicationProperties.getSystem().getCorsAllowedOrigins().isEmpty();
-        List<String> origins =
+        List<String> configuredOrigins =
                 operatorOverride
                         ? applicationProperties.getSystem().getCorsAllowedOrigins()
                         : List.of(
@@ -181,6 +182,19 @@ public class SupabaseSecurityConfig {
                                 "https://stirling.com",
                                 "https://app.stirling.com",
                                 "https://api.stirling.com");
+        // Always allow the desktop (Tauri) app's webview origins so the bundled desktop client can
+        // reach the cloud backend regardless of the operator's configured web origins. A browser
+        // can
+        // never present a tauri:// (or tauri.localhost) origin, so these are desktop-app identities
+        // -
+        // safe to allow alongside allowCredentials=true. Mirrors core WebMvcConfig.
+        List<String> origins = new ArrayList<>(configuredOrigins);
+        for (String desktopOrigin :
+                List.of("tauri://localhost", "http://tauri.localhost", "https://tauri.localhost")) {
+            if (!origins.contains(desktopOrigin)) {
+                origins.add(desktopOrigin);
+            }
+        }
         if (origins.stream().anyMatch(o -> o.contains("*"))) {
             log.warn(
                     "CORS origins contain a wildcard paired with allowCredentials=true: {}."
@@ -232,6 +246,16 @@ public class SupabaseSecurityConfig {
                             .map(GrantedAuthority::getAuthority)
                             .collect(Collectors.joining(",")));
         }
-        return new EnhancedJwtAuthenticationToken(jwt, authorities, email, supabaseId);
+        // Carry the resolved User (built by SupabaseAuthenticationFilter) across so
+        // instanceof-User authorization keeps working when this token is rebuilt.
+        User user = null;
+        Authentication existing = SecurityContextHolder.getContext().getAuthentication();
+        if (existing instanceof EnhancedJwtAuthenticationToken enhanced
+                && supabaseId != null
+                && supabaseId.equals(enhanced.getSupabaseId())
+                && enhanced.getPrincipal() instanceof User existingUser) {
+            user = existingUser;
+        }
+        return new EnhancedJwtAuthenticationToken(jwt, authorities, email, supabaseId, user);
     }
 }

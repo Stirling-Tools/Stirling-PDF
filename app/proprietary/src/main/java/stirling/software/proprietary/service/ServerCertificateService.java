@@ -4,7 +4,6 @@ import java.io.*;
 import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.*;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
@@ -73,7 +72,7 @@ public class ServerCertificateService implements ServerCertificateServiceInterfa
     }
 
     private Path getKeystorePath() {
-        return Paths.get(InstallationPathConfig.getConfigPath(), KEYSTORE_FILENAME);
+        return Path.of(InstallationPathConfig.getConfigPath(), KEYSTORE_FILENAME);
     }
 
     private boolean hasProOrEnterpriseAccess() {

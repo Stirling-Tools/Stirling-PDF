@@ -37,15 +37,20 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.security.Authentication;
 import stirling.software.common.security.SecurityContextHolder;
 import stirling.software.proprietary.security.database.repository.UserRepository;
+import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.saas.ai.model.AiCreateSession;
 import stirling.software.saas.ai.repository.AiCreateSessionRepository;
 import stirling.software.saas.ai.service.AiCreateProxyService;
 import stirling.software.saas.ai.service.AiCreateSessionService;
-import stirling.software.saas.service.CreditService;
-import stirling.software.saas.service.TeamCreditService;
+import stirling.software.saas.payg.cap.RequiresFeature;
+import stirling.software.saas.payg.charge.ChargeContext;
+import stirling.software.saas.payg.charge.JobChargeService;
+import stirling.software.saas.payg.model.BillingCategory;
+import stirling.software.saas.payg.model.FeatureGate;
+import stirling.software.saas.payg.model.JobSource;
+import stirling.software.saas.payg.model.ProcessType;
 import stirling.software.saas.util.AuthenticationUtils;
-import stirling.software.saas.util.CreditHeaderUtils;
 
 @ApplicationScoped
 @IfBuildProfile("saas")
@@ -53,16 +58,15 @@ import stirling.software.saas.util.CreditHeaderUtils;
 @Tag(name = "AI")
 @Hidden
 @RequiredArgsConstructor
+@RequiresFeature(FeatureGate.AI_SUPPORT)
 @Slf4j
 public class AiCreateController {
 
     private final AiCreateSessionService sessionService;
     private final AiCreateProxyService proxyService;
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final CreditService creditService;
-    private final TeamCreditService teamCreditService;
     private final UserRepository userRepository;
-    private final CreditHeaderUtils creditHeaderUtils;
+    private final JobChargeService jobChargeService;
 
     @POST
     @Path("/sessions")
@@ -84,7 +88,38 @@ public class AiCreateController {
                 session.getUserId(),
                 session.getDocType(),
                 session.getTemplateId());
+        chargeForCreate(session);
         return Response.ok(new CreateSessionResponse(session.getSessionId())).build();
+    }
+
+    /**
+     * Bill one document for a new AI Create session - creating a document is the charge point;
+     * follow-up edits on the same session carry no charge. Best-effort: a charge failure must not
+     * block the user's session. Entitlement is already enforced upstream via @RequiresFeature.
+     */
+    private void chargeForCreate(AiCreateSession session) {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            User user = AuthenticationUtils.getCurrentUser(auth, userRepository);
+            if (user == null || user.getTeam() == null) {
+                return;
+            }
+            JobSource source =
+                    auth instanceof ApiKeyAuthenticationToken ? JobSource.API : JobSource.WEB;
+            ChargeContext ctx =
+                    new ChargeContext(
+                            user.getId(),
+                            user.getTeam().getId(),
+                            source,
+                            ProcessType.SINGLE_TOOL,
+                            BillingCategory.AI);
+            jobChargeService.chargeStandalone(ctx, 1);
+        } catch (RuntimeException e) {
+            log.warn(
+                    "AI create session {} charge failed; session proceeds unbilled: {}",
+                    session.getSessionId(),
+                    e.getMessage());
+        }
     }
 
     @DELETE
@@ -95,8 +130,7 @@ public class AiCreateController {
     }
 
     // TODO: Migration required - @Transactional(readOnly = true): jakarta.transaction.Transactional
-    // has no readOnly attribute; using a plain transaction. Configure read-only semantics at the
-    // persistence layer if needed.
+    // has no readOnly attribute; using a plain transaction.
     @GET
     @Path("/sessions/{sessionId}")
     @Transactional
@@ -202,8 +236,7 @@ public class AiCreateController {
             @PathParam("sessionId") String sessionId, HttpServletRequest request) {
         sessionService.getSessionForCurrentUser(sessionId);
         log.info("AI create fillFields sessionId={}", sessionId);
-        return proxy(
-                "POST", "/api/create/sessions/" + sessionId + "/fields", request, false, false);
+        return proxy("POST", "/api/create/sessions/" + sessionId + "/fields", request, false);
     }
 
     @GET
@@ -211,20 +244,11 @@ public class AiCreateController {
     @Produces(MediaType.SERVER_SENT_EVENTS)
     public Response stream(@PathParam("sessionId") String sessionId, HttpServletRequest request) {
         sessionService.getSessionForCurrentUser(sessionId);
-        return proxy(
-                "GET",
-                "/api/create/sessions/" + sessionId + "/stream",
-                request,
-                true,
-                true); // Add credits header: frontend endpoint that triggers AI
+        return proxy("GET", "/api/create/sessions/" + sessionId + "/stream", request, true);
     }
 
     private Response proxy(
-            String method,
-            String path,
-            HttpServletRequest request,
-            boolean acceptEventStream,
-            boolean includeCreditsHeader) {
+            String method, String path, HttpServletRequest request, boolean acceptEventStream) {
         try {
             HttpResponse<InputStream> response =
                     proxyService.forward(method, path, request, acceptEventStream);
@@ -251,11 +275,6 @@ public class AiCreateController {
                 builder.header("Content-Type", MediaType.SERVER_SENT_EVENTS);
             }
 
-            // Add credit headers if requested
-            if (includeCreditsHeader) {
-                addCreditHeaders(builder);
-            }
-
             return builder.build();
         } catch (Exception exc) {
             log.error("AI create proxy failed path={}", path, exc);
@@ -278,31 +297,6 @@ public class AiCreateController {
             return true;
         }
         return false;
-    }
-
-    /**
-     * Add credit headers to the response builder.
-     *
-     * @param builder The response builder to add credit information to
-     */
-    private void addCreditHeaders(Response.ResponseBuilder builder) {
-        try {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            if (auth == null || !auth.isAuthenticated()) {
-                log.debug("[AI-CREATE] No authentication found, skipping credit header");
-                return;
-            }
-
-            User user = AuthenticationUtils.getCurrentUser(auth, userRepository);
-            int remainingCredits =
-                    creditHeaderUtils.getRemainingCredits(user, creditService, teamCreditService);
-            if (remainingCredits >= 0) {
-                builder.header("X-Credits-Remaining", Integer.toString(remainingCredits));
-                log.warn("[AI-CREATE] Added X-Credits-Remaining header: {}", remainingCredits);
-            }
-        } catch (Exception e) {
-            log.error("[AI-CREATE] Failed to add credit header: {}", e.getMessage(), e);
-        }
     }
 
     public record CreateSessionRequest(

@@ -9,6 +9,17 @@
 
 ## 0. TL;DR status
 
+- **2026-06-19 — merged `main` (136 commits) into `migration/run-02`.** Resolved 69 conflicts and
+  did **full Spring removal + Quarkus migration of every newly pulled-in file** (36 Spring-bearing
+  files: 21 proprietary + 15 saas). Net effect on main: legacy credits engine deleted (#6687,
+  replaced by PAYG #6589); the proprietary **policy** subsystem and the new **PAYG** subsystem
+  migrated to CDI/JAX-RS/Panache. Verified: 0 conflict markers, 0 `org.springframework` imports in
+  any main source. **`core` + `proprietary` compile; `proprietary` Quarkus-augments + boots + serves
+  real traffic; `saas` now compiles AND augments too** (previously ~28 CDI issues). Cross-file fix:
+  `PolicyExecutor`/`DownstreamEntitlementError` now carry HTTP status+body via
+  `jakarta.ws.rs.WebApplicationException` (was Spring `RestClientResponseException`);
+  `AiWorkflowService.paygLimitResponseOrNull` rewired to it. Repo `save()` shim added to the Panache
+  repos whose callers/tests expect Spring-Data `save()`.
 - **Branch:** `migration/run-01` (all work committed locally, **nothing pushed** — `origin` is the
   public `Stirling-Tools/Stirling-PDF` repo; do not push without the owner's say-so).
 - **Default flavor (`proprietary`):** compiles, Quarkus-augments, boots, and serves real traffic in

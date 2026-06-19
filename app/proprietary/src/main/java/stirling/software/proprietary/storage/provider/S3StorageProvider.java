@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
@@ -149,7 +149,7 @@ public class S3StorageProvider implements StorageProvider, AutoCloseable {
         if (originalFilename == null || originalFilename.isBlank()) {
             return null;
         }
-        // Strip CR/LF and other control chars before path parsing (Paths.get throws on them on
+        // Strip CR/LF and other control chars before path parsing (Path.of throws on them on
         // Windows, and they defeat header parsers).
         String stripped = originalFilename.replaceAll("\\p{Cntrl}", "");
         // Use only the basename to avoid leaking directory structure into the header.
@@ -183,7 +183,7 @@ public class S3StorageProvider implements StorageProvider, AutoCloseable {
         if (filename == null || filename.isBlank()) {
             return "file";
         }
-        String stripped = Paths.get(filename).getFileName().toString().replaceAll("\\p{Cntrl}", "");
+        String stripped = Path.of(filename).getFileName().toString().replaceAll("\\p{Cntrl}", "");
         return stripped.isBlank() ? "file" : stripped;
     }
 }

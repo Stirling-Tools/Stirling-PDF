@@ -18,6 +18,7 @@ import io.github.pixee.security.Filenames;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -389,6 +390,13 @@ public class AiWorkflowService {
             return new WorkflowState.Terminal(
                     cannotContinue(toolTimeoutMessage(PDF_TO_MARKDOWN_ENDPOINT, e)));
         } catch (Exception e) {
+            AiWorkflowResponse limit = paygLimitResponseOrNull(e);
+            if (limit != null) {
+                log.info(
+                        "AI markdown conversion blocked by downstream entitlement gate ({})",
+                        limit.getErrorCode());
+                return new WorkflowState.Terminal(limit);
+            }
             log.error("Failed to convert PDF to Markdown: {}", e.getMessage(), e);
             return new WorkflowState.Terminal(
                     cannotContinue(toolFailureMessage(PDF_TO_MARKDOWN_ENDPOINT, e)));
@@ -474,6 +482,14 @@ public class AiWorkflowService {
             log.error("Tool {} timed out: {}", endpointPath, e.getMessage());
             return new WorkflowState.Terminal(cannotContinue(toolTimeoutMessage(endpointPath, e)));
         } catch (Exception e) {
+            AiWorkflowResponse limit = paygLimitResponseOrNull(e);
+            if (limit != null) {
+                log.info(
+                        "AI workflow tool {} blocked by downstream entitlement gate ({})",
+                        endpointPath,
+                        limit.getErrorCode());
+                return new WorkflowState.Terminal(limit);
+            }
             log.error("Failed to execute tool {}: {}", endpointPath, e.getMessage(), e);
             return new WorkflowState.Terminal(cannotContinue(toolFailureMessage(endpointPath, e)));
         }
@@ -579,15 +595,14 @@ public class AiWorkflowService {
             log.error("Plan step on tool {} timed out: {}", e.getEndpointPath(), e.getMessage());
             return new WorkflowState.Terminal(
                     cannotContinue(toolTimeoutMessage(e.getEndpointPath(), e)));
-            // TODO: Migration required - the dedicated catch for Spring's
-            // org.springframework.web.client.HttpServerErrorException was dropped: the migrated
-            // PolicyExecutor surfaces internal-API HTTP failures as a plain IOException (see
-            // PolicyExecutor#invoke), so no Spring HTTP exception ever reaches here. If the
-            // engine's
-            // structured "detail" error body needs to surface in chat again, have PolicyExecutor
-            // throw
-            // a typed exception carrying the response body and re-add a catch that extracts it.
         } catch (Exception e) {
+            AiWorkflowResponse limit = paygLimitResponseOrNull(e);
+            if (limit != null) {
+                log.info(
+                        "AI workflow plan blocked by downstream entitlement gate ({})",
+                        limit.getErrorCode());
+                return new WorkflowState.Terminal(limit);
+            }
             log.error("Failed to execute plan: {}", e.getMessage(), e);
             return new WorkflowState.Terminal(
                     cannotContinue("Plan execution failed: " + e.getMessage()));
@@ -703,6 +718,46 @@ public class AiWorkflowService {
         response.setOutcome(AiWorkflowOutcome.CANNOT_CONTINUE);
         response.setReason(reason);
         return response;
+    }
+
+    /**
+     * If {@code e} is a downstream usage-limit block — a 401/402 from a tool call carrying the saas
+     * EntitlementGuard's {@code error} sentinel — build a terminal response that carries the
+     * structured code (+ {@code subscribed}) through to the client, so it can pop the matching
+     * usage-limit modal instead of surfacing the raw "tool failed: 402…" text. Returns null for any
+     * other failure, so the caller falls back to its normal tool-failure handling.
+     *
+     * <p>The agent's tool calls run server-side (loopback HTTP via {@link PolicyExecutor}), so this
+     * 402 never reaches the frontend's API-client interceptor that pops the modal for direct calls
+     * — same gap the policy auto-run path bridges in {@code PolicyEngine}.
+     */
+    private AiWorkflowResponse paygLimitResponseOrNull(Throwable e) {
+        // Migrated PolicyExecutor rethrows a non-OK tool response as a WebApplicationException
+        // carrying status + body (was Spring's RestClientResponseException); unwrap the cause
+        // chain.
+        WebApplicationException wae = findWebApplicationException(e);
+        if (wae == null) {
+            return null;
+        }
+        String code = DownstreamEntitlementError.extractCode(wae);
+        if (code == null) {
+            return null;
+        }
+        AiWorkflowResponse response = new AiWorkflowResponse();
+        response.setOutcome(AiWorkflowOutcome.CANNOT_CONTINUE);
+        response.setReason("You've reached your current usage limit.");
+        response.setErrorCode(code);
+        response.setErrorSubscribed(DownstreamEntitlementError.extractSubscribed(wae));
+        return response;
+    }
+
+    private static WebApplicationException findWebApplicationException(Throwable e) {
+        for (Throwable t = e; t != null; t = t.getCause()) {
+            if (t instanceof WebApplicationException wae) {
+                return wae;
+            }
+        }
+        return null;
     }
 
     /**

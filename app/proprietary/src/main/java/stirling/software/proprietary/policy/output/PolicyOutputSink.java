@@ -22,19 +22,10 @@ public interface PolicyOutputSink {
     /** Whether this sink can handle the given output spec. */
     boolean supports(OutputSpec spec);
 
-    /**
-     * Check that an output spec is usable, throwing {@link IllegalArgumentException} if not. Called
-     * when a policy is saved so misconfiguration fails fast rather than at run time.
-     */
+    /** Throws {@link IllegalArgumentException} on bad config. Called on save to fail fast. */
     default void validate(OutputSpec spec) {}
 
-    /**
-     * Persist/deliver the output files and return their descriptors.
-     *
-     * @param runId the run these outputs belong to
-     * @param outputs the final pipeline output resources
-     * @param spec the requested destination
-     */
+    /** Persist/deliver the output files and return their descriptors. */
     List<ResultFile> deliver(String runId, List<Resource> outputs, OutputSpec spec)
             throws IOException;
 }

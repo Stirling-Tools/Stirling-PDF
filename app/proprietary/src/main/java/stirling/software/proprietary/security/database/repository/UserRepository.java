@@ -165,17 +165,6 @@ public class UserRepository implements PanacheRepositoryBase<User, Long> {
                 .getResultStream();
     }
 
-    /** Users with an API key but no row in {@code user_credits}. */
-    public List<User> findUsersWithApiKeyButNoCredits() {
-        return getEntityManager()
-                .createNativeQuery(
-                        "SELECT u.* FROM users u "
-                                + "LEFT JOIN user_credits uc ON uc.user_id = u.user_id "
-                                + "WHERE u.api_key IS NOT NULL AND uc.user_id IS NULL",
-                        User.class)
-                .getResultList();
-    }
-
     /** Single-shot UPDATE that reassigns a user to a different team. */
     @Transactional
     public int updateUserTeamId(Long userId, Long teamId) {

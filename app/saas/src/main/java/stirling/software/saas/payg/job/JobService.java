@@ -234,6 +234,20 @@ public class JobService {
         return new JoinOrOpenResult(existing, JoinOrOpenResult.Disposition.JOINED);
     }
 
+    /**
+     * Open a standalone process with no lineage inputs, for a billable action that isn't
+     * file/lineage-driven (e.g. an AI Create session). Because no input signatures are recorded,
+     * nothing downstream can lineage-join it — each such charge stands alone. {@code docUnits} is
+     * persisted so the charge service's shadow + ledger rows agree with the job.
+     */
+    @Transactional
+    public ProcessingJob open(JobContext ctx, int docUnits) {
+        Objects.requireNonNull(ctx, "ctx");
+        ProcessingJob job = openFresh(ctx, Map.of()).job();
+        job.setDocUnits(docUnits);
+        return jobRepository.save(job);
+    }
+
     private JoinOrOpenResult openFresh(
             JobContext ctx, Map<Path, Set<LineageSignature>> signaturesByInput) {
         ProcessingJob fresh = new ProcessingJob();

@@ -86,7 +86,7 @@ public class SigningSessionController {
                             .map(
                                     stirling.software.proprietary.workflow.util.WorkflowMapper
                                             ::toResponse)
-                            .collect(java.util.stream.Collectors.toList());
+                            .toList();
             return Response.ok(responses).build();
         } catch (Exception e) {
             log.error("Error listing sessions for user {}", principal.getName(), e);

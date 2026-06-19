@@ -51,23 +51,8 @@
   direction: ltr; /* keep layout stable when document is rtl */
 }
 
-/* Rainbow mode container */
-.quick-access-bar-main.rainbow-mode {
-  background-color: var(--bg-muted);
-  width: 4.5rem;
-  min-width: 4.5rem;
-  max-width: 4.5rem;
-  position: relative;
-  z-index: 10;
-  border-right: 1px solid var(--border-default);
-  flex-shrink: 0;
-  box-sizing: border-box;
-  direction: ltr;
-}
-
 /* RTL adjustments keep the bar on-screen and separated from content */
-:root[dir="rtl"] .quick-access-bar-main,
-:root[dir="rtl"] .quick-access-bar-main.rainbow-mode {
+:root[dir="rtl"] .quick-access-bar-main {
   border-right: none;
   border-left: 1px solid var(--border-default);
 }

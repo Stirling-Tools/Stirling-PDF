@@ -12,6 +12,7 @@ import org.jboss.resteasy.reactive.server.multipart.FormValue;
 import org.jboss.resteasy.reactive.server.multipart.MultipartFormDataInput;
 
 import io.github.pixee.security.Filenames;
+import io.quarkus.arc.profile.IfBuildProfile;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -38,10 +39,11 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.io.FileSystemResource;
 import stirling.software.common.model.io.Resource;
 import stirling.software.common.model.job.JobResponse;
-import stirling.software.common.service.UserServiceInterface;
+import stirling.software.common.service.JobOwnershipService;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
-import stirling.software.proprietary.policy.config.FolderAccessGuard;
+import stirling.software.proprietary.policy.config.PolicyAccessGuard;
+import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.engine.PolicyRunHandle;
 import stirling.software.proprietary.policy.engine.PolicyRunRegistry;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
@@ -60,19 +62,19 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Manages policies and runs pipelines. The premium backend entry point: CRUD for stored {@code
- * Policy} objects, running a stored policy by id, and running an ad-hoc pipeline (for AI/Automate
- * one-offs).
+ * Policy CRUD plus pipeline runs (stored or ad-hoc). Runs are async: returns a run id, poll {@code
+ * GET /run/{runId}} for status, download outputs via {@code GET /api/v1/general/files/{fileId}}.
  *
- * <p>Runs execute asynchronously and return a run id immediately. Poll {@code GET /run/{runId}} for
- * status, and download outputs via the existing {@code GET /api/v1/general/files/{fileId}} using
- * the file ids in the run view.
+ * <p>Policies are scoped to a team via {@link PolicyAccessGuard}; whether a user may edit (vs only
+ * view/run) is gated by {@link PolicyManagementAuthority} through {@link
+ * #requirePolicyEditingAllowed()}.
  */
 @Slf4j
 @ApplicationScoped
 @jakarta.ws.rs.Path("/api/v1/policies")
 @Hidden
 @PremiumEndpoint
+@IfBuildProfile("saas")
 @Tag(name = "Policies", description = "Run tool pipelines on the backend")
 public class PolicyController {
 
@@ -80,11 +82,12 @@ public class PolicyController {
     @Inject PolicyRunRegistry runRegistry;
     @Inject PolicyStore policyStore;
     @Inject PolicyValidator policyValidator;
-    @Inject FolderAccessGuard folderAccessGuard;
-    @Inject UserServiceInterface userService;
+    @Inject PolicyAccessGuard policyAccessGuard;
+    @Inject PolicyManagementAuthority policyManagementAuthority;
     @Inject ApplicationProperties applicationProperties;
     @Inject ObjectMapper objectMapper;
     @Inject TempFileManager tempFileManager;
+    @Inject JobOwnershipService jobOwnershipService;
 
     @POST
     @jakarta.ws.rs.Path("/run")
@@ -168,6 +171,37 @@ public class PolicyController {
         return Response.ok(PolicyRunView.of(run)).build();
     }
 
+    @GET
+    @jakarta.ws.rs.Path("/runs")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(
+            summary = "List the caller's stored-policy runs",
+            description =
+                    "Returns the caller's in-flight and recently-finished stored-policy runs (within"
+                            + " the run-retention window). The frontend reconciles these on load so a"
+                            + " run started before a refresh/crash is rediscovered and its outputs"
+                            + " collected, rather than orphaned on the backend. Ad-hoc runs (no"
+                            + " policy id) are excluded.")
+    public List<PolicyRunView> listRuns() {
+        return runRegistry.all().stream()
+                .filter(run -> run.getPolicyId() != null)
+                .filter(run -> ownedByCurrentUser(run.getRunId()))
+                .map(PolicyRunView::of)
+                .toList();
+    }
+
+    /**
+     * Whether the run is owned by the current user, derived purely from the existing scoping
+     * methods: stripping then re-applying the scope reproduces the run's key only when its owner
+     * prefix matches the caller's. No auth (single-user) owns everything. Avoids duplicating the
+     * scoped-key format here.
+     */
+    private boolean ownedByCurrentUser(String runId) {
+        return jobOwnershipService
+                .createScopedJobKey(jobOwnershipService.extractJobId(runId))
+                .equals(runId);
+    }
+
     // --- Policy management ---
 
     @POST
@@ -178,42 +212,82 @@ public class PolicyController {
             description =
                     "Stores a policy (trigger config + steps + output + metadata). A blank id is"
                             + " assigned; returns the stored policy with its id.")
-    public Response savePolicy(String json) {
-        Policy policy = parsePolicy(json);
-        requireAuthorizedForFolderAccess(policy);
+    public Response savePolicy(Policy policy) {
+        requirePolicyEditingAllowed();
+        Policy owned = resolveOwnership(policy);
         try {
-            policyValidator.validate(policy);
+            policyValidator.validate(owned);
         } catch (IllegalArgumentException e) {
             throw new WebApplicationException(e.getMessage(), Response.Status.BAD_REQUEST);
         }
-        return Response.ok(policyStore.save(policy)).build();
+        return Response.ok(policyStore.save(owned)).build();
     }
 
     /**
-     * A policy that reads from or writes to a server folder grants whoever saves it access to that
-     * path, so restrict it to administrators on multi-user deployments. Single-user deployments
-     * (login disabled, e.g. desktop) trust the local operator. The {@link FolderAccessGuard} still
-     * enforces SaaS-off and the path allowlist during validation regardless of who saves.
+     * Assign owner + owning team server-side. Create stamps the current user and their team; update
+     * preserves the existing owner and team after verifying the policy belongs to the caller's team
+     * - so the client can neither forge ownership/team on create nor reach across teams on update
+     * (a policy in another team reads as not-found).
      */
-    private void requireAuthorizedForFolderAccess(Policy policy) {
-        if (!folderAccessGuard.usesFolderAccess(policy)) {
-            return;
+    private Policy resolveOwnership(Policy incoming) {
+        String id = incoming.id();
+        if (id != null && !id.isBlank()) {
+            Policy existing = policyStore.get(id).orElse(null);
+            if (existing != null) {
+                if (!policyAccessGuard.canAccess(existing)) {
+                    throw new WebApplicationException(
+                            "No policy: " + id, Response.Status.NOT_FOUND);
+                }
+                return withOwnerAndTeam(incoming, existing.owner(), existing.teamId());
+            }
         }
+        return withOwnerAndTeam(
+                incoming,
+                policyAccessGuard.ownerForNewPolicy(),
+                policyAccessGuard.teamForNewPolicy());
+    }
+
+    private static Policy withOwnerAndTeam(Policy policy, String owner, Long teamId) {
+        return new Policy(
+                policy.id(),
+                policy.name(),
+                owner,
+                policy.enabled(),
+                policy.trigger(),
+                policy.sources(),
+                policy.steps(),
+                policy.output(),
+                teamId);
+    }
+
+    /**
+     * Creating, editing, pausing/resuming, and deleting policies requires the editor role for the
+     * caller's team - a team leader on SaaS (see {@link PolicyManagementAuthority}); the global
+     * admin gets no say on SaaS. Team scoping (which team's policies) is enforced separately by
+     * {@link PolicyAccessGuard}. Every mutation routes through {@link #savePolicy} (pause/resume
+     * re-save with a flipped {@code enabled} flag) or {@link #deletePolicy}, so gating those two
+     * covers them all; runs ({@code /run}) stay open to the team. Single-user deployments (login
+     * disabled) have no such role, so they trust the local operator. The path allowlist for folder
+     * sources/outputs is enforced separately by {@link PolicyValidator} at validation time.
+     */
+    private void requirePolicyEditingAllowed() {
         if (!applicationProperties.getSecurity().isEnableLogin()) {
             return;
         }
-        if (!userService.isCurrentUserAdmin()) {
+        if (!policyManagementAuthority.canEditPolicies()) {
             throw new WebApplicationException(
-                    "Folder sources and outputs may only be configured by an administrator",
+                    "Policies may only be created or modified by a team leader",
                     Response.Status.FORBIDDEN);
         }
     }
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "List policies")
+    @Operation(
+            summary = "List policies",
+            description = "Lists the policies belonging to the caller's team.")
     public List<Policy> listPolicies() {
-        return policyStore.all();
+        return policyAccessGuard.visible(policyStore.all());
     }
 
     @GET
@@ -223,6 +297,7 @@ public class PolicyController {
     public Response getPolicy(@PathParam("policyId") String policyId) {
         return policyStore
                 .get(policyId)
+                .filter(policyAccessGuard::canAccess)
                 .map(policy -> Response.ok(policy).build())
                 .orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
     }
@@ -231,9 +306,14 @@ public class PolicyController {
     @jakarta.ws.rs.Path("/{policyId}")
     @Operation(summary = "Delete a policy by id")
     public Response deletePolicy(@PathParam("policyId") String policyId) {
-        return policyStore.delete(policyId)
-                ? Response.noContent().build()
-                : Response.status(Response.Status.NOT_FOUND).build();
+        requirePolicyEditingAllowed();
+        // Scope to the caller's team: a policy in another team reads as not-found.
+        boolean accessible =
+                policyStore.get(policyId).filter(policyAccessGuard::canAccess).isPresent();
+        if (accessible && policyStore.delete(policyId)) {
+            return Response.noContent().build();
+        }
+        return Response.status(Response.Status.NOT_FOUND).build();
     }
 
     @POST
@@ -253,6 +333,7 @@ public class PolicyController {
         Policy policy =
                 policyStore
                         .get(policyId)
+                        .filter(policyAccessGuard::canAccess)
                         .orElseThrow(
                                 () ->
                                         new WebApplicationException(
@@ -263,14 +344,6 @@ public class PolicyController {
         return Response.status(Response.Status.ACCEPTED)
                 .entity(new JobResponse<>(true, runId, null))
                 .build();
-    }
-
-    private Policy parsePolicy(String json) {
-        try {
-            return objectMapper.readValue(json, Policy.class);
-        } catch (JacksonException e) {
-            throw new WebApplicationException("Invalid policy JSON", Response.Status.BAD_REQUEST);
-        }
     }
 
     private PipelineDefinition parseDefinition(String json) {

@@ -7,7 +7,6 @@ import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -83,7 +82,7 @@ public class PipelineDirectoryProcessor {
 
         try {
             for (String watchedFoldersDir : watchedFoldersDirs) {
-                scanWatchedFolder(Paths.get(watchedFoldersDir).toAbsolutePath());
+                scanWatchedFolder(Path.of(watchedFoldersDir).toAbsolutePath());
             }
         } finally {
             // Clean up ThreadLocal to prevent memory leaks
@@ -443,7 +442,7 @@ public class PipelineDirectoryProcessor {
                                         .replace("{outputFolder}", finishedFoldersDir)
                                         .replace("{folderName}", dir.toString()))
                         .replaceAll("");
-        return Paths.get(outputDir).isAbsolute() ? Paths.get(outputDir) : Paths.get(".", outputDir);
+        return Path.of(outputDir).isAbsolute() ? Path.of(outputDir) : Path.of(".", outputDir);
     }
 
     private void deleteOriginalFiles(List<File> filesToProcess, Path processingDir)

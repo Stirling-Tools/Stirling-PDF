@@ -3,7 +3,6 @@ package stirling.software.proprietary.controller.api;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -91,7 +90,7 @@ public class UsageRestController {
                                             .build();
                                 })
                         .sorted(Comparator.comparingInt(EndpointStatistic::getVisits).reversed())
-                        .collect(Collectors.toList());
+                        .toList();
 
         // Apply limit if specified
         if (limit != null && limit > 0 && statistics.size() > limit) {

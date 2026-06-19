@@ -3,7 +3,6 @@ package stirling.software.proprietary.security.service;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -83,7 +82,7 @@ public class KeyPairCleanupService {
             return;
         }
 
-        Path privateKeyDirectory = Paths.get(InstallationPathConfig.getPrivateKeyPath());
+        Path privateKeyDirectory = Path.of(InstallationPathConfig.getPrivateKeyPath());
         Path keyFile = privateKeyDirectory.resolve(keyId + KeyPersistenceService.KEY_SUFFIX);
 
         if (Files.exists(keyFile)) {

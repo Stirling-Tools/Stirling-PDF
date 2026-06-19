@@ -22,4 +22,13 @@ public class ProcessingJobRepository implements PanacheRepositoryBase<Processing
     public List<ProcessingJob> findStale(JobStatus status, LocalDateTime cutoff) {
         return find("status = ?1 and lastStepAt < ?2", status, cutoff).list();
     }
+
+    // Spring-Data save() shim: persist when new, merge when detached.
+    public ProcessingJob save(ProcessingJob entity) {
+        if (entity.getId() == null) {
+            persist(entity);
+            return entity;
+        }
+        return getEntityManager().merge(entity);
+    }
 }

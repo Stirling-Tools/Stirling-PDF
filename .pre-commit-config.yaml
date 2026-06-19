@@ -1,52 +1,14 @@
+# The actual checks live in .taskfiles/pre-commit.yml (with helper scripts under
+# scripts/pre-commit/) and are driven by Task. This hook just delegates to `task
+# pre-commit` so the git pre-commit hook, CI and a manual `task pre-commit` all
+# run the exact same thing. Requires `task` and `uv` on PATH. To auto-fix instead
+# of only checking, run `task pre-commit:fix`.
 repos:
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.14
+  - repo: local
     hooks:
-      - id: ruff
-        args:
-          - --fix
-          - --line-length=127
-        files: ^((\.github/scripts|scripts|app/core/src/main/resources/static/python)/.+)?[^/]+\.py$
-        exclude: (split_photos.py)
-      - id: ruff-format
-        files: ^((\.github/scripts|scripts|app/core/src/main/resources/static/python)/.+)?[^/]+\.py$
-        exclude: (split_photos.py)
-  - repo: https://github.com/codespell-project/codespell
-    rev: v2.4.2
-    hooks:
-      - id: codespell
-        args:
-          - --ignore-words-list=thirdParty,tabEl,tabEls,Sie,ist,fulfilment,vertx
-          - --skip="./.*,*.csv,*.json,*.ambr"
-          - --quiet-level=2
-        files: \.(html|css|js|py|md)$
-        exclude: (.vscode|.devcontainer|app/core/src/main/resources|app/proprietary/src/main/resources|frontend/editor/public/vendor|Dockerfile|.*/pdfjs.*|.*/thirdParty.*|bootstrap.*|.*\.min\..*|.*diff\.js)
-  - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.30.0
-    hooks:
-      - id: gitleaks
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v6.0.0
-    hooks:
-      - id: end-of-file-fixer
-        files: ^.*(\.js|\.java|\.py|\.yml)$
-        exclude: ^(.*/pdfjs.*|.*/thirdParty.*|bootstrap.*|.*\.min\..*|.*diff\.js|\.github/workflows/.*$)
-      - id: trailing-whitespace
-        files: ^.*(\.js|\.java|\.py|\.yml)$
-        exclude: ^(.*/pdfjs.*|.*/thirdParty.*|bootstrap.*|.*\.min\..*|.*diff\.js|\.github/workflows/.*$)
-  - repo: https://github.com/pappasam/toml-sort
-    rev: v0.24.4
-    hooks:
-      - id: toml-sort-fix
-        files: frontend/editor/public/locales/.*\.toml$
-        args: ['--in-place', '--all', '--ignore-case']
-  # - repo: https://github.com/thibaudcolas/pre-commit-stylelint
-  #   rev: v16.21.1
-  #   hooks:
-  #     - id: stylelint
-  #       additional_dependencies:
-  #         - stylelint@16.21.1
-  #         - stylelint-config-standard@38.0.0
-  #         - "@stylistic/stylelint-plugin@3.1.3"
-  #       files: \.(css)$
-  #       args: [--fix]
+      - id: task-pre-commit
+        name: task pre-commit
+        entry: task pre-commit
+        language: system
+        pass_filenames: false
+        always_run: true

@@ -1120,11 +1120,7 @@ public class UserController {
         }
     }
 
-    /**
-     * List all enabled users for selection in signing workflows.
-     *
-     * @return List of user summaries
-     */
+    // Lists enabled users for the signing picker; 'org' scope = instance-wide, else caller's team.
     @GET
     @jakarta.ws.rs.Path("/users")
     @Produces(MediaType.APPLICATION_JSON)
@@ -1133,13 +1129,51 @@ public class UserController {
             return Response.status(Response.Status.UNAUTHORIZED).build();
         }
 
+        Optional<User> callerOpt =
+                userService.findByUsernameIgnoreCase(securityContext.getUserPrincipal().getName());
+
+        // Anonymous (SaaS) accounts must never enumerate users, in any scope or team.
+        if (callerOpt.map(UserController::isAnonymousUser).orElse(false)) {
+            return Response.status(Response.Status.FORBIDDEN).build();
+        }
+
+        // Fail-closed: only literal "org" opens the whole instance; anything else scopes to team.
+        String scope = applicationProperties.getStorage().getSigning().getUserListScope();
+        boolean teamScoped = !"org".equalsIgnoreCase(scope == null ? "" : scope.trim());
+
+        List<User> source;
+        if (teamScoped) {
+            Team callerTeam = callerOpt.map(User::getTeam).orElse(null);
+            if (callerTeam == null || isSystemTeam(callerTeam)) {
+                // No team or a shared system team: return only the caller, not the team's members.
+                source = callerOpt.map(List::of).orElse(List.of());
+            } else {
+                // Scopes via the single User.team FK; revisit if multi-team membership is added.
+                source = userRepository.findAllByTeamId(callerTeam.getId());
+            }
+        } else {
+            source = userRepository.findAll().list();
+        }
+
         List<UserSummaryDTO> users =
-                userRepository.findAll().list().stream()
+                source.stream()
                         .filter(User::isEnabled)
                         .map(this::toUserSummaryDTO)
                         .collect(java.util.stream.Collectors.toList());
 
         return Response.ok(users).build();
+    }
+
+    // SaaS anonymous accounts, which must not enumerate users.
+    private static boolean isAnonymousUser(User user) {
+        return AuthenticationType.ANONYMOUS.name().equalsIgnoreCase(user.getAuthenticationType());
+    }
+
+    // System teams (Default/Internal) are not enumerable through the signing picker.
+    private static boolean isSystemTeam(Team team) {
+        String name = team.getName();
+        return TeamService.DEFAULT_TEAM_NAME.equalsIgnoreCase(name)
+                || TeamService.INTERNAL_TEAM_NAME.equalsIgnoreCase(name);
     }
 
     private UserSummaryDTO toUserSummaryDTO(User user) {

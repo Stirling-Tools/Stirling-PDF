@@ -3,7 +3,6 @@ package stirling.software.proprietary.security.controller.api;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import org.jboss.resteasy.reactive.RestForm;
 
@@ -309,7 +308,7 @@ public class InviteLinkController {
                                                 "expiresAt", invite.getExpiresAt().toString());
                                         return inviteMap;
                                     })
-                            .collect(Collectors.toList());
+                            .toList();
 
             return Response.ok(Map.of("invites", inviteList), MediaType.APPLICATION_JSON).build();
 
@@ -368,7 +367,7 @@ public class InviteLinkController {
             List<InviteToken> expiredInvites =
                     inviteTokenRepository.findAll().list().stream()
                             .filter(invite -> !invite.isValid())
-                            .collect(Collectors.toList());
+                            .toList();
 
             int count = expiredInvites.size();
             expiredInvites.forEach(inviteTokenRepository::delete);

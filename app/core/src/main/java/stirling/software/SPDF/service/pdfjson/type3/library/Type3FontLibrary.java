@@ -10,7 +10,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.font.PDType3Font;
@@ -283,7 +282,7 @@ public class Type3FontLibrary {
                 .filter(Objects::nonNull)
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private String normalizeAlias(String alias) {

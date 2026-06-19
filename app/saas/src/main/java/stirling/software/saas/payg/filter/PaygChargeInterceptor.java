@@ -3,6 +3,7 @@ package stirling.software.saas.payg.filter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -32,25 +33,30 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.saas.payg.cap.AiToolRoutes;
+import stirling.software.saas.payg.cap.RequiresFeature;
 import stirling.software.saas.payg.charge.ChargeContext;
 import stirling.software.saas.payg.charge.ChargeOutcome;
 import stirling.software.saas.payg.charge.JobChargeService;
 import stirling.software.saas.payg.charge.JobInput;
 import stirling.software.saas.payg.job.JobService;
+import stirling.software.saas.payg.model.BillingCategory;
+import stirling.software.saas.payg.model.FeatureGate;
 import stirling.software.saas.payg.model.JobSource;
 import stirling.software.saas.payg.model.JobStepStatus;
 import stirling.software.saas.payg.model.ProcessType;
 import stirling.software.saas.util.AuthenticationUtils;
 
 /**
- * The hot-path PAYG interceptor. Mirrors the {@code UnifiedCreditInterceptor} shape: registered
- * after it in {@code PaygWebMvcConfig} so legacy credit-rejection short-circuits before we waste
- * work hashing inputs.
+ * The hot-path PAYG interceptor, registered in {@code PaygWebMvcConfig}.
  *
- * <p>{@code preHandle}: gates on {@code @AutoJobPostMapping}, reads the parsed multipart parts,
- * materialises each input to a {@code TempFile}, and asks {@link JobChargeService#openProcess} to
- * open (or join) a process. The resulting {@link ChargeOutcome} plus input temp-files are stashed
- * as request attributes for {@code afterCompletion}.
+ * <p>{@code preHandle}: gates on {@code @AutoJobPostMapping} OR {@code @RequiresFeature} (the
+ * latter lets AI controllers — JSON-bodied, no AutoJobPostMapping — bill correctly), reads the
+ * parsed multipart parts, materialises each input to a {@code TempFile}, and asks {@link
+ * JobChargeService#openProcess} to open (or join) a process. The resulting {@link ChargeOutcome}
+ * plus input temp-files are stashed as request attributes for {@code afterCompletion}. Routes
+ * without multipart inputs short-circuit inside {@code doPreHandle} without touching the charge
+ * service.
  *
  * <p>{@code afterCompletion}: branches on HTTP status — 2xx hashes the response body for OUTPUT
  * lineage; 4xx records a step append for audit; 5xx triggers refund-and-close (OPENED) or
@@ -60,20 +66,11 @@ import stirling.software.saas.util.AuthenticationUtils;
  * and counted on {@code payg.filter.errors}. The customer's tool call always proceeds.
  *
  * <p>// TODO: Migration required - was a Spring {@code @Component} ({@code @Profile("saas")})
- * implementing {@code org.springframework.web.servlet.AsyncHandlerInterceptor}. Convert to a JAX-RS
- * {@code @jakarta.ws.rs.ext.Provider} request/response filter pair. The Spring MVC types {@code
- * HandlerMethod}, {@code HandlerMapping}, {@code MultiValueMap}, {@code MultipartFile} and {@code
- * MultipartHttpServletRequest} have been removed: handler-annotation introspection now uses a
- * reflective {@link Method} fallback (see {@link #resolveResourceMethod}); multipart access now
- * uses the servlet-native {@link Part} API ({@code request.getParts()}); the best-matching-pattern
- * attribute now uses a literal key constant ({@link #BEST_MATCHING_PATTERN_ATTRIBUTE}).
- *
- * <p>// TODO: Migration required - {@link JobInput}'s {@code multipart} component is still typed as
- * Spring {@code org.springframework.web.multipart.MultipartFile} (that class is owned by another
- * module slated for migration). This interceptor now produces {@link Part} inputs; once {@code
- * JobInput} is migrated to carry a {@link Part} (or a neutral metadata holder exposing size +
- * content-type), {@link #buildJobInput(Part, Path)} must construct it directly. Until then that
- * helper documents the adaptation point.
+ * implementing {@code AsyncHandlerInterceptor}. Convert to a JAX-RS {@code @Provider}
+ * request/response filter pair. Handler-annotation introspection now uses a reflective {@link
+ * Method} fallback (see {@link #resolveResourceMethod}); multipart access uses the servlet-native
+ * {@link Part} API ({@code request.getParts()}); the best-matching-pattern attribute uses a literal
+ * key constant ({@link #BEST_MATCHING_PATTERN_ATTRIBUTE}).
  */
 @Slf4j
 @ApplicationScoped
@@ -119,6 +116,7 @@ public class PaygChargeInterceptor {
     private final Counter callsOpened;
     private final Counter callsJoined;
     private final Counter callsShortCircuit;
+    private final Counter callsBypassed;
     private final Counter refundsCounter;
 
     /** preHandle wall-clock per request. Separate from afterCompletion — different populations. */
@@ -158,6 +156,11 @@ public class PaygChargeInterceptor {
                 Counter.builder("payg.filter.calls")
                         .tag("disposition", "SHORT_CIRCUIT")
                         .register(meterRegistry);
+        this.callsBypassed =
+                Counter.builder("payg.filter.bypassed")
+                        .description(
+                                "Manual UI tool calls that skipped openProcess (BillingCategory.BYPASSED)")
+                        .register(meterRegistry);
         this.refundsCounter =
                 Counter.builder("payg.filter.refunds")
                         .description("First-step 5xx refunds applied to shadow rows")
@@ -184,13 +187,37 @@ public class PaygChargeInterceptor {
                 return true;
             }
             Method resourceMethod = resolveResourceMethod(handler);
-            if (resourceMethod == null
-                    || resourceMethod.getAnnotation(AutoJobPostMapping.class) == null) {
+            Class<?> beanType = resolveBeanType(handler, resourceMethod);
+            if (resourceMethod == null) {
                 callsShortCircuit.increment();
                 return true;
             }
+            // In-scope when the handler carries @AutoJobPostMapping (multipart tool POSTs) OR
+            // @RequiresFeature (AI controllers, future non-multipart gated routes). Without one of
+            // these the interceptor short-circuits — admin / info / static routes never run
+            // determineCategory.
+            boolean hasAutoJobPostMapping =
+                    findAnnotation(resourceMethod, beanType, AutoJobPostMapping.class) != null;
+            boolean hasRequiresFeature =
+                    findAnnotation(resourceMethod, beanType, RequiresFeature.class) != null;
+            // AI document tools (/api/v1/ai/tools/**) live in the proprietary module and can't
+            // carry @RequiresFeature, so they're recognised by path — see AiToolRoutes.
+            boolean aiToolRoute = AiToolRoutes.matches(request);
+            if (!hasAutoJobPostMapping && !hasRequiresFeature && !aiToolRoute) {
+                callsShortCircuit.increment();
+                return true;
+            }
+            // Bypass fast-path: determine the BillingCategory BEFORE any multipart
+            // materialisation or openProcess call. Manual UI tool calls (BYPASSED) skip the
+            // entire ledger/shadow pipeline — no temp files, no DB writes.
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            BillingCategory category = determineCategory(resourceMethod, beanType, request, auth);
+            if (category == BillingCategory.BYPASSED) {
+                callsBypassed.increment();
+                return true;
+            }
             try {
-                doPreHandle(request);
+                doPreHandle(request, auth, category);
             } catch (RuntimeException e) {
                 log.warn("PAYG preHandle failed; passing through unbilled", e);
                 errorsCounter.increment();
@@ -203,8 +230,8 @@ public class PaygChargeInterceptor {
         }
     }
 
-    private void doPreHandle(HttpServletRequest request) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    private void doPreHandle(
+            HttpServletRequest request, Authentication auth, BillingCategory category) {
         User currentUser = resolveUser(auth);
         if (currentUser == null) {
             callsShortCircuit.increment();
@@ -213,8 +240,7 @@ public class PaygChargeInterceptor {
 
         // TODO: Migration required - was `request instanceof MultipartHttpServletRequest mreq` +
         // mreq.getMultiFileMap(). Now uses servlet-native request.getParts(). A non-multipart
-        // request
-        // yields no file parts and short-circuits, preserving the original behavior.
+        // request yields no file parts and short-circuits, preserving the original behavior.
         List<Part> nonEmpty = new ArrayList<>();
         try {
             Collection<Part> parts = request.getParts();
@@ -270,7 +296,8 @@ public class PaygChargeInterceptor {
                         currentUser.getId(),
                         currentUser.getTeam() == null ? null : currentUser.getTeam().getId(),
                         determineSource(request, auth),
-                        ProcessType.SINGLE_TOOL);
+                        ProcessType.SINGLE_TOOL,
+                        category);
 
         ChargeOutcome outcome;
         try {
@@ -366,10 +393,36 @@ public class PaygChargeInterceptor {
         }
         if (status >= 400) {
             // 4xx: customer paid for the attempt. No OUTPUT recording, no refund.
+            // Still a successful-from-billing-standpoint OPENED process — meter it below.
+            meterIfOpened(jobId, disposition);
             return;
         }
 
+        // Success: this is the moment the billable work finished, so this is when we tell Stripe.
+        // Only the OPENED request meters — JOINED follow-up steps (chained tools on the same
+        // document) added no units and must not re-meter. The process stays OPEN for further
+        // lineage joins; StaleJobCloser closing it later is a no-op at Stripe thanks to the shared
+        // idempotency key. metering is best-effort and must never break the response teardown.
+        meterIfOpened(jobId, disposition);
         recordOutputs(request, response, jobId);
+    }
+
+    /**
+     * Fire the Stripe meter for a just-finished process, but only when this request OPENED it. Runs
+     * on the request-teardown thread (the response is already flushed to the client); {@code
+     * meterJobUsage} is best-effort and swallows its own failures, but we still guard here so a
+     * meter hiccup can't disturb lineage/cleanup that follows.
+     */
+    private void meterIfOpened(UUID jobId, ChargeOutcome.Disposition disposition) {
+        if (disposition != ChargeOutcome.Disposition.OPENED) {
+            return;
+        }
+        try {
+            chargeService.meterJobUsage(jobId);
+        } catch (RuntimeException e) {
+            log.warn("Meter-on-completion failed for job {}: {}", jobId, e.getMessage());
+            errorsCounter.increment();
+        }
     }
 
     private void recordOutputs(
@@ -484,9 +537,9 @@ public class PaygChargeInterceptor {
 
     /**
      * // TODO: Migration required - resolves the resource {@link Method} the original code read
-     * from Spring's {@code HandlerMethod} (via {@code hm.getMethodAnnotation(...)}). Until wired to
-     * JAX-RS {@code ResourceInfo}, supports a handler that is already a {@link Method} or exposes a
-     * no-arg {@code getMethod()} returning one, preserving the {@code @AutoJobPostMapping} gating.
+     * from Spring's {@code HandlerMethod} (via {@code hm.getMethod()}). Until wired to JAX-RS
+     * {@code ResourceInfo}, supports a handler that is already a {@link Method} or exposes a no-arg
+     * {@code getMethod()} returning one, preserving the {@code @AutoJobPostMapping} gating.
      */
     private Method resolveResourceMethod(Object handler) {
         if (handler instanceof Method m) {
@@ -505,6 +558,97 @@ public class PaygChargeInterceptor {
             // Handler does not expose a resolvable resource method.
         }
         return null;
+    }
+
+    /**
+     * Resolve the controller (bean) type that carries class-level annotations. Prefers the
+     * handler's reflective {@code getBeanType()} (Spring HandlerMethod shape); falls back to the
+     * resource method's declaring class.
+     */
+    private Class<?> resolveBeanType(Object handler, Method resourceMethod) {
+        if (handler != null) {
+            try {
+                Method getter = handler.getClass().getMethod("getBeanType");
+                Object result = getter.invoke(handler);
+                if (result instanceof Class<?> c) {
+                    return c;
+                }
+            } catch (ReflectiveOperationException ignored) {
+                // Handler does not expose a bean type; fall back below.
+            }
+        }
+        return resourceMethod == null ? null : resourceMethod.getDeclaringClass();
+    }
+
+    /**
+     * Method-then-class annotation lookup replacing Spring's {@code
+     * AnnotationUtils.findAnnotation}. Checks the resource method first, then walks the bean type's
+     * superclass chain (method-level wins over class-level).
+     */
+    private static <A extends Annotation> A findAnnotation(
+            Method method, Class<?> beanType, Class<A> annotationType) {
+        if (method != null) {
+            A onMethod = method.getAnnotation(annotationType);
+            if (onMethod != null) {
+                return onMethod;
+            }
+        }
+        Class<?> type = beanType;
+        while (type != null && type != Object.class) {
+            A onType = type.getAnnotation(annotationType);
+            if (onType != null) {
+                return onType;
+            }
+            type = type.getSuperclass();
+        }
+        return null;
+    }
+
+    /**
+     * Resolve the {@link BillingCategory} for this request. Precedence: {@code
+     * X-Stirling-Automation: true} or {@code @RequiresFeature(AUTOMATION)} → AUTOMATION;
+     * {@code @RequiresFeature(AI_SUPPORT)} → AI; an AI document-tool route ({@link AiToolRoutes}) →
+     * AI; API-key auth → API; otherwise BYPASSED (manual UI tool — short-circuited in {@link
+     * #preHandle}).
+     *
+     * <p>Method-level {@code @RequiresFeature} wins over class-level. Multiple gates: AUTOMATION
+     * dominates AI within a single annotation. The AI-tool path check sits below the automation
+     * header on purpose: an AI tool dispatched inside a policy / AI workflow bills as AUTOMATION,
+     * while a direct call to it bills as AI.
+     */
+    private static BillingCategory determineCategory(
+            Method resourceMethod,
+            Class<?> beanType,
+            HttpServletRequest request,
+            Authentication auth) {
+        String automationHeader = request.getHeader(AUTOMATION_HEADER);
+        if (automationHeader != null && "true".equalsIgnoreCase(automationHeader.trim())) {
+            return BillingCategory.AUTOMATION;
+        }
+        RequiresFeature ann = findAnnotation(resourceMethod, beanType, RequiresFeature.class);
+        if (ann != null) {
+            boolean ai = false;
+            for (FeatureGate gate : ann.value()) {
+                if (gate == FeatureGate.AUTOMATION) {
+                    return BillingCategory.AUTOMATION;
+                }
+                if (gate == FeatureGate.AI_SUPPORT) {
+                    ai = true;
+                }
+            }
+            if (ai) {
+                return BillingCategory.AI;
+            }
+        }
+        // AI document tools (proprietary module, recognised by path). A direct call bills as AI; an
+        // orchestrator-dispatched call already returned AUTOMATION above via the automation header.
+        if (AiToolRoutes.matches(request)) {
+            return BillingCategory.AI;
+        }
+        if (auth instanceof ApiKeyAuthenticationToken) {
+            return BillingCategory.API;
+        }
+        return BillingCategory.BYPASSED;
     }
 
     /**
