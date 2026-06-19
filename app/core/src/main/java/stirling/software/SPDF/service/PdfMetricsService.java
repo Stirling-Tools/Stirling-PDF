@@ -7,13 +7,10 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import lombok.extern.slf4j.Slf4j;
-
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.PostHogService;
 
 @Service
-@Slf4j
 public class PdfMetricsService {
 
     private final PostHogService postHogService;
