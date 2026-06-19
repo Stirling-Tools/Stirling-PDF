@@ -30,6 +30,7 @@ import {
   hasSaveRisks,
   type SaveRisks,
 } from "@app/tools/pdfTextEditor/v2/util/documentRisks";
+import { preloadFallbackFontBytes } from "@app/tools/pdfTextEditor/v2/util/fallbackFont";
 import { visiblePageNumber } from "@app/tools/pdfTextEditor/v2/util/dom";
 import type { SelectionState } from "@app/tools/pdfTextEditor/v2/types";
 
@@ -60,6 +61,13 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
   useAutoLoadFile(load, setOpenedFileName);
 
   useEffect(() => store.selection.subscribe(setSelection), [store]);
+
+  // Warm the Unicode fallback font so a non-Latin edit can embed it instead of
+  // dropping the glyphs. Fire-and-forget; the emit path degrades gracefully if
+  // the bytes haven't arrived yet.
+  useEffect(() => {
+    void preloadFallbackFontBytes();
+  }, []);
 
   const sel = useSelectionActions(store);
 

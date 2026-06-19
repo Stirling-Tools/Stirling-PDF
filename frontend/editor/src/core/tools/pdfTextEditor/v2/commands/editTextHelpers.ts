@@ -1,6 +1,7 @@
 import { writeUtf16 } from "@app/services/pdfiumService";
 import type { TextRun } from "@app/tools/pdfTextEditor/v2/model/TextRun";
 import type { Page } from "@app/tools/pdfTextEditor/v2/model/Page";
+import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDocument";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import {
   emitCharcodeEvent,
@@ -9,6 +10,7 @@ import {
   tryResolveCharcodes,
 } from "@app/tools/pdfTextEditor/v2/charcode/charcodeRegistry";
 import { getActiveCharcodeStrategy } from "@app/tools/pdfTextEditor/v2/charcode/CharcodeStrategy";
+import { emitFallbackTextObject } from "@app/tools/pdfTextEditor/v2/util/fallbackFont";
 
 /**
  * Remove a PAGE-level object and FREE its PDFium allocation.
@@ -184,7 +186,7 @@ export function removeMemberPtrs(
 }
 
 interface CreatedTextOptions {
-  doc: { docPtr: number; module: WrappedPdfiumModule };
+  doc: EditorDocument;
   page: Page;
   text: string;
   x: number;
@@ -475,6 +477,24 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     const newBase14 = (): number =>
       m.FPDFPageObj_NewTextObj(opts.doc.docPtr, family, size);
     const emitBase14 = (): number => {
+      // Some chars are outside base-14's Latin-1 range. Before dropping them,
+      // emit via the bundled Unicode fallback font (Noto Sans, embedded on
+      // demand) so non-Latin text is KEPT rather than silently lost. Only
+      // kicks in when sanitising actually removed chars, so pure-Latin emits
+      // are byte-for-byte unchanged. Returns 0 if the font isn't ready or
+      // didn't render (then we fall through to the sanitised base-14 drop).
+      if ([...text].length > [...base14Text].length) {
+        const fp = emitFallbackTextObject(
+          opts.doc,
+          opts.page,
+          text,
+          size,
+          opts.fill,
+          x,
+          opts.y,
+        );
+        if (fp) return fp;
+      }
       if (base14Text.length === 0) return 0; // nothing representable - drop
       const p = newBase14();
       if (!p) return 0;

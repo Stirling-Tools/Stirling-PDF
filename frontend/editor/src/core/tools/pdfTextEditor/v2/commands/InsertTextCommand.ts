@@ -4,6 +4,7 @@ import { TextRun } from "@app/tools/pdfTextEditor/v2/model/TextRun";
 import { BLACK } from "@app/tools/pdfTextEditor/v2/model/Color";
 import { writeUtf16 } from "@app/services/pdfiumService";
 import { sanitizeForBase14 } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
+import { emitFallbackTextObject } from "@app/tools/pdfTextEditor/v2/util/fallbackFont";
 
 const DEFAULT_FAMILY = "Helvetica";
 const DEFAULT_SIZE = 12;
@@ -47,24 +48,41 @@ export class InsertTextCommand implements Command {
   apply(doc: EditorDocument): void {
     const page = doc.page(this.pageIndex);
     const m = doc.module;
-    const objPtr = m.FPDFPageObj_NewTextObj(
-      doc.docPtr,
-      DEFAULT_FAMILY,
-      DEFAULT_SIZE,
-    );
-    if (!objPtr) return;
 
-    // Base-14 (WinAnsi) can't render >U+00FF; sanitize so pasted/inserted
-    // non-Latin code points are dropped rather than written as U+00FF tofu.
-    const textPtr = writeUtf16(m, sanitizeForBase14(this.text));
-    try {
-      m.FPDFText_SetText(objPtr, textPtr);
-    } finally {
-      m.pdfium.wasmExports.free(textPtr);
+    // Base-14 (WinAnsi) can't render >U+00FF. For text with non-Latin code
+    // points, embed the bundled Unicode fallback font (Noto Sans) so they're
+    // kept instead of dropped; otherwise use base-14 Helvetica. Pure-Latin
+    // text takes the unchanged base-14 path.
+    const sanitized = sanitizeForBase14(this.text);
+    let objPtr = 0;
+    if ([...this.text].length > [...sanitized].length) {
+      objPtr = emitFallbackTextObject(
+        doc,
+        page,
+        this.text,
+        DEFAULT_SIZE,
+        BLACK,
+        this.x,
+        this.y,
+      );
     }
-    m.FPDFPageObj_SetFillColor(objPtr, BLACK.r, BLACK.g, BLACK.b, BLACK.a);
-    m.FPDFPageObj_Transform(objPtr, 1, 0, 0, 1, this.x, this.y);
-    m.FPDFPage_InsertObject(page.pagePtr, objPtr);
+    if (!objPtr) {
+      objPtr = m.FPDFPageObj_NewTextObj(
+        doc.docPtr,
+        DEFAULT_FAMILY,
+        DEFAULT_SIZE,
+      );
+      if (!objPtr) return;
+      const textPtr = writeUtf16(m, sanitized);
+      try {
+        m.FPDFText_SetText(objPtr, textPtr);
+      } finally {
+        m.pdfium.wasmExports.free(textPtr);
+      }
+      m.FPDFPageObj_SetFillColor(objPtr, BLACK.r, BLACK.g, BLACK.b, BLACK.a);
+      m.FPDFPageObj_Transform(objPtr, 1, 0, 0, 1, this.x, this.y);
+      m.FPDFPage_InsertObject(page.pagePtr, objPtr);
+    }
 
     const runId = `p${page.index}-new-${page.runs.length}-${objPtr}`;
     const run = new TextRun({
