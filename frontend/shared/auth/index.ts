@@ -16,8 +16,14 @@ export { isAdminRole } from "@shared/auth/roles";
 export { AuthContext, useAuth } from "@shared/auth/context";
 
 // Unified provider + guards
-export { AuthProvider, type AuthProviderProps } from "@shared/auth/AuthProvider";
-export { RequireAuth, type RequireAuthProps } from "@shared/auth/guards/RequireAuth";
+export {
+  AuthProvider,
+  type AuthProviderProps,
+} from "@shared/auth/AuthProvider";
+export {
+  RequireAuth,
+  type RequireAuthProps,
+} from "@shared/auth/guards/RequireAuth";
 export {
   RequireAdmin,
   type RequireAdminProps,

@@ -70,7 +70,9 @@ export function LoginScreen() {
 
   const signInWithEmail = async () => {
     if (!email || !password) {
-      setError(t("login.pleaseEnterBoth", "Please enter both username and password"));
+      setError(
+        t("login.pleaseEnterBoth", "Please enter both username and password"),
+      );
       return;
     }
     try {
@@ -92,7 +94,9 @@ export function LoginScreen() {
         // Auth state updates via the provider; the gate re-evaluates.
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An unexpected error occurred");
+      setError(
+        err instanceof Error ? err.message : "An unexpected error occurred",
+      );
     } finally {
       setSubmitting(false);
     }

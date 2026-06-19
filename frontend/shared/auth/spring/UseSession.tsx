@@ -139,7 +139,10 @@ export function SpringAuthProvider({
           setSession(data.session);
         }
       } catch (err) {
-        console.error("[Auth] Unexpected error during auth initialization:", err);
+        console.error(
+          "[Auth] Unexpected error during auth initialization:",
+          err,
+        );
         if (mounted) {
           setError(err as AuthError);
         }
