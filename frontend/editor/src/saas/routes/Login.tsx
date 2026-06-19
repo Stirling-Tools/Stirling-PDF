@@ -19,6 +19,7 @@ import ErrorMessage from "@shared/auth/ui/ErrorMessage";
 import EmailPasswordForm from "@app/routes/login/EmailPasswordForm";
 import OAuthButtons from "@app/routes/login/OAuthButtons";
 import LoggedInState from "@app/routes/login/LoggedInState";
+import loginHeader from "@shared/assets/login/LoginLightModeHeader.svg";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -267,7 +268,7 @@ export default function Login() {
       {/* Centered logo */}
       <div className="auth-logo-block">
         <img
-          src={withBasePath("/modern-logo/LoginLightModeHeader.svg")}
+          src={loginHeader}
           alt="Stirling PDF"
           className="auth-logo-header auth-logo-header--light"
         />

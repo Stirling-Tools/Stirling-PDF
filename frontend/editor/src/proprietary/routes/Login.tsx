@@ -22,6 +22,7 @@ import {
 import SpringLoginForm from "@shared/auth/ui/SpringLoginForm";
 import { useSpringLogin } from "@shared/auth/ui/useSpringLogin";
 import LoggedInState from "@app/routes/login/LoggedInState";
+import loginHeader from "@shared/assets/login/LoginLightModeHeader.svg";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -408,7 +409,7 @@ export default function Login() {
       <AuthLayout>
         <div className="auth-logo-block">
           <img
-            src={withBasePath("/modern-logo/LoginLightModeHeader.svg")}
+            src={loginHeader}
             alt="Stirling PDF"
             className="auth-logo-header auth-logo-header--light"
           />
@@ -451,7 +452,7 @@ export default function Login() {
     <AuthLayout>
       <SpringLoginForm
         state={login}
-        logoSrc={withBasePath("/modern-logo/LoginLightModeHeader.svg")}
+        logoSrc={loginHeader}
         logoDarkSrc={withBasePath("/modern-logo/LoginDarkModeHeader.svg")}
         showEmailForm={showEmailForm}
         oauthCtaPrefix={

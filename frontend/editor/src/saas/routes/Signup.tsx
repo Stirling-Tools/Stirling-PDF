@@ -19,6 +19,7 @@ import {
   SignupFieldErrors,
 } from "@app/routes/signup/SignupFormValidation";
 import { useAuthService } from "@app/routes/signup/AuthService";
+import loginHeader from "@shared/assets/login/LoginLightModeHeader.svg";
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -184,7 +185,7 @@ export default function Signup() {
       {/* Centered logo */}
       <div className="auth-logo-block">
         <img
-          src={withBasePath("/modern-logo/LoginLightModeHeader.svg")}
+          src={loginHeader}
           alt="Stirling PDF"
           className="auth-logo-header auth-logo-header--light"
         />

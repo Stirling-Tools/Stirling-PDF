@@ -8,6 +8,7 @@ import "@shared/auth/ui/auth.css";
 import "@app/routes/authShared/saas-auth.css";
 import { withBasePath } from "@app/constants/app";
 import ErrorMessage from "@shared/auth/ui/ErrorMessage";
+import loginHeader from "@shared/assets/login/LoginLightModeHeader.svg";
 
 /**
  * OAuth 2.1 consent screen for the Supabase OAuth server (used by MCP clients
@@ -190,7 +191,7 @@ export default function OAuthConsent() {
   const logoBlock = (
     <div className="auth-logo-block">
       <img
-        src={withBasePath("/modern-logo/LoginLightModeHeader.svg")}
+        src={loginHeader}
         alt="Stirling PDF"
         className="auth-logo-header auth-logo-header--light"
       />
