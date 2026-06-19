@@ -21,28 +21,8 @@ const SNOOZE_KEY = "stirling-pdf-updater:snoozedUntil";
 const SNOOZE_DURATION_MS = 24 * 60 * 60 * 1000;
 
 /**
- * Best-effort Tauri detection without importing `@tauri-apps/api` into the
- * core bundle (which must remain runnable on plain web). Tauri v2 injects
- * `__TAURI_INTERNALS__` before any user code runs.
- */
-function isRunningInTauri(): boolean {
-  if (typeof window === "undefined") return false;
-  return (
-    typeof (window as unknown as { __TAURI_INTERNALS__?: unknown })
-      .__TAURI_INTERNALS__ !== "undefined"
-  );
-}
-
-/**
  * Web/server-side auto-popup that shows the UpdateModal on startup when a
- * newer Stirling-PDF version is available. Previously this check only ran
- * from the Settings → General "Check for Updates" button, so non-desktop
- * users could sit on stale versions indefinitely without any prompt.
- *
- * On desktop (Tauri) this component is a no-op — `useDesktopUpdatePopup`
- * drives the desktop flow because it also has to honour the headless
- * `updateMode` provisioning flag and wire up the silent/auto installer.
- * Running both would double-popup.
+ * newer Stirling-PDF version is available.
  */
 export function UpdateStartupPopup() {
   const { config } = useAppConfig();
@@ -60,8 +40,6 @@ export function UpdateStartupPopup() {
   const hasChecked = useRef(false);
 
   useEffect(() => {
-    // Skip on desktop — the Tauri popup owns that flow end-to-end.
-    if (isRunningInTauri()) return;
     if (hasChecked.current) return;
     if (!currentVersion) return;
     // Don't even schedule the timer until we have a version to compare.
