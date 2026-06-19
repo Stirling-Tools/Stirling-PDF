@@ -116,7 +116,7 @@ tasks:
 
   whitespace:
     cmds:
-      - uv run --no-project python scripts/pre-commit/whitespace.py {{if .FIX}}--fix {{end}}$(git ls-files {{.WS_FILES}})
+      - uv run --no-project python scripts/pre-commit/whitespace.py {{if .FIX}}--fix {{end}}{{.WS_FILES}}
 
   gitleaks:
     deps: [gitleaks-bin]
