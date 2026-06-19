@@ -148,7 +148,7 @@ export class ParagraphGrouper {
  * with snapshotted line texts so mutating the rep doesn't poison
  * `members[0]`.
  */
-function buildLineSlots(
+export function buildLineSlots(
   members: TextRun[],
   lineTexts: string[],
 ): ParagraphLineSlot[] {

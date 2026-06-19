@@ -3093,11 +3093,14 @@ test.describe("PDF text editor v2 - bold/italic", () => {
     expect(after.mergedCount).toBe(0);
 
     // Round-trip through save+reopen and check no ghost text. The bug
-    // would leave 34+ per-glyph objects PLUS the new Helvetica-Bold
-    // single object, so on reload LineGrouper would re-merge the
-    // per-glyph leftovers into another run carrying the SAME tagline.
-    // Asserting "tagline text appears exactly once across page 0 runs"
-    // catches the duplication.
+    // would leave 34+ per-glyph objects PLUS the new Helvetica object, so
+    // on reload each tagline word would appear TWICE (once from the new
+    // base-14 emit, once from the surviving per-glyph cluster). The base-14
+    // re-emit is one PDFium object per WORD (the deliberate space-
+    // preservation path), so on reopen the line reads back as separate
+    // word runs - that is expected and fine. The real ghost-layer check is
+    // therefore per-token: each distinctive tagline word must appear in
+    // EXACTLY ONE run. Two+ = leftover per-glyph originals survived.
     const saveBtn = page.getByTestId("v2-save");
     const downloadPromise = page.waitForEvent("download");
     await saveBtn.click();
@@ -3126,16 +3129,19 @@ test.describe("PDF text editor v2 - bold/italic", () => {
       ).__v2_editor_store;
       return store.doc.page(0).runs.map((r) => r.text);
     });
-    const taglineCarriers = reopenedRuns.filter((t) =>
-      /Adobe.+Acrobat.+Alternative/.test(t),
-    );
-    // The CORE assertion: exactly one run carries the tagline. Two or
-    // more = the ghost-layer bug (the per-glyph originals survived the
-    // save and re-clustered alongside the new Helvetica-Bold object).
-    expect(
-      taglineCarriers.length,
-      `Reopened page 0 runs carrying tagline: ${JSON.stringify(taglineCarriers)}`,
-    ).toBe(1);
+    // The CORE assertion: each distinctive tagline word appears in
+    // EXACTLY ONE run. Two+ for any word = the ghost-layer bug (per-glyph
+    // originals survived the save and re-clustered alongside the new emit).
+    const countCarrying = (word: string) =>
+      reopenedRuns.filter((t) => t.includes(word)).length;
+    for (const word of ["Adobe", "Acrobat", "Alternative"]) {
+      expect(
+        countCarrying(word),
+        `Runs carrying "${word}": ${JSON.stringify(
+          reopenedRuns.filter((t) => t.includes(word)),
+        )}`,
+      ).toBe(1);
+    }
   });
 });
 

@@ -36,6 +36,23 @@ export interface ParagraphLineSlot {
 }
 
 /**
+ * Deep-clone a slot so the copy shares NO nested arrays with the source.
+ * A shallow `{...slot}` leaves mergedFrom* arrays aliased, which corrupts a
+ * snapshot when a later edit mutates the live slot in place (undo/redo bug).
+ */
+export function cloneParagraphLineSlot(
+  s: ParagraphLineSlot,
+): ParagraphLineSlot {
+  return {
+    ...s,
+    mergedFromPtrs: [...s.mergedFromPtrs],
+    mergedFromTexts: [...s.mergedFromTexts],
+    mergedFromBounds: s.mergedFromBounds.map((b) => ({ ...b })),
+    mergedFromCharStarts: [...s.mergedFromCharStarts],
+  };
+}
+
+/**
  * One PDF text object. Mutable inside the editor; commands mutate it,
  * the PdfiumTextWriter is what pushes the change down into PDFium.
  */

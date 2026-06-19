@@ -306,24 +306,42 @@ function readTextObjString(
   }
 }
 
+/** 6-letter "ABCDEF+" subset tag PDFium prefixes onto subset font names. */
+const SUBSET_TAG_RE = /^[A-Z]{6}\+/;
+
+/** Read a UTF-8 font name via an FPDFFont_Get*Name accessor (null if empty). */
+function readFontNameVia(
+  m: WrappedPdfiumModule,
+  fontPtr: number,
+  getName: (font: number, buf: number, len: number) => number,
+): string | null {
+  const len = getName(fontPtr, 0, 0);
+  if (len <= 1) return null;
+  const buf = m.pdfium.wasmExports.malloc(len);
+  try {
+    getName(fontPtr, buf, len);
+    return m.pdfium.UTF8ToString(buf);
+  } finally {
+    m.pdfium.wasmExports.free(buf);
+  }
+}
+
 function readFontFamily(
   m: WrappedPdfiumModule,
   fontPtr: number,
 ): { family: string; subset: boolean } {
   if (!fontPtr) return { family: "Unknown", subset: false };
-  const len = m.FPDFFont_GetFamilyName(fontPtr, 0, 0);
-  if (len <= 1) return { family: "Unknown", subset: false };
-  const buf = m.pdfium.wasmExports.malloc(len);
-  try {
-    m.FPDFFont_GetFamilyName(fontPtr, buf, len);
-    const raw = m.pdfium.UTF8ToString(buf);
-    // PDFium prefixes subset font names with a 6-letter tag + "+".
-    const subset = /^[A-Z]{6}\+/.test(raw);
-    const family = subset ? raw.slice(7) : raw;
-    return { family, subset };
-  } finally {
-    m.pdfium.wasmExports.free(buf);
-  }
+  const familyRaw = readFontNameVia(m, fontPtr, m.FPDFFont_GetFamilyName);
+  if (familyRaw == null) return { family: "Unknown", subset: false };
+  const tagged = SUBSET_TAG_RE.test(familyRaw);
+  const family = tagged ? familyRaw.slice(7) : familyRaw;
+  if (tagged) return { family, subset: true };
+  // Some PDFs carry the 6-letter subset tag only on /BaseFont, not the
+  // embedded name table. Consult it as a fallback so those subsets aren't
+  // mislabeled as full fonts (which would wrongly let an edit reuse a font
+  // that lacks most glyphs).
+  const baseRaw = readFontNameVia(m, fontPtr, m.FPDFFont_GetBaseFontName);
+  return { family, subset: baseRaw != null && SUBSET_TAG_RE.test(baseRaw) };
 }
 
 function readTextRun(

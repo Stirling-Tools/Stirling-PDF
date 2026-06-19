@@ -1,6 +1,11 @@
 import type { Command } from "@app/tools/pdfTextEditor/v2/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDocument";
-import type { TextRun } from "@app/tools/pdfTextEditor/v2/model/TextRun";
+import {
+  cloneParagraphLineSlot,
+  type ParagraphLineSlot,
+  type TextRun,
+} from "@app/tools/pdfTextEditor/v2/model/TextRun";
+import { buildLineSlots } from "@app/tools/pdfTextEditor/v2/pdfium/ParagraphGrouper";
 
 /**
  * Merge the selected runs on a single page into one virtual paragraph.
@@ -23,6 +28,7 @@ interface RunSnapshot {
   paragraphMemberFs: number[];
   paragraphLeafPtrs: number[];
   paragraphLeafContainers: number[];
+  paragraphLineSlots: ParagraphLineSlot[];
   bounds: { x: number; y: number; width: number; height: number };
 }
 
@@ -68,6 +74,11 @@ export class MergeRunsCommand implements Command {
     this.removedRunInstances = members;
     this.prevRunOrder = page.runs.map((r) => r.id);
 
+    // Capture each line's text BEFORE rep.text is overwritten with the join
+    // (rep === runs[0] by reference), so slot ranges map to the originals.
+    const lineTexts = runs.map((r) => r.text);
+    const slots = buildLineSlots(runs, lineTexts);
+
     const minX = Math.min(...runs.map((r) => r.bounds.x));
     const maxRight = Math.max(...runs.map((r) => r.bounds.x + r.bounds.width));
     const topY = Math.max(...runs.map((r) => r.bounds.y + r.bounds.height));
@@ -112,6 +123,9 @@ export class MergeRunsCommand implements Command {
     }
     rep.paragraphLeafPtrs = leafPtrs;
     rep.paragraphLeafContainers = leafContainers;
+    // Per-line slots so a later partial edit keeps each line's source font
+    // (planParagraphEdit bails without them, falling back to Helvetica).
+    rep.paragraphLineSlots = slots;
 
     const removedIds = new Set(members.map((r) => r.id));
     page.setRuns(page.runs.filter((r) => !removedIds.has(r.id)));
@@ -175,6 +189,7 @@ function snapshotRun(r: TextRun): RunSnapshot {
     paragraphMemberFs: [...r.paragraphMemberFs],
     paragraphLeafPtrs: [...r.paragraphLeafPtrs],
     paragraphLeafContainers: [...r.paragraphLeafContainers],
+    paragraphLineSlots: r.paragraphLineSlots.map(cloneParagraphLineSlot),
     bounds: { ...r.bounds },
   };
 }
@@ -188,4 +203,5 @@ function restoreRun(r: TextRun, snap: RunSnapshot): void {
   r.paragraphMemberFs = [...snap.paragraphMemberFs];
   r.paragraphLeafPtrs = [...snap.paragraphLeafPtrs];
   r.paragraphLeafContainers = [...snap.paragraphLeafContainers];
+  r.paragraphLineSlots = snap.paragraphLineSlots.map(cloneParagraphLineSlot);
 }

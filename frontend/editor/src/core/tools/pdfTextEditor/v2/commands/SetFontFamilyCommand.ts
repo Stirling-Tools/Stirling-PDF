@@ -1,8 +1,9 @@
 import type { Command } from "@app/tools/pdfTextEditor/v2/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDocument";
-import type {
-  ParagraphLineSlot,
-  TextRun,
+import {
+  cloneParagraphLineSlot,
+  type ParagraphLineSlot,
+  type TextRun,
 } from "@app/tools/pdfTextEditor/v2/model/TextRun";
 import {
   collectContainersByPtr,
@@ -215,13 +216,7 @@ function snapshotRun(run: TextRun): RunModelSnapshot {
     paragraphMemberFs: [...run.paragraphMemberFs],
     paragraphLeafPtrs: [...run.paragraphLeafPtrs],
     paragraphLeafContainers: [...run.paragraphLeafContainers],
-    paragraphLineSlots: run.paragraphLineSlots.map((s) => ({
-      ...s,
-      mergedFromPtrs: [...s.mergedFromPtrs],
-      mergedFromTexts: [...s.mergedFromTexts],
-      mergedFromBounds: s.mergedFromBounds.map((b) => ({ ...b })),
-      mergedFromCharStarts: [...s.mergedFromCharStarts],
-    })),
+    paragraphLineSlots: run.paragraphLineSlots.map(cloneParagraphLineSlot),
     paragraphLineHeight: run.paragraphLineHeight,
   };
 }
@@ -242,6 +237,6 @@ function restoreRun(run: TextRun, snap: RunModelSnapshot): void {
   run.paragraphMemberFs = [...snap.paragraphMemberFs];
   run.paragraphLeafPtrs = [...snap.paragraphLeafPtrs];
   run.paragraphLeafContainers = [...snap.paragraphLeafContainers];
-  run.paragraphLineSlots = snap.paragraphLineSlots.map((s) => ({ ...s }));
+  run.paragraphLineSlots = snap.paragraphLineSlots.map(cloneParagraphLineSlot);
   run.paragraphLineHeight = snap.paragraphLineHeight;
 }

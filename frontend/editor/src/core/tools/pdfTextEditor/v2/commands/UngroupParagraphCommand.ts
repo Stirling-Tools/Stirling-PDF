@@ -1,6 +1,10 @@
 import type { Command } from "@app/tools/pdfTextEditor/v2/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDocument";
-import { TextRun } from "@app/tools/pdfTextEditor/v2/model/TextRun";
+import {
+  cloneParagraphLineSlot,
+  type ParagraphLineSlot,
+  TextRun,
+} from "@app/tools/pdfTextEditor/v2/model/TextRun";
 
 /**
  * Split a paragraph-grouped run back into one editable run per source
@@ -16,6 +20,7 @@ interface RepSnapshot {
   paragraphMemberFs: number[];
   paragraphLeafPtrs: number[];
   paragraphLeafContainers: number[];
+  paragraphLineSlots: ParagraphLineSlot[];
 }
 
 export class UngroupParagraphCommand implements Command {
@@ -50,12 +55,21 @@ export class UngroupParagraphCommand implements Command {
       paragraphMemberFs: [...rep.paragraphMemberFs],
       paragraphLeafPtrs: [...rep.paragraphLeafPtrs],
       paragraphLeafContainers: [...rep.paragraphLeafContainers],
+      paragraphLineSlots: rep.paragraphLineSlots.map(cloneParagraphLineSlot),
     };
 
-    const lines = rep.text.split(/\r?\n/);
     const ptrs = rep.paragraphMemberPtrs;
     const fs = rep.paragraphMemberFs;
     const containers = rep.paragraphMemberContainers;
+    // Prefer per-line slots: their startChar/endChar ranges split the text
+    // correctly even for SOFT-wrapped paragraphs (visual lines joined by a
+    // space, not "\n"). A bare "\n" split under-counts those and mis-maps
+    // lines to ptrs/baselines. Fall back to "\n" only when slots are absent.
+    const slots = rep.paragraphLineSlots;
+    const useSlots = slots.length >= 2 && slots.length === ptrs.length;
+    const lines = useSlots
+      ? slots.map((s) => rep.text.slice(s.startChar, s.endChar))
+      : rep.text.split(/\r?\n/);
     const n = Math.min(lines.length, ptrs.length);
     const newRuns: TextRun[] = [];
     const perLineHeight =
@@ -93,6 +107,7 @@ export class UngroupParagraphCommand implements Command {
     rep.paragraphMemberFs = [];
     rep.paragraphLeafPtrs = [];
     rep.paragraphLeafContainers = [];
+    rep.paragraphLineSlots = [];
     rep.paragraphLineHeight = 0;
     rep.text = lines[0] ?? "";
     rep.bounds = {
@@ -133,6 +148,9 @@ export class UngroupParagraphCommand implements Command {
     rep.paragraphMemberFs = [...this.prev.paragraphMemberFs];
     rep.paragraphLeafPtrs = [...this.prev.paragraphLeafPtrs];
     rep.paragraphLeafContainers = [...this.prev.paragraphLeafContainers];
+    rep.paragraphLineSlots = this.prev.paragraphLineSlots.map(
+      cloneParagraphLineSlot,
+    );
     const tailIds = new Set(this.createdRunIds.slice(1));
     page.setRuns(page.runs.filter((r) => !tailIds.has(r.id)));
     page.markDirty();

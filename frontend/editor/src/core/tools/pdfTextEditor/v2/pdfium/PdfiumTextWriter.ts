@@ -47,13 +47,16 @@ export class PdfiumTextWriter {
   }
 
   static commitRunFill(doc: EditorDocument, page: Page, run: TextRun): void {
-    if (!run.pdfiumObjPtr) return;
     const m = doc.module;
     // Recolour EVERY sub-object - LineGrouper-merged runs and paragraphs
     // back the rep with many PDFium text objects, and FPDFPageObj_SetFillColor
     // operates per-object. Recolouring only the rep ptr left the rest of
     // the words / lines in the previous colour.
+    // Gate on actual pointer availability, NOT run.pdfiumObjPtr - an
+    // ungrouped/overlay run can have a 0 primary ptr but valid member ptrs,
+    // and an early `!run.pdfiumObjPtr` return silently dropped its recolour.
     const ptrs = collectMemberPtrs(run);
+    if (ptrs.every((p) => !p)) return;
     const seen = new Set<number>();
     for (const ptr of ptrs) {
       if (!ptr || seen.has(ptr)) continue;
