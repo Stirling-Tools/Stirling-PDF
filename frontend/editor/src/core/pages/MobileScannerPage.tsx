@@ -20,11 +20,31 @@ import PhotoCameraRoundedIcon from "@mui/icons-material/PhotoCameraRounded";
 import UploadRoundedIcon from "@mui/icons-material/UploadRounded";
 import AddPhotoAlternateRoundedIcon from "@mui/icons-material/AddPhotoAlternateRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
-import { loadJscanify } from "@app/utils/loadJscanify";
+import {
+  loadJscanify,
+  type JscanifyCornerPoints,
+  type JscanifyScanner,
+} from "@app/utils/loadJscanify";
 import apiClient from "@app/services/apiClient";
 
 // Use the configured API base (e.g. api.stirling.com), not the page origin.
 const API_BASE = (apiClient.defaults.baseURL ?? "").replace(/\/+$/, "");
+
+// Experimental camera controls (W3C Image Capture / MediaStream extensions) that
+// are not yet part of the standard DOM lib typings but are widely shipped on
+// mobile browsers and required for document scanning.
+declare global {
+  interface MediaTrackCapabilities {
+    focusMode?: string[];
+    exposureMode?: string[];
+    torch?: boolean;
+  }
+  interface MediaTrackConstraintSet {
+    focusMode?: ConstrainDOMString;
+    exposureMode?: ConstrainDOMString;
+    torch?: ConstrainBoolean;
+  }
+}
 
 /**
  * MobileScannerPage
@@ -63,7 +83,7 @@ export default function MobileScannerPage() {
   const highlightCanvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const scannerRef = useRef<any>(null);
+  const scannerRef = useRef<JscanifyScanner | null>(null);
   const highlightIntervalRef = useRef<number | null>(null);
 
   // Detection resolution - extremely low for mobile performance
@@ -254,15 +274,15 @@ export default function MobileScannerPage() {
 
             // Configure camera capabilities for document scanning
             try {
-              const capabilities = videoTrack.getCapabilities() as any; // Cast to any for experimental camera APIs
-              const constraints: any = { advanced: [] };
+              const capabilities = videoTrack.getCapabilities();
+              const advanced: MediaTrackConstraintSet[] = [];
 
               // 1. Enable continuous autofocus
               if (
                 capabilities.focusMode &&
                 capabilities.focusMode.includes("continuous")
               ) {
-                constraints.advanced.push({ focusMode: "continuous" });
+                advanced.push({ focusMode: "continuous" });
                 console.log("✓ Continuous autofocus enabled");
               }
 
@@ -271,7 +291,7 @@ export default function MobileScannerPage() {
                 capabilities.exposureMode &&
                 capabilities.exposureMode.includes("continuous")
               ) {
-                constraints.advanced.push({ exposureMode: "continuous" });
+                advanced.push({ exposureMode: "continuous" });
                 console.log("✓ Auto-exposure enabled");
               }
 
@@ -282,8 +302,8 @@ export default function MobileScannerPage() {
               }
 
               // Apply all constraints
-              if (constraints.advanced.length > 0) {
-                await videoTrack.applyConstraints(constraints);
+              if (advanced.length > 0) {
+                await videoTrack.applyConstraints({ advanced });
               }
             } catch (err) {
               console.log("Could not configure camera features:", err);
@@ -444,15 +464,19 @@ export default function MobileScannerPage() {
 
               // Step 2: Simple jscanify detection
               const detectionStart = performance.now();
-              let corners = null;
+              let corners: JscanifyCornerPoints | null = null;
 
               // Run jscanify detection directly - convert canvas to Mat first
-              const mat = (window as any).cv.imread(detectionCanvas);
-              const contour = scannerRef.current.findPaperContour(mat);
-              mat.delete();
+              const cv = window.cv;
+              const scanner = scannerRef.current;
+              if (cv && scanner) {
+                const mat = cv.imread(detectionCanvas);
+                const contour = scanner.findPaperContour(mat);
+                mat.delete();
 
-              if (contour) {
-                corners = scannerRef.current.getCornerPoints(contour);
+                if (contour) {
+                  corners = scanner.getCornerPoints(contour);
+                }
               }
 
               const detectionTime = performance.now() - detectionStart;
@@ -660,7 +684,9 @@ export default function MobileScannerPage() {
       let finalDataUrl: string;
 
       // Apply jscanify processing if enabled and available
-      if (autoEnhance && scannerRef.current && openCvReady) {
+      const cv = window.cv;
+      const scanner = scannerRef.current;
+      if (autoEnhance && scanner && openCvReady && cv) {
         try {
           // Create low-res canvas for detection (faster processing)
           const detectionCanvas = document.createElement("canvas");
@@ -683,11 +709,11 @@ export default function MobileScannerPage() {
           );
 
           // Run detection on low-res image
-          const mat = (window as any).cv.imread(detectionCanvas);
-          const contour = scannerRef.current.findPaperContour(mat);
+          const mat = cv.imread(detectionCanvas);
+          const contour = scanner.findPaperContour(mat);
 
           if (contour) {
-            const cornerPoints = scannerRef.current.getCornerPoints(contour);
+            const cornerPoints = scanner.getCornerPoints(contour);
 
             // Scale corner points back to full resolution
             if (cornerPoints) {
@@ -746,7 +772,7 @@ export default function MobileScannerPage() {
               const docHeight = Math.round((leftHeight + rightHeight) / 2);
 
               // Extract paper from full-resolution canvas with scaled corner points
-              const resultCanvas = scannerRef.current.extractPaper(
+              const resultCanvas = scanner.extractPaper(
                 canvas,
                 docWidth,
                 docHeight,
@@ -891,8 +917,8 @@ export default function MobileScannerPage() {
     try {
       const videoTrack = streamRef.current.getVideoTracks()[0];
       await videoTrack.applyConstraints({
-        advanced: [{ torch: !torchEnabled } as any], // Cast to any for experimental torch API
-      } as any);
+        advanced: [{ torch: !torchEnabled }],
+      });
       setTorchEnabled(!torchEnabled);
       console.log("Torch:", !torchEnabled ? "ON" : "OFF");
     } catch (err) {
