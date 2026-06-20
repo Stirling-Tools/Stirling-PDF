@@ -3,7 +3,13 @@ import { loginAndSetup } from "@app/tests/helpers/login";
 import { runToolAndWaitForReview } from "@app/tests/helpers/ui-helpers";
 import * as path from "path";
 import * as fs from "fs";
-import { PDFDocument, PDFName, PDFDict } from "@cantoo/pdf-lib";
+import {
+  PDFDocument,
+  PDFName,
+  PDFDict,
+  PDFString,
+  PDFHexString,
+} from "@cantoo/pdf-lib";
 
 /**
  * End-to-end validation of the new "Add attachment" and "Add bookmark"
@@ -190,17 +196,13 @@ test.describe("Viewer sidebar add buttons - real PDF round-trip", () => {
       const node = doc.context.lookupMaybe(dictRef, PDFDict);
       if (!node) return acc;
       const title = node.get(PDFName.of("Title"));
-      if (title && typeof (title as any).decodeText === "function") {
+      if (title instanceof PDFString || title instanceof PDFHexString) {
         try {
-          acc.push((title as any).decodeText());
+          acc.push(title.decodeText());
         } catch {
-          // Title couldn't decode - fall back to asString if available
-          if (typeof (title as any).asString === "function") {
-            acc.push((title as any).asString());
-          }
+          // Title couldn't decode - fall back to asString
+          acc.push(title.asString());
         }
-      } else if (title && typeof (title as any).asString === "function") {
-        acc.push((title as any).asString());
       }
       collectTitles(node.get(PDFName.of("First")), acc);
       collectTitles(node.get(PDFName.of("Next")), acc);
