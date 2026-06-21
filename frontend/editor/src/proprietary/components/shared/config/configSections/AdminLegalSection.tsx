@@ -8,6 +8,8 @@ import {
   Loader,
   Group,
   Alert,
+  Switch,
+  Divider,
 } from "@mantine/core";
 import WarningIcon from "@mui/icons-material/Warning";
 import { alert } from "@app/components/toast";
@@ -19,6 +21,7 @@ import PendingBadge from "@app/components/shared/config/PendingBadge";
 import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStickyFooter";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
+import LoginAgreementEditor from "./LoginAgreementEditor";
 
 interface LegalSettingsData {
   termsAndConditions?: string;
@@ -26,6 +29,11 @@ interface LegalSettingsData {
   accessibilityStatement?: string;
   cookiePolicy?: string;
   impressum?: string;
+  loginAgreement?: {
+    enabled?: boolean;
+    showInAnonymousMode?: boolean;
+    fallbackText?: string;
+  };
 }
 
 export default function AdminLegalSection() {
@@ -262,6 +270,72 @@ export default function AdminLegalSection() {
                 disabled={!loginEnabled}
               />
             </div>
+          </Stack>
+        </Paper>
+
+        <Paper withBorder p="md" radius="md">
+          <Stack gap="md">
+            <div>
+              <Text fw={600}>
+                {t(
+                  "admin.settings.legal.loginAgreement.title",
+                  "Login Agreement",
+                )}
+              </Text>
+              <Text size="sm" c="dimmed">
+                {t(
+                  "admin.settings.legal.loginAgreement.description",
+                  "Show a disclaimer users must accept after logging in. The text follows each user's language.",
+                )}
+              </Text>
+            </div>
+
+            <Switch
+              label={t(
+                "admin.settings.legal.loginAgreement.enabled.label",
+                "Enable login agreement",
+              )}
+              checked={settings.loginAgreement?.enabled ?? false}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  loginAgreement: {
+                    ...settings.loginAgreement,
+                    enabled: e.currentTarget.checked,
+                  },
+                })
+              }
+              disabled={!loginEnabled}
+            />
+
+            <Switch
+              label={t(
+                "admin.settings.legal.loginAgreement.anonymous.label",
+                "Show in anonymous (no-login) mode",
+              )}
+              checked={settings.loginAgreement?.showInAnonymousMode ?? true}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  loginAgreement: {
+                    ...settings.loginAgreement,
+                    showInAnonymousMode: e.currentTarget.checked,
+                  },
+                })
+              }
+              disabled={!loginEnabled}
+            />
+
+            <Text size="xs" c="dimmed">
+              {t(
+                "admin.settings.legal.loginAgreement.restartNote",
+                "Enabling or disabling the agreement applies after a restart, like other settings. Text edits below apply immediately.",
+              )}
+            </Text>
+
+            <Divider />
+
+            <LoginAgreementEditor disabled={!loginEnabled} />
           </Stack>
         </Paper>
       </Stack>
