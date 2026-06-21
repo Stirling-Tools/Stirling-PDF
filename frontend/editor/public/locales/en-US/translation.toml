@@ -8604,8 +8604,8 @@ disableByAdmin = "Disable MFA"
 
 [workspace.people.roleDescriptions]
 admin = "Can manage settings and invite users, with full administrative access."
-user = "Can view and edit shared files, but cannot manage workspace settings or users."
 currentRole = "Current assigned role."
+user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]
 error = "Failed to update user status"
