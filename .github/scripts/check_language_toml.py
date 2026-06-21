@@ -13,7 +13,7 @@ Usage:
 """
 
 # Sample for Windows:
-# python .github/scripts/check_language_toml.py --reference-file frontend/editor/public/locales/en-GB/translation.toml --branch "" --files frontend/editor/public/locales/de-DE/translation.toml frontend/editor/public/locales/fr-FR/translation.toml
+# python .github/scripts/check_language_toml.py --reference-file frontend/editor/public/locales/en-US/translation.toml --branch "" --files frontend/editor/public/locales/de-DE/translation.toml frontend/editor/public/locales/fr-FR/translation.toml
 
 import argparse
 import glob
@@ -184,7 +184,7 @@ def check_for_differences(reference_file, file_list, branch, actor):
     if len(file_list) == 1:
         file_arr = file_list[0].split()
 
-    base_dir = Path.cwd() / "frontend" / "public" / "locales"
+    base_dir = Path.cwd() / "frontend" / "editor" / "public" / "locales"
 
     for file_path in file_arr:
         file_path = Path(file_path)
@@ -211,7 +211,7 @@ def check_for_differences(reference_file, file_list, branch, actor):
             )
             continue
 
-        if basename_current_file == basename_reference_file and locale_dir == "en-GB":
+        if basename_current_file == basename_reference_file and locale_dir == "en-US":
             continue
 
         if (
@@ -308,7 +308,7 @@ def check_for_differences(reference_file, file_list, branch, actor):
         report.append("## ❌ Overall Check Status: **_Failed_**")
         report.append("")
         report.append(
-            f"@{actor} please check your translation if it conforms to the standard. Follow the format of [en-GB/translation.toml](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/frontend/editor/public/locales/en-GB/translation.toml)"
+            f"@{actor} please check your translation if it conforms to the standard. Follow the format of [en-US/translation.toml](https://github.com/Stirling-Tools/Stirling-PDF/blob/main/frontend/editor/public/locales/en-US/translation.toml)"
         )
     else:
         report.append("## ✅ Overall Check Status: **_Success_**")
@@ -372,6 +372,7 @@ if __name__ == "__main__":
                 os.path.join(
                     os.getcwd(),
                     "frontend",
+                    "editor",
                     "public",
                     "locales",
                     "*",

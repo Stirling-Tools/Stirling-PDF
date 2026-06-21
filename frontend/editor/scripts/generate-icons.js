@@ -225,7 +225,7 @@ export type MaterialSymbolIcon = ${usedIcons.map((icon) => `'${icon}'`).join(" |
 
 export interface IconSet {
   prefix: string;
-  icons: Record<string, any>;
+  icons: Record<string, unknown>;
   width?: number;
   height?: number;
 }

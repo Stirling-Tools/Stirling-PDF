@@ -33,6 +33,7 @@ import { useViewer } from "@app/contexts/ViewerContext";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useAnnotation as useAnnotationContext } from "@app/contexts/AnnotationContext";
 import LocalIcon from "@app/components/shared/LocalIcon";
+import { compareEntriesByVisualOrder } from "@app/components/viewer/commentsSidebarOrder";
 
 const SIDEBAR_WIDTH = "18rem";
 
@@ -362,9 +363,9 @@ export function CommentsSidebar({
       const all = getSidebarAnnotationsWithRepliesGroupedByPage(state) ?? {};
       const filtered: typeof all = {};
       for (const [page, entries] of Object.entries(all)) {
-        const commentEntries = entries.filter((e) =>
-          isCommentAnnotation(e.annotation.object),
-        );
+        const commentEntries = entries
+          .filter((e) => isCommentAnnotation(e.annotation.object))
+          .sort(compareEntriesByVisualOrder);
         if (commentEntries.length > 0) {
           filtered[Number(page)] = commentEntries;
         }
@@ -616,11 +617,9 @@ export function CommentsSidebar({
                     })}
                   </Text>
                   <Text size="xs" c="dimmed" mb="sm">
-                    {entries.length === 1
-                      ? t("viewer.comments.oneComment", "1 comment")
-                      : t("viewer.comments.nComments", "{{count}} comments", {
-                          count: entries.length,
-                        })}
+                    {t("viewer.comments.nComments", "{{count}} comment(s)", {
+                      count: entries.length,
+                    })}
                   </Text>
                   <Box
                     mb="xs"

@@ -8,17 +8,17 @@ from pydantic_ai import Agent
 from pydantic_ai.output import ToolOutput
 from pydantic_ai.tools import RunContext
 
+from stirling.agents.pdf_create import PdfCreateAgent
 from stirling.agents.pdf_edit import PdfEditAgent
 from stirling.agents.pdf_questions import PdfQuestionAgent
 from stirling.agents.pdf_review import PdfReviewAgent
-from stirling.agents.pdf_to_markdown import PdfToMarkdownAgent
 from stirling.agents.user_spec import UserSpecAgent
 from stirling.contracts import (
     AgentDraftWorkflowResponse,
+    ConvertMarkdownResponse,
     ExtractedTextArtifact,
     OrchestratorRequest,
     OrchestratorResponse,
-    PageLayoutArtifact,
     PdfEditResponse,
     PdfQuestionOrchestrateResponse,
     PdfReviewOrchestrateResponse,
@@ -27,7 +27,7 @@ from stirling.contracts import (
     format_conversation_history,
     format_file_names,
 )
-from stirling.contracts.pdf_to_markdown import PdfToMarkdownOrchestrateResponse
+from stirling.contracts.pdf_create import PdfCreateOrchestrateResponse
 from stirling.services import AppRuntime
 
 logger = logging.getLogger(__name__)
@@ -72,9 +72,21 @@ class OrchestratorAgent:
                     ),
                 ),
                 ToolOutput(
-                    self.delegate_pdf_to_markdown,
-                    name="delegate_pdf_to_markdown",
-                    description=("Delegate requests to reconstruct a PDF as a Markdown document."),
+                    self.delegate_pdf_ingest,
+                    name="delegate_pdf_ingest",
+                    description=(
+                        "Delegate requests to convert a PDF to Markdown or extract its content as readable text."
+                    ),
+                ),
+                ToolOutput(
+                    self.delegate_pdf_create,
+                    name="delegate_pdf_create",
+                    description=(
+                        "Delegate requests to create a new PDF document from scratch based on a"
+                        " description. Use this when the user wants to generate a new document"
+                        " (e.g. 'create an invoice', 'write a report', 'make a contract',"
+                        " 'draft a letter'). No input file is required."
+                    ),
                 ),
                 ToolOutput(
                     self.unsupported_capability,
@@ -86,14 +98,16 @@ class OrchestratorAgent:
             system_prompt=(
                 "You are the top-level orchestrator. "
                 "Choose exactly one output function that best handles the request. "
-                "Use delegate_pdf_edit for requested modifications of single or multiple PDFs. "
+                "Use delegate_pdf_edit for any requested modification of one or more PDFs. "
                 "Use delegate_pdf_question for questions about the contents of the attached PDFs. "
                 "Use delegate_user_spec for requests to create or define an agent spec. "
                 "Use delegate_pdf_review when the user wants the PDF returned with review"
                 " comments attached — anything like 'review this', 'annotate with comments',"
                 " 'leave feedback on the PDF'. "
-                "Use delegate_pdf_to_markdown for any request to convert a PDF to Markdown "
-                "or reconstruct its content as readable text. "
+                "Use delegate_pdf_create when the user wants to generate a new document from"
+                " scratch with no input file — invoices, reports, letters, contracts, etc. "
+                "Use delegate_pdf_ingest for any request to convert a PDF to Markdown "
+                "or extract its content as readable text. "
                 "Use unsupported_capability when the user asks about the assistant itself "
                 "or when none of the other outputs fit; supply a helpful message."
             ),
@@ -133,8 +147,8 @@ class OrchestratorAgent:
                 return await self._run_pdf_edit(request)
             case SupportedCapability.AGENT_DRAFT:
                 return await self._run_agent_draft(request)
-            case SupportedCapability.PDF_TO_MARKDOWN:
-                return await self._run_pdf_to_markdown(request)
+            case SupportedCapability.PDF_CREATE:
+                return await self._run_pdf_create(request)
             case (
                 SupportedCapability.ORCHESTRATE
                 | SupportedCapability.AGENT_REVISE
@@ -163,17 +177,24 @@ class OrchestratorAgent:
     async def _run_agent_draft(self, request: OrchestratorRequest) -> AgentDraftWorkflowResponse:
         return await UserSpecAgent(self.runtime).orchestrate(request)
 
-    async def delegate_pdf_to_markdown(self, ctx: RunContext[OrchestratorDeps]) -> PdfToMarkdownOrchestrateResponse:
-        return await self._run_pdf_to_markdown(ctx.deps.request)
-
-    async def _run_pdf_to_markdown(self, request: OrchestratorRequest) -> PdfToMarkdownOrchestrateResponse:
-        return await PdfToMarkdownAgent(self.runtime).orchestrate(request)
+    async def delegate_pdf_ingest(self, ctx: RunContext[OrchestratorDeps]) -> ConvertMarkdownResponse:
+        request = ctx.deps.request
+        return ConvertMarkdownResponse(
+            reason="PDF to Markdown requested — Java converts deterministically.",
+            files_to_ingest=request.files,
+        )
 
     async def delegate_pdf_review(self, ctx: RunContext[OrchestratorDeps]) -> PdfReviewOrchestrateResponse:
         return await self._run_pdf_review(ctx.deps.request)
 
     async def _run_pdf_review(self, request: OrchestratorRequest) -> PdfReviewOrchestrateResponse:
         return await PdfReviewAgent(self.runtime).orchestrate(request)
+
+    async def delegate_pdf_create(self, ctx: RunContext[OrchestratorDeps]) -> PdfCreateOrchestrateResponse:
+        return await self._run_pdf_create(ctx.deps.request)
+
+    async def _run_pdf_create(self, request: OrchestratorRequest) -> PdfCreateOrchestrateResponse:
+        return await PdfCreateAgent(self.runtime).orchestrate(request)
 
     async def unsupported_capability(
         self,
@@ -203,11 +224,6 @@ class OrchestratorAgent:
                 total_pages = sum(len(f.pages) for f in artifact.files)
                 file_names = [f.file_name for f in artifact.files]
                 descriptions.append(f"- extracted_text: {total_pages} pages from {file_names}")
-                continue
-            if isinstance(artifact, PageLayoutArtifact):
-                total_pages = sum(len(f.pages) for f in artifact.files)
-                file_names = [f.file_name for f in artifact.files]
-                descriptions.append(f"- page_layout: {total_pages} pages from {file_names}")
                 continue
             descriptions.append("- unknown artifact")
         return "\n".join(descriptions)

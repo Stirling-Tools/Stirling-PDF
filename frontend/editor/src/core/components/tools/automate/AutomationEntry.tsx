@@ -321,7 +321,7 @@ export default function AutomationEntry({
   return shouldShowTooltip ? (
     <Tooltip
       content={createTooltipContent()}
-      position="right"
+      position="left"
       arrow={true}
       delay={500}
     >

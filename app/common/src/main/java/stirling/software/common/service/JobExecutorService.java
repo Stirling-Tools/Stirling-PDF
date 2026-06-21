@@ -57,85 +57,43 @@ public class JobExecutorService {
         this.resourceMonitor = resourceMonitor;
         this.jobQueue = jobQueue;
 
-        // Parse session timeout and calculate effective timeout once during initialization
         long sessionTimeoutMs = parseSessionTimeout(sessionTimeout);
         this.effectiveTimeoutMs = Math.min(asyncRequestTimeoutMs, sessionTimeoutMs);
         log.debug(
                 "Job executor configured with effective timeout of {} ms", this.effectiveTimeoutMs);
     }
 
-    /**
-     * Run a job either asynchronously or synchronously
-     *
-     * @param async Whether to run the job asynchronously
-     * @param work The work to be done
-     * @return The response
-     */
     public ResponseEntity<?> runJobGeneric(boolean async, Supplier<Object> work) {
         return runJobGeneric(async, work, -1);
     }
 
-    /**
-     * Run a job either asynchronously or synchronously with a custom timeout
-     *
-     * @param async Whether to run the job asynchronously
-     * @param work The work to be done
-     * @param customTimeoutMs Custom timeout in milliseconds, or -1 to use the default
-     * @return The response
-     */
     public ResponseEntity<?> runJobGeneric(
             boolean async, Supplier<Object> work, long customTimeoutMs) {
         return runJobGeneric(async, work, customTimeoutMs, false, 50);
     }
 
-    /**
-     * Run a job either asynchronously or synchronously with custom parameters
-     *
-     * @param async Whether to run the job asynchronously
-     * @param work The work to be done
-     * @param customTimeoutMs Custom timeout in milliseconds, or -1 to use the default
-     * @param queueable Whether this job can be queued when system resources are limited
-     * @param resourceWeight The resource weight of this job (1-100)
-     * @return The response
-     */
     public ResponseEntity<?> runJobGeneric(
             boolean async,
             Supplier<Object> work,
             long customTimeoutMs,
             boolean queueable,
             int resourceWeight) {
-        // Generate base UUID
         String baseJobId = UUID.randomUUID().toString();
-
-        // Scope job to authenticated user if security is enabled
         String scopedJobKey = getScopedJobKey(baseJobId);
 
         log.debug("Generated jobId: {} (base: {})", scopedJobKey, baseJobId);
 
-        // Store the scoped job ID in the request for potential use by other components
         if (request != null) {
             request.setAttribute("jobId", scopedJobKey);
-
-            // Also track this job ID in the user's session for authorization purposes
-            // This ensures users can only cancel their own jobs
-            if (request.getSession() != null) {
-                @SuppressWarnings("unchecked")
-                java.util.Set<String> userJobIds =
-                        (java.util.Set<String>) request.getSession().getAttribute("userJobIds");
-
-                if (userJobIds == null) {
-                    userJobIds = new java.util.concurrent.ConcurrentSkipListSet<>();
-                    request.getSession().setAttribute("userJobIds", userJobIds);
-                }
-
-                userJobIds.add(scopedJobKey);
-                log.debug("Added scoped job ID {} to user session", scopedJobKey);
-            }
         }
 
         String jobId = scopedJobKey;
 
-        // Determine which timeout to use
+        final String jobOwner =
+                jobOwnershipService != null
+                        ? jobOwnershipService.getCurrentUserId().orElse(null)
+                        : null;
+
         long timeoutToUse = customTimeoutMs > 0 ? customTimeoutMs : effectiveTimeoutMs;
 
         log.debug(
@@ -146,7 +104,6 @@ public class JobExecutorService {
                 queueable,
                 resourceWeight);
 
-        // Check if we need to queue this job based on resource availability
         boolean shouldQueue =
                 queueable
                         && async
@@ -154,7 +111,6 @@ public class JobExecutorService {
                         resourceMonitor.shouldQueueJob(resourceWeight);
 
         if (shouldQueue) {
-            // Queue the job instead of executing immediately
             log.debug(
                     "Queueing job {} due to resource constraints (weight: {})",
                     jobId,
@@ -162,18 +118,13 @@ public class JobExecutorService {
 
             taskManager.createTask(jobId);
 
-            // Create a specialized wrapper that updates the TaskManager
             final String capturedJobIdForQueue = jobId;
             Supplier<Object> wrappedWork =
                     () -> {
                         try {
-                            // Set jobId in ThreadLocal context for the queued job
                             stirling.software.common.util.JobContext.setJobId(
                                     capturedJobIdForQueue);
-                            log.debug(
-                                    "Set jobId {} in JobContext for queued job execution",
-                                    capturedJobIdForQueue);
-
+                            stirling.software.common.util.JobContext.setOwner(jobOwner);
                             Object result = work.get();
                             processJobResult(capturedJobIdForQueue, result);
                             return result;
@@ -186,21 +137,17 @@ public class JobExecutorService {
                             taskManager.setError(capturedJobIdForQueue, e.getMessage());
                             throw e;
                         } finally {
-                            // Clean up ThreadLocal to avoid memory leaks
                             stirling.software.common.util.JobContext.clear();
                         }
                     };
 
-            // Queue the job and get the future
             CompletableFuture<ResponseEntity<?>> future =
                     jobQueue.queueJob(jobId, resourceWeight, wrappedWork, timeoutToUse);
 
-            // Return immediately with job ID
             return ResponseEntity.ok().body(new JobResponse<>(true, jobId, null));
         } else if (async) {
             taskManager.createTask(jobId);
 
-            // Capture the jobId for the async thread
             final String capturedJobId = jobId;
 
             executor.execute(
@@ -211,13 +158,8 @@ public class JobExecutorService {
                                     capturedJobId,
                                     timeoutToUse);
 
-                            // Set jobId in ThreadLocal context for the async thread
                             stirling.software.common.util.JobContext.setJobId(capturedJobId);
-                            log.debug(
-                                    "Set jobId {} in JobContext for async execution",
-                                    capturedJobId);
-
-                            // Execute with timeout
+                            stirling.software.common.util.JobContext.setOwner(jobOwner);
                             Object result = executeWithTimeout(() -> work.get(), timeoutToUse);
                             processJobResult(capturedJobId, result);
                         } catch (TimeoutException te) {
@@ -227,7 +169,6 @@ public class JobExecutorService {
                             log.error("Error executing job {}: {}", jobId, e.getMessage(), e);
                             taskManager.setError(jobId, e.getMessage());
                         } finally {
-                            // Clean up ThreadLocal to avoid memory leaks
                             stirling.software.common.util.JobContext.clear();
                         }
                     });
@@ -237,27 +178,19 @@ public class JobExecutorService {
             try {
                 log.debug("Running sync job with timeout {} ms", timeoutToUse);
 
-                // Make jobId available to downstream components on the worker thread
                 stirling.software.common.util.JobContext.setJobId(jobId);
-                log.debug("Set jobId {} in JobContext for sync execution", jobId);
-
-                // Execute with timeout
                 Object result = executeWithTimeout(() -> work.get(), timeoutToUse);
 
-                // If the result is already a ResponseEntity, return it directly
                 if (result instanceof ResponseEntity) {
                     return (ResponseEntity<?>) result;
                 }
 
-                // Process different result types
                 return handleResultForSyncJob(result);
             } catch (TimeoutException te) {
                 log.error("Synchronous job timed out after {} ms", timeoutToUse);
                 return ResponseEntity.internalServerError()
                         .body(Map.of("error", "Job timed out after " + timeoutToUse + " ms"));
             } catch (RuntimeException e) {
-                // Check if this is a typed exception that should be handled by
-                // GlobalExceptionHandler (either directly or wrapped)
                 Throwable cause = e.getCause();
                 if (e instanceof IllegalArgumentException
                         || cause
@@ -267,16 +200,13 @@ public class JobExecutorService {
                                 instanceof
                                 stirling.software.common.util.ExceptionUtils
                                         .BaseValidationException) {
-                    // Rethrow so GlobalExceptionHandler can handle with proper HTTP status codes
                     throw e;
                 }
-                // Handle other RuntimeExceptions as generic errors
                 log.error("Error executing synchronous job: {}", e.getMessage(), e);
                 return ResponseEntity.internalServerError()
                         .body(Map.of("error", "Job failed: " + e.getMessage()));
             } catch (Exception e) {
                 log.error("Error executing synchronous job: {}", e.getMessage(), e);
-                // Construct a JSON error response
                 return ResponseEntity.internalServerError()
                         .body(Map.of("error", "Job failed: " + e.getMessage()));
             } finally {
@@ -285,23 +215,13 @@ public class JobExecutorService {
         }
     }
 
-    /**
-     * Process the result of an asynchronous job
-     *
-     * @param jobId The job ID
-     * @param result The result
-     */
     private void processJobResult(String jobId, Object result) {
         try {
             if (result instanceof byte[]) {
-                // Store byte array directly to disk to avoid double memory consumption
                 String fileId = fileStorage.storeBytes((byte[]) result, "result.pdf");
                 taskManager.setFileResult(
                         jobId, fileId, "result.pdf", MediaType.APPLICATION_PDF_VALUE);
                 log.debug("Stored byte[] result with fileId: {}", fileId);
-
-                // Let the byte array get collected naturally in the next GC cycle
-                // We don't need to force System.gc() which can be harmful
             } else if (result instanceof ResponseEntity) {
                 ResponseEntity<?> response = (ResponseEntity<?>) result;
                 Object body = response.getBody();
@@ -330,16 +250,13 @@ public class JobExecutorService {
                     taskManager.setFileResult(jobId, fileId, filename, contentType);
                     log.debug("Stored ResponseEntity<Resource> result with fileId: {}", fileId);
                 } else {
-                    // Check if the response body contains a fileId
                     if (body != null && body.toString().contains("fileId")) {
                         try {
-                            // Try to extract fileId using reflection
                             java.lang.reflect.Method getFileId =
                                     body.getClass().getMethod("getFileId");
                             String fileId = (String) getFileId.invoke(body);
 
                             if (fileId != null && !fileId.isEmpty()) {
-                                // Try to get filename and content type
                                 String filename = "result.pdf";
                                 String contentType = MediaType.APPLICATION_PDF_VALUE;
 
@@ -379,7 +296,6 @@ public class JobExecutorService {
                         }
                     }
 
-                    // Store generic result
                     taskManager.setResult(jobId, body);
                 }
             } else if (result instanceof MultipartFile file) {
@@ -388,16 +304,13 @@ public class JobExecutorService {
                         jobId, fileId, file.getOriginalFilename(), file.getContentType());
                 log.debug("Stored MultipartFile result with fileId: {}", fileId);
             } else {
-                // Check if result has a fileId field
                 if (result != null) {
                     try {
-                        // Try to extract fileId using reflection
                         java.lang.reflect.Method getFileId =
                                 result.getClass().getMethod("getFileId");
                         String fileId = (String) getFileId.invoke(result);
 
                         if (fileId != null && !fileId.isEmpty()) {
-                            // Try to get filename and content type
                             String filename = "result.pdf";
                             String contentType = MediaType.APPLICATION_PDF_VALUE;
 
@@ -435,7 +348,6 @@ public class JobExecutorService {
                     }
                 }
 
-                // Default case: store the result as is
                 taskManager.setResult(jobId, result);
             }
 
@@ -446,16 +358,8 @@ public class JobExecutorService {
         }
     }
 
-    /**
-     * Handle different result types for synchronous jobs
-     *
-     * @param result The result object
-     * @return The appropriate ResponseEntity
-     * @throws IOException If there is an error processing the result
-     */
     private ResponseEntity<?> handleResultForSyncJob(Object result) throws IOException {
         if (result instanceof byte[]) {
-            // Return byte array as PDF
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_PDF)
                     .header(
@@ -463,7 +367,6 @@ public class JobExecutorService {
                             "form-data; name=\"attachment\"; filename=\"result.pdf\"")
                     .body(result);
         } else if (result instanceof MultipartFile file) {
-            // Return MultipartFile content
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(file.getContentType()))
                     .header(
@@ -473,7 +376,6 @@ public class JobExecutorService {
                                     + "\"")
                     .body(file.getBytes());
         } else {
-            // Default case: return as JSON
             return ResponseEntity.ok(result);
         }
     }
@@ -493,15 +395,9 @@ public class JobExecutorService {
         return mediaType != null ? mediaType.toString() : MediaType.APPLICATION_PDF_VALUE;
     }
 
-    /**
-     * Parse session timeout string (e.g., "30m", "1h") to milliseconds
-     *
-     * @param timeout The timeout string
-     * @return The timeout in milliseconds
-     */
     private long parseSessionTimeout(String timeout) {
         if (timeout == null || timeout.isEmpty()) {
-            return 30 * 60 * 1000; // Default: 30 minutes
+            return 30 * 60 * 1000;
         }
 
         try {
@@ -523,27 +419,16 @@ public class JobExecutorService {
                 case "m" -> (long) (numericValue * 60 * 1000);
                 case "h" -> (long) (numericValue * 60 * 60 * 1000);
                 case "d" -> (long) (numericValue * 24 * 60 * 60 * 1000);
-                default -> (long) (numericValue * 60 * 1000); // Default to minutes
+                default -> (long) (numericValue * 60 * 1000);
             };
         } catch (Exception e) {
             log.warn("Could not parse session timeout '{}', using default", timeout);
-            return 30 * 60 * 1000; // Default: 30 minutes
+            return 30 * 60 * 1000;
         }
     }
 
-    /**
-     * Execute a supplier with a timeout
-     *
-     * @param supplier The supplier to execute
-     * @param timeoutMs The timeout in milliseconds
-     * @return The result from the supplier
-     * @throws TimeoutException If the execution times out
-     * @throws Exception If the supplier throws an exception
-     */
     private <T> T executeWithTimeout(Supplier<T> supplier, long timeoutMs)
             throws TimeoutException, Exception {
-        // Use the same executor as other async jobs for consistency
-        // This ensures all operations run on the same thread pool
         String currentJobId = stirling.software.common.util.JobContext.getJobId();
 
         java.util.concurrent.CompletableFuture<T> future =
@@ -577,17 +462,10 @@ public class JobExecutorService {
         }
     }
 
-    /**
-     * Get a scoped job key that includes user ownership when security is enabled.
-     *
-     * @param baseJobId the base job identifier
-     * @return scoped job key, or just baseJobId if no ownership service available
-     */
     private String getScopedJobKey(String baseJobId) {
         if (jobOwnershipService != null) {
             return jobOwnershipService.createScopedJobKey(baseJobId);
         }
-        // Security disabled, return unsecured job key
         return baseJobId;
     }
 }

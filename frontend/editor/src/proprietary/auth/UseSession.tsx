@@ -6,8 +6,11 @@ import {
   ReactNode,
   useCallback,
 } from "react";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { springAuth } from "@app/auth/springAuthClient";
 import { clearPlatformAuthOnLoginInit } from "@app/extensions/authSessionCleanup";
+import { stripBasePath } from "@app/constants/app";
 import type {
   Session,
   User,
@@ -22,15 +25,45 @@ import type {
 interface AuthContextType {
   session: Session | null;
   user: User | null;
+  /**
+   * Human-readable name to show in the UI for the current session.
+   * - A real identity (username/email) when the user is signed in.
+   * - The localised "User" placeholder for anonymous sessions
+   *   (proprietary's chosen label - see deriveDisplayName).
+   * - null only when there is no user object at all (signed-out), so
+   *   consumers can fall back to whatever makes sense.
+   */
+  displayName: string | null;
+  /** Whether the current session is an anonymous (login-disabled) one. */
+  isAnonymous: boolean;
   loading: boolean;
   error: AuthError | null;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
 }
 
+/**
+ * Derive a display name from the Spring user. Anonymous users get the
+ * localised "User" placeholder (proprietary's chosen label for unsigned-in
+ * sessions); returns null only when there is no user object at all so
+ * consumers can pick their own fallback.
+ *
+ * Exported for unit testing.
+ */
+export function deriveDisplayName(
+  user: User | null | undefined,
+  t: TFunction,
+): string | null {
+  if (!user) return null;
+  if (user.is_anonymous) return t("auth.displayName.user", "User");
+  return user.username || user.email || null;
+}
+
 const AuthContext = createContext<AuthContextType>({
   session: null,
   user: null,
+  displayName: null,
+  isAnonymous: false,
   loading: true,
   error: null,
   signOut: async () => {},
@@ -100,15 +133,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const { error } = await springAuth.signOut();
 
+      // Always clear the in-memory session: springAuth.signOut() removes the
+      // local token and platform user_info even when the backend POST fails,
+      // so the user is effectively signed out either way. Leaving session
+      // populated on error would mean the UI keeps the old user's badge until
+      // a manual reload (the SIGNED_OUT notifyListeners call also covers this
+      // path now, but clearing here is defence in depth).
+      setSession(null);
+
       if (error) {
         console.error("[Auth] Sign out error:", error);
         setError(error);
       } else {
         console.debug("[Auth] Signed out successfully");
-        setSession(null);
       }
     } catch (err) {
       console.error("[Auth] Unexpected error during sign out:", err);
+      setSession(null);
       setError(err as AuthError);
     }
   }, []);
@@ -130,7 +171,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Clear any platform-specific cached auth on login page init.
         if (
           typeof window !== "undefined" &&
-          window.location.pathname.startsWith("/login")
+          stripBasePath(window.location.pathname).startsWith("/login")
         ) {
           await clearPlatformAuthOnLoginInit();
         }
@@ -248,9 +289,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  const { t } = useTranslation();
+  const user = session?.user ?? null;
   const value: AuthContextType = {
     session,
-    user: session?.user ?? null,
+    user,
+    displayName: deriveDisplayName(user, t),
+    isAnonymous: user?.is_anonymous === true,
     loading,
     error,
     signOut,

@@ -1,7 +1,9 @@
 version: '3'
 
 vars:
-  JLINK_MODULES: "java.base,java.compiler,java.desktop,java.instrument,java.logging,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported"
+  # jdk.dynalink is required by VeraPDF (PDF/A validation); without it the bundled JRE throws
+  # NoClassDefFoundError: jdk/dynalink/Namespace at runtime in get-info-on-pdf and verify-pdf
+  JLINK_MODULES: "java.base,java.compiler,java.desktop,java.instrument,java.logging,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported,jdk.dynalink"
 
   # Override via JPDFIUM_PLATFORMS env (csv of platform keys, or 'all').
   JPDFIUM_PLATFORMS:
@@ -62,21 +64,21 @@ tasks:
     deps: [prepare]
     dir: editor
     cmds:
-      - npx tauri build --bundles app
+      - npx tauri build --bundles app --config '{"bundle":{"createUpdaterArtifacts":false}}'
 
   build:dev:windows:
     desc: "Build Tauri desktop NSIS installer (Windows)"
     deps: [prepare]
     dir: editor
     cmds:
-      - npx tauri build --bundles nsis
+      - npx tauri build --bundles nsis --config '{"bundle":{"createUpdaterArtifacts":false}}'
 
   build:dev:linux:
     desc: "Build Tauri desktop AppImage (Linux)"
     deps: [prepare]
     dir: editor
     cmds:
-      - npx tauri build --bundles appimage
+      - npx tauri build --bundles appimage --config '{"bundle":{"createUpdaterArtifacts":false}}'
 
   test:
     desc: "Run Tauri/Cargo tests"
@@ -125,16 +127,38 @@ tasks:
     cmds:
       - rm -rf runtime/jre
       - mkdir -p runtime
-      - >-
-        jlink
-        --add-modules {{.JLINK_MODULES}}
-        --strip-debug
-        --compress=zip-6
-        --no-header-files
-        --no-man-pages
-        --output runtime/jre
+      - |
+        JLINK_COMPRESS="$(jlink --help 2>&1 | grep -q 'zip-\[0-9\]' && echo zip-6 || echo 2)"
+        jlink \
+          --add-modules {{.JLINK_MODULES}} \
+          --strip-debug \
+          --compress="$JLINK_COMPRESS" \
+          --no-header-files \
+          --no-man-pages \
+          --output runtime/jre
+      # jlink emits its files mode 444 (read-only). Tauri's build-script
+      # resource copier preserves source permissions when staging
+      # `runtime/jre/**/*` into `target/<profile>/runtime/jre/...`, so the
+      # staged copies are read-only too. On any subsequent incremental
+      # build the copier tries to overwrite them and fails with a bare
+      # `Permission denied (os error 13)` (Rust's io::Error Display drops
+      # the path, so the failure is opaque). Make the source writable here
+      # so the staged destinations are writable and can be overwritten.
+      #
+      # Trade-off: this task runs for both `task desktop:dev` and
+      # `task desktop:build`, so production bundles also ship mode-644
+      # JRE files instead of 444. Functionally harmless on POSIX (the
+      # `other` bit is `r--` either way, and on macOS code signing is the
+      # real integrity check) and on Windows the DOS read-only attribute
+      # isn't load-bearing for the bundled JDK. If we ever need strict
+      # 444 in production, split the chmod into a dev-only step and have
+      # `desktop:build` run `jlink:clean` first to force a fresh build.
+      - cmd: chmod -R u+w runtime/jre
+        platforms: [linux, darwin]
+      - cmd: powershell -NoProfile -Command "Get-ChildItem -Recurse runtime/jre | ForEach-Object { $_.IsReadOnly = $false }"
+        platforms: [windows]
     status:
-      - test -d editor/src-tauri/runtime/jre
+      - test -f runtime/jre/release
 
   jlink:clean:
     desc: "Remove JLink runtime and bundled JARs"

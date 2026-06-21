@@ -115,6 +115,15 @@ jobs:
           toolchain: stable
           targets: ${{ matrix.platform == 'macos-15' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
+      # Cache the Cargo registry and compiled dependency crates so the build
+      # only recompiles the app crate. Written on main; PRs and the merge queue
+      # restore from it.
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+        with:
+          workspaces: frontend/editor/src-tauri
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
       - name: Set up x86_64 JDK 25 (macOS universal JRE)
         if: matrix.platform == 'macos-15'
         uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
@@ -136,10 +145,10 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
         with:
-          gradle-version: 9.3.1
+          gradle-version: 9.5.1
 
       - name: Setup Task
-        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
+        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
 
       - name: Build universal macOS JRE
         if: matrix.platform == 'macos-15'
@@ -270,10 +279,6 @@ jobs:
           echo "Certificate ID: $CERT_ID"
           echo "APPLE_SIGNING_IDENTITY=$CERT_ID" >> $GITHUB_ENV
           echo "Certificate imported successfully."
-
-      - name: Sign JPDFium dylibs inside bootJar (macOS only)
-        if: matrix.platform == 'macos-15' && env.APPLE_CERTIFICATE != ''
-        run: bash frontend/scripts/sign-jpdfium-dylibs-in-bootjar.sh
 
       - name: Check DMG creation dependencies (macOS only)
         if: matrix.platform == 'macos-15'

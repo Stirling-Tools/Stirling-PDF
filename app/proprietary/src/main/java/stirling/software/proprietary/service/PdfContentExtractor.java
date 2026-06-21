@@ -8,13 +8,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.QuoteMode;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.apache.pdfbox.text.TextPosition;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -24,14 +29,12 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.SPDF.pdf.parser.PdfIngester;
-import stirling.software.SPDF.pdf.parser.PdfModels.ParsedPage;
-import stirling.software.SPDF.pdf.parser.PdfModels.RawLine;
+import stirling.software.SPDF.pdf.parser.PageImageLocator;
 import stirling.software.SPDF.pdf.parser.PdfModels.TableFragment;
-import stirling.software.SPDF.pdf.parser.PdfModels.TextFragment;
 import stirling.software.SPDF.pdf.parser.TabulaTableParser;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.PdfUtils;
+import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.proprietary.model.api.ai.AiPdfContentType;
 import stirling.software.proprietary.model.api.ai.AiWorkflowFileRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowTextSelection;
@@ -43,7 +46,6 @@ import stirling.software.proprietary.model.api.ai.FolioType;
 public class PdfContentExtractor {
 
     private final TabulaTableParser tabulaTableParser;
-    private final PdfIngester pdfIngester;
 
     private static final int MAX_CHARACTERS_PER_PAGE = 4_000;
 
@@ -122,6 +124,7 @@ public class PdfContentExtractor {
             }
             csvStrings.add(sw.toString());
         }
+
         return csvStrings;
     }
 
@@ -188,8 +191,6 @@ public class PdfContentExtractor {
             case PAGE_TEXT, FULL_TEXT ->
                     Optional.<PdfContentResult>ofNullable(
                             extractText(lf, fileReq, remainingPages, remainingCharacters));
-            case PAGE_LAYOUT ->
-                    Optional.<PdfContentResult>ofNullable(extractPageLayout(lf, remainingPages));
             default -> {
                 log.warn(
                         "Content type {} not yet implemented, skipping for {}",
@@ -214,45 +215,11 @@ public class PdfContentExtractor {
         return extracted.isEmpty() ? null : buildExtractedFileText(lf.fileName(), extracted);
     }
 
-    private PageLayoutFileResult extractPageLayout(LoadedFile lf, int maxPages) throws IOException {
-        List<ParsedPage> parsedPages = pdfIngester.parse(lf.document(), maxPages);
-        List<LayoutPage> pages = new ArrayList<>();
-        for (ParsedPage pp : parsedPages) {
-            if (pp.layoutLines().isEmpty()) continue;
-            List<LayoutLine> lines = new ArrayList<>();
-            for (RawLine rawLine : pp.layoutLines()) {
-                List<LayoutFragment> fragments = new ArrayList<>();
-                for (TextFragment tf : rawLine.fragments()) {
-                    fragments.add(
-                            new LayoutFragment(
-                                    tf.text(),
-                                    tf.bounds().x(),
-                                    tf.bounds().y(),
-                                    tf.bounds().width(),
-                                    tf.fontSize(),
-                                    tf.bold()));
-                }
-                lines.add(new LayoutLine(rawLine.bounds().y(), fragments));
-            }
-            pages.add(new LayoutPage(pp.pageNumber(), lines));
-        }
-        if (pages.isEmpty()) return null;
-        PageLayoutFileResult result = new PageLayoutFileResult();
-        result.setFileName(lf.fileName());
-        result.setPages(pages);
-        return result;
-    }
-
     private WorkflowArtifact buildArtifact(ArtifactKind kind, List<PdfContentResult> results) {
         return switch (kind) {
             case EXTRACTED_TEXT -> {
                 ExtractedTextArtifact artifact = new ExtractedTextArtifact();
                 artifact.setFiles(results.stream().map(ExtractedFileText.class::cast).toList());
-                yield artifact;
-            }
-            case PAGE_LAYOUT -> {
-                PageLayoutArtifact artifact = new PageLayoutArtifact();
-                artifact.setFiles(results.stream().map(PageLayoutFileResult.class::cast).toList());
                 yield artifact;
             }
             case TOOL_REPORT ->
@@ -295,7 +262,6 @@ public class PdfContentExtractor {
     private List<AiWorkflowTextSelection> extractPageText(
             PDDocument document, List<Integer> selectedPages, int maxCharacters)
             throws IOException {
-        PDFTextStripper textStripper = new PDFTextStripper();
         List<AiWorkflowTextSelection> pages = new ArrayList<>();
         int remainingCharacters = maxCharacters;
 
@@ -304,10 +270,29 @@ public class PdfContentExtractor {
                 break;
             }
 
+            PDFTextStripper textStripper = new PDFTextStripper();
+            textStripper.setSortByPosition(true);
             textStripper.setStartPage(pageNumber);
             textStripper.setEndPage(pageNumber);
 
             String pageText = textStripper.getText(document).trim();
+
+            // Prepend page dimensions so the AI agent can reason about absolute coordinates.
+            PDPage page = document.getPage(pageNumber - 1);
+            PDRectangle bbox = page.getBBox();
+            String dimensionHeader =
+                    String.format(
+                            "--- Page dimensions: %.0fx%.0f pts"
+                                    + " (PDF user-space: origin bottom-left, Y up) ---\n",
+                            bbox.getWidth(), bbox.getHeight());
+            pageText = dimensionHeader + pageText;
+
+            // Append image metadata so the AI agent can reason about images spatially.
+            String imageAnnotation = buildImageAnnotation(document, pageNumber - 1);
+            if (!imageAnnotation.isEmpty()) {
+                pageText = pageText + imageAnnotation;
+            }
+
             if (pageText.isBlank()) {
                 continue;
             }
@@ -325,6 +310,56 @@ public class PdfContentExtractor {
             remainingCharacters -= clippedText.length();
         }
         return pages;
+    }
+
+    /**
+     * Builds a human-readable description of all images on a page to append to page text. Uses PDF
+     * user-space coordinates (origin bottom-left, Y up) so the AI can reference exact bounding
+     * boxes when requesting image redaction.
+     */
+    private String buildImageAnnotation(PDDocument document, int pageIndex) {
+        try {
+            List<ImageBlock> images = extractImagePositions(document, pageIndex);
+            if (images.isEmpty()) {
+                return "";
+            }
+            PDPage page = document.getPage(pageIndex);
+            PDRectangle bbox = page.getBBox();
+            float pageWidth = bbox.getWidth();
+            float pageHeight = bbox.getHeight();
+
+            StringBuilder sb = new StringBuilder("\n\n--- Images on this page ---");
+            for (int i = 0; i < images.size(); i++) {
+                ImageBlock img = images.get(i);
+                String position = spatialLabel(img, pageWidth, pageHeight);
+                float w = img.x2() - img.x1();
+                float h = img.y2() - img.y1();
+                sb.append(
+                        String.format(
+                                "\nImage %d: position=%s, size=%.0fx%.0f pts,"
+                                        + " bounds=(x1=%.0f, y1=%.0f, x2=%.0f, y2=%.0f)",
+                                i + 1, position, w, h, img.x1(), img.y1(), img.x2(), img.y2()));
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            log.debug(
+                    "Failed to extract image positions for page {}: {}", pageIndex, e.getMessage());
+            return "";
+        }
+    }
+
+    /**
+     * Returns a human-readable spatial label (e.g. "top-left", "center") for an image based on its
+     * centre relative to the page dimensions. Coordinates are in PDF user-space (Y up).
+     */
+    private static String spatialLabel(ImageBlock img, float pageWidth, float pageHeight) {
+        float cx = (img.x1() + img.x2()) / 2f;
+        float cy = (img.y1() + img.y2()) / 2f;
+
+        String horiz = cx < pageWidth / 3f ? "left" : cx < 2 * pageWidth / 3f ? "center" : "right";
+        // PDF Y increases upward, so higher Y = higher on the page = "top"
+        String vert = cy > 2 * pageHeight / 3f ? "top" : cy > pageHeight / 3f ? "middle" : "bottom";
+        return vert + "-" + horiz;
     }
 
     private ExtractedFileText buildExtractedFileText(
@@ -345,6 +380,130 @@ public class PdfContentExtractor {
             end--;
         }
         return text.substring(0, end);
+    }
+
+    // -----------------------------------------------------------------------
+    // Text position finding
+    // -----------------------------------------------------------------------
+
+    /**
+     * A located text match inside a PDF: 0-based page index and bounding box in PDFBox coordinates
+     * (origin bottom-left).
+     */
+    public record TextBlock(int pageIndex, float x1, float y1, float x2, float y2) {}
+
+    /**
+     * An image found on a PDF page: 0-based page index and bounding box in PDF user-space
+     * coordinates (origin bottom-left, Y increases upward).
+     */
+    public record ImageBlock(int pageIndex, float x1, float y1, float x2, float y2) {}
+
+    /**
+     * Extract the bounding boxes of all raster/vector images on the given (0-based) page.
+     *
+     * @param document the open PDF
+     * @param pageIndex 0-based page index
+     * @return list of located images in document order
+     */
+    public List<ImageBlock> extractImagePositions(PDDocument document, int pageIndex)
+            throws IOException {
+        PDPage page = document.getPage(pageIndex);
+        PageImageLocator locator = new PageImageLocator(page, pageIndex);
+        locator.processPage(page);
+        return locator.getImageBoxes().stream()
+                .map(b -> new ImageBlock(b.pageIndex(), b.x1(), b.y1(), b.x2(), b.y2()))
+                .toList();
+    }
+
+    /**
+     * Find all occurrences of {@code pattern} in {@code document} and return their bounding boxes.
+     *
+     * @param document the open PDF
+     * @param pattern the search string or regex
+     * @param useRegex {@code true} to treat {@code pattern} as a regular expression
+     * @return list of located matches, in page order
+     */
+    public List<TextBlock> findTextPositions(PDDocument document, String pattern, boolean useRegex)
+            throws IOException {
+        LocalTextFinder finder = new LocalTextFinder(pattern, useRegex);
+        finder.getText(document);
+        return finder.found;
+    }
+
+    private static final class LocalTextFinder extends PDFTextStripper {
+
+        private final String searchTerm;
+        private final boolean useRegex;
+        final List<TextBlock> found = new ArrayList<>();
+
+        private final List<TextPosition> pagePositions = new ArrayList<>();
+        private final StringBuilder pageText = new StringBuilder();
+
+        LocalTextFinder(String searchTerm, boolean useRegex) throws IOException {
+            this.searchTerm = searchTerm;
+            this.useRegex = useRegex;
+            setWordSeparator(" ");
+            setLineSeparator("\n");
+        }
+
+        @Override
+        protected void startPage(PDPage page) throws IOException {
+            super.startPage(page);
+            pagePositions.clear();
+            pageText.setLength(0);
+        }
+
+        @Override
+        protected void writeString(String text, List<TextPosition> positions) {
+            pageText.append(text);
+            pagePositions.addAll(positions);
+        }
+
+        @Override
+        protected void writeWordSeparator() {
+            pageText.append(getWordSeparator());
+            pagePositions.add(null);
+        }
+
+        @Override
+        protected void writeLineSeparator() {
+            pageText.append(getLineSeparator());
+            pagePositions.add(null);
+        }
+
+        @Override
+        protected void endPage(PDPage page) throws IOException {
+            String text = pageText.toString();
+            if (!text.isEmpty() && searchTerm != null && !searchTerm.isBlank()) {
+                String term = searchTerm.trim();
+                String regex = useRegex ? term : "\\Q" + term + "\\E";
+                Pattern pat = RegexPatternUtils.getInstance().createSearchPattern(regex, true);
+                Matcher matcher = pat.matcher(text);
+                while (matcher.find()) {
+                    float minX = Float.MAX_VALUE;
+                    float minY = Float.MAX_VALUE;
+                    float maxX = -Float.MAX_VALUE;
+                    float maxY = -Float.MAX_VALUE;
+                    boolean hit = false;
+                    for (int i = matcher.start(); i < matcher.end(); i++) {
+                        if (i < pagePositions.size()) {
+                            TextPosition tp = pagePositions.get(i);
+                            if (tp != null) {
+                                hit = true;
+                                minX = Math.min(minX, tp.getX());
+                                maxX = Math.max(maxX, tp.getX() + tp.getWidth());
+                                minY = Math.min(minY, tp.getY() - tp.getHeight());
+                                maxY = Math.max(maxY, tp.getY());
+                            }
+                        }
+                    }
+                    if (hit) {
+                        found.add(new TextBlock(getCurrentPageNo() - 1, minX, minY, maxX, maxY));
+                    }
+                }
+            }
+            super.endPage(page);
+        }
     }
 
     // --- Types shared with AiWorkflowService (package-private) ---
@@ -369,7 +528,6 @@ public class PdfContentExtractor {
      */
     enum ArtifactKind {
         EXTRACTED_TEXT("extracted_text"),
-        PAGE_LAYOUT("page_layout"),
         TOOL_REPORT("tool_report");
 
         private final String value;
@@ -432,41 +590,5 @@ public class PdfContentExtractor {
             this.sourceTool = sourceTool;
             this.report = report;
         }
-    }
-
-    // Serialization contract with the Python engine — see PageLayoutArtifactContractTest.
-
-    /** One text fragment with its bounding-box geometry and font properties. */
-    record LayoutFragment(
-            String text, float x, float y, float width, float fontSize, boolean bold) {}
-
-    /** A visual line on the page: y-coordinate and all fragments on that line. */
-    record LayoutLine(float y, List<LayoutFragment> fragments) {}
-
-    /** All layout lines for a single page. */
-    record LayoutPage(int pageNumber, List<LayoutLine> lines) {}
-
-    /** Page layout data for one file, as a PdfContentResult. */
-    @Data
-    static final class PageLayoutFileResult implements PdfContentResult {
-        private String fileName;
-        private List<LayoutPage> pages = new ArrayList<>();
-
-        @Override
-        public ArtifactKind getArtifactKind() {
-            return ArtifactKind.PAGE_LAYOUT;
-        }
-
-        @Override
-        public int pagesConsumed() {
-            return pages.size();
-        }
-    }
-
-    /** Artifact carrying full spatial page layout for all input files. */
-    @Data
-    static final class PageLayoutArtifact implements WorkflowArtifact {
-        private final ArtifactKind kind = ArtifactKind.PAGE_LAYOUT;
-        private List<PageLayoutFileResult> files = new ArrayList<>();
     }
 }

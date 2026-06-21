@@ -3,9 +3,16 @@
   "compilerOptions": {
     "baseUrl": "../../",
     "paths": {
-      "@app/*": ["src/desktop/*", "src/proprietary/*", "src/core/*"],
+      "@app/*": [
+        "src/desktop/*",
+        "src/cloud/*",
+        "src/proprietary/*",
+        "src/core/*"
+      ],
+      "@cloud/*": ["src/cloud/*"],
       "@proprietary/*": ["src/proprietary/*"],
-      "@core/*": ["src/core/*"]
+      "@core/*": ["src/core/*"],
+      "@shared/*": ["../shared/*"]
     }
   },
   "include": [

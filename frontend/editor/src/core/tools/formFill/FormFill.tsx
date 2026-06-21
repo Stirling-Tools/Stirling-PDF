@@ -27,6 +27,8 @@ import {
   Tooltip,
   ActionIcon,
 } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import { isAxiosError } from "axios";
 import {
   useFormFill,
   useAllFormValues,
@@ -120,6 +122,7 @@ const _MODE_TABS: ModeTabDef[] = [
 // ---------------------------------------------------------------------------
 
 const FormFill = (_props: BaseToolProps) => {
+  const { t } = useTranslation();
   const { selectedTool } = useNavigation();
   const { selectors, state: fileState } = useFileState();
 
@@ -265,13 +268,15 @@ const FormFill = (_props: BaseToolProps) => {
         detail: { blob: filledBlob },
       });
       window.dispatchEvent(event);
-    } catch (err: any) {
+    } catch (err) {
+      const status = isAxiosError(err) ? err.response?.status : undefined;
       const message =
-        err?.response?.status === 413
+        status === 413
           ? "File too large. Try reducing the PDF size first."
-          : err?.response?.status === 400
+          : status === 400
             ? "Invalid form data. Please check all fields."
-            : err?.message || "Failed to save filled form";
+            : (err instanceof Error ? err.message : undefined) ||
+              "Failed to save filled form";
       setSaveError(message);
       console.error("[FormFill] Save failed:", err);
     } finally {
@@ -488,7 +493,10 @@ const FormFill = (_props: BaseToolProps) => {
 
                 {/* Flatten toggle */}
                 <Switch
-                  label="Flatten after filling"
+                  label={t(
+                    "formFill.flattenAfterFilling",
+                    "Flatten after filling",
+                  )}
                   checked={flatten}
                   onChange={(e) => setFlatten(e.currentTarget.checked)}
                   size="xs"
@@ -507,15 +515,22 @@ const FormFill = (_props: BaseToolProps) => {
                       loading={saving}
                       disabled={!formState.isDirty && !flattenChanged}
                     >
-                      Save
+                      {t("formFill.save", "Save")}
                     </Button>
 
-                    <Tooltip label="Re-scan fields" withArrow position="bottom">
+                    <Tooltip
+                      label={t("formFill.rescanFields", "Re-scan fields")}
+                      withArrow
+                      position="bottom"
+                    >
                       <ActionIcon
                         variant="light"
                         size="md"
                         onClick={handleRefresh}
-                        aria-label="Re-scan form fields"
+                        aria-label={t(
+                          "formFill.rescanFormFields",
+                          "Re-scan form fields",
+                        )}
                       >
                         <RefreshIcon sx={{ fontSize: 16 }} />
                       </ActionIcon>

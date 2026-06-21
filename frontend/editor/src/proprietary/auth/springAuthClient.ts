@@ -18,6 +18,7 @@ import {
   isDesktopSaaSAuthMode,
   refreshPlatformSession,
   savePlatformToken,
+  shouldCallBackendLogout,
 } from "@app/extensions/platformSessionBridge";
 import { startOAuthNavigation } from "@app/extensions/oauthNavigation";
 
@@ -352,9 +353,13 @@ class SpringAuthClient {
               platformUser?.email ||
               platformUser?.username ||
               "desktop-saas-user",
-            email: platformUser?.email || "",
-            username: platformUser?.username || platformUser?.email || "User",
+            email: platformUser?.email ?? "",
+            // Username may be empty when the platform layer can't identify
+            // the user - downstream displayName derivation handles that
+            // case and falls back to a generic placeholder.
+            username: platformUser?.username ?? "",
             role: "USER",
+            is_anonymous: platformUser?.is_anonymous,
           },
           access_token: token,
           expires_in: tokenExpiry.expiresIn,
@@ -392,22 +397,19 @@ class SpringAuthClient {
       // console.debug('[SpringAuth] getSession: Session retrieved successfully');
       return { data: { session }, error: null };
     } catch (error: unknown) {
-      console.error("[SpringAuth] getSession error:", error);
-
-      // If 401/403, token is invalid - try explicit refresh
+      // 401/403 during getSession is the normal "token expired or invalid"
+      // path - handled via refresh + JWT clear.
       const status = getHttpStatus(error);
       if (status === 401 || status === 403) {
-        // A 401 during startup can be a race with a concurrent refresh. Try one
-        // explicit refresh before treating the session as invalid.
         const refreshResult = await this.refreshSession();
         if (!refreshResult.error && refreshResult.data.session) {
           return refreshResult;
         }
         localStorage.removeItem("stirling_jwt");
-        console.debug("[SpringAuth] getSession: Not authenticated");
         return { data: { session: null }, error: null };
       }
 
+      console.error("[SpringAuth] getSession error:", error);
       // Don't clear token for other errors (e.g., backend not ready, network issues)
       // The token is still valid, just can't verify it right now
       return {
@@ -575,15 +577,24 @@ class SpringAuthClient {
           "1",
         );
       }
-      const response = await apiClient.post("/api/v1/auth/logout", null, {
-        headers: {
-          "X-XSRF-TOKEN": this.getCsrfToken() || "",
-        },
-        withCredentials: true,
-      });
 
-      if (response.status === 200) {
-        // console.debug('[SpringAuth] signOut: Success');
+      // Only call the backend logout endpoint when the platform tells us
+      // the current backend implements it. In desktop SaaS mode the
+      // apiClient points at the SaaS gateway, which doesn't expose
+      // `/api/v1/auth/logout` (Supabase manages session lifecycle); POSTing
+      // there returns 500 and pollutes error toasts even though the local
+      // cleanup below succeeds.
+      if (await shouldCallBackendLogout()) {
+        const response = await apiClient.post("/api/v1/auth/logout", null, {
+          headers: {
+            "X-XSRF-TOKEN": this.getCsrfToken() || "",
+          },
+          withCredentials: true,
+        });
+
+        if (response.status === 200) {
+          // console.debug('[SpringAuth] signOut: Success');
+        }
       }
 
       // Clean up local storage
@@ -641,6 +652,12 @@ class SpringAuthClient {
           cleanupError,
         );
       }
+      // The user is logged out *locally* even if the backend call failed
+      // (token + platform user_info are gone). The previous version skipped
+      // this notification on error - the AuthProvider then never cleared
+      // its session state, leaving the UI claiming the user was still signed
+      // in until a full reload.
+      this.notifyListeners("SIGNED_OUT", null);
       return {
         error: { message: getErrorMessage(error, "Logout failed") },
       };
@@ -719,10 +736,11 @@ class SpringAuthClient {
 
       return { data: { session }, error: null };
     } catch (error: unknown) {
-      console.error("[SpringAuth] refreshSession error:", error);
       localStorage.removeItem("stirling_jwt");
 
-      // Handle different error statuses
+      // 401/403 means the refresh token is no longer valid - normal expired
+      // state, not an error worth surfacing. Other statuses (network, backend
+      // down) ARE worth logging.
       const status = getHttpStatus(error);
       if (status === 401 || status === 403) {
         return {
@@ -731,6 +749,7 @@ class SpringAuthClient {
         };
       }
 
+      console.error("[SpringAuth] refreshSession error:", error);
       return {
         data: { session: null },
         error: { message: getErrorMessage(error, "Token refresh failed") },
