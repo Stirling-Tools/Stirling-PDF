@@ -47,12 +47,21 @@ const resolves = (k) =>
   pluralBases.has(k) ||
   [...keys].some((x) => x.startsWith(`${k}.`));
 
-// Collect source files (excluding stories/tests).
+// Collect source files (excluding stories/tests). Skip symlinks so a stray link
+// can't send the walk into a cycle, and cap depth defensively — the source tree
+// is only a few levels deep, so the cap trips only on a pathological loop.
+const MAX_DEPTH = 30;
 const files = [];
-(function walkDir(dir) {
+(function walkDir(dir, depth = 0) {
+  if (depth > MAX_DEPTH) {
+    throw new Error(
+      `check-i18n: directory nesting exceeded ${MAX_DEPTH} at ${dir}`,
+    );
+  }
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (e.isSymbolicLink()) continue;
     const p = path.join(dir, e.name);
-    if (e.isDirectory()) walkDir(p);
+    if (e.isDirectory()) walkDir(p, depth + 1);
     else if (
       /\.(ts|tsx)$/.test(e.name) &&
       !/\.(stories|test|spec)\./.test(e.name)
