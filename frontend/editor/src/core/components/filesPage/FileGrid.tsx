@@ -8,8 +8,8 @@ import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import DriveFileMoveIcon from "@mui/icons-material/DriveFileMove";
 import DeleteIcon from "@mui/icons-material/Delete";
+import HistoryIcon from "@mui/icons-material/History";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import VisibilityIcon from "@mui/icons-material/Visibility";
 import DriveFileRenameOutlineIcon from "@mui/icons-material/DriveFileRenameOutline";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
@@ -60,8 +60,6 @@ interface FileGridProps {
   onOpenFolder: (id: FolderId) => void;
   /** "Add to workspace". */
   onOpenFile: (file: StirlingFileStub) => void;
-  /** "Quick view". */
-  onQuickView: (file: StirlingFileStub) => void;
   onMoveFiles: (
     fileIds: FileId[],
     targetFolderId: FolderId | null,
@@ -80,6 +78,8 @@ interface FileGridProps {
   onPromptMoveFiles: (fileIds: FileId[]) => void;
   /** Per-file Save to server; hidden when file already has remoteStorageId. */
   onSaveToServer?: (file: StirlingFileStub) => void;
+  /** Open the version-history modal for a file (only when it has >1 version). */
+  onVersionHistory?: (file: StirlingFileStub) => void;
   /** When set, the Save to server item renders disabled with this tooltip. */
   saveToServerDisabledReason?: string | null;
   /** When supplied the list-view column headers become sortable. */
@@ -329,7 +329,6 @@ function GridView({
   onSelectFile,
   onOpenFolder,
   onOpenFile,
-  onQuickView,
   onMoveFiles,
   onMoveFolder,
   onRenameFolder,
@@ -338,6 +337,7 @@ function GridView({
   onRemoveFiles,
   onPromptMoveFiles,
   onSaveToServer,
+  onVersionHistory,
   saveToServerDisabledReason,
 }: FileGridProps) {
   return (
@@ -380,7 +380,6 @@ function GridView({
                 onSelectFile(entry.file!.id, e.shiftKey, e.metaKey || e.ctrlKey)
               }
               onDoubleClick={() => onOpenFile(entry.file!)}
-              onQuickView={() => onQuickView(entry.file!)}
               onRemove={() => onRemoveFiles([entry.file!.id])}
               onMove={() => {
                 const target = selectedFileIds.has(entry.file!.id)
@@ -390,6 +389,11 @@ function GridView({
               }}
               onSaveToServer={
                 onSaveToServer ? () => onSaveToServer(entry.file!) : undefined
+              }
+              onVersionHistory={
+                onVersionHistory
+                  ? () => onVersionHistory(entry.file!)
+                  : undefined
               }
               saveToServerDisabledReason={saveToServerDisabledReason}
             />
@@ -610,11 +614,12 @@ interface FileCardProps {
   multiSelectActive: boolean;
   onClick: (e: React.MouseEvent) => void;
   onDoubleClick: () => void;
-  onQuickView: () => void;
   onRemove: () => void;
   onMove: () => void;
   /** Kebab Save to server; only fires when file is local-only. */
   onSaveToServer?: () => void;
+  /** Open the version-history modal; shown only when file has >1 version. */
+  onVersionHistory?: () => void;
   /** When set, the kebab Save to server is disabled with this tooltip. */
   saveToServerDisabledReason?: string | null;
 }
@@ -628,10 +633,10 @@ function FileCard({
   multiSelectActive,
   onClick,
   onDoubleClick,
-  onQuickView,
   onRemove,
   onMove,
   onSaveToServer,
+  onVersionHistory,
   saveToServerDisabledReason,
 }: FileCardProps) {
   const { t } = useTranslation();
@@ -786,15 +791,6 @@ function FileCard({
             >
               {t("filesPage.addToWorkspace", "Add to workspace")}
             </Menu.Item>
-            <Menu.Item
-              leftSection={<VisibilityIcon fontSize="small" />}
-              onClick={(e) => {
-                e.stopPropagation();
-                onQuickView();
-              }}
-            >
-              {t("filesPage.quickView", "Quick view")}
-            </Menu.Item>
             <OpenInNewWindowMenuItem file={file} />
             <Menu.Item
               leftSection={<DriveFileMoveIcon fontSize="small" />}
@@ -834,6 +830,17 @@ function FileCard({
                 </Menu.Item>
               </Tooltip>
             )}
+            {onVersionHistory && (file.versionNumber ?? 1) > 1 && (
+              <Menu.Item
+                leftSection={<HistoryIcon fontSize="small" />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onVersionHistory();
+                }}
+              >
+                {t("filesPage.versionHistory", "Version history")}
+              </Menu.Item>
+            )}
             <Menu.Divider />
             <Menu.Item
               color="red"
@@ -860,12 +867,12 @@ function ListView({
   onSetSelection,
   onOpenFolder,
   onOpenFile,
-  onQuickView,
   onMoveFiles,
   onMoveFolder,
   onRenameFolder,
   onDeleteFolder,
   onSaveToServer,
+  onVersionHistory,
   saveToServerDisabledReason,
   onChangeFolderAppearance,
   onRemoveFiles,
@@ -989,7 +996,6 @@ function ListView({
                 onSelectFile(entry.file!.id, e.shiftKey, e.metaKey || e.ctrlKey)
               }
               onOpen={() => onOpenFile(entry.file!)}
-              onQuickView={() => onQuickView(entry.file!)}
               onRemove={() => onRemoveFiles([entry.file!.id])}
               onMove={() => {
                 const target = selectedFileIds.has(entry.file!.id)
@@ -999,6 +1005,11 @@ function ListView({
               }}
               onSaveToServer={
                 onSaveToServer ? () => onSaveToServer(entry.file!) : undefined
+              }
+              onVersionHistory={
+                onVersionHistory
+                  ? () => onVersionHistory(entry.file!)
+                  : undefined
               }
               saveToServerDisabledReason={saveToServerDisabledReason}
             />
@@ -1198,11 +1209,12 @@ interface FileRowProps {
   multiSelectActive: boolean;
   onClick: (e: React.MouseEvent) => void;
   onOpen: () => void;
-  onQuickView: () => void;
   onRemove: () => void;
   onMove: () => void;
   /** Kebab Save to server; only fires when file is local-only. */
   onSaveToServer?: () => void;
+  /** Open the version-history modal; shown only when file has >1 version. */
+  onVersionHistory?: () => void;
   /** When set, the kebab Save to server is disabled with this tooltip. */
   saveToServerDisabledReason?: string | null;
 }
@@ -1216,10 +1228,10 @@ function FileRow({
   multiSelectActive,
   onClick,
   onOpen,
-  onQuickView,
   onRemove,
   onMove,
   onSaveToServer,
+  onVersionHistory,
   saveToServerDisabledReason,
 }: FileRowProps) {
   const { t } = useTranslation();
@@ -1377,15 +1389,6 @@ function FileRow({
           >
             {t("filesPage.addToWorkspace", "Add to workspace")}
           </Menu.Item>
-          <Menu.Item
-            leftSection={<VisibilityIcon fontSize="small" />}
-            onClick={(e) => {
-              e.stopPropagation();
-              onQuickView();
-            }}
-          >
-            {t("filesPage.quickView", "Quick view")}
-          </Menu.Item>
           <OpenInNewWindowMenuItem file={file} />
           <Menu.Item
             leftSection={<DriveFileMoveIcon fontSize="small" />}
@@ -1423,6 +1426,17 @@ function FileRow({
                 {t("filesPage.saveToServer", "Save to server")}
               </Menu.Item>
             </Tooltip>
+          )}
+          {onVersionHistory && (file.versionNumber ?? 1) > 1 && (
+            <Menu.Item
+              leftSection={<HistoryIcon fontSize="small" />}
+              onClick={(e) => {
+                e.stopPropagation();
+                onVersionHistory();
+              }}
+            >
+              {t("filesPage.versionHistory", "Version history")}
+            </Menu.Item>
           )}
           <Menu.Divider />
           <Menu.Item

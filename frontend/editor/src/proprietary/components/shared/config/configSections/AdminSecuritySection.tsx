@@ -26,6 +26,7 @@ import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStic
 import apiClient from "@app/services/apiClient";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 
 interface SecuritySettingsData {
   enableLogin?: boolean;
@@ -364,7 +365,10 @@ export default function AdminSecuritySection() {
                     ),
                   },
                 ]}
-                comboboxProps={{ zIndex: 1400 }}
+                comboboxProps={{
+                  withinPortal: true,
+                  zIndex: Z_INDEX_OVER_CONFIG_MODAL,
+                }}
                 disabled={!loginEnabled}
               />
               {isFieldPending("loginMethod") && (
@@ -480,7 +484,10 @@ export default function AdminSecuritySection() {
                     ),
                   },
                 ]}
-                comboboxProps={{ zIndex: 1400 }}
+                comboboxProps={{
+                  withinPortal: true,
+                  zIndex: Z_INDEX_OVER_CONFIG_MODAL,
+                }}
                 disabled={!loginEnabled}
               />
             </div>
@@ -1191,7 +1198,10 @@ export default function AdminSecuritySection() {
                     ),
                   },
                 ]}
-                comboboxProps={{ zIndex: 1400 }}
+                comboboxProps={{
+                  withinPortal: true,
+                  zIndex: Z_INDEX_OVER_CONFIG_MODAL,
+                }}
                 disabled={!loginEnabled}
               />
             </div>

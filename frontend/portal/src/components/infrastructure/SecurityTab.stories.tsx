@@ -20,6 +20,18 @@ type Story = StoryObj<typeof SecurityTab>;
 
 export const Default: Story = {};
 
+// Enterprise unlocks HYOK key custody (with a live rotate affordance) and the
+// full attested compliance set, including PCI in-scope.
+export const Enterprise: Story = {
+  globals: { tier: "enterprise" },
+};
+
+// Free runs on Stirling-managed keys (rotate disabled, upgrade nudge) and a
+// trimmed attestation set with HIPAA/PCI not-applicable.
+export const Free: Story = {
+  globals: { tier: "free" },
+};
+
 export const Loading: Story = {
   parameters: {
     msw: {

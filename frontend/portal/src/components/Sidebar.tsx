@@ -11,9 +11,12 @@ import markLight from "@shared/assets/brand/modern-logo/StirlingPDFLogoNoTextLig
 import markDark from "@shared/assets/brand/modern-logo/StirlingPDFLogoNoTextDark.svg";
 import {
   HomeIcon,
+  UsersIcon,
   SourcesIcon,
+  PoliciesIcon,
   PipelinesIcon,
   DocumentsIcon,
+  ComponentsIcon,
   InfrastructureIcon,
   UsageIcon,
   DocsIcon,
@@ -22,10 +25,9 @@ import {
 } from "@portal/components/icons";
 import "@portal/components/Sidebar.css";
 
-// TEMP app switcher. The editor is a separate Vite app — no shared shell yet
-// (see PORTAL_INTEGRATION_PLAN.md), so switching is a hard navigation: the
-// editor's own dev server in dev, the site root in prod. A standalone portal
-// deploy will later gate this behind a configured editor URL.
+// The editor is a separate Vite app with no shared shell, so switching apps is
+// a hard navigation — the editor's dev server in dev, the site root in prod.
+// A standalone portal deploy can gate this behind a configured editor URL.
 const EDITOR_URL = import.meta.env.DEV ? "http://localhost:5180/" : "/";
 
 interface NavEntry {
@@ -39,9 +41,12 @@ const GROUP_PRIMARY: NavEntry[] = [
 ];
 
 const GROUP_OPERATIONAL: NavEntry[] = [
+  { id: "users", label: "Users", icon: <UsersIcon /> },
   { id: "sources", label: "Sources", icon: <SourcesIcon /> },
+  { id: "policies", label: "Policies", icon: <PoliciesIcon /> },
   { id: "pipelines", label: "Pipelines", icon: <PipelinesIcon /> },
   { id: "documents", label: "Documents", icon: <DocumentsIcon /> },
+  { id: "components", label: "Components", icon: <ComponentsIcon /> },
 ];
 
 const GROUP_PLATFORM: NavEntry[] = [
@@ -132,11 +137,13 @@ export function Sidebar() {
       <div className="portal-sidebar__logo">
         <span className="portal-sidebar__brand">
           <img
-            className="portal-sidebar__brand-logo"
-            src={theme === "dark" ? wordmarkDark : wordmarkLight}
-            alt="Stirling PDF"
+            className="portal-sidebar__brand-mark"
+            src={theme === "dark" ? markDark : markLight}
+            alt="Stirling"
           />
-          <span className="portal-sidebar__logo-suffix">portal</span>
+          <span className="portal-sidebar__logo-suffix">
+            Stirling Processor
+          </span>
         </span>
 
         <Dropdown.Root align="end" className="portal-sidebar__app-switch">
@@ -160,7 +167,7 @@ export function Sidebar() {
                 />
               }
             >
-              Portal
+              Processor
             </Dropdown.Item>
             <Dropdown.Item
               onSelect={() => {

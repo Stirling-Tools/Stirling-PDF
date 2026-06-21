@@ -14,7 +14,7 @@
   align-items: center;
   justify-content: flex-start;
   padding: 0.75rem 1rem; /* 12px 16px */
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--auth-input-border-light-only);
   border-radius: 0.75rem; /* 12px */
   background-color: var(--auth-card-bg-light-only);
   font-size: 1rem; /* 16px */
@@ -27,7 +27,7 @@
 }
 
 .oauth-button-vertical-desktop:hover:not(:disabled) {
-  background-color: #f3f4f6;
+  background-color: var(--bg-raised);
 }
 
 .oauth-button-vertical-desktop:disabled {

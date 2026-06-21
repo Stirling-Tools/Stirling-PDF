@@ -3,6 +3,7 @@ import type { Tier } from "@portal/contexts/TierContext";
 import {
   apiKeysFor,
   auditLogFor,
+  modelsResponseFor,
   recentDeploymentsFor,
   regionsFor,
   securityFor,
@@ -32,6 +33,11 @@ export const infrastructureHandlers = [
   http.get("/v1/infrastructure/security", async ({ request }) => {
     await delay(120);
     return HttpResponse.json(securityFor(tierFrom(request)));
+  }),
+
+  http.get("/v1/infrastructure/models", async ({ request }) => {
+    await delay(120);
+    return HttpResponse.json(modelsResponseFor(tierFrom(request)));
   }),
 
   http.get("/v1/infrastructure/storage", async ({ request }) => {

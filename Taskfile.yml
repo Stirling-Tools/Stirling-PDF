@@ -25,8 +25,28 @@ includes:
   e2e:
     taskfile: .taskfiles/e2e.yml
     dir: .
+  pre-commit:
+    taskfile: .taskfiles/pre-commit.yml
+    dir: .
 
 tasks:
+  # ============================================================
+  # Help (shown when you run `task` with no arguments)
+  # ============================================================
+
+  default:
+    desc: "List the most common commands"
+    silent: true
+    cmds:
+      - |
+        echo "Common commands (run 'task --list' to see all):"
+        echo ""
+        echo "  task dev            Start backend & frontend on free ports"
+        echo "  task backend:dev    Start backend on default port"
+        echo "  task frontend:dev   Start frontend on default port"
+        echo "  task desktop:dev    Start desktop app"
+        echo "  task check          Quality gate (lint, typecheck, test, etc.)"
+
   # ============================================================
   # Setup & Prerequisites
   # ============================================================
@@ -87,6 +107,7 @@ tasks:
         vars:
           PORT: '{{.BACKEND_PORT}}'
           AIENGINE_URL: 'http://localhost:{{.ENGINE_PORT}}'
+          AIENGINE_ENABLED: "true"
       - task: 'frontend:dev:{{.FRONTEND}}'
         vars:
           PORT: '{{.FRONTEND_PORT}}'
@@ -173,3 +194,4 @@ tasks:
       - task: backend:clean
       - task: frontend:clean
       - task: engine:clean
+      - task: pre-commit:clean

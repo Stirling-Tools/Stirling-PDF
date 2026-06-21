@@ -669,7 +669,7 @@ const SignPopout = ({
     const signedFile = new File([response.data], filename, {
       type: "application/pdf",
     });
-    await fileActions.addFiles([signedFile]);
+    await fileActions.addFiles([signedFile], { skipUploadTracking: true });
     alert({
       alertType: "success",
       title: t("success"),
@@ -700,7 +700,7 @@ const SignPopout = ({
     const signedFile = new File([response.data], filename, {
       type: "application/pdf",
     });
-    await fileActions.addFiles([signedFile]);
+    await fileActions.addFiles([signedFile], { skipUploadTracking: true });
     alert({
       alertType: "success",
       title: t("success"),

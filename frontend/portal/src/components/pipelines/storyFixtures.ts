@@ -1,4 +1,4 @@
-import type { Pipeline } from "@portal/api/pipelines";
+import type { Pipeline, PromotedPipeline } from "@portal/api/pipelines";
 
 /** Sample pipelines shared by the Pipelines component stories. */
 
@@ -33,7 +33,7 @@ export const HEALTHY_PIPELINE: Pipeline = {
     },
     { key: "route", label: "Route / Store", ops: ["Primary store", "Notify"] },
   ],
-  golden: { passing: 42, total: 42, lastRun: "1h ago" },
+  golden: { passing: 42, total: 42, lastRun: "1h ago", threshold: 0.95 },
   drift: [],
 };
 
@@ -54,7 +54,7 @@ export const DEGRADED_PIPELINE: Pipeline = {
     p95LatencyMs: 740,
     uptime: 0.9962,
   },
-  golden: { passing: 24, total: 28, lastRun: "47m ago" },
+  golden: { passing: 24, total: 28, lastRun: "47m ago", threshold: 0.9 },
   drift: [
     {
       field: "procedure_codes",
@@ -72,3 +72,31 @@ export const DEGRADED_PIPELINE: Pipeline = {
     },
   ],
 };
+
+/** Sample watch-folder-promoted flows for the PromotedPipelines stories. */
+export const PROMOTED_PIPELINES: PromotedPipeline[] = [
+  {
+    id: "pl-promo-statements",
+    name: "Bank Statement Normalizer",
+    sourceDocType: "Bank statement",
+    watchFolder: "~/StirlingWatch/statements-in",
+    status: "deployed",
+    promotedAt: "promoted 3d ago",
+  },
+  {
+    id: "pl-promo-receipts",
+    name: "Receipt Splitter",
+    sourceDocType: "Expense receipt",
+    watchFolder: "~/StirlingWatch/receipts",
+    status: "staged",
+    promotedAt: "promoted 11h ago",
+  },
+  {
+    id: "pl-promo-onboarding",
+    name: "New-Hire Packet Sorter",
+    sourceDocType: "Onboarding packet",
+    watchFolder: "\\\\hr-share\\NewHireScans",
+    status: "review",
+    promotedAt: "promoted 2h ago",
+  },
+];

@@ -58,15 +58,23 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          pip install --require-hashes --only-binary=:all: -r ./.github/scripts/requirements_sync_readme.txt -r ./.github/scripts/requirements_pre_commit.txt
+          pip install --require-hashes --only-binary=:all: -r ./.github/scripts/requirements_sync_readme.txt
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          enable-cache: true
+
+      - name: Install Task
+        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
 
       - name: Sync translation TOML files
         run: |
           python .github/scripts/check_language_toml.py --reference-file "frontend/editor/public/locales/en-US/translation.toml" --branch main
 
-      - name: pre-commit run
+      - name: Sort translation TOML files
         run: |
-          pre-commit run toml-sort-fix --all-files
+          task pre-commit:toml-sort FIX=1
 
       - name: Commit translation files
         run: |

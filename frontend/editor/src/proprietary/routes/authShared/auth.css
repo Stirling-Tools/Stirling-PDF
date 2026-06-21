@@ -631,8 +631,15 @@
   width: auto;
 }
 
+/* Two logo variants are rendered; show the one matching the active theme. */
 .auth-logo-header--dark {
   display: none;
+}
+[data-mantine-color-scheme="dark"] .auth-logo-header--light {
+  display: none;
+}
+[data-mantine-color-scheme="dark"] .auth-logo-header--dark {
+  display: block;
 }
 
 /* ── Page entrance animation ────────────────────────────────────────── */

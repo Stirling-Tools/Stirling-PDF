@@ -153,17 +153,18 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
     const canProceed = await confirmIfDirty();
     if (!canProceed) return;
 
-    // Pop back to whatever the user came from (files / viewer / tools).
-    // location.key === "default" means /settings was the first entry in
-    // this tab (deep link / refresh), so there's nothing to pop to;
-    // fall back to home in that case.
-    if (location.key === "default") {
-      navigate("/", { replace: true });
-    } else {
-      navigate(-1);
+    // Only unwind history if settings was opened via the URL; opened via state
+    // there's no /settings entry to pop and navigate(-1) would jump to /files.
+    if (location.pathname.startsWith("/settings")) {
+      // "default" key = first entry (deep link/refresh); nothing to pop to.
+      if (location.key === "default") {
+        navigate("/", { replace: true });
+      } else {
+        navigate(-1);
+      }
     }
     onClose();
-  }, [confirmIfDirty, location.key, navigate, onClose]);
+  }, [confirmIfDirty, location.key, location.pathname, navigate, onClose]);
 
   // Synchronous wrapper for contexts (e.g. tour buttons) that need () => void
   const handleCloseSync = useCallback(() => {
