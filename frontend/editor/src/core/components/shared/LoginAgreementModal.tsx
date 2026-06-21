@@ -1,5 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { Box, Button, Group, Modal, ScrollArea, Stack } from "@mantine/core";
+import { useLocation } from "react-router-dom";
+import {
+  Box,
+  Button,
+  Divider,
+  Group,
+  Modal,
+  ScrollArea,
+  Stack,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -36,7 +45,10 @@ function getLoginNonce(loginEnabled: boolean, userId?: string): string {
 }
 
 const markdownComponents = {
-  a: (props: any) => <a {...props} target="_blank" rel="noopener noreferrer" />,
+  // Strip react-markdown's `node` prop so it isn't spread onto the DOM element.
+  a: ({ node, ...props }: any) => (
+    <a {...props} target="_blank" rel="noopener noreferrer" />
+  ),
 };
 
 /**
@@ -48,6 +60,7 @@ export default function LoginAgreementModal() {
   const { t, i18n } = useTranslation();
   const { config } = useAppConfig();
   const { user, signOut } = useAuth();
+  const { pathname } = useLocation();
 
   const [opened, setOpened] = useState(false);
   const [content, setContent] = useState("");
@@ -55,8 +68,10 @@ export default function LoginAgreementModal() {
 
   useEffect(() => {
     if (!config) return;
-    // Never gate the login/auth screens themselves.
-    if (window.location.pathname.startsWith("/login")) return;
+    // Never gate the login/auth screens themselves. pathname is a dep (not window.location) so
+    // the gate re-runs when the SPA navigates from /login to / after an interactive login -
+    // AppLayout stays mounted across that route change, so nothing else would re-trigger it.
+    if (pathname.startsWith("/login")) return;
 
     const loginEnabled = config.enableLogin !== false;
     let cancelled = false;
@@ -90,14 +105,15 @@ export default function LoginAgreementModal() {
         setContent(data.content);
         setOpened(true);
       } catch {
-        // Unreachable or unauthorized: fail closed (do not block the app).
+        // On fetch error (unreachable/unauthorized) fail OPEN: don't block app usage on a
+        // disclaimer we couldn't load.
       }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [config, i18n.language, user?.id]);
+  }, [config, i18n.language, user?.id, pathname]);
 
   const handleAccept = () => {
     try {
@@ -144,11 +160,15 @@ export default function LoginAgreementModal() {
       <Stack>
         <ScrollArea.Autosize mah="50vh" type="auto">
           <Box px="xs">
-            <Markdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+            <Markdown
+              remarkPlugins={[remarkGfm]}
+              components={markdownComponents}
+            >
               {content}
             </Markdown>
           </Box>
         </ScrollArea.Autosize>
+        <Divider />
         <Group justify="flex-end" gap="sm">
           <Button variant="default" onClick={handleDecline}>
             {t("loginAgreementDecline", "Decline")}

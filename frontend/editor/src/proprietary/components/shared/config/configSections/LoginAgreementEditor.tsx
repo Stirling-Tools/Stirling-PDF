@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
+  Anchor,
   Button,
   Group,
   Loader,
@@ -10,7 +12,9 @@ import {
   Stack,
   Text,
   Textarea,
+  Tooltip,
 } from "@mantine/core";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import apiClient from "@app/services/apiClient";
@@ -35,6 +39,7 @@ export default function LoginAgreementEditor({
   disabled,
 }: LoginAgreementEditorProps) {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
   const initialLocale = Object.prototype.hasOwnProperty.call(
     supportedLanguages,
     i18n.language,
@@ -47,6 +52,7 @@ export default function LoginAgreementEditor({
   const [loadedContent, setLoadedContent] = useState("");
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -60,10 +66,24 @@ export default function LoginAgreementEditor({
         const loaded = resp.data?.content ?? "";
         setContent(loaded);
         setLoadedContent(loaded);
+        setLoadFailed(false);
       } catch {
         if (!cancelled) {
+          // Surface the failure instead of silently showing a blank editor (which is
+          // indistinguishable from "no file yet"), and keep Save disabled so a stale buffer
+          // can't overwrite a file that exists but failed to load.
           setContent("");
           setLoadedContent("");
+          setLoadFailed(true);
+          alert({
+            alertType: "error",
+            title: t("admin.error", "Error"),
+            body: t(
+              "admin.settings.legal.loginAgreement.loadError",
+              "Failed to load the agreement for {{locale}}. Switch language and back to retry.",
+              { locale },
+            ),
+          });
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -72,9 +92,43 @@ export default function LoginAgreementEditor({
     return () => {
       cancelled = true;
     };
-  }, [locale]);
+  }, [locale, t]);
 
   const dirty = content !== loadedContent;
+
+  const handleLocaleChange = (value: string | null) => {
+    if (!value || value === locale) return;
+    // Don't silently discard unsaved markdown when switching languages.
+    if (
+      dirty &&
+      !window.confirm(
+        t(
+          "admin.settings.legal.loginAgreement.discardConfirm",
+          "You have unsaved changes that will be lost. Switch language anyway?",
+        ),
+      )
+    ) {
+      return;
+    }
+    setLocale(value);
+  };
+
+  // Jump to the General settings section where the default locale (the fallback used when a
+  // language has no file) is configured. Guard unsaved edits like the language switch.
+  const goToDefaultLocaleSetting = () => {
+    if (
+      dirty &&
+      !window.confirm(
+        t(
+          "admin.settings.legal.loginAgreement.discardConfirm",
+          "You have unsaved changes that will be lost. Switch language anyway?",
+        ),
+      )
+    ) {
+      return;
+    }
+    navigate("/settings/adminGeneral");
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -108,10 +162,35 @@ export default function LoginAgreementEditor({
     <Stack gap="md">
       <Group align="flex-end" justify="space-between" wrap="nowrap" gap="sm">
         <Select
-          label={t("admin.settings.legal.loginAgreement.language", "Language")}
+          label={
+            <Group gap={6} align="center" wrap="nowrap">
+              <span>
+                {t("admin.settings.legal.loginAgreement.language", "Language")}
+              </span>
+              <Tooltip
+                multiline
+                w={300}
+                withArrow
+                withinPortal
+                zIndex={Z_INDEX_OVER_CONFIG_MODAL}
+                label={t(
+                  "admin.settings.legal.loginAgreement.languageHelp",
+                  "Each language has its own file. If a user's language has no file, the agreement falls back to the default locale's file, then to the fallback text.",
+                )}
+              >
+                <InfoOutlinedIcon
+                  style={{
+                    fontSize: 15,
+                    cursor: "help",
+                    color: "var(--mantine-color-dimmed)",
+                  }}
+                />
+              </Tooltip>
+            </Group>
+          }
           data={languageOptions}
           value={locale}
-          onChange={(value) => value && setLocale(value)}
+          onChange={handleLocaleChange}
           searchable
           disabled={disabled || saving}
           maxDropdownHeight={280}
@@ -124,7 +203,7 @@ export default function LoginAgreementEditor({
         <Button
           onClick={handleSave}
           loading={saving}
-          disabled={disabled || loading || !dirty}
+          disabled={disabled || loading || loadFailed || !dirty}
         >
           {t("admin.settings.legal.loginAgreement.save", "Save text")}
         </Button>
@@ -169,10 +248,34 @@ export default function LoginAgreementEditor({
           "admin.settings.legal.loginAgreement.textDescription",
           "Saved to customFiles/disclaimer/{{locale}}.md and shown live on the next login. Leave blank to remove this language.",
           { locale },
+        )}{" "}
+        <Anchor
+          size="xs"
+          component="button"
+          type="button"
+          onClick={goToDefaultLocaleSetting}
+        >
+          {t(
+            "admin.settings.legal.loginAgreement.defaultLocaleLink",
+            "Configure the default locale",
+          )}
+        </Anchor>{" "}
+        {t(
+          "admin.settings.legal.loginAgreement.defaultLocaleHint",
+          "— used as the fallback when a language has no file.",
         )}
       </Text>
 
       {loading && <Loader size="xs" />}
+      {loadFailed && !loading && (
+        <Text size="xs" c="red">
+          {t(
+            "admin.settings.legal.loginAgreement.loadError",
+            "Failed to load the agreement for {{locale}}. Switch language and back to retry.",
+            { locale },
+          )}
+        </Text>
+      )}
     </Stack>
   );
 }

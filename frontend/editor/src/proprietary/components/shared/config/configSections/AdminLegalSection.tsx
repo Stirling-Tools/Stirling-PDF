@@ -21,7 +21,7 @@ import PendingBadge from "@app/components/shared/config/PendingBadge";
 import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStickyFooter";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
-import LoginAgreementEditor from "./LoginAgreementEditor";
+import LoginAgreementEditor from "@app/components/shared/config/configSections/LoginAgreementEditor";
 
 interface LegalSettingsData {
   termsAndConditions?: string;
@@ -56,6 +56,23 @@ export default function AdminLegalSection() {
     isFieldPending,
   } = useAdminSettings<LegalSettingsData>({
     sectionName: "legal",
+    // The flat legal URL fields save through the section endpoint as before; the nested
+    // loginAgreement object is flattened to dotted keys sent via the global settings endpoint
+    // (updateSettingsTransactional), which merges into the existing node. Saving a partial
+    // nested object through the section endpoint would replace the whole loginAgreement node
+    // and drop the sibling keys the UI didn't touch (e.g. fallbackText). fallbackText is not
+    // edited here, so it is deliberately omitted and left untouched.
+    saveTransformer: (current: LegalSettingsData) => {
+      const { loginAgreement, ...flat } = current;
+      const deltaSettings: Record<string, unknown> = {};
+      if (loginAgreement) {
+        deltaSettings["legal.loginAgreement.enabled"] =
+          loginAgreement.enabled ?? false;
+        deltaSettings["legal.loginAgreement.showInAnonymousMode"] =
+          loginAgreement.showInAnonymousMode ?? true;
+      }
+      return { sectionData: flat, deltaSettings };
+    },
   });
 
   useEffect(() => {

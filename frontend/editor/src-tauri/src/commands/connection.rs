@@ -257,9 +257,16 @@ pub fn apply_provisioning_if_present(app_handle: &AppHandle) -> Result<(), Strin
         .map(|value| value.trim().to_string())
         .filter(|value| !value.is_empty());
 
-    if server_url.is_none() && parsed.update_mode.is_none() {
+    // Only short-circuit when there is nothing left to apply. login_agreement is handled above,
+    // but it must still be in this guard so a login-agreement-only file falls through to the
+    // deletion block at the end (otherwise the per-user file would linger and re-apply forever).
+    if server_url.is_none()
+        && parsed.update_mode.is_none()
+        && parsed.login_agreement_enabled.is_none()
+    {
         add_log(
-            "⚠️ Provisioning file has neither serverUrl nor updateMode; skipping apply".to_string(),
+            "⚠️ Provisioning file has no actionable fields (serverUrl/updateMode/loginAgreement); skipping apply"
+                .to_string(),
         );
         return Ok(());
     }
