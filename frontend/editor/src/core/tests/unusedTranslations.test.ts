@@ -37,6 +37,10 @@ const IGNORED_KEY_PATTERNS: RegExp[] = [
   /^admin\.settings\./,
   /^settings\./,
   /^account\./,
+  // Per-locale metadata: [language] direction declares the script's text
+  // direction (ltr/rtl). It's read by the i18n layer, never as a UI t() string,
+  // so it never appears as a literal in source.
+  /^language\.direction$/,
 ];
 
 const flattenKeys = (
