@@ -115,9 +115,15 @@ public class CertificateValidationService {
             log.info("Enabled AIA certificate fetching and revocation checking");
         }
 
+        // The desktop app has no server cert and no admin to flip trust flags, so it would
+        // otherwise have zero trust anchors (everything "untrusted"). Use the bundled system CA
+        // store there so trust validation is meaningful (CA-signed -> trusted, self-signed -> not).
+        boolean desktop =
+                Boolean.parseBoolean(System.getProperty("STIRLING_PDF_TAURI_MODE", "false"));
+
         // Trust only what we explicitly opt into:
         if (validation.getTrust().isServerAsAnchor()) loadServerCertAsAnchor();
-        if (validation.getTrust().isUseSystemTrust()) loadJavaSystemTrustStore();
+        if (validation.getTrust().isUseSystemTrust() || desktop) loadJavaSystemTrustStore();
         if (validation.getTrust().isUseMozillaBundle()) loadBundledMozillaCACerts();
         if (validation.getTrust().isUseAATL()) loadAATLCertificates();
         if (validation.getTrust().isUseEUTL()) loadEUTLCertificates();

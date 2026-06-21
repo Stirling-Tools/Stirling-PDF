@@ -204,6 +204,10 @@ export class PdfiumPage {
    * Draw text on the page. API compatible with pdf-lib's `PDFPage.drawText()`.
    */
   drawText(text: string, options: DrawTextOptions): void {
+    // Guard against null/undefined values reaching the WASM UTF-16 writer, which
+    // would throw and abort the whole report. Nothing to draw for an empty string.
+    if (text == null || text === "") return;
+    const safeText = String(text);
     const { x, y, size, font, color } = options;
     const m = this._m;
     const fontName = font?.name ?? "Helvetica";
@@ -212,7 +216,7 @@ export class PdfiumPage {
     if (!textObjPtr) return;
 
     // Set text content (UTF-16)
-    const textPtr = writeUtf16(m, text);
+    const textPtr = writeUtf16(m, safeText);
     m.FPDFText_SetText(textObjPtr, textPtr);
     m.pdfium.wasmExports.free(textPtr);
 

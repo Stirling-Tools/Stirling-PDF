@@ -170,12 +170,15 @@ export const useValidateSignatureOperation =
                     "[validateSignature] PDF report generation failed",
                     err,
                   );
+                  const detail =
+                    err instanceof Error ? err.message : String(err);
                   setErrorMessage(
                     (prev) =>
                       prev ??
                       t(
                         "validateSignature.error.reportGeneration",
-                        "Could not generate the PDF report. JSON and CSV are available.",
+                        "Couldn't build the downloadable PDF report ({{detail}}). The on-screen report, JSON and CSV are still available.",
+                        { detail },
                       ),
                   );
                 }

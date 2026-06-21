@@ -2438,8 +2438,38 @@ noTeam = "No Team"
 noUsers = "No other users found."
 placeholder = "Select users..."
 
+[certSign.device]
+stepTitle = "This device"
+
 [certSign.error]
 failed = "An error occurred while processing signatures."
+
+[certSign.format]
+pkcs11 = "USB Token"
+windowsStore = "Windows certificate store"
+
+[certSign.hardware]
+certificate = "Certificate"
+customLibrary = "Custom driver path…"
+driver = "PKCS#11 driver"
+driverPath = "Driver library path"
+driverPathPlaceholder = "Full path to your PKCS#11 driver (.dll, .so or .dylib)"
+expired = "expired"
+expires = "expires"
+listCerts = "List certificates"
+loading = "Reading certificates…"
+noCerts = "No signing certificates found"
+noDriver = "No PKCS#11 driver was detected. Install your token's driver (e.g. OpenSC), then reopen this - or enter the driver path manually below."
+notYetValid = "not yet valid"
+pin = "Token PIN"
+pkcs11Hint = "Select your token's PKCS#11 driver, enter the PIN, then list the certificates on the token."
+pkcs11LoadError = "Could not read certificates from the token. Check the PIN and driver."
+refresh = "Refresh"
+selectCert = "Select certificate"
+selectDriver = "Select driver"
+slot = "Slot (optional)"
+windowsHint = "Pick a certificate from your Windows certificate store. Signing uses the key on your card/token - Windows will prompt for the PIN."
+windowsLoadError = "Could not read the Windows certificate store"
 
 [certSign.mobile]
 panelActions = "Actions"
@@ -2457,9 +2487,6 @@ pdfNotReadyDesc = "The signed PDF is being generated. Please try again in a mome
 [certSign.sign]
 results = "Signed PDF"
 submit = "Sign PDF"
-
-[certSign.signMode]
-stepTitle = "Sign Mode"
 
 [certSign.signMode.tooltip.auto]
 text = "Signs with a server <b>self-signed</b> certificate. Same <b>tamper-evident seal</b> and <b>audit trail</b>; typically shows <b>Unverified</b> in viewers."
@@ -2481,6 +2508,12 @@ title = "How signatures work"
 [certSign.signMode.tooltip.rule]
 text = "Need recipient <b>Trusted</b> status? <b>Manual</b>. Need a fast, tamper-evident seal and audit trail with no setup? <b>Auto</b>."
 title = "Rule of thumb"
+
+[certSign.source]
+device = "This device"
+server = "Server"
+stepTitle = "Certificate source"
+upload = "Upload"
 
 [certSign.tooltip.header]
 title = "About Managing Signatures"
@@ -7914,7 +7947,7 @@ pdf = "PDF"
 [validateSignature.error]
 allFailed = "Unable to validate the selected files."
 partial = "Some files could not be validated."
-reportGeneration = "Could not generate the PDF report. JSON and CSV are available."
+reportGeneration = "Couldn't build the downloadable PDF report ({{detail}}). The on-screen report, JSON and CSV are still available."
 unexpected = "Unexpected error during validation."
 
 [validateSignature.issue]
@@ -7922,6 +7955,7 @@ certExpired = "Certificate expired"
 certRevocationUnknown = "Certificate revocation status unknown"
 certRevoked = "Certificate revoked"
 chainInvalid = "Certificate chain invalid"
+selfSigned = "Self-signed - signer identity not verified"
 signatureInvalid = "Signature cryptographic check failed"
 trustInvalid = "Certificate not trusted"
 
@@ -7929,7 +7963,8 @@ trustInvalid = "Certificate not trusted"
 continued = "Continued"
 downloads = "Downloads"
 entryLabel = "Signature Summary"
-filesEvaluated = "{{count}} files evaluated"
+filesEvaluated_one = "{{count}} file evaluated"
+filesEvaluated_other = "{{count}} files evaluated"
 footer = "Validated via Stirling PDF"
 generatedAt = "Generated"
 noPdf = "PDF report will be available after a successful validation."
@@ -7939,6 +7974,9 @@ signatureCountLabel_one = "{{count}} signature"
 signatureCountLabel_other = "{{count}} signatures"
 signaturesFound_one = "{{count}} signature detected"
 signaturesFound_other = "{{count}} signatures detected"
+signaturesInvalid = "{{count}} invalid"
+signaturesUnverified_one = "{{count}} needs review"
+signaturesUnverified_other = "{{count}} need review"
 signaturesValid = "{{count}} fully valid"
 title = "Signature Validation Report"
 
@@ -7958,7 +7996,9 @@ _value = "Signature"
 [validateSignature.status]
 complete = "Validation complete"
 invalid = "Invalid"
+untrustedShort = "Unverified"
 valid = "Valid"
+validUntrusted = "Valid, signer not verified"
 
 [viewer]
 cannotPreviewFile = "Cannot Preview File"
