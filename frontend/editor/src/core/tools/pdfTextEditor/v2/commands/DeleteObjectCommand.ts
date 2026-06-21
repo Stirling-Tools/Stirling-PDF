@@ -1,7 +1,7 @@
 import type { Command } from "@app/tools/pdfTextEditor/v2/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDocument";
 import type { TextRunSnapshot } from "@app/tools/pdfTextEditor/v2/types";
-import { TextRun } from "@app/tools/pdfTextEditor/v2/model/TextRun";
+import type { TextRun } from "@app/tools/pdfTextEditor/v2/model/TextRun";
 import {
   collectContainersByPtr,
   collectMemberPtrs,
@@ -35,15 +35,14 @@ export class DeleteObjectCommand implements Command {
   private snapshot: TextRunSnapshot | null;
   /** Every sub-object pointer + its container at apply time. */
   private cachedPtrs: CapturedPtr[];
-  /** The rep's original pdfiumObjPtr, used to populate the restored TextRun. */
-  private cachedRepPtr: number;
+  /** The live run instance, re-attached on revert to keep all fields intact. */
+  private removedRun: TextRun | null = null;
 
   constructor(opts: { pageIndex: number; runId: string }) {
     this.pageIndex = opts.pageIndex;
     this.runId = opts.runId;
     this.snapshot = null;
     this.cachedPtrs = [];
-    this.cachedRepPtr = 0;
   }
 
   apply(doc: EditorDocument): void {
@@ -52,7 +51,7 @@ export class DeleteObjectCommand implements Command {
     if (!run) return;
     if (this.snapshot === null) {
       this.snapshot = run.snapshot();
-      this.cachedRepPtr = run.pdfiumObjPtr;
+      this.removedRun = run;
       const memberPtrs = collectMemberPtrs(run);
       const containerByPtr = collectContainersByPtr(run);
       const seen = new Set<number>();
@@ -79,7 +78,7 @@ export class DeleteObjectCommand implements Command {
   }
 
   revert(doc: EditorDocument): void {
-    if (!this.snapshot || this.cachedPtrs.length === 0) return;
+    if (!this.removedRun || this.cachedPtrs.length === 0) return;
     const page = doc.page(this.pageIndex);
     const m = doc.module;
     const formMod = m as unknown as {
@@ -101,11 +100,11 @@ export class DeleteObjectCommand implements Command {
         /* best-effort */
       }
     }
-    const restored = new TextRun({
-      ...this.snapshot,
-      pdfiumObjPtr: this.cachedRepPtr,
-    });
-    page.setRuns([...page.runs, restored]);
+    // Re-attach the live instance so every field (mergedFrom*, paragraph*,
+    // coverRectPtr, containerPtr) is restored exactly as before delete.
+    if (!page.findRun(this.removedRun.id)) {
+      page.setRuns([...page.runs, this.removedRun]);
+    }
     page.markDirty();
     page.markNeedsGenerate();
   }

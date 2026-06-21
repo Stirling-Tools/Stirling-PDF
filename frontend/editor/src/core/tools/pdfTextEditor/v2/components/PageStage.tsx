@@ -8,6 +8,7 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import { useEditorStore } from "@app/tools/pdfTextEditor/v2/hooks/useEditorStore";
 import { ensurePageRead } from "@app/tools/pdfTextEditor/v2/hooks/useDocumentLoader";
 import { useToolbarController } from "@app/tools/pdfTextEditor/v2/hooks/useToolbarController";
@@ -30,6 +31,7 @@ const DEFAULT_SCALE = 1.5;
  * paragraph / settings). Both subscribe to the same `EditorStore`.
  */
 export function PageStage() {
+  const { t } = useTranslation();
   const { store, state } = useEditorStore();
   const [selection, setSelection] = useState<SelectionState>(
     store.selection.value,
@@ -80,9 +82,14 @@ export function PageStage() {
         <Toolbar {...toolbar} />
         <Center style={{ flex: 1, minHeight: 0 }} data-testid="v2-stage-empty">
           <Stack align="center" gap="xs">
-            <Text c="dimmed">No document loaded.</Text>
+            <Text c="dimmed">
+              {t("pdfTextEditorV2.stage.noDocument", "No document loaded.")}
+            </Text>
             <Text c="dimmed" size="sm">
-              Pick a PDF from the Files panel on the left to begin editing.
+              {t(
+                "pdfTextEditorV2.stage.pickPrompt",
+                "Pick a PDF from the Files panel on the left to begin editing.",
+              )}
             </Text>
           </Stack>
         </Center>
@@ -99,7 +106,10 @@ export function PageStage() {
   const percent =
     p && p.total > 0 ? Math.round((p.current / p.total) * 100) : null;
   const stageLabel =
-    p?.stage ?? (state.hasDocument ? "Rendering preview" : "Loading document");
+    p?.stage ??
+    (state.hasDocument
+      ? t("pdfTextEditorV2.stage.renderingPreview", "Rendering preview")
+      : t("pdfTextEditorV2.stage.loadingDocument", "Loading document"));
 
   return (
     <Stack gap={0} h="100%" style={{ overflow: "hidden" }}>
@@ -138,7 +148,10 @@ export function PageStage() {
           if (
             store.getState().dirty &&
             !window.confirm(
-              "You have unsaved changes. Replace the open document and discard them?",
+              t(
+                "pdfTextEditorV2.confirmReplaceDirty",
+                "You have unsaved changes. Replace the open document and discard them?",
+              ),
             )
           ) {
             return;
@@ -170,10 +183,13 @@ export function PageStage() {
           >
             <Stack align="center" gap="xs">
               <Text fw={600} size="lg">
-                Drop a PDF to open
+                {t("pdfTextEditorV2.drop.title", "Drop a PDF to open")}
               </Text>
               <Text size="sm" c="dimmed">
-                Releases on the editor stage replace any open document.
+                {t(
+                  "pdfTextEditorV2.drop.hint",
+                  "Releases on the editor stage replace any open document.",
+                )}
               </Text>
             </Stack>
           </Center>
@@ -200,7 +216,10 @@ export function PageStage() {
                   w="100%"
                   size="sm"
                   data-testid="v2-load-progress"
-                  aria-label="Loading progress"
+                  aria-label={t(
+                    "pdfTextEditorV2.stage.loadingProgress",
+                    "Loading progress",
+                  )}
                 />
               ) : (
                 <Progress
@@ -209,7 +228,10 @@ export function PageStage() {
                   w="100%"
                   size="sm"
                   data-testid="v2-load-progress"
-                  aria-label="Loading progress"
+                  aria-label={t(
+                    "pdfTextEditorV2.stage.loadingProgress",
+                    "Loading progress",
+                  )}
                 />
               )}
               {p && p.total > 0 && (

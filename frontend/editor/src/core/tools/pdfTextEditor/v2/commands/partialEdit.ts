@@ -396,6 +396,8 @@ export function planPartialEdit(
       // whitespace. Don't reset lastSubRun either, so two real chars
       // from the same sub-run on either side of a ghost still dedupe.
       if (subRunIdx === -1) continue;
+      // Whitespace-only survivor of a now-deleted sub-run: drop, never keep its ptr.
+      if (subRunStatus[subRunIdx] === "all-deleted") continue;
       // Surviving chars of a mixed sub-run keep their ORIGINAL embedded
       // font: we SetText the surviving substring back onto the existing
       // object (one "modify" op per mixed sub-run) rather than removing

@@ -93,6 +93,9 @@ function coverageFor(fontId: string, status: FontStatusV2): GlyphCoverage {
   return { known: true, missing: missingAlnumFromCmap(cmap) };
 }
 
+// Symbol/ZapfDingbats are intentionally excluded: their a-z/A-Z slots are Greek
+// letters / dingbats, not Latin alphanumerics, so they are not safe-fallback
+// families and must not be badged "standard" with full alnum coverage.
 const STANDARD_14 = [
   "helvetica",
   "arial",
@@ -101,9 +104,11 @@ const STANDARD_14 = [
   "timesnewroman",
   "courier",
   "couriernew",
-  "symbol",
-  "zapfdingbats",
 ];
+
+// Style suffixes a genuine base-14 family may carry once separators are stripped
+// (e.g. "Helvetica-BoldOblique", "ArialMT", "Times-Roman").
+const BASE14_STYLE_SUFFIX = /^(bold|italic|oblique|regular|roman|mt|ps)+$/;
 
 /** Pull the readable family from a v2 fontId (`pdf:<ptr>:<family>` or `base14:<name>`). */
 function familyOf(fontId: string): string {
@@ -146,10 +151,14 @@ function isStandard14(fontId: string): boolean {
     .toLowerCase()
     .replace(/[-_\s]/g, "");
   if (NON_BASE14_MODIFIERS.some((mod) => f.includes(mod))) return false;
-  // Exact match, or a base-14 root followed only by a standard style suffix
-  // (Bold/Italic/Oblique/MT/PS…). `startsWith` (not `includes`) so a custom
-  // font that merely CONTAINS "arial" mid-name isn't mislabelled.
-  return STANDARD_14.some((p) => f === p || f.startsWith(p));
+  // Exact match, or a base-14 root whose remainder is ONLY a recognised style
+  // suffix (Bold/Italic/Oblique/MT/PS...). An open-ended startsWith would absorb
+  // distinct families like "TimesTen-Roman" or "Courier Prime".
+  return STANDARD_14.some(
+    (p) =>
+      f === p ||
+      (f.startsWith(p) && BASE14_STYLE_SUFFIX.test(f.slice(p.length))),
+  );
 }
 
 /**

@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { planParagraphEdit } from "@app/tools/pdfTextEditor/v2/commands/partialEdit";
+import {
+  planParagraphEdit,
+  planPartialEdit,
+} from "@app/tools/pdfTextEditor/v2/commands/partialEdit";
 import {
   TextRun,
   type ParagraphLineSlot,
@@ -73,6 +76,48 @@ function makeParagraph(lines: string[], separators: string[]): TextRun {
   run.paragraphLineHeight = 14;
   return run;
 }
+
+/**
+ * Build a single-sub-run TextRun whose own `mergedFrom*` arrays carry `text`
+ * as one object - the shape `planPartialEdit` diffs against. Used to exercise
+ * the surrogate-pair bailout directly.
+ */
+function makeSingleSubRun(text: string): TextRun {
+  const run = new TextRun({
+    id: "p0-t0",
+    pageIndex: 0,
+    bounds: { x: 0, y: 0, width: text.length * 6, height: 14 },
+    matrix: { a: 1, b: 0, c: 0, d: 1, e: 0, f: 800 },
+    text,
+    fontId: "pdf:1:LMRoman12",
+    fontSize: 12,
+    fill: { r: 0, g: 0, b: 0, a: 255 },
+    fontSubset: false,
+    pdfiumObjPtr: 0,
+  });
+  run.mergedFromPtrs = [200];
+  run.mergedFromTexts = [text];
+  run.mergedFromBounds = [{ x: 0, right: text.length * 6 }];
+  run.mergedFromCharStarts = [0];
+  return run;
+}
+
+describe("planPartialEdit surrogate-pair guard (astral chars)", () => {
+  it("bails (returns null) when prevText already contains an emoji surrogate pair", () => {
+    // "🎉" is two UTF-16 code units; the LCS indexes by code unit, so an
+    // existing astral char could split across keep/drop and emit a lone
+    // surrogate. The guard at partialEdit.ts must null the plan instead.
+    const run = makeSingleSubRun("🎉ab");
+    expect(planPartialEdit(run, "🎉ab", "🎉abc")).toBeNull();
+  });
+
+  it("returns a non-null plan for the same edit when prevText has NO surrogate", () => {
+    // Identical append, but an ASCII anchor instead of the emoji - proves the
+    // guard is specific to surrogate pairs and not a blanket bailout.
+    const run = makeSingleSubRun("Xab");
+    expect(planPartialEdit(run, "Xab", "Xabc")).not.toBeNull();
+  });
+});
 
 describe("planParagraphEdit slot-range line mapping", () => {
   it("does NOT bail on a soft-wrapped paragraph (the collapse bug)", () => {

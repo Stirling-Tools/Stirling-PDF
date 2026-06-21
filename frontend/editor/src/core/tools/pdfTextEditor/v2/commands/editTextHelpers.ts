@@ -65,9 +65,14 @@ export function isVerifiedPerCharPtr(ptr: number): boolean {
   return perCharBranchPtrs.has(ptr);
 }
 
+/** Doc-scoped reset: PDFium reuses freed pointers across documents. */
+export function resetPerCharBranchPtrs(): void {
+  perCharBranchPtrs.clear();
+}
+
 /** Test-only: clear the verified-ptr set between cases. */
 export function _clearVerifiedPerCharPtrsForTests(): void {
-  perCharBranchPtrs.clear();
+  resetPerCharBranchPtrs();
 }
 
 /** True when every character in `text` is also present in `pool`. */
@@ -85,13 +90,19 @@ export function everyCharIn(text: string, pool: string): boolean {
  *
  * Iterates by code POINT so an astral char (surrogate pair) is dropped whole -
  * a lone surrogate is never left behind. NBSP becomes a normal space (base-14
- * maps U+00A0 to ydieresis too).
+ * maps U+00A0 to ydieresis too). C0 controls, DEL and C1 controls are dropped
+ * since WinAnsi has no glyphs for them (tab/newline/CR are kept).
  */
 export function sanitizeForBase14(text: string): string {
   let out = "";
   for (const ch of text) {
     const cp = ch.codePointAt(0) ?? 0;
-    if (cp === 0x00a0) {
+    if (cp === 0x09 || cp === 0x0a || cp === 0x0d) {
+      out += ch;
+    } else if (cp < 0x20 || cp === 0x7f || (cp >= 0x80 && cp <= 0x9f)) {
+      // C0/DEL/C1 controls are un-encodable in WinAnsi - drop them.
+      continue;
+    } else if (cp === 0x00a0) {
       out += " ";
     } else if (cp <= 0xff) {
       out += ch;

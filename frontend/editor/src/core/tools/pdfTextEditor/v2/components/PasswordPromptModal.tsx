@@ -7,6 +7,7 @@ import {
   Button,
   PasswordInput,
 } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 
 interface PasswordPromptModalProps {
   /** Non-null opens the modal; null keeps it closed. */
@@ -27,6 +28,7 @@ export function PasswordPromptModal({
   onSubmit,
   onCancel,
 }: PasswordPromptModalProps) {
+  const { t } = useTranslation();
   const [password, setPassword] = useState("");
 
   // Clear the field whenever the prompt opens/closes so a new file (or a
@@ -44,24 +46,38 @@ export function PasswordPromptModal({
     <Modal
       opened={!!prompt}
       onClose={onCancel}
-      title="Password required"
+      title={t("pdfTextEditorV2.password.title", "Password required")}
       size="sm"
       data-testid="v2-password-modal"
     >
       <Stack gap="md">
         <Text size="sm">
           {prompt?.fileName
-            ? `"${prompt.fileName}" is password-protected.`
-            : "This PDF is password-protected."}
+            ? t(
+                "pdfTextEditorV2.password.protectedNamed",
+                '"{{fileName}}" is password-protected.',
+                { fileName: prompt.fileName },
+              )
+            : t(
+                "pdfTextEditorV2.password.protected",
+                "This PDF is password-protected.",
+              )}
         </Text>
         <PasswordInput
-          label="Password"
+          label={t("pdfTextEditorV2.password.label", "Password")}
           value={password}
           onChange={(e) => setPassword(e.currentTarget.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") submit();
           }}
-          error={prompt?.retry ? "Incorrect password - try again." : undefined}
+          error={
+            prompt?.retry
+              ? t(
+                  "pdfTextEditorV2.password.incorrect",
+                  "Incorrect password - try again.",
+                )
+              : undefined
+          }
           disabled={loading}
           data-autofocus
           data-testid="v2-password-input"
@@ -73,7 +89,7 @@ export function PasswordPromptModal({
             disabled={loading}
             data-testid="v2-password-cancel"
           >
-            Cancel
+            {t("pdfTextEditorV2.password.cancel", "Cancel")}
           </Button>
           <Button
             onClick={submit}
@@ -81,7 +97,7 @@ export function PasswordPromptModal({
             disabled={!password}
             data-testid="v2-password-submit"
           >
-            Open
+            {t("pdfTextEditorV2.password.open", "Open")}
           </Button>
         </Group>
       </Stack>

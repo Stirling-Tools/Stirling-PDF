@@ -251,6 +251,56 @@ test.describe("v2 editor - fixed-issue regressions", () => {
     );
   });
 
+  // ISSUE: typing an emoji (astral / surrogate-pair char) then saving must
+  // round-trip the FULL surrogate pair - a code-unit-level edit could split it
+  // and leave a lone surrogate, and the base-14 fallback must not render it as
+  // U+00FF ("ÿ") tofu. Exercises the surrogate path through a save+reopen.
+  test("typing an emoji round-trips without a lone surrogate or U+00FF tofu", async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    await open(page, SAMPLE, 1);
+    const id = await findId(page, 1, "Stirling\\s+PDF\\s+is\\s+a\\s+robust");
+    await caretEndInsert(page, id, " 🎉");
+    await blur(page, id);
+
+    // Save, then reopen the produced bytes.
+    const downloadPromise = page.waitForEvent("download");
+    await page.getByTestId("v2-save").click();
+    const dl = await downloadPromise;
+    const stream = await dl.createReadStream();
+    const chunks: Buffer[] = [];
+    for await (const c of stream) chunks.push(c as Buffer);
+    const saved = Buffer.concat(chunks);
+
+    await page.locator('[data-testid="v2-file-input"]').setInputFiles({
+      name: "emoji-round-trip.pdf",
+      mimeType: "application/pdf",
+      buffer: saved,
+    });
+    await expect(
+      page.locator('[data-testid^="v2-run-p1-"]').first(),
+    ).toBeVisible({ timeout: 30_000 });
+    await page.waitForTimeout(500);
+
+    const reopened = await page.evaluate(() => {
+      const s = (window as any).__v2_editor_store;
+      return s.doc
+        .page(1)
+        .runs.map((r: any) => r.text)
+        .join("");
+    });
+    // No lone high surrogate (one not immediately followed by a low surrogate).
+    expect(
+      /[\uD800-\uDBFF](?![\uDC00-\uDFFF])/.test(reopened),
+      "saved model must not contain a lone surrogate",
+    ).toBe(false);
+    expect(
+      reopened.includes("ÿ"),
+      "emoji must not be replaced by 'ÿ' tofu",
+    ).toBe(false);
+  });
+
   // NOTE: two more issues are VISUALLY confirmed (see __qa screenshots) but
   // omitted here because a stable automated assertion is hard:
   //   - replacing a long Type3 run with a short string leaves the surviving

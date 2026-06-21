@@ -1,4 +1,5 @@
 import { Modal, Stack, Text, Group, Button, List } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import {
   describeSaveRisks,
   type SaveRisks,
@@ -21,18 +22,22 @@ export function SaveRiskModal({
   onConfirm,
   onCancel,
 }: SaveRiskModalProps) {
+  const { t } = useTranslation();
   const lines = risks ? describeSaveRisks(risks) : [];
   return (
     <Modal
       opened={!!risks}
       onClose={onCancel}
-      title="Saving will change this PDF"
+      title={t("pdfTextEditorV2.saveRisk.title", "Saving will change this PDF")}
       size="md"
       data-testid="v2-save-risk-modal"
     >
       <Stack gap="md">
         <Text size="sm">
-          Downloading the edited copy rewrites the whole file. That means:
+          {t(
+            "pdfTextEditorV2.saveRisk.intro",
+            "Downloading the edited copy rewrites the whole file. That means:",
+          )}
         </Text>
         <List size="sm" spacing="xs">
           {lines.map((line) => (
@@ -40,7 +45,10 @@ export function SaveRiskModal({
           ))}
         </List>
         <Text size="sm" c="dimmed">
-          Your edits are kept - only the items above are affected.
+          {t(
+            "pdfTextEditorV2.saveRisk.note",
+            "Your edits are kept. The changes listed above are unavoidable when downloading the edited copy.",
+          )}
         </Text>
         <Group justify="flex-end" gap="sm">
           <Button
@@ -48,14 +56,14 @@ export function SaveRiskModal({
             onClick={onCancel}
             data-testid="v2-save-risk-cancel"
           >
-            Cancel
+            {t("pdfTextEditorV2.saveRisk.cancel", "Cancel")}
           </Button>
           <Button
             color="red"
             onClick={onConfirm}
             data-testid="v2-save-risk-confirm"
           >
-            Download anyway
+            {t("pdfTextEditorV2.saveRisk.downloadAnyway", "Download anyway")}
           </Button>
         </Group>
       </Stack>

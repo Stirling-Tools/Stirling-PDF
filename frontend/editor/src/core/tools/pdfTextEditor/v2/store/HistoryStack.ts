@@ -106,6 +106,11 @@ export class HistoryStack {
     this.lastCoalesceKey = null;
   }
 
+  /** End the coalescing burst so the next execute starts a fresh undo step. */
+  breakCoalescing(): void {
+    this.lastCoalesceKey = null;
+  }
+
   /**
    * Revert every command currently on the undo stack, in reverse order.
    * Equivalent to repeated `undo()` calls until empty. After the call

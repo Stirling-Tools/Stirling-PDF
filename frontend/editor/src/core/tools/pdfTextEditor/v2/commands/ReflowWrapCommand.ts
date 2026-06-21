@@ -6,6 +6,7 @@ import type {
 } from "@app/tools/pdfTextEditor/v2/model/TextRun";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import { readUtf16 } from "@app/services/pdfiumService";
+import { rotationFromMatrix } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
 
 /**
  * Reflow a text run's EXISTING glyph objects to fit within `maxWidthPt`,
@@ -92,6 +93,9 @@ export class ReflowWrapCommand implements Command {
     const run = page.findRun(this.runId);
     if (!run) return;
     if (this.maxWidthPt <= 0) return;
+    // Reflow math is axis-aligned (advance +x, step -y); a rotated run reads
+    // along a rotated axis, so skip rather than scatter glyphs.
+    if (rotationFromMatrix(run.matrix)) return;
 
     const m = doc.module;
     // Geometry + text must reflect the latest edits, and FPDFTextObj_GetText
@@ -145,10 +149,18 @@ export class ReflowWrapCommand implements Command {
         (n, g) => n + g.text.replace(/\s+/g, "").length,
         0,
       );
-      const hardBreakHere = hardBreaks.has(cumNonWs);
+      const breakCount = hardBreaks.get(cumNonWs) ?? 0;
+      const hardBreakHere = breakCount > 0;
       const widthBreak =
         cursorX > startX && cursorX + width > startX + maxWidth;
       if (hardBreakHere || widthBreak) {
+        // k consecutive newlines = k-1 blank lines + 1 content line; emit
+        // empties so an intentional blank line survives reflow.
+        for (let k = 1; k < breakCount; k++) {
+          lineIdx += 1;
+          lines.push([]);
+          lineIsHardStart.push(true);
+        }
         lineIdx += 1;
         lines.push([]);
         lineIsHardStart.push(hardBreakHere);
@@ -305,11 +317,11 @@ function groupWords(leaves: Leaf[], gapThreshold: number): Word[] {
  * Keyed by non-ws count (not raw index) so it aligns with the glyph stream,
  * whose whitespace may be collapsed / positional rather than literal.
  */
-function hardBreakNonWsCounts(text: string): Set<number> {
-  const out = new Set<number>();
+function hardBreakNonWsCounts(text: string): Map<number, number> {
+  const out = new Map<number, number>();
   let nonWs = 0;
   for (const ch of text) {
-    if (ch === "\n") out.add(nonWs);
+    if (ch === "\n") out.set(nonWs, (out.get(nonWs) ?? 0) + 1);
     else if (!/\s/.test(ch)) nonWs += 1;
   }
   return out;

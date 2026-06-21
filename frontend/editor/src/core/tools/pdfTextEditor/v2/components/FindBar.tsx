@@ -7,6 +7,7 @@ import {
   Text,
   TextInput,
 } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import CloseIcon from "@mui/icons-material/Close";
 import { EditTextCommand } from "@app/tools/pdfTextEditor/v2/commands/EditTextCommand";
 import type { EditorStore } from "@app/tools/pdfTextEditor/v2/store/EditorStore";
@@ -39,6 +40,7 @@ interface Match {
  * (the `ensurePageRead` hook will populate them on intersection).
  */
 export function FindBar({ store, pages, onClose }: FindBarProps) {
+  const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [query, setQuery] = useState("");
   const [replace, setReplace] = useState("");
@@ -159,12 +161,12 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
     <Stack gap="xs" p="sm" data-testid="v2-find-bar">
       <Group justify="space-between">
         <Text size="sm" fw={500}>
-          Find &amp; replace
+          {t("pdfTextEditorV2.find.title", "Find & replace")}
         </Text>
         <ActionIcon
           variant="subtle"
           onClick={onClose}
-          aria-label="Close find bar"
+          aria-label={t("pdfTextEditorV2.find.close", "Close find bar")}
           data-testid="v2-find-close"
         >
           <CloseIcon fontSize="small" />
@@ -174,7 +176,7 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
         ref={inputRef}
         value={query}
         onChange={(e) => setQuery(e.currentTarget.value)}
-        placeholder="Find"
+        placeholder={t("pdfTextEditorV2.find.findPlaceholder", "Find")}
         data-testid="v2-find-input"
         size="xs"
         onKeyDown={(e) => {
@@ -191,7 +193,10 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
       <TextInput
         value={replace}
         onChange={(e) => setReplace(e.currentTarget.value)}
-        placeholder="Replace with"
+        placeholder={t(
+          "pdfTextEditorV2.find.replacePlaceholder",
+          "Replace with",
+        )}
         data-testid="v2-replace-input"
         size="xs"
         onKeyDown={(e) => {
@@ -206,14 +211,26 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
         }}
       />
       <Group gap="xs" align="center">
-        <Text size="xs" c="dimmed" data-testid="v2-find-count">
+        <Text
+          size="xs"
+          c="dimmed"
+          data-testid="v2-find-count"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+        >
           {matches.length === 0
             ? query
-              ? "No matches"
-              : "Type to search"
-            : `${activeIndex + 1} of ${matches.length}`}
+              ? t("pdfTextEditorV2.find.noMatches", "No matches")
+              : t("pdfTextEditorV2.find.typeToSearch", "Type to search")
+            : t("pdfTextEditorV2.find.count", "{{current}} of {{total}}", {
+                current: activeIndex + 1,
+                total: matches.length,
+              })}
           {replaceCount !== null && matches.length === 0
-            ? ` · ${replaceCount} replaced`
+            ? t("pdfTextEditorV2.find.replaced", " · {{count}} replaced", {
+                count: replaceCount,
+              })
             : ""}
         </Text>
         <Button
@@ -241,7 +258,7 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
           disabled={matches.length === 0 || !query}
           data-testid="v2-replace-one"
         >
-          Replace
+          {t("pdfTextEditorV2.find.replace", "Replace")}
         </Button>
         <Button
           size="xs"
@@ -250,7 +267,7 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
           disabled={matches.length === 0 || !query}
           data-testid="v2-replace-all"
         >
-          Replace all
+          {t("pdfTextEditorV2.find.replaceAll", "Replace all")}
         </Button>
       </Group>
     </Stack>

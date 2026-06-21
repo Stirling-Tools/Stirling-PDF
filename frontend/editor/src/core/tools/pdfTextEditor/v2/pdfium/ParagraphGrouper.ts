@@ -197,6 +197,58 @@ export function buildLineSlots(
 }
 
 /**
+ * One visual line's worth of slot source, used when a merged run is itself a
+ * multi-line paragraph rep: each descriptor already carries its own
+ * `mergedFrom*` arrays so the slot is built straight from it, with no throwaway
+ * TextRun objects.
+ */
+export interface LineSlotDescriptor {
+  text: string;
+  baselineY: number;
+  matrixE: number;
+  containerPtr: number;
+  fontId: string;
+  fontSize: number;
+  fontSubset: boolean;
+  mergedFromPtrs: number[];
+  mergedFromTexts: string[];
+  mergedFromBounds: Array<{ x: number; right: number }>;
+  mergedFromCharStarts: number[];
+}
+
+/**
+ * Same cursor walk as `buildLineSlots` but pulls each line's `mergedFrom*`
+ * directly from a descriptor instead of a TextRun. Used by MergeRunsCommand to
+ * keep multi-line paragraph reps from collapsing to one slot per run.
+ */
+export function buildLineSlotsFromDescriptors(
+  descs: LineSlotDescriptor[],
+): ParagraphLineSlot[] {
+  const slots: ParagraphLineSlot[] = [];
+  let cursor = 0;
+  for (let i = 0; i < descs.length; i++) {
+    const d = descs[i];
+    const len = d.text.length;
+    slots.push({
+      startChar: cursor,
+      endChar: cursor + len,
+      baselineY: d.baselineY,
+      matrixE: d.matrixE,
+      containerPtr: d.containerPtr,
+      fontId: d.fontId,
+      fontSize: d.fontSize,
+      fontSubset: d.fontSubset,
+      mergedFromPtrs: [...d.mergedFromPtrs],
+      mergedFromTexts: [...d.mergedFromTexts],
+      mergedFromBounds: d.mergedFromBounds.map((b) => ({ ...b })),
+      mergedFromCharStarts: [...d.mergedFromCharStarts],
+    });
+    cursor += len + (i < descs.length - 1 ? 1 : 0);
+  }
+  return slots;
+}
+
+/**
  * A run's visual font identity for grouping: family + rounded size.
  *
  * `run.fontId` is `pdf:<fontHandlePtr>:<family>`, and PDFium often hands
@@ -336,9 +388,25 @@ function median(values: number[]): number {
 
 function computeMedianLineHeight(members: TextRun[]): number {
   if (members.length < 2) return members[0].fontSize * 1.2;
+  return medianLineHeightFromBaselines(
+    members.map((m) => m.matrix.f),
+    members[0].fontSize,
+  );
+}
+
+/**
+ * Median of consecutive baseline deltas; falls back to 1.2em when there is
+ * fewer than one delta. Lets callers compute line-height from per-visual-line
+ * baselines, not just whole runs.
+ */
+export function medianLineHeightFromBaselines(
+  baselines: number[],
+  fallbackFontSize: number,
+): number {
+  if (baselines.length < 2) return fallbackFontSize * 1.2;
   const deltas: number[] = [];
-  for (let i = 1; i < members.length; i++) {
-    deltas.push(members[i - 1].matrix.f - members[i].matrix.f);
+  for (let i = 1; i < baselines.length; i++) {
+    deltas.push(baselines[i - 1] - baselines[i]);
   }
   return median(deltas);
 }

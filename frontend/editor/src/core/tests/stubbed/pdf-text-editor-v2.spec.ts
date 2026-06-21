@@ -1,5 +1,9 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 import path from "path";
+// Independent parser for the round-trip cross-check (I45): the same
+// @cantoo/pdf-lib the fixture generators use, so a malformed-but-
+// PDFium-self-consistent save can't pass invisibly.
+import { PDFDocument } from "@cantoo/pdf-lib";
 
 const SAMPLE_PDF = path.join(__dirname, "../test-fixtures/sample.pdf");
 const MULTI_PAGE_PDF = path.join(
@@ -28,6 +32,9 @@ const SUBSET_FONT_PDF = path.join(
   __dirname,
   "../test-fixtures/subset-font-sample.pdf",
 );
+// 80-page synthetic fixture (generate-big-sample.mjs). The largest input
+// in the suite - exercises the loading overlay and the lazy page reader.
+const BIG_SAMPLE_PDF = path.join(__dirname, "../test-fixtures/big-sample.pdf");
 
 /**
  * v2 PDF text editor regression suite.
@@ -225,6 +232,50 @@ test.describe("PDF text editor v2 - selection + properties", () => {
     await expect(fontSize).toBeEnabled();
     await expect(colour).toBeEnabled();
   });
+
+  test("changing the font-size control updates the run fontSize", async ({
+    page,
+  }) => {
+    await gotoV2(page);
+    await loadSamplePdf(page);
+
+    const firstRun = page.locator('[data-testid^="v2-run-p0-"]').first();
+    const runId = await firstRun.evaluate((el) =>
+      (el.getAttribute("data-testid") ?? "").replace(/^v2-run-/, ""),
+    );
+    await firstRun.click();
+
+    const readFontSize = (id: string) =>
+      page.evaluate((rid) => {
+        const store = (
+          window as unknown as {
+            __v2_editor_store: {
+              state: { pages: { runs: { id: string; fontSize: number }[] }[] };
+            };
+          }
+        ).__v2_editor_store;
+        return (
+          store.state.pages[0]?.runs.find((r) => r.id === rid)?.fontSize ?? null
+        );
+      }, id);
+
+    const sizeBefore = await readFontSize(runId);
+    expect(sizeBefore).not.toBeNull();
+
+    // The Mantine NumberInput carries the testid on the <input> itself.
+    const sizeInput = page.getByTestId("v2-font-size");
+    await expect(sizeInput).toBeEnabled();
+    await sizeInput.fill("24");
+    await sizeInput.press("Enter");
+
+    // The command scales via a matrix ratio so allow a small tolerance.
+    await expect
+      .poll(async () => await readFontSize(runId), { timeout: 5_000 })
+      .not.toBe(sizeBefore);
+    const sizeAfter = await readFontSize(runId);
+    expect(sizeAfter).not.toBeNull();
+    expect(Math.abs(sizeAfter! - 24)).toBeLessThan(0.5);
+  });
 });
 
 test.describe("PDF text editor v2 - save", () => {
@@ -317,6 +368,37 @@ test.describe("PDF text editor v2 - save", () => {
     expect(allText).not.toContain(`${original}(Hello!)`);
     // Quiet the unused-var lint - `edited` documents the intent above.
     void edited;
+  });
+
+  test("a saved edit is readable by an independent PDF parser (not just the editor)", async ({
+    page,
+  }) => {
+    // The other round-trip tests re-feed the saved bytes through the SAME
+    // PdfiumTextReader+LineGrouper that wrote them, so a malformed-but-
+    // self-consistent save would round-trip invisibly. This one parses the
+    // downloaded bytes with @cantoo/pdf-lib (a different parser) to prove
+    // the output is a structurally valid PDF an external reader can open.
+    await gotoV2(page);
+    await loadSamplePdf(page);
+
+    const firstRun = page.locator('[data-testid^="v2-run-p0-"]').first();
+    const runTestId = (await firstRun.getAttribute("data-testid")) ?? "";
+    await typeIntoRun(page, runTestId, "ZZMARKER");
+    await expect(firstRun).toContainText("ZZMARKER");
+
+    const downloadPromise = page.waitForEvent("download");
+    await page.getByTestId("v2-save").click();
+    const download = await downloadPromise;
+    const stream = await download.createReadStream();
+    const chunks: Buffer[] = [];
+    for await (const chunk of stream) chunks.push(chunk as Buffer);
+    const savedBytes = Buffer.concat(chunks);
+
+    // Independent structural cross-check: pdf-lib must load the bytes and
+    // see the single page. Loading throws on a corrupt xref/trailer, so a
+    // clean parse here is itself a meaningful assertion PDFium can't fake.
+    const doc = await PDFDocument.load(savedBytes);
+    expect(doc.getPageCount()).toBe(1);
   });
 });
 
@@ -1220,6 +1302,31 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
       .filter(([, c]) => c > 1)
       .map(([t]) => t);
   }
+
+  test("SENTINEL: USER_SAMPLE_PDF tagline is a single grouped run", async ({
+    page,
+  }) => {
+    // 20 tagline tests below guard themselves with
+    // `if (!findTaglineRun(page)) { test.skip(...) }`. If LineGrouper ever
+    // splits the tagline across runs, findTaglineRun returns null and all
+    // 20 silently pass via skip. This un-skippable sentinel fails loudly so
+    // that drift surfaces instead of hiding as green skips.
+    await gotoV2(page);
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(USER_SAMPLE_PDF);
+    await expect(page.getByTestId("v2-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.waitForTimeout(500);
+
+    const baseline = await findTaglineRun(page);
+    expect(
+      baseline,
+      "USER_SAMPLE_PDF must expose the Acrobat-Alternative tagline as a single run - if this fails the 20 tagline tests are silently skipping",
+    ).not.toBeNull();
+    expect(baseline!.text).toMatch(/Adobe.*Acrobat.*Alternative/);
+  });
 
   test("user-sample.pdf: sequential type-3-chars-at-end keeps font + position stable", async ({
     page,
@@ -2789,6 +2896,12 @@ test.describe("PDF text editor v2 - colour", () => {
     await loadSamplePdf(page);
 
     const firstRun = page.locator('[data-testid^="v2-run-p0-"]').first();
+    // Capture the clicked run's model id so the fill assertion targets the
+    // run that was actually mutated, not runs[0] blindly.
+    const runId = await firstRun.evaluate((el) => {
+      const tid = el.getAttribute("data-testid") ?? "";
+      return tid.replace(/^v2-run-/, "");
+    });
     await firstRun.click();
 
     // Mantine's ColorInput stamps the testid on the wrapper, not the
@@ -2800,6 +2913,32 @@ test.describe("PDF text editor v2 - colour", () => {
     await colourInput.fill("#ff0000");
     await colourInput.press("Enter");
     await expect(page.getByTestId("v2-undo")).toBeEnabled();
+
+    // The undo button being enabled only proves SOMETHING dispatched. Read
+    // the run's fill from the model and assert SetColour actually landed
+    // red on the run we selected.
+    const fill = await page.evaluate((id) => {
+      const store = (
+        window as unknown as {
+          __v2_editor_store: {
+            state: {
+              pages: {
+                runs: {
+                  id: string;
+                  fill: { r: number; g: number; b: number; a: number };
+                }[];
+              }[];
+            };
+          };
+        }
+      ).__v2_editor_store;
+      const run = store.state.pages[0]?.runs.find((r) => r.id === id);
+      return run ? { ...run.fill } : null;
+    }, runId);
+    expect(fill).not.toBeNull();
+    expect(fill!.r).toBe(255);
+    expect(fill!.g).toBe(0);
+    expect(fill!.b).toBe(0);
   });
 });
 
@@ -2879,7 +3018,28 @@ test.describe("PDF text editor v2 - font family", () => {
     await gotoV2(page);
     await loadSamplePdf(page);
 
-    await page.locator('[data-testid^="v2-run-p0-"]').first().click();
+    const firstRun = page.locator('[data-testid^="v2-run-p0-"]').first();
+    const runId = await firstRun.evaluate((el) =>
+      (el.getAttribute("data-testid") ?? "").replace(/^v2-run-/, ""),
+    );
+    await firstRun.click();
+
+    const readFontId = (id: string) =>
+      page.evaluate((rid) => {
+        const store = (
+          window as unknown as {
+            __v2_editor_store: {
+              state: { pages: { runs: { id: string; fontId: string }[] }[] };
+            };
+          }
+        ).__v2_editor_store;
+        return (
+          store.state.pages[0]?.runs.find((r) => r.id === rid)?.fontId ?? null
+        );
+      }, id);
+
+    const fontIdBefore = await readFontId(runId);
+
     const family = page.getByLabel("Font family").first();
     await expect(family).toBeEnabled();
     await family.click();
@@ -2890,6 +3050,13 @@ test.describe("PDF text editor v2 - font family", () => {
       .first()
       .click({ timeout: 10_000 });
     await expect(page.getByTestId("v2-undo")).toBeEnabled();
+
+    // Undo enabled only proves a dispatch. Assert the run's model fontId
+    // actually flipped to a Helvetica family (and away from its original).
+    const fontIdAfter = await readFontId(runId);
+    expect(fontIdAfter).not.toBeNull();
+    expect(fontIdAfter).toMatch(/helvetica/i);
+    expect(fontIdAfter).not.toBe(fontIdBefore);
   });
 });
 
@@ -2929,10 +3096,67 @@ test.describe("PDF text editor v2 - multi-page", () => {
 
     const target = runs.first();
     const runTestId = (await target.getAttribute("data-testid")) ?? "";
+    const runId = runTestId.replace(/^v2-run-/, "");
+    // Capture the page-2 run's model text before the edit so we can prove
+    // the appended char survives a full round-trip, not just lands in DOM.
+    // Read by id (DOM order may differ from model run order).
+    const textBefore = await page.evaluate((id) => {
+      const store = (
+        window as unknown as {
+          __v2_editor_store: {
+            state: { pages: { runs: { id: string; text: string }[] }[] };
+          };
+        }
+      ).__v2_editor_store;
+      return store.state.pages[2]?.runs.find((r) => r.id === id)?.text ?? "";
+    }, runId);
     // Append a chr known to be in latin subsets.
     await typeIntoRun(page, runTestId, "e");
     await expect(target).toContainText("e");
     await expect(page.getByTestId("v2-undo")).toBeEnabled();
+
+    // Save the edited document and capture the bytes. Inlined (not via the
+    // shared saveAndReopen, which only waits for page-0 runs) so we can
+    // wait for page 2 to re-render.
+    const downloadPromise = page.waitForEvent("download");
+    await page.getByTestId("v2-save").click();
+    const download = await downloadPromise;
+    const stream = await download.createReadStream();
+    const chunks: Buffer[] = [];
+    for await (const chunk of stream) chunks.push(chunk as Buffer);
+    const savedBytes = Buffer.concat(chunks);
+
+    await page.locator('[data-testid="v2-file-input"]').setInputFiles({
+      name: "round-trip.pdf",
+      mimeType: "application/pdf",
+      buffer: savedBytes,
+    });
+    await expect(page.getByTestId("v2-page-2")).toBeVisible({
+      timeout: 30_000,
+    });
+    await expect(
+      page.locator('[data-testid^="v2-run-p2-"]').first(),
+    ).toBeVisible({ timeout: 30_000 });
+
+    // Re-read the page-2 run text through PdfiumTextReader + LineGrouper.
+    // The per-word emit path may split the line into multiple runs, so
+    // scan every page-2 run for the appended 'e' against the prior text.
+    const page2Text = await page.evaluate(() => {
+      const store = (
+        window as unknown as {
+          __v2_editor_store: {
+            state: { pages: { runs: { text: string }[] }[] };
+          };
+        }
+      ).__v2_editor_store;
+      return (store.state.pages[2]?.runs ?? []).map((r) => r.text).join("\n");
+    });
+    // The edit appended 'e' to the run's last token. After the per-word
+    // emit + LineGrouper the line may split on spaces, so assert on the
+    // last whitespace-delimited token (the one that grew) rather than the
+    // whole string: that token + 'e' must survive the round-trip.
+    const lastToken = textBefore.trim().split(/\s+/).pop() ?? textBefore;
+    expect(page2Text).toContain(`${lastToken}e`);
   });
 });
 
@@ -2941,7 +3165,11 @@ test.describe("PDF text editor v2 - bold/italic", () => {
     await gotoV2(page);
     await loadSamplePdf(page);
 
-    await page.locator('[data-testid^="v2-run-p0-"]').first().click();
+    const firstRun = page.locator('[data-testid^="v2-run-p0-"]').first();
+    const runId = await firstRun.evaluate((el) =>
+      (el.getAttribute("data-testid") ?? "").replace(/^v2-run-/, ""),
+    );
+    await firstRun.click();
     // First we must swap to a base-14 font (Helvetica) since the source
     // PDF's runs use unknown families that the bold flip doesn't know
     // how to map.
@@ -2952,8 +3180,26 @@ test.describe("PDF text editor v2 - bold/italic", () => {
       .first()
       .click({ timeout: 10_000 });
 
-    const undoCountBefore = await page.getByTestId("v2-undo").isEnabled();
-    expect(undoCountBefore).toBe(true);
+    const readState = (id: string) =>
+      page.evaluate((rid) => {
+        const store = (
+          window as unknown as {
+            __v2_editor_store: {
+              history: { size: () => { undo: number; redo: number } };
+              state: { pages: { runs: { id: string; fontId: string }[] }[] };
+            };
+          }
+        ).__v2_editor_store;
+        return {
+          undoDepth: store.history.size().undo,
+          fontId:
+            store.state.pages[0]?.runs.find((r) => r.id === rid)?.fontId ??
+            null,
+        };
+      }, id);
+
+    const before = await readState(runId);
+    expect(before.undoDepth).toBeGreaterThan(0);
 
     // Now click Bold. It should dispatch another edit (undo stack grows).
     await page.getByTestId("v2-bold").click();
@@ -2962,6 +3208,12 @@ test.describe("PDF text editor v2 - bold/italic", () => {
       "data-variant",
       /filled/i,
     );
+
+    // The misnamed boolean was never compared. Assert a real history-size
+    // growth AND that the run's fontId gained a Bold variant.
+    const after = await readState(runId);
+    expect(after.undoDepth).toBeGreaterThan(before.undoDepth);
+    expect(after.fontId).toMatch(/bold/i);
   });
 
   test("user-sample.pdf: Bold on a LineGrouper-merged tagline removes every per-glyph original (no ghost layers)", async ({
@@ -3393,6 +3645,84 @@ test.describe("PDF text editor v2 - lazy page loading", () => {
     // but CI machines vary. The point is the test catches a regression
     // that pushes this over 10s for a 3-page doc.
     expect(elapsedMs).toBeLessThan(10_000);
+  });
+
+  test("big-sample.pdf renders within a bounded time, edits, and round-trips", async ({
+    page,
+  }) => {
+    // The 80-page big-sample fixture is the largest input in the suite and
+    // had zero coverage. Proves the loading overlay + lazy page reader
+    // cope with a big doc: page 0 renders under a bounded timeout, a later
+    // page lazily renders on scroll, and an edit survives save + reopen.
+    test.setTimeout(120_000);
+    await gotoV2(page);
+    await page
+      .locator('[data-testid="v2-file-input"]')
+      .setInputFiles(BIG_SAMPLE_PDF);
+
+    // Page 0 must render within a bounded time even for the big doc.
+    await expect(page.getByTestId("v2-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+
+    // A later page lazily renders once scrolled near the viewport.
+    await page.evaluate(() => {
+      const el = document.querySelector<HTMLElement>(
+        '[data-testid="v2-page-40"]',
+      );
+      el?.scrollIntoView({ block: "center" });
+    });
+    await expect(page.getByTestId("v2-page-40")).toBeVisible({
+      timeout: 30_000,
+    });
+
+    // Make a trivial edit on page 0, then save + reopen and assert it
+    // survived. Scroll page 0 back into view first so its run overlay is
+    // mounted and editable.
+    await page.evaluate(() => {
+      const el = document.querySelector<HTMLElement>(
+        '[data-testid="v2-page-0"]',
+      );
+      el?.scrollIntoView({ block: "center" });
+    });
+    const firstRun = page.locator('[data-testid^="v2-run-p0-"]').first();
+    await expect(firstRun).toBeVisible({ timeout: 30_000 });
+    const runTestId = (await firstRun.getAttribute("data-testid")) ?? "";
+    await typeIntoRun(page, runTestId, "ZZBIG");
+    await expect(firstRun).toContainText("ZZBIG");
+
+    const downloadPromise = page.waitForEvent("download");
+    await page.getByTestId("v2-save").click();
+    const download = await downloadPromise;
+    const stream = await download.createReadStream();
+    const chunks: Buffer[] = [];
+    for await (const chunk of stream) chunks.push(chunk as Buffer);
+    const savedBytes = Buffer.concat(chunks);
+
+    await page.locator('[data-testid="v2-file-input"]').setInputFiles({
+      name: "big-round-trip.pdf",
+      mimeType: "application/pdf",
+      buffer: savedBytes,
+    });
+    await expect(page.getByTestId("v2-page-0")).toBeVisible({
+      timeout: 30_000,
+    });
+    const reopenedText = await page
+      .waitForFunction(
+        () => {
+          const runs = Array.from(
+            document.querySelectorAll<HTMLDivElement>(
+              '[data-testid^="v2-run-p0-"]',
+            ),
+          );
+          if (runs.length === 0) return null;
+          const joined = runs.map((el) => el.innerText).join("\n");
+          return /ZZBIG/.test(joined) ? joined : null;
+        },
+        { timeout: 30_000, polling: 500 },
+      )
+      .then((h) => h.jsonValue() as Promise<string>);
+    expect(reopenedText).toContain("ZZBIG");
   });
 });
 

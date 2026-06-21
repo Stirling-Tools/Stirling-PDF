@@ -76,12 +76,18 @@ export class SetFontFamilyCommand implements Command {
         ? run.paragraphLineHeight
         : run.fontSize * 1.2;
     const lines = run.text.split(/\r?\n/);
+    // Step lines along the rotated down-axis (sin,-cos) so a rotated paragraph
+    // keeps its baseline grid; upright reduces to straight-down Y.
+    const rot = rotationFromMatrix(run.matrix);
+    const dcos = rot ? rot.cos : 1;
+    const dsin = rot ? rot.sin : 0;
     const lineAnchors: number[] = [];
     const memberFs: number[] = [];
     const leaf: number[] = [];
     const created: number[] = [];
     for (let i = 0; i < lines.length; i++) {
-      const y = run.matrix.f - i * lineHeight;
+      const x = run.matrix.e + i * lineHeight * dsin;
+      const y = run.matrix.f - i * lineHeight * dcos;
       memberFs.push(y);
       if (lines[i].length === 0) {
         lineAnchors.push(0);
@@ -91,14 +97,14 @@ export class SetFontFamilyCommand implements Command {
         doc,
         page,
         text: lines[i],
-        x: run.matrix.e,
+        x,
         y,
         fontSize: run.fontSize,
         fill: run.fill,
         originalFontPtr: 0, // base-14: never reuse the source font
         fallbackFamily: this.nextFamily,
         // Keep the run's rotation on re-emit (no-op for upright text).
-        rotation: rotationFromMatrix(run.matrix),
+        rotation: rot,
       });
       lineAnchors.push(ptrs[0] ?? 0);
       leaf.push(...ptrs);
@@ -124,19 +130,15 @@ export class SetFontFamilyCommand implements Command {
     run.mergedFromBounds = [];
     run.mergedFromCharStarts = [];
     run.paragraphLineSlots = [];
+    // Track every per-word leaf so later recolour/resize/move hit all words,
+    // not just the anchor. Line height stays paragraph-only (>1 line).
+    run.paragraphMemberPtrs = lineAnchors;
+    run.paragraphMemberContainers = lineAnchors.map(() => 0);
+    run.paragraphMemberFs = memberFs;
+    run.paragraphLeafPtrs = leaf;
+    run.paragraphLeafContainers = leaf.map(() => 0);
     if (lines.length > 1) {
-      run.paragraphMemberPtrs = lineAnchors;
-      run.paragraphMemberContainers = lineAnchors.map(() => 0);
-      run.paragraphMemberFs = memberFs;
-      run.paragraphLeafPtrs = leaf;
-      run.paragraphLeafContainers = leaf.map(() => 0);
       run.paragraphLineHeight = lineHeight;
-    } else {
-      run.paragraphMemberPtrs = [];
-      run.paragraphMemberContainers = [];
-      run.paragraphMemberFs = [];
-      run.paragraphLeafPtrs = [];
-      run.paragraphLeafContainers = [];
     }
     run.containerPtr = 0;
     run.dirty = true;

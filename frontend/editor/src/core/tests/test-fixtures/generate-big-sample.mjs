@@ -1,5 +1,5 @@
 import process from "node:process";
-// One-off script: generate `big-sample.pdf`, a 40-page synthetic PDF
+// One-off script: generate `big-sample.pdf`, an 80-page synthetic PDF
 // with a few hundred text objects per page. Exercises the loading
 // overlay (visible for several seconds on cold load) and the lazy
 // page reader. Not heavy on disk (~ a few hundred KB) but heavy enough

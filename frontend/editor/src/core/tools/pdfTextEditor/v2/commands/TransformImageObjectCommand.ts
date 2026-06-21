@@ -36,7 +36,7 @@ export type ImageTransformMode =
   | "flip-v";
 
 interface ImageMatrixSetterModule {
-  FPDFImageObj_SetMatrix: (
+  FPDFImageObj_SetMatrix?: (
     obj: number,
     a: number,
     b: number,
@@ -192,6 +192,7 @@ function matrixBoundsAxisAligned(m: Affine): {
 function setMatrix(doc: EditorDocument, objPtr: number, m: Affine): void {
   const fn = (doc.module as unknown as ImageMatrixSetterModule)
     .FPDFImageObj_SetMatrix;
+  if (!fn) return;
   try {
     fn(objPtr, m.a, m.b, m.c, m.d, m.e, m.f);
   } catch {

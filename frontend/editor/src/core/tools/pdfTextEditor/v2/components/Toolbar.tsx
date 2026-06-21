@@ -37,6 +37,7 @@ import LinearScaleIcon from "@mui/icons-material/LinearScaleOutlined";
 import RotateLeftIcon from "@mui/icons-material/RotateLeftOutlined";
 import RotateRightIcon from "@mui/icons-material/RotateRightOutlined";
 import FlipIcon from "@mui/icons-material/FlipOutlined";
+import { useTranslation } from "react-i18next";
 import {
   parseCssColor,
   toCssHex,
@@ -133,6 +134,7 @@ export function Toolbar({
   canAlignLines,
   disabled,
 }: ToolbarProps) {
+  const { t } = useTranslation();
   const imageDisabled = disabled || !hasImageSelection;
   // Vertical aligns + distribute need 2+ objects. Horizontal aligns also
   // accept a single multi-line paragraph (aligns its lines to each other).
@@ -160,23 +162,27 @@ export function Toolbar({
       }}
       data-testid="v2-toolbar"
     >
-      <Tooltip label="Undo (Ctrl+Z)">
+      <Tooltip
+        label={t("pdfTextEditorV2.toolbar.undoTooltip", "Undo (Ctrl+Z)")}
+      >
         <ActionIcon
           variant="subtle"
           onClick={onUndo}
           disabled={!canUndo}
-          aria-label="Undo"
+          aria-label={t("pdfTextEditorV2.toolbar.undo", "Undo")}
           data-testid="v2-undo"
         >
           <UndoIcon fontSize="small" />
         </ActionIcon>
       </Tooltip>
-      <Tooltip label="Redo (Ctrl+Y)">
+      <Tooltip
+        label={t("pdfTextEditorV2.toolbar.redoTooltip", "Redo (Ctrl+Y)")}
+      >
         <ActionIcon
           variant="subtle"
           onClick={onRedo}
           disabled={!canRedo}
-          aria-label="Redo"
+          aria-label={t("pdfTextEditorV2.toolbar.redo", "Redo")}
           data-testid="v2-redo"
         >
           <RedoIcon fontSize="small" />
@@ -186,8 +192,8 @@ export function Toolbar({
       <Select
         size="xs"
         w={150}
-        placeholder="Font family"
-        aria-label="Font family"
+        placeholder={t("pdfTextEditorV2.toolbar.fontFamily", "Font family")}
+        aria-label={t("pdfTextEditorV2.toolbar.fontFamily", "Font family")}
         data-testid="v2-font-family"
         data={FONT_FAMILIES}
         value={fontValue}
@@ -207,7 +213,7 @@ export function Toolbar({
           if (Number.isFinite(next) && next > 0) onChangeFontSize(next);
         }}
         disabled={disabled || state.fontSize === null}
-        aria-label="Font size"
+        aria-label={t("pdfTextEditorV2.toolbar.fontSize", "Font size")}
         data-testid="v2-font-size"
       />
       <ColorInput
@@ -219,26 +225,26 @@ export function Toolbar({
           if (parseCssColor(next)) onChangeFill(next);
         }}
         disabled={disabled || !state.fill}
-        aria-label="Font colour"
+        aria-label={t("pdfTextEditorV2.toolbar.fontColour", "Font colour")}
         data-testid="v2-colour"
       />
-      <Tooltip label="Bold">
+      <Tooltip label={t("pdfTextEditorV2.toolbar.bold", "Bold")}>
         <ActionIcon
           variant={state.bold ? "filled" : "subtle"}
           onClick={onToggleBold}
           disabled={disabled}
-          aria-label="Bold"
+          aria-label={t("pdfTextEditorV2.toolbar.bold", "Bold")}
           data-testid="v2-bold"
         >
           <FormatBoldIcon fontSize="small" />
         </ActionIcon>
       </Tooltip>
-      <Tooltip label="Italic">
+      <Tooltip label={t("pdfTextEditorV2.toolbar.italic", "Italic")}>
         <ActionIcon
           variant={state.italic ? "filled" : "subtle"}
           onClick={onToggleItalic}
           disabled={disabled}
-          aria-label="Italic"
+          aria-label={t("pdfTextEditorV2.toolbar.italic", "Italic")}
           data-testid="v2-italic"
         >
           <FormatItalicIcon fontSize="small" />
@@ -246,11 +252,19 @@ export function Toolbar({
       </Tooltip>
       <Menu shadow="md" position="bottom-start" withinPortal>
         <Menu.Target>
-          <Tooltip label="Change case (text runs only)">
+          <Tooltip
+            label={t(
+              "pdfTextEditorV2.toolbar.changeCaseTooltip",
+              "Change case (text runs only)",
+            )}
+          >
             <ActionIcon
               variant="subtle"
               disabled={disabled || !hasRunSelection}
-              aria-label="Change case"
+              aria-label={t(
+                "pdfTextEditorV2.toolbar.changeCase",
+                "Change case",
+              )}
               data-testid="v2-change-case"
             >
               <TextFieldsIcon fontSize="small" />
@@ -262,25 +276,25 @@ export function Toolbar({
             data-testid="v2-change-case-upper"
             onClick={() => onChangeCase("upper")}
           >
-            UPPERCASE
+            {t("pdfTextEditorV2.toolbar.caseUpper", "UPPERCASE")}
           </Menu.Item>
           <Menu.Item
             data-testid="v2-change-case-lower"
             onClick={() => onChangeCase("lower")}
           >
-            lowercase
+            {t("pdfTextEditorV2.toolbar.caseLower", "lowercase")}
           </Menu.Item>
           <Menu.Item
             data-testid="v2-change-case-title"
             onClick={() => onChangeCase("title")}
           >
-            Title Case
+            {t("pdfTextEditorV2.toolbar.caseTitle", "Title Case")}
           </Menu.Item>
           <Menu.Item
             data-testid="v2-change-case-sentence"
             onClick={() => onChangeCase("sentence")}
           >
-            Sentence case
+            {t("pdfTextEditorV2.toolbar.caseSentence", "Sentence case")}
           </Menu.Item>
         </Menu.Dropdown>
       </Menu>
@@ -288,8 +302,14 @@ export function Toolbar({
       <Tooltip
         label={
           selectionAllLocked
-            ? "Unlock selection - makes it editable again"
-            : "Lock selection - prevents accidental edits"
+            ? t(
+                "pdfTextEditorV2.toolbar.unlockTooltip",
+                "Unlock selection - makes it editable again",
+              )
+            : t(
+                "pdfTextEditorV2.toolbar.lockTooltip",
+                "Lock selection - prevents accidental edits",
+              )
         }
       >
         <ActionIcon
@@ -297,7 +317,9 @@ export function Toolbar({
           onClick={onToggleLock}
           disabled={disabled}
           aria-label={
-            selectionAllLocked ? "Unlock selection" : "Lock selection"
+            selectionAllLocked
+              ? t("pdfTextEditorV2.toolbar.unlock", "Unlock selection")
+              : t("pdfTextEditorV2.toolbar.lock", "Lock selection")
           }
           data-testid="v2-toggle-lock"
         >
@@ -308,13 +330,15 @@ export function Toolbar({
           )}
         </ActionIcon>
       </Tooltip>
-      <Tooltip label="Delete (Del)">
+      <Tooltip
+        label={t("pdfTextEditorV2.toolbar.deleteTooltip", "Delete (Del)")}
+      >
         <ActionIcon
           variant="subtle"
           color="red"
           onClick={onDelete}
           disabled={disabled}
-          aria-label="Delete selected"
+          aria-label={t("pdfTextEditorV2.toolbar.delete", "Delete selected")}
           data-testid="v2-delete"
         >
           <DeleteIcon fontSize="small" />
@@ -334,48 +358,53 @@ export function Toolbar({
             disabled={disabled}
             data-testid="v2-arrange-menu"
           >
-            Arrange
+            {t("pdfTextEditorV2.toolbar.arrange", "Arrange")}
           </Button>
         </Menu.Target>
         <Menu.Dropdown>
-          <Menu.Label>Order</Menu.Label>
+          <Menu.Label>{t("pdfTextEditorV2.toolbar.order", "Order")}</Menu.Label>
           <Menu.Item
             leftSection={<FlipToFrontIcon fontSize="small" />}
             onClick={() => onChangeZOrder("to-front")}
             data-testid="v2-z-to-front"
           >
-            Bring to front
+            {t("pdfTextEditorV2.toolbar.bringToFront", "Bring to front")}
           </Menu.Item>
           <Menu.Item
             leftSection={<ArrowUpwardIcon fontSize="small" />}
             onClick={() => onChangeZOrder("forward")}
             data-testid="v2-z-forward"
           >
-            Bring forward
+            {t("pdfTextEditorV2.toolbar.bringForward", "Bring forward")}
           </Menu.Item>
           <Menu.Item
             leftSection={<ArrowDownwardIcon fontSize="small" />}
             onClick={() => onChangeZOrder("backward")}
             data-testid="v2-z-backward"
           >
-            Send backward
+            {t("pdfTextEditorV2.toolbar.sendBackward", "Send backward")}
           </Menu.Item>
           <Menu.Item
             leftSection={<FlipToBackIcon fontSize="small" />}
             onClick={() => onChangeZOrder("to-back")}
             data-testid="v2-z-to-back"
           >
-            Send to back
+            {t("pdfTextEditorV2.toolbar.sendToBack", "Send to back")}
           </Menu.Item>
           <Menu.Divider />
-          <Menu.Label>Align · needs 2+ objects</Menu.Label>
+          <Menu.Label>
+            {t(
+              "pdfTextEditorV2.toolbar.alignLabel",
+              "Align · needs 2+ objects",
+            )}
+          </Menu.Label>
           <Menu.Item
             leftSection={<AlignHorizontalLeftIcon fontSize="small" />}
             disabled={hAlignDisabled}
             onClick={() => onAlign("left")}
             data-testid="v2-align-left"
           >
-            Align left
+            {t("pdfTextEditorV2.toolbar.alignLeft", "Align left")}
           </Menu.Item>
           <Menu.Item
             leftSection={<AlignHorizontalCenterIcon fontSize="small" />}
@@ -383,7 +412,7 @@ export function Toolbar({
             onClick={() => onAlign("center-h")}
             data-testid="v2-align-center-h"
           >
-            Align centre
+            {t("pdfTextEditorV2.toolbar.alignCentre", "Align centre")}
           </Menu.Item>
           <Menu.Item
             leftSection={<AlignHorizontalRightIcon fontSize="small" />}
@@ -391,7 +420,7 @@ export function Toolbar({
             onClick={() => onAlign("right")}
             data-testid="v2-align-right"
           >
-            Align right
+            {t("pdfTextEditorV2.toolbar.alignRight", "Align right")}
           </Menu.Item>
           <Menu.Item
             leftSection={<VerticalAlignTopIcon fontSize="small" />}
@@ -399,7 +428,7 @@ export function Toolbar({
             onClick={() => onAlign("top")}
             data-testid="v2-align-top"
           >
-            Align top
+            {t("pdfTextEditorV2.toolbar.alignTop", "Align top")}
           </Menu.Item>
           <Menu.Item
             leftSection={<VerticalAlignCenterIcon fontSize="small" />}
@@ -407,7 +436,7 @@ export function Toolbar({
             onClick={() => onAlign("middle-v")}
             data-testid="v2-align-middle-v"
           >
-            Align middle
+            {t("pdfTextEditorV2.toolbar.alignMiddle", "Align middle")}
           </Menu.Item>
           <Menu.Item
             leftSection={<VerticalAlignBottomIcon fontSize="small" />}
@@ -415,17 +444,25 @@ export function Toolbar({
             onClick={() => onAlign("bottom")}
             data-testid="v2-align-bottom"
           >
-            Align bottom
+            {t("pdfTextEditorV2.toolbar.alignBottom", "Align bottom")}
           </Menu.Item>
           <Menu.Divider />
-          <Menu.Label>Distribute · needs 3+ objects</Menu.Label>
+          <Menu.Label>
+            {t(
+              "pdfTextEditorV2.toolbar.distributeLabel",
+              "Distribute · needs 3+ objects",
+            )}
+          </Menu.Label>
           <Menu.Item
             leftSection={<LinearScaleIcon fontSize="small" />}
             disabled={distributeDisabled}
             onClick={() => onDistribute("horizontal")}
             data-testid="v2-distribute-h"
           >
-            Distribute horizontally
+            {t(
+              "pdfTextEditorV2.toolbar.distributeHorizontally",
+              "Distribute horizontally",
+            )}
           </Menu.Item>
           <Menu.Item
             leftSection={
@@ -438,7 +475,10 @@ export function Toolbar({
             onClick={() => onDistribute("vertical")}
             data-testid="v2-distribute-v"
           >
-            Distribute vertically
+            {t(
+              "pdfTextEditorV2.toolbar.distributeVertically",
+              "Distribute vertically",
+            )}
           </Menu.Item>
         </Menu.Dropdown>
       </Menu>
@@ -456,18 +496,25 @@ export function Toolbar({
             disabled={disabled}
             data-testid="v2-imgop-menu"
           >
-            Image
+            {t("pdfTextEditorV2.toolbar.image", "Image")}
           </Button>
         </Menu.Target>
         <Menu.Dropdown>
-          {!hasImageSelection && <Menu.Label>Select an image first</Menu.Label>}
+          {!hasImageSelection && (
+            <Menu.Label>
+              {t(
+                "pdfTextEditorV2.toolbar.selectImageFirst",
+                "Select an image first",
+              )}
+            </Menu.Label>
+          )}
           <Menu.Item
             leftSection={<RotateLeftIcon fontSize="small" />}
             disabled={imageDisabled}
             onClick={() => onTransformImage("rotate-ccw")}
             data-testid="v2-imgop-rotate-ccw"
           >
-            Rotate 90° left
+            {t("pdfTextEditorV2.toolbar.rotateLeft", "Rotate 90° left")}
           </Menu.Item>
           <Menu.Item
             leftSection={<RotateRightIcon fontSize="small" />}
@@ -475,7 +522,7 @@ export function Toolbar({
             onClick={() => onTransformImage("rotate-cw")}
             data-testid="v2-imgop-rotate-cw"
           >
-            Rotate 90° right
+            {t("pdfTextEditorV2.toolbar.rotateRight", "Rotate 90° right")}
           </Menu.Item>
           <Menu.Item
             leftSection={<FlipIcon fontSize="small" />}
@@ -483,7 +530,7 @@ export function Toolbar({
             onClick={() => onTransformImage("flip-h")}
             data-testid="v2-imgop-flip-h"
           >
-            Flip horizontal
+            {t("pdfTextEditorV2.toolbar.flipHorizontal", "Flip horizontal")}
           </Menu.Item>
           <Menu.Item
             leftSection={
@@ -496,7 +543,7 @@ export function Toolbar({
             onClick={() => onTransformImage("flip-v")}
             data-testid="v2-imgop-flip-v"
           >
-            Flip vertical
+            {t("pdfTextEditorV2.toolbar.flipVertical", "Flip vertical")}
           </Menu.Item>
         </Menu.Dropdown>
       </Menu>

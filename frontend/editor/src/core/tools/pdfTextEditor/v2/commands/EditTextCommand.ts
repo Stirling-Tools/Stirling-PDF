@@ -222,7 +222,8 @@ export class EditTextCommand implements Command {
       this.lineEdit === null &&
       this.prevText !== null &&
       this.prevText.length > 0 &&
-      run.paragraphLineSlots.length >= 1
+      run.paragraphLineSlots.length >= 1 &&
+      !isRotated
     ) {
       const prevLines = this.prevText.split(/\r?\n/);
       const nextLines = this.nextText.split(/\r?\n/);
@@ -236,10 +237,14 @@ export class EditTextCommand implements Command {
           page.markNeedsGenerate();
           return;
         }
-        if (this.nextText.startsWith(this.prevText)) {
+        if (
+          this.nextText.startsWith(this.prevText) &&
+          /^\r?\n/.test(this.nextText.slice(this.prevText.length))
+        ) {
           // Soft-wrapped paragraph (slots != lines): can't diff per line, but
-          // a pure append still keeps every existing object and only adds the
-          // new lines at the end.
+          // a pure newline-prefixed append keeps every existing object and only
+          // adds the new lines at the end. A suffix that adds chars to the
+          // current last line before the break falls through to the overlay.
           this.applyParagraphAppend(doc, page, run);
           run.text = this.nextText;
           run.dirty = true;
@@ -417,8 +422,13 @@ export class EditTextCommand implements Command {
     // NEXT edit can route back through paragraph-aware partial-edit
     // (font-preserving) instead of falling to overlay again forever.
     const perLineEmits: Array<{ ptrs: number[]; text: string; y: number }> = [];
+    // Step each line along the run's rotated down-axis: the (0,-lineHeight)
+    // stepping vector transformed by [cos,-sin] gives (sin*L, -cos*L). Upright
+    // (cos=1,sin=0) reduces to (e, f-i*L), so unrotated output is unchanged.
+    const rot = rotationFromMatrix(run.matrix);
     for (let i = 0; i < outputLines.length; i++) {
-      const y = run.matrix.f - i * lineHeight;
+      const x = run.matrix.e + (rot ? i * rot.sin * lineHeight : 0);
+      const y = run.matrix.f - i * lineHeight * (rot ? rot.cos : 1);
       // Empty lines (a newline at end-of-text, or a blank line inserted
       // mid-paragraph) get a placeholder slot - no PDFium object is
       // emitted, because an empty text object's reported bounds are
@@ -437,7 +447,7 @@ export class EditTextCommand implements Command {
         doc,
         page,
         text: outputLines[i],
-        x: run.matrix.e,
+        x,
         y,
         fontSize: run.fontSize,
         fill: run.fill,
@@ -445,7 +455,7 @@ export class EditTextCommand implements Command {
         originalFontSubset: run.fontSubset,
         fallbackFamily,
         // Keep the run's rotation on re-emit (no-op for upright text).
-        rotation: rotationFromMatrix(run.matrix),
+        rotation: rot,
       });
       if (ptrs.length === 0) continue;
       this.createdPtrs.push(...ptrs);
@@ -520,10 +530,28 @@ export class EditTextCommand implements Command {
     page.markNeedsGenerate();
   }
 
+  /**
+   * Exactly one revert strategy member may be set per apply. Enforced only by
+   * guard ordering, so fail fast in dev if two paths ran or a member leaked.
+   */
+  private assertSingleRevertPath(): void {
+    const set =
+      (this.lineEdit !== null ? 1 : 0) +
+      (this.paragraphPlan !== null ? 1 : 0) +
+      (this.partialPlan !== null ? 1 : 0) +
+      (this.overlaid ? 1 : 0);
+    if (set > 1) {
+      console.error(
+        `EditTextCommand revert: ${set} strategy members set, expected <=1`,
+      );
+    }
+  }
+
   revert(doc: EditorDocument): void {
     const page = doc.page(this.pageIndex);
     const run = page.findRun(this.runId);
     if (!run || this.prevText === null) return;
+    this.assertSingleRevertPath();
     const m = doc.module;
 
     // Paragraph line add/remove revert: move matched lines back to their
@@ -981,8 +1009,8 @@ export class EditTextCommand implements Command {
       prev: snapshotRunModel(run),
     };
 
-    // appended starts with the break(s) after prevText; split keeps a leading
-    // "" entry for that first break, which we skip.
+    // The caller only routes here when the suffix is a pure newline-prefixed
+    // append, so split keeps a leading "" entry for that first break, skipped.
     const appendedLines = this.nextText
       .slice(this.prevText!.length)
       .split(/\r?\n/);

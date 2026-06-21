@@ -253,6 +253,8 @@ function parseFormat4(
     const idRangeOffset = dv.getUint16(idRangeOffsetsOffset + i * 2);
     if (startCode === 0xffff && endCode === 0xffff) continue;
     for (let c = startCode; c <= endCode; c++) {
+      // Cap entries like formats 6/12 - hostile format-4 cmaps can span huge ranges.
+      if (out.size >= MAX_CMAP_ENTRIES) return out;
       let glyphId: number;
       if (idRangeOffset === 0) {
         glyphId = (c + idDelta) & 0xffff;
@@ -273,6 +275,7 @@ function parseFormat4(
       }
       if (glyphId !== 0) out.set(c, glyphId);
     }
+    if (out.size >= MAX_CMAP_ENTRIES) break;
   }
   return out;
 }

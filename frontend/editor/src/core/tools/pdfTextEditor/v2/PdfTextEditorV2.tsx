@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, Stack } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import DescriptionIcon from "@mui/icons-material/DescriptionOutlined";
 import { downloadBlob } from "@app/utils/downloadUtils";
 import type { BaseToolProps } from "@app/types/tool";
@@ -39,6 +40,7 @@ const WORKBENCH_VIEW_ID = "pdfTextEditorV2Workbench";
 const INSERTED_IMAGE_RATIO = 0.4;
 
 export default function PdfTextEditorV2(_props: BaseToolProps) {
+  const { t } = useTranslation();
   const { store, state } = useEditorStore();
   const load = useDocumentLoader(store);
 
@@ -54,7 +56,7 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
   useWorkbenchPin({
     workbenchId: WORKBENCH_ID,
     workbenchViewId: WORKBENCH_VIEW_ID,
-    label: "Editor",
+    label: t("pdfTextEditorV2.workbenchLabel", "Editor"),
     icon: <DescriptionIcon fontSize="small" />,
     component: PageStage,
   });
@@ -135,7 +137,10 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
         store.setError(
           err instanceof Error
             ? err.message
-            : "Could not decode the selected image.",
+            : t(
+                "pdfTextEditorV2.error.decodeImage",
+                "Could not decode the selected image.",
+              ),
         );
         return;
       }
@@ -182,9 +187,16 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
       store.dispatch(cmd);
       if (cmd.insertedImageId) {
         store.selection.selectImage(cmd.insertedImageId);
+      } else {
+        store.setError(
+          t(
+            "pdfTextEditorV2.error.insertImage",
+            "Could not insert the selected image.",
+          ),
+        );
       }
     },
-    [store],
+    [store, t],
   );
 
   const handleCopySelected = useCallback(() => {
@@ -196,7 +208,10 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
       .filter((r) => ids.includes(r.id))
       .map((r) => r.text);
     if (texts.length === 0) return;
-    void navigator.clipboard.writeText(texts.join("\n"));
+    // Guard against non-secure contexts where navigator.clipboard is undefined.
+    if (navigator.clipboard?.writeText) {
+      void navigator.clipboard.writeText(texts.join("\n")).catch(() => {});
+    }
   }, [store]);
 
   /**

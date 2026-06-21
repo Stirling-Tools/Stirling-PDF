@@ -50,6 +50,10 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
       if (!meta) return;
       switch (e.key) {
         case "z":
+          // Blur an active editable before history so the overlay sync
+          // effect can rewrite the DOM from the reverted model.
+          if (isFocusInContentEditable())
+            (document.activeElement as HTMLElement | null)?.blur();
           if (e.shiftKey) {
             e.preventDefault();
             onRedo();
@@ -59,6 +63,8 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
           }
           return;
         case "y":
+          if (isFocusInContentEditable())
+            (document.activeElement as HTMLElement | null)?.blur();
           e.preventDefault();
           onRedo();
           return;
@@ -72,6 +78,7 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
           onDuplicate();
           return;
         case "a":
+          // Guard covers contenteditable AND Find/password inputs (dom.ts).
           if (isFocusInContentEditable()) return;
           e.preventDefault();
           onSelectAll();
@@ -91,10 +98,6 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
           onCutSelected();
           return;
         case "v":
-          // Browser's native paste into a focused contentEditable does
-          // exactly what the user wants - inserting into the run they're
-          // typing into. Only hijack for editor-level paste when the
-          // caret isn't inside a run.
           if (isFocusInContentEditable()) return;
           e.preventDefault();
           onPaste(e.shiftKey);

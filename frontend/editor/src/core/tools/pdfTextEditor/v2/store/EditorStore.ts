@@ -5,7 +5,10 @@ import { PdfiumTextReader } from "@app/tools/pdfTextEditor/v2/pdfium/PdfiumTextR
 import { resetBackendResolverCaches } from "@app/tools/pdfTextEditor/v2/charcode/BackendResolver";
 import { resetCmapCache } from "@app/tools/pdfTextEditor/v2/charcode/CmapResolver";
 import { resetContentStreamCache } from "@app/tools/pdfTextEditor/v2/charcode/ContentStreamResolver";
-import { resetOnPageAdvCache } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
+import {
+  resetOnPageAdvCache,
+  resetPerCharBranchPtrs,
+} from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
 import type { Command } from "@app/tools/pdfTextEditor/v2/commands/Command";
 import type {
   GroupingMode,
@@ -25,6 +28,8 @@ function resetCharcodeCaches(): void {
   resetCmapCache();
   resetContentStreamCache();
   resetOnPageAdvCache();
+  // The per-char ptr set is doc-scoped since PDFium reuses pointers.
+  resetPerCharBranchPtrs();
 }
 
 export type InteractionMode = "select" | "addText";
@@ -293,6 +298,8 @@ export class EditorStore {
 
   /** Mark the current edit state as saved; clears the dirty indicator. */
   markSaved(): void {
+    // Break the coalesce burst so a post-save keystroke is a new dirtying step.
+    this.history.breakCoalescing();
     this.savedUndoDepth = this.history.size().undo;
     this.bakedDirty = false;
     this.patch({ dirty: false });

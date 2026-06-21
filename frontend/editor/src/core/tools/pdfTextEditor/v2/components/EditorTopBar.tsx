@@ -1,4 +1,5 @@
 import { Box, Button, Group, Text, Tooltip } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import type { EditorStore } from "@app/tools/pdfTextEditor/v2/store/EditorStore";
 import type { PageSnapshot } from "@app/tools/pdfTextEditor/v2/types";
 
@@ -33,6 +34,7 @@ const Z_STEP = 0.25;
 const FIT_PAD_PX = 64;
 
 export function EditorTopBar(props: TopBarProps) {
+  const { t } = useTranslation();
   const {
     store,
     hasDocument,
@@ -52,7 +54,7 @@ export function EditorTopBar(props: TopBarProps) {
       style={{ borderBottom: "1px solid var(--mantine-color-default-border)" }}
     >
       <Text fw={600} size="sm">
-        PDF Text Editor
+        {t("pdfTextEditorV2.title", "PDF Text Editor")}
       </Text>
       <Text size="xs" c="dimmed">
         v2
@@ -81,7 +83,7 @@ export function EditorTopBar(props: TopBarProps) {
             <Button
               size="xs"
               variant="subtle"
-              aria-label="Zoom out"
+              aria-label={t("pdfTextEditorV2.zoom.out", "Zoom out")}
               data-testid="v2-zoom-out"
               onClick={() =>
                 store.setRenderScale(
@@ -97,7 +99,7 @@ export function EditorTopBar(props: TopBarProps) {
             <Button
               size="xs"
               variant="subtle"
-              aria-label="Zoom in"
+              aria-label={t("pdfTextEditorV2.zoom.in", "Zoom in")}
               data-testid="v2-zoom-in"
               onClick={() =>
                 store.setRenderScale(
@@ -110,7 +112,7 @@ export function EditorTopBar(props: TopBarProps) {
             <Button
               size="xs"
               variant="subtle"
-              aria-label="Reset zoom"
+              aria-label={t("pdfTextEditorV2.zoom.reset", "Reset zoom")}
               data-testid="v2-zoom-reset"
               onClick={() => store.setRenderScale(1)}
             >
@@ -119,7 +121,7 @@ export function EditorTopBar(props: TopBarProps) {
             <Button
               size="xs"
               variant="subtle"
-              aria-label="Fit to width"
+              aria-label={t("pdfTextEditorV2.zoom.fitToWidth", "Fit to width")}
               data-testid="v2-zoom-fit"
               onClick={() => {
                 const stage = document.querySelector<HTMLElement>(
@@ -136,20 +138,30 @@ export function EditorTopBar(props: TopBarProps) {
                 store.setRenderScale(+clamped.toFixed(2));
               }}
             >
-              Fit
+              {t("pdfTextEditorV2.zoom.fit", "Fit")}
             </Button>
           </Group>
-          <Tooltip label="Download edited PDF (Ctrl+S)">
+          <Tooltip
+            label={t(
+              "pdfTextEditorV2.saveTooltip",
+              "Download edited PDF (Ctrl+S)",
+            )}
+          >
             <Button size="xs" onClick={onSave} data-testid="v2-save">
-              Save PDF
+              {t("pdfTextEditorV2.save", "Save PDF")}
             </Button>
           </Tooltip>
-          <Tooltip label="Keyboard shortcuts (?)">
+          <Tooltip
+            label={t("pdfTextEditorV2.help.tooltip", "Keyboard shortcuts (?)")}
+          >
             <Button
               size="xs"
               variant="subtle"
               onClick={onShowHelp}
-              aria-label="Keyboard shortcuts"
+              aria-label={t(
+                "pdfTextEditorV2.help.ariaLabel",
+                "Keyboard shortcuts",
+              )}
               data-testid="v2-help"
             >
               ?

@@ -4,7 +4,6 @@ import type {
   RGBA,
   TextRunSnapshot,
 } from "@app/tools/pdfTextEditor/v2/types";
-import { BLACK } from "@app/tools/pdfTextEditor/v2/model/Color";
 
 /**
  * One line's worth of sub-run data inside a paragraph. Lives on the
@@ -196,7 +195,7 @@ export class TextRun {
     this.text = init.text;
     this.fontId = init.fontId;
     this.fontSize = init.fontSize;
-    this.fill = init.fill ?? BLACK;
+    this.fill = init.fill;
     this.fontSubset = init.fontSubset;
     this.dirty = false;
     this.mergedFromPtrs = [];
@@ -216,6 +215,9 @@ export class TextRun {
     this.locked = init.locked ?? false;
   }
 
+  // Display/serialization projection only. Omits runtime fields (mergedFrom,
+  // container ptrs, paragraph member/leaf arrays, line slots, coverRectPtr) so
+  // it is NOT round-trippable; hold the instance to restore a merged/paragraph run.
   snapshot(): TextRunSnapshot {
     return {
       id: this.id,

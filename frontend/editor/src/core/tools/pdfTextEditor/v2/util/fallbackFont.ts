@@ -2,6 +2,7 @@ import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDoc
 import type { Page } from "@app/tools/pdfTextEditor/v2/model/Page";
 import type { RGBA } from "@app/tools/pdfTextEditor/v2/types";
 import { FontRef } from "@app/tools/pdfTextEditor/v2/model/FontRef";
+import { parseTrueTypeCmap } from "@app/tools/pdfTextEditor/v2/charcode/CmapResolver";
 import { writeUtf16 } from "@app/services/pdfiumService";
 
 /**
@@ -26,6 +27,25 @@ const FPDF_FONT_TRUETYPE = 2;
 
 let bytesPromise: Promise<Uint8Array | null> | null = null;
 let cachedBytes: Uint8Array | null = null;
+let fallbackCoverage: Map<number, number> | null = null;
+
+/**
+ * True if the fallback font has a glyph for every non-whitespace code point of
+ * `text`. Fails open (returns true) when the cmap cannot be parsed so the width
+ * self-check stays the only backstop, unchanged from prior behaviour.
+ */
+function fallbackFontCovers(text: string): boolean {
+  if (!fallbackCoverage && cachedBytes) {
+    fallbackCoverage = parseTrueTypeCmap(cachedBytes);
+  }
+  if (!fallbackCoverage) return true;
+  for (const ch of text) {
+    if (/\s/.test(ch)) continue;
+    const cp = ch.codePointAt(0)!;
+    if (!fallbackCoverage.has(cp)) return false;
+  }
+  return true;
+}
 
 interface ExtendedPdfiumRuntime {
   HEAPU8: Uint8Array;
@@ -152,8 +172,8 @@ interface CreateTextObjModule {
 /**
  * Emit ONE text object for `text` in the embedded Unicode fallback font, placed
  * at (x, y) with `fill`, inserted into the page. Returns the ptr, or 0 when the
- * font isn't available OR didn't actually render the glyphs (Noto Sans lacks
- * CJK / Arabic / Hebrew - those .notdef to ~0 width, so the caller should drop
+ * font isn't available OR doesn't cover the glyphs (Noto Sans lacks CJK /
+ * Arabic / Hebrew - a coverage pre-check rejects those so the caller drops
  * them via base-14 instead of persisting tofu). Used for characters base-14
  * (Latin-1) can't represent.
  */
@@ -168,6 +188,7 @@ export function emitFallbackTextObject(
 ): number {
   const fb = loadFallbackFontInto(doc);
   if (!fb) return 0;
+  if (!fallbackFontCovers(text)) return 0;
   const m = doc.module;
   const create = (m as unknown as CreateTextObjModule)
     .FPDFPageObj_CreateTextObj;

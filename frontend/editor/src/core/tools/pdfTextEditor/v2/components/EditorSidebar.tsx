@@ -11,6 +11,8 @@ import {
   Text,
   Tooltip,
 } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import TextFieldsIcon from "@mui/icons-material/TextFieldsOutlined";
 import ImageIcon from "@mui/icons-material/ImageOutlined";
 import CallMergeIcon from "@mui/icons-material/CallMergeOutlined";
@@ -130,6 +132,7 @@ const FONT_STATUS_META: Record<
  * ones that can drop a brand-new character to a standard fallback font.
  */
 function FontsSection({ pages }: { pages: PageSnapshot[] }) {
+  const { t } = useTranslation();
   // Pure: the font list AND coverage both come from snapshot data + the cmap
   // cache the loader primed during its serialized read. No WASM here, so it's
   // safe to run on every render.
@@ -138,7 +141,7 @@ function FontsSection({ pages }: { pages: PageSnapshot[] }) {
   return (
     <Stack gap="xs" data-testid="v2-fonts-panel">
       <Group justify="space-between" wrap="nowrap" gap={4}>
-        <SectionLabel>Fonts</SectionLabel>
+        <SectionLabel>{t("pdfTextEditorV2.fonts.title", "Fonts")}</SectionLabel>
         <FontsHelp />
       </Group>
       <FontCompatibilitySummary fonts={fonts} />
@@ -162,7 +165,13 @@ function formatMissing(missing: string[]): string {
  * type badge.
  */
 function FontRow({ font }: { font: PageFont }) {
+  const { t } = useTranslation();
   const meta = FONT_STATUS_META[font.status];
+  const label = t(
+    `pdfTextEditorV2.fonts.status.${font.status}.label`,
+    meta.label,
+  );
+  const hint = t(`pdfTextEditorV2.fonts.status.${font.status}.hint`, meta.hint);
   const { known, missing } = font.coverage;
   const hasGap = known && missing.length > 0;
   return (
@@ -179,7 +188,7 @@ function FontRow({ font }: { font: PageFont }) {
         >
           {font.name}
         </Text>
-        <Tooltip label={meta.hint} multiline w={230} withArrow position="left">
+        <Tooltip label={hint} multiline w={230} withArrow position="left">
           <Badge
             size="xs"
             color={meta.color}
@@ -187,26 +196,35 @@ function FontRow({ font }: { font: PageFont }) {
             style={{ cursor: "help", flexShrink: 0 }}
             data-testid={`v2-font-${font.status}`}
           >
-            {meta.label}
+            {label}
           </Badge>
         </Tooltip>
       </Group>
       {known &&
         (hasGap ? (
           <Tooltip
-            label={`This font has no glyph for: ${missing.join(" ")}. Typing one uses a standard fallback font.`}
+            label={t(
+              "pdfTextEditorV2.fonts.missingTooltip",
+              "This font has no glyph for: {{glyphs}}. Typing one uses a standard fallback font.",
+              { glyphs: missing.join(" ") },
+            )}
             multiline
             w={230}
             withArrow
             position="left"
           >
             <Text size="xs" c="yellow.8" data-testid="v2-font-missing">
-              Missing: {formatMissing(missing)}
+              {t("pdfTextEditorV2.fonts.missing", "Missing: {{glyphs}}", {
+                glyphs: formatMissing(missing),
+              })}
             </Text>
           </Tooltip>
         ) : (
           <Text size="xs" c="dimmed" data-testid="v2-font-full">
-            All letters &amp; numbers present
+            {t(
+              "pdfTextEditorV2.fonts.allPresent",
+              "All letters & numbers present",
+            )}
           </Text>
         ))}
     </Stack>
@@ -223,6 +241,7 @@ function FontRow({ font }: { font: PageFont }) {
  *  - otherwise (some coverage unknown, e.g. Type3) -> blue info.
  */
 function FontCompatibilitySummary({ fonts }: { fonts: PageFont[] }) {
+  const { t } = useTranslation();
   const withGaps = fonts.filter(
     (f) => f.coverage.known && f.coverage.missing.length > 0,
   );
@@ -236,21 +255,38 @@ function FontCompatibilitySummary({ fonts }: { fonts: PageFont[] }) {
       fg: "green.8",
       iconColor: "var(--mantine-color-green-text)",
       Icon: CheckCircleIcon,
-      text: "Every font includes the full alphabet and digits - type freely.",
+      text: t(
+        "pdfTextEditorV2.fonts.compat.ok",
+        "Every font includes the full alphabet and digits - type freely.",
+      ),
     },
     info: {
       bg: "var(--mantine-color-blue-light)",
       fg: "blue.8",
       iconColor: "var(--mantine-color-blue-text)",
       Icon: InfoIcon,
-      text: "Existing text edits perfectly. A new character an embedded font doesn't include falls back to a standard font.",
+      text: t(
+        "pdfTextEditorV2.fonts.compat.info",
+        "Existing text edits perfectly. A new character an embedded font doesn't include falls back to a standard font.",
+      ),
     },
     warn: {
       bg: "var(--mantine-color-yellow-light)",
       fg: "yellow.8",
       iconColor: "var(--mantine-color-yellow-text)",
       Icon: WarningIcon,
-      text: `${withGaps.length} font${withGaps.length === 1 ? "" : "s"} missing some letters or numbers - typing those uses a standard fallback font.`,
+      text:
+        withGaps.length === 1
+          ? t(
+              "pdfTextEditorV2.fonts.compat.warnOne",
+              "{{count}} font missing some letters or numbers - typing those uses a standard fallback font.",
+              { count: withGaps.length },
+            )
+          : t(
+              "pdfTextEditorV2.fonts.compat.warnOther",
+              "{{count}} fonts missing some letters or numbers - typing those uses a standard fallback font.",
+              { count: withGaps.length },
+            ),
     },
   }[tone];
   const Icon = meta.Icon;
@@ -282,6 +318,7 @@ function FontCompatibilitySummary({ fonts }: { fonts: PageFont[] }) {
  * Surfaced next to the Fonts header so the badges/summary stay terse.
  */
 function FontsHelp() {
+  const { t } = useTranslation();
   return (
     <HoverCard width={272} shadow="md" withArrow position="left-start">
       <HoverCard.Target>
@@ -289,7 +326,10 @@ function FontsHelp() {
           variant="subtle"
           color="gray"
           size="sm"
-          aria-label="What do the font statuses mean?"
+          aria-label={t(
+            "pdfTextEditorV2.fonts.help.ariaLabel",
+            "What do the font statuses mean?",
+          )}
           data-testid="v2-fonts-info"
         >
           <InfoIcon fontSize="small" />
@@ -298,7 +338,10 @@ function FontsHelp() {
       <HoverCard.Dropdown>
         <Stack gap={6}>
           <Text size="xs" fw={600}>
-            How fonts affect editing
+            {t(
+              "pdfTextEditorV2.fonts.help.heading",
+              "How fonts affect editing",
+            )}
           </Text>
           <Text size="xs" c="dimmed">
             <Text span fw={600} c="dimmed">
@@ -312,17 +355,38 @@ function FontsHelp() {
             otherwise they fall back to a standard font (Helvetica).
           </Text>
           <Stack gap={4}>
-            <FontsHelpRow color="green" label="Standard">
-              base-14 PDF font - the full standard character set is always
-              available.
+            <FontsHelpRow
+              color="green"
+              label={t(
+                "pdfTextEditorV2.fonts.status.standard.label",
+                "Standard",
+              )}
+            >
+              {t(
+                "pdfTextEditorV2.fonts.help.standardDesc",
+                "base-14 PDF font - the full standard character set is always available.",
+              )}
             </FontsHelpRow>
-            <FontsHelpRow color="blue" label="Embedded">
-              full font shipped in the PDF - most new characters match; a glyph
-              the font lacks falls back.
+            <FontsHelpRow
+              color="blue"
+              label={t(
+                "pdfTextEditorV2.fonts.status.embedded.label",
+                "Embedded",
+              )}
+            >
+              {t(
+                "pdfTextEditorV2.fonts.help.embeddedDesc",
+                "full font shipped in the PDF - most new characters match; a glyph the font lacks falls back.",
+              )}
             </FontsHelpRow>
-            <FontsHelpRow color="yellow" label="Subset">
-              only the document's existing characters are embedded - new ones
-              usually fall back.
+            <FontsHelpRow
+              color="yellow"
+              label={t("pdfTextEditorV2.fonts.status.subset.label", "Subset")}
+            >
+              {t(
+                "pdfTextEditorV2.fonts.help.subsetDesc",
+                "only the document's existing characters are embedded - new ones usually fall back.",
+              )}
             </FontsHelpRow>
           </Stack>
         </Stack>
@@ -359,19 +423,23 @@ function EmptySidebar({
   loading: boolean;
   progress: LoadProgress | null;
 }) {
+  const { t } = useTranslation();
   return (
     <Stack gap="xs" data-testid="v2-sidebar-empty">
       <Text size="sm" fw={500}>
-        No file loaded
+        {t("pdfTextEditorV2.sidebar.noFile", "No file loaded")}
       </Text>
       <Text size="xs" c="dimmed">
-        Pick a PDF from the Files panel on the left, or drop one in. The editor
-        will open it automatically.
+        {t(
+          "pdfTextEditorV2.sidebar.noFileHint",
+          "Pick a PDF from the Files panel on the left, or drop one in. The editor will open it automatically.",
+        )}
       </Text>
       {loading && (
         <Stack gap={4} data-testid="v2-loading">
           <Text size="xs" c="dimmed">
-            {progress?.stage ?? "Opening document..."}
+            {progress?.stage ??
+              t("pdfTextEditorV2.sidebar.opening", "Opening document...")}
           </Text>
           {progress && progress.total > 0 && (
             <Text size="xs" c="dimmed">
@@ -397,7 +465,8 @@ function LoadedSidebar({
   onSetGroupingMode,
   onSetWidthMode,
 }: Omit<SidebarProps, never>) {
-  const selectionLabel = formatSelection(selection);
+  const { t } = useTranslation();
+  const selectionLabel = formatSelection(selection, t);
   return (
     <Stack gap="lg" data-testid="v2-sidebar-status">
       <InsertSection
@@ -412,7 +481,9 @@ function LoadedSidebar({
         onUngroup={onUngroup}
       />
       <Stack gap="sm">
-        <SectionLabel>Editor settings</SectionLabel>
+        <SectionLabel>
+          {t("pdfTextEditorV2.sidebar.editorSettings", "Editor settings")}
+        </SectionLabel>
         <GroupingModeControl
           mode={state.groupingMode}
           onChange={onSetGroupingMode}
@@ -439,9 +510,12 @@ function InsertSection({
   onToggleAddText: () => void;
   onPickImage: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <Stack gap="xs">
-      <SectionLabel>Insert</SectionLabel>
+      <SectionLabel>
+        {t("pdfTextEditorV2.sidebar.insert", "Insert")}
+      </SectionLabel>
       <Group grow gap="xs" wrap="nowrap">
         <Button
           size="xs"
@@ -450,7 +524,12 @@ function InsertSection({
           onClick={onToggleAddText}
           data-testid="v2-add-text"
         >
-          {mode === "addText" ? "Click page to add text" : "Add text"}
+          {mode === "addText"
+            ? t(
+                "pdfTextEditorV2.sidebar.clickPageToAddText",
+                "Click page to add text",
+              )
+            : t("pdfTextEditorV2.sidebar.addText", "Add text")}
         </Button>
         <Button
           size="xs"
@@ -459,7 +538,7 @@ function InsertSection({
           onClick={onPickImage}
           data-testid="v2-add-image"
         >
-          Add image
+          {t("pdfTextEditorV2.sidebar.addImage", "Add image")}
         </Button>
       </Group>
     </Stack>
@@ -477,15 +556,24 @@ function ParagraphSection({
   onGroup: () => void;
   onUngroup: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <Stack gap="xs">
-      <SectionLabel>Paragraph</SectionLabel>
+      <SectionLabel>
+        {t("pdfTextEditorV2.sidebar.paragraph", "Paragraph")}
+      </SectionLabel>
       <Group grow gap="xs" wrap="nowrap">
         <Tooltip
           label={
             canGroup
-              ? "Merge selected runs into one paragraph (Ctrl+M)"
-              : "Select 2+ runs to merge"
+              ? t(
+                  "pdfTextEditorV2.sidebar.groupTooltip",
+                  "Merge selected runs into one paragraph (Ctrl+M)",
+                )
+              : t(
+                  "pdfTextEditorV2.sidebar.groupTooltipDisabled",
+                  "Select 2+ runs to merge",
+                )
           }
         >
           <Button
@@ -496,14 +584,20 @@ function ParagraphSection({
             disabled={!canGroup}
             data-testid="v2-group"
           >
-            Group
+            {t("pdfTextEditorV2.sidebar.group", "Group")}
           </Button>
         </Tooltip>
         <Tooltip
           label={
             canUngroup
-              ? "Split this paragraph into one run per line"
-              : "Select a multi-line paragraph to ungroup"
+              ? t(
+                  "pdfTextEditorV2.sidebar.ungroupTooltip",
+                  "Split this paragraph into one run per line",
+                )
+              : t(
+                  "pdfTextEditorV2.sidebar.ungroupTooltipDisabled",
+                  "Select a multi-line paragraph to ungroup",
+                )
           }
         >
           <Button
@@ -514,7 +608,7 @@ function ParagraphSection({
             disabled={!canUngroup}
             data-testid="v2-ungroup"
           >
-            Ungroup
+            {t("pdfTextEditorV2.sidebar.ungroup", "Ungroup")}
           </Button>
         </Tooltip>
       </Group>
@@ -527,6 +621,7 @@ function ParagraphSection({
  * gesture the overlay listens for).
  */
 function MoveTip() {
+  const { t } = useTranslation();
   return (
     <Box
       data-testid="v2-move-tip"
@@ -538,7 +633,12 @@ function MoveTip() {
       }}
     >
       <Text size="xs" c="dimmed">
-        Hold <Kbd>Ctrl</Kbd> and drag a text box to move it.
+        {t("pdfTextEditorV2.sidebar.moveTipPrefix", "Hold ")}
+        <Kbd>Ctrl</Kbd>
+        {t(
+          "pdfTextEditorV2.sidebar.moveTipSuffix",
+          " and drag a text box to move it.",
+        )}
       </Text>
     </Box>
   );
@@ -556,10 +656,11 @@ function GroupingModeControl({
   mode: GroupingMode;
   onChange: (mode: GroupingMode) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <Stack gap={4} data-testid="v2-grouping-mode">
       <Text size="xs" fw={500}>
-        Text grouping
+        {t("pdfTextEditorV2.sidebar.textGrouping", "Text grouping")}
       </Text>
       <SegmentedControl
         size="xs"
@@ -567,15 +668,27 @@ function GroupingModeControl({
         value={mode}
         onChange={(value) => onChange(value as GroupingMode)}
         data={[
-          { label: "Auto", value: "auto" },
-          { label: "Line", value: "line" },
+          {
+            label: t("pdfTextEditorV2.sidebar.groupingAuto", "Auto"),
+            value: "auto",
+          },
+          {
+            label: t("pdfTextEditorV2.sidebar.groupingLine", "Line"),
+            value: "line",
+          },
         ]}
         data-testid="v2-grouping-mode-control"
       />
       <Text size="xs" c="dimmed">
         {mode === "auto"
-          ? "Equal-spaced lines group into editable paragraphs."
-          : "Each source line is edited on its own. Switching clears undo history."}
+          ? t(
+              "pdfTextEditorV2.sidebar.groupingAutoHint",
+              "Equal-spaced lines group into editable paragraphs.",
+            )
+          : t(
+              "pdfTextEditorV2.sidebar.groupingLineHint",
+              "Each source line is edited on its own. Switching clears undo history.",
+            )}
       </Text>
     </Stack>
   );
@@ -593,10 +706,11 @@ function WidthModeControl({
   mode: WidthMode;
   onChange: (mode: WidthMode) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <Stack gap={4} data-testid="v2-width-mode">
       <Text size="xs" fw={500}>
-        Text box width
+        {t("pdfTextEditorV2.sidebar.textBoxWidth", "Text box width")}
       </Text>
       <SegmentedControl
         size="xs"
@@ -604,28 +718,71 @@ function WidthModeControl({
         value={mode}
         onChange={(value) => onChange(value as WidthMode)}
         data={[
-          { label: "Grow", value: "grow" },
-          { label: "Wrap", value: "wrap" },
+          {
+            label: t("pdfTextEditorV2.sidebar.widthGrow", "Grow"),
+            value: "grow",
+          },
+          {
+            label: t("pdfTextEditorV2.sidebar.widthWrap", "Wrap"),
+            value: "wrap",
+          },
         ]}
         data-testid="v2-width-mode-control"
       />
       <Text size="xs" c="dimmed">
         {mode === "wrap"
-          ? "Boxes keep their width; extra text wraps onto new lines."
-          : "Boxes widen to the right as you type (no wrapping)."}
+          ? t(
+              "pdfTextEditorV2.sidebar.widthWrapHint",
+              "Boxes keep their width; extra text wraps onto new lines.",
+            )
+          : t(
+              "pdfTextEditorV2.sidebar.widthGrowHint",
+              "Boxes widen to the right as you type (no wrapping).",
+            )}
       </Text>
     </Stack>
   );
 }
 
-function formatSelection(selection: SelectionState): string | null {
+function formatSelection(
+  selection: SelectionState,
+  t: TFunction,
+): string | null {
   const runs = selection.runIds.length;
   const images = selection.imageIds.length;
   if (runs === 0 && images === 0) return null;
   const parts: string[] = [];
   if (runs > 0)
-    parts.push(`${runs} text ${runs === 1 ? "run" : "runs"} selected`);
+    parts.push(
+      runs === 1
+        ? t(
+            "pdfTextEditorV2.sidebar.runSelectedOne",
+            "{{count}} text run selected",
+            {
+              count: runs,
+            },
+          )
+        : t(
+            "pdfTextEditorV2.sidebar.runSelectedOther",
+            "{{count}} text runs selected",
+            { count: runs },
+          ),
+    );
   if (images > 0)
-    parts.push(`${images} ${images === 1 ? "image" : "images"} selected`);
+    parts.push(
+      images === 1
+        ? t(
+            "pdfTextEditorV2.sidebar.imageSelectedOne",
+            "{{count}} image selected",
+            {
+              count: images,
+            },
+          )
+        : t(
+            "pdfTextEditorV2.sidebar.imageSelectedOther",
+            "{{count}} images selected",
+            { count: images },
+          ),
+    );
   return parts.join(" · ");
 }

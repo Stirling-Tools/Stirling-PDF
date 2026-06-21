@@ -1,28 +1,10 @@
 package stirling.software.SPDF.controller.api;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
-import org.apache.pdfbox.Loader;
-import org.apache.pdfbox.contentstream.PDFStreamEngine;
-import org.apache.pdfbox.contentstream.operator.DrawObject;
-import org.apache.pdfbox.contentstream.operator.state.Concatenate;
-import org.apache.pdfbox.contentstream.operator.state.Restore;
-import org.apache.pdfbox.contentstream.operator.state.Save;
-import org.apache.pdfbox.contentstream.operator.state.SetGraphicsStateParameters;
-import org.apache.pdfbox.contentstream.operator.state.SetMatrix;
-import org.apache.pdfbox.contentstream.operator.text.BeginText;
-import org.apache.pdfbox.contentstream.operator.text.EndText;
-import org.apache.pdfbox.contentstream.operator.text.SetFontAndSize;
-import org.apache.pdfbox.contentstream.operator.text.SetTextHorizontalScaling;
-import org.apache.pdfbox.contentstream.operator.text.SetTextLeading;
-import org.apache.pdfbox.contentstream.operator.text.SetTextRenderingMode;
-import org.apache.pdfbox.contentstream.operator.text.SetTextRise;
-import org.apache.pdfbox.contentstream.operator.text.SetWordSpacing;
-import org.apache.pdfbox.contentstream.operator.text.ShowText;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDResources;
@@ -40,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.annotations.api.GeneralApi;
+import stirling.software.common.service.CustomPDFDocumentFactory;
 
 /**
  * Charcode-encode helper for the v2 PDF text editor.
@@ -62,6 +45,18 @@ import stirling.software.common.annotations.api.GeneralApi;
 @GeneralApi
 @RequiredArgsConstructor
 public class PdfTextEditorV2CharcodeController {
+
+    /** Reject JSON bodies whose base64 implies a decoded PDF larger than this. */
+    private static final int MAX_PDF_BYTES = 100 * 1024 * 1024;
+
+    /**
+     * Cache the reverse Unicode map per font instance. PDFont instances are recreated per
+     * PDDocument load, so this WeakHashMap is GC'd with the doc and bounds memory.
+     */
+    private static final java.util.Map<PDFont, java.util.Map<String, Long>> REVERSE_MAP_CACHE =
+            java.util.Collections.synchronizedMap(new java.util.WeakHashMap<>());
+
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
 
     /**
      * Permanently silence PDFBox's per-charcode "No Unicode mapping for .notdef" WARN spam
@@ -167,23 +162,29 @@ public class PdfTextEditorV2CharcodeController {
             resp.setError("missing required fields");
             return ResponseEntity.badRequest().body(resp);
         }
+        // length/4*3 bounds the decoded size without decoding, so we reject early before allocating.
+        String b64 = request.getPdfBase64();
+        if ((long) b64.length() / 4 * 3 > MAX_PDF_BYTES) {
+            resp.setError("pdf too large");
+            return ResponseEntity.status(413).body(resp);
+        }
         byte[] pdfBytes;
         try {
-            pdfBytes = Base64.getDecoder().decode(request.getPdfBase64());
+            pdfBytes = Base64.getDecoder().decode(b64);
         } catch (IllegalArgumentException e) {
             resp.setError("pdfBase64 is not valid base64");
             return ResponseEntity.badRequest().body(resp);
         }
-        try (PDDocument doc = Loader.loadPDF(pdfBytes)) {
+        try (PDDocument doc = pdfDocumentFactory.load(pdfBytes, true)) {
             if (request.getPageIndex() < 0 || request.getPageIndex() >= doc.getNumberOfPages()) {
                 resp.setError("pageIndex out of range");
                 return ResponseEntity.badRequest().body(resp);
             }
             PDPage page = doc.getPage(request.getPageIndex());
-            // Skip the LocatorScanner (it walks the page's content stream, which crashes on
-            // Type3 fonts with UnsupportedOperationException("Not implemented: Type3") before
-            // we can do anything useful). Instead enumerate the page's font resources and
-            // pick the first one whose ToUnicode CMap maps SOME charcode to the locator char.
+            // Skip walking the page's content stream (it crashes on Type3 fonts with
+            // UnsupportedOperationException("Not implemented: Type3") before we can do anything
+            // useful). Instead enumerate the page's font resources and pick the first one whose
+            // ToUnicode CMap maps SOME charcode to the locator char.
             // For Chrome/Skia-printed PDFs that emit one Type3 font per glyph, this lands on
             // the exact font that renders the locator char.
             PDFont font =
@@ -256,11 +257,11 @@ public class PdfTextEditorV2CharcodeController {
             return ResponseEntity.ok(resp);
         } catch (IOException e) {
             log.warn("encodeCharcodes: failed to load PDF", e);
-            resp.setError("failed to load PDF: " + e.getMessage());
+            resp.setError("failed to load PDF");
             return ResponseEntity.badRequest().body(resp);
         } catch (RuntimeException e) {
             log.warn("encodeCharcodes: unexpected error", e);
-            resp.setError("unexpected: " + e.getMessage());
+            resp.setError("unexpected error");
             return ResponseEntity.status(500).body(resp);
         }
     }
@@ -302,7 +303,11 @@ public class PdfTextEditorV2CharcodeController {
     private static PDFont scanResources(PDResources resources, String wantChar, String wantName) {
         if (resources == null) return null;
         String wantBase = stripSubsetTag(wantName);
+        // Bound a crafted page declaring many fonts none of which match (CPU-DoS guard).
+        int scanned = 0;
+        final int MAX_FONTS = 64;
         for (org.apache.pdfbox.cos.COSName name : resources.getFontNames()) {
+            if (++scanned > MAX_FONTS) break;
             PDFont font;
             try {
                 font = resources.getFont(name);
@@ -358,6 +363,13 @@ public class PdfTextEditorV2CharcodeController {
      * already a perceptible delay we'll cache later.
      */
     private static java.util.Map<String, Long> buildReverseUnicodeMap(PDFont font) {
+        // Cache per font instance. Cross-request reuse would need keying on font-dict bytes
+        // (out of scope); each request loads a new PDDocument hence a new PDFont.
+        return REVERSE_MAP_CACHE.computeIfAbsent(
+                font, PdfTextEditorV2CharcodeController::computeReverseUnicodeMap);
+    }
+
+    private static java.util.Map<String, Long> computeReverseUnicodeMap(PDFont font) {
         java.util.Map<String, Long> out = new java.util.HashMap<>();
         int upper = font.isStandard14() ? 256 : 0x10000;
         for (int cc = 0; cc < upper; cc++) {
@@ -372,117 +384,5 @@ public class PdfTextEditorV2CharcodeController {
             out.putIfAbsent(u, (long) cc);
         }
         return out;
-    }
-
-    /**
-     * Walks a page's text positions to find the font of the fragment whose first char matches the
-     * locator char and whose position is within ~2pt of the locator coordinates.
-     *
-     * <p>We don't require an exact match because PDFium-reported x/y can differ from PDFBox's by up
-     * to a glyph's left-side-bearing depending on how the font's bounding box is interpreted.
-     */
-    static final class LocatorScanner extends PDFStreamEngine {
-        private final String wantChar;
-        private final double wantX;
-        private final double wantY;
-        private PDFont foundFont; // exact-position match
-        private PDFont anyMatchFont; // fallback: any text obj using wantChar
-
-        private LocatorScanner(String wantChar, double wantX, double wantY) {
-            this.wantChar = wantChar;
-            this.wantX = wantX;
-            this.wantY = wantY;
-            // Operators we need so showText can correctly maintain text state.
-            addOperator(new BeginText(this));
-            addOperator(new EndText(this));
-            addOperator(new SetFontAndSize(this));
-            addOperator(new SetTextHorizontalScaling(this));
-            addOperator(new SetTextLeading(this));
-            addOperator(new SetTextRenderingMode(this));
-            addOperator(new SetTextRise(this));
-            addOperator(new SetWordSpacing(this));
-            addOperator(new SetMatrix(this));
-            addOperator(new Save(this));
-            addOperator(new Restore(this));
-            addOperator(new Concatenate(this));
-            addOperator(new SetGraphicsStateParameters(this));
-            addOperator(new DrawObject(this));
-            // Suppress unsupported-operator warnings for everything else - we only need text.
-            addOperator(new ShowText(this));
-        }
-
-        static PDFont findFont(PDPage page, String wantChar, double wantX, double wantY)
-                throws IOException {
-            LocatorScanner scanner = new LocatorScanner(wantChar, wantX, wantY);
-            scanner.processPage(page);
-            // Prefer the exact-position match; fall back to "any text object using wantChar
-            // on this page". The position match exists to disambiguate when two different
-            // fonts on the same page both render the same char, but most of the time the
-            // first appearance is the right one (e.g. "10M+" only appears in one font on
-            // the Sample.pdf marketing page).
-            if (scanner.foundFont != null) return scanner.foundFont;
-            return scanner.anyMatchFont;
-        }
-
-        @Override
-        protected void showText(byte[] string) throws IOException {
-            if (foundFont != null) return;
-            // Decode the bytes through the current font to get Unicode chars and positions.
-            // PDFStreamEngine's default showText() walks each glyph and calls showGlyph; we want
-            // a simpler path here so we replicate the bits we care about.
-            PDFont font = getGraphicsState().getTextState().getFont();
-            if (font == null) {
-                super.showText(string);
-                return;
-            }
-            ByteArrayInputStream in = new ByteArrayInputStream(string);
-            while (in.available() > 0) {
-                int before = in.available();
-                int code;
-                try {
-                    code = font.readCode(in);
-                } catch (IOException e) {
-                    in.skip(in.available());
-                    break;
-                }
-                String unicode;
-                try {
-                    unicode = font.toUnicode(code);
-                } catch (RuntimeException e) {
-                    // toUnicode is declared without checked exceptions in PDFBox, but it
-                    // can throw on malformed ToUnicode CMaps; just skip.
-                    unicode = null;
-                }
-                if (unicode != null && unicode.startsWith(wantChar)) {
-                    // Record FIRST appearance regardless of position (fallback).
-                    if (anyMatchFont == null) anyMatchFont = font;
-                    // Use the current text matrix to derive on-page coords. The frontend
-                    // sends locator coords from PDFium's text-page API, which is in the
-                    // composed CTM x text-matrix space - PDFBox's getTextMatrix() returns
-                    // just the text matrix, so positions won't match exactly. We still try
-                    // (with generous tolerance) to disambiguate same-char-different-font
-                    // cases, and fall back to anyMatchFont when nothing within tolerance
-                    // appears.
-                    float tx = getTextMatrix().getTranslateX();
-                    float ty = getTextMatrix().getTranslateY();
-                    if (Math.abs(tx - wantX) < 50 && Math.abs(ty - wantY) < 50) {
-                        foundFont = font;
-                        return;
-                    }
-                }
-                // PDFStreamEngine would normally advance the text matrix by the glyph's width
-                // here. For locator-find we don't need precise advance - approximate with
-                // glyph's standard advance / font size.
-                float w =
-                        font.getWidth(code)
-                                / 1000f
-                                * getGraphicsState().getTextState().getFontSize();
-                getTextMatrix().translate(w, 0);
-                if (in.available() == before) break; // safety
-            }
-        }
-
-        // No further hooks needed - showText() above handles font detection. PDFStreamEngine's
-        // text-state bookkeeping carries our matrix-translate forward as it parses Tj/TJ/Tm/etc.
     }
 }

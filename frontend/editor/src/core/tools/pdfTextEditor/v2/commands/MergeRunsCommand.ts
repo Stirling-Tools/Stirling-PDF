@@ -5,7 +5,11 @@ import {
   type ParagraphLineSlot,
   type TextRun,
 } from "@app/tools/pdfTextEditor/v2/model/TextRun";
-import { buildLineSlots } from "@app/tools/pdfTextEditor/v2/pdfium/ParagraphGrouper";
+import {
+  buildLineSlotsFromDescriptors,
+  type LineSlotDescriptor,
+  medianLineHeightFromBaselines,
+} from "@app/tools/pdfTextEditor/v2/pdfium/ParagraphGrouper";
 
 /**
  * Merge the selected runs on a single page into one virtual paragraph.
@@ -74,58 +78,51 @@ export class MergeRunsCommand implements Command {
     this.removedRunInstances = members;
     this.prevRunOrder = page.runs.map((r) => r.id);
 
-    // Capture each line's text BEFORE rep.text is overwritten with the join
-    // (rep === runs[0] by reference), so slot ranges map to the originals.
-    const lineTexts = runs.map((r) => r.text);
-    const slots = buildLineSlots(runs, lineTexts);
+    // A selected run may itself be a multi-line paragraph rep, so flatten the
+    // runs into ONE descriptor per visual line before building slots/members;
+    // otherwise a rep's later lines (embedded "\n") collapse into one slot.
+    const descs: LineDescriptor[] = [];
+    for (const r of runs) descs.push(...flattenRunToLines(r));
 
     const minX = Math.min(...runs.map((r) => r.bounds.x));
     const maxRight = Math.max(...runs.map((r) => r.bounds.x + r.bounds.width));
     const topY = Math.max(...runs.map((r) => r.bounds.y + r.bounds.height));
     const bottomY = Math.min(...runs.map((r) => r.bounds.y));
 
-    rep.text = runs.map((r) => r.text).join("\n");
+    rep.text = descs.map((d) => d.text).join("\n");
     rep.bounds = {
       x: minX,
       y: bottomY,
       width: maxRight - minX,
       height: topY - bottomY,
     };
+    // Median of consecutive per-line baseline deltas, not the rep-top-only
+    // formula, so multi-line reps keep correct spacing.
     rep.paragraphLineHeight =
-      runs.length > 1
-        ? (runs[0].matrix.f - runs[runs.length - 1].matrix.f) /
-          (runs.length - 1)
+      descs.length > 1
+        ? medianLineHeightFromBaselines(
+            descs.map((d) => d.baselineY),
+            rep.fontSize,
+          )
         : rep.paragraphLineHeight || rep.fontSize * 1.2;
-    rep.paragraphMemberPtrs = runs.map((r) => r.pdfiumObjPtr);
-    rep.paragraphMemberContainers = runs.map((r) => r.containerPtr);
-    rep.paragraphMemberFs = runs.map((r) => r.matrix.f);
+    rep.paragraphMemberPtrs = descs.map((d) => d.leafPtrs[0] ?? 0);
+    rep.paragraphMemberContainers = descs.map((d) => d.containerPtr);
+    rep.paragraphMemberFs = descs.map((d) => d.baselineY);
     // Flatten each line's own merged sub-ptrs so EditTextCommand removes
     // every original sub-word, not just the first ptr of each line.
     const leafPtrs: number[] = [];
     const leafContainers: number[] = [];
-    for (const r of runs) {
-      const leaves =
-        r.paragraphLeafPtrs.length > 0
-          ? r.paragraphLeafPtrs
-          : r.mergedFromPtrs.length > 0
-            ? r.mergedFromPtrs
-            : r.pdfiumObjPtr
-              ? [r.pdfiumObjPtr]
-              : [];
-      const containers =
-        r.paragraphLeafContainers.length > 0
-          ? r.paragraphLeafContainers
-          : leaves.map(() => r.containerPtr);
-      for (let i = 0; i < leaves.length; i++) {
-        leafPtrs.push(leaves[i]);
-        leafContainers.push(containers[i] ?? r.containerPtr);
+    for (const d of descs) {
+      for (const p of d.leafPtrs) {
+        leafPtrs.push(p);
+        leafContainers.push(d.containerPtr);
       }
     }
     rep.paragraphLeafPtrs = leafPtrs;
     rep.paragraphLeafContainers = leafContainers;
     // Per-line slots so a later partial edit keeps each line's source font
     // (planParagraphEdit bails without them, falling back to Helvetica).
-    rep.paragraphLineSlots = slots;
+    rep.paragraphLineSlots = buildLineSlotsFromDescriptors(descs);
 
     const removedIds = new Set(members.map((r) => r.id));
     page.setRuns(page.runs.filter((r) => !removedIds.has(r.id)));
@@ -174,6 +171,74 @@ export class MergeRunsCommand implements Command {
   describe(): string {
     return `Merge ${this.runIds.length} runs into a paragraph`;
   }
+}
+
+// A descriptor is a slot source (mergedFrom* for the slot) plus the line's
+// real leaf ptrs (which can differ from the slot fallback for single-line runs).
+interface LineDescriptor extends LineSlotDescriptor {
+  leafPtrs: number[];
+}
+
+/**
+ * Expand a run into one descriptor per visual line. A multi-line rep (>=2
+ * paragraphLineSlots) yields one descriptor per slot, slicing its text and
+ * carrying the slot's own mergedFrom* arrays so the rebuilt slot is identical
+ * to the original line. A single-line run yields exactly one descriptor.
+ */
+function flattenRunToLines(r: TextRun): LineDescriptor[] {
+  if (r.paragraphLineSlots.length >= 2) {
+    return r.paragraphLineSlots.map((slot) => ({
+      text: r.text.slice(slot.startChar, slot.endChar),
+      baselineY: slot.baselineY,
+      matrixE: slot.matrixE,
+      containerPtr: slot.containerPtr,
+      fontId: slot.fontId,
+      fontSize: slot.fontSize,
+      fontSubset: slot.fontSubset,
+      mergedFromPtrs: [...slot.mergedFromPtrs],
+      mergedFromTexts: [...slot.mergedFromTexts],
+      mergedFromBounds: slot.mergedFromBounds.map((b) => ({ ...b })),
+      mergedFromCharStarts: [...slot.mergedFromCharStarts],
+      leafPtrs: [...slot.mergedFromPtrs],
+    }));
+  }
+  const leafPtrs =
+    r.paragraphLeafPtrs.length > 0
+      ? [...r.paragraphLeafPtrs]
+      : r.mergedFromPtrs.length > 0
+        ? [...r.mergedFromPtrs]
+        : r.pdfiumObjPtr
+          ? [r.pdfiumObjPtr]
+          : [];
+  // Slot sub-runs mirror buildLineSlots' single-line fallback so partial edits
+  // keep the source font instead of bailing to the overlay path.
+  const hasSubRuns = r.mergedFromPtrs.length > 0;
+  const mergedFromPtrs = hasSubRuns
+    ? [...r.mergedFromPtrs]
+    : r.pdfiumObjPtr
+      ? [r.pdfiumObjPtr]
+      : [];
+  const mergedFromTexts = hasSubRuns ? [...r.mergedFromTexts] : [r.text];
+  const mergedFromBounds = hasSubRuns
+    ? r.mergedFromBounds.map((b) => ({ ...b }))
+    : [{ x: r.bounds.x, right: r.bounds.x + r.bounds.width }];
+  const mergedFromCharStarts = hasSubRuns ? [...r.mergedFromCharStarts] : [0];
+  return [
+    {
+      text: r.text,
+      baselineY: r.matrix.f,
+      matrixE: r.matrix.e,
+      containerPtr: r.containerPtr,
+      fontId: r.fontId,
+      fontSize: r.fontSize,
+      fontSubset: r.fontSubset,
+      mergedFromPtrs,
+      mergedFromTexts,
+      mergedFromBounds,
+      mergedFromCharStarts,
+      leafPtrs,
+    },
+  ];
 }
 
 function snapshotRun(r: TextRun): RunSnapshot {

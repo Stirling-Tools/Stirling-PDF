@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type {
   TextRunSnapshot,
   WidthMode,
@@ -183,9 +184,13 @@ export function TextRunOverlay({
   onMove,
   onWrap,
 }: TextRunOverlayProps) {
+  const { t } = useTranslation();
   const ref = useRef<HTMLDivElement | null>(null);
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
+  // True between compositionstart and compositionend (IME). While composing
+  // onInput must not dispatch per-keystroke edits; we commit once on end.
+  const composingRef = useRef(false);
   // Text content captured when the box gains focus, so blur can tell whether
   // the user actually edited it (and a Wrap reflow is warranted).
   const focusTextRef = useRef<string>("");
@@ -338,8 +343,16 @@ export function TextRunOverlay({
       data-testid={`v2-run-${run.id}`}
       contentEditable={!run.locked}
       suppressContentEditableWarning
+      spellCheck={false}
       data-locked={run.locked ? "true" : undefined}
-      title={run.locked ? "Locked - use the Unlock button to edit" : undefined}
+      title={
+        run.locked
+          ? t(
+              "pdfTextEditorV2.run.lockedTitle",
+              "Locked - use the Unlock button to edit",
+            )
+          : undefined
+      }
       onPointerDown={(e) => {
         e.stopPropagation();
         // Locked runs are inert: no select, no drag, no edit. They
@@ -462,7 +475,19 @@ export function TextRunOverlay({
         if (!wasParagraphRef.current && widest <= width + 1) return;
         onWrap(width / scale);
       }}
+      onCompositionStart={() => {
+        composingRef.current = true;
+      }}
+      onCompositionEnd={(e) => {
+        composingRef.current = false;
+        // Commit the composed string once, like onInput's non-IME path.
+        const el = e.currentTarget as HTMLDivElement;
+        onEdit(extractHardBreaks(el).replace(/\u00A0/g, " "));
+      }}
       onInput={(e) => {
+        // Skip intermediate IME steps; compositionend commits the result.
+        if (composingRef.current || (e.nativeEvent as InputEvent).isComposing)
+          return;
         const el = e.currentTarget as HTMLDivElement;
         // Always read hard breaks only - never synthesise newlines from
         // browser soft-wraps. Visual CSS wraps come from Liberation Sans

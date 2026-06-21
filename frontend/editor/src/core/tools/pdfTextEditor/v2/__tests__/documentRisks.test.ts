@@ -10,15 +10,22 @@ function mkDoc(opts: {
   signatures?: number;
   formType?: number;
   throwOnSig?: boolean;
+  secHandlerRev?: number;
+  throwOnEncrypt?: boolean;
 }): EditorDocument {
   return {
     docPtr: 1,
+    loadedPages: () => [{ pagePtr: 10 }],
     module: {
       FPDF_GetSignatureCount: () => {
         if (opts.throwOnSig) throw new Error("no API");
         return opts.signatures ?? 0;
       },
       FPDF_GetFormType: () => opts.formType ?? 0,
+      FPDF_GetSecurityHandlerRevision: () => {
+        if (opts.throwOnEncrypt) throw new Error("no API");
+        return opts.secHandlerRev ?? -1;
+      },
     },
   } as unknown as EditorDocument;
 }
@@ -26,7 +33,11 @@ function mkDoc(opts: {
 describe("detectSaveRisks", () => {
   it("reports no risk for a plain document", () => {
     const r = detectSaveRisks(mkDoc({}));
-    expect(r).toEqual({ signatures: 0, xfaForm: false });
+    expect(r).toEqual({
+      signatures: 0,
+      xfaForm: false,
+      encrypted: false,
+    });
     expect(hasSaveRisks(r)).toBe(false);
   });
 
@@ -46,9 +57,13 @@ describe("detectSaveRisks", () => {
   });
 
   it("singular wording for one signature", () => {
-    expect(describeSaveRisks({ signatures: 1, xfaForm: false })).toEqual([
-      "1 digital signature will be invalidated.",
-    ]);
+    expect(
+      describeSaveRisks({
+        signatures: 1,
+        xfaForm: false,
+        encrypted: false,
+      }),
+    ).toEqual(["1 digital signature will be invalidated."]);
   });
 
   it("clamps negative signature counts and survives a missing API", () => {
@@ -62,5 +77,18 @@ describe("detectSaveRisks", () => {
       "1 digital signature will be invalidated.",
       "Interactive XFA form data may be lost.",
     ]);
+  });
+
+  it("flags an encrypted document and survives a missing API", () => {
+    expect(detectSaveRisks(mkDoc({ secHandlerRev: -1 })).encrypted).toBe(false);
+    const r = detectSaveRisks(mkDoc({ secHandlerRev: 3 }));
+    expect(r.encrypted).toBe(true);
+    expect(hasSaveRisks(r)).toBe(true);
+    expect(describeSaveRisks(r)).toContain(
+      "This PDF is encrypted; the saved copy will NOT be encrypted (password and access restrictions are removed).",
+    );
+    expect(detectSaveRisks(mkDoc({ throwOnEncrypt: true })).encrypted).toBe(
+      false,
+    );
   });
 });

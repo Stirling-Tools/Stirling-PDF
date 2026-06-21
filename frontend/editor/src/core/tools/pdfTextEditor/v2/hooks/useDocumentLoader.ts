@@ -148,8 +148,13 @@ export function ensureAllPagesRead(store: EditorStore): void {
   for (const p of store.getState().pages) {
     const page = doc.page(p.pageIndex);
     if (page.loaded) continue;
-    PdfiumTextReader.populate(doc, page, store.groupingMode);
-    any = true;
+    try {
+      // Lazy reads must surface failures like the eager path, not throw out of the observer.
+      PdfiumTextReader.populate(doc, page, store.groupingMode);
+      any = true;
+    } catch (err) {
+      store.setError(err instanceof Error ? err.message : String(err));
+    }
   }
   if (!any) return;
   const next = store.getState().pages.map((p) => {
@@ -174,7 +179,13 @@ export function ensurePageRead(store: EditorStore, pageIndex: number): void {
   if (!doc) return;
   const page = doc.page(pageIndex);
   if (page.loaded) return;
-  PdfiumTextReader.populate(doc, page, store.groupingMode);
+  try {
+    // Lazy reads must surface failures like the eager path, not throw out of the observer.
+    PdfiumTextReader.populate(doc, page, store.groupingMode);
+  } catch (err) {
+    store.setError(err instanceof Error ? err.message : String(err));
+    return;
+  }
   const state = store.getState();
   const next = state.pages.map((p) =>
     p.pageIndex === pageIndex

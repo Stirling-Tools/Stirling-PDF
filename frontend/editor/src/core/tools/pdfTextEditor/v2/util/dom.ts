@@ -1,7 +1,10 @@
-/** True when the active element is a contenteditable surface. */
+/** True when focus is in a typing surface (contenteditable, input, etc). */
 export function isFocusInContentEditable(): boolean {
   const el = document.activeElement as HTMLElement | null;
-  return el?.getAttribute?.("contenteditable") === "true";
+  if (!el) return false;
+  if (el.isContentEditable) return true;
+  const tag = el.tagName;
+  return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
 }
 
 /**
