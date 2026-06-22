@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import "@app/routes/authShared/auth.css";
+import "@shared/auth/ui/auth.css";
 import { TextInput, PasswordInput, Button } from "@mantine/core";
 
 // Force light mode styles for auth inputs
@@ -83,10 +83,10 @@ export default function EmailPasswordForm({
           <div className="auth-field">
             <PasswordInput
               id="password"
-              label={t("login.password")}
+              label={t("login.password", "Password")}
               name="current-password"
               autoComplete="current-password"
-              placeholder={t("login.enterPassword")}
+              placeholder={t("login.enterPassword", "Enter your password")}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               error={fieldErrors.password}
@@ -99,7 +99,7 @@ export default function EmailPasswordForm({
           <div className="auth-field">
             <TextInput
               id="mfaCode"
-              label={t("login.mfaCode", "Authentication code")}
+              label={t("login.mfaCode", "Authentication Code")}
               type="text"
               name="mfaCode"
               autoComplete="one-time-code"
@@ -131,6 +131,15 @@ export default function EmailPasswordForm({
         className="auth-button"
         fullWidth
         loading={isSubmitting}
+        styles={{
+          // Own the brand colour inline so the host app's Mantine primaryColor
+          // can't win over .auth-button (editor vs portal Mantine themes
+          // differ). The fallback keeps it red even if auth-theme.css is absent.
+          root: {
+            backgroundColor: "var(--auth-button-bg-light-only, #af3434)",
+            color: "var(--auth-button-text-light-only, #ffffff)",
+          },
+        }}
       >
         {submitButtonText}
       </Button>

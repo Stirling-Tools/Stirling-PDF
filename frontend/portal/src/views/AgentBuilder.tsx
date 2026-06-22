@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button, EmptyState, Skeleton } from "@shared/components";
 import { useTier } from "@portal/contexts/TierContext";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
@@ -10,6 +11,7 @@ import { BootstrapDialog } from "@portal/components/agent-builder/BootstrapDialo
 import "@portal/views/AgentBuilder.css";
 
 export function AgentBuilder() {
+  const { t } = useTranslation();
   const { tier } = useTier();
   const state = useAsync<AgentsResponse>(() => fetchAgents(tier), [tier]);
   const { data, loading } = state;
@@ -30,18 +32,14 @@ export function AgentBuilder() {
     <div className="portal-agents">
       <header className="portal-agents__head">
         <div>
-          <h1 className="portal-agents__title">Agent Builder</h1>
-          <p className="portal-agents__sub">
-            Design, test and ship the AI agents that classify, extract from and
-            route your documents. Define scenarios, fence tool access, run a
-            golden set, and publish a version.
-          </p>
+          <h1 className="portal-agents__title">{t("agentBuilder.title")}</h1>
+          <p className="portal-agents__sub">{t("agentBuilder.subtitle")}</p>
         </div>
         <Button
           onClick={() => setBootstrapOpen(true)}
           leadingIcon={<span aria-hidden>⇪</span>}
         >
-          Bootstrap from document
+          {t("agentBuilder.bootstrapFromDocument")}
         </Button>
       </header>
 
@@ -62,11 +60,11 @@ export function AgentBuilder() {
 
       {isEmpty && (
         <EmptyState
-          title="No agents yet"
-          description="Bootstrap an agent from a sample document to seed its scenarios and extraction schema, then refine and publish."
+          title={t("agentBuilder.empty.title")}
+          description={t("agentBuilder.empty.description")}
           actions={
             <Button onClick={() => setBootstrapOpen(true)}>
-              Bootstrap from document
+              {t("agentBuilder.bootstrapFromDocument")}
             </Button>
           }
         />

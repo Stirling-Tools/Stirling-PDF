@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Banner, Button, Card } from "@shared/components";
 
 interface Props {
@@ -14,6 +15,7 @@ interface Props {
  * shell with no submit endpoint yet.
  */
 export function OfflineActivationCard({ available, onUpgrade }: Props) {
+  const { t } = useTranslation();
   const [generating, setGenerating] = useState(false);
   const [generated, setGenerated] = useState(false);
 
@@ -32,13 +34,13 @@ export function OfflineActivationCard({ available, onUpgrade }: Props) {
       <div className="portal-editor__panel-head">
         <div>
           <h3 className="portal-editor__panel-title">
-            Air-gapped activation
-            <span className="portal-editor__enterprise-tag">Enterprise</span>
+            {t("editorAdmin.offlineActivation.title")}
+            <span className="portal-editor__enterprise-tag">
+              {t("editorAdmin.offlineActivation.enterpriseTag")}
+            </span>
           </h3>
           <p className="portal-editor__panel-sub">
-            Generate a signed activation bundle for an offline or on-prem
-            install with no outbound network path. Transfer it to the instance
-            and apply it during first-run setup.
+            {t("editorAdmin.offlineActivation.subtitle")}
           </p>
         </div>
       </div>
@@ -46,7 +48,7 @@ export function OfflineActivationCard({ available, onUpgrade }: Props) {
       {!available ? (
         <div className="portal-editor__lock">
           <p className="portal-editor__lock-copy">
-            Offline and on-prem activation is part of Enterprise.
+            {t("editorAdmin.offlineActivation.lockCopy")}
           </p>
           <Button
             variant="outline"
@@ -54,7 +56,7 @@ export function OfflineActivationCard({ available, onUpgrade }: Props) {
             size="sm"
             onClick={onUpgrade}
           >
-            Talk to sales
+            {t("editorAdmin.offlineActivation.talkToSales")}
           </Button>
         </div>
       ) : (
@@ -62,8 +64,11 @@ export function OfflineActivationCard({ available, onUpgrade }: Props) {
           {generated && (
             <Banner
               tone="success"
-              title="Bundle ready"
-              description="activation-acme-3.2.1.stirlingpkg is signed and ready to transfer. It activates one instance and expires in 14 days."
+              title={t("editorAdmin.offlineActivation.readyBanner.title")}
+              description={t(
+                "editorAdmin.offlineActivation.readyBanner.description",
+                { file: "activation-acme-3.2.1.stirlingpkg" },
+              )}
             />
           )}
           <div className="portal-editor__panel-actions">
@@ -73,7 +78,7 @@ export function OfflineActivationCard({ available, onUpgrade }: Props) {
               loading={generating}
               onClick={generate}
             >
-              Generate offline bundle
+              {t("editorAdmin.offlineActivation.generateButton")}
             </Button>
           </div>
         </>

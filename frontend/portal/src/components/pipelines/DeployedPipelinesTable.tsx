@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { StatusBadge, Table, type TableColumn } from "@shared/components";
 import type { Pipeline } from "@portal/api/pipelines";
 import { compact, goldenTone, pct } from "@portal/components/pipelines/format";
@@ -17,11 +18,12 @@ export function DeployedPipelinesTable({
   pipelines,
   onRowClick,
 }: DeployedPipelinesTableProps) {
+  const { t } = useTranslation();
   const columns = useMemo<TableColumn<Pipeline>[]>(
     () => [
       {
         key: "name",
-        header: "Pipeline",
+        header: t("pipelines.table.header.name"),
         render: (p) => (
           <div className="portal-pipelines__roster-name">
             <strong>{p.name}</strong>
@@ -33,20 +35,22 @@ export function DeployedPipelinesTable({
       },
       {
         key: "status",
-        header: "Health",
+        header: t("pipelines.table.header.health"),
         render: (p) => (
           <StatusBadge
             tone={p.status === "degraded" ? "warning" : "success"}
             size="sm"
             pulse={p.status === "degraded"}
           >
-            {p.status === "degraded" ? "Degraded" : "Healthy"}
+            {p.status === "degraded"
+              ? t("pipelines.status.degraded")
+              : t("pipelines.status.healthy")}
           </StatusBadge>
         ),
       },
       {
         key: "golden",
-        header: "Golden set",
+        header: t("pipelines.table.header.goldenSet"),
         width: "11rem",
         render: (p) => {
           const tone = goldenTone(p.golden);
@@ -58,7 +62,9 @@ export function DeployedPipelinesTable({
               </StatusBadge>
               <span
                 className="portal-pipelines__roster-rate"
-                title={`Bound: ${pct(p.golden.threshold, 0)}`}
+                title={t("pipelines.table.boundTooltip", {
+                  bound: pct(p.golden.threshold, 0),
+                })}
               >
                 {pct(rate, 1)}
               </span>
@@ -68,7 +74,7 @@ export function DeployedPipelinesTable({
       },
       {
         key: "docs",
-        header: "Docs / 24h",
+        header: t("pipelines.table.header.docs24h"),
         align: "right",
         render: (p) => (
           <span className="portal-pipelines__roster-num">
@@ -78,14 +84,14 @@ export function DeployedPipelinesTable({
       },
       {
         key: "version",
-        header: "Version",
+        header: t("pipelines.table.header.version"),
         align: "right",
         render: (p) => (
           <span className="portal-pipelines__roster-version">{p.version}</span>
         ),
       },
     ],
-    [],
+    [t],
   );
 
   return (

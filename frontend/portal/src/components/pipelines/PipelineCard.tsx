@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Card, StatTile, StatusBadge } from "@shared/components";
 import type { Pipeline, StageSummary } from "@portal/api/pipelines";
 import {
@@ -8,6 +9,7 @@ import { compact, pct } from "@portal/components/pipelines/format";
 
 /** Compact five-dot stage indicator: a lit dot per stage that has ops. */
 function StageDots({ stages }: { stages: StageSummary[] }) {
+  const { t } = useTranslation();
   return (
     <span className="portal-pipelines__stage-dots" aria-hidden>
       {stages.map((s) => (
@@ -19,7 +21,10 @@ function StageDots({ stages }: { stages: StageSummary[] }) {
               ? STAGE_COLOR_VAR[STAGE_ACCENT[s.key]]
               : "var(--color-border)",
           }}
-          title={`${s.label}: ${s.ops.length} op${s.ops.length === 1 ? "" : "s"}`}
+          title={t("pipelines.card.stageTooltip", {
+            label: s.label,
+            count: s.ops.length,
+          })}
         />
       ))}
     </span>
@@ -33,6 +38,7 @@ export interface PipelineCardProps {
 
 /** Row in the deployed fleet: health, source→stages→destination rail, 24h metrics. */
 export function PipelineCard({ pipeline, onOpen }: PipelineCardProps) {
+  const { t } = useTranslation();
   const m = pipeline.metrics;
   const degraded = pipeline.status === "degraded";
   const errorTone =
@@ -60,7 +66,9 @@ export function PipelineCard({ pipeline, onOpen }: PipelineCardProps) {
           size="sm"
           pulse={degraded}
         >
-          {degraded ? "Degraded" : "Healthy"}
+          {degraded
+            ? t("pipelines.status.degraded")
+            : t("pipelines.status.healthy")}
         </StatusBadge>
       </div>
 
@@ -79,15 +87,27 @@ export function PipelineCard({ pipeline, onOpen }: PipelineCardProps) {
       </div>
 
       <div className="portal-pipelines__metrics">
-        <StatTile label="Docs / 24h" value={compact(m.docs24h)} />
-        <StatTile label="Throughput" value={`${m.throughputPerMin}/min`} />
         <StatTile
-          label="Error rate"
+          label={t("pipelines.metrics.docs24h")}
+          value={compact(m.docs24h)}
+        />
+        <StatTile
+          label={t("pipelines.metrics.throughput")}
+          value={`${m.throughputPerMin}/min`}
+        />
+        <StatTile
+          label={t("pipelines.metrics.errorRate")}
           value={pct(m.errorRate, 2)}
           tone={errorTone}
         />
-        <StatTile label="P95 latency" value={`${m.p95LatencyMs} ms`} />
-        <StatTile label="Uptime" value={pct(m.uptime, 2)} />
+        <StatTile
+          label={t("pipelines.metrics.p95Latency")}
+          value={`${m.p95LatencyMs} ms`}
+        />
+        <StatTile
+          label={t("pipelines.metrics.uptime")}
+          value={pct(m.uptime, 2)}
+        />
       </div>
 
       <div className="portal-pipelines__card-foot">
@@ -95,11 +115,14 @@ export function PipelineCard({ pipeline, onOpen }: PipelineCardProps) {
           {pipeline.version} · {pipeline.regions.join(", ")}
         </span>
         <span className="portal-pipelines__card-golden">
-          Golden {pipeline.golden.passing}/{pipeline.golden.total}
+          {t("pipelines.card.golden", {
+            passing: pipeline.golden.passing,
+            total: pipeline.golden.total,
+          })}
           {driftCount > 0 && (
             <span className="portal-pipelines__card-drift">
               {" · "}
-              {driftCount} drift{driftCount > 1 ? "s" : ""}
+              {t("pipelines.card.drift", { count: driftCount })}
             </span>
           )}
         </span>

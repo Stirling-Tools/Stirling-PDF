@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Banner, Button } from "@shared/components";
 import { formatCountdown } from "@portal/components/documents/format";
 
@@ -20,16 +21,19 @@ export function ElevationBanner({
   fourEyes,
   onRequest,
 }: ElevationBannerProps) {
+  const { t } = useTranslation();
   if (secondsLeft !== null) {
     return (
       <Banner
         tone="success"
         icon={<span aria-hidden>⏱</span>}
-        title={`Access expires in ${formatCountdown(secondsLeft)}`}
+        title={t("documents.elevation.active.title", {
+          time: formatCountdown(secondsLeft),
+        })}
         description={
           fourEyes
-            ? "Temporary grant — a peer reviewer was notified (four-eyes)."
-            : "Temporary grant — access is logged and time-boxed."
+            ? t("documents.elevation.active.descriptionFourEyes")
+            : t("documents.elevation.active.description")
         }
       />
     );
@@ -39,15 +43,15 @@ export function ElevationBanner({
     <Banner
       tone="warning"
       icon={<span aria-hidden>🔒</span>}
-      title="Sensitive document"
+      title={t("documents.elevation.gated.title")}
       description={
         fourEyes
-          ? "Content is gated by zero-standing-access. Requesting starts a time-boxed grant and notifies a peer reviewer (four-eyes)."
-          : "Content is gated by zero-standing-access. Requesting starts a time-boxed grant."
+          ? t("documents.elevation.gated.descriptionFourEyes")
+          : t("documents.elevation.gated.description")
       }
       action={
         <Button size="sm" onClick={onRequest}>
-          Request access
+          {t("documents.elevation.requestAccess")}
         </Button>
       }
     />
