@@ -127,8 +127,8 @@
     "@types/node": "^24.5.2",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
-    "@typescript-eslint/eslint-plugin": "^8.44.1",
-    "@typescript-eslint/parser": "^8.44.1",
+    "@typescript-eslint/eslint-plugin": "^8.61.1",
+    "@typescript-eslint/parser": "^8.61.1",
     "@vitejs/plugin-react-swc": "^4.1.0",
     "@vitest/coverage-v8": "^3.2.4",
     "dotenv": "^16.4.7",
@@ -149,8 +149,8 @@
     "rollup-plugin-visualizer": "^7.0.1",
     "storybook": "^9.1.20",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.2",
-    "typescript-eslint": "^8.44.1",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.61.1",
     "vite": "^7.3.2",
     "vite-plugin-compression2": "^2.5.3",
     "vite-plugin-static-copy": "^3.1.4",
@@ -166,7 +166,19 @@
     ]
   },
   "overrides": {
-    "devalue": "^5.8.1"
+    "devalue": "^5.8.1",
+    "i18next": {
+      "typescript": "$typescript"
+    },
+    "react-i18next": {
+      "typescript": "$typescript"
+    },
+    "madge": {
+      "typescript": "$typescript"
+    },
+    "tsconfck": {
+      "typescript": "$typescript"
+    }
   },
   "msw": {
     "workerDirectory": [
