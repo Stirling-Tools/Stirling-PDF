@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Banner,
   Button,
@@ -25,6 +26,7 @@ interface AccessControlsProps {
  * Toggles hold local state only; persisting them is a backend wiring task.
  */
 export function AccessControls({ access }: AccessControlsProps) {
+  const { t } = useTranslation();
   const [mfaEnforced, setMfaEnforced] = useState(access.mfaEnforced ?? false);
   const [shortSessions, setShortSessions] = useState(false);
 
@@ -36,9 +38,11 @@ export function AccessControls({ access }: AccessControlsProps) {
   return (
     <section className="portal-users__access">
       <header className="portal-users__section-head">
-        <h2 className="portal-users__section-title">Access &amp; security</h2>
+        <h2 className="portal-users__section-title">
+          {t("users.access.title")}
+        </h2>
         <p className="portal-users__section-sub">
-          Seats, authentication and provisioning for your organization.
+          {t("users.access.subtitle")}
         </p>
       </header>
 
@@ -46,20 +50,25 @@ export function AccessControls({ access }: AccessControlsProps) {
         {/* Seats — shown on every tier. */}
         <Card padding="default">
           <div className="portal-users__access-card-head">
-            <h3 className="portal-users__access-card-title">Seats</h3>
+            <h3 className="portal-users__access-card-title">
+              {t("users.access.seats.title")}
+            </h3>
             <span className="portal-users__muted">
               {seatsLabel(access.seatsUsed, access.seatLimit)}
             </span>
           </div>
           {access.seatLimit === null ? (
             <p className="portal-users__access-note">
-              Your plan includes unlimited seats.
+              {t("users.access.seats.unlimited")}
             </p>
           ) : (
             <ProgressBar
               value={seatPct}
               thresholded
-              label={`${access.seatsUsed} of ${access.seatLimit} seats used`}
+              label={t("users.access.seats.usedLabel", {
+                used: access.seatsUsed,
+                limit: access.seatLimit,
+              })}
             />
           )}
         </Card>
@@ -67,7 +76,9 @@ export function AccessControls({ access }: AccessControlsProps) {
         {/* Pro+: MFA + sessions self-service. */}
         {access.mfaAvailable && (
           <Card padding="default">
-            <h3 className="portal-users__access-card-title">Authentication</h3>
+            <h3 className="portal-users__access-card-title">
+              {t("users.access.auth.title")}
+            </h3>
             <div className="portal-users__toggle-rows">
               <div className="portal-users__toggle-row">
                 <ToggleSwitch
@@ -76,11 +87,11 @@ export function AccessControls({ access }: AccessControlsProps) {
                     setMfaEnforced(v);
                     // TODO(backend): PATCH /v1/users/access { mfaEnforced }
                   }}
-                  label="Require MFA"
+                  label={t("users.access.auth.requireMfa.label")}
                   description={
                     access.mfaEnforced
-                      ? "Enforced org-wide on this plan."
-                      : "Members must set up a second factor to sign in."
+                      ? t("users.access.auth.requireMfa.enforced")
+                      : t("users.access.auth.requireMfa.description")
                   }
                   disabled={access.mfaEnforced}
                 />
@@ -92,8 +103,13 @@ export function AccessControls({ access }: AccessControlsProps) {
                     setShortSessions(v);
                     // TODO(backend): PATCH /v1/users/access { sessionTimeout }
                   }}
-                  label="Short-lived sessions"
-                  description={`Sign members out after inactivity (currently ${access.sessionTimeout}).`}
+                  label={t("users.access.auth.shortSessions.label")}
+                  description={t(
+                    "users.access.auth.shortSessions.description",
+                    {
+                      timeout: access.sessionTimeout,
+                    },
+                  )}
                 />
               </div>
             </div>
@@ -104,25 +120,30 @@ export function AccessControls({ access }: AccessControlsProps) {
         {access.sso && (
           <Card padding="default">
             <div className="portal-users__access-card-head">
-              <h3 className="portal-users__access-card-title">SSO / SAML</h3>
+              <h3 className="portal-users__access-card-title">
+                {t("users.access.sso.title")}
+              </h3>
               <StatusBadge
                 tone={access.sso.status === "connected" ? "success" : "neutral"}
                 size="sm"
               >
                 {access.sso.status === "connected"
-                  ? "Connected"
-                  : "Not configured"}
+                  ? t("users.access.sso.connected")
+                  : t("users.access.sso.notConfigured")}
               </StatusBadge>
             </div>
             <div className="portal-users__access-stats">
-              <StatTile label="Provider" value={access.sso.provider} />
               <StatTile
-                label="Domains"
+                label={t("users.access.sso.provider")}
+                value={access.sso.provider}
+              />
+              <StatTile
+                label={t("users.access.sso.domains")}
                 value={access.sso.domains.join(", ") || "—"}
               />
             </div>
             <Button variant="ghost" size="sm">
-              Manage connection
+              {t("users.access.sso.manage")}
             </Button>
           </Card>
         )}
@@ -132,22 +153,29 @@ export function AccessControls({ access }: AccessControlsProps) {
           <Card padding="default">
             <div className="portal-users__access-card-head">
               <h3 className="portal-users__access-card-title">
-                SCIM provisioning
+                {t("users.access.scim.title")}
               </h3>
               <StatusBadge
                 tone={access.scim.enabled ? "success" : "neutral"}
                 size="sm"
               >
-                {access.scim.enabled ? "Active" : "Off"}
+                {access.scim.enabled
+                  ? t("users.access.scim.active")
+                  : t("users.access.scim.off")}
               </StatusBadge>
             </div>
             <div className="portal-users__access-stats">
-              <StatTile label="Directory" value={access.scim.directory} />
-              <StatTile label="Last sync" value={access.scim.lastSync} />
+              <StatTile
+                label={t("users.access.scim.directory")}
+                value={access.scim.directory}
+              />
+              <StatTile
+                label={t("users.access.scim.lastSync")}
+                value={access.scim.lastSync}
+              />
             </div>
             <p className="portal-users__access-note">
-              Members are created, updated and deactivated automatically from
-              your identity provider.
+              {t("users.access.scim.note")}
             </p>
           </Card>
         )}
@@ -157,11 +185,11 @@ export function AccessControls({ access }: AccessControlsProps) {
       {access.upgradeHint && (
         <Banner
           tone="info"
-          title="Unlock team access controls"
+          title={t("users.access.upgrade.title")}
           description={access.upgradeHint}
           action={
             <Button size="sm" accent="purple">
-              Upgrade plan
+              {t("users.access.upgrade.action")}
             </Button>
           }
         />

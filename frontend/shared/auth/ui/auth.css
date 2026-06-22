@@ -5,6 +5,26 @@
   margin-bottom: 0.75rem; /* 12px */
 }
 
+/* "or" divider between OAuth buttons and the email form (light-mode auth pages) */
+.auth-or-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem; /* 12px */
+  margin: 0.375rem 0 0.5rem; /* 6px 0 8px */
+}
+
+.auth-or-divider__rule {
+  height: 0.0625rem; /* 1px */
+  flex: 1 1 0%;
+  background-color: rgb(var(--text-divider-rule-rgb-light) / 0.4);
+}
+
+.auth-or-divider__label {
+  color: rgb(var(--text-divider-label-rgb-light) / 0.4);
+  font-size: 0.75rem; /* 12px */
+  white-space: nowrap;
+}
+
 .auth-field {
   display: flex;
   flex-direction: column;

@@ -1,22 +1,16 @@
+import { useTranslation } from "react-i18next";
 import { Button, Card, CodeBlock, StatusBadge } from "@shared/components";
 import { TARGET_META, type DeploymentTarget } from "@portal/api/editorDeploy";
 import { useTier } from "@portal/contexts/TierContext";
 
-const STATE_BADGE: Record<
+const STATE_BADGE_TONE: Record<
   DeploymentTarget["state"],
-  { label: string; tone: "success" | "info" | "neutral" }
+  "success" | "info" | "neutral"
 > = {
-  running: { label: "Running", tone: "success" },
-  available: { label: "Available", tone: "info" },
-  locked: { label: "Locked", tone: "neutral" },
+  running: "success",
+  available: "info",
+  locked: "neutral",
 };
-
-/** Upgrade-nudge copy for a target gated behind a higher tier. */
-function lockCopy(target: DeploymentTarget): string {
-  return target.requiresTier === "enterprise"
-    ? "On-prem and Kubernetes self-hosting are part of Enterprise."
-    : "Self-hosting with Docker and Kubernetes unlocks on a paid plan.";
-}
 
 interface Props {
   targets: DeploymentTarget[];
@@ -30,17 +24,22 @@ interface Props {
  * nudge so the value of the higher tier is visible inline.
  */
 export function DeploymentTargets({ targets, onUpgrade }: Props) {
+  const { t } = useTranslation();
   const { tier } = useTier();
+
+  const lockCopy = (target: DeploymentTarget): string =>
+    target.requiresTier === "enterprise"
+      ? t("editorAdmin.targets.lock.enterprise")
+      : t("editorAdmin.targets.lock.paid");
 
   return (
     <div className="portal-editor__targets">
-      {targets.map((t) => {
-        const meta = TARGET_META[t.kind];
-        const badge = STATE_BADGE[t.state];
-        const locked = t.state === "locked";
+      {targets.map((target) => {
+        const meta = TARGET_META[target.kind];
+        const locked = target.state === "locked";
         return (
           <Card
-            key={t.kind}
+            key={target.kind}
             padding="default"
             className="portal-editor__target"
           >
@@ -52,45 +51,51 @@ export function DeploymentTargets({ targets, onUpgrade }: Props) {
                 {meta.icon}
               </span>
               <div className="portal-editor__target-titles">
-                <h3 className="portal-editor__target-name">{t.label}</h3>
-                <p className="portal-editor__target-tagline">{t.tagline}</p>
+                <h3 className="portal-editor__target-name">{target.label}</h3>
+                <p className="portal-editor__target-tagline">
+                  {target.tagline}
+                </p>
               </div>
               <StatusBadge
-                tone={badge.tone}
+                tone={STATE_BADGE_TONE[target.state]}
                 size="sm"
-                pulse={t.state === "running"}
+                pulse={target.state === "running"}
               >
-                {badge.label}
+                {t(`editorAdmin.targets.state.${target.state}`)}
               </StatusBadge>
             </div>
 
-            {t.state === "running" && (
+            {target.state === "running" && (
               <p className="portal-editor__target-meta">
-                v{t.runningVersion} · {t.instanceCount}{" "}
-                {t.instanceCount === 1 ? "instance" : "instances"}
+                v{target.runningVersion} ·{" "}
+                {t("editorAdmin.targets.instanceCount", {
+                  count: target.instanceCount,
+                })}
               </p>
             )}
 
             {locked ? (
               <div className="portal-editor__lock">
-                <p className="portal-editor__lock-copy">{lockCopy(t)}</p>
+                <p className="portal-editor__lock-copy">{lockCopy(target)}</p>
                 <Button
                   size="sm"
                   variant="outline"
-                  accent={t.requiresTier === "enterprise" ? "purple" : "blue"}
+                  accent={
+                    target.requiresTier === "enterprise" ? "purple" : "blue"
+                  }
                   onClick={onUpgrade}
                   disabled={tier === "enterprise"}
                 >
-                  {t.requiresTier === "enterprise"
-                    ? "Talk to sales"
-                    : "Upgrade plan"}
+                  {target.requiresTier === "enterprise"
+                    ? t("editorAdmin.targets.talkToSales")
+                    : t("editorAdmin.targets.upgradePlan")}
                 </Button>
               </div>
             ) : (
               <CodeBlock
-                code={t.snippet}
-                lang={t.snippetLang}
-                caption={t.label}
+                code={target.snippet}
+                lang={target.snippetLang}
+                caption={target.label}
                 maxHeight={180}
               />
             )}

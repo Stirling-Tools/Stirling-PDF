@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Button,
   Chip,
@@ -19,6 +20,7 @@ interface ScenariosPanelProps {
  * the submit endpoint exists.
  */
 export function ScenariosPanel({ agent }: ScenariosPanelProps) {
+  const { t } = useTranslation();
   // Seed from the agent and re-seed when the selection changes (key prop on the
   // builder forces a remount, so a plain useState initialiser is enough).
   const [scenarios, setScenarios] = useState<Scenario[]>(agent.scenarios);
@@ -61,7 +63,9 @@ export function ScenariosPanel({ agent }: ScenariosPanelProps) {
                   size="sm"
                   showDot={false}
                 >
-                  {s.enabled ? "in eval" : "muted"}
+                  {s.enabled
+                    ? t("agentBuilder.scenarios.inEval")
+                    : t("agentBuilder.scenarios.muted")}
                 </StatusBadge>
               </div>
               <span className="portal-agents__scenario-expect">
@@ -73,7 +77,9 @@ export function ScenariosPanel({ agent }: ScenariosPanelProps) {
               variant="ghost"
               onClick={() => toggleEnabled(s.id)}
             >
-              {s.enabled ? "Mute" : "Enable"}
+              {s.enabled
+                ? t("agentBuilder.scenarios.mute")
+                : t("agentBuilder.scenarios.enable")}
             </Button>
           </li>
         ))}
@@ -81,25 +87,25 @@ export function ScenariosPanel({ agent }: ScenariosPanelProps) {
 
       <div className="portal-agents__scenario-add">
         <Chip tone="blue" size="sm">
-          Add scenario
+          {t("agentBuilder.scenarios.addScenario")}
         </Chip>
         <div className="portal-agents__scenario-form">
-          <FormField label="Name">
+          <FormField label={t("agentBuilder.scenarios.nameLabel")}>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Compliance escalation"
+              placeholder={t("agentBuilder.scenarios.namePlaceholder")}
             />
           </FormField>
-          <FormField label="Expected behaviour">
+          <FormField label={t("agentBuilder.scenarios.expectationLabel")}>
             <Input
               value={expectation}
               onChange={(e) => setExpectation(e.target.value)}
-              placeholder="What the agent should do"
+              placeholder={t("agentBuilder.scenarios.expectationPlaceholder")}
             />
           </FormField>
           <Button size="sm" onClick={addScenario} disabled={!canAdd}>
-            Add
+            {t("agentBuilder.scenarios.add")}
           </Button>
         </div>
       </div>

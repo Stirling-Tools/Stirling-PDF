@@ -1,37 +1,10 @@
+import { useTranslation } from "react-i18next";
 import { StatusBadge, Table, type TableColumn } from "@shared/components";
 import { type Extraction, type ReviewDocument } from "@portal/api/documents";
 import {
   confidencePct,
   confidenceTone,
 } from "@portal/components/documents/format";
-
-const cols: TableColumn<Extraction>[] = [
-  {
-    key: "field",
-    header: "Field",
-    render: (e) => <span className="portal-documents__field">{e.field}</span>,
-  },
-  {
-    key: "value",
-    header: "Value",
-    render: (e) => <span className="portal-documents__mono">{e.value}</span>,
-  },
-  {
-    key: "confidence",
-    header: "Confidence",
-    align: "right",
-    width: "7rem",
-    render: (e) => (
-      <StatusBadge
-        tone={confidenceTone(e.confidence)}
-        size="sm"
-        showDot={false}
-      >
-        {confidencePct(e.confidence)}
-      </StatusBadge>
-    ),
-  },
-];
 
 interface DocumentExtractionsProps {
   doc: ReviewDocument;
@@ -48,6 +21,36 @@ export function DocumentExtractions({
   doc,
   unlocked,
 }: DocumentExtractionsProps) {
+  const { t } = useTranslation();
+
+  const cols: TableColumn<Extraction>[] = [
+    {
+      key: "field",
+      header: t("documents.extractions.columns.field"),
+      render: (e) => <span className="portal-documents__field">{e.field}</span>,
+    },
+    {
+      key: "value",
+      header: t("documents.extractions.columns.value"),
+      render: (e) => <span className="portal-documents__mono">{e.value}</span>,
+    },
+    {
+      key: "confidence",
+      header: t("documents.extractions.columns.confidence"),
+      align: "right",
+      width: "7rem",
+      render: (e) => (
+        <StatusBadge
+          tone={confidenceTone(e.confidence)}
+          size="sm"
+          showDot={false}
+        >
+          {confidencePct(e.confidence)}
+        </StatusBadge>
+      ),
+    },
+  ];
+
   if (doc.sensitive && !unlocked) {
     return (
       <div className="portal-documents__masked">
@@ -55,8 +58,7 @@ export function DocumentExtractions({
           🔒
         </span>
         <p className="portal-documents__masked-text">
-          Extracted fields are hidden. Request timed access to view this
-          document's content.
+          {t("documents.extractions.masked")}
         </p>
       </div>
     );
@@ -67,7 +69,7 @@ export function DocumentExtractions({
       columns={cols}
       rows={doc.extractions}
       rowKey={(e) => e.field}
-      empty="No fields were extracted from this document."
+      empty={t("documents.extractions.empty")}
     />
   );
 }
