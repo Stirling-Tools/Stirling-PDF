@@ -500,43 +500,20 @@ export function sourcesFor(tier: Tier): Source[] {
 }
 
 /**
- * KPI strip values. Pro sits below the eval pass-rate target, enterprise above —
- * the delta/direction differences let a dev see tier variation at a glance.
+ * KPI strip values, derived from the fixtures so the mock mirrors the real
+ * backend's shape: source count, active-in-24h count, and document volumes.
+ * Order matches KPI_LABELS in components/sources/KpiStrip.tsx.
  */
 export function kpisFor(tier: Tier): SourcesKpi[] {
-  if (tier === "free") {
-    return [
-      { value: 0, description: "Connect a source to begin" },
-      { value: 0 },
-      { value: "—" },
-      { value: 0 },
-    ];
-  }
-
   const sources = sourcesFor(tier);
-  const agents = sources.filter((s) => s.type === "agent");
-  const agentsActive = agents.filter((s) => s.status === "active").length;
+  const active = sources.filter((s) => s.docs24h > 0).length;
   const docs24h = sources.reduce((sum, s) => sum + s.docs24h, 0);
-
-  if (tier === "enterprise") {
-    return [
-      {
-        value: agentsActive,
-        delta: 0.25,
-        description: `${agents.length} total`,
-      },
-      { value: 42, delta: 0.09, description: "Eval scenarios" },
-      { value: "96.4%", deltaDirection: "up", delta: 0.012 },
-      { value: docs24h.toLocaleString(), delta: 0.14 },
-    ];
-  }
-
-  // pro
+  const docs30d = sources.reduce((sum, s) => sum + s.docs30d, 0);
   return [
-    { value: agentsActive, delta: 0.5, description: `${agents.length} total` },
-    { value: 18, delta: 0.2, description: "Eval scenarios" },
-    { value: "91.2%", deltaDirection: "flat", delta: 0 },
-    { value: docs24h.toLocaleString(), delta: 0.16 },
+    { value: sources.length },
+    { value: active, description: `${sources.length} total` },
+    { value: docs24h.toLocaleString() },
+    { value: docs30d.toLocaleString() },
   ];
 }
 
