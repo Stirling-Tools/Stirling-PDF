@@ -95,12 +95,22 @@ export const I18N_PROJECTS: TranslationProject[] = [
   },
 ];
 
+// Locale tables are shallow by design; the cap only trips on a pathological
+// or malformed file and turns a stack overflow into a clear error.
+const MAX_LOCALE_DEPTH = 50;
+
 /** Flatten a parsed TOML locale to its set of leaf keys. */
 export function flattenLocaleKeys(
   node: unknown,
   prefix = "",
   acc = new Set<string>(),
+  depth = 0,
 ): Set<string> {
+  if (depth > MAX_LOCALE_DEPTH) {
+    throw new Error(
+      `Locale nesting exceeded ${MAX_LOCALE_DEPTH} levels at "${prefix}"`,
+    );
+  }
   if (!node || typeof node !== "object" || Array.isArray(node)) {
     if (prefix) acc.add(prefix);
     return acc;
@@ -108,13 +118,28 @@ export function flattenLocaleKeys(
   for (const [childKey, value] of Object.entries(
     node as Record<string, unknown>,
   )) {
-    flattenLocaleKeys(value, prefix ? `${prefix}.${childKey}` : childKey, acc);
+    flattenLocaleKeys(
+      value,
+      prefix ? `${prefix}.${childKey}` : childKey,
+      acc,
+      depth + 1,
+    );
   }
   return acc;
 }
 
 export function collectLocaleKeys(localeFile: string): Set<string> {
-  return flattenLocaleKeys(parse(fs.readFileSync(localeFile, "utf8")));
+  // Callers pass fixed project paths from I18N_PROJECTS, but this reader is
+  // exported: keep the resolved path inside the frontend tree so a future
+  // caller can't turn it into a path-traversal read.
+  const resolved = path.resolve(localeFile);
+  if (
+    resolved !== FRONTEND_ROOT &&
+    !resolved.startsWith(FRONTEND_ROOT + path.sep)
+  ) {
+    throw new Error(`Locale path escapes the frontend root: ${localeFile}`);
+  }
+  return flattenLocaleKeys(parse(fs.readFileSync(resolved, "utf8")));
 }
 
 const getScriptKind = (file: string): ts.ScriptKind => {
