@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Button,
   StatusBadge,
@@ -18,10 +19,11 @@ const STATUS_TONE: Record<PromotedStatus, StatusTone> = {
   review: "warning",
 };
 
-const STATUS_LABEL: Record<PromotedStatus, string> = {
-  deployed: "Deployed",
-  staged: "Staged",
-  review: "Needs review",
+/** Translation key suffixes for each promoted-pipeline status badge. */
+const STATUS_LABEL_KEY: Record<PromotedStatus, string> = {
+  deployed: "deployed",
+  staged: "staged",
+  review: "review",
 };
 
 /** Per-row promote-to-policy lifecycle, kept local until a backend exists. */
@@ -37,6 +39,7 @@ interface PromotedPipelinesProps {
  * offers a one-click path to lift its rules into a fleet-wide org policy.
  */
 export function PromotedPipelines({ promoted }: PromotedPipelinesProps) {
+  const { t } = useTranslation();
   // Promote submits have no backend yet, so reflect acceptance per row locally.
   const [promoteState, setPromoteState] = useState<
     Record<string, PromoteState>
@@ -58,7 +61,7 @@ export function PromotedPipelines({ promoted }: PromotedPipelinesProps) {
     () => [
       {
         key: "name",
-        header: "Pipeline",
+        header: t("pipelines.table.header.name"),
         render: (p) => (
           <div className="portal-pipelines__promoted-name">
             <strong>{p.name}</strong>
@@ -70,7 +73,7 @@ export function PromotedPipelines({ promoted }: PromotedPipelinesProps) {
       },
       {
         key: "docType",
-        header: "Source doc type",
+        header: t("pipelines.promoted.table.sourceDocType"),
         render: (p) => (
           <span className="portal-pipelines__promoted-muted">
             {p.sourceDocType}
@@ -79,7 +82,7 @@ export function PromotedPipelines({ promoted }: PromotedPipelinesProps) {
       },
       {
         key: "watchFolder",
-        header: "Watch folder",
+        header: t("pipelines.promoted.table.watchFolder"),
         render: (p) => (
           <code className="portal-pipelines__promoted-folder">
             {p.watchFolder}
@@ -88,10 +91,10 @@ export function PromotedPipelines({ promoted }: PromotedPipelinesProps) {
       },
       {
         key: "status",
-        header: "Status",
+        header: t("pipelines.promoted.table.status"),
         render: (p) => (
           <StatusBadge tone={STATUS_TONE[p.status]} size="sm">
-            {STATUS_LABEL[p.status]}
+            {t(`pipelines.promoted.status.${STATUS_LABEL_KEY[p.status]}`)}
           </StatusBadge>
         ),
       },
@@ -105,7 +108,7 @@ export function PromotedPipelines({ promoted }: PromotedPipelinesProps) {
           if (state === "done") {
             return (
               <StatusBadge tone="success" size="sm">
-                Policy created
+                {t("pipelines.promoted.policyCreated")}
               </StatusBadge>
             );
           }
@@ -116,13 +119,13 @@ export function PromotedPipelines({ promoted }: PromotedPipelinesProps) {
               loading={state === "pending"}
               onClick={() => onPromote(p)}
             >
-              Promote to policy
+              {t("pipelines.promoted.promoteToPolicy")}
             </Button>
           );
         },
       },
     ],
-    [promoteState],
+    [promoteState, t],
   );
 
   return (

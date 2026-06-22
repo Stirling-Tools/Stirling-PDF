@@ -1,14 +1,16 @@
+import { useTranslation } from "react-i18next";
 import { Button, Card, Chip } from "@shared/components";
 import type { Playbook } from "@portal/api/docs";
 import { DocsSection } from "@portal/components/docs/DocsSection";
 
 export function PlaybooksSection({ playbooks }: { playbooks: Playbook[] }) {
+  const { t } = useTranslation();
   return (
     <DocsSection
       id="recipes"
-      eyebrow="PLAYBOOKS"
-      title="Recipes"
-      lead="End-to-end patterns that chain sources, operations, and destinations. Each maps to a pipeline you can clone."
+      eyebrow={t("docs.recipes.eyebrow")}
+      title={t("docs.recipes.title")}
+      lead={t("docs.recipes.lead")}
     >
       <div className="portal-docs__playbook-grid">
         {playbooks.map((p) => (
@@ -32,7 +34,7 @@ export function PlaybooksSection({ playbooks }: { playbooks: Playbook[] }) {
             {/* TODO(backend): POST /v1/pipelines/clone-from-playbook to seed a
                 draft pipeline from this recipe, then route to the composer. */}
             <Button variant="outline" accent={p.accent} size="sm">
-              Clone recipe
+              {t("docs.recipes.cloneButton")}
             </Button>
           </Card>
         ))}

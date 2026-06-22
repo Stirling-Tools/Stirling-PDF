@@ -5,9 +5,12 @@ import {
   POST_LOGIN_REDIRECT_STORAGE_KEY,
   setPostLoginRedirectPath,
   springAuth,
-} from "@app/auth/springAuthClient";
+} from "@shared/auth/spring/springAuthClient";
 import { startOAuthNavigation } from "@app/extensions/oauthNavigation";
 import apiClient from "@app/services/apiClient";
+// Side-effect: configures the shared Spring engine with the (mocked) apiClient
+// + oauthNavigation seam, so springAuth routes through the mocks below.
+import "@app/auth/configureSpringAuth";
 import { allowConsole, expectConsole } from "@app/tests/failOnConsole";
 import {
   AxiosError,

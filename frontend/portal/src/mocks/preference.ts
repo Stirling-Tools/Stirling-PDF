@@ -11,9 +11,17 @@ const STORAGE_KEY = "stirling.portal.mocks-enabled";
 
 export function readMocksPreference(): boolean {
   if (typeof window === "undefined") return false;
+  // An explicit user toggle (persisted) always wins.
   const stored = window.localStorage.getItem(STORAGE_KEY);
   if (stored === "true") return true;
   if (stored === "false") return false;
+  // Build-time default: VITE_PORTAL_MOCKS forces mocks on/off. The single-origin
+  // proxy sets it false so the portal hits the real backend (otherwise the dev
+  // mock worker would seed a fake token over the shared real one). Falls back to
+  // on-in-dev, off-in-production.
+  const envDefault = import.meta.env.VITE_PORTAL_MOCKS;
+  if (envDefault === "true") return true;
+  if (envDefault === "false") return false;
   return import.meta.env.DEV;
 }
 

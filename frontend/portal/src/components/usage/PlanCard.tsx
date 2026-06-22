@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Button, Card, StatusBadge } from "@shared/components";
 import type { PlanOption } from "@portal/api/usage";
 import "@portal/views/Usage.css";
@@ -12,6 +13,7 @@ export function PlanCard({
   isCurrent: boolean;
   onSelect: () => void;
 }) {
+  const { t } = useTranslation();
   const accent = plan.tier === "enterprise" ? "purple" : "blue";
   return (
     <Card
@@ -26,7 +28,7 @@ export function PlanCard({
         <h3 className="portal-usage__plan-card-name">{plan.name}</h3>
         {isCurrent && (
           <StatusBadge tone="success" size="sm">
-            Current
+            {t("usage.planCard.current")}
           </StatusBadge>
         )}
       </div>
@@ -56,10 +58,10 @@ export function PlanCard({
         onClick={onSelect}
       >
         {isCurrent
-          ? "Your plan"
+          ? t("usage.planCard.yourPlan")
           : plan.tier === "enterprise"
-            ? "Contact sales"
-            : "Choose plan"}
+            ? t("usage.planCard.contactSales")
+            : t("usage.planCard.choosePlan")}
       </Button>
     </Card>
   );
