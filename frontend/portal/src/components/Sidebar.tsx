@@ -6,6 +6,7 @@ import { useTheme } from "@portal/contexts/ThemeContext";
 import { useUI } from "@portal/contexts/UIContext";
 import { useAsync } from "@portal/hooks/useAsync";
 import { fetchHomeKpis, type KpiEntry } from "@portal/api/home";
+import { EDITOR_URL } from "@portal/auth/editorUrl";
 import markLight from "@shared/assets/stirling-mark-light.svg";
 import markDark from "@shared/assets/stirling-mark-dark.svg";
 import {
@@ -23,11 +24,6 @@ import {
   ChevronDownIcon,
 } from "@portal/components/icons";
 import "@portal/components/Sidebar.css";
-
-// The editor is a separate Vite app with no shared shell, so switching apps is
-// a hard navigation — the editor's dev server in dev, the site root in prod.
-// A standalone portal deploy can gate this behind a configured editor URL.
-const EDITOR_URL = import.meta.env.DEV ? "http://localhost:5180/" : "/";
 
 interface NavEntry {
   id: ViewId;
