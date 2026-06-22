@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Banner, Button, Card, StatTile } from "@shared/components";
 import type { DeploymentSummary } from "@portal/api/editorDeploy";
 
@@ -13,6 +14,7 @@ interface Props {
  * there's no submit endpoint yet.
  */
 export function CredentialRotationCard({ serviceToken }: Props) {
+  const { t } = useTranslation();
   const [rotating, setRotating] = useState(false);
   const [rotated, setRotated] = useState(false);
 
@@ -30,24 +32,31 @@ export function CredentialRotationCard({ serviceToken }: Props) {
     <Card padding="default" className="portal-editor__panel">
       <div className="portal-editor__panel-head">
         <div>
-          <h3 className="portal-editor__panel-title">Service token</h3>
+          <h3 className="portal-editor__panel-title">
+            {t("editorAdmin.serviceToken.title")}
+          </h3>
           <p className="portal-editor__panel-sub">
-            Instances authenticate to the org with this credential. Rotate it on
-            a schedule or immediately after a suspected leak.
+            {t("editorAdmin.serviceToken.subtitle")}
           </p>
         </div>
       </div>
 
       <div className="portal-editor__token-row">
-        <StatTile label="Current token" value={serviceToken.masked} />
-        <StatTile label="Last rotated" value={serviceToken.lastRotated} />
+        <StatTile
+          label={t("editorAdmin.serviceToken.currentToken")}
+          value={serviceToken.masked}
+        />
+        <StatTile
+          label={t("editorAdmin.serviceToken.lastRotated")}
+          value={serviceToken.lastRotated}
+        />
       </div>
 
       {rotated && (
         <Banner
           tone="warning"
-          title="Rotate running instances"
-          description="A new token was issued. Update each self-hosted instance's STIRLING_SERVICE_TOKEN within the 24h grace window or they'll drop offline."
+          title={t("editorAdmin.serviceToken.rotatedBanner.title")}
+          description={t("editorAdmin.serviceToken.rotatedBanner.description")}
         />
       )}
 
@@ -58,7 +67,7 @@ export function CredentialRotationCard({ serviceToken }: Props) {
           loading={rotating}
           onClick={rotate}
         >
-          Rotate service token
+          {t("editorAdmin.serviceToken.rotateButton")}
         </Button>
       </div>
     </Card>

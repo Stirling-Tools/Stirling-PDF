@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button, EmptyState, Skeleton } from "@shared/components";
 import { useTier } from "@portal/contexts/TierContext";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
@@ -8,6 +9,7 @@ import { CreateKeyModal } from "@portal/components/infrastructure/CreateKeyModal
 import { SectionHeader } from "@portal/components/infrastructure/SectionHeader";
 
 export function ApiKeysTab() {
+  const { t } = useTranslation();
   const { tier } = useTier();
   const [modalOpen, setModalOpen] = useState(false);
   const state = useAsync<ApiKey[]>(() => fetchApiKeys(tier), [tier]);
@@ -18,8 +20,8 @@ export function ApiKeysTab() {
     <div className="portal-infra__stack">
       <div className="portal-infra__bar">
         <SectionHeader
-          title="API keys"
-          sub="Scoped credentials with per-key rate limits, permissions, and IP allowlists."
+          title={t("infrastructure.apiKeys.heading")}
+          sub={t("infrastructure.apiKeys.subheading")}
         />
         <Button
           variant="gradient"
@@ -27,7 +29,7 @@ export function ApiKeysTab() {
           onClick={() => setModalOpen(true)}
           leadingIcon={<span aria-hidden>+</span>}
         >
-          Create key
+          {t("infrastructure.apiKeys.createKey")}
         </Button>
       </div>
 
@@ -42,8 +44,8 @@ export function ApiKeysTab() {
       {isEmpty && (
         <EmptyState
           size="compact"
-          title="No API keys yet"
-          description="Create a scoped key to start calling the Stirling API."
+          title={t("infrastructure.apiKeys.empty.title")}
+          description={t("infrastructure.apiKeys.empty.description")}
         />
       )}
 
