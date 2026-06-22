@@ -28,6 +28,7 @@ components = "Components"
 infrastructure = "Infrastructure"
 usage = "Usage & Billing"
 docs = "Developer Docs"
+procurement = "Procurement"
 settings = "Settings"
 
 [shell.header]

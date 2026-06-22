@@ -1,0 +1,367 @@
+.portal-proc {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.5rem;
+  max-width: 84rem;
+  margin: 0 auto;
+}
+
+/* Header */
+.portal-proc__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.portal-proc__title {
+  margin: 0;
+  font-size: 1.375rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+
+.portal-proc__subtitle {
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--color-text-4);
+}
+
+/* Section headers */
+.portal-proc__section-head {
+  margin-bottom: 0.875rem;
+}
+
+.portal-proc__section-title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+
+.portal-proc__section-sub {
+  margin: 0.25rem 0 0;
+  font-size: 0.75rem;
+  color: var(--color-text-4);
+}
+
+/* ── Deal summary ─────────────────────────────────────────────────────── */
+.portal-proc__deal {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.portal-proc__deal-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.portal-proc__deal-eyebrow {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-5);
+}
+
+.portal-proc__deal-company {
+  margin: 0.125rem 0 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+
+.portal-proc__se {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.portal-proc__se-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.35;
+}
+
+.portal-proc__se-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+
+.portal-proc__se-title {
+  font-size: 0.75rem;
+  color: var(--color-text-4);
+}
+
+.portal-proc__se-email {
+  font-size: 0.75rem;
+  color: var(--color-blue);
+  text-decoration: none;
+}
+
+.portal-proc__se-email:hover {
+  text-decoration: underline;
+}
+
+.portal-proc__deal-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 0.875rem 1.5rem;
+  margin: 0;
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--color-border-light);
+}
+
+.portal-proc__deal-meta-item dt {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-5);
+}
+
+.portal-proc__deal-meta-item dd {
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--color-text-1);
+}
+
+.portal-proc__mono {
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 0.75rem !important;
+  color: var(--color-text-2) !important;
+}
+
+/* ── Stepper ──────────────────────────────────────────────────────────── */
+.portal-proc__stepper--locked {
+  opacity: 0.55;
+  filter: grayscale(0.4);
+  pointer-events: none;
+}
+
+.portal-proc__steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.75rem;
+}
+
+@media (max-width: 60rem) {
+  .portal-proc__steps {
+    grid-template-columns: 1fr;
+  }
+}
+
+.portal-proc__step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 2.5rem;
+}
+
+/* Numbered / completed marker */
+.portal-proc__step-marker {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  background: var(--color-bg-muted);
+  color: var(--color-text-4);
+  border: 1.5px solid var(--color-border);
+}
+
+.portal-proc__step--complete .portal-proc__step-marker {
+  background: var(--color-green-light);
+  color: var(--color-green-dark);
+  border-color: transparent;
+}
+
+.portal-proc__step--current .portal-proc__step-marker {
+  background: var(--color-purple);
+  color: #fff;
+  border-color: transparent;
+}
+
+/* Connector line between markers */
+.portal-proc__step-connector {
+  position: absolute;
+  top: 0.8125rem;
+  left: 1.75rem;
+  right: -0.75rem;
+  height: 1.5px;
+  background: var(--color-border);
+}
+
+.portal-proc__step--complete .portal-proc__step-connector {
+  background: color-mix(in srgb, var(--color-green) 50%, transparent);
+}
+
+@media (max-width: 60rem) {
+  .portal-proc__step-connector {
+    display: none;
+  }
+}
+
+.portal-proc__step-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.portal-proc__step-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-2);
+}
+
+.portal-proc__step--current .portal-proc__step-label {
+  color: var(--color-text-1);
+}
+
+.portal-proc__step-blurb {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--color-text-4);
+}
+
+.portal-proc__step-action {
+  margin-top: 0.25rem;
+}
+
+.portal-proc__step-provisioning {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-purple);
+}
+
+/* ── Document rows (ledger + supporting) ──────────────────────────────── */
+.portal-proc__ledger,
+.portal-proc__supporting {
+  display: flex;
+  flex-direction: column;
+}
+
+.portal-proc__ledger-groups,
+.portal-proc__supporting-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.portal-proc__group-head {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.portal-proc__group-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-5);
+}
+
+.portal-proc__group-docs {
+  display: flex;
+  flex-direction: column;
+}
+
+.portal-proc__doc {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.portal-proc__doc:last-child {
+  border-bottom: none;
+}
+
+.portal-proc__doc-text {
+  min-width: 0;
+}
+
+.portal-proc__doc-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.portal-proc__doc-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+
+.portal-proc__doc-sub {
+  margin: 0.1875rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--color-text-4);
+}
+
+.portal-proc__doc-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+/* ── Locked state ─────────────────────────────────────────────────────── */
+.portal-proc__locked {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* ── Action modal ─────────────────────────────────────────────────────── */
+.portal-proc__modal-body {
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--color-text-2);
+}
+
+.portal-proc__modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.625rem;
+}
+
+.portal-proc__upload {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.portal-proc__upload-input {
+  display: none;
+}
+
+.portal-proc__upload-name {
+  font-size: 0.75rem;
+  color: var(--color-text-4);
+}
