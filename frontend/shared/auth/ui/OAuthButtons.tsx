@@ -1,7 +1,10 @@
 import { useTranslation } from "react-i18next";
-import { BASE_PATH } from "@app/constants/app";
-import { type OAuthProvider } from "@app/auth/oauthTypes";
+import { type OAuthProvider } from "@shared/auth/spring/oauthTypes";
 import { Button } from "@mantine/core";
+import {
+  oauthIconUrl,
+  GENERIC_PROVIDER_ICON,
+} from "@shared/auth/ui/oauthIcons";
 
 // Debug flag to show all providers for UI testing
 // Set to true to see all SSO options regardless of backend configuration
@@ -23,8 +26,7 @@ export const oauthProviderConfig: Record<
   oidc: { label: "OIDC", file: "oidc.svg" },
 };
 
-// Generic fallback for unknown providers
-const GENERIC_PROVIDER_ICON = "oidc.svg";
+// Icon URLs + GENERIC_PROVIDER_ICON come from the shared oauthIcons resolver.
 
 interface OAuthButtonsProps {
   onProviderClick: (provider: OAuthProvider) => void;
@@ -112,7 +114,7 @@ export default function OAuthButtons({
               variant="default"
             >
               <img
-                src={`${BASE_PATH}/Login/${p.file}`}
+                src={oauthIconUrl(p.file)}
                 alt={p.label}
                 className="oauth-icon-small"
               />
@@ -139,7 +141,7 @@ export default function OAuthButtons({
               variant="default"
             >
               <img
-                src={`${BASE_PATH}/Login/${p.file}`}
+                src={oauthIconUrl(p.file)}
                 alt={p.label}
                 className="oauth-icon-medium"
               />
@@ -176,7 +178,7 @@ export default function OAuthButtons({
             <span className="oauth-button-left">
               <span className="oauth-icon-wrapper">
                 <img
-                  src={`${BASE_PATH}/Login/${p.file}`}
+                  src={oauthIconUrl(p.file)}
                   alt={p.label}
                   className="oauth-icon-tiny"
                 />

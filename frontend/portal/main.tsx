@@ -1,8 +1,10 @@
 /// <reference types="vite/client" />
-import { StrictMode } from "react";
+import { StrictMode, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "@portal/App";
 import { readMocksPreference } from "@portal/mocks/preference";
+// Initialise i18n (side effect) before the app renders.
+import "@portal/i18n/config";
 
 // Mantine's prebuilt styles load first so SUI tokens/base can override on
 // conflicts — SUI is the primary design language, Mantine the escape hatch.
@@ -26,7 +28,9 @@ async function bootstrap(): Promise<void> {
 
   createRoot(root!).render(
     <StrictMode>
-      <App />
+      <Suspense fallback={null}>
+        <App />
+      </Suspense>
     </StrictMode>,
   );
 }
