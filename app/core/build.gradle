@@ -136,22 +136,6 @@ sourceSets {
 
 }
 
-// Forward opt-in flags for the hardware-signing integration tests
-// (HardwareSigningIntegrationTest) to the forked test JVM. They self-skip when unset.
-tasks.withType(Test).configureEach {
-    [
-        'stirling.test.windowsStore',
-        'stirling.test.pkcs11.library',
-        'stirling.test.pkcs11.pin',
-        'stirling.test.pkcs11.slot',
-        'stirling.pkcs11.libraries'
-    ].each { prop ->
-        if (System.getProperty(prop) != null) {
-            systemProperty prop, System.getProperty(prop)
-        }
-    }
-}
-
 
 // Disable regular jar
 jar {
