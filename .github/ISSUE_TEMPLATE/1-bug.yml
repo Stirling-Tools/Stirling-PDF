@@ -98,6 +98,13 @@ body:
       description: |
         If you have any additional information that might help us understand and resolve the issue, provide it here.
 
+  - type: textarea
+    id: sample-files
+    attributes:
+      label: Sample Files
+      description: |
+        If possible, attach the PDF or other input files needed to reproduce the issue. Remove any sensitive information before sharing.
+
   - type: markdown
     attributes:
       value: |
