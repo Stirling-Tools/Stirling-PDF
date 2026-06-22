@@ -137,7 +137,6 @@
     "fake-indexeddb": "^6.2.5",
     "jsdom": "^27.0.0",
     "license-checker": "^25.0.1",
-    "madge": "^8.0.0",
     "msw": "^2.14.6",
     "msw-storybook-addon": "^2.0.7",
     "postcss": "^8.5.12",
@@ -171,9 +170,6 @@
       "typescript": "$typescript"
     },
     "react-i18next": {
-      "typescript": "$typescript"
-    },
-    "madge": {
       "typescript": "$typescript"
     },
     "tsconfck": {
