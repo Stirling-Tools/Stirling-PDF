@@ -299,14 +299,23 @@ const ValidateSignatureResults = ({
         >
           {selectedDownloadLabel}
         </Button>
-        {selectedType === "pdf" && !pdfFile && (
-          <Text size="xs" c="dimmed">
-            {t(
-              "validateSignature.report.noPdf",
-              "PDF report will be available after a successful validation.",
-            )}
-          </Text>
-        )}
+        {selectedType === "pdf" &&
+          !pdfFile &&
+          (operation.reportGenerating ? (
+            <Group gap="xs">
+              <Loader size="xs" />
+              <Text size="xs" c="dimmed">
+                {t("validateSignature.finalizing", "Preparing downloads...")}
+              </Text>
+            </Group>
+          ) : (
+            <Text size="xs" c="dimmed">
+              {t(
+                "validateSignature.report.noPdf",
+                "PDF report not available - download JSON or CSV for the full result.",
+              )}
+            </Text>
+          ))}
       </Stack>
 
       <SuggestedToolsSection />

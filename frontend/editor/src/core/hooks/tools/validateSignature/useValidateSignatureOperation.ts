@@ -21,6 +21,8 @@ import {
 
 export interface ValidateSignatureOperationHook extends ToolOperationHook<ValidateSignatureParameters> {
   results: SignatureValidationReportEntry[];
+  // True while the downloadable PDF report is still being rendered client-side.
+  reportGenerating: boolean;
 }
 
 export const useValidateSignatureOperation =
@@ -36,6 +38,7 @@ export const useValidateSignatureOperation =
     const [results, setResults] = useState<SignatureValidationReportEntry[]>(
       [],
     );
+    const [reportGenerating, setReportGenerating] = useState(false);
 
     const cancelRequested = useRef(false);
     const previousUrl = useRef<string | null>(null);
@@ -56,6 +59,7 @@ export const useValidateSignatureOperation =
       setDownloadFilename("");
       setStatus("");
       setErrorMessage(null);
+      setReportGenerating(false);
     }, [cleanupDownloadUrl]);
 
     const clearError = useCallback(() => {
@@ -83,6 +87,7 @@ export const useValidateSignatureOperation =
         cleanupDownloadUrl();
         setDownloadUrl(null);
         setDownloadFilename("");
+        setReportGenerating(false);
 
         try {
           const aggregated: SignatureValidationFileResult[] = [];
@@ -150,6 +155,7 @@ export const useValidateSignatureOperation =
               const csvFile = buildCsvFile(enrichedEntries);
 
               setFiles([resultFile, csvFile]);
+              setReportGenerating(true);
 
               (async () => {
                 try {
@@ -181,6 +187,8 @@ export const useValidateSignatureOperation =
                         { detail },
                       ),
                   );
+                } finally {
+                  setReportGenerating(false);
                 }
               })();
             }
@@ -260,6 +268,7 @@ export const useValidateSignatureOperation =
         cancelOperation,
         undoOperation,
         results,
+        reportGenerating,
       }),
       [
         cancelOperation,
@@ -272,6 +281,7 @@ export const useValidateSignatureOperation =
         isLoading,
         resetResults,
         results,
+        reportGenerating,
         status,
       ],
     );
