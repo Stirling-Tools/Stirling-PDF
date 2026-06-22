@@ -78,15 +78,16 @@ function TierSwitcher() {
 }
 
 function UserMenu() {
+  const { t } = useTranslation();
   const { displayName, signOut } = useAuth();
-  const name = displayName ?? "Account";
+  const name = displayName ?? t("shell.header.accountFallback", "Account");
   return (
     <Dropdown.Root align="end">
       <Dropdown.Trigger>
         <button
           type="button"
           className="portal-header__user"
-          aria-label="Account menu"
+          aria-label={t("shell.header.accountMenu", "Account menu")}
           title={name}
         >
           <Avatar name={name} size="md" tone="blue" />
@@ -94,7 +95,9 @@ function UserMenu() {
       </Dropdown.Trigger>
       <Dropdown.Menu width="12rem">
         <Dropdown.Item disabled>{name}</Dropdown.Item>
-        <Dropdown.Item onSelect={() => void signOut()}>Sign out</Dropdown.Item>
+        <Dropdown.Item onSelect={() => void signOut()}>
+          {t("shell.header.signOut", "Sign out")}
+        </Dropdown.Item>
       </Dropdown.Menu>
     </Dropdown.Root>
   );

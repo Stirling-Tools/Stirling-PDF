@@ -1,4 +1,5 @@
 import { type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { RequireAdmin } from "@shared/auth";
 import { Spinner } from "@shared/components";
 import { LoginScreen } from "@portal/components/LoginScreen";
@@ -38,17 +39,20 @@ function FullScreenMessage({ children }: { children: ReactNode }) {
  * - signed in admin -> the portal
  */
 export function AuthGate({ children }: { children: ReactNode }) {
+  const { t } = useTranslation();
   return (
     <RequireAdmin
       fallback={<LoginScreen />}
       onForbidden={redirectToEditor}
       loading={
         <FullScreenMessage>
-          <Spinner size="lg" label="Loading" />
+          <Spinner size="lg" label={t("auth.loading", "Loading")} />
         </FullScreenMessage>
       }
       forbidden={
-        <FullScreenMessage>Redirecting to the editor…</FullScreenMessage>
+        <FullScreenMessage>
+          {t("auth.redirectingToEditor", "Redirecting to the editor...")}
+        </FullScreenMessage>
       }
     >
       {children}
