@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, Chip, StatusBadge } from "@shared/components";
 import type { ApiKey } from "@portal/api/infrastructure";
 import {
@@ -8,6 +9,7 @@ import {
 
 /** Collapsible row for a single API key: header summary + expandable detail grid. */
 export function ApiKeyCard({ apiKey }: { apiKey: ApiKey }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   return (
     <Card padding="default" className="portal-infra__key">
@@ -38,33 +40,35 @@ export function ApiKeyCard({ apiKey }: { apiKey: ApiKey }) {
         <div className="portal-infra__key-body">
           <dl className="portal-infra__kv">
             <div>
-              <dt>Created</dt>
+              <dt>{t("infrastructure.apiKeys.card.created")}</dt>
               <dd>{apiKey.created}</dd>
             </div>
             <div>
-              <dt>Last used</dt>
+              <dt>{t("infrastructure.apiKeys.card.lastUsed")}</dt>
               <dd>{apiKey.lastUsed}</dd>
             </div>
             <div>
-              <dt>Rate limit</dt>
+              <dt>{t("infrastructure.apiKeys.card.rateLimit")}</dt>
               <dd className="portal-infra__mono">
-                {apiKey.rateLimit.toLocaleString()} req/min
+                {t("infrastructure.apiKeys.card.rateLimitValue", {
+                  value: apiKey.rateLimit.toLocaleString(),
+                })}
               </dd>
             </div>
             <div>
-              <dt>Usage today</dt>
+              <dt>{t("infrastructure.apiKeys.card.usageToday")}</dt>
               <dd className="portal-infra__mono">
                 {apiKey.usageToday.toLocaleString()}
               </dd>
             </div>
             <div>
-              <dt>Usage this month</dt>
+              <dt>{t("infrastructure.apiKeys.card.usageMonth")}</dt>
               <dd className="portal-infra__mono">
                 {apiKey.usageMonth.toLocaleString()}
               </dd>
             </div>
             <div>
-              <dt>Permissions</dt>
+              <dt>{t("infrastructure.apiKeys.card.permissions")}</dt>
               <dd className="portal-infra__chips">
                 {apiKey.permissions.map((p) => (
                   <Chip key={p} tone="blue" size="sm">
@@ -74,11 +78,11 @@ export function ApiKeyCard({ apiKey }: { apiKey: ApiKey }) {
               </dd>
             </div>
             <div className="portal-infra__kv-wide">
-              <dt>Allowed IPs</dt>
+              <dt>{t("infrastructure.apiKeys.card.allowedIps")}</dt>
               <dd className="portal-infra__chips">
                 {apiKey.allowedIps.length === 0 ? (
                   <span className="portal-infra__muted">
-                    Any IP (no allowlist)
+                    {t("infrastructure.apiKeys.card.anyIp")}
                   </span>
                 ) : (
                   apiKey.allowedIps.map((ip) => (

@@ -299,7 +299,10 @@ export function usePolicyAutoRun(): void {
 }
 
 interface ImportContext {
-  addFiles: (files: File[]) => Promise<StirlingFile[]>;
+  addFiles: (
+    files: File[],
+    options?: { skipUploadTracking?: boolean },
+  ) => Promise<StirlingFile[]>;
   consumeFiles: (
     inputFileIds: FileId[],
     outputs: StirlingFile[],
@@ -462,7 +465,7 @@ async function importOutputs(
       ctx.bumpRevision();
     }
   } else {
-    const added = await ctx.addFiles(files);
+    const added = await ctx.addFiles(files, { skipUploadTracking: true });
     // Same loop-guard for new-file output: the produced file is a new workspace
     // file the auto-run would otherwise re-enforce indefinitely.
     for (const f of added) markDispatched(run.categoryId, f.fileId);

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Banner, EmptyState, Skeleton } from "@shared/components";
 import { useTier } from "@portal/contexts/TierContext";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
@@ -14,6 +15,7 @@ import { ComponentDetailModal } from "@portal/components/catalogue/ComponentDeta
 import "@portal/views/Components.css";
 
 export function Components() {
+  const { t } = useTranslation();
   const { tier } = useTier();
   const state = useAsync<ComponentsResponse>(
     () => fetchComponents(tier),
@@ -36,11 +38,11 @@ export function Components() {
     <div className="portal-components">
       <header className="portal-components__head">
         <div>
-          <h1 className="portal-components__title">Components</h1>
+          <h1 className="portal-components__title">
+            {t("componentsView.title")}
+          </h1>
           <p className="portal-components__sub">
-            Embeddable SDK widgets you drop into your own app — a viewer, an
-            e-sign flow, an AI review panel. Each is metered per action. Click a
-            card for install, usage and props.
+            {t("componentsView.subtitle")}
           </p>
         </div>
       </header>
@@ -50,8 +52,8 @@ export function Components() {
       {tier === "free" && hasLocked && (
         <Banner
           tone="info"
-          title="Some components need a paid plan"
-          description="GA components are available on Pay-as-you-go; a few Beta components are enterprise-only. Locked cards show an upgrade nudge."
+          title={t("componentsView.lockedBanner.title")}
+          description={t("componentsView.lockedBanner.description")}
         />
       )}
 
@@ -65,8 +67,8 @@ export function Components() {
 
       {isEmpty && (
         <EmptyState
-          title="No components available"
-          description="The component catalogue could not be loaded. Try again shortly."
+          title={t("componentsView.empty.title")}
+          description={t("componentsView.empty.description")}
         />
       )}
 

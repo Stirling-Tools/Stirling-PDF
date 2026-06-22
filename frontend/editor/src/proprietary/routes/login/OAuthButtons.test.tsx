@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MantineProvider } from "@mantine/core";
-import OAuthButtons from "@app/routes/login/OAuthButtons";
+import OAuthButtons from "@shared/auth/ui/OAuthButtons";
 
 // Mock i18n
 vi.mock("react-i18next", () => ({
@@ -42,7 +42,10 @@ describe("OAuthButtons", () => {
   });
 
   it("should render unknown provider with capitalized label and generic icon", () => {
-    const enabledProviders = ["mycompany"];
+    // Render the unknown provider alongside oidc so we can assert the unknown
+    // one falls back to the same (generic OIDC) icon. Icons are bundled assets,
+    // so we compare resolved srcs rather than filenames.
+    const enabledProviders = ["mycompany", "oidc"];
 
     render(
       <TestWrapper>
@@ -57,11 +60,17 @@ describe("OAuthButtons", () => {
     // Unknown provider should be capitalized
     expect(screen.getByText("Mycompany")).toBeTruthy();
 
-    // Check that button has generic OIDC icon
-    const button = screen.getByText("Mycompany").closest("button");
-    expect(button).toBeTruthy();
-    const img = button?.querySelector("img");
-    expect(img?.src).toContain("oidc.svg");
+    // Unknown provider falls back to the generic OIDC icon
+    const mycompanyImg = screen
+      .getByText("Mycompany")
+      .closest("button")
+      ?.querySelector("img");
+    const oidcImg = screen
+      .getByText("OIDC")
+      .closest("button")
+      ?.querySelector("img");
+    expect(mycompanyImg?.src).toBeTruthy();
+    expect(mycompanyImg?.src).toBe(oidcImg?.src);
   });
 
   it('should call onProviderClick with actual provider ID (not "oidc")', async () => {
@@ -210,20 +219,19 @@ describe("OAuthButtons", () => {
       </TestWrapper>,
     );
 
-    // Check that each known provider has its specific icon
-    const googleButton = screen.getByText("Google").closest("button");
-    expect(googleButton?.querySelector("img")?.src).toContain("google.svg");
-
-    const githubButton = screen.getByText("GitHub").closest("button");
-    expect(githubButton?.querySelector("img")?.src).toContain("github.svg");
-
-    const authentikButton = screen.getByText("Authentik").closest("button");
-    expect(authentikButton?.querySelector("img")?.src).toContain(
-      "authentik.svg",
-    );
-
-    const keycloakButton = screen.getByText("Keycloak").closest("button");
-    expect(keycloakButton?.querySelector("img")?.src).toContain("keycloak.svg");
+    // Each known provider renders an icon, and the icons are distinct. Icons
+    // are bundled assets (data URI / hashed URL), so assert distinctness rather
+    // than matching filenames.
+    const srcOf = (label: string) =>
+      screen.getByText(label).closest("button")?.querySelector("img")?.src;
+    const srcs = [
+      srcOf("Google"),
+      srcOf("GitHub"),
+      srcOf("Authentik"),
+      srcOf("Keycloak"),
+    ];
+    srcs.forEach((src) => expect(src).toBeTruthy());
+    expect(new Set(srcs).size).toBe(4);
   });
 
   it("should handle mixed known and unknown providers", async () => {

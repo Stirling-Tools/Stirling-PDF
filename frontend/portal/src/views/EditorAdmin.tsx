@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Skeleton } from "@shared/components";
 import { useTier } from "@portal/contexts/TierContext";
 import { useView } from "@portal/contexts/ViewContext";
@@ -31,6 +32,7 @@ function SectionHead({ title, sub }: { title: string; sub: string }) {
  * lifecycle tasks. Reached from Infrastructure → Deployments, not the sidebar.
  */
 export function EditorAdmin() {
+  const { t } = useTranslation();
   const { tier } = useTier();
   const { setActiveView } = useView();
   const state = useAsync<EditorDeploymentResponse>(
@@ -48,12 +50,8 @@ export function EditorAdmin() {
     <div className="portal-editor">
       <header className="portal-editor__head">
         <div>
-          <h1 className="portal-editor__title">Editor deployment</h1>
-          <p className="portal-editor__sub">
-            Deploy the Stirling PDF Editor, pair self-hosted instances to your
-            org, and operate the running fleet — targets, health, credentials,
-            and offline activation in one place.
-          </p>
+          <h1 className="portal-editor__title">{t("editorAdmin.title")}</h1>
+          <p className="portal-editor__sub">{t("editorAdmin.subtitle")}</p>
         </div>
       </header>
 
@@ -61,8 +59,8 @@ export function EditorAdmin() {
 
       <section>
         <SectionHead
-          title="Deployment targets"
-          sub="Where the Editor runs. Copy a snippet to stand up a self-hosted instance, or use Managed Cloud with no ops."
+          title={t("editorAdmin.sections.targets.title")}
+          sub={t("editorAdmin.sections.targets.sub")}
         />
         {isLoading || !data ? (
           <div className="portal-editor__targets">
@@ -77,8 +75,8 @@ export function EditorAdmin() {
 
       <section>
         <SectionHead
-          title="Pairing"
-          sub="Connect a self-hosted editor to this org. Generate a token, hand off a short code, or wire it through IaC."
+          title={t("editorAdmin.sections.pairing.title")}
+          sub={t("editorAdmin.sections.pairing.sub")}
         />
         {data && (
           <PairingPanel pairings={data.pairings} onUpgrade={goUpgrade} />
@@ -87,8 +85,8 @@ export function EditorAdmin() {
 
       <section>
         <SectionHead
-          title="Instance health"
-          sub="Every Editor instance reporting in — version, region, status, last seen, and active users."
+          title={t("editorAdmin.sections.health.title")}
+          sub={t("editorAdmin.sections.health.sub")}
         />
         {data && <InstanceHealthTable instances={data.instances} />}
       </section>

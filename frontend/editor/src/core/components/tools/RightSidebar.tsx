@@ -1,10 +1,8 @@
 import { useMemo, useState } from "react";
 import { ActionIcon } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { useRainbowThemeContext } from "@app/components/shared/RainbowThemeProvider";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useSidebarContext } from "@app/contexts/SidebarContext";
-import rainbowStyles from "@app/styles/rainbow.module.css";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import ToolPanel from "@app/components/tools/ToolPanel";
 import ToolSearch from "@app/components/tools/toolPicker/ToolSearch";
@@ -45,7 +43,6 @@ import "@app/components/tools/ToolPanel.css";
  */
 export default function RightSidebar() {
   const { t } = useTranslation();
-  const { isRainbowMode } = useRainbowThemeContext();
   const { sidebarRefs } = useSidebarContext();
   const { toolPanelRef, quickAccessRef } = sidebarRefs;
   const isMobile = useIsMobile();
@@ -215,9 +212,7 @@ export default function RightSidebar() {
       ref={toolPanelRef}
       data-sidebar="tool-panel"
       data-tour={fullscreenExpanded ? undefined : "tool-panel"}
-      className={`tool-panel flex flex-col ${fullscreenExpanded ? "tool-panel--fullscreen-active" : "overflow-hidden"} bg-[var(--bg-toolbar)] border-l border-[var(--border-subtle)] transition-all duration-300 ease-out ${
-        isRainbowMode ? rainbowStyles.rainbowPaper : ""
-      } ${isMobile ? "h-full border-r-0" : "h-screen"} ${fullscreenExpanded ? "tool-panel--fullscreen" : ""}`}
+      className={`tool-panel flex flex-col ${fullscreenExpanded ? "tool-panel--fullscreen-active" : "overflow-hidden"} bg-[var(--bg-toolbar)] border-l border-[var(--border-subtle)] transition-all duration-300 ease-out ${isMobile ? "h-full border-r-0" : "h-screen"} ${fullscreenExpanded ? "tool-panel--fullscreen" : ""}`}
       style={{
         width: computedWidth(),
         padding: "0",

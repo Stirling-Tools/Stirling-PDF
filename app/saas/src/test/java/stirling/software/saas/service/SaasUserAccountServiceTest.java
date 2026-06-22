@@ -51,6 +51,7 @@ class SaasUserAccountServiceTest {
     @Mock private SupabaseUserService supabaseUserService;
     @Mock private SaasUserExtensionService saasUserExtensionService;
     @Mock private SaasTeamExtensionService saasTeamExtensionService;
+    @Mock private SaasTeamService saasTeamService;
 
     @InjectMocks private SaasUserAccountService service;
 
@@ -355,6 +356,8 @@ class SaasUserAccountServiceTest {
             assertThat(u.getEmail()).isEqualTo("alice@example.com");
             assertThat(u.getUsername()).isEqualTo("alice@example.com");
             verify(userService).saveUser(u);
+            // Upgrading from anon gives the user their own team.
+            verify(saasTeamService).ensurePersonalTeam(u);
         }
 
         @Test
@@ -455,6 +458,7 @@ class SaasUserAccountServiceTest {
             assertThat(u.getUsername()).isEqualTo("existing@example.com");
             assertThat(u.getAuthenticationType()).isEqualTo("web");
             verify(userService, never()).saveUser(any());
+            verify(saasTeamService, never()).ensurePersonalTeam(any());
         }
 
         @Test

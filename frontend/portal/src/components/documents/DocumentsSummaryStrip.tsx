@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { MetricCard, MetricStrip, Skeleton } from "@shared/components";
 import type { DocumentsSummary } from "@portal/api/documents";
 import { confidencePct } from "@portal/components/documents/format";
@@ -12,6 +13,7 @@ export function DocumentsSummaryStrip({
   summary,
   loading,
 }: DocumentsSummaryStripProps) {
+  const { t } = useTranslation();
   if (loading && !summary) {
     return (
       <MetricStrip>
@@ -26,19 +28,19 @@ export function DocumentsSummaryStrip({
   return (
     <MetricStrip>
       <MetricCard
-        label="In queue"
+        label={t("documents.summary.inQueue")}
         value={summary.totalInQueue.toLocaleString()}
       />
       <MetricCard
-        label="Needs review"
+        label={t("documents.summary.needsReview")}
         value={summary.needsReview.toLocaleString()}
       />
       <MetricCard
-        label="Avg confidence"
+        label={t("documents.summary.avgConfidence")}
         value={confidencePct(summary.avgConfidence)}
       />
       <MetricCard
-        label="Processed today"
+        label={t("documents.summary.processedToday")}
         value={summary.processedToday.toLocaleString()}
       />
     </MetricStrip>

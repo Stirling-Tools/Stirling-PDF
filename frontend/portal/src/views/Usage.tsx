@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, Skeleton, StatusBadge } from "@shared/components";
 import { useTier } from "@portal/contexts/TierContext";
 import { useAsync } from "@portal/hooks/useAsync";
@@ -18,6 +19,7 @@ import { UpgradeModal } from "@portal/components/usage/UpgradeModal";
 import "@portal/views/Usage.css";
 
 export function Usage() {
+  const { t } = useTranslation();
   const { tier } = useTier();
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTarget, setModalTarget] = useState<PlanOption | null>(null);
@@ -40,10 +42,8 @@ export function Usage() {
     <div className="portal-usage">
       <header className="portal-usage__header">
         <div>
-          <h1 className="portal-usage__title">Usage &amp; Billing</h1>
-          <p className="portal-usage__subtitle">
-            Your last 30 days of processing, plan, and charges.
-          </p>
+          <h1 className="portal-usage__title">{t("usage.title")}</h1>
+          <p className="portal-usage__subtitle">{t("usage.subtitle")}</p>
         </div>
         <StatusBadge
           tone={

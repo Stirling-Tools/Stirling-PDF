@@ -617,11 +617,9 @@ export function CommentsSidebar({
                     })}
                   </Text>
                   <Text size="xs" c="dimmed" mb="sm">
-                    {entries.length === 1
-                      ? t("viewer.comments.oneComment", "1 comment")
-                      : t("viewer.comments.nComments", "{{count}} comments", {
-                          count: entries.length,
-                        })}
+                    {t("viewer.comments.nComments", "{{count}} comment(s)", {
+                      count: entries.length,
+                    })}
                   </Text>
                   <Box
                     mb="xs"
