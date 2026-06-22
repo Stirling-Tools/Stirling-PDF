@@ -122,6 +122,9 @@ jobs:
         uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
         with:
           workspaces: frontend/editor/src-tauri
+          # Stable key shared across workflows so the nightly warmer. 
+          # rust-cache still appends OS + rustc + Cargo.lock.
+          shared-key: tauri-${{ matrix.name }}
           save-if: ${{ github.ref == 'refs/heads/main' }}
           # Save the dependency cache even if a later step fails
           cache-on-failure: true
