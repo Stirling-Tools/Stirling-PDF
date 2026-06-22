@@ -123,6 +123,8 @@ jobs:
         with:
           workspaces: frontend/editor/src-tauri
           save-if: ${{ github.ref == 'refs/heads/main' }}
+          # Save the dependency cache even if a later step fails
+          cache-on-failure: true
 
       - name: Set up x86_64 JDK 25 (macOS universal JRE)
         if: matrix.platform == 'macos-15'
