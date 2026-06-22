@@ -57,9 +57,11 @@ function loginOrigin(): string | null {
   }
 }
 
-/** The hosted login URL to open. */
+/** The hosted login URL to open — passes our origin so the SaaS posts back to us. */
 function loginUrl(): string {
-  return new URL("/login?link=1", webUrl).toString();
+  const url = new URL("/login?link=1", webUrl);
+  url.searchParams.set("origin", window.location.origin);
+  return url.toString();
 }
 
 export interface OpenPopupOptions {

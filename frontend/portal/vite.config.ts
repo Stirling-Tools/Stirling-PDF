@@ -47,6 +47,19 @@ export default defineConfig(async ({ mode }) => {
       host: true,
       port: 5173,
       strictPort: true,
+      // Real (non-mock) e2e: forward same-origin backend calls to the self-hosted
+      // instance. Turn the Mocks toggle off to exercise the real backend.
+      // Override the target with BACKEND_URL (defaults to the local instance).
+      proxy: {
+        "/api": {
+          target: process.env.BACKEND_URL || "http://localhost:8080",
+          changeOrigin: true,
+        },
+        "/v1": {
+          target: process.env.BACKEND_URL || "http://localhost:8080",
+          changeOrigin: true,
+        },
+      },
       fs: {
         allow: [resolve(import.meta.dirname, "..")],
       },
