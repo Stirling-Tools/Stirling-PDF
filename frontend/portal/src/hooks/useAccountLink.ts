@@ -1,128 +1,132 @@
 import { useCallback, useEffect, useState } from "react";
 import {
-  getSession,
-  isSupabaseConfigured,
-  signIn,
-  signOut,
-  signUp,
-  type Session,
+  isSaasLoginConfigured,
+  openSaasLoginPopup,
+  type SaasSession,
 } from "@portal/auth/supabaseLink";
 import {
-  registerInstance,
-  type RegisterInstanceResponse,
+  fetchStatus,
+  linkInstance,
+  unlinkInstance,
+  type LinkStatus,
 } from "@portal/api/link";
 import { useApplyLinkFacts } from "@portal/contexts/LinkContext";
 
 /**
- * Orchestrates the account-link flow: sign in / sign up against the SaaS Supabase
- * project, then POST the session to the org's local backend to register this
- * instance. On success the one-time device secret is held in state for the UI to
- * surface, and {@link useApplyLinkFacts} marks the org as linked.
+ * Orchestrates the account-link flow for THIS instance:
  *
- * Supabase config may be absent in this repo (see auth/supabaseLink.ts). When it
- * is, sign-in is unavailable but registration still works in dev against MSW with
- * a placeholder token — the surface degrades to "configure Supabase to go live".
+ *   1. Open the hosted SaaS login popup (auth/supabaseLink.ts) — SSO or
+ *      create-account, no bespoke form.
+ *   2. Receive the SaaS JWT it posts back (origin-validated).
+ *   3. POST the JWT to the LOCAL backend (api/link.ts) which registers with SaaS
+ *      and stores the device secret server-side.
+ *   4. Read the resulting Linked / Not-linked status.
+ *
+ * The device secret is never received or rendered here. Subscription state is
+ * resolved separately from the wallet, so a fresh link marks the org linked-free.
+ *
+ * When VITE_SAAS_WEB_URL is unset the popup degrades to a dev stub (see
+ * auth/supabaseLink.ts) that simulates the SaaS page posting back a session, so
+ * the flow stays demoable + testable.
  */
 
-export type LinkPhase = "idle" | "working" | "registered" | "error";
+export type LinkPhase = "idle" | "linking" | "error";
 
 export interface UseAccountLink {
-  supabaseConfigured: boolean;
-  /** Current SaaS session, once signed in. */
-  session: Session | null;
+  /** Whether the hosted SaaS login URL is configured (false → uses dev stub). */
+  loginConfigured: boolean;
+  /** Linked / Not-linked status for this instance; null while first loading. */
+  status: LinkStatus | null;
   phase: LinkPhase;
   error: string | null;
-  /** The one-time credential from a successful registration; clear after the user copies it. */
-  credential: RegisterInstanceResponse | null;
-  authenticate: (
-    mode: "signin" | "signup",
-    email: string,
-    password: string,
-  ) => Promise<void>;
-  /** Register this instance against the (already authenticated) SaaS team. */
-  register: (name?: string) => Promise<void>;
-  /** Dismiss the displayed one-time credential. */
-  clearCredential: () => void;
-  logout: () => Promise<void>;
+  /** Open the SaaS login popup and link this instance with the returned JWT. */
+  link: (name?: string) => Promise<void>;
+  /** Unlink this instance. */
+  unlink: () => Promise<void>;
+  /**
+   * DEV/TEST seam: when set, link() routes the popup through this stub instead of
+   * a real window.open (see auth/supabaseLink.ts OpenPopupOptions.stub).
+   */
+  loginStub?: (post: (session: SaasSession) => void) => void;
 }
 
-export function useAccountLink(): UseAccountLink {
+export interface UseAccountLinkOptions {
+  loginStub?: (post: (session: SaasSession) => void) => void;
+}
+
+export function useAccountLink(
+  opts: UseAccountLinkOptions = {},
+): UseAccountLink {
   const applyLinkFacts = useApplyLinkFacts();
-  const [session, setSession] = useState<Session | null>(null);
+  const [status, setStatus] = useState<LinkStatus | null>(null);
   const [phase, setPhase] = useState<LinkPhase>("idle");
   const [error, setError] = useState<string | null>(null);
-  const [credential, setCredential] = useState<RegisterInstanceResponse | null>(
-    null,
-  );
 
-  // Pick up an existing SaaS session on mount (no-op when unconfigured).
+  // Read the current link status on mount.
   useEffect(() => {
     let cancelled = false;
-    void getSession().then((s) => {
-      if (!cancelled) setSession(s);
+    void fetchStatus().then((s) => {
+      if (!cancelled) {
+        setStatus(s);
+        // A linked instance is at least linked-free; subscription comes from the wallet.
+        if (s.linked) applyLinkFacts(true, false);
+      }
     });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [applyLinkFacts]);
 
-  const authenticate = useCallback(
-    async (mode: "signin" | "signup", email: string, password: string) => {
-      setPhase("working");
-      setError(null);
-      try {
-        const s =
-          mode === "signin"
-            ? await signIn(email, password)
-            : await signUp(email, password);
-        setSession(s);
-        setPhase("idle");
-      } catch (e) {
-        setError(e instanceof Error ? e.message : String(e));
-        setPhase("error");
-      }
-    },
-    [],
-  );
-
-  const register = useCallback(
+  const link = useCallback(
     async (name?: string) => {
-      setPhase("working");
+      setPhase("linking");
       setError(null);
       try {
-        const cred = await registerInstance(
-          session?.access_token ?? null,
-          name ? { name } : {},
-        );
-        setCredential(cred);
-        setPhase("registered");
-        // Newly linked; subscription state is resolved separately from the wallet.
-        applyLinkFacts(true, false);
+        // Dev/Storybook fallback: with no real SaaS login URL configured,
+        // simulate the popup posting back a session so the flow stays demoable.
+        const stub =
+          opts.loginStub ??
+          (!isSaasLoginConfigured && import.meta.env.DEV
+            ? (post: (session: SaasSession) => void) =>
+                post({ access_token: "dev-stub-jwt" })
+            : undefined);
+        const session = await openSaasLoginPopup({ stub });
+        const next = await linkInstance({
+          supabaseJwt: session.access_token,
+          name,
+        });
+        setStatus(next);
+        setPhase("idle");
+        if (next.linked) applyLinkFacts(true, false);
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e));
         setPhase("error");
       }
     },
-    [session, applyLinkFacts],
+    [opts.loginStub, applyLinkFacts],
   );
 
-  const clearCredential = useCallback(() => setCredential(null), []);
-
-  const logout = useCallback(async () => {
-    await signOut();
-    setSession(null);
-    setPhase("idle");
-  }, []);
+  const unlink = useCallback(async () => {
+    setPhase("linking");
+    setError(null);
+    try {
+      const next = await unlinkInstance();
+      setStatus(next);
+      setPhase("idle");
+      applyLinkFacts(false, false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+      setPhase("error");
+    }
+  }, [applyLinkFacts]);
 
   return {
-    supabaseConfigured: isSupabaseConfigured,
-    session,
+    loginConfigured: isSaasLoginConfigured,
+    status,
     phase,
     error,
-    credential,
-    authenticate,
-    register,
-    clearCredential,
-    logout,
+    link,
+    unlink,
+    loginStub: opts.loginStub,
   };
 }

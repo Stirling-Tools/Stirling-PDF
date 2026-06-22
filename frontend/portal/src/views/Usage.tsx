@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, Skeleton, StatusBadge } from "@shared/components";
 import { useTier } from "@portal/contexts/TierContext";
+import { useLink } from "@portal/contexts/LinkContext";
 import { useAsync } from "@portal/hooks/useAsync";
 import {
   fetchBillingSummary,
@@ -36,6 +37,18 @@ export function Usage() {
 
   const walletState = useAsync<WalletContract>(() => fetchWallet(tier), [tier]);
   const wallet = walletState.loading ? null : walletState.data;
+
+  // Derive the subscribed dimension of LinkContext from the live wallet — only
+  // when already linked, so this never flips an unlinked org to linked.
+  const { isLinked, setLinkState } = useLink();
+  useEffect(() => {
+    if (!isLinked || !wallet) return;
+    setLinkState(
+      wallet.subscriptionStatus === "active"
+        ? "linked-subscribed"
+        : "linked-free",
+    );
+  }, [isLinked, wallet, setLinkState]);
 
   function openUpgrade(target: PlanOption | null) {
     setModalTarget(target);

@@ -1,13 +1,19 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import {
+  getLocalStatus,
+  linkLocal,
   listInstances,
-  registerInstance,
   resetLinkStore,
   revokeInstance,
+  unlinkLocal,
 } from "@portal/mocks/link";
 
 describe("mocks/link store", () => {
   beforeEach(() => resetLinkStore());
+
+  it("starts not-linked locally", () => {
+    expect(getLocalStatus().linked).toBe(false);
+  });
 
   it("lists seed instances newest-first", () => {
     const rows = listInstances();
@@ -17,23 +23,29 @@ describe("mocks/link store", () => {
     }
   });
 
-  it("registers a new active instance with a one-time secret", () => {
+  it("links locally and adds an active instance — without surfacing any secret", () => {
     const before = listInstances().length;
-    const cred = registerInstance("new-node");
-    expect(cred.name).toBe("new-node");
-    expect(cred.deviceSecret).toMatch(/^sk_link_/);
-    expect(cred.deviceId).toMatch(/[0-9a-f-]{36}/);
+    const status = linkLocal("new-node");
+    expect(status.linked).toBe(true);
+    expect(status.name).toBe("new-node");
+    expect(status).not.toHaveProperty("deviceSecret");
 
     const rows = listInstances();
     expect(rows.length).toBe(before + 1);
-    const added = rows.find((r) => r.instanceId === cred.instanceId);
+    const added = rows.find((r) => r.name === "new-node");
     expect(added).toBeDefined();
     expect(added?.revoked).toBe(false);
     expect(added?.lastSeenAt).toBeNull();
   });
 
-  it("registers without a name as null", () => {
-    expect(registerInstance().name).toBeNull();
+  it("links without a name as null", () => {
+    expect(linkLocal().name).toBeNull();
+  });
+
+  it("unlinks locally", () => {
+    linkLocal("temp");
+    expect(getLocalStatus().linked).toBe(true);
+    expect(unlinkLocal().linked).toBe(false);
   });
 
   it("revokes an instance and is idempotent", () => {
@@ -49,9 +61,10 @@ describe("mocks/link store", () => {
   });
 
   it("resets to seed state", () => {
-    registerInstance("temp");
+    linkLocal("temp");
     const grown = listInstances().length;
     resetLinkStore();
     expect(listInstances().length).toBeLessThan(grown);
+    expect(getLocalStatus().linked).toBe(false);
   });
 });

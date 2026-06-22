@@ -1,83 +1,135 @@
-import {
-  createClient,
-  type Session,
-  type SupabaseClient,
-} from "@supabase/supabase-js";
-
 /**
- * Supabase auth seam for the account-link surface.
+ * Hosted-login seam for the account-link surface.
  *
- * The portal admin signs in / signs up against the **SaaS** Supabase project so
- * the org's self-hosted instance can link the SaaS account. Config comes from
- * env (`VITE_SUPABASE_URL` + `VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY`), mirroring
- * the editor app's names.
+ * Linking auth is a POPUP to the hosted SaaS login (which already offers SSO +
+ * create-account), NOT a bespoke email/password form. We open the SaaS login
+ * URL with `window.open`, the user signs in / signs up there, and the SaaS page
+ * posts the resulting session back via `postMessage`. We validate
+ * `event.origin === the SaaS origin` before trusting the JWT, then hand it to the
+ * local backend (api/link.ts) to register this instance.
  *
- * ASSUMPTION: the SaaS Supabase project may not be wired into this repo yet. When
- * the env vars are absent {@link isSupabaseConfigured} is false and the auth
- * calls reject with a clear error; the Link-account UI shows a "not configured"
- * state instead of crashing, and the MSW-backed register/list/revoke flow still
- * works in dev with a placeholder token. Inject real config to go live — no code
- * change.
+ * Config: `VITE_SAAS_WEB_URL` (the hosted login origin). When absent
+ * {@link isSaasLoginConfigured} is false and the UI degrades to a "configure the
+ * SaaS login URL" state — same pattern the old Supabase seam used.
+ *
+ * ASSUMPTION (stated): the real SaaS-side postMessage success page does NOT exist
+ * yet — auth is being moved to a shared folder. The portal side of the handshake
+ * below is built for real (origin-validated message listener + popup lifecycle).
+ * For dev / Storybook / tests, {@link openSaasLoginPopup} accepts a `stub` that
+ * simulates the popup posting a session back, so the flow is demoable + testable
+ * without the live SaaS page. Inject `VITE_SAAS_WEB_URL` and ship the SaaS
+ * success page to go live — no portal code change.
  */
 
-export type { Session } from "@supabase/supabase-js";
+const webUrl = import.meta.env.VITE_SAAS_WEB_URL;
 
-const url = import.meta.env.VITE_SUPABASE_URL;
-const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY;
+export const isSaasLoginConfigured = Boolean(webUrl);
 
-export const isSupabaseConfigured = Boolean(url && anonKey);
+/** The session the SaaS login popup posts back. */
+export interface SaasSession {
+  /** SaaS JWT (Supabase access token) the local backend validates + links with. */
+  access_token: string;
+}
 
-// Lazily constructed: building a client at import time would throw in Storybook /
-// MSW dev where config is intentionally absent.
-let client: SupabaseClient | null = null;
-function getClient(): SupabaseClient {
-  if (!isSupabaseConfigured) {
-    throw new Error(
-      "Supabase is not configured — set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY.",
+/** Shape of the postMessage payload the SaaS success page sends. */
+interface LinkMessage {
+  type: "stirling-account-link";
+  session: SaasSession;
+}
+
+function isLinkMessage(data: unknown): data is LinkMessage {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    (data as { type?: unknown }).type === "stirling-account-link" &&
+    typeof (data as { session?: { access_token?: unknown } }).session
+      ?.access_token === "string"
+  );
+}
+
+/** Resolved login origin (for `event.origin` validation), or null when unset. */
+function loginOrigin(): string | null {
+  if (!webUrl) return null;
+  try {
+    return new URL(webUrl).origin;
+  } catch {
+    return null;
+  }
+}
+
+/** The hosted login URL to open. */
+function loginUrl(): string {
+  return new URL("/login?link=1", webUrl).toString();
+}
+
+export interface OpenPopupOptions {
+  /**
+   * DEV/TEST ONLY. When provided, no real popup is opened — instead this is
+   * invoked with a `post(session)` callback that simulates the SaaS success page
+   * posting a session back. Lets the popup handshake be demoed + tested without
+   * the live SaaS page.
+   */
+  stub?: (post: (session: SaasSession) => void) => void;
+}
+
+/**
+ * Opens the hosted SaaS login popup and resolves with the session it posts back.
+ * Rejects if the popup is blocked, the user closes it without signing in, or
+ * (in the real flow) login isn't configured.
+ */
+export function openSaasLoginPopup(
+  opts: OpenPopupOptions = {},
+): Promise<SaasSession> {
+  // Dev/Storybook/test stub: skip the real popup, simulate the postMessage.
+  if (opts.stub) {
+    return new Promise((resolve) => {
+      opts.stub!((session) => resolve(session));
+    });
+  }
+
+  if (!isSaasLoginConfigured) {
+    return Promise.reject(
+      new Error(
+        "SaaS login is not configured — set VITE_SAAS_WEB_URL to enable account linking.",
+      ),
     );
   }
-  client ??= createClient(url!, anonKey!, {
-    auth: { persistSession: true, autoRefreshToken: true },
+
+  const origin = loginOrigin();
+  const popup = window.open(
+    loginUrl(),
+    "stirling-account-link",
+    "width=480,height=720,menubar=no,toolbar=no",
+  );
+  if (!popup) {
+    return Promise.reject(
+      new Error("Couldn't open the login window — check your popup blocker."),
+    );
+  }
+
+  return new Promise((resolve, reject) => {
+    function cleanup() {
+      window.removeEventListener("message", onMessage);
+      window.clearInterval(closedTimer);
+    }
+
+    function onMessage(event: MessageEvent) {
+      // Only trust messages from the configured SaaS login origin.
+      if (event.origin !== origin) return;
+      if (!isLinkMessage(event.data)) return;
+      cleanup();
+      popup?.close();
+      resolve(event.data.session);
+    }
+
+    window.addEventListener("message", onMessage);
+
+    // If the user closes the popup without completing login, reject.
+    const closedTimer = window.setInterval(() => {
+      if (popup?.closed) {
+        cleanup();
+        reject(new Error("Login window closed before linking finished."));
+      }
+    }, 500);
   });
-  return client;
-}
-
-/** Signs in with email + password; returns the established session. */
-export async function signIn(
-  email: string,
-  password: string,
-): Promise<Session> {
-  const { data, error } = await getClient().auth.signInWithPassword({
-    email,
-    password,
-  });
-  if (error) throw error;
-  if (!data.session) throw new Error("Sign-in returned no session.");
-  return data.session;
-}
-
-/**
- * Signs up with email + password. Returns the session when the project issues
- * one immediately, or null when email confirmation is required.
- */
-export async function signUp(
-  email: string,
-  password: string,
-): Promise<Session | null> {
-  const { data, error } = await getClient().auth.signUp({ email, password });
-  if (error) throw error;
-  return data.session;
-}
-
-/** Current session, or null when signed out / unconfigured. */
-export async function getSession(): Promise<Session | null> {
-  if (!isSupabaseConfigured) return null;
-  const { data } = await getClient().auth.getSession();
-  return data.session;
-}
-
-/** Signs the admin out of the SaaS Supabase project. */
-export async function signOut(): Promise<void> {
-  if (!isSupabaseConfigured) return;
-  await getClient().auth.signOut();
 }

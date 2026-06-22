@@ -15,7 +15,7 @@ import {
  *
  *   - `unlinked`          — no SaaS account linked. Billable features render a
  *                           "link to unlock" affordance.
- *   - `linked-free`       — linked, running on the one-time free grant (500 units).
+ *   - `linked-free`       — linked, running on the one-time free grant (500 PDFs).
  *   - `linked-subscribed` — linked with a live PAYG subscription.
  *
  * The portal admin establishes the link by signing in to the SaaS Supabase

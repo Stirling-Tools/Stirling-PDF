@@ -16,32 +16,28 @@ export function AccountLink() {
   const link = useAccountLink();
   const { linkState } = useLink();
 
-  // Refetch the list whenever a registration completes (credential set) so the
-  // freshly linked instance appears without a manual reload.
+  // Refetch the team list whenever this instance's link status changes so a
+  // freshly linked/unlinked instance appears without a manual reload. The
+  // team-wide list/revoke target the SaaS backend (attended admin action).
+  const linked = link.status?.linked ?? false;
   const [reloadKey, setReloadKey] = useState(0);
   const instancesState = useAsync<LinkedInstanceRow[]>(
-    () => fetchInstances(link.session?.access_token ?? null),
-    [reloadKey, link.credential],
+    () => fetchInstances(null),
+    [reloadKey, linked],
   );
   const instances = instancesState.loading ? null : instancesState.data;
 
   const [revokingId, setRevokingId] = useState<number | null>(null);
 
-  const revoke = useCallback(
-    async (instance: LinkedInstanceRow) => {
-      setRevokingId(instance.instanceId);
-      try {
-        await apiRevokeInstance(
-          link.session?.access_token ?? null,
-          instance.instanceId,
-        );
-        setReloadKey((k) => k + 1);
-      } finally {
-        setRevokingId(null);
-      }
-    },
-    [link.session],
-  );
+  const revoke = useCallback(async (instance: LinkedInstanceRow) => {
+    setRevokingId(instance.instanceId);
+    try {
+      await apiRevokeInstance(null, instance.instanceId);
+      setReloadKey((k) => k + 1);
+    } finally {
+      setRevokingId(null);
+    }
+  }, []);
 
   return (
     <div className="portal-link">

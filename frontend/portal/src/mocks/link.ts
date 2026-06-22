@@ -2,10 +2,14 @@
  * Account-link fixtures and the types api/link.ts shares with them.
  *
  * "Mode A" combined billing: a self-hosted instance links the org's SaaS account
- * so its unattended calls bill against the org wallet. The portal admin signs in
- * to the SaaS Supabase project, then registers/lists/revokes linked instances
- * through the org's local backend, which proxies to the SaaS account-link API
- * (`/api/v1/account-link/*`, see AccountLinkController).
+ * so its unattended calls bill against the org wallet. Two surfaces:
+ *
+ *   - THIS instance: the local backend (`POST /api/v1/account-link/link`,
+ *     `GET /status`, `POST /unlink`). Linking hands the local backend the admin's
+ *     SaaS JWT; it registers with SaaS and stores the device secret SERVER-SIDE.
+ *     The portal only ever sees a Linked / Not-linked status — never the secret.
+ *   - TEAM-WIDE management: the SaaS backend (`GET /instances`,
+ *     `POST /instances/{id}/revoke`), called with the admin's JWT.
  *
  * api/link.ts imports the types; the MSW handlers in mocks/handlers/link.ts serve
  * this fixture data over the intercepted httpJson() calls. Components never reach
@@ -14,24 +18,27 @@
  */
 
 /* ──────────────────────────────────────────────────────────────────────── */
-/*  Register + list (mirrors AccountLinkController records)                   */
+/*  Local backend — link / status / unlink (this instance)                   */
 /* ──────────────────────────────────────────────────────────────────────── */
 
-/** Body for POST /api/v1/account-link/register — optional display name. */
-export interface RegisterInstanceRequest {
+/** Body for POST /api/v1/account-link/link — the SaaS JWT + optional name. */
+export interface LinkInstanceRequest {
+  /** Admin's SaaS session JWT, obtained via the hosted-login popup. */
+  supabaseJwt: string;
+  /** Optional label for this instance. */
   name?: string;
 }
 
-/**
- * Response from register. `deviceSecret` is plaintext and returned exactly
- * once — the caller must store it; it is never retrievable again.
- */
-export interface RegisterInstanceResponse {
-  instanceId: number;
-  deviceId: string;
-  deviceSecret: string;
+/** Link status for this instance (GET /api/v1/account-link/status). */
+export interface LinkStatus {
+  linked: boolean;
+  /** Display name the local backend stored at link time; null when unset. */
   name: string | null;
 }
+
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  SaaS backend — team-wide instance management                             */
+/* ──────────────────────────────────────────────────────────────────────── */
 
 /** A linked instance row (GET /api/v1/account-link/instances). */
 export interface LinkedInstanceRow {
@@ -46,7 +53,7 @@ export interface LinkedInstanceRow {
 }
 
 /* ──────────────────────────────────────────────────────────────────────── */
-/*  Mock store — register/revoke mutate this so the surface feels live in dev */
+/*  Mock store — link/unlink/revoke mutate this so the surface feels live     */
 /* ──────────────────────────────────────────────────────────────────────── */
 
 function seedInstances(): LinkedInstanceRow[] {
@@ -80,37 +87,48 @@ function seedInstances(): LinkedInstanceRow[] {
 
 let store: LinkedInstanceRow[] = seedInstances();
 let nextId = 1004;
+let localStatus: LinkStatus = { linked: false, name: null };
 
-/** Resets the mock store to seed state (used by Storybook / tests). */
+/** Resets the mock store + local link status to seed state (Storybook / tests). */
 export function resetLinkStore(): void {
   store = seedInstances();
   nextId = 1004;
+  localStatus = { linked: false, name: null };
 }
 
-/** All instances for the org, newest first (includes revoked). */
-export function listInstances(): LinkedInstanceRow[] {
-  return [...store].sort((a, b) => b.instanceId - a.instanceId);
+/** Current local link status for this instance. */
+export function getLocalStatus(): LinkStatus {
+  return { ...localStatus };
 }
 
-/** Registers a new instance, returning the one-time secret. */
-export function registerInstance(name?: string): RegisterInstanceResponse {
+/**
+ * Links this instance: the local backend would register with SaaS and persist
+ * the device secret itself. The mock just appends a row and flips local status —
+ * no secret is ever surfaced.
+ */
+export function linkLocal(name?: string): LinkStatus {
   const instanceId = nextId++;
-  const deviceId = crypto.randomUUID();
   store.push({
     instanceId,
-    deviceId,
+    deviceId: crypto.randomUUID(),
     name: name ?? null,
     createdAt: new Date().toISOString(),
     lastSeenAt: null,
     revoked: false,
   });
-  return {
-    instanceId,
-    deviceId,
-    // Mock secret — high-entropy shape, never a real credential.
-    deviceSecret: `sk_link_${crypto.randomUUID().replace(/-/g, "")}`,
-    name: name ?? null,
-  };
+  localStatus = { linked: true, name: name ?? null };
+  return getLocalStatus();
+}
+
+/** Unlinks this instance locally. */
+export function unlinkLocal(): LinkStatus {
+  localStatus = { linked: false, name: null };
+  return getLocalStatus();
+}
+
+/** All instances for the org, newest first (includes revoked). */
+export function listInstances(): LinkedInstanceRow[] {
+  return [...store].sort((a, b) => b.instanceId - a.instanceId);
 }
 
 /** Revokes an instance by id. Returns false if not found. Idempotent. */

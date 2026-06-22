@@ -1,10 +1,8 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  /** SaaS Supabase project URL — account-link sign-in. May be absent in dev (MSW). */
-  readonly VITE_SUPABASE_URL?: string;
-  /** SaaS Supabase publishable (anon) key — account-link sign-in. May be absent in dev (MSW). */
-  readonly VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY?: string;
+  /** Hosted SaaS login origin — account-link popup auth. May be absent in dev (uses stub). */
+  readonly VITE_SAAS_WEB_URL?: string;
 }
 
 interface ImportMeta {

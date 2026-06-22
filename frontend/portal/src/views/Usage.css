@@ -111,6 +111,27 @@
   flex-wrap: wrap;
 }
 
+/* Wallet hero metric — mirrors the SaaS plan-card price block */
+.portal-usage__wallet-hero {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.portal-usage__wallet-hero-value {
+  font-size: 2.25rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--color-text-1);
+  font-variant-numeric: tabular-nums;
+}
+
+.portal-usage__wallet-hero-unit {
+  font-size: 0.875rem;
+  color: var(--color-text-4);
+}
+
 /* Cap progress (free) */
 .portal-usage__cap {
   display: flex;
