@@ -96,34 +96,43 @@ export const I18N_PROJECTS: TranslationProject[] = [
 ];
 
 // Locale tables are shallow by design; the cap only trips on a pathological
-// or malformed file and turns a stack overflow into a clear error.
+// or malformed file and turns it into a clear error.
 const MAX_LOCALE_DEPTH = 50;
 
-/** Flatten a parsed TOML locale to its set of leaf keys. */
+/**
+ * Flatten a parsed TOML locale to its set of leaf keys.
+ *
+ * Iterative (explicit-stack) traversal rather than recursion, so a deeply
+ * nested or malformed locale walks the heap, never the call stack.
+ */
 export function flattenLocaleKeys(
   node: unknown,
   prefix = "",
   acc = new Set<string>(),
-  depth = 0,
 ): Set<string> {
-  if (depth > MAX_LOCALE_DEPTH) {
-    throw new Error(
-      `Locale nesting exceeded ${MAX_LOCALE_DEPTH} levels at "${prefix}"`,
-    );
-  }
-  if (!node || typeof node !== "object" || Array.isArray(node)) {
-    if (prefix) acc.add(prefix);
-    return acc;
-  }
-  for (const [childKey, value] of Object.entries(
-    node as Record<string, unknown>,
-  )) {
-    flattenLocaleKeys(
-      value,
-      prefix ? `${prefix}.${childKey}` : childKey,
-      acc,
-      depth + 1,
-    );
+  const stack: Array<{ node: unknown; prefix: string; depth: number }> = [
+    { node, prefix, depth: 0 },
+  ];
+  while (stack.length > 0) {
+    const { node: current, prefix: currentPrefix, depth } = stack.pop()!;
+    if (depth > MAX_LOCALE_DEPTH) {
+      throw new Error(
+        `Locale nesting exceeded ${MAX_LOCALE_DEPTH} levels at "${currentPrefix}"`,
+      );
+    }
+    if (!current || typeof current !== "object" || Array.isArray(current)) {
+      if (currentPrefix) acc.add(currentPrefix);
+      continue;
+    }
+    for (const [childKey, value] of Object.entries(
+      current as Record<string, unknown>,
+    )) {
+      stack.push({
+        node: value,
+        prefix: currentPrefix ? `${currentPrefix}.${childKey}` : childKey,
+        depth: depth + 1,
+      });
+    }
   }
   return acc;
 }
