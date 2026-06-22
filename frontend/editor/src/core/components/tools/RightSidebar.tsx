@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ActionIcon } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
@@ -32,6 +32,30 @@ import {
 import { useToolPanelGeometry } from "@app/hooks/tools/useToolPanelGeometry";
 import "@app/components/tools/ToolPanel.css";
 
+const RIGHT_RAIL_COLLAPSED_STORAGE_KEY = "stirling.rightRailCollapsed";
+
+function readPersistedRightRailCollapsed(): boolean {
+  try {
+    const stored = window.localStorage.getItem(
+      RIGHT_RAIL_COLLAPSED_STORAGE_KEY,
+    );
+    return stored === null ? true : stored === "true";
+  } catch {
+    return true;
+  }
+}
+
+function writePersistedRightRailCollapsed(collapsed: boolean): void {
+  try {
+    window.localStorage.setItem(
+      RIGHT_RAIL_COLLAPSED_STORAGE_KEY,
+      String(collapsed),
+    );
+  } catch {
+    // private mode / quota: silently no-op
+  }
+}
+
 /**
  * Right-side rail wrapping the tool panel.
  *
@@ -44,6 +68,9 @@ export default function RightSidebar() {
   const { sidebarRefs } = useSidebarContext();
   const { toolPanelRef, quickAccessRef } = sidebarRefs;
   const isMobile = useIsMobile();
+  const [rightRailCollapsed, setRightRailCollapsed] = useState(
+    readPersistedRightRailCollapsed,
+  );
 
   const {
     leftPanelView,
@@ -74,6 +101,8 @@ export default function RightSidebar() {
 
   const handleExpand = () => {
     withViewTransition(() => {
+      setRightRailCollapsed(false);
+      writePersistedRightRailCollapsed(false);
       if (readerMode) setReaderMode(false);
       if (leftPanelView === "hidden") setLeftPanelView("toolPicker");
       if (!sidebarsVisible) setSidebarsVisible(true);
@@ -81,7 +110,11 @@ export default function RightSidebar() {
   };
 
   const handleCollapse = () => {
-    withViewTransition(() => setLeftPanelView("hidden"));
+    withViewTransition(() => {
+      setRightRailCollapsed(true);
+      writePersistedRightRailCollapsed(true);
+      setLeftPanelView("hidden");
+    });
   };
 
   const [allToolsView, setAllToolsView] = useState(false);
@@ -102,6 +135,8 @@ export default function RightSidebar() {
   // it never collides with an open tool or the all-tools/search view.
   const handleOpenPolicy = () => {
     withViewTransition(() => {
+      setRightRailCollapsed(false);
+      writePersistedRightRailCollapsed(false);
       if (readerMode) setReaderMode(false);
       setLeftPanelView("toolPicker");
       if (!sidebarsVisible) setSidebarsVisible(true);
@@ -169,9 +204,16 @@ export default function RightSidebar() {
 
   const computedWidth = () => {
     if (isMobile) return "100%";
-    if (!isPanelVisible) return "3.5rem";
+    if (rightRailCollapsed || !isPanelVisible) return "3.5rem";
     return expandedWidth;
   };
+
+  useEffect(() => {
+    if (isMobile && rightRailCollapsed) {
+      setRightRailCollapsed(false);
+      writePersistedRightRailCollapsed(false);
+    }
+  }, [isMobile, rightRailCollapsed]);
 
   // Collapsed rail: show favourites + recommended tools as icons.
   const favoriteToolItems = useFavoriteToolItems(favoriteTools, toolRegistry);
@@ -212,53 +254,55 @@ export default function RightSidebar() {
     >
       {/* Headless: enforces enabled policies on every uploaded file. */}
       {policiesEnabled && <PolicyAutoRunController />}
-      {!fullscreenExpanded && !isPanelVisible && !isMobile && (
-        <div className="tool-panel__collapsed-strip">
-          <div className="tool-panel__collapsed-top">
-            <ActionIcon
-              variant="outline"
-              color="gray.4"
-              radius="xl"
-              size="md"
-              className="tool-panel__expand-btn tool-panel__toggle-vt"
-              onClick={handleExpand}
-              aria-label={t("toolPanel.expand", "Expand panel")}
-            >
-              <ChevronLeftIcon sx={{ fontSize: "1.1rem" }} />
-            </ActionIcon>
-          </div>
-          <div className="tool-panel__collapsed-divider" />
-          {policiesEnabled && (
-            <PoliciesCollapsedButton onExpand={handleOpenPolicy} />
-          )}
-          <div className="tool-panel__collapsed-tools">
-            {collapsedRailItems.map(({ id, tool }) => (
-              <AppTooltip
-                key={id}
-                content={tool.name}
-                position="left"
-                arrow
-                delay={300}
+      {!fullscreenExpanded &&
+        (rightRailCollapsed || !isPanelVisible) &&
+        !isMobile && (
+          <div className="tool-panel__collapsed-strip">
+            <div className="tool-panel__collapsed-top">
+              <ActionIcon
+                variant="outline"
+                color="gray.4"
+                radius="xl"
+                size="md"
+                className="tool-panel__expand-btn tool-panel__toggle-vt"
+                onClick={handleExpand}
+                aria-label={t("toolPanel.expand", "Expand panel")}
               >
-                <button
-                  type="button"
-                  className="tool-panel__collapsed-tool-btn"
-                  data-selected={selectedToolKey === id}
-                  onClick={() => {
-                    handleExpand();
-                    handleToolSelectWithTransition(id);
-                  }}
-                  aria-label={tool.name}
+                <ChevronLeftIcon sx={{ fontSize: "1.1rem" }} />
+              </ActionIcon>
+            </div>
+            <div className="tool-panel__collapsed-divider" />
+            {policiesEnabled && (
+              <PoliciesCollapsedButton onExpand={handleOpenPolicy} />
+            )}
+            <div className="tool-panel__collapsed-tools">
+              {collapsedRailItems.map(({ id, tool }) => (
+                <AppTooltip
+                  key={id}
+                  content={tool.name}
+                  position="left"
+                  arrow
+                  delay={300}
                 >
-                  <ToolIcon icon={tool.icon} marginRight="0" />
-                </button>
-              </AppTooltip>
-            ))}
+                  <button
+                    type="button"
+                    className="tool-panel__collapsed-tool-btn"
+                    data-selected={selectedToolKey === id}
+                    onClick={() => {
+                      handleExpand();
+                      handleToolSelectWithTransition(id);
+                    }}
+                    aria-label={tool.name}
+                  >
+                    <ToolIcon icon={tool.icon} marginRight="0" />
+                  </button>
+                </AppTooltip>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {!fullscreenExpanded && isPanelVisible && (
+      {!fullscreenExpanded && isPanelVisible && !rightRailCollapsed && (
         <div
           /* Fixed width matches the expanded panel width so the inner content is
              laid out at its final size from the moment it mounts. The outer

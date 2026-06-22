@@ -44,11 +44,10 @@ const SIDEBAR_COLLAPSED_STORAGE_KEY = "stirling.fileSidebarCollapsed";
 
 function readPersistedSidebarCollapsed(): boolean {
   try {
-    return (
-      window.localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === "true"
-    );
+    const stored = window.localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY);
+    return stored === null ? true : stored === "true";
   } catch {
-    return false;
+    return true;
   }
 }
 

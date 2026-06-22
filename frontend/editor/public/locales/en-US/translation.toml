@@ -7961,6 +7961,8 @@ invalid = "Invalid"
 valid = "Valid"
 
 [viewer]
+expandToolbar = "Expand viewer controls"
+minimizeToolbar = "Minimize viewer controls"
 cannotPreviewFile = "Cannot Preview File"
 copyText = "Copy"
 disableColorFilter = "Disable Color Filter"
