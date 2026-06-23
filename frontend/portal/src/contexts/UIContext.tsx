@@ -19,7 +19,12 @@ interface UIContextValue {
 
   /** Settings is a modal overlay, not a route. */
   settingsOpen: boolean;
-  openSettings: () => void;
+  /**
+   * The section the Settings modal should land on when opened. `null` lets the
+   * modal pick its own default. Cleared back to `null` on close.
+   */
+  settingsInitialSection: string | null;
+  openSettings: (section?: string) => void;
   closeSettings: () => void;
 }
 
@@ -29,6 +34,9 @@ export function UIProvider({ children }: { children: ReactNode }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsInitialSection, setSettingsInitialSection] = useState<
+    string | null
+  >(null);
 
   const value = useMemo<UIContextValue>(
     () => ({
@@ -43,10 +51,17 @@ export function UIProvider({ children }: { children: ReactNode }) {
       toggleAssistant: () => setAssistantOpen((o) => !o),
 
       settingsOpen,
-      openSettings: () => setSettingsOpen(true),
-      closeSettings: () => setSettingsOpen(false),
+      settingsInitialSection,
+      openSettings: (section?: string) => {
+        setSettingsInitialSection(section ?? null);
+        setSettingsOpen(true);
+      },
+      closeSettings: () => {
+        setSettingsOpen(false);
+        setSettingsInitialSection(null);
+      },
     }),
-    [searchOpen, assistantOpen, settingsOpen],
+    [searchOpen, assistantOpen, settingsOpen, settingsInitialSection],
   );
 
   return <UIContext.Provider value={value}>{children}</UIContext.Provider>;

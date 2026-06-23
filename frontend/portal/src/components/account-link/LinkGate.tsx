@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Banner, Button } from "@shared/components";
 import { useLink } from "@portal/contexts/LinkContext";
-import { useView } from "@portal/contexts/ViewContext";
+import { useUI } from "@portal/contexts/UIContext";
 
 interface Props {
   /** The billable feature — rendered only when the org is linked. */
@@ -18,7 +18,7 @@ interface Props {
  */
 export function LinkGate({ children, feature }: Props) {
   const { featuresUnlocked } = useLink();
-  const { setActiveView } = useView();
+  const { openSettings } = useUI();
 
   if (featuresUnlocked) return <>{children}</>;
 
@@ -28,7 +28,7 @@ export function LinkGate({ children, feature }: Props) {
       title={feature ? `Link to unlock ${feature}` : "Link to unlock"}
       description="Link this org's Stirling account to use billable features."
       action={
-        <Button size="sm" onClick={() => setActiveView("account-link")}>
+        <Button size="sm" onClick={() => openSettings("account-link")}>
           Link account
         </Button>
       }

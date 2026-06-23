@@ -27,7 +27,6 @@ documents = "Documents"
 components = "Components"
 infrastructure = "Infrastructure"
 usage = "Usage & Billing"
-account-link = "Account Link"
 docs = "Developer Docs"
 settings = "Settings"
 
@@ -51,6 +50,8 @@ appEditor = "Editor"
 docsProcessed = "Docs processed"
 docsCount = "{{docs}} docs"
 planPayAsYouGo = "Pay-as-you-go"
+linkAccount = "Link account"
+accountLinked = "Account linked"
 planEnterprise = "Enterprise Plan"
 
 [search]
@@ -95,6 +96,7 @@ general = "General"
 authentication = "Authentication"
 sessions = "Active sessions"
 early-access = "Early access"
+account-link = "Account link"
 
 [settings.profile]
 accountFallback = "Account"

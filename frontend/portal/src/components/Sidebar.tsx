@@ -4,6 +4,7 @@ import { useView, type ViewId } from "@portal/contexts/ViewContext";
 import { useTier } from "@portal/contexts/TierContext";
 import { useTheme } from "@portal/contexts/ThemeContext";
 import { useUI } from "@portal/contexts/UIContext";
+import { useLink } from "@portal/contexts/LinkContext";
 import { useAsync } from "@portal/hooks/useAsync";
 import { fetchHomeKpis, type KpiEntry } from "@portal/api/home";
 import { EDITOR_URL } from "@portal/auth/editorUrl";
@@ -45,9 +46,34 @@ const GROUP_OPERATIONAL: NavEntry[] = [
 const GROUP_PLATFORM: NavEntry[] = [
   { id: "infrastructure", icon: <InfrastructureIcon /> },
   { id: "usage", icon: <UsageIcon /> },
-  { id: "account-link", icon: <LinkIcon /> },
   { id: "docs", icon: <DocsIcon /> },
 ];
+
+/**
+ * Persistent "Link account" / "Linked" affordance in the sidebar footer. Reads
+ * the link state from LinkContext (populated at app boot by
+ * AccountLinkStatusBootstrap) so it doesn't need its own fetch. Click → opens
+ * the Settings modal landing on the Account Link section.
+ */
+function LinkAccountFooterItem() {
+  const { t } = useTranslation();
+  const { openSettings } = useUI();
+  const { linkState } = useLink();
+  const linked = linkState !== "unlinked";
+
+  return (
+    <NavItem
+      id="account-link"
+      label={
+        linked
+          ? t("shell.sidebar.accountLinked", "Account linked")
+          : t("shell.sidebar.linkAccount", "Link account")
+      }
+      icon={<LinkIcon />}
+      onClick={() => openSettings("account-link")}
+    />
+  );
+}
 
 function UsageFooter() {
   const { tier } = useTier();
@@ -202,6 +228,7 @@ export function Sidebar() {
       </nav>
 
       <div className="portal-sidebar__footer">
+        <LinkAccountFooterItem />
         <NavItem
           id="settings"
           label={t("nav.settings")}

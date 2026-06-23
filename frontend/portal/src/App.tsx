@@ -13,6 +13,7 @@ import { AssistantButton } from "@portal/components/AssistantButton";
 import { AssistantPanel } from "@portal/components/AssistantPanel";
 import { SearchModal } from "@portal/components/SearchModal";
 import { SettingsModal } from "@portal/components/SettingsModal";
+import { AccountLinkStatusBootstrap } from "@portal/components/account-link/AccountLinkStatusBootstrap";
 import { ViewRouter } from "@portal/ViewRouter";
 
 /**
@@ -58,8 +59,14 @@ function GlobalShortcuts() {
 
 /** Bridges the Settings modal's open/close props to UIContext state. */
 function SettingsHost() {
-  const { settingsOpen, closeSettings } = useUI();
-  return <SettingsModal open={settingsOpen} onClose={closeSettings} />;
+  const { settingsOpen, settingsInitialSection, closeSettings } = useUI();
+  return (
+    <SettingsModal
+      open={settingsOpen}
+      onClose={closeSettings}
+      initialSection={settingsInitialSection}
+    />
+  );
 }
 
 export function App() {
@@ -79,6 +86,7 @@ export function App() {
                 <UIProvider>
                   <GlobalShortcuts />
                   <AuthGate>
+                    <AccountLinkStatusBootstrap />
                     <AppShell>
                       <ViewRouter />
                     </AppShell>
