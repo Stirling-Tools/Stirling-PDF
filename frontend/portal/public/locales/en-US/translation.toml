@@ -37,6 +37,9 @@ darkMode = "Dark mode"
 lightMode = "Light mode"
 search = "Search"
 searchPlaceholder = "Search…"
+accountMenu = "Account menu"
+accountFallback = "Account"
+signOut = "Sign out"
 
 [shell.sidebar]
 brandSuffix = "Stirling Processor"
@@ -1737,3 +1740,43 @@ defaultLabel = "Docs processed · last 30 days"
 delta = "{{pct}}% vs prior 30d"
 docsValue = "{{value}} docs"
 srAnnounce = "{{date}}: {{value}} docs"
+
+# Login screen - keys used by the shared auth UI (@shared/auth/ui/*), which the
+# portal renders identically to the editor. Values mirror the editor's en-US locale.
+[login]
+enterMfaCode = "Enter 6-digit code"
+enterPassword = "Enter your password"
+enterUsername = "Enter username"
+failedToSignIn = "Failed to sign in with {{provider}}: {{message}}"
+loggingIn = "Logging In..."
+login = "Login"
+mfaCode = "Authentication Code"
+mfaRequired = "Two-factor code required"
+password = "Password"
+pleaseEnterBoth = "Please enter both email and password"
+signInWith = "Sign in with"
+unexpectedError = "Unexpected error: {{message}}"
+username = "Username"
+
+[login.slides.edit]
+alt = "Edit PDFs"
+subtitle = "With over a dozen tools to help you redact, sign, read and manipulate PDFs, you will be sure to find what you are looking for."
+title = "Edit PDFs to display/secure the information you want"
+
+[login.slides.overview]
+alt = "Stirling PDF overview"
+subtitle = "A privacy-first cloud suite for PDFs that lets you convert, sign, redact, and manage documents, along with 50+ other powerful tools."
+title = "Your one-stop-shop for all your PDF needs."
+
+[login.slides.secure]
+alt = "Secure PDFs"
+subtitle = "Add passwords, redact content, and manage certificates with ease."
+title = "Protect sensitive information in your PDFs"
+
+[signup]
+or = "or"
+
+# Auth gate (portal is admin-only): transient states shown by AuthGate.
+[auth]
+loading = "Loading"
+redirectingToEditor = "Redirecting to the editor..."

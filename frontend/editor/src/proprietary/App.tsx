@@ -21,7 +21,7 @@ import { WATCHED_FOLDERS_ENABLED } from "@app/constants/featureFlags";
 import "@app/styles/tailwind.css";
 import "@app/styles/cookieconsent.css";
 import "@app/styles/index.css";
-import "@app/styles/auth-theme.css";
+import "@shared/auth/ui/auth-theme.css";
 
 // Import file ID debugging helpers (development only)
 import "@app/utils/fileIdSafety";

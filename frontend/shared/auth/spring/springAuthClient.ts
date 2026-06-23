@@ -1,26 +1,40 @@
 /**
- * Spring Auth Client
+ * Spring Auth Client (shared engine)
  *
- * This client integrates with the Spring Security + JWT backend.
+ * Integrates with the Spring Security + JWT backend.
  * - Uses localStorage for JWT storage (sent via Authorization header)
  * - JWT validation handled server-side
  * - No email confirmation flow (auto-confirmed on registration)
+ *
+ * This is the platform-agnostic engine. The HTTP transport, base path and
+ * platform-specific behaviour are injected via `@shared/auth/config` so the
+ * same code backs the editor (which injects its apiClient + desktop bridge)
+ * and the portal (web defaults).
  */
 
-import apiClient from "@app/services/apiClient";
-import { AxiosError } from "axios";
-import { BASE_PATH } from "@app/constants/app";
-import { type OAuthProvider } from "@app/auth/oauthTypes";
-import { resetOAuthState } from "@app/auth/oauthStorage";
-import { clearPlatformAuthAfterSignOut } from "@app/extensions/authSessionCleanup";
-import {
-  getPlatformSessionUser,
-  isDesktopSaaSAuthMode,
-  refreshPlatformSession,
-  savePlatformToken,
-  shouldCallBackendLogout,
-} from "@app/extensions/platformSessionBridge";
-import { startOAuthNavigation } from "@app/extensions/oauthNavigation";
+import { AxiosError, type AxiosRequestConfig } from "axios";
+import { getSpringAuthConfig } from "@shared/auth/config";
+import { type OAuthProvider } from "@shared/auth/spring/oauthTypes";
+import { resetOAuthState } from "@shared/auth/spring/oauthStorage";
+import type {
+  AuthUser as User,
+  AuthSession as Session,
+  AuthError,
+  AuthResponse,
+  AuthChangeEvent,
+} from "@shared/auth/types";
+
+export type { User, Session, AuthError, AuthResponse, AuthChangeEvent };
+
+/** Axios config plus the editor's custom request flags (ignored by the portal). */
+type AuthRequestConfig = AxiosRequestConfig & {
+  suppressErrorToast?: boolean;
+  skipAuthRedirect?: boolean;
+};
+
+const http = () => getSpringAuthConfig().http;
+const platform = () => getSpringAuthConfig().platform;
+const basePath = () => getSpringAuthConfig().basePath;
 
 function getHttpStatus(error: unknown): number | undefined {
   if (error instanceof AxiosError) {
@@ -52,13 +66,16 @@ function getErrorMessage(error: unknown, fallback: string): string {
 
 const OAUTH_REDIRECT_COOKIE = "stirling_redirect_path";
 const OAUTH_REDIRECT_COOKIE_MAX_AGE = 60 * 5; // 5 minutes
-const DEFAULT_REDIRECT_PATH = `${BASE_PATH || ""}/auth/callback`;
+
+function defaultRedirectPath(): string {
+  return `${basePath() || ""}/auth/callback`;
+}
 
 export const POST_LOGIN_REDIRECT_STORAGE_KEY = "stirling_post_login_path";
 
 function normalizeRedirectPath(target?: string): string {
   if (!target || typeof target !== "string") {
-    return DEFAULT_REDIRECT_PATH;
+    return defaultRedirectPath();
   }
 
   try {
@@ -69,7 +86,7 @@ function normalizeRedirectPath(target?: string): string {
   } catch {
     const trimmed = target.trim();
     if (!trimmed) {
-      return DEFAULT_REDIRECT_PATH;
+      return defaultRedirectPath();
     }
     return trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
   }
@@ -112,7 +129,7 @@ export function setPostLoginRedirectPath(
       window.sessionStorage.removeItem(POST_LOGIN_REDIRECT_STORAGE_KEY);
     }
   } catch (_error) {
-    // sessionStorage unavailable (private mode) — fail open
+    // sessionStorage unavailable (private mode): fail open
   }
 }
 
@@ -129,45 +146,6 @@ export function consumePostLoginRedirectPath(): string | null {
   }
 }
 
-// Auth types
-export interface User {
-  id: string;
-  email: string;
-  username: string;
-  role: string;
-  enabled?: boolean;
-  is_anonymous?: boolean;
-  isFirstLogin?: boolean;
-  authenticationType?: string;
-  app_metadata?: Record<string, unknown>;
-}
-
-export interface Session {
-  user: User;
-  access_token: string;
-  expires_in: number;
-  expires_at?: number;
-}
-
-export interface AuthError {
-  message: string;
-  status?: number;
-  code?: string;
-  mfaRequired?: boolean;
-}
-
-export interface AuthResponse {
-  user: User | null;
-  session: Session | null;
-  error: AuthError | null;
-}
-
-export type AuthChangeEvent =
-  | "SIGNED_IN"
-  | "SIGNED_OUT"
-  | "TOKEN_REFRESHED"
-  | "USER_UPDATED";
-
 type AuthChangeCallback = (
   event: AuthChangeEvent,
   session: Session | null,
@@ -175,7 +153,7 @@ type AuthChangeCallback = (
 
 class SpringAuthClient {
   private listeners: AuthChangeCallback[] = [];
-  private sessionCheckInterval: NodeJS.Timeout | null = null;
+  private sessionCheckInterval: ReturnType<typeof setInterval> | null = null;
 
   // Adaptive intervals - calculated based on actual JWT token lifetime
   // Defaults for initial startup (will be recalculated on first token)
@@ -321,10 +299,10 @@ class SpringAuthClient {
         return { data: { session: null }, error: null };
       }
 
-      if (await isDesktopSaaSAuthMode()) {
+      if (await platform().isDesktopSaaSAuthMode()) {
         let tokenExpiry = this.getTokenExpiry(token);
         if (tokenExpiry.expiresIn <= this.DESKTOP_SAAS_REFRESH_EARLY_SECONDS) {
-          const refreshed = await refreshPlatformSession();
+          const refreshed = await platform().refreshPlatformSession();
           if (!refreshed) {
             localStorage.removeItem("stirling_jwt");
             return { data: { session: null }, error: null };
@@ -345,7 +323,7 @@ class SpringAuthClient {
           return { data: { session: null }, error: null };
         }
 
-        const platformUser = await getPlatformSessionUser();
+        const platformUser = await platform().getPlatformSessionUser();
 
         const session: Session = {
           user: {
@@ -372,14 +350,15 @@ class SpringAuthClient {
       // Verify with backend
       // Note: We pass the token explicitly here, overriding the interceptor's default
       // console.debug('[SpringAuth] getSession: Verifying JWT with /api/v1/auth/me');
-      const response = await apiClient.get("/api/v1/auth/me", {
+      const meConfig: AuthRequestConfig = {
         headers: {
           Authorization: `Bearer ${token}`,
         },
         suppressErrorToast: true, // Suppress global error handler (we handle errors locally)
         // Session bootstrap should not trigger global 401 refresh/redirect loops.
         skipAuthRedirect: true,
-      });
+      };
+      const response = await http().get("/api/v1/auth/me", meConfig);
 
       // console.debug('[SpringAuth] /me response status:', response.status);
       const data = response.data;
@@ -428,7 +407,7 @@ class SpringAuthClient {
     mfaCode?: string;
   }): Promise<AuthResponse> {
     try {
-      const response = await apiClient.post(
+      const response = await http().post(
         "/api/v1/auth/login",
         {
           username: credentials.email,
@@ -448,7 +427,7 @@ class SpringAuthClient {
       // console.log('[SpringAuth] JWT stored in localStorage');
 
       // Sync token to platform-specific storage (Tauri store for desktop)
-      await savePlatformToken(token);
+      await platform().savePlatformToken(token);
 
       // Calculate adaptive monitoring intervals based on token lifetime
       this.calculateAdaptiveIntervals(token);
@@ -504,7 +483,7 @@ class SpringAuthClient {
     options?: { data?: { full_name?: string }; emailRedirectTo?: string };
   }): Promise<AuthResponse> {
     try {
-      const response = await apiClient.post(
+      const response = await http().post(
         "/api/v1/user/register",
         {
           username: credentials.email,
@@ -548,7 +527,7 @@ class SpringAuthClient {
       // Use the full path provided by the backend
       // This supports both OAuth2 (/oauth2/authorization/...) and SAML2 (/saml2/authenticate/...)
       const redirectUrl = params.provider;
-      const handled = await startOAuthNavigation(redirectUrl);
+      const handled = await platform().startOAuthNavigation(redirectUrl);
       if (handled) {
         return { error: null };
       }
@@ -584,8 +563,8 @@ class SpringAuthClient {
       // `/api/v1/auth/logout` (Supabase manages session lifecycle); POSTing
       // there returns 500 and pollutes error toasts even though the local
       // cleanup below succeeds.
-      if (await shouldCallBackendLogout()) {
-        const response = await apiClient.post("/api/v1/auth/logout", null, {
+      if (await platform().shouldCallBackendLogout()) {
+        const response = await http().post("/api/v1/auth/logout", null, {
           headers: {
             "X-XSRF-TOKEN": this.getCsrfToken() || "",
           },
@@ -628,7 +607,7 @@ class SpringAuthClient {
       }
 
       try {
-        await clearPlatformAuthAfterSignOut();
+        await platform().clearPlatformAuthAfterSignOut();
       } catch (cleanupError) {
         console.warn(
           "[SpringAuth] Failed to run platform auth cleanup",
@@ -645,7 +624,7 @@ class SpringAuthClient {
       // Still remove token even if backend call fails
       localStorage.removeItem("stirling_jwt");
       try {
-        await clearPlatformAuthAfterSignOut();
+        await platform().clearPlatformAuthAfterSignOut();
       } catch (cleanupError) {
         console.warn(
           "[SpringAuth] Failed to run platform auth cleanup after error",
@@ -672,8 +651,8 @@ class SpringAuthClient {
     error: AuthError | null;
   }> {
     try {
-      if (await isDesktopSaaSAuthMode()) {
-        const refreshed = await refreshPlatformSession();
+      if (await platform().isDesktopSaaSAuthMode()) {
+        const refreshed = await platform().refreshPlatformSession();
         if (!refreshed) {
           localStorage.removeItem("stirling_jwt");
           return {
@@ -702,13 +681,18 @@ class SpringAuthClient {
         return { data, error: null };
       }
 
-      const response = await apiClient.post("/api/v1/auth/refresh", null, {
+      const refreshConfig: AuthRequestConfig = {
         headers: {
           "X-XSRF-TOKEN": this.getCsrfToken() || "",
         },
         withCredentials: true,
         suppressErrorToast: true, // Suppress global error handler (we handle errors locally)
-      });
+      };
+      const response = await http().post(
+        "/api/v1/auth/refresh",
+        null,
+        refreshConfig,
+      );
 
       const data = response.data;
       const token = data.session.access_token;
@@ -717,7 +701,7 @@ class SpringAuthClient {
       localStorage.setItem("stirling_jwt", token);
 
       // Sync token to platform-specific storage (Tauri store for desktop)
-      await savePlatformToken(token);
+      await platform().savePlatformToken(token);
 
       // Calculate adaptive monitoring intervals based on token lifetime
       this.calculateAdaptiveIntervals(token);
