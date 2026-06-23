@@ -146,9 +146,13 @@ tasks:
     cmds:
       - rm -rf runtime/jre
       - mkdir -p runtime
+      # Pin jlink to JAVA_HOME so the bundled JRE matches the JDK the build
+      # uses. Bare `jlink` on PATH can resolve to an older system Java (the
+      # ubuntu runner ships Java 11), producing a runtime jlink:verify rejects.
       - |
-        JLINK_COMPRESS="$(jlink --help 2>&1 | grep -q 'zip-\[0-9\]' && echo zip-6 || echo 2)"
-        jlink \
+        JLINK="${JAVA_HOME:+$JAVA_HOME/bin/}jlink"
+        JLINK_COMPRESS="$("$JLINK" --help 2>&1 | grep -q 'zip-\[0-9\]' && echo zip-6 || echo 2)"
+        "$JLINK" \
           --add-modules {{.JLINK_MODULES}} \
           --strip-debug \
           --compress="$JLINK_COMPRESS" \
