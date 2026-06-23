@@ -213,6 +213,15 @@ class TauriHttpClient {
       if (finalConfig.data instanceof FormData) {
         // FormData can be passed directly
         body = finalConfig.data;
+        // Drop any caller-supplied Content-Type so the native fetch generates
+        // multipart/form-data WITH its boundary (matches axios's FormData
+        // handling). A boundary-less "multipart/form-data" header makes the
+        // server reject the body ("No multipart boundary parameter").
+        for (const key of Object.keys(headers)) {
+          if (key.toLowerCase() === "content-type") {
+            delete headers[key];
+          }
+        }
       } else if (typeof finalConfig.data === "object") {
         // Serialize as JSON
         body = JSON.stringify(finalConfig.data);

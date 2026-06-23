@@ -18,10 +18,12 @@ import {
   useFileContext,
 } from "@app/contexts/FileContext";
 import { fileStorage } from "@app/services/fileStorage";
+import { useIndexedDB } from "@app/contexts/IndexedDBContext";
 import { POLICIES_ENABLED } from "@app/constants/featureFlags";
 import {
   runStoredPolicy,
   getPolicyRun,
+  listPolicyRuns,
   downloadPolicyOutput,
 } from "@app/services/policyApi";
 import type {
@@ -32,8 +34,10 @@ import { dispatchPaygLimitReached } from "@app/services/usageLimitBridge";
 import type { FileId } from "@app/types/file";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
 import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
+import type { PoliciesByCategory } from "@app/types/policies";
 import { usePolicies } from "@app/hooks/usePolicies";
 import {
+  addReconciledRun,
   dispatchKey,
   getRun,
   isDispatched,
@@ -116,6 +120,7 @@ export function usePolicyAutoRun(): void {
   const { fileStubs } = useAllFiles();
   const { addFiles } = useFileManagement();
   const { consumeFiles } = useFileContext();
+  const { bumpRevision } = useIndexedDB();
   const { policies } = usePolicies();
   const runs = usePolicyRuns();
   // Keys (run ids / dispatch keys) currently in flight, so the effects never
@@ -123,6 +128,8 @@ export function usePolicyAutoRun(): void {
   const polling = useRef<Set<string>>(new Set());
   const importing = useRef<Set<string>>(new Set());
   const dispatching = useRef<Set<string>>(new Set());
+  // Reconcile against the backend exactly once per mount.
+  const reconciled = useRef(false);
 
   // A policy's tool calls run server-side, so a usage-limit 402 never reaches the apiClient
   // interceptor (and thus never pops the modal that direct calls get). The backend surfaces the
@@ -145,6 +152,9 @@ export function usePolicyAutoRun(): void {
   const scheduleQueueRetry = useCallback((runId: string) => {
     const rec = getRun(runId);
     if (!rec) return;
+    // A run rediscovered from the server (reconciled) has no local input fileId, so it can't be
+    // re-dispatched; leave it failed rather than spinning on a file we can't resolve.
+    if (!rec.fileId) return;
     const key = dispatchKey(rec.categoryId, rec.fileId);
     const attempts = queueRetries.current.get(key) ?? 0;
     const backendId = policiesRef.current[rec.categoryId]?.backendId;
@@ -267,21 +277,39 @@ export function usePolicyAutoRun(): void {
       void importOutputs(run, {
         addFiles,
         consumeFiles,
+        bumpRevision,
         outputMode,
         outputName,
         parentStub,
       }).finally(() => importing.current.delete(run.runId));
     }
   }, [runs, addFiles, consumeFiles, policies, fileStubs]);
+
+  // Reconcile against the backend on load. The server owns runs (durable, user-scoped),
+  // so a run started before this client recorded it, or before a refresh/crash, is
+  // rediscovered here; the poll + import effects above then collect its outputs rather
+  // than leaving them orphaned. Waits until policies are known so server runs can be
+  // attributed to their category.
+  useEffect(() => {
+    if (!POLICIES_ENABLED || reconciled.current) return;
+    if (Object.keys(policies).length === 0) return;
+    reconciled.current = true;
+    void reconcileServerRuns(policies);
+  }, [policies]);
 }
 
 interface ImportContext {
-  addFiles: (files: File[]) => Promise<StirlingFile[]>;
+  addFiles: (
+    files: File[],
+    options?: { skipUploadTracking?: boolean },
+  ) => Promise<StirlingFile[]>;
   consumeFiles: (
     inputFileIds: FileId[],
     outputs: StirlingFile[],
     stubs: StirlingFileStub[],
   ) => Promise<unknown>;
+  /** Bump the IndexedDB revision so the file views re-read after a storage-only version write. */
+  bumpRevision: () => void;
   /** "new_file" adds the output as a separate file; "new_version" versions the input. */
   outputMode: "new_file" | "new_version";
   /** Rename rule. Empty → keep the input's filename; set → use the policy's
@@ -289,6 +317,61 @@ interface ImportContext {
   outputName: string;
   /** The input file's stub — required to version it; absent if it's been removed. */
   parentStub: StirlingFileStub | undefined;
+}
+
+/**
+ * Pull the caller's server-side runs and fold them into the local store. For a run we already
+ * track, patch its status/outputs (preserving local import progress + attribution); for one we
+ * don't, adopt it so the poll/import effects pick it up. Server-excluded ad-hoc runs and runs we
+ * can't map to a configured category are skipped.
+ */
+async function reconcileServerRuns(
+  policies: PoliciesByCategory,
+): Promise<void> {
+  let serverRuns;
+  try {
+    serverRuns = await listPolicyRuns();
+  } catch {
+    return; // offline / backend down; local cache stands.
+  }
+  for (const view of serverRuns) {
+    // No-ops unless the run is already tracked, so this only patches known runs.
+    updateRun(view.runId, {
+      status: view.status,
+      outputs: view.outputs,
+      error: view.error,
+    });
+    // No-ops if already tracked, so this only adopts runs we'd otherwise have lost.
+    const categoryId = categoryForPolicy(view.policyId, policies);
+    if (!categoryId) continue;
+    addReconciledRun({
+      runId: view.runId,
+      categoryId,
+      // No local input link: a run rediscovered purely from the server (never recorded by this
+      // client) can't be tied back to a workspace/storage file, so its output is delivered as a
+      // new file rather than a version, and it isn't retried. The recorded-run path (real fileId)
+      // covers the common refresh case; this only bites true orphans (storage wipe / other device).
+      fileId: "",
+      fileName: view.outputs[0]?.fileName ?? "",
+      fileSize: 0,
+      status: view.status,
+      outputs: view.outputs,
+      error: view.error,
+      // Use the server's creation time, not now, so a rediscovered run shows its real age.
+      startedAt: view.createdAt,
+    });
+  }
+}
+
+/** The category whose configured policy produced this run, if any. */
+function categoryForPolicy(
+  policyId: string | null,
+  policies: PoliciesByCategory,
+): string | undefined {
+  if (!policyId) return undefined;
+  return Object.entries(policies).find(
+    ([, s]) => s.backendId === policyId,
+  )?.[0];
 }
 
 /**
@@ -343,24 +426,46 @@ async function importOutputs(
   // them, so they retry (without having been added).
   const files = fetched.map((f) => f.file);
   // Workspace fileIds of the delivered outputs — the policy badge marks these
-  // (the policy's output), not the input it ran on. Set in both branches below.
+  // (the policy's output), not the input it ran on. Set in every branch below.
   let deliveredIds: string[];
-  if (ctx.outputMode === "new_version" && ctx.parentStub) {
+  // For new-version output, resolve the input's stub from the active workspace, or from storage
+  // when the workspace is empty (e.g. after a reload, where the run is recovered but the input
+  // still persists in IndexedDB). Versioning it there keeps the result identical to the no-reload
+  // case (one leaf) instead of adding the output as a second file.
+  const parentStub =
+    ctx.outputMode === "new_version"
+      ? (ctx.parentStub ??
+        (await fileStorage.getStirlingFileStub(run.fileId as FileId)) ??
+        undefined)
+      : undefined;
+  if (parentStub) {
     // Replace the input file with a versioned child (preserves its history).
     // The version records "automate" as its origin tool — a policy is a
     // multi-tool automation, not any single tool (redact/watermark/sanitize/…).
     const { stirlingFiles, stubs } = await createStirlingFilesAndStubs(
       files,
-      ctx.parentStub,
+      parentStub,
       "automate",
     );
     // Mark the outputs handled BEFORE adding them, so the auto-run never enforces
     // the policy on its own output — that would version endlessly in a loop.
     for (const s of stubs) markDispatched(run.categoryId, s.id);
     deliveredIds = stubs.map((s) => s.id as string);
-    await ctx.consumeFiles([run.fileId as FileId], stirlingFiles, stubs);
+    if (ctx.parentStub) {
+      // Input is in the active workspace: version it there (workspace + storage).
+      await ctx.consumeFiles([run.fileId as FileId], stirlingFiles, stubs);
+    } else {
+      // Input is only in storage (run recovered after a reload): version it at the
+      // storage layer, then refresh the file views.
+      await fileStorage.persistVersionedOutputs(
+        [run.fileId as FileId],
+        stirlingFiles,
+        stubs,
+      );
+      ctx.bumpRevision();
+    }
   } else {
-    const added = await ctx.addFiles(files);
+    const added = await ctx.addFiles(files, { skipUploadTracking: true });
     // Same loop-guard for new-file output: the produced file is a new workspace
     // file the auto-run would otherwise re-enforce indefinitely.
     for (const f of added) markDispatched(run.categoryId, f.fileId);
@@ -424,8 +529,9 @@ export async function runPolicyOnFile(
       startedAt: Date.now(),
     });
   } catch {
-    // Dispatch failed (offline / backend error). Mark dispatched so we don't
-    // hammer; the absent run simply won't appear in the activity feed.
+    // Dispatch failed (offline / backend error). Mark dispatched so we don't hammer;
+    // the absent run simply won't appear in the activity feed. If the backend did
+    // start a run we never recorded, reconcileServerRuns rediscovers it.
     markDispatched(categoryId, fileId);
   }
 }

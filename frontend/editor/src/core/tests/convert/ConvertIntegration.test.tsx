@@ -81,6 +81,7 @@ vi.mock("../../services/fileStorage", () => ({
       });
     }),
     storeStirlingFile: vi.fn().mockResolvedValue(undefined),
+    persistVersionedOutputs: vi.fn().mockResolvedValue(undefined),
     getAllFileMetadata: vi.fn().mockResolvedValue([]),
     cleanup: vi.fn().mockResolvedValue(undefined),
   },
@@ -122,7 +123,7 @@ describe("Convert Tool Integration Tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Setup default apiClient mock
-    mockedApiClient.post = vi.fn() as any;
+    mockedApiClient.post = vi.fn() as typeof mockedApiClient.post;
   });
 
   afterEach(() => {
@@ -213,9 +214,9 @@ describe("Convert Tool Integration Tests", () => {
       expect(result.current.isLoading).toBe(false);
       expect(result.current.errorMessage).toBe(null);
 
-      // The output file must be persisted via fileStorage.storeStirlingFile
+      // The output file must be persisted via fileStorage.persistVersionedOutputs
       // so downstream tools see it in the registry.
-      expect(fileStorage.storeStirlingFile).toHaveBeenCalled();
+      expect(fileStorage.persistVersionedOutputs).toHaveBeenCalled();
     });
 
     test("should handle API error responses correctly", async () => {

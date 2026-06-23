@@ -78,7 +78,7 @@ springBoot {
 
 allprojects {
     group = 'stirling.software'
-    version = '2.12.0'
+    version = '2.13.1'
 
     configurations.configureEach {
         exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
@@ -187,8 +187,8 @@ subprojects {
         }
         // Maven Central first; mirrors below are fallbacks for niche artifacts.
         mavenCentral()
-        maven { url = "https://build.shibboleth.net/maven/releases" }
         maven { url = "https://repository.jboss.org/" }
+        maven { url = "https://build.shibboleth.net/maven/releases" }
     }
 
     configurations.configureEach {
@@ -585,6 +585,7 @@ repositories {
         }
     }
     mavenCentral()
+    maven { url = "https://repository.jboss.org/" }
     maven { url = "https://build.shibboleth.net/maven/releases" }
 }
 

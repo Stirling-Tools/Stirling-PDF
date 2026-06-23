@@ -8,10 +8,12 @@ import HotkeysSection from "@app/components/shared/config/configSections/Hotkeys
 import GeneralSection from "@app/components/shared/config/configSections/GeneralSection";
 import PasswordSecurity from "@app/components/shared/config/configSections/PasswordSecurity";
 import ApiKeys from "@app/components/shared/config/configSections/ApiKeys";
-import Plan from "@app/components/shared/config/configSections/Plan";
 import McpSection from "@app/components/shared/config/configSections/McpSection";
 import LegalSection from "@app/components/shared/config/configSections/LegalSection";
-import TeamSection from "@app/components/shared/config/configSections/TeamSection";
+import {
+  createCloudBillingSection,
+  createCloudTeamNavItem,
+} from "@app/components/shared/config/cloudConfigNavSections";
 
 type OverviewComponent = React.ComponentType<{ onLogoutClick: () => void }>;
 
@@ -95,20 +97,9 @@ function appendBillingSection(
     return sections;
   }
 
-  return [
-    ...sections,
-    {
-      title: "Billing",
-      items: [
-        {
-          key: "plan",
-          label: t("config.plan", "Plan"),
-          icon: "credit-card",
-          component: <Plan />,
-        },
-      ],
-    },
-  ];
+  // The Plan/Billing section is the shared cloud surface (wallet-driven PAYG
+  // dashboard + spend cap), so both saas and desktop reference one source.
+  return [...sections, createCloudBillingSection(t)];
 }
 
 // Add an "MCP Server" tab in the Developer section. Always shown in SaaS;
@@ -206,12 +197,8 @@ export function createSaasConfigNavSections(
   };
 
   if (!isAnonymous) {
-    accountSection.items.push({
-      key: "teams",
-      label: t("config.team", "Team"),
-      icon: "groups-rounded",
-      component: <TeamSection />,
-    });
+    // Shared cloud team item — same management UI on saas and desktop.
+    accountSection.items.push(createCloudTeamNavItem(t));
   }
 
   let sections = [accountSection, ...baseSections];

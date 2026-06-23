@@ -1,0 +1,14 @@
+.chart-tooltip {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid transparent;
+  box-shadow: var(--shadow-md);
+  padding: 8px 10px;
+  font-size: 12px;
+  line-height: 1.25;
+  border-radius: 8px;
+}
+[data-mantine-color-scheme="dark"] .chart-tooltip {
+  border-color: var(--border-subtle);
+  box-shadow: none;
+}

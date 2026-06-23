@@ -24,5 +24,4 @@ export interface StackedBarChartProps {
 
 export interface TooltipData {
   fractions: FractionData[];
-  isDark: boolean;
 }

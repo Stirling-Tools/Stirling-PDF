@@ -9,6 +9,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 import org.slf4j.MDC;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -53,6 +54,7 @@ import stirling.software.proprietary.service.DownstreamEntitlementError;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Profile("saas")
 public class PolicyEngine {
 
     // Admission weight for one run. Weighted heavy: a run chains many tools and holds intermediate
@@ -81,13 +83,27 @@ public class PolicyEngine {
      */
     public PolicyRunHandle submit(
             PipelineDefinition definition, PolicyInputs inputs, PolicyProgressListener listener) {
+        return submit(definition, inputs, listener, null);
+    }
+
+    /**
+     * As {@link #submit(PipelineDefinition, PolicyInputs, PolicyProgressListener)}, recording the
+     * originating stored policy's id on the run ({@code null} for ad-hoc pipelines). The id lets a
+     * client attribute a run it rediscovers via {@code GET /policies/runs} after losing local state
+     * (e.g. a refresh before it recorded the run), so a finished run is never orphaned server-side.
+     */
+    public PolicyRunHandle submit(
+            PipelineDefinition definition,
+            PolicyInputs inputs,
+            PolicyProgressListener listener,
+            String policyId) {
         // Ad-hoc run (no stored policy): bill whoever kicked it off and own the outputs as them
         // too.
         // Capture the principal on this (request) thread — it does not survive the hop onto the
         // async
         // worker.
         String principal = currentActingPrincipal();
-        return submitForPrincipal(principal, principal, definition, inputs, listener);
+        return submitForPrincipal(principal, principal, policyId, definition, inputs, listener);
     }
 
     /** Run a stored policy on demand. {@code enabled} gates triggers, not explicit runs. */
@@ -103,12 +119,13 @@ public class PolicyEngine {
         String triggeringUser = currentActingPrincipal();
         String fileOwner = triggeringUser != null ? triggeringUser : policy.owner();
         return submitForPrincipal(
-                policy.owner(), fileOwner, policy.toDefinition(), inputs, listener);
+                policy.owner(), fileOwner, policy.id(), policy.toDefinition(), inputs, listener);
     }
 
     private PolicyRunHandle submitForPrincipal(
             String billingPrincipal,
             String fileOwner,
+            String policyId,
             PipelineDefinition definition,
             PolicyInputs inputs,
             PolicyProgressListener listener) {
@@ -116,7 +133,7 @@ public class PolicyEngine {
         // ownership check passes. No-op when security is off.
         String runId = jobOwnershipService.createScopedJobKey(UUID.randomUUID().toString());
         taskManager.createTask(runId);
-        PolicyRun run = new PolicyRun(runId, definition);
+        PolicyRun run = new PolicyRun(runId, policyId, definition);
         registry.register(run);
         CompletableFuture<PolicyRun> completion = new CompletableFuture<>();
         PolicyProgressListener tracking = trackingListener(runId, run, listener);

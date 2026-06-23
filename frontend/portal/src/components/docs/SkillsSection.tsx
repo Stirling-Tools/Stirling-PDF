@@ -1,14 +1,16 @@
+import { useTranslation } from "react-i18next";
 import { Card } from "@shared/components";
 import type { AgentSkill } from "@portal/api/docs";
 import { DocsSection } from "@portal/components/docs/DocsSection";
 
 export function SkillsSection({ skills }: { skills: AgentSkill[] }) {
+  const { t } = useTranslation();
   return (
     <DocsSection
       id="skill-catalog"
-      eyebrow="SKILLS"
-      title="Agent skills"
-      lead="Bundled, named capabilities your agent invokes as a single tool. Each skill is a deterministic op chain with evals attached."
+      eyebrow={t("docs.skills.eyebrow")}
+      title={t("docs.skills.title")}
+      lead={t("docs.skills.lead")}
     >
       <div className="portal-docs__skill-grid">
         {skills.map((s) => (

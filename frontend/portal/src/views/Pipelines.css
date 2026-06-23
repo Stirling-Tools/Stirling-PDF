@@ -516,3 +516,88 @@
 .portal-pipelines__composer-step.is-done {
   color: var(--color-green-dark);
 }
+
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Roster + promoted sections                                               */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+.portal-pipelines__section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.portal-pipelines__section-h {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+
+.portal-pipelines__section-sub {
+  margin: -0.25rem 0 0.25rem;
+  font-size: 0.75rem;
+  color: var(--color-text-4);
+  max-width: 46rem;
+}
+
+/* Golden-set roster table */
+.portal-pipelines__roster-name,
+.portal-pipelines__promoted-name {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.portal-pipelines__roster-name strong,
+.portal-pipelines__promoted-name strong {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+
+.portal-pipelines__roster-route,
+.portal-pipelines__promoted-when {
+  font-size: 0.6875rem;
+  color: var(--color-text-4);
+}
+
+.portal-pipelines__roster-golden {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.portal-pipelines__roster-rate {
+  font-size: 0.6875rem;
+  color: var(--color-text-4);
+  font-variant-numeric: tabular-nums;
+}
+
+.portal-pipelines__roster-num,
+.portal-pipelines__roster-version {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-2);
+}
+
+.portal-pipelines__roster-version {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+/* Promoted-from-Editor table */
+.portal-pipelines__promoted-muted {
+  color: var(--color-text-3);
+  font-size: 0.8125rem;
+}
+
+.portal-pipelines__promoted-folder {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-text-3);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-sm);
+  padding: 0.0625rem 0.375rem;
+}
