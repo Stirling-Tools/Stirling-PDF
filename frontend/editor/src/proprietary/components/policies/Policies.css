@@ -126,19 +126,30 @@
   text-decoration: underline;
 }
 
-/* Locked "Coming soon" row — muted, not interactive. */
+/* Locked "Coming soon" row — mute icon + label only, leave the upgrade button at full opacity. */
 .pol-row--soon {
-  opacity: 0.55;
   cursor: default;
 }
 .pol-row--soon:hover {
   background: transparent;
 }
-.pol-row-soon {
+.pol-row--soon > :first-child,
+.pol-row--soon .pol-row-label {
+  opacity: 0.55;
+}
+.pol-row-upgrade {
+  border: none;
+  background: none;
+  padding: 0;
   font-size: 0.6875rem;
   font-weight: 500;
   color: var(--color-text-4);
   white-space: nowrap;
+  cursor: pointer;
+  transition: color var(--motion-fast);
+}
+.pol-row-upgrade:hover {
+  color: var(--color-text-1);
 }
 
 /* In-progress activity icon spins gently. */

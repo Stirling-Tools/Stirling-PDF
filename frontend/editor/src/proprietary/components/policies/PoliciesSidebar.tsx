@@ -34,6 +34,7 @@ import type { WatchedFolder } from "@app/types/watchedFolders";
 import { POLICIES_ENABLED } from "@app/constants/featureFlags";
 import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
 import { Button } from "@shared/components/Button";
+import { useCheckout } from "@app/contexts/CheckoutContext";
 import { IconBadge } from "@shared/components/IconBadge";
 import {
   deriveRowStatus,
@@ -188,23 +189,26 @@ export function PoliciesSection({
                       {t(`policies.catalog.${cat.id}`, cat.label)}
                     </span>
                     <span className="pol-row-trail">
-                      <span className="pol-row-soon">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        style={{ "--sui-btn-fg": "var(--color-text-3)" }}
+                        onClick={() => window.open("https://stirling.com/contact", "_blank")}
+                      >
                         {t(
                           "policies.sidebar.upgradeToEnterprise",
                           "Upgrade to enterprise",
                         )}
-                      </span>
+                      </Button>
                     </span>
                   </div>
                 );
               }
               const status = deriveRowStatus(pol.policies[cat.id]);
               return (
-                <Button
+                <button
                   key={cat.id}
-                  variant="ghost"
-                  justify="start"
-                  fullWidth
+                  type="button"
                   className="pol-row"
                   onClick={() =>
                     guestBlocked ? promptGuestSignup() : selectPolicy(cat.id)
@@ -234,7 +238,7 @@ export function PoliciesSection({
                       sx={{ fontSize: "1rem" }}
                     />
                   </span>
-                </Button>
+                </button>
               );
             })}
           </div>

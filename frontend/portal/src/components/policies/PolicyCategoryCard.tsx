@@ -1,95 +1,60 @@
-import { Card, Chip, StatusBadge, StatTile } from "@shared/components";
+import { StatusBadge } from "@shared/components";
+import { Button } from "@shared/components/Button";
 import type { CatalogueEntry } from "@portal/api/policies";
 import { policyIcon } from "@portal/components/policies/policyIcons";
 import "@portal/views/Policies.css";
+
 interface PolicyCategoryCardProps {
   entry: CatalogueEntry;
   onOpen: (entry: CatalogueEntry) => void;
 }
-/**
- * One card per policy category. Configured categories show the live status +
- * stats and open the detail panel; unconfigured ones show the summary + a
- * "Set up" affordance; coming-soon categories render locked and inert.
- */
+
 export function PolicyCategoryCard({ entry, onOpen }: PolicyCategoryCardProps) {
-  const { category, config, policy } = entry;
+  const { category, policy } = entry;
   const comingSoon = category.comingSoon === true;
-  const openable = !comingSoon;
-  const status = policy?.state.status;
-  return (
-    <Card
-      className={
-        "portal-policies__card" +
-        (comingSoon ? " portal-policies__card--locked" : "")
-      }
-      interactive={openable}
-      onClick={openable ? () => onOpen(entry) : undefined}
-      role={openable ? "button" : undefined}
-      tabIndex={openable ? 0 : undefined}
-      onKeyDown={
-        openable
-          ? (e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                onOpen(entry);
-              }
-            }
-          : undefined
-      }
+
+  if (comingSoon) {
+    return (
+      <div className="portal-policies__row portal-policies__row--locked">
+        <span className="portal-policies__cat-icon portal-policies__cat-icon--neutral" aria-hidden>
+          {policyIcon(category.icon)}
+        </span>
+        <span className="portal-policies__row-name">{category.label}</span>
+        <Button variant="ghost" size="sm" style={{ "--sui-btn-fg": "var(--color-text-3)" }}>
+          Upgrade to enterprise
+        </Button>
+      </div>
+    );
+  }
+
+  const rightSection = policy ? (
+    <StatusBadge
+      tone={policy.state.status === "paused" ? "warning" : "success"}
+      size="sm"
+      pulse={policy.state.status !== "paused"}
     >
-      <header className="portal-policies__card-head">
+      {policy.state.status === "paused" ? "Paused" : "Active"}
+    </StatusBadge>
+  ) : (
+    <span className="portal-policies__setup-link">Set up</span>
+  );
+
+  return (
+    <Button
+      variant="ghost"
+      onClick={() => onOpen(entry)}
+      style={{ "--sui-btn-fg": "var(--color-text-1)" }}
+      leftSection={
         <span
           className={`portal-policies__cat-icon portal-policies__cat-icon--${category.tone}`}
           aria-hidden
         >
           {policyIcon(category.icon)}
         </span>
-        <div className="portal-policies__card-titles">
-          <h2 className="portal-policies__card-title">{category.label}</h2>
-          <span className="portal-policies__card-blurb">{category.desc}</span>
-        </div>
-        {comingSoon ? (
-          <Chip accent="neutral" size="sm">
-            Coming soon
-          </Chip>
-        ) : policy ? (
-          <StatusBadge
-            tone={status === "paused" ? "warning" : "success"}
-            size="sm"
-            pulse={status !== "paused"}
-          >
-            {status === "paused" ? "Paused" : "Active"}
-          </StatusBadge>
-        ) : (
-          <Chip accent="blue" size="sm">
-            Not set up
-          </Chip>
-        )}
-      </header>
-      <p className="portal-policies__card-summary">{config.summary}</p>
-      {policy ? (
-        <footer className="portal-policies__card-stats">
-          <StatTile
-            label="Docs enforced"
-            value={policy.stats.enforced.toLocaleString()}
-          />
-          <StatTile label="Data processed" value={policy.stats.dataProcessed} />
-          <StatTile label="Active" value={policy.stats.activeFor} />
-        </footer>
-      ) : (
-        <footer className="portal-policies__card-foot">
-          <div className="portal-policies__card-rules">
-            {config.rules.slice(0, 3).map((rule) => (
-              <Chip key={rule} accent="neutral" size="sm">
-                {rule}
-              </Chip>
-            ))}
-          </div>
-          {!comingSoon && (
-            <span className="portal-policies__card-cta">Set up →</span>
-          )}
-        </footer>
-      )}
-    </Card>
+      }
+      rightSection={rightSection}
+    >
+      {category.label}
+    </Button>
   );
 }

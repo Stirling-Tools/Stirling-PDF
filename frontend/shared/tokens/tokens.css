@@ -246,10 +246,10 @@
 
   --color-toggle-off: #3d4f6a;
 
-  /* Segmented control — neutral greys, no blue cast */
-  --color-seg-track: #1c1c1e;
-  --color-seg-indicator: #323235;
-  --color-seg-border: #2a2a2c;
+  /* Segmented control — blue-toned dark to match app surface colors */
+  --color-seg-track: var(--color-bg-hover);
+  --color-seg-indicator: var(--color-bg-muted);
+  --color-seg-border: var(--color-border);
 
   --shadow-sm: inset 0 0 0 1px #283248;
   --shadow-md: inset 0 0 0 1px #283248, 0 1px 3px rgba(0, 0, 0, 0.3);

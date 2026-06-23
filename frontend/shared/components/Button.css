@@ -8,6 +8,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.5em;
+  box-sizing: border-box;
   border: 1px solid var(--sui-btn-bd, transparent);
   border-radius: var(--radius-md);
   font-family: var(--font-sans);

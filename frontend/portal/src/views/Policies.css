@@ -42,6 +42,31 @@
   }
 }
 
+/* Category row — locked (coming soon) */
+.portal-policies__row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.25rem 0.75rem;
+  min-height: 2.25rem;
+}
+
+.portal-policies__row-name {
+  flex: 1;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text-3);
+}
+
+/* "Set up" underline link inside the active-row button's rightSection */
+.portal-policies__setup-link {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-blue);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 /* Category card */
 .portal-policies__card {
   display: flex;
@@ -142,6 +167,11 @@
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--color-blue);
+}
+
+.portal-policies__chevron-right {
+  transform: rotate(-90deg);
+  display: block;
 }
 
 /* Configured-card stat footer */
