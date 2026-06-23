@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
+import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
 import { PanelHeader } from "@shared/components/PanelHeader";
-import { Button } from "@shared/components/Button";
 import { StatusBadge } from "@shared/components/StatusBadge";
 
 const meta: Meta<typeof PanelHeader> = {
@@ -9,53 +10,53 @@ const meta: Meta<typeof PanelHeader> = {
   tags: ["autodocs"],
   parameters: { layout: "padded" },
   args: {
-    title: "Pipeline detail",
-    subtitle: "COI Compliance · us-east-1",
+    icon: <ShieldOutlinedIcon sx={{ fontSize: "1rem" }} />,
+    title: "Security",
+    closeLabel: "Close",
   },
-  argTypes: { onBack: { action: "back" } },
+  argTypes: { onClose: { action: "close" } },
 };
 export default meta;
 type Story = StoryObj<typeof PanelHeader>;
 
-/** Toggle title / subtitle / onBack / actions in controls. */
+/** Plain header pill with a trailing close button. */
 export const Playground: Story = {};
 
-export const WithActions: Story = {
+/** Category-accented icon badge (blue / purple / green / amber / red). */
+export const Accented: Story = {
+  args: { accent: "purple" },
+};
+
+/** Dropdown trigger — a disclosure chevron appears and clicking the pill opens
+ *  the menu (e.g. the chat header's "Clear chat"). */
+export const WithMenu: Story = {
   args: {
-    subtitle: "Last deploy 14m ago · golden set 48/48",
-    actions: (
-      <>
-        <StatusBadge tone="success" pulse>
-          Healthy
-        </StatusBadge>
-        <Button size="sm" variant="outline">
-          Edit composition
-        </Button>
-        <Button size="sm" variant="gradient">
-          View runs
-        </Button>
-      </>
-    ),
+    title: "Stirling",
+    menuLabel: "Stirling agent options",
+    menuItems: [
+      {
+        key: "clear",
+        icon: <DeleteSweepIcon sx={{ fontSize: 18 }} />,
+        label: "Clear chat",
+        onClick: () => {},
+      },
+    ],
   },
 };
 
-export const Everything: Story = {
+/** Loading state — pulsing status dot on the icon + a tinted border. */
+export const Loading: Story = {
+  args: { title: "Stirling", loading: true },
+};
+
+/** Right-aligned actions rendered before the close button. */
+export const WithActions: Story = {
   args: {
-    title: "Pipeline detail — COI Compliance",
-    subtitle: "Forked from Compliance Pack · 1,287 docs / 24h",
-    onBack: () => {},
+    accent: "purple",
     actions: (
-      <>
-        <StatusBadge tone="success" pulse>
-          Healthy
-        </StatusBadge>
-        <Button size="sm" variant="outline">
-          Edit composition
-        </Button>
-        <Button size="sm" variant="gradient">
-          View runs
-        </Button>
-      </>
+      <StatusBadge tone="success" showDot pulse>
+        Active
+      </StatusBadge>
     ),
   },
 };
