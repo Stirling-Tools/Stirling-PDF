@@ -425,7 +425,7 @@ export default function Login() {
             cursor: "pointer",
             fontSize: "1rem",
             fontWeight: 700,
-            color: "#000000",
+            color: "var(--text-primary)",
           }}
         >
           {isSigningIn

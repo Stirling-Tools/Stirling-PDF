@@ -49,7 +49,7 @@ export default function OAuthButtons({
               <img
                 src={oauthIconUrl(p.file)}
                 alt={p.label}
-                className={`oauth-icon-small ${p.isDisabled ? "opacity-20" : ""}`}
+                className={`oauth-icon-small oauth-icon--${p.id} ${p.isDisabled ? "opacity-20" : ""}`}
               />
             </Button>
           </Tooltip>
@@ -77,7 +77,7 @@ export default function OAuthButtons({
               <img
                 src={oauthIconUrl(p.file)}
                 alt={p.label}
-                className={`oauth-icon-medium ${p.isDisabled ? "opacity-20" : ""}`}
+                className={`oauth-icon-medium oauth-icon--${p.id} ${p.isDisabled ? "opacity-20" : ""}`}
               />
             </Button>
           </Tooltip>
@@ -102,7 +102,7 @@ export default function OAuthButtons({
               <img
                 src={oauthIconUrl(p.file)}
                 alt={p.label}
-                className={`oauth-icon-medium ${p.isDisabled ? "opacity-20" : ""}`}
+                className={`oauth-icon-medium oauth-icon--${p.id} ${p.isDisabled ? "opacity-20" : ""}`}
                 style={{ marginRight: "0.5rem", flexShrink: 0 }}
               />
               <span className="oauth-btn-label">
@@ -130,7 +130,7 @@ export default function OAuthButtons({
           <img
             src={oauthIconUrl(p.file)}
             alt={p.label}
-            className={`oauth-icon-tiny ${p.isDisabled ? "opacity-20" : ""}`}
+            className={`oauth-icon-tiny oauth-icon--${p.id} ${p.isDisabled ? "opacity-20" : ""}`}
           />
           {p.label}
         </Button>
