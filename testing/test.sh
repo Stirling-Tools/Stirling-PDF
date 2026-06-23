@@ -726,15 +726,8 @@ main() {
 
         # Build Ultra-Lite image with embedded frontend (matching docker-compose-latest-ultra-lite.yml)
         echo "Building ultra-lite image for tests that require it..."
-        # Build via Depot (caches off the GitHub Actions pool) when its token and
-        # project are present in CI. Otherwise use plain buildx with no remote
-        # cache, for local runs and fork PRs, which have neither.
-        local -a ultra_lite_builder=(docker buildx build)
-        if [ -n "${DEPOT_TOKEN:-}" ] && [ -n "${DEPOT_PROJECT_ID:-}" ]; then
-            ultra_lite_builder=(depot build --project "$DEPOT_PROJECT_ID")
-        fi
         local ultra_lite_build_log="$REPORT_DIR/Build-Ultra-Lite-Docker.build.log"
-        if ! "${ultra_lite_builder[@]}" --build-arg VERSION_TAG=alpha \
+        if ! docker buildx build --build-arg VERSION_TAG=alpha \
             -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:ultra-lite \
             -f ./docker/embedded/Dockerfile.ultra-lite \
             --load \
@@ -814,16 +807,8 @@ main() {
 
         # Build Fat (Security) image with embedded frontend (matching all 'fat' compose files)
         echo "Building fat image for tests that require it..."
-        # Depot caches off the GitHub Actions pool, but only when the base image is
-        # not built locally, since a remote Depot builder cannot see a local base
-        # image. A docker-base change therefore forces plain buildx (matching
-        # test-build-docker).
-        local -a fat_builder=(docker buildx build)
-        if [ -n "${DEPOT_TOKEN:-}" ] && [ -n "${DEPOT_PROJECT_ID:-}" ] && [ "${DOCKER_BASE_CHANGED:-false}" != "true" ]; then
-            fat_builder=(depot build --project "$DEPOT_PROJECT_ID")
-        fi
         local fat_build_log="$REPORT_DIR/Build-Fat-Docker.build.log"
-        if ! "${fat_builder[@]}" --build-arg VERSION_TAG=alpha \
+        if ! docker buildx build --build-arg VERSION_TAG=alpha \
             ${BASE_IMAGE_ARG} \
             -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:fat \
             -f ./docker/embedded/Dockerfile.fat \
