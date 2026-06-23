@@ -1,20 +1,21 @@
 import type { Command } from "@app/tools/pdfTextEditor/v2/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDocument";
 import type { Affine, PageRect } from "@app/tools/pdfTextEditor/v2/types";
-import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import {
-  counterPageRotation,
-  rotateObjectAbout,
-} from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
+  imageMatrixBounds,
+  remapImageMatrix,
+} from "@app/tools/pdfTextEditor/v2/model/affine";
 
 /**
  * Set an image object's transform to an absolute target.
  *
- * PDFium image objects encode their on-page size in the matrix's a/d
- * components (image space is 1x1 units; the matrix scales+translates
- * into PDF space). Setting `(a, b, c, d, e, f) = (width, 0, 0, height,
- * x, y)` places the image with its lower-left at `(x, y)` sized
- * `(width, height)`.
+ * The new matrix is derived by remapping the image's DISPLAY-space AABB from
+ * its previous extent to `nextBounds` while preserving the orientation baked
+ * into the previous matrix (see {@link remapImageMatrix}). This keeps a moved
+ * image upright and same-sized even on /Rotate / CropBox pages, where the raw
+ * AABB's width/height are swapped relative to what the user sees - the earlier
+ * "rebuild as axis-aligned `(w,0,0,h,x,y)` then counter-rotate" approach swapped
+ * the image's width/height and flipped it on every move of a rotated page.
  *
  * Using `FPDFImageObj_SetMatrix` (absolute) instead of
  * `FPDFPageObj_Transform` (post-multiply) avoids the "teleport" bug
@@ -48,32 +49,26 @@ export class SetImageTransformCommand implements Command {
     const page = doc.page(this.pageIndex);
     const img = page.findImage(this.imageId);
     if (!img || !img.pdfiumObjPtr) return;
-    if (this.prevBounds === null) {
-      this.prevBounds = { ...img.bounds };
-      this.prevMatrix = { ...img.matrix };
+    let prevBounds = this.prevBounds;
+    let prevMatrix = this.prevMatrix;
+    if (prevBounds === null || prevMatrix === null) {
+      prevBounds = { ...img.bounds };
+      prevMatrix = { ...img.matrix };
+      this.prevBounds = prevBounds;
+      this.prevMatrix = prevMatrix;
     }
-    setMatrix(doc, img.pdfiumObjPtr, this.nextBounds);
-    img.bounds = { ...this.nextBounds };
-    // On a /Rotate page, counter-rotate about the new centre so the image stays
-    // upright; no-op (byte-identical) otherwise. Limitation: pre-existing image
-    // rotation/shear on an unrotated page is flattened (UI reports only an AABB).
-    const m = doc.module;
-    const rot = counterPageRotation(page.display.rotate);
-    if (rot) {
-      const cx = this.nextBounds.x + this.nextBounds.width / 2;
-      const cy = this.nextBounds.y + this.nextBounds.height / 2;
-      rotateObjectAbout(m, img.pdfiumObjPtr, cx, cy, rot.cos, rot.sin);
-      img.matrix = readMatrix(m, img.pdfiumObjPtr);
-    } else {
-      img.matrix = {
-        a: this.nextBounds.width,
-        b: 0,
-        c: 0,
-        d: this.nextBounds.height,
-        e: this.nextBounds.x,
-        f: this.nextBounds.y,
-      };
-    }
+    // Remap the image's display AABB from prevBounds -> nextBounds while keeping
+    // the orientation/aspect of prevMatrix, then write the result absolutely.
+    // Reduces to the axis-aligned (w,0,0,h,x,y) placement on an unrotated page.
+    const next = remapImageMatrix(
+      prevMatrix,
+      prevBounds,
+      this.nextBounds,
+      page.display,
+    );
+    setMatrix(doc, img.pdfiumObjPtr, next);
+    img.matrix = next;
+    img.bounds = imageMatrixBounds(next);
     img.dirty = true;
     page.markDirty();
     page.markNeedsGenerate();
@@ -122,11 +117,7 @@ export class SetImageTransformCommand implements Command {
   }
 }
 
-function setMatrix(
-  doc: EditorDocument,
-  objPtr: number,
-  bounds: PageRect,
-): void {
+function setMatrix(doc: EditorDocument, objPtr: number, m: Affine): void {
   const fn = (
     doc.module as unknown as {
       FPDFImageObj_SetMatrix?: (
@@ -142,28 +133,8 @@ function setMatrix(
   ).FPDFImageObj_SetMatrix;
   if (!fn) return;
   try {
-    fn(objPtr, bounds.width, 0, 0, bounds.height, bounds.x, bounds.y);
+    fn(objPtr, m.a, m.b, m.c, m.d, m.e, m.f);
   } catch {
     /* best-effort */
-  }
-}
-
-/** Read an object's current matrix so the model stays in lock-step with PDFium. */
-function readMatrix(m: WrappedPdfiumModule, objPtr: number): Affine {
-  // FS_MATRIX: { a, b, c, d, e, f } as floats.
-  const buf = m.pdfium.wasmExports.malloc(6 * 4);
-  try {
-    const ok = m.FPDFPageObj_GetMatrix(objPtr, buf);
-    if (!ok) return { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
-    return {
-      a: m.pdfium.getValue(buf, "float"),
-      b: m.pdfium.getValue(buf + 4, "float"),
-      c: m.pdfium.getValue(buf + 8, "float"),
-      d: m.pdfium.getValue(buf + 12, "float"),
-      e: m.pdfium.getValue(buf + 16, "float"),
-      f: m.pdfium.getValue(buf + 20, "float"),
-    };
-  } finally {
-    m.pdfium.wasmExports.free(buf);
   }
 }
