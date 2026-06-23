@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Banner,
   Button,
@@ -94,6 +95,7 @@ function PolicySetupWizardBody({
   onClose: () => void;
   onSubmit: (entry: CatalogueEntry, result: PolicySetupResult) => Promise<void>;
 }) {
+  const { t } = useTranslation();
   const { category, config, policy } = entry;
   const isEdit = policy != null;
   const [step, setStep] = useState<Step>("workflow");
@@ -144,7 +146,7 @@ function PolicySetupWizardBody({
   async function submit() {
     if (submitting) return;
     if (enabledTools.length === 0) {
-      setError("Enable at least one tool in the workflow first.");
+      setError(t("policies.wizard.errors.noTools"));
       setStep("workflow");
       return;
     }
@@ -168,7 +170,7 @@ function PolicySetupWizardBody({
       });
     } catch {
       setSubmitting(false);
-      setError("Couldn't save the policy. Please try again.");
+      setError(t("policies.wizard.errors.saveFailed"));
     }
   }
   const docTypesEnabled = category.providesClassification === true;
@@ -186,15 +188,15 @@ function PolicySetupWizardBody({
             {policyIcon(category.icon)}
           </span>
           {isEdit
-            ? `Edit ${category.label} policy`
-            : `Set up ${category.label} policy`}
+            ? t("policies.wizard.title.edit", { category: category.label })
+            : t("policies.wizard.title.setUp", { category: category.label })}
         </span>
       }
       subtitle={config.summary}
       footer={
         <div className="portal-policies__wizard-foot">
           <Button variant="ghost" size="sm" onClick={onClose}>
-            Cancel
+            {t("policies.wizard.actions.cancel")}
           </Button>
           {step === "workflow" ? (
             <Button
@@ -202,7 +204,7 @@ function PolicySetupWizardBody({
               style={{ marginLeft: "auto" }}
               onClick={() => setStep("settings")}
             >
-              Continue
+              {t("policies.wizard.actions.continue")}
             </Button>
           ) : (
             <>
@@ -212,10 +214,12 @@ function PolicySetupWizardBody({
                 style={{ marginLeft: "auto" }}
                 onClick={() => setStep("workflow")}
               >
-                Back
+                {t("policies.wizard.actions.back")}
               </Button>
               <Button size="sm" onClick={submit} loading={submitting}>
-                {isEdit ? "Save changes" : "Enable policy"}
+                {isEdit
+                  ? t("policies.wizard.actions.saveChanges")
+                  : t("policies.wizard.actions.enablePolicy")}
               </Button>
             </>
           )}
@@ -224,12 +228,12 @@ function PolicySetupWizardBody({
     >
       <Tabs
         variant="underline"
-        ariaLabel="Setup steps"
+        ariaLabel={t("policies.wizard.tabs.ariaLabel")}
         activeKey={step}
         onChange={(k) => setStep(k as Step)}
         items={[
-          { key: "workflow", label: "Workflow" },
-          { key: "settings", label: "Settings" },
+          { key: "workflow", label: t("policies.wizard.tabs.workflow") },
+          { key: "settings", label: t("policies.wizard.tabs.settings") },
         ]}
       />
       {error && (
@@ -242,8 +246,7 @@ function PolicySetupWizardBody({
       {step === "workflow" && (
         <div className="portal-policies__wizard-section">
           <p className="portal-policies__wizard-desc">
-            The sequence of tools this policy runs on each document. Each tool
-            is a Stirling endpoint; toggle the ones this policy should enforce.
+            {t("policies.wizard.workflow.description")}
           </p>
           {tools.map((tl) => (
             <Card key={tl.operation} padding="tight">
@@ -271,7 +274,9 @@ function PolicySetupWizardBody({
         <div className="portal-policies__wizard-section">
           {config.fields.length > 0 && (
             <>
-              <h3 className="portal-policies__wizard-heading">Settings</h3>
+              <h3 className="portal-policies__wizard-heading">
+                {t("policies.wizard.settings.heading")}
+              </h3>
               <div className="portal-policies__fields">
                 {config.fields.map((field) => (
                   <PolicyFieldRow
@@ -286,7 +291,10 @@ function PolicySetupWizardBody({
               </div>
             </>
           )}
-          <h3 className="portal-policies__wizard-heading">Sources</h3>
+
+          <h3 className="portal-policies__wizard-heading">
+            {t("policies.wizard.sources.heading", "Sources")}
+          </h3>
           <div className="portal-policies__sources">
             {POLICY_SOURCES.map((src) => (
               <Button
@@ -314,27 +322,34 @@ function PolicySetupWizardBody({
               </Button>
             ))}
           </div>
-          <h3 className="portal-policies__wizard-heading">Document types</h3>
+
+          <h3 className="portal-policies__wizard-heading">
+            {t("policies.wizard.docTypes.heading", "Document types")}
+          </h3>
           {!docTypesEnabled ? (
             <Banner
               tone="neutral"
-              title="All document types"
-              description="Set up an Ingestion (classification) policy to narrow this to specific document types."
+              title={t("policies.wizard.docTypes.allTitle")}
+              description={t("policies.wizard.docTypes.allDescription")}
             />
           ) : (
             <Card padding="tight">
               <div className="portal-policies__doctypes-head">
                 <span>
                   {scopeTypes.length === 0
-                    ? "All document types"
-                    : `${scopeTypes.length} selected`}
+                    ? t("policies.wizard.docTypes.allTitle")
+                    : t("policies.wizard.docTypes.selected", {
+                        count: scopeTypes.length,
+                      })}
                 </span>
                 <Button
                   variant="ghost"
                   className="portal-policies__link"
                   onClick={() => setScopeNarrow((v) => !v)}
                 >
-                  {scopeNarrow ? "Clear" : "Narrow"}
+                  {scopeNarrow
+                    ? t("policies.wizard.docTypes.clear", "Clear")
+                    : t("policies.wizard.docTypes.narrow", "Narrow")}
                 </Button>
               </div>
               {scopeNarrow && (
@@ -353,11 +368,14 @@ function PolicySetupWizardBody({
               )}
             </Card>
           )}
-          <h3 className="portal-policies__wizard-heading">Output &amp; run</h3>
+
+          <h3 className="portal-policies__wizard-heading">
+            {t("policies.wizard.output.heading", "Output & run")}
+          </h3>
           <div className="portal-policies__fields">
             <FormField
-              label="Run on"
-              helperText="When the policy fires: on upload, or before export."
+              label={t("policies.wizard.output.runOn.label")}
+              helperText={t("policies.wizard.output.runOn.helper")}
             >
               <Select
                 inputSize="sm"
@@ -366,12 +384,18 @@ function PolicySetupWizardBody({
                   setRunOn(e.target.value as "upload" | "export")
                 }
                 options={[
-                  { value: "upload", label: "Upload" },
-                  { value: "export", label: "Export" },
+                  {
+                    value: "upload",
+                    label: t("policies.wizard.output.runOn.upload"),
+                  },
+                  {
+                    value: "export",
+                    label: t("policies.wizard.output.runOn.export"),
+                  },
                 ]}
               />
             </FormField>
-            <FormField label="Output as">
+            <FormField label={t("policies.wizard.output.outputAs.label")}>
               <Select
                 inputSize="sm"
                 value={outputMode}
@@ -387,12 +411,18 @@ function PolicySetupWizardBody({
                   }
                 }}
                 options={[
-                  { value: "new_version", label: "New version" },
-                  { value: "new_file", label: "New file" },
+                  {
+                    value: "new_version",
+                    label: t("policies.wizard.output.outputAs.newVersion"),
+                  },
+                  {
+                    value: "new_file",
+                    label: t("policies.wizard.output.outputAs.newFile"),
+                  },
                 ]}
               />
             </FormField>
-            <FormField label="Filename rule">
+            <FormField label={t("policies.wizard.output.filenameRule.label")}>
               <div className="portal-policies__name-row">
                 <Select
                   inputSize="sm"
@@ -403,10 +433,23 @@ function PolicySetupWizardBody({
                     )
                   }
                   options={[
-                    { value: "prefix", label: "Prefix" },
-                    { value: "suffix", label: "Suffix" },
+                    {
+                      value: "prefix",
+                      label: t("policies.wizard.output.filenameRule.prefix"),
+                    },
+                    {
+                      value: "suffix",
+                      label: t("policies.wizard.output.filenameRule.suffix"),
+                    },
                     ...(outputMode === "new_file"
-                      ? [{ value: "auto-number", label: "Auto-number" }]
+                      ? [
+                          {
+                            value: "auto-number",
+                            label: t(
+                              "policies.wizard.output.filenameRule.autoNumber",
+                            ),
+                          },
+                        ]
                       : []),
                   ]}
                 />
@@ -414,15 +457,17 @@ function PolicySetupWizardBody({
                   <Input
                     inputSize="sm"
                     value={outputName}
-                    placeholder="Text to add (optional)"
+                    placeholder={t(
+                      "policies.wizard.output.filenameRule.placeholder",
+                    )}
                     onChange={(e) => setOutputName(e.target.value)}
                   />
                 )}
               </div>
             </FormField>
             <FormField
-              label="Reviewer email"
-              helperText="Low-confidence enforcements are routed here for review."
+              label={t("policies.wizard.output.reviewerEmail.label")}
+              helperText={t("policies.wizard.output.reviewerEmail.helper")}
             >
               <Input
                 inputSize="sm"

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import {
   Banner,
   Button,
@@ -44,6 +45,7 @@ export function CurrentPlanCard({
   summary: BillingSummary;
   onUpgrade: () => void;
 }) {
+  const { t } = useTranslation();
   const { tier } = useTier();
   const usedRatio = summary.docsThisPeriod / summary.includedDocs;
 
@@ -51,7 +53,9 @@ export function CurrentPlanCard({
     <Card padding="loose" className="portal-usage__plan-current">
       <div className="portal-usage__plan-current-head">
         <div>
-          <span className="portal-usage__plan-eyebrow">Current plan</span>
+          <span className="portal-usage__plan-eyebrow">
+            {t("usage.currentPlan.eyebrow")}
+          </span>
           <h2 className="portal-usage__plan-name">{summary.planName}</h2>
         </div>
         <StatusBadge
@@ -65,10 +69,10 @@ export function CurrentPlanCard({
           size="sm"
         >
           {tier === "free"
-            ? "Free"
+            ? t("usage.currentPlan.badge.free")
             : tier === "pro"
-              ? "Pay-as-you-go"
-              : "Committed"}
+              ? t("usage.currentPlan.badge.pro")
+              : t("usage.currentPlan.badge.enterprise")}
         </StatusBadge>
       </div>
 
@@ -88,18 +92,24 @@ export function CurrentPlanCard({
               value={usedRatio}
               thresholded
               height={8}
-              label="Free plan usage"
+              label={t("usage.currentPlan.free.progressLabel")}
             />
           </div>
           {summary.capReached ? (
-            <Banner tone="danger" title="You've hit your free plan cap">
-              New documents are paused until next cycle. Upgrade to keep
-              processing without interruption.
+            <Banner
+              tone="danger"
+              title={t("usage.currentPlan.free.capReached.title")}
+            >
+              {t("usage.currentPlan.free.capReached.body")}
             </Banner>
           ) : (
-            <Banner tone="warning" title="Approaching your free plan cap">
-              You're at {Math.round(usedRatio * 100)}% of 500 docs/month.
-              Upgrade to pay-as-you-go to avoid a pause.
+            <Banner
+              tone="warning"
+              title={t("usage.currentPlan.free.approaching.title")}
+            >
+              {t("usage.currentPlan.free.approaching.body", {
+                pct: Math.round(usedRatio * 100),
+              })}
             </Banner>
           )}
         </>
@@ -108,19 +118,22 @@ export function CurrentPlanCard({
       {tier === "pro" && (
         <div className="portal-usage__breakdown">
           <BreakdownRow
-            label="Platform fee"
+            label={t("usage.currentPlan.pro.platformFee")}
             value={USD.format(summary.monthlyFee)}
           />
           <BreakdownRow
-            label="Included docs"
+            label={t("usage.currentPlan.pro.includedDocs")}
             value={`${summary.includedDocs.toLocaleString()}`}
           />
           <BreakdownRow
-            label={`Overage · ${summary.overageDocs.toLocaleString()} docs @ $${OVERAGE_RATE.toFixed(2)}`}
+            label={t("usage.currentPlan.pro.overage", {
+              docs: summary.overageDocs.toLocaleString(),
+              rate: OVERAGE_RATE.toFixed(2),
+            })}
             value={USD.format(summary.overageCost)}
           />
           <BreakdownRow
-            label="Projected this month"
+            label={t("usage.currentPlan.pro.projected")}
             value={USD.format(summary.costThisMonth)}
             emphasis
           />
@@ -130,19 +143,25 @@ export function CurrentPlanCard({
       {tier === "enterprise" && (
         <div className="portal-usage__breakdown">
           <BreakdownRow
-            label="Committed volume"
-            value={`${summary.includedDocs.toLocaleString()} docs/mo`}
+            label={t("usage.currentPlan.enterprise.committedVolume")}
+            value={t("usage.currentPlan.enterprise.committedVolumeValue", {
+              docs: summary.includedDocs.toLocaleString(),
+            })}
           />
           <BreakdownRow
-            label="Drawn this period"
-            value={`${summary.docsThisPeriod.toLocaleString()} docs`}
+            label={t("usage.currentPlan.enterprise.drawnThisPeriod")}
+            value={t("usage.currentPlan.enterprise.drawnThisPeriodValue", {
+              docs: summary.docsThisPeriod.toLocaleString(),
+            })}
           />
           <BreakdownRow
-            label="Effective rate"
-            value={`$${summary.overageRate.toFixed(3)} / doc`}
+            label={t("usage.currentPlan.enterprise.effectiveRate")}
+            value={t("usage.currentPlan.enterprise.effectiveRateValue", {
+              rate: summary.overageRate.toFixed(3),
+            })}
           />
           <BreakdownRow
-            label="Monthly draw"
+            label={t("usage.currentPlan.enterprise.monthlyDraw")}
             value={USD.format(summary.monthlyFee)}
             emphasis
           />
@@ -151,17 +170,22 @@ export function CurrentPlanCard({
 
       <div className="portal-usage__plan-actions">
         {tier !== "enterprise" ? (
-          <Button accent="neutral" onClick={onUpgrade}>
-            {tier === "free" ? "Upgrade plan" : "Talk to sales"}
+          <Button onClick={onUpgrade}>
+            {tier === "free"
+              ? t("usage.currentPlan.actions.upgrade", "Upgrade plan")
+              : t("usage.currentPlan.actions.talkToSales", "Talk to sales")}
           </Button>
         ) : (
-          <Button variant="outlined" accent="neutral" onClick={onUpgrade}>
-            Adjust commitment
+          <Button variant="outlined" onClick={onUpgrade}>
+            {t(
+              "usage.currentPlan.actions.adjustCommitment",
+              "Adjust commitment",
+            )}
           </Button>
         )}
         {/* TODO(backend): GET /v1/billing/invoices?format=pdf — bundle + download invoice PDFs. */}
         <Button variant="ghost" size="md">
-          Download invoices
+          {t("usage.currentPlan.actions.downloadInvoices")}
         </Button>
       </div>
     </Card>

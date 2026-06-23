@@ -13,7 +13,6 @@ import {
   Box,
   Collapse,
   Group,
-  Menu,
   Paper,
   ScrollArea,
   Stack,
@@ -25,14 +24,12 @@ import { Button } from "@shared/components/Button";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
 import BuildOutlinedIcon from "@mui/icons-material/BuildOutlined";
-import CloseIcon from "@mui/icons-material/Close";
 import CloudOutlinedIcon from "@mui/icons-material/CloudOutlined";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import {
   useChat,
   AiWorkflowPhase,
@@ -45,6 +42,7 @@ import { formatRelativeTime } from "@app/utils/timeUtils";
 import { useTranslatedToolCatalog } from "@app/data/useTranslatedToolRegistry";
 import { StirlingLogoAnimated } from "@app/components/agents/StirlingLogoAnimated";
 import { StirlingLogoOutline } from "@app/components/agents/StirlingLogoOutline";
+import { PanelHeader } from "@shared/components/PanelHeader";
 import { ChatQuickActions } from "@app/components/chat/ChatQuickActions";
 import "@app/components/chat/ChatPanel.css";
 type TranslateFn = TFunction;
@@ -440,49 +438,26 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
   );
   return (
     <Box className="chat-panel chat-panel--embedded">
-      <div className="chat-panel__header">
-        <Menu shadow="md" width={220} position="bottom-start" withinPortal>
-          <Menu.Target>
-            <Button
-              variant="ghost"
-              type="button"
-              className={`chat-panel__agent-pill${isLoading ? " chat-panel__agent-pill--loading" : ""}`}
-              aria-label={t("chat.header.agentMenu", "Stirling agent options")}
-              leftSection={
-                <span className="chat-panel__agent-pill-icon">
-                  <StirlingLogoOutline size={16} />
-                  {isLoading && <span className="agent-status-dot" />}
-                </span>
-              }
-              rightSection={
-                <KeyboardArrowDownIcon
-                  sx={{ fontSize: 18, color: "var(--text-muted)" }}
-                />
-              }
-            >
-              <span className="chat-panel__agent-pill-label">
-                {t("agents.stirling_name", "Stirling")}
-              </span>
-            </Button>
-          </Menu.Target>
-          <Menu.Dropdown>
-            <Menu.Item
-              leftSection={<DeleteSweepIcon sx={{ fontSize: 18 }} />}
-              onClick={clearChat}
-              disabled={messages.length === 0 && !isLoading}
-            >
-              {t("chat.header.clearChat", "Clear chat")}
-            </Menu.Item>
-          </Menu.Dropdown>
-        </Menu>
-        <Button
-          variant="ghost"
-          size="md"
-          onClick={onBack}
-          aria-label={backLabel}
-          leftSection={<CloseIcon sx={{ fontSize: 18 }} />}
-        />
-      </div>
+      <PanelHeader
+        icon={<StirlingLogoOutline size={16} />}
+        title={t("agents.stirling_name", "Stirling")}
+        loading={isLoading}
+        className="chat-panel__header"
+        barClassName="chat-panel__agent-pill-vt"
+        menuLabel={t("chat.header.agentMenu", "Stirling agent options")}
+        menuItems={[
+          {
+            key: "clear-chat",
+            icon: <DeleteSweepIcon sx={{ fontSize: 18 }} />,
+            label: t("chat.header.clearChat", "Clear chat"),
+            onClick: clearChat,
+            disabled: messages.length === 0 && !isLoading,
+          },
+        ]}
+        onClose={onBack}
+        closeLabel={backLabel}
+      />
+
       {showQuickActions && (
         <div className="chat-panel-disclaimer chat-panel-disclaimer--banner">
           <InfoOutlinedIcon

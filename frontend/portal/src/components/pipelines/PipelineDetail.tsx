@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import {
   Chip,
   EmptyState,
@@ -13,6 +14,9 @@ import {
 import { compact, pct } from "@portal/components/pipelines/format";
 
 function DriftRow({ drift }: { drift: SchemaDrift }) {
+  const { t } = useTranslation();
+  const confDelta =
+    (drift.confidenceDelta > 0 ? "+" : "") + drift.confidenceDelta.toFixed(2);
   return (
     <li className="portal-pipelines__drift">
       <span
@@ -31,10 +35,11 @@ function DriftRow({ drift }: { drift: SchemaDrift }) {
       </div>
       <div className="portal-pipelines__drift-meta">
         <span>
-          {drift.confidenceDelta > 0 ? "+" : ""}
-          {drift.confidenceDelta.toFixed(2)} conf
+          {t("pipelines.detail.drift.confidence", { delta: confDelta })}
         </span>
-        <span>{drift.affectedDocs} docs</span>
+        <span>
+          {t("pipelines.detail.drift.docs", { count: drift.affectedDocs })}
+        </span>
       </div>
     </li>
   );
@@ -46,6 +51,7 @@ export interface PipelineDetailProps {
 
 /** Drawer body: 24h metrics, the five stages, golden-set health, and schema drift. */
 export function PipelineDetail({ pipeline }: PipelineDetailProps) {
+  const { t } = useTranslation();
   const m = pipeline.metrics;
   const goldenRatio = pipeline.golden.total
     ? pipeline.golden.passing / pipeline.golden.total
@@ -55,18 +61,37 @@ export function PipelineDetail({ pipeline }: PipelineDetailProps) {
   return (
     <div className="portal-pipelines__detail">
       <section className="portal-pipelines__detail-metrics">
-        <StatTile label="Docs / 24h" value={compact(m.docs24h)} />
-        <StatTile label="Throughput" value={`${m.throughputPerMin}/min`} />
-        <StatTile label="Error rate" value={pct(m.errorRate, 2)} />
-        <StatTile label="P95 latency" value={`${m.p95LatencyMs} ms`} />
-        <StatTile label="Uptime" value={pct(m.uptime, 2)} />
+        <StatTile
+          label={t("pipelines.metrics.docs24h")}
+          value={compact(m.docs24h)}
+        />
+        <StatTile
+          label={t("pipelines.metrics.throughput")}
+          value={`${m.throughputPerMin}/min`}
+        />
+        <StatTile
+          label={t("pipelines.metrics.errorRate")}
+          value={pct(m.errorRate, 2)}
+        />
+        <StatTile
+          label={t("pipelines.metrics.p95Latency")}
+          value={`${m.p95LatencyMs} ms`}
+        />
+        <StatTile
+          label={t("pipelines.metrics.uptime")}
+          value={pct(m.uptime, 2)}
+        />
       </section>
 
       <section className="portal-pipelines__detail-section">
-        <h3 className="portal-pipelines__detail-h">Pipeline stages</h3>
+        <h3 className="portal-pipelines__detail-h">
+          {t("pipelines.detail.stages.heading")}
+        </h3>
         <p className="portal-pipelines__detail-sub">
-          Every document flows through five stages between {pipeline.source} and{" "}
-          {pipeline.destination}.
+          {t("pipelines.detail.stages.description", {
+            source: pipeline.source,
+            destination: pipeline.destination,
+          })}
         </p>
         <div className="portal-pipelines__stages">
           {pipeline.stages.map((stage) => {
@@ -86,7 +111,7 @@ export function PipelineDetail({ pipeline }: PipelineDetailProps) {
                 <div className="portal-pipelines__stage-chips">
                   {stage.ops.length === 0 ? (
                     <span className="portal-pipelines__stage-empty">
-                      No ops
+                      {t("pipelines.detail.stages.noOps")}
                     </span>
                   ) : (
                     stage.ops.map((op) => (
@@ -103,14 +128,21 @@ export function PipelineDetail({ pipeline }: PipelineDetailProps) {
       </section>
 
       <section className="portal-pipelines__detail-section">
-        <h3 className="portal-pipelines__detail-h">Golden-set validation</h3>
+        <h3 className="portal-pipelines__detail-h">
+          {t("pipelines.detail.golden.heading")}
+        </h3>
         <div className="portal-pipelines__golden">
           <div className="portal-pipelines__golden-head">
             <StatusBadge tone={goldenClean ? "success" : "warning"} size="sm">
-              {pipeline.golden.passing} of {pipeline.golden.total} passing
+              {t("pipelines.detail.golden.passing", {
+                passing: pipeline.golden.passing,
+                total: pipeline.golden.total,
+              })}
             </StatusBadge>
             <span className="portal-pipelines__golden-when">
-              last run {pipeline.golden.lastRun}
+              {t("pipelines.detail.golden.lastRun", {
+                lastRun: pipeline.golden.lastRun,
+              })}
             </span>
           </div>
           <ProgressBar
@@ -120,18 +152,23 @@ export function PipelineDetail({ pipeline }: PipelineDetailProps) {
                 ? "var(--color-green)"
                 : "linear-gradient(90deg, var(--color-amber), color-mix(in srgb, var(--color-amber) 70%, white))"
             }
-            label={`Golden set ${pipeline.golden.passing} of ${pipeline.golden.total} passing`}
+            label={t("pipelines.detail.golden.barLabel", {
+              passing: pipeline.golden.passing,
+              total: pipeline.golden.total,
+            })}
           />
         </div>
       </section>
 
       <section className="portal-pipelines__detail-section">
-        <h3 className="portal-pipelines__detail-h">Schema drift</h3>
+        <h3 className="portal-pipelines__detail-h">
+          {t("pipelines.detail.drift.heading")}
+        </h3>
         {pipeline.drift.length === 0 ? (
           <EmptyState
             size="compact"
-            title="No drift detected"
-            description="Every document in the last 24h matched its inferred schema."
+            title={t("pipelines.detail.drift.empty.title")}
+            description={t("pipelines.detail.drift.empty.description")}
           />
         ) : (
           <ul className="portal-pipelines__drift-list">

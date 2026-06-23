@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import {
   Banner,
   Button,
@@ -45,6 +46,7 @@ export function PolicyDetailPanel({
   onTogglePause,
   onDelete,
 }: PolicyDetailPanelProps) {
+  const { t } = useTranslation();
   if (!policy) return null;
   const { category, config, state, steps, stats, activity } = policy;
   const isPaused = state.status === "paused";
@@ -64,7 +66,7 @@ export function PolicyDetailPanel({
           >
             {policyIcon(category.icon)}
           </span>
-          {category.label} policy
+          {t("policies.detail.title", { category: category.label })}
         </span>
       }
       subtitle={config.summary}
@@ -79,7 +81,7 @@ export function PolicyDetailPanel({
               disabled={busy}
               style={{ marginRight: "auto" }}
             >
-              Delete
+              {t("policies.detail.actions.delete")}
             </Button>
           )}
           <Button
@@ -89,7 +91,7 @@ export function PolicyDetailPanel({
             disabled={busy}
             style={canDelete ? undefined : { marginRight: "auto" }}
           >
-            Run now
+            {t("policies.detail.actions.runNow")}
           </Button>
           <Button
             variant="outlined"
@@ -97,27 +99,34 @@ export function PolicyDetailPanel({
             onClick={onTogglePause}
             disabled={busy}
           >
-            {isPaused ? "Resume" : "Pause"}
+            {isPaused
+              ? t("policies.detail.actions.resume")
+              : t("policies.detail.actions.pause")}
           </Button>
           <Button size="sm" onClick={onEdit} disabled={busy}>
-            Edit settings
+            {t("policies.detail.actions.editSettings")}
           </Button>
         </div>
       }
     >
       <div className="portal-policies__detail-status">
         <StatusBadge tone={isPaused ? "warning" : "success"} pulse={!isPaused}>
-          {isPaused ? "Paused" : "Active"}
+          {isPaused ? t("policies.status.paused") : t("policies.status.active")}
         </StatusBadge>
         <span className="portal-policies__detail-meta">
-          Runs on {state.runOn ?? "upload"} · output{" "}
-          {state.outputMode === "new_file"
-            ? "as a new file"
-            : "as a new version"}
+          {t("policies.detail.meta", {
+            event: state.runOn ?? "upload",
+            output:
+              state.outputMode === "new_file"
+                ? t("policies.detail.outputAsNewFile")
+                : t("policies.detail.outputAsNewVersion"),
+          })}
         </span>
       </div>
 
-      <h3 className="portal-policies__wizard-heading">Enforces</h3>
+      <h3 className="portal-policies__wizard-heading">
+        {t("policies.detail.enforces")}
+      </h3>
       <Card padding="default">
         {enforceItems.length > 0 ? (
           <div className="portal-policies__enforce-flow">
@@ -144,12 +153,13 @@ export function PolicyDetailPanel({
           </div>
         )}
         <p className="portal-policies__enforce-note">
-          {config.scopeLabel} · originals stay untouched, the enforced version
-          is saved alongside.
+          {t("policies.detail.enforceNote", { scope: config.scopeLabel })}
         </p>
       </Card>
 
-      <h3 className="portal-policies__wizard-heading">Recent activity</h3>
+      <h3 className="portal-policies__wizard-heading">
+        {t("policies.detail.recentActivity")}
+      </h3>
       {activity.length > 0 ? (
         <Card padding="none">
           {activity.map((item, i) => (
@@ -179,26 +189,34 @@ export function PolicyDetailPanel({
         <Card padding="default">
           <EmptyState
             size="compact"
-            title="No activity yet"
-            description="Documents will appear here once this policy runs."
+            title={t("policies.detail.emptyActivity.title")}
+            description={t("policies.detail.emptyActivity.description")}
           />
         </Card>
       )}
 
       <Card padding="none" className="portal-policies__detail-stats">
         <StatTile
-          label="Docs enforced"
+          label={t("policies.stats.docsEnforced")}
           value={stats.enforced.toLocaleString()}
         />
-        <StatTile label="Data processed" value={stats.dataProcessed} />
-        <StatTile label="Active" value={stats.activeFor} />
+        <StatTile
+          label={t("policies.stats.dataProcessed")}
+          value={stats.dataProcessed}
+        />
+        <StatTile
+          label={t("policies.stats.activeFor")}
+          value={stats.activeFor}
+        />
       </Card>
 
       {state.scopeTypes.length > 0 && (
         <Banner
           tone="neutral"
-          title="Scoped"
-          description={`Limited to: ${state.scopeTypes.join(", ")}`}
+          title={t("policies.detail.scoped.title")}
+          description={t("policies.detail.scoped.description", {
+            types: state.scopeTypes.join(", "),
+          })}
         />
       )}
     </Modal>

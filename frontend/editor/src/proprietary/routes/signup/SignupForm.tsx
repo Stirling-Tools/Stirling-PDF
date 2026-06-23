@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import "@app/routes/authShared/auth.css";
+import "@shared/auth/ui/auth.css";
 import { useTranslation } from "react-i18next";
 import { Checkbox, TextInput, PasswordInput } from "@mantine/core";
 import { Button } from "@shared/components/Button";

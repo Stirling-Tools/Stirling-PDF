@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Banner,
   Button,
@@ -22,6 +23,7 @@ import { PromotedPipelines } from "@portal/components/pipelines/PromotedPipeline
 import "@portal/views/Pipelines.css";
 
 export function Pipelines() {
+  const { t } = useTranslation();
   const { tier } = useTier();
   const state = useAsync<PipelinesResponse>(() => fetchPipelines(tier), [tier]);
   const { data } = state;
@@ -44,41 +46,42 @@ export function Pipelines() {
     <div className="portal-pipelines">
       <header className="portal-pipelines__header">
         <div>
-          <h1 className="portal-pipelines__title">Pipelines</h1>
-          <p className="portal-pipelines__sub">
-            Document workflows composed from typed operations — deployed,
-            versioned, and continuously validated against a golden set.
-          </p>
+          <h1 className="portal-pipelines__title">{t("pipelines.title")}</h1>
+          <p className="portal-pipelines__sub">{t("pipelines.subtitle")}</p>
         </div>
         <Button
           onClick={() => setComposerOpen(true)}
           leftSection={<span aria-hidden>+</span>}
         >
-          New pipeline
+          {t("pipelines.newPipeline")}
         </Button>
       </header>
 
       {!isLoading && pipelines.length > 0 && (
         <div className="portal-pipelines__fleet">
           <StatusBadge tone="success" size="sm">
-            {fleetHealthy} healthy
+            {t("pipelines.fleet.healthy", { count: fleetHealthy })}
           </StatusBadge>
           {fleetHealthy < pipelines.length && (
             <StatusBadge tone="warning" size="sm">
-              {pipelines.length - fleetHealthy} degraded
+              {t("pipelines.fleet.degraded", {
+                count: pipelines.length - fleetHealthy,
+              })}
             </StatusBadge>
           )}
           <span className="portal-pipelines__fleet-count">
-            {pipelines.length} deployed
+            {t("pipelines.fleet.deployed", { count: pipelines.length })}
           </span>
         </div>
       )}
 
       {tier === "enterprise" && evals && (
-        <Banner tone="info" title="Shadow + comparative evals active">
-          {evals.shadowCount} pipeline{evals.shadowCount === 1 ? "" : "s"}{" "}
-          running a shadow eval, {evals.comparativeCount} in a comparative run.{" "}
-          {evals.detail}
+        <Banner tone="info" title={t("pipelines.evals.title")}>
+          {t("pipelines.evals.body", {
+            count: evals.shadowCount,
+            comparativeCount: evals.comparativeCount,
+            detail: evals.detail,
+          })}
         </Banner>
       )}
 
@@ -86,11 +89,11 @@ export function Pipelines() {
 
       {isEmpty && (
         <EmptyState
-          title="No pipelines yet"
-          description="Compose your first document workflow from the typed operation library — pick a source, chain the ops, and route the output."
+          title={t("pipelines.empty.title")}
+          description={t("pipelines.empty.description")}
           actions={
             <Button onClick={() => setComposerOpen(true)}>
-              Build your first pipeline
+              {t("pipelines.empty.action", "Build your first pipeline")}
             </Button>
           }
         />
@@ -99,11 +102,10 @@ export function Pipelines() {
       {pipelines.length > 0 && (
         <section className="portal-pipelines__section">
           <h2 className="portal-pipelines__section-h">
-            Golden-set reliability
+            {t("pipelines.reliability.heading")}
           </h2>
           <p className="portal-pipelines__section-sub">
-            Pass rate against each pipeline's golden set, judged against its own
-            bound. Anything below bound shows amber or red.
+            {t("pipelines.reliability.description")}
           </p>
           <DeployedPipelinesTable
             pipelines={pipelines}
@@ -123,11 +125,10 @@ export function Pipelines() {
       {promoted.length > 0 && (
         <section className="portal-pipelines__section">
           <h2 className="portal-pipelines__section-h">
-            Promoted from the Editor
+            {t("pipelines.promoted.heading")}
           </h2>
           <p className="portal-pipelines__section-sub">
-            Watch-folder flows built in the Editor and promoted into the portal.
-            Promote one to a policy to apply its rules fleet-wide.
+            {t("pipelines.promoted.description")}
           </p>
           <PromotedPipelines promoted={promoted} />
         </section>
@@ -140,7 +141,11 @@ export function Pipelines() {
         title={selected?.name}
         subtitle={
           selected
-            ? `${selected.version} · ${selected.source} → ${selected.destination}`
+            ? t("pipelines.detail.subtitle", {
+                version: selected.version,
+                source: selected.source,
+                destination: selected.destination,
+              })
             : undefined
         }
       >

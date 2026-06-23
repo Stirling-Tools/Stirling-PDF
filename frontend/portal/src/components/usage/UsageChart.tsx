@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { EmptyState, Skeleton } from "@shared/components";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import { fetchBillingUsage, type UsageSeriesResponse } from "@portal/api/usage";
@@ -7,6 +8,7 @@ import "@portal/components/UsageAreaChart.css";
 
 /** 30-day docs-processed area chart, with the period total and prior-period delta. */
 export function UsageChart() {
+  const { t } = useTranslation();
   const state = useAsync<UsageSeriesResponse>(() => fetchBillingUsage(), []);
   const { data: usage } = state;
   const { isLoading } = useSectionFlags(state);
@@ -33,8 +35,8 @@ export function UsageChart() {
   if (!usage || usage.points.length === 0) {
     return (
       <EmptyState
-        title="No usage yet"
-        description="Once documents are processed, your 30-day usage appears here."
+        title={t("usage.chart.empty.title")}
+        description={t("usage.chart.empty.description")}
       />
     );
   }

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { type Agent, AGENT_STATUS_TONE } from "@portal/api/agents";
 import { Button, StatusBadge } from "@shared/components";
 import "@portal/views/AgentBuilder.css";
@@ -14,8 +15,12 @@ export function AgentSelector({
   selectedId,
   onSelect,
 }: AgentSelectorProps) {
+  const { t } = useTranslation();
   return (
-    <nav className="portal-agents__selector" aria-label="Agents">
+    <nav
+      className="portal-agents__selector"
+      aria-label={t("agentBuilder.selectorAriaLabel")}
+    >
       {agents.map((a) => (
         <Button
           key={a.id}

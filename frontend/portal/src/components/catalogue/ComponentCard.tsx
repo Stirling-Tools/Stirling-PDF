@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Card, Chip, StatusBadge } from "@shared/components";
 import {
   type SdkComponent,
@@ -17,6 +18,7 @@ export function ComponentCard({
   unlocked,
   onOpen,
 }: ComponentCardProps) {
+  const { t } = useTranslation();
   const maturity = MATURITY_META[component.maturity];
   return (
     <Card
@@ -25,7 +27,7 @@ export function ComponentCard({
       className={"portal-components__card" + (unlocked ? "" : " is-locked")}
       role="button"
       tabIndex={0}
-      aria-label={`Open ${component.name} component`}
+      aria-label={t("catalogue.card.openAriaLabel", { name: component.name })}
       onClick={() => onOpen(component)}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
@@ -40,7 +42,10 @@ export function ComponentCard({
           {maturity.label}
         </StatusBadge>
         {!unlocked && (
-          <span className="portal-components__lock" aria-label="Locked">
+          <span
+            className="portal-components__lock"
+            aria-label={t("catalogue.card.lockedAriaLabel")}
+          >
             🔒
           </span>
         )}

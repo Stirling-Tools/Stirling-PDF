@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Chip, ToggleSwitch } from "@shared/components";
 import { type Agent, type ToolMode, TOOL_CATALOGUE } from "@portal/api/agents";
 import "@portal/views/AgentBuilder.css";
@@ -12,6 +13,7 @@ interface ToolsPanelProps {
  * default minus an explicit deny list, picked from the known tool catalogue.
  */
 export function ToolsPanel({ agent, governanceUnlocked }: ToolsPanelProps) {
+  const { t } = useTranslation();
   const [mode, setMode] = useState<ToolMode>(agent.toolMode);
   const [denied, setDenied] = useState<string[]>(agent.deniedTools);
   function setRestricted(on: boolean) {
@@ -32,22 +34,26 @@ export function ToolsPanel({ agent, governanceUnlocked }: ToolsPanelProps) {
           checked={restricted}
           onChange={setRestricted}
           disabled={!governanceUnlocked}
-          label="Restricted tool access"
+          label={t("agentBuilder.tools.restrictedAccess")}
           description={
             governanceUnlocked
-              ? "Allow every tool except the ones you deny below."
-              : "Tool governance is available on the Enterprise plan."
+              ? t("agentBuilder.tools.restrictedDescription")
+              : t("agentBuilder.tools.governanceGate")
           }
         />
         <Chip accent={restricted ? "amber" : "green"} size="sm">
-          {restricted ? "Restricted" : "Broad access"}
+          {restricted
+            ? t("agentBuilder.tools.restricted", "Restricted")
+            : t("agentBuilder.tools.broadAccess", "Broad access")}
         </Chip>
       </div>
       {restricted && (
         <div className="portal-agents__detail-section">
-          <span className="portal-agents__detail-heading">Denied tools</span>
+          <span className="portal-agents__detail-heading">
+            {t("agentBuilder.tools.deniedTools")}
+          </span>
           <p className="portal-agents__hint">
-            Selected tools are blocked. Everything else stays callable.
+            {t("agentBuilder.tools.deniedHint")}
           </p>
           <div className="portal-agents__chips">
             {TOOL_CATALOGUE.map((tool) => {

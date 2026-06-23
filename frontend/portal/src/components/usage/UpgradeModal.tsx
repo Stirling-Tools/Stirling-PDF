@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { Button, Modal } from "@shared/components";
 import type { Tier } from "@portal/contexts/TierContext";
 import type { PlanOption } from "@portal/api/usage";
@@ -18,22 +20,23 @@ interface UpgradeCopy {
  * enterprise user is routed to their account team for bespoke terms.
  */
 function upgradeCopy(
+  t: TFunction,
   currentTier: Tier,
   target: PlanOption | null,
 ): UpgradeCopy {
   // Cap-reached: free user pushed to pay-as-you-go.
   if (currentTier === "free") {
     return {
-      title: "Upgrade to keep processing",
-      subtitle: "Pay-as-you-go · $0.05 / doc",
-      body: "You're at the edge of the 500 doc/month free cap. Pay-as-you-go lifts the cap instantly — you only pay for what you process beyond the included 25,000 docs.",
+      title: t("usage.upgrade.free.title"),
+      subtitle: t("usage.upgrade.free.subtitle"),
+      body: t("usage.upgrade.free.body"),
       bullets: [
-        "Lift the 500 doc/month cap immediately",
-        "25,000 docs included, then $0.05/doc",
-        "Unlimited pipelines, agents, and sources",
-        "Set a monthly spend cap to stay in control",
+        t("usage.upgrade.free.bullets.0"),
+        t("usage.upgrade.free.bullets.1"),
+        t("usage.upgrade.free.bullets.2"),
+        t("usage.upgrade.free.bullets.3"),
       ],
-      cta: "Switch to pay-as-you-go",
+      cta: t("usage.upgrade.free.cta"),
       ctaAccent: "blue",
     };
   }
@@ -42,44 +45,44 @@ function upgradeCopy(
   if (currentTier === "pro") {
     if (target?.tier === "enterprise") {
       return {
-        title: "Move to a committed plan",
-        subtitle: "Enterprise · committed annual volume",
-        body: "Your overage is consistent month over month. A committed-volume contract lowers your effective per-doc rate and unlocks dedicated regions, SSO, and a named CSM.",
+        title: t("usage.upgrade.proToEnterprise.title"),
+        subtitle: t("usage.upgrade.proToEnterprise.subtitle"),
+        body: t("usage.upgrade.proToEnterprise.body"),
         bullets: [
-          "Lower effective rate vs metered overage",
-          "Dedicated & on-prem region options",
-          "SSO, audit-log export, signed DPA",
-          "Named CSM and 99.99% SLA",
+          t("usage.upgrade.proToEnterprise.bullets.0"),
+          t("usage.upgrade.proToEnterprise.bullets.1"),
+          t("usage.upgrade.proToEnterprise.bullets.2"),
+          t("usage.upgrade.proToEnterprise.bullets.3"),
         ],
-        cta: "Talk to sales",
+        cta: t("usage.upgrade.proToEnterprise.cta"),
         ctaAccent: "purple",
       };
     }
     return {
-      title: "You're already on pay-as-you-go",
-      subtitle: "Considering a committed plan?",
-      body: "Pay-as-you-go scales with usage. If your volume is steady, a committed-volume contract typically lowers your effective per-doc rate.",
+      title: t("usage.upgrade.pro.title"),
+      subtitle: t("usage.upgrade.pro.subtitle"),
+      body: t("usage.upgrade.pro.body"),
       bullets: [
-        "Predictable monthly spend",
-        "Lower effective per-doc rate at volume",
-        "Volume discounts kick in past 1M docs/mo",
+        t("usage.upgrade.pro.bullets.0"),
+        t("usage.upgrade.pro.bullets.1"),
+        t("usage.upgrade.pro.bullets.2"),
       ],
-      cta: "Explore committed pricing",
+      cta: t("usage.upgrade.pro.cta"),
       ctaAccent: "purple",
     };
   }
 
   // Bespoke-enterprise: route to account team.
   return {
-    title: "Adjust your commitment",
-    subtitle: "Enterprise · bespoke terms",
-    body: "Your plan is governed by a committed-volume contract. Changes to committed volume, regions, or terms are handled with your account team — they'll model the right shape with you.",
+    title: t("usage.upgrade.enterprise.title"),
+    subtitle: t("usage.upgrade.enterprise.subtitle"),
+    body: t("usage.upgrade.enterprise.body"),
     bullets: [
-      "Re-model committed volume up or down",
-      "Add dedicated or on-prem regions",
-      "Adjust SLA, DPA, and overage terms",
+      t("usage.upgrade.enterprise.bullets.0"),
+      t("usage.upgrade.enterprise.bullets.1"),
+      t("usage.upgrade.enterprise.bullets.2"),
     ],
-    cta: "Contact your CSM",
+    cta: t("usage.upgrade.enterprise.cta"),
     ctaAccent: "purple",
   };
 }
@@ -96,7 +99,8 @@ export function UpgradeModal({
   currentTier: Tier;
   target: PlanOption | null;
 }) {
-  const copy = upgradeCopy(currentTier, target);
+  const { t } = useTranslation();
+  const copy = upgradeCopy(t, currentTier, target);
   return (
     <Modal
       open={open}
@@ -107,7 +111,7 @@ export function UpgradeModal({
       footer={
         <div className="portal-usage__modal-actions">
           <Button variant="ghost" onClick={onClose}>
-            Not now
+            {t("usage.upgrade.notNow")}
           </Button>
           {/* TODO(backend): POST /v1/billing/plan-change { tier } (or hand off to
               sales) — for now the CTA just dismisses the modal. */}

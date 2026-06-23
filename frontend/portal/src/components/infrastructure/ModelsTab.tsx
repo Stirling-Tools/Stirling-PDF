@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import {
   Banner,
   Card,
@@ -31,80 +32,87 @@ import {
   pct,
 } from "@portal/components/infrastructure/infraFormat";
 
-const modelCols: TableColumn<ModelEntry>[] = [
-  {
-    key: "name",
-    header: "Model",
-    render: (m) => (
-      <div className="portal-infra__cell-stack">
-        <span className="portal-infra__cell-strong">{m.name}</span>
-        <Chip accent="neutral" size="sm">
-          {MODEL_PROVIDER_LABEL[m.provider]}
-        </Chip>
-      </div>
-    ),
-  },
-  {
-    key: "type",
-    header: "Type",
-    render: (m) => (
-      <Chip accent={MODEL_TYPE_TONE[m.type]} size="sm">
-        {MODEL_TYPE_LABEL[m.type]}
-      </Chip>
-    ),
-  },
-  {
-    key: "status",
-    header: "Status",
-    render: (m) => (
-      <StatusBadge
-        tone={MODEL_TONE[m.status]}
-        size="sm"
-        pulse={m.status === "active"}
-      >
-        {MODEL_LABEL[m.status]}
-      </StatusBadge>
-    ),
-  },
-  {
-    key: "load",
-    header: "Load",
-    width: "9rem",
-    render: (m) => (
-      <div className="portal-infra__load">
-        <ProgressBar value={m.load} thresholded height={6} />
-        <span className="portal-infra__load-pct">{pct(m.load)}</span>
-      </div>
-    ),
-  },
-  {
-    key: "latency",
-    header: "Latency",
-    align: "right",
-    render: (m) => <span className="portal-infra__mono">{m.latencyMs} ms</span>,
-  },
-  {
-    key: "cost",
-    header: "Cost",
-    align: "right",
-    render: (m) => (
-      <span className="portal-infra__mono">
-        {modelCost(m.cost, m.costUnit)}
-      </span>
-    ),
-  },
-  {
-    key: "version",
-    header: "Version",
-    render: (m) => <code className="portal-infra__cell-code">{m.version}</code>,
-  },
-];
-
 export function ModelsTab() {
+  const { t } = useTranslation();
   const { tier } = useTier();
   const state = useAsync<ModelsResponse>(() => fetchModels(tier), [tier]);
   const { data } = state;
   const { isLoading, isEmpty } = useSectionFlags(state);
+
+  const modelCols: TableColumn<ModelEntry>[] = [
+    {
+      key: "name",
+      header: t("infrastructure.models.columns.model"),
+      render: (m) => (
+        <div className="portal-infra__cell-stack">
+          <span className="portal-infra__cell-strong">{m.name}</span>
+          <Chip tone="neutral" size="sm">
+            {MODEL_PROVIDER_LABEL[m.provider]}
+          </Chip>
+        </div>
+      ),
+    },
+    {
+      key: "type",
+      header: t("infrastructure.models.columns.type"),
+      render: (m) => (
+        <Chip tone={MODEL_TYPE_TONE[m.type]} size="sm">
+          {MODEL_TYPE_LABEL[m.type]}
+        </Chip>
+      ),
+    },
+    {
+      key: "status",
+      header: t("infrastructure.models.columns.status"),
+      render: (m) => (
+        <StatusBadge
+          tone={MODEL_TONE[m.status]}
+          size="sm"
+          pulse={m.status === "active"}
+        >
+          {MODEL_LABEL[m.status]}
+        </StatusBadge>
+      ),
+    },
+    {
+      key: "load",
+      header: t("infrastructure.models.columns.load"),
+      width: "9rem",
+      render: (m) => (
+        <div className="portal-infra__load">
+          <ProgressBar value={m.load} thresholded height={6} />
+          <span className="portal-infra__load-pct">{pct(m.load)}</span>
+        </div>
+      ),
+    },
+    {
+      key: "latency",
+      header: t("infrastructure.models.columns.latency"),
+      align: "right",
+      render: (m) => (
+        <span className="portal-infra__mono">
+          {t("infrastructure.models.msValue", { value: m.latencyMs })}
+        </span>
+      ),
+    },
+    {
+      key: "cost",
+      header: t("infrastructure.models.columns.cost"),
+      align: "right",
+      render: (m) => (
+        <span className="portal-infra__mono">
+          {modelCost(m.cost, m.costUnit)}
+        </span>
+      ),
+    },
+    {
+      key: "version",
+      header: t("infrastructure.models.columns.version"),
+      render: (m) => (
+        <code className="portal-infra__cell-code">{m.version}</code>
+      ),
+    },
+  ];
 
   // Free has no routing control: the catalogue is read-only and the routing
   // table is replaced by an upgrade nudge.
@@ -121,29 +129,35 @@ export function ModelsTab() {
   const routingCols: TableColumn<RoutingRule>[] = [
     {
       key: "operation",
-      header: "Operation",
+      header: t("infrastructure.models.routingColumns.operation"),
       render: (r) => (
         <div className="portal-infra__cell-stack">
           <span className="portal-infra__cell-strong">{r.operation}</span>
           {r.isDefault && (
             <Chip accent="blue" size="sm">
-              Default
+              {t("infrastructure.models.routingColumns.default")}
             </Chip>
           )}
         </div>
       ),
     },
-    { key: "docType", header: "Document type", render: (r) => r.docType },
+    {
+      key: "docType",
+      header: t("infrastructure.models.routingColumns.docType"),
+      render: (r) => r.docType,
+    },
     {
       key: "modelId",
-      header: "Routed to",
+      header: t("infrastructure.models.routingColumns.routedTo"),
       width: "16rem",
       render: (r) => (
         <Select
           inputSize="sm"
           options={modelOptions}
           defaultValue={r.modelId}
-          aria-label={`Model for ${r.operation}`}
+          aria-label={t("infrastructure.models.routingColumns.modelForAria", {
+            operation: r.operation,
+          })}
         />
       ),
     },
@@ -152,23 +166,28 @@ export function ModelsTab() {
   return (
     <div className="portal-infra__stack">
       <SectionHeader
-        title="Models"
-        sub="The model catalogue and routing that powers document processing across your workspace."
+        title={t("infrastructure.models.heading")}
+        sub={t("infrastructure.models.subheading")}
       />
 
       {data && (
         <section className="portal-infra__metrics">
-          <MetricCard label="Active models" value={data.summary.activeModels} />
           <MetricCard
-            label="Avg latency"
-            value={`${data.summary.avgLatencyMs} ms`}
+            label={t("infrastructure.models.metrics.activeModels")}
+            value={data.summary.activeModels}
           />
           <MetricCard
-            label="Monthly model spend"
+            label={t("infrastructure.models.metrics.avgLatency")}
+            value={t("infrastructure.models.msValue", {
+              value: data.summary.avgLatencyMs,
+            })}
+          />
+          <MetricCard
+            label={t("infrastructure.models.metrics.monthlySpend")}
             value={
               data.summary.monthlySpend > 0
                 ? `$${data.summary.monthlySpend.toLocaleString()}`
-                : "Included"
+                : t("infrastructure.models.metrics.included")
             }
           />
         </section>
@@ -176,11 +195,11 @@ export function ModelsTab() {
 
       <section>
         <SectionHeader
-          title="Catalogue"
+          title={t("infrastructure.models.catalogue.heading")}
           sub={
             tier === "enterprise"
-              ? "Managed, bring-your-own, and on-prem models — with per-region pinning available."
-              : "Managed models available to your workspace, with live latency and cost."
+              ? t("infrastructure.models.catalogue.subEnterprise")
+              : t("infrastructure.models.catalogue.sub")
           }
         />
         <Card padding="none">
@@ -188,8 +207,10 @@ export function ModelsTab() {
           {isEmpty && (
             <EmptyState
               size="compact"
-              title="No models available"
-              description="Models in your workspace's catalogue appear here."
+              title={t("infrastructure.models.catalogue.empty.title")}
+              description={t(
+                "infrastructure.models.catalogue.empty.description",
+              )}
             />
           )}
           {!isEmpty && data && data.models.length > 0 && (
@@ -205,18 +226,18 @@ export function ModelsTab() {
       {tier === "enterprise" && (
         <Banner
           tone="info"
-          title="Bring your own model"
-          description="Register an on-prem or self-hosted model and pin it to a region for data-residency-bound processing."
+          title={t("infrastructure.models.byom.title")}
+          description={t("infrastructure.models.byom.description")}
         />
       )}
 
       <section>
         <SectionHeader
-          title="Routing rules"
+          title={t("infrastructure.models.routing.heading")}
           sub={
             canRoute
-              ? "Which model handles each operation. The default applies when no narrower rule matches."
-              : "Route operations to specific models — available on paid plans."
+              ? t("infrastructure.models.routing.sub")
+              : t("infrastructure.models.routing.subLocked")
           }
         />
         {canRoute ? (
@@ -227,15 +248,17 @@ export function ModelsTab() {
                 columns={routingCols}
                 rows={data.routing}
                 rowKey={(r) => r.id}
-                empty="No routing rules configured."
+                empty={t("infrastructure.models.routing.empty")}
               />
             )}
           </Card>
         ) : (
           <Banner
             tone="info"
-            title="Model routing is a paid feature"
-            description="Upgrade to Pro to control which model handles each operation and document type."
+            title={t("infrastructure.models.routing.lockedBanner.title")}
+            description={t(
+              "infrastructure.models.routing.lockedBanner.description",
+            )}
           />
         )}
       </section>

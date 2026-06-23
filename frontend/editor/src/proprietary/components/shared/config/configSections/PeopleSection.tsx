@@ -92,6 +92,21 @@ export default function PeopleSection() {
 
   const isCurrentUser = (user: User) => currentUser?.username === user.username;
   const isLockedUser = (user: User) => lockedUsers.includes(user.username);
+  const getUserRoleId = (user: User) =>
+    user.rolesAsString ||
+    (user.roleName?.startsWith("ROLE_") ? user.roleName : undefined) ||
+    "ROLE_USER";
+
+  const getRoleLabel = (roleId: string) => {
+    switch (roleId) {
+      case "ROLE_ADMIN":
+        return t("workspace.people.admin", "Admin");
+      case "ROLE_USER":
+        return t("workspace.people.user", "User");
+      default:
+        return roleId;
+    }
+  };
 
   // Form state for edit user modal
   const [editForm, setEditForm] = useState({
@@ -351,7 +366,7 @@ export default function PeopleSection() {
   const openEditModal = (user: User) => {
     setSelectedUser(user);
     setEditForm({
-      role: user.roleName,
+      role: getUserRoleId(user),
       teamId: user.team?.id,
     });
     setEditUserModalOpened(true);
@@ -383,7 +398,7 @@ export default function PeopleSection() {
   const roleOptions = [
     {
       value: "ROLE_ADMIN",
-      label: t("workspace.people.admin"),
+      label: getRoleLabel("ROLE_ADMIN"),
       description: t(
         "workspace.people.roleDescriptions.admin",
         "Can manage settings and invite members, with full administrative access.",
@@ -392,7 +407,7 @@ export default function PeopleSection() {
     },
     {
       value: "ROLE_USER",
-      label: t("workspace.people.user"),
+      label: getRoleLabel("ROLE_USER"),
       description: t(
         "workspace.people.roleDescriptions.user",
         "Can view and edit shared files, but cannot manage workspace settings or members.",
@@ -472,7 +487,9 @@ export default function PeopleSection() {
             </Text>
             <Text component="span" c="dimmed">
               {" "}
-              {t("workspace.people.license.users", "users")}
+              {t("workspace.people.license.users", "users", {
+                count: licenseInfo.totalUsers,
+              })}
             </Text>
           </Text>
 
@@ -702,18 +719,18 @@ export default function PeopleSection() {
                     size="sm"
                     variant="light"
                     color={
-                      (user.rolesAsString || "").includes("ROLE_ADMIN")
+                      getUserRoleId(user) === "ROLE_ADMIN"
                         ? "blue"
-                        : "cyan"
+                        : getUserRoleId(user) === "ROLE_PRO_USER"
+                          ? "grape"
+                          : "cyan"
                     }
                     styles={{
                       root: { maxWidth: "none" },
                       label: { overflow: "visible" },
                     }}
                   >
-                    {(user.rolesAsString || "").includes("ROLE_ADMIN")
-                      ? t("workspace.people.admin", "Admin")
-                      : t("workspace.people.user", "User")}
+                    {getRoleLabel(getUserRoleId(user))}
                   </Badge>
                 </Table.Td>
                 <Table.Td>
@@ -1025,7 +1042,25 @@ export default function PeopleSection() {
             </Stack>
             <Select
               label={t("workspace.people.editMember.role")}
-              data={roleOptions}
+              data={
+                selectedUser &&
+                !roleOptions.some(
+                  (option) => option.value === getUserRoleId(selectedUser),
+                )
+                  ? [
+                      ...roleOptions,
+                      {
+                        value: getUserRoleId(selectedUser),
+                        label: getRoleLabel(getUserRoleId(selectedUser)),
+                        description: t(
+                          "workspace.people.roleDescriptions.currentRole",
+                          "Current assigned role.",
+                        ),
+                        icon: "person",
+                      },
+                    ]
+                  : roleOptions
+              }
               value={editForm.role}
               onChange={(value) =>
                 setEditForm({ ...editForm, role: value || "ROLE_USER" })

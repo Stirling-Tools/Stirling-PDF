@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button, Tabs, type TabItem } from "@shared/components";
 import { useView } from "@portal/contexts/ViewContext";
 import { DeploymentsTab } from "@portal/components/infrastructure/DeploymentsTab";
@@ -17,44 +18,42 @@ type InfraTab =
   | "storage"
   | "audit";
 
-const TABS: TabItem<InfraTab>[] = [
-  { key: "deployments", label: "Deployments" },
-  { key: "api-keys", label: "API Keys" },
-  { key: "security", label: "Security" },
-  { key: "models", label: "Models" },
-  { key: "storage", label: "Storage" },
-  { key: "audit", label: "Audit Logs" },
-];
-
 export function Infrastructure() {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<InfraTab>("deployments");
   const { setActiveView } = useView();
+
+  const tabs: TabItem<InfraTab>[] = [
+    { key: "deployments", label: t("infrastructure.tabs.deployments") },
+    { key: "api-keys", label: t("infrastructure.tabs.apiKeys") },
+    { key: "security", label: t("infrastructure.tabs.security") },
+    { key: "models", label: t("infrastructure.tabs.models") },
+    { key: "storage", label: t("infrastructure.tabs.storage") },
+    { key: "audit", label: t("infrastructure.tabs.audit") },
+  ];
 
   return (
     <div className="portal-infra">
       <header className="portal-infra__head">
         <div className="portal-infra__head-text">
-          <h1 className="portal-infra__title">Infrastructure</h1>
-          <p className="portal-infra__sub">
-            Deployments, credentials, security posture, storage, and the audit
-            trail for your Stirling workspace.
-          </p>
+          <h1 className="portal-infra__title">{t("infrastructure.title")}</h1>
+          <p className="portal-infra__sub">{t("infrastructure.subtitle")}</p>
         </div>
         <Button
           variant="outlined"
           size="sm"
           onClick={() => setActiveView("editor")}
         >
-          Manage Editor deployment
+          {t("infrastructure.manageEditorDeployment")}
         </Button>
       </header>
 
       <Tabs<InfraTab>
-        items={TABS}
+        items={tabs}
         activeKey={tab}
         onChange={setTab}
         variant="underline"
-        ariaLabel="Infrastructure sections"
+        ariaLabel={t("infrastructure.sectionsAriaLabel")}
       />
 
       <div className="portal-infra__panel">

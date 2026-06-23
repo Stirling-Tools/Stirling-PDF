@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button, EmptyState, Skeleton } from "@shared/components";
 import { useTier } from "@portal/contexts/TierContext";
 import { useView } from "@portal/contexts/ViewContext";
@@ -12,6 +13,7 @@ import { ConnectWizard } from "@portal/components/sources/ConnectWizard";
 import "@portal/views/Sources.css";
 
 export function Sources() {
+  const { t } = useTranslation();
   const { tier } = useTier();
   const { setActiveView } = useView();
   const state = useAsync<SourcesResponse>(() => fetchSources(tier), [tier]);
@@ -28,11 +30,8 @@ export function Sources() {
     <div className="portal-sources">
       <header className="portal-sources__head">
         <div>
-          <h1 className="portal-sources__title">Sources &amp; Agents</h1>
-          <p className="portal-sources__sub">
-            Every place documents flow into Stirling — agents, API clients,
-            webhooks, connectors and more. Click a row for type-specific detail.
-          </p>
+          <h1 className="portal-sources__title">{t("sources.title")}</h1>
+          <p className="portal-sources__sub">{t("sources.subtitle")}</p>
         </div>
         <div className="portal-sources__actions">
           <Button
@@ -40,13 +39,13 @@ export function Sources() {
             onClick={() => setActiveView("agent-builder")}
             leftSection={<AgentBuilderIcon size={16} />}
           >
-            Agent Builder
+            {t("sources.actions.agentBuilder")}
           </Button>
           <Button
             onClick={() => setWizardOpen(true)}
             leftSection={<span aria-hidden>+</span>}
           >
-            Connect source
+            {t("sources.actions.connectSource")}
           </Button>
         </div>
       </header>
@@ -63,10 +62,12 @@ export function Sources() {
 
       {isEmpty && (
         <EmptyState
-          title="No sources connected yet"
-          description="Connect an agent, API client, webhook, connector or inbox to start feeding documents into your pipelines."
+          title={t("sources.empty.title")}
+          description={t("sources.empty.description")}
           actions={
-            <Button onClick={() => setWizardOpen(true)}>Connect source</Button>
+            <Button onClick={() => setWizardOpen(true)}>
+              {t("sources.actions.connectSource")}
+            </Button>
           }
         />
       )}

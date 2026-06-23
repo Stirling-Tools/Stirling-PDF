@@ -1,5 +1,6 @@
-import { StatusBadge } from "@shared/components";
+import { useTranslation } from "react-i18next";
 import { Button } from "@shared/components/Button";
+import { Card, Chip, StatusBadge, StatTile } from "@shared/components";
 import type { CatalogueEntry } from "@portal/api/policies";
 import { policyIcon } from "@portal/components/policies/policyIcons";
 import "@portal/views/Policies.css";
@@ -10,51 +11,77 @@ interface PolicyCategoryCardProps {
 }
 
 export function PolicyCategoryCard({ entry, onOpen }: PolicyCategoryCardProps) {
-  const { category, policy } = entry;
+  const { t } = useTranslation();
+  const { category, config, policy } = entry;
   const comingSoon = category.comingSoon === true;
 
-  if (comingSoon) {
-    return (
-      <div className="portal-policies__row portal-policies__row--locked">
-        <span className="portal-policies__cat-icon portal-policies__cat-icon--neutral" aria-hidden>
-          {policyIcon(category.icon)}
-        </span>
-        <span className="portal-policies__row-name">{category.label}</span>
-        <Button variant="ghost" size="sm" style={{ "--sui-btn-fg": "var(--color-text-3)" }}>
-          Upgrade to enterprise
-        </Button>
-      </div>
-    );
-  }
-
-  const rightSection = policy ? (
-    <StatusBadge
-      tone={policy.state.status === "paused" ? "warning" : "success"}
-      size="sm"
-      pulse={policy.state.status !== "paused"}
-    >
-      {policy.state.status === "paused" ? "Paused" : "Active"}
-    </StatusBadge>
-  ) : (
-    <span className="portal-policies__setup-link">Set up</span>
-  );
-
   return (
-    <Button
-      variant="ghost"
-      onClick={() => onOpen(entry)}
-      style={{ "--sui-btn-fg": "var(--color-text-1)" }}
-      leftSection={
+    <Card onClick={comingSoon ? undefined : () => onOpen(entry)}>
+      <header className="portal-policies__card-header">
         <span
           className={`portal-policies__cat-icon portal-policies__cat-icon--${category.tone}`}
           aria-hidden
         >
           {policyIcon(category.icon)}
         </span>
-      }
-      rightSection={rightSection}
-    >
-      {category.label}
-    </Button>
+        <div className="portal-policies__card-titles">
+          <h2 className="portal-policies__card-title">{category.label}</h2>
+          <span className="portal-policies__card-blurb">{category.desc}</span>
+        </div>
+        {comingSoon ? (
+          <Chip accent="neutral" size="sm">
+            {t("policies.card.comingSoon")}
+          </Chip>
+        ) : policy ? (
+          <StatusBadge
+            tone={policy.state.status === "paused" ? "warning" : "success"}
+            size="sm"
+            pulse={policy.state.status !== "paused"}
+          >
+            {policy.state.status === "paused"
+              ? t("policies.status.paused")
+              : t("policies.status.active")}
+          </StatusBadge>
+        ) : (
+          <Chip accent="blue" size="sm">
+            {t("policies.card.notSetUp")}
+          </Chip>
+        )}
+      </header>
+
+      <p className="portal-policies__card-summary">{config.summary}</p>
+
+      {policy ? (
+        <footer className="portal-policies__card-stats">
+          <StatTile
+            label={t("policies.stats.docsEnforced")}
+            value={policy.stats.enforced.toLocaleString()}
+          />
+          <StatTile
+            label={t("policies.stats.dataProcessed")}
+            value={policy.stats.dataProcessed}
+          />
+          <StatTile
+            label={t("policies.stats.activeFor")}
+            value={policy.stats.activeFor}
+          />
+        </footer>
+      ) : (
+        <footer className="portal-policies__card-foot">
+          <div className="portal-policies__card-rules">
+            {config.rules.slice(0, 3).map((rule) => (
+              <Chip key={rule} accent="neutral" size="sm">
+                {rule}
+              </Chip>
+            ))}
+          </div>
+          {!comingSoon && (
+            <Button variant="ghost" size="sm">
+              {t("policies.card.setUp")}
+            </Button>
+          )}
+        </footer>
+      )}
+    </Card>
   );
 }

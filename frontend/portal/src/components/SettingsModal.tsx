@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Avatar,
   Button,
@@ -55,100 +56,26 @@ interface SettingsModalProps {
   onClose: () => void;
 }
 
-/** Display copy for each notification category, keyed by the snapshot id. */
-const NOTIFICATION_COPY: Record<
-  string,
-  { label: string; description: string }
-> = {
-  "pipeline-failures": {
-    label: "Pipeline failures",
-    description: "A run errors out or a step times out.",
-  },
-  "pipeline-success": {
-    label: "Pipeline completions",
-    description: "Every successful pipeline run finishes.",
-  },
-  "usage-alerts": {
-    label: "Usage & quota alerts",
-    description: "You approach a plan limit or rate cap.",
-  },
-  "weekly-digest": {
-    label: "Weekly digest",
-    description: "A Monday summary of volume and health.",
-  },
-  "security-alerts": {
-    label: "Security alerts",
-    description: "New API keys, sign-ins, or permission changes.",
-  },
-  "product-updates": {
-    label: "Product updates",
-    description: "New operations, sources, and release notes.",
-  },
-};
+/**
+ * Notification categories with known display copy, in the order the snapshot
+ * exposes them. Labels and descriptions are resolved via i18n at render time,
+ * keyed by id; ids absent from this list are skipped.
+ */
+const NOTIFICATION_IDS = [
+  "pipeline-failures",
+  "pipeline-success",
+  "usage-alerts",
+  "weekly-digest",
+  "security-alerts",
+  "product-updates",
+] as const;
 
-const SECTION_LABEL: Record<SettingsSection, string> = {
-  profile: "Profile",
-  appearance: "Appearance",
-  notifications: "Notifications",
-  general: "General",
-  authentication: "Authentication",
-  sessions: "Active sessions",
-  "early-access": "Early access",
-};
-
-const NAV_SECTIONS: SettingsNavSection[] = [
-  {
-    title: "Account",
-    items: [
-      { key: "profile", label: "Profile", icon: <UsersIcon size={16} /> },
-      { key: "appearance", label: "Appearance", icon: <SunIcon size={16} /> },
-      {
-        key: "notifications",
-        label: "Notifications",
-        icon: <BellIcon size={16} />,
-      },
-    ],
-  },
-  {
-    title: "Workspace",
-    items: [
-      { key: "general", label: "General", icon: <SettingsIcon size={16} /> },
-    ],
-  },
-  {
-    title: "Admin",
-    items: [
-      {
-        key: "authentication",
-        label: "Authentication",
-        icon: <PoliciesIcon size={16} />,
-      },
-      {
-        key: "sessions",
-        label: "Active sessions",
-        icon: <InfrastructureIcon size={16} />,
-      },
-      {
-        key: "early-access",
-        label: "Early access",
-        icon: <SparklesIcon size={16} />,
-      },
-    ],
-  },
+const THEME_OPTIONS: { value: Theme }[] = [
+  { value: "light" },
+  { value: "dark" },
 ];
 
-const THEME_OPTIONS: { value: Theme; label: string; hint: string }[] = [
-  { value: "light", label: "Light", hint: "Bright surfaces" },
-  { value: "dark", label: "Dark", hint: "Dim surfaces" },
-];
-
-const SESSION_TIMEOUT_OPTIONS: SelectOption[] = [
-  { value: "60", label: "1 hour" },
-  { value: "240", label: "4 hours" },
-  { value: "480", label: "8 hours" },
-  { value: "720", label: "12 hours" },
-  { value: "1440", label: "24 hours" },
-];
+const SESSION_TIMEOUT_VALUES = ["60", "240", "480", "720", "1440"] as const;
 
 /**
  * Account settings as a portal-wide overlay. A grouped left-nav (Account /
@@ -157,9 +84,66 @@ const SESSION_TIMEOUT_OPTIONS: SelectOption[] = [
  * writes straight through to ThemeProvider so the change is real and visible.
  */
 export function SettingsModal({ open, onClose }: SettingsModalProps) {
+  const { t } = useTranslation();
   const { tier } = useTier();
   const { theme, setTheme } = useTheme();
   const [section, setSection] = useState<SettingsSection>("profile");
+
+  const navSections = useMemo<SettingsNavSection[]>(
+    () => [
+      {
+        title: t("settings.groups.account"),
+        items: [
+          {
+            key: "profile",
+            label: t("settings.sections.profile"),
+            icon: <UsersIcon size={16} />,
+          },
+          {
+            key: "appearance",
+            label: t("settings.sections.appearance"),
+            icon: <SunIcon size={16} />,
+          },
+          {
+            key: "notifications",
+            label: t("settings.sections.notifications"),
+            icon: <BellIcon size={16} />,
+          },
+        ],
+      },
+      {
+        title: t("settings.groups.workspace"),
+        items: [
+          {
+            key: "general",
+            label: t("settings.sections.general"),
+            icon: <SettingsIcon size={16} />,
+          },
+        ],
+      },
+      {
+        title: t("settings.groups.admin"),
+        items: [
+          {
+            key: "authentication",
+            label: t("settings.sections.authentication"),
+            icon: <PoliciesIcon size={16} />,
+          },
+          {
+            key: "sessions",
+            label: t("settings.sections.sessions"),
+            icon: <InfrastructureIcon size={16} />,
+          },
+          {
+            key: "early-access",
+            label: t("settings.sections.early-access"),
+            icon: <SparklesIcon size={16} />,
+          },
+        ],
+      },
+    ],
+    [t],
+  );
 
   const { data: snapshot, loading } = useAsync<SettingsSnapshot>(
     () => fetchSettings(tier),
@@ -214,11 +198,11 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
       value: r.value,
       label:
         r.enterpriseOnly && tier !== "enterprise"
-          ? `${r.label} · Enterprise`
+          ? t("settings.workspace.regionEnterpriseSuffix", { region: r.label })
           : r.label,
       disabled: r.enterpriseOnly && tier !== "enterprise",
     }));
-  }, [snapshot, tier]);
+  }, [snapshot, tier, t]);
 
   const isLoading = loading && !snapshot;
 
@@ -227,24 +211,26 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
       open={open}
       onClose={onClose}
       width="xl"
-      ariaLabel="Settings"
+      ariaLabel={t("settings.ariaLabel")}
       className="portal-settings"
     >
       <SettingsShell
-        sections={NAV_SECTIONS}
+        sections={navSections}
         activeKey={section}
         onSelect={(k) => setSection(k as SettingsSection)}
-        title={SECTION_LABEL[section]}
+        title={t(`settings.sections.${section}`)}
         onClose={onClose}
         footer={
           <>
             <span className="portal-settings__footer-note">
-              Changes apply to this workspace.
+              {t("settings.footerNote")}
             </span>
             <Button variant="ghost" onClick={onClose}>
-              Cancel
+              {t("settings.cancel")}
             </Button>
-            <Button onClick={onClose}>Save changes</Button>
+            <Button variant="gradient" onClick={onClose}>
+              {t("settings.saveChanges")}
+            </Button>
           </>
         }
       >
@@ -341,6 +327,7 @@ function ProfilePanel({
   onName: (v: string) => void;
   onEmail: (v: string) => void;
 }) {
+  const { t } = useTranslation();
   if (loading) {
     return (
       <div className="portal-settings__section">
@@ -362,13 +349,13 @@ function ProfilePanel({
       <div className="portal-settings__identity">
         <Avatar
           src={avatarUrl}
-          name={name || "Account"}
+          name={name || t("settings.profile.accountFallback")}
           size="lg"
           tone="blue"
         />
         <div className="portal-settings__identity-meta">
           <div className="portal-settings__identity-name">
-            {name || "Account"}
+            {name || t("settings.profile.accountFallback")}
             {role && (
               <StatusBadge tone="info" size="sm" showDot={false}>
                 {role}
@@ -378,27 +365,27 @@ function ProfilePanel({
           <span className="portal-settings__identity-email">{email}</span>
         </div>
         <Button variant="outlined" size="sm" disabled>
-          Change photo
+          {t("settings.profile.changePhoto")}
         </Button>
       </div>
 
-      <FormField label="Full name">
+      <FormField label={t("settings.profile.fullName")}>
         <Input
           value={name}
           onChange={(e) => onName(e.target.value)}
-          placeholder="Your name"
+          placeholder={t("settings.profile.namePlaceholder")}
         />
       </FormField>
 
       <FormField
-        label="Email"
-        helperText="Used for sign-in and notification delivery."
+        label={t("settings.profile.email")}
+        helperText={t("settings.profile.emailHelper")}
       >
         <Input
           type="email"
           value={email}
           onChange={(e) => onEmail(e.target.value)}
-          placeholder="you@company.com"
+          placeholder={t("settings.profile.emailPlaceholder")}
         />
       </FormField>
     </div>
@@ -416,19 +403,22 @@ function AppearancePanel({
   theme: Theme;
   onTheme: (theme: Theme) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="portal-settings__section">
       <div className="portal-settings__group">
         <div className="portal-settings__group-head">
-          <h3 className="portal-settings__group-title">Theme</h3>
+          <h3 className="portal-settings__group-title">
+            {t("settings.appearance.themeTitle")}
+          </h3>
           <p className="portal-settings__group-sub">
-            Choose how the portal looks on this device.
+            {t("settings.appearance.themeSub")}
           </p>
         </div>
         <div
           className="portal-settings__theme"
           role="radiogroup"
-          aria-label="Theme"
+          aria-label={t("settings.appearance.themeTitle")}
         >
           {THEME_OPTIONS.map((opt) => (
             <Button
@@ -450,8 +440,8 @@ function AppearancePanel({
                 <span />
               </span>
               <span className="portal-settings__theme-text">
-                <strong>{opt.label}</strong>
-                <span>{opt.hint}</span>
+                <strong>{t(`settings.appearance.${opt.value}.label`)}</strong>
+                <span>{t(`settings.appearance.${opt.value}.hint`)}</span>
               </span>
             </Button>
           ))}
@@ -476,13 +466,16 @@ function NotificationsPanel({
   order: string[];
   onToggle: (id: string, value: boolean) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="portal-settings__section">
       <div className="portal-settings__group">
         <div className="portal-settings__group-head">
-          <h3 className="portal-settings__group-title">Email notifications</h3>
+          <h3 className="portal-settings__group-title">
+            {t("settings.notifications.title")}
+          </h3>
           <p className="portal-settings__group-sub">
-            Pick which events reach your inbox.
+            {t("settings.notifications.sub")}
           </p>
         </div>
 
@@ -503,13 +496,14 @@ function NotificationsPanel({
         {!loading && (
           <div className="portal-settings__notifs">
             {order.map((id) => {
-              const copy = NOTIFICATION_COPY[id];
-              if (!copy) return null;
+              if (!(NOTIFICATION_IDS as readonly string[]).includes(id)) {
+                return null;
+              }
               return (
                 <div key={id} className="portal-settings__notif-row">
                   <div className="portal-settings__notif-text">
-                    <strong>{copy.label}</strong>
-                    <span>{copy.description}</span>
+                    <strong>{t(`settings.notifications.${id}.label`)}</strong>
+                    <span>{t(`settings.notifications.${id}.description`)}</span>
                   </div>
                   <ToggleSwitch
                     checked={notifications[id] ?? false}
@@ -548,6 +542,7 @@ function WorkspacePanel({
   planLabel?: string;
   seats?: { used: number; total: number };
 }) {
+  const { t } = useTranslation();
   if (loading) {
     return (
       <div className="portal-settings__section">
@@ -560,17 +555,17 @@ function WorkspacePanel({
 
   return (
     <div className="portal-settings__section">
-      <FormField label="Workspace name">
+      <FormField label={t("settings.workspace.nameLabel")}>
         <Input
           value={workspaceName}
           onChange={(e) => onWorkspaceName(e.target.value)}
-          placeholder="Workspace name"
+          placeholder={t("settings.workspace.namePlaceholder")}
         />
       </FormField>
 
       <FormField
-        label="Data residency region"
-        helperText="Where documents are processed and stored at rest."
+        label={t("settings.workspace.regionLabel")}
+        helperText={t("settings.workspace.regionHelper")}
       >
         <Select
           value={region}
@@ -581,21 +576,28 @@ function WorkspacePanel({
 
       <div className="portal-settings__plan">
         <div className="portal-settings__plan-row">
-          <span className="portal-settings__plan-label">Plan</span>
+          <span className="portal-settings__plan-label">
+            {t("settings.workspace.plan")}
+          </span>
           <StatusBadge tone="purple" size="sm">
             {planLabel ?? "—"}
           </StatusBadge>
         </div>
         {seats && (
           <div className="portal-settings__plan-row">
-            <span className="portal-settings__plan-label">Seats</span>
+            <span className="portal-settings__plan-label">
+              {t("settings.workspace.seats")}
+            </span>
             <span className="portal-settings__plan-value">
-              {seats.used} of {seats.total} used
+              {t("settings.workspace.seatsUsed", {
+                used: seats.used,
+                total: seats.total,
+              })}
             </span>
           </div>
         )}
         <Button variant="outlined" size="sm" disabled>
-          Manage billing
+          {t("settings.workspace.manageBilling")}
         </Button>
       </div>
     </div>
@@ -617,6 +619,7 @@ function AuthenticationPanel({
   security: SecurityForm;
   onSecurity: (patch: Partial<SecurityForm>) => void;
 }) {
+  const { t } = useTranslation();
   if (loading) {
     return (
       <div className="portal-settings__section">
@@ -635,17 +638,19 @@ function AuthenticationPanel({
     <div className="portal-settings__section">
       <div className="portal-settings__group">
         <div className="portal-settings__group-head">
-          <h3 className="portal-settings__group-title">Sign-in policy</h3>
+          <h3 className="portal-settings__group-title">
+            {t("settings.authentication.title")}
+          </h3>
           <p className="portal-settings__group-sub">
-            Organisation-wide authentication controls.
+            {t("settings.authentication.sub")}
           </p>
         </div>
 
         <div className="portal-settings__notifs">
           <div className="portal-settings__notif-row">
             <div className="portal-settings__notif-text">
-              <strong>Enforce two-factor (MFA)</strong>
-              <span>Require every member to complete MFA at sign-in.</span>
+              <strong>{t("settings.authentication.mfa.label")}</strong>
+              <span>{t("settings.authentication.mfa.description")}</span>
             </div>
             <ToggleSwitch
               checked={security.mfaEnforced}
@@ -656,14 +661,14 @@ function AuthenticationPanel({
           <div className="portal-settings__notif-row">
             <div className="portal-settings__notif-text">
               <span className="portal-settings__row-label">
-                <strong>Single sign-on (SAML)</strong>
+                <strong>{t("settings.authentication.sso.label")}</strong>
                 {!isEnterprise && (
                   <StatusBadge tone="info" size="sm" showDot={false}>
-                    Enterprise
+                    {t("settings.enterpriseBadge")}
                   </StatusBadge>
                 )}
               </span>
-              <span>Federate sign-in through your identity provider.</span>
+              <span>{t("settings.authentication.sso.description")}</span>
             </div>
             <ToggleSwitch
               checked={isEnterprise && security.ssoEnabled}
@@ -675,14 +680,14 @@ function AuthenticationPanel({
           <div className="portal-settings__notif-row">
             <div className="portal-settings__notif-text">
               <span className="portal-settings__row-label">
-                <strong>SCIM provisioning</strong>
+                <strong>{t("settings.authentication.scim.label")}</strong>
                 {!isEnterprise && (
                   <StatusBadge tone="info" size="sm" showDot={false}>
-                    Enterprise
+                    {t("settings.enterpriseBadge")}
                   </StatusBadge>
                 )}
               </span>
-              <span>Sync members and roles from your directory.</span>
+              <span>{t("settings.authentication.scim.description")}</span>
             </div>
             <ToggleSwitch
               checked={isEnterprise && security.scimEnabled}
@@ -693,15 +698,18 @@ function AuthenticationPanel({
         </div>
 
         <FormField
-          label="Session timeout"
-          helperText="Members re-authenticate after this idle period."
+          label={t("settings.authentication.sessionTimeout")}
+          helperText={t("settings.authentication.sessionTimeoutHelper")}
         >
           <Select
             value={String(security.sessionTimeoutMins)}
             onChange={(e) =>
               onSecurity({ sessionTimeoutMins: Number(e.target.value) })
             }
-            options={SESSION_TIMEOUT_OPTIONS}
+            options={SESSION_TIMEOUT_VALUES.map((value) => ({
+              value,
+              label: t(`settings.authentication.timeout.${value}`),
+            }))}
           />
         </FormField>
       </div>
@@ -720,6 +728,7 @@ function SessionsPanel({
   loading: boolean;
   sessions: ActiveSession[];
 }) {
+  const { t } = useTranslation();
   if (loading) {
     return (
       <div className="portal-settings__section">
@@ -733,9 +742,11 @@ function SessionsPanel({
     <div className="portal-settings__section">
       <div className="portal-settings__group">
         <div className="portal-settings__group-head">
-          <h3 className="portal-settings__group-title">Active sessions</h3>
+          <h3 className="portal-settings__group-title">
+            {t("settings.sessions.title")}
+          </h3>
           <p className="portal-settings__group-sub">
-            Devices currently signed in to this account.
+            {t("settings.sessions.sub")}
           </p>
         </div>
         <div className="portal-settings__notifs">
@@ -749,12 +760,12 @@ function SessionsPanel({
               </div>
               {s.current ? (
                 <StatusBadge tone="success" size="sm">
-                  This device
+                  {t("settings.sessions.thisDevice")}
                 </StatusBadge>
               ) : (
                 // TODO(backend): DELETE /v1/settings/sessions/{id}
                 <Button variant="ghost" size="sm">
-                  Revoke
+                  {t("settings.sessions.revoke")}
                 </Button>
               )}
             </div>
@@ -782,6 +793,7 @@ function EarlyAccessPanel({
   betaToggles: Record<string, boolean>;
   onBeta: (id: string, value: boolean) => void;
 }) {
+  const { t } = useTranslation();
   if (loading) {
     return (
       <div className="portal-settings__section">
@@ -797,9 +809,11 @@ function EarlyAccessPanel({
     <div className="portal-settings__section">
       <div className="portal-settings__group">
         <div className="portal-settings__group-head">
-          <h3 className="portal-settings__group-title">Preview features</h3>
+          <h3 className="portal-settings__group-title">
+            {t("settings.earlyAccess.title")}
+          </h3>
           <p className="portal-settings__group-sub">
-            Opt into features still in preview.
+            {t("settings.earlyAccess.sub")}
           </p>
         </div>
         <div className="portal-settings__notifs">
@@ -812,7 +826,7 @@ function EarlyAccessPanel({
                     <strong>{f.label}</strong>
                     {locked && (
                       <StatusBadge tone="info" size="sm" showDot={false}>
-                        Enterprise
+                        {t("settings.enterpriseBadge")}
                       </StatusBadge>
                     )}
                   </span>

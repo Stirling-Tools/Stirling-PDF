@@ -1,9 +1,11 @@
+import { useTranslation } from "react-i18next";
 import { Button, StatTile, StatusBadge } from "@shared/components";
 import type { WebhookDetail } from "@portal/api/sources";
 import { pct } from "@portal/components/sources/format";
 import "@portal/views/Sources.css";
 
 export function WebhookPanel({ d }: { d: WebhookDetail }) {
+  const { t } = useTranslation();
   const rateTone =
     d.successRate >= 0.99
       ? "success"
@@ -14,24 +16,27 @@ export function WebhookPanel({ d }: { d: WebhookDetail }) {
     <div className="portal-sources__detail">
       <div className="portal-sources__stat-grid">
         <StatTile
-          label="Endpoint URL"
+          label={t("sources.webhook.endpointUrl")}
           value={<code className="portal-sources__url">{d.url}</code>}
         />
-        <StatTile label="Auth type" value={d.authType} />
+        <StatTile label={t("sources.webhook.authType")} value={d.authType} />
         <StatTile
-          label="Success rate"
+          label={t("sources.webhook.successRate")}
           value={
             <StatusBadge tone={rateTone} size="sm">
               {pct(d.successRate)}
             </StatusBadge>
           }
         />
-        <StatTile label="Retries / 24h" value={d.retries24h} />
+        <StatTile
+          label={t("sources.webhook.retries24h")}
+          value={d.retries24h}
+        />
       </div>
 
       <div className="portal-sources__detail-section">
         <span className="portal-sources__detail-heading">
-          Recent deliveries
+          {t("sources.webhook.recentDeliveries")}
         </span>
         <div className="portal-sources__endpoints">
           {d.recentDeliveries.map((r, i) => (
@@ -54,10 +59,10 @@ export function WebhookPanel({ d }: { d: WebhookDetail }) {
           GET /v1/sources/{id}/signing-secret — currently inert demo controls. */}
       <div className="portal-sources__detail-actions">
         <Button size="sm" variant="outlined">
-          Send test event
+          {t("sources.webhook.sendTestEvent", "Send test event")}
         </Button>
         <Button size="sm" variant="ghost">
-          View signing secret
+          {t("sources.webhook.viewSigningSecret")}
         </Button>
       </div>
     </div>

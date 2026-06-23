@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import {
   Button,
   Card,
@@ -34,11 +35,11 @@ interface PolicyRow {
 
 const STATE_BADGE: Record<
   RowState,
-  { tone: "success" | "neutral" | "info"; label: string }
+  { tone: "success" | "neutral" | "info"; labelKey: string }
 > = {
-  active: { tone: "success", label: "Active" },
-  off: { tone: "neutral", label: "Off" },
-  locked: { tone: "info", label: "Soon" },
+  active: { tone: "success", labelKey: "policySummary.state.active" },
+  off: { tone: "neutral", labelKey: "policySummary.state.off" },
+  locked: { tone: "info", labelKey: "policySummary.state.soon" },
 };
 
 function toRow(entry: CatalogueEntry): PolicyRow {
@@ -48,6 +49,7 @@ function toRow(entry: CatalogueEntry): PolicyRow {
 }
 
 export function PolicySummary() {
+  const { t } = useTranslation();
   const { setActiveView } = useView();
   const state = useAsync<PoliciesResponse>(() => fetchPolicies(), []);
   const { data } = state;
@@ -58,7 +60,7 @@ export function PolicySummary() {
   const columns: TableColumn<PolicyRow>[] = [
     {
       key: "category",
-      header: "Policy",
+      header: t("policySummary.column.policy"),
       render: ({ entry }) => (
         <div className="portal-policysum__cat">
           <span className="portal-policysum__icon" aria-hidden>
@@ -73,23 +75,25 @@ export function PolicySummary() {
     },
     {
       key: "status",
-      header: "Status",
+      header: t("policySummary.column.status"),
       width: "7rem",
       render: ({ state }) => {
         const badge = STATE_BADGE[state];
         return (
           <StatusBadge tone={badge.tone} size="sm">
-            {badge.label}
+            {t(badge.labelKey)}
           </StatusBadge>
         );
       },
     },
     {
       key: "rule",
-      header: "Active rule",
+      header: t("policySummary.column.activeRule"),
       render: ({ entry, state }) => (
         <span className="portal-policysum__rule">
-          {state === "active" ? entry.config.summary : "No rule enforced yet"}
+          {state === "active"
+            ? entry.config.summary
+            : t("policySummary.noRule")}
         </span>
       ),
     },
@@ -102,7 +106,7 @@ export function PolicySummary() {
         if (state === "locked") {
           return (
             <Button size="sm" variant="ghost" onClick={goToPolicies}>
-              Coming soon
+              {t("policySummary.action.comingSoon")}
             </Button>
           );
         }
@@ -112,7 +116,9 @@ export function PolicySummary() {
             variant={state === "active" ? "ghost" : "outlined"}
             onClick={goToPolicies}
           >
-            {state === "active" ? "Configure" : "Set up"}
+            {state === "active"
+              ? t("policySummary.action.configure")
+              : t("policySummary.action.setUp")}
           </Button>
         );
       },
@@ -122,19 +128,23 @@ export function PolicySummary() {
   const rows: PolicyRow[] = data?.catalogue.map(toRow) ?? [];
 
   return (
-    <section className="portal-policysum" aria-label="What runs on your PDFs">
+    <section className="portal-policysum" aria-label={t("policySummary.title")}>
       <Card padding="none">
         <header className="portal-policysum__head">
           <div>
-            <h2 className="portal-policysum__title">What runs on your PDFs</h2>
+            <h2 className="portal-policysum__title">
+              {t("policySummary.title")}
+            </h2>
             <p className="portal-policysum__sub">
-              Standing automations every document passes through, regardless of
-              which pipeline handles it.
+              {t("policySummary.subtitle")}
             </p>
           </div>
           {data && (
             <StatusBadge tone="info" size="sm">
-              {data.summary.active} / {data.summary.categories} active
+              {t("policySummary.activeSummary", {
+                active: data.summary.active,
+                total: data.summary.categories,
+              })}
             </StatusBadge>
           )}
         </header>
@@ -153,8 +163,8 @@ export function PolicySummary() {
         {isEmpty && (
           <EmptyState
             size="compact"
-            title="No policies yet"
-            description="Once policies are configured, the categories appear here."
+            title={t("policySummary.empty.title")}
+            description={t("policySummary.empty.description")}
           />
         )}
 

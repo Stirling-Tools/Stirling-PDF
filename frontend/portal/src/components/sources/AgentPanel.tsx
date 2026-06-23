@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import {
   Button,
   Chip,
@@ -10,6 +11,7 @@ import { pct } from "@portal/components/sources/format";
 import "@portal/views/Sources.css";
 
 export function AgentPanel({ d }: { d: AgentDetail }) {
+  const { t } = useTranslation();
   const errorTone =
     d.errorRate >= 0.05
       ? "danger"
@@ -19,22 +21,31 @@ export function AgentPanel({ d }: { d: AgentDetail }) {
   return (
     <div className="portal-sources__detail">
       <div className="portal-sources__stat-grid">
-        <StatTile label="Model" value={<code>{d.model}</code>} />
-        <StatTile label="Calls / 24h" value={d.calls24h.toLocaleString()} />
         <StatTile
-          label="Error rate"
+          label={t("sources.agent.model")}
+          value={<code>{d.model}</code>}
+        />
+        <StatTile
+          label={t("sources.agent.calls24h")}
+          value={d.calls24h.toLocaleString()}
+        />
+        <StatTile
+          label={t("sources.agent.errorRate")}
           value={
             <StatusBadge tone={errorTone} size="sm">
               {pct(d.errorRate)}
             </StatusBadge>
           }
         />
-        <StatTile label="Escalations / 24h" value={d.escalations24h} />
+        <StatTile
+          label={t("sources.agent.escalations24h")}
+          value={d.escalations24h}
+        />
       </div>
 
       <div className="portal-sources__bar-row">
         <div className="portal-sources__bar-head">
-          <span>Mean confidence</span>
+          <span>{t("sources.agent.meanConfidence")}</span>
           <strong>{pct(d.confidence)}</strong>
         </div>
         <ProgressBar
@@ -42,13 +53,13 @@ export function AgentPanel({ d }: { d: AgentDetail }) {
           color={
             d.confidence >= 0.93 ? "var(--color-green)" : "var(--color-amber)"
           }
-          label="Mean output confidence"
+          label={t("sources.agent.meanOutputConfidence")}
         />
       </div>
 
       <div className="portal-sources__detail-section">
         <span className="portal-sources__detail-heading">
-          Assigned pipelines
+          {t("sources.agent.assignedPipelines")}
         </span>
         <div className="portal-sources__chips">
           {d.assignedPipelines.map((p) => (
@@ -60,7 +71,9 @@ export function AgentPanel({ d }: { d: AgentDetail }) {
       </div>
 
       <div className="portal-sources__detail-section">
-        <span className="portal-sources__detail-heading">Scopes</span>
+        <span className="portal-sources__detail-heading">
+          {t("sources.agent.scopes")}
+        </span>
         <div className="portal-sources__chips">
           {d.scopes.map((s) => (
             <Chip key={s} accent="neutral" size="sm">
@@ -74,10 +87,10 @@ export function AgentPanel({ d }: { d: AgentDetail }) {
           POST /v1/sources/{id}/pause — currently inert demo controls. */}
       <div className="portal-sources__detail-actions">
         <Button size="sm" variant="outlined">
-          View eval runs
+          {t("sources.agent.viewEvalRuns", "View eval runs")}
         </Button>
         <Button size="sm" variant="ghost">
-          Pause agent
+          {t("sources.agent.pauseAgent")}
         </Button>
       </div>
     </div>

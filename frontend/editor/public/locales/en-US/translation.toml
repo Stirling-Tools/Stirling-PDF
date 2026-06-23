@@ -5863,6 +5863,7 @@ routing = "Routing"
 security = "Security"
 
 [policies.detail]
+close = "Close"
 editSettings = "Edit Settings"
 enforces = "Enforces"
 managedByOrg = "Managed by your organization. Contact a team leader to change this policy."
@@ -5916,6 +5917,7 @@ allDocTypesTitle = "All document types"
 back = "Back"
 builderDesc = "Build the sequence of tools this policy runs on each document."
 clear = "Clear"
+close = "Close"
 continue = "Continue"
 docTypesLabel = "Document types"
 edit = "Edit"
@@ -8620,6 +8622,7 @@ disableByAdmin = "Disable MFA"
 
 [workspace.people.roleDescriptions]
 admin = "Can manage settings and invite users, with full administrative access."
+currentRole = "Current assigned role."
 user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]

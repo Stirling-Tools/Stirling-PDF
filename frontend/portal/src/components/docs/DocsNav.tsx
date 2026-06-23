@@ -1,4 +1,5 @@
 import { Button, Skeleton, StatusBadge } from "@shared/components";
+import { useTranslation } from "react-i18next";
 import type { DocsNavSection } from "@portal/api/docs";
 
 /** Left-hand documentation nav tree; each leaf selects an in-page section. */
@@ -11,8 +12,9 @@ export function DocsNav({
   active: string;
   onSelect: (id: string) => void;
 }) {
+  const { t } = useTranslation();
   return (
-    <nav className="portal-docs__nav" aria-label="Documentation">
+    <nav className="portal-docs__nav" aria-label={t("docs.nav.ariaLabel")}>
       {sections.map((section) => (
         <div key={section.id} className="portal-docs__nav-group">
           <div className="portal-docs__nav-head">

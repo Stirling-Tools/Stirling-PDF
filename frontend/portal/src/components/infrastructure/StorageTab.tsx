@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Button,
   Card,
@@ -19,14 +20,6 @@ import {
 import { SectionHeader } from "@portal/components/infrastructure/SectionHeader";
 import { pct } from "@portal/components/infrastructure/infraFormat";
 
-const RETENTION_OPTS = [
-  { value: "30", label: "30 days" },
-  { value: "60", label: "60 days" },
-  { value: "90", label: "90 days" },
-  { value: "180", label: "180 days" },
-  { value: "never", label: "Never delete" },
-];
-
 const PROVIDER_GLYPH: Record<
   StorageConfig["providers"][number]["kind"],
   string
@@ -40,10 +33,34 @@ const PROVIDER_GLYPH: Record<
 const USAGE_DANGER_FRAC = 0.8;
 
 export function StorageTab() {
+  const { t } = useTranslation();
   const { tier } = useTier();
   const state = useAsync<StorageConfig>(() => fetchStorage(tier), [tier]);
   const { data } = state;
   const { isLoading, isEmpty } = useSectionFlags(state);
+
+  const RETENTION_OPTS = [
+    {
+      value: "30",
+      label: t("infrastructure.storage.retentionOption.days", { count: 30 }),
+    },
+    {
+      value: "60",
+      label: t("infrastructure.storage.retentionOption.days", { count: 60 }),
+    },
+    {
+      value: "90",
+      label: t("infrastructure.storage.retentionOption.days", { count: 90 }),
+    },
+    {
+      value: "180",
+      label: t("infrastructure.storage.retentionOption.days", { count: 180 }),
+    },
+    {
+      value: "never",
+      label: t("infrastructure.storage.retentionOption.never"),
+    },
+  ];
 
   // TODO(backend): PATCH /v1/infrastructure/storage { retention }
   const [retention, setRetention] = useState<RetentionWindow | null>(null);
@@ -62,8 +79,8 @@ export function StorageTab() {
     return (
       <EmptyState
         size="compact"
-        title="No storage configured"
-        description="Connected storage and usage appear here."
+        title={t("infrastructure.storage.empty.title")}
+        description={t("infrastructure.storage.empty.description")}
       />
     );
   }
@@ -75,20 +92,27 @@ export function StorageTab() {
     <div className="portal-infra__stack">
       <section>
         <SectionHeader
-          title="Total usage"
-          sub="Storage consumed across all connected providers."
+          title={t("infrastructure.storage.totalUsage.heading")}
+          sub={t("infrastructure.storage.totalUsage.subheading")}
         />
         <Card padding="loose">
           <div className="portal-infra__usage-head">
             <span className="portal-infra__usage-value">
-              {data.usedGb.toLocaleString()} GB
+              {t("infrastructure.storage.gbValue", {
+                value: data.usedGb.toLocaleString(),
+              })}
               <span className="portal-infra__muted">
                 {" "}
-                / {data.quotaGb.toLocaleString()} GB
+                /{" "}
+                {t("infrastructure.storage.gbValue", {
+                  value: data.quotaGb.toLocaleString(),
+                })}
               </span>
             </span>
             <StatusBadge tone={overThreshold ? "danger" : "success"} size="sm">
-              {pct(usedFrac)} used
+              {t("infrastructure.storage.percentUsed", {
+                value: pct(usedFrac),
+              })}
             </StatusBadge>
           </div>
           <ProgressBar
@@ -99,7 +123,7 @@ export function StorageTab() {
                 ? "linear-gradient(90deg, var(--color-red), color-mix(in srgb, var(--color-red) 70%, white))"
                 : "linear-gradient(90deg, var(--color-green), color-mix(in srgb, var(--color-green) 70%, white))"
             }
-            label="Storage used"
+            label={t("infrastructure.storage.totalUsage.progressLabel")}
           />
         </Card>
       </section>
@@ -107,8 +131,8 @@ export function StorageTab() {
       <section className="portal-infra__split">
         <Card padding="loose">
           <SectionHeader
-            title="Connected providers"
-            sub="Where processed artifacts are written."
+            title={t("infrastructure.storage.providers.heading")}
+            sub={t("infrastructure.storage.providers.subheading")}
           />
           <ul className="portal-infra__providers">
             {data.providers.map((p) => (
@@ -122,16 +146,18 @@ export function StorageTab() {
                 </span>
                 {p.connected ? (
                   <span className="portal-infra__provider-meta">
-                    <span className="portal-infra__mono">{p.usedGb} GB</span>
+                    <span className="portal-infra__mono">
+                      {t("infrastructure.storage.gbValue", { value: p.usedGb })}
+                    </span>
                     <StatusBadge tone="success" size="sm">
-                      Connected
+                      {t("infrastructure.storage.providers.connected")}
                     </StatusBadge>
                   </span>
                 ) : (
                   // TODO(backend): launch the provider OAuth/credential flow,
                   // then POST /v1/infrastructure/storage/providers/{id}/connect
                   <Button variant="outlined" size="sm">
-                    Connect
+                    {t("infrastructure.storage.providers.connect", "Connect")}
                   </Button>
                 )}
               </li>
@@ -141,10 +167,10 @@ export function StorageTab() {
 
         <Card padding="loose">
           <SectionHeader
-            title="Retention"
-            sub="How long artifacts are kept before lifecycle deletion."
+            title={t("infrastructure.storage.retention.heading")}
+            sub={t("infrastructure.storage.retention.subheading")}
           />
-          <FormField label="Default retention window">
+          <FormField label={t("infrastructure.storage.retention.windowLabel")}>
             <Select
               options={RETENTION_OPTS}
               value={retentionValue}
@@ -155,9 +181,13 @@ export function StorageTab() {
           <div className="portal-infra__lifecycle">
             <div className="portal-infra__lifecycle-stage is-active">
               <span className="portal-infra__lifecycle-dot" />
-              <span className="portal-infra__lifecycle-label">Active</span>
+              <span className="portal-infra__lifecycle-label">
+                {t("infrastructure.storage.lifecycle.active")}
+              </span>
               <span className="portal-infra__muted">
-                0–{retentionValue === "never" ? "∞" : retentionValue}d
+                {t("infrastructure.storage.lifecycle.activeRange", {
+                  value: retentionValue === "never" ? "∞" : retentionValue,
+                })}
               </span>
             </div>
             <span className="portal-infra__lifecycle-arrow" aria-hidden>
@@ -165,17 +195,25 @@ export function StorageTab() {
             </span>
             <div className="portal-infra__lifecycle-stage">
               <span className="portal-infra__lifecycle-dot" />
-              <span className="portal-infra__lifecycle-label">Archived</span>
-              <span className="portal-infra__muted">cold storage</span>
+              <span className="portal-infra__lifecycle-label">
+                {t("infrastructure.storage.lifecycle.archived")}
+              </span>
+              <span className="portal-infra__muted">
+                {t("infrastructure.storage.lifecycle.coldStorage")}
+              </span>
             </div>
             <span className="portal-infra__lifecycle-arrow" aria-hidden>
               →
             </span>
             <div className="portal-infra__lifecycle-stage">
               <span className="portal-infra__lifecycle-dot" />
-              <span className="portal-infra__lifecycle-label">Deleted</span>
+              <span className="portal-infra__lifecycle-label">
+                {t("infrastructure.storage.lifecycle.deleted")}
+              </span>
               <span className="portal-infra__muted">
-                {retentionValue === "never" ? "never" : "purged"}
+                {retentionValue === "never"
+                  ? t("infrastructure.storage.lifecycle.never")
+                  : t("infrastructure.storage.lifecycle.purged")}
               </span>
             </div>
           </div>

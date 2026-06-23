@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import "@app/routes/authShared/auth.css";
+import "@shared/auth/ui/auth.css";
 import "@app/routes/authShared/saas-auth.css";
 import { Button } from "@shared/components/Button";
 

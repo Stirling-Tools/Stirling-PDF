@@ -64,6 +64,16 @@ export function usePoliciesEnabled(): boolean {
 }
 
 /**
+ * Whether the right rail should show the Policies section.
+ */
+export function usePoliciesVisible(): boolean {
+  const pol = usePolicies();
+  const { categories } = usePolicyCatalog();
+  if (!POLICIES_ENABLED) return false;
+  return pol.canConfigure || categories.some((c) => !c.comingSoon);
+}
+
+/**
  * Whether the current user is a guest who can't open or configure policies —
  * an anonymous user on a login-enabled deployment (i.e. a SaaS sign-up prompt
  * candidate). The policy list stays visible but its rows don't open; the guest
@@ -124,6 +134,14 @@ export function PoliciesSection({
 
   if (!POLICIES_ENABLED) return null;
 
+  // Admins / team leads see the full catalogue (coming-soon rows greyed as an
+  // enterprise upsell); regular users only see the live policies — the
+  // coming-soon "Upgrade to enterprise" rows are hidden from them.
+  const visibleCategories = pol.canConfigure
+    ? categories
+    : categories.filter((c) => !c.comingSoon);
+  if (visibleCategories.length === 0) return null;
+
   // The header tally counts every CONFIGURED policy (active + paused), not just
   // the active ones.
   const configuredCount = categories.filter(
@@ -174,14 +192,10 @@ export function PoliciesSection({
       {expanded && (
         <>
           <div className="pol-list-rows">
-            {categories.map((cat) => {
+            {visibleCategories.map((cat) => {
               if (cat.comingSoon) {
                 return (
-                  <div
-                    key={cat.id}
-                    className="pol-row pol-row--soon"
-                    aria-disabled="true"
-                  >
+                  <div key={cat.id} className="pol-row pol-row--soon">
                     <IconBadge size="sm" accent={ROW_ACCENT[cat.id] ?? "blue"}>
                       {cat.icon}
                     </IconBadge>
@@ -193,7 +207,9 @@ export function PoliciesSection({
                         variant="ghost"
                         size="sm"
                         style={{ "--sui-btn-fg": "var(--color-text-3)" }}
-                        onClick={() => window.open("https://stirling.com/contact", "_blank")}
+                        onClick={() =>
+                          window.open("https://stirling.com/contact", "_blank")
+                        }
                       >
                         {t(
                           "policies.sidebar.upgradeToEnterprise",
@@ -466,62 +482,64 @@ export function PoliciesCollapsedButton({
 
   if (!POLICIES_ENABLED) return null;
 
+  // Coming-soon policies are excluded; admins see all real policies, others only see configured ones — renders nothing when empty.
+  const railCategories = categories.filter((cat) => {
+    if (cat.comingSoon) return false;
+    if (pol.canConfigure) return true;
+    return pol.policies[cat.id]?.configured;
+  });
+  if (railCategories.length === 0) return null;
+
   return (
     <>
       <div className="pol-crail">
-        {categories
-          .filter((cat) => !cat.comingSoon)
-          .map((cat) => {
-            const status = deriveRowStatus(pol.policies[cat.id]);
-            const label = t(`policies.catalog.${cat.id}`, cat.label);
-            const statusLabel = t(
-              `policies.status.${status}`,
-              STATUS_LABEL[status],
-            );
-            const suffix =
-              status === "active"
-                ? t("policies.sidebar.railSuffixActive", " (Active)")
-                : status === "paused"
-                  ? t("policies.sidebar.railSuffixPaused", " (Paused)")
-                  : "";
-            return (
-              <AppTooltip
-                key={cat.id}
-                content={`${label}${suffix}`}
-                position="left"
-                arrow
-                delay={300}
-              >
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="pol-crail-btn"
-                  data-status={status}
-                  aria-label={t(
-                    "policies.sidebar.railAriaLabel",
-                    "{{label}} policy — {{status}}",
-                    { label, status: statusLabel },
-                  )}
-                  onClick={() => {
-                    if (guestBlocked) {
-                      promptGuestSignup();
-                      return;
-                    }
-                    selectPolicy(cat.id);
-                    onExpand();
-                  }}
-                  leftSection={
-                    <>
-                      {cat.icon}
-                      {(status === "active" || status === "paused") && (
-                        <span className="pol-crail-dot" data-status={status} />
-                      )}
-                    </>
+        {railCategories.map((cat) => {
+          const status = deriveRowStatus(pol.policies[cat.id]);
+          const label = t(`policies.catalog.${cat.id}`, cat.label);
+          const statusLabel = t(
+            `policies.status.${status}`,
+            STATUS_LABEL[status],
+          );
+          const suffix =
+            status === "active"
+              ? t("policies.sidebar.railSuffixActive", " (Active)")
+              : status === "paused"
+                ? t("policies.sidebar.railSuffixPaused", " (Paused)")
+                : "";
+          return (
+            <AppTooltip
+              key={cat.id}
+              content={`${label}${suffix}`}
+              position="left"
+              arrow
+              delay={300}
+            >
+              <button
+                type="button"
+                className="pol-crail-btn"
+                data-status={status}
+                aria-label={t(
+                  "policies.sidebar.railAriaLabel",
+                  "{{label}} policy — {{status}}",
+                  { label, status: statusLabel },
+                )}
+                onClick={() => {
+                  if (guestBlocked) {
+                    promptGuestSignup();
+                    return;
                   }
-                />
-              </AppTooltip>
-            );
-          })}
+                  selectPolicy(cat.id);
+                  onExpand();
+                }}
+              >
+                {cat.icon}
+                {(status === "active" || status === "paused") && (
+                  <span className="pol-crail-dot" data-status={status} />
+                )}
+              </button>
+            </AppTooltip>
+          );
+        })}
       </div>
       <div className="tool-panel__collapsed-divider" />
     </>

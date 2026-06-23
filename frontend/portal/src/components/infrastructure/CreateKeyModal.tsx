@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Banner,
   Button,
@@ -23,6 +24,7 @@ export function CreateKeyModal({
   open: boolean;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const [name, setName] = useState("");
   const [perms, setPerms] = useState<ApiKeyPermission[]>(["Read"]);
   const [ips, setIps] = useState("");
@@ -58,25 +60,31 @@ export function CreateKeyModal({
       open={open}
       onClose={close}
       width="md"
-      title={created ? "Key created" : "Create API key"}
+      title={
+        created
+          ? t("infrastructure.createKey.titleCreated")
+          : t("infrastructure.createKey.title")
+      }
       subtitle={
         created
-          ? "Copy this secret now — it won't be shown again."
-          : "Scope the key to the minimum it needs. You can rotate or revoke at any time."
+          ? t("infrastructure.createKey.subtitleCreated")
+          : t("infrastructure.createKey.subtitle")
       }
       footer={
         created ? (
-          <Button onClick={close}>Done</Button>
+          <Button onClick={close}>
+            {t("infrastructure.createKey.done", "Done")}
+          </Button>
         ) : (
           <div className="portal-infra__modal-actions">
             <Button variant="ghost" onClick={close}>
-              Cancel
+              {t("infrastructure.createKey.cancel")}
             </Button>
             <Button
               disabled={name.trim() === "" || perms.length === 0}
               onClick={createKey}
             >
-              Create key
+              {t("infrastructure.createKey.createKey")}
             </Button>
           </div>
         )
@@ -87,24 +95,27 @@ export function CreateKeyModal({
           <CodeBlock
             code={DEMO_NEW_KEY_SECRET}
             lang="bash"
-            caption="Secret key"
+            caption={t("infrastructure.createKey.secretKeyCaption")}
           />
           <Banner
             tone="warning"
-            description="Store this in a secrets manager. Stirling only ever stores a hash — there is no way to recover it later."
+            description={t("infrastructure.createKey.secretWarning")}
           />
         </div>
       ) : (
         <div className="portal-infra__form">
-          <FormField label="Key name" required>
+          <FormField
+            label={t("infrastructure.createKey.keyNameLabel")}
+            required
+          >
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Production · ingest"
+              placeholder={t("infrastructure.createKey.keyNamePlaceholder")}
             />
           </FormField>
 
-          <FormField label="Permissions">
+          <FormField label={t("infrastructure.createKey.permissionsLabel")}>
             <div className="portal-infra__perm-row">
               {PERMISSION_OPTS.map((p) => (
                 <Checkbox
@@ -118,8 +129,8 @@ export function CreateKeyModal({
           </FormField>
 
           <FormField
-            label="IP allowlist"
-            helperText="Comma-separated CIDR ranges. Leave blank to allow any IP."
+            label={t("infrastructure.createKey.ipAllowlistLabel")}
+            helperText={t("infrastructure.createKey.ipAllowlistHelper")}
           >
             <Input
               value={ips}

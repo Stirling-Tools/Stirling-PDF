@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button, EmptyState, Skeleton } from "@shared/components";
 import { useTier } from "@portal/contexts/TierContext";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
@@ -16,6 +17,7 @@ import { InviteMemberModal } from "@portal/components/users/InviteMemberModal";
 import "@portal/views/Users.css";
 
 export function Users() {
+  const { t } = useTranslation();
   const { tier } = useTier();
   const state = useAsync<UsersResponse>(() => fetchUsers(tier), [tier]);
   const { data, loading } = state;
@@ -45,17 +47,14 @@ export function Users() {
     <div className="portal-users">
       <header className="portal-users__head">
         <div>
-          <h1 className="portal-users__title">Users</h1>
-          <p className="portal-users__sub">
-            The people in your organization and the access they hold — roles,
-            status and security controls.
-          </p>
+          <h1 className="portal-users__title">{t("users.title")}</h1>
+          <p className="portal-users__sub">{t("users.subtitle")}</p>
         </div>
         <Button
           onClick={() => setInviteOpen(true)}
           leftSection={<span aria-hidden>+</span>}
         >
-          Invite member
+          {t("common.inviteMember")}
         </Button>
       </header>
 
@@ -71,10 +70,12 @@ export function Users() {
 
       {isEmpty && (
         <EmptyState
-          title="No members yet"
-          description="Invite your team to start collaborating on documents and pipelines."
+          title={t("users.empty.title")}
+          description={t("users.empty.description")}
           actions={
-            <Button onClick={() => setInviteOpen(true)}>Invite member</Button>
+            <Button onClick={() => setInviteOpen(true)}>
+              {t("common.inviteMember")}
+            </Button>
           }
         />
       )}

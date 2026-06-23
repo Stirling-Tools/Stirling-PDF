@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Card, Chip, CodeBlock } from "@shared/components";
 import type { EmbedComponent } from "@portal/api/docs";
 import { DocsSection } from "@portal/components/docs/DocsSection";
@@ -7,12 +8,13 @@ export function ComponentsSection({
 }: {
   components: EmbedComponent[];
 }) {
+  const { t } = useTranslation();
   return (
     <DocsSection
       id="component-library"
-      eyebrow="COMPONENTS"
-      title="Drop-in viewers"
-      lead="Embeddable UI for review queues and document inspection. Bring your own styles or use the shipped theme."
+      eyebrow={t("docs.components.eyebrow")}
+      title={t("docs.components.title")}
+      lead={t("docs.components.lead")}
     >
       <div className="portal-docs__component-grid">
         {components.map((c) => (
@@ -29,7 +31,7 @@ export function ComponentsSection({
       </div>
       <CodeBlock
         lang="typescript"
-        caption="embed the viewer"
+        caption={t("docs.components.codeCaption")}
         code={`import { DocumentViewer } from "@stirling/react";
 
 <DocumentViewer

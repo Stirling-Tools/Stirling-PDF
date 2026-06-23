@@ -1,5 +1,6 @@
 /// <reference types="vite/client" />
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   readMocksPreference,
   writeMocksPreference,
@@ -18,6 +19,7 @@ import { Button } from "@shared/components/Button";
  * app looks like with/without mocks.
  */
 export function MocksToggle() {
+  const { t } = useTranslation();
   const [enabled] = useState(() => readMocksPreference());
   const [pending, setPending] = useState(false);
 
@@ -40,15 +42,11 @@ export function MocksToggle() {
       }
       onClick={toggle}
       aria-pressed={enabled}
-      title={
-        enabled
-          ? "Mock data ON — fetch calls are intercepted by MSW. Click to switch to the real network (reloads the page)."
-          : "Mock data OFF — fetch calls go to the real network. Click to re-enable mocks (reloads the page)."
-      }
+      title={enabled ? t("mocks.tooltip.on") : t("mocks.tooltip.off")}
     >
       <span className="portal-mocks-toggle__dot" aria-hidden />
       <span className="portal-mocks-toggle__label">
-        Mocks {enabled ? "ON" : "OFF"}
+        {enabled ? t("mocks.label.on") : t("mocks.label.off")}
       </span>
     </Button>
   );

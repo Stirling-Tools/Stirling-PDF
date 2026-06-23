@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Chip, StatusBadge, Table, type TableColumn } from "@shared/components";
 import {
   type Source,
@@ -19,11 +20,12 @@ export function SourcesTable({
   expandedId,
   onRowClick,
 }: SourcesTableProps) {
+  const { t } = useTranslation();
   const columns = useMemo<TableColumn<Source>[]>(
     () => [
       {
         key: "name",
-        header: "Source",
+        header: t("sources.table.source"),
         render: (s) => {
           const meta = SOURCE_TYPE_META[s.type];
           return (
@@ -46,7 +48,7 @@ export function SourcesTable({
       },
       {
         key: "status",
-        header: "Status",
+        header: t("sources.table.status"),
         render: (s) => (
           <StatusBadge
             tone={SOURCE_STATUS_TONE[s.status]}
@@ -59,26 +61,26 @@ export function SourcesTable({
       },
       {
         key: "docs24h",
-        header: "Docs / 24h",
+        header: t("sources.table.docs24h"),
         align: "right",
         render: (s) => s.docs24h.toLocaleString(),
       },
       {
         key: "docs30d",
-        header: "Docs / 30d",
+        header: t("sources.table.docs30d"),
         align: "right",
         render: (s) => s.docs30d.toLocaleString(),
       },
       {
         key: "lastEvent",
-        header: "Last event",
+        header: t("sources.table.lastEvent"),
         render: (s) => (
           <span className="portal-sources__muted">{s.lastEvent}</span>
         ),
       },
       {
         key: "owner",
-        header: "Owner",
+        header: t("sources.table.owner"),
         render: (s) => <span className="portal-sources__muted">{s.owner}</span>,
       },
       {
@@ -98,7 +100,7 @@ export function SourcesTable({
         ),
       },
     ],
-    [expandedId],
+    [expandedId, t],
   );
 
   return (

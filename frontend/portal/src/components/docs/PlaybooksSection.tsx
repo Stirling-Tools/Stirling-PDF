@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Button, Card, Chip } from "@shared/components";
 import type { ButtonAccent } from "@shared/components/Button";
 import type { Playbook } from "@portal/api/docs";
@@ -11,12 +12,13 @@ const BUTTON_ACCENT: Record<Playbook["accent"], ButtonAccent> = {
 };
 
 export function PlaybooksSection({ playbooks }: { playbooks: Playbook[] }) {
+  const { t } = useTranslation();
   return (
     <DocsSection
       id="recipes"
-      eyebrow="PLAYBOOKS"
-      title="Recipes"
-      lead="End-to-end patterns that chain sources, operations, and destinations. Each maps to a pipeline you can clone."
+      eyebrow={t("docs.recipes.eyebrow")}
+      title={t("docs.recipes.title")}
+      lead={t("docs.recipes.lead")}
     >
       <div className="portal-docs__playbook-grid">
         {playbooks.map((p) => (
@@ -44,7 +46,7 @@ export function PlaybooksSection({ playbooks }: { playbooks: Playbook[] }) {
               accent={BUTTON_ACCENT[p.accent]}
               size="sm"
             >
-              Clone recipe
+              {t("docs.recipes.cloneButton", "Clone recipe")}
             </Button>
           </Card>
         ))}

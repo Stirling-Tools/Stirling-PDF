@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button, EmptyState, Modal, Skeleton } from "@shared/components";
+import { useTranslation } from "react-i18next";
 import { useUI } from "@portal/contexts/UIContext";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import { fetchQuickActions, type QuickAction } from "@portal/api/search";
@@ -7,6 +8,7 @@ import { SearchIcon } from "@portal/components/icons";
 import "@portal/components/SearchModal.css";
 
 export function SearchModal() {
+  const { t } = useTranslation();
   const { searchOpen, closeSearch } = useUI();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [query, setQuery] = useState("");
@@ -48,7 +50,7 @@ export function SearchModal() {
       open={searchOpen}
       onClose={closeSearch}
       width="lg"
-      ariaLabel="Search"
+      ariaLabel={t("search.ariaLabel")}
     >
       <div className="portal-search">
         <div className="portal-search__input-row">
@@ -57,8 +59,8 @@ export function SearchModal() {
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search Stirling — endpoints, pipelines, docs…"
-            aria-label="Search"
+            placeholder={t("search.placeholder")}
+            aria-label={t("search.ariaLabel")}
             className="portal-search__input"
             autoComplete="off"
             spellCheck={false}
@@ -82,13 +84,13 @@ export function SearchModal() {
               size="compact"
               title={
                 query.trim()
-                  ? `No matches for "${query.trim()}"`
-                  : "No quick actions"
+                  ? t("search.empty.noMatches", { query: query.trim() })
+                  : t("search.empty.noActionsTitle")
               }
               description={
                 query.trim()
-                  ? "Try a different keyword or browse the catalogue."
-                  : "Quick actions will appear here once they're available."
+                  ? t("search.empty.noMatchesDescription")
+                  : t("search.empty.noActionsDescription")
               }
             />
           )}

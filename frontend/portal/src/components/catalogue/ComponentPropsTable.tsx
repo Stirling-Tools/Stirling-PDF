@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Chip, Table, type TableColumn } from "@shared/components";
 import type { ComponentProp } from "@portal/api/sdkComponents";
 import "@portal/views/Components.css";
@@ -9,43 +10,46 @@ interface ComponentPropsTableProps {
 
 /** Small Props/API reference shown under the detail modal's Props tab. */
 export function ComponentPropsTable({ props: rows }: ComponentPropsTableProps) {
+  const { t } = useTranslation();
   const columns = useMemo<TableColumn<ComponentProp>[]>(
     () => [
       {
         key: "name",
-        header: "Prop",
+        header: t("catalogue.props.columns.name"),
         render: (p) => (
           <span className="portal-components__prop-name">{p.name}</span>
         ),
       },
       {
         key: "type",
-        header: "Type",
+        header: t("catalogue.props.columns.type"),
         render: (p) => (
           <code className="portal-components__prop-type">{p.type}</code>
         ),
       },
       {
         key: "required",
-        header: "Required",
+        header: t("catalogue.props.columns.required"),
         render: (p) =>
           p.required ? (
             <Chip size="sm" accent="amber">
-              required
+              {t("catalogue.props.required", "Required")}
             </Chip>
           ) : (
-            <span className="portal-components__muted">optional</span>
+            <span className="portal-components__muted">
+              {t("catalogue.props.optional", "Optional")}
+            </span>
           ),
       },
       {
         key: "description",
-        header: "Description",
+        header: t("catalogue.props.columns.description"),
         render: (p) => (
           <span className="portal-components__prop-desc">{p.description}</span>
         ),
       },
     ],
-    [],
+    [t],
   );
 
   return (

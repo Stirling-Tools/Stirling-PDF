@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Button,
   Card,
@@ -16,6 +17,7 @@ import "@portal/views/Usage.css";
  * enterprise render explanatory cards instead of the interactive slider.
  */
 export function SpendCapControl({ summary }: { summary: BillingSummary }) {
+  const { t } = useTranslation();
   const { tier } = useTier();
   const [enabled, setEnabled] = useState(summary.spendCap !== null);
   const [cap, setCap] = useState(summary.spendCap ?? 1_000);
@@ -23,10 +25,11 @@ export function SpendCapControl({ summary }: { summary: BillingSummary }) {
   if (tier === "free") {
     return (
       <Card padding="loose" className="portal-usage__cap-card">
-        <h2 className="portal-usage__section-title">Spend cap</h2>
+        <h2 className="portal-usage__section-title">
+          {t("usage.spendCap.free.title")}
+        </h2>
         <p className="portal-usage__section-sub">
-          The free plan can't accrue spend — your usage is hard-capped at 500
-          docs/month. Upgrade to pay-as-you-go to set a monthly spend cap.
+          {t("usage.spendCap.free.description")}
         </p>
       </Card>
     );
@@ -35,16 +38,21 @@ export function SpendCapControl({ summary }: { summary: BillingSummary }) {
   if (tier === "enterprise") {
     return (
       <Card padding="loose" className="portal-usage__cap-card">
-        <h2 className="portal-usage__section-title">Spend controls</h2>
+        <h2 className="portal-usage__section-title">
+          {t("usage.spendCap.enterprise.title")}
+        </h2>
         <p className="portal-usage__section-sub">
-          Spend is governed by your committed-volume contract. Overage terms and
-          alert thresholds are managed with your account team.
+          {t("usage.spendCap.enterprise.description")}
         </p>
         <div className="portal-usage__cap-meta">
           <StatusBadge tone="purple" size="sm">
-            Committed contract
+            {t("usage.spendCap.enterprise.badge")}
           </StatusBadge>
-          <span>Overage billed at ${summary.overageRate.toFixed(3)}/doc</span>
+          <span>
+            {t("usage.spendCap.enterprise.overage", {
+              rate: summary.overageRate.toFixed(3),
+            })}
+          </span>
         </div>
       </Card>
     );
@@ -59,9 +67,11 @@ export function SpendCapControl({ summary }: { summary: BillingSummary }) {
     <Card padding="loose" className="portal-usage__cap-card">
       <div className="portal-usage__cap-card-head">
         <div>
-          <h2 className="portal-usage__section-title">Monthly spend cap</h2>
+          <h2 className="portal-usage__section-title">
+            {t("usage.spendCap.pro.title")}
+          </h2>
           <p className="portal-usage__section-sub">
-            Pause processing automatically when spend reaches your limit.
+            {t("usage.spendCap.pro.subtitle")}
           </p>
         </div>
         <Button
@@ -69,7 +79,9 @@ export function SpendCapControl({ summary }: { summary: BillingSummary }) {
           size="sm"
           onClick={() => setEnabled((v) => !v)}
         >
-          {enabled ? "Disable cap" : "Enable cap"}
+          {enabled
+            ? t("usage.spendCap.pro.disable")
+            : t("usage.spendCap.pro.enable")}
         </Button>
       </div>
 
@@ -87,7 +99,10 @@ export function SpendCapControl({ summary }: { summary: BillingSummary }) {
           </div>
           <div className="portal-usage__cap-row">
             <span>
-              Projected {USD.format(projected)} of {USD.format(cap)} cap
+              {t("usage.spendCap.pro.projected", {
+                projected: USD.format(projected),
+                cap: USD.format(cap),
+              })}
             </span>
             <span className="portal-usage__cap-pct">
               {Math.round(capRatio * 100)}%
@@ -97,7 +112,7 @@ export function SpendCapControl({ summary }: { summary: BillingSummary }) {
             value={capRatio}
             thresholded
             height={8}
-            label="Spend against cap"
+            label={t("usage.spendCap.pro.progressLabel")}
           />
         </>
       )}

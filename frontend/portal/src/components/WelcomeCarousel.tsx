@@ -1,17 +1,15 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { Button, StatusBadge } from "@shared/components";
 import { useView, type ViewId } from "@portal/contexts/ViewContext";
 import "@portal/components/WelcomeCarousel.css";
 
 type SlideAction =
-  | { label: string; target: ViewId }
-  | { label: string; action: "try-op" };
+  | { labelKey: string; target: ViewId }
+  | { labelKey: string; action: "try-op" };
 
 interface Slide {
   id: string;
-  eyebrow: string;
-  title: string;
-  sub: string;
   durationMs: number;
   primary: SlideAction;
   secondary: SlideAction;
@@ -19,21 +17,22 @@ interface Slide {
 }
 
 function EditorOrnament() {
+  const { t } = useTranslation();
   return (
     <div className="portal-carousel__doc">
       <StatusBadge tone="danger" size="sm" pulse>
-        Critical
+        {t("welcome.ornament.editor.critical")}
       </StatusBadge>
       <div className="portal-carousel__doc-title">
         Vulnerability Assessment Report
       </div>
       <div className="portal-carousel__doc-sub">CVE-2026-1847 · 12 pages</div>
       <div className="portal-carousel__doc-meta">
-        <span>signed</span>
+        <span>{t("welcome.ornament.editor.signed")}</span>
         <span>·</span>
-        <span>OCR-clean</span>
+        <span>{t("welcome.ornament.editor.ocrClean")}</span>
         <span>·</span>
-        <span>schema match 0.97</span>
+        <span>{t("welcome.ornament.editor.schemaMatch")}</span>
       </div>
     </div>
   );
@@ -88,32 +87,29 @@ function AgentOrnament() {
 const SLIDES: Slide[] = [
   {
     id: "editor",
-    eyebrow: "PDF Editor",
-    title: "The #1 PDF Editor on GitHub",
-    sub: "Annotate, sign, redact, and review locally or in the cloud. Brought to the platform as the credibility anchor of the Stirling control plane.",
     durationMs: 12000,
-    primary: { label: "Install PDF Editor", target: "editor" },
-    secondary: { label: "Connect an instance", target: "editor" },
+    primary: { labelKey: "welcome.slides.editor.primary", target: "editor" },
+    secondary: {
+      labelKey: "welcome.slides.editor.secondary",
+      target: "editor",
+    },
     ornament: <EditorOrnament />,
   },
   {
     id: "platform",
-    eyebrow: "Platform",
-    title: "PDF Infrastructure for Developers",
-    sub: "Ingest from agents, APIs and connectors. Run composable pipelines with evals and golden sets. Land in a vault with zero-standing-access controls.",
     durationMs: 8000,
-    primary: { label: "Try a PDF operation", action: "try-op" },
-    secondary: { label: "Get an API key", target: "infrastructure" },
+    primary: { labelKey: "welcome.slides.platform.primary", action: "try-op" },
+    secondary: {
+      labelKey: "welcome.slides.platform.secondary",
+      target: "infrastructure",
+    },
     ornament: <PlatformOrnament />,
   },
   {
     id: "agents",
-    eyebrow: "AI Agents",
-    title: "PDF Processor for AI Agents",
-    sub: "Wire your agent via MCP, REST or tool definitions. Deterministic operations and guardrails — test with scenarios and evals before you ship.",
     durationMs: 8000,
-    primary: { label: "Try PDF Processor", target: "sources" },
-    secondary: { label: "View MCP docs", target: "docs" },
+    primary: { labelKey: "welcome.slides.agents.primary", target: "sources" },
+    secondary: { labelKey: "welcome.slides.agents.secondary", target: "docs" },
     ornament: <AgentOrnament />,
   },
 ];
@@ -124,6 +120,7 @@ interface WelcomeCarouselProps {
 }
 
 export function WelcomeCarousel({ onTryOp }: WelcomeCarouselProps) {
+  const { t } = useTranslation();
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const { setActiveView } = useView();
@@ -160,26 +157,32 @@ export function WelcomeCarousel({ onTryOp }: WelcomeCarouselProps) {
           setPaused(false);
         }
       }}
-      aria-label="Stirling product highlights"
+      aria-label={t("welcome.ariaLabel")}
       aria-roledescription="carousel"
     >
       <div className="portal-carousel__inner" key={slide.id}>
         <div className="portal-carousel__text">
-          <div className="portal-carousel__eyebrow">{slide.eyebrow}</div>
-          <h1 className="portal-carousel__title">{slide.title}</h1>
-          <p className="portal-carousel__sub">{slide.sub}</p>
+          <div className="portal-carousel__eyebrow">
+            {t(`welcome.slides.${slide.id}.eyebrow`)}
+          </div>
+          <h1 className="portal-carousel__title">
+            {t(`welcome.slides.${slide.id}.title`)}
+          </h1>
+          <p className="portal-carousel__sub">
+            {t(`welcome.slides.${slide.id}.sub`)}
+          </p>
           <div className="portal-carousel__cta">
             <Button
               onClick={() => runAction(slide.primary)}
               rightSection={<span aria-hidden>→</span>}
             >
-              {slide.primary.label}
+              {t(slide.primary.labelKey)}
             </Button>
             <Button
               variant="outlined"
               onClick={() => runAction(slide.secondary)}
             >
-              {slide.secondary.label}
+              {t(slide.secondary.labelKey)}
             </Button>
           </div>
         </div>
@@ -194,14 +197,17 @@ export function WelcomeCarousel({ onTryOp }: WelcomeCarouselProps) {
       <div
         className="portal-carousel__dots"
         role="group"
-        aria-label="Carousel pagination"
+        aria-label={t("welcome.pagination")}
       >
         {SLIDES.map((s, i) => (
           <Button
             key={s.id}
             variant="ghost"
             aria-current={i === index ? "true" : undefined}
-            aria-label={`Slide ${i + 1}: ${s.title}`}
+            aria-label={t("welcome.slideLabel", {
+              number: i + 1,
+              title: t(`welcome.slides.${s.id}.title`),
+            })}
             className={
               "portal-carousel__dot" + (i === index ? " is-active" : "")
             }

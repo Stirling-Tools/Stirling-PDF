@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import {
   Button,
   EmptyState,
@@ -14,38 +15,50 @@ interface EvalsPanelProps {
   agent: Agent;
 }
 
-const COLUMNS: TableColumn<EvalCase>[] = [
-  { key: "name", header: "Eval case", render: (c) => c.name },
-  {
-    key: "result",
-    header: "Result",
-    render: (c) =>
-      c.passing === null ? (
-        <span className="portal-agents__muted">not run</span>
-      ) : (
-        <StatusBadge tone={c.passing ? "success" : "danger"} size="sm">
-          {c.passing ? "pass" : "fail"}
-        </StatusBadge>
-      ),
-  },
-  {
-    key: "latency",
-    header: "Latency",
-    align: "right",
-    render: (c) => (
-      <span className="portal-agents__mono">{c.latencyMs} ms</span>
-    ),
-  },
-];
-
 /** Golden-set pass-rate, the per-case results table, and a run affordance. */
 export function EvalsPanel({ agent }: EvalsPanelProps) {
+  const { t } = useTranslation();
+
+  const columns: TableColumn<EvalCase>[] = [
+    {
+      key: "name",
+      header: t("agentBuilder.evals.columnCase"),
+      render: (c) => c.name,
+    },
+    {
+      key: "result",
+      header: t("agentBuilder.evals.columnResult"),
+      render: (c) =>
+        c.passing === null ? (
+          <span className="portal-agents__muted">
+            {t("agentBuilder.evals.notRun")}
+          </span>
+        ) : (
+          <StatusBadge tone={c.passing ? "success" : "danger"} size="sm">
+            {c.passing
+              ? t("agentBuilder.evals.pass")
+              : t("agentBuilder.evals.fail")}
+          </StatusBadge>
+        ),
+    },
+    {
+      key: "latency",
+      header: t("agentBuilder.evals.columnLatency"),
+      align: "right",
+      render: (c) => (
+        <span className="portal-agents__mono">
+          {t("agentBuilder.evals.latencyMs", { ms: c.latencyMs })}
+        </span>
+      ),
+    },
+  ];
+
   if (agent.evalsTotal === 0) {
     return (
       <div className="portal-agents__panel">
         <EmptyState
-          title="No golden set yet"
-          description="Evals turn your scenarios into a repeatable golden set. Upgrade to capture pass-rate over time and gate publishes on it."
+          title={t("agentBuilder.evals.empty.title")}
+          description={t("agentBuilder.evals.empty.description")}
           size="compact"
         />
       </div>
@@ -64,34 +77,34 @@ export function EvalsPanel({ agent }: EvalsPanelProps) {
       <div className="portal-agents__eval-head">
         <div className="portal-agents__stat-grid portal-agents__stat-grid--two">
           <StatTile
-            label="Pass rate"
+            label={t("agentBuilder.evals.passRate")}
             value={`${Math.round(rate * 100)}%`}
             tone={rate >= 0.95 ? "success" : rate >= 0.8 ? "warning" : "danger"}
           />
           <StatTile
-            label="Cases passing"
+            label={t("agentBuilder.evals.casesPassing")}
             value={`${agent.evalsPassing} / ${agent.evalsTotal}`}
           />
         </div>
         <Button size="sm" variant="outlined" onClick={runEvals}>
-          Run evals
+          {t("agentBuilder.evals.runEvals", "Run evals")}
         </Button>
       </div>
 
       <div className="portal-agents__bar-row">
         <div className="portal-agents__bar-head">
-          <span>Golden-set pass rate</span>
+          <span>{t("agentBuilder.evals.goldenSetPassRate")}</span>
           <strong>{Math.round(rate * 100)}%</strong>
         </div>
         <ProgressBar
           value={rate}
           color={rate >= 0.95 ? "var(--color-green)" : "var(--color-amber)"}
-          label="Golden-set pass rate"
+          label={t("agentBuilder.evals.goldenSetPassRate")}
         />
       </div>
 
       <Table<EvalCase>
-        columns={COLUMNS}
+        columns={columns}
         rows={agent.evalCases}
         rowKey={(c) => c.id}
       />

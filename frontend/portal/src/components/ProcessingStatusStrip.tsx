@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Banner, Button, ProgressBar, Skeleton } from "@shared/components";
 import { TIER_INFO, useTier } from "@portal/contexts/TierContext";
 import { useView } from "@portal/contexts/ViewContext";
@@ -24,6 +25,7 @@ function parseUsage(value: KpiEntry["value"]): {
 }
 
 export function ProcessingStatusStrip() {
+  const { t } = useTranslation();
   const { tier } = useTier();
   const { setActiveView } = useView();
   const { data: kpis, loading } = useAsync<KpiEntry[]>(
@@ -58,7 +60,7 @@ export function ProcessingStatusStrip() {
               variant="outlined"
               onClick={() => setActiveView("usage")}
             >
-              Upgrade
+              {t("processingStatus.upgrade")}
             </Button>
           ) : undefined
         }
@@ -66,7 +68,7 @@ export function ProcessingStatusStrip() {
         <div className="portal-statusstrip__free-row">
           <span className="portal-statusstrip__free-label">
             <strong>{used.toLocaleString()}</strong> / {cap.toLocaleString()}{" "}
-            PDFs this month
+            {t("processingStatus.pdfsThisMonth")}
           </span>
           <span className="portal-statusstrip__free-pct">
             {Math.round(ratio * 100)}%
@@ -75,7 +77,7 @@ export function ProcessingStatusStrip() {
         <ProgressBar
           value={ratio}
           thresholded
-          label={`${used} of ${cap} PDFs used this month`}
+          label={t("processingStatus.progressLabel", { used, cap })}
         />
       </Banner>
     );
@@ -97,7 +99,7 @@ export function ProcessingStatusStrip() {
         ·
       </span>
       <span className="portal-statusstrip__volume">
-        <strong>{volume ?? "—"}</strong> PDFs processed · last 30 days
+        <strong>{volume ?? "—"}</strong> {t("processingStatus.volumeSuffix")}
       </span>
       <Button
         size="sm"
@@ -105,7 +107,7 @@ export function ProcessingStatusStrip() {
         className="portal-statusstrip__manage"
         onClick={() => setActiveView("usage")}
       >
-        Manage plan
+        {t("processingStatus.managePlan")}
       </Button>
     </div>
   );

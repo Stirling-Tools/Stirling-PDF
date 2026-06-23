@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button, Card, Chip, CodeBlock } from "@shared/components";
 import type { PairingMethod, PairingOption } from "@portal/api/editorDeploy";
 
@@ -20,6 +21,7 @@ interface Props {
  * has no submit endpoint yet.
  */
 export function PairingPanel({ pairings, onUpgrade }: Props) {
+  const { t } = useTranslation();
   // Tracks which option just got a (mock) rotate so we can flash confirmation.
   const [rotated, setRotated] = useState<PairingMethod | null>(null);
 
@@ -53,7 +55,7 @@ export function PairingPanel({ pairings, onUpgrade }: Props) {
             {p.locked ? (
               <div className="portal-editor__lock">
                 <p className="portal-editor__lock-copy">
-                  IaC provisioning is part of Enterprise.
+                  {t("editorAdmin.pairing.lockCopy")}
                 </p>
                 <Button
                   size="sm"
@@ -61,7 +63,7 @@ export function PairingPanel({ pairings, onUpgrade }: Props) {
                   accent="neutral"
                   onClick={onUpgrade}
                 >
-                  Talk to sales
+                  {t("editorAdmin.pairing.talkToSales")}
                 </Button>
               </div>
             ) : (
@@ -85,10 +87,10 @@ export function PairingPanel({ pairings, onUpgrade }: Props) {
                     onClick={() => rotate(p.method)}
                   >
                     {rotated === p.method
-                      ? "Generated ✓"
+                      ? t("editorAdmin.pairing.generated")
                       : p.method === "shortcode"
-                        ? "Generate new code"
-                        : "Rotate"}
+                        ? t("editorAdmin.pairing.generateNewCode")
+                        : t("editorAdmin.pairing.rotate")}
                   </Button>
                 </div>
               </>
