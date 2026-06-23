@@ -222,6 +222,28 @@ subprojects {
         dependencies {
             // Override BOM-managed commons-lang3 for CVE-2025-48924 fix
             dependency 'org.apache.commons:commons-lang3:3.20.0'
+            // CVE-2026-42198: pgjdbc SCRAM-SHA-256 DoS. Boot BOM pins 42.7.10; override to fixed driver.
+            dependency 'org.postgresql:postgresql:42.7.11'
+            // Netty HIGH CVEs (transitive via spring-boot-starter-data-redis: spring-boot-netty + Lettuce).
+            // Boot BOM pins 4.2.12.Final; override the whole group to the patched 4.2.15.Final.
+            dependencySet(group: 'io.netty', version: '4.2.15.Final') {
+                entry 'netty-common'
+                entry 'netty-buffer'
+                entry 'netty-transport'
+                entry 'netty-transport-native-unix-common'
+                entry 'netty-transport-classes-epoll'
+                entry 'netty-resolver'
+                entry 'netty-resolver-dns'
+                entry 'netty-codec'
+                entry 'netty-codec-base'
+                entry 'netty-codec-dns'
+                entry 'netty-codec-http'
+                entry 'netty-codec-http2'
+                entry 'netty-codec-compression'
+                entry 'netty-codec-marshalling'
+                entry 'netty-codec-protobuf'
+                entry 'netty-handler'
+            }
         }
     }
 
