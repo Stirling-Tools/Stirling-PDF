@@ -25,8 +25,11 @@ export function useFormCommit(onApplied?: (blob: Blob) => void) {
         const blob = await run();
         dispatchFormApply(blob);
         onApplied?.(blob);
-      } catch (err: any) {
-        setError(err?.message || t(errorKey, errorFallback));
+      } catch (err) {
+        setError(
+          (err instanceof Error ? err.message : undefined) ||
+            t(errorKey, errorFallback),
+        );
         console.error("[FormFill] commit failed:", err);
       } finally {
         setCommitting(false);
