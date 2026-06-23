@@ -17,7 +17,7 @@ if (-not $Sha) {
 
 New-Item -ItemType Directory -Force -Path (Split-Path -Parent $Dest) | Out-Null
 
-$archive = New-TemporaryFile
+$archive = [System.IO.Path]::GetTempFileName()
 $extract = Join-Path $env:TEMP 'gitleaks-extract'
 try {
     Invoke-WebRequest -Uri $Url -OutFile $archive
