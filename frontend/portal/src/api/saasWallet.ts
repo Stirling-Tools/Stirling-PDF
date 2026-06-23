@@ -5,9 +5,10 @@
  * (members, breakdowns, activity).
  *
  * Direct portal → SaaS call: authenticated with the admin's Supabase JWT via
- * {@link saasJson}. Not gated on device credential (that's instance-only).
+ * {@link apiClient.saas}. Not gated on the device credential (that's
+ * instance-only, for unattended metering).
  */
-import { saasJson } from "@portal/api/saas";
+import { apiClient } from "@portal/api/http";
 import type {
   EntitlementState,
   SubscriptionStatus,
@@ -79,6 +80,8 @@ export function adaptSaasWallet(snap: SaasWalletSnapshot): WalletContract {
 
 /** Fetch the live wallet from the SaaS Java backend with the admin's JWT. */
 export async function fetchWalletFromSaas(): Promise<WalletContract> {
-  const snap = await saasJson<SaasWalletSnapshot>("/api/v1/payg/wallet");
+  const snap = await apiClient.saas.json<SaasWalletSnapshot>(
+    "/api/v1/payg/wallet",
+  );
   return adaptSaasWallet(snap);
 }

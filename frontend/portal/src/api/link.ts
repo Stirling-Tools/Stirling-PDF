@@ -1,4 +1,4 @@
-import { httpJson } from "@portal/api/http";
+import { apiClient } from "@portal/api/http";
 import type {
   LinkInstanceRequest,
   LinkStatus,
@@ -14,74 +14,84 @@ export type {
 /**
  * Account-link client (combined-billing "Mode A"). Two distinct surfaces:
  *
- * THIS instance — the org's own same-origin LOCAL backend:
- *   - POST /api/v1/account-link/link  — hand the local backend the admin's SaaS
- *     JWT. It registers with SaaS and stores the device secret SERVER-SIDE; the
- *     portal NEVER receives or renders the secret.
- *   - GET  /api/v1/account-link/status — Linked / Not-linked for this instance.
- *   - POST /api/v1/account-link/unlink — drop this instance's link.
+ * THIS instance — apiClient.local (Spring admin bearer auto-attached):
+ *   - POST /api/v1/account-link/link    — hand the local backend the admin's
+ *                                          SaaS JWT in the body. It registers
+ *                                          with SaaS + stores the device
+ *                                          secret SERVER-SIDE; the portal
+ *                                          NEVER receives or renders it.
+ *   - GET  /api/v1/account-link/status  — Linked / Not-linked for this
+ *                                          instance.
+ *   - POST /api/v1/account-link/unlink  — drop this instance's link (local
+ *                                          backend best-effort tells SaaS).
  *
- * TEAM-WIDE management — the SaaS backend, called with the admin's JWT directly
- * (an attended admin action):
- *   - GET  /api/v1/account-link/instances        — every linked instance.
- *   - POST /api/v1/account-link/instances/{id}/revoke — cut off one instance.
+ * TEAM-WIDE management — currently apiClient.mock (MSW-only paths until
+ * migrated):
+ *   - GET  /api/v1/account-link/instances        — every linked instance
+ *   - POST /api/v1/account-link/instances/{id}/revoke
  *
- * Paths mirror the real AccountLinkController so MSW can be dropped with no code
- * change.
+ * TODO(api): migrate the two team-wide calls to apiClient.saas (they belong
+ * on the hosted SaaS Java backend; the local backend has no such endpoints).
+ * Blocked on configuring MSW handlers to match the SaaS absolute URL so the
+ * dev/Storybook flow keeps working.
  */
 
 const BASE = "/api/v1/account-link";
 
-function authHeaders(accessToken: string | null): Record<string, string> {
-  return accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
-}
+const accessTokenHeaders = (
+  accessToken: string | null,
+): Record<string, string> =>
+  accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
 
 /**
- * POST /api/v1/account-link/link — link THIS instance. The local backend takes
- * the SaaS JWT, registers with SaaS, and persists the device secret itself; the
- * response carries only the resulting link status. No secret is returned.
+ * Link THIS instance. The local backend takes the SaaS JWT, registers with
+ * SaaS, and persists the device secret itself; the response carries only the
+ * resulting link status. No secret is returned.
  */
 export async function linkInstance(
   req: LinkInstanceRequest,
 ): Promise<LinkStatus> {
-  return httpJson<LinkStatus>(`${BASE}/link`, {
+  return apiClient.local.json<LinkStatus>(`${BASE}/link`, {
     method: "POST",
     body: req,
   });
 }
 
-/** GET /api/v1/account-link/status — Linked / Not-linked for this instance. */
+/** Linked / Not-linked for this instance. */
 export async function fetchStatus(): Promise<LinkStatus> {
-  return httpJson<LinkStatus>(`${BASE}/status`);
-}
-
-/** POST /api/v1/account-link/unlink — drop this instance's link. */
-export async function unlinkInstance(): Promise<LinkStatus> {
-  return httpJson<LinkStatus>(`${BASE}/unlink`, { method: "POST" });
+  return apiClient.local.json<LinkStatus>(`${BASE}/status`);
 }
 
 /**
- * GET /api/v1/account-link/instances — every linked instance for the team.
- * Hits the SaaS backend with the admin's JWT.
+ * Drop this instance's link. The local backend best-effort tells SaaS to
+ * revoke before clearing the credential locally.
+ */
+export async function unlinkInstance(): Promise<LinkStatus> {
+  return apiClient.local.json<LinkStatus>(`${BASE}/unlink`, { method: "POST" });
+}
+
+/**
+ * Every linked instance for the team. MSW-only path until migrated to SaaS
+ * (the local backend has no such endpoint).
  */
 export async function fetchInstances(
   accessToken: string | null,
 ): Promise<LinkedInstanceRow[]> {
-  return httpJson<LinkedInstanceRow[]>(`${BASE}/instances`, {
-    headers: authHeaders(accessToken),
+  return apiClient.mock.json<LinkedInstanceRow[]>(`${BASE}/instances`, {
+    headers: accessTokenHeaders(accessToken),
   });
 }
 
 /**
- * POST /api/v1/account-link/instances/{id}/revoke — revoke a linked instance.
- * Hits the SaaS backend with the admin's JWT.
+ * Revoke a linked instance. MSW-only path until migrated to SaaS (the local
+ * backend has no such endpoint).
  */
 export async function revokeInstance(
   accessToken: string | null,
   instanceId: number,
 ): Promise<void> {
-  await httpJson<void>(`${BASE}/instances/${instanceId}/revoke`, {
+  await apiClient.mock.json<void>(`${BASE}/instances/${instanceId}/revoke`, {
     method: "POST",
-    headers: authHeaders(accessToken),
+    headers: accessTokenHeaders(accessToken),
   });
 }
