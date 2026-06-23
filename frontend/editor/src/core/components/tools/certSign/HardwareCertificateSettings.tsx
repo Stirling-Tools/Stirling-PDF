@@ -123,7 +123,7 @@ const HardwareCertificateSettings = ({
   // Load capabilities once: which hardware kinds are supported and the detected
   // PKCS#11 driver libraries.
   useEffect(() => {
-    const cancelled = false;
+    let cancelled = false;
     getHardwareSigningCapabilities()
       .then((caps) => {
         if (cancelled) {
@@ -160,9 +160,15 @@ const HardwareCertificateSettings = ({
         }
       })
       .catch(() => {
+        if (cancelled) {
+          return;
+        }
         /* capabilities are best-effort; the user can still type a path */
         setCapsReady(true);
       });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const loadWindowsCerts = useCallback(() => {
