@@ -3,7 +3,7 @@ import { Routes, Route, useLocation } from "react-router-dom";
 import { isAuthRoute } from "@app/utils/pathUtils";
 import { AppProviders } from "@app/components/AppProviders";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
-import { RainbowThemeProvider } from "@app/components/shared/RainbowThemeProvider";
+import { ThemeProvider } from "@app/components/shared/ThemeProvider";
 import { setBaseUrl } from "@app/constants/app";
 import type { AppConfig } from "@app/contexts/AppConfigContext";
 import { AppLayout } from "@app/components/AppLayout";
@@ -40,7 +40,7 @@ function handleConfigLoaded(config: AppConfig) {
 function PublicRouteProviders({ children }: { children: ReactNode }) {
   return (
     <PreferencesProvider>
-      <RainbowThemeProvider>{children}</RainbowThemeProvider>
+      <ThemeProvider>{children}</ThemeProvider>
     </PreferencesProvider>
   );
 }

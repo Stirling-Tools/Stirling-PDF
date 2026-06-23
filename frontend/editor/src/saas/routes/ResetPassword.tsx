@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AuthLayout from "@app/routes/authShared/AuthLayout";
 import LoginHeader from "@app/routes/login/LoginHeader";
-import ErrorMessage from "@app/routes/login/ErrorMessage";
+import ErrorMessage from "@shared/auth/ui/ErrorMessage";
 import SuccessMessage from "@app/routes/login/SuccessMessage";
 import EmailPasswordForm from "@app/routes/login/EmailPasswordForm";
 import NavigationLink from "@app/routes/login/NavigationLink";

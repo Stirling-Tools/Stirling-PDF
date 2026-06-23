@@ -2,7 +2,6 @@ package stirling.software.proprietary.security.controller.api;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -28,6 +27,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.database.repository.UserRepository;
+import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.model.api.user.UsernameAndPass;
 import stirling.software.proprietary.security.repository.TeamRepository;
@@ -195,8 +195,22 @@ class UserControllerTest {
                 .andExpect(jsonPath("$[0].username").value("a@alpha.com"))
                 .andExpect(jsonPath("$[1].username").value("b@alpha.com"));
 
+        // Caller is resolved (for the anonymous-gate) but org scope still uses findAll, not team.
         verify(userRepository, never()).findAllByTeamId(any());
-        verify(userService, never()).findByUsernameIgnoreCase(anyString());
+    }
+
+    @Test
+    void listUsersForbiddenForAnonymousCaller() throws Exception {
+        // Anonymous SaaS accounts must never enumerate users, regardless of scope.
+        User anon = user(1L, "anon_abc", true, team(1L, TeamService.DEFAULT_TEAM_NAME));
+        anon.setAuthenticationType(AuthenticationType.ANONYMOUS);
+        when(userService.findByUsernameIgnoreCase("anon_abc")).thenReturn(Optional.of(anon));
+
+        mockMvc.perform(get("/api/v1/user/users").principal(auth("anon_abc")))
+                .andExpect(status().isForbidden());
+
+        verify(userRepository, never()).findAll();
+        verify(userRepository, never()).findAllByTeamId(any());
     }
 
     @Test
@@ -257,6 +271,39 @@ class UserControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].username").value("solo@nowhere.com"));
+
+        verify(userRepository, never()).findAllByTeamId(any());
+        verify(userRepository, never()).findAll();
+    }
+
+    @Test
+    void listUsersTeamScopeOnDefaultTeamReturnsSelfOnly() throws Exception {
+        // A caller on a shared system team must not enumerate its members.
+        applicationProperties.getStorage().getSigning().setUserListScope("team");
+        Team defaultTeam = team(1L, TeamService.DEFAULT_TEAM_NAME);
+        User caller = user(1L, "new@saas.com", true, defaultTeam);
+        when(userService.findByUsernameIgnoreCase("new@saas.com")).thenReturn(Optional.of(caller));
+
+        mockMvc.perform(get("/api/v1/user/users").principal(auth("new@saas.com")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].username").value("new@saas.com"));
+
+        verify(userRepository, never()).findAllByTeamId(any());
+        verify(userRepository, never()).findAll();
+    }
+
+    @Test
+    void listUsersTeamScopeOnInternalTeamReturnsSelfOnly() throws Exception {
+        applicationProperties.getStorage().getSigning().setUserListScope("team");
+        Team internalTeam = team(2L, TeamService.INTERNAL_TEAM_NAME);
+        User caller = user(1L, "svc@saas.com", true, internalTeam);
+        when(userService.findByUsernameIgnoreCase("svc@saas.com")).thenReturn(Optional.of(caller));
+
+        mockMvc.perform(get("/api/v1/user/users").principal(auth("svc@saas.com")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].username").value("svc@saas.com"));
 
         verify(userRepository, never()).findAllByTeamId(any());
         verify(userRepository, never()).findAll();

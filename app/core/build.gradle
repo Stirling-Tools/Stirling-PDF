@@ -329,6 +329,12 @@ tasks.register('cleanFrontendAssets', Delete) {
     group = 'frontend'
     description = 'Remove previously generated frontend assets from static resources'
     delete generatedFrontendPaths.collect { new File(resourcesStaticDir, it) }
+    // Prerendered per-route SPA pages (e.g. compress.html) carry per-tool OG tags and are
+    // copied from the frontend build. Remove stale ones so renamed/removed tools don't linger.
+    // api-landing.html and mobile-upload.html are real backend source files, not generated artifacts.
+    delete fileTree(dir: resourcesStaticDir, includes: ['*.html'], excludes: ['api-landing.html', 'mobile-upload.html'])
+    // Nested prerendered route pages (e.g. settings/people.html)
+    delete new File(resourcesStaticDir, 'settings')
 }
 
 tasks.register('copyApiLandingPage', Copy) {

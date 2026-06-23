@@ -2,6 +2,7 @@ package stirling.software.proprietary.policy.engine;
 
 import java.util.List;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ import stirling.software.proprietary.policy.trigger.PolicyTrigger;
  */
 @Service
 @RequiredArgsConstructor
+@Profile("saas")
 public class PolicyValidator {
 
     private final List<PolicyTrigger> triggers;

@@ -132,9 +132,10 @@ export function PolicyDetailPanel({
     <div className="pol-detail">
       <PanelHeader
         icon={category.icon}
-        iconAccent={ROW_ACCENT[category.id] ?? "blue"}
+        accent={ROW_ACCENT[category.id]}
         title={t(`policies.catalog.${category.id}`, category.label)}
-        onBack={onBack}
+        onClose={onBack}
+        closeLabel={t("policies.detail.close", "Close")}
         actions={
           <StatusBadge
             tone={isPaused ? "warning" : "success"}

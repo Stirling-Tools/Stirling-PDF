@@ -306,7 +306,11 @@ export interface FileContextActions {
   // File management - lightweight actions only
   addFiles: (
     files: File[],
-    options?: { insertAfterPageId?: string; selectFiles?: boolean },
+    options?: {
+      insertAfterPageId?: string;
+      selectFiles?: boolean;
+      skipUploadTracking?: boolean;
+    },
   ) => Promise<StirlingFile[]>;
   addFilesWithOptions: (
     files: File[],
@@ -321,6 +325,7 @@ export interface FileContextActions {
         fileName: string,
       ) => Promise<boolean>;
       allowDuplicates?: boolean;
+      skipUploadTracking?: boolean;
     },
   ) => Promise<StirlingFile[]>;
   addStirlingFileStubs: (

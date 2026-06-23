@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
@@ -27,6 +28,7 @@ import stirling.software.proprietary.policy.model.Policy;
  * defended: an operator who roots an allowlist on a symlink to a sensitive location is trusted.
  */
 @Component
+@Profile("saas")
 public class FolderAccessGuard {
 
     public static final String FOLDER_TYPE = "folder";

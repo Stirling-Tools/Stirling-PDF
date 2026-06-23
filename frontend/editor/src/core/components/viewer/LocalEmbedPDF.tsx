@@ -81,6 +81,7 @@ import { LinkLayer } from "@app/components/viewer/LinkLayer";
 import { TextSelectionHandler } from "@app/components/viewer/TextSelectionHandler";
 import { RedactionSelectionMenu } from "@app/components/viewer/RedactionSelectionMenu";
 import { AnnotationSelectionMenu } from "@app/components/viewer/AnnotationSelectionMenu";
+import { TextSelectionMenu } from "@app/components/viewer/TextSelectionMenu";
 import {
   RedactionPendingTracker,
   RedactionPendingTrackerAPI,
@@ -995,6 +996,9 @@ export function LocalEmbedPDF({
                                       documentId={documentId}
                                       pageIndex={pageIndex}
                                       background="var(--pdf-selection-bg)"
+                                      selectionMenu={(props) => (
+                                        <TextSelectionMenu {...props} />
+                                      )}
                                     />
                                   </div>
                                   <TextSelectionHandler
