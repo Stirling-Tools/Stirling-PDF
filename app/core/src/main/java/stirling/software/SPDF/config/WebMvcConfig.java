@@ -24,6 +24,7 @@ import stirling.software.common.model.ApplicationProperties;
 public class WebMvcConfig implements WebMvcConfigurer {
 
     private final EndpointInterceptor endpointInterceptor;
+    private final PdfMetricsInterceptor pdfMetricsInterceptor;
     private final ApplicationProperties applicationProperties;
 
     private static final Logger logger = LoggerFactory.getLogger(WebMvcConfig.class);
@@ -35,6 +36,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(endpointInterceptor);
+        registry.addInterceptor(pdfMetricsInterceptor);
     }
 
     @Override

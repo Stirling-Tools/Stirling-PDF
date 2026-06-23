@@ -1,7 +1,7 @@
 import { memo, useEffect, useMemo, useRef, useState } from "react";
-import { BASE_PATH } from "@app/constants/app";
+import bgDefault from "@shared/assets/login/LoginBackgroundPanel.png";
 
-type ImageSlide = {
+export type ImageSlide = {
   src: string;
   alt?: string;
   cornerModelUrl?: string;
@@ -14,11 +14,14 @@ type ImageSlide = {
 function LoginRightCarousel({
   imageSlides = [],
   showBackground = true,
+  backgroundSrc = bgDefault,
   initialSeconds = 5,
   slideSeconds = 8,
 }: {
   imageSlides?: ImageSlide[];
   showBackground?: boolean;
+  /** Background panel image; defaults to the bundled shared asset. */
+  backgroundSrc?: string;
   initialSeconds?: number;
   slideSeconds?: number;
 }) {
@@ -117,7 +120,7 @@ function LoginRightCarousel({
     >
       {showBackground && (
         <img
-          src={`${BASE_PATH}/Login/LoginBackgroundPanel.png`}
+          src={backgroundSrc}
           alt="Background panel"
           style={{
             position: "absolute",

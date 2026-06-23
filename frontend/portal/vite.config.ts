@@ -22,6 +22,25 @@ export default defineConfig(async ({ mode }) => {
   // Load .env files relative to this config, regardless of where invoked from.
   const env = loadEnv(mode, import.meta.dirname, "");
 
+  // Backend proxy so the portal shares the editor's origin for auth: with mocks
+  // off, /api/v1/auth/* (and OAuth/SAML redirects) reach the Spring backend and
+  // the same stirling_jwt token works across both apps. Mirrors the editor's
+  // proxy; override the target via BACKEND_URL.
+  const backendUrl = process.env.BACKEND_URL || "http://localhost:8080";
+  const backendProxy = {
+    target: backendUrl,
+    changeOrigin: true,
+    secure: false,
+    xfwd: true,
+  };
+  const backendProxyConfig = {
+    "/api": backendProxy,
+    // Account-link/billing data calls use a bare /v1 prefix (not /api/v1).
+    "/v1": backendProxy,
+    "/oauth2": backendProxy,
+    "/saml2": backendProxy,
+  };
+
   return {
     plugins: [
       react(),
@@ -47,27 +66,16 @@ export default defineConfig(async ({ mode }) => {
       host: true,
       port: 5173,
       strictPort: true,
-      // Real (non-mock) e2e: forward same-origin backend calls to the self-hosted
-      // instance. Turn the Mocks toggle off to exercise the real backend.
-      // Override the target with BACKEND_URL (defaults to the local instance).
-      proxy: {
-        "/api": {
-          target: process.env.BACKEND_URL || "http://localhost:8080",
-          changeOrigin: true,
-        },
-        "/v1": {
-          target: process.env.BACKEND_URL || "http://localhost:8080",
-          changeOrigin: true,
-        },
-      },
       fs: {
         allow: [resolve(import.meta.dirname, "..")],
       },
+      proxy: backendProxyConfig,
     },
     preview: {
       host: true,
       port: 5173,
       strictPort: true,
+      proxy: backendProxyConfig,
     },
     build: {
       outDir: "../dist-portal",

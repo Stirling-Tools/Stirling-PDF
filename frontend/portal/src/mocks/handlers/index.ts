@@ -1,4 +1,5 @@
 import { assistantHandlers } from "@portal/mocks/handlers/assistant";
+import { authHandlers } from "@portal/mocks/handlers/auth";
 import { homeHandlers } from "@portal/mocks/handlers/home";
 import { notificationsHandlers } from "@portal/mocks/handlers/notifications";
 import { opsHandlers } from "@portal/mocks/handlers/ops";
@@ -18,6 +19,7 @@ import { editorDeployHandlers } from "@portal/mocks/handlers/editorDeploy";
 import { linkHandlers } from "@portal/mocks/handlers/link";
 
 export const handlers = [
+  ...authHandlers,
   ...homeHandlers,
   ...opsHandlers,
   ...notificationsHandlers,

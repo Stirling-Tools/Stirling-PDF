@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { StatusBadge } from "@shared/components";
 import {
   DOC_AUDIT_LABEL,
@@ -7,8 +8,11 @@ import {
 
 /** Lifecycle timeline for a single document, oldest first. */
 export function DocumentAudit({ doc }: { doc: ReviewDocument }) {
+  const { t } = useTranslation();
   if (doc.audit.length === 0) {
-    return <p className="portal-documents__muted">No events recorded yet.</p>;
+    return (
+      <p className="portal-documents__muted">{t("documents.audit.empty")}</p>
+    );
   }
   return (
     <ol className="portal-documents__timeline">

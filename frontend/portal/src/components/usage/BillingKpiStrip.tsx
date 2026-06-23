@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { MetricCard, MetricStrip } from "@shared/components";
 import { useTier } from "@portal/contexts/TierContext";
 import { OVERAGE_RATE, type BillingSummary } from "@portal/api/usage";
@@ -10,6 +11,7 @@ export function BillingKpiStrip({
 }: {
   summary: BillingSummary | null;
 }) {
+  const { t } = useTranslation();
   const { tier } = useTier();
 
   // Overage is meaningless on free (gated) / enterprise (committed) — surface
@@ -17,47 +19,56 @@ export function BillingKpiStrip({
   const overageCard =
     tier === "free"
       ? {
-          label: "Remaining in plan",
+          label: t("usage.kpi.remainingInPlan.label"),
           value: summary
             ? `${(summary.includedDocs - summary.docsThisPeriod).toLocaleString()}`
             : "—",
-          description: "docs before cap",
+          description: t("usage.kpi.remainingInPlan.description"),
         }
       : tier === "enterprise"
         ? {
-            label: "Commit utilisation",
+            label: t("usage.kpi.commitUtilisation.label"),
             value: summary
               ? `${Math.round((summary.docsThisPeriod / summary.includedDocs) * 100)}%`
               : "—",
-            description: "of committed volume",
+            description: t("usage.kpi.commitUtilisation.description"),
           }
         : {
-            label: `Overage ($${OVERAGE_RATE.toFixed(2)}/doc)`,
+            label: t("usage.kpi.overage.label", {
+              rate: OVERAGE_RATE.toFixed(2),
+            }),
             value: summary ? USD.format(summary.overageCost) : "—",
             description: summary
-              ? `${summary.overageDocs.toLocaleString()} docs past cap`
+              ? t("usage.kpi.overage.description", {
+                  count: summary.overageDocs,
+                  docs: summary.overageDocs.toLocaleString(),
+                })
               : undefined,
           };
 
   return (
     <MetricStrip>
       <MetricCard
-        label="Docs this period"
+        label={t("usage.kpi.docsThisPeriod.label")}
         value={summary ? summary.docsThisPeriod.toLocaleString() : "—"}
         description={
           summary
-            ? `of ${summary.includedDocs.toLocaleString()} included`
+            ? t("usage.kpi.docsThisPeriod.description", {
+                included: summary.includedDocs.toLocaleString(),
+              })
             : undefined
         }
       />
       <MetricCard
-        label="Cost this month"
+        label={t("usage.kpi.costThisMonth.label")}
         value={summary ? USD.format(summary.costThisMonth) : "—"}
         description={
           summary && summary.monthlyFee > 0
-            ? `incl. ${USD.format(summary.monthlyFee)} platform`
+            ? t("usage.kpi.costThisMonth.description", {
+                fee: USD.format(summary.monthlyFee),
+              })
             : tier === "free"
-              ? "free plan"
+              ? t("usage.kpi.costThisMonth.freePlan")
               : undefined
         }
       />
@@ -67,9 +78,13 @@ export function BillingKpiStrip({
         description={overageCard.description}
       />
       <MetricCard
-        label="Next billing date"
+        label={t("usage.kpi.nextBillingDate.label")}
         value={summary ? formatBillingDate(summary.nextBillingDate) : "—"}
-        description={tier === "free" ? "resets monthly" : "auto-charge"}
+        description={
+          tier === "free"
+            ? t("usage.kpi.nextBillingDate.resetsMonthly")
+            : t("usage.kpi.nextBillingDate.autoCharge")
+        }
       />
     </MetricStrip>
   );

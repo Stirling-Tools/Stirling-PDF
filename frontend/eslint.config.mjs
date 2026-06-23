@@ -14,6 +14,7 @@ const srcGlobs = [
 const nodeGlobs = [
   "scripts/**/*.{js,ts,mjs,mts}",
   "editor/scripts/**/*.{js,ts,mjs,mts}",
+  "portal/scripts/**/*.{js,ts,mjs,mts}",
   "editor/*.config.{js,ts,mjs}",
   "portal/*.config.{js,ts,mjs}",
   "*.config.{js,ts,mjs}",
