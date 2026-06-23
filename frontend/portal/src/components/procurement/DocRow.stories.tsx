@@ -57,3 +57,6 @@ export const PaidAddon: Story = { args: { doc: paidAddon } };
 
 // Completed paperwork keeps a record but offers no further action.
 export const Complete: Story = { args: { doc: done } };
+
+// A row in a future, not-yet-reached stage — dimmed, marked "Upcoming", inert.
+export const Locked: Story = { args: { doc: sign, locked: true } };

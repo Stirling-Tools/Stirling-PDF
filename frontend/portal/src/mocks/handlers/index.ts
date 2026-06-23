@@ -39,3 +39,4 @@ export const handlers = [
 ];
 
 export { resetNotificationsStore } from "@portal/mocks/handlers/notifications";
+export { resetProcurementStore } from "@portal/mocks/handlers/procurement";

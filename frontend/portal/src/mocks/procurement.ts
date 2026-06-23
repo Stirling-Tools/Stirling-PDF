@@ -420,6 +420,29 @@ const ENTERPRISE_SUPPORTING: SupportingGroup[] = [
   },
 ];
 
+/** Structured deep clone of plain fixture data (no functions / class instances). */
+function clone<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
+/**
+ * A fresh, mutable copy of the live enterprise deal — deal header, stage ledger
+ * and supporting pool. The MSW layer seeds its in-memory store from this so the
+ * write handlers can advance the journey within a session without mutating the
+ * shared fixtures. The journey definition (JOURNEY) is immutable and shared.
+ */
+export function seedEnterpriseDeal(): {
+  deal: Deal;
+  ledger: LedgerGroup[];
+  supporting: SupportingGroup[];
+} {
+  return {
+    deal: clone(ENTERPRISE_DEAL),
+    ledger: clone(ENTERPRISE_LEDGER),
+    supporting: clone(ENTERPRISE_SUPPORTING),
+  };
+}
+
 /**
  * Builds the procurement payload for a tier. Enterprise gets the full live
  * deal; free/pro get a minimal locked payload the view renders as an

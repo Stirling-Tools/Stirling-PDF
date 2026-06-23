@@ -9,14 +9,6 @@ export const USD = new Intl.NumberFormat(undefined, {
   maximumFractionDigits: 0,
 });
 
-export function formatDealDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
 /** Document status → badge tone. Action items lean amber to pull the eye. */
 export const STATUS_TONE: Record<DocStatus, StatusTone> = {
   available: "success",

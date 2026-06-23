@@ -7,7 +7,7 @@
   margin: 0 auto;
 }
 
-/* Header */
+/* Page header */
 .portal-proc__header {
   display: flex;
   align-items: flex-start;
@@ -28,76 +28,59 @@
   color: var(--color-text-4);
 }
 
-/* Section headers */
-.portal-proc__section-head {
-  margin-bottom: 0.875rem;
-}
-
-.portal-proc__section-title {
-  margin: 0;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: var(--color-text-1);
-}
-
-.portal-proc__section-sub {
-  margin: 0.25rem 0 0;
-  font-size: 0.75rem;
-  color: var(--color-text-4);
-}
-
-/* ── Deal summary ─────────────────────────────────────────────────────── */
-.portal-proc__deal {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.portal-proc__deal-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.portal-proc__deal-eyebrow {
+/* Eyebrow label shared by the journey header + SE block */
+.portal-proc__eyebrow {
   display: block;
   font-size: 0.6875rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   color: var(--color-text-5);
+  margin-bottom: 0.25rem;
 }
 
-.portal-proc__deal-company {
-  margin: 0.125rem 0 0;
-  font-size: 1.25rem;
-  font-weight: 600;
+/* ── Journey card ─────────────────────────────────────────────────────── */
+/* Stacked, border-divided sections: header / stepper / trial / next step. */
+.portal-proc__journey-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--color-border-light);
+  flex-wrap: wrap;
+}
+
+.portal-proc__journey-title {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
   color: var(--color-text-1);
+}
+
+.portal-proc__journey-sub {
+  margin: 0.25rem 0 0;
+  max-width: 36rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-text-4);
 }
 
 .portal-proc__se {
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
+  flex-direction: column;
+  text-align: right;
+  flex-shrink: 0;
 }
 
-.portal-proc__se-text {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.35;
+.portal-proc__se .portal-proc__eyebrow {
+  margin-bottom: 0.25rem;
 }
 
 .portal-proc__se-name {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--color-text-1);
-}
-
-.portal-proc__se-title {
-  font-size: 0.75rem;
-  color: var(--color-text-4);
 }
 
 .portal-proc__se-email {
@@ -110,192 +93,281 @@
   text-decoration: underline;
 }
 
-.portal-proc__deal-meta {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
-  gap: 0.875rem 1.5rem;
-  margin: 0;
-  padding-top: 0.875rem;
-  border-top: 1px solid var(--color-border-light);
+/* Stepper band */
+.portal-proc__journey-stepper {
+  padding: 1.125rem 1.5rem;
+  border-bottom: 1px solid var(--color-border-light);
 }
 
-.portal-proc__deal-meta-item dt {
-  font-size: 0.6875rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--color-text-5);
+.portal-proc__steps {
+  display: flex;
+  align-items: flex-start;
 }
 
-.portal-proc__deal-meta-item dd {
-  margin: 0.25rem 0 0;
-  font-size: 0.8125rem;
-  color: var(--color-text-1);
-}
-
-.portal-proc__mono {
-  font-family:
-    ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-  font-size: 0.75rem !important;
-  color: var(--color-text-2) !important;
-}
-
-/* ── Stepper ──────────────────────────────────────────────────────────── */
-.portal-proc__stepper--locked {
+.portal-proc__steps--locked {
   opacity: 0.55;
   filter: grayscale(0.4);
   pointer-events: none;
 }
 
-.portal-proc__steps {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 0.75rem;
-}
-
-@media (max-width: 60rem) {
-  .portal-proc__steps {
-    grid-template-columns: 1fr;
-  }
-}
-
 .portal-proc__step {
-  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding-top: 2.5rem;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 4rem;
 }
 
-/* Numbered / completed marker */
-.portal-proc__step-marker {
-  position: absolute;
-  top: 0;
-  left: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
+.portal-proc__step-dot {
+  width: 0.875rem;
+  height: 0.875rem;
   border-radius: 50%;
-  font-size: 0.8125rem;
-  font-weight: 700;
-  background: var(--color-bg-muted);
-  color: var(--color-text-4);
-  border: 1.5px solid var(--color-border);
+  background: var(--color-border-input);
 }
 
-.portal-proc__step--complete .portal-proc__step-marker {
-  background: var(--color-green-light);
-  color: var(--color-green-dark);
-  border-color: transparent;
+.portal-proc__step--complete .portal-proc__step-dot {
+  background: var(--color-green);
 }
 
-.portal-proc__step--current .portal-proc__step-marker {
+.portal-proc__step--current .portal-proc__step-dot {
   background: var(--color-purple);
-  color: #fff;
-  border-color: transparent;
-}
-
-/* Connector line between markers */
-.portal-proc__step-connector {
-  position: absolute;
-  top: 0.8125rem;
-  left: 1.75rem;
-  right: -0.75rem;
-  height: 1.5px;
-  background: var(--color-border);
-}
-
-.portal-proc__step--complete .portal-proc__step-connector {
-  background: color-mix(in srgb, var(--color-green) 50%, transparent);
-}
-
-@media (max-width: 60rem) {
-  .portal-proc__step-connector {
-    display: none;
-  }
-}
-
-.portal-proc__step-head {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  box-shadow: 0 0 0 4px var(--color-purple-light);
 }
 
 .portal-proc__step-label {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--color-text-2);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  text-align: center;
+  white-space: nowrap;
+  color: var(--color-text-5);
 }
 
-.portal-proc__step--current .portal-proc__step-label {
-  color: var(--color-text-1);
-}
-
-.portal-proc__step-blurb {
-  margin: 0;
-  font-size: 0.75rem;
-  line-height: 1.45;
+.portal-proc__step--complete .portal-proc__step-label {
   color: var(--color-text-4);
 }
 
-.portal-proc__step-action {
-  margin-top: 0.25rem;
+.portal-proc__step--current .portal-proc__step-label {
+  font-weight: 700;
+  color: var(--color-text-1);
 }
 
-.portal-proc__step-provisioning {
+/* Connector aligns with the 0.875rem dots: (14px − 2px) / 2 = 6px down */
+.portal-proc__step-line {
+  flex: 1;
+  height: 2px;
+  margin: 0.375rem 0.375rem 0;
+  background: var(--color-border-light);
+}
+
+.portal-proc__step-line[data-filled="true"] {
+  background: var(--color-green);
+}
+
+/* Trial status strip (shown while evaluating) */
+.portal-proc__trial {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex-wrap: wrap;
+  padding: 0.75rem 1.5rem;
+  border-bottom: 1px solid var(--color-border-light);
+  background: var(--color-bg-code);
+}
+
+.portal-proc__trial-title {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--color-purple);
+  color: var(--color-text-1);
 }
 
-/* ── Document rows (ledger + supporting) ──────────────────────────────── */
-.portal-proc__ledger,
-.portal-proc__supporting {
+.portal-proc__trial-dim {
+  font-size: 0.78125rem;
+  color: var(--color-text-5);
+}
+
+.portal-proc__trial-key {
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 0.6875rem;
+  color: var(--color-text-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-input);
+  border-radius: 0.375rem;
+  padding: 0.1875rem 0.5rem;
+}
+
+/* Next-step row: one primary action at a time */
+.portal-proc__next {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 1rem 1.5rem;
+}
+
+.portal-proc__next-label {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-size: 0.84375rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+
+.portal-proc__next-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--color-amber);
+  flex-shrink: 0;
+}
+
+.portal-proc__next-dot[data-live="true"] {
+  background: var(--color-green);
+}
+
+/* ── Documents card ───────────────────────────────────────────────────── */
+.portal-proc__docs-head {
+  padding: 1.125rem 1.5rem;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.portal-proc__docs-title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--color-text-1);
+}
+
+.portal-proc__docs-sub {
+  margin: 0.25rem 0 0;
+  font-size: 0.78125rem;
+  color: var(--color-text-5);
+}
+
+.portal-proc__docs-body {
+  padding: 0.375rem 1.5rem 1.125rem;
+}
+
+/* Accordion spacing — the disclosure chrome itself lives in shared Collapsible
+   (.sui-collapsible); here we only space the stacked sections. */
+.portal-proc__docs-body .sui-collapsible {
+  margin-top: 0.875rem;
+}
+
+/* Stage header bits */
+.portal-proc__stage-dot {
+  width: 0.4375rem;
+  height: 0.4375rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.portal-proc__stage-dot[data-state="done"] {
+  background: var(--color-green);
+}
+
+.portal-proc__stage-dot[data-state="current"] {
+  background: var(--color-purple);
+}
+
+.portal-proc__stage-dot[data-state="upcoming"] {
+  background: var(--color-border-input);
+}
+
+.portal-proc__stage-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-text-4);
+}
+
+.portal-proc__stage-label[data-current] {
+  color: var(--color-text-1);
+}
+
+.portal-proc__stage-hint {
+  font-size: 0.71875rem;
+  color: var(--color-text-5);
+}
+
+.portal-proc__stage-count {
+  font-size: 0.6875rem;
+  color: var(--color-text-5);
+}
+
+/* Document lists inside the accordion */
+.portal-proc__doc-list {
+  border-top: 1px solid var(--color-border-light);
+}
+
+.portal-proc__doc-list--boxed {
+  border: 1px solid var(--color-border-light);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+/* Supporting section — extra separation from the stage accordion above it.
+   Scoped to match the general .sui-collapsible spacing rule's specificity. */
+.portal-proc__docs-body .portal-proc__supporting-acc {
+  margin-top: 1.5rem;
+}
+
+.portal-proc__supporting-head {
   display: flex;
   flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
 }
 
-.portal-proc__ledger-groups,
+.portal-proc__supporting-sub {
+  font-size: 0.71875rem;
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--color-text-5);
+}
+
+.portal-proc__acc-toggle-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-blue);
+}
+
 .portal-proc__supporting-groups {
   display: flex;
   flex-direction: column;
-  gap: 0.875rem;
-}
-
-.portal-proc__group-head {
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--color-border-light);
+  gap: 1rem;
+  border-top: 1px solid var(--color-border-light);
+  padding: 0.875rem;
 }
 
 .portal-proc__group-label {
   font-size: 0.6875rem;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   color: var(--color-text-5);
+  margin-bottom: 0.5rem;
 }
 
-.portal-proc__group-docs {
-  display: flex;
-  flex-direction: column;
-}
-
+/* ── Document rows (ledger + supporting) ──────────────────────────────── */
 .portal-proc__doc {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.875rem 1rem;
+  padding: 0.75rem 0.875rem;
   border-bottom: 1px solid var(--color-border-light);
 }
 
 .portal-proc__doc:last-child {
   border-bottom: none;
+}
+
+.portal-proc__doc[data-locked] {
+  opacity: 0.6;
 }
 
 .portal-proc__doc-text {
@@ -310,16 +382,16 @@
 }
 
 .portal-proc__doc-name {
-  font-size: 0.875rem;
+  font-size: 0.84375rem;
   font-weight: 600;
   color: var(--color-text-1);
 }
 
 .portal-proc__doc-sub {
-  margin: 0.1875rem 0 0;
-  font-size: 0.75rem;
+  margin: 0.0625rem 0 0;
+  font-size: 0.71875rem;
   line-height: 1.4;
-  color: var(--color-text-4);
+  color: var(--color-text-5);
 }
 
 .portal-proc__doc-actions {
@@ -364,4 +436,18 @@
 .portal-proc__upload-name {
   font-size: 0.75rem;
   color: var(--color-text-4);
+}
+
+@media (max-width: 48rem) {
+  .portal-proc__journey-head {
+    flex-direction: column;
+  }
+
+  .portal-proc__se {
+    text-align: left;
+  }
+
+  .portal-proc__steps {
+    overflow-x: auto;
+  }
 }

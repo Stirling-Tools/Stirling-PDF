@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { Button, Modal } from "@shared/components";
-import type { LedgerDoc } from "@portal/api/procurement";
+import type { LedgerDoc, ProcurementResponse } from "@portal/api/procurement";
 import {
   payOnline,
   requestDocument,
@@ -61,9 +61,9 @@ function actionCopy(doc: LedgerDoc): ActionCopy {
 }
 
 /**
- * Confirmation modal for a document's gating action. The action stubs resolve
- * locally (no commercial backend yet); the modal owns the in-flight state and
- * hands control back to the caller on success.
+ * Confirmation modal for a document's gating action. Owns its in-flight state;
+ * on success it hands the updated deal back to the caller via `onDone` so the
+ * journey re-renders. Downloads are client-side and just close the modal.
  */
 export function ActionModal({
   doc,
@@ -72,7 +72,7 @@ export function ActionModal({
 }: {
   doc: LedgerDoc | null;
   onClose: () => void;
-  onDone: (doc: LedgerDoc) => void;
+  onDone: (next: ProcurementResponse) => void;
 }) {
   const [submitting, setSubmitting] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -86,25 +86,27 @@ export function ActionModal({
     if (!doc) return;
     setSubmitting(true);
     try {
+      let next: ProcurementResponse | null = null;
       switch (doc.action) {
         case "sign":
-          await signAgreement(doc.id);
+          next = await signAgreement(doc.id);
           break;
         case "pay":
-          await payOnline();
+          next = await payOnline();
           break;
         case "upload":
-          if (file) await uploadPurchaseOrder(file);
+          if (file) next = await uploadPurchaseOrder(file);
           break;
         case "request":
-          await requestDocument(doc.id, doc.action);
+          next = await requestDocument(doc.id, doc.action);
           break;
         default:
-          // download is fire-and-forget; nothing to await.
+          // download is client-side — no state change.
           break;
       }
-      onDone(doc);
       setFile(null);
+      if (next) onDone(next);
+      else onClose();
     } finally {
       setSubmitting(false);
     }

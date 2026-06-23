@@ -33,45 +33,59 @@ export async function fetchProcurement(
 }
 
 /*
- * Commercial actions are demo stubs until the commercial backend exists. Each
- * resolves locally so the UI can show optimistic success; the real call is
- * documented inline as the backend contract.
+ * Commercial actions. Each mutates the deal server-side and returns the updated
+ * ProcurementResponse — the new canonical state — which the view applies so the
+ * journey progresses. The MSW layer answers these today; a real backend honours
+ * the same contracts unchanged.
  */
 
-/** Advance the deal to the stage's next step (the gating CTA). */
-export async function advanceStage(stage: DealStage): Promise<void> {
-  // TODO(backend): POST /v1/procurement/advance { fromStage } — moves the deal
-  // to the next stage and returns the updated Deal.
-  void stage;
-}
-
-/** Pay the contract online (card / bank transfer via Stripe). */
-export async function payOnline(): Promise<void> {
-  // TODO(backend): POST /v1/procurement/pay — creates a Stripe checkout
-  // session and returns its redirect URL.
+/** Advance the deal to the next stage (the journey's primary CTA). */
+export async function advanceStage(
+  fromStage: DealStage,
+): Promise<ProcurementResponse> {
+  return httpJson<ProcurementResponse>("/v1/procurement/advance", {
+    method: "POST",
+    body: { fromStage },
+  });
 }
 
 /** Sign the Stirling Enterprise Agreement (MSA + order form + EULA + DPA). */
-export async function signAgreement(docId: string): Promise<void> {
-  // TODO(backend): POST /v1/procurement/sign { docId } — opens the e-signature
-  // envelope and returns its signing URL.
-  void docId;
+export async function signAgreement(
+  docId: string,
+): Promise<ProcurementResponse> {
+  // A real backend opens an e-signature envelope and completes on callback;
+  // here it completes immediately and advances the deal.
+  return httpJson<ProcurementResponse>("/v1/procurement/sign", {
+    method: "POST",
+    body: { docId },
+  });
 }
 
-/** Upload a purchase order to invoice against. */
-export async function uploadPurchaseOrder(file: File): Promise<void> {
-  // TODO(backend): POST /v1/procurement/purchase-order (multipart) — stores the
-  // PO and flips the line item to pending invoice.
-  void file;
+/** Pay the contract online (card / bank transfer via Stripe). */
+export async function payOnline(): Promise<ProcurementResponse> {
+  return httpJson<ProcurementResponse>("/v1/procurement/pay", {
+    method: "POST",
+  });
+}
+
+/** Upload a purchase order to invoice against (an alternate payment path). */
+export async function uploadPurchaseOrder(
+  file: File,
+): Promise<ProcurementResponse> {
+  // A real backend takes the PO as multipart; the mock only needs the name.
+  return httpJson<ProcurementResponse>("/v1/procurement/purchase-order", {
+    method: "POST",
+    body: { fileName: file.name },
+  });
 }
 
 /** Request a document that is generated on demand (some carry a one-off fee). */
 export async function requestDocument(
   docId: string,
   action: DocAction,
-): Promise<void> {
-  // TODO(backend): POST /v1/procurement/documents/{docId}/request { action } —
-  // queues generation (or a paid add-on) and notifies the solutions engineer.
-  void docId;
-  void action;
+): Promise<ProcurementResponse> {
+  return httpJson<ProcurementResponse>(
+    `/v1/procurement/documents/${encodeURIComponent(docId)}/request`,
+    { method: "POST", body: { action } },
+  );
 }

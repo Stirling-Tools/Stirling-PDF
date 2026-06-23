@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, Skeleton, StatusBadge } from "@shared/components";
 import { useTier } from "@portal/contexts/TierContext";
 import { useAsync } from "@portal/hooks/useAsync";
@@ -9,11 +9,8 @@ import {
   type LedgerDoc,
   type ProcurementResponse,
 } from "@portal/api/procurement";
-import { ProcurementKpiStrip } from "@portal/components/procurement/ProcurementKpiStrip";
-import { DealSummary } from "@portal/components/procurement/DealSummary";
-import { DealStepper } from "@portal/components/procurement/DealStepper";
+import { DealJourney } from "@portal/components/procurement/DealJourney";
 import { DocumentLedger } from "@portal/components/procurement/DocumentLedger";
-import { SupportingDocs } from "@portal/components/procurement/SupportingDocs";
 import { ActionModal } from "@portal/components/procurement/ActionModal";
 import { LockedState } from "@portal/components/procurement/LockedState";
 import "@portal/views/Procurement.css";
@@ -25,40 +22,37 @@ import "@portal/views/Procurement.css";
 export function Procurement() {
   const { tier } = useTier();
   const [activeDoc, setActiveDoc] = useState<LedgerDoc | null>(null);
-  const [busyDocId, setBusyDocId] = useState<string | null>(null);
   const [advancing, setAdvancing] = useState(false);
 
   const state = useAsync<ProcurementResponse>(
     () => fetchProcurement(tier),
     [tier],
   );
-  const data = state.loading ? null : state.data;
+
+  // Write actions return the new canonical state; we hold it here so the
+  // journey reflects every action immediately. Cleared when the tier (and so
+  // the deal) changes, falling back to whatever the GET loaded.
+  const [applied, setApplied] = useState<ProcurementResponse | null>(null);
+  useEffect(() => setApplied(null), [tier]);
+  const data = applied ?? (state.loading ? null : state.data);
 
   async function onAdvance(stage: DealStage) {
     setAdvancing(true);
     try {
-      await advanceStage(stage);
+      setApplied(await advanceStage(stage));
     } finally {
       setAdvancing(false);
     }
-  }
-
-  // Track which row is mid-action so only that button spins; the modal owns
-  // the actual stub call and reports back here.
-  function onActionDone(doc: LedgerDoc) {
-    setBusyDocId(doc.id);
-    setActiveDoc(null);
-    setBusyDocId(null);
   }
 
   return (
     <div className="portal-proc">
       <header className="portal-proc__header">
         <div>
-          <h1 className="portal-proc__title">From trial to live</h1>
+          <h1 className="portal-proc__title">Procurement</h1>
           <p className="portal-proc__subtitle">
-            Your commercial journey and every document the deal needs, in one
-            place.
+            Get your team evaluated, contracted, and onboarded — every document
+            in one place.
           </p>
         </div>
         <StatusBadge tone="purple" size="md">
@@ -85,27 +79,18 @@ export function Procurement() {
 
       {data && data.unlocked && data.deal && (
         <>
-          <ProcurementKpiStrip
+          <DealJourney
             deal={data.deal}
             journey={data.journey}
-            ledger={data.ledger}
-          />
-          <DealSummary deal={data.deal} />
-          <DealStepper
-            journey={data.journey}
-            currentStage={data.deal.currentStage}
             onAdvance={onAdvance}
             advancing={advancing}
           />
           <DocumentLedger
             groups={data.ledger}
+            supporting={data.supporting}
+            journey={data.journey}
+            currentStage={data.deal.currentStage}
             onAction={setActiveDoc}
-            busyDocId={busyDocId}
-          />
-          <SupportingDocs
-            groups={data.supporting}
-            onAction={setActiveDoc}
-            busyDocId={busyDocId}
           />
         </>
       )}
@@ -113,7 +98,10 @@ export function Procurement() {
       <ActionModal
         doc={activeDoc}
         onClose={() => setActiveDoc(null)}
-        onDone={onActionDone}
+        onDone={(next) => {
+          setApplied(next);
+          setActiveDoc(null);
+        }}
       />
     </div>
   );

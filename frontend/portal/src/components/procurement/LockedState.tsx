@@ -1,6 +1,6 @@
-import { Button, EmptyState } from "@shared/components";
+import { Button, Card, EmptyState } from "@shared/components";
 import type { JourneyStep } from "@portal/api/procurement";
-import { DealStepper } from "@portal/components/procurement/DealStepper";
+import { StageStepper } from "@portal/components/procurement/StageStepper";
 
 /**
  * Enterprise-only gate for free/pro buyers. Shows the journey as a greyed
@@ -26,7 +26,9 @@ export function LockedState({
           </Button>
         }
       />
-      <DealStepper journey={journey} currentStage="trial" locked />
+      <Card padding="loose" className="portal-proc__journey-stepper">
+        <StageStepper journey={journey} currentStage="trial" locked />
+      </Card>
     </div>
   );
 }
