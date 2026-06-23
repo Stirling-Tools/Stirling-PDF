@@ -1,0 +1,104 @@
+services:
+  # ---------------------------------------------------------------------
+  # Postgres holding the stirling_pdf schema. Flyway migrates V1-V13 on
+  # backend startup against this DB. Exposed on host port 5433 so the
+  # cucumber harness can connect via psycopg from features/steps/payg_*.
+  # ---------------------------------------------------------------------
+  postgres-saas:
+    image: postgres:17-alpine
+    container_name: payg-cucumber-postgres
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      # Bootstrap stirling_pdf schema + seed test team / api key.
+      # Runs once when the container is first created.
+      - ./payg/saas-init.sql:/docker-entrypoint-initdb.d/00-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+    networks:
+      - payg-cucumber-network
+
+  # ---------------------------------------------------------------------
+  # Stirling-PDF backend with STIRLING_FLAVOR=saas. Authenticates via
+  # API key (SECURITY_CUSTOMGLOBALAPIKEY) — Supabase JWT enforcement is
+  # disabled for the test profile via SAAS_DB_PROJECT_REF=disabled so the
+  # OAuth resource-server filter no-ops. The PaygChargeInterceptor's
+  # resolveUser() ApiKey-token path is what the cucumber tests exercise.
+  # ---------------------------------------------------------------------
+  stirling-pdf-saas:
+    build:
+      context: ../..
+      dockerfile: docker/embedded/Dockerfile
+      args:
+        STIRLING_FLAVOR: saas
+    container_name: payg-cucumber-stirling
+    depends_on:
+      postgres-saas:
+        condition: service_healthy
+    restart: "no"
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/v1/info/status | grep -q 'UP'"]
+      interval: 5s
+      timeout: 10s
+      retries: 24
+    ports:
+      - "8080:8080"
+    environment:
+      # Activate the saas profile + bring the saas subproject onto the classpath.
+      # `payg-cucumber` registers the test-only throw-500 controller in
+      # `app/saas/.../payg/test/PaygCucumberThrowController.java` — that bean is
+      # @Profile("payg-cucumber") so it never registers in production.
+      SPRING_PROFILES_ACTIVE: "saas,payg-cucumber"
+      STIRLING_FLAVOR: "saas"
+      ENABLE_SAAS: "true"
+      DISABLE_ADDITIONAL_FEATURES: "false"
+
+      # Datasource — point Flyway + JPA at the test postgres.
+      SAAS_DB_URL: "jdbc:postgresql://postgres-saas:5432/postgres"
+      SAAS_DB_USERNAME: "postgres"
+      SAAS_DB_PASSWORD: "postgres"
+      SAAS_DB_PROJECT_REF: "disabled"
+
+      # The saas Flyway migrations assume `users` and `teams` already exist
+      # (V2 ALTERs `users`; V5 references `teams(id)`) because in production
+      # those tables are provisioned by Supabase before Stirling starts. On
+      # a clean test postgres they don't exist, so we disable Flyway and let
+      # Hibernate's `ddl-auto=create-drop` build the full schema from the
+      # entity graph. The default-pricing-policy row that V12 seeds in
+      # production is re-seeded by testing/compose/payg/saas-seed.sql.
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: "create-drop"
+
+      # Disable Supabase JWT enforcement for the test profile. The
+      # PaygChargeInterceptor resolves via ApiKey-token authority — that
+      # path is what we cover here.
+      SPRING_AUTOCONFIGURE_EXCLUDE: "org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration"
+
+      # Test API key matching the user seeded by saas-init.sql.
+      SECURITY_CUSTOMGLOBALAPIKEY: "payg-cucumber-key"
+      SECURITY_ENABLELOGIN: "false"
+
+      # Conservative defaults. The cucumber runs send small fixtures so
+      # the in-memory threshold never bites; the kill-switch is needed by
+      # one scenario but is toggled via a separate compose override.
+      PAYG_FILTER_ENABLED: "true"
+      PAYG_FILTER_RESPONSE_IN_MEMORY_THRESHOLD_BYTES: "10485760"
+
+      SYSTEM_DEFAULTLOCALE: "en-US"
+      SYSTEM_MAXFILESIZE: "100"
+    networks:
+      - payg-cucumber-network
+
+networks:
+  payg-cucumber-network:
+    driver: bridge

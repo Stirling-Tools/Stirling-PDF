@@ -1,20 +1,19 @@
-import { useMemo, useState, useRef, useCallback } from "react";
+import { useMemo, useState } from "react";
 import { ActionIcon } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { useRainbowThemeContext } from "@app/components/shared/RainbowThemeProvider";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useSidebarContext } from "@app/contexts/SidebarContext";
-import rainbowStyles from "@app/styles/rainbow.module.css";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import ToolPanel from "@app/components/tools/ToolPanel";
 import ToolSearch from "@app/components/tools/toolPicker/ToolSearch";
 import {
-  AgentsCollapsedButton,
-  AgentsSection,
-  useAgentsEnabled,
-} from "@app/components/agents/AgentsPanel";
-import { useChat } from "@app/components/chat/ChatContext";
-import { ChatPanel } from "@app/components/chat/ChatPanel";
+  PoliciesCollapsedButton,
+  PoliciesSection,
+  PolicyDetailTakeover,
+  usePoliciesEnabled,
+  usePolicyDetailActive,
+} from "@app/components/policies/PoliciesSidebar";
+import { PolicyAutoRunController } from "@app/components/policies/PolicyAutoRunController";
 import { useFavoriteToolItems } from "@app/hooks/tools/useFavoriteToolItems";
 import { useToolSections } from "@app/hooks/useToolSections";
 import type { SubcategoryGroup } from "@app/hooks/useToolSections";
@@ -33,20 +32,15 @@ import {
 import { useToolPanelGeometry } from "@app/hooks/tools/useToolPanelGeometry";
 import "@app/components/tools/ToolPanel.css";
 
-const DEFAULT_CHAT_WIDTH_PX = 18.5 * 16; // 18.5rem in px
-const MIN_CHAT_WIDTH_PX = 240;
-const MAX_CHAT_WIDTH_PX = 720;
-
 /**
  * Right-side rail wrapping the tool panel.
  *
- * Owns the rail-level concerns: collapse/expand chrome, the AGENTS top label,
- * the collapsed strip (agent button + favourite/recommended icon shortcuts),
- * and the agents chat overlay. Fullscreen takeover lives in FullscreenToolPanel.
+ * Owns the rail-level concerns: collapse/expand chrome and the collapsed strip
+ * (favourite/recommended icon shortcuts). Fullscreen takeover lives in
+ * FullscreenToolPanel.
  */
 export default function RightSidebar() {
   const { t } = useTranslation();
-  const { isRainbowMode } = useRainbowThemeContext();
   const { sidebarRefs } = useSidebarContext();
   const { toolPanelRef, quickAccessRef } = sidebarRefs;
   const isMobile = useIsMobile();
@@ -69,7 +63,8 @@ export default function RightSidebar() {
     favoriteTools,
   } = useToolWorkflow();
 
-  const agentsEnabled = useAgentsEnabled();
+  const policiesEnabled = usePoliciesEnabled();
+  const rawPolicyDetailActive = usePolicyDetailActive();
   const fullscreenExpanded = useIsFullscreenExpanded();
   const fullscreenGeometry = useToolPanelGeometry({
     enabled: fullscreenExpanded,
@@ -91,57 +86,6 @@ export default function RightSidebar() {
 
   const [allToolsView, setAllToolsView] = useState(false);
 
-  const { isOpen: isChatOpen, setOpen: setChatOpen } = useChat();
-  const [chatWidthPx, setChatWidthPx] = useState(DEFAULT_CHAT_WIDTH_PX);
-  const [isChatDragging, setIsChatDragging] = useState(false);
-  const chatDragState = useRef<{ startX: number; startWidth: number } | null>(
-    null,
-  );
-
-  const handleChatClose = useCallback(() => {
-    withViewTransition(() => setChatOpen(false));
-    setChatWidthPx(DEFAULT_CHAT_WIDTH_PX);
-  }, [setChatOpen]);
-
-  const handleResizeChatPointerDown = useCallback(
-    (e: React.PointerEvent<HTMLDivElement>) => {
-      e.preventDefault();
-      chatDragState.current = { startX: e.clientX, startWidth: chatWidthPx };
-      setIsChatDragging(true);
-      document.body.style.cursor = "col-resize";
-      document.body.style.userSelect = "none";
-
-      const onMove = (ev: PointerEvent) => {
-        if (!chatDragState.current) return;
-        const delta = chatDragState.current.startX - ev.clientX;
-        setChatWidthPx(
-          Math.max(
-            MIN_CHAT_WIDTH_PX,
-            Math.min(
-              MAX_CHAT_WIDTH_PX,
-              chatDragState.current.startWidth + delta,
-            ),
-          ),
-        );
-      };
-
-      const cleanup = () => {
-        chatDragState.current = null;
-        setIsChatDragging(false);
-        document.body.style.removeProperty("cursor");
-        document.body.style.removeProperty("user-select");
-        window.removeEventListener("pointermove", onMove);
-        window.removeEventListener("pointerup", cleanup);
-        window.removeEventListener("pointercancel", cleanup);
-      };
-
-      window.addEventListener("pointermove", onMove);
-      window.addEventListener("pointerup", cleanup);
-      window.addEventListener("pointercancel", cleanup);
-    },
-    [chatWidthPx],
-  );
-
   const handleShowAllTools = () => {
     withViewTransition(() => setAllToolsView(true));
   };
@@ -153,15 +97,34 @@ export default function RightSidebar() {
     });
   };
 
+  // Opening a policy (e.g. from the collapsed rail) lands the rail in the clean
+  // default tool-picker view — the only view the policy takeover renders in — so
+  // it never collides with an open tool or the all-tools/search view.
+  const handleOpenPolicy = () => {
+    withViewTransition(() => {
+      if (readerMode) setReaderMode(false);
+      setLeftPanelView("toolPicker");
+      if (!sidebarsVisible) setSidebarsVisible(true);
+      setAllToolsView(false);
+      setSearchQuery("");
+    });
+  };
+
   // The header shows [back] [search] when we have somewhere to go back to —
   // i.e. the user is in a specific tool, or already in the all-tools/search view.
   const inToolView = leftPanelView !== "toolPicker";
   // Show X (close) button only when there's somewhere to go back to.
   const showCloseButton = inToolView || allToolsView;
-  // Show search input whenever there's a close button, or when agents are off and
-  // we're in the default tool-picker view (search filters the full list inline).
+  // Policies sit above the tool list in the default tool-picker view.
+  const showPolicies =
+    policiesEnabled && !allToolsView && leftPanelView === "toolPicker";
+  // When Policies are shown, the search moves OUT of the header to sit between
+  // the Policies and Tools sections (separating them); otherwise it stays in the
+  // header. Show the header search when there's a close button, or in the
+  // default tool-picker view.
+  const showInlineSearch = showPolicies && !showCloseButton;
   const showHeaderSearch =
-    showCloseButton || (!agentsEnabled && leftPanelView === "toolPicker");
+    !showInlineSearch && (showCloseButton || leftPanelView === "toolPicker");
 
   const handleHeaderBack = () => {
     if (inToolView) {
@@ -194,18 +157,20 @@ export default function RightSidebar() {
       ? (toolRegistry[selectedToolKey as ToolId] ?? null)
       : null;
 
-  // Agents header + section is hidden when:
-  //  - the AI engine is off, or
-  //  - the user is in the all-tools view, or
-  //  - a specific tool is being rendered (leftPanelView ≠ "toolPicker").
-  const showAgents =
-    agentsEnabled && !allToolsView && leftPanelView === "toolPicker";
+  // The detail takeover replaces the tool list ONLY in the same default view —
+  // never over an open tool or the all-tools view (which must keep priority).
+  // A lingering selection is harmless: it stays hidden behind a tool and the
+  // list/takeover reappears on return to the picker (as in the prototype).
+  const policyDetailActive = rawPolicyDetailActive && showPolicies;
+
+  // The rail widens when a policy detail takes it over — the tool list is fine
+  // at 18.5rem, but the policy detail/wizard/settings need more breathing room.
+  const expandedWidth = policyDetailActive ? "25rem" : "18.5rem";
 
   const computedWidth = () => {
     if (isMobile) return "100%";
-    if (isChatOpen) return `${chatWidthPx}px`;
     if (!isPanelVisible) return "3.5rem";
-    return "18.5rem";
+    return expandedWidth;
   };
 
   // Collapsed rail: show favourites + recommended tools as icons.
@@ -239,39 +204,15 @@ export default function RightSidebar() {
       ref={toolPanelRef}
       data-sidebar="tool-panel"
       data-tour={fullscreenExpanded ? undefined : "tool-panel"}
-      className={`tool-panel flex flex-col ${fullscreenExpanded ? "tool-panel--fullscreen-active" : isChatOpen ? "" : "overflow-hidden"} bg-[var(--bg-toolbar)] border-l border-[var(--border-subtle)] transition-all duration-300 ease-out ${
-        isRainbowMode ? rainbowStyles.rainbowPaper : ""
-      } ${isMobile ? "h-full border-r-0" : "h-screen"} ${fullscreenExpanded ? "tool-panel--fullscreen" : ""}`}
+      className={`tool-panel flex flex-col ${fullscreenExpanded ? "tool-panel--fullscreen-active" : "overflow-hidden"} bg-[var(--bg-toolbar)] border-l border-[var(--border-subtle)] transition-all duration-300 ease-out ${isMobile ? "h-full border-r-0" : "h-screen"} ${fullscreenExpanded ? "tool-panel--fullscreen" : ""}`}
       style={{
         width: computedWidth(),
         padding: "0",
-        ...(isChatDragging ? { transition: "none" } : {}),
       }}
     >
-      {!fullscreenExpanded && isChatOpen && (
-        <div
-          style={{
-            height: "100%",
-            width: "100%",
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          <div
-            className="agents-takeover__resize-handle"
-            onPointerDown={handleResizeChatPointerDown}
-            role="separator"
-            aria-label={t("chat.resize", "Resize chat panel")}
-            aria-orientation="vertical"
-          />
-          <ChatPanel
-            onBack={handleChatClose}
-            backLabel={t("agents.back_to_tools", "Back to tools")}
-          />
-        </div>
-      )}
-
-      {!fullscreenExpanded && !isChatOpen && !isPanelVisible && !isMobile && (
+      {/* Headless: enforces enabled policies on every uploaded file. */}
+      {policiesEnabled && <PolicyAutoRunController />}
+      {!fullscreenExpanded && !isPanelVisible && !isMobile && (
         <div className="tool-panel__collapsed-strip">
           <div className="tool-panel__collapsed-top">
             <ActionIcon
@@ -279,15 +220,17 @@ export default function RightSidebar() {
               color="gray.4"
               radius="xl"
               size="md"
-              className="tool-panel__expand-btn"
+              className="tool-panel__expand-btn tool-panel__toggle-vt"
               onClick={handleExpand}
               aria-label={t("toolPanel.expand", "Expand panel")}
             >
               <ChevronLeftIcon sx={{ fontSize: "1.1rem" }} />
             </ActionIcon>
-            <AgentsCollapsedButton onExpand={handleExpand} />
           </div>
           <div className="tool-panel__collapsed-divider" />
+          {policiesEnabled && (
+            <PoliciesCollapsedButton onExpand={handleOpenPolicy} />
+          )}
           <div className="tool-panel__collapsed-tools">
             {collapsedRailItems.map(({ id, tool }) => (
               <AppTooltip
@@ -315,7 +258,7 @@ export default function RightSidebar() {
         </div>
       )}
 
-      {!fullscreenExpanded && !isChatOpen && isPanelVisible && (
+      {!fullscreenExpanded && isPanelVisible && (
         <div
           /* Fixed width matches the expanded panel width so the inner content is
              laid out at its final size from the moment it mounts. The outer
@@ -326,84 +269,114 @@ export default function RightSidebar() {
             opacity: 1,
             transition: "opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
             height: "100%",
-            width: isMobile ? "100%" : "18.5rem",
+            width: isMobile ? "100%" : expandedWidth,
             flexShrink: 0,
             display: "flex",
             flexDirection: "column",
           }}
         >
-          <div className="tool-panel__compact-header">
-            {activeTool ? (
-              <div
-                className="tool-panel__active-tool-pill"
-                aria-label={activeTool.name}
-              >
-                <span className="tool-panel__active-tool-pill-icon">
-                  <ToolIcon
-                    icon={activeTool.icon}
-                    marginRight="0"
-                    color="var(--mantine-color-blue-filled)"
-                  />
-                </span>
-                <span className="tool-panel__active-tool-pill-label">
-                  {activeTool.name}
-                </span>
-              </div>
-            ) : showHeaderSearch ? (
-              <div className="tool-panel__compact-header-search">
-                <ToolSearch
-                  value={searchQuery}
-                  onChange={handleHeaderSearchChange}
-                  toolRegistry={toolRegistry}
-                  mode="filter"
-                  autoFocus={allToolsView && !inToolView}
+          {policyDetailActive ? (
+            <div className="pol-takeover">
+              <PolicyDetailTakeover />
+            </div>
+          ) : (
+            <>
+              {!showPolicies && (
+                <div className="tool-panel__compact-header">
+                  {activeTool ? (
+                    <div
+                      className="tool-panel__active-tool-pill"
+                      aria-label={activeTool.name}
+                    >
+                      <span className="tool-panel__active-tool-pill-icon">
+                        <ToolIcon
+                          icon={activeTool.icon}
+                          marginRight="0"
+                          color="var(--mantine-color-blue-filled)"
+                        />
+                      </span>
+                      <span className="tool-panel__active-tool-pill-label">
+                        {activeTool.name}
+                      </span>
+                    </div>
+                  ) : showHeaderSearch ? (
+                    <div className="tool-panel__compact-header-search">
+                      <ToolSearch
+                        value={searchQuery}
+                        onChange={handleHeaderSearchChange}
+                        toolRegistry={toolRegistry}
+                        mode="filter"
+                        autoFocus={allToolsView && !inToolView}
+                      />
+                    </div>
+                  ) : null}
+                  {showCloseButton ? (
+                    <ActionIcon
+                      variant="subtle"
+                      color="gray"
+                      radius="xl"
+                      size="md"
+                      onClick={handleHeaderBack}
+                      aria-label={
+                        inToolView
+                          ? t("toolPanel.backToAllTools", "Back to all tools")
+                          : t("toolPanel.goBack", "Go back")
+                      }
+                      className="tool-panel__expand-btn"
+                    >
+                      <CloseIcon sx={{ fontSize: "1.1rem" }} />
+                    </ActionIcon>
+                  ) : (
+                    <ActionIcon
+                      variant="outline"
+                      radius="xl"
+                      size="md"
+                      onClick={handleCollapse}
+                      aria-label={t("toolPanel.collapse", "Collapse panel")}
+                      className="tool-panel__expand-btn tool-panel__toggle-vt"
+                    >
+                      <ChevronRightIcon sx={{ fontSize: "1.1rem" }} />
+                    </ActionIcon>
+                  )}
+                </div>
+              )}
+
+              {showPolicies && (
+                <PoliciesSection
+                  leadingControl={
+                    <ActionIcon
+                      variant="outline"
+                      radius="xl"
+                      size="md"
+                      onClick={handleCollapse}
+                      aria-label={t("toolPanel.collapse", "Collapse panel")}
+                      className="tool-panel__expand-btn tool-panel__toggle-vt"
+                    >
+                      <ChevronRightIcon sx={{ fontSize: "1.1rem" }} />
+                    </ActionIcon>
+                  }
                 />
-              </div>
-            ) : (
-              showAgents && (
-                <span className="tool-panel__section-label">
-                  {t("agents.section_title", "Agents")}
-                </span>
-              )
-            )}
-            {showCloseButton ? (
-              <ActionIcon
-                variant="subtle"
-                color="gray"
-                radius="xl"
-                size="md"
-                onClick={handleHeaderBack}
-                aria-label={
-                  inToolView
-                    ? t("toolPanel.backToAllTools", "Back to all tools")
-                    : t("toolPanel.goBack", "Go back")
-                }
-                className="tool-panel__expand-btn"
-              >
-                <CloseIcon sx={{ fontSize: "1.1rem" }} />
-              </ActionIcon>
-            ) : (
-              <ActionIcon
-                variant="outline"
-                radius="xl"
-                size="md"
-                onClick={handleCollapse}
-                aria-label={t("toolPanel.collapse", "Collapse panel")}
-                className="tool-panel__expand-btn"
-              >
-                <ChevronRightIcon sx={{ fontSize: "1.1rem" }} />
-              </ActionIcon>
-            )}
-          </div>
+              )}
 
-          {showAgents && <AgentsSection />}
+              {showInlineSearch && (
+                <div className="tool-panel__between-search">
+                  <ToolSearch
+                    value={searchQuery}
+                    onChange={handleHeaderSearchChange}
+                    toolRegistry={toolRegistry}
+                    mode="filter"
+                  />
+                </div>
+              )}
 
-          <ToolPanel
-            allToolsView={allToolsView}
-            onShowAllTools={handleShowAllTools}
-            onToolSelect={handleToolSelectWithTransition}
-            compact={agentsEnabled && !allToolsView}
-          />
+              <ToolPanel
+                allToolsView={allToolsView}
+                onShowAllTools={handleShowAllTools}
+                onToolSelect={handleToolSelectWithTransition}
+                compact={false}
+              />
+            </>
+          )}
         </div>
       )}
 

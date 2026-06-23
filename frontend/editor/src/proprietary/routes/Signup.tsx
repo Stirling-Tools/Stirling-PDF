@@ -4,12 +4,11 @@ import { useTranslation } from "react-i18next";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
 import { useAuth } from "@app/auth/UseSession";
 import AuthLayout from "@app/routes/authShared/AuthLayout";
-import "@app/routes/authShared/auth.css";
-import { BASE_PATH } from "@app/constants/app";
+import "@shared/auth/ui/auth.css";
+import { BASE_PATH, withBasePath } from "@app/constants/app";
 
 // Import signup components
-import LoginHeader from "@app/routes/login/LoginHeader";
-import ErrorMessage from "@app/routes/login/ErrorMessage";
+import ErrorMessage from "@shared/auth/ui/ErrorMessage";
 import DividerWithText from "@app/components/shared/DividerWithText";
 import SignupForm from "@app/routes/signup/SignupForm";
 import {
@@ -17,6 +16,7 @@ import {
   SignupFieldErrors,
 } from "@app/routes/signup/SignupFormValidation";
 import { useAuthService } from "@app/routes/signup/AuthService";
+import loginHeader from "@shared/assets/login/LoginLightModeHeader.svg";
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -92,10 +92,18 @@ export default function Signup() {
 
   return (
     <AuthLayout>
-      <LoginHeader
-        title={t("signup.title", "Create an account")}
-        subtitle={t("signup.subtitle", "Join Stirling PDF")}
-      />
+      <div className="auth-logo-block">
+        <img
+          src={loginHeader}
+          alt="Stirling PDF"
+          className="auth-logo-header auth-logo-header--light"
+        />
+        <img
+          src={withBasePath("/modern-logo/LoginDarkModeHeader.svg")}
+          alt="Stirling PDF"
+          className="auth-logo-header auth-logo-header--dark"
+        />
+      </div>
 
       <ErrorMessage error={error} />
 

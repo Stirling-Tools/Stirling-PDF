@@ -1,9 +1,7 @@
 import React, { useState } from "react";
 import { Anchor, Group, Stack, Text, Button, Paper } from "@mantine/core";
-import UsageSection from "@app/components/shared/config/configSections/apiKeys/UsageSection";
 import ApiKeySection from "@app/components/shared/config/configSections/apiKeys/ApiKeySection";
 import RefreshModal from "@app/components/shared/config/configSections/apiKeys/RefreshModal";
-import { useCredits } from "@app/components/shared/config/configSections/apiKeys/hooks/useCredits";
 import useApiKey from "@app/components/shared/config/configSections/apiKeys/hooks/useApiKey";
 import SkeletonLoader from "@app/components/shared/SkeletonLoader";
 import { useTranslation } from "react-i18next";
@@ -17,7 +15,6 @@ export default function ApiKeys() {
   const { user } = useAuth();
   const isAnonymous = Boolean(user && isUserAnonymous(user));
 
-  const { data: credits, isLoading: creditsLoading } = useCredits();
   const {
     apiKey,
     isLoading: apiKeyLoading,
@@ -25,7 +22,6 @@ export default function ApiKeys() {
     isRefreshing,
     error: apiKeyError,
     refetch,
-    hasAttempted,
   } = useApiKey();
 
   const copy = async (text: string, tag: string) => {
@@ -53,22 +49,8 @@ export default function ApiKeys() {
     );
   };
 
-  const showUsage = Boolean(credits);
-
   return (
     <Stack gap={20} p={0}>
-      {showUsage && (
-        <UsageSection
-          apiUsage={credits!}
-          obscured={Boolean(!apiKey && hasAttempted && !isAnonymous)}
-          overlayMessage={t(
-            "config.apiKeys.overlayMessage",
-            "Generate a key to see credits and available credits",
-          )}
-          loading={creditsLoading}
-        />
-      )}
-
       {!isAnonymous && apiKeyError && (
         <Text size="sm" c="red.5">
           {t(

@@ -50,7 +50,10 @@ test.describe("AddText place-multiple behaviour", () => {
   test("single placement (default) exits placement mode", async ({ page }) => {
     await enterPlacementMode(page);
 
-    await page.locator(FIRST_PAGE).first().click({ position: { x: 150, y: 150 } });
+    await page
+      .locator(FIRST_PAGE)
+      .first()
+      .click({ position: { x: 150, y: 150 } });
 
     // Wait past the 60ms auto-activate window: with the fix the tool stays
     // exited; without it placement bounces straight back into "Pause" mode.
@@ -71,7 +74,10 @@ test.describe("AddText place-multiple behaviour", () => {
       })
       .check();
 
-    await page.locator(FIRST_PAGE).first().click({ position: { x: 150, y: 150 } });
+    await page
+      .locator(FIRST_PAGE)
+      .first()
+      .click({ position: { x: 150, y: 150 } });
     await page.waitForTimeout(750);
 
     // Still placing: Pause stays offered, Resume never appears.

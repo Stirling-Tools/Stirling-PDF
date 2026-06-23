@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   consumePostLoginRedirectPath,
   springAuth,
-} from "@app/auth/springAuthClient";
+} from "@shared/auth/spring/springAuthClient";
 import { handleAuthCallbackSuccess } from "@app/extensions/authCallback";
 import styles from "@app/routes/AuthCallback.module.css";
 
@@ -18,42 +18,16 @@ export default function AuthCallback() {
   const navigate = useNavigate();
   const processingRef = useRef(false);
 
-  // Log component lifecycle
   useEffect(() => {
-    const mountId = Math.random().toString(36).substring(7);
-    console.log(`[AuthCallback:${mountId}] 🔵 Component mounted`);
-    return () => {
-      console.log(`[AuthCallback:${mountId}] 🔴 Component unmounting`);
-    };
-  }, []);
+    const startedAt = performance.now();
+    const elapsed = () => `${(performance.now() - startedAt).toFixed(0)}ms`;
 
-  useEffect(() => {
     const handleCallback = async () => {
-      const startTime = performance.now();
-      const executionId = Math.random().toString(36).substring(7);
-
-      console.log(
-        `[AuthCallback:${executionId}] ════════════════════════════════════`,
-      );
-      console.log(
-        `[AuthCallback:${executionId}] Starting authentication callback`,
-      );
-      console.log(`[AuthCallback:${executionId}] URL: ${window.location.href}`);
-      console.log(
-        `[AuthCallback:${executionId}] Hash: ${window.location.hash}`,
-      );
-      console.log(
-        `[AuthCallback:${executionId}] Document readyState: ${document.readyState}`,
-      );
-
       if (
         typeof window !== "undefined" &&
         window.sessionStorage.getItem("stirling_sso_auto_login_logged_out") ===
           "1"
       ) {
-        console.warn(
-          `[AuthCallback:${executionId}] ⚠️  Logout block active, skipping token processing`,
-        );
         navigate("/login", {
           replace: true,
           state: { error: "You have been signed out. Please sign in again." },
@@ -62,30 +36,16 @@ export default function AuthCallback() {
       }
 
       // Prevent double execution (React 18 Strict Mode + navigate dependency)
-      if (processingRef.current) {
-        console.warn(
-          `[AuthCallback:${executionId}] ⚠️  Already processing, skipping duplicate execution`,
-        );
-        console.warn(
-          `[AuthCallback:${executionId}] This is expected in React Strict Mode (development)`,
-        );
-        return;
-      }
+      if (processingRef.current) return;
       processingRef.current = true;
 
       try {
-        console.log(
-          `[AuthCallback:${executionId}] Step 1: Extracting token from URL fragment`,
-        );
-
-        // Extract JWT from URL fragment (#access_token=...)
-        const hash = window.location.hash.substring(1); // Remove '#'
-        const params = new URLSearchParams(hash);
-        const token = params.get("access_token");
+        const hash = window.location.hash.substring(1);
+        const token = new URLSearchParams(hash).get("access_token");
 
         if (!token) {
           console.error(
-            `[AuthCallback:${executionId}] ❌ No access_token in URL fragment`,
+            `[AuthCallback] No access_token in URL fragment (${elapsed()})`,
           );
           navigate("/login", {
             replace: true,
@@ -94,39 +54,13 @@ export default function AuthCallback() {
           return;
         }
 
-        console.log(
-          `[AuthCallback:${executionId}] ✓ Token extracted (length: ${token.length})`,
-        );
-        console.log(
-          `[AuthCallback:${executionId}] Step 2: Storing JWT in localStorage`,
-        );
-
-        // Store JWT in localStorage
         localStorage.setItem("stirling_jwt", token);
-        console.log(
-          `[AuthCallback:${executionId}] ✓ JWT stored in localStorage`,
-        );
-
-        console.log(
-          `[AuthCallback:${executionId}] Step 3: Dispatching 'jwt-available' event`,
-        );
-        // Dispatch custom event for other components to react to JWT availability
         window.dispatchEvent(new CustomEvent("jwt-available"));
-        console.log(`[AuthCallback:${executionId}] ✓ Event dispatched`);
-        console.log(
-          `[AuthCallback:${executionId}] Elapsed after jwt-available: ${(performance.now() - startTime).toFixed(2)}ms`,
-        );
 
-        console.log(
-          `[AuthCallback:${executionId}] Step 4: Validating token with backend`,
-        );
-        // Validate the token and load user info
-        // This calls /api/v1/auth/me with the JWT to get user details
         const { data, error } = await springAuth.getSession();
-
         if (error || !data.session) {
           console.error(
-            `[AuthCallback:${executionId}] ❌ Failed to validate token:`,
+            `[AuthCallback] Failed to validate token (${elapsed()}):`,
             error,
           );
           localStorage.removeItem("stirling_jwt");
@@ -137,68 +71,21 @@ export default function AuthCallback() {
           return;
         }
 
-        console.log(
-          `[AuthCallback:${executionId}] ✓ Token validated, user: ${data.session.user.username}`,
-        );
-        console.log(
-          `[AuthCallback:${executionId}] Step 5: Running platform-specific callback handlers`,
-        );
-
         await handleAuthCallbackSuccess(token);
-
-        console.log(
-          `[AuthCallback:${executionId}] ✓ Callback handlers complete`,
-        );
-        console.log(
-          `[AuthCallback:${executionId}] Step 6: Waiting for context stabilization`,
-        );
 
         // Wait for all context providers to process jwt-available event
         // This prevents infinite render loop when coming from cross-domain SAML redirect
         await new Promise((resolve) => setTimeout(resolve, 100));
-        console.log(
-          `[AuthCallback:${executionId}] Elapsed after stabilization wait: ${(performance.now() - startTime).toFixed(2)}ms`,
-        );
 
         const target = consumePostLoginRedirectPath() ?? "/";
-        console.log(
-          `[AuthCallback:${executionId}] Step 7: Navigating to ${target}`,
+        console.info(
+          `[AuthCallback] Authenticated ${data.session.user.username} in ${elapsed()}, navigating to ${target}`,
         );
         navigate(target, { replace: true });
-
-        const duration = performance.now() - startTime;
-        console.log(
-          `[AuthCallback:${executionId}] ✓ Authentication complete (${duration.toFixed(2)}ms)`,
-        );
-        console.log(
-          `[AuthCallback:${executionId}] ════════════════════════════════════`,
-        );
       } catch (error) {
-        const duration = performance.now() - startTime;
         console.error(
-          `[AuthCallback:${executionId}] ════════════════════════════════════`,
-        );
-        console.error(
-          `[AuthCallback:${executionId}] ❌ FATAL ERROR during authentication`,
-        );
-        console.error(`[AuthCallback:${executionId}] Error:`, error);
-        console.error(
-          `[AuthCallback:${executionId}] Error name:`,
-          (error as Error)?.name,
-        );
-        console.error(
-          `[AuthCallback:${executionId}] Error message:`,
-          (error as Error)?.message,
-        );
-        console.error(
-          `[AuthCallback:${executionId}] Error stack:`,
-          (error as Error)?.stack,
-        );
-        console.error(
-          `[AuthCallback:${executionId}] Duration before failure: ${duration.toFixed(2)}ms`,
-        );
-        console.error(
-          `[AuthCallback:${executionId}] ════════════════════════════════════`,
+          `[AuthCallback] Authentication failed (${elapsed()}):`,
+          error,
         );
         navigate("/login", {
           replace: true,

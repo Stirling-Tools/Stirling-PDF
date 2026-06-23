@@ -1,23 +1,25 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase, signInAnonymously } from "@app/auth/supabase";
 import { useAuth } from "@app/auth/UseSession";
 import { useTranslation } from "@app/hooks/useTranslation";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
 import AuthLayout from "@app/routes/authShared/AuthLayout";
-import "@app/routes/authShared/auth.css";
+import "@shared/auth/ui/auth.css";
 import "@app/routes/authShared/saas-auth.css";
-import GuestSignInButton from "@app/routes/authShared/GuestSignInButton";
+import {
+  absoluteWithBasePath,
+  getBaseUrl,
+  withBasePath,
+} from "@app/constants/app";
+import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
 
 // Import login components
-import LoginHeader from "@app/routes/login/LoginHeader";
-import ErrorMessage from "@app/routes/login/ErrorMessage";
+import ErrorMessage from "@shared/auth/ui/ErrorMessage";
 import EmailPasswordForm from "@app/routes/login/EmailPasswordForm";
-import MagicLinkForm from "@app/routes/login/MagicLinkForm";
 import OAuthButtons from "@app/routes/login/OAuthButtons";
-import DividerWithText from "@app/components/shared/DividerWithText";
 import LoggedInState from "@app/routes/login/LoggedInState";
-import { absoluteWithBasePath, getBaseUrl } from "@app/constants/app";
+import loginHeader from "@shared/assets/login/LoginLightModeHeader.svg";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -25,11 +27,13 @@ export default function Login() {
   const { t } = useTranslation();
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showMagicLink, setShowMagicLink] = useState(false);
+  const [showMagicLinkForm, setShowMagicLinkForm] = useState(false);
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [magicLinkEmail, setMagicLinkEmail] = useState("");
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
+
   // Prefill email from query param (e.g. after password reset)
   useEffect(() => {
     try {
@@ -37,11 +41,31 @@ export default function Login() {
       const emailFromQuery = url.searchParams.get("email");
       if (emailFromQuery) {
         setEmail(emailFromQuery);
+        setShowEmailForm(true);
       }
     } catch (_) {
       // ignore
     }
   }, []);
+
+  // Same-origin relative path to return to after login (e.g. the OAuth
+  // consent page). Same sanitization rules as AuthCallback's `next`.
+  const nextPath = useMemo(() => {
+    try {
+      const next = new URL(window.location.href).searchParams.get("next");
+      return next && next.startsWith("/") && !next.startsWith("//")
+        ? next
+        : null;
+    } catch (_) {
+      return null;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (session && !loading && nextPath) {
+      navigate(nextPath, { replace: true });
+    }
+  }, [session, loading, nextPath, navigate]);
 
   const baseUrl = getBaseUrl();
 
@@ -61,8 +85,11 @@ export default function Login() {
     ogUrl: `${window.location.origin}${window.location.pathname}`,
   });
 
-  // Show logged in state if authenticated
+  // Show logged in state if authenticated (unless bouncing back to `next`)
   if (session && !loading) {
+    if (nextPath) {
+      return null;
+    }
     return <LoggedInState />;
   }
 
@@ -73,7 +100,9 @@ export default function Login() {
       setIsSigningIn(true);
       setError(null);
 
-      const redirectTo = absoluteWithBasePath("/auth/callback");
+      const redirectTo =
+        absoluteWithBasePath("/auth/callback") +
+        (nextPath ? `?next=${encodeURIComponent(nextPath)}` : "");
       console.log(`[Login] Signing in with ${provider}`);
 
       const oauthOptions: {
@@ -165,7 +194,9 @@ export default function Login() {
       const { error } = await supabase.auth.signInWithOtp({
         email: magicLinkEmail.trim(),
         options: {
-          emailRedirectTo: absoluteWithBasePath("/auth/callback"),
+          emailRedirectTo:
+            absoluteWithBasePath("/auth/callback") +
+            (nextPath ? `?next=${encodeURIComponent(nextPath)}` : ""),
         },
       });
 
@@ -174,12 +205,9 @@ export default function Login() {
         setError(error.message);
       } else {
         setError(null);
-        alert(t("login.magicLinkSent", { email: magicLinkEmail }));
-        setMagicLinkEmail("");
-        setShowMagicLink(false);
+        setMagicLinkSent(true);
       }
     } catch (err) {
-      console.error("[Login] Unexpected error:", err);
       setError(
         t("login.unexpectedError", {
           message: err instanceof Error ? err.message : "Unknown error",
@@ -188,10 +216,6 @@ export default function Login() {
     } finally {
       setIsSigningIn(false);
     }
-  };
-
-  const handleForgotPassword = () => {
-    navigate("/auth/reset");
   };
 
   const handleAnonymousSignIn = async () => {
@@ -227,115 +251,210 @@ export default function Login() {
     }
   };
 
+  const toggleEmailForm = () => {
+    setShowEmailForm((v) => !v);
+    setShowMagicLinkForm(false);
+    setMagicLinkSent(false);
+  };
+
+  const toggleMagicLink = () => {
+    setShowMagicLinkForm((v) => !v);
+    setShowEmailForm(false);
+    setMagicLinkSent(false);
+  };
+
   return (
-    <AuthLayout isEmailFormExpanded={showEmailForm}>
-      <LoginHeader
-        title={t("login.login")}
-        subtitle={t("login.subtitle", "Sign back in to Stirling PDF")}
-      />
+    <AuthLayout isEmailFormExpanded={showEmailForm || showMagicLinkForm}>
+      {/* Centered logo */}
+      <div className="auth-logo-block">
+        <img
+          src={loginHeader}
+          alt="Stirling PDF"
+          className="auth-logo-header auth-logo-header--light"
+        />
+        <img
+          src={withBasePath("/modern-logo/LoginDarkModeHeader.svg")}
+          alt="Stirling PDF"
+          className="auth-logo-header auth-logo-header--dark"
+        />
+      </div>
 
       <ErrorMessage error={error} />
 
-      {/* OAuth first */}
-      <OAuthButtons
-        onProviderClick={signInWithProvider}
-        isSubmitting={isSigningIn}
-        layout="fullwidth"
-      />
+      {/* OAuth + magic link group — single flex column so gap is uniform */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "0.75rem",
+          marginBottom: "2.5rem",
+        }}
+      >
+        <OAuthButtons
+          onProviderClick={signInWithProvider}
+          isSubmitting={isSigningIn}
+          layout="fullwidth"
+          labelPrefix={`${t("login.signInWith", "Sign in with")} `}
+        />
 
-      {/* Divider between OAuth and Email */}
-      <DividerWithText
-        text={t("signup.or", "or")}
-        respondsToDarkMode={false}
-        opacity={0.4}
-      />
+        {/* Magic link button + its expandable form as one unit */}
+        <div>
+          <button
+            type="button"
+            disabled={isSigningIn}
+            onClick={toggleMagicLink}
+            className={`oauth-button-fullwidth auth-expandable-trigger ${showMagicLinkForm ? "auth-expandable-trigger--active" : ""}`}
+          >
+            <span className="oauth-btn-group">
+              <LinkRoundedIcon
+                style={{
+                  width: "1.75rem",
+                  height: "1.75rem",
+                  marginRight: "0.5rem",
+                  flexShrink: 0,
+                }}
+              />
+              <span className="oauth-btn-label">
+                {t("login.useMagicLink", "Use magic link")}
+              </span>
+            </span>
+          </button>
 
-      {/* Sign in with email button (primary color to match signup CTA) */}
-      <div className="auth-section">
+          <div
+            className={`auth-expand-grid ${showMagicLinkForm ? "auth-expand-grid--open" : ""}`}
+          >
+            <div className="auth-expand-inner">
+              <div style={{ paddingTop: "0.25rem" }}>
+                {magicLinkSent ? (
+                  <p
+                    style={{
+                      fontSize: "0.875rem",
+                      color: "#059669",
+                      margin: 0,
+                    }}
+                  >
+                    {t("login.magicLinkSent", { email: magicLinkEmail })}
+                  </p>
+                ) : (
+                  <div className="auth-magic-row">
+                    <input
+                      type="email"
+                      placeholder={t(
+                        "login.enterEmailForMagicLink",
+                        "Enter your email",
+                      )}
+                      value={magicLinkEmail}
+                      onChange={(e) => setMagicLinkEmail(e.target.value)}
+                      onKeyDown={(e) =>
+                        e.key === "Enter" &&
+                        !isSigningIn &&
+                        signInWithMagicLink()
+                      }
+                      className="auth-input"
+                    />
+                    <button
+                      onClick={signInWithMagicLink}
+                      disabled={isSigningIn || !magicLinkEmail}
+                      className="auth-magic-button"
+                    >
+                      {isSigningIn
+                        ? t("login.sending")
+                        : t("login.sendMagicLink")}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Email & Password button */}
+      <button
+        type="button"
+        disabled={isSigningIn}
+        onClick={toggleEmailForm}
+        className={`oauth-button-fullwidth auth-expandable-trigger ${showEmailForm ? "auth-expandable-trigger--active" : ""}`}
+        style={{ marginBottom: "0.75rem" }}
+      >
+        <span className="oauth-btn-group">
+          <span className="auth-at-icon">@</span>
+          <span className="oauth-btn-label">{`${t("login.signInWith", "Sign in with")} email`}</span>
+        </span>
+      </button>
+
+      {/* Email form — animated expand */}
+      <div
+        className={`auth-expand-grid ${showEmailForm ? "auth-expand-grid--open" : ""}`}
+      >
+        <div className="auth-expand-inner">
+          <div style={{ paddingBottom: "0.5rem" }}>
+            <EmailPasswordForm
+              email={email}
+              password={password}
+              setEmail={setEmail}
+              setPassword={setPassword}
+              onSubmit={signInWithEmail}
+              isSubmitting={isSigningIn}
+              submitButtonText={
+                isSigningIn ? t("login.loggingIn") : t("login.login")
+              }
+            />
+            <button
+              type="button"
+              onClick={() => navigate("/auth/reset")}
+              className="auth-link-black"
+              style={{ fontSize: "0.8125rem", marginTop: "0.25rem" }}
+            >
+              {t("login.forgotPassword", "Forgot your password?")}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Skip */}
+      <div style={{ textAlign: "center", margin: "1rem 0" }}>
         <button
           type="button"
-          onClick={() => setShowEmailForm((v) => !v)}
+          onClick={handleAnonymousSignIn}
           disabled={isSigningIn}
-          className="w-full px-4 py-[0.75rem] rounded-[0.625rem] text-base font-semibold mb-2 cursor-pointer border-0 disabled:opacity-50 disabled:cursor-not-allowed auth-cta-button"
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            fontSize: "1rem",
+            fontWeight: 700,
+            color: "#000000",
+          }}
         >
-          {t("login.useEmailInstead", "Sign in with email")}
+          {isSigningIn
+            ? t("login.signingIn", "Signing in...")
+            : `${t("signup.skip", "Skip")} →`}
         </button>
       </div>
 
-      {showEmailForm && (
-        <EmailPasswordForm
-          email={email}
-          password={password}
-          setEmail={setEmail}
-          setPassword={setPassword}
-          onSubmit={signInWithEmail}
-          isSubmitting={isSigningIn}
-          submitButtonText={
-            isSigningIn ? t("login.loggingIn") : t("login.login")
-          }
-        />
-      )}
-
-      {showEmailForm && (
-        <div className="auth-section-sm">
-          <button
-            type="button"
-            onClick={handleForgotPassword}
-            className="auth-link-black"
-          >
-            {t("login.forgotPassword", "Forgot your password?")}
-          </button>
-        </div>
-      )}
-
-      {/* Divider then Guest */}
-      <DividerWithText
-        text={t("signup.or", "or")}
-        respondsToDarkMode={false}
-        opacity={0.4}
-      />
-
-      <GuestSignInButton
-        onClick={handleAnonymousSignIn}
-        disabled={isSigningIn}
-        label={
-          isSigningIn
-            ? t("login.signingIn", "Signing in...")
-            : t("login.signInAnonymously", "Sign in as a Guest")
-        }
-      />
-
-      <div className="auth-bottom-row">
-        <button
-          type="button"
-          onClick={() => setShowMagicLink(true)}
-          className="auth-link-black"
-        >
-          {t("login.useMagicLink", "Sign in with magic link")}
-        </button>
-
+      {/* Bottom */}
+      <div
+        style={{
+          textAlign: "center",
+          marginTop: "auto",
+          paddingTop: "1rem",
+        }}
+      >
         <button
           type="button"
           onClick={() => navigate("/signup")}
-          className="auth-link-black"
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            fontSize: "0.875rem",
+            color: "#9ca3af",
+          }}
         >
-          {t("signup.signUp", "Sign up")}
+          {t("login.createAccount", "Create an account")}
         </button>
       </div>
-
-      {/* Magic link form renders on demand */}
-      {showMagicLink && (
-        <div style={{ marginTop: "0.5rem" }}>
-          <MagicLinkForm
-            showMagicLink={showMagicLink}
-            magicLinkEmail={magicLinkEmail}
-            setMagicLinkEmail={setMagicLinkEmail}
-            setShowMagicLink={setShowMagicLink}
-            onSubmit={signInWithMagicLink}
-            isSubmitting={isSigningIn}
-          />
-        </div>
-      )}
     </AuthLayout>
   );
 }

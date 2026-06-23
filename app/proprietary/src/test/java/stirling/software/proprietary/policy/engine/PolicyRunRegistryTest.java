@@ -12,6 +12,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.WaitState;
@@ -25,7 +26,7 @@ class PolicyRunRegistryTest {
 
     @BeforeEach
     void setUp() {
-        registry = new PolicyRunRegistry(30);
+        registry = new PolicyRunRegistry(new ApplicationProperties());
     }
 
     @AfterEach
@@ -94,7 +95,7 @@ class PolicyRunRegistryTest {
     }
 
     private PolicyRun register(String runId) {
-        PolicyRun run = new PolicyRun(runId, new PipelineDefinition(runId, List.of(), null));
+        PolicyRun run = new PolicyRun(runId, null, new PipelineDefinition(runId, List.of(), null));
         registry.register(run);
         return run;
     }

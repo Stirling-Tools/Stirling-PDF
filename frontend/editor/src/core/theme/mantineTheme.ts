@@ -150,6 +150,16 @@ export const mantineTheme = createTheme({
         },
       },
     },
+
+    Code: {
+      styles: {
+        root: {
+          backgroundColor: "var(--color-gray-100)",
+          color: "var(--text-primary)",
+        },
+      },
+    },
+
     Textarea: {
       styles: (_theme: MantineTheme) => ({
         input: {

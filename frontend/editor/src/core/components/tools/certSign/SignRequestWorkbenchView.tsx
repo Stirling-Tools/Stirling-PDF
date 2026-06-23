@@ -258,7 +258,7 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
   };
 
   const handleAddToActiveFiles = async () => {
-    await fileActions.addFiles([pdfFile]);
+    await fileActions.addFiles([pdfFile], { skipUploadTracking: true });
     alert({
       alertType: "success",
       title: t("success"),

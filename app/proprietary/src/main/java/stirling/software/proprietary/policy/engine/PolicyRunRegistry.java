@@ -9,29 +9,27 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PreDestroy;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.model.PolicyRun;
 
 /**
- * In-memory store of live {@link PolicyRun} state, keyed by runId. Holds the authoritative run
- * state machine; durable status/files for download are projected separately into {@code
- * TaskManager}.
+ * In-memory store of live {@link PolicyRun} state, keyed by runId. Authoritative run state machine;
+ * durable status/files are projected separately into {@code TaskManager}.
  *
- * <p>Finished runs are evicted on a fixed interval once they age past {@code
- * stirling.policies.runExpiryMinutes}, mirroring the job-result expiry in {@code TaskManager} so a
- * run's rich in-memory state does not outlive the process. Only terminal runs are evicted; active
- * and paused ({@code WAITING_FOR_INPUT}) runs are retained regardless of age. Result files are not
- * touched here: a run shares its runId with a {@code TaskManager} job, which owns file-lifecycle
- * cleanup, so eviction only frees this map's entry.
+ * <p>A scheduled sweep evicts only terminal runs aged past {@code policies.runExpiryMinutes};
+ * active and paused runs are kept regardless of age. Eviction frees only this map's entry: the
+ * shared {@code TaskManager} job owns file-lifecycle cleanup.
  */
 @Slf4j
 @Service
+@Profile("saas")
 public class PolicyRunRegistry {
 
     private final Map<String, PolicyRun> runs = new ConcurrentHashMap<>();
@@ -41,8 +39,8 @@ public class PolicyRunRegistry {
             Executors.newSingleThreadScheduledExecutor(
                     Thread.ofVirtual().name("policy-run-cleanup-", 0).factory());
 
-    public PolicyRunRegistry(
-            @Value("${stirling.policies.runExpiryMinutes:30}") int runExpiryMinutes) {
+    public PolicyRunRegistry(ApplicationProperties applicationProperties) {
+        int runExpiryMinutes = applicationProperties.getPolicies().getRunExpiryMinutes();
         this.runExpiry = Duration.ofMinutes(runExpiryMinutes);
         cleanupExecutor.scheduleAtFixedRate(this::evictExpiredRuns, 10, 10, TimeUnit.MINUTES);
         log.debug(
@@ -61,7 +59,7 @@ public class PolicyRunRegistry {
         return runs.values();
     }
 
-    /** Scheduled hook: evict terminal runs that finished before the expiry window. */
+    /** Scheduled sweep entry point. */
     private void evictExpiredRuns() {
         try {
             evictExpired(Instant.now().minus(runExpiry));
@@ -71,9 +69,8 @@ public class PolicyRunRegistry {
     }
 
     /**
-     * Remove every terminal run last updated before {@code cutoff}; active and paused runs are kept
-     * regardless of age. Returns the number evicted. Package-visible so the scheduled sweep and
-     * tests exercise the same path with an explicit cutoff.
+     * Evict terminal runs last updated before {@code cutoff}, returning the count. Package-visible
+     * so the sweep and tests share one path with an explicit cutoff.
      */
     int evictExpired(Instant cutoff) {
         int removed = 0;

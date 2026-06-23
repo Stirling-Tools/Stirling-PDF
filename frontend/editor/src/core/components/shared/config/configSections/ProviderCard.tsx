@@ -101,7 +101,7 @@ export default function ProviderCard({
               justifyContent: "space-between",
             }}
           >
-            <div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <Text fw={500} size="sm">
                 {field.label}
               </Text>
@@ -191,8 +191,9 @@ export default function ProviderCard({
   };
 
   const renderProviderIcon = () => {
-    // If icon starts with '/', it's a path to an SVG file
-    if (provider.icon.startsWith("/")) {
+    // Image source: an absolute/relative path, a data: URI (small bundled SVGs
+    // are inlined), or a full URL. Iconify names ("key-rounded") use LocalIcon.
+    if (/^(\/|\.\.?\/|data:|blob:|https?:)/.test(provider.icon)) {
       return (
         <img
           src={provider.icon}

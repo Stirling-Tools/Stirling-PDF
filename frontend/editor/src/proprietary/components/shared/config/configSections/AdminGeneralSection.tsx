@@ -32,7 +32,7 @@ import {
   toUnderscoreFormat,
   toUnderscoreLanguages,
 } from "@app/i18n";
-import { Z_INDEX_CONFIG_MODAL } from "@app/styles/zIndex";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 
 interface GeneralSettingsData {
   ui: {
@@ -591,7 +591,10 @@ export default function AdminGeneralSection() {
                   "admin.settings.general.languages.placeholder",
                   "Select languages",
                 )}
-                comboboxProps={{ zIndex: Z_INDEX_CONFIG_MODAL }}
+                comboboxProps={{
+                  withinPortal: true,
+                  zIndex: Z_INDEX_OVER_CONFIG_MODAL,
+                }}
                 disabled={!loginEnabled}
               />
             </div>
@@ -625,8 +628,11 @@ export default function AdminGeneralSection() {
                 data={defaultLocaleOptions}
                 searchable
                 clearable
-                placeholder="en_GB"
-                comboboxProps={{ zIndex: Z_INDEX_CONFIG_MODAL }}
+                placeholder="en_US"
+                comboboxProps={{
+                  withinPortal: true,
+                  zIndex: Z_INDEX_OVER_CONFIG_MODAL,
+                }}
                 disabled={!loginEnabled}
               />
             </div>
@@ -703,7 +709,7 @@ export default function AdminGeneralSection() {
                 marginBottom: "1rem",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "admin.settings.general.hideDisabledTools.googleDrive.label",
@@ -747,7 +753,7 @@ export default function AdminGeneralSection() {
                 justifyContent: "space-between",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "admin.settings.general.hideDisabledTools.mobileScanner.label",
@@ -793,7 +799,7 @@ export default function AdminGeneralSection() {
                 justifyContent: "space-between",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "admin.settings.general.showUpdate.label",
@@ -832,7 +838,7 @@ export default function AdminGeneralSection() {
                 justifyContent: "space-between",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "admin.settings.general.showUpdateOnlyAdmin.label",
@@ -873,7 +879,7 @@ export default function AdminGeneralSection() {
                 justifyContent: "space-between",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "admin.settings.general.customHTMLFiles.label",
@@ -938,7 +944,7 @@ export default function AdminGeneralSection() {
                 justifyContent: "space-between",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "admin.settings.general.customMetadata.autoUpdate.label",

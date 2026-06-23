@@ -17,6 +17,18 @@
   color: inherit;
   text-align: left;
 }
+/* Compact density for narrow rails / metric strips. */
+.sui-metric--sm {
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  min-width: 0;
+}
+.sui-metric--sm .sui-metric__value {
+  font-size: 1.125rem;
+}
+.sui-metric--sm .sui-metric__label {
+  white-space: nowrap;
+}
 .sui-metric--primary {
   background: var(--color-bg-subtle);
 }
