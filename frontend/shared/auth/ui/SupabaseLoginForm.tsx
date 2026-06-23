@@ -55,10 +55,9 @@ export default function SupabaseLoginForm({
         <OAuthButtons
           onProviderClick={signInWithProvider}
           isSubmitting={isSubmitting}
-          layout="vertical"
+          layout="fullwidth"
           enabledProviders={providers}
-          ctaPrefix={t("login.signInWith", "Sign in with")}
-          styleVariant="light"
+          ctaPrefix={`${t("login.signInWith", "Sign in with")} `}
         />
       )}
 

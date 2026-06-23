@@ -8,6 +8,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -44,11 +45,15 @@ public class InstanceController {
 
     private final EntitlementService entitlementService;
     private final TeamBillingService billingService;
+    private final AccountLinkService accountLinkService;
 
     public InstanceController(
-            EntitlementService entitlementService, TeamBillingService billingService) {
+            EntitlementService entitlementService,
+            TeamBillingService billingService,
+            AccountLinkService accountLinkService) {
         this.entitlementService = entitlementService;
         this.billingService = billingService;
+        this.accountLinkService = accountLinkService;
     }
 
     public record WhoAmIResponse(Long instanceId, Long teamId) {}
@@ -73,6 +78,21 @@ public class InstanceController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         return ResponseEntity.ok(new WhoAmIResponse(token.getInstanceId(), token.getTeamId()));
+    }
+
+    /**
+     * Revokes this instance's own credential — a credential can mark itself revoked the same way a
+     * session logs itself out. Called by the proprietary backend on local unlink so the SaaS row
+     * gets {@code revoked_at} set; idempotent (already-revoked → still 204).
+     */
+    @PostMapping("/revoke-self")
+    @PreAuthorize("hasRole('LINKED_INSTANCE')")
+    public ResponseEntity<Void> revokeSelf(Authentication auth) {
+        if (!(auth instanceof LinkedInstanceAuthenticationToken token)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        accountLinkService.revoke(token.getTeamId(), token.getInstanceId());
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/entitlement")

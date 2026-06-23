@@ -2,6 +2,8 @@ package stirling.software.saas.accountlink;
 
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.CreationTimestamp;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -60,8 +62,9 @@ public class LinkedInstance {
     @Column(name = "name", length = 255)
     private String name;
 
-    /** Insert time; DB column defaults to {@code CURRENT_TIMESTAMP}. */
-    @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
+    /** Insert time; Hibernate populates this on persist (DB DEFAULT is belt-and-braces). */
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     /** Stamped when the device credential last authenticated; powers staleness display. */

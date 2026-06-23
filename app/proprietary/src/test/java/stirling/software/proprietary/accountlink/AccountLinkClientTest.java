@@ -119,4 +119,37 @@ class AccountLinkClientTest {
         when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(resp);
         assertNull(client.fetchEntitlement("dev-1", "sec-1"));
     }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void revokeSelfSendsDeviceHeadersAndReturnsTrueOn2xx() throws Exception {
+        HttpResponse<String> resp = response(204, "");
+        ArgumentCaptor<HttpRequest> captor = ArgumentCaptor.forClass(HttpRequest.class);
+        when(httpClient.send(captor.capture(), any(HttpResponse.BodyHandler.class)))
+                .thenReturn(resp);
+
+        assertEquals(true, client.revokeSelf("dev-1", "sec-1"));
+
+        HttpRequest sent = captor.getValue();
+        assertEquals("https://saas.example.com/api/v1/instance/revoke-self", sent.uri().toString());
+        assertEquals("dev-1", sent.headers().firstValue("X-Device-Id").orElse(null));
+        assertEquals("sec-1", sent.headers().firstValue("X-Device-Secret").orElse(null));
+        assertEquals("POST", sent.method());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void revokeSelfReturnsFalseOnErrorStatus() throws Exception {
+        HttpResponse<String> resp = response(403, "{}");
+        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(resp);
+        assertEquals(false, client.revokeSelf("dev-1", "sec-1"));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void revokeSelfReturnsFalseWhenUnreachable() throws Exception {
+        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class)))
+                .thenThrow(new ConnectException("refused"));
+        assertEquals(false, client.revokeSelf("dev-1", "sec-1"));
+    }
 }

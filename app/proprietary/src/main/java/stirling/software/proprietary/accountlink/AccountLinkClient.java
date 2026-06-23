@@ -7,6 +7,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
@@ -46,6 +47,7 @@ public class AccountLinkClient {
     private final ObjectMapper mapper;
     private final HttpClient httpClient;
 
+    @Autowired
     public AccountLinkClient(AccountLinkProperties properties, ObjectMapper mapper) {
         this(
                 properties,
@@ -104,6 +106,36 @@ public class AccountLinkClient {
         }
         Long teamId = root.hasNonNull("teamId") ? root.get("teamId").asLong() : null;
         return new RegisterResult(deviceId, deviceSecret, teamId);
+    }
+
+    /**
+     * Revokes this instance's own credential on the SaaS side ({@code POST
+     * /api/v1/instance/revoke-self}), authenticated by the device credential — a credential is
+     * allowed to revoke its own identity. Best-effort: returns {@code false} if SaaS is unreachable
+     * or rejects the call, so the caller (local unlink) can still clear locally and log the orphan
+     * row for follow-up. Idempotent on SaaS (already-revoked → still 204).
+     */
+    public boolean revokeSelf(String deviceId, String deviceSecret) {
+        try {
+            HttpRequest request =
+                    HttpRequest.newBuilder()
+                            .uri(uri("/api/v1/instance/revoke-self"))
+                            .header(HEADER_DEVICE_ID, deviceId)
+                            .header(HEADER_DEVICE_SECRET, deviceSecret)
+                            .header("Accept", "application/json")
+                            .timeout(timeout())
+                            .POST(HttpRequest.BodyPublishers.noBody())
+                            .build();
+            HttpResponse<String> response = send(request);
+            if (response.statusCode() / 100 != 2) {
+                log.debug("Self-revoke returned HTTP {}", response.statusCode());
+                return false;
+            }
+            return true;
+        } catch (Exception e) {
+            log.debug("Self-revoke failed: {}", e.getMessage());
+            return false;
+        }
     }
 
     /**

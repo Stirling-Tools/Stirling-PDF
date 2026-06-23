@@ -1,6 +1,7 @@
 package stirling.software.saas.accountlink;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -37,9 +38,10 @@ class InstanceControllerTest {
 
     @Mock private EntitlementService entitlementService;
     @Mock private TeamBillingService billingService;
+    @Mock private AccountLinkService accountLinkService;
 
     private InstanceController controller() {
-        return new InstanceController(entitlementService, billingService);
+        return new InstanceController(entitlementService, billingService, accountLinkService);
     }
 
     @Test
@@ -90,6 +92,30 @@ class InstanceControllerTest {
 
         assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
         verifyNoInteractions(entitlementService, billingService);
+    }
+
+    @Test
+    void revokeSelf_callsServiceWithTokenIdentityAndReturns204() {
+        Authentication token = new LinkedInstanceAuthenticationToken(11L, 22L);
+
+        ResponseEntity<Void> resp = controller().revokeSelf(token);
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        verify(accountLinkService).revoke(22L, 11L);
+    }
+
+    @Test
+    void revokeSelf_rejectsNonInstancePrincipal() {
+        Authentication anon =
+                new AnonymousAuthenticationToken(
+                        "k",
+                        "anonymousUser",
+                        List.of(new SimpleGrantedAuthority("ROLE_ANONYMOUS")));
+
+        ResponseEntity<Void> resp = controller().revokeSelf(anon);
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        verifyNoInteractions(accountLinkService);
     }
 
     @Test

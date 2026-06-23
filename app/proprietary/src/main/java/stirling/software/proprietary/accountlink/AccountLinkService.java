@@ -52,8 +52,25 @@ public class AccountLinkService {
         return status();
     }
 
-    /** Unlinks this instance locally. */
+    /**
+     * Unlinks this instance — best-effort tells SaaS to revoke first (so the row gets {@code
+     * revoked_at} set), then clears locally regardless. If SaaS is unreachable the local clear
+     * still proceeds (admin's intent must win); the orphan row can be revoked from the portal.
+     */
     public void unlink() {
+        credentialStore
+                .get()
+                .ifPresent(
+                        c -> {
+                            boolean ok = client.revokeSelf(c.getDeviceId(), c.getDeviceSecret());
+                            if (!ok) {
+                                log.warn(
+                                        "Account-link: SaaS self-revoke failed for device {};"
+                                                + " clearing locally anyway (admin can revoke"
+                                                + " from the portal).",
+                                        c.getDeviceId());
+                            }
+                        });
         credentialStore.clear();
         entitlementCache.invalidate();
         log.info("Account-link: instance unlinked");

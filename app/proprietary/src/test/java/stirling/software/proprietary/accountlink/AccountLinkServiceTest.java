@@ -65,8 +65,46 @@ class AccountLinkServiceTest {
     }
 
     @Test
-    void unlink_clearsStoreAndCache() {
+    void unlink_callsSaasRevokeBeforeClearingLocally() {
+        DeviceCredential cred = new DeviceCredential();
+        cred.setDeviceId("dev-1");
+        cred.setDeviceSecret("sec-1");
+        cred.setTeamId(7L);
+        cred.setLinkedAt(LocalDateTime.now());
+        when(store.get()).thenReturn(Optional.of(cred));
+        when(client.revokeSelf("dev-1", "sec-1")).thenReturn(true);
+
         service.unlink();
+
+        verify(client).revokeSelf("dev-1", "sec-1");
+        verify(store).clear();
+        verify(cache).invalidate();
+    }
+
+    @Test
+    void unlink_clearsLocallyEvenWhenSaasRevokeFails() {
+        DeviceCredential cred = new DeviceCredential();
+        cred.setDeviceId("dev-1");
+        cred.setDeviceSecret("sec-1");
+        cred.setLinkedAt(LocalDateTime.now());
+        when(store.get()).thenReturn(Optional.of(cred));
+        // SaaS unreachable / returns non-2xx.
+        when(client.revokeSelf("dev-1", "sec-1")).thenReturn(false);
+
+        service.unlink();
+
+        // Local clear MUST still happen — admin's intent wins; orphan row is a follow-up.
+        verify(store).clear();
+        verify(cache).invalidate();
+    }
+
+    @Test
+    void unlink_whenAlreadyUnlinked_skipsSaasRevoke() {
+        when(store.get()).thenReturn(Optional.empty());
+
+        service.unlink();
+
+        org.mockito.Mockito.verifyNoInteractions(client);
         verify(store).clear();
         verify(cache).invalidate();
     }
