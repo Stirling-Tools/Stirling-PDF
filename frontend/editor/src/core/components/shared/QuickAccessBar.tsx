@@ -15,7 +15,6 @@ import SignPopout, {
   SIGN_REQUEST_WORKBENCH_TYPE,
   SESSION_DETAIL_WORKBENCH_TYPE,
 } from "@app/components/shared/signing/SignPopout";
-import { useRainbowThemeContext } from "@app/components/shared/RainbowThemeProvider";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useFileSelection, useFileState } from "@app/contexts/file/fileHooks";
@@ -62,7 +61,6 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const { isRainbowMode } = useRainbowThemeContext();
   const { isFilesModalOpen } = useFilesModalContext();
   const {
     handleReaderToggle,
@@ -809,7 +807,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
       ref={ref}
       data-sidebar="quick-access"
       data-tour="quick-access-bar"
-      className={`h-screen flex flex-col w-16 quick-access-bar-main ${isRainbowMode ? "rainbow-mode" : ""}`}
+      className="h-screen flex flex-col w-16 quick-access-bar-main"
     >
       {/* Fixed header outside scrollable area */}
       <div className="quick-access-header">

@@ -222,10 +222,10 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
         with:
-          gradle-version: 9.3.1
+          gradle-version: 9.5.1
 
       - name: Install Task
-        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
+        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
       - name: Run Gradle Command
         run: |
           if [ "${{ needs.check-comment.outputs.disable_security }}" == "true" ]; then
@@ -256,7 +256,7 @@ jobs:
 
       - name: Build and push PR-specific image (Depot)
         if: env.USE_DEPOT == 'true'
-        uses: depot/build-push-action@5f3b3c2e5a00f0093de47f657aeaefcedff27d18 # v1.16.0
+        uses: depot/build-push-action@98e78adca7817480b8185f474a400b451d74e287 # v1.16.0
         with:
           project: ${{ vars.DEPOT_PROJECT_ID }}
           context: .
@@ -285,7 +285,7 @@ jobs:
 
       - name: Build and push engine image (Depot)
         if: env.USE_DEPOT == 'true' && needs.check-comment.outputs.enable_prototypes == 'true'
-        uses: depot/build-push-action@5f3b3c2e5a00f0093de47f657aeaefcedff27d18 # v1.16.0
+        uses: depot/build-push-action@98e78adca7817480b8185f474a400b451d74e287 # v1.16.0
         with:
           project: ${{ vars.DEPOT_PROJECT_ID }}
           context: ./engine
@@ -388,7 +388,7 @@ jobs:
               environment:
                 DISABLE_ADDITIONAL_FEATURES: "${DISABLE_ADDITIONAL_FEATURES}"
                 SECURITY_ENABLELOGIN: "${LOGIN_SECURITY}"
-                SYSTEM_DEFAULTLOCALE: en-GB
+                SYSTEM_DEFAULTLOCALE: en-US
                 UI_APPNAME: "Stirling-PDF PR#${PR_NUMBER}"
                 UI_HOMEDESCRIPTION: "PR#${PR_NUMBER} for Stirling-PDF Latest"
                 UI_APPNAMENAVBAR: "PR#${PR_NUMBER}"

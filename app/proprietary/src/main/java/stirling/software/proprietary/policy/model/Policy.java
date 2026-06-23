@@ -3,18 +3,11 @@ package stirling.software.proprietary.policy.model;
 import java.util.List;
 
 /**
- * A stored, owned automation: how it is triggered, the ordered tool steps to run, and where its
- * output goes, plus identity and metadata.
+ * A stored automation: ordered tool steps, input sources, and an output destination.
  *
- * <p>This is the central object of the feature. Everything that runs a chain of tools is a use of a
- * Policy: a watched folder is a Policy with a folder {@link TriggerConfig} and a folder {@link
- * OutputSpec}; a scheduled job is a Policy with a schedule trigger; manual/Automate/AI runs execute
- * a Policy (or an ad-hoc {@link PipelineDefinition}) on demand. The engine itself only ever
- * executes the {@link PipelineDefinition} this exposes via {@link #toDefinition()} - it is
- * trigger-agnostic.
- *
- * <p>{@code enabled} gates automatic triggering (a disabled policy is not picked up by its
- * trigger); it does not block an explicit manual run.
+ * <p>Always runnable on demand. An optional {@link TriggerConfig} fires it automatically; a {@code
+ * null} trigger means manual-only. Trigger decides when, {@link InputSpec sources} decide where
+ * files come from; a run pulls from every source.
  */
 public record Policy(
         String id,
@@ -22,16 +15,46 @@ public record Policy(
         String owner,
         boolean enabled,
         TriggerConfig trigger,
+        List<InputSpec> sources,
         List<PipelineStep> steps,
-        OutputSpec output) {
+        OutputSpec output,
+        Long teamId) {
 
     public Policy {
-        trigger = trigger == null ? TriggerConfig.manual() : trigger;
+        sources = sources == null ? List.of() : List.copyOf(sources);
         steps = steps == null ? List.of() : steps;
         output = output == null ? OutputSpec.inline() : output;
     }
 
-    /** The engine-level, trigger-agnostic view of this policy's pipeline. */
+    /**
+     * Without an explicit owning team. Kept for the engine and tests; the controller always stamps
+     * a {@code teamId} on stored policies so they stay scoped to the creating user's team.
+     */
+    public Policy(
+            String id,
+            String name,
+            String owner,
+            boolean enabled,
+            TriggerConfig trigger,
+            List<InputSpec> sources,
+            List<PipelineStep> steps,
+            OutputSpec output) {
+        this(id, name, owner, enabled, trigger, sources, steps, output, null);
+    }
+
+    /** A policy with no configured sources (a generator, or files supplied directly to a run). */
+    public Policy(
+            String id,
+            String name,
+            String owner,
+            boolean enabled,
+            TriggerConfig trigger,
+            List<PipelineStep> steps,
+            OutputSpec output) {
+        this(id, name, owner, enabled, trigger, List.of(), steps, output, null);
+    }
+
+    /** This policy's pipeline as the engine sees it. */
     public PipelineDefinition toDefinition() {
         return new PipelineDefinition(name, steps, output);
     }

@@ -6,11 +6,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
-import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.apache.pdfbox.pdmodel.PDPageTree;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -262,38 +260,31 @@ public class RearrangePagesPDFController {
                 }
                 log.info("newPageOrder = {}", newPageOrder);
                 log.info("totalPages = {}", totalPages);
-                // Create a new list to hold the pages in the new order
-                List<PDPage> newPages = new ArrayList<>();
-                for (int i = 0; i < newPageOrder.size(); i++) {
-                    newPages.add(document.getPage(newPageOrder.get(i)));
+
+                // Snapshot the desired pages before mutating the source document's page tree.
+                List<PDPage> newPages = new ArrayList<>(newPageOrder.size());
+                for (Integer idx : newPageOrder) {
+                    newPages.add(document.getPage(idx));
                 }
 
-                // Create a new document based on the original one
-                try (PDDocument rearrangedDocument =
-                        pdfDocumentFactory.createNewDocumentBasedOnOldDocument(document)) {
-
-                    // Add the pages in the new order
-                    for (PDPage page : newPages) {
-                        rearrangedDocument.addPage(page);
-                    }
-
-                    PDDocumentCatalog sourceCatalog = document.getDocumentCatalog();
-                    if (sourceCatalog != null) {
-                        PDAcroForm sourceForm = sourceCatalog.getAcroForm(null);
-                        if (sourceForm != null) {
-                            rearrangedDocument
-                                    .getDocumentCatalog()
-                                    .getCOSObject()
-                                    .setItem(COSName.ACRO_FORM, sourceForm.getCOSObject());
-                        }
-                    }
-
-                    return WebResponseUtils.pdfDocToWebResponse(
-                            rearrangedDocument,
-                            GeneralUtils.generateFilename(
-                                    pdfFile.getOriginalFilename(), "_rearranged.pdf"),
-                            tempFileManager);
+                // Rearrange in-place on the source document rather than copying pages into a
+                // freshly-created PDDocument. Copying pages across documents triggers a PDFBox
+                // 3.0.7 compressed-save regression (PDFBOX-6203, fixed for 3.0.8) where shared
+                // resource objects (fonts, etc.) imported from the source can be silently
+                // dropped from the output, producing pages with "font not found" errors.
+                PDPageTree pages = document.getPages();
+                for (int i = totalPages - 1; i >= 0; i--) {
+                    pages.remove(i);
                 }
+                for (PDPage page : newPages) {
+                    pages.add(page);
+                }
+
+                return WebResponseUtils.pdfDocToWebResponse(
+                        document,
+                        GeneralUtils.generateFilename(
+                                pdfFile.getOriginalFilename(), "_rearranged.pdf"),
+                        tempFileManager);
             }
         } catch (IOException e) {
             ExceptionUtils.logException("document rearrangement", e);

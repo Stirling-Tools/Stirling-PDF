@@ -4,24 +4,22 @@ import { signInAnonymously } from "@app/auth/supabase";
 import { useAuth } from "@app/auth/UseSession";
 import { useTranslation } from "@app/hooks/useTranslation";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
-import { getBaseUrl } from "@app/constants/app";
+import { getBaseUrl, withBasePath } from "@app/constants/app";
 import AuthLayout from "@app/routes/authShared/AuthLayout";
-import "@app/routes/authShared/auth.css";
+import "@shared/auth/ui/auth.css";
 import "@app/routes/authShared/saas-auth.css";
-import GuestSignInButton from "@app/routes/authShared/GuestSignInButton";
 import { alert } from "@app/components/toast";
 
 // Import signup components
-import LoginHeader from "@app/routes/login/LoginHeader";
-import ErrorMessage from "@app/routes/login/ErrorMessage";
+import ErrorMessage from "@shared/auth/ui/ErrorMessage";
 import OAuthButtons from "@app/routes/login/OAuthButtons";
-import DividerWithText from "@app/components/shared/DividerWithText";
 import SignupForm from "@app/routes/signup/SignupForm";
 import {
   useSignupFormValidation,
   SignupFieldErrors,
 } from "@app/routes/signup/SignupFormValidation";
 import { useAuthService } from "@app/routes/signup/AuthService";
+import loginHeader from "@shared/assets/login/LoginLightModeHeader.svg";
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -184,84 +182,112 @@ export default function Signup() {
 
   return (
     <AuthLayout isEmailFormExpanded={showEmailForm}>
-      <LoginHeader title={t("signup.title")} subtitle={t("signup.subtitle")} />
+      {/* Centered logo */}
+      <div className="auth-logo-block">
+        <img
+          src={loginHeader}
+          alt="Stirling PDF"
+          className="auth-logo-header auth-logo-header--light"
+        />
+        <img
+          src={withBasePath("/modern-logo/LoginDarkModeHeader.svg")}
+          alt="Stirling PDF"
+          className="auth-logo-header auth-logo-header--dark"
+        />
+      </div>
 
       <ErrorMessage error={error} />
 
-      {/* OAuth first */}
-      <div style={{ marginBottom: "0.5rem" }}>
+      {/* OAuth providers */}
+      <div>
         <OAuthButtons
           onProviderClick={handleProviderSignIn}
           isSubmitting={isSigningUp}
           layout="fullwidth"
+          labelPrefix={`${t("signup.signUpWith", "Sign up with")} `}
         />
       </div>
 
-      {/* Divider between OAuth and Email */}
-      <div style={{ margin: "0.5rem 0" }}>
-        <DividerWithText
-          text={t("signup.or", "or")}
-          respondsToDarkMode={false}
-          opacity={0.4}
-        />
+      {/* Email & Password button */}
+      <button
+        type="button"
+        disabled={isSigningUp}
+        onClick={() => setShowEmailForm((v) => !v)}
+        className={`oauth-button-fullwidth auth-expandable-trigger ${showEmailForm ? "auth-expandable-trigger--active" : ""}`}
+        style={{ marginTop: "2.5rem", marginBottom: "0.75rem" }}
+      >
+        <span className="oauth-btn-group">
+          <span className="auth-at-icon">@</span>
+          <span className="oauth-btn-label">{`${t("signup.signUpWith", "Sign up with")} email`}</span>
+        </span>
+      </button>
+
+      {/* Email form — animated expand */}
+      <div
+        className={`auth-expand-grid ${showEmailForm ? "auth-expand-grid--open" : ""}`}
+      >
+        <div className="auth-expand-inner">
+          <div style={{ paddingBottom: "0.5rem" }}>
+            <SignupForm
+              name={name}
+              email={email}
+              password={password}
+              confirmPassword={confirmPassword}
+              agree={agree}
+              setName={setName}
+              setEmail={setEmail}
+              setPassword={setPassword}
+              setConfirmPassword={setConfirmPassword}
+              setAgree={setAgree}
+              onSubmit={handleSignUp}
+              isSubmitting={isSigningUp}
+              fieldErrors={fieldErrors}
+            />
+          </div>
+        </div>
       </div>
 
-      {/* Use Email Instead button (toggles email form) */}
-      <div className="auth-section">
+      {/* Skip */}
+      <div style={{ textAlign: "center", margin: "1rem 0" }}>
         <button
           type="button"
+          onClick={handleAnonymousSignIn}
           disabled={isSigningUp}
-          onClick={() => setShowEmailForm((v) => !v)}
-          className="w-full px-4 py-[0.75rem] rounded-[0.625rem] text-base font-semibold mb-2 cursor-pointer border-0 disabled:opacity-50 disabled:cursor-not-allowed auth-cta-button"
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            fontSize: "1rem",
+            fontWeight: 700,
+            color: "#000000",
+          }}
         >
-          {t("signup.useEmailInstead", "Use Email Instead")}
+          {isSigningUp
+            ? t("login.signingIn", "Signing in...")
+            : `${t("signup.skip", "Skip")} →`}
         </button>
       </div>
 
-      {showEmailForm && (
-        <SignupForm
-          name={name}
-          email={email}
-          password={password}
-          confirmPassword={confirmPassword}
-          agree={agree}
-          setName={setName}
-          setEmail={setEmail}
-          setPassword={setPassword}
-          setConfirmPassword={setConfirmPassword}
-          setAgree={setAgree}
-          onSubmit={handleSignUp}
-          isSubmitting={isSigningUp}
-          fieldErrors={fieldErrors}
-        />
-      )}
-
-      <div className="auth-section-sm">
-        <DividerWithText
-          text={t("signup.or", "or")}
-          respondsToDarkMode={false}
-          opacity={0.4}
-        />
-      </div>
-
-      <GuestSignInButton
-        onClick={handleAnonymousSignIn}
-        disabled={isSigningUp}
-        label={
-          isSigningUp
-            ? t("login.signingIn", "Signing in...")
-            : t("login.signInAnonymously", "Sign in as a Guest")
-        }
-      />
-
-      {/* Bottom row */}
-      <div className="auth-bottom-right">
+      {/* Bottom */}
+      <div
+        style={{
+          textAlign: "center",
+          marginTop: "auto",
+          paddingTop: "1rem",
+        }}
+      >
         <button
           type="button"
           onClick={() => navigate("/login")}
-          className="auth-link-black"
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            fontSize: "0.875rem",
+            color: "#9ca3af",
+          }}
         >
-          {t("login.logIn", "Log In")}
+          {t("signup.alreadyHaveAccount", "I already have an account")}
         </button>
       </div>
     </AuthLayout>

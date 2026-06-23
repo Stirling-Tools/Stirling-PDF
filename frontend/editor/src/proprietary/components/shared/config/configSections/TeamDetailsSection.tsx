@@ -370,8 +370,7 @@ export default function TeamDetailsSection({
             {team.name}
           </Text>
           <Text size="sm" c="dimmed">
-            {t("workspace.teams.memberCount", { count: teamUsers.length })}{" "}
-            {teamUsers.length === 1 ? "member" : "members"}
+            {t("workspace.teams.memberCount", { count: teamUsers.length })}
           </Text>
         </div>
       </Group>
@@ -379,10 +378,9 @@ export default function TeamDetailsSection({
       {/* Add Member Button */}
       <Group justify="flex-end">
         <Tooltip
-          label={t(
-            "workspace.people.license.noSlotsAvailable",
-            "No user slots available",
-          )}
+          label={t("workspace.people.license.slotsAvailable", {
+            count: licenseInfo ? licenseInfo.availableSlots : 0,
+          })}
           disabled={!licenseInfo || licenseInfo.availableSlots > 0}
           position="bottom"
           withArrow
@@ -532,7 +530,7 @@ export default function TeamDetailsSection({
                     >
                       {(user.rolesAsString || "").includes("ROLE_ADMIN")
                         ? t("workspace.people.admin")
-                        : t("workspace.people.member")}
+                        : t("workspace.people.user")}
                     </Badge>
                   </Table.Td>
                   <Table.Td>

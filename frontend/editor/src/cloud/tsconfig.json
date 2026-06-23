@@ -1,0 +1,24 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@app/*": [
+        "../../src/cloud/*",
+        "../../src/proprietary/*",
+        "../../src/core/*"
+      ],
+      "@cloud/*": ["../../src/cloud/*"],
+      "@proprietary/*": ["../../src/proprietary/*"],
+      "@core/*": ["../../src/core/*"],
+      "@shared/*": ["../../../shared/*"]
+    }
+  },
+  "include": [
+    "../global.d.ts",
+    "../*.js",
+    "../*.ts",
+    "../*.tsx",
+    "../core/setupTests.ts",
+    "."
+  ]
+}
