@@ -18,7 +18,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
@@ -55,7 +54,7 @@ class JpaPolicyStoreTest {
                                 "alice",
                                 true,
                                 new TriggerConfig("schedule", Map.of()),
-                                List.of(InputSpec.folder("/in")),
+                                List.of("src-in"),
                                 List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                                 OutputSpec.inline()));
 

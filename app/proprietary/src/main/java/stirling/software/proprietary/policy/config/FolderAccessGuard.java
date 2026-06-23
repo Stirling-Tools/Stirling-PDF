@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Component;
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.source.SourceStore;
 
 /**
  * Authority on which filesystem locations a policy may read/write. Checked at save time and again
@@ -36,12 +38,17 @@ public class FolderAccessGuard {
     private final boolean saasActive;
     private final List<Path> allowedRoots;
     private final List<Path> protectedRoots;
+    private final SourceStore sourceStore;
 
-    public FolderAccessGuard(ApplicationProperties applicationProperties, Environment environment) {
+    public FolderAccessGuard(
+            ApplicationProperties applicationProperties,
+            Environment environment,
+            SourceStore sourceStore) {
         this.saasActive = Arrays.asList(environment.getActiveProfiles()).contains("saas");
         this.allowedRoots =
                 normalizeAll(applicationProperties.getPolicies().getAllowedFolderRoots());
         this.protectedRoots = List.of(normalize(Path.of(InstallationPathConfig.getConfigPath())));
+        this.sourceStore = sourceStore;
     }
 
     /** Returns the normalised absolute path; throws if not permitted. */
@@ -72,7 +79,10 @@ public class FolderAccessGuard {
     /** Whether this policy touches a folder source/sink, and so is subject to these rules. */
     public boolean usesFolderAccess(Policy policy) {
         boolean readsFolder =
-                policy.sources().stream().anyMatch(spec -> FOLDER_TYPE.equals(spec.type()));
+                policy.sourceIds().stream()
+                        .map(sourceStore::get)
+                        .flatMap(Optional::stream)
+                        .anyMatch(source -> FOLDER_TYPE.equals(source.type()));
         boolean writesFolder =
                 policy.output() != null && FOLDER_TYPE.equals(policy.output().type());
         return readsFolder || writesFolder;

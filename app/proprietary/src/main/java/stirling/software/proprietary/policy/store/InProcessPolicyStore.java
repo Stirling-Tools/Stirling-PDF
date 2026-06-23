@@ -29,7 +29,7 @@ public class InProcessPolicyStore implements PolicyStore {
                         policy.owner(),
                         policy.enabled(),
                         policy.trigger(),
-                        policy.sources(),
+                        policy.sourceIds(),
                         policy.steps(),
                         policy.output(),
                         policy.teamId());

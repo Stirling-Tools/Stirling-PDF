@@ -53,6 +53,8 @@ import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.PolicyRunStatus;
 import stirling.software.proprietary.policy.model.PolicyRunView;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
+import stirling.software.proprietary.policy.source.SourceAccessGuard;
+import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
 
 /**
@@ -71,6 +73,8 @@ public class PolicyController {
     private final PolicyRunner policyRunner;
     private final PolicyRunRegistry runRegistry;
     private final PolicyStore policyStore;
+    private final SourceStore sourceStore;
+    private final SourceAccessGuard sourceAccessGuard;
     private final PolicyValidator policyValidator;
     private final PolicyAccessGuard policyAccessGuard;
     private final PolicyManagementAuthority policyManagementAuthority;
@@ -187,12 +191,29 @@ public class PolicyController {
     public ResponseEntity<Policy> savePolicy(@RequestBody Policy policy) {
         requirePolicyEditingAllowed();
         Policy owned = resolveOwnership(policy);
+        requireAccessibleSources(owned);
         try {
             policyValidator.validate(owned);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
         return ResponseEntity.ok(policyStore.save(owned));
+    }
+
+    /**
+     * Every {@code sourceId} a policy references must resolve to a source in the caller's team, so
+     * a client can neither reference a non-existent source nor reach across teams to use another
+     * team's connection. A bad reference is a client error.
+     */
+    private void requireAccessibleSources(Policy policy) {
+        for (String sourceId : policy.sourceIds()) {
+            boolean accessible =
+                    sourceStore.get(sourceId).filter(sourceAccessGuard::canAccess).isPresent();
+            if (!accessible) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST, "Unknown or inaccessible source: " + sourceId);
+            }
+        }
     }
 
     /**
@@ -225,7 +246,7 @@ public class PolicyController {
                 owner,
                 policy.enabled(),
                 policy.trigger(),
-                policy.sources(),
+                policy.sourceIds(),
                 policy.steps(),
                 policy.output(),
                 teamId);

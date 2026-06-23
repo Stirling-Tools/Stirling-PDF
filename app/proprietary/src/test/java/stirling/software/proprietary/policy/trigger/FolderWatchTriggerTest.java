@@ -32,6 +32,9 @@ import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.TriggerConfig;
+import stirling.software.proprietary.policy.source.InProcessSourceStore;
+import stirling.software.proprietary.policy.source.Source;
+import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
 
 /**
@@ -50,6 +53,7 @@ class FolderWatchTriggerTest {
 
     @TempDir Path tempDir;
 
+    private final SourceStore sourceStore = new InProcessSourceStore();
     private FolderWatchTrigger trigger;
 
     @BeforeEach
@@ -59,6 +63,7 @@ class FolderWatchTriggerTest {
                         policyStore,
                         policyRunner,
                         List.of(folderSource),
+                        sourceStore,
                         new ApplicationProperties());
         lenient().when(folderSource.supports(any())).thenReturn(true);
         lenient()
@@ -164,14 +169,31 @@ class FolderWatchTriggerTest {
         return Path.of(dir).toAbsolutePath().normalize();
     }
 
-    private static Policy folderWatch(String id, List<InputSpec> sources) {
+    /** Persists each spec as a source and returns a folder-watch policy referencing them by id. */
+    private Policy folderWatch(String id, List<InputSpec> sources) {
+        List<String> sourceIds =
+                sources.stream()
+                        .map(
+                                spec ->
+                                        sourceStore
+                                                .save(
+                                                        new Source(
+                                                                null,
+                                                                "src",
+                                                                spec.type(),
+                                                                spec.options(),
+                                                                true,
+                                                                "owner",
+                                                                null))
+                                                .id())
+                        .toList();
         return new Policy(
                 id,
                 "watcher",
                 "owner",
                 true,
                 new TriggerConfig("folder-watch", Map.of()),
-                sources,
+                sourceIds,
                 List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                 OutputSpec.inline());
     }
