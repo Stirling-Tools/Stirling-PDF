@@ -21,8 +21,6 @@ import {
 
 export interface ValidateSignatureOperationHook extends ToolOperationHook<ValidateSignatureParameters> {
   results: SignatureValidationReportEntry[];
-  // True while the downloadable PDF report is still being rendered client-side.
-  reportGenerating: boolean;
 }
 
 export const useValidateSignatureOperation =
@@ -38,7 +36,6 @@ export const useValidateSignatureOperation =
     const [results, setResults] = useState<SignatureValidationReportEntry[]>(
       [],
     );
-    const [reportGenerating, setReportGenerating] = useState(false);
 
     const cancelRequested = useRef(false);
     const previousUrl = useRef<string | null>(null);
@@ -59,7 +56,6 @@ export const useValidateSignatureOperation =
       setDownloadFilename("");
       setStatus("");
       setErrorMessage(null);
-      setReportGenerating(false);
     }, [cleanupDownloadUrl]);
 
     const clearError = useCallback(() => {
@@ -87,7 +83,6 @@ export const useValidateSignatureOperation =
         cleanupDownloadUrl();
         setDownloadUrl(null);
         setDownloadFilename("");
-        setReportGenerating(false);
 
         try {
           const aggregated: SignatureValidationFileResult[] = [];
@@ -155,7 +150,6 @@ export const useValidateSignatureOperation =
               const csvFile = buildCsvFile(enrichedEntries);
 
               setFiles([resultFile, csvFile]);
-              setReportGenerating(true);
 
               (async () => {
                 try {
@@ -176,19 +170,14 @@ export const useValidateSignatureOperation =
                     "[validateSignature] PDF report generation failed",
                     err,
                   );
-                  const detail =
-                    err instanceof Error ? err.message : String(err);
                   setErrorMessage(
                     (prev) =>
                       prev ??
                       t(
                         "validateSignature.error.reportGeneration",
-                        "Couldn't build the downloadable PDF report ({{detail}}). The on-screen report, JSON and CSV are still available.",
-                        { detail },
+                        "Could not generate the PDF report. JSON and CSV are available.",
                       ),
                   );
-                } finally {
-                  setReportGenerating(false);
                 }
               })();
             }
@@ -268,7 +257,6 @@ export const useValidateSignatureOperation =
         cancelOperation,
         undoOperation,
         results,
-        reportGenerating,
       }),
       [
         cancelOperation,
@@ -281,7 +269,6 @@ export const useValidateSignatureOperation =
         isLoading,
         resetResults,
         results,
-        reportGenerating,
         status,
       ],
     );

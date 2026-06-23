@@ -7949,7 +7949,7 @@ pdf = "PDF"
 [validateSignature.error]
 allFailed = "Unable to validate the selected files."
 partial = "Some files could not be validated."
-reportGeneration = "Couldn't build the downloadable PDF report ({{detail}}). The on-screen report, JSON and CSV are still available."
+reportGeneration = "Could not generate the PDF report. JSON and CSV are available."
 unexpected = "Unexpected error during validation."
 
 [validateSignature.issue]
@@ -7969,7 +7969,7 @@ filesEvaluated_one = "{{count}} file evaluated"
 filesEvaluated_other = "{{count}} files evaluated"
 footer = "Validated via Stirling PDF"
 generatedAt = "Generated"
-noPdf = "PDF report not available - download JSON or CSV for the full result."
+noPdf = "PDF report will be available after a successful validation."
 page = "Page"
 shortTitle = "Signature Summary"
 signatureCountLabel_one = "{{count}} signature"
