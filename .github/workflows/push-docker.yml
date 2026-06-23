@@ -51,6 +51,7 @@ jobs:
     env:
       RUN_MAIN_APP: ${{ github.event_name != 'workflow_dispatch' || inputs.build_main_app }}
       RUN_UNOSERVER: ${{ github.event_name != 'workflow_dispatch' || inputs.build_unoserver }}
+      DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
@@ -80,9 +81,8 @@ jobs:
         with:
           gradle-version: 9.5.1
 
-      - name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
+      - name: Set up Depot CLI
+        uses: depot/setup-action@15c09a5f77a0840ad4bce955686522a257853461 # v1.0.0
 
       - name: Install Task
         uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
@@ -145,14 +145,12 @@ jobs:
         id: build-push-latest
         # Empty-tag guard: build-push-action errors when asked to push with no tags.
         if: env.RUN_MAIN_APP == 'true' && steps.meta.outputs.tags != ''
-        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+        uses: depot/build-push-action@98e78adca7817480b8185f474a400b451d74e287 # v1.16.0
         with:
-          builder: ${{ steps.buildx.outputs.name }}
+          project: ${{ vars.DEPOT_PROJECT_ID }}
           context: .
           file: ./docker/embedded/Dockerfile
           push: true
-          cache-from: type=gha,scope=stirling-pdf-latest
-          cache-to: type=gha,mode=max,scope=stirling-pdf-latest
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
@@ -192,15 +190,13 @@ jobs:
 
       - name: Build and push Unified Dockerfile (fat variant)
         id: build-push-fat
-        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+        uses: depot/build-push-action@98e78adca7817480b8185f474a400b451d74e287 # v1.16.0
         if: env.RUN_MAIN_APP == 'true' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/testMain' && steps.meta-fat.outputs.tags != ''
         with:
-          builder: ${{ steps.buildx.outputs.name }}
+          project: ${{ vars.DEPOT_PROJECT_ID }}
           context: .
           file: ./docker/embedded/Dockerfile.fat
           push: true
-          cache-from: type=gha,scope=stirling-pdf-fat
-          cache-to: type=gha,mode=max,scope=stirling-pdf-fat
           tags: ${{ steps.meta-fat.outputs.tags }}
           labels: ${{ steps.meta-fat.outputs.labels }}
           build-args: VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
@@ -236,15 +232,13 @@ jobs:
 
       - name: Build and push Unified Dockerfile (ultra-lite variant)
         id: build-push-lite
-        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+        uses: depot/build-push-action@98e78adca7817480b8185f474a400b451d74e287 # v1.16.0
         if: env.RUN_MAIN_APP == 'true' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/testMain' && steps.meta-lite.outputs.tags != ''
         with:
-          builder: ${{ steps.buildx.outputs.name }}
+          project: ${{ vars.DEPOT_PROJECT_ID }}
           context: .
           file: ./docker/embedded/Dockerfile.ultra-lite
           push: true
-          cache-from: type=gha,scope=stirling-pdf-ultra-lite
-          cache-to: type=gha,mode=max,scope=stirling-pdf-ultra-lite
           tags: ${{ steps.meta-lite.outputs.tags }}
           labels: ${{ steps.meta-lite.outputs.labels }}
           build-args: VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
@@ -365,14 +359,12 @@ jobs:
       - name: Build and push unoserver image
         id: build-push-unoserver
         if: env.RUN_UNOSERVER == 'true' && steps.unoserverDecision.outputs.mode != 'skip'
-        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+        uses: depot/build-push-action@98e78adca7817480b8185f474a400b451d74e287 # v1.16.0
         with:
-          builder: ${{ steps.buildx.outputs.name }}
+          project: ${{ vars.DEPOT_PROJECT_ID }}
           context: .
           file: ./docker/unoserver/Dockerfile
           push: true
-          cache-from: type=gha,scope=stirling-unoserver
-          cache-to: type=gha,mode=max,scope=stirling-unoserver
           tags: ${{ steps.unoserverDecision.outputs.tags }}
           # Manifest annotation read by the decision step above to detect drift.
           annotations: |

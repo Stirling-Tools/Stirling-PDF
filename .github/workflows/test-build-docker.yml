@@ -178,7 +178,6 @@ jobs:
           file: ./${{ matrix.docker-rev }}
           push: false
           cache-from: type=gha,scope=${{ matrix.cache-scope }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.cache-scope }}
           platforms: ${{ steps.build-params.outputs.platforms }}
           build-args: |
             BASE_IMAGE=${{ steps.build-params.outputs.base_image }}
@@ -252,7 +251,6 @@ jobs:
           push: false
           load: true
           cache-from: type=gha,scope=stirling-unoserver
-          cache-to: type=gha,mode=max,scope=stirling-unoserver
           platforms: linux/amd64
           tags: stirling-unoserver:pr-test
           provenance: false
