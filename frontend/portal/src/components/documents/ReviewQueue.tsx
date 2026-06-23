@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { EmptyState, Skeleton, Tabs, type TabItem } from "@shared/components";
 import { useTier } from "@portal/contexts/TierContext";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
@@ -35,6 +36,7 @@ function countFor(docs: ReviewDocument[], filter: QueueFilter): number {
  * stream table, and a detail drawer. The primary Documents surface.
  */
 export function ReviewQueue() {
+  const { t } = useTranslation();
   const { tier } = useTier();
   const state = useAsync<DocumentsResponse>(() => fetchDocuments(tier), [tier]);
   const { data, loading } = state;
@@ -54,20 +56,24 @@ export function ReviewQueue() {
   const selected = documents.find((d) => d.id === selectedId) ?? null;
 
   const filterItems: TabItem<QueueFilter>[] = [
-    { key: "all", label: "All", count: countFor(documents, "all") },
+    {
+      key: "all",
+      label: t("documents.filters.all"),
+      count: countFor(documents, "all"),
+    },
     {
       key: "needs-review",
-      label: "Needs review",
+      label: t("documents.filters.needsReview"),
       count: countFor(documents, "needs-review"),
     },
     {
       key: "processed",
-      label: "Processed",
+      label: t("documents.filters.processed"),
       count: countFor(documents, "processed"),
     },
     {
       key: "archived",
-      label: "Archived",
+      label: t("documents.filters.archived"),
       count: countFor(documents, "archived"),
     },
   ];
@@ -84,7 +90,7 @@ export function ReviewQueue() {
         activeKey={filter}
         onChange={setFilter}
         variant="pill"
-        ariaLabel="Filter documents by status"
+        ariaLabel={t("documents.filters.ariaLabel")}
       />
 
       {isLoading && (
@@ -97,8 +103,8 @@ export function ReviewQueue() {
 
       {isEmpty && (
         <EmptyState
-          title="No documents in the queue"
-          description="As sources feed documents into your pipelines they'll appear here for review."
+          title={t("documents.queue.empty.title")}
+          description={t("documents.queue.empty.description")}
         />
       )}
 

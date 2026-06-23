@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ProgressBar,
   StatusBadge,
@@ -25,19 +26,20 @@ export function ReviewQueueTable({
   documents,
   onRowClick,
 }: ReviewQueueTableProps) {
+  const { t } = useTranslation();
   const columns = useMemo<TableColumn<ReviewDocument>[]>(
     () => [
       {
         key: "name",
-        header: "Name",
+        header: t("documents.table.columns.name"),
         render: (d) => (
           <div className="portal-documents__name-cell">
             <span className="portal-documents__name">{d.name}</span>
             {d.sensitive && (
               <span
                 className="portal-documents__lock"
-                title="Sensitive — access required"
-                aria-label="Sensitive"
+                title={t("documents.table.sensitiveTitle")}
+                aria-label={t("documents.table.sensitiveLabel")}
               >
                 🔒
               </span>
@@ -45,10 +47,14 @@ export function ReviewQueueTable({
           </div>
         ),
       },
-      { key: "type", header: "Type", render: (d) => d.type },
+      {
+        key: "type",
+        header: t("documents.table.columns.type"),
+        render: (d) => d.type,
+      },
       {
         key: "status",
-        header: "Status",
+        header: t("documents.table.columns.status"),
         render: (d) => (
           <StatusBadge tone={DOCUMENT_STATUS_TONE[d.status]} size="sm">
             {DOCUMENT_STATUS_LABEL[d.status]}
@@ -57,14 +63,14 @@ export function ReviewQueueTable({
       },
       {
         key: "source",
-        header: "Source",
+        header: t("documents.table.columns.source"),
         render: (d) => (
           <span className="portal-documents__muted">{d.source}</span>
         ),
       },
       {
         key: "confidence",
-        header: "Confidence",
+        header: t("documents.table.columns.confidence"),
         width: "9rem",
         render: (d) => (
           <div className="portal-documents__confidence">
@@ -81,7 +87,7 @@ export function ReviewQueueTable({
       },
       {
         key: "fields",
-        header: "Fields",
+        header: t("documents.table.columns.fields"),
         align: "right",
         render: (d) => (
           <span className="portal-documents__mono">{d.fieldsExtracted}</span>
@@ -89,14 +95,14 @@ export function ReviewQueueTable({
       },
       {
         key: "time",
-        header: "Time",
+        header: t("documents.table.columns.time"),
         align: "right",
         render: (d) => (
           <span className="portal-documents__muted">{d.time}</span>
         ),
       },
     ],
-    [],
+    [t],
   );
 
   return (
@@ -106,7 +112,7 @@ export function ReviewQueueTable({
       rows={documents}
       rowKey={(d) => d.id}
       onRowClick={onRowClick}
-      empty="No documents match this filter."
+      empty={t("documents.table.empty")}
     />
   );
 }

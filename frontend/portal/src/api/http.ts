@@ -5,7 +5,12 @@
  * In dev and Storybook those requests are intercepted by the MSW handlers in
  * `mocks/` and answered with fixture data; pointing at a real backend is just
  * a matter of not registering MSW. Consumers don't change either way.
+ *
+ * The shared `stirling_jwt` bearer token (set by the auth gate, and shared
+ * same-origin with the editor) is attached automatically so portal data calls
+ * are authenticated once real backend endpoints exist.
  */
+import { getStoredToken } from "@shared/auth";
 
 export interface HttpRequestOptions {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
@@ -26,6 +31,11 @@ export class HttpError extends Error {
   }
 }
 
+function authHeader(): Record<string, string> {
+  const token = getStoredToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 /**
  * Thin JSON fetch wrapper used by every api module. In dev/Storybook the
  * request is served by MSW; against a real backend it hits the network.
@@ -41,6 +51,7 @@ export async function httpJson<T>(
       ...(options.body !== undefined
         ? { "Content-Type": "application/json" }
         : {}),
+      ...authHeader(),
       ...options.headers,
     },
     body: options.body !== undefined ? JSON.stringify(options.body) : undefined,

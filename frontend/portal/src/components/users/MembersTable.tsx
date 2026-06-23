@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Menu } from "@mantine/core";
 import {
   Avatar,
@@ -34,11 +35,12 @@ export function MembersTable({
   onSuspend,
   onRemove,
 }: MembersTableProps) {
+  const { t } = useTranslation();
   const columns = useMemo<TableColumn<Member>[]>(
     () => [
       {
         key: "name",
-        header: "Member",
+        header: t("users.table.member"),
         render: (m) => (
           <div className="portal-users__member-cell">
             <Avatar
@@ -59,7 +61,7 @@ export function MembersTable({
       },
       {
         key: "role",
-        header: "Role",
+        header: t("users.table.role"),
         render: (m) => (
           <Chip tone={ROLE_TONE[m.role]} size="sm">
             {ROLE_LABEL[m.role]}
@@ -68,7 +70,7 @@ export function MembersTable({
       },
       {
         key: "status",
-        header: "Status",
+        header: t("users.table.status"),
         render: (m) => (
           <StatusBadge
             tone={MEMBER_STATUS_TONE[m.status]}
@@ -81,7 +83,7 @@ export function MembersTable({
       },
       {
         key: "lastActive",
-        header: "Last active",
+        header: t("users.table.lastActive"),
         render: (m) => (
           <span className="portal-users__muted">{m.lastActive}</span>
         ),
@@ -99,14 +101,14 @@ export function MembersTable({
               <button
                 type="button"
                 className="portal-users__row-action"
-                aria-label={`Actions for ${m.name}`}
+                aria-label={t("users.table.actionsFor", { name: m.name })}
                 onClick={(e) => e.stopPropagation()}
               >
                 ⋯
               </button>
             </Menu.Target>
             <Menu.Dropdown>
-              <Menu.Label>Change role</Menu.Label>
+              <Menu.Label>{t("users.table.changeRole")}</Menu.Label>
               {ROLE_OPTIONS.map((role) => (
                 <Menu.Item
                   key={role}
@@ -118,17 +120,19 @@ export function MembersTable({
               ))}
               <Menu.Divider />
               {m.status !== "suspended" && (
-                <Menu.Item onClick={() => onSuspend(m)}>Suspend</Menu.Item>
+                <Menu.Item onClick={() => onSuspend(m)}>
+                  {t("users.table.suspend")}
+                </Menu.Item>
               )}
               <Menu.Item color="red" onClick={() => onRemove(m)}>
-                Remove from org
+                {t("users.table.remove")}
               </Menu.Item>
             </Menu.Dropdown>
           </Menu>
         ),
       },
     ],
-    [onChangeRole, onSuspend, onRemove],
+    [t, onChangeRole, onSuspend, onRemove],
   );
 
   return (
