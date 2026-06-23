@@ -24,8 +24,12 @@ export function AccountLinkPanel() {
 
   const linked = link.status?.linked ?? false;
   const [reloadKey, setReloadKey] = useState(0);
+  // Only fetch the team-wide instance list when THIS instance is linked. When
+  // unlinked, the portal has no team to display — the admin's SaaS session may
+  // still be valid in the browser, but the local instance isn't part of a team
+  // (so showing the team's other instances would be confusing).
   const instancesState = useAsync<LinkedInstanceRow[]>(
-    () => fetchInstances(),
+    () => (linked ? fetchInstances() : Promise.resolve([])),
     [reloadKey, linked],
   );
   const instances = instancesState.loading ? null : instancesState.data;
@@ -67,28 +71,30 @@ export function AccountLinkPanel() {
 
       <LinkAccountCard link={link} />
 
-      <section className="portal-link__instances">
-        <div className="portal-link__section-head">
-          <h2 className="portal-link__section-title">Linked instances</h2>
-          <p className="portal-link__section-sub">
-            Every self-hosted instance registered to this org. Revoke a
-            credential to immediately cut off its unattended access.
-          </p>
-        </div>
-        {instances === null ? (
-          <div className="portal-link__skeleton" aria-hidden>
-            {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} height="3rem" />
-            ))}
+      {linked && (
+        <section className="portal-link__instances">
+          <div className="portal-link__section-head">
+            <h2 className="portal-link__section-title">Linked instances</h2>
+            <p className="portal-link__section-sub">
+              Every self-hosted instance registered to this org. Revoke a
+              credential to immediately cut off its unattended access.
+            </p>
           </div>
-        ) : (
-          <LinkedInstancesTable
-            instances={instances}
-            onRevoke={revoke}
-            revokingId={revokingId}
-          />
-        )}
-      </section>
+          {instances === null ? (
+            <div className="portal-link__skeleton" aria-hidden>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} height="3rem" />
+              ))}
+            </div>
+          ) : (
+            <LinkedInstancesTable
+              instances={instances}
+              onRevoke={revoke}
+              revokingId={revokingId}
+            />
+          )}
+        </section>
+      )}
     </div>
   );
 }
