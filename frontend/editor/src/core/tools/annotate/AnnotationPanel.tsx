@@ -12,6 +12,8 @@ import {
   Button,
   Tooltip,
   Paper,
+  Menu,
+  Modal,
 } from "@mantine/core";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import {
@@ -133,7 +135,8 @@ interface AnnotationPanelProps {
   undo: () => void;
   redo: () => void;
   historyAvailability: { canUndo: boolean; canRedo: boolean };
-  onApplyChanges: () => void;
+  onClearDocumentAnnotations: () => boolean | Promise<boolean>;
+  onApplyChanges: () => void | Promise<void>;
   applyDisabled: boolean;
 }
 
@@ -142,6 +145,11 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
   const { t } = useTranslation();
   const [colorPickerTarget, setColorPickerTarget] = useState<ColorTarget>(null);
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
+  const [isClearDocumentModalOpen, setIsClearDocumentModalOpen] =
+    useState(false);
+  const [isClearingDocumentAnnotations, setIsClearingDocumentAnnotations] =
+    useState(false);
+  const [isApplyingChanges, setIsApplyingChanges] = useState(false);
 
   const {
     activeTool,
@@ -164,6 +172,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
     undo,
     redo,
     historyAvailability,
+    onClearDocumentAnnotations,
     onApplyChanges,
     applyDisabled,
   } = props;
@@ -316,6 +325,37 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
   );
 
   const annotationsVisible = viewerContext?.isAnnotationsVisible ?? true;
+
+  const handleConfirmClearDocumentAnnotations = async () => {
+    if (isClearingDocumentAnnotations || isApplyingChanges) {
+      return;
+    }
+
+    setIsClearingDocumentAnnotations(true);
+    try {
+      const didClear = await onClearDocumentAnnotations();
+      if (didClear) {
+        setIsClearDocumentModalOpen(false);
+      }
+    } finally {
+      setIsClearingDocumentAnnotations(false);
+    }
+  };
+
+  const handleApplyChangesClick = async () => {
+    if (isApplyingChanges || isClearingDocumentAnnotations || applyDisabled) {
+      return;
+    }
+
+    setIsApplyingChanges(true);
+    try {
+      await onApplyChanges();
+    } catch {
+      // The viewer-level save handler reports the failure to the user.
+    } finally {
+      setIsApplyingChanges(false);
+    }
+  };
 
   const renderToolButtons = (
     tools: { id: AnnotationToolId; label: string; icon: string }[],
@@ -1171,7 +1211,41 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
           canUndo={historyAvailability.canUndo}
           canRedo={historyAvailability.canRedo}
           showPlaceButton={false}
-          additionalControls={null}
+          additionalControls={
+            <Menu position="bottom-end" withArrow>
+              <Menu.Target>
+                <Tooltip label={t("annotation.moreActions", "More actions")}>
+                  <ActionIcon
+                    variant="subtle"
+                    size="lg"
+                    disabled={isApplyingChanges}
+                    aria-label={t("annotation.moreActions", "More actions")}
+                  >
+                    <LocalIcon icon="more-horiz" width={20} height={20} />
+                  </ActionIcon>
+                </Tooltip>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item
+                  color="red"
+                  disabled={isClearingDocumentAnnotations || isApplyingChanges}
+                  leftSection={
+                    <LocalIcon
+                      icon="delete-rounded"
+                      width={18}
+                      height={18}
+                    />
+                  }
+                  onClick={() => setIsClearDocumentModalOpen(true)}
+                >
+                  {t(
+                    "annotation.clearDocumentAnnotations",
+                    "Clear all annotations",
+                  )}
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+          }
         />
       </Group>
 
@@ -1221,13 +1295,62 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
         mt="sm"
         variant="filled"
         color="blue"
-        disabled={applyDisabled}
-        onClick={onApplyChanges}
+        disabled={
+          applyDisabled || isApplyingChanges || isClearingDocumentAnnotations
+        }
+        loading={isApplyingChanges}
+        onClick={() => void handleApplyChangesClick()}
       >
         {t("annotation.saveChanges", "Save Changes")}
       </Button>
 
       <SuggestedToolsSection />
+
+      <Modal
+        opened={isClearDocumentModalOpen}
+        onClose={() => {
+          if (!isClearingDocumentAnnotations) {
+            setIsClearDocumentModalOpen(false);
+          }
+        }}
+        title={t(
+          "annotation.clearDocumentAnnotationsTitle",
+          "Clear all annotations?",
+        )}
+        centered
+      >
+        <Stack gap="md">
+          <Text size="sm" c="dimmed">
+            {t(
+              "annotation.clearDocumentAnnotationsDescription",
+              "This removes all annotations currently loaded in the editor. Please save changes to persist this in the PDF.",
+            )}
+          </Text>
+          <Group justify="flex-end">
+            <Button
+              variant="default"
+              disabled={isClearingDocumentAnnotations}
+              onClick={() => setIsClearDocumentModalOpen(false)}
+            >
+              {t("common.cancel", "Cancel")}
+            </Button>
+            <Button
+              color="red"
+              loading={isClearingDocumentAnnotations}
+              disabled={isApplyingChanges}
+              leftSection={
+                <LocalIcon icon="delete-rounded" width={18} height={18} />
+              }
+              onClick={() => void handleConfirmClearDocumentAnnotations()}
+            >
+              {t(
+                "annotation.clearDocumentAnnotationsConfirm",
+                "Clear all",
+              )}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Stack>
   );
 }

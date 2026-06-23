@@ -41,6 +41,7 @@ import { useWheelZoom } from "@app/hooks/useWheelZoom";
 import { useFormFill } from "@app/tools/formFill/FormFillContext";
 import { FormSaveBar } from "@app/tools/formFill/FormSaveBar";
 import { useViewerKeyCommand } from "@app/hooks/useViewerKeyCommand";
+import { alert } from "@app/components/toast";
 
 // ─── Measure dictionary extraction ────────────────────────────────────────────
 
@@ -209,6 +210,11 @@ const EmbedPdfViewerContent = ({
   // This is our source of truth for navigation guards; it is set when the
   // annotation history changes, and cleared after we successfully apply changes.
   const hasAnnotationChangesRef = useRef(false);
+  // EmbedPDF can emit once from the saved undo stack before the saved file remounts.
+  // Ignore that stale update without suppressing future edits on the same instance.
+  const savedAnnotationHistoryApiRef = useRef<typeof historyApiRef.current>(
+    null,
+  );
 
   // Scroll position preservation system
   // We continuously track the last known good scroll position, so we always have it available
@@ -222,6 +228,7 @@ const EmbedPdfViewerContent = ({
   const rotationRestoreAttemptsRef = useRef<number>(0);
 
   const formApplyInProgressRef = useRef(false);
+  const applyChangesInFlightRef = useRef<Promise<void> | null>(null);
 
   // Get redaction context
   const { redactionsApplied, setRedactionsApplied } = useRedaction();
@@ -570,6 +577,11 @@ const EmbedPdfViewerContent = ({
     }
 
     const updateHasChanges = () => {
+      if (savedAnnotationHistoryApiRef.current === historyApi) {
+        savedAnnotationHistoryApiRef.current = null;
+        return;
+      }
+
       const canUndo = historyApi.canUndo?.() ?? false;
       if (!hasAnnotationChangesRef.current && canUndo) {
         hasAnnotationChangesRef.current = true;
@@ -623,9 +635,13 @@ const EmbedPdfViewerContent = ({
 
   // Save changes - save annotations and redactions to file (overwrites active file)
   const applyChanges = useCallback(async () => {
+    if (applyChangesInFlightRef.current) {
+      return applyChangesInFlightRef.current;
+    }
+
     if (!currentFile || activeFileIds.length === 0) return;
 
-    try {
+    const saveChanges = async () => {
       console.log(
         "[Viewer] Applying changes - exporting PDF with annotations/redactions",
       );
@@ -693,21 +709,46 @@ const EmbedPdfViewerContent = ({
       await actions.consumeFiles([currentFileId], stirlingFiles, stubs);
 
       // Mark annotations as saved so navigation away from the viewer is allowed.
+      savedAnnotationHistoryApiRef.current = historyApiRef.current;
       hasAnnotationChangesRef.current = false;
       setHasUnsavedChanges(false);
       setRedactionsApplied(false);
-    } catch (error) {
-      console.error("Apply changes failed:", error);
-    }
+    };
+
+    let savePromise: Promise<void>;
+    savePromise = saveChanges()
+      .catch((error) => {
+        console.error("Apply changes failed:", error);
+        alert({
+          title: t("viewer.saveChangesErrorTitle", "Could not save changes"),
+          body:
+            error instanceof Error && error.message
+              ? error.message
+              : t(
+                  "viewer.saveChangesErrorBody",
+                  "The document could not be saved. Try again.",
+                ),
+          alertType: "error",
+        });
+        throw error;
+      })
+      .finally(() => {
+        applyChangesInFlightRef.current = null;
+      });
+
+    applyChangesInFlightRef.current = savePromise;
+    return savePromise;
   }, [
     currentFile,
     activeFiles,
     exportActions,
     actions,
     selectors,
+    historyApiRef,
     setHasUnsavedChanges,
     setRedactionsApplied,
     rotationState.rotation,
+    t,
   ]);
 
   // Apply form fill changes - reload the filled PDF into the viewer
