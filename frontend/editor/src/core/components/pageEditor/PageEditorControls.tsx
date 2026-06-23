@@ -1,4 +1,5 @@
-import { Tooltip, ActionIcon } from "@mantine/core";
+import { Tooltip } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import UndoIcon from "@mui/icons-material/Undo";
 import RedoIcon from "@mui/icons-material/Redo";
 import ContentCutIcon from "@mui/icons-material/ContentCut";
@@ -134,32 +135,24 @@ const PageEditorControls = ({
       >
         {/* Undo/Redo */}
         <Tooltip label={t("pageEditor.toolbar.undo", "Undo")}>
-          <ActionIcon
+          <Button
+            variant="ghost"
+            size="lg"
             onClick={onUndo}
             disabled={!canUndo}
-            variant="subtle"
-            style={{
-              color: canUndo ? "var(--text-secondary)" : "var(--text-muted)",
-            }}
-            radius="md"
-            size="lg"
-          >
-            <UndoIcon />
-          </ActionIcon>
+            aria-label={t("pageEditor.toolbar.undo", "Undo")}
+            leftSection={<UndoIcon />}
+          />
         </Tooltip>
         <Tooltip label={t("pageEditor.toolbar.redo", "Redo")}>
-          <ActionIcon
+          <Button
+            variant="ghost"
+            size="lg"
             onClick={onRedo}
             disabled={!canRedo}
-            variant="subtle"
-            style={{
-              color: canRedo ? "var(--text-secondary)" : "var(--text-muted)",
-            }}
-            radius="md"
-            size="lg"
-          >
-            <RedoIcon />
-          </ActionIcon>
+            aria-label={t("pageEditor.toolbar.redo", "Redo")}
+            leftSection={<RedoIcon />}
+          />
         </Tooltip>
 
         <div
@@ -175,91 +168,62 @@ const PageEditorControls = ({
         <Tooltip
           label={t("pageEditor.toolbar.rotateLeft", "Rotate Selected Left")}
         >
-          <ActionIcon
+          <Button
+            variant="ghost"
+            size="lg"
             onClick={() => onRotate("left")}
             disabled={selectedPageIds.length === 0}
-            variant="subtle"
-            style={{
-              color:
-                selectedPageIds.length > 0
-                  ? "var(--text-secondary)"
-                  : "var(--text-muted)",
-            }}
-            radius="md"
-            size="lg"
-          >
-            <RotateLeftIcon />
-          </ActionIcon>
+            aria-label={t(
+              "pageEditor.toolbar.rotateLeft",
+              "Rotate Selected Left",
+            )}
+            leftSection={<RotateLeftIcon />}
+          />
         </Tooltip>
         <Tooltip
           label={t("pageEditor.toolbar.rotateRight", "Rotate Selected Right")}
         >
-          <ActionIcon
+          <Button
+            variant="ghost"
+            size="lg"
             onClick={() => onRotate("right")}
             disabled={selectedPageIds.length === 0}
-            variant="subtle"
-            style={{
-              color:
-                selectedPageIds.length > 0
-                  ? "var(--text-secondary)"
-                  : "var(--text-muted)",
-            }}
-            radius="md"
-            size="lg"
-          >
-            <RotateRightIcon />
-          </ActionIcon>
+            aria-label={t(
+              "pageEditor.toolbar.rotateRight",
+              "Rotate Selected Right",
+            )}
+            leftSection={<RotateRightIcon />}
+          />
         </Tooltip>
         <Tooltip label={t("pageEditor.toolbar.delete", "Delete Selected")}>
-          <ActionIcon
+          <Button
+            variant="ghost"
+            size="lg"
             onClick={onDelete}
             disabled={selectedPageIds.length === 0}
-            variant="subtle"
-            style={{
-              color:
-                selectedPageIds.length > 0
-                  ? "var(--text-secondary)"
-                  : "var(--text-muted)",
-            }}
-            radius="md"
-            size="lg"
-          >
-            <DeleteIcon />
-          </ActionIcon>
+            aria-label={t("pageEditor.toolbar.delete", "Delete Selected")}
+            leftSection={<DeleteIcon />}
+          />
         </Tooltip>
         <Tooltip label={getSplitTooltip()}>
-          <ActionIcon
+          <Button
+            variant="ghost"
+            size="lg"
             onClick={onSplit}
             disabled={selectedPageIds.length === 0}
-            variant="subtle"
-            style={{
-              color:
-                selectedPageIds.length > 0
-                  ? "var(--text-secondary)"
-                  : "var(--text-muted)",
-            }}
-            radius="md"
-            size="lg"
-          >
-            <ContentCutIcon />
-          </ActionIcon>
+            aria-label={getSplitTooltip()}
+            leftSection={<ContentCutIcon />}
+          />
         </Tooltip>
         <Tooltip label={getPageBreakTooltip()}>
-          <ActionIcon
+          <Button
+            variant="ghost"
+            size="lg"
             onClick={onPageBreak}
             disabled={selectedPageIds.length === 0}
-            variant="subtle"
-            style={{
-              color:
-                selectedPageIds.length > 0
-                  ? "var(--text-secondary)"
-                  : "var(--text-muted)",
-            }}
-            radius="md"
-            size="lg"
-          >
-            <InsertPageBreakIcon />
-          </ActionIcon>
+            aria-label={getPageBreakTooltip()}
+            leftSection={<InsertPageBreakIcon />}
+          />
         </Tooltip>
       </div>
     </div>

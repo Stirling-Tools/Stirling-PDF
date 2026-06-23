@@ -6,7 +6,7 @@ const meta: Meta<typeof ChatFABButton> = {
   component: ChatFABButton,
   parameters: { layout: "centered" },
   argTypes: {
-    isLoading: { control: "boolean" },
+    loading: { control: "boolean" },
     showTick: { control: "boolean" },
     onClick: { action: "clicked" },
   },
@@ -19,7 +19,7 @@ export const Default: Story = {};
 
 /** Agent is actively working — the logo paths animate and a green pulse dot appears. */
 export const Loading: Story = {
-  args: { isLoading: true },
+  args: { loading: true },
 };
 
 /** Agent finished while the panel was closed — tick badge pops in to signal an unread result. */
@@ -33,5 +33,5 @@ export const Tick: Story = {
  * In practice this transition is handled by the parent via `hasUnviewedResult`.
  */
 export const TickWhileLoading: Story = {
-  args: { isLoading: true, showTick: true },
+  args: { loading: true, showTick: true },
 };

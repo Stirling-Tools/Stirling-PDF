@@ -1,4 +1,5 @@
-import { ActionIcon, Popover } from "@mantine/core";
+import { Popover } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import BulkSelectionPanel from "@app/components/pageEditor/BulkSelectionPanel";
@@ -36,14 +37,14 @@ export default function PageSelectByNumberButton({
         <Popover position="left" withArrow shadow="md" offset={8}>
           <Popover.Target>
             <div style={{ display: "inline-flex" }}>
-              <ActionIcon
-                variant="subtle"
-                radius="md"
+              <Button
+                variant="ghost"
                 disabled={disabled || totalPages === 0}
                 aria-label={label}
-              >
-                <LocalIcon icon="pin-end" width="1.5rem" height="1.5rem" />
-              </ActionIcon>
+                leftSection={
+                  <LocalIcon icon="pin-end" width="1.5rem" height="1.5rem" />
+                }
+              />
             </div>
           </Popover.Target>
           <Popover.Dropdown>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { ActionIcon, Slider } from "@mantine/core";
+import { Slider } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useNavigationState } from "@app/contexts/NavigationContext";
@@ -36,15 +37,13 @@ export function ViewerInlineControls() {
       <div className="workbench-bar-divider" />
 
       {/* Zoom controls */}
-      <ActionIcon
-        variant="subtle"
-        radius="md"
+      <Button
+        variant="ghost"
         className="workbench-bar-action-icon"
         onClick={() => viewer.zoomActions.zoomOut()}
         aria-label={t("viewer.zoomOut", "Zoom out")}
-      >
-        <ZoomOutIcon sx={{ fontSize: "1rem" }} />
-      </ActionIcon>
+        leftSection={<ZoomOutIcon sx={{ fontSize: "1rem" }} />}
+      />
 
       <div className="viewer-inline-controls__slider-wrap">
         <Slider
@@ -65,15 +64,13 @@ export function ViewerInlineControls() {
         />
       </div>
 
-      <ActionIcon
-        variant="subtle"
-        radius="md"
+      <Button
+        variant="ghost"
         className="workbench-bar-action-icon"
         onClick={() => viewer.zoomActions.zoomIn()}
         aria-label={t("viewer.zoomIn", "Zoom in")}
-      >
-        <ZoomInIcon sx={{ fontSize: "1rem" }} />
-      </ActionIcon>
+        leftSection={<ZoomInIcon sx={{ fontSize: "1rem" }} />}
+      />
 
       <span className="viewer-inline-controls__zoom-pct">
         {Math.round(zoomPercent)}%

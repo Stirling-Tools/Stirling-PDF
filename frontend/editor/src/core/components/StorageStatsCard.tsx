@@ -1,5 +1,6 @@
 import React from "react";
-import { Card, Group, Text, Button, Progress } from "@mantine/core";
+import { Card, Group, Text, Progress } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import StorageIcon from "@mui/icons-material/Storage";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -58,21 +59,16 @@ const StorageStatsCard: React.FC<StorageStatsCardProps> = ({
         <Group gap="xs">
           {filesCount > 0 && (
             <Button
-              variant="light"
-              color="red"
-              size="xs"
+              variant="outlined"
+              accent="danger"
+              size="sm"
               onClick={onClearAll}
               leftSection={<DeleteIcon style={{ fontSize: 16 }} />}
             >
               {t("fileManager.clearAll", "Clear All")}
             </Button>
           )}
-          <Button
-            variant="light"
-            color="blue"
-            size="xs"
-            onClick={onReloadFiles}
-          >
+          <Button variant="outlined" size="sm" onClick={onReloadFiles}>
             Reload Files
           </Button>
         </Group>

@@ -36,15 +36,15 @@ export function Sources() {
         </div>
         <div className="portal-sources__actions">
           <Button
-            variant="outline"
+            variant="outlined"
             onClick={() => setActiveView("agent-builder")}
-            leadingIcon={<AgentBuilderIcon size={16} />}
+            leftSection={<AgentBuilderIcon size={16} />}
           >
             Agent Builder
           </Button>
           <Button
             onClick={() => setWizardOpen(true)}
-            leadingIcon={<span aria-hidden>+</span>}
+            leftSection={<span aria-hidden>+</span>}
           >
             Connect source
           </Button>

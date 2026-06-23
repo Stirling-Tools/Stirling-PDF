@@ -6,7 +6,8 @@ import React, {
   useState,
 } from "react";
 import { useTranslation } from "react-i18next";
-import { Box, Center, Text, ActionIcon, Button, Stack } from "@mantine/core";
+import { Box, Center, Text, Stack } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import CloseIcon from "@mui/icons-material/Close";
 import LockIcon from "@mui/icons-material/Lock";
 
@@ -1166,21 +1167,19 @@ const EmbedPdfViewerContent = ({
     >
       {/* Close Button - Only show in preview mode */}
       {onClose && previewFile && (
-        <ActionIcon
-          variant="filled"
-          color="gray"
+        <Button
+          variant="outlined"
           size="lg"
+          aria-label={t("common.close", "Close")}
           style={{
             position: "absolute",
             top: "1rem",
             right: "1rem",
             zIndex: 1000,
-            borderRadius: "50%",
           }}
           onClick={onClose}
-        >
-          <CloseIcon />
-        </ActionIcon>
+          leftSection={<CloseIcon />}
+        />
       )}
 
       {!effectiveFile ? (
@@ -1203,7 +1202,6 @@ const EmbedPdfViewerContent = ({
               )}
             </Text>
             <Button
-              variant="filled"
               onClick={() => {
                 if (currentFile && isStirlingFile(currentFile)) {
                   actions.openEncryptedUnlockPrompt(currentFile.fileId);

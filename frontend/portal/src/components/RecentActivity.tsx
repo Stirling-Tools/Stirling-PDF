@@ -1,4 +1,10 @@
-import { Card, EmptyState, Skeleton, StatusBadge } from "@shared/components";
+import {
+  Button,
+  Card,
+  EmptyState,
+  Skeleton,
+  StatusBadge,
+} from "@shared/components";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import {
   fetchRecentActivity,
@@ -29,9 +35,9 @@ export function RecentActivity() {
     >
       <header className="portal-activity__head">
         <h2 className="portal-activity__title">Recent activity</h2>
-        <button type="button" className="portal-activity__more">
+        <Button variant="ghost" size="sm" className="portal-activity__more">
           View all →
-        </button>
+        </Button>
       </header>
 
       {isLoading && (

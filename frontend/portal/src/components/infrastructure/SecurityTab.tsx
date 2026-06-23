@@ -29,7 +29,6 @@ import {
   KEY_MODE_LABEL,
   KEY_MODE_TONE,
 } from "@portal/components/infrastructure/infraFormat";
-
 const ACCESS_OPTS: RadioOption<AccessPolicy>[] = [
   {
     value: "stirling",
@@ -49,7 +48,6 @@ const ACCESS_OPTS: RadioOption<AccessPolicy>[] = [
     description: "Keys never leave your KMS. Stirling holds only ciphertext.",
   },
 ];
-
 const RESIDENCY_OPTS: RadioOption<DataResidency>[] = [
   { value: "us", label: "United States", description: "us-east-1 · us-west-2" },
   {
@@ -59,7 +57,6 @@ const RESIDENCY_OPTS: RadioOption<DataResidency>[] = [
   },
   { value: "apac", label: "Asia Pacific", description: "ap-southeast-1" },
 ];
-
 const ipCols: TableColumn<SecurityConfig["ipAllowlist"][number]>[] = [
   { key: "label", header: "Label", render: (e) => e.label },
   {
@@ -79,22 +76,18 @@ const ipCols: TableColumn<SecurityConfig["ipAllowlist"][number]>[] = [
     render: (e) => <span className="portal-infra__muted">{e.added}</span>,
   },
 ];
-
 export function SecurityTab() {
   const { tier } = useTier();
   const state = useAsync<SecurityConfig>(() => fetchSecurity(tier), [tier]);
   const { data } = state;
   const { isLoading, isEmpty } = useSectionFlags(state);
-
   // Local mirrors so the radios are interactive without a backend round-trip,
   // seeded from the fetched config once it lands.
   // TODO(backend): PATCH /v1/infrastructure/security { accessPolicy, dataResidency }
   const [access, setAccess] = useState<AccessPolicy | null>(null);
   const [residency, setResidency] = useState<DataResidency | null>(null);
-
   const accessValue = access ?? data?.accessPolicy ?? "stirling";
   const residencyValue = residency ?? data?.dataResidency ?? "us";
-
   if (isLoading) {
     return (
       <div className="portal-infra__stack" aria-hidden>
@@ -103,7 +96,6 @@ export function SecurityTab() {
       </div>
     );
   }
-
   if (isEmpty || !data) {
     return (
       <EmptyState
@@ -113,7 +105,6 @@ export function SecurityTab() {
       />
     );
   }
-
   return (
     <div className="portal-infra__stack">
       <section className="portal-infra__split">
@@ -137,7 +128,6 @@ export function SecurityTab() {
             />
           )}
         </Card>
-
         <Card padding="loose">
           <SectionHeader
             title="Data residency"
@@ -151,7 +141,6 @@ export function SecurityTab() {
           />
         </Card>
       </section>
-
       <section>
         <SectionHeader
           title="Encryption key management"
@@ -173,7 +162,7 @@ export function SecurityTab() {
             {/* Rotation is a privileged backend action; disabled where Stirling
                 holds the keys (managed tiers can't rotate customer keys). */}
             <Button
-              variant="outline"
+              variant="outlined"
               size="sm"
               disabled={!data.keyManagement.customerManaged}
               onClick={() => {
@@ -183,7 +172,6 @@ export function SecurityTab() {
               Rotate key
             </Button>
           </div>
-
           <dl className="portal-infra__kv">
             <div className="portal-infra__kv-wide">
               <dt>Key identifier</dt>
@@ -208,7 +196,6 @@ export function SecurityTab() {
               <dd>{data.keyManagement.rotationPolicy}</dd>
             </div>
           </dl>
-
           {!data.keyManagement.customerManaged && (
             <Banner
               tone="info"
@@ -219,7 +206,6 @@ export function SecurityTab() {
           )}
         </Card>
       </section>
-
       <section>
         <SectionHeader
           title="Compliance"
@@ -239,7 +225,6 @@ export function SecurityTab() {
           ))}
         </div>
       </section>
-
       <section>
         <SectionHeader
           title="Compliance attestations"
@@ -258,7 +243,7 @@ export function SecurityTab() {
                   {ATTESTATION_LABEL[a.status]}
                 </StatusBadge>
               </div>
-              <Chip tone="neutral" size="sm">
+              <Chip accent="neutral" size="sm">
                 {a.framework}
               </Chip>
               <p className="portal-infra__cert-detail">{a.detail}</p>
@@ -278,7 +263,6 @@ export function SecurityTab() {
           ))}
         </div>
       </section>
-
       <section>
         <SectionHeader
           title="IP allowlist"

@@ -51,7 +51,8 @@ import {
 
 import { CustomSearchLayer } from "@app/components/viewer/CustomSearchLayer";
 import ToolLoadingFallback from "@app/components/tools/ToolLoadingFallback";
-import { ActionIcon, Center, Stack, Text, Tooltip } from "@mantine/core";
+import { Center, Stack, Text, Tooltip } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import CloseIcon from "@mui/icons-material/Close";
 import { ScrollAPIBridge } from "@app/components/viewer/ScrollAPIBridge";
 import { SelectionAPIBridge } from "@app/components/viewer/SelectionAPIBridge";
@@ -632,11 +633,9 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
                                     >
                                       {/* Delete button - only show when not read-only */}
                                       {!readOnly && (
-                                        <ActionIcon
+                                        <Button
                                           size="sm"
-                                          radius="xl"
-                                          variant="filled"
-                                          color="red"
+                                          accent="danger"
                                           style={{
                                             position: "absolute",
                                             top: -10,
@@ -660,11 +659,12 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
                                             "viewer.signature.delete",
                                             "Delete signature",
                                           )}
-                                        >
-                                          <CloseIcon
-                                            style={{ fontSize: "0.8rem" }}
-                                          />
-                                        </ActionIcon>
+                                          leftSection={
+                                            <CloseIcon
+                                              style={{ fontSize: "0.8rem" }}
+                                            />
+                                          }
+                                        />
                                       )}
 
                                       <div

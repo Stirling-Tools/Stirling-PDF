@@ -1,12 +1,13 @@
 import { useUI } from "@portal/contexts/UIContext";
 import { SparklesIcon } from "@portal/components/icons";
+import { Button } from "@shared/components/Button";
 import "@portal/components/AssistantButton.css";
 
 export function AssistantButton() {
   const { assistantOpen, toggleAssistant } = useUI();
   return (
-    <button
-      type="button"
+    <Button
+      variant="ghost"
       className={"portal-assistant-btn" + (assistantOpen ? " is-active" : "")}
       onClick={toggleAssistant}
       aria-label={assistantOpen ? "Close assistant" : "Open assistant"}
@@ -31,6 +32,6 @@ export function AssistantButton() {
       ) : (
         <SparklesIcon size={22} />
       )}
-    </button>
+    </Button>
   );
 }

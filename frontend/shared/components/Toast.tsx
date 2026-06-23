@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
+import { Button } from "@shared/components/Button";
 import "@shared/components/Toast.css";
 
 export type ToastTone = "info" | "success" | "warning" | "danger";
@@ -84,8 +85,7 @@ function ToastViewport({
   entries: ToastEntry[];
   onDismiss: (id: number) => void;
 }) {
-  // Render through a portal so toasts always sit above any in-flow stacking
-  // context. SSR-safe by checking for document existence.
+  // Portal keeps toasts above any stacking context; document check is SSR safety.
   if (typeof document === "undefined") return null;
   return createPortal(
     <div
@@ -109,7 +109,7 @@ function ToastItem({
   onDismiss: (id: number) => void;
 }) {
   useEffect(() => {
-    // Allow Escape to dismiss the most recently focused toast.
+    // Escape dismisses the focused toast.
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") onDismiss(entry.id);
     }
@@ -128,14 +128,14 @@ function ToastItem({
           <div className="sui-toast__desc">{entry.description}</div>
         )}
       </div>
-      <button
-        type="button"
+      <Button
+        variant="ghost"
+        shape="circle"
         className="sui-toast__close"
         onClick={() => onDismiss(entry.id)}
         aria-label="Dismiss"
-      >
-        ×
-      </button>
+        leftSection={<span>×</span>}
+      />
     </div>
   );
 }

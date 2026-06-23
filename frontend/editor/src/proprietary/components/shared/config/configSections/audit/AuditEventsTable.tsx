@@ -4,7 +4,6 @@ import {
   Text,
   Group,
   Stack,
-  Button,
   Pagination,
   Modal,
   Code,
@@ -14,6 +13,7 @@ import {
   Badge,
   UnstyledButton,
 } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import auditService, {
   AuditEvent,
@@ -23,13 +23,11 @@ import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import { useAuditFilters } from "@app/hooks/useAuditFilters";
 import AuditFiltersForm from "@app/components/shared/config/configSections/audit/AuditFiltersForm";
 import LocalIcon from "@app/components/shared/LocalIcon";
-
 interface AuditEventsTableProps {
   loginEnabled?: boolean;
   captureFileHash?: boolean;
   capturePdfAuthor?: boolean;
 }
-
 const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
   loginEnabled = true,
   captureFileHash = false,
@@ -49,7 +47,6 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
   const showAuthor = capturePdfAuthor;
   const showFileHash = captureFileHash;
   const totalColumns = 5 + (showAuthor ? 1 : 0) + (showFileHash ? 1 : 0);
-
   // Use shared filters hook
   const { filters, eventTypes, users, handleFilterChange, handleClearFilters } =
     useAuditFilters(
@@ -59,7 +56,6 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
       },
       loginEnabled,
     );
-
   useEffect(() => {
     const fetchEvents = async () => {
       try {
@@ -77,7 +73,6 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
         setLoading(false);
       }
     };
-
     if (loginEnabled) {
       fetchEvents();
     } else {
@@ -129,7 +124,6 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
       setLoading(false);
     }
   }, [filters, currentPage, loginEnabled]);
-
   // Wrap filter handlers to reset pagination
   const handleFilterChangeWithReset = (
     key: keyof AuditFilters,
@@ -138,16 +132,13 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
     handleFilterChange(key, value);
     setCurrentPage(1);
   };
-
   const handleClearFiltersWithReset = () => {
     handleClearFilters();
     setCurrentPage(1);
   };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString();
   };
-
   // Sort handling
   const toggleSort = (
     key: "timestamp" | "eventType" | "username" | "ipAddress",
@@ -159,14 +150,12 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
       setSortDir("asc");
     }
   };
-
   const getSortIcon = (
     key: "timestamp" | "eventType" | "username" | "ipAddress",
   ) => {
     if (sortKey !== key) return "unfold-more";
     return sortDir === "asc" ? "expand-less" : "expand-more";
   };
-
   // Event type colors
   const EVENT_TYPE_COLORS: Record<string, string> = {
     USER_LOGIN: "green",
@@ -179,16 +168,13 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
     UI_DATA: "gray",
     HTTP_REQUEST: "indigo",
   };
-
   const getEventTypeColor = (type: string): string => {
     return EVENT_TYPE_COLORS[type] || "blue";
   };
-
   // Apply sorting to current events
   const sortedEvents = [...events].sort((a, b) => {
     let aVal: string | number | undefined;
     let bVal: string | number | undefined;
-
     switch (sortKey) {
       case "timestamp":
         aVal = new Date(a.timestamp).getTime();
@@ -209,19 +195,16 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
       default:
         return 0;
     }
-
     if (aVal < bVal) return sortDir === "asc" ? -1 : 1;
     if (aVal > bVal) return sortDir === "asc" ? 1 : -1;
     return 0;
   });
-
   return (
     <Card padding="lg" radius="md" withBorder>
       <Stack gap="md">
         <Text size="lg" fw={600}>
           {t("audit.events.title", "Audit Events")}
         </Text>
-
         {/* Filters */}
         <AuditFiltersForm
           filters={filters}
@@ -231,7 +214,6 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
           onClearFilters={handleClearFiltersWithReset}
           disabled={!loginEnabled}
         />
-
         {/* Table */}
         {loading ? (
           <div style={{ display: "flex", justifyContent: "center" }}>
@@ -438,7 +420,6 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
                           }
                         }
                       }
-
                       return (
                         <Table.Tr key={event.id}>
                           <Table.Td>
@@ -482,8 +463,8 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
                           )}
                           <Table.Td ta="center">
                             <Button
-                              variant="subtle"
-                              size="xs"
+                              variant="ghost"
+                              size="sm"
                               onClick={() => setSelectedEvent(event)}
                               disabled={!loginEnabled}
                             >
@@ -496,7 +477,6 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
                   )}
                 </Table.Tbody>
               </Table>
-
               {/* Pagination */}
               {totalPages > 1 && (
                 <Group justify="center" mt="md">
@@ -511,7 +491,6 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
           </>
         )}
       </Stack>
-
       {/* Event Details Modal */}
       <Modal
         opened={selectedEvent !== null}
@@ -560,5 +539,4 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
     </Card>
   );
 };
-
 export default AuditEventsTable;

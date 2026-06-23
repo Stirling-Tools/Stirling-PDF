@@ -1,5 +1,6 @@
 import React from "react";
-import { Button, Group, ActionIcon } from "@mantine/core";
+import { Group } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import { useTranslation } from "react-i18next";
 import {
@@ -33,22 +34,6 @@ export function SlideButtons({
     (btn) => btn.group === "right",
   );
 
-  const buttonStyles = (variant: ButtonDefinition["variant"]) =>
-    variant === "primary"
-      ? {
-          root: {
-            background: "var(--onboarding-primary-button-bg)",
-            color: "var(--onboarding-primary-button-text)",
-          },
-        }
-      : {
-          root: {
-            background: "var(--onboarding-secondary-button-bg)",
-            border: "1px solid var(--onboarding-secondary-button-border)",
-            color: "var(--onboarding-secondary-button-text)",
-          },
-        };
-
   const resolveButtonLabel = (button: ButtonDefinition) => {
     // Special case: override "See Plans" with "Upgrade now" when over limit
     if (
@@ -74,24 +59,23 @@ export function SlideButtons({
 
     if (button.type === "icon") {
       return (
-        <ActionIcon
+        <Button
           key={button.key}
           onClick={() => onAction(button.action)}
-          radius="md"
-          size={40}
+          variant="outlined"
           disabled={disabled}
-          styles={{
-            root: {
-              background: "var(--onboarding-secondary-button-bg)",
-              border: "1px solid var(--onboarding-secondary-button-border)",
-              color: "var(--onboarding-secondary-button-text)",
-            },
+          aria-label={t("onboarding.buttons.back", "Back")}
+          style={{
+            "--sui-btn-bg": "var(--onboarding-secondary-button-bg)",
+            "--sui-btn-fg": "var(--onboarding-secondary-button-text)",
+            "--sui-btn-bd": "var(--onboarding-secondary-button-border)",
           }}
-        >
-          {button.icon === "chevron-left" && (
-            <ChevronLeftIcon fontSize="small" />
-          )}
-        </ActionIcon>
+          leftSection={
+            button.icon === "chevron-left" ? (
+              <ChevronLeftIcon fontSize="small" />
+            ) : null
+          }
+        />
       );
     }
 
@@ -103,7 +87,18 @@ export function SlideButtons({
         key={button.key}
         onClick={() => onAction(button.action)}
         disabled={disabled}
-        styles={buttonStyles(variant)}
+        style={
+          variant === "primary"
+            ? {
+                "--sui-btn-bg": "var(--onboarding-primary-button-bg)",
+                "--sui-btn-fg": "var(--onboarding-primary-button-text)",
+              }
+            : {
+                "--sui-btn-bg": "var(--onboarding-secondary-button-bg)",
+                "--sui-btn-fg": "var(--onboarding-secondary-button-text)",
+                "--sui-btn-bd": "var(--onboarding-secondary-button-border)",
+              }
+        }
       >
         {label}
       </Button>

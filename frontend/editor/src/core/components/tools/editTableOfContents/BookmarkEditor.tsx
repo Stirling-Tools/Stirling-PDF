@@ -1,9 +1,7 @@
 import { Fragment, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  ActionIcon,
   Badge,
-  Button,
   Flex,
   Group,
   NumberInput,
@@ -13,6 +11,7 @@ import {
   TextInput,
   Tooltip,
 } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import {
   BookmarkNode,
@@ -226,9 +225,9 @@ export default function BookmarkEditor({
         <Stack gap="sm">
           <Flex align="flex-start" justify="space-between" gap="md">
             <Group gap="sm" align="flex-start">
-              <ActionIcon
-                variant="subtle"
-                color="gray"
+              <Button
+                leftSection={<LocalIcon icon={chevronIcon} />}
+                variant="ghost"
                 onMouseDown={(e) => {
                   e.preventDefault();
                   if (hasChildren) handleToggle(bookmark.id);
@@ -239,9 +238,7 @@ export default function BookmarkEditor({
                   "Toggle children",
                 )}
                 style={{ marginTop: 4 }}
-              >
-                <LocalIcon icon={chevronIcon} />
-              </ActionIcon>
+              />
               <Stack gap={2}>
                 <Group gap="xs" align="center">
                   <Text fw={600}>
@@ -271,17 +268,22 @@ export default function BookmarkEditor({
                   "Add child bookmark",
                 )}
               >
-                <ActionIcon
-                  variant="subtle"
-                  color="green"
+                <Button
+                  leftSection={
+                    <LocalIcon icon="subdirectory-arrow-right-rounded" />
+                  }
+                  variant="ghost"
+                  accent="success"
                   onMouseDown={(e) => {
                     e.preventDefault();
                     handleAddChild(bookmark.id);
                   }}
                   disabled={disabled}
-                >
-                  <LocalIcon icon="subdirectory-arrow-right-rounded" />
-                </ActionIcon>
+                  aria-label={t(
+                    "editTableOfContents.editor.actions.addChild",
+                    "Add child bookmark",
+                  )}
+                />
               </Tooltip>
               <Tooltip
                 label={t(
@@ -289,17 +291,19 @@ export default function BookmarkEditor({
                   "Add sibling bookmark",
                 )}
               >
-                <ActionIcon
-                  variant="subtle"
-                  color="blue"
+                <Button
+                  leftSection={<LocalIcon icon="add-rounded" />}
+                  variant="ghost"
                   onMouseDown={(e) => {
                     e.preventDefault();
                     handleAddSibling(bookmark.id);
                   }}
                   disabled={disabled}
-                >
-                  <LocalIcon icon="add-rounded" />
-                </ActionIcon>
+                  aria-label={t(
+                    "editTableOfContents.editor.actions.addSibling",
+                    "Add sibling bookmark",
+                  )}
+                />
               </Tooltip>
               <Tooltip
                 label={t(
@@ -307,17 +311,20 @@ export default function BookmarkEditor({
                   "Remove bookmark",
                 )}
               >
-                <ActionIcon
-                  variant="subtle"
-                  color="red"
+                <Button
+                  leftSection={<LocalIcon icon="delete-rounded" />}
+                  variant="ghost"
+                  accent="danger"
                   onMouseDown={(e) => {
                     e.preventDefault();
                     handleRemove(bookmark.id);
                   }}
                   disabled={disabled}
-                >
-                  <LocalIcon icon="delete-rounded" />
-                </ActionIcon>
+                  aria-label={t(
+                    "editTableOfContents.editor.actions.remove",
+                    "Remove bookmark",
+                  )}
+                />
               </Tooltip>
             </Group>
           </Flex>
@@ -399,8 +406,7 @@ export default function BookmarkEditor({
           </Text>
         </div>
         <Button
-          variant="default"
-          color="blue"
+          variant="outlined"
           leftSection={<LocalIcon icon="bookmark-add-rounded" />}
           onMouseDown={(e) => {
             e.preventDefault();
@@ -432,8 +438,7 @@ export default function BookmarkEditor({
               )}
             </Text>
             <Button
-              variant="subtle"
-              color="blue"
+              variant="ghost"
               leftSection={<LocalIcon icon="add-rounded" />}
               onMouseDown={(e) => {
                 e.preventDefault();

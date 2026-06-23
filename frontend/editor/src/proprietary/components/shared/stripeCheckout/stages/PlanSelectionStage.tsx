@@ -1,13 +1,6 @@
 import React from "react";
-import {
-  Stack,
-  Button,
-  Text,
-  Grid,
-  Paper,
-  Alert,
-  Divider,
-} from "@mantine/core";
+import { Stack, Text, Grid, Paper, Alert, Divider } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import { PlanTierGroup } from "@app/services/licenseService";
 import { SavingsCalculation } from "@app/components/shared/stripeCheckout/types/checkout";
@@ -19,14 +12,12 @@ import {
   calculateTotalWithSeats,
 } from "@app/components/shared/stripeCheckout/utils/pricingUtils";
 import { getClickablePaperStyle } from "@app/components/shared/stripeCheckout/utils/cardStyles";
-
 interface PlanSelectionStageProps {
   planGroup: PlanTierGroup;
   minimumSeats: number;
   savings: SavingsCalculation | null;
   onSelectPlan: (period: "monthly" | "yearly") => void;
 }
-
 export const PlanSelectionStage: React.FC<PlanSelectionStageProps> = ({
   planGroup,
   minimumSeats,
@@ -36,7 +27,6 @@ export const PlanSelectionStage: React.FC<PlanSelectionStageProps> = ({
   const { t } = useTranslation();
   const isEnterprise = planGroup.tier === "enterprise";
   const seatCount = minimumSeats || 1;
-
   return (
     <Stack gap="lg" style={{ padding: "1rem 2rem" }}>
       <Grid gutter="xl" style={{ marginTop: "1rem" }}>
@@ -58,9 +48,7 @@ export const PlanSelectionStage: React.FC<PlanSelectionStageProps> = ({
                 <Text size="lg" fw={600}>
                   {t("payment.monthly", "Monthly")}
                 </Text>
-
                 <Divider />
-
                 {isEnterprise && planGroup.monthly.seatPrice ? (
                   <PriceDisplay
                     mode="enterprise"
@@ -85,9 +73,8 @@ export const PlanSelectionStage: React.FC<PlanSelectionStageProps> = ({
                     size="2.5rem"
                   />
                 )}
-
                 <div style={{ marginTop: "auto", paddingTop: "1rem" }}>
-                  <Button variant="light" fullWidth size="lg">
+                  <Button variant="outlined" fullWidth>
                     {t("payment.planStage.selectMonthly", "Select Monthly")}
                   </Button>
                 </div>
@@ -95,7 +82,6 @@ export const PlanSelectionStage: React.FC<PlanSelectionStageProps> = ({
             </Paper>
           </Grid.Col>
         )}
-
         {/* Yearly Option */}
         {planGroup.yearly && (
           <Grid.Col span={6}>
@@ -116,7 +102,6 @@ export const PlanSelectionStage: React.FC<PlanSelectionStageProps> = ({
                   )}
                 />
               )}
-
               <Stack
                 gap="md"
                 style={{ height: "100%" }}
@@ -125,9 +110,7 @@ export const PlanSelectionStage: React.FC<PlanSelectionStageProps> = ({
                 <Text size="lg" fw={600}>
                   {t("payment.yearly", "Yearly")}
                 </Text>
-
                 <Divider />
-
                 {isEnterprise && planGroup.yearly.seatPrice ? (
                   <Stack gap="sm">
                     <PriceDisplay
@@ -184,7 +167,6 @@ export const PlanSelectionStage: React.FC<PlanSelectionStageProps> = ({
                     </Text>
                   </Stack>
                 )}
-
                 {savings && (
                   <Alert color="green" variant="light" p="sm">
                     <Text size="sm" fw={600}>
@@ -198,9 +180,8 @@ export const PlanSelectionStage: React.FC<PlanSelectionStageProps> = ({
                     </Text>
                   </Alert>
                 )}
-
                 <div style={{ marginTop: "auto", paddingTop: "1rem" }}>
-                  <Button variant="filled" fullWidth size="lg">
+                  <Button fullWidth>
                     {t("payment.planStage.selectYearly", "Select Yearly")}
                   </Button>
                 </div>

@@ -20,7 +20,6 @@ import ButtonSelector from "@app/components/shared/ButtonSelector";
 import styles from "@app/components/tools/addStamp/StampPreview.module.css";
 import { getDefaultFontSizeForAlphabet } from "@app/components/tools/addStamp/StampPreviewUtils";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
-
 const STAMP_TEMPLATES = [
   {
     id: "page-numbers",
@@ -59,22 +58,18 @@ const STAMP_TEMPLATES = [
     position: 9, // top right
   },
 ];
-
 const resolveVariablesForPreview = (
   text: string,
   filename?: string,
 ): string => {
   const now = new Date();
   const pad = (n: number) => String(n).padStart(2, "0");
-
   const ESCAPED_AT_PLACEHOLDER = "\uE000ESCAPED_AT\uE000";
   let result = text.replace(/@@/g, ESCAPED_AT_PLACEHOLDER);
-
   const actualFilename = filename || "sample-document.pdf";
   const filenameWithoutExt = actualFilename.includes(".")
     ? actualFilename.substring(0, actualFilename.lastIndexOf("."))
     : actualFilename;
-
   const sampleData: Record<string, string> = {
     "@datetime": `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`,
     "@date": `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`,
@@ -97,7 +92,6 @@ const resolveVariablesForPreview = (
     // UUID - will be random each time
     "@uuid": "????????",
   };
-
   result = result.replace(/@date\{([^}]+)\}/g, (match, format) => {
     try {
       return format
@@ -115,24 +109,18 @@ const resolveVariablesForPreview = (
       return match;
     }
   });
-
   Object.entries(sampleData).forEach(([key, value]) => {
     result = result.split(key).join(value);
   });
-
   result = result.replace(new RegExp(ESCAPED_AT_PLACEHOLDER, "g"), "@");
-
   result = result.replace(/\\n/g, "\n");
-
   return result;
 };
-
 interface ClickableCodeProps {
   children: React.ReactNode;
   onClick: () => void;
   block?: boolean;
 }
-
 const ClickableCode = ({
   children,
   onClick,
@@ -156,7 +144,6 @@ const ClickableCode = ({
     {children}
   </Code>
 );
-
 const StampTextPreview = ({
   stampText,
   filename,
@@ -165,14 +152,11 @@ const StampTextPreview = ({
   filename?: string;
 }) => {
   const { t } = useTranslation();
-
   const resolvedText = useMemo(() => {
     if (!stampText.trim()) return "";
     return resolveVariablesForPreview(stampText, filename);
   }, [stampText, filename]);
-
   if (!stampText.trim()) return null;
-
   return (
     <Paper p="xs" withBorder bg="var(--mantine-color-default)">
       <Text size="xs" c="dimmed" mb={4}>
@@ -191,7 +175,6 @@ const StampTextPreview = ({
     </Paper>
   );
 };
-
 interface StampSetupSettingsProps {
   parameters: AddStampParameters;
   onParameterChange: <K extends keyof AddStampParameters>(
@@ -201,7 +184,6 @@ interface StampSetupSettingsProps {
   disabled?: boolean;
   filename?: string;
 }
-
 const StampSetupSettings = ({
   parameters,
   onParameterChange,
@@ -209,7 +191,6 @@ const StampSetupSettings = ({
   filename,
 }: StampSetupSettingsProps) => {
   const { t } = useTranslation();
-
   return (
     <Stack gap="md">
       <TextInput
@@ -240,7 +221,6 @@ const StampSetupSettings = ({
           textClassName={styles.modeToggleButtonText}
         />
       </div>
-
       {parameters.stampType === "text" && (
         <>
           {/* Template Selector - always shows placeholder, doesn't persist selection */}
@@ -272,7 +252,6 @@ const StampSetupSettings = ({
               zIndex: Z_INDEX_AUTOMATE_DROPDOWN,
             }}
           />
-
           <Textarea
             label={t("AddStampRequest.stampText", "Stamp Text")}
             description={t(
@@ -287,13 +266,11 @@ const StampSetupSettings = ({
             minRows={2}
             disabled={disabled}
           />
-
           {/* Live Preview */}
           <StampTextPreview
             stampText={parameters.stampText}
             filename={filename}
           />
-
           <Accordion variant="contained" radius="sm">
             <Accordion.Item value="variables">
               <Accordion.Control>
@@ -658,7 +635,6 @@ const StampSetupSettings = ({
           />
         </>
       )}
-
       {parameters.stampType === "image" && (
         <Stack gap="xs">
           <input
@@ -697,5 +673,4 @@ const StampSetupSettings = ({
     </Stack>
   );
 };
-
 export default StampSetupSettings;

@@ -1,4 +1,5 @@
-import { Button, Stack, Group } from "@mantine/core";
+import { Stack, Group } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import {
@@ -78,7 +79,7 @@ export const CertificateSelectionStep: React.FC<
 
       <Group gap="sm">
         <Button
-          variant="default"
+          variant="outlined"
           onClick={onBack}
           leftSection={<ArrowBackIcon sx={{ fontSize: 16 }} />}
         >

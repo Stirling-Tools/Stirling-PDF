@@ -16,13 +16,13 @@ export function AuthenticationSection() {
       />
       <div className="portal-docs__keytable">
         <div className="portal-docs__keyrow">
-          <Chip tone="green" size="sm" showDot>
+          <Chip accent="green" size="sm" showDot>
             sk_live_
           </Chip>
           <span>Production keys — billed, rate-limited per your plan.</span>
         </div>
         <div className="portal-docs__keyrow">
-          <Chip tone="amber" size="sm" showDot>
+          <Chip accent="amber" size="sm" showDot>
             sk_test_
           </Chip>
           <span>Sandbox keys — free, return synthetic fixtures.</span>

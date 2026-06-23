@@ -3,8 +3,8 @@ import type { OpKind } from "@shared/data/ops";
 
 /**
  * Fixed accent per stage so the chip row reads the same across every pipeline.
- * Each value is also a valid {@link import("@shared/components").ChipTone}, so
- * it doubles as the chip tone wherever a stage colour is rendered.
+ * Each value is also a valid {@link import("@shared/components").ChipAccent}, so
+ * it doubles as the chip accent wherever a stage colour is rendered.
  */
 export type StageAccent = "green" | "blue" | "amber" | "red" | "purple";
 

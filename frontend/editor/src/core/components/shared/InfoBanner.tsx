@@ -1,5 +1,10 @@
 import React, { ReactNode } from "react";
-import { Paper, Group, Text, Button, ActionIcon, Stack } from "@mantine/core";
+import { Paper, Group, Text, Stack } from "@mantine/core";
+import {
+  Button,
+  type ButtonVariant,
+  type ButtonAccent,
+} from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 
@@ -30,6 +35,40 @@ const toneStyles: Record<
     buttonColor: "orange",
   },
 };
+
+function toSharedButtonVariant(
+  variant: "light" | "filled" | "white" | "outline" | "subtle",
+): ButtonVariant {
+  switch (variant) {
+    case "filled":
+      return "filled";
+    case "outline":
+      return "outlined";
+    case "subtle":
+      return "ghost";
+    case "light":
+    case "white":
+    default:
+      return "outlined";
+  }
+}
+
+function toSharedButtonAccent(color: string | undefined): ButtonAccent {
+  // Mantine colours may carry a shade suffix (e.g. "orange.7"); use the hue.
+  const hue = (color ?? "").split(".")[0];
+  switch (hue) {
+    case "red":
+      return "danger";
+    case "green":
+      return "success";
+    case "yellow":
+    case "orange":
+      return "warning";
+    case "blue":
+    default:
+      return "neutral";
+  }
+}
 
 interface InfoBannerProps {
   /**
@@ -98,7 +137,6 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
 
   const iconSize = compact ? "1rem" : "1.2rem";
   const textSize = compact ? "xs" : "sm";
-  const buttonSize = compact ? "xs" : "xs";
 
   return (
     <Paper
@@ -167,11 +205,13 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
         <Group gap="xs" align="center" wrap="nowrap">
           {buttonText && onButtonClick && (
             <Button
-              variant={buttonVariant}
-              color={buttonColor ?? toneStyle.buttonColor}
-              size={buttonSize}
-              onClick={onButtonClick}
+              variant={toSharedButtonVariant(buttonVariant)}
+              accent={toSharedButtonAccent(
+                buttonColor ?? toneStyle.buttonColor,
+              )}
+              size="sm"
               loading={loading}
+              onClick={onButtonClick}
               leftSection={
                 <LocalIcon
                   icon={buttonIcon}
@@ -179,30 +219,26 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
                   height={compact ? "0.75rem" : "0.9rem"}
                 />
               }
-              styles={
-                buttonTextColor
-                  ? { label: { color: buttonTextColor } }
-                  : undefined
-              }
+              style={buttonTextColor ? { color: buttonTextColor } : undefined}
             >
               {buttonText}
             </Button>
           )}
           {dismissible && (
-            <ActionIcon
-              variant="subtle"
-              color={closeIconColor ? undefined : "gray"}
+            <Button
+              variant="ghost"
               size="sm"
               onClick={handleDismiss}
               aria-label={t("infoBanner.dismiss", "Dismiss")}
               style={closeIconColor ? { color: closeIconColor } : undefined}
-            >
-              <LocalIcon
-                icon="close-rounded"
-                width={compact ? "0.85rem" : "1rem"}
-                height={compact ? "0.85rem" : "1rem"}
-              />
-            </ActionIcon>
+              leftSection={
+                <LocalIcon
+                  icon="close-rounded"
+                  width={compact ? "0.85rem" : "1rem"}
+                  height={compact ? "0.85rem" : "1rem"}
+                />
+              }
+            />
           )}
         </Group>
       </Group>

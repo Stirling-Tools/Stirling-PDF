@@ -114,7 +114,7 @@ const deployCols: TableColumn<RecentDeployment>[] = [
     header: "Environment",
     render: (d) => (
       <Chip
-        tone={
+        accent={
           d.environment === "production"
             ? "blue"
             : d.environment === "canary"

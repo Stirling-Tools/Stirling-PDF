@@ -6,10 +6,10 @@ import {
   Checkbox,
   Stack,
   Loader,
-  ActionIcon,
   Tooltip,
 } from "@mantine/core";
 import LayersIcon from "@mui/icons-material/Layers";
+import { Button } from "@shared/components/Button";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import "@app/components/viewer/SidebarBase.css";
@@ -19,10 +19,8 @@ import {
   applyOCGVisibilityToPdf,
   collectLeafIds,
 } from "@app/components/viewer/layerUtils";
-
 import type { LayerInfo } from "@app/components/viewer/layerUtils";
 export type { LayerInfo };
-
 interface LayerSidebarProps {
   visible: boolean;
   /** Right offset in rem (how far from the right edge). */
@@ -36,11 +34,8 @@ interface LayerSidebarProps {
   /** Called when layer detection completes, reporting whether the PDF has layers. */
   onLayersDetected?: (hasLayers: boolean) => void;
 }
-
 const SIDEBAR_WIDTH = "15rem";
-
 type LoadStatus = "idle" | "loading" | "ready" | "no-layers" | "error";
-
 export function LayerSidebar({
   visible,
   rightOffset,
@@ -58,7 +53,6 @@ export function LayerSidebar({
   const loadedKeyRef = useRef<string | null>(null);
   // Track whether visibility was set by user interaction (not initial load)
   const userChangedRef = useRef(false);
-
   // Load layers when the document changes
   useEffect(() => {
     if (!file || !documentCacheKey) {
@@ -70,19 +64,14 @@ export function LayerSidebar({
       onLayersDetected?.(false);
       return;
     }
-
     if (loadedKeyRef.current === documentCacheKey) return;
-
     setStatus("loading");
     setLoadError(null);
     userChangedRef.current = false;
-
     let cancelled = false;
-
     readPdfLayers(file)
       .then((layerList) => {
         if (cancelled) return;
-
         if (layerList.length === 0) {
           setStatus("no-layers");
           setLayers([]);
@@ -91,7 +80,6 @@ export function LayerSidebar({
           onLayersDetected?.(false);
           return;
         }
-
         // Build visibility map from the layer defaults (all leaf IDs)
         const visMap: Record<string, boolean> = {};
         const populateVisibility = (items: LayerInfo[]) => {
@@ -104,7 +92,6 @@ export function LayerSidebar({
           }
         };
         populateVisibility(layerList);
-
         setLayers(layerList);
         setVisibility(visMap);
         setStatus("ready");
@@ -119,23 +106,19 @@ export function LayerSidebar({
         );
         onLayersDetected?.(false);
       });
-
     return () => {
       cancelled = true;
     };
   }, [file, documentCacheKey, onLayersDetected]);
-
   // Reset when document changes
   useEffect(() => {
     setExpanded({});
     userChangedRef.current = false;
   }, [documentCacheKey]);
-
   // Auto-apply: debounce visibility changes from user interaction
   useEffect(() => {
     if (!userChangedRef.current || !file || isApplying || layers.length === 0)
       return;
-
     const timer = setTimeout(async () => {
       setIsApplying(true);
       try {
@@ -150,7 +133,6 @@ export function LayerSidebar({
           }
         };
         collectNames(layers);
-
         const arrayBuffer = await file.arrayBuffer();
         const modifiedBytes = await applyOCGVisibilityToPdf(
           arrayBuffer,
@@ -159,7 +141,6 @@ export function LayerSidebar({
         const blob = new Blob([new Uint8Array(modifiedBytes)], {
           type: "application/pdf",
         });
-
         await onApplyLayers(blob);
       } catch (err) {
         console.error("[LayerSidebar] Failed to apply layer changes:", err);
@@ -168,15 +149,12 @@ export function LayerSidebar({
         userChangedRef.current = false;
       }
     }, 300);
-
     return () => clearTimeout(timer);
   }, [visibility, file, layers, isApplying, onApplyLayers]);
-
   const toggleLayerVisibility = useCallback((id: string) => {
     userChangedRef.current = true;
     setVisibility((prev) => ({ ...prev, [id]: !prev[id] }));
   }, []);
-
   const showAll = useCallback(() => {
     userChangedRef.current = true;
     setVisibility((prev) => {
@@ -187,7 +165,6 @@ export function LayerSidebar({
       return updated;
     });
   }, []);
-
   const hideAll = useCallback(() => {
     userChangedRef.current = true;
     setVisibility((prev) => {
@@ -198,22 +175,18 @@ export function LayerSidebar({
       return updated;
     });
   }, []);
-
   const toggleExpanded = useCallback((id: string) => {
     setExpanded((prev) => ({ ...prev, [id]: !(prev[id] ?? true) }));
   }, []);
-
   const renderLayer = (layer: LayerInfo & { depth: number }) => {
     const hasChildren = Boolean(layer.children && layer.children.length > 0);
     const isExpanded = expanded[layer.id] !== false; // default expanded
     const isLeaf = !hasChildren;
-
     const isVisible = isLeaf
       ? (visibility[layer.id] ?? layer.visible)
       : collectLeafIds(layer.children ?? []).every(
           (id) => visibility[id] ?? true,
         );
-
     return (
       <div
         key={layer.id}
@@ -275,7 +248,6 @@ export function LayerSidebar({
           ) : (
             <span className="layer-item__expand-placeholder" />
           )}
-
           {isLeaf && (
             <Checkbox
               size="xs"
@@ -285,7 +257,6 @@ export function LayerSidebar({
               style={{ flexShrink: 0 }}
             />
           )}
-
           <Tooltip
             label={layer.name}
             position="left"
@@ -295,7 +266,6 @@ export function LayerSidebar({
             <span className="layer-item__label">{layer.name}</span>
           </Tooltip>
         </div>
-
         {hasChildren && isExpanded && (
           <div className="layer-item__children">
             {(layer.children ?? []).map((child) =>
@@ -306,13 +276,10 @@ export function LayerSidebar({
       </div>
     );
   };
-
   if (!visible) return null;
-
   const leafIds = collectLeafIds(layers);
   const allVisible = leafIds.every((id) => visibility[id] !== false);
   const allHidden = leafIds.every((id) => visibility[id] === false);
-
   return (
     <Box
       className="sidebar-base layer-sidebar"
@@ -336,33 +303,29 @@ export function LayerSidebar({
           </Text>
           {isApplying && <Loader size="xs" type="dots" />}
         </div>
-
         {status === "ready" && leafIds.length > 0 && (
           <div className="layer-sidebar__header-actions">
-            <ActionIcon
-              variant="subtle"
+            <Button
+              variant="ghost"
               size="sm"
               onClick={showAll}
               disabled={allVisible || isApplying}
               aria-label="Show all layers"
               title="Show all"
-            >
-              <VisibilityIcon sx={{ fontSize: "1rem" }} />
-            </ActionIcon>
-            <ActionIcon
-              variant="subtle"
+              leftSection={<VisibilityIcon sx={{ fontSize: "1rem" }} />}
+            />
+            <Button
+              variant="ghost"
               size="sm"
               onClick={hideAll}
               disabled={allHidden || isApplying}
               aria-label="Hide all layers"
               title="Hide all"
-            >
-              <VisibilityOffIcon sx={{ fontSize: "1rem" }} />
-            </ActionIcon>
+              leftSection={<VisibilityOffIcon sx={{ fontSize: "1rem" }} />}
+            />
           </div>
         )}
       </div>
-
       {/* Content */}
       <ScrollArea style={{ flex: 1 }}>
         <Box p="sm" className="sidebar-base__content">
@@ -373,7 +336,6 @@ export function LayerSidebar({
               </Text>
             </div>
           )}
-
           {status === "loading" && (
             <Stack
               gap="md"
@@ -388,7 +350,6 @@ export function LayerSidebar({
               </Text>
             </Stack>
           )}
-
           {status === "error" && (
             <div className="sidebar-base__error">
               <Text size="sm" c="red" ta="center">
@@ -396,7 +357,6 @@ export function LayerSidebar({
               </Text>
             </div>
           )}
-
           {status === "no-layers" && (
             <div className="sidebar-base__empty-state">
               <Text size="sm" c="dimmed" ta="center">
@@ -404,7 +364,6 @@ export function LayerSidebar({
               </Text>
             </div>
           )}
-
           {status === "ready" && layers.length > 0 && (
             <div className="layer-list">
               {layers.map((layer) => renderLayer({ ...layer, depth: 0 }))}

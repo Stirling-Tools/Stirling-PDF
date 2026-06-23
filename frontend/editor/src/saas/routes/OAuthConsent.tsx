@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { Button } from "@shared/components/Button";
 import { useAuth } from "@app/auth/UseSession";
 import { useTranslation } from "@app/hooks/useTranslation";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
@@ -235,13 +236,13 @@ export default function OAuthConsent() {
             "Sign in to your Stirling PDF account to continue connecting the app.",
           )}
         </p>
-        <button
-          type="button"
+        <Button
+          variant="outlined"
           className="oauth-button-fullwidth"
           onClick={() => navigate(`/login?next=${encodeURIComponent(next)}`)}
         >
           {t("oauthConsent.signInButton", "Sign in to continue")}
-        </button>
+        </Button>
       </AuthLayout>
     );
   }
@@ -357,8 +358,7 @@ export default function OAuthConsent() {
       <ErrorMessage error={error} />
 
       <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-        <button
-          type="button"
+        <Button
           disabled={deciding !== null}
           onClick={() => decide("approve")}
           style={{
@@ -377,9 +377,9 @@ export default function OAuthConsent() {
           {deciding === "approve"
             ? t("oauthConsent.approving", "Allowing...")
             : t("oauthConsent.approve", "Allow access")}
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          variant="outlined"
           disabled={deciding !== null}
           onClick={() => decide("deny")}
           className="oauth-button-fullwidth"
@@ -387,7 +387,7 @@ export default function OAuthConsent() {
           {deciding === "deny"
             ? t("oauthConsent.denying", "Denying...")
             : t("oauthConsent.deny", "Deny")}
-        </button>
+        </Button>
       </div>
 
       {displayName && (

@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import {
-  Button,
   Collapse,
   Alert,
   TextInput,
@@ -8,9 +7,10 @@ import {
   Stack,
   Group,
   Text,
-  SegmentedControl,
   FileButton,
 } from "@mantine/core";
+import { Button } from "@shared/components/Button";
+import { SegmentedControl } from "@shared/components/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { alert } from "@app/components/toast";
@@ -18,11 +18,9 @@ import { LicenseInfo } from "@app/services/licenseService";
 import licenseService from "@app/services/licenseService";
 import { useLicense } from "@app/contexts/LicenseContext";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
-
 interface LicenseKeySectionProps {
   currentLicenseInfo?: LicenseInfo;
 }
-
 const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
   currentLicenseInfo,
 }) => {
@@ -34,18 +32,14 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
   const [savingLicense, setSavingLicense] = useState(false);
   const [inputMethod, setInputMethod] = useState<"text" | "file">("text");
   const [licenseFile, setLicenseFile] = useState<File | null>(null);
-
   const handleSaveLicense = async () => {
     // Block save if login is disabled
     if (!validateLoginEnabled()) {
       return;
     }
-
     try {
       setSavingLicense(true);
-
       let response;
-
       if (inputMethod === "file" && licenseFile) {
         // Upload file
         response = await licenseService.saveLicenseFile(licenseFile);
@@ -63,11 +57,9 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
         });
         return;
       }
-
       if (response.success) {
         // Refresh license context to update all components
         await refetchLicense();
-
         const successMessage =
           inputMethod === "file"
             ? t(
@@ -78,13 +70,11 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
                 "admin.settings.premium.key.successMessage",
                 "License key activated successfully",
               );
-
         alert({
           alertType: "success",
           title: t("success", "Success"),
           body: successMessage,
         });
-
         // Clear inputs
         setLicenseKeyInput("");
         setLicenseFile(null);
@@ -109,11 +99,10 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
       setSavingLicense(false);
     }
   };
-
   return (
     <div>
       <Button
-        variant="subtle"
+        variant="ghost"
         leftSection={
           <LocalIcon
             icon={
@@ -130,7 +119,6 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
           "Got a license key or certificate file?",
         )}
       </Button>
-
       <Collapse in={showLicenseKey} mt="md">
         <Stack gap="md">
           <Alert
@@ -145,7 +133,6 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
               )}
             </Text>
           </Alert>
-
           {/* Severe warning if license already exists */}
           {currentLicenseInfo?.licenseKey && (
             <Alert
@@ -181,7 +168,6 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
               </Stack>
             </Alert>
           )}
-
           {/* Show current license source */}
           {currentLicenseInfo?.licenseKey && (
             <Alert
@@ -228,7 +214,6 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
               </Stack>
             </Alert>
           )}
-
           {/* Input method selector */}
           <SegmentedControl
             value={inputMethod}
@@ -238,13 +223,14 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
               if (value === "text") setLicenseFile(null);
               if (value === "file") setLicenseKeyInput("");
             }}
-            data={[
+            options={[
               {
                 label: t(
                   "admin.settings.premium.inputMethod.text",
                   "License Key",
                 ),
                 value: "text",
+                disabled: !loginEnabled || savingLicense,
               },
               {
                 label: t(
@@ -252,11 +238,10 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
                   "Certificate File",
                 ),
                 value: "file",
+                disabled: !loginEnabled || savingLicense,
               },
             ]}
-            disabled={!loginEnabled || savingLicense}
           />
-
           {/* Input area */}
           <Paper withBorder p="md" radius="md">
             <Stack gap="md">
@@ -300,7 +285,7 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
                     {(props) => (
                       <Button
                         {...props}
-                        variant="outline"
+                        variant="outlined"
                         leftSection={
                           <LocalIcon
                             icon="upload-file-rounded"
@@ -333,7 +318,6 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
                   )}
                 </div>
               )}
-
               <Group justify="flex-end">
                 <Button
                   onClick={handleSaveLicense}
@@ -355,5 +339,4 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
     </div>
   );
 };
-
 export default LicenseKeySection;

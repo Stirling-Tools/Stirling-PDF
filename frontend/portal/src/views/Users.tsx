@@ -53,7 +53,7 @@ export function Users() {
         </div>
         <Button
           onClick={() => setInviteOpen(true)}
-          leadingIcon={<span aria-hidden>+</span>}
+          leftSection={<span aria-hidden>+</span>}
         >
           Invite member
         </Button>

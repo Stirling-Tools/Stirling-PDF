@@ -23,7 +23,8 @@
  * inline Save button and computes "dirty" against {@code savedCapUsd}.
  */
 import React, { useState } from "react";
-import { Button } from "@mantine/core";
+import { Button } from "@shared/components/Button";
+import { Chip } from "@shared/components/Chip";
 import DescriptionIcon from "@mui/icons-material/DescriptionOutlined";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useTranslation } from "react-i18next";
@@ -163,16 +164,15 @@ const SpendCapControl: React.FC<SpendCapControlProps> = ({
     <div className="scc">
       <div className="scc-row">
         {presets.map((preset) => (
-          <button
+          <Chip
             key={preset}
-            type="button"
             className="scc-chip"
             data-selected={presetSelected && capUsd === preset}
             onClick={() => selectPreset(preset)}
           >
             {sym}
             {preset.toLocaleString()}
-          </button>
+          </Chip>
         ))}
 
         {/* Custom-entry pill — dashed until it carries a value, then it fills
@@ -189,19 +189,18 @@ const SpendCapControl: React.FC<SpendCapControlProps> = ({
           />
         </label>
 
-        <button
-          type="button"
+        <Chip
           className={`scc-chip${onSave ? "" : " scc-row__spacer"}`}
           data-selected={isNoCap}
           onClick={selectNoCap}
         >
           {t("payg.cap.noCapLabel", "No cap")}
-        </button>
+        </Chip>
 
         {onSave && (
           <Button
-            variant="default"
-            size="xs"
+            variant="outlined"
+            size="sm"
             className="scc-row__spacer"
             disabled={!dirty || saving}
             loading={saving}

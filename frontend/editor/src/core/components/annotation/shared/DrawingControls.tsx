@@ -1,7 +1,8 @@
 import React from "react";
-import { Group, Button, ActionIcon, Tooltip } from "@mantine/core";
+import { Group, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { LocalIcon } from "@app/components/shared/LocalIcon";
+import { Button } from "@shared/components/Button";
 
 interface DrawingControlsProps {
   onUndo?: () => void;
@@ -36,40 +37,40 @@ export const DrawingControls: React.FC<DrawingControlsProps> = ({
     <Group gap="xs" wrap="nowrap" align="center">
       {onUndo && (
         <Tooltip label={t("sign.undo", "Undo")}>
-          <ActionIcon
-            variant="subtle"
+          <Button
+            variant="ghost"
             size="lg"
             aria-label={t("sign.undo", "Undo")}
             onClick={onUndo}
             disabled={undoDisabled}
-            color={undoDisabled ? "gray" : "blue"}
-          >
-            <LocalIcon
-              icon="undo"
-              width={20}
-              height={20}
-              style={{ color: "currentColor" }}
-            />
-          </ActionIcon>
+            leftSection={
+              <LocalIcon
+                icon="undo"
+                width={20}
+                height={20}
+                style={{ color: "currentColor" }}
+              />
+            }
+          />
         </Tooltip>
       )}
       {onRedo && (
         <Tooltip label={t("sign.redo", "Redo")}>
-          <ActionIcon
-            variant="subtle"
+          <Button
+            variant="ghost"
             size="lg"
             aria-label={t("sign.redo", "Redo")}
             onClick={onRedo}
             disabled={redoDisabled}
-            color={redoDisabled ? "gray" : "blue"}
-          >
-            <LocalIcon
-              icon="redo"
-              width={20}
-              height={20}
-              style={{ color: "currentColor" }}
-            />
-          </ActionIcon>
+            leftSection={
+              <LocalIcon
+                icon="redo"
+                width={20}
+                height={20}
+                style={{ color: "currentColor" }}
+              />
+            }
+          />
         </Tooltip>
       )}
 
@@ -78,11 +79,9 @@ export const DrawingControls: React.FC<DrawingControlsProps> = ({
       {/* Place Signature Button */}
       {showPlaceButton && onPlaceSignature && (
         <Button
-          variant="filled"
-          color="blue"
           onClick={onPlaceSignature}
           disabled={disabled || !hasSignatureData}
-          ml="auto"
+          style={{ marginLeft: "auto" }}
         >
           {placeButtonText}
         </Button>

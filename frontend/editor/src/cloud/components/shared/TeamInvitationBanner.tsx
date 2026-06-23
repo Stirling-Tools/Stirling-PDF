@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Button, Group, Text } from "@mantine/core";
+import { Group, Text } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { InfoBanner } from "@app/components/shared/InfoBanner";
@@ -75,11 +76,14 @@ export function TeamInvitationBanner() {
   const actionButtons = (
     <Group gap="xs" wrap="nowrap">
       <Button
-        variant="white"
-        color="gray"
-        size="xs"
+        variant="outlined"
+        size="sm"
         onClick={handleAccept}
         loading={processing}
+        style={{
+          "--sui-btn-bg": "var(--mantine-color-white)",
+          "--sui-btn-fg": "var(--mantine-color-dark-9)",
+        }}
         leftSection={
           <LocalIcon
             icon="check"
@@ -88,17 +92,12 @@ export function TeamInvitationBanner() {
             style={{ color: "var(--mantine-color-dark-9)" }}
           />
         }
-        styles={{
-          label: {
-            color: "var(--mantine-color-dark-9)",
-          },
-        }}
       >
         {t("team.invitationBanner.acceptButton", "Accept")}
       </Button>
       <Button
-        variant="subtle"
-        size="xs"
+        variant="ghost"
+        size="sm"
         onClick={handleReject}
         loading={processing}
         style={{ color: "rgba(255, 255, 255, 0.7)" }}

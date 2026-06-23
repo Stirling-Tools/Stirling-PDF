@@ -1,5 +1,6 @@
-import { Modal, Text, Button, Stack, Group } from "@mantine/core";
+import { Modal, Text, Stack, Group } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import { Button } from "@shared/components/Button";
 
 interface PolicyDeleteConfirmModalProps {
   opened: boolean;
@@ -35,10 +36,10 @@ export function PolicyDeleteConfirmModal({
           )}
         </Text>
         <Group gap="sm" justify="flex-end">
-          <Button variant="outline" size="sm" onClick={onCancel}>
+          <Button variant="outlined" size="sm" onClick={onCancel}>
             {t("cancel", "Cancel")}
           </Button>
-          <Button color="red" size="sm" onClick={onConfirm}>
+          <Button accent="danger" size="sm" onClick={onConfirm}>
             {t("delete", "Delete")}
           </Button>
         </Group>

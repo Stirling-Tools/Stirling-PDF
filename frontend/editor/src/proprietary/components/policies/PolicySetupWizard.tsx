@@ -320,7 +320,7 @@ export function PolicySetupWizard({
             size="sm"
             aria-label={t("cancel", "Cancel")}
             onClick={onCancel}
-            leadingIcon={<CloseIcon sx={{ fontSize: "1.1rem" }} />}
+            leftSection={<CloseIcon sx={{ fontSize: "1.1rem" }} />}
           />
         }
       />
@@ -659,14 +659,15 @@ export function PolicySetupWizard({
                           { count: scopeTypes.length },
                         )}
                   </span>
-                  <button
+                  <Button
+                    variant="ghost"
                     className="pol-link"
                     onClick={() => setScopeNarrow((v) => !v)}
                   >
                     {scopeNarrow
                       ? t("policies.wizard.clear", "Clear")
                       : t("policies.wizard.edit", "Edit")}
-                  </button>
+                  </Button>
                 </div>
                 {scopeNarrow && (
                   <div className="pol-doctypes">
@@ -698,7 +699,6 @@ export function PolicySetupWizard({
         </Button>
         {step < TOTAL_STEPS ? (
           <Button
-            variant="gradient"
             size="sm"
             style={{ marginLeft: "auto" }}
             onClick={() => setStep((s) => Math.min(TOTAL_STEPS, s + 1))}
@@ -707,7 +707,6 @@ export function PolicySetupWizard({
           </Button>
         ) : (
           <Button
-            variant="gradient"
             size="sm"
             style={{ marginLeft: "auto" }}
             onClick={submit}

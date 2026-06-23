@@ -3,16 +3,15 @@ import {
   Stack,
   Text,
   Group,
-  Button,
   Box,
   Popover,
   UnstyledButton,
   useMantineTheme,
 } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import CloudOutlinedIcon from "@mui/icons-material/CloudOutlined";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
-
 interface FormatOption {
   value: string;
   label: string;
@@ -20,7 +19,6 @@ interface FormatOption {
   enabled?: boolean;
   usesCloud?: boolean;
 }
-
 interface GroupedFormatDropdownProps {
   value?: string;
   placeholder?: string;
@@ -32,7 +30,6 @@ interface GroupedFormatDropdownProps {
   withinPortal?: boolean;
   zIndex?: number;
 }
-
 const GroupedFormatDropdown = ({
   value,
   placeholder = "Select an option",
@@ -46,20 +43,16 @@ const GroupedFormatDropdown = ({
 }: GroupedFormatDropdownProps) => {
   const [dropdownOpened, setDropdownOpened] = useState(false);
   const theme = useMantineTheme();
-
   const groupedOptions = useMemo(() => {
     const groups: Record<string, FormatOption[]> = {};
-
     options.forEach((option) => {
       if (!groups[option.group]) {
         groups[option.group] = [];
       }
       groups[option.group].push(option);
     });
-
     return groups;
   }, [options]);
-
   const selectedLabel = useMemo(() => {
     if (!value) return placeholder;
     const selected = options.find((opt) => opt.value === value);
@@ -67,12 +60,10 @@ const GroupedFormatDropdown = ({
       ? `${selected.group} (${selected.label})`
       : value.toUpperCase();
   }, [value, options, placeholder]);
-
   const handleOptionSelect = (selectedValue: string) => {
     onChange(selectedValue);
     setDropdownOpened(false);
   };
-
   return (
     <Popover
       opened={dropdownOpened}
@@ -147,10 +138,21 @@ const GroupedFormatDropdown = ({
                   <Button
                     key={option.value}
                     data-testid={`format-option-${option.value}`}
-                    variant={value === option.value ? "filled" : "outline"}
+                    variant={value === option.value ? "filled" : "outlined"}
                     size="sm"
                     onClick={() => handleOptionSelect(option.value)}
                     disabled={option.enabled === false}
+                    rightSection={
+                      option.usesCloud ? (
+                        <CloudOutlinedIcon
+                          style={{
+                            fontSize: "0.625rem",
+                            marginLeft: "0.25rem",
+                            opacity: 0.7,
+                          }}
+                        />
+                      ) : undefined
+                    }
                     style={{
                       fontSize: "0.75rem",
                       height: "2rem",
@@ -160,15 +162,6 @@ const GroupedFormatDropdown = ({
                     }}
                   >
                     {option.label}
-                    {option.usesCloud && (
-                      <CloudOutlinedIcon
-                        style={{
-                          fontSize: "0.625rem",
-                          marginLeft: "0.25rem",
-                          opacity: 0.7,
-                        }}
-                      />
-                    )}
                   </Button>
                 ))}
               </Group>
@@ -179,5 +172,4 @@ const GroupedFormatDropdown = ({
     </Popover>
   );
 };
-
 export default GroupedFormatDropdown;

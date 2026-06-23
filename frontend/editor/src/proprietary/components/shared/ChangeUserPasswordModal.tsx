@@ -2,10 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { isAxiosError } from "axios";
 import { useTranslation } from "react-i18next";
 import {
-  ActionIcon,
-  Button,
   Checkbox,
-  CloseButton,
   Group,
   Modal,
   PasswordInput,
@@ -13,6 +10,7 @@ import {
   Text,
   Tooltip,
 } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { alert } from "@app/components/toast";
 import {
@@ -225,7 +223,10 @@ export default function ChangeUserPasswordModal({
       withCloseButton={false}
     >
       <div style={{ position: "relative" }}>
-        <CloseButton
+        <Button
+          aria-label={t("common.close", "Close")}
+          leftSection={<LocalIcon icon="close-rounded" />}
+          variant="ghost"
           onClick={handleClose}
           size="lg"
           disabled={processing}
@@ -337,19 +338,23 @@ export default function ChangeUserPasswordModal({
                       "Copy to clipboard",
                     )}
                   >
-                    <ActionIcon
+                    <Button
+                      aria-label={t(
+                        "workspace.people.changePassword.copyTooltip",
+                        "Copy to clipboard",
+                      )}
+                      leftSection={
+                        <LocalIcon
+                          icon="content-copy"
+                          width="0.9rem"
+                          height="0.9rem"
+                        />
+                      }
                       size="sm"
-                      variant="subtle"
-                      color="gray"
+                      variant="ghost"
                       onClick={handleCopyPassword}
                       disabled={processing}
-                    >
-                      <LocalIcon
-                        icon="content-copy"
-                        width="0.9rem"
-                        height="0.9rem"
-                      />
-                    </ActionIcon>
+                    />
                   </Tooltip>
                 </Group>
               )}
@@ -425,7 +430,7 @@ export default function ChangeUserPasswordModal({
             fullWidth
             size="md"
             disabled={disabled}
-            mt="md"
+            style={{ marginTop: "var(--mantine-spacing-md)" }}
           >
             {t("workspace.people.changePassword.submit", "Update password")}
           </Button>

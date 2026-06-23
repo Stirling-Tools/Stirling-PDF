@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import { createPortal } from "react-dom";
 import { Stack, Divider, Menu, Indicator } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useLocation } from "react-router-dom";
 import LocalIcon from "@app/components/shared/LocalIcon";
@@ -1118,18 +1119,19 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
           >
             <div className="quick-access-popout__card">
               <div className="quick-access-popout__header">
-                <button
-                  type="button"
+                <Button
+                  variant="ghost"
                   className={`quick-access-popout__back ${accessInviteOpen ? "is-visible" : ""}`}
                   onClick={() => setAccessInviteOpen(false)}
                   aria-label={t("quickAccess.accessBack", "Back")}
-                >
-                  <LocalIcon
-                    icon="arrow-back-rounded"
-                    width="1rem"
-                    height="1rem"
-                  />
-                </button>
+                  leftSection={
+                    <LocalIcon
+                      icon="arrow-back-rounded"
+                      width="1rem"
+                      height="1rem"
+                    />
+                  }
+                />
                 <div className="quick-access-popout__title">
                   {accessInviteOpen
                     ? t("quickAccess.accessInviteTitle", "Invite People")
@@ -1137,33 +1139,35 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                 </div>
                 <div className="quick-access-popout__header-actions">
                   {!accessInviteOpen && (
-                    <button
-                      type="button"
+                    <Button
+                      variant="ghost"
                       className="quick-access-popout__header-action"
                       onClick={() => {
                         void openShareManage();
                       }}
                       aria-label={t("storageShare.manage", "Manage sharing")}
-                    >
-                      <LocalIcon
-                        icon="settings-rounded"
-                        width="1rem"
-                        height="1rem"
-                      />
-                    </button>
+                      leftSection={
+                        <LocalIcon
+                          icon="settings-rounded"
+                          width="1rem"
+                          height="1rem"
+                        />
+                      }
+                    />
                   )}
-                  <button
-                    type="button"
+                  <Button
+                    variant="ghost"
                     className="quick-access-popout__header-action"
                     onClick={() => setAccessMenuOpen(false)}
                     aria-label={t("close", "Close")}
-                  >
-                    <LocalIcon
-                      icon="close-rounded"
-                      width="1rem"
-                      height="1rem"
-                    />
-                  </button>
+                    leftSection={
+                      <LocalIcon
+                        icon="close-rounded"
+                        width="1rem"
+                        height="1rem"
+                      />
+                    }
+                  />
                 </div>
               </div>
 
@@ -1312,92 +1316,102 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                           </option>
                         </select>
                       </div>
-                      <button
-                        type="button"
+                      <Button
+                        variant="ghost"
+                        accent="danger"
                         className="quick-access-popout__remove"
                         onClick={() => handleRemoveInviteRow(row.id)}
                         disabled={inviteRows.length === 1}
                         aria-label={t("quickAccess.accessRemove", "Remove")}
-                      >
-                        <LocalIcon
-                          icon="close-rounded"
-                          width="0.9rem"
-                          height="0.9rem"
-                        />
-                      </button>
+                        leftSection={
+                          <LocalIcon
+                            icon="close-rounded"
+                            width="0.9rem"
+                            height="0.9rem"
+                          />
+                        }
+                      />
                     </div>
                   ))}
-                  <button
-                    type="button"
+                  <Button
+                    variant="ghost"
                     className="quick-access-popout__add"
                     onClick={handleAddInviteRow}
+                    leftSection={
+                      <span className="quick-access-popout__add-icon">+</span>
+                    }
                   >
-                    <span className="quick-access-popout__add-icon">+</span>
                     {t("quickAccess.accessAddPerson", "Add another person")}
-                  </button>
+                  </Button>
                 </div>
               </div>
 
               <div className="quick-access-popout__footer">
                 {accessInviteOpen ? (
                   <>
-                    <button
-                      type="button"
+                    <Button
                       className="quick-access-popout__primary"
                       onClick={() => void handleSendInvites()}
                       disabled={isInviting}
-                    >
-                      <LocalIcon
-                        icon="send-rounded"
-                        width="1rem"
-                        height="1rem"
-                      />
-                      {t("quickAccess.accessSendInvite", "Send Invite")}
-                    </button>
-                    {shareLinksEnabled && (
-                      <button
-                        type="button"
-                        className="quick-access-popout__link"
-                        onClick={handleCopyShareLink}
-                      >
+                      leftSection={
                         <LocalIcon
-                          icon="link-rounded"
+                          icon="send-rounded"
                           width="1rem"
                           height="1rem"
                         />
+                      }
+                    >
+                      {t("quickAccess.accessSendInvite", "Send Invite")}
+                    </Button>
+                    {shareLinksEnabled && (
+                      <Button
+                        variant="ghost"
+                        className="quick-access-popout__link"
+                        onClick={handleCopyShareLink}
+                        leftSection={
+                          <LocalIcon
+                            icon="link-rounded"
+                            width="1rem"
+                            height="1rem"
+                          />
+                        }
+                      >
                         {t("quickAccess.accessCopyLink", "Copy link")}
-                      </button>
+                      </Button>
                     )}
                   </>
                 ) : (
                   <>
                     {sharingEnabled && (
-                      <button
-                        type="button"
+                      <Button
                         className="quick-access-popout__primary"
                         onClick={() => setAccessInviteOpen(true)}
+                        leftSection={
+                          <LocalIcon
+                            icon="person-add-rounded"
+                            width="1rem"
+                            height="1rem"
+                          />
+                        }
                       >
-                        <LocalIcon
-                          icon="person-add-rounded"
-                          width="1rem"
-                          height="1rem"
-                        />
                         {t("accessInvite", "Invite")}
-                      </button>
+                      </Button>
                     )}
                     {shareLinksEnabled && (
-                      <button
-                        type="button"
+                      <Button
+                        variant="ghost"
                         className="quick-access-popout__link"
                         onClick={handleCopyShareLink}
+                        leftSection={
+                          <LocalIcon
+                            icon="link-rounded"
+                            width="1rem"
+                            height="1rem"
+                          />
+                        }
                       >
-                        <LocalIcon
-                          icon="link-rounded"
-                          width="1rem"
-                          height="1rem"
-                        />
                         {t("quickAccess.accessCopyLink", "Copy link")}
-                      </button>
+                      </Button>
                     )}
                   </>
                 )}

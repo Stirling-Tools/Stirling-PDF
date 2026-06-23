@@ -73,7 +73,7 @@ export function PolicyDetailPanel({
           {canDelete && (
             <Button
               variant="ghost"
-              accent="red"
+              accent="danger"
               size="sm"
               onClick={onDelete}
               disabled={busy}
@@ -83,7 +83,7 @@ export function PolicyDetailPanel({
             </Button>
           )}
           <Button
-            variant="outline"
+            variant="outlined"
             size="sm"
             onClick={onRun}
             disabled={busy}
@@ -92,7 +92,7 @@ export function PolicyDetailPanel({
             Run now
           </Button>
           <Button
-            variant="outline"
+            variant="outlined"
             size="sm"
             onClick={onTogglePause}
             disabled={busy}
@@ -128,7 +128,7 @@ export function PolicyDetailPanel({
                     →
                   </span>
                 )}
-                <Chip tone="blue" size="sm">
+                <Chip accent="blue" size="sm">
                   {humanizeEndpoint(op)}
                 </Chip>
               </span>
@@ -137,7 +137,7 @@ export function PolicyDetailPanel({
         ) : (
           <div className="portal-policies__enforce-flow">
             {config.rules.map((rule) => (
-              <Chip key={rule} tone="neutral" size="sm">
+              <Chip key={rule} accent="neutral" size="sm">
                 {rule}
               </Chip>
             ))}

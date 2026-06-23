@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
-import { Modal, Stack, Button, Text } from "@mantine/core";
+import { Modal, Stack, Text } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import { useTranslation } from "react-i18next";
 import { withBasePath } from "@app/constants/app";
@@ -112,7 +113,7 @@ export default function SignupRequiredBootstrap() {
             gap: "0.5rem",
           }}
         >
-          <Button variant="default" onClick={() => setOpened(false)}>
+          <Button variant="outlined" onClick={() => setOpened(false)}>
             {t("payg.signupRequired.cancel", "Not now")}
           </Button>
           <Button

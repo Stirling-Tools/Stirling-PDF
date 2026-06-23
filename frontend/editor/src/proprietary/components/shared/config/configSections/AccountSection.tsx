@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Alert,
-  Button,
   Box,
   Group,
   Modal,
@@ -11,6 +10,7 @@ import {
   Text,
   TextInput,
 } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { alert as showToast } from "@app/components/toast";
@@ -391,7 +391,7 @@ const AccountSection: React.FC = () => {
 
               {!isSsoUser && (
                 <Button
-                  variant="light"
+                  variant="outlined"
                   leftSection={<LocalIcon icon="edit-rounded" />}
                   onClick={() => setUsernameModalOpen(true)}
                 >
@@ -400,8 +400,8 @@ const AccountSection: React.FC = () => {
               )}
 
               <Button
-                variant="outline"
-                color="red"
+                variant="outlined"
+                accent="danger"
                 leftSection={<LocalIcon icon="logout-rounded" />}
                 onClick={handleLogout}
               >
@@ -452,8 +452,8 @@ const AccountSection: React.FC = () => {
                 </Button>
               ) : (
                 <Button
-                  variant="outline"
-                  color="red"
+                  variant="outlined"
+                  accent="danger"
                   leftSection={<LocalIcon icon="close-rounded" />}
                   onClick={() => {
                     setMfaError("");
@@ -546,7 +546,7 @@ const AccountSection: React.FC = () => {
 
             <Group justify="flex-end" gap="sm">
               <Button
-                variant="default"
+                variant="outlined"
                 onClick={() => setPasswordModalOpen(false)}
               >
                 {t("common.cancel", "Cancel")}
@@ -641,7 +641,7 @@ const AccountSection: React.FC = () => {
               required
             />
             <Group justify="flex-end" gap="sm">
-              <Button variant="default" onClick={handleCloseMfaSetupModal}>
+              <Button variant="outlined" onClick={handleCloseMfaSetupModal}>
                 {t("common.cancel", "Cancel")}
               </Button>
               <Button type="submit" loading={mfaLoading}>
@@ -699,10 +699,10 @@ const AccountSection: React.FC = () => {
               required
             />
             <Group justify="flex-end" gap="sm">
-              <Button variant="default" onClick={handleCloseMfaDisableModal}>
+              <Button variant="outlined" onClick={handleCloseMfaDisableModal}>
                 {t("common.cancel", "Cancel")}
               </Button>
-              <Button type="submit" color="red" loading={mfaLoading}>
+              <Button accent="danger" type="submit" loading={mfaLoading}>
                 {t("account.mfa.confirmDisable", "Disable")}
               </Button>
             </Group>
@@ -760,7 +760,7 @@ const AccountSection: React.FC = () => {
 
             <Group justify="flex-end" gap="sm">
               <Button
-                variant="default"
+                variant="outlined"
                 onClick={() => setUsernameModalOpen(false)}
               >
                 {t("common.cancel", "Cancel")}

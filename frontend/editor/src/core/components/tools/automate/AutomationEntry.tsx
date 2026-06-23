@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Group, Text, ActionIcon, Menu, Button, Box } from "@mantine/core";
+import { Group, Text, Menu, Button, Box } from "@mantine/core";
+import { Button as SharedButton } from "@shared/components/Button";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -11,7 +12,6 @@ import { Tooltip } from "@app/components/shared/Tooltip";
 import { ToolIcon } from "@app/components/shared/ToolIcon";
 import { ToolRegistry } from "@app/data/toolsTaxonomy";
 import { ToolId } from "@app/types/toolId";
-
 interface AutomationEntryProps {
   /** Optional title for the automation (usually for custom ones) */
   title?: string;
@@ -42,7 +42,6 @@ interface AutomationEntryProps {
   /** Tool registry to resolve operation names */
   toolRegistry?: Partial<ToolRegistry>;
 }
-
 export default function AutomationEntry({
   title,
   description,
@@ -62,9 +61,7 @@ export default function AutomationEntry({
   const { t } = useTranslation();
   const [isHovered, setIsHovered] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-
   const shouldShowMenu = isHovered || isMenuOpen;
-
   // Helper function to resolve tool display names
   const getToolDisplayName = (operation: string): string => {
     const entry = toolRegistry?.[operation as ToolId];
@@ -74,12 +71,10 @@ export default function AutomationEntry({
     // Fallback to translation or operation key
     return t(`${operation}.title`, operation);
   };
-
   // Create tooltip content with description and tool chain
   const createTooltipContent = () => {
     // Show tooltip if there's a description OR if there are operations to show in the chain
     if (!description && operations.length === 0) return null;
-
     const toolChain = operations.map((op, index) => (
       <React.Fragment key={`${op}-${index}`}>
         <Text
@@ -104,7 +99,6 @@ export default function AutomationEntry({
         )}
       </React.Fragment>
     ));
-
     return (
       <div style={{ minWidth: "400px", width: "auto" }}>
         {description && (
@@ -131,7 +125,6 @@ export default function AutomationEntry({
       </div>
     );
   };
-
   const buttonContent = (
     <>
       {BadgeIcon && (
@@ -174,7 +167,6 @@ export default function AutomationEntry({
       </div>
     </>
   );
-
   const wrapperContent = (
     <Box
       style={{ position: "relative", width: "100%" }}
@@ -214,9 +206,9 @@ export default function AutomationEntry({
           onClose={() => setIsMenuOpen(false)}
         >
           <Menu.Target>
-            <ActionIcon
-              variant="subtle"
-              c="dimmed"
+            <SharedButton
+              leftSection={<MoreVertIcon style={{ fontSize: 20 }} />}
+              variant="ghost"
               size="md"
               aria-label={t(
                 "automate.entryMenu.label",
@@ -234,11 +226,8 @@ export default function AutomationEntry({
                 transition: "opacity 0.2s ease",
                 pointerEvents: shouldShowMenu ? "auto" : "none",
               }}
-            >
-              <MoreVertIcon style={{ fontSize: 20 }} />
-            </ActionIcon>
+            />
           </Menu.Target>
-
           <Menu.Dropdown>
             {onImport && (
               <Menu.Item
@@ -314,10 +303,8 @@ export default function AutomationEntry({
       )}
     </Box>
   );
-
   // Show tooltip if there's a description OR operations to display
   const shouldShowTooltip = description || operations.length > 0;
-
   return shouldShowTooltip ? (
     <Tooltip
       content={createTooltipContent()}

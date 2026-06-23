@@ -1,4 +1,5 @@
-import { TextInput, Button, Text, Flex, Switch } from "@mantine/core";
+import { TextInput, Text, Flex, Switch } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
@@ -78,19 +79,13 @@ const PageSelectionInput = ({
         rightSection={
           csvInput && (
             <Button
-              variant="subtle"
-              size="xs"
+              variant="ghost"
+              size="sm"
               onClick={onClear}
-              style={{
-                color: "var(--text-muted)",
-                minWidth: "auto",
-                width: "24px",
-                height: "24px",
-                padding: 0,
-              }}
-            >
-              ×
-            </Button>
+              aria-label={t("clear", "Clear")}
+              style={{ "--sui-btn-fg": "var(--text-muted)" }}
+              leftSection={<>&times;</>}
+            />
           )
         }
         onKeyDown={(e) => e.key === "Enter" && onUpdatePagesFromCSV()}

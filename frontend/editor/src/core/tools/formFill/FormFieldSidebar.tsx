@@ -8,14 +8,8 @@
  * - Better visual hierarchy and spacing
  */
 import React, { useCallback, useEffect, useRef } from "react";
-import {
-  Box,
-  Text,
-  ScrollArea,
-  Badge,
-  Tooltip,
-  ActionIcon,
-} from "@mantine/core";
+import { Box, Text, ScrollArea, Badge, Tooltip } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import { useFormFill } from "@app/tools/formFill/FormFillContext";
 import { FieldInput } from "@app/tools/formFill/FieldInput";
@@ -115,14 +109,13 @@ export function FormFieldSidebar({ visible, onToggle }: FormFieldSidebarProps) {
             {fields.length}
           </Badge>
         </div>
-        <ActionIcon
-          variant="subtle"
+        <Button
+          variant="ghost"
           size="sm"
           onClick={onToggle}
           aria-label={t("formFill.sidebar.close", "Close sidebar")}
-        >
-          <CloseIcon sx={{ fontSize: 16 }} />
-        </ActionIcon>
+          leftSection={<CloseIcon sx={{ fontSize: 16 }} />}
+        />
       </div>
 
       {/* Content */}

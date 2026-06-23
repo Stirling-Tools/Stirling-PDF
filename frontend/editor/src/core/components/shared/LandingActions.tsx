@@ -1,19 +1,18 @@
 import React from "react";
-import { Button, Group, Tooltip, ActionIcon } from "@mantine/core";
+import { Group, Tooltip } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useIsMobile } from "@app/hooks/useIsMobile";
-
 type LandingActionsProps = {
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   onUploadClick: () => void;
   onMobileUploadClick: () => void;
   onFileSelect: (event: React.ChangeEvent<HTMLInputElement>) => void;
 };
-
 export function LandingActions({
   fileInputRef,
   onUploadClick,
@@ -25,12 +24,11 @@ export function LandingActions({
   const icons = useFileActionIcons();
   const { config } = useAppConfig();
   const isMobile = useIsMobile();
-
   return (
     <>
       <Group gap="sm" justify="center" wrap="wrap" mb="xs">
         <Button
-          classNames={{ root: "landing-btn-primary" }}
+          className="landing-btn-primary"
           leftSection={
             <LocalIcon
               icon={icons.uploadIconName}
@@ -46,10 +44,9 @@ export function LandingActions({
         >
           {terminology.uploadFromComputer}
         </Button>
-
         <Button
-          variant="default"
-          classNames={{ root: "landing-btn-secondary" }}
+          variant="outlined"
+          className="landing-btn-secondary"
           leftSection={
             <LocalIcon
               icon="add"
@@ -65,26 +62,25 @@ export function LandingActions({
         >
           {terminology.addFiles}
         </Button>
-
         {config?.enableMobileScanner && !isMobile && (
           <Tooltip label={terminology.mobileUpload} position="bottom">
-            <ActionIcon
+            <Button
               size="lg"
-              variant="default"
-              radius="md"
+              variant="outlined"
               aria-label={terminology.mobileUpload}
-              classNames={{ root: "landing-btn-secondary landing-btn-icon" }}
+              className="landing-btn-secondary landing-btn-icon"
               onClick={(e) => {
                 e.stopPropagation();
                 onMobileUploadClick();
               }}
-            >
-              <LocalIcon
-                icon="qr-code-rounded"
-                width="1.25rem"
-                height="1.25rem"
-              />
-            </ActionIcon>
+              leftSection={
+                <LocalIcon
+                  icon="qr-code-rounded"
+                  width="1.25rem"
+                  height="1.25rem"
+                />
+              }
+            />
           </Tooltip>
         )}
       </Group>

@@ -66,16 +66,13 @@ export function CreateKeyModal({
       }
       footer={
         created ? (
-          <Button variant="gradient" onClick={close}>
-            Done
-          </Button>
+          <Button onClick={close}>Done</Button>
         ) : (
           <div className="portal-infra__modal-actions">
             <Button variant="ghost" onClick={close}>
               Cancel
             </Button>
             <Button
-              variant="gradient"
               disabled={name.trim() === "" || perms.length === 0}
               onClick={createKey}
             >

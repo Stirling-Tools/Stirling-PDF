@@ -1,17 +1,10 @@
 import { useState, useEffect } from "react";
-import {
-  ActionIcon,
-  Button,
-  Paper,
-  Group,
-  Menu,
-  NumberInput,
-  Slider,
-} from "@mantine/core";
+import { Paper, Group, Menu, NumberInput, Slider } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useIsPhone } from "@app/hooks/useIsMobile";
 import { Tooltip } from "@app/components/shared/Tooltip";
+import { Button } from "@shared/components/Button";
 import FirstPageIcon from "@mui/icons-material/FirstPage";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
@@ -162,34 +155,28 @@ export function PdfViewerToolbar({
       {/* First Page Button */}
       {!isPhone && (
         <Button
-          variant="subtle"
-          color="blue"
+          variant="ghost"
           size={buttonSize}
-          px={8}
-          radius="xl"
           onClick={handleFirstPage}
           disabled={scrollState.currentPage === 1}
           style={{ minWidth: buttonMinWidth }}
           title={t("viewer.firstPage", "First Page")}
-        >
-          <FirstPageIcon fontSize="small" />
-        </Button>
+          aria-label={t("viewer.firstPage", "First Page")}
+          leftSection={<FirstPageIcon fontSize="small" />}
+        />
       )}
 
       {/* Previous Page Button */}
       <Button
-        variant="subtle"
-        color="blue"
+        variant="ghost"
         size={buttonSize}
-        px={8}
-        radius="xl"
         onClick={handlePreviousPage}
         disabled={scrollState.currentPage === 1}
         style={{ minWidth: buttonMinWidth }}
         title={t("viewer.previousPage", "Previous Page")}
-      >
-        <ArrowBackIosIcon fontSize="small" />
-      </Button>
+        aria-label={t("viewer.previousPage", "Previous Page")}
+        leftSection={<ArrowBackIosIcon fontSize="small" />}
+      />
 
       {/* Page Input */}
       <NumberInput
@@ -220,34 +207,28 @@ export function PdfViewerToolbar({
 
       {/* Next Page Button */}
       <Button
-        variant="subtle"
-        color="blue"
+        variant="ghost"
         size={buttonSize}
-        px={8}
-        radius="xl"
         onClick={handleNextPage}
         disabled={scrollState.currentPage === scrollState.totalPages}
         style={{ minWidth: buttonMinWidth }}
         title={t("viewer.nextPage", "Next Page")}
-      >
-        <ArrowForwardIosIcon fontSize="small" />
-      </Button>
+        aria-label={t("viewer.nextPage", "Next Page")}
+        leftSection={<ArrowForwardIosIcon fontSize="small" />}
+      />
 
       {/* Last Page Button */}
       {!isPhone && (
         <Button
-          variant="subtle"
-          color="blue"
+          variant="ghost"
           size={buttonSize}
-          px={8}
-          radius="xl"
           onClick={handleLastPage}
           disabled={scrollState.currentPage === scrollState.totalPages}
           style={{ minWidth: buttonMinWidth }}
           title={t("viewer.lastPage", "Last Page")}
-        >
-          <LastPageIcon fontSize="small" />
-        </Button>
+          aria-label={t("viewer.lastPage", "Last Page")}
+          leftSection={<LastPageIcon fontSize="small" />}
+        />
       )}
 
       {/* Dual Page Toggle */}
@@ -262,20 +243,24 @@ export function PdfViewerToolbar({
           arrow
         >
           <Button
-            variant={isDualPageActive ? "filled" : "light"}
-            color="blue"
+            variant={isDualPageActive ? "filled" : "outlined"}
             size={buttonSize}
-            radius="xl"
             onClick={handleDualPageToggle}
             disabled={scrollState.totalPages <= 1}
             style={{ minWidth: buttonMinWidth }}
-          >
-            {isDualPageActive ? (
-              <DescriptionIcon fontSize="small" />
-            ) : (
-              <ViewWeekIcon fontSize="small" />
-            )}
-          </Button>
+            aria-label={
+              isDualPageActive
+                ? t("viewer.singlePageView", "Single Page View")
+                : t("viewer.dualPageView", "Dual Page View")
+            }
+            leftSection={
+              isDualPageActive ? (
+                <DescriptionIcon fontSize="small" />
+              ) : (
+                <ViewWeekIcon fontSize="small" />
+              )
+            }
+          />
         </Tooltip>
       )}
 
@@ -293,10 +278,8 @@ export function PdfViewerToolbar({
           arrow
         >
           <Button
-            variant={pdfRenderMode !== "normal" ? "filled" : "light"}
-            color="blue"
+            variant={pdfRenderMode !== "normal" ? "filled" : "outlined"}
             size={buttonSize}
-            radius="xl"
             onClick={cyclePdfRenderMode}
             style={{ minWidth: buttonMinWidth }}
             aria-label={
@@ -306,11 +289,18 @@ export function PdfViewerToolbar({
                   ? t("viewer.enableSepiaFilter", "Enable Sepia Filter")
                   : t("viewer.disableColorFilter", "Disable Color Filter")
             }
-          >
-            {pdfRenderMode === "normal" && <DarkModeIcon fontSize="small" />}
-            {pdfRenderMode === "dark" && <WbTwilightIcon fontSize="small" />}
-            {pdfRenderMode === "sepia" && <WbSunnyIcon fontSize="small" />}
-          </Button>
+            leftSection={
+              <>
+                {pdfRenderMode === "normal" && (
+                  <DarkModeIcon fontSize="small" />
+                )}
+                {pdfRenderMode === "dark" && (
+                  <WbTwilightIcon fontSize="small" />
+                )}
+                {pdfRenderMode === "sepia" && <WbSunnyIcon fontSize="small" />}
+              </>
+            }
+          />
         </Tooltip>
       )}
 
@@ -322,15 +312,12 @@ export function PdfViewerToolbar({
           wrap="nowrap"
           style={{ marginLeft: 16, flexShrink: 0 }}
         >
-          <ActionIcon
-            variant="subtle"
-            color="blue"
-            radius="md"
+          <Button
+            variant="ghost"
             onClick={handleZoomOut}
             aria-label={t("viewer.zoomOut", "Zoom out")}
-          >
-            <ZoomOutIcon fontSize="small" />
-          </ActionIcon>
+            leftSection={<ZoomOutIcon fontSize="small" />}
+          />
           <Slider
             value={Math.min(Math.max(displayZoomPercent, 20), 500)}
             min={20}
@@ -345,15 +332,12 @@ export function PdfViewerToolbar({
             }}
             label={null}
           />
-          <ActionIcon
-            variant="subtle"
-            color="blue"
-            radius="md"
+          <Button
+            variant="ghost"
             onClick={handleZoomIn}
             aria-label={t("viewer.zoomIn", "Zoom in")}
-          >
-            <ZoomInIcon fontSize="small" />
-          </ActionIcon>
+            leftSection={<ZoomInIcon fontSize="small" />}
+          />
           <span
             style={{
               minWidth: "2.5rem",
@@ -375,16 +359,13 @@ export function PdfViewerToolbar({
           closeOnItemClick={false}
         >
           <Menu.Target>
-            <ActionIcon
-              variant="light"
-              color="blue"
-              radius="md"
+            <Button
+              variant="outlined"
               size="lg"
               aria-label={t("viewer.moreOptions", "More")}
               style={{ marginLeft: 4 }}
-            >
-              <MoreVertIcon fontSize="small" />
-            </ActionIcon>
+              leftSection={<MoreVertIcon fontSize="small" />}
+            />
           </Menu.Target>
           <Menu.Dropdown>
             <Menu.Label>

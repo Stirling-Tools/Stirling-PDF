@@ -1,4 +1,5 @@
-import { Stack, Button } from "@mantine/core";
+import { Stack } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { CertSignParameters } from "@app/hooks/tools/certSign/useCertSignParameters";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 
@@ -25,10 +26,7 @@ const CertificateTypeSettings = ({
     <Stack gap="md">
       <div style={{ display: "flex", gap: "4px" }}>
         <Button
-          variant={parameters.signMode === "MANUAL" ? "filled" : "outline"}
-          color={
-            parameters.signMode === "MANUAL" ? "blue" : "var(--text-muted)"
-          }
+          variant={parameters.signMode === "MANUAL" ? "filled" : "outlined"}
           onClick={() => {
             onParameterChange("signMode", "MANUAL");
             // Reset cert type when switching to manual
@@ -52,10 +50,8 @@ const CertificateTypeSettings = ({
         </Button>
         {isServerCertificateEnabled && (
           <Button
-            variant={parameters.signMode === "AUTO" ? "filled" : "outline"}
-            color={
-              parameters.signMode === "AUTO" ? "green" : "var(--text-muted)"
-            }
+            variant={parameters.signMode === "AUTO" ? "filled" : "outlined"}
+            accent={parameters.signMode === "AUTO" ? "success" : "neutral"}
             onClick={() => {
               onParameterChange("signMode", "AUTO");
               // Clear cert type and files when switching to auto

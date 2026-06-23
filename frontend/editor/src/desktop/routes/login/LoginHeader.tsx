@@ -1,5 +1,5 @@
-import { ActionIcon } from "@mantine/core";
 import CloseIcon from "@mui/icons-material/Close";
+import { Button } from "@shared/components/Button";
 import { useLogoAssets } from "@app/hooks/useLogoAssets";
 
 interface LoginHeaderProps {
@@ -55,19 +55,17 @@ export default function LoginHeader({
           )}
         </div>
         {onClose && (
-          <ActionIcon
+          <Button
             onClick={onClose}
-            radius="md"
-            size={32}
-            variant="subtle"
+            variant="ghost"
+            leftSection={<CloseIcon fontSize="small" />}
+            aria-label="Close"
             style={{
               flexShrink: 0,
               color: "var(--text-secondary)",
               outline: "none",
             }}
-          >
-            <CloseIcon fontSize="small" />
-          </ActionIcon>
+          />
         )}
       </div>
       {subtitle && <p className="login-subtitle">{subtitle}</p>}

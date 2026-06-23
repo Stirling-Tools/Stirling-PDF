@@ -20,7 +20,7 @@ export const Basic: Story = {
   render: () => (
     <Dropdown.Root>
       <Dropdown.Trigger>
-        <Button variant="outline">Open menu</Button>
+        <Button variant="outlined">Open menu</Button>
       </Dropdown.Trigger>
       <Dropdown.Menu>
         <Dropdown.Item onSelect={() => console.log("a")}>Item A</Dropdown.Item>
@@ -37,7 +37,7 @@ export const WithDivider: Story = {
   render: () => (
     <Dropdown.Root>
       <Dropdown.Trigger>
-        <Button variant="outline">Account</Button>
+        <Button variant="outlined">Account</Button>
       </Dropdown.Trigger>
       <Dropdown.Menu width="13rem">
         <Dropdown.Item>Profile</Dropdown.Item>
@@ -53,7 +53,7 @@ export const WithTrailingHints: Story = {
   render: () => (
     <Dropdown.Root>
       <Dropdown.Trigger>
-        <Button variant="outline">Commands</Button>
+        <Button variant="outlined">Commands</Button>
       </Dropdown.Trigger>
       <Dropdown.Menu width="16rem">
         <Dropdown.Item trailing="⌘ K">Search</Dropdown.Item>
@@ -71,7 +71,7 @@ export const AlignStart: Story = {
   render: () => (
     <Dropdown.Root align="start">
       <Dropdown.Trigger>
-        <Button variant="outline">Aligned to start</Button>
+        <Button variant="outlined">Aligned to start</Button>
       </Dropdown.Trigger>
       <Dropdown.Menu>
         <Dropdown.Item>One</Dropdown.Item>

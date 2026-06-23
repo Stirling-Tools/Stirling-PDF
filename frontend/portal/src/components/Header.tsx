@@ -1,4 +1,4 @@
-import { Avatar, Dropdown } from "@shared/components";
+import { Avatar, Button, Dropdown } from "@shared/components";
 import { useTheme } from "@portal/contexts/ThemeContext";
 import { useTier, TIER_INFO, type Tier } from "@portal/contexts/TierContext";
 import { useView, VIEW_LABELS } from "@portal/contexts/ViewContext";
@@ -16,17 +16,18 @@ import "@portal/components/Header.css";
 function ThemeToggle() {
   const { theme, toggle } = useTheme();
   return (
-    <button
-      type="button"
+    <Button
+      variant="ghost"
       className="portal-header__icon-btn"
       onClick={toggle}
       aria-label={
         theme === "light" ? "Switch to dark theme" : "Switch to light theme"
       }
       title={theme === "light" ? "Dark mode" : "Light mode"}
-    >
-      {theme === "light" ? <MoonIcon size={16} /> : <SunIcon size={16} />}
-    </button>
+      leftSection={
+        theme === "light" ? <MoonIcon size={16} /> : <SunIcon size={16} />
+      }
+    />
   );
 }
 
@@ -36,15 +37,21 @@ function TierSwitcher() {
   return (
     <Dropdown.Root align="end">
       <Dropdown.Trigger>
-        <button type="button" className="portal-header__tier-btn">
-          <span
-            className="portal-header__tier-dot"
-            style={{ background: info.dotColor }}
-            aria-hidden
-          />
+        <Button
+          variant="ghost"
+          size="sm"
+          className="portal-header__tier-btn"
+          leftSection={
+            <span
+              className="portal-header__tier-dot"
+              style={{ background: info.dotColor }}
+              aria-hidden
+            />
+          }
+          rightSection={<ChevronDownIcon size={14} />}
+        >
           <span className="portal-header__tier-label">{info.label}</span>
-          <ChevronDownIcon size={14} />
-        </button>
+        </Button>
       </Dropdown.Trigger>
       <Dropdown.Menu width="12rem">
         {(Object.keys(TIER_INFO) as Tier[]).map((id) => (
@@ -79,8 +86,8 @@ export function Header() {
         </span>
       </div>
 
-      <button
-        type="button"
+      <Button
+        variant="ghost"
         className="portal-header__search"
         aria-label="Search"
         onClick={openSearch}
@@ -90,7 +97,7 @@ export function Header() {
         <span className="portal-header__search-kbd" aria-hidden>
           ⌘K
         </span>
-      </button>
+      </Button>
 
       <div className="portal-header__right">
         <MocksToggle />

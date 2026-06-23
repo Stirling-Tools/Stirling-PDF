@@ -13,6 +13,7 @@ import {
   FOLDER_ICONS,
   FolderIconOption,
 } from "@app/components/filesPage/folderIcons";
+import { Button } from "@shared/components/Button";
 
 interface FolderAppearancePickerProps {
   folder: FolderRecord;
@@ -50,9 +51,9 @@ export function FolderAppearancePicker({
           }}
         >
           {FOLDER_COLOR_PALETTE.map((c) => (
-            <button
+            <Button
               key={c}
-              type="button"
+              variant="outlined"
               disabled={disabled}
               aria-label={t(
                 "filesPage.appearance.useColour",
@@ -146,8 +147,8 @@ function IconButton({
 }) {
   return (
     <Tooltip label={icon.label} withinPortal>
-      <button
-        type="button"
+      <Button
+        variant="ghost"
         disabled={disabled}
         aria-label={icon.label}
         onClick={(e) => {
@@ -172,7 +173,7 @@ function IconButton({
         }}
       >
         {icon.glyph || "-"}
-      </button>
+      </Button>
     </Tooltip>
   );
 }

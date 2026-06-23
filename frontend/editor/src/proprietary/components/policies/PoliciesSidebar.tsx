@@ -33,6 +33,7 @@ import type {
 import type { WatchedFolder } from "@app/types/watchedFolders";
 import { POLICIES_ENABLED } from "@app/constants/featureFlags";
 import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
+import { Button } from "@shared/components/Button";
 import { IconBadge } from "@shared/components/IconBadge";
 import {
   deriveRowStatus,
@@ -149,21 +150,23 @@ export function PoliciesSection({
           sidebarTooltip
           pinOnClick
         >
-          <button
+          <Button
             type="button"
+            variant="ghost"
             className="pol-info-btn"
             aria-label={t(
               "policies.sidebar.infoAriaLabel",
               "What is a policy?",
             )}
-          >
-            <LocalIcon
-              icon="info-outline-rounded"
-              width="1.25rem"
-              height="1.25rem"
-              style={{ color: "var(--icon-files-color)" }}
-            />
-          </button>
+            leftSection={
+              <LocalIcon
+                icon="info-outline-rounded"
+                width="1.25rem"
+                height="1.25rem"
+                style={{ color: "var(--icon-files-color)" }}
+              />
+            }
+          />
         </AppTooltip>
       </div>
 
@@ -197,9 +200,11 @@ export function PoliciesSection({
               }
               const status = deriveRowStatus(pol.policies[cat.id]);
               return (
-                <button
+                <Button
                   key={cat.id}
-                  type="button"
+                  variant="ghost"
+                  justify="start"
+                  fullWidth
                   className="pol-row"
                   onClick={() =>
                     guestBlocked ? promptGuestSignup() : selectPolicy(cat.id)
@@ -229,7 +234,7 @@ export function PoliciesSection({
                       sx={{ fontSize: "1rem" }}
                     />
                   </span>
-                </button>
+                </Button>
               );
             })}
           </div>
@@ -483,8 +488,9 @@ export function PoliciesCollapsedButton({
                 arrow
                 delay={300}
               >
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
                   className="pol-crail-btn"
                   data-status={status}
                   aria-label={t(
@@ -500,12 +506,15 @@ export function PoliciesCollapsedButton({
                     selectPolicy(cat.id);
                     onExpand();
                   }}
-                >
-                  {cat.icon}
-                  {(status === "active" || status === "paused") && (
-                    <span className="pol-crail-dot" data-status={status} />
-                  )}
-                </button>
+                  leftSection={
+                    <>
+                      {cat.icon}
+                      {(status === "active" || status === "paused") && (
+                        <span className="pol-crail-dot" data-status={status} />
+                      )}
+                    </>
+                  }
+                />
               </AppTooltip>
             );
           })}

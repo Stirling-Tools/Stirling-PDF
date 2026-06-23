@@ -734,29 +734,6 @@
   flex-shrink: 0;
 }
 
-.quick-access-popout__tab-button {
-  padding: 0.5rem 0.75rem;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  border-bottom: 2px solid transparent;
-  transition:
-    color 150ms,
-    border-color 150ms;
-}
-
-.quick-access-popout__tab-button.active {
-  color: var(--text-primary);
-  border-bottom-color: var(--btn-open-file);
-  font-weight: 500;
-}
-
-.quick-access-popout__tab-button:hover {
-  color: var(--text-primary);
-}
-
 /* Sign request row styling */
 .quick-access-popout__sign-request-row {
   padding: 0.75rem;

@@ -28,10 +28,10 @@ export const WithActions: Story = {
         <StatusBadge tone="success" pulse>
           Healthy
         </StatusBadge>
-        <Button size="sm" variant="outline">
+        <Button size="sm" variant="outlined">
           Edit composition
         </Button>
-        <Button size="sm" variant="gradient">
+        <Button size="sm" variant="filled">
           View runs
         </Button>
       </>
@@ -49,10 +49,10 @@ export const Everything: Story = {
         <StatusBadge tone="success" pulse>
           Healthy
         </StatusBadge>
-        <Button size="sm" variant="outline">
+        <Button size="sm" variant="outlined">
           Edit composition
         </Button>
-        <Button size="sm" variant="gradient">
+        <Button size="sm" variant="filled">
           View runs
         </Button>
       </>

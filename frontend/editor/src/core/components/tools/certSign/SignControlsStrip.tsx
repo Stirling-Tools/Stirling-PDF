@@ -8,14 +8,14 @@ import React, {
 import {
   ActionIcon,
   Box,
-  Button,
   Group,
   Menu,
   Modal,
-  SegmentedControl,
   Stack,
   Text,
 } from "@mantine/core";
+import { Button } from "@shared/components/Button";
+import { SegmentedControl } from "@shared/components/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import DrawIcon from "@mui/icons-material/Draw";
 import ImageIcon from "@mui/icons-material/Image";
@@ -24,7 +24,6 @@ import TextFieldsIcon from "@mui/icons-material/TextFields";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import CheckIcon from "@mui/icons-material/Check";
-
 import {
   DEFAULT_PARAMETERS,
   type SignParameters,
@@ -37,9 +36,7 @@ import { DrawingCanvas } from "@app/components/annotation/shared/DrawingCanvas";
 import { ColorPicker } from "@app/components/annotation/shared/ColorPicker";
 import { TextInputWithFont } from "@app/components/annotation/shared/TextInputWithFont";
 import { buildSignaturePreview } from "@app/utils/signaturePreview";
-
 import styles from "@app/components/tools/certSign/SignControlsStrip.module.css";
-
 interface SignControlsStripProps {
   visible: boolean;
   placementMode: boolean;
@@ -51,7 +48,6 @@ interface SignControlsStripProps {
   hasSelectedAnnotation?: boolean;
   onDeleteSelected?: () => void;
 }
-
 export default function SignControlsStrip({
   visible,
   placementMode,
@@ -71,7 +67,6 @@ export default function SignControlsStrip({
     isAtCapacity,
     byTypeCounts,
   } = useSavedSignatures();
-
   const [createSignatureType, setCreateSignatureType] = useState<
     "canvas" | "text" | "image" | null
   >(null);
@@ -80,7 +75,6 @@ export default function SignControlsStrip({
   const [canvasPenSize, setCanvasPenSize] = useState(2);
   const [canvasPenSizeInput, setCanvasPenSizeInput] = useState("2");
   const latestCanvasDataRef = useRef<string | undefined>(undefined);
-
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [textSignerName, setTextSignerName] = useState(
     DEFAULT_PARAMETERS.signerName ?? "",
@@ -94,7 +88,6 @@ export default function SignControlsStrip({
   const [textColor, setTextColor] = useState(
     DEFAULT_PARAMETERS.textColor ?? "#000000",
   );
-
   const renderSavedSignaturePreview = useCallback(
     (sig: SavedSignature) => {
       if (sig.type === "text") {
@@ -129,7 +122,6 @@ export default function SignControlsStrip({
           </Box>
         );
       }
-
       return (
         <Box
           component="div"
@@ -163,20 +155,17 @@ export default function SignControlsStrip({
     },
     [t],
   );
-
   const sortedSavedSignatures = useMemo(() => {
     if (!savedSignatures.length) return [];
     return [...savedSignatures].sort(
       (a, b) => (b.updatedAt ?? b.createdAt) - (a.updatedAt ?? a.createdAt),
     );
   }, [savedSignatures]);
-
   const hasAutoSelected = useRef(false);
   useEffect(() => {
     if (hasAutoSelected.current) return;
     if (!sortedSavedSignatures.length) return;
     if (signatureConfig?.signatureData) return;
-
     hasAutoSelected.current = true;
     const lastSig = sortedSavedSignatures[0];
     if (lastSig.type === "text") {
@@ -201,20 +190,17 @@ export default function SignControlsStrip({
     signatureConfig?.signatureData,
     onSignatureSelected,
   ]);
-
   const beginPlacement = useCallback(
     (config: SignParameters) => {
       const nextConfig: SignParameters = {
         ...DEFAULT_PARAMETERS,
         ...config,
       };
-
       onSignatureSelected(nextConfig);
       onPlacementModeChange(true);
     },
     [onSignatureSelected, onPlacementModeChange],
   );
-
   const applySavedSignature = useCallback(
     (sig: SavedSignature) => {
       if (sig.type === "text") {
@@ -232,15 +218,12 @@ export default function SignControlsStrip({
     },
     [beginPlacement],
   );
-
   const pausePlacement = useCallback(() => {
     onPlacementModeChange(false);
   }, [onPlacementModeChange]);
-
   const resumePlacement = useCallback(() => {
     onPlacementModeChange(true);
   }, [onPlacementModeChange]);
-
   const handleCreateSignature = useCallback(
     (type: "canvas" | "text" | "image") => {
       if (type === "image") {
@@ -259,15 +242,12 @@ export default function SignControlsStrip({
     },
     [],
   );
-
   const handleCancelCreate = useCallback(() => {
     setCreateSignatureType(null);
   }, []);
-
   const saveTextToLibrary = useCallback(async () => {
     const signerName = textSignerName.trim();
     if (!signerName || isAtCapacity) return null;
-
     const preview = await buildSignaturePreview({
       signatureType: "text",
       signerName,
@@ -276,7 +256,6 @@ export default function SignControlsStrip({
       textColor,
     });
     if (!preview?.dataUrl) return null;
-
     const nextIndex = (byTypeCounts?.text ?? 0) + 1;
     const baseLabel = t(
       "certSign.collab.signRequest.saved.defaultTextLabel",
@@ -311,7 +290,6 @@ export default function SignControlsStrip({
     textFontSize,
     textSignerName,
   ]);
-
   const saveImageToLibrary = useCallback(
     async (dataUrl: string) => {
       if (!dataUrl || isAtCapacity) return;
@@ -328,7 +306,6 @@ export default function SignControlsStrip({
     },
     [addSignature, byTypeCounts?.image, isAtCapacity, t],
   );
-
   const readFileAsDataUrl = useCallback(async (file: File): Promise<string> => {
     return await new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -342,7 +319,6 @@ export default function SignControlsStrip({
       reader.readAsDataURL(file);
     });
   }, []);
-
   const saveCanvasToLibrary = useCallback(
     async (dataUrl: string) => {
       if (!dataUrl || isAtCapacity) return;
@@ -359,10 +335,8 @@ export default function SignControlsStrip({
     },
     [addSignature, byTypeCounts?.canvas, isAtCapacity, t],
   );
-
   useEffect(() => {
     if (!visible || !signatureConfig) return;
-
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
       const isTypingTarget =
@@ -370,26 +344,21 @@ export default function SignControlsStrip({
         target?.tagName === "TEXTAREA" ||
         (target as any)?.isContentEditable;
       if (isTypingTarget) return;
-
       if (event.key === "Escape") {
         pausePlacement();
         return;
       }
-
       if (event.key === "Backspace") {
         event.preventDefault();
         onDeleteSelected?.();
       }
     };
-
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [pausePlacement, onDeleteSelected, signatureConfig, visible]);
-
   const handleCanvasSignatureChange = useCallback((dataUrl: string | null) => {
     latestCanvasDataRef.current = dataUrl ?? undefined;
   }, []);
-
   const handleDrawingComplete = useCallback(async () => {
     const dataUrl = latestCanvasDataRef.current;
     if (!dataUrl) return;
@@ -398,7 +367,6 @@ export default function SignControlsStrip({
     setCreateSignatureType(null);
     latestCanvasDataRef.current = undefined;
   }, [saveCanvasToLibrary, beginPlacement]);
-
   const handleSaveText = useCallback(async () => {
     const saved = await saveTextToLibrary();
     if (!saved) return;
@@ -413,7 +381,6 @@ export default function SignControlsStrip({
     setCreateSignatureType(null);
     setTextSignerName("");
   }, [saveTextToLibrary, beginPlacement]);
-
   const handleImageSelected = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0] ?? null;
@@ -430,9 +397,7 @@ export default function SignControlsStrip({
     },
     [readFileAsDataUrl, saveImageToLibrary, beginPlacement],
   );
-
   if (!visible || !signatureConfig) return null;
-
   const previewNode =
     signatureConfig.signatureType === "text" ? (
       <div
@@ -474,7 +439,6 @@ export default function SignControlsStrip({
         )}
       </div>
     );
-
   return (
     <div className={styles.signStrip} data-open={visible ? "true" : "false"}>
       <div className={styles.signStripInner}>
@@ -484,9 +448,7 @@ export default function SignControlsStrip({
               {t("certSign.collab.signRequest.signingTitle", "Signing")}
             </Text>
           </div>
-
           <div className={styles.signingCenter} aria-hidden="true" />
-
           <div className={styles.signingMode}>
             <SegmentedControl
               className={styles.signStripModeRadio}
@@ -495,7 +457,7 @@ export default function SignControlsStrip({
                 if (value === "place") resumePlacement();
                 else pausePlacement();
               }}
-              data={[
+              options={[
                 {
                   value: "place",
                   label: (
@@ -525,15 +487,13 @@ export default function SignControlsStrip({
                   ),
                 },
               ]}
-              size="xs"
-              radius="xl"
+              size="sm"
               aria-label={t(
                 "certSign.collab.signRequest.mode.title",
                 "Sign or move mode",
               )}
             />
           </div>
-
           <div className={styles.signingRight}>
             <Menu
               withinPortal
@@ -547,8 +507,8 @@ export default function SignControlsStrip({
               }}
             >
               <Menu.Target>
-                <button
-                  type="button"
+                <Button
+                  variant="ghost"
                   className={styles.signingPreviewButton}
                   aria-label={t(
                     "certSign.collab.signRequest.changeSignature",
@@ -556,7 +516,7 @@ export default function SignControlsStrip({
                   )}
                 >
                   {previewNode}
-                </button>
+                </Button>
               </Menu.Target>
               <Menu.Dropdown>
                 {sortedSavedSignatures.length ? (
@@ -633,11 +593,9 @@ export default function SignControlsStrip({
                 </Menu.Item>
               </Menu.Dropdown>
             </Menu>
-
             <div className={styles.signingDivider} aria-hidden="true" />
-
-            <button
-              type="button"
+            <Button
+              variant="ghost"
               className={`${styles.iconButton} ${styles.signStripMobileDelete}`}
               onClick={onDeleteSelected}
               disabled={!hasSelectedAnnotation}
@@ -651,10 +609,9 @@ export default function SignControlsStrip({
               )}
             >
               <DeleteOutlineIcon sx={{ fontSize: "1.2rem" }} />
-            </button>
-
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="ghost"
               className={`${styles.iconButton} ${styles.iconTextButton}`}
               onClick={onComplete}
               disabled={!canComplete}
@@ -676,11 +633,10 @@ export default function SignControlsStrip({
                   "Complete & Sign",
                 )}
               </span>
-            </button>
+            </Button>
           </div>
         </div>
       </div>
-
       {/* Draw Signature — auto-opens its inner canvas modal directly */}
       {createSignatureType === "canvas" && (
         <DrawingCanvas
@@ -707,7 +663,6 @@ export default function SignControlsStrip({
           height={200}
         />
       )}
-
       {/* Type Signature Modal */}
       <Modal
         opened={createSignatureType === "text"}
@@ -755,7 +710,7 @@ export default function SignControlsStrip({
             )}
           />
           <Group justify="flex-end">
-            <Button variant="subtle" onClick={handleCancelCreate}>
+            <Button variant="ghost" onClick={handleCancelCreate}>
               {t("cancel", "Cancel")}
             </Button>
             <Button onClick={handleSaveText} disabled={!textSignerName.trim()}>
@@ -764,7 +719,6 @@ export default function SignControlsStrip({
           </Group>
         </Stack>
       </Modal>
-
       {canvasColorPickerOpen && (
         <ColorPicker
           isOpen={canvasColorPickerOpen}
@@ -777,7 +731,6 @@ export default function SignControlsStrip({
           )}
         />
       )}
-
       <input
         ref={fileInputRef}
         type="file"

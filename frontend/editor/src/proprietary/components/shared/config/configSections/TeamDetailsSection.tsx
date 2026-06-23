@@ -4,20 +4,18 @@ import { useTranslation } from "react-i18next";
 import {
   Stack,
   Text,
-  Button,
   Table,
-  ActionIcon,
   Badge,
   Loader,
   Group,
   Modal,
   Select,
-  CloseButton,
   Tooltip,
   Menu,
   Avatar,
   Box,
 } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { alert } from "@app/components/toast";
 import { teamService, Team } from "@app/services/teamService";
@@ -351,7 +349,7 @@ export default function TeamDetailsSection({
         <Text size="sm" c="red">
           {t("workspace.teams.teamNotFound", "Team not found")}
         </Text>
-        <Button variant="light" onClick={onBack}>
+        <Button variant="outlined" onClick={onBack}>
           {t("workspace.teams.backToTeams", "Back to Teams")}
         </Button>
       </Stack>
@@ -362,9 +360,14 @@ export default function TeamDetailsSection({
     <Stack gap="lg">
       {/* Header with back button */}
       <Group>
-        <ActionIcon variant="subtle" onClick={onBack}>
-          <LocalIcon icon="arrow-back" width="1.2rem" height="1.2rem" />
-        </ActionIcon>
+        <Button
+          variant="ghost"
+          onClick={onBack}
+          aria-label={t("common.back", "Back")}
+          leftSection={
+            <LocalIcon icon="arrow-back" width="1.2rem" height="1.2rem" />
+          }
+        />
         <div style={{ flex: 1 }}>
           <Text fw={600} size="lg">
             {team.name}
@@ -559,21 +562,36 @@ export default function TeamDetailsSection({
                         withArrow
                         zIndex={Z_INDEX_OVER_CONFIG_MODAL + 10}
                       >
-                        <ActionIcon variant="subtle" color="gray" size="sm">
-                          <LocalIcon icon="info" width="1rem" height="1rem" />
-                        </ActionIcon>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          aria-label={t(
+                            "workspace.people.userInfo",
+                            "User info",
+                          )}
+                          leftSection={
+                            <LocalIcon icon="info" width="1rem" height="1rem" />
+                          }
+                        />
                       </Tooltip>
 
                       {/* Actions menu */}
                       <Menu position="bottom-end" withinPortal>
                         <Menu.Target>
-                          <ActionIcon variant="subtle" color="gray">
-                            <LocalIcon
-                              icon="more-vert"
-                              width="1rem"
-                              height="1rem"
-                            />
-                          </ActionIcon>
+                          <Button
+                            variant="ghost"
+                            aria-label={t(
+                              "workspace.people.memberActions",
+                              "Member actions",
+                            )}
+                            leftSection={
+                              <LocalIcon
+                                icon="more-vert"
+                                width="1rem"
+                                height="1rem"
+                              />
+                            }
+                          />
                         </Menu.Target>
                         <Menu.Dropdown
                           style={{ zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
@@ -692,9 +710,12 @@ export default function TeamDetailsSection({
         withCloseButton={false}
       >
         <div style={{ position: "relative" }}>
-          <CloseButton
+          <Button
             onClick={() => setAddMemberModalOpened(false)}
             size="lg"
+            variant="ghost"
+            aria-label={t("common.close", "Close")}
+            leftSection={<LocalIcon icon="close-rounded" />}
             style={{
               position: "absolute",
               top: -8,
@@ -751,7 +772,7 @@ export default function TeamDetailsSection({
               loading={processing}
               fullWidth
               size="md"
-              mt="md"
+              style={{ marginTop: "var(--mantine-spacing-md)" }}
             >
               {t("workspace.teams.addMemberToTeam.submit")}
             </Button>
@@ -770,9 +791,12 @@ export default function TeamDetailsSection({
         withCloseButton={false}
       >
         <div style={{ position: "relative" }}>
-          <CloseButton
+          <Button
             onClick={() => setChangeTeamModalOpened(false)}
             size="lg"
+            variant="ghost"
+            aria-label={t("common.close", "Close")}
+            leftSection={<LocalIcon icon="close-rounded" />}
             style={{
               position: "absolute",
               top: -8,
@@ -824,7 +848,7 @@ export default function TeamDetailsSection({
               loading={processing}
               fullWidth
               size="md"
-              mt="md"
+              style={{ marginTop: "var(--mantine-spacing-md)" }}
             >
               {t("workspace.teams.changeTeam.submit", "Change Team")}
             </Button>

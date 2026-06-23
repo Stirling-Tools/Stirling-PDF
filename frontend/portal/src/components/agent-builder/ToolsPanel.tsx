@@ -2,13 +2,11 @@ import { useState } from "react";
 import { Chip, ToggleSwitch } from "@shared/components";
 import { type Agent, type ToolMode, TOOL_CATALOGUE } from "@portal/api/agents";
 import "@portal/views/AgentBuilder.css";
-
 interface ToolsPanelProps {
   agent: Agent;
   /** Restricted-tools governance is an enterprise capability. */
   governanceUnlocked: boolean;
 }
-
 /**
  * Tool-access posture. `broad` grants every tool; `restricted` is allow-by-
  * default minus an explicit deny list, picked from the known tool catalogue.
@@ -16,21 +14,17 @@ interface ToolsPanelProps {
 export function ToolsPanel({ agent, governanceUnlocked }: ToolsPanelProps) {
   const [mode, setMode] = useState<ToolMode>(agent.toolMode);
   const [denied, setDenied] = useState<string[]>(agent.deniedTools);
-
   function setRestricted(on: boolean) {
     // TODO(backend): PATCH /v1/agents/{id}/tools { mode, deniedTools } —
     // persist the access posture.
     setMode(on ? "restricted" : "broad");
   }
-
   function toggleDenied(tool: string) {
     setDenied((cur) =>
       cur.includes(tool) ? cur.filter((t) => t !== tool) : [...cur, tool],
     );
   }
-
   const restricted = mode === "restricted";
-
   return (
     <div className="portal-agents__panel">
       <div className="portal-agents__tool-mode">
@@ -45,11 +39,10 @@ export function ToolsPanel({ agent, governanceUnlocked }: ToolsPanelProps) {
               : "Tool governance is available on the Enterprise plan."
           }
         />
-        <Chip tone={restricted ? "amber" : "green"} size="sm">
+        <Chip accent={restricted ? "amber" : "green"} size="sm">
           {restricted ? "Restricted" : "Broad access"}
         </Chip>
       </div>
-
       {restricted && (
         <div className="portal-agents__detail-section">
           <span className="portal-agents__detail-heading">Denied tools</span>
@@ -62,7 +55,7 @@ export function ToolsPanel({ agent, governanceUnlocked }: ToolsPanelProps) {
               return (
                 <Chip
                   key={tool}
-                  tone={isDenied ? "red" : "neutral"}
+                  accent={isDenied ? "red" : "neutral"}
                   size="sm"
                   onClick={
                     governanceUnlocked ? () => toggleDenied(tool) : undefined

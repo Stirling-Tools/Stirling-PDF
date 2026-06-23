@@ -8,7 +8,6 @@ import FitText from "@app/components/shared/FitText";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import { FileId } from "@app/types/file";
 import { truncateCenter } from "@app/utils/textUtils";
-
 interface FileDropdownMenuProps {
   displayName: string;
   activeFiles: Array<{ fileId: string; name: string; versionNumber?: number }>;
@@ -19,7 +18,6 @@ interface FileDropdownMenuProps {
   viewOptionStyle: React.CSSProperties;
   pillRef?: React.RefObject<HTMLDivElement>;
 }
-
 export const FileDropdownMenu: React.FC<FileDropdownMenuProps> = ({
   displayName,
   activeFiles,

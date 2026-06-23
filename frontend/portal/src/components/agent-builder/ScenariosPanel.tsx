@@ -80,7 +80,7 @@ export function ScenariosPanel({ agent }: ScenariosPanelProps) {
       </ul>
 
       <div className="portal-agents__scenario-add">
-        <Chip tone="blue" size="sm">
+        <Chip accent="blue" size="sm">
           Add scenario
         </Chip>
         <div className="portal-agents__scenario-form">

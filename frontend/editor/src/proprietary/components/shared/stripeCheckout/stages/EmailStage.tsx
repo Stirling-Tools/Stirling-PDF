@@ -1,5 +1,6 @@
 import React from "react";
-import { Stack, Text, TextInput, Button } from "@mantine/core";
+import { Stack, Text, TextInput } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 
 interface EmailStageProps {
@@ -44,7 +45,7 @@ export const EmailStage: React.FC<EmailStageProps> = ({
         }}
       />
 
-      <Button size="lg" onClick={onSubmit} disabled={!emailInput.trim()}>
+      <Button onClick={onSubmit} disabled={!emailInput.trim()}>
         {t("payment.emailStage.continue", "Continue")}
       </Button>
     </Stack>

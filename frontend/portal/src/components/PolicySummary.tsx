@@ -109,7 +109,7 @@ export function PolicySummary() {
         return (
           <Button
             size="sm"
-            variant={state === "active" ? "ghost" : "outline"}
+            variant={state === "active" ? "ghost" : "outlined"}
             onClick={goToPolicies}
           >
             {state === "active" ? "Configure" : "Set up"}

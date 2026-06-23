@@ -14,6 +14,7 @@ import {
   useToolMeta,
   getDisabledLabel,
 } from "@app/components/tools/fullscreen/shared";
+import { Button } from "@shared/components/Button";
 
 interface DetailedToolItemProps {
   id: string;
@@ -56,8 +57,8 @@ const DetailedToolItem: React.FC<DetailedToolItemProps> = ({
   const disabledMessage = t(disabledKey, disabledFallback);
 
   return (
-    <button
-      type="button"
+    <Button
+      variant="ghost"
       className={`tool-panel__fullscreen-item ${getItemClasses(true)} ${isSelected ? "tool-panel__fullscreen-item--selected" : ""} tool-panel__fullscreen-item--with-star`}
       onClick={onClick}
       aria-disabled={disabled}
@@ -123,7 +124,7 @@ const DetailedToolItem: React.FC<DetailedToolItemProps> = ({
           />
         </div>
       )}
-    </button>
+    </Button>
   );
 };
 

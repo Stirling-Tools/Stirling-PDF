@@ -1,7 +1,7 @@
 import React, { useCallback } from "react";
-import { ActionIcon } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
+import { Button } from "@shared/components/Button";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { ViewerContext } from "@app/contexts/ViewerContext";
 import { useSignature } from "@app/contexts/SignatureContext";
@@ -185,20 +185,24 @@ export default function ViewerAnnotationControls({
         arrow
         portalTarget={document.body}
       >
-        <ActionIcon
-          variant={isRedactMode ? "filled" : "subtle"}
-          color={isRedactMode ? "blue" : undefined}
-          radius="md"
+        <Button
+          variant={isRedactMode ? "filled" : "ghost"}
           className="workbench-bar-action-icon"
           onClick={handleRedactionToggle}
           disabled={disabled || currentView !== "viewer"}
-        >
-          <LocalIcon
-            icon="scan-delete-rounded"
-            width="1.25rem"
-            height="1.25rem"
-          />
-        </ActionIcon>
+          aria-label={
+            isRedactMode
+              ? t("workbenchBar.exitRedaction", "Exit Redaction Mode")
+              : t("workbenchBar.redact", "Redact")
+          }
+          leftSection={
+            <LocalIcon
+              icon="scan-delete-rounded"
+              width="1.25rem"
+              height="1.25rem"
+            />
+          }
+        />
       </Tooltip>
 
       <Tooltip
@@ -211,10 +215,8 @@ export default function ViewerAnnotationControls({
         arrow
         portalTarget={document.body}
       >
-        <ActionIcon
-          variant={annotationsHidden ? "filled" : "subtle"}
-          color={annotationsHidden ? "blue" : undefined}
-          radius="md"
+        <Button
+          variant={annotationsHidden ? "filled" : "ghost"}
           className="workbench-bar-action-icon"
           onClick={handleToggleAnnotationsVisibility}
           disabled={
@@ -225,17 +227,22 @@ export default function ViewerAnnotationControls({
           }
           data-active={annotationsHidden ? "true" : undefined}
           aria-pressed={annotationsHidden}
-        >
-          <LocalIcon
-            icon={
-              viewerContext?.isAnnotationsVisible
-                ? "visibility"
-                : "preview-off-rounded"
-            }
-            width="1.25rem"
-            height="1.25rem"
-          />
-        </ActionIcon>
+          aria-label={t(
+            "workbenchBar.toggleAnnotations",
+            "Toggle Annotations Visibility",
+          )}
+          leftSection={
+            <LocalIcon
+              icon={
+                viewerContext?.isAnnotationsVisible
+                  ? "visibility"
+                  : "preview-off-rounded"
+              }
+              width="1.25rem"
+              height="1.25rem"
+            />
+          }
+        />
       </Tooltip>
     </>
   );

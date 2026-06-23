@@ -117,7 +117,7 @@ export const InContext_ProductGrid: Story = {
         >
           Attach pipelines where PDFs already live.
         </p>
-        <Button variant="outline" accent="purple" size="sm">
+        <Button variant="outlined" accent="neutral" size="sm">
           Connect a source
         </Button>
       </Card>
@@ -144,7 +144,7 @@ export const InContext_ProductGrid: Story = {
         >
           Compose document workflows from typed operations.
         </p>
-        <Button variant="outline" accent="blue" size="sm">
+        <Button variant="outlined" accent="neutral" size="sm">
           Build a pipeline
         </Button>
       </Card>
@@ -159,7 +159,7 @@ export const InContext_ProductGrid: Story = {
         >
           Wire your agent via MCP, REST, or tool definitions.
         </p>
-        <Button variant="outline" accent="purple" size="sm">
+        <Button variant="outlined" accent="neutral" size="sm">
           Connect an agent
         </Button>
       </Card>

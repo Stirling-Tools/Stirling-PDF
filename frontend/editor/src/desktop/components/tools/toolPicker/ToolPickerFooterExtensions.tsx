@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Group, Text, Button } from "@mantine/core";
+import { Group, Text } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import {
   connectionModeService,
@@ -48,9 +49,8 @@ export function ToolPickerFooterExtensions() {
         {t("localMode.toolPicker.message", "Sign in to unlock all tools.")}
       </Text>
       <Button
-        size="compact-xs"
-        variant="light"
-        color="blue"
+        size="sm"
+        variant="outlined"
         style={{ flexShrink: 0 }}
         onClick={() =>
           window.dispatchEvent(new CustomEvent(OPEN_SIGN_IN_EVENT))

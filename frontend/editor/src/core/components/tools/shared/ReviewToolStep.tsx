@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
-import { Button, Stack } from "@mantine/core";
+import { Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import { Button } from "@shared/components/Button";
 import UndoIcon from "@mui/icons-material/Undo";
 import ErrorNotification from "@app/components/tools/shared/ErrorNotification";
 import ResultsPreview from "@app/components/tools/shared/ResultsPreview";
@@ -128,8 +129,11 @@ function ReviewStepContent<TParams = unknown>({
         >
           <Button
             leftSection={<UndoIcon />}
-            variant="outline"
-            color="var(--mantine-color-gray-6)"
+            variant="outlined"
+            style={{
+              "--sui-btn-fg": "var(--mantine-color-gray-6)",
+              "--sui-btn-bd": "var(--mantine-color-gray-6)",
+            }}
             onClick={handleUndo}
             fullWidth
           >
@@ -141,9 +145,8 @@ function ReviewStepContent<TParams = unknown>({
         <Button
           data-testid="download-result-button"
           leftSection={<DownloadIcon />}
-          color="blue"
           fullWidth
-          mb="md"
+          style={{ marginBottom: "1rem" }}
           onClick={handleDownload}
         >
           {terminology.download}

@@ -62,7 +62,7 @@ export const Default: Story = {
           footer={
             <>
               <Button variant="ghost">Cancel</Button>
-              <Button variant="gradient">Save changes</Button>
+              <Button>Save changes</Button>
             </>
           }
         >

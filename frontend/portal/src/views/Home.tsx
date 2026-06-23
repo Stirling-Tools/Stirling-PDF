@@ -65,11 +65,11 @@ function ProductCard({
       </div>
       <p className="portal-home__product-blurb">{blurb}</p>
       <Button
-        variant="outline"
-        accent={accent}
+        variant="outlined"
+        accent="neutral"
         size="sm"
         onClick={() => setActiveView(target)}
-        trailingIcon={<span aria-hidden>→</span>}
+        rightSection={<span aria-hidden>→</span>}
       >
         {cta}
       </Button>
@@ -122,8 +122,10 @@ function QuickActions({ onTryOp }: { onTryOp: () => void }) {
         <span className="portal-home__quick-sub">Top tasks for today</span>
       </div>
       <div className="portal-home__quick-list">
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          justify="start"
+          fullWidth
           className="portal-home__quick-row"
           onClick={onTryOp}
         >
@@ -144,9 +146,11 @@ function QuickActions({ onTryOp }: { onTryOp: () => void }) {
           <span className="portal-home__quick-arrow" aria-hidden>
             →
           </span>
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          variant="ghost"
+          justify="start"
+          fullWidth
           className="portal-home__quick-row"
           onClick={() => setActiveView("pipelines")}
         >
@@ -167,9 +171,11 @@ function QuickActions({ onTryOp }: { onTryOp: () => void }) {
           <span className="portal-home__quick-arrow" aria-hidden>
             →
           </span>
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          variant="ghost"
+          justify="start"
+          fullWidth
           className="portal-home__quick-row"
           onClick={() => setActiveView("sources")}
         >
@@ -190,9 +196,11 @@ function QuickActions({ onTryOp }: { onTryOp: () => void }) {
           <span className="portal-home__quick-arrow" aria-hidden>
             →
           </span>
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          variant="ghost"
+          justify="start"
+          fullWidth
           className="portal-home__quick-row"
           onClick={() => setActiveView("infrastructure")}
         >
@@ -213,7 +221,7 @@ function QuickActions({ onTryOp }: { onTryOp: () => void }) {
           <span className="portal-home__quick-arrow" aria-hidden>
             →
           </span>
-        </button>
+        </Button>
       </div>
     </Card>
   );
@@ -242,7 +250,7 @@ function FreeOnboarding({ onTryOp }: { onTryOp: () => void }) {
     if (!step.cta) return null;
     if (step.cta.kind === "try-op") {
       return (
-        <Button size="sm" variant="outline" onClick={onTryOp}>
+        <Button size="sm" variant="outlined" onClick={onTryOp}>
           Start
         </Button>
       );
@@ -251,7 +259,7 @@ function FreeOnboarding({ onTryOp }: { onTryOp: () => void }) {
     return (
       <Button
         size="sm"
-        variant="outline"
+        variant="outlined"
         onClick={() => setActiveView(target as ViewId)}
       >
         Start

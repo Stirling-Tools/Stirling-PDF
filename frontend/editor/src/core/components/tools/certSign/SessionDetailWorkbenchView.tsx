@@ -6,11 +6,11 @@ import {
   Text,
   Group,
   Badge,
-  Button,
   Divider,
   Modal,
-  SegmentedControl,
 } from "@mantine/core";
+import { Button } from "@shared/components/Button";
+import { SegmentedControl } from "@shared/components/SegmentedControl";
 import { useIsPhone } from "@app/hooks/useIsMobile";
 import { alert } from "@app/components/toast";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -244,8 +244,8 @@ const SessionDetailWorkbenchView = ({
         <Group justify="space-between">
           <Group gap="md">
             <Button
+              variant="ghost"
               leftSection={<ArrowBackIcon />}
-              variant="subtle"
               onClick={onBack}
               size="sm"
             >
@@ -291,29 +291,29 @@ const SessionDetailWorkbenchView = ({
             {!isPhone && (
               <Button.Group>
                 <Button
-                  variant="default"
+                  leftSection={<ZoomOutIcon fontSize="small" />}
+                  variant="outlined"
                   size="sm"
                   onClick={() => annotationApiRef.current?.zoomOut()}
                   title={t("viewer.zoomOut", "Zoom out")}
-                >
-                  <ZoomOutIcon fontSize="small" />
-                </Button>
+                  aria-label={t("viewer.zoomOut", "Zoom out")}
+                />
                 <Button
-                  variant="default"
+                  leftSection={<ZoomOutMapIcon fontSize="small" />}
+                  variant="outlined"
                   size="sm"
                   onClick={() => annotationApiRef.current?.resetZoom()}
                   title={t("viewer.resetZoom", "Reset zoom")}
-                >
-                  <ZoomOutMapIcon fontSize="small" />
-                </Button>
+                  aria-label={t("viewer.resetZoom", "Reset zoom")}
+                />
                 <Button
-                  variant="default"
+                  leftSection={<ZoomInIcon fontSize="small" />}
+                  variant="outlined"
                   size="sm"
                   onClick={() => annotationApiRef.current?.zoomIn()}
                   title={t("viewer.zoomIn", "Zoom in")}
-                >
-                  <ZoomInIcon fontSize="small" />
-                </Button>
+                  aria-label={t("viewer.zoomIn", "Zoom in")}
+                />
               </Button.Group>
             )}
 
@@ -321,8 +321,8 @@ const SessionDetailWorkbenchView = ({
             {!session.finalized && (
               <Button
                 leftSection={<DeleteIcon />}
-                color="red"
-                variant="outline"
+                accent="danger"
+                variant="outlined"
                 onClick={() => setDeleteModalOpen(true)}
                 size="sm"
               >
@@ -461,7 +461,7 @@ const SessionDetailWorkbenchView = ({
             fullWidth
             value={mobilePanel}
             onChange={(v) => setMobilePanel(v as typeof mobilePanel)}
-            data={[
+            options={[
               {
                 value: "participants",
                 label: t("certSign.mobile.panelPeople", "People"),
@@ -503,10 +503,10 @@ const SessionDetailWorkbenchView = ({
             )}
           </Text>
           <Group justify="flex-end">
-            <Button variant="subtle" onClick={() => setDeleteModalOpen(false)}>
+            <Button variant="ghost" onClick={() => setDeleteModalOpen(false)}>
               {t("cancel", "Cancel")}
             </Button>
-            <Button color="red" onClick={handleDelete} loading={deleting}>
+            <Button accent="danger" onClick={handleDelete} loading={deleting}>
               {t("delete", "Delete")}
             </Button>
           </Group>

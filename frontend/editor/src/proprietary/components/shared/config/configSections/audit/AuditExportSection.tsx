@@ -1,13 +1,7 @@
 import React, { useState } from "react";
-import {
-  Card,
-  Text,
-  Group,
-  Stack,
-  Button,
-  SegmentedControl,
-  Checkbox,
-} from "@mantine/core";
+import { Card, Text, Group, Stack, Checkbox } from "@mantine/core";
+import { Button } from "@shared/components/Button";
+import { SegmentedControl } from "@shared/components/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import auditService from "@app/services/auditService";
 import LocalIcon from "@app/components/shared/LocalIcon";
@@ -103,12 +97,11 @@ const AuditExportSection: React.FC<AuditExportSectionProps> = ({
             value={exportFormat}
             onChange={(value) => {
               if (!loginEnabled) return;
-              setExportFormat(value as "csv" | "json");
+              setExportFormat(value);
             }}
-            disabled={!loginEnabled}
-            data={[
-              { label: "CSV", value: "csv" },
-              { label: "JSON", value: "json" },
+            options={[
+              { label: "CSV", value: "csv", disabled: !loginEnabled },
+              { label: "JSON", value: "json", disabled: !loginEnabled },
             ]}
           />
         </div>

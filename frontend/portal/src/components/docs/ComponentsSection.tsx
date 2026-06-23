@@ -19,7 +19,7 @@ export function ComponentsSection({
           <Card key={c.name} padding="default">
             <div className="portal-docs__component-head">
               <code className="portal-docs__component-name">{c.name}</code>
-              <Chip tone="purple" size="sm">
+              <Chip accent="purple" size="sm">
                 {c.tag}
               </Chip>
             </div>

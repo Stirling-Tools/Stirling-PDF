@@ -11,7 +11,6 @@
  * - Smooth slide-down/slide-up animations
  * - Only appears for tools that don't have dedicated nav buttons (read, sign, automate)
  */
-
 import React, { useEffect, useRef, useState } from "react";
 import { ActionIcon, Divider } from "@mantine/core";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
@@ -25,15 +24,12 @@ import { useSidebarNavigation } from "@app/hooks/useSidebarNavigation";
 import { handleUnlessSpecialClick } from "@app/utils/clickHandlers";
 import FitText from "@app/components/shared/FitText";
 import { Tooltip } from "@app/components/shared/Tooltip";
-
 interface ActiveToolButtonProps {
   activeButton: string;
   setActiveButton: (id: string) => void;
   tooltipPosition?: "left" | "right" | "top" | "bottom";
 }
-
 const NAV_IDS = ["read", "sign", "automate"];
-
 const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({
   setActiveButton,
   tooltipPosition = "right",
@@ -44,7 +40,6 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({
   const { hasUnsavedChanges } = useNavigationState();
   const { actions: navigationActions } = useNavigationActions();
   const { getHomeNavigation } = useSidebarNavigation();
-
   // Determine if the indicator should be visible (do not require selectedTool to be resolved yet)
   // Special case: multiTool should always show even when sidebars are hidden
   const indicatorShouldShow = Boolean(
@@ -52,7 +47,6 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({
     ((leftPanelView === "toolContent" && !NAV_IDS.includes(selectedToolKey)) ||
       selectedToolKey === "multiTool"),
   );
-
   // Local animation and hover state
   const [indicatorTool, setIndicatorTool] = useState<
     typeof selectedTool | null
@@ -64,11 +58,9 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({
   const collapseTimeoutRef = useRef<number | null>(null);
   const animTimeoutRef = useRef<number | null>(null);
   const replayRafRef = useRef<number | null>(null);
-
   const isSwitchingToNewTool = () => {
     return prevKeyRef.current && prevKeyRef.current !== selectedToolKey;
   };
-
   const clearTimers = () => {
     if (collapseTimeoutRef.current) {
       window.clearTimeout(collapseTimeoutRef.current);
@@ -79,7 +71,6 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({
       animTimeoutRef.current = null;
     }
   };
-
   const playGrowDown = () => {
     clearTimers();
     setIndicatorTool(selectedTool);
@@ -99,7 +90,6 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({
       animTimeoutRef.current = null;
     }, 500);
   };
-
   const firstShow = () => {
     clearTimers();
     setIndicatorTool(selectedTool);
@@ -109,7 +99,6 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({
       animTimeoutRef.current = null;
     }, 500);
   };
-
   const triggerCollapse = () => {
     clearTimers();
     setIndicatorVisible(false);
@@ -119,7 +108,6 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({
       collapseTimeoutRef.current = null;
     }, 500); // match CSS transition duration
   };
-
   useEffect(() => {
     if (indicatorShouldShow) {
       clearTimers();
@@ -139,7 +127,6 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({
       triggerCollapse();
     }
   }, [indicatorShouldShow, selectedTool, selectedToolKey]);
-
   useEffect(() => {
     return () => {
       clearTimers();
@@ -149,7 +136,6 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({
       }
     };
   }, []);
-
   return (
     <>
       <div
@@ -228,5 +214,4 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({
     </>
   );
 };
-
 export default ActiveToolButton;

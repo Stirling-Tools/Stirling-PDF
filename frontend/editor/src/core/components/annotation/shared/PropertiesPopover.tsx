@@ -1,14 +1,6 @@
-import {
-  ActionIcon,
-  Tooltip,
-  Popover,
-  Stack,
-  Slider,
-  Text,
-  Group,
-  Button,
-} from "@mantine/core";
+import { Tooltip, Popover, Stack, Slider, Text, Group } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import { Button } from "@shared/components/Button";
 import { useState } from "react";
 import type { TrackedAnnotation } from "@embedpdf/plugin-annotation";
 import type { PdfAnnotationObject } from "@embedpdf/models";
@@ -105,27 +97,27 @@ export function PropertiesPopover({
           {t("annotation.textAlignment", "Text Alignment")}
         </Text>
         <Group gap="xs">
-          <ActionIcon
-            variant={currentAlign === "left" ? "filled" : "default"}
+          <Button
+            aria-label={t("annotation.alignLeft", "Align left")}
+            variant={currentAlign === "left" ? "filled" : "outlined"}
             onClick={() => onUpdate({ textAlign: 0 })}
             size="md"
-          >
-            <FormatAlignLeftIcon style={{ fontSize: 18 }} />
-          </ActionIcon>
-          <ActionIcon
-            variant={currentAlign === "center" ? "filled" : "default"}
+            leftSection={<FormatAlignLeftIcon style={{ fontSize: 18 }} />}
+          />
+          <Button
+            aria-label={t("annotation.alignCenter", "Align center")}
+            variant={currentAlign === "center" ? "filled" : "outlined"}
             onClick={() => onUpdate({ textAlign: 1 })}
             size="md"
-          >
-            <FormatAlignCenterIcon style={{ fontSize: 18 }} />
-          </ActionIcon>
-          <ActionIcon
-            variant={currentAlign === "right" ? "filled" : "default"}
+            leftSection={<FormatAlignCenterIcon style={{ fontSize: 18 }} />}
+          />
+          <Button
+            aria-label={t("annotation.alignRight", "Align right")}
+            variant={currentAlign === "right" ? "filled" : "outlined"}
             onClick={() => onUpdate({ textAlign: 2 })}
             size="md"
-          >
-            <FormatAlignRightIcon style={{ fontSize: 18 }} />
-          </ActionIcon>
+            leftSection={<FormatAlignRightIcon style={{ fontSize: 18 }} />}
+          />
         </Group>
       </div>
     </Stack>
@@ -176,8 +168,8 @@ export function PropertiesPopover({
             />
           </div>
           <Button
-            size="xs"
-            variant={!borderVisible ? "filled" : "light"}
+            size="sm"
+            variant={!borderVisible ? "filled" : "outlined"}
             onClick={() => {
               const newValue = borderVisible ? 0 : 1;
               onUpdate({
@@ -200,28 +192,19 @@ export function PropertiesPopover({
     <Popover opened={opened} onChange={setOpened} position="bottom" withArrow>
       <Popover.Target>
         <Tooltip label={t("annotation.properties", "Properties")}>
-          <ActionIcon
-            variant="subtle"
-            color="gray"
+          <Button
+            aria-label={t("annotation.properties", "Properties")}
+            variant="outlined"
             size="md"
             onClick={() => setOpened(!opened)}
             disabled={disabled}
-            styles={{
-              root: {
-                flexShrink: 0,
-                backgroundColor: "var(--bg-raised)",
-                border: "1px solid var(--border-default)",
-                color: "var(--text-secondary)",
-                "&:hover": {
-                  backgroundColor: "var(--hover-bg)",
-                  borderColor: "var(--border-strong)",
-                  color: "var(--text-primary)",
-                },
-              },
+            style={{
+              "--sui-btn-bg": "var(--bg-raised)",
+              "--sui-btn-fg": "var(--text-secondary)",
+              "--sui-btn-bd": "var(--border-default)",
             }}
-          >
-            <TuneIcon style={{ fontSize: 18 }} />
-          </ActionIcon>
+            leftSection={<TuneIcon style={{ fontSize: 18 }} />}
+          />
         </Tooltip>
       </Popover.Target>
       <Popover.Dropdown>

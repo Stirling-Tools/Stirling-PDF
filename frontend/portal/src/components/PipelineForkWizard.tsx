@@ -84,9 +84,9 @@ export function PipelineForkWizard() {
       {phase === "pick" && (
         <div className="portal-fork__templates">
           {PIPELINE_TEMPLATES.map((t) => (
-            <button
+            <Button
               key={t.id}
-              type="button"
+              variant="ghost"
               className="portal-fork__template"
               data-accent={t.accent}
               onClick={() => fork(t)}
@@ -95,12 +95,12 @@ export function PipelineForkWizard() {
               <span className="portal-fork__template-blurb">{t.blurb}</span>
               <span className="portal-fork__template-types">
                 {t.docTypes.map((d) => (
-                  <Chip key={d} size="sm" tone="neutral">
+                  <Chip key={d} size="sm" accent="neutral">
                     {d}
                   </Chip>
                 ))}
               </span>
-            </button>
+            </Button>
           ))}
         </div>
       )}
@@ -142,11 +142,10 @@ export function PipelineForkWizard() {
               {phase === "ready" ? "Pick another" : "Cancel"}
             </Button>
             <Button
-              variant="gradient"
               size="sm"
               onClick={deploy}
               disabled={phase !== "ready"}
-              trailingIcon={<span aria-hidden>→</span>}
+              rightSection={<span aria-hidden>→</span>}
             >
               {phase === "ready" ? "Deploy pipeline" : "Building…"}
             </Button>

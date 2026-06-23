@@ -57,9 +57,9 @@ describe("ButtonSelector", () => {
     const selectedButton = screen.getByRole("button", { name: "Option 1" });
     const unselectedButton = screen.getByRole("button", { name: "Option 2" });
 
-    // Check data-variant attribute for filled/outline
-    expect(selectedButton).toHaveAttribute("data-variant", "filled");
-    expect(unselectedButton).toHaveAttribute("data-variant", "outline");
+    // Selected option is marked via aria-pressed (shared SegmentedControl)
+    expect(selectedButton).toHaveAttribute("aria-pressed", "true");
+    expect(unselectedButton).toHaveAttribute("aria-pressed", "false");
     expect(screen.getByText("Selection Label")).toBeInTheDocument();
   });
 
@@ -104,8 +104,8 @@ describe("ButtonSelector", () => {
     const button1 = screen.getByRole("button", { name: "Option 1" });
     const button2 = screen.getByRole("button", { name: "Option 2" });
 
-    expect(button1).toHaveAttribute("data-variant", "outline");
-    expect(button2).toHaveAttribute("data-variant", "outline");
+    expect(button1).toHaveAttribute("aria-pressed", "false");
+    expect(button2).toHaveAttribute("aria-pressed", "false");
   });
 
   test.each([

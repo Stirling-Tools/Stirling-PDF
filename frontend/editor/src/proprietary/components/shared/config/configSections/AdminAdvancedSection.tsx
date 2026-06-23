@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 import {
   NumberInput,
   Switch,
-  Button,
   Stack,
   Paper,
   Text,
@@ -14,6 +13,7 @@ import {
   TextInput,
   MultiSelect,
 } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { alert } from "@app/components/toast";
 import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
 import { useRestartServer } from "@app/components/shared/config/useRestartServer";
@@ -752,8 +752,8 @@ export default function AdminAdvancedSection() {
                 )}
                 <Group justify="flex-end">
                   <Button
-                    size="xs"
-                    variant="light"
+                    size="sm"
+                    variant="outlined"
                     onClick={handleDownloadTessdataLanguages}
                     loading={downloadLanguagesLoading}
                     disabled={

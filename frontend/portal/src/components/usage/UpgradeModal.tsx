@@ -111,7 +111,7 @@ export function UpgradeModal({
           </Button>
           {/* TODO(backend): POST /v1/billing/plan-change { tier } (or hand off to
               sales) — for now the CTA just dismisses the modal. */}
-          <Button variant="gradient" accent={copy.ctaAccent} onClick={onClose}>
+          <Button accent="neutral" onClick={onClose}>
             {copy.cta}
           </Button>
         </div>

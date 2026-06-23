@@ -1,3 +1,4 @@
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "@app/hooks/useTranslation";
 import "@app/routes/authShared/auth.css";
 import "@app/routes/authShared/saas-auth.css";
@@ -24,7 +25,8 @@ export default function MagicLinkForm({
   if (!showMagicLink) {
     return (
       <div className="auth-toggle-wrapper">
-        <button
+        <Button
+          variant="ghost"
           onClick={() => {
             setShowMagicLink(true);
           }}
@@ -32,7 +34,7 @@ export default function MagicLinkForm({
           className="auth-toggle-link"
         >
           {t("login.useMagicLink")}
-        </button>
+        </Button>
       </div>
     );
   }
@@ -47,13 +49,13 @@ export default function MagicLinkForm({
         onKeyPress={(e) => e.key === "Enter" && !isSubmitting && onSubmit()}
         className="auth-input"
       />
-      <button
+      <Button
         onClick={onSubmit}
         disabled={isSubmitting || !magicLinkEmail}
         className="auth-magic-button"
       >
         {isSubmitting ? t("login.sending") : t("login.sendMagicLink")}
-      </button>
+      </Button>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import "@app/routes/authShared/auth.css";
-import { TextInput, PasswordInput, Button } from "@mantine/core";
+import { TextInput, PasswordInput } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 
 // Force light mode styles for auth inputs
 const authInputStyles = {
@@ -128,9 +129,9 @@ export default function EmailPasswordForm({
           (showPasswordField && !password) ||
           (requiresMfa && !mfaCode.trim())
         }
-        className="auth-button"
         fullWidth
         loading={isSubmitting}
+        accent="brand"
       >
         {submitButtonText}
       </Button>

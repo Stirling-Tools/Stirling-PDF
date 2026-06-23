@@ -4,14 +4,12 @@ import type { MantineSize } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import StarBorderRoundedIcon from "@mui/icons-material/StarBorderRounded";
-
 interface FavoriteStarProps {
   isFavorite: boolean;
   onToggle: () => void;
   className?: string;
   size?: MantineSize;
 }
-
 const FavoriteStar: React.FC<FavoriteStarProps> = ({
   isFavorite,
   onToggle,
@@ -19,7 +17,6 @@ const FavoriteStar: React.FC<FavoriteStarProps> = ({
   size = "xs",
 }) => {
   const { t } = useTranslation();
-
   return (
     <ActionIcon
       component="span"
@@ -57,5 +54,4 @@ const FavoriteStar: React.FC<FavoriteStarProps> = ({
     </ActionIcon>
   );
 };
-
 export default FavoriteStar;

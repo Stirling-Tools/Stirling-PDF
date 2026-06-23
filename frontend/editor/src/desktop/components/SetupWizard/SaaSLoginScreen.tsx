@@ -7,6 +7,7 @@ import DividerWithText from "@app/components/shared/DividerWithText";
 import { DesktopOAuthButtons } from "@app/components/SetupWizard/DesktopOAuthButtons";
 import { SelfHostedLink } from "@app/components/SetupWizard/SelfHostedLink";
 import { UserInfo } from "@app/services/authService";
+import { Button } from "@shared/components/Button";
 import "@app/routes/authShared/auth.css";
 
 interface SaaSLoginScreenProps {
@@ -107,8 +108,8 @@ export const SaaSLoginScreen: React.FC<SaaSLoginScreenProps> = ({
         className="navigation-link-container"
         style={{ marginTop: "0.5rem", textAlign: "right" }}
       >
-        <button
-          type="button"
+        <Button
+          variant="ghost"
           onClick={() => {
             setValidationError(null);
             onSwitchToSignup();
@@ -117,7 +118,7 @@ export const SaaSLoginScreen: React.FC<SaaSLoginScreenProps> = ({
           disabled={loading}
         >
           {t("signup.signUp", "Sign Up")}
-        </button>
+        </Button>
       </div>
 
       <SelfHostedLink onClick={onSelfHostedClick} disabled={loading} />
@@ -127,14 +128,14 @@ export const SaaSLoginScreen: React.FC<SaaSLoginScreenProps> = ({
           className="navigation-link-container"
           style={{ marginTop: "0.5rem", textAlign: "center" }}
         >
-          <button
-            type="button"
+          <Button
+            variant="ghost"
             onClick={onSkipSignIn}
             className="navigation-link-button"
             disabled={loading}
           >
             {t("setup.login.skipSignIn", "Continue without signing in")}
-          </button>
+          </Button>
         </div>
       )}
     </>

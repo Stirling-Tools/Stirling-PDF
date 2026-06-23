@@ -7,7 +7,8 @@ import React, {
   useEffect,
   useMemo,
 } from "react";
-import { Button, Group, Modal, Stack, Text } from "@mantine/core";
+import { Group, Modal, Stack, Text } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { fileStorage } from "@app/services/fileStorage";
 import { useFileActions, useFileManagement } from "@app/contexts/FileContext";
 import { zipFileService } from "@app/services/zipFileService";
@@ -1210,14 +1211,14 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
           </Text>
           <Group justify="flex-end" gap="sm">
             <Button
-              variant="default"
+              variant="outlined"
               onClick={() => resolveDeleteChoice("cancel")}
             >
               {t("cancel", "Cancel")}
             </Button>
             {!deletePromptIsServerOnly && (
               <Button
-                variant="light"
+                variant="outlined"
                 onClick={() => resolveDeleteChoice("local")}
               >
                 {t("fileManager.removeLocalOnly", "This device only")}
@@ -1225,7 +1226,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
             )}
             {deletePromptCanLeaveShare && (
               <Button
-                variant="light"
+                variant="outlined"
                 onClick={() => resolveDeleteChoice("leave")}
               >
                 {t("fileManager.leaveShare", "Remove from my list")}
@@ -1234,14 +1235,14 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
             {deletePromptFile?.remoteOwnedByCurrentUser !== false && (
               <>
                 <Button
-                  variant="light"
+                  variant="outlined"
                   onClick={() => resolveDeleteChoice("server")}
                 >
                   {t("fileManager.removeServerOnly", "Server only")}
                 </Button>
                 {!deletePromptIsServerOnly && (
                   <Button
-                    color="red"
+                    accent="danger"
                     onClick={() => resolveDeleteChoice("both")}
                   >
                     {t("fileManager.removeBoth", "Remove from both")}

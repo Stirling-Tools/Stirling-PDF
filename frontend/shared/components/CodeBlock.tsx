@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { Button } from "@shared/components/Button";
 import "@shared/components/CodeBlock.css";
 
 export type CodeLang =
@@ -12,27 +13,18 @@ export type CodeLang =
   | "plain";
 
 export interface CodeBlockProps {
-  /** The code content. */
   code: string;
-  /** Language label shown in the chrome bar. Highlight wiring is out of scope here — bring Shiki/Prism. */
+  /** Shown in the chrome bar. Syntax highlighting is not included — wire Shiki/Prism at the call site. */
   lang?: CodeLang;
-  /** Optional caption text shown in the chrome bar (e.g. a file path). */
+  /** Caption in the chrome bar (e.g. a file path). */
   caption?: ReactNode;
-  /** Show a copy-to-clipboard button. Defaults to true. */
+  /** Defaults to true. */
   copyable?: boolean;
-  /** Max height in pixels; longer content scrolls. */
+  /** Longer content scrolls vertically. */
   maxHeight?: number;
   className?: string;
 }
 
-/**
- * Always-dark code block, matched to the prototype's CODE palette.
- *
- * Highlighting is intentionally not wired here — drop in Shiki at the call
- * site and feed pre-highlighted HTML through `dangerouslySetInnerHTML` on a
- * fork of this component if you need it. For most surfaces the raw
- * monospaced text plus copy button is sufficient (and ~80% lighter).
- */
 export function CodeBlock({
   code,
   lang = "plain",
@@ -64,14 +56,15 @@ export function CodeBlock({
         {caption && <span className="sui-code__caption">{caption}</span>}
         <span className="sui-code__lang">{lang}</span>
         {copyable && (
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            shape="circle"
             className="sui-code__copy"
             onClick={copy}
             aria-label="Copy code"
           >
             {copied ? "Copied" : "Copy"}
-          </button>
+          </Button>
         )}
       </div>
       <pre className="sui-code__pre" style={{ maxHeight }}>

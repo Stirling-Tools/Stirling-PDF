@@ -30,7 +30,7 @@ export function ComponentPropsTable({ props: rows }: ComponentPropsTableProps) {
         header: "Required",
         render: (p) =>
           p.required ? (
-            <Chip size="sm" tone="amber">
+            <Chip size="sm" accent="amber">
               required
             </Chip>
           ) : (

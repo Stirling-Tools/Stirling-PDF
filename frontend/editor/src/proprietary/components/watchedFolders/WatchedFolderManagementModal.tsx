@@ -1,6 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import {
-  Button,
   Stack,
   Group,
   TextInput,
@@ -15,6 +14,7 @@ import {
   Tooltip,
   Modal,
 } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import { WatchedFolder } from "@app/types/watchedFolders";
 import { AutomationConfig, AutomationMode } from "@app/types/automation";
@@ -478,8 +478,8 @@ export function WatchedFolderManagementModal({
                             </Text>
                           </Stack>
                           <Button
-                            size="xs"
-                            variant="subtle"
+                            size="sm"
+                            variant="ghost"
                             onClick={async () => {
                               try {
                                 const handle = await (
@@ -505,9 +505,9 @@ export function WatchedFolderManagementModal({
                           </Button>
                           {inputDirName && (
                             <Button
-                              size="xs"
-                              variant="subtle"
-                              color="red"
+                              size="sm"
+                              variant="ghost"
+                              accent="danger"
                               onClick={() => {
                                 pendingInputDirHandle.current = null;
                                 setInputDirName(null);
@@ -575,8 +575,8 @@ export function WatchedFolderManagementModal({
                         zIndex={Z_INDEX_AUTOMATE_DROPDOWN}
                       >
                         <Button
-                          size="xs"
-                          variant="subtle"
+                          size="sm"
+                          variant="ghost"
                           disabled={!canWriteLocalFolder}
                           onClick={async () => {
                             try {
@@ -601,9 +601,9 @@ export function WatchedFolderManagementModal({
                       </Tooltip>
                       {outputDirName && (
                         <Button
-                          size="xs"
-                          variant="subtle"
-                          color="red"
+                          size="sm"
+                          variant="ghost"
+                          accent="danger"
                           onClick={() => {
                             pendingDirHandle.current = null;
                             setOutputDirName(null);
@@ -619,15 +619,13 @@ export function WatchedFolderManagementModal({
 
               {/* ── Advanced (collapsible) ── */}
               <div>
-                <button
+                <Button
+                  variant="ghost"
                   onClick={() => setShowAdvanced((v) => !v)}
                   style={{
                     display: "flex",
                     alignItems: "center",
                     gap: "0.35rem",
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
                     padding: "0.25rem 0",
                     width: "100%",
                     color: "var(--tool-subcategory-text-color)",
@@ -645,7 +643,7 @@ export function WatchedFolderManagementModal({
                     }}
                   />
                   {t("watchedFolders.modal.advanced", "Advanced")}
-                </button>
+                </Button>
 
                 <Collapse in={showAdvanced} transitionDuration={180}>
                   <Stack gap="sm" mt="sm">
@@ -828,15 +826,11 @@ export function WatchedFolderManagementModal({
               </Alert>
             )}
             <Group justify="flex-end" gap="sm">
-              <Button
-                variant="subtle"
-                size="sm"
-                color="gray"
-                onClick={handleClose}
-              >
+              <Button variant="ghost" size="sm" onClick={handleClose}>
                 {t("cancel", "Cancel")}
               </Button>
               <Button
+                variant="filled"
                 size="sm"
                 onClick={handleSave}
                 loading={saving}

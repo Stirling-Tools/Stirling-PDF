@@ -5,14 +5,12 @@ import {
   formatPrice,
 } from "@portal/api/sdkComponents";
 import "@portal/views/Components.css";
-
 interface ComponentCardProps {
   component: SdkComponent;
   /** False when the component sits above the active tier — renders locked. */
   unlocked: boolean;
   onOpen: (component: SdkComponent) => void;
 }
-
 /** A single catalogue tile: name, maturity, description, price and frameworks. */
 export function ComponentCard({
   component,
@@ -20,7 +18,6 @@ export function ComponentCard({
   onOpen,
 }: ComponentCardProps) {
   const maturity = MATURITY_META[component.maturity];
-
   return (
     <Card
       interactive
@@ -48,9 +45,7 @@ export function ComponentCard({
           </span>
         )}
       </div>
-
       <p className="portal-components__card-desc">{component.description}</p>
-
       <div className="portal-components__card-meta">
         <span className="portal-components__price">
           {formatPrice(component.pricing)}
@@ -59,10 +54,9 @@ export function ComponentCard({
           @stirling/{component.package}
         </span>
       </div>
-
       <div className="portal-components__frameworks">
         {component.frameworks.map((fw) => (
-          <Chip key={fw} size="sm" tone="neutral">
+          <Chip key={fw} size="sm" accent="neutral">
             {fw}
           </Chip>
         ))}

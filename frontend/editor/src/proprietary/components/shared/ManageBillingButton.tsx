@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Button } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import licenseService from "@app/services/licenseService";
 import { alert } from "@app/components/toast";
@@ -50,7 +50,7 @@ export const ManageBillingButton: React.FC<ManageBillingButtonProps> = ({
   };
 
   return (
-    <Button variant="outline" onClick={handleClick} loading={loading}>
+    <Button variant="outlined" onClick={handleClick} loading={loading}>
       {t("billing.manageBilling", "Manage Billing")}
     </Button>
   );

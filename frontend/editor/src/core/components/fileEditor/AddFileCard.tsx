@@ -1,5 +1,6 @@
 import React, { useRef, useState } from "react";
-import { Button, Group } from "@mantine/core";
+import { Group } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import LocalIcon from "@app/components/shared/LocalIcon";
@@ -106,6 +107,7 @@ const AddFileCard = ({
           >
             {!isUploadHover && (
               <Button
+                variant="ghost"
                 style={{
                   backgroundColor: "var(--landing-button-bg)",
                   color: "var(--landing-button-color)",
@@ -133,6 +135,7 @@ const AddFileCard = ({
               </Button>
             )}
             <Button
+              variant="ghost"
               aria-label={t("addFileCard.upload", "Upload")}
               title={terminology.uploadFromComputer}
               style={{

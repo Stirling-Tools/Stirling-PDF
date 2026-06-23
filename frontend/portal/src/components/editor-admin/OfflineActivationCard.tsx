@@ -49,8 +49,8 @@ export function OfflineActivationCard({ available, onUpgrade }: Props) {
             Offline and on-prem activation is part of Enterprise.
           </p>
           <Button
-            variant="outline"
-            accent="purple"
+            variant="outlined"
+            accent="neutral"
             size="sm"
             onClick={onUpgrade}
           >
@@ -68,8 +68,8 @@ export function OfflineActivationCard({ available, onUpgrade }: Props) {
           )}
           <div className="portal-editor__panel-actions">
             <Button
-              variant="outline"
-              accent="purple"
+              variant="outlined"
+              accent="neutral"
               loading={generating}
               onClick={generate}
             >

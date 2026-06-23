@@ -31,19 +31,16 @@ import {
 import apiClient from "@app/services/apiClient";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
-
 interface FeedbackFlags {
   noValidDocument?: boolean;
   errorProcessing?: boolean;
   errorMessage?: boolean;
 }
-
 interface FeedbackSettings {
   general?: { enabled?: boolean };
   channel?: FeedbackFlags;
   user?: FeedbackFlags;
 }
-
 interface TelegramSettingsData {
   enabled?: boolean;
   botToken?: string;
@@ -58,7 +55,6 @@ interface TelegramSettingsData {
   pollingIntervalMillis?: number;
   feedback?: FeedbackSettings;
 }
-
 interface MailSettings {
   enabled?: boolean;
   enableInvites?: boolean;
@@ -68,14 +64,12 @@ interface MailSettings {
   password?: string;
   from?: string;
 }
-
 interface GoogleDriveSettings {
   enabled?: boolean;
   clientId?: string;
   apiKey?: string;
   appId?: string;
 }
-
 interface OAuth2GenericSettings {
   enabled?: boolean;
   provider?: string;
@@ -87,7 +81,6 @@ interface OAuth2GenericSettings {
   autoCreateUser?: boolean;
   blockRegistration?: boolean;
 }
-
 interface Saml2Settings {
   enabled?: boolean;
   provider?: string;
@@ -102,7 +95,6 @@ interface Saml2Settings {
   autoCreateUser?: boolean;
   blockRegistration?: boolean;
 }
-
 interface OAuth2ClientSettings {
   clientId?: string;
   clientSecret?: string;
@@ -110,7 +102,6 @@ interface OAuth2ClientSettings {
   useAsUsername?: string;
   issuer?: string;
 }
-
 type ProviderSettings =
   | MailSettings
   | TelegramSettingsData
@@ -118,7 +109,6 @@ type ProviderSettings =
   | OAuth2GenericSettings
   | Saml2Settings
   | OAuth2ClientSettings;
-
 interface ConnectionsSettingsData {
   oauth2?: {
     enabled?: boolean;
@@ -146,7 +136,6 @@ interface ConnectionsSettingsData {
   googleDriveApiKey?: string;
   googleDriveAppId?: string;
 }
-
 export default function AdminConnectionsSection() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -154,7 +143,6 @@ export default function AdminConnectionsSection() {
   const { restartModalOpened, closeRestartModal, restartServer } =
     useRestartServer();
   const allProviders = useAllProviders();
-
   const adminSettings = useAdminSettings<ConnectionsSettingsData>({
     sectionName: "connections",
     fetchTransformer: async (): Promise<
@@ -165,31 +153,26 @@ export default function AdminConnectionsSection() {
         "/api/v1/admin/settings/section/security",
       );
       const securityData = securityResponse.data || {};
-
       // Fetch mail settings
       const mailResponse = await apiClient.get(
         "/api/v1/admin/settings/section/mail",
       );
       const mailData = mailResponse.data || {};
-
       // Fetch premium settings for SSO Auto Login
       const premiumResponse = await apiClient.get(
         "/api/v1/admin/settings/section/premium",
       );
       const premiumData = premiumResponse.data || {};
-
       // Fetch Telegram settings
       const telegramResponse = await apiClient.get(
         "/api/v1/admin/settings/section/telegram",
       );
       const telegramData = telegramResponse.data || {};
-
       // Fetch system settings for enableMobileScanner
       const systemResponse = await apiClient.get(
         "/api/v1/admin/settings/section/system",
       );
       const systemData = systemResponse.data || {};
-
       const result: ConnectionsSettingsData & {
         _pending?: Record<string, unknown>;
       } = {
@@ -214,7 +197,6 @@ export default function AdminConnectionsSection() {
         googleDriveApiKey: premiumData.proFeatures?.googleDrive?.apiKey || "",
         googleDriveAppId: premiumData.proFeatures?.googleDrive?.appId || "",
       };
-
       // Merge pending blocks from all endpoints
       const pendingBlock: Record<string, unknown> = {};
       if (securityData._pending?.oauth2) {
@@ -284,16 +266,13 @@ export default function AdminConnectionsSection() {
         pendingBlock.googleDriveAppId =
           premiumData._pending.proFeatures.googleDrive.appId;
       }
-
       if (Object.keys(pendingBlock).length > 0) {
         result._pending = pendingBlock;
       }
-
       return result;
     },
     saveTransformer: (currentSettings: ConnectionsSettingsData) => {
       const deltaSettings: Record<string, unknown> = {};
-
       // Build delta for oauth2 settings
       if (currentSettings.oauth2) {
         Object.keys(currentSettings.oauth2).forEach((key) => {
@@ -303,7 +282,6 @@ export default function AdminConnectionsSection() {
             )[key];
           }
         });
-
         // Build delta for specific OAuth2 providers
         const oauth2Client = currentSettings.oauth2.client;
         if (oauth2Client) {
@@ -319,7 +297,6 @@ export default function AdminConnectionsSection() {
           });
         }
       }
-
       // Build delta for saml2 settings
       if (currentSettings.saml2) {
         const saml2 = currentSettings.saml2 as Record<string, unknown>;
@@ -327,7 +304,6 @@ export default function AdminConnectionsSection() {
           deltaSettings[`security.saml2.${key}`] = saml2[key];
         });
       }
-
       // Mail settings
       if (currentSettings.mail) {
         const mail = currentSettings.mail as Record<string, unknown>;
@@ -335,7 +311,6 @@ export default function AdminConnectionsSection() {
           deltaSettings[`mail.${key}`] = mail[key];
         });
       }
-
       // Telegram settings
       if (currentSettings.telegram) {
         const telegram = currentSettings.telegram as Record<string, unknown>;
@@ -343,13 +318,11 @@ export default function AdminConnectionsSection() {
           deltaSettings[`telegram.${key}`] = telegram[key];
         });
       }
-
       // SSO Auto Login
       if (currentSettings?.ssoAutoLogin !== undefined) {
         deltaSettings["premium.proFeatures.ssoAutoLogin"] =
           currentSettings.ssoAutoLogin;
       }
-
       // Mobile Scanner settings
       if (currentSettings?.enableMobileScanner !== undefined) {
         deltaSettings["system.enableMobileScanner"] =
@@ -371,7 +344,6 @@ export default function AdminConnectionsSection() {
         deltaSettings["system.mobileScannerSettings.stretchToFit"] =
           currentSettings.mobileScannerStretchToFit;
       }
-
       // Google Drive settings
       if (currentSettings?.googleDriveEnabled !== undefined) {
         deltaSettings["premium.proFeatures.googleDrive.enabled"] =
@@ -389,33 +361,27 @@ export default function AdminConnectionsSection() {
         deltaSettings["premium.proFeatures.googleDrive.appId"] =
           currentSettings.googleDriveAppId;
       }
-
       return {
         sectionData: {},
         deltaSettings,
       };
     },
   });
-
   const { settings, setSettings, loading, fetchSettings, isFieldPending } =
     adminSettings;
-
   useEffect(() => {
     if (loginEnabled) {
       fetchSettings();
     }
   }, [loginEnabled, fetchSettings]);
-
   const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(
     settings,
     loading,
   );
-
   const handleDiscard = useCallback(() => {
     const original = resetToSnapshot();
     setSettings(original);
   }, [resetToSnapshot, setSettings]);
-
   const handleSave = async () => {
     markSaved();
     try {
@@ -428,49 +394,38 @@ export default function AdminConnectionsSection() {
       });
     }
   };
-
   // Override loading state when login is disabled
   const actualLoading = loginEnabled ? loading : false;
-
   const isProviderConfigured = (provider: Provider): boolean => {
     if (provider.id === "saml2") {
       return settings?.saml2?.enabled === true;
     }
-
     if (provider.id === "smtp") {
       return settings?.mail?.enabled === true;
     }
-
     if (provider.id === "telegram") {
       return settings?.telegram?.enabled === true;
     }
-
     if (provider.id === "googledrive") {
       return settings?.googleDriveEnabled === true;
     }
-
     if (provider.id === "oauth2-generic") {
       return settings?.oauth2?.enabled === true;
     }
-
     // Check if specific OAuth2 provider is configured (has clientId)
     const providerSettings = settings?.oauth2?.client?.[provider.id];
     return !!providerSettings?.clientId;
   };
-
   const getProviderSettings = (provider: Provider): ProviderSettings => {
     if (provider.id === "saml2") {
       return settings?.saml2 || {};
     }
-
     if (provider.id === "smtp") {
       return settings?.mail || {};
     }
-
     if (provider.id === "telegram") {
       return settings?.telegram || {};
     }
-
     if (provider.id === "googledrive") {
       const gd: GoogleDriveSettings = {
         enabled: settings?.googleDriveEnabled,
@@ -480,7 +435,6 @@ export default function AdminConnectionsSection() {
       };
       return gd;
     }
-
     if (provider.id === "oauth2-generic") {
       const generic: OAuth2GenericSettings = {
         enabled: settings?.oauth2?.enabled,
@@ -495,11 +449,9 @@ export default function AdminConnectionsSection() {
       };
       return generic;
     }
-
     // Specific OAuth2 provider settings
     return settings?.oauth2?.client?.[provider.id] || {};
   };
-
   if (actualLoading) {
     return (
       <Stack align="center" justify="center" h={200}>
@@ -507,12 +459,10 @@ export default function AdminConnectionsSection() {
       </Stack>
     );
   }
-
   const linkedProviders = allProviders.filter((p) => isProviderConfigured(p));
   const availableProviders = allProviders.filter(
     (p) => !isProviderConfigured(p),
   );
-
   const updateProviderSettings = (
     provider: Provider,
     updatedSettings: Record<string, unknown>,
@@ -553,12 +503,10 @@ export default function AdminConnectionsSection() {
       });
     }
   };
-
   return (
     <div className="settings-section-container">
       <Stack gap="xl" className="settings-section-content">
         <LoginRequiredBanner show={!loginEnabled} />
-
         {/* Header */}
         <div>
           <Text fw={600} size="lg">
@@ -571,7 +519,6 @@ export default function AdminConnectionsSection() {
             )}
           </Text>
         </div>
-
         {/* SSO Auto Login - Premium Feature */}
         <Paper withBorder p="md" radius="md">
           <Stack gap="md">
@@ -595,7 +542,6 @@ export default function AdminConnectionsSection() {
                 PRO
               </Badge>
             </Group>
-
             <div
               style={{
                 display: "flex",
@@ -635,7 +581,6 @@ export default function AdminConnectionsSection() {
             </div>
           </Stack>
         </Paper>
-
         {/* Mobile Scanner (QR Code) Upload */}
         <Paper withBorder p="md" radius="md">
           <Stack gap="md">
@@ -652,7 +597,6 @@ export default function AdminConnectionsSection() {
                 )}
               </Text>
             </Group>
-
             {/* Documentation Link */}
             <Anchor
               href="https://docs.stirlingpdf.com/Functionality/Mobile-Scanner"
@@ -666,7 +610,6 @@ export default function AdminConnectionsSection() {
               )}{" "}
               ↗
             </Anchor>
-
             <div
               style={{
                 display: "flex",
@@ -724,7 +667,6 @@ export default function AdminConnectionsSection() {
                 <PendingBadge show={isFieldPending("enableMobileScanner")} />
               </Group>
             </div>
-
             {/* Mobile Scanner Settings - Only show when enabled */}
             <Collapse in={settings?.enableMobileScanner || false}>
               <Stack
@@ -767,7 +709,6 @@ export default function AdminConnectionsSection() {
                     />
                   </Group>
                 </div>
-
                 {/* PDF Conversion Settings - Only show when convertToPdf is enabled */}
                 {settings?.mobileScannerConvertToPdf !== false && (
                   <>
@@ -825,7 +766,6 @@ export default function AdminConnectionsSection() {
                         />
                       </Group>
                     </div>
-
                     {/* Page Format */}
                     <div>
                       <Text size="sm" fw={500} mb="xs">
@@ -885,7 +825,6 @@ export default function AdminConnectionsSection() {
                         />
                       </Group>
                     </div>
-
                     {/* Stretch to Fit */}
                     <div>
                       <Text size="sm" fw={500} mb="xs">
@@ -923,7 +862,6 @@ export default function AdminConnectionsSection() {
             </Collapse>
           </Stack>
         </Paper>
-
         {/* Linked Services Section - Only show if there are linked providers */}
         {linkedProviders.length > 0 && (
           <>
@@ -949,12 +887,10 @@ export default function AdminConnectionsSection() {
                 ))}
               </Stack>
             </div>
-
             {/* Divider between sections */}
             {availableProviders.length > 0 && <Divider />}
           </>
         )}
-
         {/* Unlinked Services Section */}
         {availableProviders.length > 0 && (
           <div>
@@ -980,7 +916,6 @@ export default function AdminConnectionsSection() {
             </Stack>
           </div>
         )}
-
         {/* Restart Confirmation Modal */}
         <RestartConfirmationModal
           opened={restartModalOpened}
@@ -988,7 +923,6 @@ export default function AdminConnectionsSection() {
           onRestart={restartServer}
         />
       </Stack>
-
       <SettingsStickyFooter
         isDirty={isDirty}
         saving={adminSettings.saving}

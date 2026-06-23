@@ -18,6 +18,7 @@
  */
 import React, { Suspense, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { Button } from "@shared/components/Button";
 import CloseIcon from "@mui/icons-material/CloseRounded";
 import ArrowBackIcon from "@mui/icons-material/ArrowBackRounded";
 import ShieldIcon from "@mui/icons-material/ShieldOutlined";
@@ -152,14 +153,13 @@ export default function UpgradeModal({
           <header className="upm-header">
             <div className="upm-header__left">
               {step === "checkout" && (
-                <button
-                  type="button"
-                  className="upm-header__back"
+                <Button
+                  variant="ghost"
                   aria-label={t("payg.upgrade.backAria", "Back")}
                   onClick={goBackToCap}
-                >
-                  <ArrowBackIcon fontSize="small" />
-                </button>
+                  style={{ marginLeft: -6 }}
+                  leftSection={<ArrowBackIcon fontSize="small" />}
+                />
               )}
               <h2 className="upm-header__title">
                 {step === "confirm"
@@ -170,14 +170,12 @@ export default function UpgradeModal({
                     )}
               </h2>
             </div>
-            <button
-              type="button"
-              className="upm-header__close"
+            <Button
+              variant="ghost"
               aria-label={t("payg.upgrade.closeAria", "Close")}
               onClick={closeAndReset}
-            >
-              <CloseIcon fontSize="small" />
-            </button>
+              leftSection={<CloseIcon fontSize="small" />}
+            />
           </header>
 
           {/* Step indicator. Hidden on the confirmation panel since the
@@ -198,13 +196,13 @@ export default function UpgradeModal({
                           "{{symbol}}{{amount}} / month",
                           { symbol: sym, amount: effectiveCap },
                         )}
-                    <button
-                      type="button"
+                    <Button
+                      variant="ghost"
                       className="upm-step__edit"
                       onClick={goBackToCap}
                     >
                       {t("payg.upgrade.checkout.edit", "Edit")}
-                    </button>
+                    </Button>
                   </span>
                 ) : (
                   <span>
@@ -264,36 +262,23 @@ export default function UpgradeModal({
               <div className="upm-footer__actions">
                 {step === "cap" && (
                   <>
-                    <button
-                      type="button"
-                      className="upm-btn"
-                      data-variant="ghost"
-                      onClick={closeAndReset}
-                    >
+                    <Button variant="outlined" onClick={closeAndReset}>
                       {t("payg.upgrade.button.cancel", "Cancel")}
-                    </button>
-                    <button
-                      type="button"
-                      className="upm-btn"
-                      data-variant="primary"
-                      onClick={goToCheckout}
-                    >
+                    </Button>
+                    <Button onClick={goToCheckout}>
                       {t("payg.upgrade.button.continue", "Continue →")}
-                    </button>
+                    </Button>
                   </>
                 )}
                 {step === "confirm" && (
-                  <button
-                    type="button"
-                    className="upm-btn"
-                    data-variant="primary"
+                  <Button
                     onClick={() => {
                       setStep("cap");
                       onComplete({ capUsd: effectiveCap });
                     }}
                   >
                     {t("payg.upgrade.button.finish", "Finish")}
-                  </button>
+                  </Button>
                 )}
               </div>
             </footer>

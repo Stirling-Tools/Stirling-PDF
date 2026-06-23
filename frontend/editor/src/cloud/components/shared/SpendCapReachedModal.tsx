@@ -1,5 +1,6 @@
 import { useMemo } from "react";
-import { Modal, Stack, Button } from "@mantine/core";
+import { Modal, Stack } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import TrendingUpIcon from "@mui/icons-material/TrendingUpOutlined";
 import AnimatedSlideBackground from "@app/components/onboarding/slides/AnimatedSlideBackground";
@@ -167,7 +168,7 @@ export function SpendCapReachedModal({ onClose }: SpendCapReachedModalProps) {
               >
                 <Button
                   onClick={onClose}
-                  variant="default"
+                  variant="outlined"
                   size="sm"
                   className="spend-cap-modal-button"
                   style={{

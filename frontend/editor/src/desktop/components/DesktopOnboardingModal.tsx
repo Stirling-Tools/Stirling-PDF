@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
-import { Modal, Stack, Group, Button, ActionIcon } from "@mantine/core";
+import { Modal, Stack, Group } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import CloseIcon from "@mui/icons-material/Close";
 import LocalIcon from "@app/components/shared/LocalIcon";
@@ -103,10 +104,12 @@ export function DesktopOnboardingModal() {
             isActive
             slideKey={step === 0 ? "desktop-welcome" : "desktop-sign-in"}
           />
-          <ActionIcon
+          <Button
             onClick={handleClose}
-            radius="md"
-            size={36}
+            variant="ghost"
+            size="md"
+            leftSection={<CloseIcon fontSize="small" />}
+            aria-label={t("close", "Close")}
             style={{
               position: "absolute",
               top: 16,
@@ -116,14 +119,7 @@ export function DesktopOnboardingModal() {
               backdropFilter: "blur(4px)",
               zIndex: 10,
             }}
-            styles={{
-              root: {
-                "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.3)" },
-              },
-            }}
-          >
-            <CloseIcon fontSize="small" />
-          </ActionIcon>
+          />
           <div className={styles.heroLogo} key={`logo-${step}`}>
             <div className={styles.heroLogoCircle}>
               {step === 0 ? (
@@ -167,11 +163,9 @@ export function DesktopOnboardingModal() {
                 <Group justify="flex-end">
                   <Button
                     onClick={() => setStep(1)}
-                    styles={{
-                      root: {
-                        background: "var(--onboarding-primary-button-bg)",
-                        color: "var(--onboarding-primary-button-text)",
-                      },
+                    style={{
+                      "--sui-btn-bg": "var(--onboarding-primary-button-bg)",
+                      "--sui-btn-fg": "var(--onboarding-primary-button-text)",
                     }}
                   >
                     {t("onboarding.buttons.next", "Next →")}

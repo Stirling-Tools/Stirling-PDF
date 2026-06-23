@@ -5,7 +5,8 @@ import React, {
   useRef,
   useSyncExternalStore,
 } from "react";
-import { ActionIcon } from "@mantine/core";
+import { Button } from "@shared/components/Button";
+import { SegmentedControl } from "@shared/components/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -35,8 +36,8 @@ import {
   WorkbenchBarRenderContext,
   WorkbenchBarSection,
 } from "@app/types/workbenchBar";
-import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
-import FolderIcon from "@mui/icons-material/Folder";
+import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
+import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
 import CloseIcon from "@mui/icons-material/Close";
 import PrintIcon from "@mui/icons-material/Print";
 import "@app/components/shared/WorkbenchBar.css";
@@ -288,20 +289,18 @@ export default function WorkbenchBar({
 
       const ariaLabel =
         btn.ariaLabel ||
-        (typeof btn.tooltip === "string" ? (btn.tooltip as string) : undefined);
+        (typeof btn.tooltip === "string" ? (btn.tooltip as string) : btn.id);
       const buttonNode = (
-        <ActionIcon
-          variant={isActive ? "filled" : "subtle"}
-          color={isActive ? "blue" : undefined}
-          radius="md"
+        <Button
+          variant={isActive ? "filled" : "ghost"}
           className="workbench-bar-action-icon"
           onClick={triggerAction}
           disabled={disabled}
           aria-label={ariaLabel}
           aria-pressed={isActive ? true : undefined}
-        >
-          {btn.icon}
-        </ActionIcon>
+          leftSection={btn.icon}
+          hover={isActive ? true : false}
+        />
       );
       return renderWithTooltip(buttonNode, btn.tooltip);
     },
@@ -313,12 +312,12 @@ export default function WorkbenchBar({
     {
       value: "viewer",
       label: t("workbenchBar.viewer", "Viewer"),
-      icon: <InsertDriveFileIcon fontSize="small" />,
+      icon: <InsertDriveFileOutlinedIcon fontSize="small" />,
     },
     {
       value: "fileEditor",
       label: t("workbenchBar.activeFiles", "Active Files"),
-      icon: <FolderIcon fontSize="small" />,
+      icon: <FolderOutlinedIcon fontSize="small" />,
     },
     ...(selectedTool === "multiTool"
       ? [
@@ -340,7 +339,7 @@ export default function WorkbenchBar({
       .map((v) => ({
         value: v.workbenchId,
         label: v.label,
-        icon: v.icon ?? <InsertDriveFileIcon fontSize="small" />,
+        icon: v.icon ?? <InsertDriveFileOutlinedIcon fontSize="small" />,
       })),
   ];
 
@@ -387,8 +386,8 @@ export default function WorkbenchBar({
       <div className="workbench-bar-views" data-tour="view-switcher">
         {returnRoute && hasFiles && (
           <>
-            <button
-              type="button"
+            <Button
+              variant="ghost"
               className="workbench-bar-view-btn workbench-bar-back-btn"
               onClick={handleBackToFiles}
               aria-label={t(
@@ -400,8 +399,8 @@ export default function WorkbenchBar({
                   : "Back to My Files",
                 { folder: returnRoute.label ?? "" },
               )}
+              leftSection={<ArrowBackIcon style={{ fontSize: "1.1rem" }} />}
             >
-              <ArrowBackIcon style={{ fontSize: "1.1rem" }} />
               <span className="workbench-bar-view-label">
                 {returnRoute.label
                   ? t("filesPage.backToFolder", "Back to {{folder}}", {
@@ -409,23 +408,27 @@ export default function WorkbenchBar({
                     })
                   : t("filesPage.backToMyFiles", "Back to My Files")}
               </span>
-            </button>
+            </Button>
             <div className="workbench-bar-divider" />
           </>
         )}
-        {(hasFiles || isCustomView) &&
-          viewOptions.map((opt) => (
-            <button
-              key={opt.value}
-              className={`workbench-bar-view-btn${currentView === opt.value ? " active" : ""}`}
-              onClick={() => setCurrentView(opt.value)}
-              aria-pressed={currentView === opt.value}
-              type="button"
-            >
-              {opt.icon}
-              <span className="workbench-bar-view-label">{opt.label}</span>
-            </button>
-          ))}
+        {(hasFiles || isCustomView) && (
+          <SegmentedControl<WorkbenchType>
+            size="sm"
+            value={currentView}
+            onChange={setCurrentView}
+            variant="subtle"
+            options={viewOptions.map((opt) => ({
+              value: opt.value,
+              label: (
+                <>
+                  {opt.icon}
+                  <span className="workbench-bar-view-label">{opt.label}</span>
+                </>
+              ),
+            }))}
+          />
+        )}
       </div>
 
       {/* Tool buttons - second row, only rendered when buttons exist */}
@@ -455,39 +458,40 @@ export default function WorkbenchBar({
         {/* Print */}
         {currentView === "viewer" &&
           renderWithTooltip(
-            <ActionIcon
-              variant="subtle"
-              radius="md"
+            <Button
+              variant="ghost"
+              hover={false}
               className="workbench-bar-action-icon"
               onClick={handlePrint}
               disabled={
                 totalItems === 0 || allButtonsDisabled || disableForFullscreen
               }
               aria-label={t("workbenchBar.print", "Print PDF")}
-            >
-              <PrintIcon sx={{ fontSize: "1rem" }} />
-            </ActionIcon>,
+              leftSection={<PrintIcon sx={{ fontSize: "1rem" }} />}
+            />,
             t("workbenchBar.print", "Print PDF"),
           )}
 
         {/* Download (file-level action — not relevant in custom views) */}
         {!isCustomView &&
           renderWithTooltip(
-            <ActionIcon
-              variant="subtle"
-              radius="md"
+            <Button
+              variant="ghost"
+              hover={false}
               className="workbench-bar-action-icon"
               onClick={() => handleExportAll()}
               disabled={
                 disableForFullscreen || totalItems === 0 || allButtonsDisabled
               }
-            >
-              <LocalIcon
-                icon={icons.downloadIconName}
-                width="1rem"
-                height="1rem"
-              />
-            </ActionIcon>,
+              aria-label={downloadTooltip}
+              leftSection={
+                <LocalIcon
+                  icon={icons.downloadIconName}
+                  width="1rem"
+                  height="1rem"
+                />
+              }
+            />,
             downloadTooltip,
           )}
 
@@ -495,21 +499,23 @@ export default function WorkbenchBar({
         {!isCustomView &&
           icons.saveAsIconName &&
           renderWithTooltip(
-            <ActionIcon
-              variant="subtle"
-              radius="md"
+            <Button
+              variant="ghost"
+              hover={false}
               className="workbench-bar-action-icon"
               onClick={() => handleExportAll(true)}
               disabled={
                 disableForFullscreen || totalItems === 0 || allButtonsDisabled
               }
-            >
-              <LocalIcon
-                icon={icons.saveAsIconName}
-                width="1rem"
-                height="1rem"
-              />
-            </ActionIcon>,
+              aria-label={t("workbenchBar.saveAs", "Save As")}
+              leftSection={
+                <LocalIcon
+                  icon={icons.saveAsIconName}
+                  width="1rem"
+                  height="1rem"
+                />
+              }
+            />,
             t("workbenchBar.saveAs", "Save As"),
           )}
 
@@ -521,9 +527,9 @@ export default function WorkbenchBar({
         {/* Close (context-aware: close all / close viewer file / close page editor) */}
         {!isCustomView &&
           renderWithTooltip(
-            <ActionIcon
-              variant="subtle"
-              radius="md"
+            <Button
+              variant="ghost"
+              hover={false}
               className="workbench-bar-action-icon"
               onClick={handleClose}
               disabled={
@@ -534,9 +540,8 @@ export default function WorkbenchBar({
                   ? t("workbenchBar.closeAll", "Close All")
                   : t("workbenchBar.closePdf", "Close PDF")
               }
-            >
-              <CloseIcon sx={{ fontSize: "1rem" }} />
-            </ActionIcon>,
+              leftSection={<CloseIcon sx={{ fontSize: "1rem" }} />}
+            />,
             currentView === "fileEditor"
               ? t("workbenchBar.closeAll", "Close All")
               : t("workbenchBar.closePdf", "Close PDF"),

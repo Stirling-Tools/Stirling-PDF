@@ -7,14 +7,12 @@ import {
 } from "@shared/components";
 import type { PolicyField } from "@portal/api/policies";
 import "@portal/views/Policies.css";
-
 interface PolicyFieldRowProps {
   field: PolicyField;
   /** Effective current value (override or definition default). */
   value: boolean | string | string[];
   onChange: (value: boolean | string | string[]) => void;
 }
-
 /**
  * Renders one policy setting from the catalogue's `PolicyField`, dispatching on
  * `type`: toggle → ToggleSwitch, select → Select, chips → multi-select Chips,
@@ -36,7 +34,6 @@ export function PolicyFieldRow({
       </div>
     );
   }
-
   if (field.type === "chips") {
     const selected = Array.isArray(value) ? value : [];
     const toggle = (opt: string) =>
@@ -51,7 +48,7 @@ export function PolicyFieldRow({
           {(field.options ?? []).map((opt) => (
             <Chip
               key={opt}
-              tone={selected.includes(opt) ? "blue" : "neutral"}
+              accent={selected.includes(opt) ? "blue" : "neutral"}
               size="sm"
               onClick={() => toggle(opt)}
             >
@@ -62,7 +59,6 @@ export function PolicyFieldRow({
       </FormField>
     );
   }
-
   if (field.type === "select") {
     return (
       <FormField label={field.label}>
@@ -75,7 +71,6 @@ export function PolicyFieldRow({
       </FormField>
     );
   }
-
   return (
     <FormField label={field.label}>
       <Input

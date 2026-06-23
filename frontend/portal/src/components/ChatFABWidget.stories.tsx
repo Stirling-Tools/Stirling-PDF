@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useRef, useState } from "react";
+import { Button } from "@shared/components/Button";
 import { ChatFABButton } from "@shared/components/ChatFABButton";
 import { ChatFABWindow } from "@shared/components/ChatFABWindow";
 
@@ -59,21 +60,15 @@ function MockChatContent({
         }}
       >
         <span style={{ fontWeight: 600 }}>Stirling</span>
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          shape="circle"
           onClick={onClose}
           aria-label="Close chat"
-          style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            padding: 4,
-            borderRadius: 6,
-            color: "var(--color-text-4, #64748b)",
-          }}
+          style={{ color: "var(--color-text-4, #64748b)" }}
         >
           ✕
-        </button>
+        </Button>
       </div>
 
       {/* Messages */}
@@ -158,8 +153,10 @@ function ChatFABWidgetDemo({
       }}
     >
       {/* FAB button */}
-      <button
-        type="button"
+      <ChatFABButton
+        loading={agentLoading}
+        showTick={hasUnviewedResult && !agentLoading}
+        tabIndex={open ? -1 : 0}
         onClick={() => {
           setOpen(true);
           setHasUnviewedResult(false);
@@ -171,22 +168,13 @@ function ChatFABWidgetDemo({
           right: 16,
           bottom: 16,
           padding: 0,
-          border: "none",
-          background: "none",
-          cursor: "pointer",
           opacity: open ? 0 : 1,
           transform: open ? "scale(0.78)" : "scale(1)",
           transition:
             "opacity 160ms ease, transform 180ms cubic-bezier(0.32, 0.72, 0, 1)",
           pointerEvents: open ? "none" : "auto",
         }}
-      >
-        <ChatFABButton
-          isLoading={agentLoading}
-          showTick={hasUnviewedResult && !agentLoading}
-          tabIndex={open ? -1 : 0}
-        />
-      </button>
+      />
 
       {/* Chat panel */}
       <div
@@ -272,29 +260,21 @@ function ChatFABFullFlowDemo() {
             {s === "open" && "④ Viewed — tick cleared"}
           </div>
         ))}
-        <button
-          type="button"
+        <Button
+          accent="success"
+          size="sm"
           onClick={simulateAgentRun}
           disabled={isLoading || open}
-          style={{
-            marginTop: 4,
-            padding: "6px 12px",
-            borderRadius: 6,
-            border: "none",
-            background: "#22c55e",
-            color: "#fff",
-            cursor: isLoading || open ? "not-allowed" : "pointer",
-            opacity: isLoading || open ? 0.5 : 1,
-            fontSize: 13,
-          }}
+          style={{ marginTop: 4 }}
         >
           Simulate agent run
-        </button>
+        </Button>
       </div>
 
       {/* FAB button */}
-      <button
-        type="button"
+      <ChatFABButton
+        loading={isLoading}
+        showTick={hasUnviewedResult && !isLoading}
         onClick={handleOpen}
         aria-label="Open Stirling AI assistant"
         style={{
@@ -302,21 +282,13 @@ function ChatFABFullFlowDemo() {
           right: 16,
           bottom: 16,
           padding: 0,
-          border: "none",
-          background: "none",
-          cursor: "pointer",
           opacity: open ? 0 : 1,
           transform: open ? "scale(0.78)" : "scale(1)",
           transition:
             "opacity 160ms ease, transform 180ms cubic-bezier(0.32, 0.72, 0, 1)",
           pointerEvents: open ? "none" : "auto",
         }}
-      >
-        <ChatFABButton
-          isLoading={isLoading}
-          showTick={hasUnviewedResult && !isLoading}
-        />
-      </button>
+      />
 
       {/* Chat panel */}
       <div

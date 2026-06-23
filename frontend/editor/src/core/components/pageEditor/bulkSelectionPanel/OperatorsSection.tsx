@@ -1,4 +1,5 @@
-import { Button, Text, Group, Divider } from "@mantine/core";
+import { Text, Group, Divider } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import classes from "@app/components/pageEditor/bulkSelectionPanel/BulkSelectionPanel.module.css";
 import { LogicalOperator } from "@app/utils/bulkselection/selectionBuilders";
@@ -22,7 +23,7 @@ const OperatorsSection = ({
       <Group gap="sm" wrap="nowrap">
         <Button
           size="sm"
-          variant="outline"
+          variant="outlined"
           className={classes.operatorChip}
           onClick={() => onInsertOperator("and")}
           disabled={!csvInput.trim()}
@@ -37,7 +38,7 @@ const OperatorsSection = ({
         </Button>
         <Button
           size="sm"
-          variant="outline"
+          variant="outlined"
           className={classes.operatorChip}
           onClick={() => onInsertOperator("or")}
           disabled={!csvInput.trim()}
@@ -52,7 +53,7 @@ const OperatorsSection = ({
         </Button>
         <Button
           size="sm"
-          variant="outline"
+          variant="outlined"
           className={classes.operatorChip}
           onClick={() => onInsertOperator("not")}
           disabled={!csvInput.trim()}
@@ -70,7 +71,7 @@ const OperatorsSection = ({
       <Group gap="sm" wrap="nowrap">
         <Button
           size="sm"
-          variant="outline"
+          variant="outlined"
           className={classes.operatorChip}
           onClick={() => onInsertOperator("even")}
           title={t(
@@ -84,7 +85,7 @@ const OperatorsSection = ({
         </Button>
         <Button
           size="sm"
-          variant="outline"
+          variant="outlined"
           className={classes.operatorChip}
           onClick={() => onInsertOperator("odd")}
           title={t(

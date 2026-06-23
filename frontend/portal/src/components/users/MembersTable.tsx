@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { Menu } from "@mantine/core";
 import {
   Avatar,
+  Button,
   Chip,
   StatusBadge,
   Table,
@@ -61,7 +62,7 @@ export function MembersTable({
         key: "role",
         header: "Role",
         render: (m) => (
-          <Chip tone={ROLE_TONE[m.role]} size="sm">
+          <Chip accent={ROLE_TONE[m.role]} size="sm">
             {ROLE_LABEL[m.role]}
           </Chip>
         ),
@@ -96,14 +97,13 @@ export function MembersTable({
           // a row-action menu needs; SUI has no equivalent.
           <Menu position="bottom-end" withinPortal shadow="md" width={200}>
             <Menu.Target>
-              <button
-                type="button"
+              <Button
                 className="portal-users__row-action"
                 aria-label={`Actions for ${m.name}`}
                 onClick={(e) => e.stopPropagation()}
-              >
-                ⋯
-              </button>
+                variant="ghost"
+                leftSection="⋯"
+              />
             </Menu.Target>
             <Menu.Dropdown>
               <Menu.Label>Change role</Menu.Label>

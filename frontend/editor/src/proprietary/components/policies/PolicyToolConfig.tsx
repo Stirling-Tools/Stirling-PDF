@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { useTranslation } from "react-i18next";
 import { Loader } from "@mantine/core";
 import { ToggleSwitch } from "@shared/components/ToggleSwitch";
+import { Button } from "@shared/components/Button";
 import { Card } from "@shared/components/Card";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
@@ -85,22 +86,24 @@ export function PolicyToolConfig({
                   sidebarTooltip
                   pinOnClick
                 >
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
                     className="pol-info-btn"
                     aria-label={t(
                       "policies.toolConfig.infoAriaLabel",
                       "What does {{tool}} do?",
                       { tool: toolName },
                     )}
-                  >
-                    <LocalIcon
-                      icon="info-outline-rounded"
-                      width="1rem"
-                      height="1rem"
-                      style={{ color: "var(--icon-files-color)" }}
-                    />
-                  </button>
+                    leftSection={
+                      <LocalIcon
+                        icon="info-outline-rounded"
+                        width="1rem"
+                        height="1rem"
+                        style={{ color: "var(--icon-files-color)" }}
+                      />
+                    }
+                  />
                 </AppTooltip>
               )}
               <ToggleSwitch

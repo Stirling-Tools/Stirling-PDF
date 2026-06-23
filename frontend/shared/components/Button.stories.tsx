@@ -1,57 +1,213 @@
+import type { ReactNode } from "react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { Button } from "@shared/components/Button";
+
+/* tiny inline icons for the demos */
+const Plus = () => (
+  <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <path
+      d="M12 5v14M5 12h14"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    />
+  </svg>
+);
+const Arrow = () => (
+  <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <path
+      d="M5 12h14m0 0-5-5m5 5-5 5"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+const Trash = () => (
+  <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <path
+      d="M5 7h14M10 7V5h4v2m-8 0 1 13h6l1-13"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
 
 const meta: Meta<typeof Button> = {
   title: "Primitives/Button",
   component: Button,
   parameters: { layout: "centered" },
-  args: { children: "Connect agent" },
+  args: { text: "Button", variant: "filled", accent: "neutral", size: "md" },
   argTypes: {
     variant: {
       control: "inline-radio",
-      options: ["gradient", "outline", "ghost"],
+      options: ["filled", "outlined", "ghost"],
     },
     accent: {
       control: "inline-radio",
-      options: ["blue", "purple", "green", "amber", "red"],
+      options: ["neutral", "brand", "danger", "warning", "success"],
     },
-    size: { control: "inline-radio", options: ["sm", "md"] },
+    size: { control: "inline-radio", options: ["sm", "md", "lg", "xl"] },
+    justify: {
+      control: "inline-radio",
+      options: ["center", "start", "end", "between"],
+    },
+    shape: { control: "inline-radio", options: ["default", "circle", "pill"] },
+    text: { control: "text" },
   },
 };
 export default meta;
 type Story = StoryObj<typeof Button>;
 
-export const Gradient: Story = { args: { variant: "gradient" } };
-export const Outline: Story = { args: { variant: "outline" } };
-export const Ghost: Story = { args: { variant: "ghost" } };
+const Wrap = ({ children }: { children: ReactNode }) => (
+  <div
+    style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}
+  >
+    {children}
+  </div>
+);
 
-export const WithTrailingArrow: Story = {
-  args: {
-    variant: "gradient",
-    children: "Build a pipeline",
-    trailingIcon: <span aria-hidden>→</span>,
-  },
+/** Tweak every prop live with the controls. */
+export const Playground: Story = {};
+
+/** The three fill treatments. */
+export const Variants: Story = {
+  render: (args) => (
+    <Wrap>
+      <Button {...args} variant="filled" text="Filled" />
+      <Button {...args} variant="outlined" text="Outlined" />
+      <Button {...args} variant="ghost" text="Ghost" />
+    </Wrap>
+  ),
 };
 
-export const Loading: Story = { args: { variant: "gradient", loading: true } };
-export const Disabled: Story = {
-  args: { variant: "gradient", disabled: true },
-};
-
-export const AccentMatrix: Story = {
+/** Traffic-light accents × the three variants. `neutral` is the default. */
+export const Accents: Story = {
   render: () => (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-      {(["gradient", "outline"] as const).flatMap((variant) =>
-        (["blue", "purple", "green", "amber", "red"] as const).map((accent) => (
-          <Button
-            key={`${variant}-${accent}`}
-            variant={variant}
-            accent={accent}
-          >
-            {variant} · {accent}
-          </Button>
-        )),
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(4, auto)",
+        gap: 10,
+        justifyContent: "start",
+      }}
+    >
+      {(["filled", "outlined", "ghost"] as const).flatMap((variant) =>
+        (["neutral", "brand", "danger", "warning", "success"] as const).map(
+          (accent) => (
+            <Button
+              key={`${variant}-${accent}`}
+              variant={variant}
+              accent={accent}
+              text={accent}
+            />
+          ),
+        ),
       )}
     </div>
+  ),
+};
+
+/** Real size differences. */
+export const Sizes: Story = {
+  render: (args) => (
+    <Wrap>
+      {(["sm", "md", "lg", "xl"] as const).map((size) => (
+        <Button key={size} {...args} size={size} text={size} />
+      ))}
+    </Wrap>
+  ),
+};
+
+/** Icons are optional and positional: `leftSection`, `rightSection`, or both. */
+export const WithIcons: Story = {
+  render: (args) => (
+    <Wrap>
+      <Button {...args} leftSection={<Plus />} text="Left icon" />
+      <Button {...args} rightSection={<Arrow />} text="Right icon" />
+      <Button
+        {...args}
+        leftSection={<Plus />}
+        rightSection={<Arrow />}
+        text="Both"
+      />
+    </Wrap>
+  ),
+};
+
+/** Pass an icon and NO text — that's all an "icon-only" button is. No separate component. */
+export const IconOnly: Story = {
+  render: () => (
+    <Wrap>
+      {(["sm", "md", "lg", "xl"] as const).map((size) => (
+        <Button
+          key={size}
+          size={size}
+          leftSection={<Plus />}
+          aria-label="Add"
+        />
+      ))}
+      <Button variant="outlined" leftSection={<Plus />} aria-label="Add" />
+      <Button
+        variant="ghost"
+        accent="danger"
+        leftSection={<Trash />}
+        aria-label="Delete"
+      />
+    </Wrap>
+  ),
+};
+
+/** How content sits across the width (only visible when wider than the content,
+ * e.g. `fullWidth`). `between` pins icons to the edges and keeps the label dead-
+ * centre — the toolbar/nav row pattern. */
+export const Justify: Story = {
+  render: () => (
+    <div
+      style={{ display: "flex", flexDirection: "column", gap: 12, width: 280 }}
+    >
+      {(["center", "start", "end", "between"] as const).map((justify) => (
+        <Button
+          key={justify}
+          fullWidth
+          justify={justify}
+          variant="outlined"
+          leftSection={<Plus />}
+          rightSection={<Arrow />}
+          text={justify}
+        />
+      ))}
+    </div>
+  ),
+};
+
+/** `circle` makes a round control (pair it with an icon-only button); `pill` fully rounds a text button. */
+export const Shape: Story = {
+  render: () => (
+    <Wrap>
+      <Button
+        shape="circle"
+        variant="outlined"
+        leftSection={<Plus />}
+        aria-label="Add"
+      />
+      <Button
+        shape="circle"
+        variant="ghost"
+        leftSection={<Arrow />}
+        aria-label="Next"
+      />
+      <Button
+        shape="circle"
+        variant="filled"
+        leftSection={<Trash />}
+        aria-label="Delete"
+      />
+      <Button shape="pill" variant="filled" text="Pill" />
+      <Button shape="default" variant="outlined" text="Default" />
+    </Wrap>
   ),
 };

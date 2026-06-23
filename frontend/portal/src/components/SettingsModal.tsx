@@ -244,9 +244,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
             <Button variant="ghost" onClick={onClose}>
               Cancel
             </Button>
-            <Button variant="gradient" onClick={onClose}>
-              Save changes
-            </Button>
+            <Button onClick={onClose}>Save changes</Button>
           </>
         }
       >
@@ -379,7 +377,7 @@ function ProfilePanel({
           </div>
           <span className="portal-settings__identity-email">{email}</span>
         </div>
-        <Button variant="outline" size="sm" disabled>
+        <Button variant="outlined" size="sm" disabled>
           Change photo
         </Button>
       </div>
@@ -433,9 +431,9 @@ function AppearancePanel({
           aria-label="Theme"
         >
           {THEME_OPTIONS.map((opt) => (
-            <button
+            <Button
+              variant="ghost"
               key={opt.value}
-              type="button"
               role="radio"
               aria-checked={theme === opt.value}
               className={
@@ -455,7 +453,7 @@ function AppearancePanel({
                 <strong>{opt.label}</strong>
                 <span>{opt.hint}</span>
               </span>
-            </button>
+            </Button>
           ))}
         </div>
       </div>
@@ -596,7 +594,7 @@ function WorkspacePanel({
             </span>
           </div>
         )}
-        <Button variant="outline" size="sm" disabled>
+        <Button variant="outlined" size="sm" disabled>
           Manage billing
         </Button>
       </div>

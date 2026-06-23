@@ -1,4 +1,4 @@
-import { Button } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import { useTranslation } from "react-i18next";
 
@@ -13,9 +13,9 @@ export function NonPdfBanner({ onConvertToPdf }: NonPdfBannerProps) {
 
   return (
     <Button
-      size="xs"
-      variant="light"
-      color="orange"
+      size="sm"
+      variant="outlined"
+      accent="warning"
       leftSection={<PictureAsPdfIcon style={{ fontSize: "0.9rem" }} />}
       onClick={onConvertToPdf}
       style={{

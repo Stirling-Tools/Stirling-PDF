@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { MultiSelect, Loader, Text, Button, Stack } from "@mantine/core";
+import { MultiSelect, Loader, Text, Stack } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useNavigate } from "react-router-dom";
 import { alert } from "@app/components/toast";
 import { UserSummary } from "@app/types/signingSession";
@@ -117,8 +118,8 @@ const UserSelector = ({
           {t("certSign.collab.userSelector.noUsers", "No other users found.")}
         </Text>
         <Button
-          size="xs"
-          variant="light"
+          size="sm"
+          variant="outlined"
           onClick={() => navigate("/settings/people")}
         >
           {t("certSign.collab.userSelector.inviteUsers", "Add Users")}

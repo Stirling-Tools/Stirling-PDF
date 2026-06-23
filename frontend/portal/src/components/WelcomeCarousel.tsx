@@ -170,14 +170,13 @@ export function WelcomeCarousel({ onTryOp }: WelcomeCarouselProps) {
           <p className="portal-carousel__sub">{slide.sub}</p>
           <div className="portal-carousel__cta">
             <Button
-              variant="gradient"
               onClick={() => runAction(slide.primary)}
-              trailingIcon={<span aria-hidden>→</span>}
+              rightSection={<span aria-hidden>→</span>}
             >
               {slide.primary.label}
             </Button>
             <Button
-              variant="outline"
+              variant="outlined"
               onClick={() => runAction(slide.secondary)}
             >
               {slide.secondary.label}
@@ -198,9 +197,9 @@ export function WelcomeCarousel({ onTryOp }: WelcomeCarouselProps) {
         aria-label="Carousel pagination"
       >
         {SLIDES.map((s, i) => (
-          <button
+          <Button
             key={s.id}
-            type="button"
+            variant="ghost"
             aria-current={i === index ? "true" : undefined}
             aria-label={`Slide ${i + 1}: ${s.title}`}
             className={

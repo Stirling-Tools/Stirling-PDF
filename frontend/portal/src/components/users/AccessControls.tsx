@@ -160,7 +160,7 @@ export function AccessControls({ access }: AccessControlsProps) {
           title="Unlock team access controls"
           description={access.upgradeHint}
           action={
-            <Button size="sm" accent="purple">
+            <Button size="sm" accent="neutral">
               Upgrade plan
             </Button>
           }

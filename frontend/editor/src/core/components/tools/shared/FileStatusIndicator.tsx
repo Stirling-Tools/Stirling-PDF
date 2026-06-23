@@ -8,12 +8,10 @@ import { useAllFiles } from "@app/contexts/FileContext";
 import { useFileManager } from "@app/hooks/useFileManager";
 import { StirlingFile } from "@app/types/fileContext";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
-
 export interface FileStatusIndicatorProps {
   selectedFiles?: StirlingFile[];
   minFiles?: number;
 }
-
 const FileStatusIndicator = ({
   selectedFiles = [],
   minFiles = 1,
@@ -23,7 +21,6 @@ const FileStatusIndicator = ({
   const { files: stirlingFileStubs } = useAllFiles();
   const { loadRecentFiles } = useFileManager();
   const [hasRecentFiles, setHasRecentFiles] = useState<boolean | null>(null);
-
   // Check if there are recent files
   useEffect(() => {
     const checkRecentFiles = async () => {
@@ -36,7 +33,6 @@ const FileStatusIndicator = ({
     };
     checkRecentFiles();
   }, [loadRecentFiles]);
-
   // Handle native file picker
   const handleNativeUpload = () => {
     const input = document.createElement("input");
@@ -51,12 +47,10 @@ const FileStatusIndicator = ({
     };
     input.click();
   };
-
   // Don't render until we know if there are recent files
   if (hasRecentFiles === null) {
     return null;
   }
-
   const getPlaceholder = () => {
     if (minFiles === undefined || minFiles === 1) {
       return t("files.selectFromWorkbench", "Add files to the workbench or ");
@@ -68,7 +62,6 @@ const FileStatusIndicator = ({
       );
     }
   };
-
   // Check if there are no files in the workbench
   if (stirlingFileStubs.length === 0) {
     // If no recent files, show upload button
@@ -111,7 +104,6 @@ const FileStatusIndicator = ({
       );
     }
   }
-
   // Show selection status when there are files in workbench
   if (selectedFiles.length < minFiles) {
     // If no recent files, show upload option
@@ -156,7 +148,6 @@ const FileStatusIndicator = ({
       );
     }
   }
-
   return (
     <Text
       size="sm"
@@ -176,5 +167,4 @@ const FileStatusIndicator = ({
     </Text>
   );
 };
-
 export default FileStatusIndicator;

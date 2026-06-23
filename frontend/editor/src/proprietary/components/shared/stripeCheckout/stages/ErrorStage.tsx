@@ -1,5 +1,6 @@
 import React from "react";
-import { Alert, Stack, Text, Button } from "@mantine/core";
+import { Alert, Stack, Text } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 
 interface ErrorStageProps {
@@ -14,7 +15,7 @@ export const ErrorStage: React.FC<ErrorStageProps> = ({ error, onClose }) => {
     <Alert color="red" title={t("payment.error", "Payment Error")}>
       <Stack gap="md">
         <Text size="sm">{error}</Text>
-        <Button variant="outline" onClick={onClose}>
+        <Button variant="outlined" onClick={onClose}>
           {t("common.close", "Close")}
         </Button>
       </Stack>

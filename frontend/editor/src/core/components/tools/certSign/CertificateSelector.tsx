@@ -1,12 +1,5 @@
-import {
-  Stack,
-  Radio,
-  Divider,
-  TextInput,
-  Text,
-  Group,
-  Button,
-} from "@mantine/core";
+import { Stack, Radio, Divider, TextInput, Text, Group } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import { useEffect } from "react";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
@@ -158,8 +151,8 @@ export const CertificateSelector: React.FC<CertificateSelectorProps> = ({
             {(["PKCS12", "PFX", "PEM", "JKS"] as UploadFormat[]).map((fmt) => (
               <Button
                 key={fmt}
-                size="xs"
-                variant={uploadFormat === fmt ? "filled" : "light"}
+                size="sm"
+                variant={uploadFormat === fmt ? "filled" : "outlined"}
                 onClick={() => handleFormatChange(fmt)}
                 disabled={disabled}
               >

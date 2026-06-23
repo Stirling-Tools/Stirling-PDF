@@ -2,15 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import CompareRoundedIcon from "@mui/icons-material/CompareRounded";
 import CloseIcon from "@mui/icons-material/Close";
-import {
-  Box,
-  Group,
-  Stack,
-  Text,
-  Button,
-  Modal,
-  ActionIcon,
-} from "@mantine/core";
+import { Box, Group, Stack, Text, Modal } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import SwapVertRoundedIcon from "@mui/icons-material/SwapVertRounded";
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
@@ -33,7 +26,7 @@ import type { CompareWorkbenchData } from "@app/types/compare";
 import { getDefaultWorkbench } from "@app/types/workbench";
 import { truncateCenter } from "@app/utils/textUtils";
 import {
-  FileSelectorPicker,
+  FileSelectorPicker as PopoverFileSelector,
   FileSelectorResult,
 } from "@app/components/shared/FileSelectorPicker";
 import "@app/components/tools/compare/compareView.css";
@@ -372,15 +365,19 @@ const Compare = (props: BaseToolProps) => {
               position: "relative",
             }}
           >
-            <ActionIcon
-              variant="subtle"
-              size="xs"
-              style={{ position: "absolute", top: "0.5rem", right: "0.5rem" }}
+            <Button
+              variant="ghost"
+              size="sm"
+              style={{
+                position: "absolute",
+                top: "0.5rem",
+                right: "0.5rem",
+                "--sui-btn-fg": "var(--mantine-color-gray-8)",
+              }}
               onClick={() => clearSlot(role)}
               aria-label={t("compare.clearSlot", "Remove file")}
-            >
-              <CloseIcon fontSize="small" />
-            </ActionIcon>
+              leftSection={<CloseIcon fontSize="small" />}
+            />
             <Group align="flex-start" wrap="nowrap" gap="md">
               <Box style={{ alignSelf: "center" }}>
                 <DocumentThumbnail
@@ -421,7 +418,7 @@ const Compare = (props: BaseToolProps) => {
           data-slot-state="empty"
           style={{ width: "100%" }}
         >
-          <FileSelectorPicker
+          <PopoverFileSelector
             testId={`compare-slot-${role}-add`}
             placeholder={
               isDisabled
@@ -479,12 +476,12 @@ const Compare = (props: BaseToolProps) => {
           <Stack gap="sm" className="compare-step-selection">
             <div className="compare-step-selection__clear-row">
               <Button
-                variant="subtle"
-                size="compact-xs"
+                variant="ghost"
+                size="sm"
                 onClick={() => setClearConfirmOpen(true)}
                 disabled={!hasAnySelected}
-                styles={{ root: { textDecoration: "underline" } }}
                 style={{
+                  textDecoration: "underline",
                   background: !hasAnySelected ? "transparent" : undefined,
                   color: !hasAnySelected
                     ? "var(--spdf-clear-disabled-text)"
@@ -509,8 +506,7 @@ const Compare = (props: BaseToolProps) => {
               </Stack>
 
               {hasBothSelected && (
-                <button
-                  type="button"
+                <Button
                   className="compare-step-selection__swap"
                   onClick={handleSwap}
                   disabled={base.operation.isLoading}
@@ -523,7 +519,7 @@ const Compare = (props: BaseToolProps) => {
                   <span className="compare-step-selection__swap-label">
                     {t("compare.swap.label", "Swap")}
                   </span>
-                </button>
+                </Button>
               )}
             </div>
 
@@ -543,13 +539,12 @@ const Compare = (props: BaseToolProps) => {
                 </Text>
                 <Group justify="flex-end" gap="sm">
                   <Button
-                    variant="light"
+                    variant="outlined"
                     onClick={() => setSwapConfirmOpen(false)}
                   >
                     {t("cancel", "Cancel")}
                   </Button>
                   <Button
-                    variant="filled"
                     onClick={() => {
                       setSwapConfirmOpen(false);
                       performSwap();
@@ -577,13 +572,13 @@ const Compare = (props: BaseToolProps) => {
                 </Text>
                 <Group justify="flex-end" gap="sm">
                   <Button
-                    variant="light"
+                    variant="outlined"
                     onClick={() => setClearConfirmOpen(false)}
                   >
                     {t("cancel", "Cancel")}
                   </Button>
                   <Button
-                    variant="filled"
+                    accent="danger"
                     onClick={() => {
                       setClearConfirmOpen(false);
                       performClearSelected();

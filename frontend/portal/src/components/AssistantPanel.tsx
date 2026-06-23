@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Button } from "@shared/components";
 import { useUI } from "@portal/contexts/UIContext";
 import { useAsync } from "@portal/hooks/useAsync";
 import {
@@ -87,14 +88,13 @@ export function AssistantPanel() {
           <SparklesIcon size={16} />
           <span className="portal-assistant__title">Assistant</span>
         </div>
-        <button
-          type="button"
+        <Button
+          variant="ghost"
           className="portal-assistant__close"
           onClick={closeAssistant}
           aria-label="Close assistant"
-        >
-          <CloseIcon size={16} />
-        </button>
+          leftSection={<CloseIcon size={16} />}
+        />
       </header>
 
       <div className="portal-assistant__messages" ref={messagesRef}>
@@ -105,15 +105,16 @@ export function AssistantPanel() {
             </div>
             <div className="portal-assistant__suggestions-list">
               {suggestions.map((s) => (
-                <button
+                <Button
                   key={s}
-                  type="button"
+                  variant="outlined"
+                  size="sm"
                   className="portal-assistant__suggestion"
                   onClick={() => send(s)}
                   disabled={typing}
                 >
                   {s}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -155,14 +156,13 @@ export function AssistantPanel() {
           className="portal-assistant__input"
           disabled={typing}
         />
-        <button
+        <Button
           type="submit"
           className="portal-assistant__send"
           disabled={!input.trim() || typing}
           aria-label="Send"
-        >
-          <SendIcon size={14} />
-        </button>
+          leftSection={<SendIcon size={14} />}
+        />
       </form>
     </aside>
   );

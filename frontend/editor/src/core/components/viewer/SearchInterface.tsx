@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Box, TextInput, ActionIcon, Text, Group } from "@mantine/core";
+import { Box, TextInput, Text, Group } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { LocalIcon } from "@app/components/shared/LocalIcon";
+import { Button } from "@shared/components/Button";
 import { ViewerContext } from "@app/contexts/ViewerContext";
 
 interface SearchInterfaceProps {
@@ -199,14 +200,13 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
         <Text size="sm" fw={600}>
           {t("search.title", "Search PDF")}
         </Text>
-        <ActionIcon
-          variant="subtle"
+        <Button
+          variant="ghost"
           size="sm"
           onClick={handleCloseClick}
           aria-label={t("viewer.search.close", "Close search")}
-        >
-          <LocalIcon icon="close" width="1rem" height="1rem" />
-        </ActionIcon>
+          leftSection={<LocalIcon icon="close" width="1rem" height="1rem" />}
+        />
       </Group>
 
       {/* Search input */}
@@ -224,13 +224,14 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
           style={{ flex: 1 }}
           rightSection={
             searchQuery.trim() && (
-              <ActionIcon
-                variant="subtle"
+              <Button
+                variant="ghost"
                 onClick={handleClearSearch}
                 aria-label={t("viewer.search.clear", "Clear search")}
-              >
-                <LocalIcon icon="close" width="0.875rem" height="0.875rem" />
-              </ActionIcon>
+                leftSection={
+                  <LocalIcon icon="close" width="0.875rem" height="0.875rem" />
+                }
+              />
             )
           }
         />
@@ -274,26 +275,32 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
         </Group>
 
         <Group gap="xs">
-          <ActionIcon
-            variant="subtle"
+          <Button
+            variant="ghost"
             size="sm"
             onClick={handlePrevious}
             disabled={!resultInfo || resultInfo.currentIndex <= 1}
             aria-label={t("viewer.search.previous", "Previous result")}
-          >
-            <LocalIcon icon="keyboard-arrow-up" width="1rem" height="1rem" />
-          </ActionIcon>
-          <ActionIcon
-            variant="subtle"
+            leftSection={
+              <LocalIcon icon="keyboard-arrow-up" width="1rem" height="1rem" />
+            }
+          />
+          <Button
+            variant="ghost"
             size="sm"
             onClick={handleNext}
             disabled={
               !resultInfo || resultInfo.currentIndex >= resultInfo.totalResults
             }
             aria-label={t("viewer.search.next", "Next result")}
-          >
-            <LocalIcon icon="keyboard-arrow-down" width="1rem" height="1rem" />
-          </ActionIcon>
+            leftSection={
+              <LocalIcon
+                icon="keyboard-arrow-down"
+                width="1rem"
+                height="1rem"
+              />
+            }
+          />
         </Group>
       </Group>
 

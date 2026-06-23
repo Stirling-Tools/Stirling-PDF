@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from "react";
-import { Alert, Button, Group, Loader, Stack, Text } from "@mantine/core";
+import { Alert, Group, Loader, Stack, Text } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import type { GetPdfInfoOperationHook } from "@app/hooks/tools/getPdfInfo/useGetPdfInfoOperation";
 import { downloadFile } from "@app/services/downloadService";
@@ -72,7 +73,6 @@ const GetPdfInfoResults = ({
           {t("getPdfInfo.downloads", "Downloads")}
         </Text>
         <Button
-          color="blue"
           onClick={() => selectedFile && handleDownload(selectedFile)}
           disabled={!selectedFile}
           fullWidth

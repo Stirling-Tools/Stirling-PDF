@@ -1,4 +1,5 @@
 import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { Button } from "@shared/components/Button";
 import { BASE_PATH } from "@app/constants/app";
 
 type ImageSlide = {
@@ -205,8 +206,9 @@ function LoginRightCarousel({
         }}
       >
         {Array.from({ length: totalSlides }).map((_, i) => (
-          <button
+          <Button
             key={i}
+            variant="ghost"
             aria-label={`Go to slide ${i + 1}`}
             onClick={() => setIndex(i)}
             style={{

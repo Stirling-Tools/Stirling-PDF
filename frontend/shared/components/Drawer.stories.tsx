@@ -74,8 +74,8 @@ export const WithFooter: Story = {
                 <Button variant="ghost" onClick={() => setOpen(false)}>
                   Close
                 </Button>
-                <Button variant="outline">Edit composition</Button>
-                <Button variant="gradient">View runs</Button>
+                <Button variant="outlined">Edit composition</Button>
+                <Button>View runs</Button>
               </>
             }
           >

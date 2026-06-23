@@ -1,14 +1,8 @@
-import {
-  ActionIcon,
-  Tooltip,
-  Popover,
-  Stack,
-  Slider,
-  Text,
-} from "@mantine/core";
+import { Tooltip, Popover, Stack, Slider, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import LineWeightIcon from "@mui/icons-material/LineWeight";
+import { Button } from "@shared/components/Button";
 
 interface WidthControlProps {
   value: number;
@@ -32,28 +26,19 @@ export function WidthControl({
     <Popover opened={opened} onChange={setOpened} position="top" withArrow>
       <Popover.Target>
         <Tooltip label={t("annotation.width", "Width")}>
-          <ActionIcon
-            variant="subtle"
-            color="gray"
+          <Button
+            aria-label={t("annotation.width", "Width")}
+            variant="outlined"
             size="md"
             onClick={() => setOpened(!opened)}
             disabled={disabled}
-            styles={{
-              root: {
-                flexShrink: 0,
-                backgroundColor: "var(--bg-raised)",
-                border: "1px solid var(--border-default)",
-                color: "var(--text-secondary)",
-                "&:hover": {
-                  backgroundColor: "var(--hover-bg)",
-                  borderColor: "var(--border-strong)",
-                  color: "var(--text-primary)",
-                },
-              },
+            style={{
+              "--sui-btn-bg": "var(--bg-raised)",
+              "--sui-btn-fg": "var(--text-secondary)",
+              "--sui-btn-bd": "var(--border-default)",
             }}
-          >
-            <LineWeightIcon style={{ fontSize: 18 }} />
-          </ActionIcon>
+            leftSection={<LineWeightIcon style={{ fontSize: 18 }} />}
+          />
         </Tooltip>
       </Popover.Target>
       <Popover.Dropdown>

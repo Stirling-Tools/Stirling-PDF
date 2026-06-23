@@ -21,7 +21,7 @@ export function RolesGrid({ roles }: RolesGridProps) {
         {roles.map((role) => (
           <Card key={role.id} padding="default" className="portal-users__role">
             <div className="portal-users__role-head">
-              <Chip tone={role.tone} size="sm">
+              <Chip accent={role.tone} size="sm">
                 {role.label}
               </Chip>
             </div>

@@ -1,13 +1,6 @@
 import React, { useState } from "react";
-import {
-  Card,
-  Text,
-  Stack,
-  Button,
-  Collapse,
-  Divider,
-  Tooltip,
-} from "@mantine/core";
+import { Card, Text, Stack, Collapse, Divider, Tooltip } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import { alert } from "@app/components/toast";
 import { LicenseInfo, mapLicenseToTier } from "@app/services/licenseService";
@@ -347,7 +340,7 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
         {/* Feature Comparison Toggle */}
         <div style={{ textAlign: "center", marginTop: "1rem" }}>
           <Button
-            variant="subtle"
+            variant="ghost"
             onClick={() => setShowComparison(!showComparison)}
           >
             {showComparison

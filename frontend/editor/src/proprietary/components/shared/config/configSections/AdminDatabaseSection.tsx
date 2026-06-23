@@ -5,7 +5,6 @@ import { useTranslation } from "react-i18next";
 import {
   NumberInput,
   Switch,
-  Button,
   Stack,
   Paper,
   Text,
@@ -15,7 +14,6 @@ import {
   Select,
   Badge,
   Table,
-  ActionIcon,
   Tooltip,
   FileInput,
   Alert,
@@ -23,6 +21,7 @@ import {
   Box,
   Modal,
 } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { alert } from "@app/components/toast";
 import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
 import { useRestartServer } from "@app/components/shared/config/useRestartServer";
@@ -804,7 +803,7 @@ export default function AdminDatabaseSection() {
                   </Group>
                   <Group gap="xs">
                     <Button
-                      variant="light"
+                      variant="outlined"
                       leftSection={
                         <LocalIcon icon="refresh" width="1rem" height="1rem" />
                       }
@@ -849,7 +848,7 @@ export default function AdminDatabaseSection() {
                       styles={{ input: { minWidth: 280 } }}
                     />
                     <Button
-                      variant="outline"
+                      variant="outlined"
                       onClick={handleUploadImport}
                       loading={importingUpload}
                       disabled={!loginEnabled || !isEmbeddedH2}
@@ -926,23 +925,28 @@ export default function AdminDatabaseSection() {
                                 )}
                                 withArrow
                               >
-                                <ActionIcon
-                                  variant="subtle"
+                                <Button
+                                  variant="ghost"
                                   onClick={() =>
                                     handleDownload(backup.fileName)
                                   }
                                   disabled={!loginEnabled || !isEmbeddedH2}
-                                >
-                                  {downloadingFile === backup.fileName ? (
-                                    <Loader size="xs" />
-                                  ) : (
-                                    <LocalIcon
-                                      icon="download"
-                                      width="1rem"
-                                      height="1rem"
-                                    />
+                                  aria-label={t(
+                                    "admin.settings.database.download",
+                                    "Download",
                                   )}
-                                </ActionIcon>
+                                  leftSection={
+                                    downloadingFile === backup.fileName ? (
+                                      <Loader size="xs" />
+                                    ) : (
+                                      <LocalIcon
+                                        icon="download"
+                                        width="1rem"
+                                        height="1rem"
+                                      />
+                                    )
+                                  }
+                                />
                               </Tooltip>
                               <Tooltip
                                 label={t(
@@ -951,23 +955,28 @@ export default function AdminDatabaseSection() {
                                 )}
                                 withArrow
                               >
-                                <ActionIcon
-                                  variant="subtle"
+                                <Button
+                                  variant="ghost"
                                   onClick={() =>
                                     handleImportExisting(backup.fileName)
                                   }
                                   disabled={!loginEnabled || !isEmbeddedH2}
-                                >
-                                  {importingBackupFile === backup.fileName ? (
-                                    <Loader size="xs" />
-                                  ) : (
-                                    <LocalIcon
-                                      icon="backup"
-                                      width="1rem"
-                                      height="1rem"
-                                    />
+                                  aria-label={t(
+                                    "admin.settings.database.import",
+                                    "Import",
                                   )}
-                                </ActionIcon>
+                                  leftSection={
+                                    importingBackupFile === backup.fileName ? (
+                                      <Loader size="xs" />
+                                    ) : (
+                                      <LocalIcon
+                                        icon="backup"
+                                        width="1rem"
+                                        height="1rem"
+                                      />
+                                    )
+                                  }
+                                />
                               </Tooltip>
                               <Tooltip
                                 label={t(
@@ -976,24 +985,29 @@ export default function AdminDatabaseSection() {
                                 )}
                                 withArrow
                               >
-                                <ActionIcon
-                                  variant="subtle"
-                                  color="red"
+                                <Button
+                                  variant="ghost"
+                                  accent="danger"
                                   onClick={() =>
                                     handleDeleteClick(backup.fileName)
                                   }
                                   disabled={!loginEnabled || !isEmbeddedH2}
-                                >
-                                  {deletingFile === backup.fileName ? (
-                                    <Loader size="xs" />
-                                  ) : (
-                                    <LocalIcon
-                                      icon="delete"
-                                      width="1rem"
-                                      height="1rem"
-                                    />
+                                  aria-label={t(
+                                    "admin.settings.database.delete",
+                                    "Delete",
                                   )}
-                                </ActionIcon>
+                                  leftSection={
+                                    deletingFile === backup.fileName ? (
+                                      <Loader size="xs" />
+                                    ) : (
+                                      <LocalIcon
+                                        icon="delete"
+                                        width="1rem"
+                                        height="1rem"
+                                      />
+                                    )
+                                  }
+                                />
                               </Tooltip>
                             </Group>
                           </Table.Td>
@@ -1068,14 +1082,14 @@ export default function AdminDatabaseSection() {
             </Stack>
             <Group justify="flex-end" gap="sm">
               <Button
-                variant="default"
+                variant="outlined"
                 onClick={closeConfirmImportModal}
                 disabled={importingUpload}
               >
                 {t("cancel", "Cancel")}
               </Button>
               <Button
-                color="red"
+                accent="danger"
                 onClick={handleConfirmImport}
                 loading={importingUpload}
                 disabled={confirmInput.length === 0}
@@ -1112,14 +1126,14 @@ export default function AdminDatabaseSection() {
             </Alert>
             <Group justify="flex-end" gap="sm">
               <Button
-                variant="default"
+                variant="outlined"
                 onClick={() => setDeleteConfirmFile(null)}
                 disabled={deletingFile !== null}
               >
                 {t("cancel", "Cancel")}
               </Button>
               <Button
-                color="red"
+                accent="danger"
                 onClick={() =>
                   deleteConfirmFile && handleDelete(deleteConfirmFile)
                 }

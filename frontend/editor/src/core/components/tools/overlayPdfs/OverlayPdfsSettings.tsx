@@ -3,12 +3,11 @@ import {
   Text,
   Group,
   Select,
-  SegmentedControl,
   NumberInput,
-  Button,
-  ActionIcon,
   Divider,
 } from "@mantine/core";
+import { Button } from "@shared/components/Button";
+import { SegmentedControl } from "@shared/components/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import {
   type OverlayPdfsParameters,
@@ -121,17 +120,18 @@ export default function OverlayPdfsSettings({
           onChange={(v) =>
             onParameterChange("overlayPosition", (v === "1" ? 1 : 0) as 0 | 1)
           }
-          data={[
+          options={[
             {
               label: t("overlay-pdfs.position.foreground", "Foreground"),
               value: "0",
+              disabled,
             },
             {
               label: t("overlay-pdfs.position.background", "Background"),
               value: "1",
+              disabled,
             },
           ]}
-          disabled={disabled}
         />
       </Stack>
 
@@ -183,8 +183,7 @@ export default function OverlayPdfsSettings({
           {t("overlay-pdfs.overlayFiles.label", "Overlay Files")}
         </Text>
         <Button
-          size="xs"
-          color="blue"
+          size="sm"
           onClick={handleOpenOverlayFilesModal}
           disabled={disabled}
           leftSection={<LocalIcon icon="add" width="14" height="14" />}
@@ -217,10 +216,10 @@ export default function OverlayPdfsSettings({
                           ({(file.size / 1024).toFixed(1)} KB)
                         </Text>
                       </Group>
-                      <ActionIcon
+                      <Button
                         size="sm"
-                        variant="subtle"
-                        color="red"
+                        variant="ghost"
+                        accent="danger"
                         className={styles.removeButton}
                         onClick={() => {
                           const next = (parameters.overlayFiles || []).filter(
@@ -229,13 +228,15 @@ export default function OverlayPdfsSettings({
                           handleOverlayFilesChange(next);
                         }}
                         disabled={disabled}
-                      >
-                        <LocalIcon
-                          icon="close-rounded"
-                          width="14"
-                          height="14"
-                        />
-                      </ActionIcon>
+                        aria-label={t("remove", "Remove")}
+                        leftSection={
+                          <LocalIcon
+                            icon="close-rounded"
+                            width="14"
+                            height="14"
+                          />
+                        }
+                      />
                     </Group>
                   ))}
                 </Stack>

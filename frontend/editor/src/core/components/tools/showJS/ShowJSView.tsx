@@ -5,16 +5,8 @@ import React, {
   useRef,
   useState,
 } from "react";
-import {
-  ActionIcon,
-  Box,
-  Button,
-  Group,
-  Stack,
-  Text,
-  ScrollArea,
-  TextInput,
-} from "@mantine/core";
+import { Box, Group, Stack, Text, ScrollArea, TextInput } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import ArrowUpwardRoundedIcon from "@mui/icons-material/ArrowUpwardRounded";
 import ArrowDownwardRoundedIcon from "@mui/icons-material/ArrowDownwardRounded";
@@ -166,32 +158,30 @@ const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
             <Text size="xs" c="dimmed">
               {matches.length ? `${active + 1}/${matches.length}` : "0/0"}
             </Text>
-            <ActionIcon
+            <Button
+              leftSection={<ArrowUpwardRoundedIcon fontSize="small" />}
               size="sm"
-              variant="subtle"
+              variant="ghost"
               onClick={() => {
                 if (matches.length)
                   setActive((p) => (p - 1 + matches.length) % matches.length);
               }}
               aria-label={t("common.previous", "Previous")}
-            >
-              <ArrowUpwardRoundedIcon fontSize="small" />
-            </ActionIcon>
-            <ActionIcon
+            />
+            <Button
+              leftSection={<ArrowDownwardRoundedIcon fontSize="small" />}
               size="sm"
-              variant="subtle"
+              variant="ghost"
               onClick={() => {
                 if (matches.length) setActive((p) => (p + 1) % matches.length);
               }}
               aria-label={t("common.next", "Next")}
-            >
-              <ArrowDownwardRoundedIcon fontSize="small" />
-            </ActionIcon>
+            />
           </Group>
           <Group gap="xs" align="center" className="showjs-toolbar-controls">
             <Button
-              size="xs"
-              variant="subtle"
+              variant="ghost"
+              size="sm"
               className="showjs-outline-button"
               onClick={handleDownload}
               disabled={!downloadUrl}
@@ -200,8 +190,8 @@ const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
               {terminology.download}
             </Button>
             <Button
-              size="xs"
-              variant="subtle"
+              variant="ghost"
+              size="sm"
               className="showjs-outline-button"
               onClick={handleCopy}
               leftSection={<ContentCopyRoundedIcon fontSize="small" />}
@@ -321,7 +311,8 @@ const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
                   >
                     <div className="code-gutter">
                       {end != null ? (
-                        <button
+                        <Button
+                          variant="ghost"
                           className={`fold-toggle ${folded ? "fold-collapsed" : ""}`}
                           onClick={() => toggleFold(ln)}
                           aria-label={
@@ -331,7 +322,7 @@ const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
                           }
                         >
                           {folded ? "▸" : "▾"}
-                        </button>
+                        </Button>
                       ) : (
                         <span className="fold-placeholder" />
                       )}

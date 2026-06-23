@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Dropdown, EmptyState, Skeleton } from "@shared/components";
+import { Button, Dropdown, EmptyState, Skeleton } from "@shared/components";
 import { BellIcon } from "@portal/components/icons";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import {
@@ -43,8 +43,9 @@ export function NotificationsDropdown() {
   return (
     <Dropdown.Root align="end">
       <Dropdown.Trigger>
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          leftSection={<BellIcon size={16} />}
           className="portal-header__icon-btn portal-header__icon-btn--badge"
           aria-label={
             hasUnread
@@ -52,11 +53,10 @@ export function NotificationsDropdown() {
               : "Notifications, no unread"
           }
         >
-          <BellIcon size={16} />
           {hasUnread && (
             <span className="portal-header__bell-dot" aria-hidden />
           )}
-        </button>
+        </Button>
       </Dropdown.Trigger>
       <Dropdown.Menu width="22.5rem" className="portal-notif__menu">
         <div className="portal-notif__header">
@@ -107,17 +107,18 @@ export function NotificationsDropdown() {
           </ul>
         )}
         <div className="portal-notif__footer">
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="sm"
             className="portal-notif__action"
             onClick={onMarkAllRead}
             disabled={!hasUnread}
           >
             Mark all read
-          </button>
-          <button type="button" className="portal-notif__action">
+          </Button>
+          <Button variant="ghost" size="sm" className="portal-notif__action">
             View all
-          </button>
+          </Button>
         </div>
       </Dropdown.Menu>
     </Dropdown.Root>

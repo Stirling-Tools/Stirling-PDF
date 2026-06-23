@@ -6,9 +6,9 @@
  */
 
 import React from "react";
-import { Modal, Stack, ActionIcon } from "@mantine/core";
+import { Modal, Stack } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import DiamondOutlinedIcon from "@mui/icons-material/DiamondOutlined";
-import CloseIcon from "@mui/icons-material/Close";
 
 import type {
   SlideDefinition,
@@ -137,10 +137,11 @@ export default function OnboardingModalSlide({
             slideKey={slideContent.key}
           />
           {allowDismiss && (
-            <ActionIcon
+            <Button
               onClick={onSkip}
-              radius="md"
-              size={36}
+              variant="ghost"
+              aria-label="Close"
+              leftSection={<>&times;</>}
               style={{
                 position: "absolute",
                 top: 16,
@@ -150,16 +151,7 @@ export default function OnboardingModalSlide({
                 backdropFilter: "blur(4px)",
                 zIndex: 10,
               }}
-              styles={{
-                root: {
-                  "&:hover": {
-                    backgroundColor: "rgba(255, 255, 255, 0.3)",
-                  },
-                },
-              }}
-            >
-              <CloseIcon fontSize="small" />
-            </ActionIcon>
+            />
           )}
           <div className={styles.heroLogo} key={`logo-${slideContent.key}`}>
             {renderHero()}

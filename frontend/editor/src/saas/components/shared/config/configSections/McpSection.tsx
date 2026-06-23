@@ -7,12 +7,12 @@ import {
   Group,
   Alert,
   Code,
-  Button,
   CopyButton,
   Tabs,
   Tooltip,
   ThemeIcon,
 } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { openAppSettings } from "@app/utils/appSettings";
@@ -41,10 +41,14 @@ function CopyInline({ value, label }: { value: string; label: string }) {
           withArrow
         >
           <Button
-            size="compact-xs"
-            variant={copied ? "light" : "default"}
-            color={copied ? "teal" : "gray"}
+            size="sm"
+            variant="outlined"
             onClick={copy}
+            style={
+              copied
+                ? { "--sui-btn-fg": "teal", "--sui-btn-bd": "teal" }
+                : undefined
+            }
             leftSection={
               <LocalIcon
                 icon={copied ? "check-rounded" : "content-copy-rounded"}
@@ -180,6 +184,7 @@ export default function McpSection() {
                 </Text>
                 <Button
                   size="sm"
+                  variant="filled"
                   onClick={goToAccount}
                   style={{ flexShrink: 0 }}
                 >
@@ -277,8 +282,8 @@ export default function McpSection() {
                   )}
                 </Text>
                 <Button
-                  size="xs"
-                  variant="light"
+                  size="sm"
+                  variant="outlined"
                   style={{ flexShrink: 0 }}
                   leftSection={
                     <LocalIcon icon="key-rounded" width={14} height={14} />

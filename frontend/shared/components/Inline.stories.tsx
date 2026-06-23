@@ -15,8 +15,8 @@ type Story = StoryObj<typeof Inline>;
 export const Default: Story = {
   render: () => (
     <Inline gap="2">
-      <Button variant="gradient">Primary</Button>
-      <Button variant="outline">Secondary</Button>
+      <Button>Primary</Button>
+      <Button variant="outlined">Secondary</Button>
       <Button variant="ghost">Cancel</Button>
     </Inline>
   ),

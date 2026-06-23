@@ -39,7 +39,7 @@ export function AgentBuilder() {
         </div>
         <Button
           onClick={() => setBootstrapOpen(true)}
-          leadingIcon={<span aria-hidden>⇪</span>}
+          leftSection={<span aria-hidden>⇪</span>}
         >
           Bootstrap from document
         </Button>

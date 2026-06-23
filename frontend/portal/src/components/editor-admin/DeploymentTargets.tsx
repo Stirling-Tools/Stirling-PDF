@@ -76,8 +76,8 @@ export function DeploymentTargets({ targets, onUpgrade }: Props) {
                 <p className="portal-editor__lock-copy">{lockCopy(t)}</p>
                 <Button
                   size="sm"
-                  variant="outline"
-                  accent={t.requiresTier === "enterprise" ? "purple" : "blue"}
+                  variant="outlined"
+                  accent="neutral"
                   onClick={onUpgrade}
                   disabled={tier === "enterprise"}
                 >

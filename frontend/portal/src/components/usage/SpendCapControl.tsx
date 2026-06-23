@@ -65,7 +65,7 @@ export function SpendCapControl({ summary }: { summary: BillingSummary }) {
           </p>
         </div>
         <Button
-          variant={enabled ? "outline" : "gradient"}
+          variant={enabled ? "outlined" : "filled"}
           size="sm"
           onClick={() => setEnabled((v) => !v)}
         >

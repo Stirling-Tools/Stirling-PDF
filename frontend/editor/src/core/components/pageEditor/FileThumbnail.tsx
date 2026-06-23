@@ -5,7 +5,8 @@ import React, {
   useMemo,
   useEffect,
 } from "react";
-import { ActionIcon, CheckboxIndicator } from "@mantine/core";
+import { CheckboxIndicator } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
@@ -16,7 +17,6 @@ import {
   draggable,
   dropTargetForElements,
 } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
-
 import styles from "@app/components/pageEditor/PageEditor.module.css";
 import { useFileContext } from "@app/contexts/FileContext";
 import { FileId } from "@app/types/file";
@@ -24,7 +24,6 @@ import { PrivateContent } from "@app/components/shared/PrivateContent";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
 import { downloadFileWithPolicy as downloadFile } from "@app/services/exportWithPolicy";
-
 interface FileItem {
   id: FileId;
   name: string;
@@ -33,7 +32,6 @@ interface FileItem {
   size: number;
   modifiedAt?: number | string | Date;
 }
-
 interface FileThumbnailProps {
   file: FileItem;
   index: number;
@@ -53,7 +51,6 @@ interface FileThumbnailProps {
   toolMode?: boolean;
   isSupported?: boolean;
 }
-
 const FileThumbnail = ({
   file,
   index,
@@ -70,7 +67,6 @@ const FileThumbnail = ({
   const icons = useFileActionIcons();
   const DownloadOutlinedIcon = icons.download;
   const { pinFile, unpinFile, isFilePinned, activeFiles } = useFileContext();
-
   // ---- Drag state ----
   const [isDragging, setIsDragging] = useState(false);
   const dragElementRef = useRef<HTMLDivElement | null>(null);
@@ -78,20 +74,17 @@ const FileThumbnail = ({
     undefined,
   );
   const [showActions, setShowActions] = useState(false);
-
   // Resolve the actual File object for pin/unpin operations
   const actualFile = useMemo(() => {
     return activeFiles.find((f) => f.fileId === file.id);
   }, [activeFiles, file.id]);
   const isPinned = actualFile ? isFilePinned(actualFile) : false;
-
   const downloadSelectedFile = useCallback(() => {
     // Prefer parent-provided handler if available
     if (typeof onDownloadFile === "function") {
       onDownloadFile(file.id);
       return;
     }
-
     // Fallback: attempt to download using the File object if provided
     const maybeFile = (file as unknown as { file?: File }).file;
     if (maybeFile instanceof File) {
@@ -102,22 +95,17 @@ const FileThumbnail = ({
       });
       return;
     }
-
     // If we can't find a way to download, surface a status message
     onSetStatus?.(terminology.downloadUnavailable);
   }, [file, onDownloadFile, onSetStatus, t]);
   const handleRef = useRef<HTMLSpanElement | null>(null);
-
   // ---- Selection ----
   const isSelected = selectedFiles.includes(file.id);
-
   // ---- Drag & drop wiring ----
   const fileElementRef = useCallback(
     (element: HTMLDivElement | null) => {
       if (!element) return;
-
       dragElementRef.current = element;
-
       const dragCleanup = draggable({
         element,
         getInitialData: () => ({
@@ -133,7 +121,6 @@ const FileThumbnail = ({
           setIsDragging(false);
         },
       });
-
       const dropCleanup = dropTargetForElements({
         element,
         getData: () => ({
@@ -153,7 +140,6 @@ const FileThumbnail = ({
           }
         },
       });
-
       return () => {
         dragCleanup();
         dropCleanup();
@@ -161,7 +147,6 @@ const FileThumbnail = ({
     },
     [file.id, file.name, selectedFiles, onReorderFiles],
   );
-
   // Update dropdown width on resize
   useEffect(() => {
     const update = () => {
@@ -172,30 +157,25 @@ const FileThumbnail = ({
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
   }, []);
-
   // Close the actions dropdown when hovering outside this file card (and its dropdown)
   useEffect(() => {
     if (!showActions) return;
-
     const isInsideCard = (target: EventTarget | null) => {
       const container = dragElementRef.current;
       if (!container) return false;
       return target instanceof Node && container.contains(target);
     };
-
     const handleMouseMove = (e: MouseEvent) => {
       if (!isInsideCard(e.target)) {
         setShowActions(false);
       }
     };
-
     const handleTouchStart = (e: TouchEvent) => {
       // On touch devices, close if the touch target is outside the card
       if (!isInsideCard(e.target)) {
         setShowActions(false);
       }
     };
-
     document.addEventListener("mousemove", handleMouseMove);
     document.addEventListener("touchstart", handleTouchStart, {
       passive: true,
@@ -205,13 +185,11 @@ const FileThumbnail = ({
       document.removeEventListener("touchstart", handleTouchStart);
     };
   }, [showActions]);
-
   // ---- Card interactions ----
   const handleCardClick = () => {
     if (!isSupported) return;
     onToggleFile(file.id);
   };
-
   return (
     <div
       ref={fileElementRef}
@@ -247,7 +225,6 @@ const FileThumbnail = ({
             </div>
           )}
         </div>
-
         {/* Centered index */}
         <div
           className={styles.headerIndex}
@@ -255,21 +232,18 @@ const FileThumbnail = ({
         >
           {index + 1}
         </div>
-
         {/* Kebab menu */}
-        <ActionIcon
+        <Button
           aria-label={t("moreOptions", "More options")}
-          variant="subtle"
+          variant="ghost"
           className={styles.kebab}
           onClick={(e) => {
             e.stopPropagation();
             setShowActions((v) => !v);
           }}
-        >
-          <MoreVertIcon fontSize="small" />
-        </ActionIcon>
+          leftSection={<MoreVertIcon fontSize="small" />}
+        />
       </div>
-
       {/* Actions overlay */}
       {showActions && (
         <div
@@ -277,8 +251,18 @@ const FileThumbnail = ({
           style={{ width: actionsWidth }}
           onClick={(e) => e.stopPropagation()}
         >
-          <button
+          <Button
+            variant="ghost"
+            justify="start"
+            fullWidth
             className={styles.actionRow}
+            leftSection={
+              isPinned ? (
+                <PushPinIcon fontSize="small" />
+              ) : (
+                <PushPinOutlinedIcon fontSize="small" />
+              )
+            }
             onClick={() => {
               if (actualFile) {
                 if (isPinned) {
@@ -292,41 +276,38 @@ const FileThumbnail = ({
               setShowActions(false);
             }}
           >
-            {isPinned ? (
-              <PushPinIcon fontSize="small" />
-            ) : (
-              <PushPinOutlinedIcon fontSize="small" />
-            )}
-            <span>{isPinned ? t("unpin", "Unpin") : t("pin", "Pin")}</span>
-          </button>
-
-          <button
+            {isPinned ? t("unpin", "Unpin") : t("pin", "Pin")}
+          </Button>
+          <Button
+            variant="ghost"
+            justify="start"
+            fullWidth
             className={styles.actionRow}
+            leftSection={<DownloadOutlinedIcon fontSize="small" />}
             onClick={() => {
               downloadSelectedFile();
               setShowActions(false);
             }}
           >
-            <DownloadOutlinedIcon fontSize="small" />
-            <span>{terminology.download}</span>
-          </button>
-
+            {terminology.download}
+          </Button>
           <div className={styles.actionsDivider} />
-
-          <button
+          <Button
+            variant="ghost"
+            justify="start"
+            fullWidth
             className={`${styles.actionRow} ${styles.actionDanger}`}
+            leftSection={<DeleteOutlineIcon fontSize="small" />}
             onClick={() => {
               onDeleteFile(file.id);
               onSetStatus(`Deleted ${file.name}`);
               setShowActions(false);
             }}
           >
-            <DeleteOutlineIcon fontSize="small" />
-            <span>{t("delete", "Delete")}</span>
-          </button>
+            {t("delete", "Delete")}
+          </Button>
         </div>
       )}
-
       {/* File content area */}
       <div className="file-container w-[90%] h-[80%] relative">
         {/* Stacked file effect - multiple shadows to simulate pages */}
@@ -372,14 +353,12 @@ const FileThumbnail = ({
             </PrivateContent>
           )}
         </div>
-
         {/* Pin indicator (bottom-left) */}
         {isPinned && (
           <span className={styles.pinIndicator} aria-hidden>
             <PushPinIcon fontSize="small" />
           </span>
         )}
-
         {/* Drag handle (span wrapper so we can attach a ref reliably) */}
         <span ref={handleRef} className={styles.dragHandle} aria-hidden>
           <DragIndicatorIcon fontSize="small" />
@@ -388,5 +367,4 @@ const FileThumbnail = ({
     </div>
   );
 };
-
 export default React.memo(FileThumbnail);

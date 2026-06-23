@@ -1,12 +1,10 @@
 import { useTranslation } from "react-i18next";
 import { BASE_PATH } from "@app/constants/app";
 import { type OAuthProvider } from "@app/auth/oauthTypes";
-import { Button } from "@mantine/core";
-
+import { Button } from "@shared/components/Button";
 // Debug flag to show all providers for UI testing
 // Set to true to see all SSO options regardless of backend configuration
 export const DEBUG_SHOW_ALL_PROVIDERS = false;
-
 // OAuth provider configuration - maps provider ID to display info
 // Known providers get custom icons; unknown providers use generic SSO icon
 export const oauthProviderConfig: Record<
@@ -22,10 +20,8 @@ export const oauthProviderConfig: Record<
   authentik: { label: "Authentik", file: "authentik.svg" },
   oidc: { label: "OIDC", file: "oidc.svg" },
 };
-
 // Generic fallback for unknown providers
 const GENERIC_PROVIDER_ICON = "oidc.svg";
-
 interface OAuthButtonsProps {
   onProviderClick: (provider: OAuthProvider) => void;
   isSubmitting: boolean;
@@ -36,7 +32,6 @@ interface OAuthButtonsProps {
   demoMode?: boolean;
   useNewStyle?: boolean;
 }
-
 export default function OAuthButtons({
   onProviderClick,
   isSubmitting,
@@ -48,17 +43,14 @@ export default function OAuthButtons({
   useNewStyle = false,
 }: OAuthButtonsProps) {
   const { t } = useTranslation();
-
   // Debug mode: show all providers for UI testing
   const providersToShow = DEBUG_SHOW_ALL_PROVIDERS
     ? Object.keys(oauthProviderConfig)
     : enabledProviders;
-
   // Build provider list - extract provider ID from full path for display
   const providers = providersToShow.map((pathOrId) => {
     // Extract provider ID from full path (e.g., '/saml2/authenticate/stirling' -> 'stirling')
     const providerId = pathOrId.split("/").pop() || pathOrId;
-
     if (providerId in oauthProviderConfig) {
       // Known provider - use predefined icon and label
       return {
@@ -75,12 +67,10 @@ export default function OAuthButtons({
       file: GENERIC_PROVIDER_ICON,
     };
   });
-
   // If no providers are enabled, don't render anything
   if (providers.length === 0) {
     return null;
   }
-
   const isSingleProvider = providers.length === 1;
   const isTinted = styleVariant === "tinted";
   const isOutline = styleVariant === "outline";
@@ -95,7 +85,6 @@ export default function OAuthButtons({
     authentik: "#FA7B17",
     oidc: "#334155",
   };
-
   if (layout === "icons") {
     return (
       <div className="oauth-container-icons">
@@ -109,7 +98,7 @@ export default function OAuthButtons({
               disabled={isSubmitting}
               className="oauth-button-icon"
               aria-label={`${t("login.signInWith", "Sign in with")} ${p.label}`}
-              variant="default"
+              variant="ghost"
             >
               <img
                 src={`${BASE_PATH}/Login/${p.file}`}
@@ -122,7 +111,6 @@ export default function OAuthButtons({
       </div>
     );
   }
-
   if (layout === "grid") {
     return (
       <div className="oauth-container-grid">
@@ -136,7 +124,7 @@ export default function OAuthButtons({
               disabled={isSubmitting}
               className="oauth-button-grid"
               aria-label={`${t("login.signInWith", "Sign in with")} ${p.label}`}
-              variant="default"
+              variant="ghost"
             >
               <img
                 src={`${BASE_PATH}/Login/${p.file}`}
@@ -149,7 +137,6 @@ export default function OAuthButtons({
       </div>
     );
   }
-
   return (
     <div
       className={`oauth-container-vertical${useNewStyle && isSingleProvider ? " oauth-container-single" : ""}`}
@@ -164,7 +151,7 @@ export default function OAuthButtons({
             disabled={!demoMode && isSubmitting}
             className={`oauth-button-vertical${useNewStyle && isSingleProvider ? " oauth-button-vertical-single" : ""}${!useNewStyle ? " oauth-button-vertical-legacy" : ""}${isTinted ? " oauth-button-vertical-tinted" : ""}${isOutline ? " oauth-button-vertical-outline" : ""}${isLight ? " oauth-button-vertical-light" : ""}`}
             aria-label={`${t("login.signInWith", "Sign in with")} ${p.label}`}
-            variant="default"
+            variant="ghost"
             style={
               isTinted
                 ? ({

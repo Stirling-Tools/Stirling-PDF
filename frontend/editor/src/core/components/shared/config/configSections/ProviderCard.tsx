@@ -3,7 +3,6 @@ import {
   Paper,
   Group,
   Text,
-  Button,
   Collapse,
   Stack,
   TextInput,
@@ -13,6 +12,7 @@ import {
   TagsInput,
   Anchor,
 } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import EditableSecretField from "@app/components/shared/EditableSecretField";
@@ -224,8 +224,8 @@ export default function ProviderCard({
 
           <Group gap="xs" wrap="nowrap">
             <Button
-              variant={isConfigured ? "subtle" : "filled"}
-              size="xs"
+              variant={isConfigured ? "ghost" : "filled"}
+              size="sm"
               onClick={
                 isConfigured
                   ? () => setExpanded(!expanded)
@@ -279,8 +279,8 @@ export default function ProviderCard({
               <Group justify="flex-end" mt="sm">
                 {onDisconnect && (
                   <Button
-                    variant="outline"
-                    color="red"
+                    variant="outlined"
+                    accent="danger"
                     size="sm"
                     onClick={onDisconnect}
                     disabled={disabled}

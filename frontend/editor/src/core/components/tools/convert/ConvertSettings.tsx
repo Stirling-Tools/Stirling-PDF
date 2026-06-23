@@ -40,7 +40,6 @@ import {
   FIT_OPTIONS,
 } from "@app/constants/convertConstants";
 import { StirlingFile } from "@app/types/fileContext";
-
 interface ConvertSettingsProps {
   parameters: ConvertParameters;
   onParameterChange: <K extends keyof ConvertParameters>(
@@ -53,7 +52,6 @@ interface ConvertSettingsProps {
   selectedFiles: StirlingFile[];
   disabled?: boolean;
 }
-
 const ConvertSettings = ({
   parameters,
   onParameterChange,
@@ -67,37 +65,28 @@ const ConvertSettings = ({
   const { state, selectors } = useFileState();
   const activeFiles = state.files.ids;
   const { preferences } = usePreferences();
-
   const allEndpoints = useMemo(() => {
     const endpoints = getConversionEndpoints(EXTENSION_TO_ENDPOINT);
     return endpoints;
   }, []);
-
   const { endpointStatus } = useMultipleEndpointsEnabled(allEndpoints);
-
   // Get comprehensive conversion status (availability + cloud routing)
   const conversionStatus = useConversionCloudStatus();
-
   const isConversionAvailable = (fromExt: string, toExt: string): boolean => {
     const conversionKey = `${fromExt}-${toExt}`;
-
     // In desktop SaaS mode, check combined availability (local OR SaaS)
     if (conversionStatus.availability[conversionKey] !== undefined) {
       return conversionStatus.availability[conversionKey];
     }
-
     // Fallback to local-only check (web mode or desktop non-SaaS mode)
     const endpointKey = EXTENSION_TO_ENDPOINT[fromExt]?.[toExt];
     if (!endpointKey) return false;
-
     const isAvailable = endpointStatus[endpointKey] === true;
     return isAvailable;
   };
-
   const doesConversionUseCloud = (fromExt: string, toExt: string): boolean => {
     return conversionStatus.cloudStatus[`${fromExt}-${toExt}`] || false;
   };
-
   // Enhanced FROM options with endpoint availability
   const enhancedFromOptions = useMemo(() => {
     const baseOptions = FROM_FORMAT_OPTIONS.map((option) => {
@@ -107,19 +96,16 @@ const ConvertSettings = ({
         (targetOption) =>
           isConversionAvailable(option.value, targetOption.value),
       );
-
       return {
         ...option,
         enabled: hasAvailableConversions,
       };
     });
-
     // Filter out unavailable source formats if preference is enabled
     let filteredOptions = baseOptions;
     if (preferences.hideUnavailableConversions) {
       filteredOptions = baseOptions.filter((opt) => opt.enabled !== false);
     }
-
     // Add dynamic format option if current selection is a file-<extension> format
     if (
       parameters.fromExtension &&
@@ -132,11 +118,9 @@ const ConvertSettings = ({
         group: "File",
         enabled: true,
       };
-
       // Add the dynamic option at the beginning
       return [dynamicOption, ...filteredOptions];
     }
-
     return filteredOptions;
   }, [
     parameters.fromExtension,
@@ -144,11 +128,9 @@ const ConvertSettings = ({
     preferences.hideUnavailableConversions,
     conversionStatus,
   ]);
-
   // Enhanced TO options with endpoint availability and cloud status
   const enhancedToOptions = useMemo(() => {
     if (!parameters.fromExtension) return [];
-
     const availableOptions =
       getAvailableToExtensions(parameters.fromExtension) || [];
     const enhanced = availableOptions.map((option) => {
@@ -166,12 +148,10 @@ const ConvertSettings = ({
         usesCloud,
       };
     });
-
     // Filter out unavailable conversions if preference is enabled
     if (preferences.hideUnavailableConversions) {
       return enhanced.filter((opt) => opt.enabled !== false);
     }
-
     return enhanced;
   }, [
     parameters.fromExtension,
@@ -179,7 +159,6 @@ const ConvertSettings = ({
     preferences.hideUnavailableConversions,
     conversionStatus,
   ]);
-
   const resetParametersToDefaults = () => {
     onParameterChange("imageOptions", {
       colorType: COLOR_TYPES.COLOR,
@@ -228,21 +207,18 @@ const ConvertSettings = ({
     onParameterChange("isSmartDetection", false);
     onParameterChange("smartDetectionType", "none");
   };
-
   const setAutoTargetExtension = (fromExtension: string) => {
     const availableToOptions = getAvailableToExtensions(fromExtension);
     const autoTarget =
       availableToOptions.length === 1 ? availableToOptions[0].value : "";
     onParameterChange("toExtension", autoTarget);
   };
-
   const filterFilesByExtension = (extension: string) => {
     const files = activeFiles
       .map((fileId) => selectors.getFile(fileId))
       .filter(Boolean) as StirlingFile[];
     return files.filter((file) => {
       const fileExtension = detectFileExtension(file.name);
-
       if (extension === "any") {
         return true;
       } else if (extension === "image") {
@@ -252,17 +228,14 @@ const ConvertSettings = ({
       }
     });
   };
-
   const updateFileSelection = (files: StirlingFile[]) => {
     const fileIds = files.map((file) => file.fileId);
     setSelectedFiles(fileIds);
   };
-
   const handleFromExtensionChange = (value: string) => {
     onParameterChange("fromExtension", value);
     setAutoTargetExtension(value);
     resetParametersToDefaults();
-
     if (activeFiles.length > 0) {
       const matchingFiles = filterFilesByExtension(value);
       updateFileSelection(matchingFiles);
@@ -270,7 +243,6 @@ const ConvertSettings = ({
       updateFileSelection([]);
     }
   };
-
   const handleToExtensionChange = (value: string) => {
     onParameterChange("toExtension", value);
     onParameterChange("imageOptions", {
@@ -307,7 +279,6 @@ const ConvertSettings = ({
       dpi: 150,
     });
   };
-
   return (
     <Stack gap="md">
       {/* Format Selection */}
@@ -326,7 +297,6 @@ const ConvertSettings = ({
           minWidth="18rem"
         />
       </Stack>
-
       <Stack gap="sm">
         <Text size="sm" fw={500}>
           {t("convert.convertTo", "Convert to")}:
@@ -370,7 +340,6 @@ const ConvertSettings = ({
           />
         )}
       </Stack>
-
       {/* Format-specific options */}
       {isImageFormat(parameters.toExtension) && (
         <>
@@ -382,7 +351,6 @@ const ConvertSettings = ({
           />
         </>
       )}
-
       {/* Color options for image to PDF conversion */}
       {(isImageFormat(parameters.fromExtension) &&
         parameters.toExtension === "pdf") ||
@@ -397,7 +365,6 @@ const ConvertSettings = ({
           />
         </>
       ) : null}
-
       {/* SVG to PDF options */}
       {parameters.fromExtension === "svg" &&
         parameters.toExtension === "pdf" && (
@@ -410,7 +377,6 @@ const ConvertSettings = ({
             />
           </>
         )}
-
       {/* Web to PDF options */}
       {(isWebFormat(parameters.fromExtension) &&
         parameters.toExtension === "pdf") ||
@@ -425,7 +391,6 @@ const ConvertSettings = ({
           />
         </>
       ) : null}
-
       {/* Email to PDF options (EML and MSG formats) */}
       {(parameters.fromExtension === "eml" ||
         parameters.fromExtension === "msg") &&
@@ -439,7 +404,6 @@ const ConvertSettings = ({
             />
           </>
         )}
-
       {/* CBZ to PDF options */}
       {parameters.fromExtension === "cbz" &&
         parameters.toExtension === "pdf" && (
@@ -452,7 +416,6 @@ const ConvertSettings = ({
             />
           </>
         )}
-
       {/* PDF to CBZ options */}
       {parameters.fromExtension === "pdf" &&
         parameters.toExtension === "cbz" && (
@@ -465,7 +428,6 @@ const ConvertSettings = ({
             />
           </>
         )}
-
       {/* PDF to PDF/A options */}
       {parameters.fromExtension === "pdf" &&
         parameters.toExtension === "pdfa" && (
@@ -479,7 +441,6 @@ const ConvertSettings = ({
             />
           </>
         )}
-
       {/* PDF to PDF/X options */}
       {parameters.fromExtension === "pdf" &&
         parameters.toExtension === "pdfx" && (
@@ -493,7 +454,6 @@ const ConvertSettings = ({
             />
           </>
         )}
-
       {/* eBook to PDF options */}
       {["epub", "mobi", "azw3", "fb2"].includes(parameters.fromExtension) &&
         parameters.toExtension === "pdf" && (
@@ -506,7 +466,6 @@ const ConvertSettings = ({
             />
           </>
         )}
-
       {/* CBR to PDF options */}
       {parameters.fromExtension === "cbr" &&
         parameters.toExtension === "pdf" && (
@@ -519,7 +478,6 @@ const ConvertSettings = ({
             />
           </>
         )}
-
       {/* PDF to CBR options */}
       {parameters.fromExtension === "pdf" &&
         parameters.toExtension === "cbr" && (
@@ -532,7 +490,6 @@ const ConvertSettings = ({
             />
           </>
         )}
-
       {/* PDF to EPUB/AZW3 options */}
       {parameters.fromExtension === "pdf" &&
         ["epub", "azw3"].includes(parameters.toExtension) && (
@@ -548,5 +505,4 @@ const ConvertSettings = ({
     </Stack>
   );
 };
-
 export default ConvertSettings;

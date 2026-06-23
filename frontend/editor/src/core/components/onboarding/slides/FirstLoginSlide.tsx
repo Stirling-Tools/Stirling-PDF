@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Stack, PasswordInput, Button, Alert, Text } from "@mantine/core";
+import { Stack, PasswordInput, Alert, Text } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import { SlideConfig } from "@app/types/types";
 import LocalIcon from "@app/components/shared/LocalIcon";
@@ -206,7 +207,7 @@ function FirstLoginForm({
               confirmPassword.length < 8
             }
             size="md"
-            mt="xs"
+            style={{ marginTop: "var(--mantine-spacing-xs)" }}
           >
             {t("firstLogin.changePassword", "Change Password")}
           </Button>

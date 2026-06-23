@@ -3,7 +3,8 @@ import {
   RedactionSelectionMenuProps,
 } from "@embedpdf/plugin-redaction/react";
 import { PdfAnnotationSubtype } from "@embedpdf/models";
-import { ActionIcon, Tooltip, Button, Group } from "@mantine/core";
+import { Tooltip, Group } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 import { useEffect, useState, useRef, useCallback } from "react";
@@ -140,27 +141,18 @@ function RedactionSelectionMenuInner({
     >
       <Group gap="sm" wrap="nowrap" justify="center">
         <Tooltip label={t("viewer.redaction.removeMark", "Remove this mark")}>
-          <ActionIcon
-            variant="subtle"
-            color="gray"
+          <Button
+            aria-label={t("viewer.redaction.removeMark", "Remove this mark")}
+            variant="outlined"
             size="md"
             onClick={handleRemove}
-            styles={{
-              root: {
-                flexShrink: 0,
-                backgroundColor: "var(--bg-raised)",
-                border: "1px solid var(--border-default)",
-                color: "var(--text-secondary)",
-                "&:hover": {
-                  backgroundColor: "var(--hover-bg)",
-                  borderColor: "var(--border-strong)",
-                  color: "var(--text-primary)",
-                },
-              },
+            style={{
+              "--sui-btn-bg": "var(--bg-raised)",
+              "--sui-btn-fg": "var(--text-secondary)",
+              "--sui-btn-bd": "var(--border-default)",
             }}
-          >
-            <DeleteIcon style={{ fontSize: 18 }} />
-          </ActionIcon>
+            leftSection={<DeleteIcon style={{ fontSize: 18 }} />}
+          />
         </Tooltip>
 
         <Tooltip
@@ -172,14 +164,11 @@ function RedactionSelectionMenuInner({
           position="top"
         >
           <Button
-            variant="filled"
-            color="red"
-            size="xs"
+            accent="danger"
+            size="sm"
             onClick={handleApply}
             leftSection={<CheckCircleIcon style={{ fontSize: 16 }} />}
-            styles={{
-              root: { flexShrink: 0, whiteSpace: "nowrap" },
-            }}
+            style={{ flexShrink: 0, whiteSpace: "nowrap" }}
           >
             Apply (permanent)
           </Button>

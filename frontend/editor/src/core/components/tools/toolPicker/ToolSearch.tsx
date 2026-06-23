@@ -7,7 +7,6 @@ import { TextInput } from "@app/components/shared/TextInput";
 import "@app/components/tools/toolPicker/ToolPicker.css";
 import { rankByFuzzy, idToWords } from "@app/utils/fuzzySearch";
 import { ToolId } from "@app/types/toolId";
-
 interface ToolSearchProps {
   value: string;
   onChange: (value: string) => void;
@@ -21,7 +20,6 @@ interface ToolSearchProps {
   onFocus?: () => void;
   autoFocus?: boolean;
 }
-
 const ToolSearch = ({
   value,
   onChange,
@@ -39,7 +37,6 @@ const ToolSearch = ({
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-
   const filteredTools = useMemo(() => {
     if (!value.trim()) return [];
     const entries = Object.entries(toolRegistry).filter(
@@ -53,7 +50,6 @@ const ToolSearch = ({
     ]).slice(0, 6);
     return ranked.map(({ item: [id, tool] }) => ({ id, tool }));
   }, [value, toolRegistry, mode, selectedToolKey]);
-
   const handleSearchChange = (searchValue: string) => {
     onChange(searchValue);
     if (mode === "dropdown") {
@@ -62,7 +58,6 @@ const ToolSearch = ({
       );
     }
   };
-
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -77,7 +72,6 @@ const ToolSearch = ({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
   // Auto-focus the input when requested
   useEffect(() => {
     if (autoFocus && searchRef.current) {
@@ -86,7 +80,6 @@ const ToolSearch = ({
       }, 10);
     }
   }, [autoFocus]);
-
   const searchInput = (
     <TextInput
       id="tool-search-input"
@@ -108,15 +101,12 @@ const ToolSearch = ({
       onFocus={onFocus}
     />
   );
-
   if (mode === "filter") {
     return <div className="search-input-container">{searchInput}</div>;
   }
-
   if (mode === "unstyled") {
     return searchInput;
   }
-
   return (
     <div ref={searchRef} style={{ position: "relative" }}>
       {searchInput}
@@ -173,5 +163,4 @@ const ToolSearch = ({
     </div>
   );
 };
-
 export default ToolSearch;

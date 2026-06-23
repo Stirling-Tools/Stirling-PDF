@@ -67,7 +67,7 @@ export function VersionsPanel({ agent, historyUnlocked }: VersionsPanelProps) {
                 {v.status === "draft" && (
                   <Button
                     size="sm"
-                    variant="outline"
+                    variant="outlined"
                     onClick={() => publish(v.version)}
                   >
                     Publish

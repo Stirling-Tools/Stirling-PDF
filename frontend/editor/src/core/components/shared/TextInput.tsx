@@ -1,5 +1,6 @@
 import React, { forwardRef } from "react";
 import { useTranslation } from "react-i18next";
+import { Button } from "@shared/components/Button";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import styles from "@app/components/shared/textInput/TextInput.module.css";
 
@@ -110,14 +111,19 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
           {...props}
         />
         {shouldShowClearButton && (
-          <button
-            type="button"
+          <Button
+            variant="ghost"
             className={styles.clearButton}
             onClick={handleClear}
             aria-label={t("textInput.clear", "Clear input")}
-          >
-            <LocalIcon icon="close-rounded" width="1.25rem" height="1.25rem" />
-          </button>
+            leftSection={
+              <LocalIcon
+                icon="close-rounded"
+                width="1.25rem"
+                height="1.25rem"
+              />
+            }
+          />
         )}
       </div>
     );

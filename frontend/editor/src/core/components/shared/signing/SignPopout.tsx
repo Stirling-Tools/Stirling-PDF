@@ -2,6 +2,9 @@ import { lazy, useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { Drawer } from "@mantine/core";
+import { Button } from "@shared/components/Button";
+import { Chip } from "@shared/components/Chip";
+import { SegmentedControl } from "@shared/components/SegmentedControl";
 import { useIsPhone } from "@app/hooks/useIsMobile";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import ActiveSessionsPanel from "@app/components/shared/signing/ActiveSessionsPanel";
@@ -779,14 +782,15 @@ const SignPopout = ({
     >
       {/* Header */}
       <div className="quick-access-popout__header">
-        <button
-          type="button"
+        <Button
+          variant="ghost"
           className={`quick-access-popout__back ${showCreatePanel ? "is-visible" : ""}`}
           onClick={() => setShowCreatePanel(false)}
           aria-label={t("quickAccess.back", "Back")}
-        >
-          <LocalIcon icon="arrow-back-rounded" width="1rem" height="1rem" />
-        </button>
+          leftSection={
+            <LocalIcon icon="arrow-back-rounded" width="1rem" height="1rem" />
+          }
+        />
         <div className="quick-access-popout__title">
           {showCreatePanel
             ? t("quickAccess.createSession", "Create Signing Request")
@@ -798,25 +802,27 @@ const SignPopout = ({
         </div>
         <div className="quick-access-popout__header-actions">
           {!showCreatePanel && (
-            <button
-              type="button"
+            <Button
+              variant="ghost"
               className="quick-access-popout__header-action"
               onClick={fetchData}
               disabled={loading}
               aria-label={t("quickAccess.refresh", "Refresh")}
               style={{ opacity: loading ? 0.5 : 0.7 }}
-            >
-              <LocalIcon icon="refresh-rounded" width="1rem" height="1rem" />
-            </button>
+              leftSection={
+                <LocalIcon icon="refresh-rounded" width="1rem" height="1rem" />
+              }
+            />
           )}
-          <button
-            type="button"
+          <Button
+            variant="ghost"
             className="quick-access-popout__header-action"
             onClick={onClose}
             aria-label={t("close", "Close")}
-          >
-            <LocalIcon icon="close-rounded" width="1rem" height="1rem" />
-          </button>
+            leftSection={
+              <LocalIcon icon="close-rounded" width="1rem" height="1rem" />
+            }
+          />
         </div>
       </div>
 
@@ -827,8 +833,8 @@ const SignPopout = ({
             {t("quickAccess.signYourself", "Sign Yourself")}
           </div>
           <div className="quick-access-popout__quick-sign-actions">
-            <button
-              type="button"
+            <Button
+              variant="ghost"
               className="quick-access-popout__quick-sign-btn"
               onClick={() => {
                 onClose();
@@ -837,9 +843,9 @@ const SignPopout = ({
             >
               <LocalIcon icon="signature-rounded" width="1rem" height="1rem" />
               {t("quickAccess.wetSign", "Add Signature")}
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="ghost"
               className="quick-access-popout__quick-sign-btn"
               onClick={() => {
                 onClose();
@@ -852,7 +858,7 @@ const SignPopout = ({
                 height="1rem"
               />
               {t("quickAccess.certSign", "Certificate Sign")}
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -864,30 +870,33 @@ const SignPopout = ({
             <span>
               {t("quickAccess.signatureRequests", "Signature Requests")}
             </span>
-            <button
-              type="button"
+            <Button
+              variant="ghost"
               className="quick-access-popout__section-action"
               onClick={() => setShowCreatePanel(true)}
               aria-label={t("quickAccess.newRequest", "New request")}
               title={t("quickAccess.newRequest", "New request")}
-            >
-              <LocalIcon icon="add-rounded" width="1rem" height="1rem" />
-            </button>
+              leftSection={
+                <LocalIcon icon="add-rounded" width="1rem" height="1rem" />
+              }
+            />
           </div>
-          <div className="quick-access-popout__tab-nav">
-            <button
-              className={`quick-access-popout__tab-button ${activeTab === "active" ? "active" : ""}`}
-              onClick={() => handleTabChange("active")}
-            >
-              {t("quickAccess.activeTab", "Active")}
-            </button>
-            <button
-              className={`quick-access-popout__tab-button ${activeTab === "completed" ? "active" : ""}`}
-              onClick={() => handleTabChange("completed")}
-            >
-              {t("quickAccess.completedTab", "Completed")}
-            </button>
-          </div>
+          <SegmentedControl
+            className="quick-access-popout__tab-nav"
+            fullWidth
+            value={activeTab}
+            onChange={handleTabChange}
+            options={[
+              {
+                label: t("quickAccess.activeTab", "Active"),
+                value: "active",
+              },
+              {
+                label: t("quickAccess.completedTab", "Completed"),
+                value: "completed",
+              },
+            ]}
+          />
         </>
       )}
 
@@ -903,14 +912,13 @@ const SignPopout = ({
           />
           <div className="quick-access-popout__filter-chips">
             {filterOptions.map((f) => (
-              <button
+              <Chip
                 key={f.key}
-                type="button"
                 className={`quick-access-popout__filter-chip ${activeFilters.has(f.key) ? "is-active" : ""}`}
                 onClick={() => toggleFilter(f.key)}
               >
                 {f.label}
-              </button>
+              </Chip>
             ))}
           </div>
         </div>
@@ -961,8 +969,8 @@ const SignPopout = ({
       {/* Footer */}
       {groupSigningEnabled && showCreatePanel && (
         <div className="quick-access-popout__footer">
-          <button
-            type="button"
+          <Button
+            variant="ghost"
             className="quick-access-popout__primary"
             onClick={handleCreateSession}
             disabled={
@@ -975,7 +983,7 @@ const SignPopout = ({
             {creating
               ? t("quickAccess.sendingRequest", "Sending...")
               : t("quickAccess.requestSignatures", "Request Signatures")}
-          </button>
+          </Button>
         </div>
       )}
     </div>

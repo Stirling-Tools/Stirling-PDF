@@ -8,13 +8,13 @@ import {
 import {
   Alert,
   Box,
-  Button,
   Group,
   Loader,
   Stack,
   Text,
   TextInput,
 } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { QRCodeSVG } from "qrcode.react";
 import { useTranslation } from "react-i18next";
 import { SlideConfig } from "@app/types/types";
@@ -210,8 +210,8 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
 
               <Group justify="space-between" wrap="wrap">
                 <Button
+                  variant="outlined"
                   type="button"
-                  variant="light"
                   onClick={fetchMfaSetup}
                   disabled={mfaLoading || submitting || setupComplete}
                 >
@@ -226,7 +226,7 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
                 >
                   Enable MFA
                 </Button>
-                <Button type="button" variant="light" onClick={onLogout}>
+                <Button variant="outlined" type="button" onClick={onLogout}>
                   Logout
                 </Button>
               </Group>

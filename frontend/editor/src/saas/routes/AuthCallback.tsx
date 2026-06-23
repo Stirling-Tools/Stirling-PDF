@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@app/auth/supabase";
-import { Button } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { withBasePath } from "@app/constants/app";
 
 interface CallbackState {
@@ -206,8 +206,8 @@ export default function AuthCallback() {
               if (state.status === "error") {
                 return (
                   <Button
+                    accent="danger"
                     onClick={() => navigate("/login", { replace: true })}
-                    className="inline-flex items-center rounded-md bg-rose-600 px-4 py-2 text-sm font-medium text-white shadow hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500"
                   >
                     Back to login
                   </Button>

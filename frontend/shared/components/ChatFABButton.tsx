@@ -2,21 +2,21 @@ import type { ButtonHTMLAttributes } from "react";
 import "@shared/components/ChatFABButton.css";
 
 export interface ChatFABButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  /** Shows a green pulse dot to indicate the agent is actively working. */
-  isLoading?: boolean;
-  /** Shows a green tick badge to indicate an unread result is waiting. */
+  /** Green pulse dot — agent is working. */
+  loading?: boolean;
+  /** Green tick badge — unread result waiting. */
   showTick?: boolean;
 }
 
 export function ChatFABButton({
-  isLoading = false,
+  loading = false,
   showTick = false,
   className,
   ...rest
 }: ChatFABButtonProps) {
   const classes = [
     "chat-fab-btn",
-    isLoading ? "chat-fab-btn--loading" : "",
+    loading ? "chat-fab-btn--loading" : "",
     showTick ? "chat-fab-btn--tick" : "",
     className ?? "",
   ]
@@ -39,7 +39,7 @@ export function ChatFABButton({
         />
         <path d="M7.26 95.83 L123.37 0 L123.37 89.5 L7.26 185.33 Z" />
       </svg>
-      {isLoading && !showTick && (
+      {loading && !showTick && (
         <span className="chat-fab-btn__pulse" aria-hidden="true" />
       )}
       {showTick && (

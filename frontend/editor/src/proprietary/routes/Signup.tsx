@@ -16,6 +16,7 @@ import {
   SignupFieldErrors,
 } from "@app/routes/signup/SignupFormValidation";
 import { useAuthService } from "@app/routes/signup/AuthService";
+import { Button } from "@shared/components/Button";
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -129,13 +130,13 @@ export default function Signup() {
 
       {/* Bottom row - centered */}
       <div style={{ textAlign: "center", margin: "0.5rem 0 0.25rem" }}>
-        <button
-          type="button"
+        <Button
+          variant="ghost"
           onClick={() => navigate("/login")}
           className="auth-link-black"
         >
           {t("login.logIn", "Log In")}
-        </button>
+        </Button>
       </div>
     </AuthLayout>
   );

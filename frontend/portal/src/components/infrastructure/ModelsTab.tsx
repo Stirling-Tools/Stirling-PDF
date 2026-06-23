@@ -38,7 +38,7 @@ const modelCols: TableColumn<ModelEntry>[] = [
     render: (m) => (
       <div className="portal-infra__cell-stack">
         <span className="portal-infra__cell-strong">{m.name}</span>
-        <Chip tone="neutral" size="sm">
+        <Chip accent="neutral" size="sm">
           {MODEL_PROVIDER_LABEL[m.provider]}
         </Chip>
       </div>
@@ -48,7 +48,7 @@ const modelCols: TableColumn<ModelEntry>[] = [
     key: "type",
     header: "Type",
     render: (m) => (
-      <Chip tone={MODEL_TYPE_TONE[m.type]} size="sm">
+      <Chip accent={MODEL_TYPE_TONE[m.type]} size="sm">
         {MODEL_TYPE_LABEL[m.type]}
       </Chip>
     ),
@@ -126,7 +126,7 @@ export function ModelsTab() {
         <div className="portal-infra__cell-stack">
           <span className="portal-infra__cell-strong">{r.operation}</span>
           {r.isDefault && (
-            <Chip tone="blue" size="sm">
+            <Chip accent="blue" size="sm">
               Default
             </Chip>
           )}

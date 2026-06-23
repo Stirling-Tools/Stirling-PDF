@@ -1,11 +1,5 @@
-import {
-  Modal,
-  Stack,
-  Text,
-  Button,
-  PasswordInput,
-  Group,
-} from "@mantine/core";
+import { Modal, Stack, Text, PasswordInput, Group } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import { type KeyboardEventHandler } from "react";
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
@@ -87,17 +81,20 @@ const EncryptedPdfUnlockModal = ({
 
         <Group justify="space-between">
           <Button
-            variant="light"
-            color="var(--mantine-color-gray-8)"
+            variant="outlined"
             onClick={onSkip}
             disabled={isProcessing}
+            style={{
+              "--sui-btn-fg": "var(--mantine-color-gray-8)",
+              "--sui-btn-bd": "var(--mantine-color-gray-8)",
+            }}
           >
             {t("encryptedPdfUnlock.skip", "Skip for now")}
           </Button>
           <Group gap="xs">
             {remainingCount > 0 && (
               <Button
-                variant="light"
+                variant="outlined"
                 onClick={onUnlockAll}
                 loading={isProcessing}
                 disabled={password.trim().length === 0}

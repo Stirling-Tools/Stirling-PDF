@@ -1,3 +1,4 @@
+import { Button } from "@shared/components";
 import { type Source, SOURCE_TYPE_META } from "@portal/api/sources";
 import { SourceDetailPanel } from "@portal/components/sources/SourceDetailPanel";
 import "@portal/views/Sources.css";
@@ -25,14 +26,13 @@ export function SourceDetailCard({ source, onClose }: SourceDetailCardProps) {
             {meta.label} · owned by {source.owner}
           </span>
         </div>
-        <button
-          type="button"
+        <Button
+          variant="ghost"
           className="portal-sources__expanded-close"
           onClick={onClose}
           aria-label="Close detail"
-        >
-          ×
-        </button>
+          leftSection="×"
+        />
       </header>
       <SourceDetailPanel source={source} />
     </section>

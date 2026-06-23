@@ -3,12 +3,10 @@
  *
  * Allows selecting files to attach to PDFs with optional PDF/A-3b conversion support.
  */
-
 import {
   Stack,
   Text,
   Group,
-  ActionIcon,
   ScrollArea,
   Button,
   Checkbox,
@@ -17,7 +15,7 @@ import { useTranslation } from "react-i18next";
 import { AddAttachmentsParameters } from "@app/hooks/tools/addAttachments/useAddAttachmentsParameters";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
-
+import { Button as DSButton } from "@shared/components/Button";
 interface AddAttachmentsSettingsProps {
   parameters: AddAttachmentsParameters;
   onParameterChange: <K extends keyof AddAttachmentsParameters>(
@@ -26,14 +24,12 @@ interface AddAttachmentsSettingsProps {
   ) => void;
   disabled?: boolean;
 }
-
 const AddAttachmentsSettings = ({
   parameters,
   onParameterChange,
   disabled = false,
 }: AddAttachmentsSettingsProps) => {
   const { t } = useTranslation();
-
   return (
     <Stack gap="md">
       <Stack gap="xs">
@@ -68,7 +64,6 @@ const AddAttachmentsSettings = ({
             : t("AddAttachmentsRequest.placeholder", "Choose files...")}
         </Button>
       </Stack>
-
       {parameters.attachments?.length > 0 && (
         <Stack gap="xs">
           <Text size="sm" fw={500}>
@@ -120,10 +115,17 @@ const AddAttachmentsSettings = ({
                       ({(file.size / 1024).toFixed(1)} KB)
                     </Text>
                   </Group>
-                  <ActionIcon
+                  <DSButton
+                    leftSection={
+                      <LocalIcon icon="close-rounded" width="14" height="14" />
+                    }
+                    aria-label={t(
+                      "AddAttachmentsRequest.removeFile",
+                      "Remove file",
+                    )}
                     size="sm"
-                    variant="subtle"
-                    color="red"
+                    variant="ghost"
+                    accent="danger"
                     style={{ flexShrink: 0 }}
                     onClick={() => {
                       const newAttachments = (
@@ -132,16 +134,13 @@ const AddAttachmentsSettings = ({
                       onParameterChange("attachments", newAttachments);
                     }}
                     disabled={disabled}
-                  >
-                    <LocalIcon icon="close-rounded" width="14" height="14" />
-                  </ActionIcon>
+                  />
                 </Group>
               ))}
             </Stack>
           </ScrollArea.Autosize>
         </Stack>
       )}
-
       {/* PDF/A-3b conversion option with informative tooltip */}
       <Group gap="xs" align="flex-start">
         <Checkbox
@@ -196,5 +195,4 @@ const AddAttachmentsSettings = ({
     </Stack>
   );
 };
-
 export default AddAttachmentsSettings;

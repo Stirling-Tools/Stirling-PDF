@@ -22,10 +22,9 @@ export function ApiKeysTab() {
           sub="Scoped credentials with per-key rate limits, permissions, and IP allowlists."
         />
         <Button
-          variant="gradient"
           size="sm"
           onClick={() => setModalOpen(true)}
-          leadingIcon={<span aria-hidden>+</span>}
+          leftSection={<span aria-hidden>+</span>}
         >
           Create key
         </Button>

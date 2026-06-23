@@ -463,10 +463,6 @@
   margin-left: 6px;
 }
 
-.signStripButton {
-  color: var(--text-secondary);
-}
-
 .signStripPill {
   height: 28px;
   border-radius: 999px;
@@ -568,11 +564,6 @@
   background: var(--border-default);
   margin: 0 6px;
   flex: 0 0 auto;
-}
-
-.signStripCloseButton {
-  width: 28px;
-  height: 28px;
 }
 
 /* Mobile-only delete button (no Backspace key); hidden on desktop */

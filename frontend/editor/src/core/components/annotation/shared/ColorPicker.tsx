@@ -4,13 +4,12 @@ import {
   Stack,
   ColorPicker as MantineColorPicker,
   Group,
-  Button,
   ColorSwatch,
   Slider,
   Text,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-
+import { Button } from "@shared/components/Button";
 interface ColorPickerProps {
   isOpen: boolean;
   onClose: () => void;
@@ -22,7 +21,6 @@ interface ColorPickerProps {
   showOpacity?: boolean;
   opacityLabel?: string;
 }
-
 export const ColorPicker: React.FC<ColorPickerProps> = ({
   isOpen,
   onClose,
@@ -38,7 +36,6 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
   const resolvedTitle = title ?? t("colorPicker.title", "Choose colour");
   const resolvedOpacityLabel =
     opacityLabel ?? t("annotation.opacity", "Opacity");
-
   return (
     <Modal
       opened={isOpen}
@@ -90,13 +87,11 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
     </Modal>
   );
 };
-
 interface ColorSwatchButtonProps {
   color: string;
   onClick: () => void;
   size?: number;
 }
-
 export const ColorSwatchButton: React.FC<ColorSwatchButtonProps> = ({
   color,
   onClick,

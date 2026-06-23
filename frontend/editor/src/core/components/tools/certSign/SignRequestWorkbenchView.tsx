@@ -1,15 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Paper,
-  Group,
-  Button,
-  Text,
-  Divider,
-  CloseButton,
-} from "@mantine/core";
+import { Paper, Group, Text, Divider } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useIsPhone } from "@app/hooks/useIsMobile";
 import CancelIcon from "@mui/icons-material/Cancel";
+import CloseIcon from "@mui/icons-material/Close";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import ZoomInIcon from "@mui/icons-material/ZoomIn";
 import ZoomOutIcon from "@mui/icons-material/ZoomOut";
@@ -341,14 +336,14 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
             justify={isPhone ? "flex-end" : undefined}
           >
             <Button
-              variant="light"
+              variant="outlined"
               size="sm"
               leftSection={<FolderOpenIcon fontSize="small" />}
               onClick={handleAddToActiveFiles}
               style={{
-                backgroundColor: "var(--landing-inner-paper-bg)",
-                color: "var(--btn-open-file)",
-                border: "1px solid var(--landing-inner-paper-border)",
+                "--sui-btn-bg": "var(--landing-inner-paper-bg)",
+                "--sui-btn-fg": "var(--btn-open-file)",
+                "--sui-btn-bd": "var(--landing-inner-paper-border)",
               }}
             >
               {t(
@@ -359,8 +354,8 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
             {signRequest.myStatus !== "SIGNED" &&
               signRequest.myStatus !== "DECLINED" && (
                 <Button
-                  variant="light"
-                  color="red"
+                  variant="outlined"
+                  accent="danger"
                   size="sm"
                   leftSection={<CancelIcon fontSize="small" />}
                   onClick={handleDecline}
@@ -374,37 +369,43 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
                 <Divider orientation="vertical" />
                 <Button.Group>
                   <Button
-                    variant="subtle"
+                    leftSection={<ZoomOutIcon fontSize="small" />}
+                    variant="ghost"
                     size="sm"
                     onClick={() => annotationApiRef.current?.zoomOut()}
                     title={t("viewer.zoomOut", "Zoom out")}
-                  >
-                    <ZoomOutIcon fontSize="small" />
-                  </Button>
+                    aria-label={t("viewer.zoomOut", "Zoom out")}
+                  />
                   <Button
-                    variant="subtle"
+                    leftSection={<ZoomOutMapIcon fontSize="small" />}
+                    variant="ghost"
                     size="sm"
                     onClick={() => annotationApiRef.current?.resetZoom()}
                     title={t("viewer.resetZoom", "Reset zoom")}
-                  >
-                    <ZoomOutMapIcon fontSize="small" />
-                  </Button>
+                    aria-label={t("viewer.resetZoom", "Reset zoom")}
+                  />
                   <Button
-                    variant="subtle"
+                    leftSection={<ZoomInIcon fontSize="small" />}
+                    variant="ghost"
                     size="sm"
                     onClick={() => annotationApiRef.current?.zoomIn()}
                     title={t("viewer.zoomIn", "Zoom in")}
-                  >
-                    <ZoomInIcon fontSize="small" />
-                  </Button>
+                    aria-label={t("viewer.zoomIn", "Zoom in")}
+                  />
                 </Button.Group>
               </>
             )}
             <Divider orientation="vertical" />
-            <CloseButton
+            <Button
+              leftSection={<CloseIcon />}
+              variant="ghost"
               size="md"
               onClick={onBack}
               title={t(
+                "certSign.collab.signRequest.backToList",
+                "Back to Sign Requests",
+              )}
+              aria-label={t(
                 "certSign.collab.signRequest.backToList",
                 "Back to Sign Requests",
               )}

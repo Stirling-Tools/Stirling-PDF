@@ -7,11 +7,9 @@ import React, {
   useState,
 } from "react";
 import {
-  ActionIcon,
   Alert,
   Badge,
   Box,
-  Button,
   Card,
   Divider,
   Group,
@@ -24,6 +22,7 @@ import {
   Text,
   Tooltip,
 } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { Dropzone } from "@mantine/dropzone";
 import { useTranslation } from "react-i18next";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
@@ -1552,11 +1551,11 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
       {content}
       {resizeHandle}
       {activeGroupId === groupId && (
-        <ActionIcon
-          size="xs"
-          variant="filled"
-          color="red"
-          radius="xl"
+        <Button
+          aria-label={t("pdfTextEditor.actions.clearText", "Clear text")}
+          size="sm"
+          variant="ghost"
+          accent="danger"
           style={{
             position: "absolute",
             top: -8,
@@ -1565,6 +1564,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
             cursor: "pointer",
             pointerEvents: "auto",
           }}
+          leftSection={<CloseIcon style={{ fontSize: 12 }} />}
           onMouseDown={(event) => {
             console.log(`❌ MOUSEDOWN on X button for group ${groupId}`);
             event.stopPropagation();
@@ -1595,9 +1595,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
             event.stopPropagation();
             event.preventDefault();
           }}
-        >
-          <CloseIcon style={{ fontSize: 12 }} />
-        </ActionIcon>
+        />
       )}
     </Box>
   );
@@ -2008,7 +2006,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                 </Text>
                 <Group justify="flex-end" gap="sm" mt="xs">
                   <Button
-                    variant="default"
+                    variant="outlined"
                     onClick={handleDismissWelcomeBanner}
                   >
                     {t("pdfTextEditor.welcomeBanner.gotIt", "Got it")}
@@ -2124,18 +2122,16 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                               "Merge selected boxes",
                             )}
                           >
-                            <ActionIcon
+                            <Button
                               size="sm"
-                              variant="light"
-                              color="blue"
+                              variant="outlined"
                               aria-label={t(
                                 "pdfTextEditor.manual.merge",
                                 "Merge selection",
                               )}
                               onClick={handleMergeSelection}
-                            >
-                              <MergeTypeIcon fontSize="small" />
-                            </ActionIcon>
+                              leftSection={<MergeTypeIcon fontSize="small" />}
+                            />
                           </Tooltip>
                         )}
                         {canUngroupSelection && (
@@ -2145,18 +2141,16 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                               "Split paragraph back into lines",
                             )}
                           >
-                            <ActionIcon
+                            <Button
                               size="sm"
-                              variant="light"
-                              color="blue"
+                              variant="outlined"
                               aria-label={t(
                                 "pdfTextEditor.manual.ungroup",
                                 "Ungroup selection",
                               )}
                               onClick={handleUngroupSelection}
-                            >
-                              <CallSplitIcon fontSize="small" />
-                            </ActionIcon>
+                              leftSection={<CallSplitIcon fontSize="small" />}
+                            />
                           </Tooltip>
                         )}
                         <Menu
@@ -2166,19 +2160,17 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                           disabled={!hasSelection && !hasWidthOverrides}
                         >
                           <Menu.Target>
-                            <ActionIcon
+                            <Button
                               size="sm"
-                              variant="light"
-                              color="blue"
+                              variant="outlined"
                               aria-label={t(
                                 "pdfTextEditor.manual.widthMenu",
                                 "Width options",
                               )}
                               onMouseDown={(event) => event.stopPropagation()}
                               onClick={(event) => event.stopPropagation()}
-                            >
-                              <MoreVertIcon fontSize="small" />
-                            </ActionIcon>
+                              leftSection={<MoreVertIcon fontSize="small" />}
+                            />
                           </Menu.Target>
                           <Menu.Dropdown>
                             <Menu.Item

@@ -151,15 +151,11 @@ export function CurrentPlanCard({
 
       <div className="portal-usage__plan-actions">
         {tier !== "enterprise" ? (
-          <Button
-            variant="gradient"
-            accent={tier === "free" ? "blue" : "purple"}
-            onClick={onUpgrade}
-          >
+          <Button accent="neutral" onClick={onUpgrade}>
             {tier === "free" ? "Upgrade plan" : "Talk to sales"}
           </Button>
         ) : (
-          <Button variant="outline" accent="purple" onClick={onUpgrade}>
+          <Button variant="outlined" accent="neutral" onClick={onUpgrade}>
             Adjust commitment
           </Button>
         )}

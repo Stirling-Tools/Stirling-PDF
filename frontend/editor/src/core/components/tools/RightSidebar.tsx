@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { ActionIcon } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useSidebarContext } from "@app/contexts/SidebarContext";
@@ -19,6 +18,7 @@ import { useToolSections } from "@app/hooks/useToolSections";
 import type { SubcategoryGroup } from "@app/hooks/useToolSections";
 import { ToolIcon } from "@app/components/shared/ToolIcon";
 import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
+import { Button } from "@shared/components/Button";
 import { withViewTransition } from "@app/utils/viewTransition";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
@@ -215,17 +215,19 @@ export default function RightSidebar() {
       {!fullscreenExpanded && !isPanelVisible && !isMobile && (
         <div className="tool-panel__collapsed-strip">
           <div className="tool-panel__collapsed-top">
-            <ActionIcon
-              variant="outline"
-              color="gray.4"
-              radius="xl"
+            <Button
+              leftSection={<ChevronLeftIcon sx={{ fontSize: "1.1rem" }} />}
+              aria-label={t("toolPanel.expand", "Expand panel")}
+              variant="outlined"
               size="md"
+              shape="circle"
+              style={{
+                "--sui-btn-fg": "var(--mantine-color-gray-4)",
+                "--sui-btn-bd": "var(--mantine-color-gray-4)",
+              }}
               className="tool-panel__expand-btn tool-panel__toggle-vt"
               onClick={handleExpand}
-              aria-label={t("toolPanel.expand", "Expand panel")}
-            >
-              <ChevronLeftIcon sx={{ fontSize: "1.1rem" }} />
-            </ActionIcon>
+            />
           </div>
           <div className="tool-panel__collapsed-divider" />
           {policiesEnabled && (
@@ -240,18 +242,17 @@ export default function RightSidebar() {
                 arrow
                 delay={300}
               >
-                <button
-                  type="button"
+                <Button
+                  leftSection={<ToolIcon icon={tool.icon} marginRight="0" />}
+                  aria-label={tool.name}
+                  variant="ghost"
                   className="tool-panel__collapsed-tool-btn"
                   data-selected={selectedToolKey === id}
                   onClick={() => {
                     handleExpand();
                     handleToolSelectWithTransition(id);
                   }}
-                  aria-label={tool.name}
-                >
-                  <ToolIcon icon={tool.icon} marginRight="0" />
-                </button>
+                />
               </AppTooltip>
             ))}
           </div>
@@ -311,32 +312,31 @@ export default function RightSidebar() {
                     </div>
                   ) : null}
                   {showCloseButton ? (
-                    <ActionIcon
-                      variant="subtle"
-                      color="gray"
-                      radius="xl"
-                      size="md"
-                      onClick={handleHeaderBack}
+                    <Button
+                      leftSection={<CloseIcon sx={{ fontSize: "1.1rem" }} />}
                       aria-label={
                         inToolView
                           ? t("toolPanel.backToAllTools", "Back to all tools")
                           : t("toolPanel.goBack", "Go back")
                       }
-                      className="tool-panel__expand-btn"
-                    >
-                      <CloseIcon sx={{ fontSize: "1.1rem" }} />
-                    </ActionIcon>
-                  ) : (
-                    <ActionIcon
-                      variant="outline"
-                      radius="xl"
+                      variant="ghost"
                       size="md"
-                      onClick={handleCollapse}
+                      shape="circle"
+                      onClick={handleHeaderBack}
+                      className="tool-panel__expand-btn"
+                    />
+                  ) : (
+                    <Button
+                      leftSection={
+                        <ChevronRightIcon sx={{ fontSize: "1.1rem" }} />
+                      }
                       aria-label={t("toolPanel.collapse", "Collapse panel")}
+                      variant="outlined"
+                      size="md"
+                      shape="circle"
+                      onClick={handleCollapse}
                       className="tool-panel__expand-btn tool-panel__toggle-vt"
-                    >
-                      <ChevronRightIcon sx={{ fontSize: "1.1rem" }} />
-                    </ActionIcon>
+                    />
                   )}
                 </div>
               )}
@@ -344,16 +344,17 @@ export default function RightSidebar() {
               {showPolicies && (
                 <PoliciesSection
                   leadingControl={
-                    <ActionIcon
-                      variant="outline"
-                      radius="xl"
-                      size="md"
-                      onClick={handleCollapse}
+                    <Button
+                      leftSection={
+                        <ChevronRightIcon sx={{ fontSize: "1.1rem" }} />
+                      }
                       aria-label={t("toolPanel.collapse", "Collapse panel")}
+                      variant="outlined"
+                      size="md"
+                      shape="circle"
+                      onClick={handleCollapse}
                       className="tool-panel__expand-btn tool-panel__toggle-vt"
-                    >
-                      <ChevronRightIcon sx={{ fontSize: "1.1rem" }} />
-                    </ActionIcon>
+                    />
                   }
                 />
               )}

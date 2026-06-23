@@ -1,4 +1,8 @@
-import { Stack, NumberInput, Select, SegmentedControl } from "@mantine/core";
+import { Stack, NumberInput, Select } from "@mantine/core";
+import {
+  SegmentedControl,
+  type SegmentedOption,
+} from "@shared/components/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import {
   AdjustPageScaleParameters,
@@ -47,14 +51,17 @@ const AdjustPageScaleSettings = ({
     },
   ];
 
-  const orientationOptions = [
+  const orientationDisabled = disabled || isKeepSelected;
+  const orientationOptions: SegmentedOption<Orientation>[] = [
     {
       value: "PORTRAIT",
       label: t("adjustPageScale.orientation.portrait", "Portrait"),
+      disabled: orientationDisabled,
     },
     {
       value: "LANDSCAPE",
       label: t("adjustPageScale.orientation.landscape", "Landscape"),
+      disabled: orientationDisabled,
     },
   ];
 
@@ -99,8 +106,7 @@ const AdjustPageScaleSettings = ({
         onChange={(value) =>
           onParameterChange("orientation", value as Orientation)
         }
-        data={orientationOptions}
-        disabled={disabled || isKeepSelected}
+        options={orientationOptions}
         fullWidth
       />
     </Stack>

@@ -1,4 +1,5 @@
-import { Modal, Text, Button, Stack, Group } from "@mantine/core";
+import { Modal, Text, Stack, Group } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import { WatchedFolder } from "@app/types/watchedFolders";
 
@@ -43,10 +44,15 @@ export function DeleteFolderConfirmModal({
           )}
         </Text>
         <Group gap="sm" justify="flex-end">
-          <Button variant="outline" size="sm" onClick={onCancel}>
+          <Button variant="outlined" size="sm" onClick={onCancel}>
             {t("cancel", "Cancel")}
           </Button>
-          <Button color="red" size="sm" onClick={onConfirm}>
+          <Button
+            variant="filled"
+            accent="danger"
+            size="sm"
+            onClick={onConfirm}
+          >
             {t("delete", "Delete")}
           </Button>
         </Group>

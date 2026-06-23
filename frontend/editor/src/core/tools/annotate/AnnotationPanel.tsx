@@ -4,15 +4,14 @@ import { useTranslation } from "react-i18next";
 import {
   Text,
   Group,
-  ActionIcon,
   Stack,
   Slider,
   Box,
   Tooltip as MantineTooltip,
-  Button,
   Tooltip,
   Paper,
 } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import {
   ColorPicker,
@@ -323,20 +322,17 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
     <Group gap="xs">
       {tools.map((tool) => (
         <MantineTooltip key={tool.id} label={tool.label} withArrow>
-          <ActionIcon
+          <Button
             variant={
-              activeTool === tool.id && annotationsVisible ? "filled" : "subtle"
+              activeTool === tool.id && annotationsVisible ? "filled" : "ghost"
             }
-            color={
-              activeTool === tool.id && annotationsVisible ? "blue" : undefined
-            }
-            radius="md"
             onClick={() => activateAnnotationTool(tool.id)}
             disabled={!annotationsVisible}
             aria-label={tool.label}
-          >
-            <LocalIcon icon={tool.icon} width="1.25rem" height="1.25rem" />
-          </ActionIcon>
+            leftSection={
+              <LocalIcon icon={tool.icon} width="1.25rem" height="1.25rem" />
+            }
+          />
         </MantineTooltip>
       ))}
     </Group>
@@ -600,41 +596,49 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                     {t("annotation.textAlignment", "Text Alignment")}
                   </Text>
                   <Group gap="xs">
-                    <ActionIcon
-                      variant={textAlignment === "left" ? "filled" : "default"}
+                    <Button
+                      variant={textAlignment === "left" ? "filled" : "outlined"}
                       onClick={() => setTextAlignment("left")}
                       size="md"
-                    >
-                      <LocalIcon
-                        icon="format-align-left"
-                        width={18}
-                        height={18}
-                      />
-                    </ActionIcon>
-                    <ActionIcon
+                      aria-label={t("annotation.alignLeft", "Align left")}
+                      leftSection={
+                        <LocalIcon
+                          icon="format-align-left"
+                          width={18}
+                          height={18}
+                        />
+                      }
+                    />
+                    <Button
                       variant={
-                        textAlignment === "center" ? "filled" : "default"
+                        textAlignment === "center" ? "filled" : "outlined"
                       }
                       onClick={() => setTextAlignment("center")}
                       size="md"
-                    >
-                      <LocalIcon
-                        icon="format-align-center"
-                        width={18}
-                        height={18}
-                      />
-                    </ActionIcon>
-                    <ActionIcon
-                      variant={textAlignment === "right" ? "filled" : "default"}
+                      aria-label={t("annotation.alignCenter", "Align center")}
+                      leftSection={
+                        <LocalIcon
+                          icon="format-align-center"
+                          width={18}
+                          height={18}
+                        />
+                      }
+                    />
+                    <Button
+                      variant={
+                        textAlignment === "right" ? "filled" : "outlined"
+                      }
                       onClick={() => setTextAlignment("right")}
                       size="md"
-                    >
-                      <LocalIcon
-                        icon="format-align-right"
-                        width={18}
-                        height={18}
-                      />
-                    </ActionIcon>
+                      aria-label={t("annotation.alignRight", "Align right")}
+                      leftSection={
+                        <LocalIcon
+                          icon="format-align-right"
+                          width={18}
+                          height={18}
+                        />
+                      }
+                    />
                   </Group>
                 </Box>
                 <Box>
@@ -651,8 +655,8 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                       }}
                     />
                     <Button
-                      size="xs"
-                      variant={textBackgroundColor ? "light" : "default"}
+                      size="sm"
+                      variant="outlined"
                       onClick={() => {
                         setTextBackgroundColor("");
                         annotationApiRef?.current?.setAnnotationStyle?.(
@@ -699,8 +703,8 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                     }}
                   />
                   <Button
-                    size="xs"
-                    variant={noteBackgroundColor ? "light" : "default"}
+                    size="sm"
+                    variant="outlined"
                     onClick={() => {
                       setNoteBackgroundColor("");
                       annotationApiRef?.current?.setAnnotationStyle?.(
@@ -774,8 +778,8 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                         />
                       </Box>
                       <Button
-                        size="xs"
-                        variant={shapeThickness === 0 ? "filled" : "light"}
+                        size="sm"
+                        variant={shapeThickness === 0 ? "filled" : "ghost"}
                         onClick={() =>
                           setShapeThickness(shapeThickness === 0 ? 1 : 0)
                         }
@@ -1139,30 +1143,22 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
         <Tooltip
           label={t("annotation.selectAndMove", "Select and edit annotations")}
         >
-          <ActionIcon
+          <Button
             variant={
               activeTool === "select" && annotationsVisible
                 ? "filled"
-                : "default"
+                : "outlined"
             }
-            size="lg"
             disabled={!annotationsVisible}
             onClick={() => {
               activateAnnotationTool("select");
             }}
-            style={{
-              width: "auto",
-              paddingInline: "0.75rem",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "0.4rem",
-            }}
+            leftSection={
+              <LocalIcon icon="touch-app-rounded" width={20} height={20} />
+            }
           >
-            <LocalIcon icon="touch-app-rounded" width={20} height={20} />
-            <Text component="span" size="sm" fw={500}>
-              {t("annotation.selectAndMove", "Select and Edit")}
-            </Text>
-          </ActionIcon>
+            {t("annotation.selectAndMove", "Select and Edit")}
+          </Button>
         </Tooltip>
 
         <DrawingControls
@@ -1217,12 +1213,9 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
       <Button
         fullWidth
         size="md"
-        radius="md"
-        mt="sm"
-        variant="filled"
-        color="blue"
         disabled={applyDisabled}
         onClick={onApplyChanges}
+        style={{ marginTop: "0.75rem" }}
       >
         {t("annotation.saveChanges", "Save Changes")}
       </Button>

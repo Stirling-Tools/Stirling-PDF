@@ -1,4 +1,5 @@
-import { Card, Group, Stack, Text, Button } from "@mantine/core";
+import { Card, Group, Stack, Text } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import FileUploadButton from "@app/components/shared/FileUploadButton";
 import { ValidateSignatureParameters } from "@app/hooks/tools/validateSignature/useValidateSignatureParameters";
@@ -52,8 +53,7 @@ const ValidateSignatureSettings = ({
           />
           {certFile && (
             <Button
-              variant="subtle"
-              color="gray"
+              variant="ghost"
               onClick={() => handleCertFileChange(null)}
               disabled={disabled}
             >

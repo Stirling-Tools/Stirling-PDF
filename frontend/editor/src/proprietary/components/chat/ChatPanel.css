@@ -27,7 +27,6 @@
 
 .chat-panel__agent-pill {
   display: inline-flex;
-  align-items: center;
   gap: 0.5rem;
   flex: 1;
   min-width: 0;
@@ -39,6 +38,9 @@
   transition:
     background 120ms ease-out,
     border-color 120ms ease-out;
+}
+
+.chat-fab-window--open .chat-panel__agent-pill {
   view-transition-name: stirling-agent;
 }
 
@@ -118,6 +120,12 @@
 [data-mantine-color-scheme="dark"] .chat-panel__agent-pill {
   background: transparent;
   border-color: var(--border-subtle);
+}
+
+/* The neutral ghost accent defaults to blue — use the surface text colour
+   instead so the pill label and close icon don't look like interactive links. */
+.chat-panel__header .sui-btn--ghost {
+  --sui-btn-fg: var(--text-primary);
 }
 
 [data-mantine-color-scheme="dark"] .chat-panel__agent-pill:hover {

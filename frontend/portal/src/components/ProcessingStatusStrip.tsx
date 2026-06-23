@@ -55,7 +55,7 @@ export function ProcessingStatusStrip() {
           nearCap ? (
             <Button
               size="sm"
-              variant="outline"
+              variant="outlined"
               onClick={() => setActiveView("usage")}
             >
               Upgrade

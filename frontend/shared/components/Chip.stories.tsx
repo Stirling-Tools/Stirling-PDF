@@ -8,12 +8,12 @@ const meta: Meta<typeof Chip> = {
   parameters: { layout: "centered" },
   args: {
     children: "us-east-1",
-    tone: "neutral",
+    accent: "neutral",
     size: "md",
     showDot: false,
   },
   argTypes: {
-    tone: {
+    accent: {
       control: "inline-radio",
       options: ["neutral", "blue", "purple", "green", "amber", "red"],
     },
@@ -34,7 +34,7 @@ export const ToneRow: Story = {
     <div style={{ display: "flex", gap: 8 }}>
       {(["neutral", "blue", "purple", "green", "amber", "red"] as const).map(
         (t) => (
-          <Chip key={t} tone={t}>
+          <Chip key={t} accent={t}>
             {t}
           </Chip>
         ),
@@ -53,25 +53,25 @@ export const InContext_OpChain: Story = {
         maxWidth: "32rem",
       }}
     >
-      <Chip tone="green" showDot>
+      <Chip accent="green" showDot>
         ocr
       </Chip>
-      <Chip tone="green" showDot>
+      <Chip accent="green" showDot>
         classify
       </Chip>
-      <Chip tone="green" showDot>
+      <Chip accent="green" showDot>
         extract
       </Chip>
-      <Chip tone="blue" showDot>
+      <Chip accent="blue" showDot>
         validate
       </Chip>
-      <Chip tone="red" showDot>
+      <Chip accent="red" showDot>
         redact
       </Chip>
-      <Chip tone="red" showDot>
+      <Chip accent="red" showDot>
         encrypt-rest
       </Chip>
-      <Chip tone="purple" showDot>
+      <Chip accent="purple" showDot>
         store-primary
       </Chip>
     </div>

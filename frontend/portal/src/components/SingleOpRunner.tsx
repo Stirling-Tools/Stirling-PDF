@@ -170,23 +170,21 @@ export function SingleOpRunner({
           </Button>
           {phase === "done" ? (
             <>
-              <Button variant="outline" onClick={reset}>
+              <Button variant="outlined" onClick={reset}>
                 Run again
               </Button>
               <Button
-                variant="gradient"
                 onClick={buildPipelineWithOp}
-                trailingIcon={<span aria-hidden>→</span>}
+                rightSection={<span aria-hidden>→</span>}
               >
                 Open the pipeline builder
               </Button>
             </>
           ) : (
             <Button
-              variant="gradient"
               onClick={run}
               disabled={phase === "running" || !selectedOp}
-              trailingIcon={<span aria-hidden>→</span>}
+              rightSection={<span aria-hidden>→</span>}
             >
               {phase === "running" ? "Running…" : "Run operation"}
             </Button>
@@ -235,13 +233,14 @@ export function SingleOpRunner({
                 </>
               )}
             </div>
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="sm"
               className="portal-runner__sample-btn"
               onClick={pickSample}
             >
               {sample ? "Pick another sample" : "Use a sample"}
-            </button>
+            </Button>
           </div>
 
           <div>
@@ -267,9 +266,9 @@ export function SingleOpRunner({
                 />
               )}
               {ops?.map((op) => (
-                <button
+                <Button
                   key={op.id}
-                  type="button"
+                  variant="ghost"
                   className={
                     "portal-runner__op" +
                     (selectedOpId === op.id ? " is-selected" : "")
@@ -288,7 +287,7 @@ export function SingleOpRunner({
                     {op.endpoint}
                   </span>
                   <span className="portal-runner__op-blurb">{op.blurb}</span>
-                </button>
+                </Button>
               ))}
             </div>
           </div>

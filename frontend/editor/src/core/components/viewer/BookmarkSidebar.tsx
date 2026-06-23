@@ -1,41 +1,27 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import {
-  Box,
-  ScrollArea,
-  Text,
-  ActionIcon,
-  Loader,
-  Stack,
-  TextInput,
-  Button,
-} from "@mantine/core";
+import { Box, ScrollArea, Text, Loader, Stack, TextInput } from "@mantine/core";
 import LocalIcon from "@app/components/shared/LocalIcon";
+import { Button } from "@shared/components/Button";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { PdfBookmarkObject, PdfActionType } from "@embedpdf/models";
 import BookmarksIcon from "@mui/icons-material/BookmarksRounded";
 import "@app/components/viewer/SidebarBase.css";
 import "@app/components/viewer/BookmarkSidebar.css";
-
 interface BookmarkSidebarProps {
   visible: boolean;
   thumbnailVisible: boolean;
   documentCacheKey?: string;
   preloadCacheKeys?: string[];
 }
-
 const SIDEBAR_WIDTH = "15rem";
-
 type BookmarkNode = PdfBookmarkObject & { id: string };
-
 type BookmarkCacheStatus = "idle" | "loading" | "success" | "error";
-
 interface BookmarkCacheEntry {
   status: BookmarkCacheStatus;
   bookmarks: PdfBookmarkObject[] | null;
   error: string | null;
   lastFetched: number | null;
 }
-
 const createEntry = (
   overrides: Partial<BookmarkCacheEntry> = {},
 ): BookmarkCacheEntry => ({
@@ -45,15 +31,12 @@ const createEntry = (
   lastFetched: null,
   ...overrides,
 });
-
 const resolvePageNumber = (bookmark: PdfBookmarkObject): number | null => {
   const target = bookmark.target;
   if (!target) return null;
-
   if (target.type === "destination") {
     return target.destination.pageIndex + 1;
   }
-
   if (target.type === "action") {
     const action = target.action;
     if (
@@ -65,10 +48,8 @@ const resolvePageNumber = (bookmark: PdfBookmarkObject): number | null => {
         : null;
     }
   }
-
   return null;
 };
-
 export const BookmarkSidebar = ({
   visible,
   thumbnailVisible,
@@ -87,11 +68,9 @@ export const BookmarkSidebar = ({
   const cacheRef = useRef<Map<string, BookmarkCacheEntry>>(new Map());
   const [fetchNonce, setFetchNonce] = useState(0);
   const currentKeyRef = useRef<string | null>(documentCacheKey ?? null);
-
   useEffect(() => {
     currentKeyRef.current = documentCacheKey ?? null;
   }, [documentCacheKey]);
-
   // Poll once until the bookmark bridge registers
   useEffect(() => {
     if (bookmarkSupport) return;
@@ -102,24 +81,20 @@ export const BookmarkSidebar = ({
         clearInterval(id);
       }
     }, 250);
-
     return () => {
       cancelled = true;
       clearInterval(id);
     };
   }, [bookmarkSupport, hasBookmarkSupport]);
-
   // Reset UI and load cached entry (if any) when switching documents
   useEffect(() => {
     setExpanded({});
     setSearchTerm("");
-
     if (!documentCacheKey) {
       setActiveEntry(createEntry());
       bookmarkActions.clearBookmarks();
       return;
     }
-
     const cached = cacheRef.current.get(documentCacheKey);
     if (cached) {
       setActiveEntry(cached);
@@ -138,7 +113,6 @@ export const BookmarkSidebar = ({
       bookmarkActions.clearBookmarks();
     }
   }, [documentCacheKey, bookmarkActions]);
-
   // Keep cache bounded to the currently relevant keys
   useEffect(() => {
     const allowed = new Set<string>();
@@ -150,18 +124,15 @@ export const BookmarkSidebar = ({
         allowed.add(key);
       }
     });
-
     cacheRef.current.forEach((_entry, key) => {
       if (!allowed.has(key)) {
         cacheRef.current.delete(key);
       }
     });
   }, [documentCacheKey, preloadCacheKeys]);
-
   // Fetch bookmarks for the active document when needed
   useEffect(() => {
     if (!bookmarkSupport || !documentCacheKey) return;
-
     const key = documentCacheKey;
     const cached = cacheRef.current.get(key);
     if (
@@ -170,7 +141,6 @@ export const BookmarkSidebar = ({
     ) {
       return;
     }
-
     let cancelled = false;
     const updateEntry = (entry: BookmarkCacheEntry) => {
       cacheRef.current.set(key, entry);
@@ -178,7 +148,6 @@ export const BookmarkSidebar = ({
         setActiveEntry(entry);
       }
     };
-
     updateEntry(
       createEntry({
         status: "loading",
@@ -186,7 +155,6 @@ export const BookmarkSidebar = ({
         lastFetched: cached?.lastFetched ?? null,
       }),
     );
-
     const fetchWithRetry = async () => {
       const maxAttempts = 10;
       for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -202,17 +170,14 @@ export const BookmarkSidebar = ({
             message.includes("document") &&
             message.includes("not") &&
             message.includes("open");
-
           if (!notReady || attempt === maxAttempts - 1) {
             throw error;
           }
-
           await new Promise((resolve) => setTimeout(resolve, 50));
         }
       }
       return [];
     };
-
     fetchWithRetry()
       .then((bookmarks) => {
         if (cancelled) return;
@@ -242,12 +207,10 @@ export const BookmarkSidebar = ({
           bookmarkActions.setLocalBookmarks(null, message);
         }
       });
-
     return () => {
       cancelled = true;
     };
   }, [bookmarkSupport, documentCacheKey, fetchNonce, bookmarkActions]);
-
   const requestReload = useCallback(() => {
     if (!documentCacheKey) return;
     cacheRef.current.delete(documentCacheKey);
@@ -255,7 +218,6 @@ export const BookmarkSidebar = ({
     bookmarkActions.clearBookmarks();
     setFetchNonce((value) => value + 1);
   }, [documentCacheKey, bookmarkActions]);
-
   const bookmarksWithIds = useMemo(() => {
     const assignIds = (
       nodes: PdfBookmarkObject[],
@@ -264,7 +226,6 @@ export const BookmarkSidebar = ({
       if (!Array.isArray(nodes)) {
         return [];
       }
-
       return nodes.map((node, index) => {
         const id = `${prefix}-${index}`;
         return {
@@ -274,25 +235,21 @@ export const BookmarkSidebar = ({
         };
       });
     };
-
     const bookmarks = Array.isArray(activeEntry.bookmarks)
       ? activeEntry.bookmarks
       : [];
     return assignIds(bookmarks);
   }, [activeEntry.bookmarks]);
-
   const currentStatus = activeEntry.status;
   const isLocalLoading = bookmarkSupport && currentStatus === "loading";
   const currentError =
     bookmarkSupport && currentStatus === "error" ? activeEntry.error : null;
-
   const toggleNode = (nodeId: string) => {
     setExpanded((prev) => ({
       ...prev,
       [nodeId]: !(prev[nodeId] ?? true),
     }));
   };
-
   const expandAll = useCallback(() => {
     const allExpanded: Record<string, boolean> = {};
     const expandRecursive = (nodes: BookmarkNode[]) => {
@@ -306,7 +263,6 @@ export const BookmarkSidebar = ({
     expandRecursive(bookmarksWithIds);
     setExpanded(allExpanded);
   }, [bookmarksWithIds]);
-
   const collapseAll = useCallback(() => {
     const allCollapsed: Record<string, boolean> = {};
     const collapseRecursive = (nodes: BookmarkNode[]) => {
@@ -320,7 +276,6 @@ export const BookmarkSidebar = ({
     collapseRecursive(bookmarksWithIds);
     setExpanded(allCollapsed);
   }, [bookmarksWithIds]);
-
   const handleBookmarkClick = (
     bookmark: PdfBookmarkObject,
     event: React.MouseEvent,
@@ -339,26 +294,21 @@ export const BookmarkSidebar = ({
         return;
       }
     }
-
     const pageNumber = resolvePageNumber(bookmark);
     if (pageNumber) {
       scrollActions.scrollToPage(pageNumber);
     }
   };
-
   const filteredBookmarks = useMemo(() => {
     if (!searchTerm.trim()) return bookmarksWithIds;
     const term = searchTerm.trim().toLowerCase();
-
     const applyFilter = (nodeList: BookmarkNode[]): BookmarkNode[] => {
       const results: BookmarkNode[] = [];
-
       for (const node of nodeList) {
         const childMatches = node.children
           ? applyFilter(node.children as BookmarkNode[])
           : [];
         const matchesSelf = node.title?.toLowerCase().includes(term) ?? false;
-
         if (matchesSelf || childMatches.length > 0) {
           results.push({
             ...node,
@@ -366,29 +316,22 @@ export const BookmarkSidebar = ({
           });
         }
       }
-
       return results;
     };
-
     return applyFilter(bookmarksWithIds);
   }, [bookmarksWithIds, searchTerm]);
-
   const renderBookmarks = (nodes: BookmarkNode[], depth = 0) => {
     if (!nodes || !Array.isArray(nodes)) {
       return null;
     }
-
     return nodes.map((node, _index) => {
       if (!node || !node.id) {
         return null;
       }
-
       const hasChildren =
         Array.isArray(node.children) && node.children.length > 0;
       const isNodeExpanded = expanded[node.id] ?? true;
-
       const pageNumber = resolvePageNumber(node);
-
       return (
         <div
           key={node.id}
@@ -414,23 +357,27 @@ export const BookmarkSidebar = ({
             }
           >
             {hasChildren ? (
-              <ActionIcon
-                variant="subtle"
+              <Button
+                variant="ghost"
                 size="sm"
                 className="bookmark-item__expand-icon"
+                aria-label={isNodeExpanded ? "Collapse" : "Expand"}
                 onClick={(event) => {
                   event.stopPropagation();
                   toggleNode(node.id);
                 }}
-              >
-                <LocalIcon
-                  icon={
-                    isNodeExpanded ? "keyboard-arrow-up" : "keyboard-arrow-down"
-                  }
-                  width="1rem"
-                  height="1rem"
-                />
-              </ActionIcon>
+                leftSection={
+                  <LocalIcon
+                    icon={
+                      isNodeExpanded
+                        ? "keyboard-arrow-up"
+                        : "keyboard-arrow-down"
+                    }
+                    width="1rem"
+                    height="1rem"
+                  />
+                }
+              />
             ) : (
               <span className="bookmark-item__dash">-</span>
             )}
@@ -454,7 +401,6 @@ export const BookmarkSidebar = ({
       );
     });
   };
-
   const isSearchActive = searchTerm.trim().length > 0;
   const hasBookmarks = bookmarksWithIds.length > 0;
   const showBookmarkList =
@@ -473,11 +419,9 @@ export const BookmarkSidebar = ({
     hasBookmarks &&
     filteredBookmarks.length === 0;
   const showNoDocument = bookmarkSupport && !documentCacheKey;
-
   if (!visible) {
     return null;
   }
-
   return (
     <Box
       className="sidebar-base bookmark-sidebar"
@@ -502,30 +446,39 @@ export const BookmarkSidebar = ({
         {bookmarkSupport && bookmarksWithIds.length > 0 && (
           <>
             {Object.values(expanded).some((val) => val === false) ? (
-              <ActionIcon
-                variant="subtle"
+              <Button
+                variant="ghost"
                 size="sm"
                 onClick={expandAll}
                 aria-label="Expand all bookmarks"
                 title="Expand all"
-              >
-                <LocalIcon icon="unfold-more" width="1.1rem" height="1.1rem" />
-              </ActionIcon>
+                leftSection={
+                  <LocalIcon
+                    icon="unfold-more"
+                    width="1.1rem"
+                    height="1.1rem"
+                  />
+                }
+              />
             ) : (
-              <ActionIcon
-                variant="subtle"
+              <Button
+                variant="ghost"
                 size="sm"
                 onClick={collapseAll}
                 aria-label="Collapse all bookmarks"
                 title="Collapse all"
-              >
-                <LocalIcon icon="unfold-less" width="1.1rem" height="1.1rem" />
-              </ActionIcon>
+                leftSection={
+                  <LocalIcon
+                    icon="unfold-less"
+                    width="1.1rem"
+                    height="1.1rem"
+                  />
+                }
+              />
             )}
           </>
         )}
       </div>
-
       <Box
         px="sm"
         pb="sm"
@@ -541,7 +494,6 @@ export const BookmarkSidebar = ({
           size="xs"
         />
       </Box>
-
       <ScrollArea style={{ flex: 1 }}>
         <Box p="sm" className="sidebar-base__content bookmark-sidebar__content">
           {!bookmarkSupport && (
@@ -551,7 +503,6 @@ export const BookmarkSidebar = ({
               </Text>
             </div>
           )}
-
           {bookmarkSupport && showNoDocument && (
             <div className="sidebar-base__empty-state">
               <Text size="sm" c="dimmed" ta="center">
@@ -559,18 +510,16 @@ export const BookmarkSidebar = ({
               </Text>
             </div>
           )}
-
           {bookmarkSupport && documentCacheKey && currentError && (
             <Stack gap="xs" align="center" className="sidebar-base__error">
               <Text size="sm" c="red" ta="center">
                 {currentError}
               </Text>
-              <Button size="xs" variant="light" onClick={requestReload}>
+              <Button variant="outlined" size="sm" onClick={requestReload}>
                 Retry
               </Button>
             </Stack>
           )}
-
           {bookmarkSupport && documentCacheKey && isLocalLoading && (
             <Stack
               gap="md"
@@ -585,7 +534,6 @@ export const BookmarkSidebar = ({
               </Text>
             </Stack>
           )}
-
           {showEmptyState && (
             <div className="sidebar-base__empty-state">
               <Text size="sm" c="dimmed" ta="center">
@@ -593,13 +541,11 @@ export const BookmarkSidebar = ({
               </Text>
             </div>
           )}
-
           {showBookmarkList && (
             <div className="bookmark-list">
               {renderBookmarks(filteredBookmarks)}
             </div>
           )}
-
           {showSearchEmpty && (
             <div className="sidebar-base__empty-state">
               <Text size="sm" c="dimmed" ta="center">

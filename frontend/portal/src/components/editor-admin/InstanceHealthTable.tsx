@@ -27,7 +27,7 @@ const cols: TableColumn<EditorInstance>[] = [
       <div className="portal-editor__cell-stack">
         <span className="portal-editor__cell-strong">{i.host}</span>
         <span className="portal-editor__cell-muted">
-          <Chip size="sm" tone={TARGET_META[i.target].tone}>
+          <Chip size="sm" accent={TARGET_META[i.target].tone}>
             {TARGET_LABEL[i.target]}
           </Chip>
         </span>

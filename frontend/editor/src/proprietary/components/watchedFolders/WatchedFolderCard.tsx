@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Box, Button, Text, ActionIcon, Group, Loader } from "@mantine/core";
+import { Box, Button, Text, Group, Loader } from "@mantine/core";
+import { Button as SharedButton } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -8,7 +9,6 @@ import PauseCircleOutlineIcon from "@mui/icons-material/PauseCircleOutlined";
 import { WatchedFolder } from "@app/types/watchedFolders";
 import { FolderRunStatus } from "@app/hooks/useFolderRunStatuses";
 import { iconMap } from "@app/components/tools/automate/iconMap";
-
 interface WatchedFolderCardProps {
   folder: WatchedFolder;
   isActive: boolean;
@@ -18,7 +18,6 @@ interface WatchedFolderCardProps {
   onDelete: (e: React.MouseEvent) => void;
   onFileDrop?: (fileIds: string[]) => void;
 }
-
 export function WatchedFolderCard({
   folder,
   isActive,
@@ -33,7 +32,6 @@ export function WatchedFolderCard({
   const [isDragOver, setIsDragOver] = useState(false);
   const IconComponent =
     iconMap[folder.icon as keyof typeof iconMap] || iconMap.FolderIcon;
-
   const handleDragOver = (e: React.DragEvent) => {
     const types = e.dataTransfer.types;
     if (
@@ -45,9 +43,7 @@ export function WatchedFolderCard({
     e.dataTransfer.dropEffect = "copy";
     setIsDragOver(true);
   };
-
   const handleDragLeave = () => setIsDragOver(false);
-
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
@@ -64,7 +60,6 @@ export function WatchedFolderCard({
     const fileId = e.dataTransfer.getData("watchedFolderFileId");
     if (fileId && onFileDrop) onFileDrop([fileId]);
   };
-
   return (
     <Box
       className="tool-button-container"
@@ -109,24 +104,22 @@ export function WatchedFolderCard({
         rightSection={
           isHovered ? (
             <Group gap={2} onClick={(e) => e.stopPropagation()}>
-              <ActionIcon
-                size="xs"
-                variant="subtle"
+              <SharedButton
+                size="sm"
+                variant="ghost"
                 onClick={onEdit}
                 aria-label={t("watchedFolders.card.edit", "Edit folder")}
-              >
-                <EditIcon style={{ fontSize: 11 }} />
-              </ActionIcon>
+                leftSection={<EditIcon style={{ fontSize: 11 }} />}
+              />
               {!folder.isDefault && (
-                <ActionIcon
-                  size="xs"
-                  variant="subtle"
-                  color="red"
+                <SharedButton
+                  size="sm"
+                  variant="ghost"
+                  accent="danger"
                   onClick={onDelete}
                   aria-label={t("watchedFolders.card.delete", "Delete folder")}
-                >
-                  <DeleteIcon style={{ fontSize: 11 }} />
-                </ActionIcon>
+                  leftSection={<DeleteIcon style={{ fontSize: 11 }} />}
+                />
               )}
             </Group>
           ) : folder.isPaused ? (

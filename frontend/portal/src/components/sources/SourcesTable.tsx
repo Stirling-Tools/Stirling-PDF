@@ -36,7 +36,7 @@ export function SourcesTable({
               </span>
               <div className="portal-sources__name-text">
                 <strong>{s.name}</strong>
-                <Chip tone={meta.tone} size="sm">
+                <Chip accent={meta.tone} size="sm">
                   {meta.label}
                 </Chip>
               </div>

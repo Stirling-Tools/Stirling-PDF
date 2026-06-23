@@ -31,10 +31,10 @@ export const WithCTAs: Story = {
       "The fastest way in is forking a pre-bundled pipeline like PII Sweep or Compliance Pack.",
     actions: (
       <>
-        <Button variant="gradient" trailingIcon={<span aria-hidden>→</span>}>
+        <Button rightSection={<span aria-hidden>→</span>}>
           Browse templates
         </Button>
-        <Button variant="outline">Build from scratch</Button>
+        <Button variant="outlined">Build from scratch</Button>
       </>
     ),
   },

@@ -63,7 +63,7 @@ export function ConnectWizard({ open, onClose }: ConnectWizardProps) {
           <Button
             size="sm"
             onClick={advance}
-            trailingIcon={!isLast ? <span aria-hidden>→</span> : undefined}
+            rightSection={!isLast ? <span aria-hidden>→</span> : undefined}
           >
             {isLast ? "Connect source" : "Continue"}
           </Button>
@@ -92,9 +92,9 @@ export function ConnectWizard({ open, onClose }: ConnectWizardProps) {
           {(Object.keys(SOURCE_TYPE_META) as Source["type"][]).map((t) => {
             const meta = SOURCE_TYPE_META[t];
             return (
-              <button
+              <Button
                 key={t}
-                type="button"
+                variant="ghost"
                 className={
                   "portal-sources__type-card" +
                   (type === t ? " is-selected" : "")
@@ -105,7 +105,7 @@ export function ConnectWizard({ open, onClose }: ConnectWizardProps) {
                   {meta.icon}
                 </span>
                 <span className="portal-sources__type-name">{meta.label}</span>
-              </button>
+              </Button>
             );
           })}
         </div>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Stack, Button, Box } from "@mantine/core";
+import { Stack, Box } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import { useIndexedDBThumbnail } from "@app/hooks/useIndexedDBThumbnail";
 import { useFileManagerContext } from "@app/contexts/FileManagerContext";
@@ -112,11 +113,11 @@ const FileDetails: React.FC<FileDetailsProps> = ({ compact = false }) => {
         disabled={!hasSelection && !canCloseAll}
         fullWidth
         style={{
-          backgroundColor:
+          "--sui-btn-bg":
             hasSelection || canCloseAll
               ? "var(--btn-open-file)"
               : "var(--mantine-color-gray-4)",
-          color: "white",
+          "--sui-btn-fg": "white",
         }}
       >
         {canCloseAll

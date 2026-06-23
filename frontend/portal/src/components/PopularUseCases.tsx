@@ -1,4 +1,4 @@
-import { Card, type CardProps } from "@shared/components";
+import { Button, Card, type CardProps } from "@shared/components";
 import { useView } from "@portal/contexts/ViewContext";
 import "@portal/components/PopularUseCases.css";
 
@@ -67,13 +67,15 @@ export function PopularUseCases() {
     <section className="portal-usecases" aria-label="Popular use cases">
       <header className="portal-usecases__head">
         <h2 className="portal-usecases__title">Popular use cases</h2>
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="sm"
           className="portal-usecases__viewall"
           onClick={() => setActiveView("pipelines")}
+          rightSection={<span aria-hidden>→</span>}
         >
-          View all pipelines <span aria-hidden>→</span>
-        </button>
+          View all pipelines
+        </Button>
       </header>
       <div className="portal-usecases__grid">
         {USE_CASES.map((uc) => (
@@ -91,14 +93,14 @@ export function PopularUseCases() {
             </span>
             <h3 className="portal-usecases__card-title">{uc.title}</h3>
             <p className="portal-usecases__blurb">{uc.blurb}</p>
-            <button
-              type="button"
+            <Button
+              variant="ghost"
               className="portal-usecases__cta"
               style={{ color: ACCENT_COLOR[uc.accent] }}
               onClick={() => setActiveView("pipelines")}
             >
               {uc.cta} <span aria-hidden>→</span>
-            </button>
+            </Button>
           </Card>
         ))}
       </div>

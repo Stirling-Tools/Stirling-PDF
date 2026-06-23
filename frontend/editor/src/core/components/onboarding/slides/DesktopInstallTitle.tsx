@@ -1,6 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Menu, ActionIcon } from "@mantine/core";
+import { Menu } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 export interface OSOption {
@@ -66,18 +67,21 @@ export const DesktopInstallTitle: React.FC<DesktopInstallTitleProps> = ({
       <span style={{ whiteSpace: "nowrap" }}>{title}</span>
       <Menu position="bottom" offset={5} zIndex={10000}>
         <Menu.Target>
-          <ActionIcon
-            variant="transparent"
+          <Button
+            variant="ghost"
             size="sm"
+            aria-label={t(
+              "onboarding.desktopInstall.selectOs",
+              "Select operating system",
+            )}
+            leftSection={<ExpandMoreIcon fontSize="small" />}
             style={{
               background: "transparent",
               border: "none",
               color: "inherit",
               padding: 0,
             }}
-          >
-            <ExpandMoreIcon fontSize="small" />
-          </ActionIcon>
+          />
         </Menu.Target>
         <Menu.Dropdown>
           {osOptions.map((option) => {

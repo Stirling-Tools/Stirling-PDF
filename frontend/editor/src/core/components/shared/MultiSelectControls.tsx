@@ -1,4 +1,5 @@
-import { Box, Group, Text, Button } from "@mantine/core";
+import { Box, Group, Text } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 
 interface MultiSelectControlsProps {
@@ -36,20 +37,20 @@ const MultiSelectControls = ({
           {selectedCount} {t("fileManager.filesSelected", "files")}
         </Text>
         <Group>
-          <Button size="xs" variant="light" onClick={onClearSelection}>
+          <Button variant="outlined" size="sm" onClick={onClearSelection}>
             {t("fileManager.clearSelection", "Clear files")}
           </Button>
 
           {onAddToUpload && (
-            <Button size="xs" color="green" onClick={onAddToUpload}>
+            <Button accent="success" size="sm" onClick={onAddToUpload}>
               {t("fileManager.addToUpload", "Add to Upload")}
             </Button>
           )}
 
           {onOpenInFileEditor && (
             <Button
-              size="xs"
-              color="orange"
+              accent="warning"
+              size="sm"
               onClick={onOpenInFileEditor}
               disabled={selectedCount === 0}
             >
@@ -59,8 +60,7 @@ const MultiSelectControls = ({
 
           {onOpenInPageEditor && (
             <Button
-              size="xs"
-              color="blue"
+              size="sm"
               onClick={onOpenInPageEditor}
               disabled={selectedCount === 0}
             >
@@ -69,7 +69,7 @@ const MultiSelectControls = ({
           )}
 
           {onDeleteAll && (
-            <Button size="xs" color="red" onClick={onDeleteAll}>
+            <Button accent="danger" size="sm" onClick={onDeleteAll}>
               {t("fileManager.deleteAll", "Delete All")}
             </Button>
           )}

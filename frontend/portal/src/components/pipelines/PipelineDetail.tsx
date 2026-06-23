@@ -90,7 +90,7 @@ export function PipelineDetail({ pipeline }: PipelineDetailProps) {
                     </span>
                   ) : (
                     stage.ops.map((op) => (
-                      <Chip key={op} tone={accent} size="sm">
+                      <Chip key={op} accent={accent} size="sm">
                         {op}
                       </Chip>
                     ))

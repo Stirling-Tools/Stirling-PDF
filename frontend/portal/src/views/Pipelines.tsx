@@ -51,9 +51,8 @@ export function Pipelines() {
           </p>
         </div>
         <Button
-          variant="gradient"
           onClick={() => setComposerOpen(true)}
-          leadingIcon={<span aria-hidden>+</span>}
+          leftSection={<span aria-hidden>+</span>}
         >
           New pipeline
         </Button>
@@ -90,7 +89,7 @@ export function Pipelines() {
           title="No pipelines yet"
           description="Compose your first document workflow from the typed operation library — pick a source, chain the ops, and route the output."
           actions={
-            <Button variant="gradient" onClick={() => setComposerOpen(true)}>
+            <Button onClick={() => setComposerOpen(true)}>
               Build your first pipeline
             </Button>
           }

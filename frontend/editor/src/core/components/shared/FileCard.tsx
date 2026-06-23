@@ -1,25 +1,14 @@
 import { useState } from "react";
-import {
-  Card,
-  Stack,
-  Text,
-  Group,
-  Badge,
-  Button,
-  Box,
-  ActionIcon,
-  Tooltip,
-} from "@mantine/core";
+import { Card, Stack, Text, Group, Badge, Box, Tooltip } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import StorageIcon from "@mui/icons-material/Storage";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
-
 import { StirlingFileStub } from "@app/types/fileContext";
 import { getFileSize, getFileDate } from "@app/utils/fileUtils";
 import { useFileThumbnail } from "@app/hooks/useFileThumbnail";
 import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbnail";
-
 interface FileCardProps {
   file: File;
   fileStub?: StirlingFileStub;
@@ -31,7 +20,6 @@ interface FileCardProps {
   onSelect?: () => void;
   isSupported?: boolean; // Whether the file format is supported by the current tool
 }
-
 const FileCard = ({
   file,
   fileStub,
@@ -50,10 +38,8 @@ const FileCard = ({
     isGenerating,
   } = useFileThumbnail(fileStub);
   const [isHovered, setIsHovered] = useState(false);
-
   const isPdf = file.type === "application/pdf";
   const isHydrating = isPdf && !isEncrypted && !thumb && !isGenerating;
-
   return (
     <Card
       shadow="xs"
@@ -112,34 +98,36 @@ const FileCard = ({
             >
               {onView && (
                 <Tooltip label={t("fileCard.viewInViewer", "View in Viewer")}>
-                  <ActionIcon
+                  <Button
                     size="sm"
-                    variant="subtle"
-                    color="blue"
+                    variant="ghost"
+                    aria-label={t("fileCard.viewInViewer", "View in Viewer")}
                     onClick={(e) => {
                       e.stopPropagation();
                       onView();
                     }}
-                  >
-                    <VisibilityIcon style={{ fontSize: 16 }} />
-                  </ActionIcon>
+                    leftSection={<VisibilityIcon style={{ fontSize: 16 }} />}
+                  />
                 </Tooltip>
               )}
               {onEdit && (
                 <Tooltip
                   label={t("fileCard.openInFileEditor", "Open in File Editor")}
                 >
-                  <ActionIcon
+                  <Button
                     size="sm"
-                    variant="subtle"
-                    color="orange"
+                    variant="ghost"
+                    accent="warning"
+                    aria-label={t(
+                      "fileCard.openInFileEditor",
+                      "Open in File Editor",
+                    )}
                     onClick={(e) => {
                       e.stopPropagation();
                       onEdit();
                     }}
-                  >
-                    <EditIcon style={{ fontSize: 16 }} />
-                  </ActionIcon>
+                    leftSection={<EditIcon style={{ fontSize: 16 }} />}
+                  />
                 </Tooltip>
               )}
             </div>
@@ -152,11 +140,9 @@ const FileCard = ({
             iconSize="3rem"
           />
         </Box>
-
         <Text fw={500} size="sm" lineClamp={1} ta="center">
           {file.name}
         </Text>
-
         <Group gap="xs" justify="center">
           <Badge color="red" variant="light" size="sm">
             {getFileSize(file)}
@@ -180,16 +166,15 @@ const FileCard = ({
             </Badge>
           )}
         </Group>
-
         <Button
-          color="red"
-          size="xs"
-          variant="light"
+          accent="danger"
+          size="sm"
+          variant="outlined"
           onClick={(e) => {
             e.stopPropagation();
             onRemove();
           }}
-          mt={4}
+          style={{ marginTop: 4 }}
         >
           {t("delete", "Remove")}
         </Button>
@@ -197,5 +182,4 @@ const FileCard = ({
     </Card>
   );
 };
-
 export default FileCard;

@@ -1,5 +1,6 @@
 import React from "react";
-import { Stack, Box, Text, Button, ActionIcon, Center } from "@mantine/core";
+import { Stack, Box, Text, Center } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
@@ -127,22 +128,22 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
         {/* Navigation arrows for multiple files */}
         {hasMultipleFiles && (
           <Box style={{ display: "flex", gap: "0.25rem" }}>
-            <ActionIcon
-              variant="subtle"
+            <Button
+              variant="ghost"
               size="sm"
               onClick={onPrevious}
               disabled={isAnimating}
-            >
-              <ChevronLeftIcon style={{ fontSize: 16 }} />
-            </ActionIcon>
-            <ActionIcon
-              variant="subtle"
+              aria-label={t("fileManager.previousFile", "Previous file")}
+              leftSection={<ChevronLeftIcon style={{ fontSize: 16 }} />}
+            />
+            <Button
+              variant="ghost"
               size="sm"
               onClick={onNext}
               disabled={isAnimating}
-            >
-              <ChevronRightIcon style={{ fontSize: 16 }} />
-            </ActionIcon>
+              aria-label={t("fileManager.nextFile", "Next file")}
+              leftSection={<ChevronRightIcon style={{ fontSize: 16 }} />}
+            />
           </Box>
         )}
       </Box>
@@ -154,11 +155,11 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
         disabled={!hasSelection && !canCloseAll}
         fullWidth
         style={{
-          backgroundColor:
+          "--sui-btn-bg":
             hasSelection || canCloseAll
               ? "var(--btn-open-file)"
               : "var(--mantine-color-gray-4)",
-          color: "white",
+          "--sui-btn-fg": "white",
         }}
       >
         {canCloseAll

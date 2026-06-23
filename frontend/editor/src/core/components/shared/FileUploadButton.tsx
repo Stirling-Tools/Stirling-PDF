@@ -1,7 +1,6 @@
 import { useRef } from "react";
 import { FileButton, Button } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-
 interface FileUploadButtonProps {
   file?: File;
   onChange: (file: File | null) => void;
@@ -11,7 +10,6 @@ interface FileUploadButtonProps {
   variant?: "outline" | "filled" | "light" | "default" | "subtle" | "gradient";
   fullWidth?: boolean;
 }
-
 const FileUploadButton = ({
   file,
   onChange,
@@ -23,9 +21,7 @@ const FileUploadButton = ({
 }: FileUploadButtonProps) => {
   const { t } = useTranslation();
   const resetRef = useRef<() => void>(null);
-
   const defaultPlaceholder = t("chooseFile", "Choose File");
-
   return (
     <FileButton
       resetRef={resetRef}
@@ -41,5 +37,4 @@ const FileUploadButton = ({
     </FileButton>
   );
 };
-
 export default FileUploadButton;

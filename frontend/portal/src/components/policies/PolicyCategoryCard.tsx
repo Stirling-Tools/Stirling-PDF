@@ -2,12 +2,10 @@ import { Card, Chip, StatusBadge, StatTile } from "@shared/components";
 import type { CatalogueEntry } from "@portal/api/policies";
 import { policyIcon } from "@portal/components/policies/policyIcons";
 import "@portal/views/Policies.css";
-
 interface PolicyCategoryCardProps {
   entry: CatalogueEntry;
   onOpen: (entry: CatalogueEntry) => void;
 }
-
 /**
  * One card per policy category. Configured categories show the live status +
  * stats and open the detail panel; unconfigured ones show the summary + a
@@ -18,7 +16,6 @@ export function PolicyCategoryCard({ entry, onOpen }: PolicyCategoryCardProps) {
   const comingSoon = category.comingSoon === true;
   const openable = !comingSoon;
   const status = policy?.state.status;
-
   return (
     <Card
       className={
@@ -52,7 +49,7 @@ export function PolicyCategoryCard({ entry, onOpen }: PolicyCategoryCardProps) {
           <span className="portal-policies__card-blurb">{category.desc}</span>
         </div>
         {comingSoon ? (
-          <Chip tone="neutral" size="sm">
+          <Chip accent="neutral" size="sm">
             Coming soon
           </Chip>
         ) : policy ? (
@@ -64,14 +61,12 @@ export function PolicyCategoryCard({ entry, onOpen }: PolicyCategoryCardProps) {
             {status === "paused" ? "Paused" : "Active"}
           </StatusBadge>
         ) : (
-          <Chip tone="blue" size="sm">
+          <Chip accent="blue" size="sm">
             Not set up
           </Chip>
         )}
       </header>
-
       <p className="portal-policies__card-summary">{config.summary}</p>
-
       {policy ? (
         <footer className="portal-policies__card-stats">
           <StatTile
@@ -85,7 +80,7 @@ export function PolicyCategoryCard({ entry, onOpen }: PolicyCategoryCardProps) {
         <footer className="portal-policies__card-foot">
           <div className="portal-policies__card-rules">
             {config.rules.slice(0, 3).map((rule) => (
-              <Chip key={rule} tone="neutral" size="sm">
+              <Chip key={rule} accent="neutral" size="sm">
                 {rule}
               </Chip>
             ))}

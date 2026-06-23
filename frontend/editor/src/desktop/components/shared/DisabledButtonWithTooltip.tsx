@@ -1,6 +1,5 @@
 import React from "react";
 import "@app/components/shared/DisabledButtonWithTooltip.css";
-
 interface DisabledButtonWithTooltipProps {
   /** Tooltip text shown on hover */
   tooltip: string;
@@ -8,7 +7,6 @@ interface DisabledButtonWithTooltipProps {
   className?: string;
   style?: React.CSSProperties;
 }
-
 /**
  * A visually disabled button that still responds to hover (showing a tooltip).
  * Mantine's disabled prop prevents pointer events entirely, so this is a plain
