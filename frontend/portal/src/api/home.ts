@@ -13,10 +13,13 @@ export type {
   ActivityKind,
   KpiEntry,
   OnboardingStep,
+  PipelineStage,
+  PipelineTemplate,
   RegionHealth,
   UsagePoint,
   UsageSeriesResponse,
 } from "@portal/mocks/home";
+export { PIPELINE_STAGES, PIPELINE_TEMPLATES } from "@portal/mocks/home";
 
 /** GET /v1/analytics/usage?window=30d */
 export async function fetchUsageSeries(): Promise<UsageSeriesResponse> {

@@ -2,7 +2,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "paths": {
-      "@app/*": ["src/core/*"],
+      "@app/*": ["./src/core/*"],
       "@shared/*": ["../shared/*"]
     }
   },

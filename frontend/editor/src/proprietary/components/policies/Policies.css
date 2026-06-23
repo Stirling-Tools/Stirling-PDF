@@ -1,0 +1,522 @@
+/* ============================ Policies ============================ */
+/* The Policies surface is docked in the right tool sidebar: a list section  */
+/* above Tools, a detail takeover that replaces Tools when a policy is open, */
+/* and a collapsed-rail of policy icons.                                     */
+/*                                                                           */
+/* Chrome (headers, cards, buttons, badges, chips, lists, steps…) uses SUI   */
+/* (@shared/components). The bespoke .pol-* bits below are thin layout        */
+/* scaffolding + the collapsed rail; spacing snaps to the SUI --space-*       */
+/* scale and colour to the SUI token set so it reads as one product.         */
+
+/* Dark mode only: remap SUI surface/border tokens to the app's neutral-grey values so policy cards read as one product with the rail; accent tokens are left alone. */
+[data-theme="dark"] .pol-list,
+[data-theme="dark"] .pol-takeover,
+[data-theme="dark"] .pol-detail,
+[data-theme="dark"] .pol-crail {
+  --color-bg: var(--bg-toolbar);
+  --color-bg-alt: var(--bg-toolbar);
+  --color-bg-subtle: var(--bg-toolbar);
+  --color-surface: var(--bg-surface);
+  --color-surface-alt: #323942;
+  --color-bg-hover: #323942;
+  --color-bg-muted: var(--bg-surface);
+  --color-border: var(--border-default);
+  --color-border-light: var(--border-subtle);
+  --color-border-input: var(--border-strong);
+  --color-border-hover: var(--border-strong);
+  --color-divider: var(--border-subtle);
+  --color-dropdown-bg: var(--bg-surface);
+  --color-dropdown-border: var(--border-default);
+}
+
+/* ---- List ---- */
+.pol-list {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+/* Header row: optional leading control (sidebar collapse) + the SectionHeader,
+   mirroring the back-button + title layout inside an open policy. */
+.pol-list-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+}
+.pol-list-head .sui-sectionhdr {
+  flex: 1;
+  min-width: 0;
+}
+/* Small "what is a policy?" info button on the header. */
+/* Bare info icon matching the tool-step affordance (LocalIcon, no chrome). */
+.pol-info-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: opacity var(--motion-fast);
+}
+.pol-info-btn:hover {
+  opacity: 0.7;
+}
+.pol-list-rows {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-1) var(--space-1_5);
+  gap: 0.0625rem;
+}
+/* A policy row: tinted icon tile + label + trailing status/CTA. */
+.pol-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-1_5) var(--space-2);
+  border: none;
+  border-radius: var(--radius-lg);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--motion-fast);
+}
+.pol-row:hover {
+  background: var(--color-bg-hover);
+}
+.pol-row:focus-visible {
+  outline: 2px solid var(--color-blue);
+  outline-offset: -2px;
+}
+/* Policy icons are colourless at rest; hovering or focusing the row reveals the
+   category colour (blue/purple/green/amber/red — see ROW_ACCENT). The accent
+   class sets --ib-base; we neutralise --ib-accent here and restore it on hover. */
+.pol-row .sui-iconbadge {
+  --ib-accent: var(--color-text-3);
+  transition:
+    color var(--motion-fast),
+    background var(--motion-fast);
+}
+.pol-row:hover .sui-iconbadge,
+.pol-row:focus-visible .sui-iconbadge {
+  --ib-accent: var(--ib-base);
+}
+.pol-row-label {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text-1);
+}
+.pol-row-trail {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-left: auto;
+}
+/* Unconfigured rows: a quiet blue "Set up" call-to-action instead of a status pill. */
+.pol-row-setup {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--color-blue);
+}
+/* Trailing drill-in chevron on each policy row (after the status / CTA). */
+.pol-row-chevron {
+  color: var(--color-text-4);
+  flex-shrink: 0;
+}
+
+/* Retry button on a failed activity row. */
+/* Expandable error text in the activity feed — long backend errors are clamped
+   and collapsed by default so they don't blow up the row. */
+.pol-activity-error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.125rem;
+}
+.pol-activity-error__text {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.pol-activity-error__text--clamped {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.pol-activity-error__toggle {
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: inherit;
+  font-weight: 600;
+  color: var(--color-blue);
+  cursor: pointer;
+}
+.pol-activity-error__toggle:hover {
+  text-decoration: underline;
+}
+
+/* Enterprise-only ("coming soon") row — shown to admins / team leaders but not
+   available on the current plan, so the whole box is dimmed to read as disabled.
+   The row itself isn't a button; its trailing "Upgrade to enterprise" link is. */
+.pol-row--soon {
+  cursor: default;
+  opacity: 0.55;
+}
+.pol-row--soon:hover {
+  background: transparent;
+}
+/* Trailing "Upgrade to enterprise" link → contact us. Greyed to match the
+   disabled row; still clickable for admins who want to enquire. */
+.pol-row-upgrade {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--color-text-4);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.pol-row-upgrade:hover {
+  text-decoration: underline;
+}
+
+/* In-progress activity icon spins gently. */
+.pol-spin {
+  animation: pol-spin 1.2s linear infinite;
+}
+@keyframes pol-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---- Locked, per-tool config (PolicyToolConfig): one section per tool ---- */
+.pol-tool-config {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.pol-tool-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+}
+.pol-tool-icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-text-3);
+}
+.pol-tool-name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+  margin-right: auto;
+}
+.pol-tool-body {
+  padding: 0 var(--space-3) var(--space-3);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-3);
+}
+
+/* ---- Detail container (wizard / narrative / settings share this) ---- */
+.pol-detail {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  max-width: 32rem;
+  width: 100%;
+}
+
+/* ---- Step indicator (wraps a SUI StepIndicator) ---- */
+.pol-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0 var(--space-5) var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+.pol-step-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-4);
+}
+
+/* ---- Scroll body ---- */
+.pol-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-3) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.pol-desc {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-text-4);
+  margin: 0;
+  margin-bottom: var(--space-3);
+}
+.pol-section-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-4);
+  /* Bottom gap so the label doesn't hug its card/chips. */
+  margin: 0 0 var(--space-2);
+}
+
+/* Sub-section header inside a settings card (e.g. "Output filename"). The field
+   directly below it carries data-first so the borders don't double up. */
+.pol-subhead {
+  padding: 0.55rem 0.875rem 0.4rem;
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-4);
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+}
+
+/* Position dropdown + custom-text input sitting on one row under the
+   "Output filename" subhead — the dropdown sizes to content, text fills. */
+.pol-name-row {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+.pol-name-row > :first-child {
+  flex: 0 0 auto;
+}
+.pol-name-row > :last-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* ---- Fields (PolicyFieldRow) — row inset matches SUI ListRow ---- */
+.pol-field {
+  padding: 0.7rem 0.875rem;
+  background: var(--color-surface);
+}
+.pol-field:not([data-first]) {
+  border-top: 1px solid var(--color-border);
+}
+.pol-field-label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text-1);
+}
+.pol-field-count {
+  font-size: 0.6875rem;
+  color: var(--color-text-4);
+}
+.pol-field-chips-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-2);
+}
+.pol-field-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1_5);
+}
+
+/* ---- Sources ---- */
+.pol-source {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.7rem 0.875rem;
+  cursor: pointer;
+  background: var(--color-surface);
+}
+.pol-source:not([data-first]) {
+  border-top: 1px solid var(--color-border);
+}
+
+/* ---- Doc types ---- */
+.pol-link {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-blue);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+.pol-doctypes-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.7rem 0.875rem;
+}
+.pol-doctypes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2) 0.875rem var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+/* ---- Summary ---- */
+.pol-summary-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+.pol-summary-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+.pol-summary-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1_5);
+}
+/* Muted placeholder for an unset summary value (e.g. no reviewer chosen). */
+.pol-muted {
+  color: var(--color-text-4);
+}
+
+/* ---- Enforces rule flow (wraps a SUI ChipFlow) ---- */
+.pol-rule-flow {
+  margin-bottom: var(--space-2);
+}
+
+/* ---- Meta / note ---- */
+.pol-meta-row {
+  display: flex;
+  gap: var(--space-3);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border);
+}
+.pol-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1_5);
+  font-size: 0.75rem;
+  color: var(--color-text-4);
+}
+.pol-note {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-muted);
+  font-size: 0.75rem;
+  color: var(--color-text-4);
+}
+
+/* ---- Stats: one grouped card with three divided columns. ---- */
+.pol-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+.pol-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-0_5);
+  padding: var(--space-3) var(--space-2);
+  text-align: center;
+}
+.pol-stat:not(:first-child) {
+  border-left: 1px solid var(--color-border);
+}
+.pol-stat-value {
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--color-text-1);
+}
+.pol-stat-label {
+  font-size: 0.6875rem;
+  color: var(--color-text-4);
+}
+
+/* ---- Footer (hosts SUI Buttons) ---- */
+.pol-footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-5);
+  border-top: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+.pol-footer-end {
+  justify-content: flex-end;
+}
+
+/* ---- Detail takeover (fills the rail when a policy is open) ---- */
+.pol-takeover {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- Collapsed rail policy icons ---- */
+.pol-crail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  flex-shrink: 0;
+  /* The collapsed-rail dividers carry 8px of space below them only, so the
+     divider above gives the row 8px of headroom while the one below (rendered
+     straight after) hugs it. Match that 8px underneath so the row sits centred
+     between the two dividers. */
+  margin-bottom: 8px;
+}
+.pol-crail-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-3);
+  cursor: pointer;
+  transition: background var(--motion-fast);
+}
+.pol-crail-btn:hover {
+  background: var(--color-blue-light);
+}
+.pol-crail-btn[data-status="active"] {
+  color: var(--color-blue);
+}
+.pol-crail-btn[data-status="paused"] {
+  color: var(--color-amber);
+}
+.pol-crail-dot {
+  position: absolute;
+  top: 0.1rem;
+  right: 0.1rem;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  border: 2px solid var(--bg-toolbar, var(--color-surface));
+}
+.pol-crail-dot[data-status="active"] {
+  background: var(--color-green);
+}
+.pol-crail-dot[data-status="paused"] {
+  background: var(--color-amber);
+}

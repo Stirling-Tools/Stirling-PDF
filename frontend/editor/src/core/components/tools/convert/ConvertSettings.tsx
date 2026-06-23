@@ -10,7 +10,11 @@ import {
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useTranslation } from "react-i18next";
 import { useMultipleEndpointsEnabled } from "@app/hooks/useEndpointConfig";
-import { isImageFormat, isWebFormat } from "@app/utils/convertUtils";
+import {
+  isImageFormat,
+  isWebFormat,
+  getAvailableToExtensions as defaultGetAvailableToExtensions,
+} from "@app/utils/convertUtils";
 import { getConversionEndpoints } from "@app/data/toolsTaxonomy";
 import { useFileSelection } from "@app/contexts/FileContext";
 import { useFileState } from "@app/contexts/FileContext";
@@ -47,18 +51,18 @@ interface ConvertSettingsProps {
     key: K,
     value: ConvertParameters[K],
   ) => void;
-  getAvailableToExtensions: (
+  getAvailableToExtensions?: (
     fromExtension: string,
   ) => Array<{ value: string; label: string; group: string }>;
-  selectedFiles: StirlingFile[];
+  selectedFiles?: StirlingFile[];
   disabled?: boolean;
 }
 
 const ConvertSettings = ({
   parameters,
   onParameterChange,
-  getAvailableToExtensions,
-  selectedFiles,
+  getAvailableToExtensions = defaultGetAvailableToExtensions,
+  selectedFiles = [],
   disabled = false,
 }: ConvertSettingsProps) => {
   const { t } = useTranslation();

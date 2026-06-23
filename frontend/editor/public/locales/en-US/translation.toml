@@ -17,10 +17,12 @@ confirmCloseConfirm = "Close File"
 confirmCloseDiscard = "Discard changes and close"
 confirmCloseMessage = "Are you sure you want to close this file?"
 confirmCloseSave = "Save and close"
-confirmCloseSaveFailed = "Saved with errors. {{count}} file{{plural}} could not be saved."
+confirmCloseSaveFailed_one = "Saved with errors. {{count}} file could not be saved."
+confirmCloseSaveFailed_other = "Saved with errors. {{count}} files could not be saved."
 confirmCloseSaveFailedTitle = "Save Failed"
 confirmCloseUnsaved = "This file has unsaved changes."
-confirmCloseUnsavedList = "You have {{count}} file{{plural}} with unsaved changes.\n\n{{fileList}}"
+confirmCloseUnsavedList_one = "You have {{count}} file with unsaved changes.\n\n{{fileList}}"
+confirmCloseUnsavedList_other = "You have {{count}} files with unsaved changes.\n\n{{fileList}}"
 custom = "Custom..."
 customPosition = "Custom Position"
 customTextTooltip = "Optional custom format for page numbers. Use {n} as placeholder for the number. Example: \"Page {n}\" will show \"Page 1\", \"Page 2\", etc."
@@ -33,8 +35,8 @@ downloadUnavailable = "Download unavailable for this item"
 edit = "Edit"
 editSecret = "Edit this value"
 editYourNewFiles = "Edit your new file(s)"
-encryptedFileBlocked = "File is password-protected. Unlock it first."
-encryptedFilesBlocked = "{{count}} files are password-protected. Unlock them first."
+encryptedFilesBlocked_one = "File is password-protected. Unlock it first."
+encryptedFilesBlocked_other = "{{count}} files are password-protected. Unlock them first."
 exportAndContinue = "Export & Continue"
 false = "False"
 fileNotSavedToDisk = "Not saved to disk"
@@ -50,12 +52,9 @@ help = "Help"
 imgPrompt = "Select Image(s)"
 incorrectPasswordMessage = "Current password is incorrect."
 info = "Info"
-insufficientCredits = "Insufficient credits. Required: {{requiredCredits}}, Available: {{currentBalance}}, Shortfall: {{shortfall}}"
 invalidUndoData = "Cannot undo: invalid operation data"
 keepWorking = "Keep Working"
 loading = "Loading..."
-loadingCredits = "Checking credits..."
-loadingProStatus = "Checking subscription status..."
 logOut = "Log out"
 marginTooltip = "Distance between the page number and the edge of the page."
 moreOptions = "More Options"
@@ -66,7 +65,6 @@ noFileSelected = "No file loaded. Please upload one."
 noFilesToUndo = "Cannot undo: no files were processed in the last operation"
 noOperationToUndo = "No operation to undo"
 nothingToUndo = "Nothing to undo"
-noticeTopUpOrPlan = "Not enough credits, please top up or upgrade to a plan"
 noValidFiles = "No valid files to process"
 oops = "Oops!"
 openInNewWindow = "Open in new window"
@@ -1134,6 +1132,10 @@ apikeyNote = "Clients send a Stirling API key in the X-API-KEY header (or Author
 description = "Expose Stirling's PDF tools and AI agents to MCP clients over an OAuth-protected endpoint."
 title = "MCP Server"
 
+[admin.settings.mcp.acceptedAudiences]
+description = "Extra token audience values accepted besides the Resource ID (comma or space separated). Leave blank for strict RFC 8707. Needed for IdPs that cannot mint resource audiences - e.g. Supabase's OAuth server always issues aud=authenticated."
+label = "Additional accepted audiences (optional)"
+
 [admin.settings.mcp.allowedOps]
 description = "If set, ONLY these operation ids are exposed (an allow-list; comma or space separated). Leave blank to expose all enabled tools except any blocked below."
 label = "Allowed tools"
@@ -1516,12 +1518,18 @@ title = "Feedback Messages"
 
 [admin.settings.telegram.feedback.channel]
 title = "Channel Feedback Rules"
-errorMessage.description = "Show detailed error messages for channels."
-errorMessage.label = "Show error messages (Channel)"
-errorProcessing.description = "Send processing error messages to channels."
-errorProcessing.label = "Show processing errors (Channel)"
-noValidDocument.description = "Suppress the no valid document response for channel uploads."
-noValidDocument.label = "Show \"No valid document\" (Channel)"
+
+[admin.settings.telegram.feedback.channel.errorMessage]
+description = "Show detailed error messages for channels."
+label = "Show error messages (Channel)"
+
+[admin.settings.telegram.feedback.channel.errorProcessing]
+description = "Send processing error messages to channels."
+label = "Show processing errors (Channel)"
+
+[admin.settings.telegram.feedback.channel.noValidDocument]
+description = "Suppress the no valid document response for channel uploads."
+label = "Show \"No valid document\" (Channel)"
 
 [admin.settings.telegram.feedback.general.enabled]
 description = "Control whether the bot sends feedback messages at all."
@@ -1529,12 +1537,18 @@ label = "Enable Feedback"
 
 [admin.settings.telegram.feedback.user]
 title = "User Feedback Rules"
-errorMessage.description = "Show detailed error messages for users."
-errorMessage.label = "Show error messages (User)"
-errorProcessing.description = "Send processing error messages to users."
-errorProcessing.label = "Show processing errors (User)"
-noValidDocument.description = "Suppress the no valid document response for user uploads."
-noValidDocument.label = "Show \"No valid document\" (User)"
+
+[admin.settings.telegram.feedback.user.errorMessage]
+description = "Show detailed error messages for users."
+label = "Show error messages (User)"
+
+[admin.settings.telegram.feedback.user.errorProcessing]
+description = "Send processing error messages to users."
+label = "Show processing errors (User)"
+
+[admin.settings.telegram.feedback.user.noValidDocument]
+description = "Suppress the no valid document response for user uploads."
+label = "Show \"No valid document\" (User)"
 
 [admin.settings.telegram.pipelineInboxFolder]
 description = "Folder under the pipeline directory where incoming Telegram files are stored."
@@ -1575,30 +1589,7 @@ admin = "Admin"
 title = "User Control Settings"
 
 [agents]
-auto_redaction_description = "Redact PII automatically"
-auto_redaction_name = "Auto Redaction"
-back_to_tools = "Back to tools"
-coming_soon = "Coming soon"
-compliance_description = "Audit documents for compliance"
-compliance_name = "Compliance Check"
-data_extraction_description = "Extract tables & structured data"
-data_extraction_name = "Data Extraction"
-doc_summary_description = "Summarize long documents"
-doc_summary_name = "Summarizer"
-form_filler_description = "Fill PDF forms intelligently"
-form_filler_name = "Form Filler"
-pdf_to_markdown_description = "Convert PDFs to clean Markdown"
-pdf_to_markdown_name = "PDF to Markdown"
-section_title = "Agents"
-show_less = "Show less"
-start_chat = "Start chatting"
-stirling_description = "Your general-purpose PDF assistant"
-stirling_full_name = "Stirling General Agent"
-stirling_long_description = "General purpose PDF assistant that can run tools, create PDFs and extract insights from your documents."
 stirling_name = "Stirling"
-stirling_running = "Running..."
-stirling_tooltip = "Stirling agent"
-view_all = "View all agents"
 
 [analytics]
 learnMore = "Learn more about our analytics"
@@ -1843,7 +1834,8 @@ desc = "Build multi-step workflows by chaining together PDF actions. Ideal for r
 export = "Export"
 exportForFolderScanning = "Export for Folder Scanning"
 import = "Import"
-importPartialSuccess = "Imported with {{count}} unmapped operation(s): {{ops}}"
+importPartialSuccess_one = "Imported with {{count}} unmapped operation: {{ops}}"
+importPartialSuccess_other = "Imported with {{count}} unmapped operations: {{ops}}"
 importSuccess = "Imported automation: {{name}}"
 invalidStep = "Invalid step"
 reviewTitle = "Automation Results"
@@ -1903,7 +1895,8 @@ dropHint = "Drop JSON here or click to choose a file"
 dropSubhint = "Both Automate and Folder Scanning configs are accepted"
 dropzoneAriaLabel = "Drop an automation JSON file here"
 intro = "Drop a JSON file or paste its contents below. The format (Automate or Folder Scanning) is detected automatically."
-opCount = "{{count}} operation(s)"
+opCount_one = "{{count}} operation"
+opCount_other = "{{count}} operations"
 parseError = "Could not parse: {{message}}"
 pasteLabel = "Or paste JSON"
 pastePlaceholder = "Paste your automation JSON here…"
@@ -1929,7 +1922,8 @@ title = "Suggested"
 finish = "Finish"
 run = "Run Automation"
 running = "Running Automation..."
-steps = "{{count}} steps"
+steps_one = "{{count}} step"
+steps_other = "{{count}} steps"
 unnamed = "Unnamed Automation"
 
 [automation.suggested]
@@ -2259,7 +2253,8 @@ title = "Which option should I use?"
 stepTitle = "Certificate Format"
 
 [certSign.collab.addParticipants]
-add = "Add {{count}} Participant(s)"
+add_one = "Add {{count}} Participant"
+add_other = "Add {{count}} Participants"
 reasonHelp = "Pre-set a signing reason for these participants (optional, they can override when signing)"
 reasonPlaceholder = "e.g. Approval, Review..."
 
@@ -2372,7 +2367,8 @@ certInvalidFallback = "Invalid certificate"
 certNetworkError = "Could not validate certificate"
 certValidating = "Validating certificate..."
 certValidUntil = "Certificate valid until {{date}}"
-description = "You have placed {{count}} signature(s). Choose your certificate to complete signing."
+description_one = "You have placed {{count}} signature. Choose your certificate to complete signing."
+description_other = "You have placed {{count}} signatures. Choose your certificate to complete signing."
 sign = "Sign Document"
 title = "Configure Certificate"
 
@@ -2678,9 +2674,6 @@ title = "Change Permissions"
 [changePermissions.tooltip.warning]
 text = "To make these permissions unchangeable, use the Add Password tool to set an owner password."
 
-[chat]
-resize = "Resize chat panel"
-
 [chat.actions]
 copy = "Copy message"
 
@@ -2693,6 +2686,7 @@ agentMenu = "Stirling agent options"
 clearChat = "Clear chat"
 
 [chat.input]
+disclaimer = "AI can make mistakes. Be sure to verify the output before sharing."
 placeholder = "What do you want to do?"
 send = "Send message"
 
@@ -2705,11 +2699,9 @@ executing_tool_single = "Running {{tool}}..."
 executing_tool_step = "Running {{tool}} (step {{step}} of {{total}})..."
 extracting_content = "Extracting content from your documents..."
 processing = "Processing extracted content..."
-ranForMinutes = "Ran for {{count}} minutes"
 ranForMinutes_one = "Ran for 1 minute"
 ranForMinutes_other = "Ran for {{count}} minutes"
 ranForMinutesSeconds = "Ran for {{minutes}} min, {{seconds}} sec"
-ranForSeconds = "Ran for {{count}} seconds"
 ranForSeconds_one = "Ran for 1 second"
 ranForSeconds_other = "Ran for {{count}} seconds"
 thinking = "Thinking..."
@@ -2729,8 +2721,6 @@ mergeMany = "Merge these {{count}} documents into 1"
 moreFiles = "+{{count}} more"
 openFromComputer = "Open from computer"
 removeFile = "Remove {{name}}"
-rotateMany = "Rotate these documents"
-rotateOne = "Rotate this document"
 splitOne = "Split this document"
 
 [chat.responses]
@@ -2741,9 +2731,11 @@ need_clarification = "Could you clarify your request?"
 not_found = "I couldn't find the requested information."
 processing = "Processing ({{outcome}})..."
 unsupported_capability = "Unsupported capability: {{capability}}"
+usage_limit_reached = "You've reached your usage limit. Check your plan options to keep going."
 
 [chat.toolsUsed]
-summary = "Ran {{count}} tools"
+summary_one = "Ran 1 tool"
+summary_other = "Ran {{count}} tools"
 unknownTool = "Unknown tool"
 
 [cloudBadge]
@@ -2756,7 +2748,6 @@ tooltip = "Pick color from screen"
 title = "Choose color"
 
 [common]
-available = "available"
 back = "Back"
 cancel = "Cancel"
 close = "Close"
@@ -2767,16 +2758,13 @@ copy = "Copy"
 done = "Done"
 error = "Error"
 expand = "Expand"
-learnMore = "Learn more"
 loading = "Loading..."
 next = "Next"
-operation = "this operation"
 preview = "Preview"
 previous = "Previous"
 refresh = "Refresh"
 retry = "Retry"
 save = "Save"
-used = "used"
 
 [compare]
 clearSelected = "Clear selected"
@@ -2966,6 +2954,7 @@ tags = "squish,small,tiny"
 
 [config]
 plan = "Plan"
+team = "Team"
 
 [config.account.overview]
 confirmDelete = "Delete My Account"
@@ -3021,9 +3010,7 @@ title = "Upgrade Guest Account"
 upgradeButton = "Upgrade Account"
 
 [config.apiKeys]
-chartAriaLabel = "Credits usage: included {{includedUsed}} of {{includedTotal}}, purchased {{purchasedUsed}} of {{purchasedTotal}}"
 copyKeyAriaLabel = "Copy API key"
-creditsRemaining = "Credits Remaining"
 description = "Your API key for accessing Stirling's suite of PDF tools. Copy it to your project or refresh to generate a new one."
 docsDescription = "Learn more about integrating with Stirling PDF:"
 docsLink = "API Documentation"
@@ -3031,14 +3018,9 @@ docsTitle = "API Documentation"
 generateError = "We couldn't generate your API key."
 goToAccount = "Go to Account"
 guestInfo = "Guest users do not receive API keys. Create an account to get an API key you can use in your applications."
-includedCredits = "Included credits"
 intro = "Use your API key to programmatically access Stirling PDF's processing capabilities."
 label = "API Key"
-lastApiUse = "Last API Use"
-nextReset = "Next Reset"
-overlayMessage = "Generate a key to see credits and available credits"
 publicKeyAriaLabel = "Public API key"
-purchasedCredits = "Purchased credits"
 refreshAriaLabel = "Refresh API key"
 schemaLink = "API Schema Reference"
 usage = "Include this key in the X-API-KEY header with all API requests."
@@ -3061,6 +3043,7 @@ warning = "⚠️ Warning: This action will generate new API keys and make your 
 
 [config.mcp]
 description = "Model Context Protocol (MCP) lets AI assistants like Claude use your Stirling PDF tools directly. Connect a client once and your assistant can convert, edit, secure and process documents on your behalf."
+guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts toward your usage, just like using Stirling PDF directly."
 title = "MCP Server"
@@ -3081,14 +3064,6 @@ label = "Your MCP endpoint"
 addTo = "Add to"
 hint = "Pick your client, paste the snippet into the file shown, then restart it. You'll sign in with your Stirling account on first use - no keys to copy."
 title = "Connect your AI assistant"
-
-[config.mcp.tools]
-ai = "AI"
-convert = "Convert"
-misc = "Misc"
-pages = "Pages"
-security = "Security"
-title = "What your assistant can do"
 
 [config.overview]
 description = "Current application settings and configuration details."
@@ -3228,69 +3203,22 @@ description = "These cookies are essential for the website to function properly.
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
 
-[credits]
-enableOverageBilling = "Enable Overage Billing"
-maybeLater = "Maybe later"
-upgrade = "Upgrade"
-
-[credits.insufficient]
-brief = "Insufficient credits. You need {{required}} credits but have {{current}}."
-freeTier = "Upgrade to Team for 10x more credits and unlimited overage billing."
-managedMember = "Please contact your team leader for assistance."
-message = "You do not have enough credits to run {{tool}}. You currently have {{current}} credits."
-messageWithAmount = "You need {{required}} credits to run {{tool}}, but you only have {{current}}."
-teamMember = "Enable overage billing to never run out of credits."
-title = "Insufficient Credits"
-
 [credits.modal]
 advancedMonitoring = "Advanced monitoring"
 allInOneWorkspace = "All-in-one PDF workspace (viewer, tools & agent)"
 apiSandbox = "API sandbox"
-contactSales = "Contact Sales"
-creditsRemaining = "{{current}} of {{total}} remaining"
-creditsThisMonth = "Monthly credits"
-current = "Current Plan"
-customPricing = "Custom"
 dedicatedSupportSlas = "Dedicated support & SLAs"
-enterpriseSubscription = "Enterprise"
-everythingInCredits = "Everything in Credits, plus:"
-everythingInFree = "Everything in Free, plus:"
 fasterThroughput = "10x faster throughput"
-forRegularWork = "For regular PDF work:"
-freeTier = "Free Tier"
 fullyPrivateFiles = "Fully private files"
 largeFileProcessing = "Large file processing"
-managedMemberMessage = "You have unlimited access to credits through your team. If you need assistance, please contact your team leader."
-managedMemberTitle = "Unlimited Credits"
-meteringBillingNote = "Overage credits are billed monthly alongside your Team subscription. Track your usage anytime in your account settings."
-meteringExplanation = "Your Team plan includes {{credits}} credits per month. When you run out, overage billing automatically provides additional credits so you never have to stop working."
-meteringIncluded = "{{credits}} credits/month included with Team"
-meteringNeverRunOut = "Never run out of credits"
-meteringNoCommitment = "No commitment, cancel anytime"
-meteringPayAsYouGo = "Only pay for what you use"
-meteringPrice = "Additional credits at {{price}}/credit"
-meteringTitle = "Pay-What-You-Use Overage Billing"
-monthlyCredits = "monthly credits"
 orgWideAccess = "Org-wide access controls"
-overage = "overage"
-perMonth = "/month"
-popular = "Popular"
 premiumAiModels = "Premium AI models"
 prioritySupport = "Priority support"
 privateDocCloud = "Private Document Cloud"
 ragFineTuning = "RAG + fine-tuning"
 secureApiAccess = "Secure API access"
-selfHostLink = "Review the docs and plans"
-selfHostPrompt = "Want to self host?"
 standardThroughput = "Standard throughput"
-subtitle = "Upgrade to Team for 10x the credits and faster processing."
-subtitlePro = "Enable automatic overage billing to never run out of credits."
-teamLeaderOnly = "Only team leaders can enable overage billing"
-teamSubscription = "Team"
-titleExhausted = "You've used your free credits"
-titleExhaustedPro = "You have run out of credits"
 unlimitedApiAccess = "Unlimited API access"
-unlimitedMonthlyCredits = "Site License"
 unlimitedSeats = "Unlimited seats"
 
 [crop]
@@ -3504,7 +3432,8 @@ title = "Remove password to continue"
 unlock = "Unlock & Continue"
 unlockAll = "Use for all ({{count}})"
 unlockAllPartialFail = "Wrong password for: {{names}}"
-unlockAllSuccess = "Unlocked {{count}} file(s)."
+unlockAllSuccess_one = "Unlocked {{count}} file."
+unlockAllSuccess_other = "Unlocked {{count}} files."
 unlockPrompt = "Unlock PDF to continue"
 viewerLocked = "This PDF is password-protected"
 viewerUnlock = "Unlock"
@@ -3664,6 +3593,7 @@ unzip = "Unzip"
 updateOnServer = "Update on Server"
 uploadSelected = "Upload Files"
 uploadToServer = "Upload to Server"
+versionHistory = "Version history"
 
 [files]
 addFiles = "Add files"
@@ -3699,6 +3629,7 @@ workbench = "Workbench"
 addFiles = "Add files"
 collapse = "Collapse sidebar"
 dropHint = "Open files to get started"
+dropToAdd = "Drop files to add"
 expand = "Expand sidebar"
 files = "Files"
 googleDrive = "Google Drive"
@@ -3714,7 +3645,13 @@ searchPlaceholder = "Search files..."
 
 [fileSidebar.fileItem]
 closeViewer = "Close viewer"
+delete = "Delete"
+moreActions = "More actions"
 openInViewer = "Open in viewer"
+savedToServer = "Saved to server"
+updateOnServer = "Update on server"
+uploadToServer = "Upload to server"
+versionHistory = "Version history"
 
 [filesPage]
 addToWorkspace = "Add to workspace"
@@ -3731,16 +3668,26 @@ closeDetails = "Close details"
 create = "Create"
 cycleBlocked = "Can't move a folder into one of its own subfolders."
 delete = "Delete"
+deleteFilesChoiceBody = "Some of these files are saved both on this device and in the cloud. Where should they be deleted from?"
+deleteFilesCloudBody_one = "Delete 1 file from the cloud? This cannot be undone."
+deleteFilesCloudBody_other = "Delete {{count}} files from the cloud? This cannot be undone."
+deleteFilesError = "Could not delete. Try again."
+deleteFilesLocalBody_one = "Delete 1 file from this device? This cannot be undone."
+deleteFilesLocalBody_other = "Delete {{count}} files from this device? This cannot be undone."
+deleteFilesTitle_one = "Delete 1 file?"
+deleteFilesTitle_other = "Delete {{count}} files?"
 deleteFolder = "Delete folder"
 deleteFolderBody = "Delete folder \"{{name}}\"?"
-deleteFolderContents = "Also delete {{count}} file(s) inside the folder"
+deleteFolderContents_one = "Also delete {{count}} file inside the folder"
+deleteFolderContents_other = "Also delete {{count}} files inside the folder"
 deleteFolderContentsWarning = "Files will be permanently removed and cannot be recovered."
 deleteFolderError = "Could not delete the folder. Try again."
 deleteFolderKeepHint = "Files inside will be moved to All files."
 deleteFolderTitle = "Delete folder?"
 deselectAll = "Clear selection"
 details = "Details"
-detailsCount = "{{count}} files selected"
+detailsCount_one = "{{count}} file selected"
+detailsCount_other = "{{count}} files selected"
 dismissError = "Dismiss"
 download = "Download"
 downloadAll = "Download all"
@@ -3748,16 +3695,19 @@ downloadVersion = "Download this version"
 dropOverlay = "Drop files to upload"
 dropOverlaySub = "Files start in Local. Use 'Move to' or 'Save to cloud' to organize them into a folder."
 file = "File"
+fileInfo = "File info"
 fileMenu = "File actions"
 folder = "Folder"
-folderItems = "{{count}} items"
+folderItems_one = "{{count}} item"
+folderItems_other = "{{count}} items"
 folderMenu = "Folder actions"
 inPath = "in {{path}}"
 inWorkspace = "Open"
 inWorkspaceAria = "Already in workspace"
 loading = "Loading…"
 localFoldersUnavailable = "Folders are cloud-only - save a file to the cloud to organize it."
-moveSkippedRemote = "{{count}} file(s) couldn't be moved on the server (no permission or already deleted)."
+moveSkippedRemote_one = "{{count}} file couldn't be moved on the server (no permission or already deleted)."
+moveSkippedRemote_other = "{{count}} files couldn't be moved on the server (no permission or already deleted)."
 moveTo = "Move to…"
 myFiles = "My Files"
 newFolder = "New folder"
@@ -3767,10 +3717,8 @@ offlineNoFolderEdits = "Server folder sync unavailable - folder changes are disa
 open = "Open"
 openVersionInWorkspace = "Open in workspace"
 originFilter = "Filter by source"
-quickView = "Quick view"
 refresh = "Refresh from server"
 remove = "Delete"
-removeConfirm = "Delete {{count}} file(s)? This cannot be undone."
 removeVersion = "Remove this version"
 rename = "Rename"
 renameFolder = "Rename folder"
@@ -3787,115 +3735,169 @@ selectFile = "Select file {{name}}"
 shareDisabledHint = "File sharing isn't enabled on this server. Ask your admin to enable it."
 shareManage = "Manage sharing"
 showDetails = "Show details"
-summary = "{{count}} items"
+signInRequired = "Sign in to use cloud storage."
+summary_one = "{{count}} item"
+summary_other = "{{count}} items"
 tree = "Folders"
 upload = "Upload"
 uploadedToLocal = "Uploaded files start in Local. Use 'Save to cloud' to put them in a folder."
 uploadFromMobile = "Upload from Mobile"
 versionActions = "Version actions"
 versionCollapse = "Collapse middle versions"
+versionHistory = "Version history"
+versionHistoryEmpty = "This file has no earlier versions."
 versionOrigin = "Original upload"
 versionsCount = "{{count}} versions"
 versionShowHidden = "Show {{count}} earlier versions"
-viewVersion = "View this version"
-appearance.colour = "Color"
-appearance.icon = "Icon"
-appearance.title = "Appearance"
-appearance.useColour = "Use color {{c}}"
-column.modified = "Modified"
-column.name = "Name"
-column.size = "Size"
-column.type = "Type"
-empty.hint = "Drop PDFs anywhere on this page to upload, or use the New folder button to organize your files."
-empty.newFolderCta = "Create folder"
-empty.title = "This folder is empty"
-empty.uploadCta = "Upload files"
-empty.cloud.hint = "Upload a file to start, or create a folder to organize."
-empty.cloud.offlineHint = "Reconnect to load your cloud library."
-empty.cloud.offlineTitle = "No cached cloud files"
-empty.cloud.title = "No cloud files yet"
-empty.local.hint = "Files saved without uploading stay here. Drop a file to add one."
-empty.local.title = "No local-only files"
-empty.recent.hint = "Files you open or edit will appear here."
-empty.recent.title = "Nothing modified yet"
-empty.shared.hint = "When someone shares a file via link, it appears here."
-empty.shared.title = "Nothing shared with you"
-empty.sharedByMe.hint = "Create a share link or invite a teammate from any of your files to see it here."
-empty.sharedByMe.title = "You haven't shared any files yet"
-error.actionFailed = "Could not {{action}}."
-error.actionFailedDetail = "Could not {{action}}: {{message}}"
-error.deleteFolderFailed = "Could not delete folder."
-error.deleteFolderFailedDetail = "Could not delete folder: {{message}}"
-error.folderAppearanceFailed = "Could not update folder appearance."
-error.folderAppearanceFailedDetail = "Could not update folder appearance: {{message}}"
-error.moveFilesFailed = "Could not move files."
-error.moveFilesFailedDetail = "Could not move files: {{message}}"
-error.moveFolderFailed = "Could not move folder."
-error.moveFolderFailedDetail = "Could not move folder: {{message}}"
-error.removeFilesFailed = "Could not remove files."
-error.removeFilesFailedDetail = "Could not remove files: {{message}}"
-error.uploadFilesFailed = "Could not upload files."
-error.uploadFilesFailedDetail = "Could not upload files: {{message}}"
-field.added = "Added"
-field.count = "Files"
-field.folder = "Folder"
-field.modified = "Modified"
-field.name = "Name"
-field.size = "Size"
-field.toolHistory = "Tool history"
-field.toolHistoryAtVersion = "Cumulative tool chain"
-field.totalSize = "Total size"
-field.type = "Type"
-field.versionHistory = "Version journey"
-folderName.cancel = "Cancel"
-folderName.error = "Could not save folder. Try again."
-folderName.label = "Folder name"
-folderName.placeholder = "Folder name"
-moveDialog.cancel = "Cancel"
-moveDialog.confirm = "Move here"
-moveDialog.error = "Could not move. Try again."
-moveDialog.hint = "Pick a destination folder. Tip: you can also drag and drop files onto folders in the tree on the left."
-moveDialog.newFolderCancel = "Discard"
-moveDialog.newFolderCreate = "Create"
-moveDialog.newFolderError = "Could not create folder. Try again."
-moveDialog.newFolderLabel = "New folder name"
-moveDialog.newFolderPlaceholder = "Folder name"
-moveDialog.newFolderToggle = "Create new folder…"
-moveDialog.title = "Move to folder"
-origin.all = "All sources"
-origin.cloud = "Cloud"
-origin.cloudHint = "Stored on the Stirling server"
-origin.local = "Local"
-origin.localHint = "Only stored in this browser"
-origin.shared = "Shared"
-origin.sharedHint = "Shared with you via link"
-sort.modifiedAsc = "Oldest first"
-sort.modifiedDesc = "Recent first"
-sort.nameAsc = "Name A→Z"
-sort.nameDesc = "Name Z→A"
-sort.sizeAsc = "Smallest first"
-sort.sizeDesc = "Largest first"
-syncError.client = "Folder sync failed."
-syncError.network = "Could not reach the server."
-syncError.server = "Server error during folder sync."
-tabName.local = "Local"
-tabName.recent = "Recent"
-tabName.shared = "Shared with me"
-tabName.sharedByMe = "Shared by me"
-tabs.all = "All"
-tabs.ariaLabel = "File views"
-tabs.recent = "Recent"
-tabs.shared = "Shared with me"
-tabs.sharedByMe = "Shared by me"
-treeMenu.actions = "Folder actions for {{name}}"
-treeMenu.delete = "Delete folder"
-treeMenu.newSubfolder = "New subfolder"
-treeMenu.rename = "Rename"
-typeFilter.allTypes = "All types"
-typeFilter.label = "Filter by type"
-viewMode.grid = "Grid view"
-viewMode.label = "View mode"
-viewMode.list = "List view"
+viewVersionHistory = "Version journey ({{count}})"
+
+[filesPage.appearance]
+colour = "Color"
+icon = "Icon"
+title = "Appearance"
+useColour = "Use color {{c}}"
+
+[filesPage.column]
+modified = "Modified"
+name = "Name"
+size = "Size"
+type = "Type"
+
+[filesPage.deleteScope]
+cloud = "Cloud only"
+cloudHint = "Deletes from the server. A copy stays on this device."
+device = "This device only"
+deviceHint = "Removes the local copy. The cloud copy is kept."
+everywhere = "Everywhere"
+everywhereHint = "Deletes the file from this device and the cloud."
+
+[filesPage.empty]
+hint = "Drop PDFs anywhere on this page to upload, or use the New folder button to organize your files."
+newFolderCta = "Create folder"
+title = "This folder is empty"
+uploadCta = "Upload files"
+
+[filesPage.empty.cloud]
+hint = "Upload a file to start, or create a folder to organize."
+offlineHint = "Reconnect to load your cloud library."
+offlineTitle = "No cached cloud files"
+title = "No cloud files yet"
+
+[filesPage.empty.local]
+hint = "Files saved without uploading stay here. Drop a file to add one."
+title = "No local-only files"
+
+[filesPage.empty.recent]
+hint = "Files you open or edit will appear here."
+title = "Nothing modified yet"
+
+[filesPage.empty.shared]
+hint = "When someone shares a file via link, it appears here."
+title = "Nothing shared with you"
+
+[filesPage.empty.sharedByMe]
+hint = "Create a share link or invite a teammate from any of your files to see it here."
+title = "You haven't shared any files yet"
+
+[filesPage.error]
+actionFailed = "Could not {{action}}."
+actionFailedDetail = "Could not {{action}}: {{message}}"
+cloudDeleteFailed_one = "Couldn't delete 1 file from the cloud."
+cloudDeleteFailed_other = "Couldn't delete {{count}} files from the cloud."
+deleteFolderFailed = "Could not delete folder."
+deleteFolderFailedDetail = "Could not delete folder: {{message}}"
+folderAppearanceFailed = "Could not update folder appearance."
+folderAppearanceFailedDetail = "Could not update folder appearance: {{message}}"
+moveFilesFailed = "Could not move files."
+moveFilesFailedDetail = "Could not move files: {{message}}"
+moveFolderFailed = "Could not move folder."
+moveFolderFailedDetail = "Could not move folder: {{message}}"
+removeFilesFailed = "Could not remove files."
+removeFilesFailedDetail = "Could not remove files: {{message}}"
+uploadFilesFailed = "Could not upload files."
+uploadFilesFailedDetail = "Could not upload files: {{message}}"
+
+[filesPage.field]
+added = "Added"
+count = "Files"
+folder = "Folder"
+modified = "Modified"
+name = "Name"
+size = "Size"
+toolHistory = "Tool history"
+toolHistoryAtVersion = "Cumulative tool chain"
+totalSize = "Total size"
+type = "Type"
+versionHistory = "Version journey"
+
+[filesPage.folderName]
+cancel = "Cancel"
+error = "Could not save folder. Try again."
+label = "Folder name"
+placeholder = "Folder name"
+
+[filesPage.moveDialog]
+cancel = "Cancel"
+confirm = "Move here"
+error = "Could not move. Try again."
+hint = "Pick a destination folder. Tip: you can also drag and drop files onto folders in the tree on the left."
+newFolderCancel = "Discard"
+newFolderCreate = "Create"
+newFolderError = "Could not create folder. Try again."
+newFolderLabel = "New folder name"
+newFolderPlaceholder = "Folder name"
+newFolderToggle = "Create new folder…"
+title = "Move to folder"
+
+[filesPage.origin]
+all = "All sources"
+cloud = "Cloud"
+cloudHint = "Stored on the Stirling server"
+local = "Local"
+localHint = "Only stored in this browser"
+shared = "Shared"
+sharedHint = "Shared with you via link"
+
+[filesPage.sort]
+modifiedAsc = "Oldest first"
+modifiedDesc = "Recent first"
+nameAsc = "Name A→Z"
+nameDesc = "Name Z→A"
+sizeAsc = "Smallest first"
+sizeDesc = "Largest first"
+
+[filesPage.syncError]
+client = "Folder sync failed."
+network = "Could not reach the server."
+server = "Server error during folder sync."
+
+[filesPage.tabName]
+local = "Local"
+recent = "Recent"
+shared = "Shared with me"
+sharedByMe = "Shared by me"
+
+[filesPage.tabs]
+all = "All"
+ariaLabel = "File views"
+recent = "Recent"
+shared = "Shared with me"
+sharedByMe = "Shared by me"
+
+[filesPage.treeMenu]
+actions = "Folder actions for {{name}}"
+delete = "Delete folder"
+newSubfolder = "New subfolder"
+rename = "Rename"
+
+[filesPage.typeFilter]
+allTypes = "All types"
+label = "Filter by type"
+
+[filesPage.viewMode]
+grid = "Grid view"
+label = "View mode"
+list = "List view"
 
 [fileToPDF]
 tags = "transformation,format,document,picture,slide,text,conversion,office,docs,word,excel,powerpoint"
@@ -4116,7 +4118,8 @@ pages = "Pages"
 pdfVersion = "PDF Version"
 permsAll = "All Permissions Allowed"
 permsMixed = "Some permissions restricted"
-permsRestricted = "{{count}} restrictions"
+permsRestricted_one = "{{count}} restriction"
+permsRestricted_other = "{{count}} restrictions"
 securityTitle = "Security Status"
 technical = "Technical"
 title = "PDF Summary"
@@ -4164,7 +4167,8 @@ location = "Location:"
 logo = "Logo:"
 logoHidden = "No logo"
 logoShown = "Stirling PDF logo shown"
-participantCount = "{{count}} participant(s) will sign in order"
+participantCount_one = "{{count}} participant will sign in order"
+participantCount_other = "{{count}} participants will sign in order"
 participants = "Participants"
 reason = "Reason:"
 send = "Send Signing Requests"
@@ -4182,7 +4186,8 @@ title = "Select Document"
 
 [groupSigning.steps.selectParticipants]
 continue = "Continue to Signature Settings"
-count = "{{count}} participant(s) selected"
+count_one = "{{count}} participant selected"
+count_other = "{{count}} participants selected"
 label = "Select participants"
 placeholder = "Choose participants to sign..."
 title = "Choose Participants"
@@ -4778,7 +4783,8 @@ descriptionNoConvert = "Scan to upload photos from your mobile device."
 error = "Connection Error"
 expiryWarning = "Session Expiring Soon"
 expiryWarningMessage = "This QR code will expire in {{seconds}} seconds. A new code will be generated automatically."
-filesReceived = "{{count}} file(s) received"
+filesReceived_one = "{{count}} file received"
+filesReceived_other = "{{count}} files received"
 instructions = "Scan with your phone camera. Images convert to PDF automatically."
 instructionsNoConvert = "Scan with your phone camera to upload files."
 pollingError = "Error checking for files"
@@ -4799,6 +4805,34 @@ title = "Authentication Failed"
 [oauth.success]
 message = "You can close this window and return to Stirling PDF."
 title = "Authentication Successful"
+
+[oauthConsent]
+approve = "Allow access"
+approving = "Allowing..."
+decisionFailed = "Could not submit your decision. Please try again."
+deny = "Deny"
+denying = "Denying..."
+loadFailed = "This authorization request is invalid or has expired. Close this tab and try connecting again from the app."
+loading = "Loading authorization request..."
+missingId = "Missing authorization request. Start the connection from your app and try again."
+redirecting = "Returning you to the app..."
+requesting = "{{app}} wants to access your Stirling PDF account"
+scopesIntro = "This will allow {{app}} to:"
+signedInAs = "Signed in as {{name}}"
+signInButton = "Sign in to continue"
+signInPrompt = "Sign in to your Stirling PDF account to continue connecting the app."
+title = "Authorize access"
+unknownApp = "A third-party application"
+
+[oauthConsent.access]
+actAsYou = "Act as you - everything {{app}} does runs under your account and counts towards your usage"
+tools = "Use your Stirling PDF tools on your behalf - convert, edit, sign, secure and process your documents"
+
+[oauthConsent.scope]
+email = "See your email address"
+openid = "Confirm your identity"
+phone = "See your phone number"
+profile = "See your basic profile information"
 
 [ocr]
 desc = "Cleanup scans and detects text from images within a PDF and re-adds it as text."
@@ -4917,15 +4951,6 @@ body = "Stirling works best as a desktop app. You can use it offline, access doc
 title = "Download"
 titleWithOs = "Download for {{osLabel}}"
 
-[onboarding.freeTrial]
-afterTrialWithoutPayment = "After your trial ends, you'll continue with our free tier. Add a payment method to keep Pro access."
-afterTrialWithPayment = "Your Pro subscription will start automatically when the trial ends."
-body = "You have full access to Stirling PDF Pro features during your trial. Enjoy unlimited conversions, larger file sizes, and priority processing."
-daysRemaining = "{{days}} days remaining"
-daysRemainingSingular = "{{days}} day remaining"
-title = "Your 30-Day Pro Trial"
-trialEnds = "Trial ends {{date}}"
-
 [onboarding.mfa]
 authenticationCode = "Authentication code"
 qrCodeLoading = "Generating your QR code…"
@@ -4936,6 +4961,22 @@ adminBodyLoginEnabled = "As an admin, you can manage users, configure settings, 
 adminTitle = "Admin Overview"
 userBody = "Invite teammates, assign roles, and keep your documents organized in one secure workspace. Enable login mode whenever you're ready to grow beyond solo use."
 userTitle = "Plan Overview"
+
+[onboarding.saas.freeEditor]
+freeLine = "The editor is now <free>completely free</free>."
+premium = "We've added loads of new features, including <strong>Policies</strong> and <strong>Agent Chat</strong>."
+title = "Welcome to Stirling"
+
+[onboarding.saas.team]
+addButton = "Add"
+createBody = "Work on documents together: teammates share files, automations and your plan. Add the first member by email to create your team."
+createTitle = "Create your team"
+inviteBody = "Everyone on your team shares files, automations and your plan. Add teammates by email and they'll get an invite."
+inviteTitle = "Invite members to your team"
+
+[onboarding.saas.usage]
+body = "Automations, AI and API requests draw from your free allowance. Manual editing never counts against it."
+title = "Your free Processor allowance"
 
 [onboarding.securityCheck]
 message = "The application has undergone significant changes recently. Your server admin's attention may be required. Please confirm your role to continue."
@@ -5207,12 +5248,210 @@ title = "Page Ranges"
 bullet1 = "<strong>all</strong> → selects all pages"
 title = "Special Keywords"
 
+[payg.activity]
+docs = "docs"
+empty = "No billable activity yet this period."
+subtitle = "Only AI and automation draw from your budget. Everyday tools are free and aren't listed here."
+title = "Recent billable activity"
+
+[payg.cap]
+amount = "Cap amount"
+custom = "Custom"
+docsEstimate = "≈ {{docs}} processed PDFs / month"
+docsRate = "at {{rate}} / PDF"
+noCapDesc = "Usage is billed without an upper limit. You can re-enable a cap at any time."
+noCapLabel = "No cap"
+noneShort = "No cap"
+perMonth = "/ month"
+save = "Update cap"
+subtitle = "Set your maximum spend. We convert this to PDFs using the current price tier."
+title = "Monthly spending cap"
+
+[payg.checkout]
+connecting = "Connecting to Stripe…"
+errorTitle = "Stripe error"
+
+[payg.checkout.error]
+startFailed = "Couldn't start checkout session"
+
+[payg.checkout.mock]
+backend = "Backend is in mock mode; no real Stripe session was created."
+continue = "Continue with mock subscription"
+noKey = "VITE_STRIPE_PUBLISHABLE_KEY is unset. Real iframe mounts here once configured."
+title = "Stripe Embedded Checkout (mock mode)"
+
+[payg.confirm]
+body = "Your team can now run automation, AI, and API operations beyond your 500 free PDFs."
+capValue = "{{symbol}}{{amount}} / month"
+noCap = "No cap"
+note = "You can change your cap, cancel, or open the Stripe customer portal any time from this page."
+summaryLabel = "Monthly ceiling"
+title = "Welcome to the Processor plan"
+
+[payg.docHelp]
+billable = "Only automation runs, AI tools, and API calls count. Manual tools in the editor are always free."
+chains = "Running the same file through several steps of one automation counts it once, not once per step."
+perFile = "Each file you process counts as one PDF. Very long or very large files can count as more than one."
+refunds = "If a job fails on its first step, the PDF is credited back automatically."
+toggle = "What counts as a PDF?"
+
+[payg.error]
+body = "We couldn't reach the billing service. Refresh the page to try again."
+title = "Couldn't load your plan"
+
+[payg.free.cta]
+benefit1Body = "chain tools, schedule runs, batch process"
+benefit1Title = "Automation pipelines"
+benefit2Body = "summarize, classify, redact, AI-OCR"
+benefit2Title = "AI tools"
+benefit3Body = "call any Stirling endpoint programmatically"
+benefit3Title = "API access"
+button = "Turn on Processor →"
+reassurance = "No minimum · Set a $0 cap to test · Cancel anytime"
+subtitle = "Keep going past your 500 free PDFs with automation, AI, and the API. Set a monthly ceiling, so you stay in control."
+title = "Turn on the Processor plan"
+
+[payg.free.editor]
+eyebrow = "Editor plan · Always free"
+
+[payg.free.header]
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+freeTitle = "Unlimited PDF editing"
+
+[payg.free.hero]
+capSuffix = "/ {{limit}} free PDFs"
+metaCategories = "Automation · AI · API requests"
+
+[payg.free.member]
+ownerOnly = "Only your team owner can turn on Processor. Manual tools stay free for you to use as much as you like."
+
+[payg.free.proc]
+eyebrow = "Processor plan · metered"
+
+[payg.free.state]
+approachingLimit = "Approaching limit"
+limitReached = "Limit reached"
+plentyLeft = "Plenty left"
+
+[payg.gates]
+ai = "AI tools (AI Create, suggestions, AI-OCR)"
+automation = "Automations & pipelines"
+client = "Browser-only tools (viewer, page editor, file management)"
+offsite = "Server tools (compress, OCR, convert, watermark…)"
+pauses = "pauses at cap"
+title = "What happens when the cap is reached"
+
+[payg.header]
+eyebrow = "Processor plan · {{start}} – {{end}}"
+freeBody = "View, edit, merge, split, sign, watermark, compress, convert and manual OCR — as much as you want, no matter where you trigger it."
+freeLabel = "Always free"
+freeTitle = "Unlimited PDF editing"
+meterBody = "{{limit}} free PDFs to start, then billed per PDF up to your cap."
+meterLabel = "Metered"
+meterTitle = "Automation · AI · API"
+
+[payg.member]
+askLeader = "Only your team owner can change the cap."
+
+[payg.members]
+docs = "PDFs"
+subtitle = "Billable PDFs each teammate has processed this period."
+title = "Team member usage"
+
+[payg.role]
+leader = "Team owner"
+member = "Member"
+
+[payg.signupRequired]
+body = "Stirling PDF gives every signed-up account 500 free operations, enough to keep most workflows humming without paying a cent. You're currently using Stirling as a guest, which doesn't include billable tools like AI, automations, or hosted processing."
+cancel = "Not now"
+cta = "Sign up free"
+subtext = "Creating an account is free and takes a few seconds. No credit card required."
+title = "Sign up to use {{category}}"
+
+[payg.signupRequired.category]
+ai = "AI features"
+api = "this tool"
+automation = "automations"
+default = "this feature"
+
+[payg.spendCapMeter]
+capSuffix = "/ {{amount}} cap"
+metaCategories = "Automation · AI · API spend"
+resets = "Resets each billing period"
+
+[payg.state]
+degraded = "Cap reached"
+full = "Healthy"
+warned = "Approaching cap"
+
+[payg.stripe]
+open = "Open billing portal"
+subtitle = "Receipts, invoices, payment method, billing currency."
+title = "Manage billing in Stripe"
+
+[payg.stripe.toast.unavailable]
+body = "Billing portal isn't available right now. Try again in a moment."
+title = "Billing portal unavailable"
+
+[payg.upgrade]
+backAria = "Back"
+closeAria = "Close"
+
+[payg.upgrade.button]
+cancel = "Cancel"
+continue = "Continue →"
+finish = "Finish"
+
+[payg.upgrade.cap]
+help = "We'll never charge above this. Set $0 if you want to keep everything free while testing."
+title = "Set your monthly spend ceiling"
+usdNote = "Estimated in USD. You can adjust your cap any time after subscribing, in your own currency."
+
+[payg.upgrade.checkout]
+capValue = "{{symbol}}{{amount}} / month"
+edit = "Edit"
+help = "Stripe handles your card details. Stirling never sees them."
+loading = "Loading checkout…"
+noCap = "No cap"
+title = "Add your payment method"
+
+[payg.upgrade.help]
+aiBody = "summarize, classify, redact, AI-OCR"
+aiTitle = "AI tools"
+apiBody = "programmatic access to any Stirling endpoint"
+apiTitle = "API calls"
+automationBody = "chained tools or scheduled runs that don't need clicks"
+automationTitle = "Automation pipelines"
+footnote = "Manual tools (viewing, editing, merging, splitting, watermarking, compressing, manual OCR) are always free, even past 500. The distinction is the type of work, not where you click."
+title = "What we count toward billing"
+
+[payg.upgrade.promise]
+body = "You only pay for automation pipelines, AI tools, and API calls, the work that goes beyond a single click. Edit, merge, split, sign, compress as much as you want, no charge."
+highlight = "Manual tools stay free, always."
+
+[payg.upgrade.steps]
+cap = "Set monthly ceiling"
+payment = "Add payment method"
+
+[payg.upgrade.title]
+confirm = "You're subscribed"
+default = "Upgrade to Processor plan"
+
+[payg.usage]
+breakdown = "AI {{ai}} • Automation {{automation}} • API {{api}}"
+capLine = "{{cap}}/mo cap"
+estBill = "≈ {{amount}} so far this period"
+firstFree = "First {{free}} free"
+noCap = "No monthly cap"
+ofLimitProcessed = "/ {{limit}} PDFs processed"
+processed = "PDFs processed"
+resetsIn = "Resets in {{days}} days"
+resetsTomorrow = "Resets tomorrow"
+thisPeriod = "This billing period"
+
 [payment]
-autoClose = "This window will close automatically..."
 canCloseWindow = "You can now close this window."
-checkoutInstructions = "Complete your purchase in the browser window that just opened. After payment is complete, return here and click the button below to refresh your billing information."
-checkoutOpened = "Checkout Opened in Browser"
-closeLater = "I'll Do This Later"
 error = "Payment Error"
 generatingLicense = "Generating your license key..."
 licenseActivated = "License activated! Your license key has been saved. A confirmation email has been sent to your registered email address."
@@ -5228,7 +5467,6 @@ paymentCanceled = "Payment was canceled. No charges were made."
 perMonth = "/month"
 preparing = "Preparing your checkout..."
 redirecting = "Redirecting to secure checkout..."
-refreshBilling = "I've Completed Payment - Refresh Billing"
 success = "Payment Successful!"
 successMessage = "Your subscription has been activated successfully. You will receive a confirmation email shortly."
 syncError = "Payment successful but license sync failed. Your license will be updated shortly. Please contact support if issues persist."
@@ -5518,29 +5756,19 @@ title = "Pipeline"
 
 [plan]
 contact = "Contact Us"
-currency = "Currency"
 current = "Current Plan"
-customPricing = "Custom"
 featureComparison = "Feature Comparison"
 from = "From"
 hideComparison = "Hide Feature Comparison"
-included = "Included"
 licensedSeats = "Licensed: {{count}} seats"
 manage = "Manage"
 perMonth = "/month"
 perSeat = "/seat"
 popular = "Popular"
-purchase = "Purchase"
-selectCredits = "Select Credit Amount"
 selectPlan = "Select Plan"
 showComparison = "Compare All Features"
-totalCost = "Total Cost"
 upgrade = "Upgrade"
 withServer = "+ Server Plan"
-
-[plan.activePlan]
-subtitle = "Your current subscription details"
-title = "Active Plan"
 
 [plan.api]
 large = "5,000 Credits"
@@ -5548,12 +5776,7 @@ medium = "1,000 Credits"
 small = "500 Credits"
 xsmall = "100 Credits"
 
-[plan.apiPackages]
-subtitle = "Purchase API credits for your applications"
-title = "API Credit Packages"
-
 [plan.availablePlans]
-loadError = "Unable to load plan pricing. Using default values."
 subtitle = "Choose the plan that fits your needs"
 title = "Available Plans"
 
@@ -5564,7 +5787,6 @@ highlight3 = "Latest features"
 name = "Enterprise"
 requiresServer = "Requires Server"
 requiresServerMessage = "Please upgrade to the Server plan first before upgrading to Enterprise."
-siteLicense = "Site License"
 
 [plan.feature]
 api = "API Access"
@@ -5603,6 +5825,12 @@ highlight3 = "Community support"
 included = "Included"
 name = "Free"
 
+[plan.freeLimit]
+cta = "View Processor Plan"
+dismiss = "Maybe Later"
+message = "That's your whole free allowance for automation, AI and the API. Seriously impressive! Keep the momentum going for just pennies a day."
+title = "Woah, {{total}} PDFs Processed!"
+
 [plan.highlights]
 advancedIntegrations = "Advanced integrations"
 allBasicFeatures = "All basic features"
@@ -5634,6 +5862,12 @@ highlight2 = "Advanced PDF tools"
 highlight3 = "No watermarks"
 name = "Pro"
 
+[plan.spendCap]
+cta = "View Spending Limit"
+dismiss = "Not Now"
+message = "You've made the most of this month's cap. That's a load of automation, AI and API work! Bump it up whenever you like to keep going."
+title = "You're on a Roll!"
+
 [plan.static]
 activateLicense = "Activate Your License"
 contactToUpgrade = "Contact us to upgrade or customize your plan"
@@ -5658,22 +5892,110 @@ keyDescription = "Paste the license key from your email"
 success = "License Activated!"
 successMessage = "Your license has been successfully activated. You can now close this window."
 
-[plan.team]
-name = "Team"
+[policies]
+deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
+deleteConfirmTitle = "Delete {{label}} policy?"
 
-[plan.trial]
-badge = "Trial"
-continueWithFree = "Continue with Free"
-daysRemaining = "Your trial ends in {{days}} days"
-endDate = "Expires: {{date}}"
-expired = "Your Trial Has Ended"
-expiredMessage = "Your 30-day Pro trial has expired. Subscribe to Pro to continue accessing premium features, or continue with our free tier."
-freeTierLimitations = "Free tier includes basic PDF tools with usage limits."
-message = ""
-subscribe = "Subscribe to Pro"
-subscribeToPro = "Subscribe to Pro"
-subscriptionScheduled = "Subscription scheduled - starts {{date}}"
-title = "Free Trial Active"
+[policies.catalog]
+compliance = "Compliance"
+ingestion = "Ingestion"
+retention = "Retention"
+routing = "Routing"
+security = "Security"
+
+[policies.detail]
+close = "Close"
+editSettings = "Edit Settings"
+enforces = "Enforces"
+managedByOrg = "Managed by your organization. Contact a team leader to change this policy."
+noActivityDescription = "Documents will appear here once this policy runs."
+noActivityTitle = "No activity yet"
+onEveryUpload = "On every upload"
+originalsNote = "Originals stay untouched • Enforced version saved alongside"
+pause = "Pause"
+recentActivity = "Recent Activity"
+resume = "Resume"
+retry = "Retry"
+showLess = "Show less"
+showMore = "Show more"
+statActive = "Active"
+statDataProcessed = "Data processed"
+statDocsEnforced = "Docs enforced"
+statusActive = "Active"
+statusPaused = "Paused"
+
+[policies.fields]
+selectedCount = "{{count}} selected"
+
+[policies.pii]
+fieldLabel = "PII to redact"
+placeholder = "Select PII types"
+
+[policies.sidebar]
+activeCount = "{{count}} active"
+infoAriaLabel = "What is a policy?"
+infoTooltip = "A policy is a fixed set of tools that runs automatically whenever it's triggered — for example when a new document arrives — enforcing rules like redacting PII with no manual steps."
+loading = "Loading…"
+railAriaLabel = "{{label}} policy — {{status}}"
+railSuffixActive = " (Active)"
+railSuffixPaused = " (Paused)"
+setUp = "Set up"
+title = "Policies"
+upgradeToEnterprise = "Upgrade to enterprise"
+
+[policies.status]
+active = "Active"
+paused = "Paused"
+setup = "Set up"
+
+[policies.toolConfig]
+enableAriaLabel = "Enable {{tool}}"
+infoAriaLabel = "What does {{tool}} do?"
+
+[policies.wizard]
+allDocTypesDescription = "Enable the Classification policy to filter by document type."
+allDocTypesTitle = "All document types"
+back = "Back"
+builderDesc = "Build the sequence of tools this policy runs on each document."
+clear = "Clear"
+close = "Close"
+continue = "Continue"
+docTypesLabel = "Document types"
+edit = "Edit"
+editTitle = "Edit {{label}} Policy"
+enablePolicy = "Enable Policy"
+filenameAutoNumber = "Auto-number"
+filenamePositionAria = "Filename position"
+filenamePrefix = "Prefix"
+filenameSuffix = "Suffix"
+filenameTextAria = "Filename text"
+filenameTextPlaceholder = "Text to add (optional)"
+lockedDescription = "Contact a team leader to change this policy."
+lockedTitle = "Managed by your organization"
+maxRetriesLabel = "Max retries"
+noToolsError = "Add at least one configured tool to the workflow first."
+outputAsLabel = "Output as"
+outputFilenameSubhead = "Output filename"
+outputModeAria = "Output mode"
+outputNewFile = "New file"
+outputNewVersion = "New version"
+outputRetriesLabel = "Output & retries"
+outputSubhead = "Output"
+retryDelayAria = "Retry delay minutes"
+retryDelayLabel = "Retry delay (min)"
+runOnExport = "Export"
+runOnLabel = "Run on"
+runOnSubhead = "Run on"
+runOnUpload = "Upload"
+saveChanges = "Save Changes"
+saveError = "Couldn't save the policy. Please try again."
+setupClassification = "Set up Classification"
+setupTitle = "Set up {{label}} Policy"
+sourcesDesc = "Choose where this policy runs and which document types it applies to."
+sourcesLabel = "Sources"
+stepOf = "Step {{step}} of {{total}}"
+toolChainDesc = "Configure the tools this policy runs on each document."
+typesSelected = "{{count}} types selected"
 
 [printFile]
 title = "Print File"
@@ -6531,8 +6853,9 @@ logout = "Log out"
 setAsDefault = "Set as Default"
 theme = "Theme"
 themeDark = "Dark"
-themeDescription = "Switch between light and dark mode"
+themeDescription = "Choose light, dark, or follow your system"
 themeLight = "Light"
+themeSystem = "System"
 title = "General"
 user = "User"
 
@@ -6618,6 +6941,18 @@ title = "Keyboard Shortcuts"
 mac = "Include ⌘ (Command), ⌥ (Option), or another modifier in your shortcut."
 windows = "Include Ctrl, Alt, or another modifier in your shortcut."
 
+[settings.legal]
+label = "Legal"
+title = "Legal"
+
+[settings.legal.cookiePreferences]
+description = "Review or change your cookie consent choices."
+manage = "Manage"
+
+[settings.legal.documents]
+description = "Policies and legal information for this service."
+title = "Legal Documents"
+
 [settings.licensingAnalytics]
 audit = "Audit"
 plan = "Plan"
@@ -6656,7 +6991,9 @@ trial = "Trial"
 
 [settings.planBilling.team]
 managedByTeam = "Managed by team"
-memberCount = "{{count}} team members"
+memberCount_one = "{{count}} team member"
+memberCount_other = "{{count}} team members"
+memberCount_zero = "no team members"
 
 [settings.planBilling.tier]
 enterprise = "Enterprise"
@@ -7234,7 +7571,8 @@ errorTitle = "Share failed"
 expiredBody = "This share link is invalid or has expired."
 expiredTitle = "Link expired"
 failure = "Unable to generate a share link. Please try again."
-fileCount = "{{count}} files"
+fileCount_one = "{{count}} file"
+fileCount_other = "{{count}} files"
 fileLabel = "File"
 generate = "Generate Link"
 generated = "Share link generated"
@@ -7296,7 +7634,8 @@ description = "This uploads the current file to server storage for your own acce
 errorTitle = "Upload failed"
 failure = "Upload failed. Please check your login and storage settings."
 featureDisabled = "Saving to the server isn't enabled on this server."
-fileCount = "{{count}} files"
+fileCount_one = "{{count}} file"
+fileCount_other = "{{count}} files"
 fileLabel = "File"
 hint = "Public links and access modes are controlled by your server settings."
 more = " +{{count}} more"
@@ -7306,7 +7645,6 @@ updateButton = "Update on Server"
 uploadButton = "Upload to Server"
 
 [survey]
-nav = "Survey"
 title = "Stirling-PDF Survey"
 
 [swagger]
@@ -7331,35 +7669,15 @@ leaveButton = "Leave Team"
 leaveError = "Failed to leave team"
 leaveSuccess = "Successfully left team"
 loading = "Loading team information..."
-memberCount = "{{count}} members"
+memberCount_one = "{{count}} member"
+memberCount_other = "{{count}} members"
+memberCount_zero = "no members"
 memberRemoved = "Member removed successfully"
 namePlaceholder = "Enter team name"
 personal = "Personal"
 removeError = "Failed to remove member"
 renameError = "Failed to rename team"
 renameSuccess = "Team renamed successfully"
-
-[team.features]
-badge = "Team Features"
-subtitle = "Collaborate with your team"
-title = "Team Collaboration"
-viewPlans = "View Plans"
-
-[team.features.billing]
-description = "Manage billing and subscriptions"
-title = "Billing Management"
-
-[team.features.credits]
-description = "Shared credit pool for all members"
-title = "Shared Credits"
-
-[team.features.dashboard]
-description = "View team activity and usage"
-title = "Team Dashboard"
-
-[team.features.invite]
-description = "Add members to your team"
-title = "Invite Members"
 
 [team.invitationBanner]
 acceptButton = "Accept"
@@ -7381,11 +7699,6 @@ pending = "Pending"
 remove = "Remove"
 roleColumn = "Role"
 title = "Team Members"
-
-[team.upgrade]
-button = "Upgrade to Team"
-description = "Unlock team collaboration features"
-title = "Upgrade to Team Plan"
 
 [textAlign]
 center = "Center"
@@ -7523,8 +7836,6 @@ allReleases = "All Releases"
 breaking = "Breaking"
 breakingChanges = "Breaking Changes"
 breakingChangesDefault = "This version contains breaking changes."
-breakingChangesDetected = "Breaking Changes Detected"
-breakingChangesMessage = "Some versions contain breaking changes. Please review the migration guides below before updating."
 close = "Close"
 closeModal = "Close update modal"
 current = "Current Version"
@@ -7676,8 +7987,10 @@ generatedAt = "Generated"
 noPdf = "PDF report will be available after a successful validation."
 page = "Page"
 shortTitle = "Signature Summary"
-signatureCountLabel = "{{count}} signatures"
-signaturesFound = "{{count}} signatures detected"
+signatureCountLabel_one = "{{count}} signature"
+signatureCountLabel_other = "{{count}} signatures"
+signaturesFound_one = "{{count}} signature detected"
+signaturesFound_other = "{{count}} signatures detected"
 signaturesValid = "{{count}} fully valid"
 title = "Signature Validation Report"
 
@@ -7701,6 +8014,7 @@ valid = "Valid"
 
 [viewer]
 cannotPreviewFile = "Cannot Preview File"
+copyText = "Copy"
 disableColorFilter = "Disable Color Filter"
 dualPageView = "Dual Page View"
 enableDarkFilter = "Enable Dark Filter"
@@ -7741,8 +8055,8 @@ goToLink = "Go to link"
 hint = "Place comments with the Comment, Insert Text, or Replace Text tools. They will appear here by page."
 locateAnnotation = "Locate in document"
 moreActions = "More actions"
-nComments = "{{count}} comments"
-oneComment = "1 comment"
+nComments_one = "{{count}} comment"
+nComments_other = "{{count}} comments"
 pageLabel = "Page {{page}}"
 removeCommentOnly = "Remove comment only"
 saveReply = "Save reply"
@@ -8219,7 +8533,6 @@ loading = "Loading people..."
 locked = "locked"
 lockedBadge = "Locked"
 loginRequired = "Enable login mode first"
-member = "Member"
 noMembersFound = "No members found"
 role = "Role"
 searchMembers = "Search members..."
@@ -8282,14 +8595,14 @@ success = "Password updated successfully"
 title = "Change password"
 
 [workspace.people.editMember]
-editing = "Editing:"
+editing = "Editing: <0>{{username}}</0>"
 error = "Failed to update user"
 role = "Role"
-submit = "Update Member"
+submit = "Update User"
 success = "User updated successfully"
 team = "Team (Optional)"
 teamPlaceholder = "Select a team"
-title = "Edit Member"
+title = "Edit User"
 
 [workspace.people.emailInvite]
 allFailed = "Failed to invite users"
@@ -8330,9 +8643,11 @@ currentUsage = "Currently using {{current}} of {{max}} user licenses"
 fromLicense = "from license"
 grandfathered = "Grandfathered"
 grandfatheredShort = "{{count}} grandfathered"
-noSlotsAvailable = "No slots available"
-slotsAvailable = "{{count}} user slot(s) available"
-users = "users"
+slotsAvailable_one = "{{count}} user slot available"
+slotsAvailable_other = "{{count}} user slots available"
+slotsAvailable_zero = "No slots available"
+users_one = "user"
+users_other = "users"
 
 [workspace.people.mfa]
 adminDisableError = "Failed to disable MFA for user"
@@ -8340,9 +8655,9 @@ adminDisableSuccess = "MFA disabled successfully for user"
 disableByAdmin = "Disable MFA"
 
 [workspace.people.roleDescriptions]
-admin = "Can manage settings and invite members, with full administrative access."
-member = "Can view and edit shared files, but cannot manage workspace settings or members."
-user = "User"
+admin = "Can manage settings and invite users, with full administrative access."
+currentRole = "Current assigned role."
+user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]
 error = "Failed to update user status"
@@ -8362,7 +8677,9 @@ description = "Manage teams and organize workspace members"
 loadError = "Failed to load team details"
 loading = "Loading teams..."
 loadingDetails = "Loading team details..."
-memberCount = "{{count}} members"
+memberCount_one = "{{count}} member"
+memberCount_other = "{{count}} members"
+memberCount_zero = "no members"
 noMembers = "No members in this team"
 noTeamsFound = "No teams found"
 removeMember = "Remove from team"
@@ -8426,5 +8743,6 @@ title = "Rename Team"
 [zipWarning]
 cancel = "Cancel"
 confirm = "Extract"
-message = "This ZIP contains {{count}} files. Extract anyway?"
+message_one = "This ZIP contains {{count}} file. Extract anyway?"
+message_other = "This ZIP contains {{count}} files. Extract anyway?"
 title = "Large ZIP File"

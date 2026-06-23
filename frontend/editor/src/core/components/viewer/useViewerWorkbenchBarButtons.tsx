@@ -18,7 +18,7 @@ import {
   useNavigationState,
   useNavigationGuard,
 } from "@app/contexts/NavigationContext";
-import { BASE_PATH, withBasePath } from "@app/constants/app";
+import { stripBasePath, withBasePath } from "@app/constants/app";
 import { useRedaction, useRedactionMode } from "@app/contexts/RedactionContext";
 import TextFieldsIcon from "@mui/icons-material/TextFields";
 import StraightenIcon from "@mui/icons-material/Straighten";
@@ -73,17 +73,10 @@ export function useViewerWorkbenchBarButtons(
     });
   }, [registerImmediatePanUpdate]);
 
-  const stripBasePath = useCallback((path: string) => {
-    if (BASE_PATH && path.startsWith(BASE_PATH)) {
-      return path.slice(BASE_PATH.length) || "/";
-    }
-    return path;
-  }, []);
-
   const isAnnotationsPath = useCallback(() => {
     const cleanPath = stripBasePath(window.location.pathname).toLowerCase();
     return cleanPath === "/annotations" || cleanPath.endsWith("/annotations");
-  }, [stripBasePath]);
+  }, []);
 
   const [isAnnotationsActive, setIsAnnotationsActive] = useState<boolean>(() =>
     isAnnotationsPath(),

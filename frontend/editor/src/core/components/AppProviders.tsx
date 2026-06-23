@@ -1,5 +1,5 @@
 import { ReactNode, useEffect } from "react";
-import { RainbowThemeProvider } from "@app/components/shared/RainbowThemeProvider";
+import { ThemeProvider } from "@app/components/shared/ThemeProvider";
 import { FileContextProvider } from "@app/contexts/FileContext";
 import { NavigationProvider } from "@app/contexts/NavigationContext";
 import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
@@ -114,7 +114,7 @@ export function AppProviders({
 }: AppProvidersProps) {
   return (
     <PreferencesProvider>
-      <RainbowThemeProvider>
+      <ThemeProvider>
         <ErrorBoundary>
           <BannerProvider>
             <AppConfigProvider
@@ -172,7 +172,7 @@ export function AppProviders({
             </AppConfigProvider>
           </BannerProvider>
         </ErrorBoundary>
-      </RainbowThemeProvider>
+      </ThemeProvider>
     </PreferencesProvider>
   );
 }

@@ -105,15 +105,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Stream<Long> findByUsernameIsNullAndCreatedAtBefore(
             @Param("cutoffDate") LocalDateTime cutoffDate);
 
-    /** Users with an API key but no row in {@code user_credits}. */
-    @Query(
-            value =
-                    "SELECT u.* FROM users u "
-                            + "LEFT JOIN user_credits uc ON uc.user_id = u.user_id "
-                            + "WHERE u.api_key IS NOT NULL AND uc.user_id IS NULL",
-            nativeQuery = true)
-    List<User> findUsersWithApiKeyButNoCredits();
-
     /** Single-shot UPDATE that reassigns a user to a different team. */
     @Modifying
     @Query("UPDATE User u SET u.team.id = :teamId WHERE u.id = :userId")

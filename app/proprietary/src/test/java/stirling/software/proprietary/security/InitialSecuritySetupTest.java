@@ -16,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.env.Environment;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import stirling.software.common.model.ApplicationProperties;
@@ -36,6 +37,7 @@ class InitialSecuritySetupTest {
     @Mock private TeamService teamService;
     @Mock private DatabaseServiceInterface databaseService;
     @Mock private UserLicenseSettingsService licenseSettingsService;
+    @Mock private Environment environment;
 
     private ApplicationProperties applicationProperties;
     private InitialSecuritySetup initialSecuritySetup;
@@ -53,13 +55,15 @@ class InitialSecuritySetupTest {
         when(userService.findByUsernameIgnoreCase(Role.INTERNAL_API_USER.getRoleId()))
                 .thenReturn(Optional.of(internalUser));
         when(teamService.getOrCreateInternalTeam()).thenReturn(internalTeam);
+        when(environment.getActiveProfiles()).thenReturn(new String[] {});
         initialSecuritySetup =
                 new InitialSecuritySetup(
                         userService,
                         teamService,
                         applicationProperties,
                         databaseService,
-                        licenseSettingsService);
+                        licenseSettingsService,
+                        environment);
     }
 
     @Test

@@ -30,6 +30,7 @@ import React, {
   useSyncExternalStore,
 } from "react";
 import { useDebouncedCallback } from "@mantine/hooks";
+import { isAxiosError } from "axios";
 import type {
   FormField,
   FormFillState,
@@ -449,11 +450,13 @@ export function FormFillProvider({
         forFileIdRef.current = fileId ?? null;
         setForFileId(fileId ?? null);
         dispatch({ type: "FETCH_SUCCESS", fields });
-      } catch (err: any) {
+      } catch (err) {
         if (fetchVersionRef.current !== version) return; // stale
         const msg =
-          err?.response?.data?.message ||
-          err?.message ||
+          (isAxiosError<{ message?: string }>(err)
+            ? err.response?.data?.message
+            : undefined) ||
+          (err instanceof Error ? err.message : undefined) ||
           "Failed to fetch form fields";
         dispatch({ type: "FETCH_ERROR", error: msg });
       }

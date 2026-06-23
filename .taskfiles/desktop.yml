@@ -127,14 +127,15 @@ tasks:
     cmds:
       - rm -rf runtime/jre
       - mkdir -p runtime
-      - >-
-        jlink
-        --add-modules {{.JLINK_MODULES}}
-        --strip-debug
-        --compress=zip-6
-        --no-header-files
-        --no-man-pages
-        --output runtime/jre
+      - |
+        JLINK_COMPRESS="$(jlink --help 2>&1 | grep -q 'zip-\[0-9\]' && echo zip-6 || echo 2)"
+        jlink \
+          --add-modules {{.JLINK_MODULES}} \
+          --strip-debug \
+          --compress="$JLINK_COMPRESS" \
+          --no-header-files \
+          --no-man-pages \
+          --output runtime/jre
       # jlink emits its files mode 444 (read-only). Tauri's build-script
       # resource copier preserves source permissions when staging
       # `runtime/jre/**/*` into `target/<profile>/runtime/jre/...`, so the
