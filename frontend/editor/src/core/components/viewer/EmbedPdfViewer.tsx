@@ -212,9 +212,8 @@ const EmbedPdfViewerContent = ({
   const hasAnnotationChangesRef = useRef(false);
   // EmbedPDF can emit once from the saved undo stack before the saved file remounts.
   // Ignore that stale update without suppressing future edits on the same instance.
-  const savedAnnotationHistoryApiRef = useRef<typeof historyApiRef.current>(
-    null,
-  );
+  const savedAnnotationHistoryApiRef =
+    useRef<typeof historyApiRef.current>(null);
 
   // Scroll position preservation system
   // We continuously track the last known good scroll position, so we always have it available
@@ -715,8 +714,7 @@ const EmbedPdfViewerContent = ({
       setRedactionsApplied(false);
     };
 
-    let savePromise: Promise<void>;
-    savePromise = saveChanges()
+    const savePromise = saveChanges()
       .catch((error) => {
         console.error("Apply changes failed:", error);
         alert({

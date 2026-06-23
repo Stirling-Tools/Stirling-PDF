@@ -499,31 +499,31 @@ export const AnnotationAPIBridge = forwardRef<AnnotationAPI>(
           api?.deleteAnnotations?.(annotations);
         },
 
-        clearDocumentAnnotations: async (): Promise<ClearDocumentAnnotationsResult> => {
-          const api = annotationApi as unknown as
-            | AnnotationApiSurface
-            | undefined;
-          const clearAnnotations =
-            api?.[EMBEDPDF_CLEAR_DOCUMENT_ANNOTATIONS];
+        clearDocumentAnnotations:
+          async (): Promise<ClearDocumentAnnotationsResult> => {
+            const api = annotationApi as unknown as
+              | AnnotationApiSurface
+              | undefined;
+            const clearAnnotations = api?.[EMBEDPDF_CLEAR_DOCUMENT_ANNOTATIONS];
 
-          if (!api || !clearAnnotations || !api.getAnnotations) {
-            return { available: false, cleared: false };
-          }
+            if (!api || !clearAnnotations || !api.getAnnotations) {
+              return { available: false, cleared: false };
+            }
 
-          let annotations: unknown[];
-          try {
-            annotations = api.getAnnotations();
-          } catch {
-            return { available: false, cleared: false };
-          }
+            let annotations: unknown[];
+            try {
+              annotations = api.getAnnotations();
+            } catch {
+              return { available: false, cleared: false };
+            }
 
-          if (annotations.length === 0) {
-            return { available: true, cleared: false };
-          }
+            if (annotations.length === 0) {
+              return { available: true, cleared: false };
+            }
 
-          await clearAnnotations.call(api);
-          return { available: true, cleared: true };
-        },
+            await clearAnnotations.call(api);
+            return { available: true, cleared: true };
+          },
 
         createAnnotation: (
           pageIndex: number,

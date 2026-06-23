@@ -1230,11 +1230,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                   color="red"
                   disabled={isClearingDocumentAnnotations || isApplyingChanges}
                   leftSection={
-                    <LocalIcon
-                      icon="delete-rounded"
-                      width={18}
-                      height={18}
-                    />
+                    <LocalIcon icon="delete-rounded" width={18} height={18} />
                   }
                   onClick={() => setIsClearDocumentModalOpen(true)}
                 >
@@ -1343,10 +1339,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
               }
               onClick={() => void handleConfirmClearDocumentAnnotations()}
             >
-              {t(
-                "annotation.clearDocumentAnnotationsConfirm",
-                "Clear all",
-              )}
+              {t("annotation.clearDocumentAnnotationsConfirm", "Clear all")}
             </Button>
           </Group>
         </Stack>
