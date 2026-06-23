@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button, FormField, Input, Modal, Select } from "@shared/components";
 import { type RoleId, ROLES } from "@portal/api/users";
 import "@portal/views/Users.css";
@@ -23,13 +24,14 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  * sending — wiring the submit to the backend dispatches the invitation.
  */
 export function InviteMemberModal({ open, onClose }: InviteMemberModalProps) {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<RoleId>(DEFAULT_ROLE);
   const [touched, setTouched] = useState(false);
 
   const emailValid = EMAIL_RE.test(email.trim());
   const error =
-    touched && !emailValid ? "Enter a valid email address" : undefined;
+    touched && !emailValid ? t("users.invite.emailError") : undefined;
 
   function close() {
     onClose();
@@ -54,24 +56,24 @@ export function InviteMemberModal({ open, onClose }: InviteMemberModalProps) {
       open={open}
       onClose={close}
       width="sm"
-      title="Invite member"
-      subtitle="They'll receive an email to join your organization."
+      title={t("common.inviteMember")}
+      subtitle={t("users.invite.subtitle")}
       footer={
         <div className="portal-users__modal-footer">
           <Button variant="ghost" size="sm" onClick={close}>
-            Cancel
+            {t("users.invite.cancel")}
           </Button>
           <Button size="sm" onClick={submit} disabled={touched && !emailValid}>
-            Send invite
+            {t("users.invite.send")}
           </Button>
         </div>
       }
     >
       <div className="portal-users__invite-body">
-        <FormField label="Email" error={error} required>
+        <FormField label={t("users.invite.email")} error={error} required>
           <Input
             type="email"
-            placeholder="teammate@acme.com"
+            placeholder={t("users.invite.emailPlaceholder")}
             value={email}
             invalid={!!error}
             onChange={(e) => setEmail(e.target.value)}
@@ -79,8 +81,8 @@ export function InviteMemberModal({ open, onClose }: InviteMemberModalProps) {
           />
         </FormField>
         <FormField
-          label="Role"
-          helperText="Determines what the member can do once they join."
+          label={t("users.invite.role")}
+          helperText={t("users.invite.roleHelper")}
         >
           <Select
             options={ROLE_SELECT_OPTIONS}

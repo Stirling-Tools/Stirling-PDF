@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { MetricCard, MetricStrip } from "@shared/components";
 import type { PoliciesResponse } from "@portal/api/policies";
 
@@ -12,28 +13,29 @@ interface CatalogueSummaryProps {
  * across loading / ready states; only the values flow from the API.
  */
 export function CatalogueSummary({ data, loading }: CatalogueSummaryProps) {
+  const { t } = useTranslation();
   const s = loading ? undefined : data?.summary;
   return (
     <MetricStrip>
       <MetricCard
-        label="Active policies"
+        label={t("policies.summary.active.label")}
         value={s ? s.active : "—"}
-        description="Enforcing on upload/export"
+        description={t("policies.summary.active.description")}
       />
       <MetricCard
-        label="Paused"
+        label={t("policies.summary.paused.label")}
         value={s ? s.paused : "—"}
-        description="Configured but not firing"
+        description={t("policies.summary.paused.description")}
       />
       <MetricCard
-        label="Categories"
+        label={t("policies.summary.categories.label")}
         value={s ? s.categories : "—"}
-        description="Available to configure"
+        description={t("policies.summary.categories.description")}
       />
       <MetricCard
-        label="Docs enforced"
+        label={t("policies.summary.docsEnforced.label")}
         value={s ? s.docsEnforced.toLocaleString() : "—"}
-        description="Across active policies"
+        description={t("policies.summary.docsEnforced.description")}
       />
     </MetricStrip>
   );

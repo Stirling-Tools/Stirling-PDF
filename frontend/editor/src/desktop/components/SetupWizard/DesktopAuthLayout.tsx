@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import LoginRightCarousel from "@app/components/shared/LoginRightCarousel";
+import LoginRightCarousel from "@shared/auth/ui/LoginRightCarousel";
 import buildLoginSlides from "@app/components/shared/loginSlides";
-import styles from "@app/routes/authShared/AuthLayout.module.css";
+import styles from "@shared/auth/ui/AuthShell.module.css";
 import { useLogoVariant } from "@app/hooks/useLogoVariant";
 
 interface DesktopAuthLayoutProps {

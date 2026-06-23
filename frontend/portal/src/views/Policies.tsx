@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Skeleton } from "@shared/components";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import {
@@ -44,6 +45,7 @@ function toWirePolicy(
 }
 
 export function Policies() {
+  const { t } = useTranslation();
   // The catalogue is refetched after every mutation by bumping this counter,
   // so the cards/detail reflect the in-memory store the handlers maintain.
   const [version, setVersion] = useState(0);
@@ -133,12 +135,8 @@ export function Policies() {
   return (
     <div className="portal-policies">
       <header className="portal-policies__head">
-        <h1 className="portal-policies__title">Policies</h1>
-        <p className="portal-policies__sub">
-          Standing automations that enforce a tool pipeline on every document.
-          Each policy fires on upload or export, runs its tool chain, and saves
-          the enforced version alongside the original.
-        </p>
+        <h1 className="portal-policies__title">{t("policies.title")}</h1>
+        <p className="portal-policies__sub">{t("policies.subtitle")}</p>
       </header>
 
       <CatalogueSummary data={data} loading={loading} />

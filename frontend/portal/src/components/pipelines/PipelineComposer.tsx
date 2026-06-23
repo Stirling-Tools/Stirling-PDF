@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button, Chip, Modal } from "@shared/components";
 import {
   DESTINATION_OPTIONS,
@@ -13,15 +14,16 @@ import {
   STAGE_COLOR_VAR,
 } from "@portal/components/pipelines/stageAccent";
 
-const COMPOSER_STEPS = ["Source", "Operations", "Routing"] as const;
+const COMPOSER_STEPS = ["source", "operations", "routing"] as const;
 
-const OP_KIND_LABEL: Record<OpKind, string> = {
-  ingest: "Ingest",
-  validate: "Validate",
-  modify: "Modify",
-  secure: "Secure",
-  store: "Route / Store",
-  alert: "Alerts",
+/** Translation key suffixes for each op-kind group heading in the picker. */
+const OP_KIND_LABEL_KEY: Record<OpKind, string> = {
+  ingest: "ingest",
+  validate: "validate",
+  modify: "modify",
+  secure: "secure",
+  store: "store",
+  alert: "alert",
 };
 
 /** Selectable ops in the picker — excludes pipeline-only structural ops. */
@@ -48,6 +50,7 @@ export interface PipelineComposerProps {
 
 /** Three-step wizard: pick a source, compose the op chain, route the output. */
 export function PipelineComposer({ open, onClose }: PipelineComposerProps) {
+  const { t } = useTranslation();
   const [step, setStep] = useState(0);
   const [source, setSource] = useState<string>("upload");
   const [selectedOps, setSelectedOps] = useState<string[]>([
@@ -103,29 +106,29 @@ export function PipelineComposer({ open, onClose }: PipelineComposerProps) {
       open={open}
       onClose={close}
       width="xl"
-      title="New pipeline"
-      subtitle="Pick a source, compose the operation chain, then route the output."
+      title={t("pipelines.composer.title")}
+      subtitle={t("pipelines.composer.subtitle")}
       footer={
         <>
           <div className="portal-pipelines__composer-steps" aria-hidden>
-            {COMPOSER_STEPS.map((label, i) => (
+            {COMPOSER_STEPS.map((stepId, i) => (
               <span
-                key={label}
+                key={stepId}
                 className={
                   "portal-pipelines__composer-step" +
                   (i === step ? " is-active" : i < step ? " is-done" : "")
                 }
               >
-                {i + 1}. {label}
+                {i + 1}. {t(`pipelines.composer.steps.${stepId}`)}
               </span>
             ))}
           </div>
           <Button variant="ghost" onClick={close}>
-            Cancel
+            {t("pipelines.composer.cancel")}
           </Button>
           {step > 0 && (
             <Button variant="outline" onClick={() => setStep((s) => s - 1)}>
-              Back
+              {t("pipelines.composer.back")}
             </Button>
           )}
           {isLast ? (
@@ -134,7 +137,7 @@ export function PipelineComposer({ open, onClose }: PipelineComposerProps) {
               onClick={deploy}
               trailingIcon={<span aria-hidden>→</span>}
             >
-              Deploy pipeline
+              {t("pipelines.composer.deploy")}
             </Button>
           ) : (
             <Button
@@ -143,7 +146,7 @@ export function PipelineComposer({ open, onClose }: PipelineComposerProps) {
               disabled={!canAdvance}
               trailingIcon={<span aria-hidden>→</span>}
             >
-              Continue
+              {t("pipelines.composer.continue")}
             </Button>
           )}
         </>
@@ -162,10 +165,10 @@ export function PipelineComposer({ open, onClose }: PipelineComposerProps) {
                 onClick={() => setSource("any")}
               >
                 <span className="portal-pipelines__option-label">
-                  Any source
+                  {t("pipelines.composer.anySource.label")}
                 </span>
                 <span className="portal-pipelines__option-desc">
-                  Accept documents from every connected channel
+                  {t("pipelines.composer.anySource.desc")}
                 </span>
               </button>
               {SOURCE_OPTIONS.map((opt) => (
@@ -194,12 +197,14 @@ export function PipelineComposer({ open, onClose }: PipelineComposerProps) {
           <div className="portal-pipelines__composer-body">
             <div className="portal-pipelines__chain">
               <span className="portal-pipelines__chain-label">
-                Operation chain ({selectedOps.length})
+                {t("pipelines.composer.operationChain", {
+                  count: selectedOps.length,
+                })}
               </span>
               <div className="portal-pipelines__chain-chips">
                 {selectedOps.length === 0 ? (
                   <span className="portal-pipelines__chain-empty">
-                    Add operations from the library below.
+                    {t("pipelines.composer.chainEmpty")}
                   </span>
                 ) : (
                   selectedOps.map((id) => {
@@ -222,7 +227,7 @@ export function PipelineComposer({ open, onClose }: PipelineComposerProps) {
 
             <div className="portal-pipelines__agents">
               <span className="portal-pipelines__agents-label">
-                Quick-add bundles
+                {t("pipelines.composer.quickAddBundles")}
               </span>
               <div className="portal-pipelines__agents-row">
                 {PIPELINE_AGENTS.map((agent) => (
@@ -249,7 +254,7 @@ export function PipelineComposer({ open, onClose }: PipelineComposerProps) {
                       }}
                       aria-hidden
                     />
-                    {OP_KIND_LABEL[kind]}
+                    {t(`pipelines.composer.opKind.${OP_KIND_LABEL_KEY[kind]}`)}
                   </div>
                   <div className="portal-pipelines__library-chips">
                     {PICKER_OPS[kind].map((op) => {
@@ -275,7 +280,9 @@ export function PipelineComposer({ open, onClose }: PipelineComposerProps) {
 
         {step === 2 && (
           <div className="portal-pipelines__composer-body">
-            <span className="portal-pipelines__chain-label">Destination</span>
+            <span className="portal-pipelines__chain-label">
+              {t("pipelines.composer.destination")}
+            </span>
             <div className="portal-pipelines__composer-grid">
               {DESTINATION_OPTIONS.map((opt) => (
                 <button
@@ -297,7 +304,9 @@ export function PipelineComposer({ open, onClose }: PipelineComposerProps) {
               ))}
             </div>
 
-            <span className="portal-pipelines__chain-label">Alerts</span>
+            <span className="portal-pipelines__chain-label">
+              {t("pipelines.composer.alerts")}
+            </span>
             <div className="portal-pipelines__alerts">
               <label className="portal-pipelines__alert">
                 <input
@@ -306,10 +315,8 @@ export function PipelineComposer({ open, onClose }: PipelineComposerProps) {
                   onChange={(e) => setNotifyEmail(e.target.checked)}
                 />
                 <span>
-                  <strong>Email on failure</strong>
-                  <span>
-                    Notify the on-call list when error rate trips its bound
-                  </span>
+                  <strong>{t("pipelines.composer.alert.email.title")}</strong>
+                  <span>{t("pipelines.composer.alert.email.desc")}</span>
                 </span>
               </label>
               <label className="portal-pipelines__alert">
@@ -319,8 +326,8 @@ export function PipelineComposer({ open, onClose }: PipelineComposerProps) {
                   onChange={(e) => setNotifyWebhook(e.target.checked)}
                 />
                 <span>
-                  <strong>Webhook on completion</strong>
-                  <span>POST a run summary to a URL you control</span>
+                  <strong>{t("pipelines.composer.alert.webhook.title")}</strong>
+                  <span>{t("pipelines.composer.alert.webhook.desc")}</span>
                 </span>
               </label>
               <label className="portal-pipelines__alert">
@@ -330,10 +337,8 @@ export function PipelineComposer({ open, onClose }: PipelineComposerProps) {
                   onChange={(e) => setReviewQueue(e.target.checked)}
                 />
                 <span>
-                  <strong>Route low-confidence to review</strong>
-                  <span>
-                    Send docs under the confidence bound to a human queue
-                  </span>
+                  <strong>{t("pipelines.composer.alert.review.title")}</strong>
+                  <span>{t("pipelines.composer.alert.review.desc")}</span>
                 </span>
               </label>
             </div>
