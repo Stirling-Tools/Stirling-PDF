@@ -8,10 +8,10 @@ import type { SourcesResponse } from "@portal/api/sources";
  * across loading / empty / ready states; only values + deltas flow from the API.
  */
 const KPI_LABEL_KEYS = [
-  "sources.kpi.sources",
-  "sources.kpi.active24h",
+  "sources.kpi.agentsActive",
+  "sources.kpi.scenarios",
+  "sources.kpi.evalPassRate",
   "sources.kpi.docs24h",
-  "sources.kpi.docs30d",
 ] as const;
 
 interface KpiStripProps {

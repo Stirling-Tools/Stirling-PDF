@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, EmptyState, Skeleton } from "@shared/components";
+import { useTier } from "@portal/contexts/TierContext";
 import { useView } from "@portal/contexts/ViewContext";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import { fetchSources, type SourcesResponse } from "@portal/api/sources";
@@ -13,8 +14,9 @@ import "@portal/views/Sources.css";
 
 export function Sources() {
   const { t } = useTranslation();
+  const { tier } = useTier();
   const { setActiveView } = useView();
-  const state = useAsync<SourcesResponse>(() => fetchSources(), []);
+  const state = useAsync<SourcesResponse>(() => fetchSources(tier), [tier]);
   const { data, loading } = state;
   const { isLoading, isEmpty } = useSectionFlags(state);
 

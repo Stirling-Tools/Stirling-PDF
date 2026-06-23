@@ -353,10 +353,10 @@ title = "No sources connected yet"
 description = "Connect an agent, API client, webhook, connector or inbox to start feeding documents into your pipelines."
 
 [sources.kpi]
-sources = "Sources"
-active24h = "Active (24h)"
+agentsActive = "Agents active"
+scenarios = "Scenarios"
+evalPassRate = "Eval pass rate (7d)"
 docs24h = "Docs / 24h"
-docs30d = "Docs / 30d"
 
 [sources.table]
 source = "Source"
