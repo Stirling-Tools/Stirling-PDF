@@ -202,7 +202,8 @@ public class SecurityConfiguration {
                         "Origin",
                         "X-API-KEY",
                         "X-CSRF-TOKEN",
-                        "X-XSRF-TOKEN"));
+                        "X-XSRF-TOKEN",
+                        "X-Browser-Id"));
 
         cfg.setExposedHeaders(
                 List.of(

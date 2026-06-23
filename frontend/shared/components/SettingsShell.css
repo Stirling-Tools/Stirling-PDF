@@ -1,0 +1,170 @@
+.sui-settings-shell {
+  display: flex;
+  height: min(80vh, 36rem);
+  min-height: 22rem;
+}
+
+/* Left navigation rail */
+.sui-settings-shell__nav {
+  width: 14rem;
+  flex-shrink: 0;
+  overflow-y: auto;
+  padding: 1rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  background: var(--color-bg-subtle);
+  border-right: 1px solid var(--color-border-light);
+}
+
+.sui-settings-shell__group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.sui-settings-shell__group-title {
+  padding: 0 0.5rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-4);
+}
+
+.sui-settings-shell__item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.4rem 0.5rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  text-align: left;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text-2);
+  cursor: pointer;
+  transition:
+    background var(--motion-fast),
+    color var(--motion-fast);
+}
+.sui-settings-shell__item:hover:not(:disabled) {
+  background: var(--color-bg-hover);
+  color: var(--color-text-1);
+}
+.sui-settings-shell__item.is-active {
+  background: var(--color-bg-hover);
+  color: var(--color-text-1);
+  box-shadow: inset 2px 0 0 var(--color-blue);
+}
+.sui-settings-shell__item:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sui-settings-shell__item-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: currentColor;
+}
+.sui-settings-shell__item-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sui-settings-shell__item-badge {
+  flex-shrink: 0;
+}
+
+/* Right content pane */
+.sui-settings-shell__content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+}
+
+.sui-settings-shell__header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.875rem 1.25rem;
+  border-bottom: 1px solid var(--color-border-light);
+}
+.sui-settings-shell__title {
+  font-size: 1rem;
+  font-weight: 650;
+  color: var(--color-text-1);
+}
+.sui-settings-shell__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.sui-settings-shell__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text-3);
+  cursor: pointer;
+  transition:
+    background var(--motion-fast),
+    color var(--motion-fast);
+}
+.sui-settings-shell__close:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-1);
+}
+
+.sui-settings-shell__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.25rem;
+}
+
+.sui-settings-shell__footer {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid var(--color-border-light);
+}
+
+/* On a phone the rail collapses to a horizontal strip above the content. */
+@media (max-width: 40rem) {
+  .sui-settings-shell {
+    flex-direction: column;
+    height: 100%;
+  }
+  .sui-settings-shell__nav {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    border-right: none;
+    border-bottom: 1px solid var(--color-border-light);
+  }
+  .sui-settings-shell__group {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+  .sui-settings-shell__group-title {
+    display: none;
+  }
+}

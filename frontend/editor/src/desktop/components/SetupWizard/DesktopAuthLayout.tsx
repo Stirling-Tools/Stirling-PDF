@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import LoginRightCarousel from "@app/components/shared/LoginRightCarousel";
+import LoginRightCarousel from "@shared/auth/ui/LoginRightCarousel";
 import buildLoginSlides from "@app/components/shared/loginSlides";
-import styles from "@app/routes/authShared/AuthLayout.module.css";
+import styles from "@shared/auth/ui/AuthShell.module.css";
 import { useLogoVariant } from "@app/hooks/useLogoVariant";
 
 interface DesktopAuthLayoutProps {
@@ -20,27 +20,6 @@ export const DesktopAuthLayout: React.FC<DesktopAuthLayoutProps> = ({
     () => buildLoginSlides(logoVariant, t),
     [logoVariant, t],
   );
-
-  // Force light mode on auth pages
-  useEffect(() => {
-    const htmlElement = document.documentElement;
-    const previousColorScheme = htmlElement.getAttribute(
-      "data-mantine-color-scheme",
-    );
-
-    // Set light mode
-    htmlElement.setAttribute("data-mantine-color-scheme", "light");
-
-    // Cleanup: restore previous theme when leaving auth pages
-    return () => {
-      if (previousColorScheme) {
-        htmlElement.setAttribute(
-          "data-mantine-color-scheme",
-          previousColorScheme,
-        );
-      }
-    };
-  }, []);
 
   useEffect(() => {
     const update = () => {

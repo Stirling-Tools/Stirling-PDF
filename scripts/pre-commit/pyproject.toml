@@ -1,0 +1,16 @@
+# Pinned Python lint/format tools for `task pre-commit`. uv.lock locks these
+# plus their transitive dependencies by hash, so `uv run --project
+# scripts/pre-commit --locked <tool>` is reproducible and integrity-checked.
+# This is not a packaged project - it only exists to lock the tooling.
+[project]
+name = "stirling-precommit-tools"
+version = "0"
+requires-python = ">=3.11"
+dependencies = [
+    "ruff==0.15.14",
+    "codespell==2.4.2",
+    "toml-sort==0.24.4",
+]
+
+[tool.uv]
+package = false

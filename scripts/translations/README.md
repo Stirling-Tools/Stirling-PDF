@@ -482,6 +482,46 @@ title = "Add Page Numbers"
 
 Keys use dot notation internally (e.g., `addPageNumbers.selectText.1`).
 
+### Pluralization Suffixes
+
+Pluralized i18n keys use the i18next/Intl plural suffixes:
+`_zero`, `_one`, `_two`, `_few`, `_many`, and `_other`.
+
+Define the shared base key plus one entry for each plural category the language
+needs. Always provide `_other`; i18next uses it as the fallback plural form.
+Use `{{count}}` as the count placeholder, and call the base key from code with a
+`count` value:
+
+```toml
+[common]
+fileCount_one = "{{count}} file"
+fileCount_other = "{{count}} files"
+fileCount_zero = "No files"
+```
+
+Languages with more plural categories can add their required forms. For example,
+Arabic-style plural rules distinguish `0`, `1`, `2`, small counts, large counts,
+and the fallback form:
+
+```toml
+[common]
+uploadCount_zero = "No files uploaded"              # count = 0
+uploadCount_one = "One file uploaded"               # count = 1
+uploadCount_two = "Two files uploaded"              # count = 2
+uploadCount_few = "{{count}} files uploaded"        # count = 3-10
+uploadCount_many = "{{count}} files uploaded"       # count = 11-99
+uploadCount_other = "{{count}} files uploaded"      # count = 100, fractions, fallback
+```
+
+```ts
+t("common.uploadCount", { count: files.length });
+```
+
+Do not translate the suffix names themselves. They are CLDR plural categories,
+not English words. Add only the forms required by the target language, but keep
+the plural key set aligned with `en-US` unless the target language needs
+additional CLDR forms such as `_few` or `_many`.
+
 ## Key Features
 
 ### Placeholder Preservation

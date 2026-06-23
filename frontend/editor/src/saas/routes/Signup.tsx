@@ -6,12 +6,12 @@ import { useTranslation } from "@app/hooks/useTranslation";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
 import { getBaseUrl, withBasePath } from "@app/constants/app";
 import AuthLayout from "@app/routes/authShared/AuthLayout";
-import "@app/routes/authShared/auth.css";
+import "@shared/auth/ui/auth.css";
 import "@app/routes/authShared/saas-auth.css";
 import { alert } from "@app/components/toast";
 
 // Import signup components
-import ErrorMessage from "@app/routes/login/ErrorMessage";
+import ErrorMessage from "@shared/auth/ui/ErrorMessage";
 import OAuthButtons from "@app/routes/login/OAuthButtons";
 import SignupForm from "@app/routes/signup/SignupForm";
 import {
@@ -19,6 +19,7 @@ import {
   SignupFieldErrors,
 } from "@app/routes/signup/SignupFormValidation";
 import { useAuthService } from "@app/routes/signup/AuthService";
+import loginHeader from "@shared/assets/login/LoginLightModeHeader.svg";
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -184,7 +185,7 @@ export default function Signup() {
       {/* Centered logo */}
       <div className="auth-logo-block">
         <img
-          src={withBasePath("/modern-logo/LoginLightModeHeader.svg")}
+          src={loginHeader}
           alt="Stirling PDF"
           className="auth-logo-header auth-logo-header--light"
         />

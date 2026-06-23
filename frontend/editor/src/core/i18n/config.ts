@@ -1,6 +1,6 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
-import TomlBackend from "@app/i18n/tomlBackend";
+import TomlBackend from "@shared/i18n/tomlBackend";
 
 i18n
   .use(TomlBackend)

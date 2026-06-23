@@ -12,6 +12,7 @@ import LocalIcon from "@app/components/shared/LocalIcon";
 import { useConfigNavSections } from "@app/components/shared/config/configNavSections";
 import { NavKey, VALID_NAV_KEYS } from "@app/components/shared/config/types";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { COOKIE_CONSENT_SCROLL_SHARD } from "@app/hooks/useCookieConsent";
 import "@app/components/shared/AppConfigModal.css";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import {
@@ -24,6 +25,7 @@ import {
   useUnsavedChanges,
 } from "@app/contexts/UnsavedChangesContext";
 import { SettingsSearchBar } from "@app/components/shared/config/SettingsSearchBar";
+import { stripBasePath, withBasePath } from "@app/constants/app";
 
 interface AppConfigModalProps {
   opened: boolean;
@@ -96,13 +98,14 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
   const switchSection = useCallback(
     (key: NavKey) => {
       setActive(key);
-      const alreadyInSettings =
-        window.location.pathname.startsWith("/settings");
+      const alreadyInSettings = stripBasePath(
+        window.location.pathname,
+      ).startsWith("/settings");
       if (alreadyInSettings) {
         window.history.replaceState(
           window.history.state,
           "",
-          `/settings/${key}`,
+          withBasePath(`/settings/${key}`),
         );
       } else {
         navigate(`/settings/${key}`);
@@ -150,17 +153,18 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
     const canProceed = await confirmIfDirty();
     if (!canProceed) return;
 
-    // Pop back to whatever the user came from (files / viewer / tools).
-    // location.key === "default" means /settings was the first entry in
-    // this tab (deep link / refresh), so there's nothing to pop to;
-    // fall back to home in that case.
-    if (location.key === "default") {
-      navigate("/", { replace: true });
-    } else {
-      navigate(-1);
+    // Only unwind history if settings was opened via the URL; opened via state
+    // there's no /settings entry to pop and navigate(-1) would jump to /files.
+    if (location.pathname.startsWith("/settings")) {
+      // "default" key = first entry (deep link/refresh); nothing to pop to.
+      if (location.key === "default") {
+        navigate("/", { replace: true });
+      } else {
+        navigate(-1);
+      }
     }
     onClose();
-  }, [confirmIfDirty, location.key, navigate, onClose]);
+  }, [confirmIfDirty, location.key, location.pathname, navigate, onClose]);
 
   // Synchronous wrapper for contexts (e.g. tour buttons) that need () => void
   const handleCloseSync = useCallback(() => {
@@ -214,6 +218,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
       padding={0}
       fullScreen={isMobile}
       styles={{ content: { overflowY: "hidden", overscrollBehavior: "none" } }}
+      removeScrollProps={{ shards: [COOKIE_CONSENT_SCROLL_SHARD] }}
     >
       <div className="modal-container">
         {/* Left navigation */}

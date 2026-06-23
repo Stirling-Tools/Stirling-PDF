@@ -12,7 +12,7 @@
 .chat-fab-trigger {
   position: absolute;
   right: 16px;
-  bottom: calc(var(--footer-height, 2rem) + 16px);
+  bottom: 16px;
   pointer-events: auto;
   opacity: 1;
   /* Include box-shadow so the ChatFABButton hover shadow still animates */
