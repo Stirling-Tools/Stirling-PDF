@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Card, Chip } from "@shared/components";
 import type { Role } from "@portal/api/users";
 import "@portal/views/Users.css";
@@ -8,14 +9,14 @@ interface RolesGridProps {
 
 /** Reference catalogue of the org roles and what each one can do. */
 export function RolesGrid({ roles }: RolesGridProps) {
+  const { t } = useTranslation();
   return (
     <section className="portal-users__roles">
       <header className="portal-users__section-head">
-        <h2 className="portal-users__section-title">Roles</h2>
-        <p className="portal-users__section-sub">
-          Every role exists on every plan — what each one can do is fixed across
-          the org.
-        </p>
+        <h2 className="portal-users__section-title">
+          {t("users.roles.title")}
+        </h2>
+        <p className="portal-users__section-sub">{t("users.roles.subtitle")}</p>
       </header>
       <div className="portal-users__roles-grid">
         {roles.map((role) => (

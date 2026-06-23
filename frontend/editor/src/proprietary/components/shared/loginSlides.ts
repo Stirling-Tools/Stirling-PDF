@@ -2,68 +2,27 @@ import { BASE_PATH } from "@app/constants/app";
 import { getLogoFolder } from "@app/constants/logo";
 import type { LogoVariant } from "@app/services/preferencesService";
 import type { TFunction } from "i18next";
+import { loginSlideText } from "@shared/auth/ui/loginSlideText";
+import type { ImageSlide } from "@shared/auth/ui/LoginRightCarousel";
+import addToPdf from "@shared/assets/login/AddToPDF.png";
+import securePdf from "@shared/assets/login/SecurePDF.png";
 
-export type LoginCarouselSlide = {
-  src: string;
-  alt?: string;
-  title?: string;
-  subtitle?: string;
-  cornerModelUrl?: string;
-  followMouseTilt?: boolean;
-  tiltMaxDeg?: number;
-};
+const SLIDE_TILT = { followMouseTilt: true, tiltMaxDeg: 5 } as const;
 
+/**
+ * Editor login carousel slides. Copy comes from the shared set (so the editor
+ * and portal carousels stay in sync) and the edit/secure images are the shared
+ * bundled assets; only the hero is the logo-variant image the editor serves
+ * from /public.
+ */
 export const buildLoginSlides = (
   variant: LogoVariant | null | undefined,
   t: TFunction,
-): LoginCarouselSlide[] => {
+): ImageSlide[] => {
   const folder = getLogoFolder(variant);
-  const heroImage = `${BASE_PATH}/${folder}/Firstpage.png`;
-
-  return [
-    {
-      src: heroImage,
-      alt: t("login.slides.overview.alt", "Stirling PDF overview"),
-      title: t(
-        "login.slides.overview.title",
-        "Your one-stop-shop for all your PDF needs.",
-      ),
-      subtitle: t(
-        "login.slides.overview.subtitle",
-        "A privacy-first cloud suite for PDFs that lets you convert, sign, redact, and manage documents, along with 50+ other powerful tools.",
-      ),
-      followMouseTilt: true,
-      tiltMaxDeg: 5,
-    },
-    {
-      src: `${BASE_PATH}/Login/AddToPDF.png`,
-      alt: t("login.slides.edit.alt", "Edit PDFs"),
-      title: t(
-        "login.slides.edit.title",
-        "Edit PDFs to display/secure the information you want",
-      ),
-      subtitle: t(
-        "login.slides.edit.subtitle",
-        "With over a dozen tools to help you redact, sign, read and manipulate PDFs, you will be sure to find what you are looking for.",
-      ),
-      followMouseTilt: true,
-      tiltMaxDeg: 5,
-    },
-    {
-      src: `${BASE_PATH}/Login/SecurePDF.png`,
-      alt: t("login.slides.secure.alt", "Secure PDFs"),
-      title: t(
-        "login.slides.secure.title",
-        "Protect sensitive information in your PDFs",
-      ),
-      subtitle: t(
-        "login.slides.secure.subtitle",
-        "Add passwords, redact content, and manage certificates with ease.",
-      ),
-      followMouseTilt: true,
-      tiltMaxDeg: 5,
-    },
-  ];
+  const text = loginSlideText((key, fallback) => t(key, fallback));
+  const srcs = [`${BASE_PATH}/${folder}/Firstpage.png`, addToPdf, securePdf];
+  return srcs.map((src, i) => ({ src, ...text[i], ...SLIDE_TILT }));
 };
 
 export default buildLoginSlides;
