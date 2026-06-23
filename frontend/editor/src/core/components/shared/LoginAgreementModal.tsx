@@ -36,10 +36,20 @@ function readJwt(): string | null {
 
 // A value that changes on each fresh login so the agreement re-shows per login, but stays
 // stable across page refreshes within the same logged-in tab session.
+// Opaque, non-reversible digest so we never persist any token material. Only
+// needs to change when the input changes (to re-trigger the disclaimer).
+function digest(value: string): string {
+  let h = 5381;
+  for (let i = 0; i < value.length; i++) {
+    h = ((h << 5) + h + value.charCodeAt(i)) | 0;
+  }
+  return (h >>> 0).toString(36);
+}
+
 function getLoginNonce(loginEnabled: boolean, userId?: string): string {
   if (!loginEnabled) return "anon";
   const jwt = readJwt();
-  if (jwt) return `jwt:${jwt.slice(-24)}`;
+  if (jwt) return `jwt:${digest(jwt)}`;
   if (userId) return `user:${userId}`;
   return "session";
 }
