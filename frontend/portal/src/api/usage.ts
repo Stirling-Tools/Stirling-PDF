@@ -1,4 +1,6 @@
 import { httpJson } from "@portal/api/http";
+import { isSaasApiConfigured } from "@portal/api/saas";
+import { fetchWalletFromSaas } from "@portal/api/saasWallet";
 import type { Tier } from "@portal/contexts/TierContext";
 import type {
   BillingHistoryRow,
@@ -48,11 +50,18 @@ export async function fetchBillingHistory(
 }
 
 /**
- * GET /v1/billing/wallet?tier=… — live wallet contract (subscription, free pool,
- * period spend/cap, state). The real billing shape the account-link surface
- * gates against; mirrors the SaaS InstanceController entitlement read.
+ * Live wallet contract (subscription, free pool, period spend/cap, state).
+ *
+ * When VITE_SAAS_API_URL is configured, this calls the SaaS Java backend
+ * directly with the admin's Supabase JWT (the attended-reads path designed for
+ * portal→SaaS). The team is resolved from the JWT; the {@code tier} parameter
+ * is ignored in that mode. When unconfigured, falls back to the local mock
+ * path (keyed by tier) so dev/Storybook flows still work.
  */
 export async function fetchWallet(tier: Tier): Promise<WalletContract> {
+  if (isSaasApiConfigured) {
+    return fetchWalletFromSaas();
+  }
   return httpJson<WalletContract>(
     `/v1/billing/wallet?tier=${encodeURIComponent(tier)}`,
   );

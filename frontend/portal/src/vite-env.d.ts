@@ -5,6 +5,8 @@ interface ImportMetaEnv {
   readonly VITE_SAAS_SUPABASE_URL?: string;
   /** Hosted SaaS Supabase anon/publishable key (public). */
   readonly VITE_SAAS_SUPABASE_ANON_KEY?: string;
+  /** Hosted SaaS Java backend base URL — attended portal→SaaS reads (wallet etc.) with the admin's JWT. */
+  readonly VITE_SAAS_API_URL?: string;
   /** URL of the editor app (app switcher + non-admin redirect). See portal/.env. */
   readonly VITE_EDITOR_URL: string;
   /** Force MSW mocks on/off ("true"/"false"); empty falls back to dev default. */
