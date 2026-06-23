@@ -5,8 +5,6 @@ import { useTheme } from "@portal/contexts/ThemeContext";
 import { useUI } from "@portal/contexts/UIContext";
 import { useAsync } from "@portal/hooks/useAsync";
 import { fetchHomeKpis, type KpiEntry } from "@portal/api/home";
-import wordmarkLight from "@shared/assets/brand/modern-logo/StirlingPDFLogoBlackText.svg";
-import wordmarkDark from "@shared/assets/brand/modern-logo/StirlingPDFLogoWhiteText.svg";
 import markLight from "@shared/assets/brand/modern-logo/StirlingPDFLogoNoTextLight.svg";
 import markDark from "@shared/assets/brand/modern-logo/StirlingPDFLogoNoTextDark.svg";
 import {
