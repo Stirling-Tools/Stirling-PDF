@@ -96,9 +96,9 @@ dependencies {
 
     // Batik only bridge module needed (transitively pulls anim, gvt, util, css, dom, svg-dom)
     // Replaces batik-all which included unused codec, svggen, transcoder, script modules
-    implementation 'org.apache.xmlgraphics:batik-bridge:1.19'
+    implementation "org.apache.xmlgraphics:batik-bridge:${batikVersion}"
     // Required by TwelveMonkeys imageio-batik SPI (SVGImageReaderSpi) during ImageIO init
-    runtimeOnly 'org.apache.xmlgraphics:batik-transcoder:1.19'
+    runtimeOnly "org.apache.xmlgraphics:batik-transcoder:${batikVersion}"
 
     // PDFBox Graphics2D bridge for Batik SVG to PDF conversion
     implementation 'de.rototor.pdfbox:graphics2d:3.0.5'
