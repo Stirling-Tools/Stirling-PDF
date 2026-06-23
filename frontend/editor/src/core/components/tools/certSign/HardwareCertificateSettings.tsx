@@ -253,15 +253,31 @@ const HardwareCertificateSettings = ({
     }));
 
   const libraryOptions = [
+    // Label = driver name only; the long path goes under the dropdown so the
+    // input doesn't overflow / scroll horizontally.
     ...libraries.map((l) => ({
       value: l.path,
-      label: `${l.name} (${l.path})`,
+      label: l.name,
     })),
     {
       value: CUSTOM_LIBRARY_VALUE,
       label: t("certSign.hardware.customLibrary", "Custom driver path…"),
     },
   ];
+  const selectedLibraryPath =
+    librarySelection && librarySelection !== CUSTOM_LIBRARY_VALUE
+      ? librarySelection
+      : null;
+
+  // Hold the UI until capabilities are known, so the kind toggle / Windows-store
+  // section don't render and then vanish on mac/Linux (no flicker).
+  if (!capsReady) {
+    return (
+      <Stack gap="md" align="center" py="sm">
+        <Loader size="sm" />
+      </Stack>
+    );
+  }
 
   return (
     <Stack gap="md">
@@ -348,6 +364,11 @@ const HardwareCertificateSettings = ({
             onChange={onLibraryChange}
             disabled={disabled || loading}
           />
+          {selectedLibraryPath && (
+            <Text size="xs" c="dimmed" style={{ wordBreak: "break-all" }}>
+              {selectedLibraryPath}
+            </Text>
+          )}
           {librarySelection === CUSTOM_LIBRARY_VALUE && (
             <TextInput
               label={t("certSign.hardware.driverPath", "Driver library path")}
