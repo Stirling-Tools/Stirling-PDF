@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@app/auth/supabase";
 import { Button } from "@mantine/core";
 import { withBasePath } from "@app/constants/app";
-import { tryCompleteAccountLinkPopup } from "@app/routes/authShared/accountLinkPopup";
 
 interface CallbackState {
   status: "processing" | "success" | "error";
@@ -121,11 +120,6 @@ export default function AuthCallback() {
             setTimeout(() => navigate("/login", { replace: true }), 2000);
             return;
           }
-        }
-
-        // Account-link popup: post the session to the opener (Portal) + close.
-        if (await tryCompleteAccountLinkPopup()) {
-          return;
         }
 
         // Redirect to the intended destination

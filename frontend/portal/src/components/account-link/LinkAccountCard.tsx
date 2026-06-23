@@ -1,17 +1,21 @@
+import { useState } from "react";
 import { Banner, Button, Card, StatusBadge } from "@shared/components";
 import type { UseAccountLink } from "@portal/hooks/useAccountLink";
+import { LinkAccountModal } from "@portal/components/account-link/LinkAccountModal";
 
 interface Props {
   link: UseAccountLink;
 }
 
 /**
- * Links THIS instance to its Stirling account via a popup to the hosted SaaS
- * login (SSO + create-account). The portal posts the returned JWT to the local
- * backend, which stores the device secret server-side — the secret is never
- * received or rendered here. The card shows only a Linked / Not-linked status.
+ * Links THIS instance to its Stirling account via an in-app login modal (shared
+ * Supabase login — SSO + email/password). The portal posts the returned JWT to
+ * the local backend, which stores the device secret server-side — the secret is
+ * never received or rendered here. The card shows only a Linked / Not-linked
+ * status.
  */
 export function LinkAccountCard({ link }: Props) {
+  const [modalOpen, setModalOpen] = useState(false);
   const linking = link.phase === "linking";
   const linked = link.status?.linked ?? false;
 
@@ -31,9 +35,9 @@ export function LinkAccountCard({ link }: Props) {
 
       {!link.loginConfigured && (
         <Banner tone="neutral" title="SaaS login not configured">
-          Set <code>VITE_SAAS_WEB_URL</code> to enable account linking against the
-          hosted Stirling login. In dev the popup is simulated so the flow stays
-          demoable.
+          Set <code>VITE_SAAS_SUPABASE_URL</code> to enable account linking
+          against the hosted Stirling account. In dev you can simulate sign-in
+          from the link dialog.
         </Banner>
       )}
 
@@ -51,17 +55,28 @@ export function LinkAccountCard({ link }: Props) {
               : "This instance is linked."}{" "}
             Unattended processing bills against your org wallet.
           </span>
-          <Button variant="outline" accent="red" loading={linking} onClick={link.unlink}>
+          <Button
+            variant="outline"
+            accent="red"
+            loading={linking}
+            onClick={link.unlink}
+          >
             Unlink
           </Button>
         </div>
       ) : (
         <div className="portal-link__actions">
-          <Button loading={linking} onClick={() => link.link()}>
+          <Button loading={linking} onClick={() => setModalOpen(true)}>
             Link your Stirling account
           </Button>
         </div>
       )}
+
+      <LinkAccountModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onLinked={(session) => link.completeLink(session)}
+      />
     </Card>
   );
 }

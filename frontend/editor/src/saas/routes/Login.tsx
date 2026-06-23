@@ -19,7 +19,6 @@ import ErrorMessage from "@shared/auth/ui/ErrorMessage";
 import EmailPasswordForm from "@app/routes/login/EmailPasswordForm";
 import OAuthButtons from "@app/routes/login/OAuthButtons";
 import LoggedInState from "@app/routes/login/LoggedInState";
-import { tryCompleteAccountLinkPopup } from "@app/routes/authShared/accountLinkPopup";
 import loginHeader from "@shared/assets/login/LoginLightModeHeader.svg";
 
 export default function Login() {
@@ -67,13 +66,6 @@ export default function Login() {
       navigate(nextPath, { replace: true });
     }
   }, [session, loading, nextPath, navigate]);
-
-  // Account-link popup (?link=1&origin=…): hand the session back to the opener.
-  useEffect(() => {
-    if (session && !loading) {
-      void tryCompleteAccountLinkPopup();
-    }
-  }, [session, loading]);
 
   const baseUrl = getBaseUrl();
 

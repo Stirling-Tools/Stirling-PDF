@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
+import type { SupabaseLoginSession } from "@shared/auth/ui/useSupabaseLogin";
 import {
-  isSaasLoginConfigured,
-  openSaasLoginPopup,
-  type SaasSession,
-} from "@portal/auth/supabaseLink";
+  ensureSaasSupabase,
+  isSaasSupabaseConfigured,
+  PENDING_LINK_KEY,
+} from "@portal/auth/saasSupabase";
 import {
   fetchStatus,
   linkInstance,
@@ -15,52 +16,59 @@ import { useApplyLinkFacts } from "@portal/contexts/LinkContext";
 /**
  * Orchestrates the account-link flow for THIS instance:
  *
- *   1. Open the hosted SaaS login popup (auth/supabaseLink.ts) — SSO or
- *      create-account, no bespoke form.
- *   2. Receive the SaaS JWT it posts back (origin-validated).
- *   3. POST the JWT to the LOCAL backend (api/link.ts) which registers with SaaS
- *      and stores the device secret server-side.
- *   4. Read the resulting Linked / Not-linked status.
+ *   1. The admin signs in to their Stirling account IN-APP (LinkAccountModal →
+ *      shared Supabase login), minting a short-term SaaS JWT.
+ *   2. {@link completeLink} POSTs that JWT to the LOCAL backend (api/link.ts),
+ *      which registers with SaaS and stores the device secret server-side.
+ *   3. The resulting Linked / Not-linked status is read back.
  *
- * The device secret is never received or rendered here. Subscription state is
- * resolved separately from the wallet, so a fresh link marks the org linked-free.
- *
- * When VITE_SAAS_WEB_URL is unset the popup degrades to a dev stub (see
- * auth/supabaseLink.ts) that simulates the SaaS page posting back a session, so
- * the flow stays demoable + testable.
+ * Email/password resolves inline (the modal calls completeLink). SSO redirects
+ * the browser to the provider and back; the returned session is finished here on
+ * mount (see the pending-link effect). The device secret is never received or
+ * rendered. Subscription state is resolved separately from the wallet, so a fresh
+ * link marks the org linked-free.
  */
 
 export type LinkPhase = "idle" | "linking" | "error";
 
 export interface UseAccountLink {
-  /** Whether the hosted SaaS login URL is configured (false → uses dev stub). */
+  /** Whether the SaaS Supabase project is configured (false → link UI shows a configure state). */
   loginConfigured: boolean;
   /** Linked / Not-linked status for this instance; null while first loading. */
   status: LinkStatus | null;
   phase: LinkPhase;
   error: string | null;
-  /** Open the SaaS login popup and link this instance with the returned JWT. */
-  link: (name?: string) => Promise<void>;
+  /** Finish linking THIS instance with a SaaS session minted by the login modal. */
+  completeLink: (session: SupabaseLoginSession, name?: string) => Promise<void>;
   /** Unlink this instance. */
   unlink: () => Promise<void>;
-  /**
-   * DEV/TEST seam: when set, link() routes the popup through this stub instead of
-   * a real window.open (see auth/supabaseLink.ts OpenPopupOptions.stub).
-   */
-  loginStub?: (post: (session: SaasSession) => void) => void;
 }
 
-export interface UseAccountLinkOptions {
-  loginStub?: (post: (session: SaasSession) => void) => void;
-}
-
-export function useAccountLink(
-  opts: UseAccountLinkOptions = {},
-): UseAccountLink {
+export function useAccountLink(): UseAccountLink {
   const applyLinkFacts = useApplyLinkFacts();
   const [status, setStatus] = useState<LinkStatus | null>(null);
   const [phase, setPhase] = useState<LinkPhase>("idle");
   const [error, setError] = useState<string | null>(null);
+
+  const completeLink = useCallback(
+    async (session: SupabaseLoginSession, name?: string) => {
+      setPhase("linking");
+      setError(null);
+      try {
+        const next = await linkInstance({
+          supabaseJwt: session.access_token,
+          name,
+        });
+        setStatus(next);
+        setPhase("idle");
+        if (next.linked) applyLinkFacts(true, false);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : String(e));
+        setPhase("error");
+      }
+    },
+    [applyLinkFacts],
+  );
 
   // Read the current link status on mount.
   useEffect(() => {
@@ -77,34 +85,24 @@ export function useAccountLink(
     };
   }, [applyLinkFacts]);
 
-  const link = useCallback(
-    async (name?: string) => {
-      setPhase("linking");
-      setError(null);
-      try {
-        // Dev/Storybook fallback: with no real SaaS login URL configured,
-        // simulate the popup posting back a session so the flow stays demoable.
-        const stub =
-          opts.loginStub ??
-          (!isSaasLoginConfigured && import.meta.env.DEV
-            ? (post: (session: SaasSession) => void) =>
-                post({ access_token: "dev-stub-jwt" })
-            : undefined);
-        const session = await openSaasLoginPopup({ stub });
-        const next = await linkInstance({
-          supabaseJwt: session.access_token,
-          name,
-        });
-        setStatus(next);
-        setPhase("idle");
-        if (next.linked) applyLinkFacts(true, false);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : String(e));
-        setPhase("error");
+  // SSO return: if we kicked off an SSO link before redirecting away, the SaaS
+  // session is now in the shared Supabase client — finish the link.
+  useEffect(() => {
+    const supabase = ensureSaasSupabase();
+    const pending = sessionStorage.getItem(PENDING_LINK_KEY);
+    if (!supabase || pending === null) return;
+    let cancelled = false;
+    void supabase.auth.getSession().then(({ data }) => {
+      sessionStorage.removeItem(PENDING_LINK_KEY);
+      const token = data.session?.access_token;
+      if (token && !cancelled) {
+        void completeLink({ access_token: token }, pending || undefined);
       }
-    },
-    [opts.loginStub, applyLinkFacts],
-  );
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [completeLink]);
 
   const unlink = useCallback(async () => {
     setPhase("linking");
@@ -121,12 +119,11 @@ export function useAccountLink(
   }, [applyLinkFacts]);
 
   return {
-    loginConfigured: isSaasLoginConfigured,
+    loginConfigured: isSaasSupabaseConfigured,
     status,
     phase,
     error,
-    link,
+    completeLink,
     unlink,
-    loginStub: opts.loginStub,
   };
 }

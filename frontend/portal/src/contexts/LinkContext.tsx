@@ -19,9 +19,9 @@ import {
  *   - `linked-subscribed` — linked with a live PAYG subscription.
  *
  * The portal admin establishes the link by signing in to the SaaS Supabase
- * project (auth/supabaseLink.ts) and registering the instance (api/link.ts); the
- * subscribed-vs-free distinction comes from the wallet contract (api/usage.ts
- * WalletContract.subscriptionStatus).
+ * project in-app (auth/saasSupabase.ts + the shared Supabase login) and
+ * registering the instance (api/link.ts); the subscribed-vs-free distinction
+ * comes from the wallet contract (api/usage.ts WalletContract.subscriptionStatus).
  */
 export type LinkState = "unlinked" | "linked-free" | "linked-subscribed";
 
