@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { EmptyState } from "@shared/components";
 import { useTier } from "@portal/contexts/TierContext";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
@@ -59,6 +60,7 @@ function DocsContentPane({
 }
 
 export function DeveloperDocs() {
+  const { t } = useTranslation();
   const { tier } = useTier();
   const [active, setActive] = useState("quickstart");
 
@@ -78,8 +80,8 @@ export function DeveloperDocs() {
         {isEmpty && (
           <EmptyState
             size="compact"
-            title="Docs unavailable"
-            description="The documentation index could not be loaded."
+            title={t("docs.nav.empty.title")}
+            description={t("docs.nav.empty.description")}
           />
         )}
         {nav && nav.length > 0 && (

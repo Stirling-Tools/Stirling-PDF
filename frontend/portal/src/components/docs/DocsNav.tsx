@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Skeleton, StatusBadge } from "@shared/components";
 import type { DocsNavSection } from "@portal/api/docs";
 
@@ -11,8 +12,9 @@ export function DocsNav({
   active: string;
   onSelect: (id: string) => void;
 }) {
+  const { t } = useTranslation();
   return (
-    <nav className="portal-docs__nav" aria-label="Documentation">
+    <nav className="portal-docs__nav" aria-label={t("docs.nav.ariaLabel")}>
       {sections.map((section) => (
         <div key={section.id} className="portal-docs__nav-group">
           <div className="portal-docs__nav-head">
