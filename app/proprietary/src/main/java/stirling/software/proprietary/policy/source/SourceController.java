@@ -117,8 +117,8 @@ public class SourceController {
 
     /**
      * Stamp owner + team server-side. Create stamps the current user and their team; update
-     * preserves the existing owner and team after verifying the source belongs to the caller's team
-     * — so the client can neither forge ownership on create nor reach across teams on update (a
+     * preserves the existing owner and team after verifying the source belongs to the caller's team,
+     * so the client can neither forge ownership on create nor reach across teams on update (a
      * source in another team reads as not-found).
      */
     private Source resolveOwnership(Source incoming) {

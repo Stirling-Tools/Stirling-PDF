@@ -1,25 +1,37 @@
 import { httpJson } from "@portal/api/http";
-import type { SourcesResponse } from "@portal/mocks/sources";
-import type { Tier } from "@portal/contexts/TierContext";
+import type { Source, SourcesResponse } from "@portal/mocks/sources";
+
+/**
+ * Sources service layer: the backend contract.
+ *
+ * Like the policies surface (and unlike the portal's mock-only `/v1/...` pages),
+ * this calls the REAL Stirling base `/api/v1/sources` (SourceController), so it is
+ * plug-and-play: drop MSW and these exact calls hit the live backend.
+ */
 
 export type {
-  AgentDetail,
-  ApiClientDetail,
-  BasicDetail,
   Source,
-  SourceDetail,
+  SourceDetailRow,
+  SourceKpi,
+  SourcePolicyRef,
   SourceStatus,
-  SourceType,
-  SourceTypeMeta,
-  SourcesKpi,
+  SourceView,
   SourcesResponse,
-  WebhookDetail,
 } from "@portal/mocks/sources";
-export { SOURCE_STATUS_TONE, SOURCE_TYPE_META } from "@portal/mocks/sources";
 
-/** GET /v1/sources?tier=… — KPI strip + the sources table for the tier. */
-export async function fetchSources(tier: Tier): Promise<SourcesResponse> {
-  return httpJson<SourcesResponse>(
-    `/v1/sources?tier=${encodeURIComponent(tier)}`,
-  );
+/** GET /api/v1/sources: KPI strip + one row per source for the admin. */
+export async function fetchSources(): Promise<SourcesResponse> {
+  return httpJson<SourcesResponse>("/api/v1/sources");
+}
+
+/** POST /api/v1/sources: create (blank id) or update (matched id) a source. */
+export async function createSource(source: Source): Promise<Source> {
+  return httpJson<Source>("/api/v1/sources", { method: "POST", body: source });
+}
+
+/** DELETE /api/v1/sources/{id}: remove a source (409 if a policy references it). */
+export async function deleteSource(id: string): Promise<void> {
+  await httpJson<void>(`/api/v1/sources/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  });
 }

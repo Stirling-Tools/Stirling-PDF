@@ -1,18 +1,27 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Chip, StatusBadge, Table, type TableColumn } from "@shared/components";
 import {
-  type Source,
-  SOURCE_STATUS_TONE,
-  SOURCE_TYPE_META,
-} from "@portal/api/sources";
+  Chip,
+  StatusBadge,
+  type StatusTone,
+  Table,
+  type TableColumn,
+} from "@shared/components";
+import type { SourceStatus, SourceView } from "@portal/api/sources";
+import { sourceTypeMeta } from "@portal/components/sources/sourceTypes";
 import "@portal/views/Sources.css";
 
+const STATUS_TONE: Record<SourceStatus, StatusTone> = {
+  active: "success",
+  unused: "neutral",
+  disabled: "warning",
+};
+
 interface SourcesTableProps {
-  sources: Source[];
+  sources: SourceView[];
   /** Id of the row whose detail panel is open, drives the caret state. */
   expandedId: string | null;
-  onRowClick: (source: Source) => void;
+  onRowClick: (source: SourceView) => void;
 }
 
 export function SourcesTable({
@@ -21,13 +30,13 @@ export function SourcesTable({
   onRowClick,
 }: SourcesTableProps) {
   const { t } = useTranslation();
-  const columns = useMemo<TableColumn<Source>[]>(
+  const columns = useMemo<TableColumn<SourceView>[]>(
     () => [
       {
         key: "name",
         header: t("sources.table.source"),
         render: (s) => {
-          const meta = SOURCE_TYPE_META[s.type];
+          const meta = sourceTypeMeta(s.type);
           return (
             <div className="portal-sources__name-cell">
               <span
@@ -51,37 +60,23 @@ export function SourcesTable({
         header: t("sources.table.status"),
         render: (s) => (
           <StatusBadge
-            tone={SOURCE_STATUS_TONE[s.status]}
+            tone={STATUS_TONE[s.status]}
             size="sm"
             pulse={s.status === "active"}
           >
-            {s.status}
+            {t(`sources.status.${s.status}`)}
           </StatusBadge>
         ),
       },
       {
-        key: "docs24h",
-        header: t("sources.table.docs24h"),
+        key: "referenceCount",
+        header: t("sources.table.usedBy"),
         align: "right",
-        render: (s) => s.docs24h.toLocaleString(),
-      },
-      {
-        key: "docs30d",
-        header: t("sources.table.docs30d"),
-        align: "right",
-        render: (s) => s.docs30d.toLocaleString(),
-      },
-      {
-        key: "lastEvent",
-        header: t("sources.table.lastEvent"),
         render: (s) => (
-          <span className="portal-sources__muted">{s.lastEvent}</span>
+          <span className={s.referenceCount === 0 ? "portal-sources__muted" : undefined}>
+            {s.referenceCount}
+          </span>
         ),
-      },
-      {
-        key: "owner",
-        header: t("sources.table.owner"),
-        render: (s) => <span className="portal-sources__muted">{s.owner}</span>,
       },
       {
         key: "expand",
@@ -104,7 +99,7 @@ export function SourcesTable({
   );
 
   return (
-    <Table<Source>
+    <Table<SourceView>
       className="portal-sources__table"
       columns={columns}
       rows={sources}

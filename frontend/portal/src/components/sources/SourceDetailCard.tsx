@@ -1,17 +1,24 @@
 import { useTranslation } from "react-i18next";
-import { type Source, SOURCE_TYPE_META } from "@portal/api/sources";
+import { Button } from "@shared/components";
+import type { SourceView } from "@portal/api/sources";
 import { SourceDetailPanel } from "@portal/components/sources/SourceDetailPanel";
+import { sourceTypeMeta } from "@portal/components/sources/sourceTypes";
 import "@portal/views/Sources.css";
 
 interface SourceDetailCardProps {
-  source: Source;
+  source: SourceView;
   onClose: () => void;
+  onDelete: (source: SourceView) => void;
 }
 
-/** Expanded type-specific detail for the selected table row. */
-export function SourceDetailCard({ source, onClose }: SourceDetailCardProps) {
+/** Expanded detail for the selected source row, with a delete action. */
+export function SourceDetailCard({
+  source,
+  onClose,
+  onDelete,
+}: SourceDetailCardProps) {
   const { t } = useTranslation();
-  const meta = SOURCE_TYPE_META[source.type];
+  const meta = sourceTypeMeta(source.type);
   return (
     <section className="portal-sources__expanded">
       <header className="portal-sources__expanded-head">
@@ -24,9 +31,9 @@ export function SourceDetailCard({ source, onClose }: SourceDetailCardProps) {
         <div>
           <h2 className="portal-sources__expanded-title">{source.name}</h2>
           <span className="portal-sources__expanded-sub">
-            {t("sources.detail.ownedBy", {
+            {t("sources.detail.subtitle", {
               type: meta.label,
-              owner: source.owner,
+              status: t(`sources.status.${source.status}`),
             })}
           </span>
         </div>
@@ -39,7 +46,14 @@ export function SourceDetailCard({ source, onClose }: SourceDetailCardProps) {
           ×
         </button>
       </header>
+
       <SourceDetailPanel source={source} />
+
+      <div className="portal-sources__detail-actions">
+        <Button accent="red" variant="outline" onClick={() => onDelete(source)}>
+          {t("sources.detail.delete")}
+        </Button>
+      </div>
     </section>
   );
 }

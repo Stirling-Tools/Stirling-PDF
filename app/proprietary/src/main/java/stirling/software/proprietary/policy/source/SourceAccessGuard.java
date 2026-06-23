@@ -32,7 +32,7 @@ public class SourceAccessGuard {
         return enforced() ? userService.getCurrentUsername() : null;
     }
 
-    /** Team a new source is stamped with — the creator's team. {@code null} when login disabled. */
+    /** Team a new source is stamped with: the creator's team. {@code null} when login disabled. */
     public Long teamForNewSource() {
         return enforced() ? policyManagementAuthority.currentUserTeamId() : null;
     }

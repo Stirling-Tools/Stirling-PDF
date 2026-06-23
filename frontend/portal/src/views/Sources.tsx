@@ -1,10 +1,15 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, EmptyState, Skeleton } from "@shared/components";
-import { useTier } from "@portal/contexts/TierContext";
+import { Banner, Button, EmptyState, Modal, Skeleton } from "@shared/components";
 import { useView } from "@portal/contexts/ViewContext";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
-import { fetchSources, type SourcesResponse } from "@portal/api/sources";
+import { HttpError } from "@portal/api/http";
+import {
+  deleteSource,
+  fetchSources,
+  type SourcesResponse,
+  type SourceView,
+} from "@portal/api/sources";
 import { AgentBuilderIcon } from "@portal/components/icons";
 import { KpiStrip } from "@portal/components/sources/KpiStrip";
 import { SourcesTable } from "@portal/components/sources/SourcesTable";
@@ -12,19 +17,59 @@ import { SourceDetailCard } from "@portal/components/sources/SourceDetailCard";
 import { ConnectWizard } from "@portal/components/sources/ConnectWizard";
 import "@portal/views/Sources.css";
 
+/** Best-effort human message from a thrown error (ProblemDetail or classic shape). */
+function messageFor(error: unknown): string {
+  if (error instanceof HttpError) {
+    const body = error.body as {
+      detail?: string;
+      message?: string;
+      error?: string;
+    } | null;
+    return body?.detail ?? body?.message ?? body?.error ?? error.message;
+  }
+  return error instanceof Error ? error.message : String(error);
+}
+
 export function Sources() {
   const { t } = useTranslation();
-  const { tier } = useTier();
   const { setActiveView } = useView();
-  const state = useAsync<SourcesResponse>(() => fetchSources(tier), [tier]);
+  // Refetch after every mutation by bumping this counter, so the table reflects
+  // the in-memory store the handlers maintain (mirrors the Policies view).
+  const [version, setVersion] = useState(0);
+  const state = useAsync<SourcesResponse>(() => fetchSources(), [version]);
   const { data, loading } = state;
   const { isLoading, isEmpty } = useSectionFlags(state);
+  const refetch = useCallback(() => setVersion((v) => v + 1), []);
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<SourceView | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const sources = data?.sources ?? [];
   const expanded = sources.find((s) => s.id === expandedId) ?? null;
+
+  function requestDelete(source: SourceView) {
+    setDeleteError(null);
+    setPendingDelete(source);
+  }
+
+  async function confirmDelete() {
+    if (!pendingDelete || deleting) return;
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await deleteSource(pendingDelete.id);
+      setPendingDelete(null);
+      setExpandedId(null);
+      refetch();
+    } catch (e) {
+      setDeleteError(messageFor(e));
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   return (
     <div className="portal-sources">
@@ -86,10 +131,49 @@ export function Sources() {
         <SourceDetailCard
           source={expanded}
           onClose={() => setExpandedId(null)}
+          onDelete={requestDelete}
         />
       )}
 
-      <ConnectWizard open={wizardOpen} onClose={() => setWizardOpen(false)} />
+      <ConnectWizard
+        open={wizardOpen}
+        onClose={() => setWizardOpen(false)}
+        onCreated={refetch}
+      />
+
+      <Modal
+        open={pendingDelete !== null}
+        onClose={() => !deleting && setPendingDelete(null)}
+        width="sm"
+        title={t("sources.delete.title")}
+        footer={
+          <div className="portal-sources__wizard-footer">
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={deleting}
+              onClick={() => setPendingDelete(null)}
+            >
+              {t("sources.delete.cancel")}
+            </Button>
+            <Button
+              size="sm"
+              accent="red"
+              loading={deleting}
+              onClick={confirmDelete}
+            >
+              {t("sources.delete.confirm")}
+            </Button>
+          </div>
+        }
+      >
+        <p>
+          {t("sources.delete.body", { name: pendingDelete?.name ?? "" })}
+        </p>
+        {deleteError && (
+          <Banner tone="danger" description={deleteError} />
+        )}
+      </Modal>
     </div>
   );
 }
