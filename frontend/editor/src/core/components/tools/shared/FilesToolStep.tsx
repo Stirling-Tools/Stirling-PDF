@@ -10,14 +10,10 @@ export interface FilesToolStepProps {
   minFiles?: number;
 }
 
-export function createFilesToolStep(
-  createStep: (
-    title: string,
-    props: any,
-    children?: React.ReactNode,
-  ) => React.ReactElement,
+export function createFilesToolStep<T>(
+  createStep: (title: string, props: any, children?: React.ReactNode) => T,
   props: FilesToolStepProps,
-): React.ReactElement {
+): T {
   return createStep(
     i18n.t("files.title", "Files"),
     {
