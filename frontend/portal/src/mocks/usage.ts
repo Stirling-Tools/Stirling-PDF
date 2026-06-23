@@ -1,7 +1,7 @@
 /**
  * Usage & Billing fixtures and the types api/usage.ts shares with them.
  * api/usage.ts imports the types; the MSW handlers in mocks/handlers/usage.ts
- * serve this fixture data over the intercepted httpJson() calls. Components
+ * serve this fixture data over the intercepted apiClient.mock.json() calls. Components
  * never reach into this module directly.
  *
  * Once a real billing backend exists, the MSW handlers stop being registered

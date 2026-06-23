@@ -42,13 +42,17 @@ export const linkHandlers = [
     return HttpResponse.json(unlinkLocal());
   }),
 
-  http.get("/api/v1/account-link/instances", async () => {
+  // Team-wide list/revoke are SaaS-direct now (apiClient.saas calls the
+  // absolute VITE_SAAS_API_URL). Wildcard so the same handlers intercept both
+  // the relative pattern (legacy / direct-MSW usage) and any absolute SaaS
+  // base URL configured in dev/test.
+  http.get("*/api/v1/account-link/instances", async () => {
     await delay(120);
     return HttpResponse.json(listInstances());
   }),
 
   http.post(
-    "/api/v1/account-link/instances/:instanceId/revoke",
+    "*/api/v1/account-link/instances/:instanceId/revoke",
     async ({ params }) => {
       await delay(120);
       const ok = revokeInstance(Number(params.instanceId));

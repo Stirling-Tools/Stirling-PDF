@@ -30,10 +30,10 @@
  * ## Why this is split, not a single function
  *
  * The two backends speak two credentials and resolve different identities. A
- * single `httpJson("/v1/billing/wallet")` reading the path prefix to pick a
- * domain is implicit + fragile (the bug we just had: /v1/billing/wallet fell
- * through to the local backend on a real run). Forcing the call site to say
- * `.local` / `.saas` / `.mock` keeps the routing intent reviewable in diffs.
+ * single generic fetch reading the path prefix to pick a domain is implicit +
+ * fragile (the bug we hit: /v1/billing/wallet fell through to the local
+ * backend on a real run). Forcing the call site to say `.local` / `.saas` /
+ * `.mock` keeps the routing intent reviewable in diffs.
  *
  * ## Device credential isn't here
  *
@@ -46,7 +46,12 @@ import { getStoredToken } from "@shared/auth";
 import { getSupabaseClient } from "@shared/auth/supabase/supabaseClient";
 import { ensureSaasSupabase } from "@portal/auth/saasSupabase";
 
-const SAAS_BASE_URL = import.meta.env.VITE_SAAS_API_URL?.replace(/\/+$/, "");
+/** Read the SaaS base URL at call time so tests can stub it via vi.stubEnv. */
+function saasBaseUrl(): string | null {
+  const raw = import.meta.env.VITE_SAAS_API_URL;
+  if (!raw) return null;
+  return raw.replace(/\/+$/, "");
+}
 
 export interface HttpRequestOptions {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
@@ -155,10 +160,11 @@ async function saasJson<T>(
   path: string,
   options: HttpRequestOptions = {},
 ): Promise<T> {
-  if (!SAAS_BASE_URL) throw new SaasUnconfiguredError();
+  const base = saasBaseUrl();
+  if (!base) throw new SaasUnconfiguredError();
   const token = await getSaasAccessToken();
   if (!token) throw new SaasNotLinkedError();
-  const res = await fetch(`${SAAS_BASE_URL}${path}`, {
+  const res = await fetch(`${base}${path}`, {
     method: options.method ?? "GET",
     headers: {
       Accept: "application/json",
@@ -187,7 +193,7 @@ export const apiClient = {
   saas: {
     json: saasJson,
     /** True when VITE_SAAS_API_URL is set. Doesn't check session liveness. */
-    isConfigured: (): boolean => Boolean(SAAS_BASE_URL),
+    isConfigured: (): boolean => Boolean(saasBaseUrl()),
   },
   /**
    * Same wire shape as `local`, but the path is an MSW-only invention (never
@@ -200,9 +206,3 @@ export const apiClient = {
   },
 } as const;
 
-/**
- * @deprecated Use `apiClient.local.json` (or `apiClient.mock.json` for
- * MSW-only invented paths). Kept as an alias so older api/*.ts files keep
- * working during the migration.
- */
-export const httpJson = localJson;

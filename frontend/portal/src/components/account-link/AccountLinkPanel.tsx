@@ -25,7 +25,7 @@ export function AccountLinkPanel() {
   const linked = link.status?.linked ?? false;
   const [reloadKey, setReloadKey] = useState(0);
   const instancesState = useAsync<LinkedInstanceRow[]>(
-    () => fetchInstances(null),
+    () => fetchInstances(),
     [reloadKey, linked],
   );
   const instances = instancesState.loading ? null : instancesState.data;
@@ -35,7 +35,7 @@ export function AccountLinkPanel() {
   const revoke = useCallback(async (instance: LinkedInstanceRow) => {
     setRevokingId(instance.instanceId);
     try {
-      await apiRevokeInstance(null, instance.instanceId);
+      await apiRevokeInstance(instance.instanceId);
       setReloadKey((k) => k + 1);
     } finally {
       setRevokingId(null);
