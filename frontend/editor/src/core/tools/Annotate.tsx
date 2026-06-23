@@ -679,6 +679,16 @@ const Annotate = (_props: BaseToolProps) => {
       setTextAlignment,
     });
 
+  const handleClearAllAnnotations = useCallback(() => {
+    annotationApiRef?.current?.deselectAnnotation?.();
+    annotationApiRef?.current?.deleteAllAnnotations?.();
+    setSelectedAnn(null);
+    setSelectedAnnId(null);
+    setActiveTool("select");
+    activeToolRef.current = "select";
+    annotationApiRef?.current?.activateAnnotationTool?.("select");
+  }, [annotationApiRef, setSelectedAnn, setSelectedAnnId]);
+
   const steps =
     allFiles.length === 0
       ? []
@@ -717,6 +727,7 @@ const Annotate = (_props: BaseToolProps) => {
                 historyAvailability={historyAvailability}
                 onApplyChanges={handleApplyChanges}
                 applyDisabled={!hasUnsavedChanges}
+                onClearAllAnnotations={handleClearAllAnnotations}
               />
             ),
           },

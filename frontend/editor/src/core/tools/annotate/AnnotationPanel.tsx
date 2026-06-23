@@ -12,6 +12,7 @@ import {
   Button,
   Tooltip,
   Paper,
+  Modal,
 } from "@mantine/core";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import {
@@ -135,6 +136,7 @@ interface AnnotationPanelProps {
   historyAvailability: { canUndo: boolean; canRedo: boolean };
   onApplyChanges: () => void;
   applyDisabled: boolean;
+  onClearAllAnnotations: () => void;
 }
 
 // AnnotationPanel component extracted from Annotate.tsx to keep the main file smaller.
@@ -166,7 +168,9 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
     historyAvailability,
     onApplyChanges,
     applyDisabled,
+    onClearAllAnnotations,
   } = props;
+  const [isClearAllModalOpen, setIsClearAllModalOpen] = useState(false);
 
   const {
     inkColor,
@@ -1171,7 +1175,25 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
           canUndo={historyAvailability.canUndo}
           canRedo={historyAvailability.canRedo}
           showPlaceButton={false}
-          additionalControls={null}
+          additionalControls={
+            <Tooltip label={t("annotation.clearAll", "Clear all annotations")}>
+              <ActionIcon
+                variant="subtle"
+                size="lg"
+                color="red"
+                disabled={!annotationsVisible}
+                aria-label={t("annotation.clearAll", "Clear all annotations")}
+                onClick={() => setIsClearAllModalOpen(true)}
+              >
+                <LocalIcon
+                  icon="delete-rounded"
+                  width={20}
+                  height={20}
+                  style={{ color: "currentColor" }}
+                />
+              </ActionIcon>
+            </Tooltip>
+          }
         />
       </Group>
 
@@ -1228,6 +1250,42 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
       </Button>
 
       <SuggestedToolsSection />
+
+      <Modal
+        opened={isClearAllModalOpen}
+        onClose={() => setIsClearAllModalOpen(false)}
+        title={t("annotation.clearAllConfirmTitle", "Clear all annotations?")}
+        centered
+      >
+        <Stack gap="md">
+          <Text size="sm" c="dimmed">
+            {t(
+              "annotation.clearAllConfirmDescription",
+              "This removes every annotation from the PDF, including comments, drawings, highlights, notes, and stamps.",
+            )}
+          </Text>
+          <Group justify="flex-end">
+            <Button
+              variant="default"
+              onClick={() => setIsClearAllModalOpen(false)}
+            >
+              {t("common.cancel", "Cancel")}
+            </Button>
+            <Button
+              color="red"
+              leftSection={
+                <LocalIcon icon="delete-rounded" width={18} height={18} />
+              }
+              onClick={() => {
+                onClearAllAnnotations();
+                setIsClearAllModalOpen(false);
+              }}
+            >
+              {t("annotation.clearAllConfirm", "Clear all")}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Stack>
   );
 }

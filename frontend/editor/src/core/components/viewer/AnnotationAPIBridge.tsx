@@ -116,6 +116,7 @@ type AnnotationApiSurface = {
   deleteAnnotations?: (
     annotations: Array<{ pageIndex: number; id: string }>,
   ) => void;
+  deleteAllAnnotations?: () => void;
   createAnnotation?: (
     pageIndex: number,
     annotation: Record<string, unknown>,
@@ -492,6 +493,13 @@ export const AnnotationAPIBridge = forwardRef<AnnotationAPI>(
             | AnnotationApiSurface
             | undefined;
           api?.deleteAnnotations?.(annotations);
+        },
+
+        deleteAllAnnotations: () => {
+          const api = annotationApi as unknown as
+            | AnnotationApiSurface
+            | undefined;
+          api?.deleteAllAnnotations?.();
         },
 
         createAnnotation: (

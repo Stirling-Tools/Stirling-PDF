@@ -46,6 +46,7 @@ export interface AnnotationAPI {
   deleteAnnotations?: (
     annotations: Array<{ pageIndex: number; id: string }>,
   ) => void;
+  deleteAllAnnotations?: () => void;
   createAnnotation?: (
     pageIndex: number,
     annotation: Record<string, unknown>,
