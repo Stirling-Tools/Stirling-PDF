@@ -17,7 +17,9 @@ export const STATUS_LABEL: Record<PolicyRowStatus, string> = {
   setup: "Set up",
 };
 
-/** A soft tinted icon tile per category — gives each policy a calm identity colour. */
+/**
+ * Per-category accent colour
+ */
 export const ROW_ACCENT: Record<string, IconBadgeAccent> = {
   ingestion: "blue",
   security: "purple",

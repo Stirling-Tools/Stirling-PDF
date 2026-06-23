@@ -7,15 +7,12 @@ import {
   FractionData,
 } from "@app/types/charts";
 import { generateTooltipHTML } from "@app/components/shared/charts/stackedBarChart/StackedBarTooltip";
-import {
-  detectTheme,
-  getChartThemeVars,
-} from "@app/components/shared/charts/utils/themeUtils";
 import { createTooltipPositioner } from "@app/components/shared/charts/utils/tooltipUtils";
 import {
   createRoundedRectPath,
   createScale,
 } from "@app/components/shared/charts/utils/d3Utils";
+import "@app/components/shared/charts/StackedBarChart.css";
 
 export default function StackedBarChart({
   fractions,
@@ -35,13 +32,6 @@ export default function StackedBarChart({
   const reactId = useId();
   const clipId = useMemo(() => `clip-${reactId}`, [reactId]);
 
-  // Memoize theme detection to avoid recalculation
-  const theme = useMemo(() => detectTheme(), []);
-  const themeVars = useMemo(
-    () => getChartThemeVars(theme.isDark),
-    [theme.isDark],
-  );
-
   // Memoize tooltip positioner
   const tooltipPositioner = useMemo(
     () => createTooltipPositioner(tooltipPosition),
@@ -57,22 +47,11 @@ export default function StackedBarChart({
     [tooltipPositioner],
   );
 
-  const setTooltipContent = useCallback(
-    (labelHtml: string) => {
-      const tooltip = tooltipRef.current;
-      if (!tooltip) return;
-      tooltip.innerHTML = labelHtml;
-      tooltip.style.background = themeVars.background;
-      tooltip.style.color = themeVars.textPrimary;
-      tooltip.style.border = themeVars.border;
-      tooltip.style.boxShadow = themeVars.boxShadow;
-      tooltip.style.padding = "8px 10px";
-      tooltip.style.fontSize = "12px";
-      tooltip.style.lineHeight = "1.25";
-      tooltip.style.borderRadius = "8px";
-    },
-    [themeVars],
-  );
+  const setTooltipContent = useCallback((labelHtml: string) => {
+    const tooltip = tooltipRef.current;
+    if (!tooltip) return;
+    tooltip.innerHTML = labelHtml;
+  }, []);
 
   const hideTooltip = useCallback(() => {
     const tooltip = tooltipRef.current;
@@ -126,8 +105,8 @@ export default function StackedBarChart({
         .attr("height", height)
         .attr("rx", radius)
         .attr("ry", radius)
-        .attr("fill", themeVars.inactive)
-        .attr("stroke", themeVars.cardBorder);
+        .attr("fill", "var(--usage-inactive)")
+        .attr("stroke", "var(--api-keys-card-border)");
 
       // Define a clipPath that will reveal the used portion from left to right
       const defs = svg.append("defs");
@@ -225,7 +204,6 @@ export default function StackedBarChart({
         .on("mouseenter", (event: MouseEvent) => {
           const tooltipData: TooltipData = {
             fractions: data,
-            isDark: theme.isDark,
           };
           const html = generateTooltipHTML(tooltipData);
           setTooltipContent(html);
@@ -267,7 +245,6 @@ export default function StackedBarChart({
     animate,
     animationDurationMs,
     clipId,
-    themeVars,
     setTooltipContent,
     hideTooltip,
     positionTooltip,
@@ -279,6 +256,7 @@ export default function StackedBarChart({
         <div ref={containerRef} />
         <div
           ref={tooltipRef}
+          className="chart-tooltip"
           style={{
             position: "absolute",
             left: 0,
@@ -325,10 +303,10 @@ export default function StackedBarChart({
               style={{
                 width: 10,
                 height: 10,
-                background: themeVars.inactive,
+                background: "var(--usage-inactive)",
                 display: "inline-block",
                 borderRadius: 2,
-                outline: `1px solid ${themeVars.cardBorder}`,
+                outline: "1px solid var(--api-keys-card-border)",
               }}
             />
             <Text size="sm">Remaining</Text>

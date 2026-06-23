@@ -1,8 +1,11 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button, EmptyState, Skeleton } from "@shared/components";
 import { useTier } from "@portal/contexts/TierContext";
+import { useView } from "@portal/contexts/ViewContext";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import { fetchSources, type SourcesResponse } from "@portal/api/sources";
+import { AgentBuilderIcon } from "@portal/components/icons";
 import { KpiStrip } from "@portal/components/sources/KpiStrip";
 import { SourcesTable } from "@portal/components/sources/SourcesTable";
 import { SourceDetailCard } from "@portal/components/sources/SourceDetailCard";
@@ -10,7 +13,9 @@ import { ConnectWizard } from "@portal/components/sources/ConnectWizard";
 import "@portal/views/Sources.css";
 
 export function Sources() {
+  const { t } = useTranslation();
   const { tier } = useTier();
+  const { setActiveView } = useView();
   const state = useAsync<SourcesResponse>(() => fetchSources(tier), [tier]);
   const { data, loading } = state;
   const { isLoading, isEmpty } = useSectionFlags(state);
@@ -25,18 +30,24 @@ export function Sources() {
     <div className="portal-sources">
       <header className="portal-sources__head">
         <div>
-          <h1 className="portal-sources__title">Sources &amp; Agents</h1>
-          <p className="portal-sources__sub">
-            Every place documents flow into Stirling — agents, API clients,
-            webhooks, connectors and more. Click a row for type-specific detail.
-          </p>
+          <h1 className="portal-sources__title">{t("sources.title")}</h1>
+          <p className="portal-sources__sub">{t("sources.subtitle")}</p>
         </div>
-        <Button
-          onClick={() => setWizardOpen(true)}
-          leadingIcon={<span aria-hidden>+</span>}
-        >
-          Connect source
-        </Button>
+        <div className="portal-sources__actions">
+          <Button
+            variant="outline"
+            onClick={() => setActiveView("agent-builder")}
+            leadingIcon={<AgentBuilderIcon size={16} />}
+          >
+            {t("sources.actions.agentBuilder")}
+          </Button>
+          <Button
+            onClick={() => setWizardOpen(true)}
+            leadingIcon={<span aria-hidden>+</span>}
+          >
+            {t("sources.actions.connectSource")}
+          </Button>
+        </div>
       </header>
 
       <KpiStrip data={data} loading={loading} />
@@ -51,10 +62,12 @@ export function Sources() {
 
       {isEmpty && (
         <EmptyState
-          title="No sources connected yet"
-          description="Connect an agent, API client, webhook, connector or inbox to start feeding documents into your pipelines."
+          title={t("sources.empty.title")}
+          description={t("sources.empty.description")}
           actions={
-            <Button onClick={() => setWizardOpen(true)}>Connect source</Button>
+            <Button onClick={() => setWizardOpen(true)}>
+              {t("sources.actions.connectSource")}
+            </Button>
           }
         />
       )}

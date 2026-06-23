@@ -62,20 +62,12 @@ public class PaygWebMvcConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(paygChargeInterceptor)
                 .addPathPatterns("/api/**")
-                .excludePathPatterns(
-                        "/api/v1/credits/**",
-                        "/api/v1/config/**",
-                        "/api/v1/info/**",
-                        "/api/v1/admin/**")
+                .excludePathPatterns("/api/v1/config/**", "/api/v1/info/**", "/api/v1/admin/**")
                 .order(INTERCEPTOR_ORDER);
 
         registry.addInterceptor(entitlementGuard)
                 .addPathPatterns("/api/**")
-                .excludePathPatterns(
-                        "/api/v1/credits/**",
-                        "/api/v1/config/**",
-                        "/api/v1/info/**",
-                        "/api/v1/admin/**")
+                .excludePathPatterns("/api/v1/config/**", "/api/v1/info/**", "/api/v1/admin/**")
                 .order(ENTITLEMENT_GUARD_ORDER);
     }
 }

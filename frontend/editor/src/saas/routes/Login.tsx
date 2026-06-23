@@ -5,7 +5,7 @@ import { useAuth } from "@app/auth/UseSession";
 import { useTranslation } from "@app/hooks/useTranslation";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
 import AuthLayout from "@app/routes/authShared/AuthLayout";
-import "@app/routes/authShared/auth.css";
+import "@shared/auth/ui/auth.css";
 import "@app/routes/authShared/saas-auth.css";
 import {
   absoluteWithBasePath,
@@ -15,10 +15,11 @@ import {
 import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
 
 // Import login components
-import ErrorMessage from "@app/routes/login/ErrorMessage";
+import ErrorMessage from "@shared/auth/ui/ErrorMessage";
 import EmailPasswordForm from "@app/routes/login/EmailPasswordForm";
 import OAuthButtons from "@app/routes/login/OAuthButtons";
 import LoggedInState from "@app/routes/login/LoggedInState";
+import loginHeader from "@shared/assets/login/LoginLightModeHeader.svg";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -267,7 +268,7 @@ export default function Login() {
       {/* Centered logo */}
       <div className="auth-logo-block">
         <img
-          src={withBasePath("/modern-logo/LoginLightModeHeader.svg")}
+          src={loginHeader}
           alt="Stirling PDF"
           className="auth-logo-header auth-logo-header--light"
         />

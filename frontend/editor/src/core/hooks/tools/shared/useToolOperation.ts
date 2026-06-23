@@ -30,6 +30,7 @@ import {
 import { createNewStirlingFileStub } from "@app/types/fileContext";
 import { ToolOperation } from "@app/types/file";
 import { ensureBackendReady } from "@app/services/backendReadinessGuard";
+import { trackEditorOperation } from "@app/services/analytics";
 import { useWillUseCloud } from "@app/hooks/useWillUseCloud";
 import { useCreditCheck } from "@app/hooks/useCreditCheck";
 import { notifyPdfProcessingComplete } from "@app/services/desktopNotificationService";
@@ -155,18 +156,13 @@ export const useToolOperation = <TParams>(
           fileActions.openEncryptedUnlockPrompt(ef.fileId);
         }
         actions.setError(
-          encryptedFiles.length === 1
-            ? t(
-                "encryptedFileBlocked",
-                "File is password-protected. Unlock it first.",
-              )
-            : t(
-                "encryptedFilesBlocked",
-                "{{count}} files are password-protected. Unlock them first.",
-                {
-                  count: encryptedFiles.length,
-                },
-              ),
+          t(
+            "encryptedFilesBlocked",
+            "{{count}} files are password-protected. Unlock them first.",
+            {
+              count: encryptedFiles.length,
+            },
+          ),
         );
         return;
       }
@@ -389,6 +385,11 @@ export const useToolOperation = <TParams>(
         }
 
         if (processedFiles.length > 0) {
+          trackEditorOperation(
+            config.operationType,
+            successSourceIds.length || validFiles.length,
+          );
+
           actions.setFiles(processedFiles);
 
           // Generate thumbnails and download URL concurrently

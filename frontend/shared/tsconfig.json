@@ -4,7 +4,6 @@
     "jsx": "react-jsx",
     "module": "esnext",
     "moduleResolution": "bundler",
-    "baseUrl": "./",
     "paths": {
       "@shared/*": ["./*"]
     },

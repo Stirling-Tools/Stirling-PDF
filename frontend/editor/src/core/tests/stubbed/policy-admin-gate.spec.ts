@@ -27,6 +27,15 @@ async function openSecurityPolicy(page: import("@playwright/test").Page) {
   await expect(page.getByText("Set up Security Policy")).toBeVisible();
 }
 
+// Policies are a SaaS-only feature: POLICIES_ENABLED is off in the proprietary
+// and core builds this stubbed suite runs against, so the policy UI never
+// renders here. Skip unless the app under test is built with policies enabled
+// and the runner opts in via POLICIES_E2E=1.
+test.beforeEach(() => {
+  const enabled = ["1", "true"].includes(process.env.POLICIES_E2E ?? "");
+  test.skip(!enabled, "Policies are SaaS-only; set POLICIES_E2E=1 to run");
+});
+
 test.describe("Policy editing gate — non-admin (login on)", () => {
   test.use({
     stubOptions: { enableLogin: true, isAdmin: false },

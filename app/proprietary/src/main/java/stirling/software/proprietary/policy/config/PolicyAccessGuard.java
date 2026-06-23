@@ -3,6 +3,7 @@ package stirling.software.proprietary.policy.config;
 import java.util.List;
 import java.util.Objects;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ import stirling.software.proprietary.policy.model.Policy;
  */
 @Component
 @RequiredArgsConstructor
+@Profile("saas")
 public class PolicyAccessGuard {
 
     private final UserServiceInterface userService;

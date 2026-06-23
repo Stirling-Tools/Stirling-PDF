@@ -1,6 +1,5 @@
 import { useEffect, useState, Suspense, lazy } from "react";
 import { Box, Loader, Center } from "@mantine/core";
-import { useRainbowThemeContext } from "@app/components/shared/RainbowThemeProvider";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useFileState } from "@app/contexts/FileContext";
@@ -34,7 +33,6 @@ const FileManagerView = lazy(
 
 // No props needed - component uses contexts directly
 export default function Workbench() {
-  const { isRainbowMode } = useRainbowThemeContext();
   const { config } = useAppConfig();
 
   // The consent banner used to be initialised by the footer; the legal links
@@ -199,14 +197,7 @@ export default function Workbench() {
     <Box
       className="flex-1 h-full min-w-0 relative flex flex-col"
       data-tour="workbench"
-      style={
-        isRainbowMode
-          ? // No background color in rainbow mode, but still pin min-width:0
-            // so inner flex children (files-page toolbar, etc.) actually
-            // shrink on narrow viewports.
-            { minWidth: 0 }
-          : { backgroundColor: "var(--bg-background)", minWidth: 0 }
-      }
+      style={{ backgroundColor: "var(--bg-background)", minWidth: 0 }}
     >
       {/* Workbench Bar - animates in/out based on file presence */}
       {currentView !== "myFiles" &&

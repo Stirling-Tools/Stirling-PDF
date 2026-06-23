@@ -3,8 +3,11 @@ import type { SettingsSnapshot } from "@portal/mocks/settings";
 import type { Tier } from "@portal/contexts/TierContext";
 
 export type {
+  ActiveSession,
+  BetaFeature,
   NotificationDefault,
   RegionOption,
+  SecuritySettings,
   SettingsSnapshot,
 } from "@portal/mocks/settings";
 
