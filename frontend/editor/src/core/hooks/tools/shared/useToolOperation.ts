@@ -30,6 +30,7 @@ import {
 import { createNewStirlingFileStub } from "@app/types/fileContext";
 import { ToolOperation } from "@app/types/file";
 import { ensureBackendReady } from "@app/services/backendReadinessGuard";
+import { trackEditorOperation } from "@app/services/analytics";
 import { useWillUseCloud } from "@app/hooks/useWillUseCloud";
 import { useCreditCheck } from "@app/hooks/useCreditCheck";
 import { notifyPdfProcessingComplete } from "@app/services/desktopNotificationService";
@@ -384,6 +385,11 @@ export const useToolOperation = <TParams>(
         }
 
         if (processedFiles.length > 0) {
+          trackEditorOperation(
+            config.operationType,
+            successSourceIds.length || validFiles.length,
+          );
+
           actions.setFiles(processedFiles);
 
           // Generate thumbnails and download URL concurrently

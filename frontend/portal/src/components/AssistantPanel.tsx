@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useUI } from "@portal/contexts/UIContext";
 import { useAsync } from "@portal/hooks/useAsync";
 import {
@@ -15,6 +16,7 @@ interface Message {
 }
 
 export function AssistantPanel() {
+  const { t } = useTranslation();
   const { assistantOpen, closeAssistant } = useUI();
   const { data: suggestions } = useAsync<readonly string[]>(
     () => fetchAssistantSuggestions(),
@@ -69,8 +71,8 @@ export function AssistantPanel() {
         role: "assistant",
         text:
           err instanceof Error
-            ? `Couldn't reach the assistant: ${err.message}`
-            : "Couldn't reach the assistant.",
+            ? t("assistant.errorWithDetail", { detail: err.message })
+            : t("assistant.error"),
       };
       setMessages((prev) => [...prev, failMsg]);
     } finally {
@@ -81,17 +83,23 @@ export function AssistantPanel() {
   if (!assistantOpen) return null;
 
   return (
-    <aside className="portal-assistant" role="dialog" aria-label="Assistant">
+    <aside
+      className="portal-assistant"
+      role="dialog"
+      aria-label={t("assistant.title")}
+    >
       <header className="portal-assistant__header">
         <div className="portal-assistant__header-left">
           <SparklesIcon size={16} />
-          <span className="portal-assistant__title">Assistant</span>
+          <span className="portal-assistant__title">
+            {t("assistant.title")}
+          </span>
         </div>
         <button
           type="button"
           className="portal-assistant__close"
           onClick={closeAssistant}
-          aria-label="Close assistant"
+          aria-label={t("assistant.close")}
         >
           <CloseIcon size={16} />
         </button>
@@ -101,7 +109,7 @@ export function AssistantPanel() {
         {messages.length === 0 && suggestions && (
           <div className="portal-assistant__suggestions">
             <div className="portal-assistant__suggestions-eyebrow">
-              Try asking
+              {t("assistant.tryAsking")}
             </div>
             <div className="portal-assistant__suggestions-list">
               {suggestions.map((s) => (
@@ -130,7 +138,10 @@ export function AssistantPanel() {
         ))}
         {typing && (
           <div className="portal-assistant__bubble portal-assistant__bubble--assistant">
-            <span className="portal-assistant__typing" aria-label="Typing">
+            <span
+              className="portal-assistant__typing"
+              aria-label={t("assistant.typing")}
+            >
               <span />
               <span />
               <span />
@@ -150,8 +161,8 @@ export function AssistantPanel() {
           ref={inputRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask about Stirling…"
-          aria-label="Ask the assistant"
+          placeholder={t("assistant.inputPlaceholder")}
+          aria-label={t("assistant.inputAriaLabel")}
           className="portal-assistant__input"
           disabled={typing}
         />
@@ -159,7 +170,7 @@ export function AssistantPanel() {
           type="submit"
           className="portal-assistant__send"
           disabled={!input.trim() || typing}
-          aria-label="Send"
+          aria-label={t("assistant.send")}
         >
           <SendIcon size={14} />
         </button>

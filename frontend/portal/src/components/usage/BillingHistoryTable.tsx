@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import {
   Card,
   EmptyState,
@@ -24,16 +25,17 @@ const STATUS_TONE: Record<InvoiceStatus, StatusTone> = {
   refunded: "neutral",
 };
 
-const STATUS_LABEL: Record<InvoiceStatus, string> = {
-  paid: "Paid",
-  due: "Due",
-  pending: "Pending",
-  refunded: "Refunded",
-};
-
 /** Invoice / line-item history for the current and prior billing cycles. */
 export function BillingHistoryTable() {
+  const { t } = useTranslation();
   const { tier } = useTier();
+
+  const statusLabel: Record<InvoiceStatus, string> = {
+    paid: t("usage.history.status.paid"),
+    due: t("usage.history.status.due"),
+    pending: t("usage.history.status.pending"),
+    refunded: t("usage.history.status.refunded"),
+  };
   const state = useAsync<BillingHistoryRow[]>(
     () => fetchBillingHistory(tier),
     [tier],
@@ -44,7 +46,7 @@ export function BillingHistoryTable() {
   const columns: TableColumn<BillingHistoryRow>[] = [
     {
       key: "date",
-      header: "Date",
+      header: t("usage.history.columns.date"),
       render: (r) => (
         <span className="portal-usage__hist-date">
           {formatBillingDate(r.date)}
@@ -54,19 +56,19 @@ export function BillingHistoryTable() {
     },
     {
       key: "description",
-      header: "Description",
+      header: t("usage.history.columns.description"),
       render: (r) => r.description,
     },
     {
       key: "docs",
-      header: "Docs",
+      header: t("usage.history.columns.docs"),
       align: "right",
       render: (r) => (r.docs > 0 ? r.docs.toLocaleString() : "—"),
       width: "8rem",
     },
     {
       key: "amount",
-      header: "Amount",
+      header: t("usage.history.columns.amount"),
       align: "right",
       render: (r) => (
         <span
@@ -85,11 +87,11 @@ export function BillingHistoryTable() {
     },
     {
       key: "status",
-      header: "Status",
+      header: t("usage.history.columns.status"),
       align: "right",
       render: (r) => (
         <StatusBadge tone={STATUS_TONE[r.status]} size="sm">
-          {STATUS_LABEL[r.status]}
+          {statusLabel[r.status]}
         </StatusBadge>
       ),
       width: "8rem",
@@ -99,9 +101,11 @@ export function BillingHistoryTable() {
   return (
     <section className="portal-usage__hist-block">
       <header className="portal-usage__section-head">
-        <h2 className="portal-usage__section-title">Billing history</h2>
+        <h2 className="portal-usage__section-title">
+          {t("usage.history.title")}
+        </h2>
         <p className="portal-usage__section-sub">
-          Line items from the current and prior billing cycles.
+          {t("usage.history.subtitle")}
         </p>
       </header>
 
@@ -116,8 +120,8 @@ export function BillingHistoryTable() {
       {isEmpty && (
         <EmptyState
           size="compact"
-          title="No billing history"
-          description="Charges and credits appear here once your first cycle closes."
+          title={t("usage.history.empty.title")}
+          description={t("usage.history.empty.description")}
         />
       )}
 
@@ -127,7 +131,7 @@ export function BillingHistoryTable() {
             columns={columns}
             rows={rows}
             rowKey={(r) => r.id}
-            empty="No line items"
+            empty={t("usage.history.emptyRows")}
           />
         </Card>
       )}

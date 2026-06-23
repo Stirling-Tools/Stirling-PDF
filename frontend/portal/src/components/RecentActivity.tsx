@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Card, EmptyState, Skeleton, StatusBadge } from "@shared/components";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import {
@@ -17,6 +18,7 @@ const KIND_COLOUR: Record<ActivityKind, string> = {
 };
 
 export function RecentActivity() {
+  const { t } = useTranslation();
   const state = useAsync<ActivityEvent[]>(() => fetchRecentActivity(), []);
   const { data: events } = state;
   const { isLoading, isEmpty } = useSectionFlags(state);
@@ -25,12 +27,12 @@ export function RecentActivity() {
     <Card
       padding="none"
       className="portal-activity"
-      aria-label="Recent activity"
+      aria-label={t("recentActivity.title")}
     >
       <header className="portal-activity__head">
-        <h2 className="portal-activity__title">Recent activity</h2>
+        <h2 className="portal-activity__title">{t("recentActivity.title")}</h2>
         <button type="button" className="portal-activity__more">
-          View all →
+          {t("recentActivity.viewAll")} →
         </button>
       </header>
 
@@ -54,8 +56,8 @@ export function RecentActivity() {
       {isEmpty && (
         <EmptyState
           size="compact"
-          title="Nothing here yet"
-          description="Pipeline runs, deploys and agent events will appear here."
+          title={t("recentActivity.empty.title")}
+          description={t("recentActivity.empty.description")}
         />
       )}
 

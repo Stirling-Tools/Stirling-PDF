@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { StatusBadge, Tabs, type TabItem } from "@shared/components";
 import { type Agent, AGENT_STATUS_TONE } from "@portal/api/agents";
 import { ScenariosPanel } from "@portal/components/agent-builder/ScenariosPanel";
@@ -20,17 +21,26 @@ export function AgentBuilderPanel({
   agent,
   governanceUnlocked,
 }: AgentBuilderPanelProps) {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<BuilderTab>("scenarios");
 
   const tabs: TabItem<BuilderTab>[] = [
-    { key: "scenarios", label: "Scenarios", count: agent.scenarios.length },
-    { key: "tools", label: "Tools" },
+    {
+      key: "scenarios",
+      label: t("agentBuilder.tabs.scenarios"),
+      count: agent.scenarios.length,
+    },
+    { key: "tools", label: t("agentBuilder.tabs.tools") },
     {
       key: "evals",
-      label: "Evals",
+      label: t("agentBuilder.tabs.evals"),
       count: agent.evalsTotal > 0 ? agent.evalsTotal : undefined,
     },
-    { key: "versions", label: "Versions", count: agent.versions.length },
+    {
+      key: "versions",
+      label: t("agentBuilder.tabs.versions"),
+      count: agent.versions.length,
+    },
   ];
 
   return (
@@ -56,7 +66,7 @@ export function AgentBuilderPanel({
         activeKey={tab}
         onChange={setTab}
         variant="underline"
-        ariaLabel="Agent builder sections"
+        ariaLabel={t("agentBuilder.sectionsAriaLabel")}
       />
 
       {tab === "scenarios" && <ScenariosPanel agent={agent} />}

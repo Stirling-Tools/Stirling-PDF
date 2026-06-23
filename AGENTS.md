@@ -152,7 +152,7 @@ The project structure is defined in `engine/pyproject.toml`. Any new dependencie
 #### Import Paths - CRITICAL
 **ALWAYS use `@app/*` for imports.** Do not use `@core/*` or `@proprietary/*` unless explicitly wrapping/extending a lower layer implementation.
 
-For a broader explanation of the frontend layering and override architecture, see [frontend/editor/DeveloperGuide.md](frontend/editor/DeveloperGuide.md).
+For a broader explanation of the frontend layering and override architecture, read @frontend/editor/DeveloperGuide.md
 
 ```typescript
 // ✅ CORRECT - Use @app/* for all imports
