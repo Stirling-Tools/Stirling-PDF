@@ -9,8 +9,12 @@ import React, {
   useCallback,
 } from "react";
 import { useNavigation } from "@app/contexts/NavigationContext";
-import { useFileState } from "@app/contexts/FileContext";
+import { useFileState, useFileActions } from "@app/contexts/FileContext";
 import { isStirlingFile } from "@app/types/fileContext";
+import type { FileId } from "@app/types/file";
+import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
+import { enforceExportPolicies } from "@app/services/policyExport";
+import { alert } from "@app/components/toast";
 import {
   preferencesService,
   type PdfRenderMode,
@@ -241,6 +245,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   // activeFileIndex is derived from activeFileId so they can never desync.
   // ViewerProvider sits inside FileContextProvider so useFileState is valid here.
   const { selectors, state } = useFileState();
+  const { actions } = useFileActions();
 
   // Clear activeFileId when its file is removed from the workbench.
   // Dep on state.files.ids so the effect re-runs on every add/remove.
@@ -537,6 +542,50 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     triggerImmediateZoomUpdate,
   });
 
+  // Printing is an exit path, so a "run on export" policy must enforce here too.
+  // Enforce on the doc that's about to print; if a policy rewrote it, swap the
+  // viewer to the enforced version and ask the user to review before printing
+  // again — printing silently would put bytes on paper that differ from what's
+  // on screen. With no active policy this is a no-op and print runs straight away.
+  const printWithPolicy = useCallback(async () => {
+    const parentStub = activeFileId
+      ? selectors.getStirlingFileStub(activeFileId as FileId)
+      : undefined;
+    const buffer = parentStub ? await exportActions.saveAsCopy() : null;
+    if (!parentStub || !buffer) {
+      printActions.print();
+      return;
+    }
+    const current = new File([buffer], parentStub.name, {
+      type: "application/pdf",
+    });
+    const [enforced] = await enforceExportPolicies(
+      [current],
+      [activeFileId as FileId],
+    );
+    // enforceExportPolicies returns the same File when no export policy touched it.
+    if (!enforced || enforced === current) {
+      printActions.print();
+      return;
+    }
+    const { stirlingFiles, stubs } = await createStirlingFilesAndStubs(
+      [enforced],
+      parentStub,
+      "automate",
+    );
+    await actions.consumeFiles([activeFileId as FileId], stirlingFiles, stubs);
+    alert({
+      alertType: "warning",
+      title: "Policy applied before printing",
+      body: "This PDF was updated to meet a policy. Review the changes, then print again.",
+    });
+  }, [activeFileId, selectors, exportActions, printActions, actions]);
+
+  const enforcedPrintActions = useMemo<PrintActions>(
+    () => ({ print: printWithPolicy }),
+    [printWithPolicy],
+  );
+
   const value: ViewerContextType = {
     // UI state
     isThumbnailSidebarVisible,
@@ -610,7 +659,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     exportActions,
     bookmarkActions,
     attachmentActions,
-    printActions,
+    printActions: enforcedPrintActions,
 
     // Bridge registration
     registerBridge,
