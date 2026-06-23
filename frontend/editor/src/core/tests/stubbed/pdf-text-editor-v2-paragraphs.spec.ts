@@ -1,6 +1,7 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 import type { Page } from "@playwright/test";
 import path from "path";
+import type { V2TestWindow } from "@app/tests/stubbed/v2EditorTestTypes";
 
 const SAMPLE = path.join(__dirname, "../../../../public/samples/Sample.pdf");
 
@@ -39,10 +40,9 @@ async function gotoGrow(page: Page): Promise<void> {
 
 async function findPara(page: Page, re: RegExp): Promise<string | null> {
   return page.evaluate((src: string) => {
-    const store = (window as unknown as { __v2_editor_store: any })
-      .__v2_editor_store;
+    const store = (window as unknown as V2TestWindow).__v2_editor_store;
     const rx = new RegExp(src);
-    const r = store.doc.page(1).runs.find((x: any) => rx.test(x.text));
+    const r = store.doc.page(1).runs.find((x) => rx.test(x.text));
     return r ? r.id : null;
   }, re.source);
 }
@@ -100,11 +100,10 @@ interface ParaInfo {
 /** Read every leaf glyph's real text + bounds + baseline from PDFium. */
 async function readGlyphs(page: Page, id: string): Promise<ParaInfo | null> {
   return page.evaluate((rid: string) => {
-    const store = (window as unknown as { __v2_editor_store: any })
-      .__v2_editor_store;
+    const store = (window as unknown as V2TestWindow).__v2_editor_store;
     const m = store.doc.module;
     const pg = store.doc.page(1);
-    const r = pg.runs.find((x: any) => x.id === rid);
+    const r = pg.runs.find((x) => x.id === rid);
     if (!r) return null;
     const ptrs: number[] =
       r.paragraphLeafPtrs && r.paragraphLeafPtrs.length

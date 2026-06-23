@@ -1,6 +1,7 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 import type { Route } from "@playwright/test";
 import path from "path";
+import type { V2TestWindow } from "@app/tests/stubbed/v2EditorTestTypes";
 
 /**
  * Regression for the mushroom-life.pdf "paragraph scramble" report.
@@ -44,10 +45,10 @@ test("mid-line paragraph edit does not scramble unchanged words (cold backend, n
 
   const probe = () =>
     page.evaluate(() => {
-      const s = (window as any).__v2_editor_store;
+      const s = (window as unknown as V2TestWindow).__v2_editor_store;
       const pg = s.doc.page(0);
       const r =
-        pg.runs.find((x: any) => (x.paragraphLineSlots?.length ?? 0) > 1) ??
+        pg.runs.find((x) => (x.paragraphLineSlots?.length ?? 0) > 1) ??
         pg.runs[0];
       return {
         id: r?.id as string,

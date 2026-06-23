@@ -162,7 +162,8 @@ public class PdfTextEditorV2CharcodeController {
             resp.setError("missing required fields");
             return ResponseEntity.badRequest().body(resp);
         }
-        // length/4*3 bounds the decoded size without decoding, so we reject early before allocating.
+        // length/4*3 bounds the decoded size without decoding, so we reject early before
+        // allocating.
         String b64 = request.getPdfBase64();
         if ((long) b64.length() / 4 * 3 > MAX_PDF_BYTES) {
             resp.setError("pdf too large");

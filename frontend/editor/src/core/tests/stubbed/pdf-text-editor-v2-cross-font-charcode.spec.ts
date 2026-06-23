@@ -1,6 +1,7 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 import type { Page, Route } from "@playwright/test";
 import path from "path";
+import type { V2TestWindow } from "@app/tests/stubbed/v2EditorTestTypes";
 
 /**
  * Cross-font charcode disambiguation (H1H2/U).
@@ -44,7 +45,7 @@ test("editor sends the run's font name to encode-charcodes", async ({
   // Edit a run - the cache-miss prefetch (and focus prewarm) POST to the
   // endpoint, now carrying the resolved font's name.
   const id = await page.evaluate(() => {
-    const s = (window as any).__v2_editor_store;
+    const s = (window as unknown as V2TestWindow).__v2_editor_store;
     return s.doc.page(0).runs[0]?.id ?? null;
   });
   expect(id, "page 0 has a run").toBeTruthy();

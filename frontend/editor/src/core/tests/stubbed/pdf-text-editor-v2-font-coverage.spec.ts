@@ -1,5 +1,5 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
-import type { Route } from "@playwright/test";
+import type { Page, Route } from "@playwright/test";
 import path from "path";
 
 /**
@@ -17,7 +17,7 @@ import path from "path";
 
 const SUBSET = path.join(__dirname, "../test-fixtures/subset-font-sample.pdf");
 
-async function open(page: any, file: string): Promise<void> {
+async function open(page: Page, file: string): Promise<void> {
   await page.route("**/encode-charcodes", (route: Route) => route.abort());
   await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
   await expect(page.getByTestId("v2-root")).toBeVisible({ timeout: 20_000 });

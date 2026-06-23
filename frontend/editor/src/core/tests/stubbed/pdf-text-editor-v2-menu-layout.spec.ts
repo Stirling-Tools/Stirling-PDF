@@ -1,5 +1,7 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
+import type { Page } from "@playwright/test";
 import path from "path";
+import type { V2TestWindow } from "@app/tests/stubbed/v2EditorTestTypes";
 
 /**
  * UI-layout coverage for the menu-grouped editor chrome:
@@ -12,7 +14,7 @@ import path from "path";
  */
 const SAMPLE = path.join(__dirname, "../../../../public/samples/Sample.pdf");
 
-async function open(page: any, firstPage = 0): Promise<void> {
+async function open(page: Page, firstPage = 0): Promise<void> {
   await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
   await expect(page.getByTestId("v2-root")).toBeVisible({ timeout: 15_000 });
   await page.locator('[data-testid="v2-file-input"]').setInputFiles(SAMPLE);
@@ -22,12 +24,16 @@ async function open(page: any, firstPage = 0): Promise<void> {
   await page.waitForTimeout(900);
 }
 
-async function runId(page: any, pageIdx: number, src: string): Promise<string> {
+async function runId(
+  page: Page,
+  pageIdx: number,
+  src: string,
+): Promise<string> {
   const id = await page.evaluate(
     ({ pageIdx, src }: { pageIdx: number; src: string }) => {
-      const r = (window as any).__v2_editor_store.doc
+      const r = (window as unknown as V2TestWindow).__v2_editor_store.doc
         .page(pageIdx)
-        .runs.find((x: any) => new RegExp(src).test(x.text));
+        .runs.find((x) => new RegExp(src).test(x.text));
       return r ? r.id : null;
     },
     { pageIdx, src },
@@ -36,9 +42,12 @@ async function runId(page: any, pageIdx: number, src: string): Promise<string> {
   return id;
 }
 
-async function selectOne(page: any, id: string): Promise<void> {
+async function selectOne(page: Page, id: string): Promise<void> {
   await page.evaluate(
-    (rid: string) => (window as any).__v2_editor_store.selection.selectOne(rid),
+    (rid: string) =>
+      (window as unknown as V2TestWindow).__v2_editor_store.selection.selectOne(
+        rid,
+      ),
     id,
   );
   await page.waitForTimeout(150);

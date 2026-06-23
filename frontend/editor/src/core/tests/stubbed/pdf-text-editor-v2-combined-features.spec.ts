@@ -1,5 +1,10 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
+import type { Page } from "@playwright/test";
 import path from "path";
+import type {
+  V2Matrix,
+  V2TestWindow,
+} from "@app/tests/stubbed/v2EditorTestTypes";
 
 /**
  * Combined-feature regression suite: the new editor features (image
@@ -12,16 +17,16 @@ const PNG = path.join(__dirname, "../test-fixtures/sample.png");
 
 // z-order / align / distribute live in the toolbar's "Arrange" menu, and
 // image rotate/flip in the "Image" menu. Open the menu, then click the item.
-async function clickArrange(page: any, testid: string): Promise<void> {
+async function clickArrange(page: Page, testid: string): Promise<void> {
   await page.getByTestId("v2-arrange-menu").click();
   await page.getByTestId(testid).click();
 }
-async function clickImage(page: any, testid: string): Promise<void> {
+async function clickImage(page: Page, testid: string): Promise<void> {
   await page.getByTestId("v2-imgop-menu").click();
   await page.getByTestId(testid).click();
 }
 
-async function open(page: any, firstPage = 0): Promise<void> {
+async function open(page: Page, firstPage = 0): Promise<void> {
   await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
   await expect(page.getByTestId("v2-root")).toBeVisible({ timeout: 15_000 });
   await page.locator('[data-testid="v2-file-input"]').setInputFiles(SAMPLE);
@@ -30,13 +35,17 @@ async function open(page: any, firstPage = 0): Promise<void> {
   });
   await page.waitForTimeout(900);
 }
-async function runId(page: any, pageIdx: number, src: string): Promise<string> {
+async function runId(
+  page: Page,
+  pageIdx: number,
+  src: string,
+): Promise<string> {
   const id = await page.evaluate(
     ({ pageIdx, src }: { pageIdx: number; src: string }) => {
-      const s = (window as any).__v2_editor_store;
+      const s = (window as unknown as V2TestWindow).__v2_editor_store;
       const r = s.doc
         .page(pageIdx)
-        .runs.find((x: any) => new RegExp(src).test(x.text));
+        .runs.find((x) => new RegExp(src).test(x.text));
       return r ? r.id : null;
     },
     { pageIdx, src },
@@ -44,43 +53,48 @@ async function runId(page: any, pageIdx: number, src: string): Promise<string> {
   if (!id) throw new Error(`run /${src}/ not found`);
   return id;
 }
-async function selectRun(page: any, id: string): Promise<void> {
+async function selectRun(page: Page, id: string): Promise<void> {
   await page.evaluate(
-    (rid: string) => (window as any).__v2_editor_store.selection.selectOne(rid),
+    (rid: string) =>
+      (window as unknown as V2TestWindow).__v2_editor_store.selection.selectOne(
+        rid,
+      ),
     id,
   );
   await page.waitForTimeout(120);
 }
-async function selectMany(page: any, ids: string[]): Promise<void> {
+async function selectMany(page: Page, ids: string[]): Promise<void> {
   await page.evaluate(
     (rids: string[]) =>
-      (window as any).__v2_editor_store.selection.selectMany(rids),
+      (
+        window as unknown as V2TestWindow
+      ).__v2_editor_store.selection.selectMany(rids),
     ids,
   );
   await page.waitForTimeout(120);
 }
 async function runText(
-  page: any,
+  page: Page,
   pageIdx: number,
   id: string,
 ): Promise<string> {
   return page.evaluate(
     ({ pageIdx, id }: { pageIdx: number; id: string }) => {
-      const r = (window as any).__v2_editor_store.doc
+      const r = (window as unknown as V2TestWindow).__v2_editor_store.doc
         .page(pageIdx)
-        .runs.find((x: any) => x.id === id);
+        .runs.find((x) => x.id === id);
       return r ? (r.text as string) : "(gone)";
     },
     { pageIdx, id },
   );
 }
 async function insertImage(
-  page: any,
-): Promise<{ id: string; matrix: any } | null> {
+  page: Page,
+): Promise<{ id: string; matrix: V2Matrix } | null> {
   await page.locator('[data-testid="v2-image-input"]').setInputFiles(PNG);
   await page.waitForTimeout(1200);
   return page.evaluate(() => {
-    const s = (window as any).__v2_editor_store;
+    const s = (window as unknown as V2TestWindow).__v2_editor_store;
     for (const p of s.doc.loadedPages()) {
       if (p.images.length > 0) {
         const img = p.images[p.images.length - 1];
@@ -90,26 +104,29 @@ async function insertImage(
     return null;
   });
 }
-async function imageMatrix(page: any, imageId: string): Promise<any> {
+async function imageMatrix(
+  page: Page,
+  imageId: string,
+): Promise<V2Matrix | null> {
   return page.evaluate((iid: string) => {
-    const s = (window as any).__v2_editor_store;
+    const s = (window as unknown as V2TestWindow).__v2_editor_store;
     for (const p of s.doc.loadedPages()) {
-      const img = p.images.find((x: any) => x.id === iid);
+      const img = p.images.find((x) => x.id === iid);
       if (img) return { ...img.matrix };
     }
     return null;
   }, imageId);
 }
-async function totalRuns(page: any): Promise<number> {
+async function totalRuns(page: Page): Promise<number> {
   return page.evaluate(() =>
-    (window as any).__v2_editor_store.doc
+    (window as unknown as V2TestWindow).__v2_editor_store.doc
       .loadedPages()
-      .reduce((n: number, p: any) => n + p.runs.length, 0),
+      .reduce((n: number, p) => n + p.runs.length, 0),
   );
 }
-async function countRunsContaining(page: any, sub: string): Promise<number> {
+async function countRunsContaining(page: Page, sub: string): Promise<number> {
   return page.evaluate((sub: string) => {
-    const s = (window as any).__v2_editor_store;
+    const s = (window as unknown as V2TestWindow).__v2_editor_store;
     const needle = sub.toLowerCase();
     let n = 0;
     for (const p of s.doc.loadedPages())
@@ -118,22 +135,23 @@ async function countRunsContaining(page: any, sub: string): Promise<number> {
   }, sub);
 }
 async function firstRunIds(
-  page: any,
+  page: Page,
   pageIdx: number,
   n: number,
 ): Promise<string[]> {
   return page.evaluate(
     ({ pageIdx, n }: { pageIdx: number; n: number }) =>
-      (window as any).__v2_editor_store.doc
+      (window as unknown as V2TestWindow).__v2_editor_store.doc
         .page(pageIdx)
         .runs.slice(0, n)
-        .map((r: any) => r.id),
+        .map((r) => r.id),
     { pageIdx, n },
   );
 }
-async function undoSize(page: any): Promise<number> {
+async function undoSize(page: Page): Promise<number> {
   return page.evaluate(
-    () => (window as any).__v2_editor_store.history.size().undo,
+    () =>
+      (window as unknown as V2TestWindow).__v2_editor_store.history.size().undo,
   );
 }
 
@@ -153,7 +171,9 @@ test.describe("v2 editor - combined feature set", () => {
     expect(ins, "image insert must add an image").not.toBeNull();
     await page.evaluate(
       (iid: string) =>
-        (window as any).__v2_editor_store.selection.selectImage(iid),
+        (
+          window as unknown as V2TestWindow
+        ).__v2_editor_store.selection.selectImage(iid),
       ins!.id,
     );
     await page.waitForTimeout(120);
@@ -162,14 +182,14 @@ test.describe("v2 editor - combined feature set", () => {
     const rotated = await imageMatrix(page, ins!.id);
     // A 90deg rotation swaps the axes: original diagonal (a,d) becomes off-diagonal (b,c).
     expect(
-      Math.abs(rotated.a) + Math.abs(rotated.d),
+      Math.abs(rotated!.a) + Math.abs(rotated!.d),
       "rotate must move scale off the main diagonal",
-    ).toBeLessThan(Math.abs(rotated.b) + Math.abs(rotated.c) + 0.01);
+    ).toBeLessThan(Math.abs(rotated!.b) + Math.abs(rotated!.c) + 0.01);
     await page.getByTestId("v2-undo").click();
     await page.waitForTimeout(300);
     const reverted = await imageMatrix(page, ins!.id);
-    expect(reverted.a).toBeCloseTo(ins!.matrix.a, 1);
-    expect(reverted.d).toBeCloseTo(ins!.matrix.d, 1);
+    expect(reverted!.a).toBeCloseTo(ins!.matrix.a, 1);
+    expect(reverted!.d).toBeCloseTo(ins!.matrix.d, 1);
   });
 
   test("image flip-h mirrors the matrix and undo reverts", async ({ page }) => {
@@ -178,20 +198,22 @@ test.describe("v2 editor - combined feature set", () => {
     expect(ins).not.toBeNull();
     await page.evaluate(
       (iid: string) =>
-        (window as any).__v2_editor_store.selection.selectImage(iid),
+        (
+          window as unknown as V2TestWindow
+        ).__v2_editor_store.selection.selectImage(iid),
       ins!.id,
     );
     await page.waitForTimeout(120);
     await clickImage(page, "v2-imgop-flip-h");
     await page.waitForTimeout(300);
     const flipped = await imageMatrix(page, ins!.id);
-    expect(Math.sign(flipped.a), "flip-h negates horizontal scale").toBe(
+    expect(Math.sign(flipped!.a), "flip-h negates horizontal scale").toBe(
       -Math.sign(ins!.matrix.a || 1),
     );
     await page.getByTestId("v2-undo").click();
     await page.waitForTimeout(300);
     const reverted = await imageMatrix(page, ins!.id);
-    expect(reverted.a).toBeCloseTo(ins!.matrix.a, 1);
+    expect(reverted!.a).toBeCloseTo(ins!.matrix.a, 1);
   });
 
   test("change case UPPER then LOWER transforms the selected run's text", async ({
@@ -224,9 +246,9 @@ test.describe("v2 editor - combined feature set", () => {
     await page.waitForTimeout(200);
     const locked = await page.evaluate(
       (rid: string) =>
-        (window as any).__v2_editor_store.doc
+        (window as unknown as V2TestWindow).__v2_editor_store.doc
           .page(1)
-          .runs.find((x: any) => x.id === rid).locked,
+          .runs.find((x) => x.id === rid)!.locked,
       id,
     );
     expect(locked, "run should be locked").toBe(true);
@@ -242,7 +264,7 @@ test.describe("v2 editor - combined feature set", () => {
     );
     // Clear selection, then clicking the locked run must NOT select it.
     await page.evaluate(() =>
-      (window as any).__v2_editor_store.selection.clear(),
+      (window as unknown as V2TestWindow).__v2_editor_store.selection.clear(),
     );
     await page
       .getByTestId(`v2-run-${id}`)
@@ -250,7 +272,9 @@ test.describe("v2 editor - combined feature set", () => {
       .catch(() => {});
     await page.waitForTimeout(150);
     const selAfterClick = await page.evaluate(
-      () => (window as any).__v2_editor_store.selection.value.runIds.length,
+      () =>
+        (window as unknown as V2TestWindow).__v2_editor_store.selection.value
+          .runIds.length,
     );
     expect(selAfterClick, "locked run must not be selectable by click").toBe(0);
   });
@@ -266,9 +290,11 @@ test.describe("v2 editor - combined feature set", () => {
     await page.waitForTimeout(300);
     const xs = await page.evaluate(
       ({ a, b }: { a: string; b: string }) => {
-        const pg = (window as any).__v2_editor_store.doc.page(1);
-        const ra = pg.runs.find((x: any) => x.id === a);
-        const rb = pg.runs.find((x: any) => x.id === b);
+        const pg = (
+          window as unknown as V2TestWindow
+        ).__v2_editor_store.doc.page(1);
+        const ra = pg.runs.find((x) => x.id === a)!;
+        const rb = pg.runs.find((x) => x.id === b)!;
         return [ra.bounds.x, rb.bounds.x];
       },
       { a, b },
@@ -315,24 +341,30 @@ test.describe("v2 editor - combined feature set", () => {
     expect(ins).not.toBeNull();
     await page.evaluate(
       (iid: string) =>
-        (window as any).__v2_editor_store.selection.selectImage(iid),
+        (
+          window as unknown as V2TestWindow
+        ).__v2_editor_store.selection.selectImage(iid),
       ins!.id,
     );
     await page.waitForTimeout(120);
     const undoBefore = await page.evaluate(
-      () => (window as any).__v2_editor_store.history.size().undo,
+      () =>
+        (window as unknown as V2TestWindow).__v2_editor_store.history.size()
+          .undo,
     );
     await clickArrange(page, "v2-z-to-front");
     await page.waitForTimeout(300);
     const undoAfter = await page.evaluate(
-      () => (window as any).__v2_editor_store.history.size().undo,
+      () =>
+        (window as unknown as V2TestWindow).__v2_editor_store.history.size()
+          .undo,
     );
     expect(undoAfter, "z-order is its own undo step").toBe(undoBefore + 1);
     // No crash + still one image present.
     const imgs = await page.evaluate(() =>
-      (window as any).__v2_editor_store.doc
+      (window as unknown as V2TestWindow).__v2_editor_store.doc
         .loadedPages()
-        .reduce((n: number, p: any) => n + p.images.length, 0),
+        .reduce((n: number, p) => n + p.images.length, 0),
     );
     expect(imgs).toBeGreaterThan(0);
   });
@@ -344,9 +376,9 @@ test.describe("v2 editor - combined feature set", () => {
     const id = await runId(page, 1, "Stirling\\s+PDF\\s+is\\s+a\\s+robust");
     const before = await page.evaluate(
       (rid: string) => [
-        ...(window as any).__v2_editor_store.doc
+        ...(window as unknown as V2TestWindow).__v2_editor_store.doc
           .page(1)
-          .runs.find((x: any) => x.id === rid).paragraphLeafPtrs,
+          .runs.find((x) => x.id === rid)!.paragraphLeafPtrs,
       ],
       id,
     );
@@ -373,9 +405,9 @@ test.describe("v2 editor - combined feature set", () => {
     );
     await page.waitForTimeout(1200);
     const after = await page.evaluate((rid: string) => {
-      const r = (window as any).__v2_editor_store.doc
+      const r = (window as unknown as V2TestWindow).__v2_editor_store.doc
         .page(1)
-        .runs.find((x: any) => x.id === rid);
+        .runs.find((x) => x.id === rid);
       return r ? [...r.paragraphLeafPtrs] : [];
     }, id);
     const kept = before.filter((p: number) => after.includes(p)).length;
@@ -396,7 +428,9 @@ test.describe("v2 editor - combined feature set", () => {
     expect(ins).not.toBeNull();
     await page.evaluate(
       (iid: string) =>
-        (window as any).__v2_editor_store.selection.selectImage(iid),
+        (
+          window as unknown as V2TestWindow
+        ).__v2_editor_store.selection.selectImage(iid),
       ins!.id,
     );
     await page.waitForTimeout(120);
@@ -404,14 +438,14 @@ test.describe("v2 editor - combined feature set", () => {
     await page.waitForTimeout(300);
     const rotated = await imageMatrix(page, ins!.id);
     expect(
-      Math.abs(rotated.a) + Math.abs(rotated.d),
+      Math.abs(rotated!.a) + Math.abs(rotated!.d),
       "rotate moves scale off the main diagonal",
-    ).toBeLessThan(Math.abs(rotated.b) + Math.abs(rotated.c) + 0.01);
+    ).toBeLessThan(Math.abs(rotated!.b) + Math.abs(rotated!.c) + 0.01);
     await page.getByTestId("v2-undo").click();
     await page.waitForTimeout(300);
     const reverted = await imageMatrix(page, ins!.id);
-    expect(reverted.a).toBeCloseTo(ins!.matrix.a, 1);
-    expect(reverted.d).toBeCloseTo(ins!.matrix.d, 1);
+    expect(reverted!.a).toBeCloseTo(ins!.matrix.a, 1);
+    expect(reverted!.d).toBeCloseTo(ins!.matrix.d, 1);
   });
 
   test("image flip-v mirrors the vertical scale and undo reverts", async ({
@@ -422,20 +456,22 @@ test.describe("v2 editor - combined feature set", () => {
     expect(ins).not.toBeNull();
     await page.evaluate(
       (iid: string) =>
-        (window as any).__v2_editor_store.selection.selectImage(iid),
+        (
+          window as unknown as V2TestWindow
+        ).__v2_editor_store.selection.selectImage(iid),
       ins!.id,
     );
     await page.waitForTimeout(120);
     await clickImage(page, "v2-imgop-flip-v");
     await page.waitForTimeout(300);
     const flipped = await imageMatrix(page, ins!.id);
-    expect(Math.sign(flipped.d), "flip-v negates vertical scale").toBe(
+    expect(Math.sign(flipped!.d), "flip-v negates vertical scale").toBe(
       -Math.sign(ins!.matrix.d || 1),
     );
     await page.getByTestId("v2-undo").click();
     await page.waitForTimeout(300);
     const reverted = await imageMatrix(page, ins!.id);
-    expect(reverted.d).toBeCloseTo(ins!.matrix.d, 1);
+    expect(reverted!.d).toBeCloseTo(ins!.matrix.d, 1);
   });
 
   test("rotating an image four times clockwise returns to the original matrix", async ({
@@ -446,7 +482,9 @@ test.describe("v2 editor - combined feature set", () => {
     expect(ins).not.toBeNull();
     await page.evaluate(
       (iid: string) =>
-        (window as any).__v2_editor_store.selection.selectImage(iid),
+        (
+          window as unknown as V2TestWindow
+        ).__v2_editor_store.selection.selectImage(iid),
       ins!.id,
     );
     await page.waitForTimeout(120);
@@ -455,12 +493,12 @@ test.describe("v2 editor - combined feature set", () => {
       await page.waitForTimeout(180);
     }
     const m = await imageMatrix(page, ins!.id);
-    expect(m.a).toBeCloseTo(ins!.matrix.a, 1);
-    expect(m.d).toBeCloseTo(ins!.matrix.d, 1);
-    expect(Math.abs(m.b), "no residual shear after full turn").toBeLessThan(
+    expect(m!.a).toBeCloseTo(ins!.matrix.a, 1);
+    expect(m!.d).toBeCloseTo(ins!.matrix.d, 1);
+    expect(Math.abs(m!.b), "no residual shear after full turn").toBeLessThan(
       0.01,
     );
-    expect(Math.abs(m.c), "no residual shear after full turn").toBeLessThan(
+    expect(Math.abs(m!.c), "no residual shear after full turn").toBeLessThan(
       0.01,
     );
   });
@@ -473,16 +511,18 @@ test.describe("v2 editor - combined feature set", () => {
     expect(ins).not.toBeNull();
     await page.evaluate(
       (iid: string) =>
-        (window as any).__v2_editor_store.selection.selectImage(iid),
+        (
+          window as unknown as V2TestWindow
+        ).__v2_editor_store.selection.selectImage(iid),
       ins!.id,
     );
     await page.waitForTimeout(120);
     await page.getByTestId("v2-toggle-lock").click();
     await page.waitForTimeout(200);
     const locked = await page.evaluate((iid: string) => {
-      const s = (window as any).__v2_editor_store;
+      const s = (window as unknown as V2TestWindow).__v2_editor_store;
       for (const p of s.doc.loadedPages()) {
-        const im = p.images.find((x: any) => x.id === iid);
+        const im = p.images.find((x) => x.id === iid);
         if (im) return im.locked;
       }
       return null;
@@ -495,7 +535,7 @@ test.describe("v2 editor - combined feature set", () => {
     );
     // Clicking the locked image must not select it.
     await page.evaluate(() =>
-      (window as any).__v2_editor_store.selection.clear(),
+      (window as unknown as V2TestWindow).__v2_editor_store.selection.clear(),
     );
     await page
       .getByTestId(`v2-image-${ins!.id}`)
@@ -503,7 +543,9 @@ test.describe("v2 editor - combined feature set", () => {
       .catch(() => {});
     await page.waitForTimeout(150);
     const selImgs = await page.evaluate(
-      () => (window as any).__v2_editor_store.selection.value.imageIds,
+      () =>
+        (window as unknown as V2TestWindow).__v2_editor_store.selection.value
+          .imageIds,
     );
     expect(
       selImgs.includes(ins!.id),
@@ -512,7 +554,9 @@ test.describe("v2 editor - combined feature set", () => {
     // Unlock via store-selection (bypasses the inert UI) then toggle.
     await page.evaluate(
       (iid: string) =>
-        (window as any).__v2_editor_store.selection.selectImage(iid),
+        (
+          window as unknown as V2TestWindow
+        ).__v2_editor_store.selection.selectImage(iid),
       ins!.id,
     );
     await page.getByTestId("v2-toggle-lock").click();
@@ -531,7 +575,9 @@ test.describe("v2 editor - combined feature set", () => {
     expect(ins).not.toBeNull();
     await page.evaluate(
       (iid: string) =>
-        (window as any).__v2_editor_store.selection.selectImage(iid),
+        (
+          window as unknown as V2TestWindow
+        ).__v2_editor_store.selection.selectImage(iid),
       ins!.id,
     );
     await page.waitForTimeout(120);
@@ -542,9 +588,9 @@ test.describe("v2 editor - combined feature set", () => {
       undoBefore + 1,
     );
     const imgs = await page.evaluate(() =>
-      (window as any).__v2_editor_store.doc
+      (window as unknown as V2TestWindow).__v2_editor_store.doc
         .loadedPages()
-        .reduce((n: number, p: any) => n + p.images.length, 0),
+        .reduce((n: number, p) => n + p.images.length, 0),
     );
     expect(imgs).toBeGreaterThan(0);
   });
@@ -557,7 +603,9 @@ test.describe("v2 editor - combined feature set", () => {
     expect(ins).not.toBeNull();
     await page.evaluate(
       (iid: string) =>
-        (window as any).__v2_editor_store.selection.selectImage(iid),
+        (
+          window as unknown as V2TestWindow
+        ).__v2_editor_store.selection.selectImage(iid),
       ins!.id,
     );
     await page.waitForTimeout(120);
@@ -583,9 +631,11 @@ test.describe("v2 editor - combined feature set", () => {
     await page.waitForTimeout(300);
     const rights = await page.evaluate(
       ({ a, b }: { a: string; b: string }) => {
-        const pg = (window as any).__v2_editor_store.doc.page(1);
-        const ra = pg.runs.find((x: any) => x.id === a);
-        const rb = pg.runs.find((x: any) => x.id === b);
+        const pg = (
+          window as unknown as V2TestWindow
+        ).__v2_editor_store.doc.page(1);
+        const ra = pg.runs.find((x) => x.id === a)!;
+        const rb = pg.runs.find((x) => x.id === b)!;
         return [ra.bounds.x + ra.bounds.width, rb.bounds.x + rb.bounds.width];
       },
       { a, b },
@@ -607,9 +657,11 @@ test.describe("v2 editor - combined feature set", () => {
     await page.waitForTimeout(300);
     const tops = await page.evaluate(
       ({ a, b }: { a: string; b: string }) => {
-        const pg = (window as any).__v2_editor_store.doc.page(1);
-        const ra = pg.runs.find((x: any) => x.id === a);
-        const rb = pg.runs.find((x: any) => x.id === b);
+        const pg = (
+          window as unknown as V2TestWindow
+        ).__v2_editor_store.doc.page(1);
+        const ra = pg.runs.find((x) => x.id === a)!;
+        const rb = pg.runs.find((x) => x.id === b)!;
         return [ra.bounds.y + ra.bounds.height, rb.bounds.y + rb.bounds.height];
       },
       { a, b },
@@ -633,11 +685,13 @@ test.describe("v2 editor - combined feature set", () => {
     await clickArrange(page, "v2-distribute-v");
     await page.waitForTimeout(300);
     const gaps = await page.evaluate((ids: string[]) => {
-      const pg = (window as any).__v2_editor_store.doc.page(1);
+      const pg = (window as unknown as V2TestWindow).__v2_editor_store.doc.page(
+        1,
+      );
       const items = ids
-        .map((id) => pg.runs.find((r: any) => r.id === id))
-        .map((r: any) => ({ y: r.bounds.y, h: r.bounds.height }))
-        .sort((p: any, q: any) => p.y - q.y);
+        .map((id) => pg.runs.find((r) => r.id === id)!)
+        .map((r) => ({ y: r.bounds.y, h: r.bounds.height }))
+        .sort((p, q) => p.y - q.y);
       const g: number[] = [];
       for (let i = 1; i < items.length; i++) {
         g.push(items[i].y - (items[i - 1].y + items[i - 1].h));
@@ -745,9 +799,9 @@ test.describe("v2 editor - combined feature set", () => {
     await page.waitForTimeout(250);
     const locked = await page.evaluate(
       (rid: string) =>
-        (window as any).__v2_editor_store.doc
+        (window as unknown as V2TestWindow).__v2_editor_store.doc
           .page(1)
-          .runs.find((x: any) => x.id === rid).locked,
+          .runs.find((x) => x.id === rid)!.locked,
       id,
     );
     expect(locked, "undo unlocks the run").toBe(false);

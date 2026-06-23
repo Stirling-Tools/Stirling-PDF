@@ -1,6 +1,7 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 import type { Page, Route } from "@playwright/test";
 import path from "path";
+import type { V2TestWindow } from "@app/tests/stubbed/v2EditorTestTypes";
 
 /**
  * Editing OBJECT-rotated text (a text run whose matrix is rotated within an
@@ -18,8 +19,8 @@ const ROTATE90 = path.join(__dirname, "../test-fixtures/cropbox-rotate90.pdf");
 
 async function rotatedRunMatrix(page: Page): Promise<{ a: number; b: number }> {
   return page.evaluate(() => {
-    const s = (window as any).__v2_editor_store;
-    const r = s.doc.page(0).runs.find((x: any) => /Rotated/.test(x.text));
+    const s = (window as unknown as V2TestWindow).__v2_editor_store;
+    const r = s.doc.page(0).runs.find((x) => /Rotated/.test(x.text));
     return r ? { a: r.matrix.a, b: r.matrix.b } : { a: 1, b: 0 };
   });
 }
@@ -46,8 +47,8 @@ test("editing rotated text keeps its rotation through save+reopen", async ({
 
   // Edit the run, then commit (blur).
   const id = await page.evaluate(() => {
-    const s = (window as any).__v2_editor_store;
-    const r = s.doc.page(0).runs.find((x: any) => /Rotated/.test(x.text));
+    const s = (window as unknown as V2TestWindow).__v2_editor_store;
+    const r = s.doc.page(0).runs.find((x) => /Rotated/.test(x.text));
     return r ? r.id : null;
   });
   expect(id, "rotated run found").toBeTruthy();
@@ -116,8 +117,8 @@ test("inserting text on a /Rotate 90 page lands upright (counter-rotated)", asyn
   // The inserted run must be counter-rotated so it reads upright on the
   // 90deg-displayed page (matrix.b non-zero), not axis-aligned.
   const m = await page.evaluate(() => {
-    const s = (window as any).__v2_editor_store;
-    const r = s.doc.page(0).runs.find((x: any) => /New text/.test(x.text));
+    const s = (window as unknown as V2TestWindow).__v2_editor_store;
+    const r = s.doc.page(0).runs.find((x) => /New text/.test(x.text));
     return r ? { a: r.matrix.a, b: r.matrix.b } : null;
   });
   expect(m, "inserted run found").toBeTruthy();

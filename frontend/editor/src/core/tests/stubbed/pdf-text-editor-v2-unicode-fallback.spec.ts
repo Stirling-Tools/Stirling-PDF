@@ -1,6 +1,7 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 import type { Page, Route } from "@playwright/test";
 import path from "path";
+import type { V2TestWindow } from "@app/tests/stubbed/v2EditorTestTypes";
 
 /**
  * Client-side Unicode fallback font (Noto Sans, embedded on demand).
@@ -62,7 +63,7 @@ async function appendSaveReopen(
 
   // Append the sample text to the first run and commit (blur).
   const id = await page.evaluate(() => {
-    const s = (window as any).__v2_editor_store;
+    const s = (window as unknown as V2TestWindow).__v2_editor_store;
     return s.doc.page(0).runs[0]?.id ?? null;
   });
   expect(id, "page 0 has at least one run").toBeTruthy();
@@ -111,10 +112,10 @@ async function appendSaveReopen(
   await page.waitForTimeout(500);
 
   const reopened = await page.evaluate(() => {
-    const s = (window as any).__v2_editor_store;
+    const s = (window as unknown as V2TestWindow).__v2_editor_store;
     return s.doc
       .page(0)
-      .runs.map((r: any) => r.text)
+      .runs.map((r) => r.text)
       .join("");
   });
   return { reopened, errs, runId: id as string };
@@ -186,7 +187,7 @@ for (const { name, text } of RTL_SAMPLES) {
     await page.waitForTimeout(400);
 
     const id = await page.evaluate(() => {
-      const s = (window as any).__v2_editor_store;
+      const s = (window as unknown as V2TestWindow).__v2_editor_store;
       return s.doc.page(0).runs[0]?.id ?? null;
     });
     expect(id, "page 0 has at least one run").toBeTruthy();
@@ -217,16 +218,16 @@ for (const { name, text } of RTL_SAMPLES) {
 
     // (a) model text carries the inserted RTL string.
     const model = await page.evaluate((rid: string) => {
-      const s = (window as any).__v2_editor_store;
-      return s.doc.page(0).runs.find((r: any) => r.id === rid)?.text ?? "";
+      const s = (window as unknown as V2TestWindow).__v2_editor_store;
+      return s.doc.page(0).runs.find((r) => r.id === rid)?.text ?? "";
     }, id as string);
     expect(model).toContain(text);
 
     // (b) the edited run stays within page bounds after the edit.
     const fits = await page.evaluate((rid: string) => {
-      const s = (window as any).__v2_editor_store;
+      const s = (window as unknown as V2TestWindow).__v2_editor_store;
       const pg = s.doc.page(0);
-      const r = pg.runs.find((x: any) => x.id === rid);
+      const r = pg.runs.find((x) => x.id === rid)!;
       return { boundsRight: r.bounds.x + r.bounds.width, pageWidth: pg.width };
     }, id as string);
     expect(
@@ -254,10 +255,10 @@ for (const { name, text } of RTL_SAMPLES) {
     await page.waitForTimeout(500);
 
     const reopened = await page.evaluate(() => {
-      const s = (window as any).__v2_editor_store;
+      const s = (window as unknown as V2TestWindow).__v2_editor_store;
       return s.doc
         .page(0)
-        .runs.map((r: any) => r.text)
+        .runs.map((r) => r.text)
         .join("");
     });
     // Noto Sans lacks Arabic/Hebrew, so the script is dropped on save - but

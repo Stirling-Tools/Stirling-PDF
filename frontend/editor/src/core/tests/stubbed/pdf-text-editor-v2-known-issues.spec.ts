@@ -1,5 +1,7 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
+import type { Page } from "@playwright/test";
 import path from "path";
+import type { V2TestWindow } from "@app/tests/stubbed/v2EditorTestTypes";
 
 /**
  * REGRESSION suite for the 12 issues found by the QA sweep of the v2 PDF text
@@ -13,7 +15,7 @@ import path from "path";
 const SAMPLE = path.join(__dirname, "../../../../public/samples/Sample.pdf");
 const SUBSET = path.join(__dirname, "../test-fixtures/subset-font-sample.pdf");
 
-async function open(page: any, file: string, firstPage = 0): Promise<void> {
+async function open(page: Page, file: string, firstPage = 0): Promise<void> {
   await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
   await expect(page.getByTestId("v2-root")).toBeVisible({ timeout: 15_000 });
   await page.locator('[data-testid="v2-file-input"]').setInputFiles(file);
@@ -23,16 +25,16 @@ async function open(page: any, file: string, firstPage = 0): Promise<void> {
   await page.waitForTimeout(900);
 }
 async function findId(
-  page: any,
+  page: Page,
   pageIdx: number,
   src: string,
 ): Promise<string> {
   const id = await page.evaluate(
     ({ pageIdx, src }: { pageIdx: number; src: string }) => {
-      const s = (window as any).__v2_editor_store;
+      const s = (window as unknown as V2TestWindow).__v2_editor_store;
       const r = s.doc
         .page(pageIdx)
-        .runs.find((x: any) => new RegExp(src).test(x.text));
+        .runs.find((x) => new RegExp(src).test(x.text));
       return r ? r.id : null;
     },
     { pageIdx, src },
@@ -41,21 +43,21 @@ async function findId(
   return id;
 }
 async function leafPtrs(
-  page: any,
+  page: Page,
   pageIdx: number,
   id: string,
 ): Promise<number[]> {
   return page.evaluate(
     ({ pageIdx, id }: { pageIdx: number; id: string }) => {
-      const s = (window as any).__v2_editor_store;
-      const r = s.doc.page(pageIdx).runs.find((x: any) => x.id === id);
+      const s = (window as unknown as V2TestWindow).__v2_editor_store;
+      const r = s.doc.page(pageIdx).runs.find((x) => x.id === id);
       return r ? [...r.paragraphLeafPtrs] : [];
     },
     { pageIdx, id },
   );
 }
 async function caretEndInsert(
-  page: any,
+  page: Page,
   id: string,
   text: string,
 ): Promise<void> {
@@ -77,7 +79,7 @@ async function caretEndInsert(
   );
   await page.waitForTimeout(150);
 }
-async function replaceAll(page: any, id: string, full: string): Promise<void> {
+async function replaceAll(page: Page, id: string, full: string): Promise<void> {
   await page.evaluate(
     ({ id, full }: { id: string; full: string }) => {
       const el = document.querySelector<HTMLDivElement>(
@@ -95,7 +97,7 @@ async function replaceAll(page: any, id: string, full: string): Promise<void> {
   );
   await page.waitForTimeout(200);
 }
-async function blur(page: any, id: string): Promise<void> {
+async function blur(page: Page, id: string): Promise<void> {
   await page.evaluate((rid: string) => {
     document
       .querySelector<HTMLElement>(`[data-testid="v2-run-${rid}"]`)
@@ -105,7 +107,7 @@ async function blur(page: any, id: string): Promise<void> {
 }
 /** Per-glyph geometry + extracted text for a run, straight from PDFium. */
 async function glyphs(
-  page: any,
+  page: Page,
   pageIdx: number,
   id: string,
 ): Promise<{
@@ -118,11 +120,11 @@ async function glyphs(
 }> {
   return page.evaluate(
     ({ pageIdx, id }: { pageIdx: number; id: string }) => {
-      const s = (window as any).__v2_editor_store;
+      const s = (window as unknown as V2TestWindow).__v2_editor_store;
       const m = s.doc.module;
       const pg = s.doc.page(pageIdx);
       pg.flushGenerate(m);
-      const r = pg.runs.find((x: any) => x.id === id);
+      const r = pg.runs.find((x) => x.id === id)!;
       const ptrs: number[] = r.paragraphLeafPtrs.length
         ? r.paragraphLeafPtrs
         : r.mergedFromPtrs.length
@@ -284,10 +286,10 @@ test.describe("v2 editor - fixed-issue regressions", () => {
     await page.waitForTimeout(500);
 
     const reopened = await page.evaluate(() => {
-      const s = (window as any).__v2_editor_store;
+      const s = (window as unknown as V2TestWindow).__v2_editor_store;
       return s.doc
         .page(1)
-        .runs.map((r: any) => r.text)
+        .runs.map((r) => r.text)
         .join("");
     });
     // No lone high surrogate (one not immediately followed by a low surrogate).
@@ -317,9 +319,9 @@ test.describe("v2 editor - fixed-issue regressions", () => {
     const id = await findId(page, 1, "Comprehensive\\s+toolkit");
     const cur = await page.evaluate(
       (rid: string) =>
-        (window as any).__v2_editor_store.doc
+        (window as unknown as V2TestWindow).__v2_editor_store.doc
           .page(1)
-          .runs.find((x: any) => x.id === rid).text as string,
+          .runs.find((x) => x.id === rid)!.text as string,
       id,
     );
     await replaceAll(page, id, cur.replace(/^Comprehensive/, ""));
@@ -338,9 +340,9 @@ test.describe("v2 editor - fixed-issue regressions", () => {
     const id = await findId(page, 1, "Comprehensive\\s+toolkit");
     const cur = await page.evaluate(
       (rid: string) =>
-        (window as any).__v2_editor_store.doc
+        (window as unknown as V2TestWindow).__v2_editor_store.doc
           .page(1)
-          .runs.find((x: any) => x.id === rid).text as string,
+          .runs.find((x) => x.id === rid)!.text as string,
       id,
     );
     // drop the 'h' from "Comprehensive" -> the word should read "Compreensive"
@@ -363,10 +365,10 @@ test.describe("v2 editor - fixed-issue regressions", () => {
     await open(page, SAMPLE, 0);
     const countImages = () =>
       page.evaluate(() => {
-        const s = (window as any).__v2_editor_store;
+        const s = (window as unknown as V2TestWindow).__v2_editor_store;
         return s.doc
           .loadedPages()
-          .reduce((n: number, p: any) => n + p.images.length, 0);
+          .reduce((n: number, p) => n + p.images.length, 0);
       });
     const before = await countImages();
     // a 1x1 red PNG, decoded in-browser by handleInsertImage
@@ -398,9 +400,9 @@ test.describe("v2 editor - fixed-issue regressions", () => {
     const id = await findId(page, 1, "Stirling\\s+PDF\\s+is\\s+a\\s+robust");
     const cur = await page.evaluate(
       (rid: string) =>
-        (window as any).__v2_editor_store.doc
+        (window as unknown as V2TestWindow).__v2_editor_store.doc
           .page(1)
-          .runs.find((x: any) => x.id === rid).text as string,
+          .runs.find((x) => x.id === rid)!.text as string,
       id,
     );
     await replaceAll(
@@ -427,15 +429,17 @@ test.describe("v2 editor - fixed-issue regressions", () => {
     const id = await findId(page, 1, "Stirling\\s+PDF\\s+is\\s+a\\s+robust");
     const get = (): Promise<string> =>
       page.evaluate((r: string) => {
-        const x = (window as any).__v2_editor_store.doc
+        const x = (window as unknown as V2TestWindow).__v2_editor_store.doc
           .page(1)
-          .runs.find((y: any) => y.id === r);
+          .runs.find((y) => y.id === r);
         return x ? (x.text as string) : "(gone)";
       }, id);
     await caretEndInsert(page, id, " UNIQ");
     await blur(page, id);
     const edited = await get();
-    await page.evaluate(() => (window as any).__v2_editor_store.resetAll());
+    await page.evaluate(() =>
+      (window as unknown as V2TestWindow).__v2_editor_store.resetAll(),
+    );
     await page.waitForTimeout(400);
     // Redo until the button is disabled. The edit + its auto-reflow coalesce
     // into ONE undo/redo step, so this is typically a single click - clicking
@@ -481,9 +485,9 @@ test.describe("v2 editor - fixed-issue regressions", () => {
     const id = await findId(page, 1, "Stirling\\s+PDF\\s+is\\s+a\\s+robust");
     const before = await page.evaluate(
       (rid: string) =>
-        (window as any).__v2_editor_store.doc
+        (window as unknown as V2TestWindow).__v2_editor_store.doc
           .page(1)
-          .runs.find((x: any) => x.id === rid).text as string,
+          .runs.find((x) => x.id === rid)!.text as string,
       id,
     );
     await caretEndInsert(page, id, "\n");
@@ -496,11 +500,9 @@ test.describe("v2 editor - fixed-issue regressions", () => {
         () =>
           page.evaluate(
             (rid: string) =>
-              ((window as any).__v2_editor_store.doc
+              ((window as unknown as V2TestWindow).__v2_editor_store.doc
                 .page(1)
-                .runs.find((x: any) => x.id === rid)?.text ?? null) as
-                | string
-                | null,
+                .runs.find((x) => x.id === rid)?.text ?? null) as string | null,
             id,
           ),
         { timeout: 6000, message: "one undo should fully revert Enter+type" },

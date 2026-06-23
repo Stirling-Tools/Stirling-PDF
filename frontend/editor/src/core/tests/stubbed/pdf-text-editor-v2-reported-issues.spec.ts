@@ -1,5 +1,7 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
+import type { Page } from "@playwright/test";
 import path from "path";
+import type { V2TestWindow } from "@app/tests/stubbed/v2EditorTestTypes";
 
 /**
  * Regression coverage for three user-reported issues:
@@ -17,12 +19,12 @@ const SAMPLE = path.join(__dirname, "../../../../public/samples/Sample.pdf");
 
 // Align / distribute / z-order now live inside the toolbar's "Arrange" menu.
 // Open the menu, then act on or inspect the item.
-async function clickArrange(page: any, testid: string): Promise<void> {
+async function clickArrange(page: Page, testid: string): Promise<void> {
   await page.getByTestId("v2-arrange-menu").click();
   await page.getByTestId(testid).click();
 }
 async function arrangeItemDisabled(
-  page: any,
+  page: Page,
   testid: string,
 ): Promise<boolean> {
   await page.getByTestId("v2-arrange-menu").click();
@@ -36,7 +38,7 @@ async function arrangeItemDisabled(
   return disabled;
 }
 
-async function open(page: any, firstPage = 0): Promise<void> {
+async function open(page: Page, firstPage = 0): Promise<void> {
   await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
   await expect(page.getByTestId("v2-root")).toBeVisible({ timeout: 15_000 });
   await page.locator('[data-testid="v2-file-input"]').setInputFiles(SAMPLE);
@@ -45,13 +47,17 @@ async function open(page: any, firstPage = 0): Promise<void> {
   });
   await page.waitForTimeout(900);
 }
-async function runId(page: any, pageIdx: number, src: string): Promise<string> {
+async function runId(
+  page: Page,
+  pageIdx: number,
+  src: string,
+): Promise<string> {
   const id = await page.evaluate(
     ({ pageIdx, src }: { pageIdx: number; src: string }) => {
-      const s = (window as any).__v2_editor_store;
+      const s = (window as unknown as V2TestWindow).__v2_editor_store;
       const r = s.doc
         .page(pageIdx)
-        .runs.find((x: any) => new RegExp(src).test(x.text));
+        .runs.find((x) => new RegExp(src).test(x.text));
       return r ? r.id : null;
     },
     { pageIdx, src },
@@ -60,28 +66,30 @@ async function runId(page: any, pageIdx: number, src: string): Promise<string> {
   return id;
 }
 async function runText(
-  page: any,
+  page: Page,
   pageIdx: number,
   id: string,
 ): Promise<string> {
   return page.evaluate(
     ({ pageIdx, id }: { pageIdx: number; id: string }) => {
-      const r = (window as any).__v2_editor_store.doc
+      const r = (window as unknown as V2TestWindow).__v2_editor_store.doc
         .page(pageIdx)
-        .runs.find((x: any) => x.id === id);
+        .runs.find((x) => x.id === id);
       return r ? (r.text as string) : "(gone)";
     },
     { pageIdx, id },
   );
 }
-async function selRunCount(page: any): Promise<number> {
+async function selRunCount(page: Page): Promise<number> {
   return page.evaluate(
-    () => (window as any).__v2_editor_store.selection.value.runIds.length,
+    () =>
+      (window as unknown as V2TestWindow).__v2_editor_store.selection.value
+        .runIds.length,
   );
 }
 /** Append text into a run via the contentEditable overlay, then blur. */
 async function appendViaOverlay(
-  page: any,
+  page: Page,
   id: string,
   text: string,
 ): Promise<void> {
@@ -138,10 +146,12 @@ test.describe("v2 editor - reported issue: align multi-select (real UI)", () => 
     await page.waitForTimeout(250);
     const xs = await page.evaluate(
       ({ a, b }: { a: string; b: string }) => {
-        const pg = (window as any).__v2_editor_store.doc.page(0);
+        const pg = (
+          window as unknown as V2TestWindow
+        ).__v2_editor_store.doc.page(0);
         return [
-          pg.runs.find((r: any) => r.id === a).bounds.x,
-          pg.runs.find((r: any) => r.id === b).bounds.x,
+          pg.runs.find((r) => r.id === a)!.bounds.x,
+          pg.runs.find((r) => r.id === b)!.bounds.x,
         ];
       },
       { a, b },
@@ -186,31 +196,33 @@ test.describe("v2 editor - reported issue: align multi-select (real UI)", () => 
 });
 
 test.describe("v2 editor - reported issue: align a single paragraph's lines", () => {
-  async function selectOne(page: any, id: string): Promise<void> {
+  async function selectOne(page: Page, id: string): Promise<void> {
     await page.evaluate(
       (rid: string) =>
-        (window as any).__v2_editor_store.selection.selectOne(rid),
+        (
+          window as unknown as V2TestWindow
+        ).__v2_editor_store.selection.selectOne(rid),
       id,
     );
     await page.waitForTimeout(120);
   }
-  async function lineRights(page: any, id: string): Promise<number[]> {
+  async function lineRights(page: Page, id: string): Promise<number[]> {
     return page.evaluate((rid: string) => {
-      const run = (window as any).__v2_editor_store.doc
+      const run = (window as unknown as V2TestWindow).__v2_editor_store.doc
         .page(1)
-        .runs.find((r: any) => r.id === rid);
-      return (run?.paragraphLineSlots ?? []).map((s: any) =>
-        Math.max(...s.mergedFromBounds.map((b: any) => b.right)),
+        .runs.find((r) => r.id === rid);
+      return (run?.paragraphLineSlots ?? []).map((s) =>
+        Math.max(...s.mergedFromBounds.map((b) => b.right)),
       );
     }, id);
   }
-  async function lineLefts(page: any, id: string): Promise<number[]> {
+  async function lineLefts(page: Page, id: string): Promise<number[]> {
     return page.evaluate((rid: string) => {
-      const run = (window as any).__v2_editor_store.doc
+      const run = (window as unknown as V2TestWindow).__v2_editor_store.doc
         .page(1)
-        .runs.find((r: any) => r.id === rid);
-      return (run?.paragraphLineSlots ?? []).map((s: any) =>
-        Math.min(...s.mergedFromBounds.map((b: any) => b.x)),
+        .runs.find((r) => r.id === rid);
+      return (run?.paragraphLineSlots ?? []).map((s) =>
+        Math.min(...s.mergedFromBounds.map((b) => b.x)),
       );
     }, id);
   }
@@ -342,12 +354,14 @@ test.describe("v2 editor - reported issue: character insertion + font integrity"
     // is the correct glyph via SetText, never a guessed one.
     await open(page, 1);
     const id = await runId(page, 1, "Multi-Language\\s+Support");
-    await page.evaluate(() => ((window as any).__v2_charcode_events = []));
+    await page.evaluate(
+      () => ((window as unknown as V2TestWindow).__v2_charcode_events = []),
+    );
     await appendViaOverlay(page, id, "S");
     const outcomes = await page.evaluate(
       () =>
-        ((window as any).__v2_charcode_events ?? []).map(
-          (e: any) => `${e.strategy}:${e.outcome}`,
+        ((window as unknown as V2TestWindow).__v2_charcode_events ?? []).map(
+          (e) => `${e.strategy}:${e.outcome}`,
         ) as string[],
     );
     expect(
@@ -368,13 +382,15 @@ test.describe("v2 editor - reported issue: character insertion + font integrity"
     await open(page, 1);
     const id = await runId(page, 1, "Multi-Language\\s+Support");
     await page.evaluate(
-      () => ((window as any).__v2_charcode_events = []) as unknown as void,
+      () =>
+        ((window as unknown as V2TestWindow).__v2_charcode_events =
+          []) as unknown as void,
     );
     await appendViaOverlay(page, id, "S");
     const outcomes = await page.evaluate(
       () =>
-        ((window as any).__v2_charcode_events ?? []).map(
-          (e: any) => e.outcome,
+        ((window as unknown as V2TestWindow).__v2_charcode_events ?? []).map(
+          (e) => e.outcome,
         ) as string[],
     );
     // At least one emit event fired for the edit.
@@ -391,7 +407,7 @@ test.describe("v2 editor - reported issue: character insertion + font integrity"
 });
 
 test.describe("v2 editor - reported issue: bullet-to-item mapping", () => {
-  async function loadPage2(page: any): Promise<void> {
+  async function loadPage2(page: Page): Promise<void> {
     await open(page, 0);
     await page.evaluate(() => {
       document.querySelector('[data-testid="v2-page-1"]')?.scrollIntoView();
@@ -411,7 +427,7 @@ test.describe("v2 editor - reported issue: bullet-to-item mapping", () => {
   }) => {
     await loadPage2(page);
     const hasOrphanBulletRun = await page.evaluate(() => {
-      const s = (window as any).__v2_editor_store;
+      const s = (window as unknown as V2TestWindow).__v2_editor_store;
       const runs = s.doc.page(2).runs as Array<{ text: string }>;
       // An "orphan" run is one whose text is ONLY bullets + whitespace
       // and holds 2+ bullets (the stacked bullet column).
