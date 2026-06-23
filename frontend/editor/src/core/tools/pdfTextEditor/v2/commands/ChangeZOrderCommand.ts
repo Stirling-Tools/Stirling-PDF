@@ -96,7 +96,12 @@ export class ChangeZOrderCommand implements Command {
     this.nextIndex = target;
     m.FPDFPage_RemoveObject(page.pagePtr, ptr);
     ext.FPDFPage_InsertObjectAtIndex(page.pagePtr, ptr, target);
-    page.dirty = true;
+    // markDirty() bumps the revision so PageView re-renders the bitmap, and
+    // markNeedsGenerate() regenerates the content stream so the new paint order
+    // shows on screen AND survives save. A bare `dirty = true` did neither, so a
+    // reorder silently had no visible effect (and was lost on save).
+    page.markDirty();
+    page.markNeedsGenerate();
   }
 
   revert(doc: EditorDocument): void {
@@ -111,7 +116,8 @@ export class ChangeZOrderCommand implements Command {
       this.targetPtr,
       this.prevIndex,
     );
-    page.dirty = true;
+    page.markDirty();
+    page.markNeedsGenerate();
   }
 
   private resolveTargetPtr(
