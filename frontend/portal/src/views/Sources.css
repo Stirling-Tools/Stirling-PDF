@@ -406,19 +406,6 @@
   color: var(--color-text-1);
 }
 
-.portal-sources__type-card:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-}
-
-.portal-sources__type-soon {
-  font-size: 0.625rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--color-text-3, var(--color-text-2));
-}
-
 .portal-sources__wizard-body {
   display: flex;
   flex-direction: column;

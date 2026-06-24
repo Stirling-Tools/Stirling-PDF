@@ -15,8 +15,6 @@ export interface SourceTypeMeta {
 
 const SOURCE_TYPE_META: Record<string, SourceTypeMeta> = {
   folder: { label: "Folder", icon: "⛁", tone: "blue" },
-  s3: { label: "Amazon S3", icon: "☁", tone: "amber" },
-  gdrive: { label: "Google Drive", icon: "▲", tone: "green" },
 };
 
 const UNKNOWN_TYPE_META: SourceTypeMeta = {
@@ -46,8 +44,6 @@ export interface CreatableSourceType {
   type: string;
   label: string;
   description: string;
-  /** Listed but not yet wired on the backend; shown disabled in the picker. */
-  comingSoon?: boolean;
   fields: SourceFieldDef[];
 }
 
@@ -79,20 +75,6 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
         ],
       },
     ],
-  },
-  {
-    type: "s3",
-    label: "Amazon S3",
-    description: "Pull documents from an S3 bucket. Coming soon.",
-    comingSoon: true,
-    fields: [],
-  },
-  {
-    type: "gdrive",
-    label: "Google Drive",
-    description: "Watch a shared Drive folder. Coming soon.",
-    comingSoon: true,
-    fields: [],
   },
 ];
 

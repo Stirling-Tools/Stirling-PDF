@@ -79,12 +79,7 @@ export function ConnectWizard({
   const requiredFilled = type.fields.every(
     (f) => !f.required || (options[f.key] ?? "").trim() !== "",
   );
-  const canContinue =
-    step === 0
-      ? !type.comingSoon
-      : step === 1
-        ? name.trim() !== "" && requiredFilled
-        : true;
+  const canContinue = step === 1 ? name.trim() !== "" && requiredFilled : true;
   const isLast = step === WIZARD_STEP_COUNT - 1;
 
   async function advance() {
@@ -174,7 +169,6 @@ export function ConnectWizard({
             <button
               key={ct.type}
               type="button"
-              disabled={ct.comingSoon}
               className={
                 "portal-sources__type-card" +
                 (type.type === ct.type ? " is-selected" : "")
@@ -185,11 +179,6 @@ export function ConnectWizard({
                 {sourceTypeMeta(ct.type).icon}
               </span>
               <span className="portal-sources__type-name">{ct.label}</span>
-              {ct.comingSoon && (
-                <span className="portal-sources__type-soon">
-                  {t("sources.wizard.comingSoon")}
-                </span>
-              )}
             </button>
           ))}
         </div>
