@@ -123,7 +123,8 @@ class PaygInvoicesControllerTest {
                         LocalDateTime.of(2026, 5, 1, 0, 0),
                         LocalDateTime.of(2026, 5, 31, 23, 59),
                         "https://stripe/invoice/1",
-                        "https://stripe/invoice/1.pdf");
+                        "https://stripe/invoice/1.pdf",
+                        "Stirling Processor Plan");
 
         try (var mocked = org.mockito.Mockito.mockStatic(AuthenticationUtils.class)) {
             mocked.when(() -> AuthenticationUtils.getCurrentUser(auth, userRepository))
@@ -144,6 +145,7 @@ class PaygInvoicesControllerTest {
             assertThat(body.totalMinor()).isEqualTo(2500L);
             assertThat(body.currency()).isEqualTo("usd");
             assertThat(body.hostedInvoiceUrl()).isEqualTo("https://stripe/invoice/1");
+            assertThat(body.description()).isEqualTo("Stirling Processor Plan");
         }
     }
 

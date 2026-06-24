@@ -30,9 +30,22 @@ function formatMoney(minor: number | null, currency: string | null): string {
 
 function formatDate(iso: string | null): string {
   if (!iso) return "—";
-  // ISO local datetime from the backend; trim to date for the table.
-  const d = iso.split("T")[0];
-  return d ?? "—";
+  // Mirror Stripe's portal row layout: "24 Jul 2026" rather than the bare ISO.
+  // Parse manually because the backend returns local datetime without a
+  // timezone suffix; treating it as the local date is correct for display.
+  const datePart = iso.split("T")[0];
+  if (!datePart) return "—";
+  const [y, m, d] = datePart.split("-").map((n) => Number(n));
+  if (!y || !m || !d) return datePart;
+  try {
+    return new Intl.DateTimeFormat(undefined, {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    }).format(new Date(y, m - 1, d));
+  } catch {
+    return datePart;
+  }
 }
 
 function statusTone(status: string): "success" | "warning" | "danger" | "neutral" {
@@ -89,16 +102,11 @@ export function InvoicesList() {
   const visibleRows = invoices?.slice(0, visible) ?? [];
   const hasMore = total > DEFAULT_VISIBLE;
 
+  // Column layout mirrors Stripe's own customer-portal "Invoice history" rows:
+  //   Date · Amount · Status · Description (product name) · Actions
+  // The monospace invoice id is dropped — users care about "what was it for",
+  // not the internal id.
   const columns: TableColumn<Invoice>[] = [
-    {
-      key: "number",
-      header: "Invoice",
-      render: (inv) => (
-        <span className="portal-billing__invoice-num">
-          {inv.number ?? inv.id}
-        </span>
-      ),
-    },
     {
       key: "date",
       header: "Date",
@@ -107,7 +115,6 @@ export function InvoicesList() {
     {
       key: "amount",
       header: "Amount",
-      align: "right",
       render: (inv) => formatMoney(inv.totalMinor, inv.currency),
     },
     {
@@ -117,6 +124,15 @@ export function InvoicesList() {
         <StatusBadge tone={statusTone(inv.status)} size="sm">
           {inv.status}
         </StatusBadge>
+      ),
+    },
+    {
+      key: "description",
+      header: "Description",
+      render: (inv) => (
+        <span className="portal-billing__invoice-desc">
+          {inv.description ?? "Invoice"}
+        </span>
       ),
     },
     {

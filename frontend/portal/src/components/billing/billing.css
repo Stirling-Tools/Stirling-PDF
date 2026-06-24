@@ -427,6 +427,11 @@
   font-size: 0.875rem;
 }
 
+.portal-billing__invoice-desc {
+  color: var(--color-text-1, #0f172a);
+  font-size: 0.9375rem;
+}
+
 .portal-billing__invoice-actions {
   display: inline-flex;
   align-items: center;

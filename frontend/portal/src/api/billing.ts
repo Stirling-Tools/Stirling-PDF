@@ -92,6 +92,8 @@ export interface Invoice {
   periodEnd: string | null;
   hostedInvoiceUrl: string | null;
   invoicePdf: string | null;
+  /** Product name from the subscription chain (e.g. "Stirling Processor Plan"). */
+  description: string | null;
 }
 
 export async function fetchInvoices(limit: number = 20): Promise<Invoice[]> {
