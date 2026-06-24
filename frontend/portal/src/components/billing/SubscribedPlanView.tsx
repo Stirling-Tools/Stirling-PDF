@@ -3,7 +3,6 @@ import {
   Banner,
   Button,
   Card,
-  StatusBadge,
   Table,
   type TableColumn,
 } from "@shared/components";
@@ -104,19 +103,14 @@ export function SubscribedPlanView({ wallet, onWalletChange }: Props) {
             {portalError}
           </Banner>
         )}
-        <div className="portal-billing__row-actions">
-          <Button
-            variant="outline"
-            loading={openingPortal}
-            onClick={openPortal}
-            disabled={wallet.teamId == null}
-          >
-            Open Stripe portal ↗
-          </Button>
-          <StatusBadge tone="success" size="sm">
-            Active
-          </StatusBadge>
-        </div>
+        <Button
+          variant="outline"
+          loading={openingPortal}
+          onClick={openPortal}
+          disabled={wallet.teamId == null}
+        >
+          Manage Billing
+        </Button>
       </Card>
 
       <InvoicesList />
