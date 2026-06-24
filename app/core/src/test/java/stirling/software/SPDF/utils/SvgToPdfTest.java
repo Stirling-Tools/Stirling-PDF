@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 
@@ -172,6 +173,53 @@ class SvgToPdfTest {
             }
         } finally {
             Files.deleteIfExists(external);
+        }
+    }
+
+    // A self-contained SVG whose only content is an inline base64 data: image (a solid-red vector
+    // SVG). Vector data: images decode via batik-bridge without batik-codec, so this exercises the
+    // data: security allowance independent of raster codecs.
+    private static String svgWithInlineRedImage() {
+        String innerSvg =
+                "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"100\" height=\"100\">"
+                        + "<rect width=\"100\" height=\"100\" fill=\"red\"/></svg>";
+        String dataUri =
+                "data:image/svg+xml;base64,"
+                        + Base64.getEncoder()
+                                .encodeToString(innerSvg.getBytes(StandardCharsets.UTF_8));
+        return "<svg xmlns=\"http://www.w3.org/2000/svg\" "
+                + "xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"100\" height=\"100\">"
+                + "<image x=\"0\" y=\"0\" width=\"100\" height=\"100\" xlink:href=\""
+                + dataUri
+                + "\"/></svg>";
+    }
+
+    @Test
+    void convert_rendersInlineDataUriImage() throws IOException {
+        byte[] pdf = SvgToPdf.convert(svgWithInlineRedImage().getBytes(StandardCharsets.UTF_8));
+        try (PDDocument doc = Loader.loadPDF(pdf)) {
+            BufferedImage page = new PDFRenderer(doc).renderImageWithDPI(0, 72);
+            int rgb = page.getRGB(page.getWidth() / 2, page.getHeight() / 2);
+            int r = (rgb >> 16) & 0xff;
+            int gg = (rgb >> 8) & 0xff;
+            int b = rgb & 0xff;
+            assertTrue(
+                    r > 200 && gg < 60 && b < 60,
+                    "Inline data: image must be rendered into the PDF (center rgb="
+                            + Integer.toHexString(rgb)
+                            + ")");
+        }
+    }
+
+    @Test
+    void combineIntoPdf_keepsPageWithInlineDataUriImage() throws IOException {
+        List<byte[]> svgs =
+                List.of(
+                        SIMPLE_SVG.getBytes(StandardCharsets.UTF_8),
+                        svgWithInlineRedImage().getBytes(StandardCharsets.UTF_8));
+        byte[] pdf = SvgToPdf.combineIntoPdf(svgs);
+        try (PDDocument doc = Loader.loadPDF(pdf)) {
+            assertEquals(2, doc.getNumberOfPages(), "inline data: image page must not be dropped");
         }
     }
 }

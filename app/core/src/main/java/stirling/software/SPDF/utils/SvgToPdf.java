@@ -99,6 +99,10 @@ public class SvgToPdf {
         return new UserAgentAdapter() {
             @Override
             public void checkLoadExternalResource(ParsedURL resourceURL, ParsedURL docURL) {
+                // Inline data: URIs are self-contained (no network/file fetch) - allow them.
+                if (resourceURL != null && "data".equals(resourceURL.getProtocol())) {
+                    return;
+                }
                 throw new SecurityException(
                         "External resource loading is disabled for SVG to PDF conversion: "
                                 + resourceURL);
