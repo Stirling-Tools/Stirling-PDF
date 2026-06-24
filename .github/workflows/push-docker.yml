@@ -82,7 +82,7 @@ jobs:
           gradle-version: 9.5.1
 
       - name: Set up Depot CLI
-        uses: depot/setup-action@15c09a5f77a0840ad4bce955686522a257853461 # v1.0.0
+        uses: depot/setup-action@15c09a5f77a0840ad4bce955686522a257853461 # v1.7.1
 
       - name: Install Task
         uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
@@ -145,7 +145,7 @@ jobs:
         id: build-push-latest
         # Empty-tag guard: build-push-action errors when asked to push with no tags.
         if: env.RUN_MAIN_APP == 'true' && steps.meta.outputs.tags != ''
-        uses: depot/build-push-action@98e78adca7817480b8185f474a400b451d74e287 # v1.16.0
+        uses: depot/build-push-action@98e78adca7817480b8185f474a400b451d74e287 # v1.18.0
         with:
           project: ${{ vars.DEPOT_PROJECT_ID }}
           context: .
@@ -190,7 +190,7 @@ jobs:
 
       - name: Build and push Unified Dockerfile (fat variant)
         id: build-push-fat
-        uses: depot/build-push-action@98e78adca7817480b8185f474a400b451d74e287 # v1.16.0
+        uses: depot/build-push-action@98e78adca7817480b8185f474a400b451d74e287 # v1.18.0
         if: env.RUN_MAIN_APP == 'true' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/testMain' && steps.meta-fat.outputs.tags != ''
         with:
           project: ${{ vars.DEPOT_PROJECT_ID }}
@@ -232,7 +232,7 @@ jobs:
 
       - name: Build and push Unified Dockerfile (ultra-lite variant)
         id: build-push-lite
-        uses: depot/build-push-action@98e78adca7817480b8185f474a400b451d74e287 # v1.16.0
+        uses: depot/build-push-action@98e78adca7817480b8185f474a400b451d74e287 # v1.18.0
         if: env.RUN_MAIN_APP == 'true' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/testMain' && steps.meta-lite.outputs.tags != ''
         with:
           project: ${{ vars.DEPOT_PROJECT_ID }}
@@ -359,7 +359,7 @@ jobs:
       - name: Build and push unoserver image
         id: build-push-unoserver
         if: env.RUN_UNOSERVER == 'true' && steps.unoserverDecision.outputs.mode != 'skip'
-        uses: depot/build-push-action@98e78adca7817480b8185f474a400b451d74e287 # v1.16.0
+        uses: depot/build-push-action@98e78adca7817480b8185f474a400b451d74e287 # v1.18.0
         with:
           project: ${{ vars.DEPOT_PROJECT_ID }}
           context: .

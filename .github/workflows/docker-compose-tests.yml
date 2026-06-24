@@ -70,7 +70,7 @@ jobs:
 
       - name: Set up Depot CLI
         if: needs.pick.outputs.is_fork != 'true'
-        uses: depot/setup-action@15c09a5f77a0840ad4bce955686522a257853461 # v1.0.0
+        uses: depot/setup-action@15c09a5f77a0840ad4bce955686522a257853461 # v1.7.1
 
       - name: Install Docker Compose
         run: |
