@@ -228,7 +228,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
             <Button variant="ghost" onClick={onClose}>
               {t("settings.cancel")}
             </Button>
-            <Button variant="gradient" onClick={onClose}>
+            <Button accent="brand" onClick={onClose}>
               {t("settings.saveChanges")}
             </Button>
           </>

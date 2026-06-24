@@ -121,7 +121,7 @@ export function PipelineComposer({ open, onClose }: PipelineComposerProps) {
             </Button>
           )}
           {isLast ? (
-            <Button onClick={deploy} trailingIcon={<span aria-hidden>→</span>}>
+            <Button onClick={deploy} rightSection={<span aria-hidden>→</span>}>
               {t("pipelines.composer.deploy", "Deploy pipeline")}
             </Button>
           ) : (

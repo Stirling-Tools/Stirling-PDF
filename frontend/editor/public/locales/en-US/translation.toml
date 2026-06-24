@@ -3622,7 +3622,11 @@ tabListLabel = "Saved files, workbench, upload"
 upload = "Upload from computer"
 
 [fileSelectorPicker.sort]
+dateAsc = "Oldest first"
+dateDesc = "Newest first"
 dateLabel = "Latest"
+nameAsc = "A to Z"
+nameDesc = "Z to A"
 nameLabel = "A–Z"
 
 [fileSelectorPicker.tabs]
@@ -8653,8 +8657,8 @@ removeMemberError = "Failed to remove user from team"
 removeMemberSuccess = "User removed from team"
 renameTeamLabel = "Rename Team"
 system = "System"
-teamName = "Team Name"
 teamActions = "Team actions"
+teamName = "Team Name"
 teamNotFound = "Team not found"
 title = "Teams"
 totalMembers = "Total Members"

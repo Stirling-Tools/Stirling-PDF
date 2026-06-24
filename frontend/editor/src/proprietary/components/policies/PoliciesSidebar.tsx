@@ -34,7 +34,6 @@ import type { WatchedFolder } from "@app/types/watchedFolders";
 import { POLICIES_ENABLED } from "@app/constants/featureFlags";
 import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
 import { Button } from "@shared/components/Button";
-import { useCheckout } from "@app/contexts/CheckoutContext";
 import { IconBadge } from "@shared/components/IconBadge";
 import {
   deriveRowStatus,

@@ -1,5 +1,4 @@
 import { useTranslation } from "react-i18next";
-import "@app/routes/authShared/auth.css";
 import { Button } from "@shared/components/Button";
 import "@shared/auth/ui/auth.css";
 import { TextInput, PasswordInput } from "@mantine/core";
