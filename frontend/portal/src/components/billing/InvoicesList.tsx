@@ -10,6 +10,10 @@ import {
 } from "@shared/components";
 import { fetchInvoices, type Invoice } from "@portal/api/billing";
 
+const DEFAULT_VISIBLE = 5;
+/** Fetch a few more than DEFAULT_VISIBLE so "Show more" actually has something to show. */
+const FETCH_LIMIT = 20;
+
 function formatMoney(minor: number | null, currency: string | null): string {
   if (minor == null) return "—";
   const code = (currency ?? "usd").toUpperCase();
@@ -48,17 +52,26 @@ function statusTone(status: string): "success" | "warning" | "danger" | "neutral
 
 /**
  * Recent Stripe invoices, sourced from GET /api/v1/payg/invoices (reads
- * stripe.invoices via the Sync Engine). Empty list = no invoices yet (free
- * team, or pre-checkout). Each row deep-links to the Stripe-hosted invoice.
+ * stripe.invoices via the Sync Engine). The backend already orders newest
+ * first; we fetch FETCH_LIMIT rows and show DEFAULT_VISIBLE by default, with
+ * an inline "Show more" toggle. For history older than FETCH_LIMIT, the
+ * Stripe customer portal (button on the Subscription card above) is the
+ * authoritative archive.
+ *
+ * Each row links straight out to Stripe-hosted assets — the invoice page
+ * ({@code hostedInvoiceUrl}) and the PDF ({@code invoicePdf}). Rendered as
+ * actual {@code <a target="_blank">} anchors rather than {@code window.open}
+ * handlers so they're real user gestures (popup blockers don't trip).
  */
 export function InvoicesList() {
   const [invoices, setInvoices] = useState<Invoice[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     setError(null);
-    fetchInvoices(20)
+    fetchInvoices(FETCH_LIMIT)
       .then((rows) => {
         if (!cancelled) setInvoices(rows);
       })
@@ -69,6 +82,11 @@ export function InvoicesList() {
       cancelled = true;
     };
   }, []);
+
+  const total = invoices?.length ?? 0;
+  const visible = showAll ? total : Math.min(DEFAULT_VISIBLE, total);
+  const visibleRows = invoices?.slice(0, visible) ?? [];
+  const hasMore = total > DEFAULT_VISIBLE;
 
   const columns: TableColumn<Invoice>[] = [
     {
@@ -104,16 +122,32 @@ export function InvoicesList() {
       key: "actions",
       header: "",
       align: "right",
-      render: (inv) =>
-        inv.hostedInvoiceUrl ? (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => window.open(inv.hostedInvoiceUrl!, "_blank", "noopener,noreferrer")}
-          >
-            View
-          </Button>
-        ) : null,
+      render: (inv) => (
+        <div className="portal-billing__invoice-actions">
+          {inv.hostedInvoiceUrl && (
+            <a
+              className="portal-billing__invoice-link"
+              href={inv.hostedInvoiceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`View invoice ${inv.number ?? inv.id} in Stripe`}
+            >
+              View ↗
+            </a>
+          )}
+          {inv.invoicePdf && (
+            <a
+              className="portal-billing__invoice-link"
+              href={inv.invoicePdf}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`Download invoice ${inv.number ?? inv.id} as PDF`}
+            >
+              PDF ↓
+            </a>
+          )}
+        </div>
+      ),
     },
   ];
 
@@ -121,6 +155,11 @@ export function InvoicesList() {
     <Card padding="loose">
       <span className="portal-billing__eyebrow">History</span>
       <h3 className="portal-billing__section-title">Invoices</h3>
+      <p className="portal-billing__section-sub">
+        Newest first. For older invoices, open the Stripe customer portal from
+        the Subscription card above.
+      </p>
+
       {invoices === null && !error && (
         <div className="portal-billing__skeleton" aria-hidden>
           <Skeleton height="2.5rem" />
@@ -128,11 +167,13 @@ export function InvoicesList() {
           <Skeleton height="2.5rem" />
         </div>
       )}
+
       {error && (
         <p className="portal-billing__error" role="alert">
           Couldn't load invoices: {error}
         </p>
       )}
+
       {invoices !== null && invoices.length === 0 && !error && (
         <EmptyState
           size="compact"
@@ -140,12 +181,28 @@ export function InvoicesList() {
           description="Once your team subscribes and the first cycle closes, your invoices appear here."
         />
       )}
+
       {invoices !== null && invoices.length > 0 && (
-        <Table
-          columns={columns}
-          rows={invoices}
-          rowKey={(inv) => inv.id}
-        />
+        <>
+          <Table
+            columns={columns}
+            rows={visibleRows}
+            rowKey={(inv) => inv.id}
+          />
+          {hasMore && (
+            <div className="portal-billing__invoice-footer">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowAll((v) => !v)}
+              >
+                {showAll
+                  ? `Show fewer (top ${DEFAULT_VISIBLE})`
+                  : `Show all ${total}`}
+              </Button>
+            </div>
+          )}
+        </>
       )}
     </Card>
   );

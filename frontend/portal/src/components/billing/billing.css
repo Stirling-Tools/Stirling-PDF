@@ -426,3 +426,43 @@
     monospace;
   font-size: 0.875rem;
 }
+
+.portal-billing__invoice-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.portal-billing__invoice-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text-1, #0f172a);
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease;
+}
+
+.portal-billing__invoice-link:hover {
+  background: var(--color-bg-2, #f1f5f9);
+  border-color: var(--color-border, #e2e8f0);
+}
+
+.portal-billing__invoice-link:focus-visible {
+  outline: none;
+  border-color: var(--color-accent-blue, #0a8bff);
+  background: var(--color-bg-2, #f1f5f9);
+}
+
+.portal-billing__invoice-footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 0.75rem;
+}
