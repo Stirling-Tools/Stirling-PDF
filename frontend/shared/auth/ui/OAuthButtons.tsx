@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { type OAuthProvider } from "@shared/auth/spring/oauthTypes";
 import { Button } from "@mantine/core";
+import { Button as DSButton } from "@shared/components/Button";
 import {
   oauthIconUrl,
   GENERIC_PROVIDER_ICON,
@@ -30,7 +31,7 @@ export const oauthProviderConfig: Record<
 interface OAuthButtonsProps {
   onProviderClick: (provider: OAuthProvider) => void;
   isSubmitting: boolean;
-  layout?: "vertical" | "grid" | "icons";
+  layout?: "vertical" | "grid" | "icons" | "fullwidth";
   enabledProviders?: OAuthProvider[]; // List of full auth paths from backend (e.g., '/oauth2/authorization/google', '/saml2/authenticate/stirling')
   ctaPrefix?: string;
   styleVariant?: "neutral" | "tinted" | "outline" | "light";
@@ -142,6 +143,34 @@ export default function OAuthButtons({
       </div>
     );
   }
+  if (layout === "fullwidth") {
+    return (
+      <div className="oauth-container-fullwidth">
+        {providers.map((p) => (
+          <DSButton
+            key={p.id}
+            variant="outlined"
+            onClick={() => onProviderClick(p.id)}
+            disabled={isSubmitting}
+            className="oauth-button-fullwidth"
+          >
+            <span className="oauth-btn-group">
+              <img
+                src={oauthIconUrl(p.file)}
+                alt={p.label}
+                className={`oauth-icon-medium oauth-icon--${p.providerId}`}
+                style={{ marginRight: "0.5rem", flexShrink: 0 }}
+              />
+              <span className="oauth-btn-label">
+                {ctaPrefix ? `${ctaPrefix} ${p.label}` : p.label}
+              </span>
+            </span>
+          </DSButton>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div
       className={`oauth-container-vertical${useNewStyle && isSingleProvider ? " oauth-container-single" : ""}`}

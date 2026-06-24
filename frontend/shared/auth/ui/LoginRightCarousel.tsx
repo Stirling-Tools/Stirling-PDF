@@ -215,8 +215,8 @@ function LoginRightCarousel({
             aria-label={`Go to slide ${i + 1}`}
             onClick={() => setIndex(i)}
             style={{
-              width: "10px",
-              height: "12px",
+              width: "5px",
+              height: "5px",
               borderRadius: "50%",
               border: "none",
               cursor: "pointer",
@@ -225,6 +225,9 @@ function LoginRightCarousel({
               boxShadow: "0 2px 6px rgba(0,0,0,0.25)",
               display: "block",
               flexShrink: 0,
+              padding: 0,
+              minWidth: 0,
+              minHeight: 0,
             }}
           />
         ))}
