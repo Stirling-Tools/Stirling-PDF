@@ -59,10 +59,13 @@ public class ResourceGrantController {
         }
         AccessPermission permission =
                 request.permission() == null ? AccessPermission.USE : request.permission();
+        // PORTAL is a singleton resource; its grants always target the whole type.
+        String resourceId =
+                request.resourceType() == ResourceType.PORTAL ? "" : request.resourceId();
         ResourceGrant grant =
                 accessService.grant(
                         request.resourceType(),
-                        request.resourceId(),
+                        resourceId,
                         request.principalType(),
                         request.principalId(),
                         permission,

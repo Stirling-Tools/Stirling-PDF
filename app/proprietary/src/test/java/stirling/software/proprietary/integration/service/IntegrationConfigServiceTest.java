@@ -21,9 +21,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import stirling.software.proprietary.access.model.DefaultAccessPolicy;
 import stirling.software.proprietary.access.model.OwnerScope;
 import stirling.software.proprietary.access.service.OwnershipService;
@@ -34,6 +31,9 @@ import stirling.software.proprietary.integration.model.IntegrationConfig;
 import stirling.software.proprietary.integration.model.IntegrationType;
 import stirling.software.proprietary.integration.repository.IntegrationConfigRepository;
 import stirling.software.proprietary.security.model.User;
+
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Integration-glue tests. Ownership authorization and secret masking are covered by {@code

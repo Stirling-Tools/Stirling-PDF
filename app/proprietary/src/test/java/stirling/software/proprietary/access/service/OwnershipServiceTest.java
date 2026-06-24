@@ -136,6 +136,20 @@ class OwnershipServiceTest {
         assertThat(ownership.canUse(TYPE, r, admin(2))).isTrue(); // admin
     }
 
+    @Test
+    void disabledTeamResourceUsableByLeaderOfOwningTeam() {
+        Team team = new Team();
+        team.setId(5L);
+        TestResource r = new TestResource(1L);
+        r.setEnabled(false);
+        r.setOwnerTeam(team);
+        User leader = user(7);
+        when(teamLeadLookup.isLeaderOfTeam(leader, 5L)).thenReturn(true);
+
+        assertThat(ownership.canUse(TYPE, r, leader)).isTrue(); // lead of the owning team
+        assertThat(ownership.canUse(TYPE, r, user(8))).isFalse(); // not a lead
+    }
+
     // ---- helpers ----
 
     private void assertForbidden(org.assertj.core.api.ThrowableAssert.ThrowingCallable call) {

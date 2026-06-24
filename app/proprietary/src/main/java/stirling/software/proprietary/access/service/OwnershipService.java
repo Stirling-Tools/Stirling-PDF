@@ -98,7 +98,12 @@ public class OwnershipService {
     }
 
     public boolean isOwner(OwnedResource resource, User user) {
-        return resource.getOwnerUserId() != null && resource.getOwnerUserId().equals(user.getId());
+        if (resource.getOwnerUserId() != null && resource.getOwnerUserId().equals(user.getId())) {
+            return true;
+        }
+        // Team-owned: the lead of the owning team owns it.
+        return resource.getOwnerTeamId() != null
+                && teamLeadLookup.isLeaderOfTeam(user, resource.getOwnerTeamId());
     }
 
     private ResponseStatusException forbidden(String message) {
