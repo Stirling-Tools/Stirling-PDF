@@ -2,7 +2,7 @@
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Stirling PDF",
   "mainBinaryName": "Stirling-PDF",
-  "version": "2.13.1",
+  "version": "2.13.2",
   "identifier": "stirling.pdf.dev",
   "build": {
     "frontendDist": "../dist",
