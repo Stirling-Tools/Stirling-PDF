@@ -113,8 +113,8 @@ function UsageFooter() {
 
   const planLabel =
     tier === "pro"
-      ? t("shell.sidebar.planPayAsYouGo")
-      : t("shell.sidebar.planEnterprise");
+      ? t("shell.sidebar.planProcessor", "Processor plan")
+      : t("shell.sidebar.planEnterprise", "Enterprise plan");
 
   return (
     <div className="portal-sidebar__usage">

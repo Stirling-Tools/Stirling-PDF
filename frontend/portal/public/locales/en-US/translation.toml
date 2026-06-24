@@ -49,10 +49,9 @@ appProcessor = "Processor"
 appEditor = "Editor"
 docsProcessed = "Docs processed"
 docsCount = "{{docs}} docs"
-planPayAsYouGo = "Pay-as-you-go"
-linkAccount = "Link account"
-accountLinked = "Account linked"
-planEnterprise = "Enterprise Plan"
+planProcessor = "Processor plan"
+linkAccount = "Link Stirling account"
+planEnterprise = "Enterprise plan"
 
 [search]
 ariaLabel = "Search"
