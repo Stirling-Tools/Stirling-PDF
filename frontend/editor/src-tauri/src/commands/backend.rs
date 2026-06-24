@@ -308,7 +308,7 @@ fn monitor_backend_output(mut rx: tauri::async_runtime::Receiver<tauri_plugin_sh
                             let mut port_guard = BACKEND_PORT.lock().unwrap();
                             *port_guard = Some(port);
                             add_log(format!("🎉 Backend started on port: {}", port));
-                            add_log(format!("🔌 Navigate to: http://localhost:{}/", port));
+                            add_log(format!("🔌 Navigate to: http://127.0.0.1:{}/", port));
                         }
                     }
 

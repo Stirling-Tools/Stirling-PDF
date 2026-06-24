@@ -869,8 +869,8 @@ public class ApplicationProperties {
     public static class System {
         private String defaultLocale;
         private boolean googlevisibility;
-        private boolean showUpdate;
-        private boolean showUpdateOnlyAdmin;
+        private boolean showUpdate = true;
+        private boolean showUpdateOnlyAdmin = true;
         private boolean showSettingsWhenNoLogin = true;
         private boolean customHTMLFiles;
         private String tessdataDir;

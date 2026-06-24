@@ -22,6 +22,7 @@ import stirling.software.SPDF.config.InitialSetup;
 import stirling.software.SPDF.controller.api.security.TimestampController;
 import stirling.software.common.annotations.api.ConfigApi;
 import stirling.software.common.configuration.AppConfig;
+import stirling.software.common.configuration.interfaces.ShowAdminInterface;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.ServerCertificateServiceInterface;
 import stirling.software.common.service.UserServiceInterface;
@@ -37,6 +38,7 @@ public class ConfigController {
     private final EndpointConfiguration endpointConfiguration;
     private final ServerCertificateServiceInterface serverCertificateService;
     private final UserServiceInterface userService;
+    private final ShowAdminInterface showAdmin;
     private final stirling.software.common.service.LicenseServiceInterface licenseService;
     private final stirling.software.SPDF.config.ExternalAppDepConfig externalAppDepConfig;
 
@@ -49,6 +51,8 @@ public class ConfigController {
             @org.springframework.beans.factory.annotation.Autowired(required = false)
                     UserServiceInterface userService,
             @org.springframework.beans.factory.annotation.Autowired(required = false)
+                    ShowAdminInterface showAdmin,
+            @org.springframework.beans.factory.annotation.Autowired(required = false)
                     stirling.software.common.service.LicenseServiceInterface licenseService,
             stirling.software.SPDF.config.ExternalAppDepConfig externalAppDepConfig) {
         this.applicationProperties = applicationProperties;
@@ -56,6 +60,7 @@ public class ConfigController {
         this.endpointConfiguration = endpointConfiguration;
         this.serverCertificateService = serverCertificateService;
         this.userService = userService;
+        this.showAdmin = showAdmin;
         this.licenseService = licenseService;
         this.externalAppDepConfig = externalAppDepConfig;
     }
@@ -315,6 +320,10 @@ public class ConfigController {
             configData.put(
                     "enableAlphaFunctionality",
                     applicationProperties.getSystem().isEnableAlphaFunctionality());
+            boolean shouldShowUpdate =
+                    applicationProperties.getSystem().isShowUpdate()
+                            && (showAdmin == null || showAdmin.getShowUpdateOnlyAdmins());
+            configData.put("shouldShowUpdate", shouldShowUpdate);
             configData.put(
                     "enableAnalytics", applicationProperties.getSystem().getEnableAnalytics());
             configData.put("enablePosthog", applicationProperties.getSystem().getEnablePosthog());
