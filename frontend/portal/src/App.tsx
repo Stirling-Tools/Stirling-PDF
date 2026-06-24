@@ -80,8 +80,10 @@ export function App() {
     <ThemeProvider>
       <PortalMantineProvider>
         <AuthProvider mode="spring">
-          <TierProvider initialTier="pro">
-            <LinkProvider initialState="unlinked">
+          <LinkProvider initialState="unlinked">
+            {/* TierProvider sits INSIDE LinkProvider so it can derive the tier
+                from the real link/subscription state when MSW mocks are off. */}
+            <TierProvider initialTier="pro">
               <BrowserRouter basename={basename}>
                 <UIProvider>
                   <GlobalShortcuts />
@@ -97,8 +99,8 @@ export function App() {
                   </AuthGate>
                 </UIProvider>
               </BrowserRouter>
-            </LinkProvider>
-          </TierProvider>
+            </TierProvider>
+          </LinkProvider>
         </AuthProvider>
       </PortalMantineProvider>
     </ThemeProvider>
