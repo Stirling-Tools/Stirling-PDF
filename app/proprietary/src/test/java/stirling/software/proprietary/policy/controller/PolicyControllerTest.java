@@ -40,6 +40,8 @@ import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.PolicyRunView;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
+import stirling.software.proprietary.policy.source.SourceAccessGuard;
+import stirling.software.proprietary.policy.source.SourceStore;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("PolicyController")
@@ -48,6 +50,8 @@ class PolicyControllerTest {
     @Mock private PolicyRunner policyRunner;
     @Mock private PolicyRunRegistry runRegistry;
     @Mock private stirling.software.proprietary.policy.store.PolicyStore policyStore;
+    @Mock private SourceStore sourceStore;
+    @Mock private SourceAccessGuard sourceAccessGuard;
     @Mock private PolicyValidator policyValidator;
     @Mock private PolicyAccessGuard policyAccessGuard;
     @Mock private PolicyManagementAuthority policyManagementAuthority;
@@ -65,6 +69,8 @@ class PolicyControllerTest {
                         policyRunner,
                         runRegistry,
                         policyStore,
+                        sourceStore,
+                        sourceAccessGuard,
                         policyValidator,
                         policyAccessGuard,
                         policyManagementAuthority,
@@ -295,8 +301,7 @@ class PolicyControllerTest {
         @DisplayName("listPolicies returns team-visible policies")
         void listVisible() {
             List<Policy> all = List.of(policy("a", 1L), policy("b", 1L));
-            when(policyStore.all()).thenReturn(all);
-            when(policyAccessGuard.visible(all)).thenReturn(all);
+            when(policyAccessGuard.visibleFrom(policyStore)).thenReturn(all);
 
             List<Policy> result = controller.listPolicies();
 

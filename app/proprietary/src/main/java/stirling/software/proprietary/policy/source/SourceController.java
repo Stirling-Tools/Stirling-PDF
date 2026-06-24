@@ -177,7 +177,7 @@ public class SourceController {
 
     /** Names of the caller's visible policies that reference the given source. */
     private List<String> referencingPolicyNames(String sourceId) {
-        return policyAccessGuard.visible(policyStore.all()).stream()
+        return policyAccessGuard.visibleFrom(policyStore).stream()
                 .filter(policy -> policy.sourceIds().contains(sourceId))
                 .map(Policy::name)
                 .toList();

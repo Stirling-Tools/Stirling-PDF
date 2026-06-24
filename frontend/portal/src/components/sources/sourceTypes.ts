@@ -72,7 +72,10 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
         defaultValue: "consume",
         options: [
           { value: "consume", label: "Consume: process each file once" },
-          { value: "snapshot", label: "Snapshot: re-read the folder every run" },
+          {
+            value: "snapshot",
+            label: "Snapshot: re-read the folder every run",
+          },
         ],
       },
     ],
@@ -94,7 +97,9 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
 ];
 
 /** Default option values for a type's create form. */
-export function defaultOptions(type: CreatableSourceType): Record<string, string> {
+export function defaultOptions(
+  type: CreatableSourceType,
+): Record<string, string> {
   const out: Record<string, string> = {};
   for (const field of type.fields) {
     out[field.key] = field.defaultValue ?? "";

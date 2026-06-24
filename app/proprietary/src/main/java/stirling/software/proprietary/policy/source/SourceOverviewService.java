@@ -32,8 +32,8 @@ public class SourceOverviewService {
     private final PolicyAccessGuard policyAccessGuard;
 
     public SourcesResponse overview() {
-        List<Source> sources = sourceAccessGuard.visible(sourceStore.all());
-        List<Policy> policies = policyAccessGuard.visible(policyStore.all());
+        List<Source> sources = sourceAccessGuard.visibleFrom(sourceStore);
+        List<Policy> policies = policyAccessGuard.visibleFrom(policyStore);
 
         Map<String, List<Policy>> referencesBySource = referencesBySource(policies);
 

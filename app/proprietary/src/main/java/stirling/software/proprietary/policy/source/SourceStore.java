@@ -13,6 +13,9 @@ public interface SourceStore {
 
     List<Source> all();
 
+    /** Sources owned by the given team, loaded scoped rather than fetched globally. */
+    List<Source> findByTeam(Long teamId);
+
     /** Returns whether the source existed. */
     boolean delete(String id);
 }

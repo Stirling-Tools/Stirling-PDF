@@ -278,7 +278,7 @@ public class PolicyController {
             summary = "List policies",
             description = "Lists the policies belonging to the caller's team.")
     public List<Policy> listPolicies() {
-        return policyAccessGuard.visible(policyStore.all());
+        return policyAccessGuard.visibleFrom(policyStore);
     }
 
     @GetMapping("/{policyId}")

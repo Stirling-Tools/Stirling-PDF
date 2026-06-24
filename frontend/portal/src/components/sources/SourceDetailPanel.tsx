@@ -38,7 +38,9 @@ export function SourceDetailPanel({ source }: { source: SourceView }) {
         )}
       </div>
 
-      <p className="portal-sources__muted">{t("sources.detail.docsUntracked")}</p>
+      <p className="portal-sources__muted">
+        {t("sources.detail.docsUntracked")}
+      </p>
     </div>
   );
 }

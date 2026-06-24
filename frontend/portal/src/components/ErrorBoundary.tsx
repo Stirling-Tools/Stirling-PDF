@@ -1,5 +1,22 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { Button, EmptyState } from "@shared/components";
+
+/**
+ * Default fallback for {@link ErrorBoundary}. Split into a function component so
+ * it can read translations via the `useTranslation` hook, which the class-based
+ * boundary cannot call directly.
+ */
+function DefaultErrorFallback({ onRetry }: { onRetry: () => void }) {
+  const { t } = useTranslation();
+  return (
+    <EmptyState
+      title={t("errorBoundary.title")}
+      description={t("errorBoundary.description")}
+      actions={<Button onClick={onRetry}>{t("errorBoundary.retry")}</Button>}
+    />
+  );
+}
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -44,11 +61,7 @@ export class ErrorBoundary extends Component<
     if (this.props.fallback) return this.props.fallback(this.reset);
     return (
       <div style={{ padding: "2rem" }}>
-        <EmptyState
-          title="Something went wrong on this page"
-          description="This view hit an unexpected error. Try again, or pick another section from the sidebar."
-          actions={<Button onClick={this.reset}>Try again</Button>}
-        />
+        <DefaultErrorFallback onRetry={this.reset} />
       </div>
     );
   }

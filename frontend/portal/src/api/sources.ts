@@ -28,7 +28,7 @@ export interface SourceView {
   referenceCount: number;
   referencingPolicies: SourcePolicyRef[];
   config: SourceDetailRow[];
-  /** Per-source document volume — not tracked yet (always null for now). */
+  /** Per-source document volume: not tracked yet (always null for now). */
   docsTotal: number | null;
 }
 

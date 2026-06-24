@@ -43,7 +43,11 @@ function messageFor(error: unknown): string {
 }
 
 /** Guided flow for connecting a new source: choose type -> configure -> create. */
-export function ConnectWizard({ open, onClose, onCreated }: ConnectWizardProps) {
+export function ConnectWizard({
+  open,
+  onClose,
+  onCreated,
+}: ConnectWizardProps) {
   const { t } = useTranslation();
   const [step, setStep] = useState(0);
   const [type, setType] = useState<CreatableSourceType>(DEFAULT_TYPE);

@@ -49,6 +49,7 @@ public class JpaPolicyStore implements PolicyStore {
         entity.setOwner(stored.owner());
         entity.setEnabled(stored.enabled());
         entity.setTriggerType(stored.trigger() == null ? null : stored.trigger().type());
+        entity.setTeamId(stored.teamId());
         entity.setPolicyJson(objectMapper.writeValueAsString(stored));
         repository.save(entity);
         return stored;
@@ -62,6 +63,11 @@ public class JpaPolicyStore implements PolicyStore {
     @Override
     public List<Policy> all() {
         return repository.findAll().stream().map(this::toPolicy).toList();
+    }
+
+    @Override
+    public List<Policy> findByTeam(Long teamId) {
+        return repository.findByTeam(teamId).stream().map(this::toPolicy).toList();
     }
 
     @Override

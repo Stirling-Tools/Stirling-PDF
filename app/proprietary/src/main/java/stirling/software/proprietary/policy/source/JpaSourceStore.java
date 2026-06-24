@@ -62,6 +62,11 @@ public class JpaSourceStore implements SourceStore {
     }
 
     @Override
+    public List<Source> findByTeam(Long teamId) {
+        return repository.findByTeam(teamId).stream().map(this::toSource).toList();
+    }
+
+    @Override
     public boolean delete(String id) {
         if (!repository.existsById(id)) {
             return false;

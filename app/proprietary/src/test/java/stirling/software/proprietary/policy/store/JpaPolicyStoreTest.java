@@ -88,6 +88,46 @@ class JpaPolicyStoreTest {
     }
 
     @Test
+    void saveDenormalizesTeamIdForScopedQueries() {
+        store.save(
+                new Policy(
+                        "p1",
+                        "scoped",
+                        "alice",
+                        true,
+                        null,
+                        List.of(),
+                        List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
+                        OutputSpec.inline(),
+                        9L));
+
+        ArgumentCaptor<PolicyEntity> captor = ArgumentCaptor.forClass(PolicyEntity.class);
+        verify(repository).save(captor.capture());
+        assertEquals(Long.valueOf(9L), captor.getValue().getTeamId());
+    }
+
+    @Test
+    void findByTeamDelegatesToTheScopedQuery() {
+        Policy policy =
+                new Policy(
+                        "p1",
+                        "ours",
+                        "alice",
+                        true,
+                        null,
+                        List.of(),
+                        List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
+                        OutputSpec.inline(),
+                        9L);
+        when(repository.findByTeam(9L)).thenReturn(List.of(entityFor(policy)));
+
+        List<Policy> mine = store.findByTeam(9L);
+
+        assertEquals(1, mine.size());
+        assertEquals("p1", mine.get(0).id());
+    }
+
+    @Test
     void findByTriggerTypeUsesTheEnabledQuery() {
         Policy policy =
                 new Policy(
@@ -124,6 +164,7 @@ class JpaPolicyStoreTest {
         entity.setOwner(policy.owner());
         entity.setEnabled(policy.enabled());
         entity.setTriggerType(policy.trigger() == null ? null : policy.trigger().type());
+        entity.setTeamId(policy.teamId());
         entity.setPolicyJson(objectMapper.writeValueAsString(policy));
         return entity;
     }

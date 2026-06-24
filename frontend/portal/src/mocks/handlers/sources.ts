@@ -85,12 +85,18 @@ function configRows(options: Record<string, unknown>) {
   }));
 }
 
-function deriveStatus(source: StoredSource, referenceCount: number): SourceStatus {
+function deriveStatus(
+  source: StoredSource,
+  referenceCount: number,
+): SourceStatus {
   if (!source.enabled) return "disabled";
   return referenceCount === 0 ? "unused" : "active";
 }
 
-function toSourceView(source: StoredSource, refs: SourcePolicyRef[]): SourceView {
+function toSourceView(
+  source: StoredSource,
+  refs: SourcePolicyRef[],
+): SourceView {
   return {
     id: source.id,
     name: source.name,

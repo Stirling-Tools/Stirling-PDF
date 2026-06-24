@@ -73,7 +73,11 @@ export function SourcesTable({
         header: t("sources.table.usedBy"),
         align: "right",
         render: (s) => (
-          <span className={s.referenceCount === 0 ? "portal-sources__muted" : undefined}>
+          <span
+            className={
+              s.referenceCount === 0 ? "portal-sources__muted" : undefined
+            }
+          >
             {s.referenceCount}
           </span>
         ),

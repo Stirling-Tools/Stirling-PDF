@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Map;
@@ -99,6 +100,34 @@ class SourceOverviewServiceTest {
     }
 
     @Test
+    void overviewLoadsOnlyTheCallersTeam() {
+        // Login on, caller is on team 1. Another team's source and policy must be invisible, and a
+        // cross-team policy referencing our source must not inflate its reference count.
+        ApplicationProperties properties = new ApplicationProperties();
+        properties.getSecurity().setEnableLogin(true);
+        UserServiceInterface userService = mock(UserServiceInterface.class);
+        PolicyManagementAuthority authority = mock(PolicyManagementAuthority.class);
+        when(authority.currentUserTeamId()).thenReturn(1L);
+        SourceAccessGuard sourceGuard = new SourceAccessGuard(userService, properties, authority);
+        PolicyAccessGuard policyGuard = new PolicyAccessGuard(userService, properties, authority);
+        SourceOverviewService scoped =
+                new SourceOverviewService(sourceStore, policyStore, sourceGuard, policyGuard);
+
+        Source ours = teamSource("Ours", "/ours", 1L);
+        teamSource("Theirs", "/theirs", 2L);
+        teamPolicy("Our policy", 1L, ours.id());
+        teamPolicy("Their policy", 2L, ours.id());
+
+        SourcesResponse response = scoped.overview();
+
+        assertEquals(1, response.sources().size());
+        SourceView view = response.sources().get(0);
+        assertEquals(ours.id(), view.id());
+        assertEquals(1, view.referenceCount());
+        assertEquals(List.of(1L, 1L, 0L), response.kpis().stream().map(SourceKpi::value).toList());
+    }
+
+    @Test
     void documentVolumeIsNotTrackedYet() {
         Source a = source("A", "/a");
         assertNull(find(service.overview(), a.id()).docsTotal());
@@ -108,6 +137,18 @@ class SourceOverviewServiceTest {
         return sourceStore.save(
                 new Source(
                         null, name, "folder", Map.of("directory", directory), true, "owner", null));
+    }
+
+    private Source teamSource(String name, String directory, Long teamId) {
+        return sourceStore.save(
+                new Source(
+                        null,
+                        name,
+                        "folder",
+                        Map.of("directory", directory),
+                        true,
+                        "owner",
+                        teamId));
     }
 
     private void policyReferencing(String name, String... sourceIds) {
@@ -121,6 +162,20 @@ class SourceOverviewServiceTest {
                         List.of(sourceIds),
                         List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                         OutputSpec.inline()));
+    }
+
+    private void teamPolicy(String name, Long teamId, String... sourceIds) {
+        policyStore.save(
+                new Policy(
+                        null,
+                        name,
+                        "owner",
+                        true,
+                        null,
+                        List.of(sourceIds),
+                        List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
+                        OutputSpec.inline(),
+                        teamId));
     }
 
     private static SourceView find(SourcesResponse response, String id) {

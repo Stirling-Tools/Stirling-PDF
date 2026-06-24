@@ -408,6 +408,12 @@ tasks:
     cmds:
       - npx vitest run --root editor
 
+  test:portal:
+    desc: "Run developer portal tests"
+    deps: [prepare]
+    cmds:
+      - npx vitest run --root portal
+
   test:watch:
     desc: "Run tests in watch mode"
     deps: [prepare]

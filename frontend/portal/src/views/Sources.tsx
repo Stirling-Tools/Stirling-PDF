@@ -1,6 +1,12 @@
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Banner, Button, EmptyState, Modal, Skeleton } from "@shared/components";
+import {
+  Banner,
+  Button,
+  EmptyState,
+  Modal,
+  Skeleton,
+} from "@shared/components";
 import { useView } from "@portal/contexts/ViewContext";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import { HttpError } from "@portal/api/http";
@@ -167,12 +173,8 @@ export function Sources() {
           </div>
         }
       >
-        <p>
-          {t("sources.delete.body", { name: pendingDelete?.name ?? "" })}
-        </p>
-        {deleteError && (
-          <Banner tone="danger" description={deleteError} />
-        )}
+        <p>{t("sources.delete.body", { name: pendingDelete?.name ?? "" })}</p>
+        {deleteError && <Banner tone="danger" description={deleteError} />}
       </Modal>
     </div>
   );

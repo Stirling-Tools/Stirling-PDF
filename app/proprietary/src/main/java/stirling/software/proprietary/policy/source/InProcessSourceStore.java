@@ -2,6 +2,7 @@ package stirling.software.proprietary.policy.source;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -41,6 +42,13 @@ public class InProcessSourceStore implements SourceStore {
     @Override
     public List<Source> all() {
         return List.copyOf(sources.values());
+    }
+
+    @Override
+    public List<Source> findByTeam(Long teamId) {
+        return sources.values().stream()
+                .filter(source -> Objects.equals(source.teamId(), teamId))
+                .toList();
     }
 
     @Override

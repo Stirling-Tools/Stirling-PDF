@@ -83,6 +83,14 @@ class JpaSourceStoreTest {
     }
 
     @Test
+    void findByTeamDelegatesToTheScopedQuery() {
+        Source mine = new Source("a", "A", "folder", Map.of("directory", "/a"), true, "alice", 7L);
+        when(repository.findByTeam(7L)).thenReturn(List.of(entityFor(mine)));
+
+        assertEquals(List.of(mine), store.findByTeam(7L));
+    }
+
+    @Test
     void deleteReturnsWhetherTheSourceExisted() {
         when(repository.existsById("s1")).thenReturn(true);
         assertTrue(store.delete("s1"));

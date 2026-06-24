@@ -54,6 +54,18 @@ public class SourceAccessGuard {
         return sources.stream().filter(source -> Objects.equals(source.teamId(), teamId)).toList();
     }
 
+    /**
+     * The sources visible to the caller, loaded scoped to their team rather than fetched globally
+     * and filtered. Equivalent to {@link #visible(List)} over the whole store, but on SaaS it never
+     * pulls another team's sources into memory.
+     */
+    public List<Source> visibleFrom(SourceStore store) {
+        if (!enforced()) {
+            return store.all();
+        }
+        return store.findByTeam(policyManagementAuthority.currentUserTeamId());
+    }
+
     private boolean enforced() {
         return applicationProperties.getSecurity().isEnableLogin();
     }

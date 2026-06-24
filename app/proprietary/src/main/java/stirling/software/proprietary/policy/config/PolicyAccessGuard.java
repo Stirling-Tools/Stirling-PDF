@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.store.PolicyStore;
 
 /**
  * Policies are scoped to a team: a user may view, run, edit, and delete only the policies belonging
@@ -54,6 +55,18 @@ public class PolicyAccessGuard {
         }
         Long teamId = policyManagementAuthority.currentUserTeamId();
         return policies.stream().filter(policy -> Objects.equals(policy.teamId(), teamId)).toList();
+    }
+
+    /**
+     * The policies visible to the caller, loaded scoped to their team rather than fetched globally
+     * and filtered. Equivalent to {@link #visible(List)} over the whole store, but on SaaS it never
+     * pulls another team's policies into memory.
+     */
+    public List<Policy> visibleFrom(PolicyStore store) {
+        if (!enforced()) {
+            return store.all();
+        }
+        return store.findByTeam(policyManagementAuthority.currentUserTeamId());
     }
 
     private boolean enforced() {

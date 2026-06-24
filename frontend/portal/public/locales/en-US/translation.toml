@@ -1746,3 +1746,8 @@ or = "or"
 [auth]
 loading = "Loading"
 redirectingToEditor = "Redirecting to the editor..."
+
+[errorBoundary]
+title = "Something went wrong on this page"
+description = "This view hit an unexpected error. Try again, or pick another section from the sidebar."
+retry = "Try again"
