@@ -214,10 +214,8 @@ export default defineConfig(
     ignores: [
       "editor/src/core/components/**/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/core/contexts/**/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/data/**/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/core/hooks/**/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/core/services/**/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/tools/Automate.tsx",
       "editor/src/core/tools/annotate/useAnnotationSelection.ts",
       "editor/src/core/types/**/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/core/utils/**/*.{js,mjs,jsx,ts,tsx}",
