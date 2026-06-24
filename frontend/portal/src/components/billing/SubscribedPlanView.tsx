@@ -103,14 +103,16 @@ export function SubscribedPlanView({ wallet, onWalletChange }: Props) {
             {portalError}
           </Banner>
         )}
-        <Button
-          variant="outline"
-          loading={openingPortal}
-          onClick={openPortal}
-          disabled={wallet.teamId == null}
-        >
-          Manage Billing
-        </Button>
+        <div className="portal-billing__subscription-actions">
+          <Button
+            variant="outline"
+            loading={openingPortal}
+            onClick={openPortal}
+            disabled={wallet.teamId == null}
+          >
+            Manage Billing
+          </Button>
+        </div>
       </Card>
 
       <InvoicesList />

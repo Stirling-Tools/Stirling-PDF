@@ -446,6 +446,12 @@
   display: none;
 }
 
+.portal-billing__subscription-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
 .portal-billing__invoice-actions {
   display: inline-flex;
   align-items: center;
