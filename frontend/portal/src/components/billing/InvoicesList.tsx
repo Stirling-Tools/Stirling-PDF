@@ -170,12 +170,7 @@ export function InvoicesList() {
 
   return (
     <Card padding="loose">
-      <span className="portal-billing__eyebrow">History</span>
-      <h3 className="portal-billing__section-title">Invoices</h3>
-      <p className="portal-billing__section-sub">
-        Newest first. For older invoices, open the Stripe customer portal from
-        the Subscription card above.
-      </p>
+      <h3 className="portal-billing__section-title">Invoice history</h3>
 
       {invoices === null && !error && (
         <div className="portal-billing__skeleton" aria-hidden>
