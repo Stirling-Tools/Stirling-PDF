@@ -434,11 +434,15 @@
 
 /* Invoice table sits flush inside the already-surfaced Card: drop the table's
    own border + background + radius so only the row dividers (kept by sui-table
-   defaults) show. */
+   defaults) show. Column headers are hidden too — only 4 columns, all
+   self-evident; the labels were just chrome. */
 .portal-billing__invoice-table {
   border: none;
   background: transparent;
   border-radius: 0;
+}
+.portal-billing__invoice-table thead {
+  display: none;
 }
 
 .portal-billing__invoice-actions {
