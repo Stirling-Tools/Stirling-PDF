@@ -446,10 +446,20 @@
   display: none;
 }
 
-.portal-billing__subscription-actions {
+.portal-billing__subscription-head {
   display: flex;
-  justify-content: flex-end;
-  margin-top: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.portal-billing__subscription-head > div:first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.portal-billing__subscription-head > div:first-child .portal-billing__section-sub {
+  margin-bottom: 0;
 }
 
 .portal-billing__invoice-actions {

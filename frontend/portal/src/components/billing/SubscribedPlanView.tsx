@@ -92,18 +92,17 @@ export function SubscribedPlanView({ wallet, onWalletChange }: Props) {
       )}
 
       <Card padding="loose">
-        <span className="portal-billing__eyebrow">Subscription</span>
-        <h3 className="portal-billing__section-title">Manage your subscription</h3>
-        <p className="portal-billing__section-sub">
-          Update your card, download invoices, change billing email, or cancel
-          your subscription in Stripe's hosted portal.
-        </p>
-        {portalError && (
-          <Banner tone="danger" title="Couldn't open Stripe portal">
-            {portalError}
-          </Banner>
-        )}
-        <div className="portal-billing__subscription-actions">
+        <div className="portal-billing__subscription-head">
+          <div>
+            <span className="portal-billing__eyebrow">Subscription</span>
+            <h3 className="portal-billing__section-title">
+              Manage your subscription
+            </h3>
+            <p className="portal-billing__section-sub">
+              Update your card, download invoices, change billing email, or
+              cancel your subscription in Stripe's hosted portal.
+            </p>
+          </div>
           <Button
             variant="outline"
             loading={openingPortal}
@@ -113,6 +112,11 @@ export function SubscribedPlanView({ wallet, onWalletChange }: Props) {
             Manage Billing
           </Button>
         </div>
+        {portalError && (
+          <Banner tone="danger" title="Couldn't open Stripe portal">
+            {portalError}
+          </Banner>
+        )}
       </Card>
 
       <InvoicesList />
