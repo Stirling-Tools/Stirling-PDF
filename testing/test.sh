@@ -727,11 +727,13 @@ main() {
         # Build Ultra-Lite image with embedded frontend (matching docker-compose-latest-ultra-lite.yml)
         echo "Building ultra-lite image for tests that require it..."
         local ultra_lite_build_log="$REPORT_DIR/Build-Ultra-Lite-Docker.build.log"
-        if ! docker buildx build --build-arg VERSION_TAG=alpha \
+        docker buildx build --build-arg VERSION_TAG=alpha \
             -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:ultra-lite \
             -f ./docker/embedded/Dockerfile.ultra-lite \
             --load \
-            . 2>&1 | tee "$ultra_lite_build_log"; then
+            . 2>&1 | tee "$ultra_lite_build_log"
+        # Check the build's exit status, not tee's, so a failed build is caught.
+        if [ "${PIPESTATUS[0]}" -ne 0 ]; then
             failed_tests+=("Build-Ultra-Lite-Docker")
             capture_build_failure "Build-Ultra-Lite-Docker"
             gha_endgroup
@@ -808,12 +810,14 @@ main() {
         # Build Fat (Security) image with embedded frontend (matching all 'fat' compose files)
         echo "Building fat image for tests that require it..."
         local fat_build_log="$REPORT_DIR/Build-Fat-Docker.build.log"
-        if ! docker buildx build --build-arg VERSION_TAG=alpha \
+        docker buildx build --build-arg VERSION_TAG=alpha \
             ${BASE_IMAGE_ARG} \
             -t docker.stirlingpdf.com/stirlingtools/stirling-pdf:fat \
             -f ./docker/embedded/Dockerfile.fat \
             --load \
-            . 2>&1 | tee "$fat_build_log"; then
+            . 2>&1 | tee "$fat_build_log"
+        # Check the build's exit status, not tee's, so a failed build is caught.
+        if [ "${PIPESTATUS[0]}" -ne 0 ]; then
             failed_tests+=("Build-Fat-Docker")
             capture_build_failure "Build-Fat-Docker"
             gha_endgroup
