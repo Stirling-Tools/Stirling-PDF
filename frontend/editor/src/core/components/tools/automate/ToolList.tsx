@@ -18,7 +18,7 @@ interface ToolListProps {
   onToolConfigure: (index: number) => void;
   onToolAdd: () => void;
   getToolName: (operation: string) => string;
-  getToolDefaultParameters: (operation: string) => Record<string, any>;
+  getToolDefaultParameters: (operation: string) => Record<string, unknown>;
 }
 
 export default function ToolList({
