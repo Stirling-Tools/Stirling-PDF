@@ -147,6 +147,28 @@
   --_border: #d9a8a8;
   --_tint: rgba(142, 49, 49, 0.09);
 }
+/* premium — gradient for upgrade CTAs. `--_solid` is a gradient, so `filled`
+ * consumes it directly; outlined/ghost fall back to a violet text/border. */
+.sui-btn--premium {
+  --_solid: linear-gradient(
+    135deg,
+    #8b5cf6 0%,
+    #6366f1 38%,
+    #3b82f6 72%,
+    #22d3ee 100%
+  );
+  --_solid-hover: linear-gradient(
+    135deg,
+    #8b5cf6 0%,
+    #6366f1 38%,
+    #3b82f6 72%,
+    #22d3ee 100%
+  );
+  --_on-solid: #ffffff;
+  --_text: #7c3aed;
+  --_border: #c4b5fd;
+  --_tint: rgba(124, 58, 237, 0.1);
+}
 
 /* ---- variants: consume the accent palette; public vars override ---- */
 .sui-btn--filled {
@@ -176,6 +198,20 @@
   background: var(--sui-btn-bg, var(--_tint));
 }
 
+/* ---- premium filled: a plain gradient with a subtle hover brighten. No glow,
+ * border shine, sheen, lift, or entrance animation — keep it generic. ---- */
+.sui-btn--premium.sui-btn--filled {
+  transition:
+    background 120ms ease,
+    filter 120ms ease,
+    transform 80ms ease;
+}
+.sui-btn--premium.sui-btn--filled:hover:not(:disabled):not(
+    [aria-disabled="true"]
+  ) {
+  filter: brightness(1.06);
+}
+
 /* ---- dark mode: nudge accents for dark surfaces ---- */
 [data-theme="dark"] .sui-btn--neutral {
   --_solid: #3b82f6;
@@ -203,6 +239,11 @@
   --_text: #d98a8a;
   --_border: #5a2424;
   --_tint: rgba(217, 138, 138, 0.16);
+}
+[data-theme="dark"] .sui-btn--premium {
+  --_text: #c4b5fd;
+  --_border: #5b21b6;
+  --_tint: rgba(167, 139, 250, 0.18);
 }
 
 /* ---- overflow: hidden truncates label text; default wraps ---- */

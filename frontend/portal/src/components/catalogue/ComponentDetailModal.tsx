@@ -98,7 +98,7 @@ export function ComponentDetailModal({
         ) : (
           <Button
             size="sm"
-            accent="neutral"
+            accent="premium"
             // TODO(backend): route to the upgrade / contact-sales flow.
             onClick={() => onClose()}
           >

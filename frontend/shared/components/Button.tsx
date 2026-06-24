@@ -7,13 +7,15 @@ import type {
 import "@shared/components/Button.css";
 
 export type ButtonVariant = "filled" | "outlined" | "ghost";
-/** neutral=plain, brand=Stirling-red CTA. */
+/** neutral=plain, brand=Stirling-red CTA, premium=gradient for upgrade CTAs
+ * (best as `variant="filled"`). */
 export type ButtonAccent =
   | "neutral"
   | "brand"
   | "danger"
   | "warning"
-  | "success";
+  | "success"
+  | "premium";
 export type ButtonSize = "sm" | "md" | "lg" | "xl";
 /** `between` pins leftSection/label/rightSection to left/center/right (toolbar rows). */
 export type ButtonJustify = "center" | "start" | "end" | "between";

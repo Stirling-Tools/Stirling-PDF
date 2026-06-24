@@ -188,7 +188,7 @@ export function AccessControls({ access }: AccessControlsProps) {
           title={t("users.access.upgrade.title")}
           description={access.upgradeHint}
           action={
-            <Button size="sm">
+            <Button size="sm" accent="premium">
               {t("users.access.upgrade.action", "Upgrade plan")}
             </Button>
           }

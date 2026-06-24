@@ -35,6 +35,18 @@ const Trash = () => (
     />
   </svg>
 );
+const Sparkle = () => (
+  <svg
+    width="1em"
+    height="1em"
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    aria-hidden
+  >
+    <path d="M12 2l1.9 5.1L19 9l-5.1 1.9L12 16l-1.9-5.1L5 9l5.1-1.9L12 2z" />
+    <path d="M19 14l.9 2.4L22 17l-2.1.8L19 20l-.9-2.2L16 17l2.1-.6L19 14z" />
+  </svg>
+);
 
 const meta: Meta<typeof Button> = {
   title: "Primitives/Button",
@@ -48,7 +60,7 @@ const meta: Meta<typeof Button> = {
     },
     accent: {
       control: "inline-radio",
-      options: ["neutral", "brand", "danger", "warning", "success"],
+      options: ["neutral", "brand", "danger", "warning", "success", "premium"],
     },
     size: { control: "inline-radio", options: ["sm", "md", "lg", "xl"] },
     justify: {
@@ -96,16 +108,23 @@ export const Accents: Story = {
       }}
     >
       {(["filled", "outlined", "ghost"] as const).flatMap((variant) =>
-        (["neutral", "brand", "danger", "warning", "success"] as const).map(
-          (accent) => (
-            <Button
-              key={`${variant}-${accent}`}
-              variant={variant}
-              accent={accent}
-              text={accent}
-            />
-          ),
-        ),
+        (
+          [
+            "neutral",
+            "brand",
+            "danger",
+            "warning",
+            "success",
+            "premium",
+          ] as const
+        ).map((accent) => (
+          <Button
+            key={`${variant}-${accent}`}
+            variant={variant}
+            accent={accent}
+            text={accent}
+          />
+        )),
       )}
     </div>
   ),
@@ -209,5 +228,55 @@ export const Shape: Story = {
       <Button shape="pill" variant="filled" text="Pill" />
       <Button shape="default" variant="outlined" text="Default" />
     </Wrap>
+  ),
+};
+
+/** `accent="premium"` — a gradient CTA for upgrade moments. The gradient lives
+ * on the `filled` variant (subtle brighten on hover, nothing flashy);
+ * outlined/ghost fall back to a calm violet. */
+export const Premium: Story = {
+  render: () => (
+    <div
+      style={{ display: "flex", flexDirection: "column", gap: 16, width: 320 }}
+    >
+      <Button
+        accent="premium"
+        size="lg"
+        fullWidth
+        leftSection={<Sparkle />}
+        text="Upgrade to Processor Plan"
+      />
+      <Wrap>
+        <Button accent="premium" text="Upgrade" />
+        <Button accent="premium" leftSection={<Sparkle />} text="Go Pro" />
+        <Button
+          accent="premium"
+          shape="pill"
+          rightSection={<Arrow />}
+          text="Get Pro"
+        />
+        <Button
+          accent="premium"
+          leftSection={<Sparkle />}
+          aria-label="Upgrade"
+        />
+      </Wrap>
+      <Wrap>
+        <Button accent="premium" variant="outlined" text="Outlined" />
+        <Button accent="premium" variant="ghost" text="Ghost" />
+        <Button accent="premium" disabled text="Disabled" />
+      </Wrap>
+      <Wrap>
+        {(["sm", "md", "lg", "xl"] as const).map((size) => (
+          <Button
+            key={size}
+            accent="premium"
+            size={size}
+            leftSection={<Sparkle />}
+            text={size}
+          />
+        ))}
+      </Wrap>
+    </div>
   ),
 };
