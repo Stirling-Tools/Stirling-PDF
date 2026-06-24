@@ -2,16 +2,22 @@ package stirling.software.SPDF.controller.api.misc;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.within;
 import static org.mockito.Mockito.mock;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.contentstream.operator.Operator;
+import org.apache.pdfbox.cos.COSNumber;
+import org.apache.pdfbox.pdfparser.PDFStreamParser;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -51,6 +57,8 @@ class StampControllerMoreTest {
     private TempFileManager tempFileManager;
     private StampController stampController;
 
+    private record ContentMatrix(float a, float b, float c, float d, float e, float f) {}
+
     @BeforeEach
     void setUp() {
         pdfDocumentFactory = new CustomPDFDocumentFactory(mock(PdfMetadataService.class));
@@ -62,15 +70,22 @@ class StampControllerMoreTest {
 
     /** Build a multi-page PDF (A4) with a little text drawn on each page. */
     private static byte[] buildPdf(int pageCount) throws IOException {
+        return buildPdf(pageCount, PDRectangle.A4, 0);
+    }
+
+    /** Build a multi-page PDF with a little text drawn on each page. */
+    private static byte[] buildPdf(int pageCount, PDRectangle pageSize, int pageRotation)
+            throws IOException {
         try (PDDocument document = new PDDocument();
                 ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             for (int i = 0; i < pageCount; i++) {
-                PDPage page = new PDPage(PDRectangle.A4);
+                PDPage page = new PDPage(pageSize);
+                page.setRotation(pageRotation);
                 document.addPage(page);
                 try (PDPageContentStream cs = new PDPageContentStream(document, page)) {
                     cs.beginText();
                     cs.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
-                    cs.newLineAtOffset(72, 720);
+                    cs.newLineAtOffset(72, Math.max(12, pageSize.getHeight() - 72));
                     cs.showText("Page " + (i + 1));
                     cs.endText();
                 }
@@ -83,6 +98,15 @@ class StampControllerMoreTest {
     private static MockMultipartFile pdfFile(int pageCount) throws IOException {
         return new MockMultipartFile(
                 "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, buildPdf(pageCount));
+    }
+
+    private static MockMultipartFile pdfFile(PDRectangle pageSize, int pageRotation)
+            throws IOException {
+        return new MockMultipartFile(
+                "fileInput",
+                "input.pdf",
+                MediaType.APPLICATION_PDF_VALUE,
+                buildPdf(1, pageSize, pageRotation));
     }
 
     /** Build a small PNG image as a multipart file. */
@@ -117,19 +141,81 @@ class StampControllerMoreTest {
         return req;
     }
 
+    private static byte[] responseBytes(ResponseEntity<Resource> response) throws IOException {
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        try (InputStream is = response.getBody().getInputStream()) {
+            return is.readAllBytes();
+        }
+    }
+
     /** Read the response body back into a PDDocument and assert page count. */
     private static void assertValidPdf(ResponseEntity<Resource> response, int expectedPages)
             throws IOException {
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotNull();
-        byte[] out;
-        try (InputStream is = response.getBody().getInputStream()) {
-            out = is.readAllBytes();
-        }
+        byte[] out = responseBytes(response);
         assertThat(out.length).isGreaterThan(0);
         try (PDDocument result = Loader.loadPDF(out)) {
             assertThat(result.getNumberOfPages()).isEqualTo(expectedPages);
         }
+    }
+
+    private ContentMatrix stampTranslationMatrix(AddStampRequest req) throws Exception {
+        byte[] out = responseBytes(stampController.addStamp(req));
+        try (PDDocument result = Loader.loadPDF(out)) {
+            List<ContentMatrix> translations =
+                    contentMatrices(result.getPage(0)).stream()
+                            .filter(StampControllerMoreTest::isNonZeroTranslation)
+                            .toList();
+            assertThat(translations).hasSize(1);
+            return translations.get(0);
+        }
+    }
+
+    private static List<ContentMatrix> contentMatrices(PDPage page) throws IOException {
+        PDFStreamParser parser = new PDFStreamParser(page);
+        List<Object> tokens = new ArrayList<>();
+        Object token;
+        while ((token = parser.parseNextToken()) != null) {
+            tokens.add(token);
+        }
+
+        List<ContentMatrix> matrices = new ArrayList<>();
+        for (int i = 6; i < tokens.size(); i++) {
+            if (tokens.get(i) instanceof Operator operator && "cm".equals(operator.getName())) {
+                matrices.add(
+                        new ContentMatrix(
+                                numberToken(tokens, i - 6),
+                                numberToken(tokens, i - 5),
+                                numberToken(tokens, i - 4),
+                                numberToken(tokens, i - 3),
+                                numberToken(tokens, i - 2),
+                                numberToken(tokens, i - 1)));
+            }
+        }
+        return matrices;
+    }
+
+    private static float numberToken(List<Object> tokens, int index) {
+        assertThat(tokens.get(index)).isInstanceOf(COSNumber.class);
+        return ((COSNumber) tokens.get(index)).floatValue();
+    }
+
+    private static boolean isNonZeroTranslation(ContentMatrix matrix) {
+        return isCloseTo(matrix.a(), 1f)
+                && isCloseTo(matrix.b(), 0f)
+                && isCloseTo(matrix.c(), 0f)
+                && isCloseTo(matrix.d(), 1f)
+                && (!isCloseTo(matrix.e(), 0f) || !isCloseTo(matrix.f(), 0f));
+    }
+
+    private static boolean isCloseTo(float actual, float expected) {
+        return Math.abs(actual - expected) < 0.001f;
+    }
+
+    private static void assertTranslation(
+            ContentMatrix matrix, float expectedX, float expectedY) {
+        assertThat(matrix.e()).isCloseTo(expectedX, within(0.5f));
+        assertThat(matrix.f()).isCloseTo(expectedY, within(0.5f));
     }
 
     @Nested
@@ -307,6 +393,80 @@ class StampControllerMoreTest {
             req.setOverrideX(10f);
             req.setOverrideY(10f);
             req.setStampImage(pngImage("logo.png"));
+            assertValidPdf(stampController.addStamp(req), 1);
+        }
+
+        @Test
+        @DisplayName("non-rotated page keeps override image coordinates inside bounds")
+        void imageStampOverrideCoordinatesNonRotated() throws Exception {
+            AddStampRequest req = baseRequest(pdfFile(new PDRectangle(792, 612), 0));
+            req.setStampType("image");
+            req.setFontSize(40f);
+            req.setOverrideX(100f);
+            req.setOverrideY(200f);
+            req.setStampImage(pngImage("logo.png"));
+
+            ContentMatrix matrix = stampTranslationMatrix(req);
+
+            assertTranslation(matrix, 100f, 200f);
+        }
+
+        @ParameterizedTest
+        @CsvSource({
+            "90, 792, 0, 90, 792, 0",
+            "180, 792, 612, 180, 792, 612",
+            "270, 0, 612, 270, 0, 612"
+        })
+        @DisplayName("rotated page override coordinates use the rotated image footprint")
+        void imageStampOverrideCoordinatesRotatedPages(
+                int pageRotation,
+                float overrideX,
+                float overrideY,
+                float stampRotation,
+                float expectedX,
+                float expectedY)
+                throws Exception {
+            AddStampRequest req = baseRequest(pdfFile(new PDRectangle(792, 612), pageRotation));
+            req.setStampType("image");
+            req.setFontSize(40f);
+            req.setRotation(stampRotation);
+            req.setOverrideX(overrideX);
+            req.setOverrideY(overrideY);
+            req.setStampImage(pngImage("logo.png"));
+
+            ContentMatrix matrix = stampTranslationMatrix(req);
+
+            assertTranslation(matrix, expectedX, expectedY);
+        }
+
+        @Test
+        @DisplayName("oversized rotated image stamp remains partially on the visible page")
+        void imageStampOversizedRotatedPageConstrained() throws Exception {
+            PDRectangle pageSize = new PDRectangle(120, 100);
+            AddStampRequest req = baseRequest(pdfFile(pageSize, 270));
+            req.setStampType("image");
+            req.setFontSize(160f);
+            req.setRotation(270f);
+            req.setOverrideX(1000f);
+            req.setOverrideY(1000f);
+            req.setStampImage(pngImage("logo.png"));
+
+            ContentMatrix matrix = stampTranslationMatrix(req);
+
+            assertTranslation(matrix, pageSize.getLowerLeftX(), pageSize.getLowerLeftY() + 320f);
+        }
+
+        @ParameterizedTest
+        @ValueSource(ints = {0, 90, 180, 270})
+        @DisplayName("auto-position image stamp returns a valid PDF on rotated and non-rotated pages")
+        void imageStampAutoPositionValidOnRotatedAndNonRotatedPages(int pageRotation)
+                throws Exception {
+            AddStampRequest req = baseRequest(pdfFile(new PDRectangle(792, 612), pageRotation));
+            req.setStampType("image");
+            req.setOverrideX(-1f);
+            req.setOverrideY(-1f);
+            req.setStampImage(pngImage("logo.png"));
+
             assertValidPdf(stampController.addStamp(req), 1);
         }
 
