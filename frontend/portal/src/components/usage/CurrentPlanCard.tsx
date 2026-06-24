@@ -170,7 +170,10 @@ export function CurrentPlanCard({
 
       <div className="portal-usage__plan-actions">
         {tier !== "enterprise" ? (
-          <Button accent={tier === "free" ? "premium" : "neutral"} onClick={onUpgrade}>
+          <Button
+            accent={tier === "free" ? "premium" : "neutral"}
+            onClick={onUpgrade}
+          >
             {tier === "free"
               ? t("usage.currentPlan.actions.upgrade", "Upgrade plan")
               : t("usage.currentPlan.actions.talkToSales", "Talk to sales")}
