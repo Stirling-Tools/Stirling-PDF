@@ -82,7 +82,10 @@ public class IntegrationConfigService {
         if (request.enabled() != null) {
             cfg.setEnabled(request.enabled());
         }
-        if (request.locked() != null && ownership.isAdmin(currentUser)) {
+        if (request.locked() != null && request.locked() != cfg.isLocked()) {
+            if (!ownership.isAdmin(currentUser)) {
+                throw forbidden("Only administrators can change the locked flag");
+            }
             cfg.setLocked(request.locked());
         }
         if (request.defaultAccess() != null) {

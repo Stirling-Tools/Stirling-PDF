@@ -140,6 +140,22 @@ class IntegrationConfigServiceTest {
         assertThat(visible).extracting(IntegrationConfig::getId).contains(99L);
     }
 
+    @Test
+    void nonAdminCannotChangeLockedFlag() {
+        IntegrationConfig cfg = config(5L); // locked = false
+        when(repository.findById(5L)).thenReturn(Optional.of(cfg));
+        when(ownership.canManage(any(), eq(cfg), any())).thenReturn(true);
+        when(ownership.isAdmin(any())).thenReturn(false);
+
+        IntegrationConfigRequest req =
+                new IntegrationConfigRequest(null, null, null, null, null, true, null, null);
+
+        assertThatThrownBy(() -> service.update(5L, req, user(7)))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+                .isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
     // ---- helpers ----
 
     private IntegrationConfig config(long id) {

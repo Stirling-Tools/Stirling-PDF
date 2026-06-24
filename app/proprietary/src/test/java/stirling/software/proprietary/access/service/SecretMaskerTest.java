@@ -59,4 +59,22 @@ class SecretMaskerTest {
 
         assertThat(clean).containsEntry("bucket", "b").doesNotContainKey("secretKey");
     }
+
+    @Test
+    void deeplyNestedInputIsBoundedNotOverflowing() {
+        // Build a structure far deeper than the recursion cap.
+        Map<String, Object> root = new LinkedHashMap<>();
+        Map<String, Object> cur = root;
+        for (int i = 0; i < 2000; i++) {
+            Map<String, Object> next = new LinkedHashMap<>();
+            cur.put("child", next);
+            cur = next;
+        }
+        cur.put("secretKey", "deep");
+
+        // Must return (bounded recursion), not throw StackOverflowError.
+        assertThat(masker.mask(root)).isNotNull();
+        assertThat(masker.sanitize(root)).isNotNull();
+        assertThat(masker.merge(root, root)).isNotNull();
+    }
 }
