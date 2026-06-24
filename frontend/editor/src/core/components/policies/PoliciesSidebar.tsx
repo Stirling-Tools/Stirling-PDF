@@ -14,6 +14,11 @@ export function usePoliciesEnabled(): boolean {
   return false;
 }
 
+/** Whether the Policies list should appear for the current user. False in core. */
+export function usePoliciesVisible(): boolean {
+  return false;
+}
+
 /**
  * Whether a policy is open (its detail should take over the rail). Always false
  * in core; proprietary bridges to the policy-selection store.
