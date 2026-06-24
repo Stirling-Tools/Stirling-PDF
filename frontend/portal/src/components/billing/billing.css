@@ -55,7 +55,7 @@
 }
 
 .portal-billing__error {
-  color: var(--color-text-danger, #b91c1c);
+  color: var(--color-red, #b91c1c);
   font-size: 0.875rem;
   margin: 0.5rem 0;
 }
@@ -104,7 +104,7 @@
 
 .portal-billing__meter-track {
   height: 0.5rem;
-  background: var(--color-bg-3, #e5e7eb);
+  background: var(--color-bg-subtle, #e5e7eb);
   border-radius: 999px;
   overflow: hidden;
   margin-bottom: 0.75rem;
@@ -112,7 +112,7 @@
 
 .portal-billing__meter-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--color-accent-blue, #0a8bff), var(--color-accent-purple, #8b5cf6));
+  background: linear-gradient(90deg, var(--color-blue, #0a8bff), var(--color-purple, #8b5cf6));
   border-radius: 999px;
   transition: width 200ms ease;
 }
@@ -131,7 +131,7 @@
 .paygf-meter {
   padding: 14px 16px;
   border-radius: 11px;
-  background: var(--color-bg-2, #f8fafc);
+  background: var(--color-bg-muted, #f8fafc);
   border: 1px solid var(--color-border, #e5e7eb);
   margin-top: 0.75rem;
 }
@@ -219,7 +219,7 @@
   margin-top: 18px;
   height: 10px;
   border-radius: 999px;
-  background: var(--color-bg-3, #e5e7eb);
+  background: var(--color-bg-subtle, #e5e7eb);
   overflow: hidden;
   position: relative;
 }
@@ -276,7 +276,7 @@
 
 .portal-billing__plan-features li::before {
   content: "✓";
-  color: var(--color-accent-success, #10b981);
+  color: var(--color-green, #10b981);
   position: absolute;
   left: 0;
   font-weight: 600;
@@ -327,7 +327,7 @@
 
 .portal-billing__breakdown-track {
   height: 0.5rem;
-  background: var(--color-bg-3, #e5e7eb);
+  background: var(--color-bg-subtle, #e5e7eb);
   border-radius: 999px;
   overflow: hidden;
 }
@@ -391,7 +391,7 @@
 }
 
 .portal-billing__cap-error {
-  color: var(--color-text-danger, #b91c1c);
+  color: var(--color-red, #b91c1c);
   font-size: 0.8125rem;
   margin: 0 0 0.5rem;
 }
@@ -462,6 +462,341 @@
   margin-bottom: 0;
 }
 
+/* ── Spend-cap control — ported from the SaaS cloud SpendCapControl.css.
+   Same class names + structure so the visual is identical to the SaaS Plan
+   page; when the shared-component move lands, these dedupe to one stylesheet. */
+.scc {
+  --scc-accent: #0a8bff;
+  --scc-accent-text: #0a8bff;
+  --scc-accent-soft: rgba(10, 139, 255, 0.12);
+  --scc-accent-border: rgba(10, 139, 255, 0.25);
+  --scc-chip-bg: var(--color-bg-muted, #f8fafc);
+  --scc-chip-border: var(--color-border, #e2e8f0);
+  --scc-text-primary: var(--color-text-1, #0f172a);
+  --scc-text-secondary: var(--color-text-2, #475569);
+  --scc-text-muted: var(--color-text-3, #64748b);
+  --scc-border-strong: var(--color-text-4, #94a3b8);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 0.75rem;
+}
+[data-mantine-color-scheme="dark"] .scc {
+  --scc-accent-text: #66b8ff;
+  --scc-accent-soft: rgba(10, 139, 255, 0.16);
+  --scc-chip-bg: #272d35;
+  --scc-chip-border: #3d444e;
+}
+
+.scc-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.scc-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid var(--scc-chip-border);
+  background: var(--scc-chip-bg);
+  color: var(--scc-text-secondary);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+  transition:
+    color 0.12s ease,
+    border-color 0.12s ease,
+    background 0.12s ease;
+}
+.scc-chip:hover:not(:disabled) {
+  color: var(--scc-text-primary);
+  border-color: var(--scc-border-strong);
+}
+.scc-chip[data-selected="true"] {
+  background: var(--scc-accent-soft);
+  border-color: var(--scc-accent);
+  color: var(--scc-accent-text);
+}
+.scc-chip:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.scc-custom {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px dashed var(--scc-chip-border);
+  background: transparent;
+  cursor: text;
+  transition:
+    border-color 0.12s ease,
+    background 0.12s ease;
+}
+.scc-custom:hover {
+  border-color: var(--scc-border-strong);
+}
+.scc-custom[data-active="true"] {
+  border-style: solid;
+  border-color: var(--scc-accent);
+  background: var(--scc-accent-soft);
+}
+.scc-custom__symbol {
+  color: var(--scc-text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.scc-custom[data-active="true"] .scc-custom__symbol,
+.scc-custom[data-active="true"] .scc-custom__input {
+  color: var(--scc-accent-text);
+}
+.scc-custom__input {
+  width: 70px;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--scc-text-primary);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.scc-custom__input::placeholder {
+  color: var(--scc-text-muted);
+  font-weight: 600;
+}
+
+.scc-row__spacer {
+  margin-left: auto;
+}
+
+.scc-estimate {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--scc-accent-soft);
+  border: 1px solid var(--scc-accent-border);
+}
+.scc-estimate__icon {
+  color: var(--scc-accent-text);
+  display: flex;
+}
+.scc-estimate__main {
+  font-size: 0.875rem;
+  font-weight: 550;
+  color: var(--scc-text-primary);
+}
+.scc-estimate__sub {
+  font-size: 0.75rem;
+  color: var(--scc-text-muted);
+  margin-top: 1px;
+}
+
+.scc-note {
+  font-size: 0.8125rem;
+  color: var(--scc-text-muted);
+  line-height: 1.45;
+}
+
+/* ── Plan header (free-vs-metered split) — ported from SaaS payg-planhead ── */
+.portal-billing__planhead-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.portal-billing__planhead-eyebrow {
+  font-size: 0.78rem;
+  color: var(--color-text-3);
+}
+.portal-billing__role-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.portal-billing__role-pill[data-leader="true"] {
+  background: rgba(10, 139, 255, 0.12);
+  color: #0a8bff;
+  border: 1px solid rgba(10, 139, 255, 0.25);
+}
+.portal-billing__role-pill[data-leader="false"] {
+  background: var(--color-bg-muted);
+  color: var(--color-text-3);
+  border: 1px solid var(--color-border);
+}
+.portal-billing__planhead-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+}
+.portal-billing__planhead-col {
+  padding-right: 22px;
+}
+.portal-billing__planhead-col--meter {
+  padding-right: 0;
+  padding-left: 22px;
+  border-left: 1px solid var(--color-border);
+}
+.portal-billing__planhead-lbl {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.portal-billing__planhead-lbl--free {
+  color: #10b981;
+}
+.portal-billing__planhead-lbl--meter {
+  color: #0a8bff;
+}
+.portal-billing__planhead-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-text-1);
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+.portal-billing__planhead-body {
+  margin: 5px 0 0;
+  font-size: 0.85rem;
+  color: var(--color-text-3);
+  line-height: 1.5;
+}
+/* The period meter merged into the plan-head card, divided from the split. */
+.portal-billing__planhead-meter {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--color-border);
+}
+@media (max-width: 640px) {
+  .portal-billing__planhead-split {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .portal-billing__planhead-col {
+    padding-right: 0;
+  }
+  .portal-billing__planhead-col--meter {
+    padding-left: 0;
+    padding-top: 16px;
+    border-left: none;
+    border-top: 1px solid var(--color-border);
+  }
+}
+
+/* ── "What happens at the cap" disclosure + gates — ported from SaaS ────── */
+.payg-help {
+  margin-top: 4px;
+}
+.payg-help__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-2);
+}
+.payg-help__toggle:hover {
+  color: var(--color-text-1);
+}
+.payg-help__chevron {
+  transition: transform 0.15s ease;
+}
+.payg-help__toggle[aria-expanded="true"] .payg-help__chevron {
+  transform: rotate(180deg);
+}
+.payg-help__panel {
+  margin-top: 10px;
+}
+.payg-gates {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+@media (max-width: 720px) {
+  .payg-gates {
+    grid-template-columns: 1fr;
+  }
+}
+.payg-gate {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 15px;
+  border-radius: 11px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-muted);
+}
+.payg-gate[data-enabled="false"] {
+  border-style: dashed;
+  opacity: 0.85;
+}
+.payg-gate__chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  flex-shrink: 0;
+}
+.payg-gate[data-enabled="true"] .payg-gate__chip {
+  background: rgba(34, 197, 94, 0.16);
+  color: #22c55e;
+}
+.payg-gate[data-enabled="false"] .payg-gate__chip {
+  background: rgba(239, 68, 68, 0.16);
+  color: #f87171;
+}
+.payg-gate__label {
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: var(--color-text-1);
+  flex: 1;
+}
+.payg-gate__tag {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  color: #dc2626;
+  background: rgba(239, 68, 68, 0.12);
+}
+[data-mantine-color-scheme="dark"] .payg-gate__tag {
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.18);
+}
+
 .portal-billing__invoice-actions {
   display: inline-flex;
   align-items: center;
@@ -486,14 +821,14 @@
 }
 
 .portal-billing__invoice-link:hover {
-  background: var(--color-bg-2, #f1f5f9);
+  background: var(--color-bg-muted, #f1f5f9);
   border-color: var(--color-border, #e2e8f0);
 }
 
 .portal-billing__invoice-link:focus-visible {
   outline: none;
-  border-color: var(--color-accent-blue, #0a8bff);
-  background: var(--color-bg-2, #f1f5f9);
+  border-color: var(--color-blue, #0a8bff);
+  background: var(--color-bg-muted, #f1f5f9);
 }
 
 

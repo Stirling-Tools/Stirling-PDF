@@ -8,9 +8,9 @@ import {
 } from "@shared/components";
 import type { Wallet, WalletMember } from "@portal/api/billing";
 import { createPortalSession } from "@portal/billing/stripe";
-import { WalletMeter } from "@portal/components/billing/WalletMeter";
+import { PlanHeadCard } from "@portal/components/billing/PlanHeadCard";
 import { CategoryBreakdownPanel } from "@portal/components/billing/CategoryBreakdownPanel";
-import { CapControl } from "@portal/components/billing/CapControl";
+import { SpendCapControl } from "@portal/components/billing/SpendCapControl";
 import { InvoicesList } from "@portal/components/billing/InvoicesList";
 
 interface Props {
@@ -69,15 +69,14 @@ export function SubscribedPlanView({ wallet, onWalletChange }: Props) {
 
   return (
     <div className="portal-billing__stack">
-      <WalletMeter wallet={wallet} />
+      <PlanHeadCard wallet={wallet} />
 
-      <div className="portal-billing__row">
-        <CapControl wallet={wallet} onSaved={onWalletChange} />
-        <CategoryBreakdownPanel
-          breakdown={wallet.categoryBreakdown}
-          totalSpend={wallet.spendUnitsThisPeriod}
-        />
-      </div>
+      <SpendCapControl wallet={wallet} onSaved={onWalletChange} />
+
+      <CategoryBreakdownPanel
+        breakdown={wallet.categoryBreakdown}
+        totalSpend={wallet.spendUnitsThisPeriod}
+      />
 
       {wallet.role === "leader" && wallet.members.length > 0 && (
         <Card padding="loose">
