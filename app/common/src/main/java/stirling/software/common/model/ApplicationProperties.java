@@ -514,6 +514,14 @@ public class ApplicationProperties {
         private String accessibilityStatement;
         private String cookiePolicy;
         private String impressum;
+        private LoginAgreement loginAgreement = new LoginAgreement();
+
+        @Data
+        public static class LoginAgreement {
+            private boolean enabled = false;
+            private boolean showInAnonymousMode = true;
+            private String fallbackText = "";
+        }
     }
 
     @Data

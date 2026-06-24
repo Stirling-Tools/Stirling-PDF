@@ -203,7 +203,7 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
     // Define all Java options with Tauri-specific paths
     let log_path_option = format!("-Dlogging.file.path={}", log_dir.display());
 
-    let java_options = vec![
+    let mut java_options = vec![
         "-Xmx2g",
         "-DBROWSER_OPEN=false",
         "-DSTIRLING_PDF_TAURI_MODE=true",
@@ -212,9 +212,15 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
         "-Dserver.port=0",  // Let OS assign an available port
         "-Dsecurity.enableLogin=false",  // Disable login for desktop mode
         "-Dsecurity.csrfDisabled=true",  // Disable CSRF for desktop mode
-        "-jar",
-        jar_path.to_str().unwrap(),
     ];
+
+    // Enable the login agreement on local desktop installs when it has been provisioned.
+    if crate::commands::connection::login_agreement_enabled(app) {
+        java_options.push("-Dlegal.loginAgreement.enabled=true");
+    }
+
+    java_options.push("-jar");
+    java_options.push(jar_path.to_str().unwrap());
 
     // Log the equivalent command for external testing
     let java_command = format!(
