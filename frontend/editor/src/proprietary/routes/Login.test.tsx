@@ -323,13 +323,13 @@ describe("Login", () => {
     // Wait for OAuth button to appear
     await waitFor(
       () => {
-        const button = screen.queryByText("Authentik");
+        const button = screen.queryByText(/Authentik/);
         expect(button).toBeTruthy();
       },
       { timeout: 3000 },
     );
 
-    const oauthButton = screen.getByText("Authentik");
+    const oauthButton = screen.getByText(/Authentik/);
     await user.click(oauthButton);
 
     await waitFor(() => {
@@ -369,13 +369,13 @@ describe("Login", () => {
     // Wait for OAuth button to appear (will show 'Mycompany' as label)
     await waitFor(
       () => {
-        const button = screen.queryByText("Mycompany");
+        const button = screen.queryByText(/Mycompany/);
         expect(button).toBeTruthy();
       },
       { timeout: 3000 },
     );
 
-    const oauthButton = screen.getByText("Mycompany");
+    const oauthButton = screen.getByText(/Mycompany/);
     await user.click(oauthButton);
 
     await waitFor(() => {
@@ -416,13 +416,13 @@ describe("Login", () => {
     // Wait for OAuth button to appear
     await waitFor(
       () => {
-        const button = screen.queryByText("OIDC");
+        const button = screen.queryByText(/OIDC/);
         expect(button).toBeTruthy();
       },
       { timeout: 3000 },
     );
 
-    const oauthButton = screen.getByText("OIDC");
+    const oauthButton = screen.getByText(/OIDC/);
     await user.click(oauthButton);
 
     await waitFor(() => {
@@ -758,12 +758,12 @@ describe("Login", () => {
 
     await waitFor(
       () => {
-        expect(screen.getByText("Authentik")).toBeTruthy();
+        expect(screen.getByText(/Authentik/)).toBeTruthy();
       },
       { timeout: 3000 },
     );
 
-    await user.click(screen.getByText("Authentik"));
+    await user.click(screen.getByText(/Authentik/));
 
     await waitFor(() => {
       expect(springAuth.signInWithOAuth).toHaveBeenCalled();

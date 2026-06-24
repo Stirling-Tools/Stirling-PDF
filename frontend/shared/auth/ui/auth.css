@@ -751,7 +751,8 @@
   box-shadow: none;
 }
 
-[data-mantine-color-scheme="dark"] .oauth-button-fullwidth:hover:not(:disabled) {
+[data-mantine-color-scheme="dark"]
+  .oauth-button-fullwidth:hover:not(:disabled) {
   background-color: var(--bg-raised);
   box-shadow: none;
 }
