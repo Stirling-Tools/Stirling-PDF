@@ -53,6 +53,9 @@ export default function TeamDetailsSection({
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [selectedTeamId, setSelectedTeamId] = useState<string>("");
   const [processing, setProcessing] = useState(false);
+  const availableUsersForTeam = team
+    ? availableUsers.filter((user) => user.team?.id !== team.id)
+    : [];
 
   // License information
   const [licenseInfo, setLicenseInfo] = useState<{
@@ -746,7 +749,7 @@ export default function TeamDetailsSection({
               placeholder={t(
                 "workspace.teams.addMemberToTeam.selectUserPlaceholder",
               )}
-              data={availableUsers.map((user) => ({
+              data={availableUsersForTeam.map((user) => ({
                 value: user.id.toString(),
                 label: `${user.username}${user.team ? ` (${t("workspace.teams.addMemberToTeam.currentlyIn")} ${user.team.name})` : ""}`,
               }))}
@@ -760,8 +763,9 @@ export default function TeamDetailsSection({
             />
 
             {selectedUserId &&
-              availableUsers.find((u) => u.id.toString() === selectedUserId)
-                ?.team && (
+              availableUsersForTeam.find(
+                (u) => u.id.toString() === selectedUserId,
+              )?.team && (
                 <Text size="xs" c="orange">
                   {t("workspace.teams.addMemberToTeam.willBeMoved")}
                 </Text>
