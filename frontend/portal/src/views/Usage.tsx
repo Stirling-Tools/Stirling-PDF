@@ -1,126 +1,126 @@
-import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { Card, Skeleton, StatusBadge } from "@shared/components";
-import { useTier } from "@portal/contexts/TierContext";
-import { useLink } from "@portal/contexts/LinkContext";
-import { useAsync } from "@portal/hooks/useAsync";
+import { useCallback, useEffect, useState } from "react";
+import { Banner, Skeleton, StatusBadge } from "@shared/components";
+import { useLink, LINK_INFO } from "@portal/contexts/LinkContext";
+import { fetchWallet, type Wallet } from "@portal/api/billing";
+import { LinkAccountPrompt } from "@portal/components/billing/LinkAccountPrompt";
+import { FreePlanView } from "@portal/components/billing/FreePlanView";
+import { SubscribedPlanView } from "@portal/components/billing/SubscribedPlanView";
 import {
-  fetchBillingSummary,
-  fetchPlanOptions,
-  fetchWallet,
-  type BillingSummary,
-  type PlanOption,
-  type WalletContract,
-} from "@portal/api/usage";
-import { UsageChart } from "@portal/components/usage/UsageChart";
-import { BillingKpiStrip } from "@portal/components/usage/BillingKpiStrip";
-import { WalletContractCard } from "@portal/components/usage/WalletContractCard";
-import { CurrentPlanCard } from "@portal/components/usage/CurrentPlanCard";
-import { SpendCapControl } from "@portal/components/usage/SpendCapControl";
-import { AvailablePlans } from "@portal/components/usage/AvailablePlans";
-import { BillingHistoryTable } from "@portal/components/usage/BillingHistoryTable";
-import { UpgradeModal } from "@portal/components/usage/UpgradeModal";
+  HttpError,
+  SaasNotLinkedError,
+  SaasUnconfiguredError,
+} from "@portal/api/http";
 import "@portal/views/Usage.css";
+import "@portal/components/billing/billing.css";
 
+/**
+ * Billing & usage page. State-driven by the link/subscription dimension —
+ * NOT by the legacy {@code tier} prop:
+ *
+ *   unlinked          → LinkAccountPrompt
+ *   linked-free       → FreePlanView (free meter + PAYG explainer)
+ *   linked-subscribed → SubscribedPlanView (period meter, cap, members,
+ *                       invoices, Stripe portal)
+ *
+ * Wallet comes from {@code GET /api/v1/payg/wallet} (apiClient.saas). After a
+ * subscription flip via Stripe checkout / cancel via the portal, the
+ * onWalletChange refresh re-reads and the view re-dispatches on the new
+ * status.
+ */
 export function Usage() {
-  const { t } = useTranslation();
-  const { tier } = useTier();
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalTarget, setModalTarget] = useState<PlanOption | null>(null);
+  const { linkState, isLinked, setLinkState } = useLink();
+  const [wallet, setWallet] = useState<Wallet | null>(null);
+  const [loading, setLoading] = useState<boolean>(isLinked);
+  const [error, setError] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  const summaryState = useAsync<BillingSummary>(
-    () => fetchBillingSummary(tier),
-    [tier],
-  );
-  const summary = summaryState.loading ? null : summaryState.data;
-
-  const plansState = useAsync<PlanOption[]>(() => fetchPlanOptions(), []);
-  const { data: plans } = plansState;
-
-  const walletState = useAsync<WalletContract>(() => fetchWallet(tier), [tier]);
-  const wallet = walletState.loading ? null : walletState.data;
-
-  // Derive the subscribed dimension of LinkContext from the live wallet — only
-  // when already linked, so this never flips an unlinked org to linked.
-  const { isLinked, setLinkState } = useLink();
   useEffect(() => {
-    if (!isLinked || !wallet) return;
-    setLinkState(
-      wallet.subscriptionStatus === "active"
-        ? "linked-subscribed"
-        : "linked-free",
-    );
-  }, [isLinked, wallet, setLinkState]);
+    // Only fetch the wallet when the instance is linked. Unlinked → render the
+    // link prompt; no SaaS call needed.
+    if (!isLinked) {
+      setWallet(null);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    fetchWallet()
+      .then((w) => {
+        if (cancelled) return;
+        setWallet(w);
+        // Derive the linked-free / linked-subscribed dimension from the live
+        // wallet. Only refines a `linked-*` state; never flips unlinked → linked.
+        setLinkState(
+          w.status === "subscribed" ? "linked-subscribed" : "linked-free",
+        );
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        if (e instanceof SaasUnconfiguredError || e instanceof SaasNotLinkedError) {
+          setError(e.message);
+        } else if (e instanceof HttpError) {
+          setError(`Wallet unavailable: ${e.status} ${e.statusText}`);
+        } else {
+          setError(e instanceof Error ? e.message : String(e));
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isLinked, refreshKey, setLinkState]);
 
-  function openUpgrade(target: PlanOption | null) {
-    setModalTarget(target);
-    setModalOpen(true);
-  }
+  const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
 
   return (
-    <div className="portal-usage">
+    <div className="portal-usage portal-billing">
       <header className="portal-usage__header">
         <div>
-          <h1 className="portal-usage__title">{t("usage.title")}</h1>
-          <p className="portal-usage__subtitle">{t("usage.subtitle")}</p>
+          <h1 className="portal-usage__title">Usage & billing</h1>
+          <p className="portal-usage__subtitle">
+            What you've used, what you'll pay, and how to change it.
+          </p>
         </div>
         <StatusBadge
           tone={
-            tier === "enterprise"
-              ? "purple"
-              : tier === "pro"
+            linkState === "linked-subscribed"
+              ? "success"
+              : linkState === "linked-free"
                 ? "info"
                 : "neutral"
           }
           size="md"
         >
-          {summary?.planName ?? "—"}
+          {LINK_INFO[linkState].label}
         </StatusBadge>
       </header>
 
-      <UsageChart />
+      {!isLinked && <LinkAccountPrompt />}
 
-      {wallet && <WalletContractCard wallet={wallet} />}
-
-      <BillingKpiStrip summary={summary} />
-
-      <div className="portal-usage__row">
-        {summary ? (
-          <CurrentPlanCard
-            summary={summary}
-            onUpgrade={() => openUpgrade(null)}
-          />
-        ) : (
-          <Card padding="loose">
-            <Skeleton width="10rem" height="1.25rem" />
-            <Skeleton height="9rem" />
-          </Card>
-        )}
-        {summary ? (
-          <SpendCapControl summary={summary} />
-        ) : (
-          <Card padding="loose">
-            <Skeleton width="8rem" height="1.25rem" />
-            <Skeleton height="5rem" />
-          </Card>
-        )}
-      </div>
-
-      {plans && plans.length > 0 && (
-        // Any plan selection routes through the intent-aware upgrade modal; the
-        // target plan drives whether the copy is an upgrade pitch or a
-        // downgrade / sales conversation.
-        <AvailablePlans plans={plans} current={tier} onSelect={openUpgrade} />
+      {isLinked && loading && (
+        <div className="portal-billing__skeleton" aria-hidden>
+          <Skeleton height="10rem" />
+          <Skeleton height="14rem" />
+        </div>
       )}
 
-      <BillingHistoryTable />
+      {isLinked && error && (
+        <Banner tone="danger" title="Couldn't load wallet">
+          {error}
+        </Banner>
+      )}
 
-      <UpgradeModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        currentTier={tier}
-        target={modalTarget}
-      />
+      {isLinked && wallet && wallet.status === "free" && (
+        <FreePlanView wallet={wallet} />
+      )}
+
+      {isLinked && wallet && wallet.status === "subscribed" && (
+        <SubscribedPlanView wallet={wallet} onWalletChange={refresh} />
+      )}
     </div>
   );
 }
