@@ -21,11 +21,8 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
 
-/**
- * Resolves the login agreement / disclaimer text. The per-language markdown lives in
- * customFiles/disclaimer/&lt;locale&gt;.md and is read live (no restart needed), while the
- * enable/visibility flags come from the predefined legal.loginAgreement settings.
- */
+// Resolves login agreement text from customFiles/disclaimer/<locale>.md (read live);
+// enable/visibility come from the legal.loginAgreement settings.
 @Service
 @Slf4j
 public class LoginAgreementService {

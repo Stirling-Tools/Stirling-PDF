@@ -11,7 +11,7 @@ import {
   Text,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import Markdown from "react-markdown";
+import Markdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import apiClient from "@app/services/apiClient";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
@@ -55,11 +55,11 @@ function getLoginNonce(loginEnabled: boolean, userId?: string): string {
   return "session";
 }
 
-const markdownComponents = {
+const markdownComponents: Components = {
   // Strip react-markdown's `node` prop so it isn't spread onto the DOM element.
-  a: ({ node, ...props }: any) => (
-    <a {...props} target="_blank" rel="noopener noreferrer" />
-  ),
+  a({ node, ...props }) {
+    return <a {...props} target="_blank" rel="noopener noreferrer" />;
+  },
 };
 
 /**
@@ -95,7 +95,7 @@ export default function LoginAgreementModal() {
             params: { lang: i18n.language },
             suppressErrorToast: true,
             skipAuthRedirect: true,
-          } as any,
+          },
         );
         const data = resp.data;
         if (cancelled || !data?.enabled) return;

@@ -45,7 +45,7 @@ export default function LoginAgreementEditor({
     i18n.language,
   )
     ? i18n.language
-    : "en-GB";
+    : "en-US";
 
   const [locale, setLocale] = useState<string>(initialLocale);
   const [content, setContent] = useState("");
