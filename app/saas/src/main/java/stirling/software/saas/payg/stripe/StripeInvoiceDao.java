@@ -43,6 +43,11 @@ public class StripeInvoiceDao {
             String hostedInvoiceUrl,
             String invoicePdf) {}
 
+    // Drafts are excluded: Stripe's API returns null for both
+    // {@code hosted_invoice_url} and {@code invoice_pdf} on unfinalized
+    // invoices, and Stripe's own customer portal hides drafts too — there's no
+    // user-facing artefact to surface yet. The next finalize / webhook flips
+    // the status and the invoice shows up automatically.
     private static final String QUERY =
             "SELECT i.id, i.number, i.status::text AS status,"
                     + " i.total, i.currency,"
@@ -50,6 +55,7 @@ public class StripeInvoiceDao {
                     + " i.hosted_invoice_url, i.invoice_pdf"
                     + " FROM stripe.invoices i"
                     + " WHERE i.customer = ?"
+                    + "   AND i.status::text <> 'draft'"
                     + " ORDER BY i.created DESC NULLS LAST"
                     + " LIMIT ?";
 

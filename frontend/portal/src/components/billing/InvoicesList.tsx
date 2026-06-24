@@ -50,33 +50,21 @@ function statusTone(status: string): "success" | "warning" | "danger" | "neutral
   }
 }
 
-interface Props {
-  /**
-   * Open the team's Stripe customer portal. Used as a fallback action on rows
-   * where Stripe hasn't published a hosted URL or PDF yet — notably drafts
-   * (Stripe's API returns null for both {@code hosted_invoice_url} and
-   * {@code invoice_pdf} on unfinalized invoices, by design). The customer
-   * portal does surface drafts and their preview PDFs.
-   */
-  onOpenStripePortal?: () => void;
-}
-
 /**
  * Recent Stripe invoices, sourced from GET /api/v1/payg/invoices (reads
- * stripe.invoices via the Sync Engine). The backend already orders newest
- * first; we fetch FETCH_LIMIT rows and show DEFAULT_VISIBLE by default, with
- * an inline "Show more" toggle. For history older than FETCH_LIMIT, the
- * Stripe customer portal (button on the Subscription card above) is the
- * authoritative archive.
+ * stripe.invoices via the Sync Engine). Backend orders newest first AND
+ * filters out drafts (matching Stripe's own customer portal behavior —
+ * drafts have no public hosted URL or PDF). We fetch FETCH_LIMIT rows and
+ * show DEFAULT_VISIBLE by default with a "Show all N" inline toggle. For
+ * history older than FETCH_LIMIT, the Stripe customer portal (button on the
+ * Subscription card above) is the authoritative archive.
  *
  * Each row links straight out to Stripe-hosted assets — the invoice page
  * ({@code hostedInvoiceUrl}) and the PDF ({@code invoicePdf}). Rendered as
  * actual {@code <a target="_blank">} anchors rather than {@code window.open}
- * handlers so they're real user gestures (popup blockers don't trip). For
- * draft invoices (both URLs null), we fall back to the Stripe customer portal
- * which exposes drafts + their preview PDFs.
+ * handlers so they're real user gestures (popup blockers don't trip).
  */
-export function InvoicesList({ onOpenStripePortal }: Props = {}) {
+export function InvoicesList() {
   const [invoices, setInvoices] = useState<Invoice[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
@@ -135,50 +123,32 @@ export function InvoicesList({ onOpenStripePortal }: Props = {}) {
       key: "actions",
       header: "",
       align: "right",
-      render: (inv) => {
-        const hasUrl = Boolean(inv.hostedInvoiceUrl || inv.invoicePdf);
-        return (
-          <div className="portal-billing__invoice-actions">
-            {inv.hostedInvoiceUrl && (
-              <a
-                className="portal-billing__invoice-link"
-                href={inv.hostedInvoiceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`View invoice ${inv.number ?? inv.id} in Stripe`}
-              >
-                View ↗
-              </a>
-            )}
-            {inv.invoicePdf && (
-              <a
-                className="portal-billing__invoice-link"
-                href={inv.invoicePdf}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`Download invoice ${inv.number ?? inv.id} as PDF`}
-              >
-                PDF ↓
-              </a>
-            )}
-            {/* Draft fallback. Stripe's API returns null for both
-                hosted_invoice_url and invoice_pdf until the invoice is
-                finalized — but Stripe's own customer portal still shows
-                drafts with their preview PDFs, so we route the click there. */}
-            {!hasUrl && onOpenStripePortal && (
-              <button
-                type="button"
-                className="portal-billing__invoice-link portal-billing__invoice-link--btn"
-                onClick={onOpenStripePortal}
-                aria-label={`Open invoice ${inv.number ?? inv.id} in Stripe`}
-                title="Drafts are only available via Stripe's customer portal"
-              >
-                Open in Stripe →
-              </button>
-            )}
-          </div>
-        );
-      },
+      render: (inv) => (
+        <div className="portal-billing__invoice-actions">
+          {inv.hostedInvoiceUrl && (
+            <a
+              className="portal-billing__invoice-link"
+              href={inv.hostedInvoiceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`View invoice ${inv.number ?? inv.id} in Stripe`}
+            >
+              View ↗
+            </a>
+          )}
+          {inv.invoicePdf && (
+            <a
+              className="portal-billing__invoice-link"
+              href={inv.invoicePdf}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`Download invoice ${inv.number ?? inv.id} as PDF`}
+            >
+              PDF ↓
+            </a>
+          )}
+        </div>
+      ),
     },
   ];
 

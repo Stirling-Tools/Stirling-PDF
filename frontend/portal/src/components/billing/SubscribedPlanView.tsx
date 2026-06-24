@@ -121,7 +121,7 @@ export function SubscribedPlanView({ wallet, onWalletChange }: Props) {
         </div>
       </Card>
 
-      <InvoicesList onOpenStripePortal={openPortal} />
+      <InvoicesList />
     </div>
   );
 }
