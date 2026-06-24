@@ -8,6 +8,7 @@ import {
   Modal,
   ScrollArea,
   Stack,
+  Text,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import Markdown from "react-markdown";
@@ -179,13 +180,21 @@ export default function LoginAgreementModal() {
           </Box>
         </ScrollArea.Autosize>
         <Divider />
-        <Group justify="flex-end" gap="sm">
-          <Button variant="default" onClick={handleDecline}>
-            {t("loginAgreementDecline", "Decline")}
-          </Button>
-          <Button onClick={handleAccept}>
-            {t("loginAgreementAccept", "Accept")}
-          </Button>
+        <Group justify="space-between" gap="sm" align="center" wrap="wrap">
+          <Text size="xs" c="dimmed" style={{ flex: 1, minWidth: 0 }}>
+            {t(
+              "loginAgreementProvider",
+              "This notice is provided by your administrator, not Stirling PDF Inc.",
+            )}
+          </Text>
+          <Group gap="sm" wrap="nowrap">
+            <Button variant="default" onClick={handleDecline}>
+              {t("loginAgreementDecline", "Decline")}
+            </Button>
+            <Button onClick={handleAccept}>
+              {t("loginAgreementAccept", "Accept")}
+            </Button>
+          </Group>
         </Group>
       </Stack>
     </Modal>
