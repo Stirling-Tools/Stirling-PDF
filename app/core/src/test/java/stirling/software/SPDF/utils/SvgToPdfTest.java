@@ -2,12 +2,22 @@ package stirling.software.SPDF.utils;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import javax.imageio.ImageIO;
+
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.rendering.PDFRenderer;
 import org.junit.jupiter.api.Test;
 
 class SvgToPdfTest {
@@ -123,5 +133,45 @@ class SvgToPdfTest {
     void combineIntoPdf_allNullEntries_throwsIOException() {
         List<byte[]> svgs = Arrays.asList(null, null, new byte[0]);
         assertThrows(IOException.class, () -> SvgToPdf.combineIntoPdf(svgs));
+    }
+
+    @Test
+    void convert_doesNotEmbedExternalFileResource() throws Exception {
+        Path external = Files.createTempFile("svg-external", ".png");
+        BufferedImage red = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = red.createGraphics();
+        g.setColor(Color.RED);
+        g.fillRect(0, 0, 100, 100);
+        g.dispose();
+        ImageIO.write(red, "png", external.toFile());
+
+        try {
+            String svg =
+                    "<svg xmlns=\"http://www.w3.org/2000/svg\" "
+                            + "xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"100\" height=\"100\">"
+                            + "<image x=\"0\" y=\"0\" width=\"100\" height=\"100\" xlink:href=\""
+                            + external.toUri()
+                            + "\"/></svg>";
+
+            byte[] pdf;
+            try {
+                pdf = SvgToPdf.convert(svg.getBytes(StandardCharsets.UTF_8));
+            } catch (IOException blocked) {
+                return;
+            }
+
+            try (PDDocument doc = Loader.loadPDF(pdf)) {
+                BufferedImage page = new PDFRenderer(doc).renderImageWithDPI(0, 72);
+                int rgb = page.getRGB(page.getWidth() / 2, page.getHeight() / 2);
+                int r = (rgb >> 16) & 0xff;
+                int gg = (rgb >> 8) & 0xff;
+                int b = rgb & 0xff;
+                assertFalse(
+                        r > 200 && gg < 60 && b < 60,
+                        "External file image must not be rendered into the PDF");
+            }
+        } finally {
+            Files.deleteIfExists(external);
+        }
     }
 }
