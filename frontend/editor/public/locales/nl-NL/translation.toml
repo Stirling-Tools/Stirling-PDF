@@ -5854,6 +5854,7 @@ routing = "Routing"
 security = "Security"
 
 [policies.detail]
+close = "Sluiten"
 editSettings = "Edit Settings"
 enforces = "Enforces"
 managedByOrg = "Managed by your organisation. Contact a team leader to change this policy."
@@ -5907,6 +5908,7 @@ allDocTypesTitle = "All document types"
 back = "Back"
 builderDesc = "Build the sequence of tools this policy runs on each document."
 clear = "Clear"
+close = "Sluiten"
 continue = "Continue"
 docTypesLabel = "Document types"
 edit = "Edit"
@@ -7784,8 +7786,6 @@ allReleases = "Alle releases"
 breaking = "Breaking"
 breakingChanges = "Incompatibele wijzigingen"
 breakingChangesDefault = "Deze versie bevat incompatibele wijzigingen."
-breakingChangesDetected = "Incompatibele wijzigingen gedetecteerd"
-breakingChangesMessage = "Sommige versies bevatten incompatibele wijzigingen. Bekijk onderstaande migratiehandleidingen voordat u update."
 close = "Sluiten"
 closeModal = "Updatevenster sluiten"
 current = "Huidige versie"
@@ -8606,6 +8606,7 @@ disableByAdmin = "MFA uitschakelen"
 
 [workspace.people.roleDescriptions]
 admin = "Kan instellingen beheren en leden uitnodigen, met volledige beheerdersrechten."
+currentRole = "Momenteel toegewezen rol."
 user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]

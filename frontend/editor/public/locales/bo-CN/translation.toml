@@ -5854,6 +5854,7 @@ routing = "Routing"
 security = "Security"
 
 [policies.detail]
+close = "སྒོ་བསྡམས"
 editSettings = "Edit Settings"
 enforces = "Enforces"
 managedByOrg = "Managed by your organisation. Contact a team leader to change this policy."
@@ -5907,6 +5908,7 @@ allDocTypesTitle = "All document types"
 back = "Back"
 builderDesc = "Build the sequence of tools this policy runs on each document."
 clear = "Clear"
+close = "སྒོ་བསྡམས"
 continue = "Continue"
 docTypesLabel = "Document types"
 edit = "Edit"
@@ -7784,8 +7786,6 @@ allReleases = "གསར་བརྗེ་ཚང་མ"
 breaking = "མཚམས་སྐྱེད"
 breakingChanges = "འགྱུར་ལྡོག་འགལ་བ།"
 breakingChangesDefault = "ཐོན་རིམ་འདིའི་ནང་ལ་འགྱུར་ལྡོག་གི་བསྒྱུར་བཅོས་ཡོད།"
-breakingChangesDetected = "བརྡབ་པའི་འགྱུར་བ།"
-breakingChangesMessage = "ཐོན་རིམ་ཁ་ཤས་ལ་བསྒྱུར་བཅོས་ཆག་པ་ཡོད། གསར་བརྗེ་མ་བྱས་གོང་གཤམ་གྱི་གནས་སྤོ་ལམ་སྟོན་ལ་ཞིབ་བཤེར་གནང་རོགས།"
 close = "གཏན་པ"
 closeModal = "གསར་སྒྱུར་སྒོ་ཁ་རྒྱག"
 current = "ད་ལྟའི་ཐོན་རིམ།"
@@ -8606,6 +8606,7 @@ disableByAdmin = "MFA སྤྱོད་སྒོ་བརྒྱབ"
 
 [workspace.people.roleDescriptions]
 admin = "སྒྲིག་སྟངས་འཛིན་སྐྱོང་བྱེད་ཐུབ་པ་དང་ཚོགས་མི་གདན་འདྲེན་ཞུ་ཐུབ།"
+currentRole = "ད་ལྟའི་བསྐོས་པའི་ལས་འགན།"
 user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]

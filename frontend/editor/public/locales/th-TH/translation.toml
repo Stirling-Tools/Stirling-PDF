@@ -5854,6 +5854,7 @@ routing = "Routing"
 security = "Security"
 
 [policies.detail]
+close = "ปิด"
 editSettings = "Edit Settings"
 enforces = "Enforces"
 managedByOrg = "Managed by your organisation. Contact a team leader to change this policy."
@@ -5907,6 +5908,7 @@ allDocTypesTitle = "All document types"
 back = "Back"
 builderDesc = "Build the sequence of tools this policy runs on each document."
 clear = "Clear"
+close = "ปิด"
 continue = "Continue"
 docTypesLabel = "Document types"
 edit = "Edit"
@@ -7784,8 +7786,6 @@ allReleases = "รุ่นทั้งหมด"
 breaking = "Breaking"
 breakingChanges = "การเปลี่ยนแปลงที่มีผลกระทบ"
 breakingChangesDefault = "เวอร์ชันนี้มีการเปลี่ยนแปลงที่มีผลกระทบ"
-breakingChangesDetected = "พบการเปลี่ยนแปลงที่มีผลกระทบ"
-breakingChangesMessage = "บางเวอร์ชันมีการเปลี่ยนแปลงที่มีผลกระทบ โปรดตรวจสอบคู่มือการย้ายด้านล่างก่อนอัปเดต"
 close = "ปิด"
 closeModal = "ปิดหน้าต่างอัปเดต"
 current = "เวอร์ชันปัจจุบัน"
@@ -8606,6 +8606,7 @@ disableByAdmin = "ปิดใช้งาน MFA"
 
 [workspace.people.roleDescriptions]
 admin = "สามารถจัดการการตั้งค่าและเชิญสมาชิก พร้อมการเข้าถึงระดับผู้ดูแลทั้งหมด"
+currentRole = "บทบาทที่ได้รับมอบหมายในปัจจุบัน."
 user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]
