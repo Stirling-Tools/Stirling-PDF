@@ -8,7 +8,7 @@
 // Usage: cd frontend && node scripts/find-unused-css.mjs [filterSubstring]
 
 import { readFileSync, readdirSync } from "node:fs";
-import { join, extname } from "node:path";
+import { join, extname, isAbsolute } from "node:path";
 
 const ROOTS = ["editor/src", "shared", "portal/src"];
 const SRC_EXT = new Set([
@@ -37,6 +37,10 @@ function walk(dir, acc = []) {
       e.name.startsWith(".")
     )
       continue;
+    // Dirents from readdirSync are always single path components, but guard
+    // anyway so a name can never escape `dir` (satisfies Aikido's path-traversal
+    // check on the readFile below).
+    if (e.name.includes("..") || isAbsolute(e.name)) continue;
     const p = join(dir, e.name);
     if (e.isDirectory()) walk(p, acc);
     // Exclude the temporary button-catalog gallery so its reproduced classes
