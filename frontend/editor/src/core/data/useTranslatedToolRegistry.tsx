@@ -471,7 +471,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         subcategoryId: SubcategoryId.GENERAL,
         maxFiles: 1,
         endpoints: ["form-detection"],
-        operationConfig: autoFormDetectionOperationConfig,
+        operationConfig: asRegistryConfig(autoFormDetectionOperationConfig),
         synonyms: [
           "form",
           "detect",
