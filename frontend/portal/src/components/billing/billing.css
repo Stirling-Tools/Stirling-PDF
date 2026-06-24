@@ -432,6 +432,15 @@
   font-size: 0.9375rem;
 }
 
+/* Invoice table sits flush inside the already-surfaced Card: drop the table's
+   own border + background + radius so only the row dividers (kept by sui-table
+   defaults) show. */
+.portal-billing__invoice-table {
+  border: none;
+  background: transparent;
+  border-radius: 0;
+}
+
 .portal-billing__invoice-actions {
   display: inline-flex;
   align-items: center;

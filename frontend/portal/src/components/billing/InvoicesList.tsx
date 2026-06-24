@@ -197,6 +197,7 @@ export function InvoicesList() {
       {invoices !== null && invoices.length > 0 && (
         <>
           <Table
+            className="portal-billing__invoice-table"
             columns={columns}
             rows={visibleRows}
             rowKey={(inv) => inv.id}
