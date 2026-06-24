@@ -1,29 +1,72 @@
 import { http, HttpResponse, delay } from "msw";
-import {
-  buildKpis,
-  seedReferences,
-  seedSources,
-  toSourceView,
-  type Source,
-  type SourcePolicyRef,
-  type SourcesResponse,
-  type StoredSource,
-} from "@portal/mocks/sources";
+import type {
+  Source,
+  SourceKpi,
+  SourcePolicyRef,
+  SourceStatus,
+  SourceView,
+  SourcesResponse,
+} from "@portal/api/sources";
 
 /**
- * The portal exercises the REAL sources API base `/api/v1/sources` (NOT the
- * portal's usual `/v1/...`), so this surface is plug-and-play against the live
- * backend (SourceController + SourceOverviewService). These handlers mutate an
- * in-memory store, so create/delete behave like a real backend within a session,
- * including the 409 when a still-referenced source is deleted.
+ * Stateful mock for the Sources surface so the portal works fully offline with
+ * mocks on. Mirrors the real backend shape (`/api/v1/sources`, SourceController +
+ * SourceOverviewService): create/delete mutate an in-memory store, and delete of
+ * a still-referenced source returns 409. With mocks OFF these calls fall through
+ * to the real backend instead, like any other `/api/v1/...` surface.
  */
 
-let store: StoredSource[] = seedSources();
-const references: Record<string, SourcePolicyRef[]> = seedReferences();
-
-export function resetSourcesStore(seed?: StoredSource[]): void {
-  store = seed ? [...seed] : seedSources();
+interface StoredSource extends Source {
+  id: string;
 }
+
+function seedSources(): StoredSource[] {
+  return [
+    {
+      id: "src-claims",
+      name: "Claims intake",
+      type: "folder",
+      options: { directory: "/data/claims-intake", mode: "consume" },
+      enabled: true,
+      owner: "you@acme.com",
+    },
+    {
+      id: "src-contracts",
+      name: "Contracts drop",
+      type: "folder",
+      options: { directory: "/data/contracts", mode: "snapshot" },
+      enabled: true,
+      owner: "legal-ops@acme.com",
+    },
+    {
+      id: "src-archive",
+      name: "Archive reprocess",
+      type: "folder",
+      options: { directory: "/data/archive", mode: "consume" },
+      enabled: true,
+      owner: "data-eng@acme.com",
+    },
+    {
+      id: "src-legacy",
+      name: "Legacy share (paused)",
+      type: "folder",
+      options: { directory: "/mnt/legacy" },
+      enabled: false,
+      owner: "data-eng@acme.com",
+    },
+  ];
+}
+
+/** Which seeded policies reference each seeded source (drives reference counts). */
+const references: Record<string, SourcePolicyRef[]> = {
+  "src-claims": [
+    { id: "pol_security", name: "Security Policy" },
+    { id: "pol_redaction", name: "Redaction Policy" },
+  ],
+  "src-contracts": [{ id: "pol_contract", name: "Contract Review" }],
+};
+
+let store: StoredSource[] = seedSources();
 
 let idCounter = 0;
 function nextId(): string {
@@ -35,24 +78,57 @@ function refsFor(id: string): SourcePolicyRef[] {
   return references[id] ?? [];
 }
 
+function configRows(options: Record<string, unknown>) {
+  return Object.entries(options).map(([key, value]) => ({
+    label: key.charAt(0).toUpperCase() + key.slice(1),
+    value: String(value),
+  }));
+}
+
+function deriveStatus(source: StoredSource, referenceCount: number): SourceStatus {
+  if (!source.enabled) return "disabled";
+  return referenceCount === 0 ? "unused" : "active";
+}
+
+function toSourceView(source: StoredSource, refs: SourcePolicyRef[]): SourceView {
+  return {
+    id: source.id,
+    name: source.name,
+    type: source.type,
+    status: deriveStatus(source, refs.length),
+    referenceCount: refs.length,
+    referencingPolicies: refs,
+    config: configRows(source.options),
+    docsTotal: null,
+  };
+}
+
+function buildKpis(views: SourceView[]): SourceKpi[] {
+  const total = views.length;
+  const inUse = views.filter((v) => v.referenceCount > 0).length;
+  return [
+    { value: total, description: "connections" },
+    { value: inUse, description: "referenced by a policy" },
+    { value: total - inUse, description: "unused" },
+  ];
+}
+
 function buildOverview(): SourcesResponse {
-  const sources = store
-    .map((source) => toSourceView(source, refsFor(source.id)))
+  const views = store
+    .map((s) => toSourceView(s, refsFor(s.id)))
     .sort(
       (a, b) =>
         b.referenceCount - a.referenceCount || a.name.localeCompare(b.name),
     );
-  return { kpis: buildKpis(sources), sources };
+  return { kpis: buildKpis(views), sources: views };
 }
 
 export const sourcesHandlers = [
-  // Overview: one row per source, with reference counts.
   http.get("/api/v1/sources", async () => {
     await delay(120);
     return HttpResponse.json(buildOverview());
   }),
 
-  // Get one source's raw record by id.
   http.get("/api/v1/sources/:id", async ({ params }) => {
     await delay(120);
     const source = store.find((s) => s.id === params.id);
@@ -60,7 +136,6 @@ export const sourcesHandlers = [
     return HttpResponse.json(source);
   }),
 
-  // Create or update: a blank id is assigned, owner stamped server-side.
   http.post("/api/v1/sources", async ({ request }) => {
     await delay(120);
     const incoming = (await request.json()) as Source;
@@ -79,7 +154,6 @@ export const sourcesHandlers = [
     return HttpResponse.json(saved);
   }),
 
-  // Delete: 404 if missing, 409 if a policy still references it.
   http.delete("/api/v1/sources/:id", async ({ params }) => {
     await delay(120);
     const id = String(params.id);
