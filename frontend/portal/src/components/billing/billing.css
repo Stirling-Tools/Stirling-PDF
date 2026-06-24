@@ -432,16 +432,17 @@
   font-size: 0.9375rem;
 }
 
-/* Invoice table sits flush inside the already-surfaced Card: drop the table's
+/* Tables that sit flush inside an already-surfaced Card: drop the table's
    own border + background + radius so only the row dividers (kept by sui-table
-   defaults) show. Column headers are hidden too — only 4 columns, all
-   self-evident; the labels were just chrome. */
-.portal-billing__invoice-table {
+   defaults) show. Column headers are hidden too — small self-evident tables
+   read better without them. Used by the Invoice history + Per-member usage
+   tables. */
+.portal-billing__flush-table {
   border: none;
   background: transparent;
   border-radius: 0;
 }
-.portal-billing__invoice-table thead {
+.portal-billing__flush-table thead {
   display: none;
 }
 

@@ -82,11 +82,9 @@ export function SubscribedPlanView({ wallet, onWalletChange }: Props) {
 
       {wallet.role === "leader" && wallet.members.length > 0 && (
         <Card padding="loose">
-          <span className="portal-billing__eyebrow">Team</span>
-          <h3 className="portal-billing__section-title">
-            Per-member usage
-          </h3>
+          <h3 className="portal-billing__section-title">Per-member usage</h3>
           <Table
+            className="portal-billing__flush-table"
             columns={memberColumns}
             rows={wallet.members}
             rowKey={(m) => m.userId}
