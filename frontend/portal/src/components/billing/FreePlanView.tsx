@@ -1,50 +1,41 @@
 import { useState } from "react";
 import { Banner, Button, Card } from "@shared/components";
 import type { Wallet } from "@portal/api/billing";
-import { createCheckoutSession, type SaasCurrency } from "@portal/billing/stripe";
+import type { SaasCurrency } from "@portal/billing/stripe";
 import { WalletMeter } from "@portal/components/billing/WalletMeter";
+import { StripeCheckoutModal } from "@portal/components/billing/StripeCheckoutModal";
 
 interface Props {
   wallet: Wallet;
+  /** Called after checkout completes so the parent refetches the wallet. */
+  onSubscribed?: () => void;
+}
+
+function isSaasCurrency(c: string | null): c is SaasCurrency {
+  return c === "usd" || c === "eur" || c === "gbp";
 }
 
 /**
  * Linked, not yet subscribed. Shows the lifetime free meter + a PAYG explainer
- * card. The "Turn on Pay-as-you-go" CTA mints a Stripe checkout session via
- * the SaaS edge function (same path the SaaS web app uses) and redirects.
+ * card. The "Turn on Pay-as-you-go" CTA opens the embedded Stripe Checkout
+ * modal (same UX the SaaS web app uses — the admin stays in the portal).
  */
-export function FreePlanView({ wallet }: Props) {
-  const [checkoutError, setCheckoutError] = useState<string | null>(null);
-  const [starting, setStarting] = useState(false);
+export function FreePlanView({ wallet, onSubscribed }: Props) {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [missingTeam, setMissingTeam] = useState<string | null>(null);
 
   const isLeader = wallet.role === "leader";
+  const currency: SaasCurrency = isSaasCurrency(wallet.currency)
+    ? wallet.currency
+    : "usd";
 
-  async function startCheckout() {
-    if (wallet.teamId == null) return;
-    setStarting(true);
-    setCheckoutError(null);
-    try {
-      // Use the wallet's resolved currency if any; default to "usd" — the
-      // edge function only supports usd/eur/gbp.
-      const currency =
-        wallet.currency && isSaasCurrency(wallet.currency)
-          ? (wallet.currency as SaasCurrency)
-          : ("usd" as SaasCurrency);
-      const { url } = await createCheckoutSession({
-        teamId: wallet.teamId,
-        currency,
-        successUrl: window.location.href,
-        cancelUrl: window.location.href,
-      });
-      window.location.href = url;
-    } catch (e) {
-      setCheckoutError(e instanceof Error ? e.message : String(e));
-      setStarting(false);
+  function openCheckout() {
+    if (wallet.teamId == null) {
+      setMissingTeam("No team is resolved on your wallet yet — refresh and try again.");
+      return;
     }
-  }
-
-  function isSaasCurrency(c: string): c is SaasCurrency {
-    return c === "usd" || c === "eur" || c === "gbp";
+    setMissingTeam(null);
+    setModalOpen(true);
   }
 
   return (
@@ -80,9 +71,9 @@ export function FreePlanView({ wallet }: Props) {
           </li>
         </ul>
 
-        {checkoutError && (
-          <Banner tone="danger" title="Couldn't start checkout">
-            {checkoutError}
+        {missingTeam && (
+          <Banner tone="warning" title="Couldn't start checkout">
+            {missingTeam}
           </Banner>
         )}
 
@@ -90,8 +81,7 @@ export function FreePlanView({ wallet }: Props) {
           {isLeader ? (
             <Button
               variant="gradient"
-              loading={starting}
-              onClick={startCheckout}
+              onClick={openCheckout}
               disabled={wallet.teamId == null}
             >
               Turn on Pay-as-you-go →
@@ -106,6 +96,19 @@ export function FreePlanView({ wallet }: Props) {
           </span>
         </div>
       </Card>
+
+      {wallet.teamId != null && (
+        <StripeCheckoutModal
+          open={modalOpen}
+          onClose={() => setModalOpen(false)}
+          teamId={wallet.teamId}
+          currency={currency}
+          onComplete={() => {
+            setModalOpen(false);
+            onSubscribed?.();
+          }}
+        />
+      )}
     </div>
   );
 }

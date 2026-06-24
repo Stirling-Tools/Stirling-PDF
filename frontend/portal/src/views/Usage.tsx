@@ -115,7 +115,7 @@ export function Usage() {
       )}
 
       {isLinked && wallet && wallet.status === "free" && (
-        <FreePlanView wallet={wallet} />
+        <FreePlanView wallet={wallet} onSubscribed={refresh} />
       )}
 
       {isLinked && wallet && wallet.status === "subscribed" && (

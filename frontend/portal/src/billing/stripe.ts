@@ -36,12 +36,21 @@ interface PortalSessionRequest {
   returnUrl: string;
 }
 
-/** Checkout response: either a new Checkout URL or a portal URL if already subscribed. */
+/**
+ * Checkout response shape. The edge function defaults to embedded Stripe
+ * Checkout (returns {@code client_secret}); it can also return:
+ *   - {@code portal_url} + {@code already_subscribed: true} when the team is
+ *     already on PAYG (short-circuit so the click still does something useful)
+ *   - {@code url} alongside or instead of {@code client_secret} for hosted /
+ *     redirect-mode flows (rare; embedded is the default for the SaaS UX).
+ */
 interface CheckoutResponse {
   success: boolean;
-  checkout_url?: string;
+  client_secret?: string;
+  url?: string;
   portal_url?: string;
   already_subscribed?: boolean;
+  mock?: boolean;
   error?: string;
 }
 
@@ -71,16 +80,29 @@ async function invoke<T>(name: string, body: Record<string, unknown>): Promise<T
 }
 
 /**
- * Mint a Stripe Checkout session for PAYG subscription. Returns the URL the
- * browser should redirect to: usually a Checkout URL, but if the team is
- * already subscribed the edge function short-circuits to a Customer Portal URL
- * (so the click still does something sensible). After Checkout completes, the
- * Stripe webhook flips the team to subscribed and the next fetchWallet picks
- * it up.
+ * Result of {@link createCheckoutSession}. Exactly ONE of {@code clientSecret}
+ * or {@code redirectUrl} is set: clientSecret drives embedded Stripe Checkout
+ * (the default UX, matching the SaaS web app); redirectUrl is used for the
+ * already-subscribed short-circuit (portal URL) or any hosted-mode fallback.
+ */
+export interface CheckoutSession {
+  clientSecret: string | null;
+  redirectUrl: string | null;
+  alreadySubscribed: boolean;
+  mock: boolean;
+}
+
+/**
+ * Mint a Stripe Checkout session for PAYG subscription. Defaults to embedded
+ * Checkout (returns {@code clientSecret}) so the portal can mount
+ * &lt;EmbeddedCheckoutProvider&gt; inline. If the team is already subscribed the
+ * edge function short-circuits to a Customer Portal URL — surfaced as
+ * {@code redirectUrl} + {@code alreadySubscribed=true} so the caller can open it
+ * in a new tab instead of trying to mount a checkout iframe with no secret.
  */
 export async function createCheckoutSession(
   req: CheckoutSessionRequest,
-): Promise<{ url: string; alreadySubscribed: boolean }> {
+): Promise<CheckoutSession> {
   const res = await invoke<CheckoutResponse>("create-checkout-session", {
     team_id: req.teamId,
     currency: req.currency ?? "usd",
@@ -93,11 +115,27 @@ export async function createCheckoutSession(
   if (!res.success) {
     throw new StripeFunctionError(res.error ?? "create-checkout-session failed");
   }
-  const url = res.checkout_url ?? res.portal_url;
-  if (!url) {
-    throw new StripeFunctionError("create-checkout-session returned no URL");
+  const alreadySubscribed = Boolean(res.already_subscribed);
+  const redirectUrl = alreadySubscribed
+    ? (res.portal_url ?? null)
+    : (res.url ?? null);
+  const clientSecret = alreadySubscribed ? null : (res.client_secret ?? null);
+  if (!clientSecret && !redirectUrl) {
+    throw new StripeFunctionError(
+      "create-checkout-session returned neither client_secret nor URL",
+    );
   }
-  return { url, alreadySubscribed: Boolean(res.already_subscribed) };
+  return {
+    clientSecret,
+    redirectUrl,
+    alreadySubscribed,
+    mock: Boolean(res.mock) || clientSecret?.startsWith("cs_mock_") === true,
+  };
+}
+
+/** {@code VITE_STRIPE_PUBLISHABLE_KEY} — the Stripe pk used by embedded Checkout. */
+export function getStripePublishableKey(): string {
+  return import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ?? "";
 }
 
 /**
