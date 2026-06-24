@@ -461,6 +461,13 @@
   background: var(--color-bg-2, #f1f5f9);
 }
 
+/* When rendered as a <button> rather than an <a>, normalise the chrome. */
+.portal-billing__invoice-link--btn {
+  font-family: inherit;
+  cursor: pointer;
+  background: transparent;
+}
+
 .portal-billing__invoice-footer {
   display: flex;
   justify-content: center;
