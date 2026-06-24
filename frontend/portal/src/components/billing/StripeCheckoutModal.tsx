@@ -113,8 +113,8 @@ export function StripeCheckoutModal({
       open={open}
       onClose={onClose}
       width="lg"
-      title="Turn on Pay-as-you-go"
-      subtitle="Add a card to keep going past your free grant. Stripe handles the rest."
+      title="Turn on the Processor plan"
+      subtitle="Add a card to keep going past your free Editor-plan grant. Stripe handles the rest."
     >
       {!publishableKey && (
         <Banner tone="neutral" title="Stripe not configured">

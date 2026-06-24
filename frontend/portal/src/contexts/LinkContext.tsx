@@ -33,8 +33,8 @@ export interface LinkInfo {
 
 export const LINK_INFO: Record<LinkState, LinkInfo> = {
   unlinked: { label: "Not linked", unlocked: false },
-  "linked-free": { label: "Linked · Free grant", unlocked: true },
-  "linked-subscribed": { label: "Linked · Pay-as-you-go", unlocked: true },
+  "linked-free": { label: "Editor plan", unlocked: true },
+  "linked-subscribed": { label: "Processor plan", unlocked: true },
 };
 
 interface LinkContextValue {

@@ -17,9 +17,11 @@ export interface TierInfo {
 }
 
 export const TIER_INFO: Record<Tier, TierInfo> = {
-  free: { label: "Free Plan", dotColor: "var(--color-text-4)" },
-  pro: { label: "Pay-as-you-go", dotColor: "var(--color-blue)" },
-  enterprise: { label: "Enterprise Plan", dotColor: "var(--color-purple)" },
+  // Matches SaaS branding (editor/cloud Payg + PaygFree): the always-free
+  // manual-tools tier is "Editor plan"; the metered tier is "Processor plan".
+  free: { label: "Editor plan", dotColor: "var(--color-text-4)" },
+  pro: { label: "Processor plan", dotColor: "var(--color-blue)" },
+  enterprise: { label: "Enterprise plan", dotColor: "var(--color-purple)" },
 };
 
 interface TierContextValue {

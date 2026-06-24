@@ -13,7 +13,7 @@ export function LinkAccountPrompt() {
       <EmptyState
         size="default"
         title="Link your Stirling account"
-        description="Linking unlocks 500 free PDFs across automation, AI, and the API. Manual editing stays free always. Subscribe to Pay-as-you-go to keep going past the free grant — set a monthly cap, stay in control."
+        description="Link to unlock the full Editor plan — 500 free PDFs across automation, AI, and the API. Manual PDF editing stays free forever, no matter what. When you need more, turn on the Processor plan and only pay for what you use."
         actions={
           <Button variant="gradient" onClick={() => openSettings()}>
             Link Stirling account

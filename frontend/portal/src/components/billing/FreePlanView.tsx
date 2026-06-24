@@ -16,9 +16,10 @@ function isSaasCurrency(c: string | null): c is SaasCurrency {
 }
 
 /**
- * Linked, not yet subscribed. Shows the lifetime free meter + a PAYG explainer
- * card. The "Turn on Pay-as-you-go" CTA opens the embedded Stripe Checkout
- * modal (same UX the SaaS web app uses — the admin stays in the portal).
+ * Linked, not yet subscribed. Shows the lifetime free meter + the Processor
+ * plan explainer card. The "Turn on Processor" CTA opens the embedded Stripe
+ * Checkout modal (same UX the SaaS web app uses — the admin stays in the
+ * portal).
  */
 export function FreePlanView({ wallet, onSubscribed }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
@@ -43,9 +44,9 @@ export function FreePlanView({ wallet, onSubscribed }: Props) {
       <WalletMeter wallet={wallet} />
 
       <Card padding="loose" className="portal-billing__plan-card">
-        <span className="portal-billing__eyebrow">Pay-as-you-go plan</span>
+        <span className="portal-billing__eyebrow">Processor plan · metered</span>
         <h2 className="portal-billing__plan-title">
-          Turn on Pay-as-you-go
+          Turn on the Processor plan
         </h2>
         <p className="portal-billing__plan-sub">
           Keep going past your {wallet.freeAllowance.toLocaleString()} free PDFs
@@ -66,8 +67,8 @@ export function FreePlanView({ wallet, onSubscribed }: Props) {
             programmatically.
           </li>
           <li>
-            <strong>Manual PDF editing stays free</strong> — view, sign, merge,
-            split, watermark, compress, convert, manual OCR — always.
+            <strong>Editor plan stays free</strong> — view, sign, merge, split,
+            watermark, compress, convert, manual OCR — always.
           </li>
         </ul>
 
@@ -84,11 +85,11 @@ export function FreePlanView({ wallet, onSubscribed }: Props) {
               onClick={openCheckout}
               disabled={wallet.teamId == null}
             >
-              Turn on Pay-as-you-go →
+              Turn on Processor →
             </Button>
           ) : (
             <p className="portal-billing__plan-readonly">
-              Only the team owner can enable Pay-as-you-go.
+              Only the team owner can enable the Processor plan.
             </p>
           )}
           <span className="portal-billing__plan-reassure">

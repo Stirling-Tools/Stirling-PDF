@@ -1,119 +1,164 @@
-import { Card, StatusBadge } from "@shared/components";
+import { Card } from "@shared/components";
 import type { Wallet } from "@portal/api/billing";
 
 interface Props {
   wallet: Wallet;
 }
 
-function formatMoney(minor: number | null, currency: string | null): string {
-  if (minor == null) return "—";
+/** State band — mirrors the SaaS meter exactly (FULL / WARNED / DEGRADED at 80% / 100%). */
+function meterState(used: number, limit: number): {
+  state: "FULL" | "WARNED" | "DEGRADED";
+  pct: number;
+} {
+  const pct = limit > 0 ? Math.min(100, (used / limit) * 100) : 100;
+  const state = pct >= 100 ? "DEGRADED" : pct >= 80 ? "WARNED" : "FULL";
+  return { state, pct };
+}
+
+function currencySymbol(currency: string | null): string {
+  switch ((currency ?? "").toLowerCase()) {
+    case "usd":
+      return "$";
+    case "eur":
+      return "€";
+    case "gbp":
+      return "£";
+    default:
+      return currency ? currency.toUpperCase() + " " : "$";
+  }
+}
+
+function formatMoneyMajor(major: number, currency: string | null): string {
   const code = (currency ?? "usd").toUpperCase();
-  const major = minor / 100;
   try {
     return new Intl.NumberFormat(undefined, {
       style: "currency",
       currency: code,
     }).format(major);
   } catch {
-    return `${major.toFixed(2)} ${code}`;
+    return `${currencySymbol(currency)}${major.toLocaleString()}`;
   }
 }
 
-function formatRate(perDocMinor: number | null, currency: string | null): string {
-  if (perDocMinor == null) return "—";
-  return `${formatMoney(perDocMinor, currency)}/PDF`;
-}
-
 /**
- * Headline meter card. Subscribed: this-period spend, estimated bill, cap.
- * Free: lifetime free pool used + remaining. Same component, two faces — the
- * billing page renders one or the other based on wallet.status.
+ * Headline meter card. Matches the SaaS `FreeMeterPanel` visual treatment
+ * (same `paygf-meter` + `payg-bar` + `payg-status` class structure, so the
+ * styling is interchangeable with the cloud plan page).
+ *
+ * Two faces:
+ *   - free                → "X / N free PDFs" (uses freeAllowance + freeRemaining)
+ *   - subscribed (no cap) → "X PDFs processed this period" (estimated bill only,
+ *                            no bar — uncapped)
+ *   - subscribed (capped) → "$spent / $cap" against the configured cap
  */
 export function WalletMeter({ wallet }: Props) {
   const subscribed = wallet.status === "subscribed";
-  const usedPct =
-    wallet.billableLimit && wallet.billableLimit > 0
-      ? Math.min(100, (wallet.billableUsed / wallet.billableLimit) * 100)
-      : null;
+
+  if (!subscribed) {
+    // Editor-plan free-grant view: lifetime grant, 500 PDFs by default.
+    const { state, pct } = meterState(wallet.billableUsed, wallet.freeAllowance);
+    const stateLabel =
+      state === "DEGRADED"
+        ? "Limit reached"
+        : state === "WARNED"
+          ? "Approaching limit"
+          : "Plenty left";
+    return (
+      <Card padding="loose">
+        <span className="portal-billing__eyebrow">Editor plan · Always free</span>
+        <h2 className="portal-billing__meter-title">
+          One-time free grant
+        </h2>
+        <div className="paygf-meter" data-state={state}>
+          <div className="paygf-meter__top">
+            <div className="paygf-meter__figure">
+              <span className="paygf-meter__num">
+                {wallet.billableUsed.toLocaleString()}
+              </span>
+              <span className="paygf-meter__cap">
+                / {wallet.freeAllowance.toLocaleString()} free PDFs
+              </span>
+            </div>
+            <span className="payg-status" data-state={state}>
+              <span className="payg-status__dot" />
+              {stateLabel}
+            </span>
+          </div>
+          <div className="payg-bar">
+            <div
+              className="payg-bar__fill"
+              data-state={state}
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+          <div className="paygf-meter__meta">
+            <span>Automation · AI · API requests</span>
+          </div>
+        </div>
+        <p className="portal-billing__meter-foot">
+          Manual PDF editing — view, sign, merge, split, watermark, compress,
+          convert, manual OCR — is always free.
+        </p>
+      </Card>
+    );
+  }
+
+  // Subscribed (Processor plan): spend-vs-cap meter.
+  const spent =
+    wallet.estimatedBillMinor != null ? wallet.estimatedBillMinor / 100 : 0;
+  const cap = wallet.capUsd ?? 0;
+  const capActive = !wallet.noCap && cap > 0;
+  const { state, pct } = meterState(spent, cap);
+  const stateLabel =
+    !capActive
+      ? "Uncapped"
+      : state === "DEGRADED"
+        ? "Cap reached"
+        : state === "WARNED"
+          ? "Approaching cap"
+          : "Healthy";
+  const symbol = currencySymbol(wallet.currency);
 
   return (
     <Card padding="loose">
-      <div className="portal-billing__meter-head">
-        <div>
-          <span className="portal-billing__eyebrow">
-            {subscribed ? "This period" : "Free grant"}
+      <span className="portal-billing__eyebrow">Processor plan · metered</span>
+      <h2 className="portal-billing__meter-title">This period</h2>
+      <div className="paygf-meter" data-state={capActive ? state : "FULL"}>
+        <div className="paygf-meter__top">
+          <div className="paygf-meter__figure">
+            <span className="paygf-meter__num">
+              {symbol}
+              {spent.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+            </span>
+            <span className="paygf-meter__cap">
+              {capActive
+                ? `/ ${formatMoneyMajor(cap, wallet.currency)} cap`
+                : "no cap"}
+            </span>
+          </div>
+          <span className="payg-status" data-state={capActive ? state : "FULL"}>
+            <span className="payg-status__dot" />
+            {stateLabel}
           </span>
-          <h2 className="portal-billing__meter-title">
-            {subscribed ? "PDFs processed this period" : "Lifetime free grant"}
-          </h2>
         </div>
-        <StatusBadge
-          tone={subscribed ? "success" : "info"}
-          size="md"
-        >
-          {subscribed ? "Pay-as-you-go" : "Free"}
-        </StatusBadge>
+        {capActive && (
+          <div className="payg-bar">
+            <div
+              className="payg-bar__fill"
+              data-state={state}
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+        )}
+        <div className="paygf-meter__meta">
+          <span>
+            {wallet.billableUsed.toLocaleString()} PDFs · {wallet.billingPeriodStart} → {wallet.billingPeriodEnd}
+          </span>
+        </div>
       </div>
-
-      <div className="portal-billing__meter-figures">
-        <div className="portal-billing__meter-figure">
-          <span className="portal-billing__meter-num">
-            {wallet.billableUsed.toLocaleString()}
-          </span>
-          <span className="portal-billing__meter-label">
-            {subscribed ? "PDFs processed" : "PDFs used"}
-          </span>
-        </div>
-        {wallet.billableLimit != null && (
-          <div className="portal-billing__meter-figure">
-            <span className="portal-billing__meter-num portal-billing__meter-num--muted">
-              of {wallet.billableLimit.toLocaleString()}
-            </span>
-            <span className="portal-billing__meter-label">
-              {subscribed
-                ? `Capped at ${formatMoney((wallet.capUsd ?? 0) * 100, wallet.currency ?? "usd")}/period`
-                : "free PDFs total"}
-            </span>
-          </div>
-        )}
-        {subscribed && wallet.estimatedBillMinor != null && (
-          <div className="portal-billing__meter-figure">
-            <span className="portal-billing__meter-num">
-              {formatMoney(wallet.estimatedBillMinor, wallet.currency)}
-            </span>
-            <span className="portal-billing__meter-label">
-              estimated · {formatRate(wallet.pricePerDocMinor, wallet.currency)}
-            </span>
-          </div>
-        )}
-        {!subscribed && (
-          <div className="portal-billing__meter-figure">
-            <span className="portal-billing__meter-num">
-              {wallet.freeRemaining.toLocaleString()}
-            </span>
-            <span className="portal-billing__meter-label">remaining</span>
-          </div>
-        )}
-      </div>
-
-      {usedPct != null && (
-        <div
-          className="portal-billing__meter-track"
-          role="progressbar"
-          aria-valuenow={Math.round(usedPct)}
-          aria-valuemax={100}
-        >
-          <div
-            className="portal-billing__meter-fill"
-            style={{ width: `${usedPct}%` }}
-          />
-        </div>
-      )}
-
       <p className="portal-billing__meter-foot">
-        {subscribed
-          ? `Period: ${wallet.billingPeriodStart} → ${wallet.billingPeriodEnd}. Free portion was netted out at charge time; the Stripe invoice is authoritative.`
-          : "Manual PDF editing — view, sign, merge, split, watermark, compress, convert, manual OCR — stays free forever, no matter how many PDFs you touch. The free grant only applies to automation, AI, and API."}
+        Estimated charges so far this period. The Stripe invoice is
+        authoritative.
       </p>
     </Card>
   );

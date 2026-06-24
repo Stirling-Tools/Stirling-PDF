@@ -120,7 +120,122 @@
 .portal-billing__meter-foot {
   font-size: 0.8125rem;
   color: var(--color-text-3);
-  margin: 0;
+  margin: 0.75rem 0 0;
+}
+
+/* ── SaaS-shared meter primitives ───────────────────────────────────────────
+   Same class names + structure as
+   editor/src/cloud/components/shared/config/configSections/{Payg,PaygFree}.css
+   so the visual treatment matches the SaaS plan page. When the shared move
+   lands these can be deduped via a shared stylesheet. */
+.paygf-meter {
+  padding: 14px 16px;
+  border-radius: 11px;
+  background: var(--color-bg-2, #f8fafc);
+  border: 1px solid var(--color-border, #e5e7eb);
+  margin-top: 0.75rem;
+}
+.paygf-meter__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.paygf-meter__figure {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+}
+.paygf-meter__num {
+  font-size: 1.7rem;
+  font-weight: 750;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--color-text-1, #0f172a);
+  font-variant-numeric: tabular-nums;
+}
+.paygf-meter__cap {
+  font-size: 0.85rem;
+  color: var(--color-text-3, #64748b);
+  font-variant-numeric: tabular-nums;
+}
+.paygf-meter .payg-bar {
+  margin-top: 11px;
+}
+.paygf-meter__meta {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  font-size: 0.78rem;
+  color: var(--color-text-2, #475569);
+}
+
+/* Status chip (Healthy / Approaching / Cap reached). Solid hex colours
+   intentionally — the chip palette is semantic, not theme-bound. */
+.payg-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 13px;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.payg-status__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+}
+.payg-status[data-state="FULL"] {
+  background: #dcfce7;
+  color: #15803d;
+}
+.payg-status[data-state="FULL"] .payg-status__dot {
+  background: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.18);
+}
+.payg-status[data-state="WARNED"] {
+  background: #fef3c7;
+  color: #a16207;
+}
+.payg-status[data-state="WARNED"] .payg-status__dot {
+  background: #eab308;
+  box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.2);
+}
+.payg-status[data-state="DEGRADED"] {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+.payg-status[data-state="DEGRADED"] .payg-status__dot {
+  background: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+}
+
+/* Segmented usage bar */
+.payg-bar {
+  margin-top: 18px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--color-bg-3, #e5e7eb);
+  overflow: hidden;
+  position: relative;
+}
+.payg-bar__fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.payg-bar__fill[data-state="FULL"] {
+  background: linear-gradient(90deg, #0a8bff, #38bdf8);
+}
+.payg-bar__fill[data-state="WARNED"] {
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+.payg-bar__fill[data-state="DEGRADED"] {
+  background: linear-gradient(90deg, #dc2626, #f87171);
 }
 
 /* ── Plan card (free state) ─────────────────────────────────────────────── */

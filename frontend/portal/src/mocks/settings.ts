@@ -97,9 +97,9 @@ const REGIONS: RegionOption[] = [
 ];
 
 const PLAN_LABEL: Record<Tier, string> = {
-  free: "Free Plan",
-  pro: "Pay-as-you-go",
-  enterprise: "Enterprise Plan",
+  free: "Editor plan",
+  pro: "Processor plan",
+  enterprise: "Enterprise plan",
 };
 
 const SEATS: Record<Tier, { used: number; total: number }> = {

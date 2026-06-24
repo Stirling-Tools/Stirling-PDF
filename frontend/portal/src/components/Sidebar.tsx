@@ -50,25 +50,20 @@ const GROUP_PLATFORM: NavEntry[] = [
 ];
 
 /**
- * Persistent "Link account" / "Linked" affordance in the sidebar footer. Reads
- * the link state from LinkContext (populated at app boot by
- * AccountLinkStatusBootstrap) so it doesn't need its own fetch. Click → opens
- * the Settings modal landing on the Account Link section.
+ * Sidebar-footer link-account CTA. Only visible when the org is unlinked — once
+ * linked, the linked-instances row + plan badge already communicate the state,
+ * so a permanent footer button would be noise. Click → opens Settings landing
+ * on the Account Link section.
  */
 function LinkAccountFooterItem() {
   const { t } = useTranslation();
   const { openSettings } = useUI();
   const { linkState } = useLink();
-  const linked = linkState !== "unlinked";
-
+  if (linkState !== "unlinked") return null;
   return (
     <NavItem
       id="account-link"
-      label={
-        linked
-          ? t("shell.sidebar.accountLinked", "Account linked")
-          : t("shell.sidebar.linkAccount", "Link account")
-      }
+      label={t("shell.sidebar.linkAccount", "Link Stirling account")}
       icon={<LinkIcon />}
       onClick={() => openSettings("account-link")}
     />
