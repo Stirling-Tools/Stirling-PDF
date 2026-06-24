@@ -85,7 +85,7 @@ dependencies {
 
     // veraPDF still uses javax.xml.bind, not the new jakarta namespace
     implementation 'javax.xml.bind:jaxb-api:2.3.1'
-    implementation 'com.sun.xml.bind:jaxb-impl:2.3.9'
+    implementation 'com.sun.xml.bind:jaxb-impl:4.0.9'
     implementation 'com.sun.xml.bind:jaxb-core:4.0.7'
 
     // CVE-2022-25647: Explicit gson to prevent unsafe deserialization (tabula would pull 2.8.7)
