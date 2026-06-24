@@ -16,14 +16,19 @@ export class StripeFunctionError extends Error {
   }
 }
 
+/** Currencies the SaaS PAYG offering supports. Default for new checkouts is "usd". */
+export type SaasCurrency = "usd" | "eur" | "gbp";
+
 interface CheckoutSessionRequest {
   teamId: number;
   /** Where Stripe redirects on success — typically the portal billing page. */
   successUrl: string;
   /** Where Stripe redirects on cancel/close. */
   cancelUrl: string;
-  /** Optional monthly cap in USD. null = no cap. */
-  capUsd?: number | null;
+  /** ISO 4217 lower-case. Defaults to "usd"; portal uses the wallet's currency when set. */
+  currency?: SaasCurrency;
+  /** Optional prefill for the Stripe Checkout email field. */
+  billingOwnerEmail?: string;
 }
 
 interface PortalSessionRequest {
@@ -31,8 +36,19 @@ interface PortalSessionRequest {
   returnUrl: string;
 }
 
-interface SessionUrlResponse {
-  url: string;
+/** Checkout response: either a new Checkout URL or a portal URL if already subscribed. */
+interface CheckoutResponse {
+  success: boolean;
+  checkout_url?: string;
+  portal_url?: string;
+  already_subscribed?: boolean;
+  error?: string;
+}
+
+interface PortalResponse {
+  success: boolean;
+  url?: string;
+  error?: string;
 }
 
 async function invoke<T>(name: string, body: Record<string, unknown>): Promise<T> {
@@ -55,36 +71,52 @@ async function invoke<T>(name: string, body: Record<string, unknown>): Promise<T
 }
 
 /**
- * Mint a Stripe Checkout session for PAYG subscription. The browser is
- * redirected to {@code url}; on completion the webhook flips the team to
- * subscribed and the portal picks it up via {@code fetchWallet}.
+ * Mint a Stripe Checkout session for PAYG subscription. Returns the URL the
+ * browser should redirect to: usually a Checkout URL, but if the team is
+ * already subscribed the edge function short-circuits to a Customer Portal URL
+ * (so the click still does something sensible). After Checkout completes, the
+ * Stripe webhook flips the team to subscribed and the next fetchWallet picks
+ * it up.
  */
 export async function createCheckoutSession(
   req: CheckoutSessionRequest,
-): Promise<string> {
-  const { url } = await invoke<SessionUrlResponse>("create-checkout-session", {
+): Promise<{ url: string; alreadySubscribed: boolean }> {
+  const res = await invoke<CheckoutResponse>("create-checkout-session", {
     team_id: req.teamId,
+    currency: req.currency ?? "usd",
     success_url: req.successUrl,
     cancel_url: req.cancelUrl,
-    cap_usd: req.capUsd ?? null,
+    ...(req.billingOwnerEmail
+      ? { billing_owner_email: req.billingOwnerEmail }
+      : {}),
   });
-  return url;
+  if (!res.success) {
+    throw new StripeFunctionError(res.error ?? "create-checkout-session failed");
+  }
+  const url = res.checkout_url ?? res.portal_url;
+  if (!url) {
+    throw new StripeFunctionError("create-checkout-session returned no URL");
+  }
+  return { url, alreadySubscribed: Boolean(res.already_subscribed) };
 }
 
 /**
  * Mint a Stripe Customer Portal session. The admin can manage their card,
- * view invoices, and cancel from Stripe's hosted UI. Returns 404 with
- * {@code team_not_subscribed} if called for a free team — caller toasts that.
+ * view invoices, and cancel from Stripe's hosted UI. The edge function returns
+ * 404 with {@code team_not_subscribed} if called for a free team — surfaced
+ * here as a StripeFunctionError the caller can toast.
  */
 export async function createPortalSession(
   req: PortalSessionRequest,
 ): Promise<string> {
-  const { url } = await invoke<SessionUrlResponse>(
-    "create-customer-portal-session",
-    {
-      team_id: req.teamId,
-      return_url: req.returnUrl,
-    },
-  );
-  return url;
+  const res = await invoke<PortalResponse>("create-customer-portal-session", {
+    team_id: req.teamId,
+    return_url: req.returnUrl,
+  });
+  if (!res.success || !res.url) {
+    throw new StripeFunctionError(
+      res.error ?? "create-customer-portal-session failed",
+    );
+  }
+  return res.url;
 }

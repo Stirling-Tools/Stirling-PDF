@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Banner, Button, Card } from "@shared/components";
 import type { Wallet } from "@portal/api/billing";
-import { createCheckoutSession } from "@portal/billing/stripe";
+import { createCheckoutSession, type SaasCurrency } from "@portal/billing/stripe";
 import { WalletMeter } from "@portal/components/billing/WalletMeter";
 
 interface Props {
@@ -24,8 +24,15 @@ export function FreePlanView({ wallet }: Props) {
     setStarting(true);
     setCheckoutError(null);
     try {
-      const url = await createCheckoutSession({
+      // Use the wallet's resolved currency if any; default to "usd" — the
+      // edge function only supports usd/eur/gbp.
+      const currency =
+        wallet.currency && isSaasCurrency(wallet.currency)
+          ? (wallet.currency as SaasCurrency)
+          : ("usd" as SaasCurrency);
+      const { url } = await createCheckoutSession({
         teamId: wallet.teamId,
+        currency,
         successUrl: window.location.href,
         cancelUrl: window.location.href,
       });
@@ -34,6 +41,10 @@ export function FreePlanView({ wallet }: Props) {
       setCheckoutError(e instanceof Error ? e.message : String(e));
       setStarting(false);
     }
+  }
+
+  function isSaasCurrency(c: string): c is SaasCurrency {
+    return c === "usd" || c === "eur" || c === "gbp";
   }
 
   return (
