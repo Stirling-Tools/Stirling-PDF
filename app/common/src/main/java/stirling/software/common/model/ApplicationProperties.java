@@ -207,6 +207,11 @@ public class ApplicationProperties {
     @Data
     public static class Policies {
         /**
+         * Master switch for the policy + sources subsystem (the PAYG-metered automation surface).
+         */
+        private boolean enabled = false;
+
+        /**
          * Absolute directories that policy folder input sources and output sinks may read from or
          * write to. Empty (the default) disables folder access entirely, so a policy can never be
          * pointed at an arbitrary server path. Stirling's own config directory is always

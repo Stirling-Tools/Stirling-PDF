@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.context.annotation.Profile;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
@@ -30,7 +30,7 @@ import stirling.software.proprietary.policy.source.SourceStore;
  * defended: an operator who roots an allowlist on a symlink to a sensitive location is trusted.
  */
 @Component
-@Profile("saas")
+@ConditionalOnBooleanProperty(name = "policies.enabled")
 public class FolderAccessGuard {
 
     public static final String FOLDER_TYPE = "folder";

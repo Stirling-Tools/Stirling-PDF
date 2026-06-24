@@ -2,7 +2,7 @@ package stirling.software.proprietary.policy.source;
 
 import java.util.List;
 
-import org.springframework.context.annotation.Profile;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -40,7 +40,7 @@ import stirling.software.proprietary.policy.store.PolicyStore;
 @Hidden
 @RequiredArgsConstructor
 @Tag(name = "Sources", description = "Reusable policy input connections")
-@Profile("saas")
+@ConditionalOnBooleanProperty(name = "policies.enabled")
 public class SourceController {
 
     private final SourceStore sourceStore;
@@ -117,8 +117,8 @@ public class SourceController {
 
     /**
      * Stamp owner + team server-side. Create stamps the current user and their team; update
-     * preserves the existing owner and team after verifying the source belongs to the caller's team,
-     * so the client can neither forge ownership on create nor reach across teams on update (a
+     * preserves the existing owner and team after verifying the source belongs to the caller's
+     * team, so the client can neither forge ownership on create nor reach across teams on update (a
      * source in another team reads as not-found).
      */
     private Source resolveOwnership(Source incoming) {

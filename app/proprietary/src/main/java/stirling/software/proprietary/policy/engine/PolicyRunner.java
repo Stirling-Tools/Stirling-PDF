@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.springframework.context.annotation.Profile;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -30,7 +30,7 @@ import stirling.software.proprietary.policy.source.SourceStore;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Profile("saas")
+@ConditionalOnBooleanProperty(name = "policies.enabled")
 public class PolicyRunner {
 
     private final PolicyEngine policyEngine;

@@ -2,7 +2,7 @@ package stirling.software.proprietary.policy.engine;
 
 import java.util.List;
 
-import org.springframework.context.annotation.Profile;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -25,7 +25,7 @@ import stirling.software.proprietary.policy.trigger.PolicyTrigger;
  */
 @Service
 @RequiredArgsConstructor
-@Profile("saas")
+@ConditionalOnBooleanProperty(name = "policies.enabled")
 public class PolicyValidator {
 
     private final List<PolicyTrigger> triggers;

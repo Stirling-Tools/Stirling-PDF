@@ -2,8 +2,8 @@ package stirling.software.proprietary.policy.trigger;
 
 import java.util.List;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.context.SmartLifecycle;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Profile("saas")
+@ConditionalOnBooleanProperty(name = "policies.enabled")
 public class PolicyTriggerManager implements SmartLifecycle {
 
     private final List<PolicyTrigger> triggers;

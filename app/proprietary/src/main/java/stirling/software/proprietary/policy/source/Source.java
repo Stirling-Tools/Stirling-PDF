@@ -5,9 +5,9 @@ import java.util.Map;
 import stirling.software.proprietary.policy.model.InputSpec;
 
 /**
- * A persisted, reusable input connection: the instantiation of a source definition.
- * Policies reference sources by {@code id} rather than embedding their
- * config, so one connection is configured once and can feed many policies.
+ * A persisted, reusable input connection: the instantiation of a source definition. Policies
+ * reference sources by {@code id} rather than embedding their config, so one connection is
+ * configured once and can feed many policies.
  *
  * <p>{@code type} keys an {@link stirling.software.proprietary.policy.input.InputSource} bean,
  * matching {@link InputSpec#type()}; {@code options} is that source's config. {@code owner} and
