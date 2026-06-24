@@ -3,6 +3,7 @@ import { fetch } from "@tauri-apps/plugin-http";
 import {
   shouldUseFastLocalTransport,
   fetchViaLocalProxy,
+  markFastTransportUnavailable,
 } from "@app/services/tauriLocalProxy";
 
 /**
@@ -299,8 +300,10 @@ class TauriHttpClient {
           ) {
             throw proxyError;
           }
+          // Fast path failed — trip the circuit breaker and fall back to plugin-http.
+          markFastTransportUnavailable();
           console.warn(
-            "[TauriHttpClient] local fast-path failed, falling back to plugin-http",
+            "[TauriHttpClient] local fast-path failed; reverting to plugin-http for this session",
             proxyError,
           );
           response = await fetch(url, fetchOptions);

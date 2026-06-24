@@ -1,16 +1,17 @@
 import { invoke } from "@tauri-apps/api/core";
 
-/**
- * Experimental fast path for localhost binary traffic.
- *
- * When enabled, PDF uploads/downloads to the bundled backend bypass
- * `@tauri-apps/plugin-http`'s per-byte number-array IPC marshalling (~3.5x size
- * bloat) and move raw bytes via a Rust command (see
- * src-tauri/src/commands/local_proxy.rs). Default OFF — flip to A/B test, and
- * the caller falls back to the normal plugin-http path automatically if this
- * path ever throws (except on abort, which is honoured, not retried).
- */
-export const FAST_LOCAL_TRANSPORT_ENABLED = false;
+// Fast path for localhost binary traffic: moves raw bytes via a Rust command
+// instead of plugin-http's per-byte number-array IPC (~3.5x size bloat).
+// See src-tauri/src/commands/local_proxy.rs.
+//
+// A single runtime failure trips a session-wide circuit breaker and all
+// subsequent requests fall back to plugin-http transparently.
+let fastTransportUnavailable = false;
+
+// Trip the circuit breaker so the rest of the session uses plugin-http.
+export function markFastTransportUnavailable(): void {
+  fastTransportUnavailable = true;
+}
 
 function isLoopbackUrl(url: string): boolean {
   try {
@@ -40,7 +41,7 @@ export function shouldUseFastLocalTransport(
   responseType: string | undefined,
   data: unknown,
 ): boolean {
-  if (!FAST_LOCAL_TRANSPORT_ENABLED) return false;
+  if (fastTransportUnavailable) return false;
   if (!isLoopbackUrl(url)) return false;
   const hasBinaryUpload =
     typeof FormData !== "undefined" && data instanceof FormData;
