@@ -3,7 +3,11 @@ package stirling.software.proprietary.policy.source;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Map;
@@ -23,6 +27,7 @@ import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.store.InProcessPolicyStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
+import stirling.software.proprietary.policy.trigger.PolicyTriggerManager;
 
 /**
  * Tests for {@link SourceController}'s delete guard: a source still referenced by a policy is
@@ -33,6 +38,7 @@ class SourceControllerTest {
 
     private final SourceStore sourceStore = new InProcessSourceStore();
     private final PolicyStore policyStore = new InProcessPolicyStore();
+    private PolicyTriggerManager triggerManager;
     private SourceController controller;
 
     @BeforeEach
@@ -45,6 +51,10 @@ class SourceControllerTest {
         PolicyAccessGuard policyGuard = new PolicyAccessGuard(userService, properties, authority);
         SourceOverviewService overviewService =
                 new SourceOverviewService(sourceStore, policyStore, sourceGuard, policyGuard);
+        triggerManager = mock(PolicyTriggerManager.class);
+        // A permissive input source so config validation passes and save can be exercised.
+        InputSource folderInput = mock(InputSource.class);
+        when(folderInput.supports(any())).thenReturn(true);
         controller =
                 new SourceController(
                         sourceStore,
@@ -53,8 +63,9 @@ class SourceControllerTest {
                         policyStore,
                         policyGuard,
                         authority,
+                        triggerManager,
                         properties,
-                        List.<InputSource>of());
+                        List.of(folderInput));
     }
 
     @Test
@@ -77,6 +88,15 @@ class SourceControllerTest {
 
         assertEquals(204, response.getStatusCode().value());
         assertTrue(sourceStore.get(source.id()).isEmpty());
+        // A deletable source is referenced by no policy, so no watch registration can change.
+        verify(triggerManager, never()).notifyPoliciesChanged();
+    }
+
+    @Test
+    void savingASourceReSyncsTriggerRegistrations() {
+        controller.save(folderSource());
+
+        verify(triggerManager).notifyPoliciesChanged();
     }
 
     @Test

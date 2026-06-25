@@ -56,6 +56,7 @@ import stirling.software.proprietary.policy.progress.PolicyProgressListener;
 import stirling.software.proprietary.policy.source.SourceAccessGuard;
 import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
+import stirling.software.proprietary.policy.trigger.PolicyTriggerManager;
 
 /**
  * Policy CRUD plus pipeline runs (stored or ad-hoc). Runs are async: returns a run id, poll {@code
@@ -78,6 +79,7 @@ public class PolicyController {
     private final PolicyValidator policyValidator;
     private final PolicyAccessGuard policyAccessGuard;
     private final PolicyManagementAuthority policyManagementAuthority;
+    private final PolicyTriggerManager policyTriggerManager;
     private final ApplicationProperties applicationProperties;
     private final TempFileManager tempFileManager;
     private final JobOwnershipService jobOwnershipService;
@@ -197,7 +199,11 @@ public class PolicyController {
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
-        return ResponseEntity.ok(policyStore.save(owned));
+        Policy saved = policyStore.save(owned);
+        // Re-sync trigger registrations now so a new/changed folder-watch policy starts being
+        // watched immediately instead of after the next reconcile sweep.
+        policyTriggerManager.notifyPoliciesChanged();
+        return ResponseEntity.ok(saved);
     }
 
     /**
@@ -299,6 +305,9 @@ public class PolicyController {
         boolean accessible =
                 policyStore.get(policyId).filter(policyAccessGuard::canAccess).isPresent();
         if (accessible && policyStore.delete(policyId)) {
+            // Cancel any now-orphaned folder watch promptly rather than leaving the WatchKey open
+            // until the next reconcile sweep.
+            policyTriggerManager.notifyPoliciesChanged();
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();

@@ -165,6 +165,30 @@ class FolderWatchTriggerTest {
         }
     }
 
+    @Test
+    void onPoliciesChangedSyncsRegistrationsImmediately() throws Exception {
+        Path dir = Files.createDirectories(tempDir.resolve("watched"));
+        Policy p = folderWatch("p", List.of(InputSpec.folder(dir.toString())));
+
+        WatchService service = FileSystems.getDefault().newWatchService();
+        try {
+            trigger.watchService = service;
+            when(policyStore.findByTriggerType("folder-watch")).thenReturn(List.of(p));
+
+            // The mutation hook registers the new policy's directory without waiting for a
+            // reconcile.
+            trigger.onPoliciesChanged();
+            assertEquals(Set.of(normalized(dir.toString())), trigger.watchedDirs());
+
+            // Once the policy is gone, the same hook cancels its registration.
+            when(policyStore.findByTriggerType("folder-watch")).thenReturn(List.of());
+            trigger.onPoliciesChanged();
+            assertEquals(Set.of(), trigger.watchedDirs());
+        } finally {
+            service.close();
+        }
+    }
+
     private static Path normalized(String dir) {
         return Path.of(dir).toAbsolutePath().normalize();
     }

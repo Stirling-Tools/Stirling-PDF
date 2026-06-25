@@ -123,6 +123,14 @@ public class FolderWatchTrigger implements PolicyTrigger {
         dirByKey.clear();
     }
 
+    @Override
+    public void onPoliciesChanged() {
+        // A created/updated/deleted policy may add or drop a watched directory: register/cancel now
+        // instead of waiting up to watchReconcileSeconds for the next reconcile. A no-op until the
+        // trigger is started (watchService null), where the first reconcile picks everything up.
+        syncRegistrations();
+    }
+
     private void watchLoop() {
         // Capture once: stop() may null the field; close() still wakes take()/poll() on this local.
         WatchService watcher = watchService;

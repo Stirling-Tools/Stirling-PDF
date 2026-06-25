@@ -28,6 +28,7 @@ import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.store.PolicyStore;
+import stirling.software.proprietary.policy.trigger.PolicyTriggerManager;
 
 /**
  * CRUD for persisted, reusable input connections plus the Sources overview for the admin portal. A
@@ -49,6 +50,7 @@ public class SourceController {
     private final PolicyStore policyStore;
     private final PolicyAccessGuard policyAccessGuard;
     private final PolicyManagementAuthority policyManagementAuthority;
+    private final PolicyTriggerManager policyTriggerManager;
     private final ApplicationProperties applicationProperties;
     private final List<InputSource> inputSources;
 
@@ -87,7 +89,11 @@ public class SourceController {
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
-        return ResponseEntity.ok(sourceStore.save(owned));
+        Source saved = sourceStore.save(owned);
+        // An edited folder source can change which directory needs watching, so re-sync trigger
+        // registrations now instead of waiting for the next reconcile.
+        policyTriggerManager.notifyPoliciesChanged();
+        return ResponseEntity.ok(saved);
     }
 
     @DeleteMapping("/{sourceId}")
