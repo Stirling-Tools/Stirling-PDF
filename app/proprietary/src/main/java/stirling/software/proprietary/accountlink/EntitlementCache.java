@@ -67,11 +67,16 @@ public class EntitlementCache {
     }
 
     private boolean isStale(Snapshot snap) {
-        return snap.entitlement() == null
-                || Duration.between(snap.fetchedAt(), Instant.now()).compareTo(ttl) >= 0;
+        // fetchedAt is the last *attempt* time (stamped on success AND failure), so a failed
+        // fetch backs off for a full TTL instead of every billable request re-triggering a
+        // blocking round-trip against a dead/slow SaaS endpoint.
+        return Duration.between(snap.fetchedAt(), Instant.now()).compareTo(ttl) >= 0;
     }
 
-    /** Pulls a fresh snapshot. Keeps the previous one on failure (fail-open). */
+    /**
+     * Pulls a fresh snapshot. Keeps the previous entitlement on failure (fail-open) but still
+     * stamps the attempt time so re-fetches throttle to the TTL.
+     */
     void refresh() {
         Optional<DeviceCredential> cred = credentialStore.get();
         if (cred.isEmpty()) {
@@ -84,8 +89,10 @@ public class EntitlementCache {
         if (fresh != null) {
             snapshot = new Snapshot(fresh, Instant.now());
         } else {
-            // Unreachable: keep the last known snapshot (may be null) and let the gate fail open.
-            log.debug("Entitlement refresh failed; reusing last known snapshot");
+            // Unreachable: keep the last known entitlement (may be null) but stamp the attempt
+            // so we don't hammer SaaS; the gate fails open in the meantime.
+            log.debug("Entitlement refresh failed; reusing last known snapshot, backing off a TTL");
+            snapshot = new Snapshot(snapshot.entitlement(), Instant.now());
         }
     }
 

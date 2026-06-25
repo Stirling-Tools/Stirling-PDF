@@ -72,6 +72,19 @@ class EntitlementCacheTest {
     }
 
     @Test
+    void linked_neverFetched_unreachable_backsOffWithinTtl() {
+        // No prior snapshot + SaaS unreachable: the gate fails open (empty), but a failed
+        // attempt stamps the TTL so a second read within the window does NOT re-fetch —
+        // no sustained hammer of blocking round-trips against a dead endpoint.
+        when(store.get()).thenReturn(Optional.of(cred()));
+        when(client.fetchEntitlement(anyString(), anyString())).thenReturn(null);
+
+        assertTrue(cache.current().isEmpty());
+        assertTrue(cache.current().isEmpty());
+        verify(client, times(1)).fetchEntitlement(any(), any());
+    }
+
+    @Test
     void invalidate_forcesRefetch() {
         InstanceEntitlement snap = new InstanceEntitlement(false, 10, 0, null, EntitlementState.OK);
         when(store.get()).thenReturn(Optional.of(cred()));

@@ -11,7 +11,7 @@ import {
   unlinkInstance,
   type LinkStatus,
 } from "@portal/api/link";
-import { useApplyLinkFacts } from "@portal/contexts/LinkContext";
+import { useApplyLinkFacts, useLink } from "@portal/contexts/LinkContext";
 
 /**
  * Orchestrates the account-link flow for THIS instance:
@@ -46,6 +46,7 @@ export interface UseAccountLink {
 
 export function useAccountLink(): UseAccountLink {
   const applyLinkFacts = useApplyLinkFacts();
+  const { markSaasSessionChanged } = useLink();
   const [status, setStatus] = useState<LinkStatus | null>(null);
   const [phase, setPhase] = useState<LinkPhase>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -92,8 +93,10 @@ export function useAccountLink(): UseAccountLink {
     };
   }, [applyLinkFacts]);
 
-  // SSO return: if we kicked off an SSO link before redirecting away, the SaaS
-  // session is now in the shared Supabase client — finish the link.
+  // SSO return: an SSO sign-in we kicked off has redirected back and the SaaS
+  // session is now in the shared Supabase client. The pending marker carries the
+  // mode: "reauth" only refreshes attended reads (the instance is already linked
+  // — re-registering would mint a duplicate credential); anything else links.
   useEffect(() => {
     const supabase = ensureSaasSupabase();
     const pending = sessionStorage.getItem(PENDING_LINK_KEY);
@@ -102,14 +105,17 @@ export function useAccountLink(): UseAccountLink {
     void supabase.auth.getSession().then(({ data }) => {
       sessionStorage.removeItem(PENDING_LINK_KEY);
       const token = data.session?.access_token;
-      if (token && !cancelled) {
-        void completeLink({ access_token: token }, pending || undefined);
+      if (!token || cancelled) return;
+      if (pending === "reauth") {
+        markSaasSessionChanged();
+      } else {
+        void completeLink({ access_token: token });
       }
     });
     return () => {
       cancelled = true;
     };
-  }, [completeLink]);
+  }, [completeLink, markSaasSessionChanged]);
 
   const unlink = useCallback(async () => {
     setPhase("linking");

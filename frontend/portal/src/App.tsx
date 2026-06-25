@@ -95,6 +95,7 @@ function LinkModalHost() {
   return (
     <LinkAccountModal
       open={linkModalOpen}
+      mode={linkModalMode}
       onClose={closeLinkModal}
       onLinked={onLinked}
     />

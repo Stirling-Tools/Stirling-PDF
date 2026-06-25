@@ -16,6 +16,13 @@ import {
 interface Props {
   open: boolean;
   onClose: () => void;
+  /**
+   * "link" registers this instance against the signed-in account; "reauth" only
+   * refreshes an expired SaaS session (the instance is already linked). The mode
+   * is persisted across the OAuth redirect so the SSO-return handler doesn't
+   * re-register on a reauth.
+   */
+  mode?: "link" | "reauth";
   /** Called with the SaaS session after a successful sign-in. */
   onLinked: (session: SupabaseLoginSession) => void | Promise<void>;
 }
@@ -27,16 +34,18 @@ interface Props {
  * never reaches the browser. SSO redirects away and is finished by useAccountLink
  * on return.
  */
-export function LinkAccountModal({ open, onClose, onLinked }: Props) {
+export function LinkAccountModal({ open, onClose, mode = "link", onLinked }: Props) {
   useEffect(() => {
     if (open) ensureSaasSupabase();
   }, [open]);
 
+  const reauth = mode === "reauth";
   const login = useSupabaseLogin({
     providers: SAAS_OAUTH_PROVIDERS,
-    // Return to the current page after SSO; the link finishes from useAccountLink.
+    // Return to the current page after SSO; the SSO-return handler in
+    // useAccountLink reads the persisted mode so it links vs. only refreshes.
     redirectTo: window.location.href,
-    onBeforeOAuth: () => sessionStorage.setItem(PENDING_LINK_KEY, ""),
+    onBeforeOAuth: () => sessionStorage.setItem(PENDING_LINK_KEY, mode),
     onSuccess: async (session) => {
       await onLinked(session);
       onClose();
@@ -48,8 +57,12 @@ export function LinkAccountModal({ open, onClose, onLinked }: Props) {
       open={open}
       onClose={onClose}
       width="md"
-      title="Link your Stirling account"
-      subtitle="Sign in to the account this server should bill against."
+      title={reauth ? "Sign in again" : "Link your Stirling account"}
+      subtitle={
+        reauth
+          ? "Your session expired — sign back in to your Stirling account. Your instance stays linked."
+          : "Sign in to the account this server should bill against."
+      }
     >
       {isSaasSupabaseConfigured ? (
         <SupabaseLoginForm state={login} />

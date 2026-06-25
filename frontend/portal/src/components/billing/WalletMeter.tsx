@@ -79,7 +79,9 @@ export function SubscribedMeter({ wallet }: { wallet: Wallet }) {
   const spent =
     wallet.estimatedBillMinor != null ? wallet.estimatedBillMinor / 100 : 0;
   const cap = wallet.capUsd ?? 0;
-  const capActive = !wallet.noCap && cap > 0;
+  // A configured cap is active even at $0 — an explicit $0 cap blocks all metered
+  // work, so it must render as a real cap, not "no cap". Only noCap is uncapped.
+  const capActive = !wallet.noCap;
   const { state, pct } = meterState(spent, cap);
   // Only surface the status chip when it's actionable — i.e. capped and
   // approaching/at the cap. A green "Healthy" or "Uncapped" badge is just noise.

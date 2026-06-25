@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Banner, Button, Skeleton, StatusBadge } from "@shared/components";
 import { useLink, LINK_INFO } from "@portal/contexts/LinkContext";
 import { useUI } from "@portal/contexts/UIContext";
@@ -41,6 +41,14 @@ export function Usage() {
   // it to subscribed.
   const [finalizing, setFinalizing] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  // Guards the post-checkout poll loop from setState after unmount.
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     // Only fetch the wallet when the instance is linked. Unlinked → render the
@@ -98,6 +106,7 @@ export function Usage() {
     for (let i = 0; i < 10; i++) {
       try {
         const w = await fetchWallet();
+        if (!mounted.current) return;
         if (w.status === "subscribed") {
           setWallet(w);
           setLinkState("linked-subscribed");
@@ -108,6 +117,7 @@ export function Usage() {
         // Transient read failure — keep polling.
       }
       await new Promise((r) => setTimeout(r, 2000));
+      if (!mounted.current) return;
     }
     // Webhook still hasn't landed after ~20s: stop blocking and refresh. The page
     // self-heals on the next load once provisioning completes.
