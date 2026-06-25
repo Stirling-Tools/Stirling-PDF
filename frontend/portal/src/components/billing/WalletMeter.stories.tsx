@@ -13,17 +13,18 @@ type Story = StoryObj<typeof WalletMeter>;
 
 /** Free grant, plenty left (< 80% used) → FULL band. */
 export const FreePlentyLeft: Story = {
-  args: { wallet: { ...freeWallet, freeRemaining: 380 } },
+  // The band keys off used/allowance — 120/500 = 24% → FULL.
+  args: { wallet: { ...freeWallet, billableUsed: 120, freeRemaining: 380 } },
 };
 
 /** Free grant approaching the limit (≥ 80%) → WARNED band. */
 export const FreeApproachingLimit: Story = {
-  args: { wallet: { ...freeWallet, freeRemaining: 60 } },
+  args: { wallet: { ...freeWallet, billableUsed: 440, freeRemaining: 60 } },
 };
 
 /** Free grant exhausted → DEGRADED band. */
 export const FreeLimitReached: Story = {
-  args: { wallet: { ...freeWallet, freeRemaining: 0, billableUsed: 500 } },
+  args: { wallet: { ...freeWallet, billableUsed: 500, freeRemaining: 0 } },
 };
 
 /** Subscribed, within cap → spend-vs-cap meter, no status chip. */
