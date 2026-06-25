@@ -5854,6 +5854,7 @@ routing = "Routing"
 security = "Security"
 
 [policies.detail]
+close = "Dún"
 editSettings = "Edit Settings"
 enforces = "Enforces"
 managedByOrg = "Managed by your organisation. Contact a team leader to change this policy."
@@ -5907,6 +5908,7 @@ allDocTypesTitle = "All document types"
 back = "Back"
 builderDesc = "Build the sequence of tools this policy runs on each document."
 clear = "Clear"
+close = "Dún"
 continue = "Continue"
 docTypesLabel = "Document types"
 edit = "Edit"
@@ -7784,8 +7786,6 @@ allReleases = "Gach Eisiúint"
 breaking = "Briseadh comhoiriúnachta"
 breakingChanges = "Athruithe Bristeacha"
 breakingChangesDefault = "Tá athruithe bristeacha sa leagan seo."
-breakingChangesDetected = "Aimsíodh Athruithe Bristeacha"
-breakingChangesMessage = "Tá athruithe bristeacha i roinnt leaganacha. Déan athbhreithniú ar na treoracha imirce thíos sula nuashonraíonn tú."
 close = "Dún"
 closeModal = "Dún an modail nuashonraithe"
 current = "Leagan Reatha"
@@ -8606,6 +8606,7 @@ disableByAdmin = "Díchumasaigh MFA"
 
 [workspace.people.roleDescriptions]
 admin = "Is féidir socruithe a bhainistiú agus baill a thabhairt isteach, le rochtain riaracháin iomlán."
+currentRole = "Ról sannta faoi láthair."
 user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]

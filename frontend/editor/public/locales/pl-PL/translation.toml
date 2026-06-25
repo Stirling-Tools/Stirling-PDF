@@ -5854,6 +5854,7 @@ routing = "Routing"
 security = "Security"
 
 [policies.detail]
+close = "Zamknij"
 editSettings = "Edit Settings"
 enforces = "Enforces"
 managedByOrg = "Managed by your organisation. Contact a team leader to change this policy."
@@ -5907,6 +5908,7 @@ allDocTypesTitle = "All document types"
 back = "Back"
 builderDesc = "Build the sequence of tools this policy runs on each document."
 clear = "Clear"
+close = "Zamknij"
 continue = "Continue"
 docTypesLabel = "Document types"
 edit = "Edit"
@@ -7784,8 +7786,6 @@ allReleases = "Wszystkie wydania"
 breaking = "Niekompatybilne zmiany"
 breakingChanges = "Zmiany niekompatybilne"
 breakingChangesDefault = "Ta wersja zawiera zmiany niekompatybilne."
-breakingChangesDetected = "Wykryto zmiany niekompatybilne"
-breakingChangesMessage = "Niektóre wersje zawierają zmiany niekompatybilne. Przejrzyj poniższe przewodniki migracji przed aktualizacją."
 close = "Zamknij"
 closeModal = "Zamknij okno aktualizacji"
 current = "Bieżąca wersja"
@@ -8606,6 +8606,7 @@ disableByAdmin = "Wyłącz MFA"
 
 [workspace.people.roleDescriptions]
 admin = "Może zarządzać ustawieniami i zapraszać członków, z pełnym dostępem administracyjnym."
+currentRole = "Aktualnie przypisana rola."
 user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]

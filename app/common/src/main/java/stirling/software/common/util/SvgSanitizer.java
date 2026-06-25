@@ -244,10 +244,7 @@ public class SvgSanitizer {
             return false;
         }
 
-        return normalized.startsWith("http://")
-                || normalized.startsWith("https://")
-                || normalized.startsWith("//")
-                || normalized.startsWith("file:");
+        return true;
     }
 
     private boolean isUrlAllowed(String url) {

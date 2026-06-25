@@ -5854,6 +5854,7 @@ routing = "Routing"
 security = "Security"
 
 [policies.detail]
+close = "Închide"
 editSettings = "Edit Settings"
 enforces = "Enforces"
 managedByOrg = "Managed by your organisation. Contact a team leader to change this policy."
@@ -5907,6 +5908,7 @@ allDocTypesTitle = "All document types"
 back = "Back"
 builderDesc = "Build the sequence of tools this policy runs on each document."
 clear = "Clear"
+close = "Închide"
 continue = "Continue"
 docTypesLabel = "Document types"
 edit = "Edit"
@@ -7784,8 +7786,6 @@ allReleases = "Toate versiunile"
 breaking = "Schimbări majore"
 breakingChanges = "Modificări incompatibile"
 breakingChangesDefault = "Această versiune conține modificări incompatibile."
-breakingChangesDetected = "Modificări incompatibile detectate"
-breakingChangesMessage = "Unele versiuni conțin modificări incompatibile. Consultă ghidurile de migrare de mai jos înainte de a actualiza."
 close = "Închide"
 closeModal = "Închideți fereastra de actualizare"
 current = "Versiune curentă"
@@ -8606,6 +8606,7 @@ disableByAdmin = "Dezactivați MFA"
 
 [workspace.people.roleDescriptions]
 admin = "Poate gestiona setările și invita membri, cu acces administrativ complet."
+currentRole = "Rolul atribuit în prezent."
 user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]
