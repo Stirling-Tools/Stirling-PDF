@@ -82,11 +82,7 @@ const getTranslationPrefixesForNavKey = (key: string): string[] => {
 const normalizeSearchString = (value: string): string => {
   return value
     .replace(/\{\{\s*([^}]+?)\s*\}\}/g, (_match, rawKey: string) => {
-      const replacement = rawKey.trim();
-      if (typeof replacement === "string" || typeof replacement === "number") {
-        return String(replacement);
-      }
-      return replacement;
+      return rawKey.trim();
     })
     .replace(/<\/?\d+>/g, "");
 };
