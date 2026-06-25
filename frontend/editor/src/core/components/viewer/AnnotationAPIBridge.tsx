@@ -1,4 +1,5 @@
 import { useImperativeHandle, forwardRef, useCallback } from "react";
+import type { TrackedAnnotation } from "@embedpdf/plugin-annotation";
 import { useAnnotationCapability } from "@embedpdf/plugin-annotation/react";
 import { PdfAnnotationSubtype, PdfAnnotationIcon } from "@embedpdf/models";
 import type {
@@ -501,16 +502,14 @@ export const AnnotationAPIBridge = forwardRef<AnnotationAPI>(
 
         clearDocumentAnnotations:
           async (): Promise<ClearDocumentAnnotationsResult> => {
-            const api = annotationApi as unknown as
-              | AnnotationApiSurface
-              | undefined;
+            const api = annotationApi;
             const clearAnnotations = api?.[EMBEDPDF_CLEAR_DOCUMENT_ANNOTATIONS];
 
             if (!api || !clearAnnotations || !api.getAnnotations) {
               return { available: false, cleared: false };
             }
 
-            let annotations: unknown[];
+            let annotations: TrackedAnnotation[];
             try {
               annotations = api.getAnnotations();
             } catch {

@@ -21,7 +21,10 @@ import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import EditIcon from "@mui/icons-material/Edit";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { useAnnotation } from "@embedpdf/plugin-annotation/react";
-import { getSidebarAnnotationsWithRepliesGroupedByPage } from "@embedpdf/plugin-annotation";
+import {
+  getSidebarAnnotationsWithRepliesGroupedByPage,
+  type SidebarAnnotationEntry,
+} from "@embedpdf/plugin-annotation";
 import {
   PdfAnnotationSubtype,
   PdfAnnotationReplyType,
@@ -54,8 +57,52 @@ function isStandaloneCommentType(type: number | undefined): boolean {
 const ANNOTATE_PANEL_ID = "annotate" as const;
 const TEXT_COMMENT_TOOL_ID = "textComment" as const;
 
+type StirlingAnnotationCustomData = Record<string, unknown> & {
+  annotationToolId?: string;
+  isComment?: boolean;
+  modifiedDate?: Date | number | string;
+  toolId?: string;
+};
+
+type StirlingAnnotationObject = PdfAnnotationObject & {
+  creationDate?: Date | number | string;
+  customData?: StirlingAnnotationCustomData;
+  M?: Date | number | string;
+  modifiedDate?: Date | number | string;
+};
+
+type StirlingTextAnnotationObject = PdfTextAnnoObject & {
+  creationDate?: Date | number | string;
+  customData?: StirlingAnnotationCustomData;
+  M?: Date | number | string;
+  modifiedDate?: Date | number | string;
+};
+
+type StirlingSidebarAnnotationEntry = Omit<
+  SidebarAnnotationEntry,
+  "annotation" | "replies"
+> & {
+  annotation: SidebarAnnotationEntry["annotation"] & {
+    object: StirlingAnnotationObject;
+  };
+  replies: Array<
+    SidebarAnnotationEntry["replies"][number] & {
+      object: StirlingTextAnnotationObject;
+    }
+  >;
+};
+
+type StirlingSidebarAnnotationsByPage = Record<
+  number,
+  StirlingSidebarAnnotationEntry[]
+>;
+
+type StirlingAnnotationPatch = Partial<PdfAnnotationObject> & {
+  customData?: Record<string, unknown>;
+};
+
 /** Format annotation date for display (e.g. "Mar 11, 6:05 PM"). */
-function formatCommentDate(obj: any): string {
+function formatCommentDate(obj: StirlingAnnotationObject): string {
   const raw =
     obj?.modifiedDate ??
     obj?.creationDate ??
@@ -79,8 +126,8 @@ interface CommentsSidebarProps {
 }
 
 function getCommentDisplayContent(entry: {
-  annotation: { object: any };
-  replies: Array<{ object: any }>;
+  annotation: { object: Pick<PdfAnnotationObject, "contents"> };
+  replies: Array<{ object: Pick<PdfAnnotationObject, "contents"> }>;
 }): string {
   const main = entry.annotation?.object?.contents;
   if (main != null && String(main).trim()) return String(main).trim();
@@ -93,7 +140,10 @@ function getCommentDisplayContent(entry: {
 /** Placeholder authors we never show; use current user's name from context instead. */
 const PLACEHOLDER_AUTHORS = new Set(["Guest", "Digital Signature", ""]);
 
-function getAuthorName(obj: any, currentDisplayName: string): string {
+function getAuthorName(
+  obj: Pick<PdfAnnotationObject, "author">,
+  currentDisplayName: string,
+): string {
   const stored = (obj?.author ?? "Guest").trim() || "Guest";
   if (PLACEHOLDER_AUTHORS.has(stored)) return currentDisplayName || "Guest";
   return stored;
@@ -101,7 +151,7 @@ function getAuthorName(obj: any, currentDisplayName: string): string {
 
 /** Replies store an explicit author; only allow edit when it matches the current comment author name. */
 function isReplyAuthoredByCurrentUser(
-  obj: any,
+  obj: Pick<PdfAnnotationObject, "author">,
   currentDisplayName: string,
 ): boolean {
   const stored = (obj?.author ?? "").trim() || "Guest";
@@ -158,7 +208,7 @@ function getIconByType(type: number | undefined): string {
   return "comment";
 }
 
-function isCommentAnnotation(ann: any): boolean {
+function isCommentAnnotation(ann: StirlingAnnotationObject): boolean {
   const toolId = ann?.customData?.toolId ?? ann?.customData?.annotationToolId;
   if (
     toolId === "textComment" ||
@@ -185,7 +235,7 @@ function isCommentAnnotation(ann: any): boolean {
   return false;
 }
 
-function isLinkedCommentAnnotation(ann: any): boolean {
+function isLinkedCommentAnnotation(ann: StirlingAnnotationObject): boolean {
   const type = ann?.type;
   if (isStandaloneCommentType(type)) return false;
   if (ann?.inReplyToId) return false;
@@ -195,27 +245,32 @@ function isLinkedCommentAnnotation(ann: any): boolean {
   );
 }
 
-function getAnnotationPageIndex(fallbackPageIndex: number, ann: any): number {
+function getAnnotationPageIndex(
+  fallbackPageIndex: number,
+  ann: PdfAnnotationObject,
+): number {
   return typeof ann?.pageIndex === "number" ? ann.pageIndex : fallbackPageIndex;
 }
 
-function getRemoveCommentPatch(ann: any): Partial<PdfAnnotationObject> {
+function getRemoveCommentPatch(
+  ann: StirlingAnnotationObject,
+): StirlingAnnotationPatch {
   const customData = {
-    ...((ann?.customData ?? {}) as Record<string, unknown>),
+    ...(ann.customData ?? {}),
   };
   delete customData.isComment;
   return {
     customData,
     contents: "",
-  } as unknown as Partial<PdfAnnotationObject>;
+  };
 }
 
-function getAnnotationToolId(ann: any): string {
+function getAnnotationToolId(ann: StirlingAnnotationObject): string {
   return ann?.customData?.toolId ?? ann?.customData?.annotationToolId ?? "";
 }
 
 function getAnnotationTypeLabel(
-  ann: any,
+  ann: StirlingAnnotationObject,
   t: (key: string, fallback: string) => string,
 ): string {
   const toolId = getAnnotationToolId(ann);
@@ -247,7 +302,7 @@ function getAnnotationTypeLabel(
   return t("viewer.comments.typeComment", "Comment");
 }
 
-function AnnotationTypeIcon({ ann }: { ann: any }) {
+function AnnotationTypeIcon({ ann }: { ann: StirlingAnnotationObject }) {
   const toolId = getAnnotationToolId(ann);
   const iconName = TOOL_ICON_MAP[toolId] ?? getIconByType(ann?.type);
   return (
@@ -338,7 +393,7 @@ export function CommentsSidebar({
   ]);
 
   const handleLocateAnnotation = useCallback(
-    (pageIndex: number, ann: any) => {
+    (pageIndex: number, ann: PdfAnnotationObject) => {
       scrollActions?.scrollToPage(pageIndex + 1, "smooth");
       setTimeout(() => {
         const pageEl = document.querySelector<HTMLElement>(
@@ -385,8 +440,9 @@ export function CommentsSidebar({
 
   const byPage = useMemo(() => {
     try {
-      const all = getSidebarAnnotationsWithRepliesGroupedByPage(state) ?? {};
-      const filtered: typeof all = {};
+      const all = (getSidebarAnnotationsWithRepliesGroupedByPage(state) ??
+        {}) as StirlingSidebarAnnotationsByPage;
+      const filtered: StirlingSidebarAnnotationsByPage = {};
       for (const [page, entries] of Object.entries(all)) {
         const commentEntries = entries
           .filter((e) => isCommentAnnotation(e.annotation.object))
@@ -442,12 +498,16 @@ export function CommentsSidebar({
   const [deleteModal, setDeleteModal] = useState<{
     pageIndex: number;
     id: string;
-    ann: any;
+    ann: StirlingAnnotationObject;
   } | null>(null);
   const [clearAllModalOpen, setClearAllModalOpen] = useState(false);
 
   const handleDeleteClick = useCallback(
-    (pageIndex: number, annotationId: string, ann: any) => {
+    (
+      pageIndex: number,
+      annotationId: string,
+      ann: StirlingAnnotationObject,
+    ) => {
       if (isLinkedCommentAnnotation(ann)) {
         setDeleteModal({ pageIndex, id: annotationId, ann });
       } else {
@@ -478,7 +538,7 @@ export function CommentsSidebar({
     const commentPatches: Array<{
       pageIndex: number;
       id: string;
-      patch: Partial<PdfAnnotationObject>;
+      patch: StirlingAnnotationPatch;
     }> = [];
 
     for (const [page, entries] of Object.entries(byPage)) {
