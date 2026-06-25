@@ -165,13 +165,17 @@ legal:
   accessibilityStatement: "" # URL to the accessibility statement of your application (e.g. https://example.com/accessibility). Empty string to disable or filename to load from local file in static folder
   cookiePolicy: "" # URL to the cookie policy of your application (e.g. https://example.com/cookie). Empty string to disable or filename to load from local file in static folder
   impressum: "" # URL to the impressum of your application (e.g. https://example.com/impressum). Empty string to disable or filename to load from local file in static folder
+  loginAgreement:
+    enabled: false # set to 'true' to show a login agreement/disclaimer popup after login (and on app launch when login is disabled). Per-language text is read from customFiles/disclaimer/<locale>.md (e.g. en-GB.md, fr-FR.md)
+    showInAnonymousMode: true # when login is disabled, set to 'false' to suppress the agreement in anonymous (no-login) mode
+    fallbackText: "" # optional markdown used for any language that has no customFiles/disclaimer/<locale>.md file (also settable via the LEGAL_LOGINAGREEMENT_FALLBACKTEXT env var for single-language headless installs)
 
 system:
   defaultLocale: "" # force a default language for new users (e.g. 'en-US', 'de-DE'). Empty string auto-detects from the browser, falling back to en-US
   googlevisibility: false # 'true' to allow Google visibility (via robots.txt), 'false' to disallow
   enableAlphaFunctionality: false # set to enable functionality which might need more testing before it fully goes live (this feature might make no changes)
-  showUpdate: false # see when a new update is available
-  showUpdateOnlyAdmin: false # only admins can see when a new update is available, depending on showUpdate it must be set to 'true'
+  showUpdate: true # see when a new update is available
+  showUpdateOnlyAdmin: true # only admins can see when a new update is available, depending on showUpdate it must be set to 'true'
   showSettingsWhenNoLogin: true # set to 'false' to hide settings button when login is disabled (enableLogin: false). Only applies when login is disabled.
   customHTMLFiles: false # enable to have files placed in /customFiles/templates override the existing template HTML files
   tessdataDir: "" # path to the directory containing the Tessdata files. This setting is relevant for Windows systems. For Windows users, this path should be adjusted to point to the appropriate directory where the Tessdata files are stored.

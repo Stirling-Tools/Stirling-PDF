@@ -546,6 +546,14 @@ public class ApplicationProperties {
         private String accessibilityStatement;
         private String cookiePolicy;
         private String impressum;
+        private LoginAgreement loginAgreement = new LoginAgreement();
+
+        @Data
+        public static class LoginAgreement {
+            private boolean enabled = false;
+            private boolean showInAnonymousMode = true;
+            private String fallbackText = "";
+        }
     }
 
     @Data
@@ -901,8 +909,8 @@ public class ApplicationProperties {
     public static class System {
         private String defaultLocale;
         private boolean googlevisibility;
-        private boolean showUpdate;
-        private boolean showUpdateOnlyAdmin;
+        private boolean showUpdate = true;
+        private boolean showUpdateOnlyAdmin = true;
         private boolean showSettingsWhenNoLogin = true;
         private boolean customHTMLFiles;
         private String tessdataDir;
