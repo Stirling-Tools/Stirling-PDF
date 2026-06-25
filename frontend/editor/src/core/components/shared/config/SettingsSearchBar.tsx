@@ -79,19 +79,29 @@ const getTranslationPrefixesForNavKey = (key: string): string[] => {
   return Array.from(new Set([...explicitPrefixes, ...inferredPrefixes]));
 };
 
+const normalizeSearchString = (value: string): string => {
+  return value.replace(/\{\{\s*([^}]+?)\s*\}\}/g, (_match, rawKey: string) => {
+    const replacement = rawKey.trim();
+    if (typeof replacement === "string" || typeof replacement === "number") {
+      return String(replacement);
+    }
+    return replacement;
+  });
+};
+
 const flattenTranslationStrings = (value: unknown): string[] => {
   if (typeof value === "string") {
-    const trimmed = value.trim();
+    const trimmed = normalizeSearchString(value).trim();
     return trimmed ? [trimmed] : [];
   }
 
   if (Array.isArray(value)) {
-    return value.flatMap(flattenTranslationStrings);
+    return value.flatMap((entry) => flattenTranslationStrings(entry));
   }
 
   if (value && typeof value === "object") {
-    return Object.values(value as Record<string, unknown>).flatMap(
-      flattenTranslationStrings,
+    return Object.values(value as Record<string, unknown>).flatMap((entry) =>
+      flattenTranslationStrings(entry),
     );
   }
 
@@ -138,7 +148,10 @@ export const SettingsSearchBar: React.FC<SettingsSearchBarProps> = ({
           const translationPrefixes = getTranslationPrefixesForNavKey(item.key);
           const translationContent = translationPrefixes.flatMap((prefix) =>
             flattenTranslationStrings(
-              t(prefix, { returnObjects: true, defaultValue: {} } as any),
+              t(prefix, {
+                returnObjects: true,
+                defaultValue: {},
+              } as any),
             ),
           );
 
