@@ -81,7 +81,7 @@ public class SourceOverviewService {
                 null);
     }
 
-    /** Disabled connections read as paused; otherwise an unreferenced source is an orphan. */
+    /** A disabled (paused) source reads as "disabled"; an unreferenced one reads as "unused". */
     private static String deriveStatus(Source source, int referenceCount) {
         if (!source.enabled()) {
             return "disabled";
