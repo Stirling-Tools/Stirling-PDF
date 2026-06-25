@@ -1,3 +1,4 @@
+// CI: temporary no-op to exercise test-build-docker-images for this CI fix (remove before merge)
 plugins {
     id "java"
     id "jacoco"
