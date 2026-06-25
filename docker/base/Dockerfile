@@ -1,6 +1,7 @@
 # Stirling-PDF Base Image
 # Pre-built tools: Calibre, Ghostscript, QPDF, ImageMagick, Python venv with AI/OCR packages
 # This image is reused by Dockerfile and Dockerfile.fat to avoid rebuilding tools on every app release
+# CI: temporary no-op to exercise the base-changed PR build path for this fix (remove before merge)
 
 ARG TARGETPLATFORM
 
