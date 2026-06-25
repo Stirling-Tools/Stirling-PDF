@@ -74,6 +74,79 @@ fn parse_launch_files(args: &[String]) -> Vec<String> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   tauri::Builder::default()
+    .register_uri_scheme_protocol("asset", |_app, request| {
+      let uri = request.uri();
+      let path_str = urlencoding::decode(uri.path()).unwrap_or(std::borrow::Cow::Borrowed(uri.path())).into_owned();
+      
+      #[cfg(target_os = "windows")]
+      let path_str = if path_str.starts_with('/') && path_str.chars().nth(2) == Some(':') {
+          path_str[1..].to_string()
+      } else {
+          path_str
+      };
+      
+      let path = std::path::Path::new(&path_str);
+      
+      let mime_type = match path.extension().and_then(|ext| ext.to_str()) {
+          Some("html") => "text/html",
+          Some("css") => "text/css",
+          Some("js") => "application/javascript",
+          Some("wasm") => "application/wasm",
+          Some("png") => "image/png",
+          Some("jpg") | Some("jpeg") => "image/jpeg",
+          Some("gif") => "image/gif",
+          Some("svg") => "image/svg+xml",
+          Some("json") => "application/json",
+          _ => "application/octet-stream",
+      };
+
+      let br_path = format!("{}.br", path_str);
+      let gz_path = format!("{}.gz", path_str);
+
+      if std::path::Path::new(&br_path).exists() {
+        if let Ok(bytes) = std::fs::read(&br_path) {
+          return tauri::http::Response::builder()
+            .header("Content-Type", mime_type)
+            .header("Content-Encoding", "br")
+            .header("Access-Control-Allow-Origin", "*")
+            .status(200)
+            .body(bytes)
+            .unwrap();
+        }
+      }
+
+      if std::path::Path::new(&gz_path).exists() {
+        if let Ok(bytes) = std::fs::read(&gz_path) {
+          return tauri::http::Response::builder()
+            .header("Content-Type", mime_type)
+            .header("Content-Encoding", "gzip")
+            .header("Access-Control-Allow-Origin", "*")
+            .status(200)
+            .body(bytes)
+            .unwrap();
+        }
+      }
+
+      if !path.exists() {
+        return tauri::http::Response::builder()
+          .status(404)
+          .body(Vec::new())
+          .unwrap();
+      }
+
+      match std::fs::read(&path) {
+        Ok(bytes) => tauri::http::Response::builder()
+          .header("Content-Type", mime_type)
+          .header("Access-Control-Allow-Origin", "*")
+          .status(200)
+          .body(bytes)
+          .unwrap(),
+        Err(_) => tauri::http::Response::builder()
+          .status(500)
+          .body(Vec::new())
+          .unwrap(),
+      }
+    })
     .plugin(
       tauri_plugin_log::Builder::new()
         .level(log::LevelFilter::Info)
