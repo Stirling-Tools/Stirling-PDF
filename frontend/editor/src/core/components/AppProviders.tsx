@@ -26,6 +26,7 @@ import { AdminTourOrchestrationProvider } from "@app/contexts/AdminTourOrchestra
 import { PageEditorProvider } from "@app/contexts/PageEditorContext";
 import { BannerProvider } from "@app/contexts/BannerContext";
 import ErrorBoundary from "@app/components/shared/ErrorBoundary";
+import { usePosthogTracking } from "@app/hooks/usePosthogTracking";
 import { useScarfTracking } from "@app/hooks/useScarfTracking";
 import { useAppInitialization } from "@app/hooks/useAppInitialization";
 import { useLogoAssets } from "@app/hooks/useLogoAssets";
@@ -39,6 +40,11 @@ import { FolderProvider } from "@app/contexts/FolderContext";
 // Component to initialize scarf tracking (must be inside AppConfigProvider)
 function ScarfTrackingInitializer() {
   useScarfTracking();
+  return null;
+}
+
+function PosthogTrackingInitializer() {
+  usePosthogTracking();
   return null;
 }
 
@@ -121,6 +127,7 @@ export function AppProviders({
               retryOptions={appConfigRetryOptions}
               {...appConfigProviderProps}
             >
+              <PosthogTrackingInitializer />
               <ScarfTrackingInitializer />
               <AppConfigLoader />
               <ServerDefaultsSync />
