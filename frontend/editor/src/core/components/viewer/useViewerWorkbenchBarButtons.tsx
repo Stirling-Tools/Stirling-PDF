@@ -25,11 +25,19 @@ import StraightenIcon from "@mui/icons-material/Straighten";
 import LayersIcon from "@mui/icons-material/Layers";
 import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import StopIcon from "@mui/icons-material/Stop";
+import SettingsIcon from "@mui/icons-material/Settings";
 import { useViewerReadAloud } from "@app/components/viewer/useViewerReadAloud";
+import { RulerScaleSettingsButton } from "@app/components/viewer/RulerScaleSettingsButton";
+import type { MeasureScale } from "@app/utils/measurementTypes";
 
 export function useViewerWorkbenchBarButtons(
   isRulerActive?: boolean,
   setIsRulerActive?: (v: boolean) => void,
+  customScale?: MeasureScale | null,
+  setCustomScale?: (scale: MeasureScale | null) => void,
+  isScaleCalibrationActive?: boolean,
+  startScaleCalibration?: () => void,
+  cancelScaleCalibration?: () => void,
 ) {
   const { t, i18n } = useTranslation();
   const viewer = useViewer();
@@ -117,10 +125,35 @@ export function useViewerWorkbenchBarButtons(
   const annotationsLabel = t("workbenchBar.annotations", "Annotations");
   const formFillLabel = t("workbenchBar.formFill", "Fill Form");
   const rulerLabel = t("workbenchBar.ruler", "Ruler / Measure");
+  const rulerSettingsLabel = t("workbenchBar.rulerSettings", "Scale Settings");
   const readAloudLabel = t("workbenchBar.readAloud", "Read Aloud");
   const readAloudSpeedLabel = t("workbenchBar.readAloudSpeed", "Speed");
 
   const isFormFillActive = (selectedTool as string) === "formFill";
+
+  const handleStartScaleCalibration = useCallback(() => {
+    startScaleCalibration?.();
+    setIsRulerActive?.(true);
+    if (isPanning) {
+      viewer.panActions.disablePan();
+      setIsPanning(false);
+    }
+  }, [isPanning, setIsRulerActive, startScaleCalibration, viewer.panActions]);
+
+  const handleCancelScaleCalibration = useCallback(() => {
+    cancelScaleCalibration?.();
+  }, [cancelScaleCalibration]);
+
+  const handleApplyRulerScale = useCallback(
+    (scale: MeasureScale) => {
+      setCustomScale?.(scale);
+    },
+    [setCustomScale],
+  );
+
+  const handleResetRulerScale = useCallback(() => {
+    setCustomScale?.(null);
+  }, [setCustomScale]);
 
   // Filter languages based on available voices
   const filteredLanguages = useMemo(
@@ -236,6 +269,32 @@ export function useViewerWorkbenchBarButtons(
           }
         },
       },
+      // Ruler scale settings button - only visible when ruler is active
+      ...(isRulerActive
+        ? [
+            {
+              id: "viewer-ruler-settings",
+              icon: <SettingsIcon sx={{ fontSize: "1.5rem" }} />,
+              tooltip: rulerSettingsLabel,
+              ariaLabel: rulerSettingsLabel,
+              section: "top" as const,
+              order: 25.5,
+              render: ({ disabled }: { disabled?: boolean }) => (
+                <RulerScaleSettingsButton
+                  disabled={disabled}
+                  label={rulerSettingsLabel}
+                  tooltipPosition={tooltipPosition}
+                  currentScale={customScale}
+                  onApplyScale={handleApplyRulerScale}
+                  onResetScale={handleResetRulerScale}
+                  onStartCalibration={handleStartScaleCalibration}
+                  onCancelCalibration={handleCancelScaleCalibration}
+                  isCalibrationActive={isScaleCalibrationActive}
+                />
+              ),
+            },
+          ]
+        : []),
       {
         id: "viewer-rotate-left",
         icon: <LocalIcon icon="rotate-left" width="1.25rem" height="1.25rem" />,
@@ -561,8 +620,15 @@ export function useViewerWorkbenchBarButtons(
     formFillLabel,
     isFormFillActive,
     rulerLabel,
+    rulerSettingsLabel,
     isRulerActive,
     setIsRulerActive,
+    handleStartScaleCalibration,
+    handleCancelScaleCalibration,
+    handleApplyRulerScale,
+    handleResetRulerScale,
+    customScale,
+    isScaleCalibrationActive,
     readAloudLabel,
     readAloudSpeedLabel,
     isReadingAloud,
