@@ -1,6 +1,7 @@
 import { Card } from "@shared/components";
 import {
   currencySymbol,
+  formatMinor,
   formatMoneyMajor,
   formatPeriodDate,
   MeterBar,
@@ -27,7 +28,8 @@ export function WalletMeter({ wallet }: Props) {
   const subscribed = wallet.status === "subscribed";
 
   if (!subscribed) {
-    // Editor-plan free-grant view: lifetime grant, 500 PDFs by default.
+    // Processor-trial view: the one-time free grant (500 PDFs by default), framed
+    // as a trial of the paid Processor plan per marketing.
     const { state, pct } = meterState(wallet.billableUsed, wallet.freeAllowance);
     const stateLabel =
       state === "DEGRADED"
@@ -35,24 +37,29 @@ export function WalletMeter({ wallet }: Props) {
         : state === "WARNED"
           ? "Approaching limit"
           : "Plenty left";
+    const rate =
+      wallet.pricePerDocMinor != null && wallet.pricePerDocMinor > 0
+        ? wallet.pricePerDocMinor
+        : null;
+    const title =
+      rate != null
+        ? `Process ${wallet.freeAllowance.toLocaleString()} PDFs free, then ${formatMinor(rate, wallet.currency)}/PDF`
+        : `Process ${wallet.freeAllowance.toLocaleString()} PDFs free`;
     return (
       <Card padding="loose">
-        <span className="portal-billing__eyebrow">Editor plan · Always free</span>
-        <h2 className="portal-billing__meter-title">
-          One-time free grant
-        </h2>
+        <span className="portal-billing__eyebrow">Processor trial</span>
+        <h2 className="portal-billing__meter-title">{title}</h2>
+        <p className="portal-billing__section-sub">
+          Use the PDF Editor for free. Pay to process PDFs automatically.
+        </p>
         <MeterBar
           state={state}
           pct={pct}
           figure={wallet.billableUsed.toLocaleString()}
-          capSuffix={`/ ${wallet.freeAllowance.toLocaleString()} free PDFs`}
+          capSuffix={`of ${wallet.freeAllowance.toLocaleString()} free PDFs used`}
           statusLabel={stateLabel}
           meta={<span>Automation · AI · API requests</span>}
         />
-        <p className="portal-billing__meter-foot">
-          Manual PDF editing — view, sign, merge, split, watermark, compress,
-          convert, manual OCR — is always free.
-        </p>
       </Card>
     );
   }
