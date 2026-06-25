@@ -491,6 +491,28 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         automationSettings: null,
         maxFiles: 1,
       },
+      wordCount: {
+        icon: (
+          <LocalIcon
+            icon="format-list-numbered-rounded"
+            width="1.5rem"
+            height="1.5rem"
+          />
+        ),
+        name: t("home.wordCount.title", "Word Count"),
+        component: lazy(() => import("@app/tools/WordCount")),
+        description: t(
+          "home.wordCount.desc",
+          "Count words, characters, and lines in a PDF, with optional per-page breakdown",
+        ),
+        categoryId: ToolCategoryId.STANDARD_TOOLS,
+        subcategoryId: SubcategoryId.VERIFICATION,
+        endpoints: ["word-count"],
+        synonyms: getSynonyms(t, "wordCount"),
+        supportsAutomate: false,
+        automationSettings: null,
+        maxFiles: 1,
+      },
       validateSignature: {
         icon: (
           <LocalIcon
