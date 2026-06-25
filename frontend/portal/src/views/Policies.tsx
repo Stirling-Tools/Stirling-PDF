@@ -3,13 +3,13 @@ import { useTranslation } from "react-i18next";
 import { Skeleton } from "@shared/components";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import {
+  buildWireFromSetup,
+  buildWireFromState,
   deletePolicy,
   fetchPolicies,
-  runPolicy,
   savePolicy,
   type CatalogueEntry,
   type PoliciesResponse,
-  type Policy,
   type PolicySetupResult,
 } from "@portal/api/policies";
 import { CatalogueSummary } from "@portal/components/policies/CatalogueSummary";
@@ -18,43 +18,13 @@ import { PolicyDetailPanel } from "@portal/components/policies/PolicyDetailPanel
 import { PolicySetupWizard } from "@portal/components/policies/PolicySetupWizard";
 import "@portal/views/Policies.css";
 
-/**
- * Translate the setup flow's collected result into the backend `Policy` wire
- * record (Policy.java): the tool chain becomes the ordered pipeline `steps`,
- * the run event becomes the `trigger`, and the output settings become `output`.
- * Reuses the existing record's id on edit so the POST updates in place.
- */
-function toWirePolicy(
-  entry: CatalogueEntry,
-  result: PolicySetupResult,
-): Policy {
-  return {
-    id: entry.policy?.state.backendId ?? "",
-    name: `${entry.category.label} Policy`,
-    enabled: entry.policy ? entry.policy.state.status !== "paused" : true,
-    trigger: { event: result.runOn },
-    sources: result.sources.map((source) => ({ source })),
-    steps: result.steps,
-    output: {
-      mode: result.outputMode,
-      name: result.outputName,
-      namePosition: result.outputNamePosition,
-    },
-    categoryId: entry.category.id,
-  };
-}
-
 export function Policies() {
   const { t } = useTranslation();
-  // The catalogue is refetched after every mutation by bumping this counter,
-  // so the cards/detail reflect the in-memory store the handlers maintain.
   const [version, setVersion] = useState(0);
   const state = useAsync<PoliciesResponse>(() => fetchPolicies(), [version]);
   const { data, loading } = state;
   const { isLoading } = useSectionFlags(state);
 
-  // The category whose detail panel is open (configured), and the one whose
-  // setup wizard is open. Both reference a catalogue entry.
   const [detail, setDetail] = useState<CatalogueEntry | null>(null);
   const [wizard, setWizard] = useState<CatalogueEntry | null>(null);
   const [busy, setBusy] = useState(false);
@@ -62,7 +32,6 @@ export function Policies() {
   const catalogue = data?.catalogue ?? [];
   const refetch = useCallback(() => setVersion((v) => v + 1), []);
 
-  // Open the detail panel for configured categories, the wizard otherwise.
   function openEntry(entry: CatalogueEntry) {
     if (entry.policy) setDetail(entry);
     else setWizard(entry);
@@ -72,7 +41,7 @@ export function Policies() {
     entry: CatalogueEntry,
     result: PolicySetupResult,
   ) {
-    await savePolicy(toWirePolicy(entry, result));
+    await savePolicy(buildWireFromSetup(entry, result));
     setWizard(null);
     setDetail(null);
     refetch();
@@ -90,32 +59,13 @@ export function Policies() {
     }
   }
 
-  function handleRun() {
-    const id = detail?.policy?.state.backendId;
-    if (id) void runLifecycle(() => runPolicy(id));
-  }
-
   function handleTogglePause() {
     const entry = detail;
     const policy = entry?.policy;
     if (!entry || !policy?.state.backendId) return;
-    // Pause/resume is a re-save with the enabled flag flipped (the backend has
-    // no dedicated endpoint — every mutation routes through POST /policies).
+    const enabled = policy.state.status === "paused";
     void runLifecycle(() =>
-      savePolicy({
-        id: policy.state.backendId!,
-        name: `${entry.category.label} Policy`,
-        enabled: policy.state.status === "paused",
-        trigger: { event: policy.state.runOn ?? "upload" },
-        sources: policy.state.sources.map((source) => ({ source })),
-        steps: policy.steps,
-        output: {
-          mode: policy.state.outputMode ?? "new_version",
-          name: policy.state.outputName ?? "",
-          namePosition: "suffix",
-        },
-        categoryId: entry.category.id,
-      }),
+      savePolicy(buildWireFromState(entry, policy, enabled)),
     );
   }
 
@@ -124,7 +74,6 @@ export function Policies() {
     if (id) void runLifecycle(() => deletePolicy(id));
   }
 
-  // Reopen the wizard for the policy currently shown in the detail panel.
   function handleEdit() {
     if (detail) {
       setWizard(detail);
@@ -166,7 +115,7 @@ export function Policies() {
         busy={busy}
         onClose={() => setDetail(null)}
         onEdit={handleEdit}
-        onRun={handleRun}
+        onRun={() => {}}
         onTogglePause={handleTogglePause}
         onDelete={handleDelete}
       />
