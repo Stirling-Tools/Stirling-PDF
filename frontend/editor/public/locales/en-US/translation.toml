@@ -55,6 +55,10 @@ info = "Info"
 invalidUndoData = "Cannot undo: invalid operation data"
 keepWorking = "Keep Working"
 loading = "Loading..."
+loginAgreementAccept = "Accept"
+loginAgreementDecline = "Decline"
+loginAgreementProvider = "This notice is provided by your administrator, not Stirling PDF Inc."
+loginAgreementTitle = "Login Agreement"
 logOut = "Log out"
 marginTooltip = "Distance between the page number and the edge of the page."
 moreOptions = "More Options"
@@ -1071,6 +1075,30 @@ title = "Legal Responsibility Warning"
 [admin.settings.legal.impressum]
 description = "URL or filename to impressum (required in some jurisdictions)"
 label = "Impressum"
+
+[admin.settings.legal.loginAgreement]
+defaultLocaleHint = "— used as the fallback when a language has no file."
+defaultLocaleLink = "Configure the default locale"
+description = "Show a disclaimer users must accept after logging in. The text follows each user's language."
+discardConfirm = "You have unsaved changes that will be lost. Switch language anyway?"
+editLabel = "Markdown"
+emptyPreview = "Nothing to preview yet."
+language = "Language"
+languageHelp = "Each language has its own file. If a user's language has no file, the agreement falls back to the default locale's file, then to the fallback text."
+loadError = "Failed to load the agreement for {{locale}}. Switch language and back to retry."
+previewLabel = "Preview"
+restartNote = "Enabling or disabling the agreement applies after a restart, like other settings. Text edits below apply immediately."
+save = "Save text"
+saved = "Saved"
+savedBody = "Login agreement updated for {{locale}}"
+textDescription = "Saved to customFiles/disclaimer/{{locale}}.md and shown live on the next login. Leave blank to remove this language."
+title = "Login Agreement"
+
+[admin.settings.legal.loginAgreement.anonymous]
+label = "Show in anonymous (no-login) mode"
+
+[admin.settings.legal.loginAgreement.enabled]
+label = "Enable login agreement"
 
 [admin.settings.legal.privacyPolicy]
 description = "URL or filename to privacy policy"
