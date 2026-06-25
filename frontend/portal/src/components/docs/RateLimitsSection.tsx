@@ -1,26 +1,34 @@
+import { useTranslation } from "react-i18next";
 import { Card, CodeBlock } from "@shared/components";
 import type { RateLimit } from "@portal/api/docs";
 import { DocsSection } from "@portal/components/docs/DocsSection";
 
 export function RateLimitsSection({ rateLimit }: { rateLimit: RateLimit }) {
+  const { t } = useTranslation();
   return (
     <DocsSection
       id="rate-limits"
-      eyebrow="GETTING STARTED"
-      title="Rate limits & quotas"
-      lead="Limits scale with your plan. A 429 response includes a Retry-After header; the SDKs back off automatically."
+      eyebrow={t("docs.rateLimits.eyebrow")}
+      title={t("docs.rateLimits.title")}
+      lead={t("docs.rateLimits.lead")}
     >
       <div className="portal-docs__limits">
         <Card padding="default">
-          <div className="portal-docs__limit-label">Requests / minute</div>
+          <div className="portal-docs__limit-label">
+            {t("docs.rateLimits.requestsPerMinute")}
+          </div>
           <div className="portal-docs__limit-value">{rateLimit.rpm}</div>
         </Card>
         <Card padding="default">
-          <div className="portal-docs__limit-label">Burst</div>
+          <div className="portal-docs__limit-label">
+            {t("docs.rateLimits.burst")}
+          </div>
           <div className="portal-docs__limit-value">{rateLimit.burst}</div>
         </Card>
         <Card padding="default">
-          <div className="portal-docs__limit-label">Concurrency</div>
+          <div className="portal-docs__limit-label">
+            {t("docs.rateLimits.concurrency")}
+          </div>
           <div className="portal-docs__limit-value">
             {rateLimit.concurrency}
           </div>
@@ -28,7 +36,7 @@ export function RateLimitsSection({ rateLimit }: { rateLimit: RateLimit }) {
       </div>
       <CodeBlock
         lang="http"
-        caption="429 Too Many Requests"
+        caption={t("docs.rateLimits.codeCaption")}
         code={`HTTP/1.1 429 Too Many Requests
 Retry-After: 2
 X-RateLimit-Remaining: 0`}

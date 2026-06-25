@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button, Card, Chip, StatusBadge } from "@shared/components";
 import { useView } from "@portal/contexts/ViewContext";
 import {
@@ -20,6 +21,7 @@ type Phase = "pick" | "building" | "ready";
 const STAGE_STEP_MS = 550;
 
 export function PipelineForkWizard() {
+  const { t } = useTranslation();
   const { setActiveView } = useView();
   const [phase, setPhase] = useState<Phase>("pick");
   const [template, setTemplate] = useState<PipelineTemplate | null>(null);
@@ -68,15 +70,14 @@ export function PipelineForkWizard() {
     <Card padding="loose" className="portal-fork">
       <header className="portal-fork__head">
         <div>
-          <h2 className="portal-fork__title">Fork a starter pipeline</h2>
-          <p className="portal-fork__sub">
-            Clone a proven workflow and tune it — every template ships the same
-            four-stage backbone.
-          </p>
+          <h2 className="portal-fork__title">{t("forkWizard.title")}</h2>
+          <p className="portal-fork__sub">{t("forkWizard.subtitle")}</p>
         </div>
         {phase !== "pick" && template && (
           <StatusBadge tone={phase === "ready" ? "success" : "info"} size="sm">
-            {phase === "ready" ? "Ready to deploy" : "Building…"}
+            {phase === "ready"
+              ? t("forkWizard.status.ready")
+              : t("forkWizard.status.building")}
           </StatusBadge>
         )}
       </header>
@@ -139,7 +140,9 @@ export function PipelineForkWizard() {
 
           <div className="portal-fork__build-actions">
             <Button variant="ghost" size="sm" onClick={reset}>
-              {phase === "ready" ? "Pick another" : "Cancel"}
+              {phase === "ready"
+                ? t("forkWizard.action.pickAnother")
+                : t("forkWizard.action.cancel")}
             </Button>
             <Button
               variant="gradient"
@@ -148,7 +151,9 @@ export function PipelineForkWizard() {
               disabled={phase !== "ready"}
               trailingIcon={<span aria-hidden>→</span>}
             >
-              {phase === "ready" ? "Deploy pipeline" : "Building…"}
+              {phase === "ready"
+                ? t("forkWizard.action.deploy")
+                : t("forkWizard.status.building")}
             </Button>
           </div>
         </div>

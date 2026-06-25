@@ -5854,6 +5854,7 @@ routing = "Routing"
 security = "Security"
 
 [policies.detail]
+close = "Zatvori"
 editSettings = "Edit Settings"
 enforces = "Enforces"
 managedByOrg = "Managed by your organisation. Contact a team leader to change this policy."
@@ -5907,6 +5908,7 @@ allDocTypesTitle = "All document types"
 back = "Back"
 builderDesc = "Build the sequence of tools this policy runs on each document."
 clear = "Clear"
+close = "Zatvori"
 continue = "Continue"
 docTypesLabel = "Document types"
 edit = "Edit"
@@ -7784,8 +7786,6 @@ allReleases = "Sva izdanja"
 breaking = "Nekompatibilno"
 breakingChanges = "Nekompatibilne promjene"
 breakingChangesDefault = "Ova verzija sadrži nekompatibilne promjene."
-breakingChangesDetected = "Otkrivene nekompatibilne promjene"
-breakingChangesMessage = "Neke verzije sadrže nekompatibilne promjene. Prije ažuriranja pregledajte vodiče za migraciju u nastavku."
 close = "Zatvori"
 closeModal = "Zatvori prozor ažuriranja"
 current = "Trenutačna verzija"
@@ -8606,6 +8606,7 @@ disableByAdmin = "Onemogući MFA"
 
 [workspace.people.roleDescriptions]
 admin = "Može upravljati postavkama i pozivati članove, s punim administrativnim pristupom."
+currentRole = "Trenutno dodijeljena uloga."
 user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]

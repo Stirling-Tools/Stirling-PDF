@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Dropdown, EmptyState, Skeleton } from "@shared/components";
 import { BellIcon } from "@portal/components/icons";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
@@ -20,6 +21,7 @@ const CATEGORY_COLOUR: Record<NotificationCategory, string> = {
 };
 
 export function NotificationsDropdown() {
+  const { t } = useTranslation();
   const state = useAsync<Notification[]>(() => fetchNotifications(), []);
   const { data: items } = state;
   const { isLoading } = useSectionFlags(state);
@@ -48,8 +50,10 @@ export function NotificationsDropdown() {
           className="portal-header__icon-btn portal-header__icon-btn--badge"
           aria-label={
             hasUnread
-              ? `Notifications, ${visible.length} unread`
-              : "Notifications, no unread"
+              ? t("notifications.ariaLabel.unread", {
+                  count: visible.length,
+                })
+              : t("notifications.ariaLabel.none")
           }
         >
           <BellIcon size={16} />
@@ -60,16 +64,20 @@ export function NotificationsDropdown() {
       </Dropdown.Trigger>
       <Dropdown.Menu width="22.5rem" className="portal-notif__menu">
         <div className="portal-notif__header">
-          <span className="portal-notif__title">Notifications</span>
+          <span className="portal-notif__title">
+            {t("notifications.title")}
+          </span>
           {hasUnread ? (
-            <span className="portal-notif__count">{visible.length} new</span>
+            <span className="portal-notif__count">
+              {t("notifications.count.new", { count: visible.length })}
+            </span>
           ) : isLoading ? (
             <span className="portal-notif__count portal-notif__count--quiet">
-              loading
+              {t("notifications.count.loading")}
             </span>
           ) : (
             <span className="portal-notif__count portal-notif__count--quiet">
-              all read
+              {t("notifications.count.allRead")}
             </span>
           )}
         </div>
@@ -84,8 +92,8 @@ export function NotificationsDropdown() {
         {isEmpty && (
           <EmptyState
             size="compact"
-            title="You're all caught up"
-            description="No new notifications."
+            title={t("notifications.empty.title")}
+            description={t("notifications.empty.description")}
           />
         )}
         {!isLoading && !isEmpty && (
@@ -113,10 +121,10 @@ export function NotificationsDropdown() {
             onClick={onMarkAllRead}
             disabled={!hasUnread}
           >
-            Mark all read
+            {t("notifications.markAllRead")}
           </button>
           <button type="button" className="portal-notif__action">
-            View all
+            {t("notifications.viewAll")}
           </button>
         </div>
       </Dropdown.Menu>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Drawer, StatusBadge, Tabs, type TabItem } from "@shared/components";
 import {
   DOCUMENT_STATUS_LABEL,
@@ -14,12 +15,6 @@ import { ElevationBanner } from "@portal/components/documents/ElevationBanner";
 
 type SubTab = "overview" | "extractions" | "audit";
 
-const SUB_TABS: TabItem<SubTab>[] = [
-  { key: "overview", label: "Overview" },
-  { key: "extractions", label: "Extractions" },
-  { key: "audit", label: "Audit" },
-];
-
 interface DocumentDrawerProps {
   /** Selected document, or null when the drawer is closed. */
   doc: ReviewDocument | null;
@@ -32,8 +27,15 @@ interface DocumentDrawerProps {
  * behind a client-side timed elevation; enterprise adds a four-eyes note.
  */
 export function DocumentDrawer({ doc, onClose }: DocumentDrawerProps) {
+  const { t } = useTranslation();
   const { tier } = useTier();
   const fourEyes = tier === "enterprise";
+
+  const subTabs: TabItem<SubTab>[] = [
+    { key: "overview", label: t("documents.drawer.tabs.overview") },
+    { key: "extractions", label: t("documents.drawer.tabs.extractions") },
+    { key: "audit", label: t("documents.drawer.tabs.audit") },
+  ];
 
   const [tab, setTab] = useState<SubTab>("overview");
   // Seconds remaining on the active elevation grant; null means no grant.
@@ -92,11 +94,11 @@ export function DocumentDrawer({ doc, onClose }: DocumentDrawerProps) {
         )}
 
         <Tabs<SubTab>
-          items={SUB_TABS}
+          items={subTabs}
           activeKey={tab}
           onChange={setTab}
           variant="underline"
-          ariaLabel="Document detail sections"
+          ariaLabel={t("documents.drawer.sectionsAriaLabel")}
         />
 
         <div className="portal-documents__drawer-panel">

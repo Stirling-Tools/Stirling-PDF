@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button, Modal } from "@shared/components";
 import "@portal/views/AgentBuilder.css";
 
@@ -13,6 +14,7 @@ interface BootstrapDialogProps {
  * it captures the chosen file name locally and closes without provisioning.
  */
 export function BootstrapDialog({ open, onClose }: BootstrapDialogProps) {
+  const { t } = useTranslation();
   const [fileName, setFileName] = useState<string | null>(null);
 
   function close() {
@@ -31,24 +33,22 @@ export function BootstrapDialog({ open, onClose }: BootstrapDialogProps) {
       open={open}
       onClose={close}
       width="md"
-      title="Bootstrap from a document"
-      subtitle="Seed a new agent from one representative file"
+      title={t("agentBuilder.bootstrap.title")}
+      subtitle={t("agentBuilder.bootstrap.subtitle")}
       footer={
         <div className="portal-agents__dialog-footer">
           <Button variant="ghost" size="sm" onClick={close}>
-            Cancel
+            {t("agentBuilder.bootstrap.cancel")}
           </Button>
           <Button size="sm" onClick={bootstrap} disabled={!fileName}>
-            Bootstrap agent
+            {t("agentBuilder.bootstrap.submit")}
           </Button>
         </div>
       }
     >
       <div className="portal-agents__bootstrap">
         <p className="portal-agents__bootstrap-lead">
-          Drop a sample document and we&apos;ll propose scenarios and an
-          extraction schema you can refine. Nothing is published until you
-          review it.
+          {t("agentBuilder.bootstrap.lead")}
         </p>
         <label className="portal-agents__dropzone">
           <input
@@ -61,7 +61,7 @@ export function BootstrapDialog({ open, onClose }: BootstrapDialogProps) {
             ⇪
           </span>
           <span className="portal-agents__dropzone-text">
-            {fileName ?? "Choose a sample document (PDF or image)"}
+            {fileName ?? t("agentBuilder.bootstrap.dropzoneText")}
           </span>
         </label>
       </div>

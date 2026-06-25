@@ -130,9 +130,34 @@ tasks:
 
   dev:portal:
     desc: "Start developer portal dev server"
+    ignore_error: true
     deps: [install]
+    vars:
+      PORT: '{{.PORT | default "5173"}}'
+      BACKEND_URL: '{{.BACKEND_URL | default "http://localhost:8080"}}'
+      EDITOR_URL: '{{.EDITOR_URL | default ""}}'
+      OPEN: '{{.OPEN | default ""}}'
+      SUBPATH: '{{.SUBPATH | default ""}}'
+      MOCKS: '{{.MOCKS | default ""}}'
+    env:
+      BACKEND_URL: '{{.BACKEND_URL}}'
     cmds:
-      - npx vite portal --port {{.PORT | default "5173"}}{{if .OPEN}} --open{{end}}
+      - '{{if .SUBPATH}}RUN_SUBPATH={{.SUBPATH}} {{end}}{{if .MOCKS}}VITE_PORTAL_MOCKS={{.MOCKS}} {{end}}{{if .EDITOR_URL}}VITE_EDITOR_URL={{.EDITOR_URL}} {{end}}npx vite portal --port {{.PORT}}{{if .OPEN}} --open{{end}}'
+
+  dev:portal:proxy:serve:
+    internal: true
+    vars:
+      PORT: '{{.PORT | default "3000"}}'
+      BACKEND_URL: '{{.BACKEND_URL | default "http://localhost:8080"}}'
+      EDITOR_DEV_URL: '{{.EDITOR_DEV_URL | default ""}}'
+      PORTAL_DEV_URL: '{{.PORTAL_DEV_URL | default ""}}'
+    env:
+      PORT: '{{.PORT}}'
+      BACKEND_URL: '{{.BACKEND_URL}}'
+      EDITOR_DEV_URL: '{{.EDITOR_DEV_URL}}'
+      PORTAL_DEV_URL: '{{.PORTAL_DEV_URL}}'
+    cmds:
+      - npx tsx scripts/dev-origin-proxy.ts
 
   # ============================================================
   # Build
@@ -153,8 +178,10 @@ tasks:
   build:proprietary:
     desc: "Build for proprietary mode"
     deps: [prepare]
+    vars:
+      PREVIEW: '{{.PREVIEW | default ""}}'
     cmds:
-      - npx vite build editor --mode proprietary
+      - '{{if .PREVIEW}}VITE_BUILD_FOR_PREVIEW=1 {{end}}npx vite build editor --mode proprietary'
 
   build:saas:
     desc: "Build for SaaS mode"
@@ -181,8 +208,26 @@ tasks:
   build:portal:
     desc: "Build developer portal"
     deps: [install]
+    vars:
+      SUBPATH: '{{.SUBPATH | default ""}}'
     cmds:
-      - npx vite build portal
+      - '{{if .SUBPATH}}RUN_SUBPATH={{.SUBPATH}} {{end}}npx vite build portal'
+
+  preview:portal:proxy:
+    desc: "Build + serve editor + portal behind one origin (prod-like auth testing)"
+    deps: [prepare]
+    vars:
+      PORT: '{{.PORT | default "3000"}}'
+      BACKEND_URL: '{{.BACKEND_URL | default "http://localhost:8080"}}'
+    env:
+      PORT: '{{.PORT}}'
+      BACKEND_URL: '{{.BACKEND_URL}}'
+    cmds:
+      - task: build:proprietary
+        vars: { PREVIEW: '1' }
+      - task: build:portal
+        vars: { SUBPATH: portal }
+      - npx tsx scripts/dev-origin-proxy.ts
 
   storybook:
     desc: "Start Storybook dev server"
@@ -288,6 +333,7 @@ tasks:
     desc: "Typecheck scripts"
     deps: [prepare]
     cmds:
+      - npx tsc --noEmit --project scripts/tsconfig.json
       - npx tsc --noEmit --project editor/scripts/tsconfig.json
 
   typecheck:prototypes:

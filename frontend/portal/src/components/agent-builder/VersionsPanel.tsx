@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Button, StatusBadge } from "@shared/components";
 import { type Agent, AGENT_STATUS_TONE } from "@portal/api/agents";
 import "@portal/views/AgentBuilder.css";
@@ -19,6 +20,7 @@ function formatDate(iso: string): string {
 
 /** Version history with publish / rollback actions per row. */
 export function VersionsPanel({ agent, historyUnlocked }: VersionsPanelProps) {
+  const { t } = useTranslation();
   // Without governance, only the current version is meaningful to show.
   const versions = historyUnlocked
     ? agent.versions
@@ -54,7 +56,7 @@ export function VersionsPanel({ agent, historyUnlocked }: VersionsPanelProps) {
                   </StatusBadge>
                   {isCurrent && (
                     <StatusBadge tone="info" size="sm" showDot={false}>
-                      current
+                      {t("agentBuilder.versions.current")}
                     </StatusBadge>
                   )}
                 </div>
@@ -70,7 +72,7 @@ export function VersionsPanel({ agent, historyUnlocked }: VersionsPanelProps) {
                     variant="outline"
                     onClick={() => publish(v.version)}
                   >
-                    Publish
+                    {t("agentBuilder.versions.publish")}
                   </Button>
                 )}
                 {v.status === "published" && !isCurrent && (
@@ -79,7 +81,7 @@ export function VersionsPanel({ agent, historyUnlocked }: VersionsPanelProps) {
                     variant="ghost"
                     onClick={() => rollback(v.version)}
                   >
-                    Roll back
+                    {t("agentBuilder.versions.rollBack")}
                   </Button>
                 )}
               </div>
@@ -90,8 +92,7 @@ export function VersionsPanel({ agent, historyUnlocked }: VersionsPanelProps) {
 
       {!historyUnlocked && publishedExists && (
         <p className="portal-agents__hint">
-          Full version history and rollback are available on the Enterprise
-          plan.
+          {t("agentBuilder.versions.historyGate")}
         </p>
       )}
     </div>

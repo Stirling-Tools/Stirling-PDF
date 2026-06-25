@@ -4,6 +4,12 @@
   justify-content: center;
   border-radius: var(--radius-md);
   flex-shrink: 0;
+  /* Resolved tint. Each accent class sets --ib-base; --ib-accent defaults to it
+     but a consumer can override --ib-accent alone (e.g. to neutralise the badge
+     until hover) without losing the per-accent base. */
+  --ib-accent: var(--ib-base, var(--color-blue));
+  color: var(--ib-accent);
+  background: color-mix(in srgb, var(--ib-accent) 14%, transparent);
 }
 .sui-iconbadge--sm {
   width: 1.75rem;
@@ -14,22 +20,17 @@
   height: 2rem;
 }
 .sui-iconbadge--blue {
-  color: var(--color-blue);
-  background: color-mix(in srgb, var(--color-blue) 14%, transparent);
+  --ib-base: var(--color-blue);
 }
 .sui-iconbadge--purple {
-  color: var(--color-purple);
-  background: color-mix(in srgb, var(--color-purple) 14%, transparent);
+  --ib-base: var(--color-purple);
 }
 .sui-iconbadge--green {
-  color: var(--color-green);
-  background: color-mix(in srgb, var(--color-green) 14%, transparent);
+  --ib-base: var(--color-green);
 }
 .sui-iconbadge--amber {
-  color: var(--color-amber);
-  background: color-mix(in srgb, var(--color-amber) 14%, transparent);
+  --ib-base: var(--color-amber);
 }
 .sui-iconbadge--red {
-  color: var(--color-red);
-  background: color-mix(in srgb, var(--color-red) 14%, transparent);
+  --ib-base: var(--color-red);
 }

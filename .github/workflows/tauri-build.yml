@@ -122,7 +122,12 @@ jobs:
         uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
         with:
           workspaces: frontend/editor/src-tauri
+          # Stable key shared across workflows so the nightly warmer.
+          # rust-cache still appends OS + rustc + Cargo.lock.
+          shared-key: tauri-${{ matrix.name }}
           save-if: ${{ github.ref == 'refs/heads/main' }}
+          # Save the dependency cache even if a later step fails
+          cache-on-failure: true
 
       - name: Set up x86_64 JDK 25 (macOS universal JRE)
         if: matrix.platform == 'macos-15'
@@ -145,7 +150,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
         with:
-          gradle-version: 9.5.1
+          gradle-version: 9.6.0
 
       - name: Setup Task
         uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
