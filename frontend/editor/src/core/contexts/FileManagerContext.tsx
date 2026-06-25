@@ -1002,16 +1002,14 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
             skipAuthRedirect: true,
           } as any,
         );
-        const contentType =
-          (response.headers &&
-            (response.headers["content-type"] ||
-              response.headers["Content-Type"])) ||
-          "";
-        const disposition =
-          (response.headers &&
-            (response.headers["content-disposition"] ||
-              response.headers["Content-Disposition"])) ||
-          "";
+        const contentType = ((response.headers &&
+          (response.headers["content-type"] ||
+            response.headers["Content-Type"])) ||
+          "") as string;
+        const disposition = ((response.headers &&
+          (response.headers["content-disposition"] ||
+            response.headers["Content-Disposition"])) ||
+          "") as string;
         const filename =
           parseContentDispositionFilename(disposition) ||
           file.name ||

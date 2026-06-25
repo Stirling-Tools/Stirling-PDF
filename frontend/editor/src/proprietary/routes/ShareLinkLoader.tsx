@@ -78,16 +78,14 @@ export default function ShareLinkLoader({ token }: ShareLinkLoaderProps) {
         );
         if (signal.aborted) return;
 
-        const contentType =
-          (response.headers &&
-            (response.headers["content-type"] ||
-              response.headers["Content-Type"])) ||
-          "";
-        const disposition =
-          (response.headers &&
-            (response.headers["content-disposition"] ||
-              response.headers["Content-Disposition"])) ||
-          "";
+        const contentType = ((response.headers &&
+          (response.headers["content-type"] ||
+            response.headers["Content-Type"])) ||
+          "") as string;
+        const disposition = ((response.headers &&
+          (response.headers["content-disposition"] ||
+            response.headers["Content-Disposition"])) ||
+          "") as string;
         const filename =
           parseContentDispositionFilename(disposition) || "shared-file";
         const blob = response.data as Blob;
