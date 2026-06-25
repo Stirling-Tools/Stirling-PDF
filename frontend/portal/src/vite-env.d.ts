@@ -5,9 +5,7 @@ interface ImportMetaEnv {
   readonly VITE_SAAS_SUPABASE_URL?: string;
   /** Hosted SaaS Supabase anon/publishable key (public). */
   readonly VITE_SAAS_SUPABASE_ANON_KEY?: string;
-  /** Hosted SaaS Java backend base URL — attended portal→SaaS reads (wallet etc.) with the admin's JWT. */
-  readonly VITE_SAAS_API_URL?: string;
-  /** Hosted SaaS Java backend base URL — apiClient.saas calls go here. */
+  /** Hosted SaaS Java backend base URL — attended portal→SaaS reads (wallet, invoices, …) via apiClient.saas with the admin's JWT. */
   readonly VITE_SAAS_API_URL?: string;
   /** Stripe publishable key (pk_live_… / pk_test_…) used by embedded Checkout. */
   readonly VITE_STRIPE_PUBLISHABLE_KEY?: string;

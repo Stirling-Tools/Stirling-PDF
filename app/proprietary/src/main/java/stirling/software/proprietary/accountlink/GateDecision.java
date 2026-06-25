@@ -19,7 +19,9 @@ public record GateDecision(boolean allowed, Reason reason) {
         /** Not linked — block billable work; FE should prompt to link. */
         NOT_LINKED,
         /** Linked but over the limit / no subscription — block billable work. */
-        OVER_LIMIT
+        OVER_LIMIT,
+        /** Credential revoked/invalid on the SaaS side — block billable work. */
+        REVOKED
     }
 
     public static GateDecision allow(Reason reason) {

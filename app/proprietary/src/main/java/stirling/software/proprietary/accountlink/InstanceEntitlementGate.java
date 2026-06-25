@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
  *   <li>Billable + not linked → block with {@code NOT_LINKED} ("link to activate").
  *   <li>Billable + linked + entitlement unknown (unreachable) → <b>fail open</b>, allow.
  *   <li>Billable + linked + entitled → allow.
+ *   <li>Billable + linked + credential revoked → block with {@code REVOKED}.
  *   <li>Billable + linked + over limit → block with {@code OVER_LIMIT}.
  * </ol>
  *
@@ -78,14 +79,19 @@ public class InstanceEntitlementGate {
             // inability to reach billing.
             return GateDecision.allow(GateDecision.Reason.FAIL_OPEN);
         }
-        return entitled(entitlement.get())
+        InstanceEntitlement e = entitlement.get();
+        if (e.state() == EntitlementState.REVOKED) {
+            // Credential revoked/invalid (authoritative deny) — block, distinct from over-limit.
+            return GateDecision.block(GateDecision.Reason.REVOKED);
+        }
+        return entitled(e)
                 ? GateDecision.allow(GateDecision.Reason.ENTITLED)
                 : GateDecision.block(GateDecision.Reason.OVER_LIMIT);
     }
 
     /** True when the snapshot permits billable work (subscribed, free pool left, or within cap). */
     private static boolean entitled(InstanceEntitlement e) {
-        if (e.state() == EntitlementState.OVER_LIMIT) {
+        if (e.state() == EntitlementState.OVER_LIMIT || e.state() == EntitlementState.REVOKED) {
             return false;
         }
         if (e.subscribed()) {

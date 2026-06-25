@@ -134,10 +134,27 @@ class AccountLinkClientTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void fetchEntitlementReturnsNullOnErrorStatus() throws Exception {
-        HttpResponse<String> resp = response(403, "{}");
+    void fetchEntitlementReturnsNullOnServerError() throws Exception {
+        // 5xx is a transient/server failure, not a credential deny → null, the cache fails open.
+        HttpResponse<String> resp = response(503, "{}");
         when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(resp);
         assertNull(client.fetchEntitlement("dev-1", "sec-1"));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void fetchEntitlementThrowsRevokedOnDeny() throws Exception {
+        // 401/403 = authoritative deny (revoked/invalid credential) → RevokedException, NOT null:
+        // the cache must block billable work rather than fail open on a stale snapshot.
+        for (int status : new int[] {401, 403}) {
+            HttpResponse<String> resp = response(status, "{}");
+            when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(resp);
+            AccountLinkClient.RevokedException ex =
+                    assertThrows(
+                            AccountLinkClient.RevokedException.class,
+                            () -> client.fetchEntitlement("dev-1", "sec-1"));
+            assertEquals(status, ex.status());
+        }
     }
 
     @Test

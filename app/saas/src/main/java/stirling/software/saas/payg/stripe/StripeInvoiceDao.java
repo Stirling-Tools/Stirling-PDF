@@ -155,10 +155,11 @@ public class StripeInvoiceDao {
     }
 
     /**
-     * Sums billed line-item quantity per invoice from {@code stripe.invoice_line_items} — the units
-     * (PDFs) each invoice charged for. Run SEPARATELY from the invoice query and defensively
-     * wrapped: if that table isn't in the sync target, it degrades to an empty map (the column
-     * renders "—") instead of failing the whole invoice list.
+     * Sums billed quantity (PDFs) per invoice from the {@code stripe.invoices.lines} JSONB the Sync
+     * Engine mirrors — line items live in {@code lines->'data'}, NOT a separate {@code
+     * invoice_line_items} table (the sync engine never creates one). Run SEPARATELY from the
+     * invoice query and defensively wrapped, so a missing/changed schema degrades to an empty map
+     * (the column renders "—") instead of failing the whole invoice list.
      */
     private Map<String, Long> sumBilledUnits(List<String> invoiceIds) {
         if (invoiceIds.isEmpty()) {
@@ -166,11 +167,14 @@ public class StripeInvoiceDao {
         }
         String placeholders = invoiceIds.stream().map(id -> "?").collect(Collectors.joining(","));
         String sql =
-                "SELECT invoice AS invoice_id, COALESCE(SUM(quantity), 0) AS qty"
-                        + " FROM stripe.invoice_line_items"
-                        + " WHERE invoice IN ("
+                "SELECT i.id AS invoice_id,"
+                        + " COALESCE((SELECT SUM((l->>'quantity')::int)"
+                        + "           FROM jsonb_array_elements(COALESCE(i.lines->'data', '[]'::jsonb))"
+                        + "             AS l), 0) AS qty"
+                        + " FROM stripe.invoices i"
+                        + " WHERE i.id IN ("
                         + placeholders
-                        + ") GROUP BY invoice";
+                        + ")";
         try {
             Map<String, Long> map = new HashMap<>();
             jdbcTemplate.query(
@@ -181,7 +185,7 @@ public class StripeInvoiceDao {
                     invoiceIds.toArray());
             return map;
         } catch (DataAccessException e) {
-            log.warn("stripe.invoice_line_items sum failed: {}", e.getMessage());
+            log.warn("stripe.invoices line-quantity sum failed: {}", e.getMessage());
             return Map.of();
         }
     }

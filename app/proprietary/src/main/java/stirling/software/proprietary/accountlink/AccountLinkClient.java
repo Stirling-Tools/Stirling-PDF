@@ -86,6 +86,26 @@ public class AccountLinkClient {
     }
 
     /**
+     * Authoritative deny (401/403) from the entitlement endpoint — the device credential is revoked
+     * or invalid. Distinct from a transport/server failure (which returns {@code null} and fails
+     * open): the cache must BLOCK billable work on this rather than serve a stale entitled
+     * snapshot. Unchecked so it propagates cleanly through {@link #fetchEntitlement}'s transport
+     * try/catch.
+     */
+    public static final class RevokedException extends RuntimeException {
+        private final int status;
+
+        public RevokedException(int status) {
+            super("SaaS entitlement denied (credential revoked/invalid): HTTP " + status);
+            this.status = status;
+        }
+
+        public int status() {
+            return status;
+        }
+    }
+
+    /**
      * Relays the admin Supabase JWT to the SaaS register endpoint and returns the minted
      * credential.
      *
@@ -152,11 +172,18 @@ public class AccountLinkClient {
     }
 
     /**
-     * Fetches the current entitlement using the stored device credential. Returns the parsed
-     * snapshot, or {@code null} when the SaaS side is unreachable / returns an error — the caller
-     * (cache + gate) treats {@code null} as "unknown" and fails open.
+     * Fetches the current entitlement using the stored device credential. Three outcomes:
+     *
+     * <ul>
+     *   <li>2xx → the parsed snapshot.
+     *   <li>401/403 → {@link RevokedException} (authoritative deny — revoked/invalid credential);
+     *       the caller must BLOCK, not fail open.
+     *   <li>transport failure, other non-2xx (e.g. 5xx), or a malformed body → {@code null}
+     *       ("unknown" — the caller fails open).
+     * </ul>
      */
     public InstanceEntitlement fetchEntitlement(String deviceId, String deviceSecret) {
+        HttpResponse<String> response;
         try {
             HttpRequest request =
                     HttpRequest.newBuilder()
@@ -167,14 +194,26 @@ public class AccountLinkClient {
                             .timeout(timeout())
                             .GET()
                             .build();
-            HttpResponse<String> response = send(request);
-            if (response.statusCode() / 100 != 2) {
-                log.debug("Entitlement fetch returned HTTP {}", response.statusCode());
-                return null;
-            }
-            return parseEntitlement(response.body());
+            response = send(request);
         } catch (Exception e) {
+            // Transport failure (timeout / connection refused / interrupted) → unknown, fail open.
             log.debug("Entitlement fetch failed: {}", e.getMessage());
+            return null;
+        }
+        int status = response.statusCode();
+        if (status == 401 || status == 403) {
+            // Authoritative deny — the SaaS side rejected the credential (revoked/invalid).
+            throw new RevokedException(status);
+        }
+        if (status / 100 != 2) {
+            // Server / transient error → unknown, fail open (do NOT treat as a deny).
+            log.debug("Entitlement fetch returned HTTP {}", status);
+            return null;
+        }
+        try {
+            return parseEntitlement(response.body());
+        } catch (IOException e) {
+            log.debug("Entitlement parse failed: {}", e.getMessage());
             return null;
         }
     }

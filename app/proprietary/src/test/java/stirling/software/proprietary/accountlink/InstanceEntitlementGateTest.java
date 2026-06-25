@@ -95,6 +95,17 @@ class InstanceEntitlementGateTest {
     }
 
     @Test
+    void billable_linked_revoked_blocksWithRevokedSignal() {
+        // Authoritative deny (revoked/invalid credential) surfaced by the cache as REVOKED —
+        // blocks distinctly from over-limit, even though the snapshot is "present".
+        InstanceEntitlement revoked =
+                new InstanceEntitlement(false, 0, 0, null, EntitlementState.REVOKED);
+        GateDecision d = InstanceEntitlementGate.decide(true, true, true, Optional.of(revoked));
+        assertFalse(d.allowed());
+        assertEquals(Reason.REVOKED, d.reason());
+    }
+
+    @Test
     void billable_linked_unsubscribedWithFreePool_overLimitStateStillBlocks() {
         // Defensive: an explicit OVER_LIMIT state blocks even if a stale free count looks positive.
         InstanceEntitlement conflicting =
