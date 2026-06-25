@@ -13,6 +13,7 @@ export interface AppConfig {
   enableOAuth?: boolean;
   enableSaml?: boolean;
   isAdmin?: boolean;
+  shouldShowUpdate?: boolean;
   enableAlphaFunctionality?: boolean;
   enableAnalytics?: boolean | null;
   enablePosthog?: boolean | null;

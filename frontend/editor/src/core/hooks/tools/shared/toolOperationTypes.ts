@@ -1,3 +1,4 @@
+import { lazy, type ComponentType } from "react";
 import { StirlingFile } from "@app/types/fileContext";
 import type { ResponseHandler } from "@app/utils/toolResponseProcessor";
 import { ToolId } from "@app/types/toolId";
@@ -146,6 +147,56 @@ export type ToolOperationConfig<TParams = void> =
   | SingleFileToolOperationConfig<TParams>
   | MultiFileToolOperationConfig<TParams>
   | CustomToolOperationConfig<TParams>;
+
+/**
+ * One generic source-of-truth for the props every automation settings component
+ * accepts: the tool's parameters plus a typed change handler.
+ */
+export interface ToolAutomationSettingsProps<TParams> {
+  parameters: TParams;
+  onParameterChange: <K extends keyof TParams>(
+    key: K,
+    value: TParams[K],
+  ) => void;
+  disabled?: boolean;
+}
+
+/**
+ * Erased parameter shape stored in the registry. Spreadable and callable, so
+ * consumers can merge defaults and invoke buildFormData/customProcessor/endpoint
+ * without per-tool type knowledge.
+ */
+export type ErasedToolParams = Record<string, unknown>;
+
+export type RegistryToolOperationConfig = ToolOperationConfig<ErasedToolParams>;
+export type RegistryAutomationSettings = ComponentType<
+  ToolAutomationSettingsProps<ErasedToolParams>
+> | null;
+
+/**
+ * Store a tool's typed operationConfig in the registry. The input is validated as
+ * a real ToolOperationConfig<TParams>, then TParams is erased here. TParams is
+ * invariant in ToolOperationConfig, so the erasure cannot be a plain assignment;
+ * the `as unknown as` is the localized existential boundary.
+ */
+export function asRegistryConfig<TParams>(
+  config: ToolOperationConfig<TParams>,
+): RegistryToolOperationConfig {
+  return config as unknown as RegistryToolOperationConfig;
+}
+
+/**
+ * Lazily load a tool's automation settings component for the registry. The loaded
+ * component is validated against ToolAutomationSettingsProps<TParams> (inferred
+ * from the module), then erased to the registry's shared props shape.
+ */
+export function lazySettings<TParams>(
+  loader: () => Promise<{
+    default: ComponentType<ToolAutomationSettingsProps<TParams>>;
+  }>,
+): RegistryAutomationSettings {
+  return lazy(loader) as unknown as RegistryAutomationSettings;
+}
 
 /**
  * Complete tool operation interface returned by useToolOperation.
