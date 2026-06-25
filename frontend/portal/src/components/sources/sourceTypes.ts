@@ -1,24 +1,26 @@
 import type { ChipTone } from "@shared/components";
 
 /**
- * Per-type presentation + create-form metadata. This is product copy, not data.
- * It lives client-side so the table chip, type picker, and configure step stay
- * stable regardless of which connections exist. The backend's source `type`
- * string keys into here; unknown types fall back gracefully.
+ * Per-type presentation + create-form metadata. User-facing copy is stored as
+ * i18n keys (resolved by the rendering component via t()), not literals, so the
+ * table chip, type picker, and configure step stay translatable. The structure
+ * lives client-side so it stays stable regardless of which connections exist.
+ * The backend's source `type` string keys into here; unknown types fall back
+ * gracefully.
  */
 
 export interface SourceTypeMeta {
-  label: string;
+  labelKey: string;
   icon: string;
   tone: ChipTone;
 }
 
 const SOURCE_TYPE_META: Record<string, SourceTypeMeta> = {
-  folder: { label: "Folder", icon: "⛁", tone: "blue" },
+  folder: { labelKey: "sources.types.folder.label", icon: "⛁", tone: "blue" },
 };
 
 const UNKNOWN_TYPE_META: SourceTypeMeta = {
-  label: "Source",
+  labelKey: "sources.types.unknown.label",
   icon: "◇",
   tone: "neutral",
 };
@@ -30,47 +32,50 @@ export function sourceTypeMeta(type: string): SourceTypeMeta {
 /** One configurable field for a creatable source type. */
 export interface SourceFieldDef {
   key: string;
-  label: string;
+  labelKey: string;
   control: "text" | "select";
   required?: boolean;
-  placeholder?: string;
-  helperText?: string;
-  options?: { value: string; label: string }[];
+  placeholderKey?: string;
+  helperTextKey?: string;
+  options?: { value: string; labelKey: string }[];
   defaultValue?: string;
 }
 
 /** A source type the wizard can create, with the fields its config needs. */
 export interface CreatableSourceType {
   type: string;
-  label: string;
-  description: string;
+  labelKey: string;
+  descriptionKey: string;
   fields: SourceFieldDef[];
 }
 
 export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
   {
     type: "folder",
-    label: "Folder",
-    description: "Watch a directory on the server for new documents.",
+    labelKey: "sources.types.folder.label",
+    descriptionKey: "sources.types.folder.description",
     fields: [
       {
         key: "directory",
-        label: "Directory path",
+        labelKey: "sources.types.folder.fields.directory.label",
         control: "text",
         required: true,
-        placeholder: "/data/incoming",
-        helperText: "Absolute path Stirling watches for files to process.",
+        placeholderKey: "sources.types.folder.fields.directory.placeholder",
+        helperTextKey: "sources.types.folder.fields.directory.helperText",
       },
       {
         key: "mode",
-        label: "Read mode",
+        labelKey: "sources.types.folder.fields.mode.label",
         control: "select",
         defaultValue: "consume",
         options: [
-          { value: "consume", label: "Consume: process each file once" },
+          {
+            value: "consume",
+            labelKey: "sources.types.folder.fields.mode.options.consume",
+          },
           {
             value: "snapshot",
-            label: "Snapshot: re-read the folder every run",
+            labelKey: "sources.types.folder.fields.mode.options.snapshot",
           },
         ],
       },

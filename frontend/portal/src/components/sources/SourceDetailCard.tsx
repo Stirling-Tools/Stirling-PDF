@@ -40,7 +40,7 @@ export function SourceDetailCard({
           <h2 className="portal-sources__expanded-title">{source.name}</h2>
           <span className="portal-sources__expanded-sub">
             {t("sources.detail.subtitle", {
-              type: meta.label,
+              type: t(meta.labelKey),
               status: t(`sources.status.${source.status}`),
             })}
           </span>

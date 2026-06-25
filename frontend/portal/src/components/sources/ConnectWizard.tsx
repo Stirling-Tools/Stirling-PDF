@@ -221,7 +221,9 @@ export function ConnectWizard({
               <span className="portal-sources__type-icon" aria-hidden>
                 {sourceTypeMeta(ct.type).icon}
               </span>
-              <span className="portal-sources__type-name">{ct.label}</span>
+              <span className="portal-sources__type-name">
+                {t(ct.labelKey)}
+              </span>
             </button>
           ))}
         </div>
@@ -239,14 +241,19 @@ export function ConnectWizard({
           {type.fields.map((field) => (
             <FormField
               key={field.key}
-              label={field.label}
-              helperText={field.helperText}
+              label={t(field.labelKey)}
+              helperText={
+                field.helperTextKey ? t(field.helperTextKey) : undefined
+              }
               required={field.required}
             >
               {field.control === "select" ? (
                 <Select
                   value={options[field.key] ?? ""}
-                  options={field.options ?? []}
+                  options={(field.options ?? []).map((o) => ({
+                    value: o.value,
+                    label: t(o.labelKey),
+                  }))}
                   onChange={(e) =>
                     setOptions((o) => ({ ...o, [field.key]: e.target.value }))
                   }
@@ -254,7 +261,9 @@ export function ConnectWizard({
               ) : (
                 <Input
                   value={options[field.key] ?? ""}
-                  placeholder={field.placeholder}
+                  placeholder={
+                    field.placeholderKey ? t(field.placeholderKey) : undefined
+                  }
                   onChange={(e) =>
                     setOptions((o) => ({ ...o, [field.key]: e.target.value }))
                   }
@@ -269,11 +278,14 @@ export function ConnectWizard({
         <div className="portal-sources__wizard-body">
           <div className="portal-sources__stat-grid">
             <StatTile label={t("sources.wizard.name")} value={name || "—"} />
-            <StatTile label={t("sources.wizard.type")} value={type.label} />
+            <StatTile
+              label={t("sources.wizard.type")}
+              value={t(type.labelKey)}
+            />
             {type.fields.map((field) => (
               <StatTile
                 key={field.key}
-                label={field.label}
+                label={t(field.labelKey)}
                 value={options[field.key] || "—"}
               />
             ))}

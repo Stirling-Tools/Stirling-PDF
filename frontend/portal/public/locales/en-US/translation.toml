@@ -401,6 +401,25 @@ chooseType = "Choose type"
 configure = "Configure"
 review = "Review & connect"
 
+[sources.types.folder]
+label = "Folder"
+description = "Watch a directory on the server for new documents."
+
+[sources.types.folder.fields.directory]
+label = "Directory path"
+placeholder = "/data/incoming"
+helperText = "Absolute path Stirling watches for files to process."
+
+[sources.types.folder.fields.mode]
+label = "Read mode"
+
+[sources.types.folder.fields.mode.options]
+consume = "Consume: process each file once"
+snapshot = "Snapshot: re-read the folder every run"
+
+[sources.types.unknown]
+label = "Source"
+
 [usage]
 title = "Usage & Billing"
 subtitle = "Your last 30 days of processing, plan, and charges."
