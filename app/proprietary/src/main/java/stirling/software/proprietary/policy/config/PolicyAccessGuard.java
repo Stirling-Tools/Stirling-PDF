@@ -48,19 +48,10 @@ public class PolicyAccessGuard {
         return Objects.equals(policy.teamId(), policyManagementAuthority.currentUserTeamId());
     }
 
-    /** The subset of {@code policies} scoped to the current user's team. */
-    public List<Policy> visible(List<Policy> policies) {
-        if (!enforced()) {
-            return policies;
-        }
-        Long teamId = policyManagementAuthority.currentUserTeamId();
-        return policies.stream().filter(policy -> Objects.equals(policy.teamId(), teamId)).toList();
-    }
-
     /**
-     * The policies visible to the caller, loaded scoped to their team rather than fetched globally
-     * and filtered. Equivalent to {@link #visible(List)} over the whole store, but on SaaS it never
-     * pulls another team's policies into memory.
+     * The policies visible to the caller: their whole team's, loaded scoped rather than fetched
+     * globally and filtered, so on SaaS it never pulls another team's policies into memory. Login
+     * disabled (single-user) returns everything.
      */
     public List<Policy> visibleFrom(PolicyStore store) {
         if (!enforced()) {

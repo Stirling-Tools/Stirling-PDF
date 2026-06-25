@@ -45,19 +45,10 @@ public class SourceAccessGuard {
         return Objects.equals(source.teamId(), policyManagementAuthority.currentUserTeamId());
     }
 
-    /** The subset of {@code sources} scoped to the current user's team. */
-    public List<Source> visible(List<Source> sources) {
-        if (!enforced()) {
-            return sources;
-        }
-        Long teamId = policyManagementAuthority.currentUserTeamId();
-        return sources.stream().filter(source -> Objects.equals(source.teamId(), teamId)).toList();
-    }
-
     /**
-     * The sources visible to the caller, loaded scoped to their team rather than fetched globally
-     * and filtered. Equivalent to {@link #visible(List)} over the whole store, but on SaaS it never
-     * pulls another team's sources into memory.
+     * The sources visible to the caller: their whole team's, loaded scoped rather than fetched
+     * globally and filtered, so on SaaS it never pulls another team's sources into memory. Login
+     * disabled (single-user) returns everything.
      */
     public List<Source> visibleFrom(SourceStore store) {
         if (!enforced()) {
