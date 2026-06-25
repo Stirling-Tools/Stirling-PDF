@@ -5854,6 +5854,7 @@ routing = "Routing"
 security = "Security"
 
 [policies.detail]
+close = "Bezárás"
 editSettings = "Edit Settings"
 enforces = "Enforces"
 managedByOrg = "Managed by your organisation. Contact a team leader to change this policy."
@@ -5907,6 +5908,7 @@ allDocTypesTitle = "All document types"
 back = "Back"
 builderDesc = "Build the sequence of tools this policy runs on each document."
 clear = "Clear"
+close = "Bezárás"
 continue = "Continue"
 docTypesLabel = "Document types"
 edit = "Edit"
@@ -7784,8 +7786,6 @@ allReleases = "Összes kiadás"
 breaking = "Kompatibilitást törő"
 breakingChanges = "Inkompatibilis változások"
 breakingChangesDefault = "Ez a verzió inkompatibilis változásokat tartalmaz."
-breakingChangesDetected = "Inkompatibilis változások észlelve"
-breakingChangesMessage = "Egyes verziók inkompatibilis változásokat tartalmaznak. Frissítés előtt tekintse át az alábbi átállási útmutatókat."
 close = "Bezárás"
 closeModal = "Frissítési ablak bezárása"
 current = "Jelenlegi verzió"
@@ -8606,6 +8606,7 @@ disableByAdmin = "MFA letiltása"
 
 [workspace.people.roleDescriptions]
 admin = "Kezelheti a beállításokat és meghívhat tagokat, teljes adminisztratív hozzáféréssel."
+currentRole = "Jelenleg hozzárendelt szerepkör."
 user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]
