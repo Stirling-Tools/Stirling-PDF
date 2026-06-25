@@ -80,14 +80,16 @@ const withProviders: Decorator = (Story, context) => {
     <MemoryRouter initialEntries={["/"]}>
       <ThemeProvider>
         <MantineProvider theme={mantineTheme} forceColorScheme={colorScheme}>
-          <TierKey tier={tier}>
-            <LinkProvider key={linkState} initialState={linkState}>
+          {/* LinkProvider must wrap TierProvider: TierContext derives its tier
+              from useLink() (matches App.tsx's nesting). */}
+          <LinkProvider key={linkState} initialState={linkState}>
+            <TierKey tier={tier}>
               <UIProvider>
                 <ThemeWatcher />
                 <Story />
               </UIProvider>
-            </LinkProvider>
-          </TierKey>
+            </TierKey>
+          </LinkProvider>
         </MantineProvider>
       </ThemeProvider>
     </MemoryRouter>
