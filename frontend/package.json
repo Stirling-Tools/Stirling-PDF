@@ -172,7 +172,6 @@
     "form-data": "^4.0.6",
     "protobufjs": "^7.6.3",
     "esbuild": "^0.28.1",
-    "brace-expansion": "^5.0.6",
     "@babel/core": "^7.29.6"
   },
   "msw": {

@@ -166,7 +166,9 @@ class SignatureStorageService {
 
             // Convert to data URL (base64) for both display and use
             const blob = new Blob([imageResponse.data], {
-              type: (imageResponse.headers["content-type"] as string) || "image/png",
+              type:
+                (imageResponse.headers["content-type"] as string) ||
+                "image/png",
             });
 
             const dataUrl = await new Promise<string>((resolve, reject) => {

@@ -185,8 +185,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
       } as any,
     );
     const contentType = ((response.headers &&
-      (response.headers["content-type"] ||
-        response.headers["Content-Type"])) ||
+      (response.headers["content-type"] || response.headers["Content-Type"])) ||
       "") as string;
     const disposition = ((response.headers &&
       (response.headers["content-disposition"] ||
@@ -209,8 +208,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
       } as any,
     );
     const contentType = ((response.headers &&
-      (response.headers["content-type"] ||
-        response.headers["Content-Type"])) ||
+      (response.headers["content-type"] || response.headers["Content-Type"])) ||
       "") as string;
     const disposition = ((response.headers &&
       (response.headers["content-disposition"] ||
