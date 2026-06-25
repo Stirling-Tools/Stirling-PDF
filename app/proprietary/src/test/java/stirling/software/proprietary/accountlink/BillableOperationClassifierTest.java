@@ -28,4 +28,22 @@ class BillableOperationClassifierTest {
         MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/general/merge");
         assertFalse(BillableOperationClassifier.isBillable(req));
     }
+
+    @Test
+    void aiSegmentNotAtPathStartIsFree() {
+        // Tightened from substring to prefix: the AI segment appearing mid-path (e.g. behind a
+        // proxy prefix) must NOT classify a manual tool as billable.
+        MockHttpServletRequest req =
+                new MockHttpServletRequest("POST", "/proxy/api/v1/ai/tools/foo");
+        assertFalse(BillableOperationClassifier.isBillable(req));
+    }
+
+    @Test
+    void aiPathUnderContextPathIsBillable() {
+        // A real context-path deployment still classifies: /<ctx>/api/v1/ai/** is billable.
+        MockHttpServletRequest req =
+                new MockHttpServletRequest("POST", "/stirling/api/v1/ai/tools/foo");
+        req.setContextPath("/stirling");
+        assertTrue(BillableOperationClassifier.isBillable(req));
+    }
 }

@@ -54,6 +54,17 @@ public class AccountLinkController {
         }
         try {
             return ResponseEntity.ok(service.link(req.supabaseJwt(), req.name()));
+        } catch (AccountLinkClient.UpstreamException e) {
+            // Auth failures are the admin's token, not a gateway fault: surface 401/403 as-is so
+            // the portal can prompt a re-sign-in. Anything else upstream → 502. Don't echo the
+            // raw upstream body back to the browser.
+            HttpStatus status =
+                    e.status() == HttpStatus.UNAUTHORIZED.value()
+                                    || e.status() == HttpStatus.FORBIDDEN.value()
+                            ? HttpStatus.valueOf(e.status())
+                            : HttpStatus.BAD_GATEWAY;
+            log.warn("Account-link register rejected upstream: HTTP {}", e.status());
+            return ResponseEntity.status(status).body(java.util.Map.of("error", "LINK_FAILED"));
         } catch (IOException e) {
             log.warn("Account-link failed: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY)

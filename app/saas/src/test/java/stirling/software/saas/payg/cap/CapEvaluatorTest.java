@@ -29,10 +29,22 @@ class CapEvaluatorTest {
     }
 
     @Test
-    void zeroCap_treatedAsUnlimitedForSafety() {
-        // Defensive: a zero cap would divide-by-zero. The guard treats it as null (FULL).
+    void zeroCap_blocksMeteredWork() {
+        // An explicit $0 cap buys zero paid documents → metered work is blocked
+        // (DEGRADED/MINIMAL); only the free grant + manual tools run. (Uncapped is the
+        // separate capUnits==null case, covered by nullCap_returnsFullStateAndFullGates.)
         Evaluation e = CapEvaluator.evaluate(50L, 0L, 80, 100, FeatureSet.MINIMAL);
-        assertThat(e.state()).isEqualTo(EntitlementState.FULL);
+        assertThat(e.state()).isEqualTo(EntitlementState.DEGRADED);
+        assertThat(e.featureSet()).isEqualTo(FeatureSet.MINIMAL);
+        assertThat(e.enabledGates())
+                .containsExactlyInAnyOrder(FeatureGate.OFFSITE_PROCESSING, FeatureGate.CLIENT_SIDE);
+    }
+
+    @Test
+    void zeroCap_blocksEvenAtZeroSpend() {
+        // A $0 cap blocks from the first metered op — not gated on spend.
+        Evaluation e = CapEvaluator.evaluate(0L, 0L, 80, 100, FeatureSet.MINIMAL);
+        assertThat(e.state()).isEqualTo(EntitlementState.DEGRADED);
     }
 
     @Test

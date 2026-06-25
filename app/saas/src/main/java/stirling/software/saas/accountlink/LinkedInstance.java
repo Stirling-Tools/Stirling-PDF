@@ -22,9 +22,9 @@ import lombok.Setter;
  * <p>Created by {@code POST /api/v1/account-link/register}, authenticated with the admin's
  * short-lived Supabase JWT. Registration mints a {@code device_id} (public) plus a {@code
  * device_secret} (high-entropy, returned once and stored only on the instance — we keep an unsalted
- * SHA-256 hash, the same posture as API keys). The instance authenticates all subsequent unattended
- * metering / entitlement calls with that device credential, so no long-lived user JWT lives on the
- * server side.
+ * SHA-256 hash, the same posture as API keys). The instance authenticates its unattended
+ * entitlement reads with that device credential, so no long-lived user JWT lives on the server
+ * side.
  *
  * <p>{@code revoked_at IS NULL} means active; revoking sets it and the credential stops
  * authenticating. The whole surface is gated behind {@code stirling.billing.account-link.enabled}.

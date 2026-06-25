@@ -32,8 +32,8 @@ import stirling.software.saas.util.AuthenticationUtils;
  * <p>A self-hosted instance's local backend calls {@code POST /register} with the admin's
  * short-lived Supabase JWT (validated by the existing {@code SupabaseSecurityConfig} chain — no new
  * auth here). We resolve the caller's team, mint a device credential bound to it, and return the
- * secret exactly once. Ongoing metering / entitlement calls authenticate with that device
- * credential, not this JWT.
+ * secret exactly once. Ongoing entitlement reads authenticate with that device credential, not this
+ * JWT.
  *
  * <p>Whole surface gated behind {@code stirling.billing.account-link.enabled}: off → beans absent →
  * 404. Leader-only, and the team is always derived from the caller (never the request body).
@@ -64,7 +64,7 @@ public class AccountLinkController {
 
     /** {@code deviceSecret} is plaintext and returned exactly once — the caller must store it. */
     public record RegisterResponse(
-            Long instanceId, String deviceId, String deviceSecret, String name) {}
+            Long instanceId, Long teamId, String deviceId, String deviceSecret, String name) {}
 
     public record InstanceRow(
             Long instanceId,
@@ -88,7 +88,11 @@ public class AccountLinkController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(
                         new RegisterResponse(
-                                reg.instanceId(), reg.deviceId(), reg.deviceSecret(), reg.name()));
+                                reg.instanceId(),
+                                lt.teamId(),
+                                reg.deviceId(),
+                                reg.deviceSecret(),
+                                reg.name()));
     }
 
     @GetMapping("/instances")

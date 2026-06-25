@@ -3,6 +3,7 @@ package stirling.software.saas.accountlink;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.time.LocalDateTime;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
@@ -74,6 +75,11 @@ public class DeviceCredentialAuthenticationFilter extends OncePerRequestFilter {
                                                     new LinkedInstanceAuthenticationToken(
                                                             instance.getInstanceId(),
                                                             instance.getTeamId()));
+                                    // Stamp liveness. The instance surface is low-frequency
+                                    // (entitlement poll ~5 min, not per billable op), so an
+                                    // unconditional write here is cheap.
+                                    instance.setLastSeenAt(LocalDateTime.now());
+                                    repo.save(instance);
                                 } else {
                                     log.debug("Device credential mismatch for device {}", deviceId);
                                 }

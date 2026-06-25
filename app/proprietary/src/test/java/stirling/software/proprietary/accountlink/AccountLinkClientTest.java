@@ -8,7 +8,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.IOException;
 import java.net.ConnectException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -73,10 +72,14 @@ class AccountLinkClientTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void registerThrowsOnNon2xx() throws Exception {
+    void registerThrowsUpstreamExceptionWithStatusOnNon2xx() throws Exception {
         HttpResponse<String> resp = response(401, "{\"error\":\"unauthorized\"}");
         when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(resp);
-        assertThrows(IOException.class, () -> client.register("jwt", null));
+        AccountLinkClient.UpstreamException ex =
+                assertThrows(
+                        AccountLinkClient.UpstreamException.class,
+                        () -> client.register("jwt", null));
+        assertEquals(401, ex.status());
     }
 
     @Test
@@ -101,6 +104,23 @@ class AccountLinkClientTest {
         HttpRequest sent = captor.getValue();
         assertEquals("dev-1", sent.headers().firstValue("X-Device-Id").orElse(null));
         assertEquals("sec-1", sent.headers().firstValue("X-Device-Secret").orElse(null));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void fetchEntitlementMapsOverLimitState() throws Exception {
+        // Pins the consume side of the wire contract: InstanceController emits "OVER_LIMIT" (for a
+        // DEGRADED team) and the client must map it to the gate-blocking state.
+        HttpResponse<String> resp =
+                response(
+                        200,
+                        "{\"subscribed\":true,\"freeRemainingUnits\":0,\"periodSpendUnits\":1300,\"periodCapUnits\":1250,\"state\":\"OVER_LIMIT\"}");
+        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(resp);
+
+        InstanceEntitlement e = client.fetchEntitlement("dev-1", "sec-1");
+
+        assertNotNull(e);
+        assertEquals(EntitlementState.OVER_LIMIT, e.state());
     }
 
     @Test

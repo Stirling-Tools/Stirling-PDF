@@ -60,7 +60,8 @@ class InstanceControllerTest {
         assertThat(body.freeRemainingUnits()).isEqualTo(120L);
         assertThat(body.periodSpendUnits()).isEqualTo(90L);
         assertThat(body.periodCapUnits()).isEqualTo(1250L);
-        assertThat(body.state()).isEqualTo(EntitlementState.WARNED);
+        // WARNED is still within budget for the gate's purposes → coarse OK.
+        assertThat(body.state()).isEqualTo("OK");
     }
 
     @Test
@@ -77,7 +78,22 @@ class InstanceControllerTest {
         assertThat(body.subscribed()).isFalse();
         assertThat(body.freeRemainingUnits()).isEqualTo(500L);
         assertThat(body.periodCapUnits()).isNull();
-        assertThat(body.state()).isEqualTo(EntitlementState.FULL);
+        assertThat(body.state()).isEqualTo("OK");
+    }
+
+    @Test
+    void entitlement_degradedMapsToOverLimit() {
+        // The instance gate parses OK / OVER_LIMIT, never the SaaS FULL/WARNED/DEGRADED enum.
+        // DEGRADED (automation + AI gated) must reach the wire as OVER_LIMIT.
+        Authentication token = new LinkedInstanceAuthenticationToken(3L, 8L);
+        when(billingService.forTeam(8L)).thenReturn(subscribedBilling("sub_8", 0L));
+        when(entitlementService.getSnapshot(8L))
+                .thenReturn(snapshot(EntitlementState.DEGRADED, 1300L, 1250L));
+
+        EntitlementResponse body = controller().entitlement(token).getBody();
+
+        assertThat(body).isNotNull();
+        assertThat(body.state()).isEqualTo("OVER_LIMIT");
     }
 
     @Test

@@ -22,8 +22,8 @@ import lombok.extern.slf4j.Slf4j;
  * Account-link instance registration + lifecycle (combined-billing "Mode A").
  *
  * <p>Mints a {@code device_id} (public) + {@code device_secret} (high-entropy, returned once) bound
- * to a team, persisting only the SHA-256 hash of the secret. The instance authenticates subsequent
- * unattended metering / entitlement calls with that credential.
+ * to a team, persisting only the SHA-256 hash of the secret. The instance authenticates its
+ * unattended entitlement reads with that credential.
  *
  * <p>Gated behind {@code stirling.billing.account-link.enabled}: when off the bean is absent, so
  * {@link AccountLinkController} (which depends on it) drops out too and its endpoints 404.

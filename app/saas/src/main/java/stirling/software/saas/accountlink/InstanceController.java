@@ -60,14 +60,15 @@ public class InstanceController {
 
     /**
      * Minimal entitlement view the local gate enforces against. {@code periodCapUnits} null =
-     * uncapped.
+     * uncapped. {@code state} is the coarse OK / OVER_LIMIT vocabulary the instance gate parses
+     * (see {@link #coarseState}), not the SaaS feature-state enum.
      */
     public record EntitlementResponse(
             boolean subscribed,
             long freeRemainingUnits,
             long periodSpendUnits,
             Long periodCapUnits,
-            EntitlementState state) {}
+            String state) {}
 
     @GetMapping("/whoami")
     @PreAuthorize("hasRole('LINKED_INSTANCE')")
@@ -115,6 +116,16 @@ public class InstanceController {
                         billing.freeRemainingUnits(),
                         snap.periodSpendUnits(),
                         snap.periodCapUnits(),
-                        snap.state()));
+                        coarseState(snap.state())));
+    }
+
+    /**
+     * Collapses the SaaS feature-state machine into the OK / OVER_LIMIT vocabulary the instance
+     * gate parses. DEGRADED means automation + AI are gated off — which, for a gate that governs
+     * only billable work (manual tools are free-pathed before it), is exactly OVER_LIMIT; FULL and
+     * WARNED are OK.
+     */
+    private static String coarseState(EntitlementState state) {
+        return state == EntitlementState.DEGRADED ? "OVER_LIMIT" : "OK";
     }
 }

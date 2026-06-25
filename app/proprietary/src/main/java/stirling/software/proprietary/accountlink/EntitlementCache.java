@@ -3,6 +3,7 @@ package stirling.software.proprietary.accountlink;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
@@ -28,8 +29,15 @@ public class EntitlementCache {
     private final AccountLinkClient client;
     private final Duration ttl;
 
-    private volatile InstanceEntitlement cached;
-    private volatile Instant fetchedAt = Instant.EPOCH;
+    /** Entitlement + fetch time, swapped atomically as one value so readers never tear. */
+    private record Snapshot(InstanceEntitlement entitlement, Instant fetchedAt) {}
+
+    private static final Snapshot EMPTY = new Snapshot(null, Instant.EPOCH);
+
+    private volatile Snapshot snapshot = EMPTY;
+
+    /** Single-flight guard: one thread refreshes while others serve the current snapshot. */
+    private final AtomicBoolean refreshing = new AtomicBoolean(false);
 
     public EntitlementCache(
             DeviceCredentialStore credentialStore,
@@ -45,14 +53,22 @@ public class EntitlementCache {
      * not linked or the SaaS side is unreachable and we have no prior snapshot.
      */
     public Optional<InstanceEntitlement> current() {
-        if (isStale()) {
-            refresh();
+        // Single-flight: when stale, exactly one thread refreshes (blocking on the SaaS
+        // call) while concurrent callers serve the last snapshot — no thundering herd of
+        // synchronous round-trips on the billable hot path. Safe because the gate fails open.
+        if (isStale(snapshot) && refreshing.compareAndSet(false, true)) {
+            try {
+                refresh();
+            } finally {
+                refreshing.set(false);
+            }
         }
-        return Optional.ofNullable(cached);
+        return Optional.ofNullable(snapshot.entitlement());
     }
 
-    private boolean isStale() {
-        return cached == null || Duration.between(fetchedAt, Instant.now()).compareTo(ttl) >= 0;
+    private boolean isStale(Snapshot snap) {
+        return snap.entitlement() == null
+                || Duration.between(snap.fetchedAt(), Instant.now()).compareTo(ttl) >= 0;
     }
 
     /** Pulls a fresh snapshot. Keeps the previous one on failure (fail-open). */
@@ -60,15 +76,13 @@ public class EntitlementCache {
         Optional<DeviceCredential> cred = credentialStore.get();
         if (cred.isEmpty()) {
             // Unlinked: clear any stale snapshot so the gate sees "not linked".
-            cached = null;
-            fetchedAt = Instant.now();
+            snapshot = new Snapshot(null, Instant.now());
             return;
         }
         InstanceEntitlement fresh =
                 client.fetchEntitlement(cred.get().getDeviceId(), cred.get().getDeviceSecret());
         if (fresh != null) {
-            cached = fresh;
-            fetchedAt = Instant.now();
+            snapshot = new Snapshot(fresh, Instant.now());
         } else {
             // Unreachable: keep the last known snapshot (may be null) and let the gate fail open.
             log.debug("Entitlement refresh failed; reusing last known snapshot");
@@ -77,6 +91,6 @@ public class EntitlementCache {
 
     /** Forces a refresh on the next {@link #current()} (e.g. right after linking). */
     public void invalidate() {
-        fetchedAt = Instant.EPOCH;
+        snapshot = new Snapshot(snapshot.entitlement(), Instant.EPOCH);
     }
 }

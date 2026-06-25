@@ -9,6 +9,6 @@ public enum EntitlementState {
     OK,
     /** Free pool exhausted and no subscription / over the period cap — billable work blocked. */
     OVER_LIMIT,
-    /** Anything unrecognised: treated conservatively as a block (only when we DID get a reply). */
+    /** Unrecognised/malformed reply — the gate falls back to its numeric checks, not this flag. */
     UNKNOWN
 }

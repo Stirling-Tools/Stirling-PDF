@@ -23,6 +23,16 @@ public final class BillableOperationClassifier {
             return true;
         }
         String uri = request.getRequestURI();
-        return uri != null && uri.contains(AI_PATH_PREFIX);
+        if (uri == null) {
+            return false;
+        }
+        // Prefix-match the AI surface (not a loose substring contains), stripping a deployment
+        // context path so /<ctx>/api/v1/ai/** still classifies as billable.
+        String ctx = request.getContextPath();
+        String path =
+                ctx != null && !ctx.isEmpty() && uri.startsWith(ctx)
+                        ? uri.substring(ctx.length())
+                        : uri;
+        return path.startsWith(AI_PATH_PREFIX);
     }
 }

@@ -69,6 +69,23 @@ public class AccountLinkClient {
     public record RegisterResult(String deviceId, String deviceSecret, Long teamId) {}
 
     /**
+     * A non-2xx reply from the SaaS account-link API. Carries the upstream status so the caller can
+     * map auth failures (401/403) through rather than masking everything as a 502.
+     */
+    public static class UpstreamException extends IOException {
+        private final int status;
+
+        public UpstreamException(int status, String body) {
+            super("SaaS account-link returned HTTP " + status + ": " + body);
+            this.status = status;
+        }
+
+        public int status() {
+            return status;
+        }
+    }
+
+    /**
      * Relays the admin Supabase JWT to the SaaS register endpoint and returns the minted
      * credential.
      *
@@ -92,11 +109,7 @@ public class AccountLinkClient {
 
         HttpResponse<String> response = send(request);
         if (response.statusCode() / 100 != 2) {
-            throw new IOException(
-                    "SaaS register returned HTTP "
-                            + response.statusCode()
-                            + ": "
-                            + response.body());
+            throw new UpstreamException(response.statusCode(), response.body());
         }
         JsonNode root = mapper.readTree(response.body());
         String deviceId = text(root, "deviceId");
