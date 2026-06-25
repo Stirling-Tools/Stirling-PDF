@@ -207,8 +207,6 @@ export default defineConfig(
     },
   },
   // Stricter rules that not all sub-folders are conformant to yet.
-  // Keep this non-type-aware: `parserOptions.project`/`projectService` here OOMs
-  // the lint step (builds the whole TS program); tsc covers type correctness.
   {
     files: srcGlobs,
     ignores: [
