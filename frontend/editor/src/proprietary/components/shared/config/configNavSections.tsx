@@ -32,6 +32,7 @@ export const useConfigNavSections = (
   runningEE: boolean = false,
   loginEnabled: boolean = false,
   onRequestClose: () => void = () => {},
+  showSettingsWhenNoLogin: boolean = true,
 ): ConfigNavSection[] => {
   const { t } = useTranslation();
 
@@ -41,6 +42,7 @@ export const useConfigNavSections = (
     runningEE,
     loginEnabled,
     onRequestClose,
+    showSettingsWhenNoLogin,
   );
 
   // Add account management under Preferences
@@ -64,8 +66,9 @@ export const useConfigNavSections = (
     }
   }
 
-  // Add Admin sections if user is admin OR if login is disabled (but mark as disabled)
-  if (isAdmin || !loginEnabled) {
+  // Add Admin sections for admins. When login is disabled, keep the historical
+  // read-only admin preview only if system.showSettingsWhenNoLogin allows it.
+  if (isAdmin || (!loginEnabled && showSettingsWhenNoLogin)) {
     const requiresLogin = !loginEnabled;
     const enableLoginTooltip = t(
       "settings.tooltips.enableLoginFirst",
