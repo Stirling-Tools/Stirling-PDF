@@ -2,7 +2,9 @@ package stirling.software.saas.accountlink;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -78,6 +80,20 @@ class DeviceCredentialAuthenticationFilterTest {
         assertEquals(1L, token.getInstanceId());
         assertEquals(
                 "ROLE_LINKED_INSTANCE", token.getAuthorities().iterator().next().getAuthority());
+    }
+
+    @Test
+    void successfulAuthStampsLastSeen() throws ServletException, IOException {
+        LinkedInstance instance = instanceWithSecret("s3cr3t");
+        when(repo.findByDeviceIdAndRevokedAtIsNull("dev-1")).thenReturn(Optional.of(instance));
+
+        filter.doFilter(
+                instanceRequest("dev-1", "s3cr3t"),
+                new MockHttpServletResponse(),
+                new MockFilterChain());
+
+        assertNotNull(instance.getLastSeenAt(), "last_seen_at stamped on successful auth");
+        verify(repo).save(instance);
     }
 
     @Test

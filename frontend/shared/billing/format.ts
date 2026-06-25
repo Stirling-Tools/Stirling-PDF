@@ -76,8 +76,14 @@ export function docCapForMoney(
   return rate != null ? Math.floor((capUsdMajor * 100) / rate) : null;
 }
 
-/** Short "24 Jun" date for billing-period labels. Parses the date part of an ISO string. */
-export function formatPeriodDate(iso: string | null): string {
+/**
+ * Short date for billing labels: "24 Jun" (period meters) or "24 Jun 2026" with
+ * {@code year}. Parses the date part of an ISO string as a local date.
+ */
+export function formatPeriodDate(
+  iso: string | null,
+  opts?: { year?: boolean },
+): string {
   if (!iso) return "";
   const datePart = iso.split("T")[0];
   if (!datePart) return "";
@@ -87,6 +93,7 @@ export function formatPeriodDate(iso: string | null): string {
     return new Intl.DateTimeFormat(undefined, {
       day: "numeric",
       month: "short",
+      ...(opts?.year ? { year: "numeric" } : {}),
     }).format(new Date(y, m - 1, d));
   } catch {
     return datePart;

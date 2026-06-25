@@ -96,4 +96,9 @@ describe("formatPeriodDate", () => {
     expect(out).toContain("Jun");
     expect(out).toContain("24");
   });
+
+  it("includes the year only when asked", () => {
+    expect(formatPeriodDate("2026-06-24")).not.toContain("2026");
+    expect(formatPeriodDate("2026-06-24", { year: true })).toContain("2026");
+  });
 });

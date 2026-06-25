@@ -8,45 +8,12 @@ import {
   Table,
   type TableColumn,
 } from "@shared/components";
+import { formatMinor, formatPeriodDate } from "@shared/billing";
 import { fetchInvoices, type Invoice } from "@portal/api/billing";
 
 const DEFAULT_VISIBLE = 5;
 /** Fetch a few more than DEFAULT_VISIBLE so "Show more" actually has something to show. */
 const FETCH_LIMIT = 20;
-
-function formatMoney(minor: number | null, currency: string | null): string {
-  if (minor == null) return "—";
-  const code = (currency ?? "usd").toUpperCase();
-  const major = minor / 100;
-  try {
-    return new Intl.NumberFormat(undefined, {
-      style: "currency",
-      currency: code,
-    }).format(major);
-  } catch {
-    return `${major.toFixed(2)} ${code}`;
-  }
-}
-
-function formatDate(iso: string | null): string {
-  if (!iso) return "—";
-  // Mirror Stripe's portal row layout: "24 Jul 2026" rather than the bare ISO.
-  // Parse manually because the backend returns local datetime without a
-  // timezone suffix; treating it as the local date is correct for display.
-  const datePart = iso.split("T")[0];
-  if (!datePart) return "—";
-  const [y, m, d] = datePart.split("-").map((n) => Number(n));
-  if (!y || !m || !d) return datePart;
-  try {
-    return new Intl.DateTimeFormat(undefined, {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    }).format(new Date(y, m - 1, d));
-  } catch {
-    return datePart;
-  }
-}
 
 function statusTone(status: string): "success" | "warning" | "danger" | "neutral" {
   switch (status) {
@@ -113,12 +80,16 @@ export function InvoicesList() {
     {
       key: "date",
       header: "Date",
-      render: (inv) => formatDate(inv.createdAt),
+      render: (inv) =>
+        inv.createdAt ? formatPeriodDate(inv.createdAt, { year: true }) : "—",
     },
     {
       key: "amount",
       header: "Amount",
-      render: (inv) => formatMoney(inv.totalMinor, inv.currency),
+      render: (inv) =>
+        inv.totalMinor == null
+          ? "—"
+          : formatMinor(inv.totalMinor, inv.currency),
     },
     {
       key: "status",
