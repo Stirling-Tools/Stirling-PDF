@@ -212,7 +212,12 @@ export default defineConfig(
   {
     files: srcGlobs,
     ignores: [
-      "editor/src/core/components/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/components/annotation/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/components/fileManager/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/components/pageEditor/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/components/shared/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/components/tools/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/components/viewer/**/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/core/contexts/**/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/core/hooks/**/*.{js,mjs,jsx,ts,tsx}",
       "editor/src/core/services/**/*.{js,mjs,jsx,ts,tsx}",
