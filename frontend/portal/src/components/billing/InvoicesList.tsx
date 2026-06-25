@@ -84,8 +84,18 @@ export function InvoicesList() {
         inv.createdAt ? formatPeriodDate(inv.createdAt, { year: true }) : "—",
     },
     {
+      key: "pdfs",
+      header: "PDFs processed",
+      align: "right",
+      // Billed units on the invoice's metered line item; "—" when the
+      // line-item table isn't synced into the Stripe mirror.
+      render: (inv) =>
+        inv.pdfsProcessed == null ? "—" : inv.pdfsProcessed.toLocaleString(),
+    },
+    {
       key: "amount",
       header: "Amount",
+      align: "right",
       render: (inv) =>
         inv.totalMinor == null
           ? "—"

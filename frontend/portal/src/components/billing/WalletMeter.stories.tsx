@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { WalletMeter } from "@portal/components/billing/WalletMeter";
-import { freeWallet, subscribedWallet } from "@portal/components/billing/walletFixtures";
+import { freeWallet } from "@portal/components/billing/walletFixtures";
 import "@portal/components/billing/billing.css";
 
 const meta: Meta<typeof WalletMeter> = {
@@ -25,14 +25,4 @@ export const FreeApproachingLimit: Story = {
 /** Free grant exhausted → DEGRADED band. */
 export const FreeLimitReached: Story = {
   args: { wallet: { ...freeWallet, billableUsed: 500, freeRemaining: 0 } },
-};
-
-/** Subscribed, within cap → spend-vs-cap meter, no status chip. */
-export const SubscribedWithinCap: Story = {
-  args: { wallet: subscribedWallet },
-};
-
-/** Subscribed, no cap → "$X / no cap", bar hidden. */
-export const SubscribedUncapped: Story = {
-  args: { wallet: { ...subscribedWallet, noCap: true, capUsd: null } },
 };

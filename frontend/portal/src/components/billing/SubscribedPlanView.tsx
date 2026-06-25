@@ -1,16 +1,13 @@
-import { useCallback, useState } from "react";
-import {
-  Banner,
-  Button,
-  Card,
-  Table,
-  type TableColumn,
-} from "@shared/components";
-import type { Wallet, WalletMember } from "@portal/api/billing";
-import { createPortalSession } from "@portal/billing/stripe";
-import { PlanHeadCard } from "@portal/components/billing/PlanHeadCard";
-import { CategoryBreakdownPanel } from "@portal/components/billing/CategoryBreakdownPanel";
-import { SpendCapControl } from "@portal/components/billing/SpendCapControl";
+import { useState } from "react";
+import { Banner, Button } from "@shared/components";
+import { meterState } from "@shared/billing";
+import type { Wallet } from "@portal/api/billing";
+import { useStripePortal } from "@portal/hooks/useStripePortal";
+import { FreePdfEditorsCard } from "@portal/components/billing/FreePdfEditorsCard";
+import { PdfsProcessedCard } from "@portal/components/billing/PdfsProcessedCard";
+import { SpendThisMonthCard } from "@portal/components/billing/SpendThisMonthCard";
+import { SpendLimitCard } from "@portal/components/billing/SpendLimitCard";
+import { PaymentMethodCard } from "@portal/components/billing/PaymentMethodCard";
 import { InvoicesList } from "@portal/components/billing/InvoicesList";
 
 interface Props {
@@ -19,106 +16,84 @@ interface Props {
 }
 
 /**
- * Linked + subscribed. The full PAYG dashboard:
- *   - period meter + estimated bill
- *   - by-category breakdown (real data from wallet.categoryBreakdown)
- *   - monthly cap (leader-only edit, real PATCH /api/v1/payg/cap)
- *   - team members + per-member spend (leader only)
- *   - invoices (real GET /api/v1/payg/invoices)
- *   - "Manage subscription" → Stripe customer portal
+ * Linked + subscribed — the full Processor-plan dashboard, matching the
+ * marketing layout and reusing the free view's building blocks:
+ *   - team editor fleet ({@link FreePdfEditorsCard}, shared with the free view)
+ *   - PDFs processed + category split ({@link PdfsProcessedCard})
+ *   - spend-vs-cap meter, projection, and the leader-only cap editor
+ *     ({@link SpendLimitCard} → shared {@code SpendCapControl})
+ *   - Enterprise upsell ({@link EnterpriseUpsell}, shared with the free view)
+ *   - per-member usage, Stripe invoices, and the default payment method
+ *
+ * Card / subscription management lives in Stripe's hosted portal — both the
+ * page-header "Manage Payment" action and the payment card's "Update" button
+ * deep-link there via {@link useStripePortal}.
  */
 export function SubscribedPlanView({ wallet, onWalletChange }: Props) {
-  const [portalError, setPortalError] = useState<string | null>(null);
-  const [openingPortal, setOpeningPortal] = useState(false);
+  const [adjusting, setAdjusting] = useState(false);
+  const portal = useStripePortal(wallet);
 
-  const openPortal = useCallback(async () => {
-    if (wallet.teamId == null) return;
-    setOpeningPortal(true);
-    setPortalError(null);
-    try {
-      const url = await createPortalSession({
-        teamId: wallet.teamId,
-        returnUrl: window.location.href,
-      });
-      window.open(url, "_blank", "noopener,noreferrer");
-    } catch (e) {
-      setPortalError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setOpeningPortal(false);
-    }
-  }, [wallet.teamId]);
+  const isLeader = wallet.role === "leader";
+  const spent =
+    wallet.estimatedBillMinor != null ? wallet.estimatedBillMinor / 100 : 0;
+  const capActive = !wallet.noCap && wallet.capUsd != null;
+  const { state, pct } = meterState(spent, wallet.capUsd ?? 0);
+  const showCapWarn = capActive && state !== "FULL";
 
-  const memberColumns: TableColumn<WalletMember>[] = [
-    {
-      key: "name",
-      header: "Member",
-      render: (m) => (
-        <div className="portal-billing__member-stack">
-          <span className="portal-billing__member-name">{m.name || m.email}</span>
-          <span className="portal-billing__member-email">{m.email}</span>
-        </div>
-      ),
-    },
-    {
-      key: "spend",
-      header: "PDFs this period",
-      align: "right",
-      render: (m) => m.spendUnits.toLocaleString(),
-    },
-  ];
+  function raiseLimit() {
+    setAdjusting(true);
+    document
+      .getElementById("portal-spend-limit")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
   return (
     <div className="portal-billing__stack">
-      <PlanHeadCard wallet={wallet} />
-
-      <SpendCapControl wallet={wallet} onSaved={onWalletChange} />
-
-      <CategoryBreakdownPanel
-        breakdown={wallet.categoryBreakdown}
-        totalSpend={wallet.spendUnitsThisPeriod}
-      />
-
-      {wallet.role === "leader" && wallet.members.length > 0 && (
-        <Card padding="loose">
-          <h3 className="portal-billing__section-title">Per-member usage</h3>
-          <Table
-            className="portal-billing__flush-table"
-            columns={memberColumns}
-            rows={wallet.members}
-            rowKey={(m) => m.userId}
-          />
-        </Card>
+      {showCapWarn && (
+        <Banner
+          tone={state === "DEGRADED" ? "danger" : "warning"}
+          title={
+            state === "DEGRADED"
+              ? "Monthly spend limit reached"
+              : `You're at ${Math.round(pct)}% of your monthly spend limit`
+          }
+          action={
+            isLeader ? (
+              <Button size="sm" onClick={raiseLimit}>
+                Raise limit
+              </Button>
+            ) : undefined
+          }
+        >
+          {state === "DEGRADED"
+            ? "Metered processing is paused until you raise the limit or the cycle resets. Unlimited PDF editing keeps working."
+            : "Raise it now so automated processing never pauses."}
+        </Banner>
       )}
 
-      <Card padding="loose">
-        <div className="portal-billing__subscription-head">
-          <div>
-            <span className="portal-billing__eyebrow">Subscription</span>
-            <h3 className="portal-billing__section-title">
-              Manage your subscription
-            </h3>
-            <p className="portal-billing__section-sub">
-              Update your card, download invoices, change billing email, or
-              cancel your subscription in Stripe's hosted portal.
-            </p>
-          </div>
-          <Button
-            variant="outline"
-            loading={openingPortal}
-            onClick={openPortal}
-            disabled={wallet.teamId == null}
-          >
-            Manage Billing
-          </Button>
-        </div>
-        {portalError && (
-          <Banner tone="danger" title="Couldn't open Stripe portal">
-            {portalError}
-          </Banner>
-        )}
-      </Card>
+      <FreePdfEditorsCard />
+
+      <PdfsProcessedCard wallet={wallet} />
+
+      <div className="portal-billing__spend-row">
+        <SpendThisMonthCard wallet={wallet} />
+        <SpendLimitCard
+          wallet={wallet}
+          onWalletChange={onWalletChange}
+          adjusting={adjusting}
+          onAdjustingChange={setAdjusting}
+        />
+      </div>
 
       <InvoicesList />
+
+      <PaymentMethodCard onManage={portal.open} managing={portal.opening} />
+
+      {portal.error && (
+        <Banner tone="danger" title="Couldn't open Stripe portal">
+          {portal.error}
+        </Banner>
+      )}
     </div>
   );
 }

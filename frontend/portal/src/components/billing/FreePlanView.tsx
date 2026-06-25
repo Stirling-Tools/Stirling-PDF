@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { Banner, Button, Card } from "@shared/components";
+import { Banner, Button, StatusBadge } from "@shared/components";
 import type { Wallet } from "@portal/api/billing";
 import type { SaasCurrency } from "@portal/billing/stripe";
 import { WalletMeter } from "@portal/components/billing/WalletMeter";
+import { FreePdfEditorsCard } from "@portal/components/billing/FreePdfEditorsCard";
+import { EnterpriseUpsell } from "@portal/components/billing/EnterpriseUpsell";
 import { StripeCheckoutModal } from "@portal/components/billing/StripeCheckoutModal";
 
 interface Props {
@@ -16,10 +18,9 @@ function isSaasCurrency(c: string | null): c is SaasCurrency {
 }
 
 /**
- * Linked, not yet subscribed. Shows the lifetime free meter + the Processor
- * plan explainer card. The "Turn on Processor" CTA opens the embedded Stripe
- * Checkout modal (same UX the SaaS web app uses — the admin stays in the
- * portal).
+ * Linked, not yet subscribed — the "Editor" current plan. Shows the team's free
+ * editor fleet, the Processor trial meter (with the inline "Switch on the
+ * Processor" CTA → embedded Stripe Checkout), and the Enterprise upsell.
  */
 export function FreePlanView({ wallet, onSubscribed }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
@@ -39,64 +40,53 @@ export function FreePlanView({ wallet, onSubscribed }: Props) {
     setModalOpen(true);
   }
 
+  const switchOnAction = isLeader ? (
+    <Button
+      variant="gradient"
+      onClick={openCheckout}
+      disabled={wallet.teamId == null}
+    >
+      Switch on the Processor →
+    </Button>
+  ) : null;
+
   return (
     <div className="portal-billing__stack">
-      <WalletMeter wallet={wallet} />
-
-      <Card padding="loose" className="portal-billing__plan-card">
-        <span className="portal-billing__eyebrow">Processor plan · metered</span>
-        <h2 className="portal-billing__plan-title">
-          Turn on the Processor plan
-        </h2>
-        <p className="portal-billing__plan-sub">
-          Keep going past your {wallet.freeAllowance.toLocaleString()} free PDFs
-          with automation, AI, and the API. Set a monthly ceiling so you stay in
-          control.
-        </p>
-
-        <ul className="portal-billing__plan-features">
-          <li>
-            <strong>Automation pipelines</strong>: chain tools, schedule runs,
-            batch process.
-          </li>
-          <li>
-            <strong>AI tools</strong>: summarise, classify, redact, AI-OCR.
-          </li>
-          <li>
-            <strong>API access</strong>: call any Stirling endpoint
-            programmatically.
-          </li>
-          <li>
-            <strong>Editor plan stays free</strong> — view, sign, merge, split,
-            watermark, compress, convert, manual OCR — always.
-          </li>
-        </ul>
-
-        {missingTeam && (
-          <Banner tone="warning" title="Couldn't start checkout">
-            {missingTeam}
-          </Banner>
-        )}
-
-        <div className="portal-billing__plan-actions">
-          {isLeader ? (
-            <Button
-              variant="gradient"
-              onClick={openCheckout}
-              disabled={wallet.teamId == null}
-            >
-              Turn on Processor →
-            </Button>
-          ) : (
-            <p className="portal-billing__plan-readonly">
-              Only the team owner can enable the Processor plan.
-            </p>
-          )}
-          <span className="portal-billing__plan-reassure">
-            No minimum · Set a $0 cap to test · Cancel anytime
-          </span>
+      {/* Current plan */}
+      <div className="portal-billing__current-plan">
+        <span className="portal-billing__eyebrow">Current plan</span>
+        <div className="portal-billing__current-plan-row">
+          <h2 className="portal-billing__current-plan-name">Editor</h2>
+          <StatusBadge tone="success" size="sm" showDot={false}>
+            Free forever
+          </StatusBadge>
+          <StatusBadge tone="info" size="sm" showDot={false}>
+            SSO included
+          </StatusBadge>
+          <StatusBadge tone="purple" size="sm" showDot={false}>
+            Unlimited users
+          </StatusBadge>
         </div>
-      </Card>
+      </div>
+
+      <FreePdfEditorsCard />
+
+      {/* Processor trial — meter with the inline upgrade CTA */}
+      <WalletMeter wallet={wallet} action={switchOnAction} />
+
+      {missingTeam && (
+        <Banner tone="warning" title="Couldn't start checkout">
+          {missingTeam}
+        </Banner>
+      )}
+      {!isLeader && (
+        <p className="portal-billing__plan-readonly">
+          Only the team owner can switch on the Processor plan.
+        </p>
+      )}
+
+      {/* Volume discount / Enterprise */}
+      <EnterpriseUpsell />
 
       {wallet.teamId != null && (
         <StripeCheckoutModal

@@ -52,10 +52,30 @@ export interface Invoice {
   invoicePdf: string | null;
   /** Product name from the subscription chain (e.g. "Stirling Processor Plan"). */
   description: string | null;
+  /** Billed units (PDFs) on this invoice; null when the line-item table isn't synced. */
+  pdfsProcessed: number | null;
 }
 
 export async function fetchInvoices(limit: number = 20): Promise<Invoice[]> {
   return apiClient.saas.json<Invoice[]>(
     `/api/v1/payg/invoices?limit=${encodeURIComponent(String(limit))}`,
   );
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Payment method — GET /api/v1/payg/payment-method. Reads the default card off
+// the Stripe mirror; `present: false` when the mirror doesn't carry one (table
+// not synced / no card). Card edits happen in Stripe's portal, not here.
+// ────────────────────────────────────────────────────────────────────────────
+
+export interface PaymentMethod {
+  present: boolean;
+  brand: string | null;
+  last4: string | null;
+  expMonth: number | null;
+  expYear: number | null;
+}
+
+export async function fetchPaymentMethod(): Promise<PaymentMethod> {
+  return apiClient.saas.json<PaymentMethod>("/api/v1/payg/payment-method");
 }

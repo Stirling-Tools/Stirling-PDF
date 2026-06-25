@@ -11,8 +11,8 @@ interface MeterBarProps {
   capSuffix: ReactNode;
   /** Status-chip content; null/undefined hides the chip. */
   statusLabel?: ReactNode;
-  /** Footer meta line. */
-  meta: ReactNode;
+  /** Footer meta line; null/undefined hides the line entirely. */
+  meta?: ReactNode;
   /** Hide the fill bar (e.g. uncapped). Shown by default. */
   showBar?: boolean;
 }
@@ -62,7 +62,7 @@ export function MeterBar({
           />
         </div>
       )}
-      <div className="paygf-meter__meta">{meta}</div>
+      {meta != null && <div className="paygf-meter__meta">{meta}</div>}
     </div>
   );
 }

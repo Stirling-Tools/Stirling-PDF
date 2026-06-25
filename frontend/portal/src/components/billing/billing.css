@@ -3,7 +3,75 @@
 .portal-billing__stack {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 0.75rem;
+}
+
+/* Spend this month | Spend limit — two separate cards, side by side. */
+.portal-billing__spend-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: 0.75rem;
+  align-items: stretch;
+}
+@media (max-width: 60rem) {
+  .portal-billing__spend-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Left card is a flex column so the Enterprise upsell pins to the foot and the
+   card matches the spend-limit card's height. */
+.portal-billing__spend-this-month {
+  display: flex;
+  flex-direction: column;
+}
+.portal-billing__spend-foot {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+}
+.portal-billing__spend-foot:not(:first-child) {
+  margin-top: 1.25rem;
+}
+
+/* Cap editor (in-place, replaces the spend-limit display). */
+.portal-billing__suggested {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 0.75rem;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-blue);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.portal-billing__suggested:hover {
+  border-color: var(--color-blue);
+}
+.portal-billing__guardrail {
+  margin-top: 0.85rem;
+  padding: 0.7rem 0.85rem;
+  font-size: 0.8125rem;
+  color: var(--color-text-3);
+  background: var(--color-bg-subtle);
+  border-radius: 0.6rem;
+}
+.portal-billing__guardrail strong {
+  color: var(--color-text-1);
+}
+.portal-billing__edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+/* Tighten the billing cards to the marketing rhythm — less empty top/bottom and
+   slightly snugger sides than the default loose profile. */
+.portal-billing__stack .sui-card--pad-loose {
+  padding: 0.95rem 1.5rem;
 }
 
 .portal-billing__row {
@@ -128,12 +196,10 @@
    editor/src/cloud/components/shared/config/configSections/{Payg,PaygFree}.css
    so the visual treatment matches the SaaS plan page. When the shared move
    lands these can be deduped via a shared stylesheet. */
+/* Flat by default — the meter sits directly on its card, no inner panel box
+   (shared by the free trial meter and the subscribed spend meter). */
 .paygf-meter {
-  padding: 14px 16px;
-  border-radius: 11px;
-  background: var(--color-bg-muted, #f8fafc);
-  border: 1px solid var(--color-border, #e5e7eb);
-  margin-top: 0.75rem;
+  margin-top: 0.6rem;
 }
 .paygf-meter__top {
   display: flex;
@@ -388,18 +454,6 @@
 .portal-billing__cap-actions {
   display: flex;
   justify-content: flex-end;
-}
-
-.portal-billing__cap-error {
-  color: var(--color-red, #b91c1c);
-  font-size: 0.8125rem;
-  margin: 0 0 0.5rem;
-}
-
-.portal-billing__cap-readonly {
-  font-size: 0.875rem;
-  color: var(--color-text-2);
-  margin: 0;
 }
 
 /* ── Members + invoices ─────────────────────────────────────────────────── */
@@ -705,98 +759,6 @@
   }
 }
 
-/* ── "What happens at the cap" disclosure + gates — ported from SaaS ────── */
-.payg-help {
-  margin-top: 4px;
-}
-.payg-help__toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 0;
-  border: none;
-  background: none;
-  cursor: pointer;
-  font: inherit;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--color-text-2);
-}
-.payg-help__toggle:hover {
-  color: var(--color-text-1);
-}
-.payg-help__chevron {
-  transition: transform 0.15s ease;
-}
-.payg-help__toggle[aria-expanded="true"] .payg-help__chevron {
-  transform: rotate(180deg);
-}
-.payg-help__panel {
-  margin-top: 10px;
-}
-.payg-gates {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-}
-@media (max-width: 720px) {
-  .payg-gates {
-    grid-template-columns: 1fr;
-  }
-}
-.payg-gate {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 13px 15px;
-  border-radius: 11px;
-  border: 1px solid var(--color-border);
-  background: var(--color-bg-muted);
-}
-.payg-gate[data-enabled="false"] {
-  border-style: dashed;
-  opacity: 0.85;
-}
-.payg-gate__chip {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 9px;
-  flex-shrink: 0;
-}
-.payg-gate[data-enabled="true"] .payg-gate__chip {
-  background: rgba(34, 197, 94, 0.16);
-  color: #22c55e;
-}
-.payg-gate[data-enabled="false"] .payg-gate__chip {
-  background: rgba(239, 68, 68, 0.16);
-  color: #f87171;
-}
-.payg-gate__label {
-  font-size: 0.8125rem;
-  line-height: 1.35;
-  color: var(--color-text-1);
-  flex: 1;
-}
-.payg-gate__tag {
-  font-size: 0.625rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  padding: 2px 8px;
-  border-radius: 999px;
-  flex-shrink: 0;
-  white-space: nowrap;
-  color: #dc2626;
-  background: rgba(239, 68, 68, 0.12);
-}
-[data-mantine-color-scheme="dark"] .payg-gate__tag {
-  color: #f87171;
-  background: rgba(239, 68, 68, 0.18);
-}
-
 .portal-billing__invoice-actions {
   display: inline-flex;
   align-items: center;
@@ -836,4 +798,195 @@
   display: flex;
   justify-content: center;
   margin-top: 0.75rem;
+}
+
+/* ── Current plan header ──────────────────────────────────────────────── */
+.portal-billing__current-plan {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.portal-billing__current-plan-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+.portal-billing__current-plan-name {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text-1);
+}
+
+/* ── Free PDF Editors (fleet) card ───────────────────────────────────── */
+.portal-billing__editors-id {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+.portal-billing__editors-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  line-height: 0;
+  border-radius: 0.65rem;
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
+  color: var(--color-blue);
+}
+/* Identity, stats, and the "Invite teammates" action all sit on one line; the
+   metric cells render flat (no per-stat box) and are divided by hairlines, so
+   the card reads as a single strip rather than a box-in-a-box. */
+.portal-billing__fleet-row {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+.portal-billing__fleet-row .portal-billing__editors-id {
+  align-items: center;
+  flex: 0 0 auto;
+}
+.portal-billing__fleet-metrics {
+  flex: 1;
+}
+.portal-billing__fleet-metrics .sui-metric {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  border-left: 1px solid var(--color-border);
+  padding: 0 0 0 1.5rem;
+  min-width: 0;
+  gap: 0.3rem;
+}
+/* Uppercase stat labels to match the marketing treatment. */
+.portal-billing__fleet-metrics .sui-metric__label {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+@media (max-width: 60rem) {
+  .portal-billing__fleet-row {
+    flex-wrap: wrap;
+    gap: 1.25rem;
+  }
+  .portal-billing__fleet-metrics {
+    flex: 1 1 100%;
+    order: 3;
+  }
+}
+
+/* "N left" reads as quiet gray text, like the "x of y" suffix — not a status pill. */
+.portal-billing__trial-meter .payg-status {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--color-text-3, #64748b);
+}
+.portal-billing__trial-meter .payg-status__dot {
+  display: none;
+}
+
+/* ── Enterprise / volume-discount card ───────────────────────────────── */
+.portal-billing__enterprise-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+/* Bare variant — embeds in another card's column without its own surface. */
+.portal-billing__enterprise-bare {
+  display: block;
+}
+
+/* ── PDFs processed + category split (subscribed) ────────────────────── */
+.portal-billing__bignum-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin: 0.35rem 0 0.85rem;
+}
+.portal-billing__bignum {
+  font-size: 2rem;
+  font-weight: 750;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--color-text-1);
+  font-variant-numeric: tabular-nums;
+}
+.portal-billing__bignum-unit {
+  font-size: 0.85rem;
+  color: var(--color-text-3);
+}
+.portal-billing__segbar {
+  display: flex;
+  height: 0.55rem;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--color-bg-muted, #f1f5f9);
+}
+.portal-billing__segbar-seg {
+  height: 100%;
+}
+.portal-billing__segbar-seg--blue {
+  background: #0a8bff;
+}
+.portal-billing__segbar-seg--purple {
+  background: #8b5cf6;
+}
+.portal-billing__segbar-seg--teal {
+  background: #06b6d4;
+}
+.portal-billing__seglegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.75rem;
+  margin-top: 0.85rem;
+}
+.portal-billing__seglegend-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+.portal-billing__dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  align-self: center;
+  flex-shrink: 0;
+}
+.portal-billing__dot--blue {
+  background: #0a8bff;
+}
+.portal-billing__dot--purple {
+  background: #8b5cf6;
+}
+.portal-billing__dot--teal {
+  background: #06b6d4;
+}
+.portal-billing__seglegend-label {
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+.portal-billing__seglegend-val {
+  color: var(--color-text-2);
+  font-variant-numeric: tabular-nums;
+}
+.portal-billing__seglegend-desc {
+  color: var(--color-text-4);
+}
+
+/* ── Spend-limit projection line ─────────────────────────────────────── */
+.portal-billing__projection {
+  margin: 0.85rem 0 0;
+  font-size: 0.85rem;
+  color: var(--color-text-3);
+}
+.portal-billing__projection strong {
+  color: var(--color-amber, #d97706);
 }

@@ -25,39 +25,27 @@ export function currencySymbol(currency: string | null | undefined): string {
 }
 
 /**
- * Format minor units of an ISO currency ("$2.24", "£0.40"). Allows up to 3
- * fraction digits so sub-cent per-document rates don't round to $0.
+ * Format minor units as a compact-symbol amount ("$2.24", "£0.40"). Uses the
+ * short symbol (not Intl's "US$" currency display) and allows up to 3 fraction
+ * digits so sub-cent per-document rates don't round to $0.
  */
 export function formatMinor(
   minor: number,
   currency: string | null | undefined,
 ): string {
-  const code = (currency ?? "usd").toUpperCase();
-  try {
-    return new Intl.NumberFormat(undefined, {
-      style: "currency",
-      currency: code,
-      maximumFractionDigits: 3,
-    }).format(minor / 100);
-  } catch {
-    return `${(minor / 100).toFixed(2)} ${code}`;
-  }
+  const num = new Intl.NumberFormat(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 3,
+  }).format(minor / 100);
+  return `${currencySymbol(currency)}${num}`;
 }
 
-/** Format a major-unit amount as currency (standard fraction digits). */
+/** Format a major-unit amount with the compact symbol ("$1,000", "€500"). */
 export function formatMoneyMajor(
   major: number,
   currency: string | null | undefined,
 ): string {
-  const code = (currency ?? "usd").toUpperCase();
-  try {
-    return new Intl.NumberFormat(undefined, {
-      style: "currency",
-      currency: code,
-    }).format(major);
-  } catch {
-    return `${currencySymbol(currency)}${major.toLocaleString()}`;
-  }
+  return `${currencySymbol(currency)}${major.toLocaleString()}`;
 }
 
 /**

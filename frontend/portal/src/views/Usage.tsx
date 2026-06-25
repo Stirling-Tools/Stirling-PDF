@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Banner, Button, Skeleton, StatusBadge } from "@shared/components";
-import { useLink, LINK_INFO } from "@portal/contexts/LinkContext";
+import { Banner, Button, Skeleton } from "@shared/components";
+import { useLink } from "@portal/contexts/LinkContext";
 import { useUI } from "@portal/contexts/UIContext";
 import { fetchWallet, type Wallet } from "@portal/api/billing";
+import { useStripePortal } from "@portal/hooks/useStripePortal";
 import { LinkAccountPrompt } from "@portal/components/billing/LinkAccountPrompt";
 import { FreePlanView } from "@portal/components/billing/FreePlanView";
 import { SubscribedPlanView } from "@portal/components/billing/SubscribedPlanView";
@@ -29,7 +30,7 @@ import "@portal/components/billing/billing.css";
  * status.
  */
 export function Usage() {
-  const { linkState, isLinked, setLinkState, saasSessionNonce } = useLink();
+  const { isLinked, setLinkState, saasSessionNonce } = useLink();
   const { openLinkModal } = useUI();
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [loading, setLoading] = useState<boolean>(isLinked);
@@ -41,6 +42,8 @@ export function Usage() {
   // it to subscribed.
   const [finalizing, setFinalizing] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  // Stripe customer portal — the subscribed header's "Manage Payment" action.
+  const portal = useStripePortal(wallet);
   // Guards the post-checkout poll loop from setState after unmount.
   const mounted = useRef(true);
   useEffect(() => {
@@ -128,70 +131,79 @@ export function Usage() {
   return (
     <div className="portal-usage portal-billing">
       <header className="portal-usage__header">
-        <div>
-          <h1 className="portal-usage__title">Usage & billing</h1>
-          <p className="portal-usage__subtitle">
-            What you've used, what you'll pay, and how to change it.
-          </p>
+        <div className="portal-usage__header-inner">
+          <div>
+            <h1 className="portal-usage__title">Usage & billing</h1>
+            <p className="portal-usage__subtitle">
+              Consumption, invoices, and plan management for every PDF Stirling
+              has billed, in one console.
+            </p>
+          </div>
+          {wallet?.status === "subscribed" && (
+            <Button
+              variant="outline"
+              size="sm"
+              loading={portal.opening}
+              onClick={portal.open}
+            >
+              Manage Payment
+            </Button>
+          )}
         </div>
-        <StatusBadge
-          tone={
-            linkState === "linked-subscribed"
-              ? "success"
-              : linkState === "linked-free"
-                ? "info"
-                : "neutral"
-          }
-          size="md"
-        >
-          {LINK_INFO[linkState].label}
-        </StatusBadge>
       </header>
 
-      {!isLinked && <LinkAccountPrompt />}
+      <div className="portal-usage__body">
+        {!isLinked && <LinkAccountPrompt />}
 
-      {isLinked && loading && (
-        <div className="portal-billing__skeleton" aria-hidden>
-          <Skeleton height="10rem" />
-          <Skeleton height="14rem" />
-        </div>
-      )}
+        {isLinked && loading && (
+          <div className="portal-billing__skeleton" aria-hidden>
+            <Skeleton height="10rem" />
+            <Skeleton height="14rem" />
+          </div>
+        )}
 
-      {isLinked && finalizing && (
-        <Banner tone="info" title="Finalizing your subscription…">
-          It can take a few seconds for your subscription to activate. This page
-          updates automatically.
-        </Banner>
-      )}
+        {isLinked && finalizing && (
+          <Banner tone="info" title="Finalizing your subscription…">
+            It can take a few seconds for your subscription to activate. This
+            page updates automatically.
+          </Banner>
+        )}
 
-      {isLinked && needsReauth && (
-        <Banner
-          tone="warning"
-          title="Session expired"
-          action={
-            <Button size="sm" onClick={() => openLinkModal("reauth")}>
-              Sign in again
-            </Button>
-          }
-        >
-          Your Stirling account session has expired. Sign in again to view
-          billing — your instance stays linked.
-        </Banner>
-      )}
+        {isLinked && needsReauth && (
+          <Banner
+            tone="warning"
+            title="Session expired"
+            action={
+              <Button size="sm" onClick={() => openLinkModal("reauth")}>
+                Sign in again
+              </Button>
+            }
+          >
+            Your Stirling account session has expired. Sign in again to view
+            billing — your instance stays linked.
+          </Banner>
+        )}
 
-      {isLinked && error && (
-        <Banner tone="danger" title="Couldn't load wallet">
-          {error}
-        </Banner>
-      )}
+        {isLinked && error && (
+          <Banner tone="danger" title="Couldn't load wallet">
+            {error}
+          </Banner>
+        )}
 
-      {isLinked && !finalizing && wallet && wallet.status === "free" && (
-        <FreePlanView wallet={wallet} onSubscribed={confirmSubscription} />
-      )}
+        {isLinked && portal.error && (
+          <Banner tone="danger" title="Couldn't open Stripe portal">
+            {portal.error}
+          </Banner>
+        )}
 
-      {isLinked && wallet && wallet.status === "subscribed" && (
-        <SubscribedPlanView wallet={wallet} onWalletChange={refresh} />
-      )}
+        {isLinked && !finalizing && wallet && wallet.status === "free" && (
+          <FreePlanView wallet={wallet} onSubscribed={confirmSubscription} />
+        )}
+
+        {isLinked && wallet && wallet.status === "subscribed" && (
+          <SubscribedPlanView wallet={wallet} onWalletChange={refresh} />
+        )}
+      </div>
     </div>
   );
 }
