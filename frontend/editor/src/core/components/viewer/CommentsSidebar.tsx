@@ -64,50 +64,31 @@ type StirlingAnnotationCustomData = Record<string, unknown> & {
   toolId?: string;
 };
 
-type StirlingAnnotationObject = PdfAnnotationObject & {
+type StirlingAnnotationMetadata = {
   creationDate?: Date | number | string;
   customData?: StirlingAnnotationCustomData;
   M?: Date | number | string;
   modifiedDate?: Date | number | string;
 };
-
-type StirlingTextAnnotationObject = PdfTextAnnoObject & {
-  creationDate?: Date | number | string;
-  customData?: StirlingAnnotationCustomData;
-  M?: Date | number | string;
-  modifiedDate?: Date | number | string;
-};
-
-type StirlingSidebarAnnotationEntry = Omit<
-  SidebarAnnotationEntry,
-  "annotation" | "replies"
-> & {
-  annotation: SidebarAnnotationEntry["annotation"] & {
-    object: StirlingAnnotationObject;
-  };
-  replies: Array<
-    SidebarAnnotationEntry["replies"][number] & {
-      object: StirlingTextAnnotationObject;
-    }
-  >;
-};
-
-type StirlingSidebarAnnotationsByPage = Record<
-  number,
-  StirlingSidebarAnnotationEntry[]
->;
 
 type StirlingAnnotationPatch = Partial<PdfAnnotationObject> & {
   customData?: Record<string, unknown>;
 };
 
+function getStirlingAnnotationMetadata(
+  ann: PdfAnnotationObject,
+): StirlingAnnotationMetadata {
+  return ann as StirlingAnnotationMetadata;
+}
+
 /** Format annotation date for display (e.g. "Mar 11, 6:05 PM"). */
-function formatCommentDate(obj: StirlingAnnotationObject): string {
+function formatCommentDate(obj: PdfAnnotationObject): string {
+  const metadata = getStirlingAnnotationMetadata(obj);
   const raw =
-    obj?.modifiedDate ??
-    obj?.creationDate ??
-    obj?.customData?.modifiedDate ??
-    obj?.M;
+    metadata.modifiedDate ??
+    metadata.creationDate ??
+    metadata.customData?.modifiedDate ??
+    metadata.M;
   if (raw == null) return "";
   const d = raw instanceof Date ? raw : new Date(raw);
   if (Number.isNaN(d.getTime())) return "";
@@ -208,8 +189,9 @@ function getIconByType(type: number | undefined): string {
   return "comment";
 }
 
-function isCommentAnnotation(ann: StirlingAnnotationObject): boolean {
-  const toolId = ann?.customData?.toolId ?? ann?.customData?.annotationToolId;
+function isCommentAnnotation(ann: PdfAnnotationObject): boolean {
+  const customData = getStirlingAnnotationMetadata(ann).customData;
+  const toolId = customData?.toolId ?? customData?.annotationToolId;
   if (
     toolId === "textComment" ||
     toolId === "insertText" ||
@@ -217,7 +199,7 @@ function isCommentAnnotation(ann: StirlingAnnotationObject): boolean {
   )
     return true;
   // Any annotation explicitly added to comments via the "Add comment" button
-  if (ann?.customData?.isComment === true) return true;
+  if (customData?.isComment === true) return true;
   const type = ann?.type;
   // Standalone comment types (TEXT, FREETEXT, CARET) without a toolId are always comments
   if (!toolId && isStandaloneCommentType(type)) return true;
@@ -235,12 +217,13 @@ function isCommentAnnotation(ann: StirlingAnnotationObject): boolean {
   return false;
 }
 
-function isLinkedCommentAnnotation(ann: StirlingAnnotationObject): boolean {
+function isLinkedCommentAnnotation(ann: PdfAnnotationObject): boolean {
+  const customData = getStirlingAnnotationMetadata(ann).customData;
   const type = ann?.type;
   if (isStandaloneCommentType(type)) return false;
   if (ann?.inReplyToId) return false;
   return (
-    ann?.customData?.isComment === true ||
+    customData?.isComment === true ||
     (type !== undefined && (ann?.contents ?? "").trim().length > 0)
   );
 }
@@ -253,10 +236,10 @@ function getAnnotationPageIndex(
 }
 
 function getRemoveCommentPatch(
-  ann: StirlingAnnotationObject,
+  ann: PdfAnnotationObject,
 ): StirlingAnnotationPatch {
   const customData = {
-    ...(ann.customData ?? {}),
+    ...(getStirlingAnnotationMetadata(ann).customData ?? {}),
   };
   delete customData.isComment;
   return {
@@ -265,12 +248,13 @@ function getRemoveCommentPatch(
   };
 }
 
-function getAnnotationToolId(ann: StirlingAnnotationObject): string {
-  return ann?.customData?.toolId ?? ann?.customData?.annotationToolId ?? "";
+function getAnnotationToolId(ann: PdfAnnotationObject): string {
+  const customData = getStirlingAnnotationMetadata(ann).customData;
+  return customData?.toolId ?? customData?.annotationToolId ?? "";
 }
 
 function getAnnotationTypeLabel(
-  ann: StirlingAnnotationObject,
+  ann: PdfAnnotationObject,
   t: (key: string, fallback: string) => string,
 ): string {
   const toolId = getAnnotationToolId(ann);
@@ -302,7 +286,7 @@ function getAnnotationTypeLabel(
   return t("viewer.comments.typeComment", "Comment");
 }
 
-function AnnotationTypeIcon({ ann }: { ann: StirlingAnnotationObject }) {
+function AnnotationTypeIcon({ ann }: { ann: PdfAnnotationObject }) {
   const toolId = getAnnotationToolId(ann);
   const iconName = TOOL_ICON_MAP[toolId] ?? getIconByType(ann?.type);
   return (
@@ -438,11 +422,10 @@ export function CommentsSidebar({
     [scrollActions, getZoomState],
   );
 
-  const byPage = useMemo(() => {
+  const byPage = useMemo<Record<number, SidebarAnnotationEntry[]>>(() => {
     try {
-      const all = (getSidebarAnnotationsWithRepliesGroupedByPage(state) ??
-        {}) as StirlingSidebarAnnotationsByPage;
-      const filtered: StirlingSidebarAnnotationsByPage = {};
+      const all = getSidebarAnnotationsWithRepliesGroupedByPage(state) ?? {};
+      const filtered: Record<number, SidebarAnnotationEntry[]> = {};
       for (const [page, entries] of Object.entries(all)) {
         const commentEntries = entries
           .filter((e) => isCommentAnnotation(e.annotation.object))
@@ -498,16 +481,12 @@ export function CommentsSidebar({
   const [deleteModal, setDeleteModal] = useState<{
     pageIndex: number;
     id: string;
-    ann: StirlingAnnotationObject;
+    ann: PdfAnnotationObject;
   } | null>(null);
   const [clearAllModalOpen, setClearAllModalOpen] = useState(false);
 
   const handleDeleteClick = useCallback(
-    (
-      pageIndex: number,
-      annotationId: string,
-      ann: StirlingAnnotationObject,
-    ) => {
+    (pageIndex: number, annotationId: string, ann: PdfAnnotationObject) => {
       if (isLinkedCommentAnnotation(ann)) {
         setDeleteModal({ pageIndex, id: annotationId, ann });
       } else {
