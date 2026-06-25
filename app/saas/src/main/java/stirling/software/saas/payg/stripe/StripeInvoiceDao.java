@@ -3,8 +3,11 @@ package stirling.software.saas.payg.stripe;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.springframework.context.annotation.Profile;
 import org.springframework.dao.DataAccessException;
@@ -46,7 +49,9 @@ public class StripeInvoiceDao {
             LocalDateTime periodEnd,
             String hostedInvoiceUrl,
             String invoicePdf,
-            String description) {}
+            String description,
+            /** Billed units (PDFs) on this invoice — summed line-item quantity; null if unknown. */
+            Long pdfsProcessed) {}
 
     // Drafts are excluded: Stripe's API returns null for both
     // {@code hosted_invoice_url} and {@code invoice_pdf} on unfinalized
@@ -95,30 +100,89 @@ public class StripeInvoiceDao {
             return List.of();
         }
         int safeLimit = Math.max(1, Math.min(limit, 100));
+        List<InvoiceRow> rows;
         try {
-            return jdbcTemplate.query(
-                    QUERY,
-                    (rs, i) ->
-                            new InvoiceRow(
-                                    rs.getString("id"),
-                                    rs.getString("number"),
-                                    rs.getString("status"),
-                                    nullableLong(rs, "total"),
-                                    rs.getString("currency"),
-                                    toLocal(rs.getLong("created"), rs.wasNull()),
-                                    toLocal(rs.getLong("period_start"), rs.wasNull()),
-                                    toLocal(rs.getLong("period_end"), rs.wasNull()),
-                                    rs.getString("hosted_invoice_url"),
-                                    rs.getString("invoice_pdf"),
-                                    rs.getString("description")),
-                    stripeCustomerId,
-                    safeLimit);
+            rows =
+                    jdbcTemplate.query(
+                            QUERY,
+                            (rs, i) ->
+                                    new InvoiceRow(
+                                            rs.getString("id"),
+                                            rs.getString("number"),
+                                            rs.getString("status"),
+                                            nullableLong(rs, "total"),
+                                            rs.getString("currency"),
+                                            toLocal(rs.getLong("created"), rs.wasNull()),
+                                            toLocal(rs.getLong("period_start"), rs.wasNull()),
+                                            toLocal(rs.getLong("period_end"), rs.wasNull()),
+                                            rs.getString("hosted_invoice_url"),
+                                            rs.getString("invoice_pdf"),
+                                            rs.getString("description"),
+                                            null),
+                            stripeCustomerId,
+                            safeLimit);
         } catch (DataAccessException e) {
             log.warn(
                     "stripe.invoices lookup failed for customer {}: {}",
                     stripeCustomerId,
                     e.getMessage());
             return List.of();
+        }
+        if (rows.isEmpty()) {
+            return rows;
+        }
+        Map<String, Long> billed = sumBilledUnits(rows.stream().map(InvoiceRow::id).toList());
+        if (billed.isEmpty()) {
+            return rows;
+        }
+        return rows.stream()
+                .map(
+                        r ->
+                                new InvoiceRow(
+                                        r.id(),
+                                        r.number(),
+                                        r.status(),
+                                        r.totalMinor(),
+                                        r.currency(),
+                                        r.createdAt(),
+                                        r.periodStart(),
+                                        r.periodEnd(),
+                                        r.hostedInvoiceUrl(),
+                                        r.invoicePdf(),
+                                        r.description(),
+                                        billed.get(r.id())))
+                .toList();
+    }
+
+    /**
+     * Sums billed line-item quantity per invoice from {@code stripe.invoice_line_items} — the units
+     * (PDFs) each invoice charged for. Run SEPARATELY from the invoice query and defensively
+     * wrapped: if that table isn't in the sync target, it degrades to an empty map (the column
+     * renders "—") instead of failing the whole invoice list.
+     */
+    private Map<String, Long> sumBilledUnits(List<String> invoiceIds) {
+        if (invoiceIds.isEmpty()) {
+            return Map.of();
+        }
+        String placeholders = invoiceIds.stream().map(id -> "?").collect(Collectors.joining(","));
+        String sql =
+                "SELECT invoice AS invoice_id, COALESCE(SUM(quantity), 0) AS qty"
+                        + " FROM stripe.invoice_line_items"
+                        + " WHERE invoice IN ("
+                        + placeholders
+                        + ") GROUP BY invoice";
+        try {
+            Map<String, Long> map = new HashMap<>();
+            jdbcTemplate.query(
+                    sql,
+                    (java.sql.ResultSet rs) -> {
+                        map.put(rs.getString("invoice_id"), rs.getLong("qty"));
+                    },
+                    invoiceIds.toArray());
+            return map;
+        } catch (DataAccessException e) {
+            log.warn("stripe.invoice_line_items sum failed: {}", e.getMessage());
+            return Map.of();
         }
     }
 

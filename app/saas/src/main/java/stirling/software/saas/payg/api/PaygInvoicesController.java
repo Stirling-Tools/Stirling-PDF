@@ -83,7 +83,8 @@ public class PaygInvoicesController {
             String periodEnd,
             String hostedInvoiceUrl,
             String invoicePdf,
-            String description) {}
+            String description,
+            Long pdfsProcessed) {}
 
     @GetMapping("/invoices")
     @PreAuthorize("isAuthenticated()")
@@ -139,7 +140,8 @@ public class PaygInvoicesController {
                 iso(r.periodEnd()),
                 r.hostedInvoiceUrl(),
                 r.invoicePdf(),
-                r.description());
+                r.description(),
+                r.pdfsProcessed());
     }
 
     private static String iso(LocalDateTime ldt) {
