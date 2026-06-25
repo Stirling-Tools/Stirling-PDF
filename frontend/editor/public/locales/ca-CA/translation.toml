@@ -5854,6 +5854,7 @@ routing = "Routing"
 security = "Security"
 
 [policies.detail]
+close = "Tanca"
 editSettings = "Edit Settings"
 enforces = "Enforces"
 managedByOrg = "Managed by your organisation. Contact a team leader to change this policy."
@@ -5907,6 +5908,7 @@ allDocTypesTitle = "All document types"
 back = "Back"
 builderDesc = "Build the sequence of tools this policy runs on each document."
 clear = "Clear"
+close = "Tanca"
 continue = "Continue"
 docTypesLabel = "Document types"
 edit = "Edit"
@@ -7784,8 +7786,6 @@ allReleases = "Totes les versions"
 breaking = "Canvis incompatibles"
 breakingChanges = "Canvis incompatibles"
 breakingChangesDefault = "Aquesta versió conté canvis incompatibles."
-breakingChangesDetected = "S'han detectat canvis incompatibles"
-breakingChangesMessage = "Algunes versions contenen canvis incompatibles. Revisa les guies de migració abans d'actualitzar."
 close = "Tanca"
 closeModal = "Tanca la finestra d'actualització"
 current = "Versió actual"
@@ -8606,6 +8606,7 @@ disableByAdmin = "Desactiva l'MFA"
 
 [workspace.people.roleDescriptions]
 admin = "Pot gestionar paràmetres i convidar membres, amb accés administratiu complet."
+currentRole = "Rol assignat actual."
 user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]

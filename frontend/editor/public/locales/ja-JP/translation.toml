@@ -5854,6 +5854,7 @@ routing = "Routing"
 security = "Security"
 
 [policies.detail]
+close = "閉じる"
 editSettings = "Edit Settings"
 enforces = "Enforces"
 managedByOrg = "Managed by your organisation. Contact a team leader to change this policy."
@@ -5907,6 +5908,7 @@ allDocTypesTitle = "All document types"
 back = "Back"
 builderDesc = "Build the sequence of tools this policy runs on each document."
 clear = "Clear"
+close = "閉じる"
 continue = "Continue"
 docTypesLabel = "Document types"
 edit = "Edit"
@@ -7784,8 +7786,6 @@ allReleases = "すべてのリリース"
 breaking = "重大変更"
 breakingChanges = "互換性のない変更"
 breakingChangesDefault = "このバージョンには互換性のない変更が含まれます。"
-breakingChangesDetected = "互換性のない変更を検出"
-breakingChangesMessage = "一部のバージョンには互換性のない変更が含まれます。更新前に以下の移行ガイドを確認してください。"
 close = "閉じる"
 closeModal = "更新モーダルを閉じる"
 current = "現在のバージョン"
@@ -8606,6 +8606,7 @@ disableByAdmin = "MFA を無効化"
 
 [workspace.people.roleDescriptions]
 admin = "設定の管理とメンバーの招待が可能。管理者としてのフルアクセス権があります。"
+currentRole = "現在割り当てられているロール。"
 user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]

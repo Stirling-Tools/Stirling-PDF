@@ -5854,6 +5854,7 @@ routing = "Routing"
 security = "Security"
 
 [policies.detail]
+close = "Bağla"
 editSettings = "Edit Settings"
 enforces = "Enforces"
 managedByOrg = "Managed by your organisation. Contact a team leader to change this policy."
@@ -5907,6 +5908,7 @@ allDocTypesTitle = "All document types"
 back = "Back"
 builderDesc = "Build the sequence of tools this policy runs on each document."
 clear = "Clear"
+close = "Bağla"
 continue = "Continue"
 docTypesLabel = "Document types"
 edit = "Edit"
@@ -7784,8 +7786,6 @@ allReleases = "Bütün buraxılışlar"
 breaking = "Uyğunluğu pozan"
 breakingChanges = "Uyğunluğu pozan dəyişikliklər"
 breakingChangesDefault = "Bu versiya uyğunluğu pozan dəyişikliklər ehtiva edir."
-breakingChangesDetected = "Uyğunluğu pozan dəyişikliklər aşkarlandı"
-breakingChangesMessage = "Bəzi versiyalar uyğunluğu pozan dəyişikliklər ehtiva edir. Yeniləməzdən əvvəl aşağıdakı miqrasiya bələdçilərini nəzərdən keçirin."
 close = "Bağla"
 closeModal = "Yeniləmə pəncərəsini bağla"
 current = "Cari versiya"
@@ -8606,6 +8606,7 @@ disableByAdmin = "MFA-nı deaktiv et"
 
 [workspace.people.roleDescriptions]
 admin = "Ayarları idarə edə və üzvləri dəvət edə bilər, tam inzibati girişə malikdir."
+currentRole = "Hazırda təyin olunmuş rol."
 user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]
