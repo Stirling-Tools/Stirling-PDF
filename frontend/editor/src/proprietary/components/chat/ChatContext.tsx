@@ -3,6 +3,7 @@ import {
   useContext,
   useReducer,
   useCallback,
+  useMemo,
   useRef,
   type ReactNode,
 } from "react";
@@ -403,6 +404,15 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const abortRef = useRef<AbortController | null>(null);
   const messagesRef = useRef<ChatMessage[]>(state.messages);
   messagesRef.current = state.messages;
+  // Hold the latest files in refs so sendMessage's identity does not change on
+  // every file operation. Otherwise a new sendMessage (and thus a new context
+  // value) would be created on each file change, re-rendering every useChat()
+  // consumer. sendMessage reads .current at call time, so it still sees the
+  // current files.
+  const activeFilesRef = useRef(activeFiles);
+  activeFilesRef.current = activeFiles;
+  const activeFileStubsRef = useRef(activeFileStubs);
+  activeFileStubsRef.current = activeFileStubs;
 
   // Download a File from the Stirling files endpoint.
   const downloadFile = useCallback(
@@ -495,6 +505,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       abortRef.current = controller;
 
       const priorMessages = messagesRef.current;
+      // Snapshot the files at send time so the upload AND the result-import both
+      // act on what the user actually sent — not on whatever the workbench holds
+      // when the (possibly many-seconds-later) result arrives.
+      const sourceFiles = activeFilesRef.current;
+      const sourceStubs = activeFileStubsRef.current;
       const startTime = Date.now();
       // Mirror every progress event locally so we can attach the full log to
       // the assistant message when the result arrives — without needing a ref
@@ -514,7 +529,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       try {
         const formData = new FormData();
         formData.append("userMessage", content);
-        activeFiles.forEach((file, i) => {
+        sourceFiles.forEach((file, i) => {
           formData.append(`fileInputs[${i}].fileInput`, file);
         });
         priorMessages.forEach((message, i) => {
@@ -633,7 +648,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
               },
             });
             if (data.fileId || data.resultFiles?.length) {
-              importResultFile(data, activeFileStubs).catch((err) => {
+              importResultFile(data, sourceStubs).catch((err) => {
                 console.error("Failed to import AI result file", err);
                 dispatch({
                   type: "ADD_MESSAGE",
@@ -693,24 +708,34 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         }
       }
     },
-    [activeFiles, activeFileStubs, importResultFile],
+    [importResultFile],
   );
 
-  return (
-    <ChatContext.Provider
-      value={{
-        messages: state.messages,
-        isLoading: state.isLoading,
-        progress: state.progress,
-        progressLog: state.progressLog,
-        sendMessage,
-        cancelMessage,
-        clearChat,
-      }}
-    >
-      {children}
-    </ChatContext.Provider>
+  // Memoize the context value so it only changes when chat state changes — not
+  // on every file operation. With sendMessage/cancelMessage/clearChat all stable,
+  // useChat() consumers re-render only when messages/loading/progress change.
+  const value = useMemo<ChatContextValue>(
+    () => ({
+      messages: state.messages,
+      isLoading: state.isLoading,
+      progress: state.progress,
+      progressLog: state.progressLog,
+      sendMessage,
+      cancelMessage,
+      clearChat,
+    }),
+    [
+      state.messages,
+      state.isLoading,
+      state.progress,
+      state.progressLog,
+      sendMessage,
+      cancelMessage,
+      clearChat,
+    ],
   );
+
+  return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
 }
 
 export function useChat(): ChatContextValue {
