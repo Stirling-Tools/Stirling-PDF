@@ -62,6 +62,11 @@ export async function fetchSources(): Promise<SourcesResponse> {
   return httpJson<SourcesResponse>("/api/v1/sources");
 }
 
+/** GET /api/v1/sources/{id}: the raw source record (config options), for editing. */
+export async function fetchSource(id: string): Promise<Source> {
+  return httpJson<Source>(`/api/v1/sources/${encodeURIComponent(id)}`);
+}
+
 /** POST /api/v1/sources: create (blank id) or update (matched id) a source. */
 export async function createSource(source: Source): Promise<Source> {
   return httpJson<Source>("/api/v1/sources", { method: "POST", body: source });

@@ -15,9 +15,13 @@ vi.mock("react-i18next", () => ({
 }));
 
 const fetchSources = vi.fn();
+const fetchSource = vi.fn();
+const createSource = vi.fn();
 const deleteSource = vi.fn();
 vi.mock("@portal/api/sources", () => ({
   fetchSources: () => fetchSources(),
+  fetchSource: (id: string) => fetchSource(id),
+  createSource: (source: unknown) => createSource(source),
   deleteSource: (id: string) => deleteSource(id),
 }));
 
@@ -65,6 +69,8 @@ function renderView() {
 describe("Sources view", () => {
   beforeEach(() => {
     fetchSources.mockReset();
+    fetchSource.mockReset();
+    createSource.mockReset();
     deleteSource.mockReset();
   });
 
@@ -95,5 +101,30 @@ describe("Sources view", () => {
     expect(
       await screen.findByText("Source is referenced by 2 policies"),
     ).toBeInTheDocument();
+  });
+
+  it("pauses a source by re-saving it with enabled flipped off", async () => {
+    fetchSources.mockResolvedValue(RESPONSE);
+    fetchSource.mockResolvedValue({
+      id: "src-referenced",
+      name: "Claims intake",
+      type: "folder",
+      options: { directory: "/data/incoming", mode: "consume" },
+      enabled: true,
+    });
+    createSource.mockResolvedValue({});
+
+    renderView();
+
+    fireEvent.click(await screen.findByText("Claims intake"));
+    fireEvent.click(await screen.findByText("sources.detail.pause"));
+
+    await waitFor(() => {
+      expect(createSource).toHaveBeenCalledTimes(1);
+    });
+    expect(fetchSource).toHaveBeenCalledWith("src-referenced");
+    expect(createSource).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "src-referenced", enabled: false }),
+    );
   });
 });

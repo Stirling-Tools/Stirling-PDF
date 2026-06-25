@@ -373,6 +373,9 @@ closeAriaLabel = "Close detail"
 usedBy = "Used by"
 notReferenced = "Not referenced by any policy, so it's safe to delete."
 docsUntracked = "Per-source document volume isn't tracked yet."
+edit = "Edit"
+pause = "Pause"
+resume = "Resume"
 delete = "Delete source"
 
 [sources.delete]
@@ -383,10 +386,12 @@ confirm = "Delete"
 
 [sources.wizard]
 title = "Connect a source"
+editTitle = "Edit source"
 subtitle = "Step {{current}} of {{total}} · {{label}}"
 cancel = "Cancel"
 back = "Back"
 continue = "Continue"
+save = "Save changes"
 name = "Name"
 namePlaceholder = "e.g. Claims intake"
 type = "Type"

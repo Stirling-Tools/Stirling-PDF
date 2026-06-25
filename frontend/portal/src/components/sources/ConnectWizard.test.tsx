@@ -62,6 +62,50 @@ describe("ConnectWizard", () => {
     });
   });
 
+  it("edits an existing source: prefilled, skips type, submits with its id", async () => {
+    createSource.mockResolvedValue({ id: "s1" });
+    const onCreated = vi.fn();
+
+    render(
+      <ConnectWizard
+        open
+        source={{
+          id: "s1",
+          name: "James",
+          type: "folder",
+          options: { directory: "'/data/in'", mode: "consume" },
+          enabled: true,
+        }}
+        onClose={vi.fn()}
+        onCreated={onCreated}
+      />,
+    );
+
+    // Edit opens on the configure step with name + directory prefilled.
+    const inputs = screen.getAllByRole("textbox") as HTMLInputElement[];
+    expect(inputs[0].value).toBe("James");
+    expect(inputs[1].value).toBe("'/data/in'");
+
+    // Fix the stray quotes, continue to review, save.
+    fireEvent.change(inputs[1], { target: { value: "/data/in" } });
+    fireEvent.click(screen.getByText("sources.wizard.continue"));
+    fireEvent.click(screen.getByText("sources.wizard.save"));
+
+    await waitFor(() => {
+      expect(createSource).toHaveBeenCalledTimes(1);
+    });
+    expect(createSource).toHaveBeenCalledWith({
+      id: "s1",
+      name: "James",
+      type: "folder",
+      options: { directory: "/data/in", mode: "consume" },
+      enabled: true,
+    });
+    await waitFor(() => {
+      expect(onCreated).toHaveBeenCalledTimes(1);
+    });
+  });
+
   it("renders the inline error message when create fails", async () => {
     createSource.mockRejectedValue(
       new HttpError(400, "Bad Request", {

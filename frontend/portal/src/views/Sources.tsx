@@ -11,8 +11,11 @@ import { useView } from "@portal/contexts/ViewContext";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import { HttpError } from "@portal/api/http";
 import {
+  createSource,
   deleteSource,
+  fetchSource,
   fetchSources,
+  type Source,
   type SourcesResponse,
   type SourceView,
 } from "@portal/api/sources";
@@ -49,12 +52,53 @@ export function Sources() {
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [editingSource, setEditingSource] = useState<Source | null>(null);
+  const [mutating, setMutating] = useState(false);
+  const [pageError, setPageError] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<SourceView | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const sources = data?.sources ?? [];
   const expanded = sources.find((s) => s.id === expandedId) ?? null;
+
+  function openCreate() {
+    setEditingSource(null);
+    setWizardOpen(true);
+  }
+
+  // Editing needs the raw source (config options), which the overview rows don't
+  // carry, so fetch it before opening the wizard prefilled.
+  async function openEdit(source: SourceView) {
+    if (mutating) return;
+    setPageError(null);
+    setMutating(true);
+    try {
+      setEditingSource(await fetchSource(source.id));
+      setWizardOpen(true);
+    } catch (e) {
+      setPageError(messageFor(e));
+    } finally {
+      setMutating(false);
+    }
+  }
+
+  // Pause/resume: re-save the source with enabled flipped (same POST contract as
+  // edit). Fetch the raw record first so the full config round-trips intact.
+  async function togglePause(source: SourceView) {
+    if (mutating) return;
+    setPageError(null);
+    setMutating(true);
+    try {
+      const raw = await fetchSource(source.id);
+      await createSource({ ...raw, enabled: !raw.enabled });
+      refetch();
+    } catch (e) {
+      setPageError(messageFor(e));
+    } finally {
+      setMutating(false);
+    }
+  }
 
   function requestDelete(source: SourceView) {
     setDeleteError(null);
@@ -92,14 +136,13 @@ export function Sources() {
           >
             {t("sources.actions.agentBuilder")}
           </Button>
-          <Button
-            onClick={() => setWizardOpen(true)}
-            leadingIcon={<span aria-hidden>+</span>}
-          >
+          <Button onClick={openCreate} leadingIcon={<span aria-hidden>+</span>}>
             {t("sources.actions.connectSource")}
           </Button>
         </div>
       </header>
+
+      {pageError && <Banner tone="danger" description={pageError} />}
 
       <KpiStrip data={data} loading={loading} />
 
@@ -116,7 +159,7 @@ export function Sources() {
           title={t("sources.empty.title")}
           description={t("sources.empty.description")}
           actions={
-            <Button onClick={() => setWizardOpen(true)}>
+            <Button onClick={openCreate}>
               {t("sources.actions.connectSource")}
             </Button>
           }
@@ -137,12 +180,16 @@ export function Sources() {
         <SourceDetailCard
           source={expanded}
           onClose={() => setExpandedId(null)}
+          onEdit={openEdit}
+          onTogglePause={togglePause}
           onDelete={requestDelete}
+          busy={mutating}
         />
       )}
 
       <ConnectWizard
         open={wizardOpen}
+        source={editingSource ?? undefined}
         onClose={() => setWizardOpen(false)}
         onCreated={refetch}
       />

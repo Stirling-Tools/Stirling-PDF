@@ -34,7 +34,12 @@ const meta: Meta<typeof SourceDetailCard> = {
   title: "Portal/Sources/SourceDetailCard",
   component: SourceDetailCard,
   parameters: { layout: "padded" },
-  args: { onClose: () => {}, onDelete: () => {} },
+  args: {
+    onClose: () => {},
+    onEdit: () => {},
+    onTogglePause: () => {},
+    onDelete: () => {},
+  },
   decorators: [
     (S) => (
       <div style={{ maxWidth: "56rem" }}>
