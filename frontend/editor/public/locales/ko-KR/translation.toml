@@ -5854,6 +5854,7 @@ routing = "Routing"
 security = "Security"
 
 [policies.detail]
+close = "닫기"
 editSettings = "Edit Settings"
 enforces = "Enforces"
 managedByOrg = "Managed by your organisation. Contact a team leader to change this policy."
@@ -5907,6 +5908,7 @@ allDocTypesTitle = "All document types"
 back = "Back"
 builderDesc = "Build the sequence of tools this policy runs on each document."
 clear = "Clear"
+close = "닫기"
 continue = "Continue"
 docTypesLabel = "Document types"
 edit = "Edit"
@@ -7784,8 +7786,6 @@ allReleases = "모든 릴리스"
 breaking = "중대한 변경"
 breakingChanges = "호환성 파괴 변경"
 breakingChangesDefault = "이 버전에는 호환성 파괴 변경이 포함되어 있습니다."
-breakingChangesDetected = "호환성 파괴 변경 감지됨"
-breakingChangesMessage = "일부 버전에 호환성 파괴 변경이 포함되어 있습니다. 업데이트 전에 아래 마이그레이션 가이드를 검토하세요."
 close = "닫기"
 closeModal = "업데이트 모달 닫기"
 current = "현재 버전"
@@ -8606,6 +8606,7 @@ disableByAdmin = "MFA 비활성화"
 
 [workspace.people.roleDescriptions]
 admin = "설정을 관리하고 멤버를 초대할 수 있으며, 전체 관리자 권한을 가집니다."
+currentRole = "현재 할당된 역할입니다."
 user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]
