@@ -39,7 +39,9 @@ export const linkHandlers = [
 
   http.post("/api/v1/account-link/unlink", async () => {
     await delay(120);
-    return HttpResponse.json(unlinkLocal());
+    // Clear local link state, then 204 (no body) to match the real backend.
+    unlinkLocal();
+    return new HttpResponse(null, { status: 204 });
   }),
 
   // Team-wide list/revoke are SaaS-direct now (apiClient.saas calls the

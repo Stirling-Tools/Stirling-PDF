@@ -26,6 +26,22 @@ interface UIContextValue {
   settingsInitialSection: string | null;
   openSettings: (section?: string) => void;
   closeSettings: () => void;
+
+  /**
+   * The account-link login modal. A single top-level instance — never nested in
+   * another overlay. Opening it from within Settings closes Settings first (no
+   * modal-in-modal) and reopens Settings on the account-link section once the
+   * login modal closes, so the admin returns to where they were.
+   */
+  linkModalOpen: boolean;
+  /**
+   * "link" registers this instance (the normal first-time flow); "reauth" only
+   * refreshes an expired SaaS session for attended reads — it must NOT re-register
+   * (that would mint a duplicate device credential).
+   */
+  linkModalMode: "link" | "reauth";
+  openLinkModal: (mode?: "link" | "reauth") => void;
+  closeLinkModal: () => void;
 }
 
 const UIContext = createContext<UIContextValue | null>(null);
@@ -35,6 +51,13 @@ export function UIProvider({ children }: { children: ReactNode }) {
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsInitialSection, setSettingsInitialSection] = useState<
+    string | null
+  >(null);
+  const [linkModalOpen, setLinkModalOpen] = useState(false);
+  const [linkModalMode, setLinkModalMode] = useState<"link" | "reauth">("link");
+  // When the link modal is opened from inside Settings, remember the section to
+  // restore so closing the modal returns the admin to where they were.
+  const [reopenSettingsAfterLink, setReopenSettingsAfterLink] = useState<
     string | null
   >(null);
 
@@ -60,8 +83,39 @@ export function UIProvider({ children }: { children: ReactNode }) {
         setSettingsOpen(false);
         setSettingsInitialSection(null);
       },
+
+      linkModalOpen,
+      linkModalMode,
+      openLinkModal: (mode: "link" | "reauth" = "link") => {
+        setLinkModalMode(mode);
+        // Never stack on Settings: close it first, and remember to reopen it on
+        // the account-link section once the login modal closes.
+        if (settingsOpen) {
+          setReopenSettingsAfterLink("account-link");
+          setSettingsOpen(false);
+          setSettingsInitialSection(null);
+        }
+        setLinkModalOpen(true);
+      },
+      closeLinkModal: () => {
+        setLinkModalOpen(false);
+        setLinkModalMode("link");
+        if (reopenSettingsAfterLink) {
+          setSettingsInitialSection(reopenSettingsAfterLink);
+          setSettingsOpen(true);
+          setReopenSettingsAfterLink(null);
+        }
+      },
     }),
-    [searchOpen, assistantOpen, settingsOpen, settingsInitialSection],
+    [
+      searchOpen,
+      assistantOpen,
+      settingsOpen,
+      settingsInitialSection,
+      linkModalOpen,
+      linkModalMode,
+      reopenSettingsAfterLink,
+    ],
   );
 
   return <UIContext.Provider value={value}>{children}</UIContext.Provider>;

@@ -4,7 +4,8 @@ import { MantineProvider } from "@mantine/core";
 import { AuthProvider } from "@shared/auth";
 import { ThemeProvider, useTheme } from "@portal/contexts/ThemeContext";
 import { TierProvider } from "@portal/contexts/TierContext";
-import { LinkProvider } from "@portal/contexts/LinkContext";
+import { LinkProvider, useLink } from "@portal/contexts/LinkContext";
+import type { SupabaseLoginSession } from "@shared/auth/ui/useSupabaseLogin";
 import { UIProvider, useUI } from "@portal/contexts/UIContext";
 import { mantineTheme } from "@portal/theme/mantineTheme";
 import { AppShell } from "@portal/components/AppShell";
@@ -13,7 +14,11 @@ import { AssistantButton } from "@portal/components/AssistantButton";
 import { AssistantPanel } from "@portal/components/AssistantPanel";
 import { SearchModal } from "@portal/components/SearchModal";
 import { SettingsModal } from "@portal/components/SettingsModal";
-import { AccountLinkStatusBootstrap } from "@portal/components/account-link/AccountLinkStatusBootstrap";
+import { LinkAccountModal } from "@portal/components/account-link/LinkAccountModal";
+import {
+  AccountLinkProvider,
+  useAccountLinkContext,
+} from "@portal/contexts/AccountLinkContext";
 import { ViewRouter } from "@portal/ViewRouter";
 
 /**
@@ -69,6 +74,33 @@ function SettingsHost() {
   );
 }
 
+/**
+ * The one and only account-link login modal. Mounted at the app root (never
+ * nested in another overlay) and driven by UIContext, so any "Link account" CTA
+ * — sidebar, billing prompt, feature gate, Settings panel — opens this exact
+ * instance. Linking is finished by the shared {@link useAccountLinkContext}
+ * orchestration.
+ */
+function LinkModalHost() {
+  const { linkModalOpen, linkModalMode, closeLinkModal } = useUI();
+  const { markSaasSessionChanged } = useLink();
+  const link = useAccountLinkContext();
+  // "reauth" only refreshes the browser SaaS session for attended reads — the
+  // sign-in already applied it to the Supabase client, so we just signal a
+  // refetch. It must NOT call completeLink (that re-registers → duplicate row).
+  const onLinked =
+    linkModalMode === "reauth"
+      ? () => markSaasSessionChanged()
+      : (session: SupabaseLoginSession) => link.completeLink(session);
+  return (
+    <LinkAccountModal
+      open={linkModalOpen}
+      onClose={closeLinkModal}
+      onLinked={onLinked}
+    />
+  );
+}
+
 export function App() {
   // Honour the Vite base path so the portal routes correctly when served under a
   // subpath (e.g. "/portal" behind the single-origin proxy). BASE_URL is "./"
@@ -88,14 +120,16 @@ export function App() {
                 <UIProvider>
                   <GlobalShortcuts />
                   <AuthGate>
-                    <AccountLinkStatusBootstrap />
-                    <AppShell>
-                      <ViewRouter />
-                    </AppShell>
-                    <AssistantButton />
-                    <AssistantPanel />
-                    <SearchModal />
-                    <SettingsHost />
+                    <AccountLinkProvider>
+                      <AppShell>
+                        <ViewRouter />
+                      </AppShell>
+                      <AssistantButton />
+                      <AssistantPanel />
+                      <SearchModal />
+                      <SettingsHost />
+                      <LinkModalHost />
+                    </AccountLinkProvider>
                   </AuthGate>
                 </UIProvider>
               </BrowserRouter>

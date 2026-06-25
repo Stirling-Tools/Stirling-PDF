@@ -101,6 +101,9 @@ export function InvoicesList() {
   const visible = showAll ? total : Math.min(DEFAULT_VISIBLE, total);
   const visibleRows = invoices?.slice(0, visible) ?? [];
   const hasMore = total > DEFAULT_VISIBLE;
+  // We only fetched FETCH_LIMIT rows — at the cap there may be older invoices we
+  // didn't load, so don't claim "all".
+  const atFetchLimit = total >= FETCH_LIMIT;
 
   // Column layout mirrors Stripe's own customer-portal "Invoice history" rows:
   //   Date · Amount · Status · Description (product name) · Actions
@@ -211,8 +214,16 @@ export function InvoicesList() {
               >
                 {showAll
                   ? `Show fewer (top ${DEFAULT_VISIBLE})`
-                  : `Show all ${total}`}
+                  : atFetchLimit
+                    ? `Show ${total} most recent`
+                    : `Show all ${total}`}
               </Button>
+              {showAll && atFetchLimit && (
+                <span className="portal-billing__invoice-note">
+                  Showing your {FETCH_LIMIT} most recent invoices. Older invoices
+                  are in the Stripe portal.
+                </span>
+              )}
             </div>
           )}
         </>

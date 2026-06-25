@@ -66,8 +66,9 @@ describe("api/link — local backend (this instance)", () => {
 
   it("unlinks this instance", async () => {
     await linkInstance({ supabaseJwt: "jwt_abc" });
-    const status = await unlinkInstance();
-    expect(status.linked).toBe(false);
+    // unlink returns 204 (no body); the status is read back separately.
+    await unlinkInstance();
+    expect((await fetchStatus()).linked).toBe(false);
   });
 
   it("forwards the SaaS JWT in the link body", async () => {

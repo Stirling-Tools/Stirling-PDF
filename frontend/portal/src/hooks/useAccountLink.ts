@@ -73,13 +73,20 @@ export function useAccountLink(): UseAccountLink {
   // Read the current link status on mount.
   useEffect(() => {
     let cancelled = false;
-    void fetchStatus().then((s) => {
-      if (!cancelled) {
-        setStatus(s);
-        // A linked instance is at least linked-free; subscription comes from the wallet.
-        if (s.linked) applyLinkFacts(true, false);
-      }
-    });
+    void fetchStatus()
+      .then((s) => {
+        if (!cancelled) {
+          setStatus(s);
+          // A linked instance is at least linked-free; subscription comes from the wallet.
+          if (s.linked) applyLinkFacts(true, false);
+        }
+      })
+      .catch(() => {
+        // Status endpoint absent (flag off) / unreachable → leave status null,
+        // which renders as "Not linked". Don't surface an error or leak an
+        // unhandled rejection for the expected flag-off case.
+        if (!cancelled) setStatus({ linked: false, name: null });
+      });
     return () => {
       cancelled = true;
     };
@@ -108,8 +115,8 @@ export function useAccountLink(): UseAccountLink {
     setPhase("linking");
     setError(null);
     try {
-      const next = await unlinkInstance();
-      setStatus(next);
+      await unlinkInstance();
+      setStatus({ linked: false, name: null });
       setPhase("idle");
       applyLinkFacts(false, false);
     } catch (e) {

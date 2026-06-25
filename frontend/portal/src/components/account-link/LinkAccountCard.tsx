@@ -1,21 +1,19 @@
-import { useState } from "react";
 import { Banner, Button, Card, StatusBadge } from "@shared/components";
 import type { UseAccountLink } from "@portal/hooks/useAccountLink";
-import { LinkAccountModal } from "@portal/components/account-link/LinkAccountModal";
+import { useUI } from "@portal/contexts/UIContext";
 
 interface Props {
   link: UseAccountLink;
 }
 
 /**
- * Links THIS instance to its Stirling account via an in-app login modal (shared
- * Supabase login — SSO + email/password). The portal posts the returned JWT to
- * the local backend, which stores the device secret server-side — the secret is
- * never received or rendered here. The card shows only a Linked / Not-linked
- * status.
+ * Status + actions for THIS instance's account link. The "Link" button opens
+ * the single top-level login modal (UIContext.openLinkModal) — never a nested
+ * modal. The portal posts the returned JWT to the local backend, which stores
+ * the device secret server-side; the secret is never received or rendered here.
  */
 export function LinkAccountCard({ link }: Props) {
-  const [modalOpen, setModalOpen] = useState(false);
+  const { openLinkModal } = useUI();
   const linking = link.phase === "linking";
   const linked = link.status?.linked ?? false;
 
@@ -66,17 +64,11 @@ export function LinkAccountCard({ link }: Props) {
         </div>
       ) : (
         <div className="portal-link__actions">
-          <Button loading={linking} onClick={() => setModalOpen(true)}>
+          <Button loading={linking} onClick={() => openLinkModal()}>
             Link your Stirling account
           </Button>
         </div>
       )}
-
-      <LinkAccountModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onLinked={(session) => link.completeLink(session)}
-      />
     </Card>
   );
 }

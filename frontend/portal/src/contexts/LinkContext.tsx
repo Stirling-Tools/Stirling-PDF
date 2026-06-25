@@ -21,7 +21,7 @@ import {
  * The portal admin establishes the link by signing in to the SaaS Supabase
  * project in-app (auth/saasSupabase.ts + the shared Supabase login) and
  * registering the instance (api/link.ts); the subscribed-vs-free distinction
- * comes from the wallet contract (api/usage.ts WalletContract.subscriptionStatus).
+ * comes from the wallet (api/billing.ts Wallet.status).
  */
 export type LinkState = "unlinked" | "linked-free" | "linked-subscribed";
 
@@ -44,6 +44,13 @@ interface LinkContextValue {
   isLinked: boolean;
   /** Convenience for `LINK_INFO[linkState].unlocked` — billable features usable. */
   featuresUnlocked: boolean;
+  /**
+   * Bumps whenever the browser's SaaS session changes (e.g. a re-sign-in after
+   * expiry). Attended SaaS reads (the wallet) key off this to refetch with the
+   * fresh token without re-establishing the instance link.
+   */
+  saasSessionNonce: number;
+  markSaasSessionChanged: () => void;
 }
 
 const LinkContext = createContext<LinkContextValue | null>(null);
@@ -56,6 +63,11 @@ export function LinkProvider({
   initialState?: LinkState;
 }) {
   const [linkState, setLinkState] = useState<LinkState>(initialState);
+  const [saasSessionNonce, setSaasSessionNonce] = useState(0);
+  const markSaasSessionChanged = useCallback(
+    () => setSaasSessionNonce((n) => n + 1),
+    [],
+  );
   const value = useMemo<LinkContextValue>(() => {
     const unlocked = LINK_INFO[linkState].unlocked;
     return {
@@ -63,8 +75,10 @@ export function LinkProvider({
       setLinkState,
       isLinked: linkState !== "unlinked",
       featuresUnlocked: unlocked,
+      saasSessionNonce,
+      markSaasSessionChanged,
     };
-  }, [linkState]);
+  }, [linkState, saasSessionNonce, markSaasSessionChanged]);
   return <LinkContext.Provider value={value}>{children}</LinkContext.Provider>;
 }
 

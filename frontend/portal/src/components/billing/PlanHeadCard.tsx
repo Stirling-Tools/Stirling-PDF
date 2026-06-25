@@ -1,27 +1,12 @@
 import { Card } from "@shared/components";
 import AllInclusiveIcon from "@mui/icons-material/AllInclusiveRounded";
 import BoltIcon from "@mui/icons-material/BoltRounded";
+import { formatPeriodDate } from "@shared/billing";
 import type { Wallet } from "@portal/api/billing";
 import { SubscribedMeter } from "@portal/components/billing/WalletMeter";
 
 interface Props {
   wallet: Wallet;
-}
-
-function fmtDate(iso: string | null): string {
-  if (!iso) return "";
-  const d = iso.split("T")[0];
-  if (!d) return "";
-  const [y, m, day] = d.split("-").map(Number);
-  if (!y || !m || !day) return d;
-  try {
-    return new Intl.DateTimeFormat(undefined, {
-      day: "numeric",
-      month: "short",
-    }).format(new Date(y, m - 1, day));
-  } catch {
-    return d;
-  }
 }
 
 /**
@@ -35,7 +20,7 @@ export function PlanHeadCard({ wallet }: Props) {
   const isLeader = wallet.role === "leader";
 
   const eyebrow = subscribed
-    ? `Processor plan · ${fmtDate(wallet.billingPeriodStart)} – ${fmtDate(wallet.billingPeriodEnd)}`
+    ? `Processor plan · ${formatPeriodDate(wallet.billingPeriodStart)} – ${formatPeriodDate(wallet.billingPeriodEnd)}`
     : "Editor plan";
 
   return (

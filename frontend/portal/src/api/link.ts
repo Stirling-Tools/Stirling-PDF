@@ -60,10 +60,11 @@ export async function fetchStatus(): Promise<LinkStatus> {
 
 /**
  * Drop this instance's link. The local backend best-effort tells SaaS to
- * revoke before clearing the credential locally.
+ * revoke before clearing the credential locally, then returns 204 — there's no
+ * body, so the caller sets the known unlinked status itself.
  */
-export async function unlinkInstance(): Promise<LinkStatus> {
-  return apiClient.local.json<LinkStatus>(`${BASE}/unlink`, { method: "POST" });
+export async function unlinkInstance(): Promise<void> {
+  await apiClient.local.json<void>(`${BASE}/unlink`, { method: "POST" });
 }
 
 /**

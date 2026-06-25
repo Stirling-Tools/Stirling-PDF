@@ -1,43 +1,15 @@
 import { Card } from "@shared/components";
+import {
+  currencySymbol,
+  formatMoneyMajor,
+  formatPeriodDate,
+  MeterBar,
+  meterState,
+} from "@shared/billing";
 import type { Wallet } from "@portal/api/billing";
 
 interface Props {
   wallet: Wallet;
-}
-
-/** State band — mirrors the SaaS meter exactly (FULL / WARNED / DEGRADED at 80% / 100%). */
-function meterState(used: number, limit: number): {
-  state: "FULL" | "WARNED" | "DEGRADED";
-  pct: number;
-} {
-  const pct = limit > 0 ? Math.min(100, (used / limit) * 100) : 100;
-  const state = pct >= 100 ? "DEGRADED" : pct >= 80 ? "WARNED" : "FULL";
-  return { state, pct };
-}
-
-function currencySymbol(currency: string | null): string {
-  switch ((currency ?? "").toLowerCase()) {
-    case "usd":
-      return "$";
-    case "eur":
-      return "€";
-    case "gbp":
-      return "£";
-    default:
-      return currency ? currency.toUpperCase() + " " : "$";
-  }
-}
-
-function formatMoneyMajor(major: number, currency: string | null): string {
-  const code = (currency ?? "usd").toUpperCase();
-  try {
-    return new Intl.NumberFormat(undefined, {
-      style: "currency",
-      currency: code,
-    }).format(major);
-  } catch {
-    return `${currencySymbol(currency)}${major.toLocaleString()}`;
-  }
 }
 
 /**
@@ -69,32 +41,14 @@ export function WalletMeter({ wallet }: Props) {
         <h2 className="portal-billing__meter-title">
           One-time free grant
         </h2>
-        <div className="paygf-meter" data-state={state}>
-          <div className="paygf-meter__top">
-            <div className="paygf-meter__figure">
-              <span className="paygf-meter__num">
-                {wallet.billableUsed.toLocaleString()}
-              </span>
-              <span className="paygf-meter__cap">
-                / {wallet.freeAllowance.toLocaleString()} free PDFs
-              </span>
-            </div>
-            <span className="payg-status" data-state={state}>
-              <span className="payg-status__dot" />
-              {stateLabel}
-            </span>
-          </div>
-          <div className="payg-bar">
-            <div
-              className="payg-bar__fill"
-              data-state={state}
-              style={{ width: `${pct}%` }}
-            />
-          </div>
-          <div className="paygf-meter__meta">
-            <span>Automation · AI · API requests</span>
-          </div>
-        </div>
+        <MeterBar
+          state={state}
+          pct={pct}
+          figure={wallet.billableUsed.toLocaleString()}
+          capSuffix={`/ ${wallet.freeAllowance.toLocaleString()} free PDFs`}
+          statusLabel={stateLabel}
+          meta={<span>Automation · AI · API requests</span>}
+        />
         <p className="portal-billing__meter-foot">
           Manual PDF editing — view, sign, merge, split, watermark, compress,
           convert, manual OCR — is always free.
@@ -135,42 +89,23 @@ export function SubscribedMeter({ wallet }: { wallet: Wallet }) {
 
   return (
     <>
-      <div className="paygf-meter" data-state={capActive ? state : "FULL"}>
-        <div className="paygf-meter__top">
-          <div className="paygf-meter__figure">
-            <span className="paygf-meter__num">
-              {symbol}
-              {spent.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-            </span>
-            <span className="paygf-meter__cap">
-              {capActive
-                ? `/ ${formatMoneyMajor(cap, wallet.currency)} cap`
-                : "no cap"}
-            </span>
-          </div>
-          {showStatus && (
-            <span className="payg-status" data-state={state}>
-              <span className="payg-status__dot" />
-              {stateLabel}
-            </span>
-          )}
-        </div>
-        {capActive && (
-          <div className="payg-bar">
-            <div
-              className="payg-bar__fill"
-              data-state={state}
-              style={{ width: `${pct}%` }}
-            />
-          </div>
-        )}
-        <div className="paygf-meter__meta">
+      <MeterBar
+        state={capActive ? state : "FULL"}
+        pct={pct}
+        figure={`${symbol}${spent.toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
+        capSuffix={
+          capActive ? `/ ${formatMoneyMajor(cap, wallet.currency)} cap` : "no cap"
+        }
+        statusLabel={showStatus ? stateLabel : null}
+        showBar={capActive}
+        meta={
           <span>
             {wallet.billableUsed.toLocaleString()} PDFs ·{" "}
-            {wallet.billingPeriodStart} → {wallet.billingPeriodEnd}
+            {formatPeriodDate(wallet.billingPeriodStart)} →{" "}
+            {formatPeriodDate(wallet.billingPeriodEnd)}
           </span>
-        </div>
-      </div>
+        }
+      />
       <p className="portal-billing__meter-foot">
         Estimated charges so far this period. The Stripe invoice is
         authoritative.

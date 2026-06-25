@@ -1,8 +1,9 @@
 import { useCallback, useState } from "react";
-import { Skeleton, StatusBadge } from "@shared/components";
+import { Banner, Skeleton, StatusBadge } from "@shared/components";
 import { useAsync } from "@portal/hooks/useAsync";
-import { useAccountLink } from "@portal/hooks/useAccountLink";
+import { useAccountLinkContext } from "@portal/contexts/AccountLinkContext";
 import { useLink, LINK_INFO } from "@portal/contexts/LinkContext";
+import { HttpError } from "@portal/api/http";
 import {
   fetchInstances,
   revokeInstance as apiRevokeInstance,
@@ -19,7 +20,7 @@ import "@portal/views/AccountLink.css";
  * intentionally rather than via a top-level sidebar nav entry.
  */
 export function AccountLinkPanel() {
-  const link = useAccountLink();
+  const link = useAccountLinkContext();
   const { linkState } = useLink();
 
   const linked = link.status?.linked ?? false;
@@ -32,15 +33,18 @@ export function AccountLinkPanel() {
     () => (linked ? fetchInstances() : Promise.resolve([])),
     [reloadKey, linked],
   );
-  const instances = instancesState.loading ? null : instancesState.data;
 
   const [revokingId, setRevokingId] = useState<number | null>(null);
+  const [revokeError, setRevokeError] = useState<string | null>(null);
 
   const revoke = useCallback(async (instance: LinkedInstanceRow) => {
     setRevokingId(instance.instanceId);
+    setRevokeError(null);
     try {
       await apiRevokeInstance(instance.instanceId);
       setReloadKey((k) => k + 1);
+    } catch (e) {
+      setRevokeError(e instanceof Error ? e.message : String(e));
     } finally {
       setRevokingId(null);
     }
@@ -80,18 +84,31 @@ export function AccountLinkPanel() {
               credential to immediately cut off its unattended access.
             </p>
           </div>
-          {instances === null ? (
+          {instancesState.loading ? (
             <div className="portal-link__skeleton" aria-hidden>
               {Array.from({ length: 3 }).map((_, i) => (
                 <Skeleton key={i} height="3rem" />
               ))}
             </div>
+          ) : instancesState.error ? (
+            <Banner tone="danger" title="Couldn't load linked instances">
+              {instancesState.error instanceof HttpError &&
+              instancesState.error.status === 403
+                ? "Only the team owner can view the org's linked instances."
+                : "Couldn't load the team's linked instances. Try again in a moment."}
+            </Banner>
           ) : (
             <LinkedInstancesTable
-              instances={instances}
+              instances={instancesState.data ?? []}
               onRevoke={revoke}
               revokingId={revokingId}
             />
+          )}
+
+          {revokeError && (
+            <Banner tone="danger" title="Couldn't revoke instance">
+              {revokeError}
+            </Banner>
           )}
         </section>
       )}

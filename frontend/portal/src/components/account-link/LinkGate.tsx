@@ -18,7 +18,7 @@ interface Props {
  */
 export function LinkGate({ children, feature }: Props) {
   const { featuresUnlocked } = useLink();
-  const { openSettings } = useUI();
+  const { openLinkModal } = useUI();
 
   if (featuresUnlocked) return <>{children}</>;
 
@@ -28,7 +28,7 @@ export function LinkGate({ children, feature }: Props) {
       title={feature ? `Link to unlock ${feature}` : "Link to unlock"}
       description="Link this org's Stirling account to use billable features."
       action={
-        <Button size="sm" onClick={() => openSettings("account-link")}>
+        <Button size="sm" onClick={() => openLinkModal()}>
           Link account
         </Button>
       }

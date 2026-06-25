@@ -52,12 +52,12 @@ const GROUP_PLATFORM: NavEntry[] = [
 /**
  * Sidebar-footer link-account CTA. Only visible when the org is unlinked — once
  * linked, the linked-instances row + plan badge already communicate the state,
- * so a permanent footer button would be noise. Click → opens Settings landing
- * on the Account Link section.
+ * so a permanent footer button would be noise. Click → opens the login modal
+ * directly.
  */
 function LinkAccountFooterItem() {
   const { t } = useTranslation();
-  const { openSettings } = useUI();
+  const { openLinkModal } = useUI();
   const { linkState } = useLink();
   if (linkState !== "unlinked") return null;
   return (
@@ -65,7 +65,7 @@ function LinkAccountFooterItem() {
       id="account-link"
       label={t("shell.sidebar.linkAccount", "Link Stirling account")}
       icon={<LinkIcon />}
-      onClick={() => openSettings("account-link")}
+      onClick={() => openLinkModal()}
     />
   );
 }
