@@ -1,6 +1,3 @@
-/* SaaS-specific auth styles — imported alongside the base auth.css.
-   (The fullwidth OAuth styles moved to shared auth.css so the portal link
-   modal can render the same SSO buttons as the SaaS login.) */
 
 .auth-dropdown-wrapper {
   position: relative;
