@@ -1,29 +1,38 @@
-import { resolve } from "node:path";
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react-swc";
 import tsconfigPaths from "vite-tsconfig-paths";
+import { resolve } from "node:path";
 
-// Standalone portal test config. Mirrors the @portal/* + @shared/* aliases from
-// vite.config.ts so unit tests resolve the same imports the app and Storybook do.
+// Standalone test config for the portal app, mirroring the editor's setup.
+// Explicit resolve.alias for @portal and @shared so imports resolve even when
+// they originate inside frontend/shared/ (outside the portal tsconfig scope),
+// matching the resolve.alias block in the portal's vite.config.ts.
+const portalDir = resolve(__dirname, "src");
+const sharedDir = resolve(__dirname, "..", "shared");
+
 export default defineConfig({
   plugins: [
     react(),
     tsconfigPaths({
-      projects: [resolve(import.meta.dirname, "tsconfig.json")],
+      projects: [resolve(__dirname, "tsconfig.json")],
     }),
   ],
   resolve: {
     alias: {
-      "@portal": resolve(import.meta.dirname, "src"),
-      "@shared": resolve(import.meta.dirname, "..", "shared"),
+      "@portal": portalDir,
+      "@shared": sharedDir,
     },
   },
   test: {
     globals: true,
     environment: "jsdom",
-    setupFiles: [resolve(import.meta.dirname, "src/setupTests.ts")],
-    root: import.meta.dirname,
-    include: ["src/**/*.test.{ts,tsx}"],
+    setupFiles: ["./src/setupTests.ts"],
     css: false,
+    include: ["src/**/*.test.{ts,tsx}"],
+    testTimeout: 10000,
+    hookTimeout: 10000,
+  },
+  esbuild: {
+    target: "es2020",
   },
 });

@@ -404,9 +404,21 @@ tasks:
 
   test:
     desc: "Run tests"
+    cmds:
+      - task: test:editor
+      - task: test:portal
+
+  test:editor:
+    desc: "Run editor tests"
     deps: [prepare]
     cmds:
       - npx vitest run --root editor
+
+  test:portal:
+    desc: "Run portal tests"
+    deps: [prepare]
+    cmds:
+      - npx vitest run --root portal
 
   test:watch:
     desc: "Run tests in watch mode"

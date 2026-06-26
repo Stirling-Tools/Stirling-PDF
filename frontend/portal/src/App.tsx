@@ -1,7 +1,8 @@
 import { useEffect, type ReactNode } from "react";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter, useLocation } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
 import { AuthProvider } from "@shared/auth";
+import { ErrorBoundary } from "@portal/components/ErrorBoundary";
 import { ThemeProvider, useTheme } from "@portal/contexts/ThemeContext";
 import { TierProvider } from "@portal/contexts/TierContext";
 import { LinkProvider, useLink } from "@portal/contexts/LinkContext";
@@ -102,6 +103,20 @@ function LinkModalHost() {
   );
 }
 
+/**
+ * The routed view, wrapped in an error boundary so a single view crashing can't
+ * white-screen the portal (the shell + nav stay alive). Keyed by route so
+ * navigating to another section clears any error from the previous one.
+ */
+function RoutedContent() {
+  const { pathname } = useLocation();
+  return (
+    <ErrorBoundary key={pathname}>
+      <ViewRouter />
+    </ErrorBoundary>
+  );
+}
+
 export function App() {
   // Honour the Vite base path so the portal routes correctly when served under a
   // subpath (e.g. "/portal" behind the single-origin proxy). BASE_URL is "./"
@@ -123,7 +138,7 @@ export function App() {
                   <AuthGate>
                     <AccountLinkProvider>
                       <AppShell>
-                        <ViewRouter />
+                        <RoutedContent />
                       </AppShell>
                       <AssistantButton />
                       <AssistantPanel />

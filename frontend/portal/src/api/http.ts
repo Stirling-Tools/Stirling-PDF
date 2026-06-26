@@ -93,6 +93,24 @@ export class SaasNotLinkedError extends Error {
   }
 }
 
+/**
+ * Best-effort human-readable message from a thrown error: unwraps an
+ * {@link HttpError}'s ProblemDetail-ish body (`detail` / `message` / `error`)
+ * before falling back to the error's own message. Shared by views that surface
+ * a failed request inline.
+ */
+export function errorMessage(error: unknown): string {
+  if (error instanceof HttpError) {
+    const body = error.body as {
+      detail?: string;
+      message?: string;
+      error?: string;
+    } | null;
+    return body?.detail ?? body?.message ?? body?.error ?? error.message;
+  }
+  return error instanceof Error ? error.message : String(error);
+}
+
 // ────────────────────────────────────────────────────────────────────────────
 // Shared response handler
 // ────────────────────────────────────────────────────────────────────────────
