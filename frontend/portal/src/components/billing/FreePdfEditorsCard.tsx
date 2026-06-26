@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import {
   Button,
   Card,
@@ -6,6 +7,7 @@ import {
   StatusBadge,
 } from "@shared/components";
 import GroupsIcon from "@mui/icons-material/GroupsRounded";
+import PersonAddIcon from "@mui/icons-material/PersonAddAltRounded";
 
 /**
  * "Free PDF Editors" team-fleet card. The editors-deployed / active-this-month /
@@ -22,6 +24,7 @@ const SAMPLE = {
 };
 
 export function FreePdfEditorsCard() {
+  const navigate = useNavigate();
   return (
     <Card padding="loose">
       <div className="portal-billing__fleet-row">
@@ -47,8 +50,13 @@ export function FreePdfEditorsCard() {
           <MetricCard label="PDFs edited" value={SAMPLE.pdfsEdited} />
           <MetricCard label="Cost" value="$0" />
         </MetricStrip>
-        {/* Wired once the team-invite flow is exposed in the portal. */}
-        <Button variant="outline" size="sm" disabled>
+        {/* Opens the Users tab with its invite-member modal (via the ?invite param). */}
+        <Button
+          variant="outline"
+          size="sm"
+          leadingIcon={<PersonAddIcon sx={{ fontSize: 16 }} />}
+          onClick={() => navigate("/users?invite=1")}
+        >
           Invite teammates
         </Button>
       </div>
