@@ -40,7 +40,6 @@ export type {
   PolicyRowStatus,
   PolicyRunView,
   PolicySetupResult,
-  PolicySource,
   PolicyState,
   PolicyStats,
   PolicyActivityItem,
@@ -54,7 +53,6 @@ export {
   POLICY_CATEGORIES,
   POLICY_CONFIG,
   POLICY_DOC_TYPES,
-  POLICY_SOURCES,
   TOOL_ENDPOINTS,
   humanizeEndpoint,
 } from "@portal/mocks/policies";

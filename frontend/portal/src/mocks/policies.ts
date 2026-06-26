@@ -62,12 +62,6 @@ export interface PolicyConfigDef {
   defaultOperations: WirePipelineStep[];
 }
 
-export interface PolicySource {
-  id: string;
-  label: string;
-  desc: string;
-  icon: string;
-}
 
 export interface PolicyState {
   configured: boolean;
@@ -342,44 +336,6 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
   },
 };
 
-export const POLICY_SOURCES: PolicySource[] = [
-  {
-    id: "editor",
-    label: "Editor",
-    desc: "Documents you save or export in Stirling",
-    icon: "file",
-  },
-  {
-    id: "device",
-    label: "Entire device",
-    desc: "All PDFs on this machine, retroactively",
-    icon: "device",
-  },
-  {
-    id: "sharepoint",
-    label: "SharePoint",
-    desc: "Connected SharePoint libraries",
-    icon: "globe",
-  },
-  {
-    id: "dropbox",
-    label: "Dropbox",
-    desc: "Connected Dropbox folders",
-    icon: "cloud",
-  },
-  {
-    id: "gmail",
-    label: "Gmail",
-    desc: "PDF attachments in email",
-    icon: "mail",
-  },
-  {
-    id: "gdrive",
-    label: "Google Drive",
-    desc: "Connected Drive folders",
-    icon: "folder",
-  },
-];
 
 export const POLICY_DOC_TYPES: string[] = [
   "Contracts",
@@ -415,7 +371,7 @@ export function seedPolicies(): WirePolicy[] {
           maxRetries: 3,
           retryDelayMinutes: 5,
           categoryId: "security",
-          sources: ["editor"],
+          sources: ["src-claims"],
           scopeTypes: [],
           reviewerEmail: "security@acme.com",
           fieldValues: {},
@@ -425,7 +381,7 @@ export function seedPolicies(): WirePolicy[] {
   ];
 }
 
-const NOW = 1750000000000;
+const NOW = Date.now();
 const M = 60000;
 const H = 3600000;
 const D = 86400000;

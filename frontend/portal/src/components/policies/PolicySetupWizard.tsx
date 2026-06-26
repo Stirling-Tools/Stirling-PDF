@@ -14,14 +14,16 @@ import {
 } from "@shared/components";
 import {
   POLICY_DOC_TYPES,
-  POLICY_SOURCES,
   humanizeEndpoint,
   type CatalogueEntry,
   type PipelineStep,
   type PolicySetupResult,
 } from "@portal/api/policies";
+import { fetchSources } from "@portal/api/sources";
+import { useAsync } from "@portal/hooks/useAsync";
 import { PolicyFieldRow } from "@portal/components/policies/PolicyFieldRow";
 import { policyIcon } from "@portal/components/policies/policyIcons";
+import { sourceTypeMeta } from "@portal/components/sources/sourceTypes";
 import "@portal/views/Policies.css";
 
 interface PolicySetupWizardProps {
@@ -112,7 +114,12 @@ function PolicySetupWizardBody({
     resolveFieldValues(entry),
   );
   const [sources, setSources] = useState<string[]>(
-    policy?.state.sources.length ? policy.state.sources : ["editor"],
+    policy?.state.sources ?? [],
+  );
+
+  const sourcesAsync = useAsync(() => fetchSources(), []);
+  const availableSources = (sourcesAsync.data?.sources ?? []).filter(
+    (s) => s.status !== "disabled",
   );
   const [scopeNarrow, setScopeNarrow] = useState(
     (policy?.state.scopeTypes.length ?? 0) > 0,
@@ -315,31 +322,43 @@ function PolicySetupWizardBody({
             {t("policies.wizard.sources.heading")}
           </h3>
           <div className="portal-policies__sources">
-            {POLICY_SOURCES.map((src) => (
-              <button
-                key={src.id}
-                type="button"
-                className={
-                  "portal-policies__source" +
-                  (sources.includes(src.id)
-                    ? " portal-policies__source--on"
-                    : "")
-                }
-                onClick={() => toggleSource(src.id)}
-              >
-                <span className="portal-policies__source-icon" aria-hidden>
-                  {policyIcon(src.icon)}
-                </span>
-                <span className="portal-policies__source-text">
-                  <span className="portal-policies__source-label">
-                    {src.label}
+            {sourcesAsync.loading && availableSources.length === 0 ? (
+              <p className="portal-policies__sources-loading">
+                {t("policies.wizard.sources.loading")}
+              </p>
+            ) : availableSources.length === 0 ? (
+              <Banner
+                tone="neutral"
+                title={t("policies.wizard.sources.emptyTitle")}
+                description={t("policies.wizard.sources.emptyDescription")}
+              />
+            ) : (
+              availableSources.map((src) => (
+                <button
+                  key={src.id}
+                  type="button"
+                  className={
+                    "portal-policies__source" +
+                    (sources.includes(src.id)
+                      ? " portal-policies__source--on"
+                      : "")
+                  }
+                  onClick={() => toggleSource(src.id)}
+                >
+                  <span className="portal-policies__source-icon" aria-hidden>
+                    {sourceTypeMeta(src.type).icon}
                   </span>
-                  <span className="portal-policies__source-desc">
-                    {src.desc}
+                  <span className="portal-policies__source-text">
+                    <span className="portal-policies__source-label">
+                      {src.name}
+                    </span>
+                    <span className="portal-policies__source-desc">
+                      {src.type}
+                    </span>
                   </span>
-                </span>
-              </button>
-            ))}
+                </button>
+              ))
+            )}
           </div>
 
           <h3 className="portal-policies__wizard-heading">

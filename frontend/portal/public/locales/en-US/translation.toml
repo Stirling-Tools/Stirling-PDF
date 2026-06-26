@@ -990,6 +990,9 @@ heading = "Settings"
 
 [policies.wizard.sources]
 heading = "Sources"
+loading = "Loading sources…"
+emptyTitle = "No sources available"
+emptyDescription = "Connect a source on the Sources page first, then attach it to a policy here."
 
 [policies.wizard.docTypes]
 heading = "Document types"

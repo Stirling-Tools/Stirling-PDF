@@ -139,20 +139,6 @@ export default defineConfig({
           target: "es2020",
         },
       },
-      {
-        test: {
-          name: "shared",
-          include: ["../shared/**/*.test.ts"],
-          environment: "node",
-          globals: true,
-        },
-        resolve: {
-          alias: { "@shared": sharedDir },
-        },
-        esbuild: {
-          target: "es2020",
-        },
-      },
     ],
   },
   esbuild: {
