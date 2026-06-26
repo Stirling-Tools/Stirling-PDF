@@ -9,10 +9,9 @@ import React, {
   useCallback,
 } from "react";
 import { useNavigation } from "@app/contexts/NavigationContext";
-import { useFileState, useFileActions } from "@app/contexts/FileContext";
+import { useFileState } from "@app/contexts/FileContext";
 import { isStirlingFile } from "@app/types/fileContext";
 import type { FileId } from "@app/types/file";
-import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
 import { enforceExportPolicies } from "@app/services/policyExport";
 import { alert } from "@app/components/toast";
 import {
@@ -245,7 +244,6 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   // activeFileIndex is derived from activeFileId so they can never desync.
   // ViewerProvider sits inside FileContextProvider so useFileState is valid here.
   const { selectors, state } = useFileState();
-  const { actions } = useFileActions();
 
   // Clear activeFileId when its file is removed from the workbench.
   // Dep on state.files.ids so the effect re-runs on every add/remove.
@@ -543,43 +541,38 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   });
 
   // Printing is an exit path, so a "run on export" policy must enforce here too.
-  // Enforce on the doc that's about to print; if a policy rewrote it, swap the
-  // viewer to the enforced version and ask the user to review before printing
-  // again — printing silently would put bytes on paper that differ from what's
-  // on screen. With no active policy this is a no-op and print runs straight away.
+  // Enforce the current file through the same path export uses: when a policy
+  // rewrites it, that path versions the in-editor file to the enforced output
+  // and marks it enforced, so a follow-up print of the unedited result prints
+  // it as-is instead of re-running the (non-idempotent) policy. Ask the user to
+  // review the updated doc before printing again, rather than printing bytes
+  // they haven't seen. With no active export policy this is a no-op and print
+  // runs straight away.
   const printWithPolicy = useCallback(async () => {
-    const parentStub = activeFileId
-      ? selectors.getStirlingFileStub(activeFileId as FileId)
+    const file = activeFileId
+      ? selectors.getFiles([activeFileId as FileId])[0]
       : undefined;
-    const buffer = parentStub ? await exportActions.saveAsCopy() : null;
-    if (!parentStub || !buffer) {
+    if (!activeFileId || !file) {
       printActions.print();
       return;
     }
-    const current = new File([buffer], parentStub.name, {
-      type: "application/pdf",
-    });
     const [enforced] = await enforceExportPolicies(
-      [current],
-      [activeFileId as FileId],
+      [file],
+      [activeFileId],
+      "print",
     );
-    // enforceExportPolicies returns the same File when no export policy touched it.
-    if (!enforced || enforced === current) {
+    // Original file back means no policy rewrote it (no active policy, already
+    // enforced, or graceful failure fallback) — nothing new to review, print it.
+    if (!enforced || enforced === file) {
       printActions.print();
       return;
     }
-    const { stirlingFiles, stubs } = await createStirlingFilesAndStubs(
-      [enforced],
-      parentStub,
-      "automate",
-    );
-    await actions.consumeFiles([activeFileId as FileId], stirlingFiles, stubs);
     alert({
       alertType: "warning",
       title: "Policy applied before printing",
       body: "This PDF was updated to meet a policy. Review the changes, then print again.",
     });
-  }, [activeFileId, selectors, exportActions, printActions, actions]);
+  }, [activeFileId, selectors, printActions]);
 
   const enforcedPrintActions = useMemo<PrintActions>(
     () => ({ print: printWithPolicy }),

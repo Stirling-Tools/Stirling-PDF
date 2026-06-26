@@ -17,7 +17,15 @@ import {
   getPolicyRun,
   downloadPolicyOutput,
 } from "@app/services/policyApi";
-import { recordRunStart } from "@app/components/policies/policyRunStore";
+import {
+  recordRunStart,
+  isDispatched,
+} from "@app/components/policies/policyRunStore";
+import {
+  runQueued,
+  getQueueJobs,
+  type EnforcementTrigger,
+} from "@app/components/policies/enforcementQueue";
 import { ROW_ACCENT } from "@app/components/policies/policyStatus";
 import { alert, updateToast, dismissToast } from "@app/components/toast";
 import { POLICIES_ENABLED } from "@app/constants/featureFlags";
@@ -98,8 +106,17 @@ async function runToCompletion(
     if (view.status === "FAILED" || view.status === "CANCELLED") {
       throw new Error(view.error || `policy run ${view.status.toLowerCase()}`);
     }
+    if (view.status === "WAITING_FOR_INPUT") {
+      throw new Error("policy requires interactive input and cannot run automatically");
+    }
   }
   throw new Error("policy run timed out");
+}
+
+function enforcedFilesSummary(names: string[]): string {
+  if (names.length === 1) return names[0];
+  if (names.length === 2) return `${names[0]} and ${names[1]}`;
+  return `${names[0]}, ${names[1]} and ${names.length - 2} more`;
 }
 
 /**
@@ -113,80 +130,109 @@ async function runToCompletion(
 export async function enforceExportPolicies(
   files: File[],
   fileIds?: (string | undefined)[],
+  trigger: EnforcementTrigger = "export",
 ): Promise<File[]> {
   const active = activeExportPolicies();
   const targets = files.flatMap((f, i) => (isPdf(f) ? [i] : []));
   if (!active.length || targets.length === 0) return files;
 
+  // Policies that haven't already enforced this exact file version. Enforcing
+  // versions the in-editor file to the policy's output and marks that output
+  // dispatched, so an unedited re-export skips re-running — re-applying a
+  // non-idempotent policy would stack watermarks/flattens. Editing produces a
+  // new file id that isn't dispatched, so an edited file enforces afresh.
+  const pendingFor = (fileId: string | undefined) =>
+    active.filter((p) => !(fileId && isDispatched(p.categoryId, fileId)));
+  if (!targets.some((i) => pendingFor(fileIds?.[i]).length > 0)) return files;
+
   const names = active.map((p) => p.label).join(", ");
-  const toastId = alert({
-    alertType: "neutral",
-    title: `Applying ${names}`,
-    body: `Enforcing ${
-      targets.length === 1 ? "your file" : `${targets.length} files`
-    } before export…`,
-    isPersistentPopup: true,
-    expandable: false,
-    glowColor: active[0].accent,
-  });
 
-  const out = [...files];
-  let failures = 0;
-  for (const i of targets) {
-    const file = files[i];
-    const fileId = fileIds?.[i];
-    try {
-      let current = file;
-      // The last "new version" policy's output is what versions the editor file
-      // (recording every policy would double-consume the same input).
-      let versionRun: PolicyRunResult & { categoryId: string };
-      let hasVersionRun = false;
-      for (const policy of active) {
-        const result = await runToCompletion(policy.backendId, current);
-        current = result.file;
-        if (policy.outputMode === "new_version" && fileId) {
-          versionRun = { ...result, categoryId: policy.categoryId };
-          hasVersionRun = true;
+  // Serialise through the enforcement queue: one policy run in flight at a time
+  // (the backend rejects concurrent runs under load), and the user can see
+  // what's pending. Export, print and convert all share this queue.
+  return runQueued({ label: names, trigger }, async () => {
+    // An earlier queued job may have just enforced these same files and marked
+    // them dispatched, so re-check at run time before doing (or announcing) work.
+    if (!targets.some((i) => pendingFor(fileIds?.[i]).length > 0)) return files;
+
+    const pending = targets.filter((i) => pendingFor(fileIds?.[i]).length > 0);
+    const total = pending.length;
+    const progressTitle = (done: number) =>
+      total === 1
+        ? `Applying ${names}`
+        : `Applying ${names} (${done + 1} of ${total})`;
+    const progressBody = (done: number) => files[pending[done]].name;
+
+    const toastId = alert({
+      alertType: "neutral",
+      title: progressTitle(0),
+      body: progressBody(0),
+      isPersistentPopup: true,
+      expandable: false,
+      glowColor: active[0].accent,
+    });
+
+    const out = [...files];
+    let failures = 0;
+    let done = 0;
+    for (const i of pending) {
+      const file = files[i];
+      const fileId = fileIds?.[i];
+      const toRun = pendingFor(fileId);
+      try {
+        let current = file;
+        // The last "new version" policy's output is what versions the editor
+        // file (recording every policy would double-consume the same input).
+        let versionRun: (PolicyRunResult & { categoryId: string }) | undefined;
+        for (const policy of toRun) {
+          const result = await runToCompletion(policy.backendId, current);
+          current = result.file;
+          if (policy.outputMode === "new_version" && fileId) {
+            versionRun = { ...result, categoryId: policy.categoryId };
+          }
         }
+        out[i] = current;
+        done += 1;
+        if (done < total)
+          updateToast(toastId, { title: progressTitle(done), body: progressBody(done) });
+        if (versionRun && fileId) {
+          recordRunStart({
+            runId: versionRun.runId,
+            categoryId: versionRun.categoryId,
+            fileId,
+            fileName: file.name,
+            fileSize: file.size,
+            status: "COMPLETED",
+            outputs: versionRun.outputs,
+            error: null,
+            startedAt: Date.now(),
+          });
+        }
+      } catch {
+        failures += 1; // leave out[i] as the original — never hard-block.
       }
-      out[i] = current;
-      if (hasVersionRun && fileId) {
-        recordRunStart({
-          runId: versionRun!.runId,
-          categoryId: versionRun!.categoryId,
-          fileId,
-          fileName: file.name,
-          fileSize: file.size,
-          status: "COMPLETED",
-          outputs: versionRun!.outputs,
-          error: null,
-          startedAt: Date.now(),
-        });
-      }
-    } catch {
-      failures += 1; // leave out[i] as the original — never hard-block.
     }
-  }
 
-  updateToast(
-    toastId,
-    failures
-      ? {
-          alertType: "warning",
-          title: "Exported without full enforcement",
-          body: `${failures} of ${targets.length} file(s) couldn't be processed and were exported as-is.`,
-          isPersistentPopup: false,
-          glowColor: undefined,
-        }
-      : {
-          alertType: "success",
-          title: `${names} applied`,
-          body: "Enforced before export.",
-          isPersistentPopup: false,
-          glowColor: undefined,
-        },
-  );
-  // update() doesn't reschedule auto-dismiss, so fade the result out explicitly.
-  window.setTimeout(() => dismissToast(toastId), TOAST_LINGER_MS);
-  return out;
+    updateToast(
+      toastId,
+      failures
+        ? {
+            alertType: "warning",
+            title: "Exported without full enforcement",
+            body: `${failures} of ${total} file(s) couldn't be processed and were exported as-is.`,
+            isPersistentPopup: false,
+            glowColor: undefined,
+          }
+        : {
+            alertType: "success",
+            title: `${names} applied`,
+            body: enforcedFilesSummary(pending.map((i) => files[i].name)),
+            isPersistentPopup: false,
+            glowColor: undefined,
+          },
+    );
+    // update() doesn't reschedule auto-dismiss, so fade the result out explicitly.
+    window.setTimeout(() => dismissToast(toastId), TOAST_LINGER_MS);
+    return out;
+  });
 }
