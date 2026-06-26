@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useFrontendVersionInfo } from "@app/hooks/useFrontendVersionInfo";
+import { useIsMobile } from "@app/hooks/useIsMobile";
 import { updateService, type UpdateSummary } from "@app/services/updateService";
+import { isUpdatePopupAllowed } from "@app/components/shared/updatePopupGate";
 import UpdateModal from "@app/components/shared/UpdateModal";
 
 /**
@@ -26,6 +28,7 @@ const SNOOZE_DURATION_MS = 24 * 60 * 60 * 1000;
  */
 export function UpdateStartupPopup() {
   const { config } = useAppConfig();
+  const isMobile = useIsMobile();
   const { appVersion } = useFrontendVersionInfo(config?.appVersion);
 
   // The version to compare against the latest. Prefer the frontend version
@@ -39,10 +42,12 @@ export function UpdateStartupPopup() {
   const [showModal, setShowModal] = useState(false);
   const hasChecked = useRef(false);
 
+  const allowed = isUpdatePopupAllowed(config, isMobile);
+
   useEffect(() => {
     if (hasChecked.current) return;
     if (!currentVersion) return;
-    // Don't even schedule the timer until we have a version to compare.
+    if (!allowed) return;
     hasChecked.current = true;
 
     const timer = setTimeout(async () => {
@@ -79,12 +84,14 @@ export function UpdateStartupPopup() {
 
     return () => clearTimeout(timer);
   }, [
+    allowed,
     currentVersion,
     config?.machineType,
     config?.activeSecurity,
     config?.license,
   ]);
 
+  if (!allowed) return null;
   if (!updateSummary || !currentVersion) return null;
 
   const machineInfo = {

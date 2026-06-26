@@ -16,6 +16,11 @@ on:
         required: false
         type: string
         default: "all"
+      sign:
+        description: "Sign and notarize the bundles."
+        required: false
+        type: boolean
+        default: true
   workflow_dispatch:
     inputs:
       platform:
@@ -28,6 +33,11 @@ on:
           - windows
           - macos
           - linux
+      sign:
+        description: "Sign and notarize the bundles."
+        required: false
+        default: true
+        type: boolean
 
 permissions:
   contents: read
@@ -122,7 +132,7 @@ jobs:
         uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
         with:
           workspaces: frontend/editor/src-tauri
-          # Stable key shared across workflows so the nightly warmer. 
+          # Stable key shared across workflows so the nightly warmer.
           # rust-cache still appends OS + rustc + Cargo.lock.
           shared-key: tauri-${{ matrix.name }}
           save-if: ${{ github.ref == 'refs/heads/main' }}
@@ -150,7 +160,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
         with:
-          gradle-version: 9.5.1
+          gradle-version: 9.6.0
 
       - name: Setup Task
         uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
@@ -177,7 +187,7 @@ jobs:
       # DigiCert KeyLocker Setup (Cloud HSM)
       - name: Setup DigiCert KeyLocker
         id: digicert-setup
-        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && github.ref == 'refs/heads/main' }}
+        if: ${{ inputs.sign && matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && github.ref == 'refs/heads/main' }}
         uses: digicert/ssm-code-signing@1d820463733701cf1484c7eb5d7d24a15ca2c454 # v1.2.1
         env:
           SM_API_KEY: ${{ secrets.SM_API_KEY }}
@@ -187,7 +197,7 @@ jobs:
           SM_HOST: ${{ secrets.SM_HOST }}
 
       - name: Setup DigiCert KeyLocker Certificate
-        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && github.ref == 'refs/heads/main' }}
+        if: ${{ inputs.sign && matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && github.ref == 'refs/heads/main' }}
         shell: pwsh
         run: |
           Write-Host "Setting up DigiCert KeyLocker environment..."
@@ -222,7 +232,7 @@ jobs:
 
       # Traditional PFX Certificate Import (fallback if KeyLocker not configured)
       - name: Import Windows Code Signing Certificate
-        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY == '' && github.ref == 'refs/heads/main' }}
+        if: ${{ inputs.sign && matrix.platform == 'windows-latest' && env.SM_API_KEY == '' && github.ref == 'refs/heads/main' }}
         env:
           WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
           WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
@@ -253,7 +263,7 @@ jobs:
           }
 
       - name: Import Apple Developer Certificate
-        if: matrix.platform == 'macos-15' && env.APPLE_CERTIFICATE != ''
+        if: inputs.sign && matrix.platform == 'macos-15' && env.APPLE_CERTIFICATE != ''
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
@@ -274,7 +284,7 @@ jobs:
           rm certificate.p12
 
       - name: Verify Certificate
-        if: matrix.platform == 'macos-15' && env.APPLE_CERTIFICATE != ''
+        if: inputs.sign && matrix.platform == 'macos-15' && env.APPLE_CERTIFICATE != ''
         run: |
           echo "Verifying Apple Developer Certificate..."
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
@@ -297,7 +307,7 @@ jobs:
           ls -la /usr/bin/hd* || echo "No hd* tools found"
 
       - name: Preflight smctl
-        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && github.ref == 'refs/heads/main' }}
+        if: ${{ inputs.sign && matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && github.ref == 'refs/heads/main' }}
         shell: pwsh
         env:
           KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
@@ -310,7 +320,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { Write-Host "[WARN] smctl windows certsync returned non-zero - continuing" }
 
       - name: Configure Windows code signing
-        if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && github.ref == 'refs/heads/main' }}
+        if: ${{ inputs.sign && matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && github.ref == 'refs/heads/main' }}
         shell: bash
         env:
           KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
@@ -329,7 +339,7 @@ jobs:
           EOF
 
       - name: Import release GPG signing key (Linux)
-        if: matrix.platform == 'ubuntu-22.04' && env.RELEASE_GPG_PRIVATE_KEY != '' && github.ref == 'refs/heads/main'
+        if: inputs.sign && matrix.platform == 'ubuntu-22.04' && env.RELEASE_GPG_PRIVATE_KEY != '' && github.ref == 'refs/heads/main'
         run: |
           echo "$RELEASE_GPG_PRIVATE_KEY" | gpg --batch --import
           gpg --list-secret-keys --keyid-format=long
@@ -350,19 +360,21 @@ jobs:
         uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # v0.6.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: ${{ env.APPLE_SIGNING_IDENTITY }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          # Apple signing/notarization env is blanked when sign is false so the
+          # cache warmer compiles an unsigned bundle and skips notarization.
+          APPLE_CERTIFICATE: ${{ inputs.sign && secrets.APPLE_CERTIFICATE || '' }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ inputs.sign && secrets.APPLE_CERTIFICATE_PASSWORD || '' }}
+          APPLE_SIGNING_IDENTITY: ${{ inputs.sign && env.APPLE_SIGNING_IDENTITY || '' }}
+          APPLE_ID: ${{ inputs.sign && secrets.APPLE_ID || '' }}
+          APPLE_PASSWORD: ${{ inputs.sign && secrets.APPLE_ID_PASSWORD || '' }}
+          APPLE_TEAM_ID: ${{ inputs.sign && secrets.APPLE_TEAM_ID || '' }}
           # AppImage signing — three env vars work together:
           #   SIGN=1                        tells linuxdeploy-plugin-appimage to forward --sign to appimagetool
           #   APPIMAGETOOL_SIGN_PASSPHRASE  appimagetool uses this to unlock the GPG key non-interactively
           #   SIGN_KEY                      appimagetool picks the key matching this fingerprint
           # Without SIGN=1, the other two are ignored and the AppImage is built unsigned even if a key is present.
-          # Mirror the Windows/macOS gate: only sign when secret is present AND ref is main (skips PRs from forks/Dependabot).
-          SIGN: ${{ (env.RELEASE_GPG_PRIVATE_KEY != '' && github.ref == 'refs/heads/main') && '1' || '0' }}
+          # Mirror the Windows/macOS gate: only sign when enabled AND secret is present AND ref is main (skips PRs from forks/Dependabot and the cache warmer).
+          SIGN: ${{ (inputs.sign && env.RELEASE_GPG_PRIVATE_KEY != '' && github.ref == 'refs/heads/main') && '1' || '0' }}
           APPIMAGETOOL_SIGN_PASSPHRASE: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
           SIGN_KEY: ${{ vars.RELEASE_GPG_FINGERPRINT }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
@@ -388,7 +400,7 @@ jobs:
         uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # v0.6.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SIGN: ${{ (env.RELEASE_GPG_PRIVATE_KEY != '' && github.ref == 'refs/heads/main') && '1' || '0' }}
+          SIGN: ${{ (inputs.sign && env.RELEASE_GPG_PRIVATE_KEY != '' && github.ref == 'refs/heads/main') && '1' || '0' }}
           APPIMAGETOOL_SIGN_PASSPHRASE: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
           SIGN_KEY: ${{ vars.RELEASE_GPG_FINGERPRINT }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
@@ -403,7 +415,7 @@ jobs:
           args: --bundles appimage
 
       - name: Clear release GPG key from runner keyring (Linux)
-        if: always() && matrix.platform == 'ubuntu-22.04' && env.RELEASE_GPG_PRIVATE_KEY != '' && github.ref == 'refs/heads/main'
+        if: always() && inputs.sign && matrix.platform == 'ubuntu-22.04' && env.RELEASE_GPG_PRIVATE_KEY != '' && github.ref == 'refs/heads/main'
         env:
           RELEASE_GPG_FINGERPRINT: ${{ vars.RELEASE_GPG_FINGERPRINT }}
         run: |
@@ -413,7 +425,7 @@ jobs:
           fi
 
       - name: Verify notarization (macOS only)
-        if: matrix.platform == 'macos-15'
+        if: inputs.sign && matrix.platform == 'macos-15'
         run: |
           echo "🔍 Verifying notarization status..."
           cd ./frontend/editor/src-tauri/target
@@ -451,7 +463,7 @@ jobs:
       # Verify the MSI AND the inner exe extracted from it are signed.
       # The inner exe is what gets installed on users' machines and what AV scans.
       - name: Verify Windows Code Signature
-        if: matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && github.ref == 'refs/heads/main'
+        if: inputs.sign && matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && github.ref == 'refs/heads/main'
         shell: pwsh
         run: |
           $allSigned = $true

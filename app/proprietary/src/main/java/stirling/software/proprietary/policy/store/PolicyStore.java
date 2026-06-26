@@ -15,6 +15,9 @@ public interface PolicyStore {
 
     List<Policy> all();
 
+    /** Policies owned by the given team, loaded scoped rather than fetched globally. */
+    List<Policy> findByTeam(Long teamId);
+
     /** Enabled policies with the given trigger type, for background triggers. */
     List<Policy> findByTriggerType(String triggerType);
 

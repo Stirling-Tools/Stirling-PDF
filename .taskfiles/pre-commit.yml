@@ -4,8 +4,6 @@ version: '3'
 # pre-commit hook (.pre-commit-config.yaml) and CI (pre_commit.yml) both call.
 
 vars:
-  GITLEAKS: '8.30.0'
-
   # File selections as git pathspecs: git does the include/exclude matching, so
   # there is no grep/xargs and it behaves identically on every platform.
   PY_FILES: >-
@@ -43,7 +41,9 @@ vars:
     ':(exclude).github/workflows/*'
   LOCALE_TOML: 'frontend/editor/public/locales/*/translation.toml'
 
-  GITLEAKS_BIN: '.task/bin/gitleaks-{{.GITLEAKS}}{{if eq OS "windows"}}.exe{{end}}'
+  # gitleaks is pinned + checksum-verified by scripts/pre-commit/install_gitleaks.py,
+  # which owns the version and caches the binary here.
+  GITLEAKS_BIN: '.task/bin/gitleaks{{if eq OS "windows"}}.exe{{end}}'
 
 tasks:
   default:
@@ -84,22 +84,13 @@ tasks:
       - test -d scripts/pre-commit/.venv
 
   clean:
-    desc: "Remove the cache/build artifacts"
+    desc: "Remove the cached gitleaks binary and the tool virtualenv"
     cmds:
-      - task: '{{if eq OS "windows"}}clean-windows{{else}}clean-unix{{end}}'
-
-  clean-unix:
-    internal: true
-    cmds:
-      - rm -rf scripts/pre-commit/.venv .task/bin/gitleaks-*
-
-  # On Windows, use PowerShell so it matches the same paths and tolerates absent
-  # files without erroring.
-  clean-windows:
-    internal: true
-    ignore_error: true
-    cmds:
-      - powershell -NoProfile -Command "Remove-Item -Recurse -Force -ErrorAction SilentlyContinue scripts/pre-commit/.venv, .task/bin/gitleaks-*"
+      - cmd: rm -rf scripts/pre-commit/.venv .task/bin/gitleaks
+        platforms: [linux, darwin]
+      - cmd: cmd /c "rmdir /s /q scripts\pre-commit\.venv & del /q .task\bin\gitleaks.exe"
+        platforms: [windows]
+        ignore_error: true
 
   # Individual checks (hidden from `task --list`, but callable, e.g.
   # `task pre-commit:toml-sort FIX=1`). Pass FIX=1 to auto-fix where supported.
@@ -125,7 +116,7 @@ tasks:
 
   whitespace:
     cmds:
-      - uv run --no-project python scripts/pre-commit/whitespace.py {{if .FIX}}--fix {{end}}$(git ls-files {{.WS_FILES}})
+      - uv run --no-project python scripts/pre-commit/whitespace.py {{if .FIX}}--fix {{end}}{{.WS_FILES}}
 
   gitleaks:
     deps: [gitleaks-bin]
@@ -137,23 +128,6 @@ tasks:
 
   gitleaks-bin:
     internal: true
-    desc: "Ensure the pinned gitleaks binary is cached in .task/bin"
-    status:
-      - test -f {{.GITLEAKS_BIN}}
-    vars:
-      GL_ARCH: '{{if eq ARCH "amd64"}}x64{{else if eq ARCH "arm64"}}arm64{{else if eq ARCH "386"}}x32{{else}}{{ARCH}}{{end}}'
-      GL_PLATFORM: '{{OS}}_{{.GL_ARCH}}'
-      GL_URL: 'https://github.com/gitleaks/gitleaks/releases/download/v{{.GITLEAKS}}/gitleaks_{{.GITLEAKS}}_{{.GL_PLATFORM}}'
-      # SHA-256 of each release asset, from gitleaks_{{.GITLEAKS}}_checksums.txt.
-      GL_SHA: >-
-        {{if eq .GL_PLATFORM "linux_x64"}}79a3ab579b53f71efd634f3aaf7e04a0fa0cf206b7ed434638d1547a2470a66e
-        {{- else if eq .GL_PLATFORM "linux_arm64"}}b4cbbb6ddf7d1b2a603088cd03a4e3f7ce48ee7fd449b51f7de6ee2906f5fa2f
-        {{- else if eq .GL_PLATFORM "darwin_x64"}}ca221d012d247080c2f6f61f4b7a83bffa2453806b0c195c795bbe9a8c775ed5
-        {{- else if eq .GL_PLATFORM "darwin_arm64"}}b251ab2bcd4cd8ba9e56ff37698c033ebf38582b477d21ebd86586d927cf87e7
-        {{- else if eq .GL_PLATFORM "windows_x64"}}54fe94f644b832dd08e8c3a5915efb3bfa862386d59fb27ca0792cb687a83573
-        {{- end}}
+    desc: "Ensure the pinned, checksum-verified gitleaks binary is cached in .task/bin"
     cmds:
-      - cmd: bash scripts/pre-commit/install-gitleaks.sh "{{.GL_URL}}.tar.gz" "{{.GL_SHA}}" "{{.GITLEAKS_BIN}}"
-        platforms: [linux, darwin]
-      - cmd: powershell -NoProfile -File scripts/pre-commit/install-gitleaks.ps1 -Url "{{.GL_URL}}.zip" -Sha "{{.GL_SHA}}" -Dest "{{.GITLEAKS_BIN}}"
-        platforms: [windows]
+      - uv run --no-project python scripts/pre-commit/install_gitleaks.py
