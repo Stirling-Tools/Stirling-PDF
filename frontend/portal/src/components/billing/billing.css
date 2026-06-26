@@ -879,7 +879,8 @@
 }
 
 /* "N left" reads as quiet gray text, like the "x of y" suffix — not a status pill. */
-.portal-billing__trial-meter .payg-status {
+.portal-billing__trial-meter .payg-status,
+.portal-billing__spend-meter .payg-status {
   background: none;
   padding: 0;
   border-radius: 0;
@@ -887,8 +888,13 @@
   font-weight: 400;
   color: var(--color-text-3, #64748b);
 }
-.portal-billing__trial-meter .payg-status__dot {
+.portal-billing__trial-meter .payg-status__dot,
+.portal-billing__spend-meter .payg-status__dot {
   display: none;
+}
+/* Spend meter: anchor the "remaining" half of the meta line to the right edge. */
+.portal-billing__spend-meter .paygf-meter__meta {
+  justify-content: space-between;
 }
 
 /* ── Enterprise / volume-discount card ───────────────────────────────── */

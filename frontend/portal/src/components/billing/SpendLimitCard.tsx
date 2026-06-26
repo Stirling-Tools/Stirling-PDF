@@ -199,30 +199,32 @@ export function SpendLimitCard({
         )}
       </div>
 
-      <MeterBar
-        state={capActive ? state : "FULL"}
-        pct={pct}
-        figure={capActive ? formatMoneyMajor(cap, wallet.currency) : spentLabel}
-        capSuffix={
-          capActive
-            ? docEstimate != null
-              ? `/ month · ≈ ${docEstimate.toLocaleString()} documents`
-              : "/ month"
-            : "no cap"
-        }
-        statusLabel={capActive ? `${Math.round(pct)}% used` : null}
-        showBar={capActive}
-        meta={
-          capActive ? (
-            <span>
-              {spentLabel} used this month ·{" "}
-              {formatMinor(remainingMinor, wallet.currency)} remaining
-            </span>
-          ) : (
-            <span>{spentLabel} this period · uncapped</span>
-          )
-        }
-      />
+      <div className="portal-billing__spend-meter">
+        <MeterBar
+          state={capActive ? state : "FULL"}
+          pct={pct}
+          figure={capActive ? formatMoneyMajor(cap, wallet.currency) : spentLabel}
+          capSuffix={
+            capActive
+              ? docEstimate != null
+                ? `/ month · ≈ ${docEstimate.toLocaleString()} documents`
+                : "/ month"
+              : "no cap"
+          }
+          statusLabel={capActive ? `${Math.round(pct)}% used` : null}
+          showBar={capActive}
+          meta={
+            capActive ? (
+              <>
+                <span>{spentLabel} used this month</span>
+                <span>{formatMinor(remainingMinor, wallet.currency)} remaining</span>
+              </>
+            ) : (
+              <span>{spentLabel} this period · uncapped</span>
+            )
+          }
+        />
+      </div>
 
       {proj && (
         <p className="portal-billing__projection">
