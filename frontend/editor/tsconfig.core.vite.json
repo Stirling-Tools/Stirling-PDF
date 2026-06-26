@@ -2,8 +2,9 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "paths": {
-      "@app/*": ["src/core/*"]
+      "@app/*": ["./src/core/*"],
+      "@shared/*": ["../shared/*"]
     }
   },
-  "exclude": ["src/proprietary", "src/desktop", "node_modules"]
+  "exclude": ["src/proprietary", "src/desktop"]
 }

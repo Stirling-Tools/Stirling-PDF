@@ -30,6 +30,19 @@ ext {
     commonmarkVersion = "0.28.0"
     googleJavaFormatVersion = "1.28.0"
     logback = "1.5.32"
+    commonsIoVersion = "2.22.0"
+    commonsLang3 = "3.20.0"
+    rhinoVersion = "1.9.1"
+    okhttpBomVersion = "5.3.2"
+    gsonVersion = "2.14.0"
+    guavaVersion = "33.6.0-jre"
+    bucket4jVersion = "8.19.0"
+    archunitVersion = "1.4.2"
+    batikVersion = "1.19"
+    jpdfiumVersion = "1.0.2"
+    jwtVersion = "0.13.0"
+    awsSdkVersion = "2.44.12"
+    testcontainersMinioVersion = "1.21.4"
     // junit-platform-launcher version managed by Spring Boot BOM
     modernJavaVersion = 25
 }
@@ -78,7 +91,7 @@ springBoot {
 
 allprojects {
     group = 'stirling.software'
-    version = '2.11.0'
+    version = '2.13.2'
 
     configurations.configureEach {
         exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
@@ -185,9 +198,10 @@ subprojects {
                 allowInsecureProtocol = true
             }
         }
-        maven { url = "https://build.shibboleth.net/maven/releases" }
-        maven { url = "https://repository.jboss.org/" }
+        // Maven Central first; mirrors below are fallbacks for niche artifacts.
         mavenCentral()
+        maven { url = "https://repository.jboss.org/" }
+        maven { url = "https://build.shibboleth.net/maven/releases" }
     }
 
     configurations.configureEach {
@@ -202,12 +216,12 @@ subprojects {
         // - CVE-2022-25647: gson 2.8.9+ (explicit dependency overrides tabula 2.8.7)
         // - CVE-2025-66453: rhino 1.7.15 (explicit dependency overrides verapdf 1.7.13)
         // Fallback strategy force declarations for additional safety:
-        resolutionStrategy.force 'com.google.code.gson:gson:2.13.2'
-        resolutionStrategy.force 'org.mozilla:rhino:1.9.1'
+        resolutionStrategy.force "com.google.code.gson:gson:${gsonVersion}"
+        resolutionStrategy.force "org.mozilla:rhino:${rhinoVersion}"
         // CVE-2025-48924: commons-lang3 3.20.0 DoS prevention
-        resolutionStrategy.force 'org.apache.commons:commons-lang3:3.20.0'
-        // CVE-2024-47554: commons-io 2.21.0 DoS prevention
-        resolutionStrategy.force 'commons-io:commons-io:2.21.0'
+        resolutionStrategy.force "org.apache.commons:commons-lang3:${commonsLang3}"
+        // CVE-2024-47554: commons-io DoS prevention
+        resolutionStrategy.force "commons-io:commons-io:${commonsIoVersion}"
         // Keep BouncyCastle modules aligned to avoid runtime linkage errors
         resolutionStrategy.force "org.bouncycastle:bcprov-jdk18on:${bouncycastleVersion}"
         resolutionStrategy.force "org.bouncycastle:bcpkix-jdk18on:${bouncycastleVersion}"
@@ -220,7 +234,7 @@ subprojects {
         }
         dependencies {
             // Override BOM-managed commons-lang3 for CVE-2025-48924 fix
-            dependency 'org.apache.commons:commons-lang3:3.20.0'
+            dependency "org.apache.commons:commons-lang3:$commonsLang3"
         }
     }
 
@@ -242,7 +256,7 @@ subprojects {
         testRuntimeOnly 'org.mockito:mockito-inline:5.2.0'
         testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 
-        testImplementation platform("com.squareup.okhttp3:okhttp-bom:5.3.2")
+        testImplementation platform("com.squareup.okhttp3:okhttp-bom:${okhttpBomVersion}")
         testImplementation "com.squareup.okhttp3:mockwebserver"
     }
 
@@ -438,7 +452,7 @@ subprojects {
         }
 
         tasks.named("bootRun") {
-            jvmArgs = [
+            def runtimeArgs = [
                 "-XX:+UseG1GC",
                 "-XX:MaxGCPauseMillis=200",
                 "-XX:G1HeapRegionSize=4m",
@@ -447,6 +461,53 @@ subprojects {
                 "-XX:+UseCompactObjectHeaders",
                 "--enable-native-access=ALL-UNNAMED"
             ]
+
+            // Optional JaCoCo agent for e2e/cucumber backend coverage.
+            //
+            // Enabled with `-PjacocoAgent=true`. The default destfile lives
+            // outside the source tree so it doesn't poison a normal bootRun
+            // for a developer who forgot to pass the property. Override
+            // both with `-PjacocoExec=/path/to.exec` if you need a custom
+            // location (e.g. when sharing it with the Playwright runner).
+            if (rootProject.hasProperty('jacocoAgent') &&
+                rootProject.property('jacocoAgent').toString() == 'true') {
+                def agentJar = rootProject.layout.buildDirectory
+                        .file('jacoco/jacocoagent.jar').get().asFile.absolutePath
+                def execFile = (rootProject.findProperty('jacocoExec') ?:
+                        rootProject.layout.projectDirectory
+                                .file('.test-state/playwright/jacoco.exec').asFile.absolutePath
+                        ).toString()
+                // The JaCoCo agent argument is a comma-separated key=value list,
+                // so a path that itself contains ',' or '=' would smuggle extra
+                // agent options (e.g. -PjacocoExec='out.exec,sessionid=evil').
+                // Today the value only comes from our own CI workflows, but
+                // validating defensively is cheap and silences Aikido.
+                //
+                // Control characters are checked via String.contains rather
+                // than inside a slashy regex character class - a literal NULL
+                // accidentally landing in the regex killed Groovy parsing on
+                // the previous attempt.
+                def hasBadChar = execFile.find(/[,= ]/) != null ||
+                        execFile.contains('\r') ||
+                        execFile.contains('\n') ||
+                        execFile.contains('\t')
+                if (hasBadChar) {
+                    throw new GradleException(
+                            "jacocoExec='" + execFile + "' contains characters " +
+                            "(',', '=', whitespace, or control chars) that " +
+                            "would break -javaagent option parsing. Choose " +
+                            "a different path."
+                    )
+                }
+                runtimeArgs.add("-javaagent:${agentJar}=destfile=${execFile},output=file,append=false,dumponexit=true")
+                dependsOn(rootProject.tasks.named('copyJacocoAgent'))
+                doFirst {
+                    new File(execFile).parentFile?.mkdirs()
+                    logger.lifecycle("JaCoCo agent attached: ${execFile}")
+                }
+            }
+
+            jvmArgs = runtimeArgs
         }
     }
 }
@@ -536,8 +597,9 @@ repositories {
             allowInsecureProtocol = true
         }
     }
-    maven { url = "https://build.shibboleth.net/maven/releases" }
     mavenCentral()
+    maven { url = "https://repository.jboss.org/" }
+    maven { url = "https://build.shibboleth.net/maven/releases" }
 }
 
 dependencies {
@@ -550,7 +612,7 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 
-    testImplementation platform("com.squareup.okhttp3:okhttp-bom:5.3.2")
+    testImplementation platform("com.squareup.okhttp3:okhttp-bom:${okhttpBomVersion}")
     testImplementation "com.squareup.okhttp3:mockwebserver"
 }
 
@@ -621,9 +683,85 @@ tasks.register('buildRestartHelper', Jar) {
     }
 }
 
-
 tasks.withType(Test).configureEach {
     // maxParallelForks: parallelise JUnit across cores
     // Half of available CPUs is a safe default; bump if your tests are I/O-bound.
     maxParallelForks = Math.max(1, (Runtime.runtime.availableProcessors().intdiv(2)) as int)
+}
+
+// ----------------------------------------------------------------------------
+// JaCoCo helpers used by CI for cucumber + Playwright (live backend) coverage.
+//
+// These let CI attach the JaCoCo agent to a running Spring Boot process
+// (gradle bootRun or the docker image, via JAVA_TOOL_OPTIONS) and then turn
+// the resulting .exec dump back into HTML + XML reports without anyone
+// hand-installing the JaCoCo CLI.
+// ----------------------------------------------------------------------------
+
+configurations {
+    jacocoRuntimeAgent
+    jacocoCli
+}
+
+dependencies {
+    // The :runtime classifier on org.jacoco.agent IS the agent jar - no
+    // unzipping required. Kept on the version the plugin already picks so
+    // agent + reporter line up exactly.
+    jacocoRuntimeAgent "org.jacoco:org.jacoco.agent:${jacoco.toolVersion}:runtime"
+    jacocoCli "org.jacoco:org.jacoco.cli:${jacoco.toolVersion}"
+}
+
+tasks.register('copyJacocoAgent', Copy) {
+    group = 'verification'
+    description = 'Copies the JaCoCo runtime agent jar to build/jacoco/jacocoagent.jar.'
+    from configurations.jacocoRuntimeAgent
+    into layout.buildDirectory.dir('jacoco')
+    rename { 'jacocoagent.jar' }
+}
+
+// Aggregates an externally-produced .exec (e.g. from e2e:live or the cucumber
+// docker container) against this project's compiled classes + sources.
+//
+// Inputs are configured via -P properties so the same task works for every
+// caller:
+//
+//   ./gradlew jacocoReportFromExec -PexecFile=.test-state/playwright/jacoco.exec \
+//                                  -PreportDir=build/reports/jacoco/e2e-live
+tasks.register('jacocoReportFromExec', JacocoReport) {
+    group = 'verification'
+    description = 'Generates a JaCoCo HTML+XML report from an externally captured .exec.'
+
+    def execProp = project.findProperty('execFile') ?: project.findProperty('execFiles')
+    def reportProp = project.findProperty('reportDir') ?: "build/reports/jacoco/external"
+
+    executionData fileTree(rootProject.rootDir) {
+        if (execProp) {
+            include execProp.toString().split(',').collect { it.trim() }
+        } else {
+            // Sensible defaults so the task is usable without props.
+            include '.test-state/**/*.exec'
+            include 'coverage-tools/exec/*.exec'
+            include 'testing/cucumber-coverage/*.exec'
+        }
+    }
+
+    // Pull compiled classes + sources from every subproject so the report is
+    // an aggregate. JaCoCo silently skips classes that have no matching .exec
+    // probes, so this is safe even when only a subset of code was exercised.
+    classDirectories.setFrom(files(subprojects.collect { sub ->
+        sub.fileTree(dir: "${sub.buildDir}/classes/java/main", excludes: [
+            '**/generated/**',
+        ])
+    }))
+    sourceDirectories.setFrom(files(subprojects.collect { sub ->
+        "${sub.projectDir}/src/main/java"
+    }))
+
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        csv.required.set(false)
+        xml.outputLocation.set(layout.projectDirectory.file("${reportProp}/jacocoTestReport.xml"))
+        html.outputLocation.set(layout.projectDirectory.dir("${reportProp}/html"))
+    }
 }

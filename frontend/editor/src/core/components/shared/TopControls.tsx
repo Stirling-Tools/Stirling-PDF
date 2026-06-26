@@ -1,7 +1,5 @@
 import React, { useState, useCallback, useMemo } from "react";
 import { SegmentedControl, Loader } from "@mantine/core";
-import { useRainbowThemeContext } from "@app/components/shared/RainbowThemeProvider";
-import rainbowStyles from "@app/styles/rainbow.module.css";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import GridViewIcon from "@mui/icons-material/GridView";
 import FolderIcon from "@mui/icons-material/Folder";
@@ -148,7 +146,6 @@ const TopControls = ({
   onFileSelect,
   onFileRemove,
 }: TopControlsProps) => {
-  const { isRainbowMode } = useRainbowThemeContext();
   const [switchingTo, setSwitchingTo] = useState<WorkbenchType | null>(null);
 
   const pageEditorState = usePageEditorDropdownState();
@@ -213,7 +210,6 @@ const TopControls = ({
           onChange={handleViewChange}
           color="blue"
           fullWidth
-          className={isRainbowMode ? rainbowStyles.rainbowSegmentedControl : ""}
           style={{
             transition: "all 0.2s ease",
             opacity: switchingTo ? 0.8 : 1,

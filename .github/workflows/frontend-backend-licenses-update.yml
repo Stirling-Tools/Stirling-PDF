@@ -97,7 +97,7 @@ jobs:
         run: npm ci --ignore-scripts --audit=false --fund=false
 
       - name: Install Task
-        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
+        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
       - name: Generate frontend license report (internal PR)
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
         env:
@@ -110,8 +110,8 @@ jobs:
           NPM_CONFIG_IGNORE_SCRIPTS: "true"
         working-directory: frontend
         run: |
-          mkdir -p src/assets
-          npx --yes license-report --only=prod --output=json > src/assets/3rdPartyLicenses.json
+          mkdir -p editor/src/assets
+          npx --yes license-report --only=prod --output=json > editor/src/assets/3rdPartyLicenses.json
 
       - name: Postprocess with project script (BASE version)
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == true
@@ -349,10 +349,10 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
         with:
-          gradle-version: 9.3.1
+          gradle-version: 9.6.0
 
       - name: Install Task
-        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
+        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
       - name: Check licenses and generate report
         id: license-check
         run: task backend:licenses:generate || echo "LICENSE_CHECK_FAILED=true" >> $GITHUB_ENV

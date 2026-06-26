@@ -40,6 +40,21 @@ tasks:
     cmds:
       - node editor/scripts/generate-icons.js
 
+  prepare:og:
+    internal: true
+    run: when_changed
+    desc: "Regenerate OG/social-preview metadata from the tool registry"
+    cmds:
+      - node editor/scripts/generate-og-metadata.mjs
+    sources:
+      - editor/src/core/types/toolId.ts
+      - editor/src/core/utils/urlMapping.ts
+      - editor/src/core/data/useTranslatedToolRegistry.tsx
+      - editor/public/og_images/*.png
+    generates:
+      - editor/src/core/data/ogImageMap.json
+      - editor/public/og-metadata.json
+
   prepare:
     desc: "Set up dev environment"
     run: when_changed
@@ -49,6 +64,7 @@ tasks:
       - task: prepare:env
         vars: { MODE: '{{.MODE}}' }
       - prepare:icons
+      - prepare:og
 
   # ============================================================
   # Development
@@ -112,6 +128,37 @@ tasks:
       - task: dev:_run
         vars: { MODE: prototypes, PORT: '{{.PORT}}', BACKEND_URL: '{{.BACKEND_URL}}', OPEN: '{{.OPEN}}' }
 
+  dev:portal:
+    desc: "Start developer portal dev server"
+    ignore_error: true
+    deps: [install]
+    vars:
+      PORT: '{{.PORT | default "5173"}}'
+      BACKEND_URL: '{{.BACKEND_URL | default "http://localhost:8080"}}'
+      EDITOR_URL: '{{.EDITOR_URL | default ""}}'
+      OPEN: '{{.OPEN | default ""}}'
+      SUBPATH: '{{.SUBPATH | default ""}}'
+      MOCKS: '{{.MOCKS | default ""}}'
+    env:
+      BACKEND_URL: '{{.BACKEND_URL}}'
+    cmds:
+      - '{{if .SUBPATH}}RUN_SUBPATH={{.SUBPATH}} {{end}}{{if .MOCKS}}VITE_PORTAL_MOCKS={{.MOCKS}} {{end}}{{if .EDITOR_URL}}VITE_EDITOR_URL={{.EDITOR_URL}} {{end}}npx vite portal --port {{.PORT}}{{if .OPEN}} --open{{end}}'
+
+  dev:portal:proxy:serve:
+    internal: true
+    vars:
+      PORT: '{{.PORT | default "3000"}}'
+      BACKEND_URL: '{{.BACKEND_URL | default "http://localhost:8080"}}'
+      EDITOR_DEV_URL: '{{.EDITOR_DEV_URL | default ""}}'
+      PORTAL_DEV_URL: '{{.PORTAL_DEV_URL | default ""}}'
+    env:
+      PORT: '{{.PORT}}'
+      BACKEND_URL: '{{.BACKEND_URL}}'
+      EDITOR_DEV_URL: '{{.EDITOR_DEV_URL}}'
+      PORTAL_DEV_URL: '{{.PORTAL_DEV_URL}}'
+    cmds:
+      - npx tsx scripts/dev-origin-proxy.ts
+
   # ============================================================
   # Build
   # ============================================================
@@ -131,8 +178,10 @@ tasks:
   build:proprietary:
     desc: "Build for proprietary mode"
     deps: [prepare]
+    vars:
+      PREVIEW: '{{.PREVIEW | default ""}}'
     cmds:
-      - npx vite build editor --mode proprietary
+      - '{{if .PREVIEW}}VITE_BUILD_FOR_PREVIEW=1 {{end}}npx vite build editor --mode proprietary'
 
   build:saas:
     desc: "Build for SaaS mode"
@@ -156,6 +205,42 @@ tasks:
     cmds:
       - npx vite build editor --mode prototypes
 
+  build:portal:
+    desc: "Build developer portal"
+    deps: [install]
+    vars:
+      SUBPATH: '{{.SUBPATH | default ""}}'
+    cmds:
+      - '{{if .SUBPATH}}RUN_SUBPATH={{.SUBPATH}} {{end}}npx vite build portal'
+
+  preview:portal:proxy:
+    desc: "Build + serve editor + portal behind one origin (prod-like auth testing)"
+    deps: [prepare]
+    vars:
+      PORT: '{{.PORT | default "3000"}}'
+      BACKEND_URL: '{{.BACKEND_URL | default "http://localhost:8080"}}'
+    env:
+      PORT: '{{.PORT}}'
+      BACKEND_URL: '{{.BACKEND_URL}}'
+    cmds:
+      - task: build:proprietary
+        vars: { PREVIEW: '1' }
+      - task: build:portal
+        vars: { SUBPATH: portal }
+      - npx tsx scripts/dev-origin-proxy.ts
+
+  storybook:
+    desc: "Start Storybook dev server"
+    deps: [install]
+    cmds:
+      - npx storybook dev -p 6006 {{.CLI_ARGS}}
+
+  storybook:build:
+    desc: "Build static Storybook"
+    deps: [install]
+    cmds:
+      - npx storybook build {{.CLI_ARGS}}
+
   # ============================================================
   # Code quality
   # ============================================================
@@ -164,8 +249,22 @@ tasks:
     desc: "Run linting"
     deps: [install]
     cmds:
+      - task: lint:eslint
+      - task: lint:dpdm
+
+  lint:eslint:
+    desc: "Run ESLint linting"
+    deps: [install]
+    cmds:
       - npx eslint --max-warnings=0
-      - npx dpdm editor/src --circular --no-warning --no-tree --exit-code circular:1
+
+  lint:dpdm:
+    desc: "Run circular import linting"
+    deps: [install]
+    cmds:
+      # Globs so dpdm walks the whole tree. dpdm expands the braces itself, so this is
+      # shell-agnostic. Covers editor, portal, and the shared design system.
+      - npx dpdm "editor/src/**/*.{ts,tsx}" "portal/src/**/*.{ts,tsx}" "shared/**/*.{ts,tsx}" --circular --no-warning --no-tree --exit-code circular:1
 
   lint:fix:
     desc: "Auto-fix lint issues"
@@ -196,17 +295,26 @@ tasks:
     cmds:
       - task: typecheck:proprietary
 
+  typecheck:_run:
+    internal: true
+    env:
+      CI: '{{ .CI | default "false" }}'
+    cmds:
+      - '{{ if eq .CI "true" }}npx tsc{{ else }}npx tsgo{{ end }} --noEmit --project {{.PROJECT}}'
+
   typecheck:core:
     desc: "Typecheck core build variant"
     deps: [prepare]
     cmds:
-      - npx tsc --noEmit --project editor/src/core/tsconfig.json
+      - task: typecheck:_run
+        vars: { PROJECT: editor/src/core/tsconfig.json }
 
   typecheck:proprietary:
     desc: "Typecheck proprietary build variant"
     deps: [prepare]
     cmds:
-      - npx tsc --noEmit --project editor/src/proprietary/tsconfig.json
+      - task: typecheck:_run
+        vars: { PROJECT: editor/src/proprietary/tsconfig.json }
 
   typecheck:saas:
     desc: "Typecheck SaaS build variant"
@@ -214,7 +322,8 @@ tasks:
       - task: prepare
         vars: { MODE: saas }
     cmds:
-      - npx tsc --noEmit --project editor/src/saas/tsconfig.json
+      - task: typecheck:_run
+        vars: { PROJECT: editor/src/saas/tsconfig.json }
 
   typecheck:desktop:
     desc: "Typecheck desktop build variant"
@@ -222,19 +331,45 @@ tasks:
       - task: prepare
         vars: { MODE: desktop }
     cmds:
-      - npx tsc --noEmit --project editor/src/desktop/tsconfig.json
+      - task: typecheck:_run
+        vars: { PROJECT: editor/src/desktop/tsconfig.json }
+
+  typecheck:cloud:
+    desc: "Typecheck cloud shared layer (standalone)"
+    deps: [prepare]
+    cmds:
+      - task: typecheck:_run
+        vars: { PROJECT: editor/src/cloud/tsconfig.json }
 
   typecheck:scripts:
     desc: "Typecheck scripts"
     deps: [prepare]
     cmds:
-      - npx tsc --noEmit --project editor/scripts/tsconfig.json
+      - task: typecheck:_run
+        vars: { PROJECT: scripts/tsconfig.json }
+      - task: typecheck:_run
+        vars: { PROJECT: editor/scripts/tsconfig.json }
 
   typecheck:prototypes:
     desc: "Typecheck prototypes build variant"
     deps: [prepare]
     cmds:
-      - npx tsc --noEmit --project editor/src/prototypes/tsconfig.json
+      - task: typecheck:_run
+        vars: { PROJECT: editor/src/prototypes/tsconfig.json }
+
+  typecheck:portal:
+    desc: "Typecheck developer portal build variant"
+    deps: [install]
+    cmds:
+      - task: typecheck:_run
+        vars: { PROJECT: portal/tsconfig.json }
+
+  typecheck:shared:
+    desc: "Typecheck the shared design system"
+    deps: [install]
+    cmds:
+      - task: typecheck:_run
+        vars: { PROJECT: shared/tsconfig.json }
 
   typecheck:all:
     desc: "Typecheck all build variants"
@@ -243,8 +378,11 @@ tasks:
       - task: typecheck:proprietary
       - task: typecheck:saas
       - task: typecheck:desktop
+      - task: typecheck:cloud
       - task: typecheck:scripts
       - task: typecheck:prototypes
+      - task: typecheck:portal
+      - task: typecheck:shared
 
   # ============================================================
   # Quality Gate
@@ -258,14 +396,24 @@ tasks:
       - task: format:check
       - task: test
 
+  og:check:
+    desc: "Fail if committed OG/social-preview metadata is out of date"
+    cmds:
+      - node editor/scripts/generate-og-metadata.mjs --check
+
   check:all:
     desc: "Full CI quality gate"
     cmds:
+      # Runs first, before prepare regenerates: guards the committed og-metadata.json /
+      # ogImageMap.json that the Cloudflare Pages (plain `vite build`) deploy relies on.
+      - task: og:check
       - task: typecheck:all
       - task: lint
       - task: format:check
       - task: build
+      - task: build:portal
       - task: test
+      - task: storybook:build
 
   # ============================================================
   # Test
@@ -273,21 +421,48 @@ tasks:
 
   test:
     desc: "Run tests"
-    deps: [install]
+    cmds:
+      - task: test:editor
+      - task: test:portal
+
+  test:editor:
+    desc: "Run editor tests"
+    deps: [prepare]
     cmds:
       - npx vitest run --root editor
 
+  test:portal:
+    desc: "Run portal tests"
+    deps: [prepare]
+    cmds:
+      - npx vitest run --root portal
+
   test:watch:
     desc: "Run tests in watch mode"
-    deps: [install]
+    deps: [prepare]
     cmds:
       - npx vitest --watch --root editor
 
   test:coverage:
-    desc: "Run tests with coverage"
-    deps: [install]
+    desc: "Run tests with coverage (one-shot; CI-friendly)."
+    deps: [prepare]
     cmds:
-      - npx vitest --coverage --root editor
+      # `vitest run` makes this CI-safe (the bare `vitest` form enters watch
+      # mode). Explicit reporter list because v8 + json-summary is what the
+      # coverage-summary.py helper consumes; html/text are kept for humans.
+      #
+      # reportsDirectory is pinned to ./coverage relative to vitest's root
+      # (--root editor), so output lands at frontend/editor/coverage/. The
+      # CI upload step reads from that path. An earlier attempt with
+      # `./editor/coverage` double-nested into frontend/editor/editor/coverage;
+      # pinning future-proofs against vitest changing the default.
+      - >
+        npx vitest run --root editor --coverage
+        --coverage.provider=v8
+        --coverage.reporter=text-summary
+        --coverage.reporter=json-summary
+        --coverage.reporter=html
+        --coverage.reportsDirectory=./coverage
 
   # ============================================================
   # Code Generation
@@ -298,3 +473,15 @@ tasks:
     deps: [install]
     cmds:
       - node editor/scripts/generate-licenses.js
+
+  # ============================================================
+  # Clean
+  # ============================================================
+
+  clean:
+    desc: "Clean build artifacts and caches"
+    cmds:
+      - cmd: powershell rm -Recurse -Force -ErrorAction SilentlyContinue node_modules/.vite, editor/dist, dist, dist-portal
+        platforms: [windows]
+      - cmd: rm -rf node_modules/.vite editor/dist dist dist-portal
+        platforms: [linux, darwin]

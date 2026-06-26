@@ -3,6 +3,11 @@ export interface AnnotationRect {
   size: { width: number; height: number };
 }
 
+export interface ClearDocumentAnnotationsResult {
+  available: boolean;
+  cleared: boolean;
+}
+
 export interface SignatureAPI {
   addImageSignature: (
     signatureData: string,
@@ -46,6 +51,7 @@ export interface AnnotationAPI {
   deleteAnnotations?: (
     annotations: Array<{ pageIndex: number; id: string }>,
   ) => void;
+  clearDocumentAnnotations?: () => Promise<ClearDocumentAnnotationsResult>;
   createAnnotation?: (
     pageIndex: number,
     annotation: Record<string, unknown>,

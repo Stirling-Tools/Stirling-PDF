@@ -6,6 +6,7 @@ import {
   forwardRef,
   useRef,
 } from "react";
+import { useTranslation } from "react-i18next";
 import { createPluginRegistration } from "@embedpdf/core";
 import type { PluginRegistry } from "@embedpdf/core";
 import { EmbedPDF } from "@embedpdf/core/react";
@@ -157,6 +158,7 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
     },
     ref,
   ) => {
+    const { t } = useTranslation();
     const [pdfUrl, setPdfUrl] = useState<string | null>(null);
     const annotationApiRef = useRef<any>(null);
     const zoomApiRef = useRef<any>(null);
@@ -298,10 +300,11 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
           selectAfterCreate: true,
         }),
 
-        // Register pan plugin
-        createPluginRegistration(PanPluginPackage, {
-          defaultMode: "mobile",
-        }),
+        // Register pan plugin. Keep the default mode ("never"). Do NOT set
+        // defaultMode: "mobile" - it makes pan the default interaction on any
+        // touch-capable device (e.g. Windows touchscreen laptops) and blocks
+        // text selection.
+        createPluginRegistration(PanPluginPackage),
 
         // Register zoom plugin
         createPluginRegistration(ZoomPluginPackage, {
@@ -653,7 +656,10 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
                                               ),
                                             );
                                           }}
-                                          aria-label="Delete signature"
+                                          aria-label={t(
+                                            "viewer.signature.delete",
+                                            "Delete signature",
+                                          )}
                                         >
                                           <CloseIcon
                                             style={{ fontSize: "0.8rem" }}

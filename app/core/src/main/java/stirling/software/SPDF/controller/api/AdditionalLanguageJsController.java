@@ -48,7 +48,7 @@ public class AdditionalLanguageJsController {
                                 }
                             }
                             // Fallback
-                            return "en_GB";
+                            return "en_US";
                         }
                         """);
         writer.flush();

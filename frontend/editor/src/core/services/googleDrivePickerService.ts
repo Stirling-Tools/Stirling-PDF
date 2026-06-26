@@ -4,6 +4,7 @@
  */
 
 import { loadScript } from "@app/utils/scriptLoader";
+import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@app/styles/zIndex";
 
 const SCOPES = "https://www.googleapis.com/auth/drive.readonly";
 const SESSION_STORAGE_ID = "googleDrivePickerAccessToken";
@@ -201,6 +202,10 @@ class GoogleDrivePickerService {
         .addView(view1)
         .addView(view2)
         .setCallback((data: any) => this.pickerCallback(data, resolve, reject));
+
+      (builder as unknown as { setZIndex(z: number): void }).setZIndex(
+        Z_INDEX_OVER_FILE_MANAGER_MODAL,
+      );
 
       if (options.multiple) {
         builder.enableFeature(window.google.picker.Feature.MULTISELECT_ENABLED);

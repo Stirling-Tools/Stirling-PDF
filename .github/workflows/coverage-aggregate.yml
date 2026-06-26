@@ -1,0 +1,230 @@
+name: Aggregate backend coverage
+
+# Reusable workflow called from build.yml after every backend coverage
+# producer (JUnit, e2e:live, cucumber) has run. Downloads each job's raw
+# .exec, merges them into one JaCoCo report, and posts a combined step
+# summary alongside the per-source ones.
+#
+# Kept separate from the per-source jobs so:
+#   - the per-source jobs stay fast and independent (no cross-job waits)
+#   - this job can `if: always()` and still produce something useful when
+#     one of the producers fails partway through
+#   - frontend producers can be added later without touching the
+#     producers themselves
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  pick:
+    uses: ./.github/workflows/_runner-pick.yml
+
+  aggregate:
+    needs: pick
+    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
+    timeout-minutes: 15
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        with:
+          egress-policy: audit
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          java-version: "25"
+          distribution: "temurin"
+
+      - name: Cache Gradle dependency artifacts
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: |
+            ~/.gradle/wrapper
+            ~/.gradle/caches/modules-2/files-2.1
+            ~/.gradle/caches/modules-2/metadata-2.*
+          key: gradle-deps-${{ runner.os }}-jdk-25-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties', '**/*.gradle', '**/*.gradle.kts', 'settings.gradle', 'settings.gradle.kts', 'gradle/libs.versions.toml') }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
+        with:
+          gradle-version: 9.6.0
+          cache-disabled: true
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.12"
+
+      - name: Install defusedxml for coverage scripts
+        # Both coverage-summary.py and coverage-matrix.py parse JaCoCo
+        # XML through defusedxml - see the script headers for context.
+        run: python -m pip install --quiet defusedxml
+
+      # Pattern matches every artifact this PR's producers might upload:
+      #   jacoco-exec-junit-jdk-25            (uploaded only by the saas
+      #                                         leg of backend-build, which
+      #                                         is a strict superset of the
+      #                                         core + proprietary legs)
+      #   jacoco-exec-e2e-live
+      #   jacoco-exec-cucumber
+      # Each lands as a sibling dir under coverage-execs/, with the .exec
+      # files preserving their original relative paths.
+      - name: Download all .exec artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v6.0.0
+        with:
+          pattern: jacoco-exec-*
+          path: coverage-execs/
+          merge-multiple: false
+        continue-on-error: true
+
+      - name: Inventory .exec files
+        id: inventory
+        # Splits the downloaded artifacts into two buckets:
+        #   * e2e-only  = cucumber + Playwright live (user-flow coverage)
+        #   * all       = the above plus JUnit (everything we test)
+        #
+        # Bucketing is by artifact-name prefix: download-artifact preserves
+        # the artifact name as the top-level dir, so JUnit's `.exec`s live
+        # under coverage-execs/jacoco-exec-junit-*/... while the others
+        # are under coverage-execs/jacoco-exec-{e2e-live,cucumber}/...
+        #
+        # If nothing was uploaded (e.g. all producers crashed before
+        # writing) we exit gracefully so this advisory job never fails CI.
+        run: |
+          mapfile -t all_execs < <(find coverage-execs -name '*.exec' -type f | sort)
+          mapfile -t e2e_execs < <(find coverage-execs -name '*.exec' -type f -not -path '*/jacoco-exec-junit-*' | sort)
+          if [ "${#all_execs[@]}" -eq 0 ]; then
+            echo "::warning::No .exec artifacts found - skipping aggregate report"
+            echo "found_all=false" >> "$GITHUB_OUTPUT"
+            echo "found_e2e=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          printf 'All %d .exec files:\n' "${#all_execs[@]}"
+          printf '  %s\n' "${all_execs[@]}"
+          IFS=','; all_joined="${all_execs[*]}"
+          echo "files_all=$all_joined" >> "$GITHUB_OUTPUT"
+          echo "found_all=true" >> "$GITHUB_OUTPUT"
+          if [ "${#e2e_execs[@]}" -eq 0 ]; then
+            echo "::notice::No e2e/cucumber .exec files - e2e-only report will be skipped"
+            echo "found_e2e=false" >> "$GITHUB_OUTPUT"
+          else
+            printf 'E2E-only %d .exec files:\n' "${#e2e_execs[@]}"
+            printf '  %s\n' "${e2e_execs[@]}"
+            unset IFS
+            IFS=','; e2e_joined="${e2e_execs[*]}"
+            echo "files_e2e=$e2e_joined" >> "$GITHUB_OUTPUT"
+            echo "found_e2e=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Compile classes for JaCoCo class lookup
+        # jacocoReportFromExec only needs the compiled .class files
+        # under each subproject's build/classes/java/main/. `classes`
+        # (compileJava + processResources) is enough; we skipped the
+        # heavier `assemble` to avoid building bootJar / fat jars that
+        # add 60+ seconds per run for no gain to the report.
+        if: steps.inventory.outputs.found_all == 'true'
+        run: ./gradlew classes -PnoSpotless
+
+      - name: Generate e2e-only JaCoCo report
+        # "Real user-flow" coverage: only counts code reached by an actual
+        # HTTP request from cucumber or live Playwright. Useful for
+        # questions like "how much of our backend does a user actually
+        # hit?". Skipped when neither producer uploaded a .exec.
+        if: steps.inventory.outputs.found_e2e == 'true'
+        run: |
+          ./gradlew jacocoReportFromExec \
+            -PexecFile="${{ steps.inventory.outputs.files_e2e }}" \
+            -PreportDir=build/reports/jacoco/aggregate-e2e \
+            -PnoSpotless
+
+      - name: Generate combined JaCoCo report (everything)
+        if: steps.inventory.outputs.found_all == 'true'
+        run: |
+          ./gradlew jacocoReportFromExec \
+            -PexecFile="${{ steps.inventory.outputs.files_all }}" \
+            -PreportDir=build/reports/jacoco/aggregate-all \
+            -PnoSpotless
+
+      - name: E2E-only step summary
+        # Rendered first so it gets prime real estate in the Summary
+        # tab - this is the number most readers actually want
+        # ("how much of the backend do real user flows cover?").
+        if: steps.inventory.outputs.found_e2e == 'true'
+        run: |
+          python scripts/coverage-summary.py \
+            --title "Real user-flow backend coverage (e2e:live + cucumber)" \
+            --jacoco "merged=build/reports/jacoco/aggregate-e2e/jacocoTestReport.xml" \
+            --github-step-summary
+
+      - name: ALL-sources step summary
+        # Separate call (not a multi-input one) because the helper's
+        # rightmost "Aggregate" column would sum the two reports - which
+        # is meaningless when one is a strict superset of the other.
+        if: steps.inventory.outputs.found_all == 'true'
+        run: |
+          python scripts/coverage-summary.py \
+            --title "Combined backend coverage (JUnit + e2e:live + cucumber)" \
+            --jacoco "merged=build/reports/jacoco/aggregate-all/jacocoTestReport.xml" \
+            --github-step-summary
+
+      - name: Upload combined aggregate report
+        if: steps.inventory.outputs.found_all == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: jacoco-aggregate-all-${{ github.run_id }}
+          path: build/reports/jacoco/aggregate-all/
+          retention-days: 14
+
+      - name: Upload e2e-only aggregate report
+        if: steps.inventory.outputs.found_e2e == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: jacoco-aggregate-e2e-${{ github.run_id }}
+          path: build/reports/jacoco/aggregate-e2e/
+          retention-days: 14
+
+      # --------------------------------------------------------------
+      # Per-area matrix: rolls backend + frontend coverage into one
+      # table indexed by core/proprietary/saas/desktop. Pulls the
+      # frontend artifacts now (after the JaCoCo step has done its
+      # work) so the per-source backend summaries still render first
+      # even if the matrix step fails.
+      # --------------------------------------------------------------
+      - name: Download vitest coverage artifact
+        # frontend-validation uploads as `frontend-coverage`. Tolerate
+        # absence so a backend-only PR still produces the matrix with
+        # just backend rows populated.
+        if: always()
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v6.0.0
+        with:
+          name: frontend-coverage
+          path: matrix-inputs/vitest/
+        continue-on-error: true
+
+      - name: Download Playwright frontend coverage artifact
+        # e2e-live uploads as `playwright-frontend-coverage-<run_id>`.
+        # Same tolerance as vitest - matrix script handles missing inputs.
+        if: always()
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v6.0.0
+        with:
+          name: playwright-frontend-coverage-${{ github.run_id }}
+          path: matrix-inputs/playwright/
+        continue-on-error: true
+
+      - name: Coverage matrix step summary
+        if: always()
+        # Matrix references the two aggregate JaCoCo XMLs (already
+        # generated above) plus whichever frontend artifacts landed.
+        # Every input is optional; missing ones render as "-".
+        run: |
+          python scripts/coverage-matrix.py \
+            ${{ steps.inventory.outputs.found_all == 'true' && '--jacoco-all build/reports/jacoco/aggregate-all/jacocoTestReport.xml' || '' }} \
+            ${{ steps.inventory.outputs.found_e2e == 'true' && '--jacoco-e2e build/reports/jacoco/aggregate-e2e/jacocoTestReport.xml' || '' }} \
+            --vitest matrix-inputs/vitest/coverage-summary.json \
+            --playwright-frontend matrix-inputs/playwright/coverage-pw-summary/coverage-summary.json \
+            --title "Coverage matrix (per-area, e2e vs all)" \
+            --github-step-summary

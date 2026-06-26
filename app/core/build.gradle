@@ -67,7 +67,7 @@ dependencies {
         exclude group: 'com.fasterxml.jackson.jaxrs'
         exclude group: 'com.fasterxml.jackson.module', module: 'jackson-module-jaxb-annotations'
     }
-    implementation 'commons-io:commons-io:2.22.0'
+    implementation "commons-io:commons-io:$commonsIoVersion"
     implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
     implementation "org.bouncycastle:bcpkix-jdk18on:$bouncycastleVersion"
     implementation 'io.micrometer:micrometer-core'
@@ -81,25 +81,24 @@ dependencies {
 
     implementation 'org.verapdf:validation-model:1.28.2'
     // CVE-2025-66453: Explicit rhino 1.7.15 to override verapdf's 1.7.13
-    implementation 'org.mozilla:rhino:1.9.1'
+    implementation "org.mozilla:rhino:${rhinoVersion}"
 
     // veraPDF still uses javax.xml.bind, not the new jakarta namespace
     implementation 'javax.xml.bind:jaxb-api:2.3.1'
     implementation 'com.sun.xml.bind:jaxb-impl:2.3.9'
     implementation 'com.sun.xml.bind:jaxb-core:4.0.7'
-    implementation 'org.apache.poi:poi-ooxml:5.5.1'
 
-    // CVE-2022-25647: Explicit gson 2.13.2 to prevent unsafe deserialization (tabula would pull 2.8.7)
-    implementation 'com.google.code.gson:gson:2.13.2'
+    // CVE-2022-25647: Explicit gson to prevent unsafe deserialization (tabula would pull 2.8.7)
+    implementation "com.google.code.gson:gson:${gsonVersion}"
     implementation 'org.apache.pdfbox:jbig2-imageio:3.0.4'
     implementation 'com.opencsv:opencsv:5.12.0' // https://mvnrepository.com/artifact/com.opencsv/opencsv
     implementation 'org.apache.poi:poi-ooxml:5.5.1'
 
     // Batik only bridge module needed (transitively pulls anim, gvt, util, css, dom, svg-dom)
     // Replaces batik-all which included unused codec, svggen, transcoder, script modules
-    implementation 'org.apache.xmlgraphics:batik-bridge:1.19'
+    implementation "org.apache.xmlgraphics:batik-bridge:${batikVersion}"
     // Required by TwelveMonkeys imageio-batik SPI (SVGImageReaderSpi) during ImageIO init
-    runtimeOnly 'org.apache.xmlgraphics:batik-transcoder:1.19'
+    runtimeOnly "org.apache.xmlgraphics:batik-transcoder:${batikVersion}"
 
     // PDFBox Graphics2D bridge for Batik SVG to PDF conversion
     implementation 'de.rototor.pdfbox:graphics2d:3.0.5'
@@ -207,13 +206,29 @@ def resourcesStaticDir = file('src/main/resources/static')
 def generatedFrontendPaths = [
     'assets',
     'index.html',
+    'index.html.gz',
+    'index.html.br',
+    'sw.js',
+    'sw.js.gz',
+    'sw.js.br',
+    'manifest.json.gz',
+    'manifest.json.br',
+    'site.webmanifest.gz',
+    'site.webmanifest.br',
+    'browserconfig.xml.gz',
+    'browserconfig.xml.br',
+    'manifest-classic.json',
+    'manifest-classic.json.gz',
+    'manifest-classic.json.br',
     'locales',
     'Login',
     'classic-logo',
     'modern-logo',
     'og_images',
     'samples',
-    'manifest-classic.json'
+    'pdfium',
+    'vendor',
+    'pdfjs'
 ]
 
 tasks.register('npmInstall', Exec) {
@@ -314,6 +329,12 @@ tasks.register('cleanFrontendAssets', Delete) {
     group = 'frontend'
     description = 'Remove previously generated frontend assets from static resources'
     delete generatedFrontendPaths.collect { new File(resourcesStaticDir, it) }
+    // Prerendered per-route SPA pages (e.g. compress.html) carry per-tool OG tags and are
+    // copied from the frontend build. Remove stale ones so renamed/removed tools don't linger.
+    // api-landing.html and mobile-upload.html are real backend source files, not generated artifacts.
+    delete fileTree(dir: resourcesStaticDir, includes: ['*.html'], excludes: ['api-landing.html', 'mobile-upload.html'])
+    // Nested prerendered route pages (e.g. settings/people.html)
+    delete new File(resourcesStaticDir, 'settings')
 }
 
 tasks.register('copyApiLandingPage', Copy) {

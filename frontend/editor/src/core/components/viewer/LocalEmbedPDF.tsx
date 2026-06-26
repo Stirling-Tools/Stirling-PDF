@@ -81,6 +81,7 @@ import { LinkLayer } from "@app/components/viewer/LinkLayer";
 import { TextSelectionHandler } from "@app/components/viewer/TextSelectionHandler";
 import { RedactionSelectionMenu } from "@app/components/viewer/RedactionSelectionMenu";
 import { AnnotationSelectionMenu } from "@app/components/viewer/AnnotationSelectionMenu";
+import { TextSelectionMenu } from "@app/components/viewer/TextSelectionMenu";
 import {
   RedactionPendingTracker,
   RedactionPendingTrackerAPI,
@@ -89,7 +90,7 @@ import { RedactionAPIBridge } from "@app/components/viewer/RedactionAPIBridge";
 import { DocumentPermissionsAPIBridge } from "@app/components/viewer/DocumentPermissionsAPIBridge";
 import { DocumentReadyWrapper } from "@app/components/viewer/DocumentReadyWrapper";
 import { ActiveDocumentProvider } from "@app/components/viewer/ActiveDocumentContext";
-import { absoluteWithBasePath } from "@app/constants/app";
+import { pdfiumWasmUrl } from "@app/services/wasmPrecompiler";
 import { FormFieldOverlay } from "@app/tools/formFill/FormFieldOverlay";
 import { ButtonAppearanceOverlay } from "@app/tools/formFill/ButtonAppearanceOverlay";
 import SignatureFieldOverlay from "@app/components/viewer/SignatureFieldOverlay";
@@ -243,12 +244,12 @@ export function LocalEmbedPDF({
         drawBlackBoxes: false,
       }),
 
-      // Register pan plugin (depends on Viewport, InteractionManager)
-      createPluginRegistration(PanPluginPackage, {
-        defaultMode: "mobile", // Try mobile mode which might be more permissive
-      }),
-      // Register pan plugin (depends on Viewport, InteractionManager) - keep disabled to prevent drag panning
-      createPluginRegistration(PanPluginPackage, {}),
+      // Register pan plugin (depends on Viewport, InteractionManager).
+      // Keep the default mode ("never"). Do NOT set defaultMode: "mobile" - the pan
+      // react layer makes pan the default interaction on any touch-capable device
+      // (navigator.maxTouchPoints > 0), e.g. Windows touchscreen laptops, which then
+      // permanently locks the viewer in pan mode and blocks all text selection.
+      createPluginRegistration(PanPluginPackage),
 
       // Register zoom plugin with configuration
       createPluginRegistration(ZoomPluginPackage, {
@@ -296,7 +297,7 @@ export function LocalEmbedPDF({
 
   // Initialize the engine with the React hook - use local WASM for offline support
   const { engine, isLoading, error } = usePdfiumEngine({
-    wasmUrl: absoluteWithBasePath("/pdfium/pdfium.wasm"),
+    wasmUrl: pdfiumWasmUrl,
   });
 
   // Early return if no file or URL provided
@@ -995,6 +996,9 @@ export function LocalEmbedPDF({
                                       documentId={documentId}
                                       pageIndex={pageIndex}
                                       background="var(--pdf-selection-bg)"
+                                      selectionMenu={(props) => (
+                                        <TextSelectionMenu {...props} />
+                                      )}
                                     />
                                   </div>
                                   <TextSelectionHandler

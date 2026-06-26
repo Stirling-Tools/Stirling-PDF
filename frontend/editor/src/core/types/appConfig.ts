@@ -13,6 +13,7 @@ export interface AppConfig {
   enableOAuth?: boolean;
   enableSaml?: boolean;
   isAdmin?: boolean;
+  shouldShowUpdate?: boolean;
   enableAlphaFunctionality?: boolean;
   enableAnalytics?: boolean | null;
   enablePosthog?: boolean | null;
@@ -20,6 +21,7 @@ export interface AppConfig {
   enableDesktopInstallSlide?: boolean;
   premiumEnabled?: boolean;
   premiumKey?: string;
+  paygEnabled?: boolean;
   termsAndConditions?: string;
   privacyPolicy?: string;
   cookiePolicy?: string;

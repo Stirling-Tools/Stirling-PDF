@@ -165,13 +165,17 @@ legal:
   accessibilityStatement: "" # URL to the accessibility statement of your application (e.g. https://example.com/accessibility). Empty string to disable or filename to load from local file in static folder
   cookiePolicy: "" # URL to the cookie policy of your application (e.g. https://example.com/cookie). Empty string to disable or filename to load from local file in static folder
   impressum: "" # URL to the impressum of your application (e.g. https://example.com/impressum). Empty string to disable or filename to load from local file in static folder
+  loginAgreement:
+    enabled: false # set to 'true' to show a login agreement/disclaimer popup after login (and on app launch when login is disabled). Per-language text is read from customFiles/disclaimer/<locale>.md (e.g. en-GB.md, fr-FR.md)
+    showInAnonymousMode: true # when login is disabled, set to 'false' to suppress the agreement in anonymous (no-login) mode
+    fallbackText: "" # optional markdown used for any language that has no customFiles/disclaimer/<locale>.md file (also settable via the LEGAL_LOGINAGREEMENT_FALLBACKTEXT env var for single-language headless installs)
 
 system:
-  defaultLocale: en-US # set the default language (e.g. 'de-DE', 'fr-FR', etc)
+  defaultLocale: "" # force a default language for new users (e.g. 'en-US', 'de-DE'). Empty string auto-detects from the browser, falling back to en-US
   googlevisibility: false # 'true' to allow Google visibility (via robots.txt), 'false' to disallow
   enableAlphaFunctionality: false # set to enable functionality which might need more testing before it fully goes live (this feature might make no changes)
-  showUpdate: false # see when a new update is available
-  showUpdateOnlyAdmin: false # only admins can see when a new update is available, depending on showUpdate it must be set to 'true'
+  showUpdate: true # see when a new update is available
+  showUpdateOnlyAdmin: true # only admins can see when a new update is available, depending on showUpdate it must be set to 'true'
   showSettingsWhenNoLogin: true # set to 'false' to hide settings button when login is disabled (enableLogin: false). Only applies when login is disabled.
   customHTMLFiles: false # enable to have files placed in /customFiles/templates override the existing template HTML files
   tessdataDir: "" # path to the directory containing the Tessdata files. This setting is relevant for Windows systems. For Windows users, this path should be adjusted to point to the appropriate directory where the Tessdata files are stored.
@@ -290,6 +294,7 @@ storage:
     linkExpirationDays: 3 # Number of days before share links expire
   signing:
     enabled: false # set to 'true' to enable group signing workflow (requires storage.enabled) [ALPHA]
+    userListScope: org # Signing user-picker scope: 'org' (default) = whole instance, else caller's team only.
 autoPipeline:
   outputFolder: "" # Output folder for processed pipeline files (leave empty for default)
   fileReadiness:
@@ -363,6 +368,39 @@ aiEngine:
   enabled: false # Set to 'true' to enable the AI engine integration
   url: http://localhost:5001 # URL of the Python AI engine
   timeoutSeconds: 120 # Timeout in seconds for AI engine requests
+
+policies:
+  # Folder automations can read from and write to the directories you allow here, so treat this as a
+  # security boundary. Leave allowedFolderRoots empty (default) to disable folder sources/outputs
+  # entirely; list absolute directories to permit folder access only within them. Stirling's own
+  # config directory is always off-limits, and folder access is always disabled in SaaS mode.
+  allowedFolderRoots: [] # e.g. ["/data/inbox", "/data/outbox"]
+  scheduleSweepSeconds: 60 # How often (seconds) scheduled policies are checked for being due
+  watchReconcileSeconds: 300 # How often (seconds) folder-watch re-syncs watches and re-runs as a safety net for missed events
+  watchQuietPeriodMs: 500 # How long (ms) folder-watch coalesces a burst of file events into a single run
+  streamTimeoutMs: 1800000 # SSE timeout (ms) for live run-progress streams
+  runExpiryMinutes: 30 # How long (minutes) a finished run's in-memory state is kept before eviction
+
+# Model Context Protocol (MCP) server. Exposes Stirling's PDF tools (grouped by namespace)
+# plus the AI agents to MCP clients (Inspector, Claude Desktop, custom). OAuth-protected.
+# Disabled by default - enable explicitly per deployment after configuring mcp.auth.
+mcp:
+  enabled: false # Master switch. 'false' (default) means no /mcp endpoint, no metadata, no beans wired.
+  scopesEnabled: true # Enforce mcp.tools.read / mcp.tools.write scopes derived from operation category
+  allowedOperations: [] # Tool allow-list (operation ids, e.g. ['compress-pdf']). Empty = all. When set, ONLY these are exposed over MCP.
+  blockedOperations: [] # Tool deny-list (operation ids). Always removed from MCP even if otherwise allowed.
+  auth:
+    mode: oauth # 'oauth' (full OAuth2 resource server) or 'apikey' (Stirling per-user API key via X-API-KEY header; no external IdP needed - the low-friction self-host option)
+    issuerUri: "" # OAuth2 issuer URI (e.g. http://localhost:9000). Required when mode=oauth.
+    jwksUri: "" # JWKS URI. Blank -> derived from issuer's /.well-known/openid-configuration.
+    resourceId: "" # RFC 8707 resource identifier of THIS MCP server (e.g. http://localhost:8080/mcp).
+                   # Required: tokens must list this id in `aud` or the request is rejected.
+    acceptedAudiences: [] # Extra `aud` values accepted on top of resourceId. Empty = strict RFC 8707.
+                          # For IdPs that cannot mint resource audiences (Supabase OAuth server always
+                          # issues aud=authenticated) list that audience here, e.g. ['authenticated'].
+    usernameClaim: sub # JWT claim matched against a Stirling username (e.g. 'sub', 'email', 'preferred_username')
+    requireExistingAccount: true # Reject tokens whose subject has no enabled Stirling account (recommended)
+  engineCapabilityRefreshMinutes: 5 # How often to refresh the AI capabilities manifest from the engine
 
 # Cluster configuration. NOT YET ENABLED - scaffolding for later work. Leave at defaults.
 cluster:

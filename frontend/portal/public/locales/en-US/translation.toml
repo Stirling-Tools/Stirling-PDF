@@ -1,0 +1,1776 @@
+# Portal translations — US English is the source of truth. Other languages are
+# produced from this file by the Crowdin pipeline. Keys are grouped by
+# view/feature; shared strings live under [common].
+
+[common]
+inviteMember = "Invite member"
+
+[users]
+title = "Users"
+subtitle = "The people in your organization and the access they hold — roles, status and security controls."
+
+[users.empty]
+title = "No members yet"
+description = "Invite your team to start collaborating on documents and pipelines."
+
+# Navigation item labels, keyed by view id. Drives both the sidebar nav and the
+# header breadcrumb so the visible label has a single source.
+[nav]
+home = "Home"
+editor = "Editor"
+users = "Users"
+sources = "Sources"
+agent-builder = "Agent Builder"
+policies = "Policies"
+pipelines = "Pipelines"
+documents = "Documents"
+components = "Components"
+infrastructure = "Infrastructure"
+usage = "Usage & Billing"
+docs = "Developer Docs"
+settings = "Settings"
+
+[shell.header]
+switchToDark = "Switch to dark theme"
+switchToLight = "Switch to light theme"
+darkMode = "Dark mode"
+lightMode = "Light mode"
+search = "Search"
+searchPlaceholder = "Search…"
+accountMenu = "Account menu"
+accountFallback = "Account"
+signOut = "Sign out"
+
+[shell.sidebar]
+brandSuffix = "Stirling Processor"
+primaryNav = "Primary navigation"
+switchApp = "Switch app"
+appProcessor = "Processor"
+appEditor = "Editor"
+docsProcessed = "Docs processed"
+docsCount = "{{docs}} docs"
+planPayAsYouGo = "Pay-as-you-go"
+planEnterprise = "Enterprise Plan"
+
+[search]
+ariaLabel = "Search"
+placeholder = "Search Stirling — endpoints, pipelines, docs…"
+
+[search.empty]
+noMatches = "No matches for \"{{query}}\""
+noMatchesDescription = "Try a different keyword or browse the catalogue."
+noActionsTitle = "No quick actions"
+noActionsDescription = "Quick actions will appear here once they're available."
+
+[assistant]
+open = "Open assistant"
+close = "Close assistant"
+title = "Assistant"
+tryAsking = "Try asking"
+typing = "Typing"
+inputPlaceholder = "Ask about Stirling…"
+inputAriaLabel = "Ask the assistant"
+send = "Send"
+error = "Couldn't reach the assistant."
+errorWithDetail = "Couldn't reach the assistant: {{detail}}"
+
+[settings]
+ariaLabel = "Settings"
+footerNote = "Changes apply to this workspace."
+cancel = "Cancel"
+saveChanges = "Save changes"
+enterpriseBadge = "Enterprise"
+
+[settings.groups]
+account = "Account"
+workspace = "Workspace"
+admin = "Admin"
+
+[settings.sections]
+profile = "Profile"
+appearance = "Appearance"
+notifications = "Notifications"
+general = "General"
+authentication = "Authentication"
+sessions = "Active sessions"
+early-access = "Early access"
+
+[settings.profile]
+accountFallback = "Account"
+changePhoto = "Change photo"
+fullName = "Full name"
+namePlaceholder = "Your name"
+email = "Email"
+emailHelper = "Used for sign-in and notification delivery."
+emailPlaceholder = "you@company.com"
+
+[settings.appearance]
+themeTitle = "Theme"
+themeSub = "Choose how the portal looks on this device."
+
+[settings.appearance.light]
+label = "Light"
+hint = "Bright surfaces"
+
+[settings.appearance.dark]
+label = "Dark"
+hint = "Dim surfaces"
+
+[settings.notifications]
+title = "Email notifications"
+sub = "Pick which events reach your inbox."
+
+[settings.notifications.pipeline-failures]
+label = "Pipeline failures"
+description = "A run errors out or a step times out."
+
+[settings.notifications.pipeline-success]
+label = "Pipeline completions"
+description = "Every successful pipeline run finishes."
+
+[settings.notifications.usage-alerts]
+label = "Usage & quota alerts"
+description = "You approach a plan limit or rate cap."
+
+[settings.notifications.weekly-digest]
+label = "Weekly digest"
+description = "A Monday summary of volume and health."
+
+[settings.notifications.security-alerts]
+label = "Security alerts"
+description = "New API keys, sign-ins, or permission changes."
+
+[settings.notifications.product-updates]
+label = "Product updates"
+description = "New operations, sources, and release notes."
+
+[settings.workspace]
+nameLabel = "Workspace name"
+namePlaceholder = "Workspace name"
+regionLabel = "Data residency region"
+regionHelper = "Where documents are processed and stored at rest."
+regionEnterpriseSuffix = "{{region}} · Enterprise"
+plan = "Plan"
+seats = "Seats"
+seatsUsed = "{{used}} of {{total}} used"
+manageBilling = "Manage billing"
+
+[settings.authentication]
+title = "Sign-in policy"
+sub = "Organisation-wide authentication controls."
+sessionTimeout = "Session timeout"
+sessionTimeoutHelper = "Members re-authenticate after this idle period."
+
+[settings.authentication.mfa]
+label = "Enforce two-factor (MFA)"
+description = "Require every member to complete MFA at sign-in."
+
+[settings.authentication.sso]
+label = "Single sign-on (SAML)"
+description = "Federate sign-in through your identity provider."
+
+[settings.authentication.scim]
+label = "SCIM provisioning"
+description = "Sync members and roles from your directory."
+
+[settings.authentication.timeout]
+60 = "1 hour"
+240 = "4 hours"
+480 = "8 hours"
+720 = "12 hours"
+1440 = "24 hours"
+
+[settings.sessions]
+title = "Active sessions"
+sub = "Devices currently signed in to this account."
+thisDevice = "This device"
+revoke = "Revoke"
+
+[settings.earlyAccess]
+title = "Preview features"
+sub = "Opt into features still in preview."
+
+[componentsView]
+title = "Components"
+subtitle = "Embeddable SDK widgets you drop into your own app — a viewer, an e-sign flow, an AI review panel. Each is metered per action. Click a card for install, usage and props."
+
+[componentsView.lockedBanner]
+title = "Some components need a paid plan"
+description = "GA components are available on Pay-as-you-go; a few Beta components are enterprise-only. Locked cards show an upgrade nudge."
+
+[componentsView.empty]
+title = "No components available"
+description = "The component catalogue could not be loaded. Try again shortly."
+
+[pipelines]
+title = "Pipelines"
+subtitle = "Document workflows composed from typed operations — deployed, versioned, and continuously validated against a golden set."
+newPipeline = "New pipeline"
+
+[pipelines.status]
+healthy = "Healthy"
+degraded = "Degraded"
+
+[pipelines.fleet]
+healthy_one = "{{count}} healthy"
+healthy_other = "{{count}} healthy"
+degraded_one = "{{count}} degraded"
+degraded_other = "{{count}} degraded"
+deployed_one = "{{count}} deployed"
+deployed_other = "{{count}} deployed"
+
+[pipelines.evals]
+title = "Shadow + comparative evals active"
+body_one = "{{count}} pipeline running a shadow eval, {{comparativeCount}} in a comparative run. {{detail}}"
+body_other = "{{count}} pipelines running a shadow eval, {{comparativeCount}} in a comparative run. {{detail}}"
+
+[pipelines.empty]
+title = "No pipelines yet"
+description = "Compose your first document workflow from the typed operation library — pick a source, chain the ops, and route the output."
+action = "Build your first pipeline"
+
+[pipelines.reliability]
+heading = "Golden-set reliability"
+description = "Pass rate against each pipeline's golden set, judged against its own bound. Anything below bound shows amber or red."
+
+[pipelines.promoted]
+heading = "Promoted from the Editor"
+description = "Watch-folder flows built in the Editor and promoted into the portal. Promote one to a policy to apply its rules fleet-wide."
+policyCreated = "Policy created"
+promoteToPolicy = "Promote to policy"
+
+[pipelines.promoted.table]
+sourceDocType = "Source doc type"
+watchFolder = "Watch folder"
+status = "Status"
+
+[pipelines.promoted.status]
+deployed = "Deployed"
+staged = "Staged"
+review = "Needs review"
+
+[pipelines.table.header]
+name = "Pipeline"
+health = "Health"
+goldenSet = "Golden set"
+docs24h = "Docs / 24h"
+version = "Version"
+
+[pipelines.table]
+boundTooltip = "Bound: {{bound}}"
+
+[pipelines.metrics]
+docs24h = "Docs / 24h"
+throughput = "Throughput"
+errorRate = "Error rate"
+p95Latency = "P95 latency"
+uptime = "Uptime"
+
+[pipelines.card]
+stageTooltip_one = "{{label}}: {{count}} op"
+stageTooltip_other = "{{label}}: {{count}} ops"
+golden = "Golden {{passing}}/{{total}}"
+drift_one = "{{count}} drift"
+drift_other = "{{count}} drifts"
+
+[pipelines.composer]
+title = "New pipeline"
+subtitle = "Pick a source, compose the operation chain, then route the output."
+cancel = "Cancel"
+back = "Back"
+deploy = "Deploy pipeline"
+continue = "Continue"
+quickAddBundles = "Quick-add bundles"
+chainEmpty = "Add operations from the library below."
+operationChain_one = "Operation chain ({{count}})"
+operationChain_other = "Operation chain ({{count}})"
+destination = "Destination"
+alerts = "Alerts"
+
+[pipelines.composer.steps]
+source = "Source"
+operations = "Operations"
+routing = "Routing"
+
+[pipelines.composer.anySource]
+label = "Any source"
+desc = "Accept documents from every connected channel"
+
+[pipelines.composer.opKind]
+ingest = "Ingest"
+validate = "Validate"
+modify = "Modify"
+secure = "Secure"
+store = "Route / Store"
+alert = "Alerts"
+
+[pipelines.composer.alert.email]
+title = "Email on failure"
+desc = "Notify the on-call list when error rate trips its bound"
+
+[pipelines.composer.alert.webhook]
+title = "Webhook on completion"
+desc = "POST a run summary to a URL you control"
+
+[pipelines.composer.alert.review]
+title = "Route low-confidence to review"
+desc = "Send docs under the confidence bound to a human queue"
+
+[pipelines.detail]
+subtitle = "{{version}} · {{source}} → {{destination}}"
+
+[pipelines.detail.stages]
+heading = "Pipeline stages"
+description = "Every document flows through five stages between {{source}} and {{destination}}."
+noOps = "No ops"
+
+[pipelines.detail.golden]
+heading = "Golden-set validation"
+passing = "{{passing}} of {{total}} passing"
+lastRun = "last run {{lastRun}}"
+barLabel = "Golden set {{passing}} of {{total}} passing"
+
+[pipelines.detail.drift]
+heading = "Schema drift"
+confidence = "{{delta}} conf"
+docs_one = "{{count}} docs"
+docs_other = "{{count}} docs"
+
+[pipelines.detail.drift.empty]
+title = "No drift detected"
+description = "Every document in the last 24h matched its inferred schema."
+
+[sources]
+title = "Sources"
+subtitle = "Reusable input connections that feed documents into Stirling. Configure a connection once, then reference it from any number of policies. Click a row for its config and which policies use it."
+
+[sources.actions]
+agentBuilder = "Agent Builder"
+connectSource = "Connect source"
+
+[sources.empty]
+title = "No sources connected yet"
+description = "Connect a folder (and, soon, cloud storage) so your policies have somewhere to pull documents from."
+
+[sources.kpi]
+total = "Connections"
+inUse = "In use"
+unused = "Unused"
+
+[sources.status]
+active = "Active"
+unused = "Unused"
+disabled = "Disabled"
+
+[sources.table]
+source = "Source"
+status = "Status"
+usedBy = "Policies"
+
+[sources.detail]
+subtitle = "{{type}} · {{status}}"
+closeAriaLabel = "Close detail"
+usedBy = "Used by"
+notReferenced = "Not referenced by any policy, so it's safe to delete."
+docsUntracked = "Per-source document volume isn't tracked yet."
+edit = "Edit"
+pause = "Pause"
+resume = "Resume"
+delete = "Delete source"
+
+[sources.delete]
+title = "Delete source?"
+body = "Delete \"{{name}}\"? This can't be undone. Policies that reference it would need to be updated."
+cancel = "Cancel"
+confirm = "Delete"
+
+[sources.wizard]
+title = "Connect a source"
+editTitle = "Edit source"
+subtitle = "Step {{current}} of {{total}} · {{label}}"
+cancel = "Cancel"
+back = "Back"
+continue = "Continue"
+save = "Save changes"
+name = "Name"
+namePlaceholder = "e.g. Claims intake"
+type = "Type"
+
+[sources.wizard.steps]
+chooseType = "Choose type"
+configure = "Configure"
+review = "Review & connect"
+
+[sources.types.folder]
+label = "Folder"
+description = "Watch a directory on the server for new documents."
+
+[sources.types.folder.fields.directory]
+label = "Directory path"
+placeholder = "/data/incoming"
+helperText = "Absolute path Stirling watches for files to process."
+
+[sources.types.folder.fields.mode]
+label = "Read mode"
+
+[sources.types.folder.fields.mode.options]
+consume = "Consume: process each file once"
+snapshot = "Snapshot: re-read the folder every run"
+
+[sources.types.unknown]
+label = "Source"
+
+[usage]
+title = "Usage & Billing"
+subtitle = "Your last 30 days of processing, plan, and charges."
+
+[usage.chart.empty]
+title = "No usage yet"
+description = "Once documents are processed, your 30-day usage appears here."
+
+[usage.kpi.docsThisPeriod]
+label = "Docs this period"
+description = "of {{included}} included"
+
+[usage.kpi.costThisMonth]
+label = "Cost this month"
+description = "incl. {{fee}} platform"
+freePlan = "free plan"
+
+[usage.kpi.nextBillingDate]
+label = "Next billing date"
+resetsMonthly = "resets monthly"
+autoCharge = "auto-charge"
+
+[usage.kpi.remainingInPlan]
+label = "Remaining in plan"
+description = "docs before cap"
+
+[usage.kpi.commitUtilisation]
+label = "Commit utilisation"
+description = "of committed volume"
+
+[usage.kpi.overage]
+label = "Overage (${{rate}}/doc)"
+description_one = "{{docs}} doc past cap"
+description_other = "{{docs}} docs past cap"
+
+[usage.currentPlan]
+eyebrow = "Current plan"
+
+[usage.currentPlan.badge]
+free = "Free"
+pro = "Pay-as-you-go"
+enterprise = "Committed"
+
+[usage.currentPlan.free]
+progressLabel = "Free plan usage"
+
+[usage.currentPlan.free.capReached]
+title = "You've hit your free plan cap"
+body = "New documents are paused until next cycle. Upgrade to keep processing without interruption."
+
+[usage.currentPlan.free.approaching]
+title = "Approaching your free plan cap"
+body = "You're at {{pct}}% of 500 docs/month. Upgrade to pay-as-you-go to avoid a pause."
+
+[usage.currentPlan.pro]
+platformFee = "Platform fee"
+includedDocs = "Included docs"
+overage = "Overage · {{docs}} docs @ ${{rate}}"
+projected = "Projected this month"
+
+[usage.currentPlan.enterprise]
+committedVolume = "Committed volume"
+committedVolumeValue = "{{docs}} docs/mo"
+drawnThisPeriod = "Drawn this period"
+drawnThisPeriodValue = "{{docs}} docs"
+effectiveRate = "Effective rate"
+effectiveRateValue = "${{rate}} / doc"
+monthlyDraw = "Monthly draw"
+
+[usage.currentPlan.actions]
+upgrade = "Upgrade plan"
+talkToSales = "Talk to sales"
+adjustCommitment = "Adjust commitment"
+downloadInvoices = "Download invoices"
+
+[usage.spendCap.free]
+title = "Spend cap"
+description = "The free plan can't accrue spend — your usage is hard-capped at 500 docs/month. Upgrade to pay-as-you-go to set a monthly spend cap."
+
+[usage.spendCap.enterprise]
+title = "Spend controls"
+description = "Spend is governed by your committed-volume contract. Overage terms and alert thresholds are managed with your account team."
+badge = "Committed contract"
+overage = "Overage billed at ${{rate}}/doc"
+
+[usage.spendCap.pro]
+title = "Monthly spend cap"
+subtitle = "Pause processing automatically when spend reaches your limit."
+disable = "Disable cap"
+enable = "Enable cap"
+projected = "Projected {{projected}} of {{cap}} cap"
+progressLabel = "Spend against cap"
+
+[usage.plans]
+title = "Plans"
+subtitle = "Move up or down at any time — changes take effect next cycle."
+
+[usage.planCard]
+current = "Current"
+yourPlan = "Your plan"
+contactSales = "Contact sales"
+choosePlan = "Choose plan"
+
+[usage.history]
+title = "Billing history"
+subtitle = "Line items from the current and prior billing cycles."
+emptyRows = "No line items"
+
+[usage.history.columns]
+date = "Date"
+description = "Description"
+docs = "Docs"
+amount = "Amount"
+status = "Status"
+
+[usage.history.status]
+paid = "Paid"
+due = "Due"
+pending = "Pending"
+refunded = "Refunded"
+
+[usage.history.empty]
+title = "No billing history"
+description = "Charges and credits appear here once your first cycle closes."
+
+[usage.upgrade]
+notNow = "Not now"
+
+[usage.upgrade.free]
+title = "Upgrade to keep processing"
+subtitle = "Pay-as-you-go · $0.05 / doc"
+body = "You're at the edge of the 500 doc/month free cap. Pay-as-you-go lifts the cap instantly — you only pay for what you process beyond the included 25,000 docs."
+bullets = [
+  "Lift the 500 doc/month cap immediately",
+  "25,000 docs included, then $0.05/doc",
+  "Unlimited pipelines, agents, and sources",
+  "Set a monthly spend cap to stay in control",
+]
+cta = "Switch to pay-as-you-go"
+
+[usage.upgrade.proToEnterprise]
+title = "Move to a committed plan"
+subtitle = "Enterprise · committed annual volume"
+body = "Your overage is consistent month over month. A committed-volume contract lowers your effective per-doc rate and unlocks dedicated regions, SSO, and a named CSM."
+bullets = [
+  "Lower effective rate vs metered overage",
+  "Dedicated & on-prem region options",
+  "SSO, audit-log export, signed DPA",
+  "Named CSM and 99.99% SLA",
+]
+cta = "Talk to sales"
+
+[usage.upgrade.pro]
+title = "You're already on pay-as-you-go"
+subtitle = "Considering a committed plan?"
+body = "Pay-as-you-go scales with usage. If your volume is steady, a committed-volume contract typically lowers your effective per-doc rate."
+bullets = [
+  "Predictable monthly spend",
+  "Lower effective per-doc rate at volume",
+  "Volume discounts kick in past 1M docs/mo",
+]
+cta = "Explore committed pricing"
+
+[usage.upgrade.enterprise]
+title = "Adjust your commitment"
+subtitle = "Enterprise · bespoke terms"
+body = "Your plan is governed by a committed-volume contract. Changes to committed volume, regions, or terms are handled with your account team — they'll model the right shape with you."
+bullets = [
+  "Re-model committed volume up or down",
+  "Add dedicated or on-prem regions",
+  "Adjust SLA, DPA, and overage terms",
+]
+cta = "Contact your CSM"
+
+[documents]
+title = "Documents"
+subtitle = "Review and approve documents moving through your pipelines."
+
+[documents.summary]
+inQueue = "In queue"
+needsReview = "Needs review"
+avgConfidence = "Avg confidence"
+processedToday = "Processed today"
+
+[documents.filters]
+all = "All"
+needsReview = "Needs review"
+processed = "Processed"
+archived = "Archived"
+ariaLabel = "Filter documents by status"
+
+[documents.queue.empty]
+title = "No documents in the queue"
+description = "As sources feed documents into your pipelines they'll appear here for review."
+
+[documents.table]
+empty = "No documents match this filter."
+sensitiveTitle = "Sensitive — access required"
+sensitiveLabel = "Sensitive"
+
+[documents.table.columns]
+name = "Name"
+type = "Type"
+status = "Status"
+source = "Source"
+confidence = "Confidence"
+fields = "Fields"
+time = "Time"
+
+[documents.drawer]
+sectionsAriaLabel = "Document detail sections"
+
+[documents.drawer.tabs]
+overview = "Overview"
+extractions = "Extractions"
+audit = "Audit"
+
+[documents.overview]
+status = "Status"
+type = "Type"
+confidence = "Confidence"
+fieldsExtracted = "Fields extracted"
+source = "Source"
+received = "Received"
+
+[documents.extractions]
+masked = "Extracted fields are hidden. Request timed access to view this document's content."
+empty = "No fields were extracted from this document."
+
+[documents.extractions.columns]
+field = "Field"
+value = "Value"
+confidence = "Confidence"
+
+[documents.audit]
+empty = "No events recorded yet."
+
+[documents.elevation]
+requestAccess = "Request access"
+
+[documents.elevation.active]
+title = "Access expires in {{time}}"
+description = "Temporary grant — access is logged and time-boxed."
+descriptionFourEyes = "Temporary grant — a peer reviewer was notified (four-eyes)."
+
+[documents.elevation.gated]
+title = "Sensitive document"
+description = "Content is gated by zero-standing-access. Requesting starts a time-boxed grant."
+descriptionFourEyes = "Content is gated by zero-standing-access. Requesting starts a time-boxed grant and notifies a peer reviewer (four-eyes)."
+
+[agentBuilder]
+title = "Agent Builder"
+subtitle = "Design, test and ship the AI agents that classify, extract from and route your documents. Define scenarios, fence tool access, run a golden set, and publish a version."
+bootstrapFromDocument = "Bootstrap from document"
+sectionsAriaLabel = "Agent builder sections"
+selectorAriaLabel = "Agents"
+
+[agentBuilder.empty]
+title = "No agents yet"
+description = "Bootstrap an agent from a sample document to seed its scenarios and extraction schema, then refine and publish."
+
+[agentBuilder.tabs]
+scenarios = "Scenarios"
+tools = "Tools"
+evals = "Evals"
+versions = "Versions"
+
+[agentBuilder.kpi]
+activeAgents = "Active agents"
+avgPassRate = "Avg eval pass rate"
+scenarios = "Scenarios"
+latestPublished = "Latest published"
+totalDescription_one = "{{count}} total"
+totalDescription_other = "{{count}} total"
+acrossGoldenSets = "across golden sets"
+testCases = "test cases"
+fleetWide = "fleet-wide"
+
+[agentBuilder.bootstrap]
+title = "Bootstrap from a document"
+subtitle = "Seed a new agent from one representative file"
+cancel = "Cancel"
+submit = "Bootstrap agent"
+lead = "Drop a sample document and we'll propose scenarios and an extraction schema you can refine. Nothing is published until you review it."
+dropzoneText = "Choose a sample document (PDF or image)"
+
+[agentBuilder.scenarios]
+inEval = "in eval"
+muted = "muted"
+mute = "Mute"
+enable = "Enable"
+addScenario = "Add scenario"
+nameLabel = "Name"
+namePlaceholder = "e.g. Compliance escalation"
+expectationLabel = "Expected behaviour"
+expectationPlaceholder = "What the agent should do"
+add = "Add"
+
+[agentBuilder.tools]
+restrictedAccess = "Restricted tool access"
+restrictedDescription = "Allow every tool except the ones you deny below."
+governanceGate = "Tool governance is available on the Enterprise plan."
+restricted = "Restricted"
+broadAccess = "Broad access"
+deniedTools = "Denied tools"
+deniedHint = "Selected tools are blocked. Everything else stays callable."
+
+[agentBuilder.evals]
+columnCase = "Eval case"
+columnResult = "Result"
+columnLatency = "Latency"
+notRun = "not run"
+pass = "pass"
+fail = "fail"
+latencyMs = "{{ms}} ms"
+passRate = "Pass rate"
+casesPassing = "Cases passing"
+runEvals = "Run evals"
+goldenSetPassRate = "Golden-set pass rate"
+
+[agentBuilder.evals.empty]
+title = "No golden set yet"
+description = "Evals turn your scenarios into a repeatable golden set. Upgrade to capture pass-rate over time and gate publishes on it."
+
+[agentBuilder.versions]
+current = "current"
+publish = "Publish"
+rollBack = "Roll back"
+historyGate = "Full version history and rollback are available on the Enterprise plan."
+
+[home.productGrid]
+ariaLabel = "Process PDFs at scale"
+
+[home.productGrid.sources]
+title = "Sources"
+blurb = "Attach pipelines where PDFs already live — S3, agents, SharePoint, webhooks, batch, email."
+cta = "Connect a source"
+
+[home.productGrid.pipelines]
+badge = "Hero"
+title = "Pipelines"
+blurb = "Compose document workflows from typed operations. Upload a sample to get suggestions or start blank."
+cta = "Build a pipeline"
+
+[home.productGrid.agents]
+title = "Agents"
+blurb = "Wire your agent via MCP, REST, or tool definitions. Deterministic operations, scenarios, evals."
+cta = "Connect an agent"
+
+[home.quickActions]
+title = "Quick actions"
+subtitle = "Top tasks for today"
+
+[home.quickActions.tryOp]
+title = "Try a PDF operation"
+blurb = "Drop a sample, pick an op, see the JSON"
+
+[home.quickActions.buildPipeline]
+title = "Build a pipeline"
+blurb = "3-step composer over the typed op library"
+
+[home.quickActions.connectSource]
+title = "Connect a source"
+blurb = "S3, agents, webhooks, watched folders"
+
+[home.quickActions.issueApiKey]
+title = "Issue an API key"
+blurb = "Scoped key with rate limits and IP allowlist"
+
+[home.onboarding]
+title = "Get to value"
+subtitle = "Four steps to a production-shaped Stirling project."
+progress = "{{done}} / {{total}} done"
+runAgain = "Run again"
+start = "Start"
+
+[home.onboarding.empty]
+title = "No onboarding steps yet"
+description = "Onboarding tasks will appear here once your workspace is set up."
+
+[home.kpis.free]
+docsProcessed = "Docs processed"
+docsProcessedDescription = "Free plan cap"
+operations = "Operations"
+pipelines = "Pipelines"
+agents = "Agents"
+
+[home.kpis.pro]
+docs30d = "Docs / 30d"
+pipelines = "Pipelines"
+agentsActive = "Agents active"
+evalPassRate = "Eval pass rate"
+
+[home.kpis.enterprise]
+docs30d = "Docs / 30d"
+p95Latency = "P95 latency"
+evalPassRate = "Eval pass rate"
+slaUptime = "SLA uptime (30d)"
+
+[home.regions]
+title = "Region health"
+subtitle = "Real-time status for every deployed Stirling region."
+
+[home.regions.empty]
+title = "No regions yet"
+description = "Once a region is deployed, its health appears here."
+
+[home.chart.empty]
+title = "No usage yet"
+description = "Once documents are processed, your 30-day usage appears here."
+
+[editorAdmin]
+title = "Editor deployment"
+subtitle = "Deploy the Stirling PDF Editor, pair self-hosted instances to your org, and operate the running fleet — targets, health, credentials, and offline activation in one place."
+
+[editorAdmin.sections.targets]
+title = "Deployment targets"
+sub = "Where the Editor runs. Copy a snippet to stand up a self-hosted instance, or use Managed Cloud with no ops."
+
+[editorAdmin.sections.pairing]
+title = "Pairing"
+sub = "Connect a self-hosted editor to this org. Generate a token, hand off a short code, or wire it through IaC."
+
+[editorAdmin.sections.health]
+title = "Instance health"
+sub = "Every Editor instance reporting in — version, region, status, last seen, and active users."
+
+[editorAdmin.serviceToken]
+title = "Service token"
+subtitle = "Instances authenticate to the org with this credential. Rotate it on a schedule or immediately after a suspected leak."
+currentToken = "Current token"
+lastRotated = "Last rotated"
+rotateButton = "Rotate service token"
+
+[editorAdmin.serviceToken.rotatedBanner]
+title = "Rotate running instances"
+description = "A new token was issued. Update each self-hosted instance's STIRLING_SERVICE_TOKEN within the 24h grace window or they'll drop offline."
+
+[editorAdmin.targets]
+talkToSales = "Talk to sales"
+upgradePlan = "Upgrade plan"
+instanceCount_one = "{{count}} instance"
+instanceCount_other = "{{count}} instances"
+
+[editorAdmin.targets.state]
+running = "Running"
+available = "Available"
+locked = "Locked"
+
+[editorAdmin.targets.lock]
+enterprise = "On-prem and Kubernetes self-hosting are part of Enterprise."
+paid = "Self-hosting with Docker and Kubernetes unlocks on a paid plan."
+
+[editorAdmin.pairing]
+lockCopy = "IaC provisioning is part of Enterprise."
+talkToSales = "Talk to sales"
+generated = "Generated ✓"
+generateNewCode = "Generate new code"
+rotate = "Rotate"
+
+[editorAdmin.health.columns]
+host = "Host"
+version = "Version"
+region = "Region"
+status = "Status"
+lastSeen = "Last seen"
+activeUsers = "Active users"
+
+[editorAdmin.health.empty]
+title = "No instances reporting"
+description = "Deploy a target and pair it to see live instance health here."
+
+[editorAdmin.offlineActivation]
+title = "Air-gapped activation"
+enterpriseTag = "Enterprise"
+subtitle = "Generate a signed activation bundle for an offline or on-prem install with no outbound network path. Transfer it to the instance and apply it during first-run setup."
+lockCopy = "Offline and on-prem activation is part of Enterprise."
+talkToSales = "Talk to sales"
+generateButton = "Generate offline bundle"
+
+[editorAdmin.offlineActivation.readyBanner]
+title = "Bundle ready"
+description = "{{file}} is signed and ready to transfer. It activates one instance and expires in 14 days."
+
+[policies]
+title = "Policies"
+subtitle = "Standing automations that enforce a tool pipeline on every document. Each policy fires on upload or export, runs its tool chain, and saves the enforced version alongside the original."
+
+[policies.status]
+active = "Active"
+paused = "Paused"
+
+[policies.stats]
+docsEnforced = "Docs enforced"
+dataProcessed = "Data processed"
+activeFor = "Active"
+
+[policies.summary.active]
+label = "Active policies"
+description = "Enforcing on upload/export"
+
+[policies.summary.paused]
+label = "Paused"
+description = "Configured but not firing"
+
+[policies.summary.categories]
+label = "Categories"
+description = "Available to configure"
+
+[policies.summary.docsEnforced]
+label = "Docs enforced"
+description = "Across active policies"
+
+[policies.card]
+comingSoon = "Coming soon"
+notSetUp = "Not set up"
+setUp = "Set up →"
+
+[policies.detail]
+title = "{{category}} policy"
+meta = "Runs on {{event}} · output {{output}}"
+outputAsNewFile = "as a new file"
+outputAsNewVersion = "as a new version"
+enforces = "Enforces"
+enforceNote = "{{scope}} · originals stay untouched, the enforced version is saved alongside."
+recentActivity = "Recent activity"
+
+[policies.detail.actions]
+delete = "Delete"
+runNow = "Run now"
+resume = "Resume"
+pause = "Pause"
+editSettings = "Edit settings"
+
+[policies.detail.emptyActivity]
+title = "No activity yet"
+description = "Documents will appear here once this policy runs."
+
+[policies.detail.scoped]
+title = "Scoped"
+description = "Limited to: {{types}}"
+
+[policies.wizard.title]
+edit = "Edit {{category}} policy"
+setUp = "Set up {{category}} policy"
+
+[policies.wizard.actions]
+cancel = "Cancel"
+continue = "Continue"
+back = "Back"
+saveChanges = "Save changes"
+enablePolicy = "Enable policy"
+
+[policies.wizard.errors]
+noTools = "Enable at least one tool in the workflow first."
+saveFailed = "Couldn't save the policy. Please try again."
+
+[policies.wizard.tabs]
+ariaLabel = "Setup steps"
+workflow = "Workflow"
+settings = "Settings"
+
+[policies.wizard.workflow]
+description = "The sequence of tools this policy runs on each document. Each tool is a Stirling endpoint; toggle the ones this policy should enforce."
+
+[policies.wizard.settings]
+heading = "Settings"
+
+[policies.wizard.sources]
+heading = "Sources"
+
+[policies.wizard.docTypes]
+heading = "Document types"
+allTitle = "All document types"
+allDescription = "Set up an Ingestion (classification) policy to narrow this to specific document types."
+selected_one = "{{count}} selected"
+selected_other = "{{count}} selected"
+clear = "Clear"
+narrow = "Narrow"
+
+[policies.wizard.output]
+heading = "Output & run"
+
+[policies.wizard.output.runOn]
+label = "Run on"
+helper = "When the policy fires: on upload, or before export."
+upload = "Upload"
+export = "Export"
+
+[policies.wizard.output.outputAs]
+label = "Output as"
+newVersion = "New version"
+newFile = "New file"
+
+[policies.wizard.output.filenameRule]
+label = "Filename rule"
+prefix = "Prefix"
+suffix = "Suffix"
+autoNumber = "Auto-number"
+placeholder = "Text to add (optional)"
+
+[policies.wizard.output.reviewerEmail]
+label = "Reviewer email"
+helper = "Low-confidence enforcements are routed here for review."
+
+[users.summary]
+members = "Members"
+pendingInvites = "Pending invites"
+seatsUsed = "Seats used"
+
+[users.table]
+member = "Member"
+role = "Role"
+status = "Status"
+lastActive = "Last active"
+actionsFor = "Actions for {{name}}"
+changeRole = "Change role"
+suspend = "Suspend"
+remove = "Remove from org"
+
+[users.invite]
+subtitle = "They'll receive an email to join your organization."
+cancel = "Cancel"
+send = "Send invite"
+email = "Email"
+emailPlaceholder = "teammate@acme.com"
+emailError = "Enter a valid email address"
+role = "Role"
+roleHelper = "Determines what the member can do once they join."
+
+[users.roles]
+title = "Roles"
+subtitle = "Every role exists on every plan — what each one can do is fixed across the org."
+
+[users.access]
+title = "Access & security"
+subtitle = "Seats, authentication and provisioning for your organization."
+
+[users.access.seats]
+title = "Seats"
+unlimited = "Your plan includes unlimited seats."
+usedLabel = "{{used}} of {{limit}} seats used"
+
+[users.access.auth]
+title = "Authentication"
+
+[users.access.auth.requireMfa]
+label = "Require MFA"
+enforced = "Enforced org-wide on this plan."
+description = "Members must set up a second factor to sign in."
+
+[users.access.auth.shortSessions]
+label = "Short-lived sessions"
+description = "Sign members out after inactivity (currently {{timeout}})."
+
+[users.access.sso]
+title = "SSO / SAML"
+connected = "Connected"
+notConfigured = "Not configured"
+provider = "Provider"
+domains = "Domains"
+manage = "Manage connection"
+
+[users.access.scim]
+title = "SCIM provisioning"
+active = "Active"
+off = "Off"
+directory = "Directory"
+lastSync = "Last sync"
+note = "Members are created, updated and deactivated automatically from your identity provider."
+
+[users.access.upgrade]
+title = "Unlock team access controls"
+action = "Upgrade plan"
+
+[docs.nav]
+ariaLabel = "Documentation"
+
+[docs.nav.empty]
+title = "Docs unavailable"
+description = "The documentation index could not be loaded."
+
+[docs.authentication]
+eyebrow = "GETTING STARTED"
+title = "Authentication"
+lead = "All requests authenticate with a bearer token. Keys are scoped per environment and never expire unless rotated."
+codeCaption = "every request"
+liveKey = "Production keys — billed, rate-limited per your plan."
+testKey = "Sandbox keys — free, return synthetic fixtures."
+
+[docs.components]
+eyebrow = "COMPONENTS"
+title = "Drop-in viewers"
+lead = "Embeddable UI for review queues and document inspection. Bring your own styles or use the shipped theme."
+codeCaption = "embed the viewer"
+
+[docs.endpoints]
+eyebrow = "API REFERENCE"
+title = "Endpoints"
+lead = "Every document type is a typed endpoint. POST a file, receive schema-validated JSON. Filter by vertical below."
+filterAll = "All"
+filterAriaLabel = "Filter endpoints by vertical"
+fieldCount_one = "{{count}} field"
+fieldCount_other = "{{count}} fields"
+
+[docs.errors]
+eyebrow = "API REFERENCE"
+title = "Errors"
+lead = "Errors return a stable machine-readable code plus a human message. The 4xx body always includes a request_id for support."
+codeCaption = "422 Unprocessable Entity"
+
+[docs.quickstart]
+eyebrow = "GETTING STARTED"
+title = "Quickstart"
+lead = "Send your first document to a typed endpoint and get structured JSON back in three steps. No model training, no prompt engineering."
+
+[docs.quickstart.step1]
+title = "Issue an API key"
+body = "Create a scoped key from the Infrastructure tab. Keys carry rate limits and an optional IP allowlist. Export it into your shell:"
+
+[docs.quickstart.step2]
+title = "Send a document"
+body = "POST a file to any typed endpoint. The endpoint determines the schema you get back — here, the invoice extractor."
+snippetCaption = "extract an invoice"
+
+[docs.quickstart.step3]
+title = "Read the structured result"
+body = "Every response is validated against the endpoint schema, with a confidence score and per-field provenance."
+codeCaption = "200 OK"
+
+[docs.quickstart.callout]
+label = "Next:"
+bodyBeforeLink = "wire the same call into a pipeline to chain validation, redaction, and delivery — or expose it to an agent over MCP. See"
+link = "Playbooks"
+bodyAfterLink = "for copy-paste recipes."
+
+[docs.recipes]
+eyebrow = "PLAYBOOKS"
+title = "Recipes"
+lead = "End-to-end patterns that chain sources, operations, and destinations. Each maps to a pipeline you can clone."
+cloneButton = "Clone recipe"
+
+[docs.rateLimits]
+eyebrow = "GETTING STARTED"
+title = "Rate limits & quotas"
+lead = "Limits scale with your plan. A 429 response includes a Retry-After header; the SDKs back off automatically."
+requestsPerMinute = "Requests / minute"
+burst = "Burst"
+concurrency = "Concurrency"
+codeCaption = "429 Too Many Requests"
+
+[docs.sdks]
+eyebrow = "SDKS"
+title = "Official SDKs"
+lead = "First-party clients with typed responses, automatic retries, and streaming uploads. All track the same endpoint catalogue."
+
+[docs.sdks.status]
+beta = "Beta"
+deprecated = "Deprecated"
+
+[docs.skills]
+eyebrow = "SKILLS"
+title = "Agent skills"
+lead = "Bundled, named capabilities your agent invokes as a single tool. Each skill is a deterministic op chain with evals attached."
+
+[docs.webhooks]
+eyebrow = "API REFERENCE"
+title = "Webhooks"
+lead = "Subscribe to document.processed, pipeline.completed, and quota.threshold events. Payloads are signed with HMAC-SHA256."
+codeCaption = "document.processed"
+
+[docs.webhooks.callout]
+beforeSignature = "Verify the"
+beforeHelper = "header against your signing secret before trusting a payload. SDKs ship a"
+afterHelper = "helper."
+
+[catalogue.card]
+openAriaLabel = "Open {{name}} component"
+lockedAriaLabel = "Locked"
+
+[catalogue.detail]
+ariaLabel = "Component detail"
+tabsAriaLabel = "Component detail sections"
+addToProject = "Add to project"
+upgradeToUnlock = "Upgrade to unlock"
+
+[catalogue.detail.tabs]
+overview = "Overview"
+code = "Code"
+props = "Props / API"
+pricing = "Pricing"
+
+[catalogue.detail.locked]
+title = "Not available on your plan"
+description = "{{name}} is included from the {{tier}} plan. Upgrade to embed it."
+
+[catalogue.detail.preview]
+badge = "Live preview"
+note = "Interactive sandbox renders here"
+
+[catalogue.detail.stats]
+maturity = "Maturity"
+price = "Price"
+freeQuota = "Free quota"
+freeQuotaValue = "{{amount}} / mo"
+none = "None"
+embeds30d = "Embeds (30d)"
+perAction = "Per action"
+billedOn = "Billed on"
+
+[catalogue.detail.code]
+install = "Install"
+usage = "Usage"
+
+[catalogue.detail.pricing]
+note = "Metered per {{unit}}. Usage beyond the monthly free quota is billed to your account and itemised under Usage & Billing."
+
+[catalogue.props]
+required = "required"
+optional = "optional"
+
+[catalogue.props.columns]
+name = "Prop"
+type = "Type"
+required = "Required"
+description = "Description"
+
+[catalogue.summary]
+componentsGa = "Components GA"
+inBeta = "In beta"
+embedsThisMonth = "Embeds this month"
+componentSpendMtd = "Component spend (MTD)"
+
+[infrastructure]
+title = "Infrastructure"
+subtitle = "Deployments, credentials, security posture, storage, and the audit trail for your Stirling workspace."
+manageEditorDeployment = "Manage Editor deployment"
+sectionsAriaLabel = "Infrastructure sections"
+
+[infrastructure.tabs]
+deployments = "Deployments"
+apiKeys = "API Keys"
+security = "Security"
+models = "Models"
+storage = "Storage"
+audit = "Audit Logs"
+
+[infrastructure.apiKeys]
+heading = "API keys"
+subheading = "Scoped credentials with per-key rate limits, permissions, and IP allowlists."
+createKey = "Create key"
+
+[infrastructure.apiKeys.empty]
+title = "No API keys yet"
+description = "Create a scoped key to start calling the Stirling API."
+
+[infrastructure.apiKeys.card]
+created = "Created"
+lastUsed = "Last used"
+rateLimit = "Rate limit"
+rateLimitValue = "{{value}} req/min"
+usageToday = "Usage today"
+usageMonth = "Usage this month"
+permissions = "Permissions"
+allowedIps = "Allowed IPs"
+anyIp = "Any IP (no allowlist)"
+
+[infrastructure.createKey]
+title = "Create API key"
+titleCreated = "Key created"
+subtitle = "Scope the key to the minimum it needs. You can rotate or revoke at any time."
+subtitleCreated = "Copy this secret now — it won't be shown again."
+done = "Done"
+cancel = "Cancel"
+createKey = "Create key"
+secretKeyCaption = "Secret key"
+secretWarning = "Store this in a secrets manager. Stirling only ever stores a hash — there is no way to recover it later."
+keyNameLabel = "Key name"
+keyNamePlaceholder = "e.g. Production · ingest"
+permissionsLabel = "Permissions"
+ipAllowlistLabel = "IP allowlist"
+ipAllowlistHelper = "Comma-separated CIDR ranges. Leave blank to allow any IP."
+
+[infrastructure.deployments]
+msValue = "{{value}} ms"
+throughputValue = "{{value}}/min"
+
+[infrastructure.deployments.regionColumns]
+region = "Region"
+latency = "Latency"
+load = "Load"
+status = "Status"
+version = "Version"
+uptime = "Uptime"
+instances = "Instances"
+throughput = "Throughput"
+p99 = "P99"
+
+[infrastructure.deployments.deployColumns]
+version = "Version"
+environment = "Environment"
+product = "Product"
+status = "Status"
+deployedBy = "Deployed by"
+when = "When"
+
+[infrastructure.deployments.regions]
+heading = "Regions"
+subheading = "Live health for every deployed Stirling region — latency, load, and rollout version."
+
+[infrastructure.deployments.regions.empty]
+title = "No regions deployed"
+description = "Deployed regions appear here once your workspace is provisioned."
+
+[infrastructure.deployments.recent]
+heading = "Recent deployments"
+subheading = "The latest rollouts across products and environments."
+
+[infrastructure.audit]
+heading = "Audit logs"
+subheading = "Every authentication, configuration, and processing event across your workspace."
+filterAriaLabel = "Filter audit events by category"
+latencyValue = "{{value}} ms"
+noEventsInCategory = "No events in this category."
+
+[infrastructure.audit.filters]
+all = "All"
+auth = "Auth"
+config = "Config"
+elevation = "Elevation"
+processing = "Processing"
+security = "Security"
+
+[infrastructure.audit.columns]
+timestamp = "Timestamp"
+event = "Event"
+actor = "Actor"
+target = "Target"
+status = "Status"
+latency = "Latency"
+
+[infrastructure.audit.metrics]
+totalEvents = "Total events · 24h"
+processing = "Processing"
+elevation = "Elevation"
+config = "Config"
+
+[infrastructure.audit.empty]
+title = "No audit events"
+description = "Workspace activity will appear here as it happens."
+
+[infrastructure.models]
+heading = "Models"
+subheading = "The model catalogue and routing that powers document processing across your workspace."
+msValue = "{{value}} ms"
+
+[infrastructure.models.columns]
+model = "Model"
+type = "Type"
+status = "Status"
+load = "Load"
+latency = "Latency"
+cost = "Cost"
+version = "Version"
+
+[infrastructure.models.routingColumns]
+operation = "Operation"
+default = "Default"
+docType = "Document type"
+routedTo = "Routed to"
+modelForAria = "Model for {{operation}}"
+
+[infrastructure.models.metrics]
+activeModels = "Active models"
+avgLatency = "Avg latency"
+monthlySpend = "Monthly model spend"
+included = "Included"
+
+[infrastructure.models.catalogue]
+heading = "Catalogue"
+sub = "Managed models available to your workspace, with live latency and cost."
+subEnterprise = "Managed, bring-your-own, and on-prem models — with per-region pinning available."
+
+[infrastructure.models.catalogue.empty]
+title = "No models available"
+description = "Models in your workspace's catalogue appear here."
+
+[infrastructure.models.byom]
+title = "Bring your own model"
+description = "Register an on-prem or self-hosted model and pin it to a region for data-residency-bound processing."
+
+[infrastructure.models.routing]
+heading = "Routing rules"
+sub = "Which model handles each operation. The default applies when no narrower rule matches."
+subLocked = "Route operations to specific models — available on paid plans."
+empty = "No routing rules configured."
+
+[infrastructure.models.routing.lockedBanner]
+title = "Model routing is a paid feature"
+description = "Upgrade to Pro to control which model handles each operation and document type."
+
+[infrastructure.security.empty]
+title = "Security posture unavailable"
+description = "Your workspace's security configuration will appear here."
+
+[infrastructure.security.access.stirling]
+label = "Stirling-held keys"
+description = "Stirling manages encryption keys. Simplest — zero key ops on your side."
+
+[infrastructure.security.access.byok]
+label = "Bring your own key (BYOK)"
+description = "Supply a key from your own KMS. Stirling encrypts with it but can still read."
+
+[infrastructure.security.access.hyok]
+label = "Hold your own key (HYOK)"
+description = "Keys never leave your KMS. Stirling holds only ciphertext."
+
+[infrastructure.security.residency.us]
+label = "United States"
+description = "us-east-1 · us-west-2"
+
+[infrastructure.security.residency.eu]
+label = "European Union"
+description = "eu-west-1 · GDPR data boundary"
+
+[infrastructure.security.residency.apac]
+label = "Asia Pacific"
+description = "ap-southeast-1"
+
+[infrastructure.security.ipColumns]
+label = "Label"
+cidr = "CIDR"
+addedBy = "Added by"
+added = "Added"
+
+[infrastructure.security.accessPolicy]
+heading = "Document access policy"
+subheading = "Controls who can decrypt processed documents at rest."
+
+[infrastructure.security.hyokBanner]
+title = "Stirling cannot decrypt your documents"
+description = "With HYOK, encryption keys never leave your KMS. Stirling stores and processes only ciphertext you can revoke at any time."
+
+[infrastructure.security.residencyHeader]
+heading = "Data residency"
+subheading = "Where documents are stored and processed."
+
+[infrastructure.security.keyManagement]
+heading = "Encryption key management"
+subheading = "Custody of the keys that encrypt documents at rest — who can decrypt, and how keys rotate."
+rotateKey = "Rotate key"
+keyId = "Key identifier"
+algorithm = "Algorithm"
+lastRotated = "Last rotated"
+rotationPolicy = "Rotation policy"
+
+[infrastructure.security.managedBanner]
+title = "Keys are managed by Stirling on your plan"
+description = "Bring-your-own-key (BYOK) and hold-your-own-key (HYOK) custody are available on Enterprise. Upgrade to supply keys from your own KMS."
+
+[infrastructure.security.compliance]
+heading = "Compliance"
+subheading = "Attestations and certifications covering the Stirling platform."
+
+[infrastructure.security.attestations]
+heading = "Compliance attestations"
+subheading = "Framework-by-framework audit posture, with reports available on attested controls."
+viewReport = "View report →"
+noReport = "No report available"
+
+[infrastructure.security.ipAllowlist]
+heading = "IP allowlist"
+sub = "API access is restricted to these CIDR ranges."
+subLocked = "Restrict API access to known IP ranges — available on paid plans."
+empty = "No IP ranges configured — all IPs allowed."
+
+[infrastructure.security.ipAllowlist.lockedBanner]
+title = "IP allowlisting is a paid feature"
+description = "Upgrade to Pro to restrict API access to specific networks."
+
+[infrastructure.storage]
+gbValue = "{{value}} GB"
+percentUsed = "{{value}} used"
+
+[infrastructure.storage.retentionOption]
+days_one = "{{count}} day"
+days_other = "{{count}} days"
+never = "Never delete"
+
+[infrastructure.storage.empty]
+title = "No storage configured"
+description = "Connected storage and usage appear here."
+
+[infrastructure.storage.totalUsage]
+heading = "Total usage"
+subheading = "Storage consumed across all connected providers."
+progressLabel = "Storage used"
+
+[infrastructure.storage.providers]
+heading = "Connected providers"
+subheading = "Where processed artifacts are written."
+connected = "Connected"
+connect = "Connect"
+
+[infrastructure.storage.retention]
+heading = "Retention"
+subheading = "How long artifacts are kept before lifecycle deletion."
+windowLabel = "Default retention window"
+
+[infrastructure.storage.lifecycle]
+active = "Active"
+activeRange = "0–{{value}}d"
+archived = "Archived"
+coldStorage = "cold storage"
+deleted = "Deleted"
+never = "never"
+purged = "purged"
+
+[recentActivity]
+title = "Recent activity"
+viewAll = "View all"
+
+[recentActivity.empty]
+title = "Nothing here yet"
+description = "Pipeline runs, deploys and agent events will appear here."
+
+[useCases]
+title = "Popular use cases"
+viewAll = "View all pipelines"
+
+[useCases.items.autoRouting]
+eyebrow = "AUTO-ROUTING"
+title = "Auto-classify and route incoming documents"
+blurb = "One classifier reads what arrived — KYC form, invoice, contract, COI — and routes to the right downstream pipeline. No manual triage, no docs in the wrong workflow."
+cta = "Build a classifier pipeline"
+
+[useCases.items.piiRedaction]
+eyebrow = "PII REDACTION"
+title = "Redact PII before it leaves your stack"
+blurb = "Strip sensitive fields before storage, indexing, or LLM processing. Schema-aware, per-field audit, BYOK or HYOK keys. Compliance at the document boundary, not per pipeline."
+cta = "See redaction pipelines"
+
+[useCases.items.trainingData]
+eyebrow = "TRAINING DATA"
+title = "Turn PDFs into training data"
+blurb = "Batch-import an archive, redact PII, classify, chunk, and emit ready-to-load JSON for fine-tuning, eval sets, or RAG. Self-completing and replayable."
+cta = "Build a training-data pipeline"
+
+[useCases.items.authenticity]
+eyebrow = "AUTHENTICITY"
+title = "Verify signatures and detect tampering"
+blurb = "Cryptographic checks at the document boundary — signature validation, tamper detection, signing flows for outbound documents. Trust decisions in the pipeline, not your app code."
+cta = "Try authenticity check"
+
+[policySummary]
+title = "What runs on your PDFs"
+subtitle = "Standing automations every document passes through, regardless of which pipeline handles it."
+activeSummary = "{{active}} / {{total}} active"
+noRule = "No rule enforced yet"
+
+[policySummary.state]
+active = "Active"
+off = "Off"
+soon = "Soon"
+
+[policySummary.column]
+policy = "Policy"
+status = "Status"
+activeRule = "Active rule"
+
+[policySummary.action]
+comingSoon = "Coming soon"
+configure = "Configure"
+setUp = "Set up"
+
+[policySummary.empty]
+title = "No policies yet"
+description = "Once policies are configured, the categories appear here."
+
+[opRunner]
+title = "Try a PDF operation"
+subtitle = "Drop a sample, pick an op, see what Stirling returns."
+featuredOps = "Featured ops"
+durationMs = "{{ms}} ms"
+
+[opRunner.action]
+close = "Close"
+runAgain = "Run again"
+openBuilder = "Open the pipeline builder"
+run = "Run operation"
+running = "Running…"
+
+[opRunner.status]
+failed = "Failed"
+completed = "Completed"
+
+[opRunner.drop]
+title = "Drop a PDF here"
+hint = "or use a sample document."
+replaceHint = "Drop again or pick another sample to replace."
+pickAnother = "Pick another sample"
+useSample = "Use a sample"
+
+[opRunner.empty]
+title = "No featured ops yet"
+description = "Once operations are published, they'll show up here."
+
+[opRunner.hint]
+ready = "Ready"
+aSample = "a sample"
+press = "Press"
+toInvoke = "to invoke"
+
+[opRunner.hint.runOn]
+before = "Run"
+middle = "on"
+
+[opRunner.running]
+title = "Running {{label}}…"
+
+[opRunner.error]
+title = "The operation didn't complete"
+unknown = "Unknown error"
+
+[welcome]
+ariaLabel = "Stirling product highlights"
+pagination = "Carousel pagination"
+slideLabel = "Slide {{number}}: {{title}}"
+
+[welcome.ornament.editor]
+critical = "Critical"
+signed = "signed"
+ocrClean = "OCR-clean"
+schemaMatch = "schema match 0.97"
+
+[welcome.slides.editor]
+eyebrow = "PDF Editor"
+title = "The #1 PDF Editor on GitHub"
+sub = "Annotate, sign, redact, and review locally or in the cloud. Brought to the platform as the credibility anchor of the Stirling control plane."
+primary = "Install PDF Editor"
+secondary = "Connect an instance"
+
+[welcome.slides.platform]
+eyebrow = "Platform"
+title = "PDF Infrastructure for Developers"
+sub = "Ingest from agents, APIs and connectors. Run composable pipelines with evals and golden sets. Land in a vault with zero-standing-access controls."
+primary = "Try a PDF operation"
+secondary = "Get an API key"
+
+[welcome.slides.agents]
+eyebrow = "AI Agents"
+title = "PDF Processor for AI Agents"
+sub = "Wire your agent via MCP, REST or tool definitions. Deterministic operations and guardrails — test with scenarios and evals before you ship."
+primary = "Try PDF Processor"
+secondary = "View MCP docs"
+
+[notifications]
+title = "Notifications"
+markAllRead = "Mark all read"
+viewAll = "View all"
+
+[notifications.ariaLabel]
+unread_one = "Notifications, {{count}} unread"
+unread_other = "Notifications, {{count}} unread"
+none = "Notifications, no unread"
+
+[notifications.count]
+new_one = "{{count}} new"
+new_other = "{{count}} new"
+loading = "loading"
+allRead = "all read"
+
+[notifications.empty]
+title = "You're all caught up"
+description = "No new notifications."
+
+[mocks.label]
+on = "Mocks ON"
+off = "Mocks OFF"
+
+[mocks.tooltip]
+on = "Mock data ON — fetch calls are intercepted by MSW. Click to switch to the real network (reloads the page)."
+off = "Mock data OFF — fetch calls go to the real network. Click to re-enable mocks (reloads the page)."
+
+[forkWizard]
+title = "Fork a starter pipeline"
+subtitle = "Clone a proven workflow and tune it — every template ships the same four-stage backbone."
+
+[forkWizard.status]
+ready = "Ready to deploy"
+building = "Building…"
+
+[forkWizard.action]
+pickAnother = "Pick another"
+cancel = "Cancel"
+deploy = "Deploy pipeline"
+
+[processingStatus]
+upgrade = "Upgrade"
+pdfsThisMonth = "PDFs this month"
+progressLabel = "{{used}} of {{cap}} PDFs used this month"
+volumeSuffix = "PDFs processed · last 30 days"
+managePlan = "Manage plan"
+
+[usageChart]
+defaultLabel = "Docs processed · last 30 days"
+delta = "{{pct}}% vs prior 30d"
+docsValue = "{{value}} docs"
+srAnnounce = "{{date}}: {{value}} docs"
+
+# Login screen - keys used by the shared auth UI (@shared/auth/ui/*), which the
+# portal renders identically to the editor. Values mirror the editor's en-US locale.
+[login]
+enterMfaCode = "Enter 6-digit code"
+enterPassword = "Enter your password"
+enterUsername = "Enter username"
+failedToSignIn = "Failed to sign in with {{provider}}: {{message}}"
+loggingIn = "Logging In..."
+login = "Login"
+mfaCode = "Authentication Code"
+mfaRequired = "Two-factor code required"
+password = "Password"
+pleaseEnterBoth = "Please enter both email and password"
+signInWith = "Sign in with"
+unexpectedError = "Unexpected error: {{message}}"
+username = "Username"
+
+[login.slides.edit]
+alt = "Edit PDFs"
+subtitle = "With over a dozen tools to help you redact, sign, read and manipulate PDFs, you will be sure to find what you are looking for."
+title = "Edit PDFs to display/secure the information you want"
+
+[login.slides.overview]
+alt = "Stirling PDF overview"
+subtitle = "A privacy-first cloud suite for PDFs that lets you convert, sign, redact, and manage documents, along with 50+ other powerful tools."
+title = "Your one-stop-shop for all your PDF needs."
+
+[login.slides.secure]
+alt = "Secure PDFs"
+subtitle = "Add passwords, redact content, and manage certificates with ease."
+title = "Protect sensitive information in your PDFs"
+
+[signup]
+or = "or"
+
+# Auth gate (portal is admin-only): transient states shown by AuthGate.
+[auth]
+loading = "Loading"
+redirectingToEditor = "Redirecting to the editor..."
+
+[errorBoundary]
+title = "Something went wrong on this page"
+description = "This view hit an unexpected error. Try again, or pick another section from the sidebar."
+retry = "Try again"

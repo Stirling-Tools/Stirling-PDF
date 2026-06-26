@@ -1,11 +1,17 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "baseUrl": "../../",
     "paths": {
-      "@app/*": ["src/desktop/*", "src/proprietary/*", "src/core/*"],
-      "@proprietary/*": ["src/proprietary/*"],
-      "@core/*": ["src/core/*"]
+      "@app/*": [
+        "../../src/desktop/*",
+        "../../src/cloud/*",
+        "../../src/proprietary/*",
+        "../../src/core/*"
+      ],
+      "@cloud/*": ["../../src/cloud/*"],
+      "@proprietary/*": ["../../src/proprietary/*"],
+      "@core/*": ["../../src/core/*"],
+      "@shared/*": ["../../../shared/*"]
     }
   },
   "include": [

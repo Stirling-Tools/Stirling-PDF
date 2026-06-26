@@ -1,5 +1,6 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 import type { Page, Route } from "@playwright/test";
+import { DATABASE_CONFIGS } from "@app/services/indexedDBManager";
 
 /** Stubbed coverage for the /files page UI invariants. */
 
@@ -34,63 +35,70 @@ async function seedFiles(page: Page, files: SeedFile[]): Promise<void> {
   await page.route("**/api/v1/storage/files", (route: Route) =>
     route.fulfill({ json: serverFiles }),
   );
-  await page.addInitScript((records) => {
-    const open = window.indexedDB.open("stirling-pdf-files", 4);
-    open.onupgradeneeded = (event) => {
-      const db = (event.target as IDBOpenDBRequest).result;
-      // Create both `files` and `folders` stores on this DB.
-      if (!db.objectStoreNames.contains("files")) {
-        const store = db.createObjectStore("files", { keyPath: "id" });
-        store.createIndex("name", "name", { unique: false });
-        store.createIndex("folderId", "folderId", { unique: false });
-        store.createIndex("originalFileId", "originalFileId", {
-          unique: false,
-        });
-      }
-      if (!db.objectStoreNames.contains("folders")) {
-        const fStore = db.createObjectStore("folders", { keyPath: "id" });
-        fStore.createIndex("parentFolderId", "parentFolderId", {
-          unique: false,
-        });
-        fStore.createIndex("name", "name", { unique: false });
-      }
-    };
-    open.onsuccess = () => {
-      const db = open.result;
-      const tx = db.transaction("files", "readwrite");
-      const store = tx.objectStore("files");
-      const now = Date.now();
-      for (const f of records) {
-        store.put({
-          id: f.id,
-          fileId: f.id,
-          quickKey: f.id,
-          name: f.name,
-          type: "application/pdf",
-          size: 1024,
-          lastModified: now,
-          createdAt: now,
-          // Placeholder; opening would need real bytes.
-          data: new ArrayBuffer(8),
-          thumbnail: null,
-          isLeaf: true,
-          versionNumber: f.versionNumber ?? 1,
-          originalFileId: f.id,
-          parentFileId: null,
-          toolHistory: f.toolHistory ?? [],
-          folderId: null,
-          remoteStorageId: f.remoteStorageId,
-          remoteStorageUpdatedAt: f.remoteStorageId ? now : null,
-          remoteOwnerUsername: f.remoteStorageId ? "testuser" : null,
-          remoteOwnedByCurrentUser: f.remoteStorageId ? true : null,
-          remoteAccessRole: f.remoteStorageId ? "owner" : null,
-          remoteSharedViaLink: false,
-          remoteHasShareLinks: false,
-          remoteShareToken: null,
-        });
-      }
-    };
-  }, files);
+  await page.addInitScript(
+    ({ records, dbVersion }) => {
+      const open = window.indexedDB.open("stirling-pdf-files", dbVersion);
+      open.onupgradeneeded = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result;
+        // Create both `files` and `folders` stores on this DB.
+        if (!db.objectStoreNames.contains("files")) {
+          const store = db.createObjectStore("files", { keyPath: "id" });
+          store.createIndex("name", "name", { unique: false });
+          store.createIndex("folderId", "folderId", { unique: false });
+          store.createIndex("originalFileId", "originalFileId", {
+            unique: false,
+          });
+        }
+        if (!db.objectStoreNames.contains("folders")) {
+          const fStore = db.createObjectStore("folders", { keyPath: "id" });
+          fStore.createIndex("parentFolderId", "parentFolderId", {
+            unique: false,
+          });
+          fStore.createIndex("name", "name", { unique: false });
+        }
+      };
+      open.onsuccess = () => {
+        const db = open.result;
+        // Yield the connection if the app ever needs to upgrade, and drop it
+        // once the writes commit, so the seed never blocks the app's open.
+        db.onversionchange = () => db.close();
+        const tx = db.transaction("files", "readwrite");
+        const store = tx.objectStore("files");
+        const now = Date.now();
+        for (const f of records) {
+          store.put({
+            id: f.id,
+            fileId: f.id,
+            quickKey: f.id,
+            name: f.name,
+            type: "application/pdf",
+            size: 1024,
+            lastModified: now,
+            createdAt: now,
+            // Placeholder; opening would need real bytes.
+            data: new ArrayBuffer(8),
+            thumbnail: null,
+            isLeaf: true,
+            versionNumber: f.versionNumber ?? 1,
+            originalFileId: f.id,
+            parentFileId: null,
+            toolHistory: f.toolHistory ?? [],
+            folderId: null,
+            remoteStorageId: f.remoteStorageId,
+            remoteStorageUpdatedAt: f.remoteStorageId ? now : null,
+            remoteOwnerUsername: f.remoteStorageId ? "testuser" : null,
+            remoteOwnedByCurrentUser: f.remoteStorageId ? true : null,
+            remoteAccessRole: f.remoteStorageId ? "owner" : null,
+            remoteSharedViaLink: false,
+            remoteHasShareLinks: false,
+            remoteShareToken: null,
+          });
+        }
+        tx.oncomplete = () => db.close();
+      };
+    },
+    { records: files, dbVersion: DATABASE_CONFIGS.FILES.version },
+  );
 }
 
 /** Stub the storage + config endpoints hit on mount. */
@@ -120,12 +128,16 @@ async function stubStorageApis(
   );
 }
 
-/** Navigate to /files and wait for at least one seeded card. */
+/** Navigate to /files and wait for at least one real (non-skeleton) card.
+ *  `.files-page-card` also matches the loading-state skeleton placeholders, and
+ *  their parent grid carries `aria-busy="true"` which intercepts pointer events
+ *  -- so waiting for any `.files-page-card` races the skeleton→real transition
+ *  and causes flaky timeouts on slower CI runners. */
 async function gotoFilesPage(page: Page): Promise<void> {
   await page.goto("/files", { waitUntil: "domcontentloaded" });
-  await expect(page.locator(".files-page-card").first()).toBeVisible({
-    timeout: 5_000,
-  });
+  await expect(
+    page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
+  ).toBeVisible({ timeout: 10_000 });
 }
 
 test.describe("Files page", () => {
@@ -281,6 +293,52 @@ test.describe("Files page", () => {
       await expect(
         page.getByRole("menuitem", { name: /^Save to server$/i }),
       ).toHaveCount(0);
+    });
+  });
+
+  test.describe("Save to server gating (storage disabled)", () => {
+    test.beforeEach(async ({ page }) => {
+      // storageEnabled:false -> Save-to-server stays visible for local-only
+      // files but is disabled (with an explanatory tooltip), not hidden, so
+      // users discover the feature and know to ask their admin.
+      await stubStorageApis(page, { storageEnabled: false });
+      await seedFiles(page, [
+        { id: "local-a", name: "local-a.pdf", remoteStorageId: null },
+      ]);
+    });
+    test.use({ autoGoto: false });
+
+    test("bulk Save to server is disabled (not hidden) when storage off", async ({
+      page,
+    }) => {
+      await gotoFilesPage(page);
+      await page
+        .locator(".files-page-card:not(.is-folder)")
+        .filter({ hasText: "local-a.pdf" })
+        .click();
+      const saveButtons = page.getByRole("button", {
+        name: /^Save to server$/i,
+      });
+      // Present (toolbar + details panel) and every instance disabled.
+      const count = await saveButtons.count();
+      expect(count).toBeGreaterThan(0);
+      for (let i = 0; i < count; i += 1) {
+        await expect(saveButtons.nth(i)).toBeVisible();
+        await expect(saveButtons.nth(i)).toBeDisabled();
+      }
+    });
+
+    test("per-file kebab Save to server is disabled (not hidden) when storage off", async ({
+      page,
+    }) => {
+      await gotoFilesPage(page);
+      const localCard = page
+        .locator(".files-page-card:not(.is-folder)")
+        .filter({ hasText: "local-a.pdf" });
+      await localCard.getByRole("button", { name: /File actions/i }).click();
+      const item = page.getByRole("menuitem", { name: /^Save to server$/i });
+      await expect(item).toBeVisible();
+      await expect(item).toBeDisabled();
     });
   });
 
@@ -481,7 +539,10 @@ test.describe("Files page", () => {
   });
 
   test.describe("Move dialog inline create-folder", () => {
-    test.use({ autoGoto: false });
+    // The inline create-folder affordance is gated on `serverReachable`, which
+    // only flips true once a confirmed, non-anonymous user triggers the folder
+    // pull (see FolderContext). Seed a JWT so the stubbed session is logged-in.
+    test.use({ autoGoto: false, seedJwt: true });
 
     test("Move dialog shows Create new folder affordance", async ({ page }) => {
       await stubStorageApis(page);

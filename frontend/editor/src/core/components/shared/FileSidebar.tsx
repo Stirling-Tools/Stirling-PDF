@@ -1,6 +1,7 @@
 import React, {
   useState,
   useCallback,
+  useMemo,
   useRef,
   useEffect,
   forwardRef,
@@ -19,6 +20,7 @@ import {
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useAuth } from "@app/auth/UseSession";
+import { useProfilePictureUrl } from "@app/hooks/useProfilePictureUrl";
 import {
   useIndexedDB,
   useIndexedDBRevision,
@@ -30,6 +32,7 @@ import type { StirlingFileStub } from "@app/types/fileContext";
 import MenuIcon from "@mui/icons-material/Menu";
 import SearchIcon from "@mui/icons-material/Search";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
+import FolderSpecialIcon from "@mui/icons-material/FolderSpecial";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
@@ -37,10 +40,32 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import SettingsIcon from "@mui/icons-material/Settings";
 import type { FileId } from "@app/types/file";
 import { FileItem } from "@app/components/shared/FileSidebarFileItem";
+import BulkUploadToServerModal from "@app/components/shared/BulkUploadToServerModal";
+import { getFileOrigin } from "@app/components/filesPage/fileOrigin";
+import { VersionHistoryModal } from "@app/components/filesPage/VersionHistoryModal";
+import { DeleteFilesDialog } from "@app/components/filesPage/DeleteFilesDialog";
+import {
+  deleteServerFile,
+  type DeleteScope,
+} from "@app/services/serverStorageDelete";
+import { fileStorage } from "@app/services/fileStorage";
+import { useFolderMembership } from "@app/hooks/useFolderMembership";
+import { useAllWatchedFolders } from "@app/hooks/useAllWatchedFolders";
+import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
+import {
+  setWatchedFolderDraggedFileIds,
+  clearWatchedFolderDraggedFileIds,
+} from "@app/components/watchedFolders/watchedFolderDragState";
+import { WATCHED_FOLDERS_ENABLED } from "@app/constants/featureFlags";
+import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import "@app/components/shared/FileSidebar.css";
 
 const COLLAPSED_WIDTH = "3.5rem";
 const EXPANDED_WIDTH = "16.25rem"; // ~260px
+
+// Inlined to avoid a circular import with WatchedFoldersRegistration.
+const WATCHED_FOLDER_VIEW_ID = "watchedFolder";
+const WATCHED_FOLDER_WORKBENCH_ID = "custom:watchedFolder";
 
 export interface FileSidebarProps {
   collapsed?: boolean;
@@ -101,7 +126,61 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const { state } = useFileState();
     const { actions: fileActions } = useFileActions();
     const { actions: navActions } = useNavigationActions();
+    const { setCustomWorkbenchViewData, customWorkbenchViews } =
+      useToolWorkflow();
     const { workbench: currentWorkbench, selectedTool } = useNavigationState();
+    const isWatchedFoldersActive =
+      currentWorkbench === WATCHED_FOLDER_WORKBENCH_ID;
+    // The folder currently open in the Watched Folders view (null = folder list/home).
+    const activeWatchedFolderId = (customWorkbenchViews.find(
+      (v) => v.id === WATCHED_FOLDER_VIEW_ID,
+    )?.data?.folderId ?? null) as string | null;
+    // fileId → folderId[] across all watch folders. In the Watched Folders view the
+    // sidebar tick reflects "already in the open folder" instead of workbench
+    // membership (which is meaningless there - a click sends to the folder, not
+    // the workbench). The same map drives the per-file membership dots.
+    const folderMembership = useFolderMembership();
+    const allFolders = useAllWatchedFolders();
+    const policyFileBadges = usePolicyFileBadges();
+    const folderById = useMemo(
+      () => new Map(allFolders.map((f) => [f.id, f])),
+      [allFolders],
+    );
+
+    const openWatchedFolders = useCallback(() => {
+      if (collapsed && onToggleCollapse) onToggleCollapse();
+      setCustomWorkbenchViewData(WATCHED_FOLDER_VIEW_ID, { folderId: null });
+      navActions.setWorkbench(WATCHED_FOLDER_WORKBENCH_ID as any);
+    }, [collapsed, onToggleCollapse, setCustomWorkbenchViewData, navActions]);
+
+    // Clicking a file's membership dot jumps straight into that folder.
+    const openWatchedFolder = useCallback(
+      (folderId: string) => {
+        if (collapsed && onToggleCollapse) onToggleCollapse();
+        setCustomWorkbenchViewData(WATCHED_FOLDER_VIEW_ID, { folderId });
+        navActions.setWorkbench(WATCHED_FOLDER_WORKBENCH_ID as any);
+      },
+      [collapsed, onToggleCollapse, setCustomWorkbenchViewData, navActions],
+    );
+
+    // In Watched Folders view, sidebar files can be dragged onto a folder card / drop
+    // zone (which read the watchedFolderFileId dataTransfer key).
+    const handleWatchedFolderDragStart = useCallback(
+      (e: React.DragEvent, fileId: FileId) => {
+        e.dataTransfer.setData("watchedFolderFileId", String(fileId));
+        e.dataTransfer.effectAllowed = "copy";
+        // Publish the id so drop targets can detect "already in folder" during
+        // dragover (dataTransfer values are unreadable then). Clear on dragend
+        // regardless of whether the drag ended in a drop or was cancelled.
+        setWatchedFolderDraggedFileIds([String(fileId)]);
+        const clear = () => {
+          clearWatchedFolderDraggedFileIds();
+          document.removeEventListener("dragend", clear);
+        };
+        document.addEventListener("dragend", clear);
+      },
+      [],
+    );
     const isMultiTool =
       currentWorkbench === "pageEditor" && selectedTool === "multiTool";
     const { requestNavigation } = useNavigationGuard();
@@ -112,10 +191,15 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     // Each auth layer derives its own displayName from its native user shape.
     // Fall back to the proprietary REST endpoint only when the auth
     // context yields nothing - then to "User" as a generic last resort.
-    const { displayName: authDisplayName } = useAuth();
+    const { displayName: authDisplayName, isAnonymous } = useAuth();
     const [accountUsername, setAccountUsername] = useState<string | null>(null);
     const displayName =
       authDisplayName ?? accountUsername ?? t("auth.displayName.user", "User");
+
+    const profilePictureUrl = useProfilePictureUrl();
+    const [pictureFailed, setPictureFailed] = useState(false);
+    useEffect(() => setPictureFailed(false), [profilePictureUrl]);
+    const showProfilePicture = !!profilePictureUrl && !pictureFailed;
 
     useEffect(() => {
       if (!config?.enableLogin) {
@@ -145,6 +229,21 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     // Leaf files = user-visible files (excludes intermediate tool outputs)
     const [allFileStubs, setAllFileStubs] = useState<StirlingFileStub[]>([]);
     const [stubsLoaded, setStubsLoaded] = useState(false);
+    // Kebab "Save to cloud" target; drives BulkUploadToServerModal.
+    const [saveToServerTarget, setSaveToServerTarget] = useState<
+      StirlingFileStub[] | null
+    >(null);
+    // Kebab "Version history" target; drives VersionHistoryModal.
+    const [versionHistoryTarget, setVersionHistoryTarget] =
+      useState<StirlingFileStub | null>(null);
+    // Kebab "Delete" target when the file is on the cloud; drives the
+    // local/cloud/both choice dialog. Local-only files delete immediately.
+    const [deleteTarget, setDeleteTarget] = useState<StirlingFileStub | null>(
+      null,
+    );
+    // Storage gate: only offer Save-to-cloud when the server allows it and
+    // the user is signed in (guests have no cloud library).
+    const storageEnabled = config?.storageEnabled === true && !isAnonymous;
 
     const refreshStubs = useCallback(async () => {
       // Leaf files from IDB - same source as the file selection modal.
@@ -171,6 +270,76 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     useEffect(() => {
       refreshStubs();
     }, [refreshStubs, indexedDBRevision]);
+
+    // Kebab delete: local-only files go immediately (cheap, re-addable). When
+    // the file is also on the cloud, open the choice dialog so the user picks
+    // where to remove it from.
+    const handleSidebarDelete = useCallback(
+      async (fileId: FileId) => {
+        const stub = allFileStubs.find((s) => s.id === fileId);
+        const hasCloud =
+          !!stub &&
+          typeof stub.remoteStorageId === "number" &&
+          stub.remoteOwnedByCurrentUser === true;
+        if (hasCloud && stub) {
+          setDeleteTarget(stub);
+          return;
+        }
+        await fileActions.removeFiles([fileId], true);
+        await refreshStubs();
+      },
+      [allFileStubs, fileActions, refreshStubs],
+    );
+
+    const handleConfirmSidebarDelete = useCallback(
+      async (scope: DeleteScope) => {
+        const stub = deleteTarget;
+        if (!stub) return;
+        if (
+          (scope === "cloud" || scope === "everywhere") &&
+          typeof stub.remoteStorageId === "number" &&
+          stub.remoteOwnedByCurrentUser === true
+        ) {
+          await deleteServerFile(stub.remoteStorageId);
+        }
+        if (scope === "device" || scope === "everywhere") {
+          await fileActions.removeFiles([stub.id], true);
+        } else if (scope === "cloud") {
+          // Local copy kept - drop the dead remote pointer so the cloud badge
+          // clears (the sidebar doesn't reconcile with the server itself).
+          const cleared = {
+            remoteStorageId: undefined,
+            remoteStorageUpdatedAt: undefined,
+            remoteOwnedByCurrentUser: undefined,
+            remoteSharedViaLink: false,
+            remoteHasShareLinks: undefined,
+          };
+          fileActions.updateStirlingFileStub(stub.id, cleared);
+          await fileStorage.updateFileMetadata(stub.id, cleared);
+        }
+        setDeleteTarget(null);
+        await refreshStubs();
+      },
+      [deleteTarget, fileActions, refreshStubs],
+    );
+
+    // Kebab: open the upload-to-server modal for this one file.
+    const handleSaveToCloud = useCallback(
+      (fileId: FileId) => {
+        const stub = allFileStubs.find((s) => s.id === fileId);
+        if (stub) setSaveToServerTarget([stub]);
+      },
+      [allFileStubs],
+    );
+
+    // Kebab: open the version-history modal for this one file.
+    const handleVersionHistory = useCallback(
+      (fileId: FileId) => {
+        const stub = allFileStubs.find((s) => s.id === fileId);
+        if (stub) setVersionHistoryTarget(stub);
+      },
+      [allFileStubs],
+    );
 
     // Once a pending file lands in state, open it in the viewer.
     useEffect(() => {
@@ -242,6 +411,19 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         const stub = allFileStubs.find((s) => s.id === fileId);
         if (!stub) return;
 
+        // In the Watched Folders view a click sends the file into the open folder
+        // (mirrors how a click toggles a file into the active workbench elsewhere).
+        // On the folder list (no folder open) it's a no-op so browsing isn't disrupted.
+        if (isWatchedFoldersActive) {
+          if (activeWatchedFolderId) {
+            setCustomWorkbenchViewData(WATCHED_FOLDER_VIEW_ID, {
+              folderId: activeWatchedFolderId,
+              pendingFileId: stub.id,
+            });
+          }
+          return;
+        }
+
         const workbenchFileId = state.files.ids.find(
           (id) => (id as string) === (stub.id as string),
         );
@@ -291,6 +473,9 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         activeFileId,
         requestNavigation,
         isMultiTool,
+        isWatchedFoldersActive,
+        activeWatchedFolderId,
+        setCustomWorkbenchViewData,
       ],
     );
 
@@ -352,25 +537,77 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       ],
     );
 
-    const handleNativeFilePick = useCallback(
-      async (e: React.ChangeEvent<HTMLInputElement>) => {
-        // Per-tool validation happens downstream.
-        const files = Array.from(e.target.files ?? []);
-        if (files.length > 0) {
-          if (onUploadFiles) {
-            await onUploadFiles(files);
-          } else {
-            await addFiles(files);
-            if (!isMultiTool) {
-              navActions.setWorkbench(
-                files.length === 1 ? "viewer" : "fileEditor",
-              );
-            }
+    // Shared ingest path for both the native picker and drag-and-drop.
+    // Per-tool validation happens downstream.
+    const ingestFiles = useCallback(
+      async (files: File[]) => {
+        if (files.length === 0) return;
+        if (onUploadFiles) {
+          await onUploadFiles(files);
+        } else {
+          await addFiles(files);
+          if (!isMultiTool) {
+            navActions.setWorkbench(
+              files.length === 1 ? "viewer" : "fileEditor",
+            );
           }
         }
-        e.target.value = "";
       },
       [addFiles, navActions, isMultiTool, onUploadFiles],
+    );
+
+    const handleNativeFilePick = useCallback(
+      async (e: React.ChangeEvent<HTMLInputElement>) => {
+        await ingestFiles(Array.from(e.target.files ?? []));
+        e.target.value = "";
+      },
+      [ingestFiles],
+    );
+
+    // Native OS file drop onto the sidebar - mirrors the workbench drop zone.
+    // Only react to OS file drags ("Files" type); internal element drags (e.g.
+    // watched-folder file moves) set their own dataTransfer keys and must pass
+    // through untouched.
+    const [isFileDragOver, setIsFileDragOver] = useState(false);
+    const dragDepth = useRef(0);
+
+    const isNativeFileDrag = (e: React.DragEvent) =>
+      Array.from(e.dataTransfer.types).includes("Files");
+
+    const handleDragEnter = useCallback((e: React.DragEvent) => {
+      if (!isNativeFileDrag(e)) return;
+      e.preventDefault();
+      dragDepth.current += 1;
+      setIsFileDragOver(true);
+    }, []);
+
+    const handleDragOver = useCallback((e: React.DragEvent) => {
+      if (!isNativeFileDrag(e)) return;
+      // Required so the browser fires `drop` rather than opening the file.
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "copy";
+    }, []);
+
+    const handleDragLeave = useCallback((e: React.DragEvent) => {
+      if (!isNativeFileDrag(e)) return;
+      // dragenter/leave fire per child element; the counter keeps the overlay
+      // stable until the cursor genuinely leaves the sidebar.
+      dragDepth.current -= 1;
+      if (dragDepth.current <= 0) {
+        dragDepth.current = 0;
+        setIsFileDragOver(false);
+      }
+    }, []);
+
+    const handleDrop = useCallback(
+      async (e: React.DragEvent) => {
+        if (!isNativeFileDrag(e)) return;
+        e.preventDefault();
+        dragDepth.current = 0;
+        setIsFileDragOver(false);
+        await ingestFiles(Array.from(e.dataTransfer.files ?? []));
+      },
+      [ingestFiles],
     );
 
     const shouldHideGoogleDrive =
@@ -386,7 +623,22 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         data-collapsed={collapsed}
         data-sidebar="file-sidebar"
         data-tour="quick-access-bar"
+        data-file-drag-over={isFileDragOver || undefined}
+        onDragEnter={handleDragEnter}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
       >
+        {isFileDragOver && (
+          <div className="file-sidebar-drop-overlay" aria-hidden="true">
+            <UploadFileIcon className="file-sidebar-drop-overlay-icon" />
+            {!collapsed && (
+              <span className="file-sidebar-drop-overlay-text">
+                {t("fileSidebar.dropToAdd", "Drop files to add")}
+              </span>
+            )}
+          </div>
+        )}
         <div className="file-sidebar-inner">
           {/* Header: hamburger + branding */}
           <Tooltip
@@ -676,6 +928,32 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
               </Tooltip>
             )}
 
+            {/* Watched Folders entry */}
+            {WATCHED_FOLDERS_ENABLED && (
+              <div
+                className="file-sidebar-action-row"
+                data-testid="watchedFolders-button"
+                data-active={isWatchedFoldersActive}
+                onClick={openWatchedFolders}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => e.key === "Enter" && openWatchedFolders()}
+                aria-label={t("watchedFolders.sidebarTitle", "Watched Folders")}
+                style={
+                  isWatchedFoldersActive
+                    ? { backgroundColor: "var(--active-bg)" }
+                    : undefined
+                }
+              >
+                <FolderSpecialIcon className="file-sidebar-action-icon" />
+                {!collapsed && (
+                  <span className="file-sidebar-action-label sidebar-content-fade">
+                    {t("watchedFolders.sidebarTitle", "Watched Folders")}
+                  </span>
+                )}
+              </div>
+            )}
+
             {/* Files section - always visible when expanded */}
             {!collapsed && (
               <div className="file-sidebar-files-section sidebar-content-fade">
@@ -716,6 +994,34 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                         (id) => (id as string) === (stub.id as string),
                       );
                       const isInWorkbench = !!workbenchFileId;
+                      // On Watched Folders, the tick means "this file is already in
+                      // the open folder"; on the folder home (no folder open) a
+                      // click is a no-op, so show no tick at all.
+                      const isSelected = isWatchedFoldersActive
+                        ? activeWatchedFolderId != null &&
+                          (folderMembership
+                            .get(stub.id as string)
+                            ?.includes(activeWatchedFolderId) ??
+                            false)
+                        : isInWorkbench;
+                      // Membership dots only on the Watched Folders home (the folder
+                      // grid, no folder open). Inside a specific folder the tick
+                      // already shows "in this folder"; in other views they'd just
+                      // be noise.
+                      const showFolderDots =
+                        WATCHED_FOLDERS_ENABLED &&
+                        isWatchedFoldersActive &&
+                        activeWatchedFolderId === null;
+                      const memberFolders = showFolderDots
+                        ? (folderMembership.get(stub.id as string) ?? [])
+                            .map((fid) => folderById.get(fid))
+                            .filter((f): f is NonNullable<typeof f> => !!f)
+                            .map((f) => ({
+                              id: f.id,
+                              name: f.name,
+                              accentColor: f.accentColor,
+                            }))
+                        : [];
                       // Both active and viewed-in-viewer are ID-based - never index-based.
                       const isViewedInViewer = !!(
                         viewedWorkbenchId &&
@@ -732,6 +1038,9 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                         : (workbenchFileId
                             ? state.files.byId[workbenchFileId]?.thumbnailUrl
                             : undefined) || stub.thumbnailUrl;
+                      // local | cloud | shared-with-me - drives the cloud badge
+                      // and the Upload-vs-Update menu label.
+                      const fileOrigin = getFileOrigin(stub);
                       return (
                         <FileItem
                           key={stub.id}
@@ -739,12 +1048,39 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                           name={stub.name}
                           size={stub.size}
                           lastModified={stub.lastModified}
-                          isSelected={isInWorkbench}
+                          isSelected={isSelected}
                           isActive={isActive}
                           isViewedInViewer={isViewedInViewer}
                           thumbnailUrl={thumbnailUrl}
                           onClick={handleFileClick}
                           onEyeClick={handleEyeClick}
+                          draggable={isWatchedFoldersActive}
+                          onDragStart={handleWatchedFolderDragStart}
+                          folders={memberFolders}
+                          onFolderClick={openWatchedFolder}
+                          policies={
+                            policyFileBadges.get(stub.id as string) ?? []
+                          }
+                          onDelete={
+                            isWatchedFoldersActive
+                              ? undefined
+                              : handleSidebarDelete
+                          }
+                          onSaveToCloud={
+                            isWatchedFoldersActive
+                              ? undefined
+                              : handleSaveToCloud
+                          }
+                          canSaveToCloud={
+                            storageEnabled && fileOrigin !== "shared-with-me"
+                          }
+                          isUploadedToCloud={fileOrigin === "cloud"}
+                          onVersionHistory={
+                            isWatchedFoldersActive
+                              ? undefined
+                              : handleVersionHistory
+                          }
+                          hasVersionHistory={(stub.versionNumber ?? 1) > 1}
                         />
                       );
                     })}
@@ -765,6 +1101,30 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             )}
           </div>
         </div>
+
+        {/* Kebab "Save to cloud" upload modal (one file at a time). */}
+        <BulkUploadToServerModal
+          opened={Boolean(saveToServerTarget && saveToServerTarget.length > 0)}
+          onClose={() => setSaveToServerTarget(null)}
+          files={saveToServerTarget ?? []}
+          onUploaded={refreshStubs}
+        />
+
+        {/* Kebab "Version history" modal. */}
+        <VersionHistoryModal
+          opened={Boolean(versionHistoryTarget)}
+          onClose={() => setVersionHistoryTarget(null)}
+          file={versionHistoryTarget}
+          onChanged={refreshStubs}
+        />
+
+        {/* Cloud-aware delete choice (only opened for cloud-uploaded files). */}
+        <DeleteFilesDialog
+          opened={Boolean(deleteTarget)}
+          files={deleteTarget ? [deleteTarget] : []}
+          onClose={() => setDeleteTarget(null)}
+          onConfirm={handleConfirmSidebarDelete}
+        />
 
         {/* Bottom bar: user name + settings */}
         <Tooltip
@@ -797,10 +1157,21 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             style={onOpenSettings ? { cursor: "pointer" } : undefined}
           >
             <div
-              className="file-sidebar-bottom-avatar"
+              className={`file-sidebar-bottom-avatar${
+                showProfilePicture ? " file-sidebar-bottom-avatar--picture" : ""
+              }`}
               aria-label={displayName}
             >
-              {displayName.charAt(0).toUpperCase()}
+              {showProfilePicture ? (
+                <img
+                  src={profilePictureUrl}
+                  alt=""
+                  className="file-sidebar-bottom-avatar-img"
+                  onError={() => setPictureFailed(true)}
+                />
+              ) : (
+                displayName.charAt(0).toUpperCase()
+              )}
             </div>
             {!collapsed && (
               <span className="file-sidebar-bottom-name sidebar-content-fade">

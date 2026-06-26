@@ -3,8 +3,8 @@
   "compilerOptions": {
     "module": "node16",
     "moduleResolution": "node16",
+    "types": ["node"],
     "noEmit": true
   },
-  "include": ["./**/*.ts", "./**/*.mts"],
-  "exclude": []
+  "include": ["./**/*.ts", "./**/*.mts"]
 }

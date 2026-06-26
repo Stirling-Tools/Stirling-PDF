@@ -31,7 +31,9 @@ function FirstLoginForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
     // Validation
     if (
       (!usingDefaultCredentials && !currentPassword) ||
@@ -115,102 +117,104 @@ function FirstLoginForm({
   return (
     <div className={styles.securitySlideContent}>
       <div className={styles.securityCard}>
-        <Stack gap="md">
-          <div className={styles.securityAlertRow}>
-            <LocalIcon
-              icon="info-rounded"
-              width={20}
-              height={20}
-              style={{ color: "#3B82F6", flexShrink: 0 }}
-            />
-            <span>
-              {t(
-                "firstLogin.welcomeMessage",
-                "For security reasons, you must change your password on your first login.",
-              )}
-            </span>
-          </div>
+        <form onSubmit={handleSubmit}>
+          <Stack gap="md">
+            <div className={styles.securityAlertRow}>
+              <LocalIcon
+                icon="info-rounded"
+                width={20}
+                height={20}
+                style={{ color: "#3B82F6", flexShrink: 0 }}
+              />
+              <span>
+                {t(
+                  "firstLogin.welcomeMessage",
+                  "For security reasons, you must change your password on your first login.",
+                )}
+              </span>
+            </div>
 
-          <Text size="sm" fw={500}>
-            {t("firstLogin.loggedInAs", "Logged in as")}:{" "}
-            <strong>{username}</strong>
-          </Text>
+            <Text size="sm" fw={500}>
+              {t("firstLogin.loggedInAs", "Logged in as")}:{" "}
+              <strong>{username}</strong>
+            </Text>
 
-          {error && (
-            <Alert
-              icon={
-                <LocalIcon icon="error-rounded" width="1rem" height="1rem" />
-              }
-              color="red"
-              variant="light"
-            >
-              {error}
-            </Alert>
-          )}
+            {error && (
+              <Alert
+                icon={
+                  <LocalIcon icon="error-rounded" width="1rem" height="1rem" />
+                }
+                color="red"
+                variant="light"
+              >
+                {error}
+              </Alert>
+            )}
 
-          {/* Only show current password field if not using default credentials */}
-          {!usingDefaultCredentials && (
+            {/* Only show current password field if not using default credentials */}
+            {!usingDefaultCredentials && (
+              <PasswordInput
+                label={t("firstLogin.currentPassword", "Current Password")}
+                placeholder={t(
+                  "firstLogin.enterCurrentPassword",
+                  "Enter your current password",
+                )}
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.currentTarget.value)}
+                required
+                styles={{
+                  input: { height: 44 },
+                }}
+              />
+            )}
+
             <PasswordInput
-              label={t("firstLogin.currentPassword", "Current Password")}
+              label={t("firstLogin.newPassword", "New Password")}
               placeholder={t(
-                "firstLogin.enterCurrentPassword",
-                "Enter your current password",
+                "firstLogin.enterNewPassword",
+                "Enter new password (min 8 characters)",
               )}
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.currentTarget.value)}
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.currentTarget.value)}
+              minLength={8}
               required
               styles={{
                 input: { height: 44 },
               }}
             />
-          )}
 
-          <PasswordInput
-            label={t("firstLogin.newPassword", "New Password")}
-            placeholder={t(
-              "firstLogin.enterNewPassword",
-              "Enter new password (min 8 characters)",
-            )}
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.currentTarget.value)}
-            minLength={8}
-            required
-            styles={{
-              input: { height: 44 },
-            }}
-          />
+            <PasswordInput
+              label={t("firstLogin.confirmPassword", "Confirm New Password")}
+              placeholder={t(
+                "firstLogin.reEnterNewPassword",
+                "Re-enter new password",
+              )}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.currentTarget.value)}
+              required
+              minLength={8}
+              styles={{
+                input: { height: 44 },
+              }}
+            />
 
-          <PasswordInput
-            label={t("firstLogin.confirmPassword", "Confirm New Password")}
-            placeholder={t(
-              "firstLogin.reEnterNewPassword",
-              "Re-enter new password",
-            )}
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.currentTarget.value)}
-            required
-            minLength={8}
-            styles={{
-              input: { height: 44 },
-            }}
-          />
-
-          <Button
-            fullWidth
-            onClick={handleSubmit}
-            loading={loading}
-            disabled={
-              !newPassword ||
-              !confirmPassword ||
-              newPassword.length < 8 ||
-              confirmPassword.length < 8
-            }
-            size="md"
-            mt="xs"
-          >
-            {t("firstLogin.changePassword", "Change Password")}
-          </Button>
-        </Stack>
+            <Button
+              type="submit"
+              fullWidth
+              loading={loading}
+              disabled={
+                !newPassword ||
+                !confirmPassword ||
+                newPassword.length < 8 ||
+                confirmPassword.length < 8
+              }
+              size="md"
+              mt="xs"
+            >
+              {t("firstLogin.changePassword", "Change Password")}
+            </Button>
+          </Stack>
+        </form>
       </div>
     </div>
   );

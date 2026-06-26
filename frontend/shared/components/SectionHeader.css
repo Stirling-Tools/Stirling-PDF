@@ -1,0 +1,33 @@
+.sui-sectionhdr {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0.4rem 0;
+  background: transparent;
+  border: none;
+  text-align: left;
+}
+button.sui-sectionhdr {
+  cursor: pointer;
+}
+.sui-sectionhdr__title {
+  flex: 1;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-4);
+}
+.sui-sectionhdr__count {
+  font-size: 0.6875rem;
+  color: var(--color-text-4);
+}
+.sui-sectionhdr__chevron {
+  color: var(--color-text-4);
+  flex-shrink: 0;
+  transition: transform var(--motion-fast);
+}
+.sui-sectionhdr__chevron[data-collapsed="true"] {
+  transform: rotate(-90deg);
+}

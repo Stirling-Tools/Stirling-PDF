@@ -22,6 +22,7 @@ import stirling.software.SPDF.config.InitialSetup;
 import stirling.software.SPDF.controller.api.security.TimestampController;
 import stirling.software.common.annotations.api.ConfigApi;
 import stirling.software.common.configuration.AppConfig;
+import stirling.software.common.configuration.interfaces.ShowAdminInterface;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.ServerCertificateServiceInterface;
 import stirling.software.common.service.UserServiceInterface;
@@ -37,6 +38,7 @@ public class ConfigController {
     private final EndpointConfiguration endpointConfiguration;
     private final ServerCertificateServiceInterface serverCertificateService;
     private final UserServiceInterface userService;
+    private final ShowAdminInterface showAdmin;
     private final stirling.software.common.service.LicenseServiceInterface licenseService;
     private final stirling.software.SPDF.config.ExternalAppDepConfig externalAppDepConfig;
 
@@ -49,6 +51,8 @@ public class ConfigController {
             @org.springframework.beans.factory.annotation.Autowired(required = false)
                     UserServiceInterface userService,
             @org.springframework.beans.factory.annotation.Autowired(required = false)
+                    ShowAdminInterface showAdmin,
+            @org.springframework.beans.factory.annotation.Autowired(required = false)
                     stirling.software.common.service.LicenseServiceInterface licenseService,
             stirling.software.SPDF.config.ExternalAppDepConfig externalAppDepConfig) {
         this.applicationProperties = applicationProperties;
@@ -56,6 +60,7 @@ public class ConfigController {
         this.endpointConfiguration = endpointConfiguration;
         this.serverCertificateService = serverCertificateService;
         this.userService = userService;
+        this.showAdmin = showAdmin;
         this.licenseService = licenseService;
         this.externalAppDepConfig = externalAppDepConfig;
     }
@@ -119,9 +124,28 @@ public class ConfigController {
         String localIp = GeneralUtils.getLocalNetworkIp();
         if (localIp != null) {
             String scheme = appConfig.getBackendUrl().startsWith("https") ? "https" : "http";
-            return scheme + "://" + localIp + ":" + appConfig.getServerPort();
+            return scheme + "://" + localIp + ":" + resolveEffectiveServerPort(appConfig);
         }
         return "";
+    }
+
+    /**
+     * The port the embedded server is actually listening on. With {@code server.port=0} (an
+     * ephemeral port, which the desktop bundle uses to dodge port clashes) the configured value
+     * stays {@code "0"} while Spring publishes the real bound port as {@code local.server.port}
+     * once the server is up. Advertised URLs (the mobile-scanner QR, share links) must carry the
+     * real port - a literal {@code :0} is unreachable and browsers reject it as ERR_UNSAFE_PORT.
+     */
+    // visible for testing
+    String resolveEffectiveServerPort(AppConfig appConfig) {
+        String configured = appConfig.getServerPort();
+        if (configured == null || "0".equals(configured.trim())) {
+            String actual = applicationContext.getEnvironment().getProperty("local.server.port");
+            if (actual != null && !actual.isBlank()) {
+                return actual;
+            }
+        }
+        return configured;
     }
 
     private static boolean isLoopbackHost(String host) {
@@ -161,7 +185,7 @@ public class ConfigController {
             // Note: Frontend expects "baseUrl" field name for compatibility
             configData.put("baseUrl", appConfig.getBackendUrl());
             configData.put("contextPath", appConfig.getContextPath());
-            configData.put("serverPort", appConfig.getServerPort());
+            configData.put("serverPort", resolveEffectiveServerPort(appConfig));
 
             String frontendUrl = applicationProperties.getSystem().getFrontendUrl();
             configData.put("frontendUrl", resolveFrontendUrl(request, appConfig));
@@ -296,6 +320,10 @@ public class ConfigController {
             configData.put(
                     "enableAlphaFunctionality",
                     applicationProperties.getSystem().isEnableAlphaFunctionality());
+            boolean shouldShowUpdate =
+                    applicationProperties.getSystem().isShowUpdate()
+                            && (showAdmin == null || showAdmin.getShowUpdateOnlyAdmins());
+            configData.put("shouldShowUpdate", shouldShowUpdate);
             configData.put(
                     "enableAnalytics", applicationProperties.getSystem().getEnableAnalytics());
             configData.put("enablePosthog", applicationProperties.getSystem().getEnablePosthog());

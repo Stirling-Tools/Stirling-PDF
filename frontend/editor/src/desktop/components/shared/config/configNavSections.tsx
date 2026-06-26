@@ -1,13 +1,12 @@
 import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
-import {
-  useConfigNavSections as useProprietaryConfigNavSections,
-  createConfigNavSections as createProprietaryConfigNavSections,
-} from "@proprietary/components/shared/config/configNavSections";
+import { useConfigNavSections as useProprietaryConfigNavSections } from "@proprietary/components/shared/config/configNavSections";
 import { ConfigNavSection } from "@core/components/shared/config/configNavSections";
 import { ConnectionSettings } from "@app/components/ConnectionSettings";
-import { SaasPlanSection } from "@app/components/shared/config/configSections/SaasPlanSection";
-import { SaaSTeamsSection } from "@app/components/shared/config/configSections/SaaSTeamsSection";
+import {
+  createCloudPlanNavItem,
+  createCloudTeamNavItem,
+} from "@app/components/shared/config/cloudConfigNavSections";
 import { connectionModeService } from "@app/services/connectionModeService";
 import { authService } from "@app/services/authService";
 
@@ -68,12 +67,16 @@ export const useConfigNavSections = (
     ],
   };
 
-  // In local mode only show Preferences + Connection Mode — everything else
-  // requires a server and will 500 or show irrelevant admin UI.
+  // In local mode only show Preferences + Connection Mode + Legal — everything
+  // else requires a server and will 500 or show irrelevant admin UI.
   if (isLocalMode) {
     const result: ConfigNavSection[] = [];
     if (sections.length > 0) result.push(sections[0]);
     result.push(connectionModeSection);
+    const legalSection = sections.find((section) =>
+      section.items.some((item) => item.key === "legal"),
+    );
+    if (legalSection) result.push(legalSection);
     return result;
   }
 
@@ -96,29 +99,18 @@ export const useConfigNavSections = (
   // Connection Mode always sits immediately after Preferences
   result.push(connectionModeSection);
 
-  // Plan & Billing and Team sections only when authenticated in SaaS mode
+  // Plan & Billing and Team sections only when authenticated in SaaS mode.
+  // These are the SHARED cloud sections — the wallet-driven PAYG Plan
+  // (dashboard + spend cap) and the team management UI — so a desktop SaaS
+  // user sees the same Plan / billing / team experience as the web app.
   if (isSaasMode && isAuthenticated) {
     result.push({
       title: t("settings.planBilling.title", "Plan & Billing"),
-      items: [
-        {
-          key: "planBilling",
-          label: t("settings.planBilling.title", "Plan & Billing"),
-          icon: "credit-card",
-          component: <SaasPlanSection />,
-        },
-      ],
+      items: [createCloudPlanNavItem(t)],
     });
     result.push({
       title: t("settings.team.title", "Team"),
-      items: [
-        {
-          key: "teams",
-          label: t("settings.team.title", "Team"),
-          icon: "groups-rounded",
-          component: <SaaSTeamsSection />,
-        },
-      ],
+      items: [createCloudTeamNavItem(t)],
     });
   }
 
@@ -141,53 +133,4 @@ export const useConfigNavSections = (
   }
 
   return result;
-};
-
-/**
- * Deprecated: Use useConfigNavSections hook instead
- * Desktop extension of createConfigNavSections that adds connection settings
- */
-export const createConfigNavSections = (
-  isAdmin: boolean = false,
-  runningEE: boolean = false,
-  loginEnabled: boolean = false,
-): ConfigNavSection[] => {
-  console.warn(
-    "createConfigNavSections is deprecated. Use useConfigNavSections hook instead for proper i18n support.",
-  );
-
-  // Get the proprietary sections (includes core Preferences + admin sections)
-  const sections = createProprietaryConfigNavSections(
-    isAdmin,
-    runningEE,
-    loginEnabled,
-  );
-
-  // Add Connection section at the beginning (after Preferences)
-  sections.splice(1, 0, {
-    title: "Connection",
-    items: [
-      {
-        key: "connectionMode",
-        label: "Connection Mode",
-        icon: "desktop-cloud-rounded",
-        component: <ConnectionSettings />,
-      },
-    ],
-  });
-
-  // Add Plan & Billing section (after Connection Mode)
-  sections.splice(2, 0, {
-    title: "Plan & Billing",
-    items: [
-      {
-        key: "planBilling",
-        label: "Plan & Billing",
-        icon: "credit-card",
-        component: <SaasPlanSection />,
-      },
-    ],
-  });
-
-  return sections;
 };

@@ -31,7 +31,7 @@ jobs:
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
       - name: Install Task
-        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
+        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
       - name: Quality-check frontend
         id: frontend-check
         run: task frontend:check:all
@@ -109,6 +109,41 @@ jobs:
                 comment_id: existing.id,
               });
             }
+      - name: Vitest coverage
+        # Separate from `frontend:check:all` so the quality-gate run stays
+        # uninstrumented (faster signal) and coverage stays an informational
+        # follow-up. Continue-on-error keeps the workflow green even when
+        # a handful of test files refuse to import (e.g. missing icon
+        # specifiers) - the summary still gets posted with whatever
+        # vitest managed to instrument.
+        id: frontend-coverage
+        continue-on-error: true
+        run: task frontend:test:coverage
+      - name: Set up Python for coverage summary
+        if: always()
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.12"
+      - name: Install defusedxml for coverage summary
+        # See coverage-summary.py header - it parses XML through defusedxml
+        # to dodge the stdlib parser's exposure to XXE / billion-laughs.
+        if: always()
+        run: python -m pip install --quiet defusedxml
+      - name: Vitest coverage step summary
+        if: always()
+        run: |
+          python scripts/coverage-summary.py \
+            --title "Frontend Vitest coverage" \
+            --vitest frontend/editor/coverage/coverage-summary.json \
+            --github-step-summary
+      - name: Upload vitest coverage report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: frontend-coverage
+          path: frontend/editor/coverage/
+          retention-days: 7
+          if-no-files-found: warn
       - name: Upload frontend build artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:

@@ -515,7 +515,7 @@
   /* Always-dark text (for use on light backgrounds like alerts) - does not change in dark mode */
   --text-always-dark: #1f2937;
   --text-always-dark-muted: #6b7280;
-  --border-subtle: #2a2f36;
+  --border-subtle: rgba(255, 255, 255, 0.08);
   --border-default: #3a4047;
   --border-strong: #4b5563;
   --hover-bg: #374151;
@@ -796,10 +796,11 @@
 }
 /* ── PDF Link Overlay (viewer) ── */
 :root {
-  --link-hover-bg: rgba(10, 139, 255, 0.04);
-  --link-hover-border: rgba(10, 139, 255, 0.15);
+  --link-hover-bg: rgba(10, 139, 255, 0.1);
+  --link-hover-border: rgba(10, 139, 255, 0.32);
   --link-hover-shadow:
-    0 0 0 0.5px rgba(10, 139, 255, 0.05), 0 1px 3px rgba(10, 139, 255, 0.04);
+    inset 0 0 0 1px rgba(255, 255, 255, 0.35),
+    0 1px 4px rgba(10, 139, 255, 0.12);
   --link-focus-ring: rgba(10, 139, 255, 0.25);
   --link-toolbar-bg: rgba(15, 23, 42, 0.88);
   --link-toolbar-border: rgba(255, 255, 255, 0.1);
@@ -809,10 +810,11 @@
 }
 
 [data-mantine-color-scheme="dark"] {
-  --link-hover-bg: rgba(10, 139, 255, 0.06);
-  --link-hover-border: rgba(59, 170, 255, 0.2);
+  --link-hover-bg: rgba(59, 170, 255, 0.14);
+  --link-hover-border: rgba(59, 170, 255, 0.38);
   --link-hover-shadow:
-    0 0 0 0.5px rgba(59, 170, 255, 0.1), 0 1px 3px rgba(10, 139, 255, 0.08);
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14),
+    0 1px 4px rgba(10, 139, 255, 0.18);
   --link-focus-ring: rgba(59, 170, 255, 0.3);
   --link-toolbar-bg: rgba(15, 23, 42, 0.92);
   --link-toolbar-border: rgba(255, 255, 255, 0.08);
@@ -843,7 +845,7 @@
 .pdf-link-overlay:hover,
 .pdf-link-overlay--active {
   background: var(--link-hover-bg);
-  border-bottom: 2px solid var(--color-primary-500);
+  border-color: var(--link-hover-border);
   box-shadow: var(--link-hover-shadow);
 }
 
@@ -885,6 +887,7 @@
   align-items: center;
   height: 32px;
   padding: 0 4px;
+  box-sizing: border-box;
   pointer-events: auto;
   white-space: nowrap;
   user-select: none;
@@ -930,11 +933,15 @@
   cursor: pointer;
   transition: all 0.12s ease;
   white-space: nowrap;
-  line-height: 1;
+  line-height: 1.25;
   border-radius: 9999px;
 }
 
 .pdf-link-toolbar-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.25;
   transition: color 0.12s ease;
 }
 
@@ -979,6 +986,10 @@
 
 .pdf-link-toolbar-btn--go:hover {
   background: rgba(255, 255, 255, 0.08);
+}
+
+.pdf-link-toolbar-btn--go {
+  min-width: 0;
 }
 
 .pdf-link-toolbar-sep {
