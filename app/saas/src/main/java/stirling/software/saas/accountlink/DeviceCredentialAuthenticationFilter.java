@@ -75,11 +75,19 @@ public class DeviceCredentialAuthenticationFilter extends OncePerRequestFilter {
                                                     new LinkedInstanceAuthenticationToken(
                                                             instance.getInstanceId(),
                                                             instance.getTeamId()));
-                                    // Stamp liveness. The instance surface is low-frequency
-                                    // (entitlement poll ~5 min, not per billable op), so an
-                                    // unconditional write here is cheap.
-                                    instance.setLastSeenAt(LocalDateTime.now());
-                                    repo.save(instance);
+                                    // Stamp liveness, best-effort. Auth is already set above; a
+                                    // transient write failure must NOT 500 an otherwise-valid
+                                    // request, so swallow it. The instance surface is low-frequency
+                                    // (entitlement poll ~5 min), so the write is cheap.
+                                    try {
+                                        instance.setLastSeenAt(LocalDateTime.now());
+                                        repo.save(instance);
+                                    } catch (RuntimeException e) {
+                                        log.debug(
+                                                "last_seen_at update failed for device {}: {}",
+                                                deviceId,
+                                                e.getMessage());
+                                    }
                                 } else {
                                     log.debug("Device credential mismatch for device {}", deviceId);
                                 }
