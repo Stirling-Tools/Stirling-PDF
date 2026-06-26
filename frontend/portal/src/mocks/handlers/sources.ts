@@ -66,6 +66,25 @@ const references: Record<string, SourcePolicyRef[]> = {
   "src-contracts": [{ id: "pol_contract", name: "Contract Review" }],
 };
 
+/** Per-source document throughput, mirroring the backend's docsTotal / 24h / 30d. */
+const docCounts: Record<
+  string,
+  { total: number; last24h: number; last30d: number }
+> = {
+  "src-claims": { total: 45230, last24h: 312, last30d: 9870 },
+  "src-contracts": { total: 12840, last24h: 96, last30d: 2310 },
+  "src-archive": { total: 1180, last24h: 0, last30d: 0 },
+  "src-legacy": { total: 48600, last24h: 0, last30d: 0 },
+};
+
+function docsFor(id: string): {
+  total: number;
+  last24h: number;
+  last30d: number;
+} {
+  return docCounts[id] ?? { total: 0, last24h: 0, last30d: 0 };
+}
+
 let store: StoredSource[] = seedSources();
 
 let idCounter = 0;
@@ -97,6 +116,7 @@ function toSourceView(
   source: StoredSource,
   refs: SourcePolicyRef[],
 ): SourceView {
+  const docs = docsFor(source.id);
   return {
     id: source.id,
     name: source.name,
@@ -105,7 +125,9 @@ function toSourceView(
     referenceCount: refs.length,
     referencingPolicies: refs,
     config: configRows(source.options),
-    docsTotal: null,
+    docsTotal: docs.total,
+    docs24h: docs.last24h,
+    docs30d: docs.last30d,
   };
 }
 

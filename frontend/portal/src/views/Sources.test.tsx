@@ -43,7 +43,9 @@ const RESPONSE: SourcesResponse = {
         { id: "pol-2", name: "Classification" },
       ],
       config: [{ label: "Directory", value: "/data/incoming" }],
-      docsTotal: null,
+      docsTotal: 1240,
+      docs24h: 18,
+      docs30d: 540,
     },
     {
       id: "src-orphan",
@@ -53,7 +55,9 @@ const RESPONSE: SourcesResponse = {
       referenceCount: 0,
       referencingPolicies: [],
       config: [{ label: "Directory", value: "/tmp/scratch" }],
-      docsTotal: null,
+      docsTotal: 1240,
+      docs24h: 18,
+      docs30d: 540,
     },
   ],
 };

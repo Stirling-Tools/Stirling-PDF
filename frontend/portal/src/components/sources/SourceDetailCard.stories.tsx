@@ -16,7 +16,9 @@ const IN_USE: SourceView = {
     { label: "Directory", value: "/data/claims-intake" },
     { label: "Mode", value: "consume" },
   ],
-  docsTotal: null,
+  docsTotal: 45230,
+  docs24h: 312,
+  docs30d: 9870,
 };
 
 const ORPHANED: SourceView = {
@@ -27,7 +29,9 @@ const ORPHANED: SourceView = {
   referenceCount: 0,
   referencingPolicies: [],
   config: [{ label: "Directory", value: "/data/archive" }],
-  docsTotal: null,
+  docsTotal: 45230,
+  docs24h: 312,
+  docs30d: 9870,
 };
 
 const meta: Meta<typeof SourceDetailCard> = {

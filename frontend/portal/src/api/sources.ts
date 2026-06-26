@@ -28,8 +28,10 @@ export interface SourceView {
   referenceCount: number;
   referencingPolicies: SourcePolicyRef[];
   config: SourceDetailRow[];
-  /** Per-source document volume: not tracked yet (always null for now). */
-  docsTotal: number | null;
+  /** Documents this source has fed into runs: lifetime, plus trailing 24h / 30d windows. */
+  docsTotal: number;
+  docs24h: number;
+  docs30d: number;
 }
 
 export interface SourceKpi {
