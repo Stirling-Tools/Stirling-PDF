@@ -106,7 +106,9 @@ async function runToCompletion(
       throw new Error(view.error || `policy run ${view.status.toLowerCase()}`);
     }
     if (view.status === "WAITING_FOR_INPUT") {
-      throw new Error("policy requires interactive input and cannot run automatically");
+      throw new Error(
+        "policy requires interactive input and cannot run automatically",
+      );
     }
   }
   throw new Error("policy run timed out");
@@ -193,7 +195,10 @@ export async function enforceExportPolicies(
         out[i] = current;
         done += 1;
         if (done < total)
-          updateToast(toastId, { title: progressTitle(done), body: progressBody(done) });
+          updateToast(toastId, {
+            title: progressTitle(done),
+            body: progressBody(done),
+          });
         if (versionRun && fileId) {
           recordRunStart({
             runId: versionRun.runId,

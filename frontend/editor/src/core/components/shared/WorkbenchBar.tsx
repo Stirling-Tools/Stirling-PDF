@@ -175,7 +175,9 @@ export default function WorkbenchBar({
       const filesToExport =
         selectedFiles.length > 0 ? selectedFiles : activeFiles;
       const stubs = filesToExport.map((file) =>
-        isStirlingFile(file) ? selectors.getStirlingFileStub(file.fileId) : undefined,
+        isStirlingFile(file)
+          ? selectors.getStirlingFileStub(file.fileId)
+          : undefined,
       );
 
       // Enforce all files in one batch so the toast shows progress across the
