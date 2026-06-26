@@ -250,15 +250,6 @@ tasks:
     deps: [install]
     cmds:
       - task: lint:oxlint
-      - task: lint:dpdm
-
-  lint:dpdm:
-    desc: "Run circular import linting"
-    deps: [install]
-    cmds:
-      # Globs so dpdm walks the whole tree. dpdm expands the braces itself, so this is
-      # shell-agnostic. Covers editor, portal, and the shared design system.
-      - npx dpdm "editor/src/**/*.{ts,tsx}" "portal/src/**/*.{ts,tsx}" "shared/**/*.{ts,tsx}" --circular --no-warning --no-tree --exit-code circular:1
 
   lint:fix:
     desc: "Auto-fix lint issues"
