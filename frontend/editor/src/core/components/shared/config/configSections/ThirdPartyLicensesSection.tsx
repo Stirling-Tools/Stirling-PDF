@@ -46,6 +46,13 @@ function LicensesSectionBody({
     [dependencies],
   );
 
+  const getDependencyKey = (dependency: Dependency) =>
+    [
+      dependency.moduleName ?? "module",
+      dependency.moduleVersion ?? "version",
+      dependency.moduleUrl ?? "url",
+    ].join(":");
+
   return (
     <Stack gap="lg">
       <Paper withBorder p="md" radius="md">
@@ -97,7 +104,7 @@ function LicensesSectionBody({
                 </Table.Tr>
               ) : (
                 sortedDependencies.map((dependency) => (
-                  <Table.Tr key={dependency.moduleName}>
+                  <Table.Tr key={getDependencyKey(dependency)}>
                     <Table.Td>
                       {dependency.moduleUrl ? (
                         <Anchor
