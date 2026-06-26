@@ -2,14 +2,18 @@ package stirling.software.saas.accountlink;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.junit.jupiter.api.AfterEach;
@@ -93,15 +97,18 @@ class DeviceCredentialAuthenticationFilterTest {
                 new MockHttpServletResponse(),
                 new MockFilterChain());
 
-        assertNotNull(instance.getLastSeenAt(), "last_seen_at stamped on successful auth");
-        verify(repo).save(instance);
+        // Targeted single-column update (guarded by revoked_at IS NULL), not a full-entity save.
+        verify(repo).touchLastSeen(eq(1L), any(LocalDateTime.class));
+        verify(repo, never()).save(any());
     }
 
     @Test
-    void lastSeenSaveFailureDoesNotBreakAuth() throws ServletException, IOException {
+    void lastSeenWriteFailureDoesNotBreakAuth() throws ServletException, IOException {
         LinkedInstance instance = instanceWithSecret("s3cr3t");
         when(repo.findByDeviceIdAndRevokedAtIsNull("dev-1")).thenReturn(Optional.of(instance));
-        doThrow(new RuntimeException("transient db")).when(repo).save(instance);
+        doThrow(new RuntimeException("transient db"))
+                .when(repo)
+                .touchLastSeen(anyLong(), any(LocalDateTime.class));
 
         // A liveness-write failure must NOT propagate — auth is already set, so the
         // request stays authenticated rather than 500ing.

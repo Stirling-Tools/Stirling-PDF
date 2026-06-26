@@ -66,9 +66,12 @@ public class AccountLinkController {
             log.warn("Account-link register rejected upstream: HTTP {}", e.status());
             return ResponseEntity.status(status).body(java.util.Map.of("error", "LINK_FAILED"));
         } catch (IOException e) {
-            log.warn("Account-link failed: {}", e.getMessage());
+            // Don't echo e.getMessage() to the browser: a DNS/connection/TLS failure can carry the
+            // configured SaaS host/IP. Log it server-side; return the same opaque body the
+            // UpstreamException branch does.
+            log.warn("Account-link failed (transport): {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
-                    .body(java.util.Map.of("error", "LINK_FAILED", "detail", e.getMessage()));
+                    .body(java.util.Map.of("error", "LINK_FAILED"));
         }
     }
 

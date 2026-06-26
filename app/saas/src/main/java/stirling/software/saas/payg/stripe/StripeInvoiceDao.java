@@ -157,9 +157,17 @@ public class StripeInvoiceDao {
     /**
      * Sums billed quantity (PDFs) per invoice from the {@code stripe.invoices.lines} JSONB the Sync
      * Engine mirrors — line items live in {@code lines->'data'}, NOT a separate {@code
-     * invoice_line_items} table (the sync engine never creates one). Run SEPARATELY from the
-     * invoice query and defensively wrapped, so a missing/changed schema degrades to an empty map
-     * (the column renders "—") instead of failing the whole invoice list.
+     * invoice_line_items} table (the sync engine never creates one).
+     *
+     * <p>Only the <b>metered</b> usage line counts: a Processor invoice can also carry flat
+     * subscription-fee, proration and tax lines, each with its own {@code quantity}, so summing
+     * every line would inflate the headline PDF count (usage 500 + a fee line of 1 → "501"). We
+     * filter on {@code price.recurring.usage_type = 'metered'}. When no metered line is present the
+     * subquery is {@code NULL} and the invoice is <b>omitted</b> from the map, so {@code
+     * InvoiceRow.pdfsProcessed} stays {@code null} and the column renders "—" rather than "0".
+     *
+     * <p>Run SEPARATELY from the invoice query and defensively wrapped, so a missing/changed schema
+     * degrades to an empty map (every row renders "—") instead of failing the whole invoice list.
      */
     private Map<String, Long> sumBilledUnits(List<String> invoiceIds) {
         if (invoiceIds.isEmpty()) {
@@ -168,9 +176,9 @@ public class StripeInvoiceDao {
         String placeholders = invoiceIds.stream().map(id -> "?").collect(Collectors.joining(","));
         String sql =
                 "SELECT i.id AS invoice_id,"
-                        + " COALESCE((SELECT SUM((l->>'quantity')::int)"
-                        + "           FROM jsonb_array_elements(COALESCE(i.lines->'data', '[]'::jsonb))"
-                        + "             AS l), 0) AS qty"
+                        + " (SELECT SUM((l->>'quantity')::int)"
+                        + "    FROM jsonb_array_elements(COALESCE(i.lines->'data', '[]'::jsonb)) AS l"
+                        + "   WHERE l->'price'->'recurring'->>'usage_type' = 'metered') AS qty"
                         + " FROM stripe.invoices i"
                         + " WHERE i.id IN ("
                         + placeholders
@@ -180,7 +188,11 @@ public class StripeInvoiceDao {
             jdbcTemplate.query(
                     sql,
                     (java.sql.ResultSet rs) -> {
-                        map.put(rs.getString("invoice_id"), rs.getLong("qty"));
+                        long qty = rs.getLong("qty");
+                        if (!rs.wasNull()) {
+                            // null (no metered line) → leave the key absent → renders "—".
+                            map.put(rs.getString("invoice_id"), qty);
+                        }
                     },
                     invoiceIds.toArray());
             return map;

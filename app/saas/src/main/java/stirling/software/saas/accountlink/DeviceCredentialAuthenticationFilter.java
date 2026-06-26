@@ -77,11 +77,12 @@ public class DeviceCredentialAuthenticationFilter extends OncePerRequestFilter {
                                                             instance.getTeamId()));
                                     // Stamp liveness, best-effort. Auth is already set above; a
                                     // transient write failure must NOT 500 an otherwise-valid
-                                    // request, so swallow it. The instance surface is low-frequency
-                                    // (entitlement poll ~5 min), so the write is cheap.
+                                    // request, so swallow it. Targeted single-column UPDATE (not a
+                                    // full save) so a concurrent revoke between the read above and
+                                    // this write can't be clobbered back to active.
                                     try {
-                                        instance.setLastSeenAt(LocalDateTime.now());
-                                        repo.save(instance);
+                                        repo.touchLastSeen(
+                                                instance.getInstanceId(), LocalDateTime.now());
                                     } catch (RuntimeException e) {
                                         log.debug(
                                                 "last_seen_at update failed for device {}: {}",
