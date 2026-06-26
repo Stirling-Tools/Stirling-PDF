@@ -1,6 +1,6 @@
 import { defineConfig } from "oxlint";
 
-// App source globs (mirrors srcGlobs in eslint.config.mjs).
+// App source globs
 const srcGlobs = [
   "editor/src/**/*.{js,mjs,jsx,ts,tsx}",
   "portal/src/**/*.{js,mjs,jsx,ts,tsx}",

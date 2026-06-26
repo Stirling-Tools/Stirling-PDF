@@ -249,14 +249,8 @@ tasks:
     desc: "Run linting"
     deps: [install]
     cmds:
-      - task: lint:eslint
+      - task: lint:oxlint
       - task: lint:dpdm
-
-  lint:eslint:
-    desc: "Run ESLint linting"
-    deps: [install]
-    cmds:
-      - npx eslint --max-warnings=0
 
   lint:dpdm:
     desc: "Run circular import linting"
@@ -270,19 +264,19 @@ tasks:
     desc: "Auto-fix lint issues"
     deps: [install]
     cmds:
-      - npx eslint --fix
+      - npx oxlint --fix
 
   format:
     desc: "Auto-fix code formatting"
     deps: [install]
     cmds:
-      - npx prettier --write .
+      - npx oxfmt --write .
 
   format:check:
     desc: "Check code formatting"
     deps: [install]
     cmds:
-      - npx prettier --check .
+      - npx oxfmt --check .
 
   fix:
     desc: "Auto-fix lint and format"
@@ -290,48 +284,11 @@ tasks:
       - task: format
       - task: lint:fix
 
-  # ------------------------------------------------------------
-  # OSS oxc toolchain (oxlint + oxfmt) - evaluation
-  # Runs in parallel with the ESLint/Prettier tasks above so the
-  # two toolchains can be benchmarked head-to-head before any swap.
-  # Config: frontend/oxlint.config.ts, frontend/.oxfmtrc.json
-  # ------------------------------------------------------------
-
   lint:oxlint:
     desc: "Run oxlint linting"
     deps: [install]
     cmds:
       - npx oxlint --max-warnings=0
-
-  lint:oxlint:fix:
-    desc: "Auto-fix lint issues with oxlint"
-    deps: [install]
-    cmds:
-      - npx oxlint --fix
-
-  format:oxfmt:
-    desc: "Auto-fix code formatting with oxfmt"
-    deps: [install]
-    cmds:
-      - npx oxfmt --write .
-
-  format:oxfmt:check:
-    desc: "Check code formatting with oxfmt"
-    deps: [install]
-    cmds:
-      - npx oxfmt --check .
-
-  bench:lint:
-    desc: "Time ESLint against oxlint on the same tree"
-    deps: [install]
-    cmds:
-      - bash -c 'echo "=== ESLint ===" && time npx eslint --max-warnings=0 || true; echo; echo "=== oxlint ===" && time npx oxlint --max-warnings=0 || true'
-
-  bench:format:
-    desc: "Time Prettier against oxfmt on the same tree"
-    deps: [install]
-    cmds:
-      - bash -c 'echo "=== Prettier ===" && time npx prettier --check . || true; echo; echo "=== oxfmt ===" && time npx oxfmt --check . || true'
 
   typecheck:
     desc: "Typecheck default build of the app"
