@@ -39,7 +39,7 @@ export function toWirePolicy(state: PolicyDecodedState): WirePolicy {
     enabled: state.enabled,
     trigger: null,
     steps: state.steps,
-    output: { type: "inline", options: options as WirePolicy["output"]["options"] },
+    output: { type: "inline", options },
   };
 }
 
@@ -65,8 +65,7 @@ export function fromWirePolicy(policy: WirePolicy): PolicyDecodedState {
       ? (raw.scopeTypes as string[])
       : [],
     reviewerEmail: str(raw.reviewerEmail),
-    fieldValues:
-      (raw.fieldValues as PolicyDecodedState["fieldValues"] | undefined) ?? {},
+    fieldValues: raw.fieldValues ?? {},
     runOn: raw.runOn === "export" ? "export" : "upload",
     outputMode: raw.mode === "new_file" ? "new_file" : "new_version",
     outputName: str(raw.name),

@@ -136,7 +136,7 @@ function PolicySetupWizardBody({
   const [outputName, setOutputName] = useState(policy?.state.outputName ?? "");
   const [outputNamePosition, setOutputNamePosition] = useState<
     "prefix" | "suffix" | "auto-number"
-  >("suffix");
+  >(policy?.state.outputNamePosition ?? "suffix");
   const [runOn, setRunOn] = useState<"upload" | "export">(
     policy?.state.runOn ?? "upload",
   );

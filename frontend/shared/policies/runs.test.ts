@@ -87,6 +87,26 @@ describe("runsToActivity", () => {
     expect(row.status).toBe("processing");
   });
 
+  it("maps CANCELLED to flagged status", () => {
+    const run: PolicyRunView = { ...failed("x", NOW - MIN, "Cancelled by user"), status: "CANCELLED" };
+    expect(runsToActivity([run])[0].status).toBe("flagged");
+  });
+
+  it("maps PENDING to processing status", () => {
+    const run: PolicyRunView = { ...running("x", NOW - MIN), status: "PENDING" };
+    expect(runsToActivity([run])[0].status).toBe("processing");
+  });
+
+  it("maps WAITING_FOR_INPUT to processing status", () => {
+    const run: PolicyRunView = { ...running("x", NOW - MIN), status: "WAITING_FOR_INPUT" };
+    expect(runsToActivity([run])[0].status).toBe("processing");
+  });
+
+  it("falls back to 'Enforcement failed' when FAILED run has no error message", () => {
+    const run: PolicyRunView = { ...failed("x", NOW - MIN), error: null };
+    expect(runsToActivity([run])[0].action).toBe("Enforcement failed");
+  });
+
   it("shows step progress when currentStep and stepCount are set", () => {
     const [row] = runsToActivity([running("c", NOW - MIN, 1)]);
     expect(row.action).toContain("step 1/2");

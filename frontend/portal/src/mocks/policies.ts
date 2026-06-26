@@ -72,6 +72,7 @@ export interface PolicyState {
   fieldValues: Record<string, boolean | string | string[]>;
   outputMode?: "new_file" | "new_version";
   outputName?: string;
+  outputNamePosition?: "prefix" | "suffix" | "auto-number";
   runOn?: "upload" | "export";
   backendId?: string;
   isDefault?: boolean;

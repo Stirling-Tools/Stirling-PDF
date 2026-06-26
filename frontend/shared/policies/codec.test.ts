@@ -107,4 +107,10 @@ describe("fromWirePolicy → round-trip", () => {
     expect(decoded.runOn).toBe("upload");
     expect(decoded.outputMode).toBe("new_version");
   });
+
+  it("defaults fieldValues to empty object when missing", () => {
+    const wire = toWirePolicy(FULL_STATE);
+    delete (wire.output.options as Record<string, unknown>).fieldValues;
+    expect(fromWirePolicy(wire).fieldValues).toEqual({});
+  });
 });

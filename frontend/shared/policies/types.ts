@@ -33,7 +33,7 @@ export interface WireOutputOptions {
 
 export interface WireOutputSpec {
   type: "inline";
-  options: Partial<WireOutputOptions> & Record<string, unknown>;
+  options: Partial<WireOutputOptions>;
 }
 
 export interface WirePolicy {
