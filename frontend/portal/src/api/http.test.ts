@@ -50,18 +50,18 @@ function ok(body: unknown): Response {
 describe("apiClient.saas", () => {
   it("throws SaasUnconfiguredError when VITE_SAAS_API_URL is unset", async () => {
     vi.stubEnv("VITE_SAAS_API_URL", "");
-    await expect(apiClient.saas.json("/api/v1/payg/wallet")).rejects.toBeInstanceOf(
-      SaasUnconfiguredError,
-    );
+    await expect(
+      apiClient.saas.json("/api/v1/payg/wallet"),
+    ).rejects.toBeInstanceOf(SaasUnconfiguredError);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("throws SaasNotLinkedError when there is no SaaS session", async () => {
     vi.stubEnv("VITE_SAAS_API_URL", "https://saas.test.local");
     getSession.mockResolvedValue({ data: { session: null } });
-    await expect(apiClient.saas.json("/api/v1/payg/wallet")).rejects.toBeInstanceOf(
-      SaasNotLinkedError,
-    );
+    await expect(
+      apiClient.saas.json("/api/v1/payg/wallet"),
+    ).rejects.toBeInstanceOf(SaasNotLinkedError);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 

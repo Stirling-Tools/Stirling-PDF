@@ -15,7 +15,9 @@ const DEFAULT_VISIBLE = 5;
 /** Fetch a few more than DEFAULT_VISIBLE so "Show more" actually has something to show. */
 const FETCH_LIMIT = 20;
 
-function statusTone(status: string): "success" | "warning" | "danger" | "neutral" {
+function statusTone(
+  status: string,
+): "success" | "warning" | "danger" | "neutral" {
   switch (status) {
     case "paid":
       return "success";
@@ -201,8 +203,8 @@ export function InvoicesList() {
               </Button>
               {showAll && atFetchLimit && (
                 <span className="portal-billing__invoice-note">
-                  Showing your {FETCH_LIMIT} most recent invoices. Older invoices
-                  are in the Stripe portal.
+                  Showing your {FETCH_LIMIT} most recent invoices. Older
+                  invoices are in the Stripe portal.
                 </span>
               )}
             </div>

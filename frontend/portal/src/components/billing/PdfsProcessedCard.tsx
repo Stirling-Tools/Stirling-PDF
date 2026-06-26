@@ -30,7 +30,9 @@ export function PdfsProcessedCard({ wallet }: { wallet: Wallet }) {
 
   return (
     <Card padding="loose">
-      <span className="portal-billing__eyebrow">PDFs processed this period</span>
+      <span className="portal-billing__eyebrow">
+        PDFs processed this period
+      </span>
       <div className="portal-billing__bignum-row">
         <span className="portal-billing__bignum">
           {wallet.billableUsed.toLocaleString()}
@@ -62,7 +64,9 @@ export function PdfsProcessedCard({ wallet }: { wallet: Wallet }) {
                   className={`portal-billing__dot portal-billing__dot--${s.cls}`}
                   aria-hidden
                 />
-                <span className="portal-billing__seglegend-label">{s.label}</span>
+                <span className="portal-billing__seglegend-label">
+                  {s.label}
+                </span>
                 <span className="portal-billing__seglegend-val">
                   {b[s.key].toLocaleString()} PDFs
                 </span>

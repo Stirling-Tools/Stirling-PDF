@@ -51,7 +51,9 @@ describe("mocks/link store", () => {
   it("revokes an instance and is idempotent", () => {
     const id = listInstances().find((r) => !r.revoked)!.instanceId;
     expect(revokeInstance(id)).toBe(true);
-    expect(listInstances().find((r) => r.instanceId === id)?.revoked).toBe(true);
+    expect(listInstances().find((r) => r.instanceId === id)?.revoked).toBe(
+      true,
+    );
     // Idempotent — revoking again still returns true.
     expect(revokeInstance(id)).toBe(true);
   });

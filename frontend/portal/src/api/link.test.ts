@@ -55,7 +55,10 @@ describe("api/link — local backend (this instance)", () => {
   });
 
   it("links this instance via the local endpoint, never returning a secret", async () => {
-    const status = await linkInstance({ supabaseJwt: "jwt_abc", name: "node-1" });
+    const status = await linkInstance({
+      supabaseJwt: "jwt_abc",
+      name: "node-1",
+    });
     expect(status.linked).toBe(true);
     expect(status.name).toBe("node-1");
     // Contract: the device secret is stored server-side, never sent to the portal.

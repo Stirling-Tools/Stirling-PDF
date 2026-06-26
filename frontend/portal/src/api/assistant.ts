@@ -7,9 +7,12 @@ export async function fetchAssistantSuggestions(): Promise<readonly string[]> {
 
 /** POST /v1/assistant/messages */
 export async function getAssistantReply(input: string): Promise<string> {
-  const res = await apiClient.mock.json<{ reply: string }>("/v1/assistant/messages", {
-    method: "POST",
-    body: { input },
-  });
+  const res = await apiClient.mock.json<{ reply: string }>(
+    "/v1/assistant/messages",
+    {
+      method: "POST",
+      body: { input },
+    },
+  );
   return res.reply;
 }

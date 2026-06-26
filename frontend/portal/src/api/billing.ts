@@ -25,9 +25,7 @@ export async function fetchWallet(): Promise<Wallet> {
 // Cap — leader-only PATCH (real endpoint).
 // ────────────────────────────────────────────────────────────────────────────
 
-export async function updateCap(
-  capUsd: number | null,
-): Promise<void> {
+export async function updateCap(capUsd: number | null): Promise<void> {
   await apiClient.saas.json<void>("/api/v1/payg/cap", {
     method: "PATCH",
     body: { capUsd: capUsd ?? 0, noCap: capUsd === null },

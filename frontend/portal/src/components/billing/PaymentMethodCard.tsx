@@ -57,7 +57,9 @@ export function PaymentMethodCard({ onManage, managing }: Props) {
             </>
           ) : (
             <>
-              <h3 className="portal-billing__section-title">Managed in Stripe</h3>
+              <h3 className="portal-billing__section-title">
+                Managed in Stripe
+              </h3>
               <p className="portal-billing__section-sub">
                 Your card and billing details are kept securely in Stripe's
                 customer portal.

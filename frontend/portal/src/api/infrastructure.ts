@@ -69,20 +69,28 @@ export async function fetchApiKeys(tier: Tier): Promise<ApiKey[]> {
 
 /** GET /v1/infrastructure/security?tier=… */
 export async function fetchSecurity(tier: Tier): Promise<SecurityConfig> {
-  return apiClient.mock.json<SecurityConfig>(`/v1/infrastructure/security${q(tier)}`);
+  return apiClient.mock.json<SecurityConfig>(
+    `/v1/infrastructure/security${q(tier)}`,
+  );
 }
 
 /** GET /v1/infrastructure/models?tier=… */
 export async function fetchModels(tier: Tier): Promise<ModelsResponse> {
-  return apiClient.mock.json<ModelsResponse>(`/v1/infrastructure/models${q(tier)}`);
+  return apiClient.mock.json<ModelsResponse>(
+    `/v1/infrastructure/models${q(tier)}`,
+  );
 }
 
 /** GET /v1/infrastructure/storage?tier=… */
 export async function fetchStorage(tier: Tier): Promise<StorageConfig> {
-  return apiClient.mock.json<StorageConfig>(`/v1/infrastructure/storage${q(tier)}`);
+  return apiClient.mock.json<StorageConfig>(
+    `/v1/infrastructure/storage${q(tier)}`,
+  );
 }
 
 /** GET /v1/infrastructure/audit-log?tier=… */
 export async function fetchAuditLog(tier: Tier): Promise<AuditLogResponse> {
-  return apiClient.mock.json<AuditLogResponse>(`/v1/infrastructure/audit-log${q(tier)}`);
+  return apiClient.mock.json<AuditLogResponse>(
+    `/v1/infrastructure/audit-log${q(tier)}`,
+  );
 }

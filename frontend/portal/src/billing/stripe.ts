@@ -10,7 +10,10 @@ import { ensureSaasSupabase } from "@portal/auth/saasSupabase";
  */
 
 export class StripeFunctionError extends Error {
-  constructor(message: string, public readonly code?: string) {
+  constructor(
+    message: string,
+    public readonly code?: string,
+  ) {
     super(message);
     this.name = "StripeFunctionError";
   }
@@ -60,7 +63,10 @@ interface PortalResponse {
   error?: string;
 }
 
-async function invoke<T>(name: string, body: Record<string, unknown>): Promise<T> {
+async function invoke<T>(
+  name: string,
+  body: Record<string, unknown>,
+): Promise<T> {
   ensureSaasSupabase();
   const supabase = getSupabaseClient();
   if (!supabase) {
@@ -71,7 +77,9 @@ async function invoke<T>(name: string, body: Record<string, unknown>): Promise<T
   }
   const { data, error } = await supabase.functions.invoke<T>(name, { body });
   if (error) {
-    throw new StripeFunctionError(error.message ?? `Edge function ${name} failed`);
+    throw new StripeFunctionError(
+      error.message ?? `Edge function ${name} failed`,
+    );
   }
   if (data == null) {
     throw new StripeFunctionError(`Edge function ${name} returned no data`);
@@ -113,7 +121,9 @@ export async function createCheckoutSession(
       : {}),
   });
   if (!res.success) {
-    throw new StripeFunctionError(res.error ?? "create-checkout-session failed");
+    throw new StripeFunctionError(
+      res.error ?? "create-checkout-session failed",
+    );
   }
   const alreadySubscribed = Boolean(res.already_subscribed);
   const redirectUrl = alreadySubscribed

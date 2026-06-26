@@ -8,14 +8,20 @@ import { LinkProvider } from "@portal/contexts/LinkContext";
  * credential). This is the exact regression that slipped through once, so it gets
  * a dedicated guard.
  */
-const { linkInstance, fetchStatus, unlinkInstance, getSession } = vi.hoisted(() => ({
-  linkInstance: vi.fn(),
-  fetchStatus: vi.fn(),
-  unlinkInstance: vi.fn(),
-  getSession: vi.fn(),
-}));
+const { linkInstance, fetchStatus, unlinkInstance, getSession } = vi.hoisted(
+  () => ({
+    linkInstance: vi.fn(),
+    fetchStatus: vi.fn(),
+    unlinkInstance: vi.fn(),
+    getSession: vi.fn(),
+  }),
+);
 
-vi.mock("@portal/api/link", () => ({ linkInstance, fetchStatus, unlinkInstance }));
+vi.mock("@portal/api/link", () => ({
+  linkInstance,
+  fetchStatus,
+  unlinkInstance,
+}));
 vi.mock("@portal/auth/saasSupabase", () => ({
   PENDING_LINK_KEY: "stirling_pending_link",
   isSaasSupabaseConfigured: true,

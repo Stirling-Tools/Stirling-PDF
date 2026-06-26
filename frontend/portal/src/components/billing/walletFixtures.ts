@@ -43,8 +43,18 @@ export const subscribedWallet: Wallet = {
   spendUnitsThisPeriod: 2250,
   categoryBreakdown: { api: 900, ai: 600, automation: 750 },
   members: [
-    { userId: "u1", name: "Ada Lovelace", email: "ada@acme.test", spendUnits: 1400 },
-    { userId: "u2", name: "Alan Turing", email: "alan@acme.test", spendUnits: 850 },
+    {
+      userId: "u1",
+      name: "Ada Lovelace",
+      email: "ada@acme.test",
+      spendUnits: 1400,
+    },
+    {
+      userId: "u2",
+      name: "Alan Turing",
+      email: "alan@acme.test",
+      spendUnits: 850,
+    },
   ],
   recent: [],
 };

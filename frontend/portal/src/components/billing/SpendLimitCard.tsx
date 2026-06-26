@@ -46,7 +46,10 @@ function projectOverspend(wallet: Wallet): Projection | null {
   if (wallet.estimatedBillMinor == null || wallet.estimatedBillMinor <= 0) {
     return null;
   }
-  const totalDays = daysBetween(wallet.billingPeriodStart, wallet.billingPeriodEnd);
+  const totalDays = daysBetween(
+    wallet.billingPeriodStart,
+    wallet.billingPeriodEnd,
+  );
   if (totalDays <= 0) return null;
   const todayIso = new Date().toISOString().slice(0, 10);
   const elapsed = Math.min(
@@ -120,7 +123,9 @@ export function SpendLimitCard({
     return (
       <Card padding="loose">
         <span className="portal-billing__eyebrow">Spend limit</span>
-        <h3 className="portal-billing__section-title">Set your monthly ceiling</h3>
+        <h3 className="portal-billing__section-title">
+          Set your monthly ceiling
+        </h3>
 
         <SharedSpendCapControl
           capUsd={draftCap}
@@ -136,15 +141,16 @@ export function SpendLimitCard({
             className="portal-billing__suggested"
             onClick={() => setDraftCap(proj.suggestedMajor)}
           >
-            Use suggested · {formatMoneyMajor(proj.suggestedMajor, wallet.currency)}{" "}
-            / month
+            Use suggested ·{" "}
+            {formatMoneyMajor(proj.suggestedMajor, wallet.currency)} / month
           </button>
         )}
 
         <div className="portal-billing__guardrail">
           <strong>Your guardrail:</strong> a hard ceiling — you're never billed
           past it. At the cap, metered processing pauses (unlimited PDF editing
-          keeps working) until you raise it or the cycle resets. Nothing is lost.
+          keeps working) until you raise it or the cycle resets. Nothing is
+          lost.
         </div>
 
         {error && (
@@ -203,7 +209,9 @@ export function SpendLimitCard({
         <MeterBar
           state={capActive ? state : "FULL"}
           pct={pct}
-          figure={capActive ? formatMoneyMajor(cap, wallet.currency) : spentLabel}
+          figure={
+            capActive ? formatMoneyMajor(cap, wallet.currency) : spentLabel
+          }
           capSuffix={
             capActive
               ? docEstimate != null
@@ -217,7 +225,9 @@ export function SpendLimitCard({
             capActive ? (
               <>
                 <span>{spentLabel} used this month</span>
-                <span>{formatMinor(remainingMinor, wallet.currency)} remaining</span>
+                <span>
+                  {formatMinor(remainingMinor, wallet.currency)} remaining
+                </span>
               </>
             ) : (
               <span>{spentLabel} this period · uncapped</span>
@@ -234,7 +244,10 @@ export function SpendLimitCard({
           })}
           /day you reach the cap in ~{proj.daysToCap}{" "}
           {proj.daysToCap === 1 ? "day" : "days"} (~
-          {formatMoneyMajor(Math.round(proj.projectedEndMajor), wallet.currency)}{" "}
+          {formatMoneyMajor(
+            Math.round(proj.projectedEndMajor),
+            wallet.currency,
+          )}{" "}
           month-end). Suggested limit ~
           {formatMoneyMajor(proj.suggestedMajor, wallet.currency)}.
         </p>

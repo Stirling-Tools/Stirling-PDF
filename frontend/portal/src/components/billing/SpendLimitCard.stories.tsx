@@ -26,7 +26,9 @@ function Demo({ wallet, open = false }: { wallet: Wallet; open?: boolean }) {
 }
 
 /** Comfortably within the cap. */
-export const WithinCap: Story = { render: () => <Demo wallet={subscribedWallet} /> };
+export const WithinCap: Story = {
+  render: () => <Demo wallet={subscribedWallet} />,
+};
 
 /** Approaching the cap — % used chip + run-rate projection. */
 export const ApproachingCap: Story = {

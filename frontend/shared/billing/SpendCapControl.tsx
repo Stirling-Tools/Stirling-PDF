@@ -126,7 +126,10 @@ export function SpendCapControl({
           </button>
         ))}
 
-        <label className="scc-custom" data-active={customActive ? "true" : "false"}>
+        <label
+          className="scc-custom"
+          data-active={customActive ? "true" : "false"}
+        >
           <span className="scc-custom__symbol">{sym}</span>
           <input
             className="scc-custom__input"
@@ -166,7 +169,10 @@ export function SpendCapControl({
 
       {previewDocs != null && (
         <div className="scc-estimate">
-          <DescriptionIcon className="scc-estimate__icon" sx={{ fontSize: 22 }} />
+          <DescriptionIcon
+            className="scc-estimate__icon"
+            sx={{ fontSize: 22 }}
+          />
           <div>
             <div className="scc-estimate__main">
               {L.docsEstimate(previewDocs.toLocaleString())}

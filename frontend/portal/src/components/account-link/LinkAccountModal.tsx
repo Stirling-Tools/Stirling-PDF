@@ -34,7 +34,12 @@ interface Props {
  * never reaches the browser. SSO redirects away and is finished by useAccountLink
  * on return.
  */
-export function LinkAccountModal({ open, onClose, mode = "link", onLinked }: Props) {
+export function LinkAccountModal({
+  open,
+  onClose,
+  mode = "link",
+  onLinked,
+}: Props) {
   useEffect(() => {
     if (open) ensureSaasSupabase();
   }, [open]);

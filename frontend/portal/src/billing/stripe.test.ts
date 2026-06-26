@@ -32,7 +32,10 @@ afterEach(() => vi.restoreAllMocks());
 
 describe("createCheckoutSession", () => {
   it("maps embedded checkout (client_secret)", async () => {
-    invoke.mockResolvedValue({ data: { success: true, client_secret: "cs_123" }, error: null });
+    invoke.mockResolvedValue({
+      data: { success: true, client_secret: "cs_123" },
+      error: null,
+    });
     const s = await createCheckoutSession(req);
     expect(s).toEqual({
       clientSecret: "cs_123",
@@ -44,7 +47,11 @@ describe("createCheckoutSession", () => {
 
   it("short-circuits already-subscribed to the portal URL (no client secret)", async () => {
     invoke.mockResolvedValue({
-      data: { success: true, already_subscribed: true, portal_url: "https://portal" },
+      data: {
+        success: true,
+        already_subscribed: true,
+        portal_url: "https://portal",
+      },
       error: null,
     });
     const s = await createCheckoutSession(req);
@@ -62,8 +69,13 @@ describe("createCheckoutSession", () => {
   });
 
   it("throws when success is false", async () => {
-    invoke.mockResolvedValue({ data: { success: false, error: "no team" }, error: null });
-    await expect(createCheckoutSession(req)).rejects.toBeInstanceOf(StripeFunctionError);
+    invoke.mockResolvedValue({
+      data: { success: false, error: "no team" },
+      error: null,
+    });
+    await expect(createCheckoutSession(req)).rejects.toBeInstanceOf(
+      StripeFunctionError,
+    );
   });
 
   it("throws when neither client_secret nor url is returned", async () => {
@@ -81,8 +93,13 @@ describe("createCheckoutSession", () => {
 
 describe("createPortalSession", () => {
   it("returns the portal URL", async () => {
-    invoke.mockResolvedValue({ data: { success: true, url: "https://billing" }, error: null });
-    expect(await createPortalSession({ teamId: 1, returnUrl: "r" })).toBe("https://billing");
+    invoke.mockResolvedValue({
+      data: { success: true, url: "https://billing" },
+      error: null,
+    });
+    expect(await createPortalSession({ teamId: 1, returnUrl: "r" })).toBe(
+      "https://billing",
+    );
   });
 
   it("throws on a free team (no url)", async () => {
@@ -90,8 +107,8 @@ describe("createPortalSession", () => {
       data: { success: false, error: "team_not_subscribed" },
       error: null,
     });
-    await expect(createPortalSession({ teamId: 1, returnUrl: "r" })).rejects.toBeInstanceOf(
-      StripeFunctionError,
-    );
+    await expect(
+      createPortalSession({ teamId: 1, returnUrl: "r" }),
+    ).rejects.toBeInstanceOf(StripeFunctionError);
   });
 });

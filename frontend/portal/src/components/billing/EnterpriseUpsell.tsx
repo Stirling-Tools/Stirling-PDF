@@ -12,7 +12,9 @@ interface Props {
 export function EnterpriseUpsell({ bare = false }: Props) {
   const body = (
     <>
-      <span className="portal-billing__eyebrow">Volume discount · 1M+ PDFs</span>
+      <span className="portal-billing__eyebrow">
+        Volume discount · 1M+ PDFs
+      </span>
       <div className="portal-billing__enterprise-head">
         <div>
           <h3 className="portal-billing__section-title">Stirling Enterprise</h3>
@@ -28,6 +30,7 @@ export function EnterpriseUpsell({ bare = false }: Props) {
       </div>
     </>
   );
-  if (bare) return <div className="portal-billing__enterprise-bare">{body}</div>;
+  if (bare)
+    return <div className="portal-billing__enterprise-bare">{body}</div>;
   return <Card padding="loose">{body}</Card>;
 }

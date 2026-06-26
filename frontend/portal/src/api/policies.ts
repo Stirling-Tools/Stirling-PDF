@@ -50,7 +50,9 @@ export async function fetchPolicies(): Promise<PoliciesResponse> {
 
 /** GET /api/v1/policies/{id} — one stored policy's raw record. */
 export async function fetchPolicy(id: string): Promise<Policy> {
-  return apiClient.local.json<Policy>(`/api/v1/policies/${encodeURIComponent(id)}`);
+  return apiClient.local.json<Policy>(
+    `/api/v1/policies/${encodeURIComponent(id)}`,
+  );
 }
 
 /**
@@ -58,14 +60,20 @@ export async function fetchPolicy(id: string): Promise<Policy> {
  * assigns owner + team server-side and returns the stored policy with its id.
  */
 export async function savePolicy(policy: Policy): Promise<Policy> {
-  return apiClient.local.json<Policy>("/api/v1/policies", { method: "POST", body: policy });
+  return apiClient.local.json<Policy>("/api/v1/policies", {
+    method: "POST",
+    body: policy,
+  });
 }
 
 /** DELETE /api/v1/policies/{id} — remove a stored policy. */
 export async function deletePolicy(id: string): Promise<void> {
-  await apiClient.local.json<void>(`/api/v1/policies/${encodeURIComponent(id)}`, {
-    method: "DELETE",
-  });
+  await apiClient.local.json<void>(
+    `/api/v1/policies/${encodeURIComponent(id)}`,
+    {
+      method: "DELETE",
+    },
+  );
 }
 
 /** The async run acknowledgement: a run id to poll for status. */

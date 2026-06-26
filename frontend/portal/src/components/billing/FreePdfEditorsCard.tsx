@@ -46,7 +46,10 @@ export function FreePdfEditorsCard() {
         </div>
         <MetricStrip className="portal-billing__fleet-metrics">
           <MetricCard label="Editors deployed" value={SAMPLE.editorsDeployed} />
-          <MetricCard label="Active this month" value={SAMPLE.activeThisMonth} />
+          <MetricCard
+            label="Active this month"
+            value={SAMPLE.activeThisMonth}
+          />
           <MetricCard label="PDFs edited" value={SAMPLE.pdfsEdited} />
           <MetricCard label="Cost" value="$0" />
         </MetricStrip>

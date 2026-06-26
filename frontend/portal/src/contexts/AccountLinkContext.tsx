@@ -1,5 +1,8 @@
 import { createContext, useContext, type ReactNode } from "react";
-import { useAccountLink, type UseAccountLink } from "@portal/hooks/useAccountLink";
+import {
+  useAccountLink,
+  type UseAccountLink,
+} from "@portal/hooks/useAccountLink";
 
 /**
  * Single app-wide {@link useAccountLink} instance. The link flow is orchestrated

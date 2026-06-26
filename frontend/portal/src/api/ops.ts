@@ -21,13 +21,13 @@ export async function runSingleOp(
   sample: string,
 ): Promise<{ result: OpResultMap; durationMs: number }> {
   try {
-    return await apiClient.mock.json<{ result: OpResultMap; durationMs: number }>(
-      `/v1/ops/${encodeURIComponent(opId)}/run`,
-      {
-        method: "POST",
-        body: { sample },
-      },
-    );
+    return await apiClient.mock.json<{
+      result: OpResultMap;
+      durationMs: number;
+    }>(`/v1/ops/${encodeURIComponent(opId)}/run`, {
+      method: "POST",
+      body: { sample },
+    });
   } catch (err) {
     if (err instanceof HttpError && err.status === 404) {
       throw new UnknownOpError(opId);

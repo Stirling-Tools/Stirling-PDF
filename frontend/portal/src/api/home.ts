@@ -23,7 +23,9 @@ export { PIPELINE_STAGES, PIPELINE_TEMPLATES } from "@portal/mocks/home";
 
 /** GET /v1/analytics/usage?window=30d */
 export async function fetchUsageSeries(): Promise<UsageSeriesResponse> {
-  return apiClient.mock.json<UsageSeriesResponse>("/v1/analytics/usage?window=30d");
+  return apiClient.mock.json<UsageSeriesResponse>(
+    "/v1/analytics/usage?window=30d",
+  );
 }
 
 /** GET /v1/activity?limit=8 */
@@ -33,7 +35,9 @@ export async function fetchRecentActivity(): Promise<ActivityEvent[]> {
 
 /** GET /v1/home/kpis?tier=… */
 export async function fetchHomeKpis(tier: Tier): Promise<KpiEntry[]> {
-  return apiClient.mock.json<KpiEntry[]>(`/v1/home/kpis?tier=${encodeURIComponent(tier)}`);
+  return apiClient.mock.json<KpiEntry[]>(
+    `/v1/home/kpis?tier=${encodeURIComponent(tier)}`,
+  );
 }
 
 /** GET /v1/regions/health (Enterprise) */

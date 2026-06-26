@@ -180,7 +180,11 @@
 
 .portal-billing__meter-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--color-blue, #0a8bff), var(--color-purple, #8b5cf6));
+  background: linear-gradient(
+    90deg,
+    var(--color-blue, #0a8bff),
+    var(--color-purple, #8b5cf6)
+  );
   border-radius: 999px;
   transition: width 200ms ease;
 }
@@ -473,11 +477,7 @@
 }
 
 .portal-billing__invoice-num {
-  font-family:
-    ui-monospace,
-    SFMono-Regular,
-    Menlo,
-    monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.875rem;
 }
 
@@ -512,7 +512,9 @@
   min-width: 0;
 }
 
-.portal-billing__subscription-head > div:first-child .portal-billing__section-sub {
+.portal-billing__subscription-head
+  > div:first-child
+  .portal-billing__section-sub {
   margin-bottom: 0;
 }
 
@@ -792,7 +794,6 @@
   border-color: var(--color-blue, #0a8bff);
   background: var(--color-bg-muted, #f1f5f9);
 }
-
 
 .portal-billing__invoice-footer {
   display: flex;

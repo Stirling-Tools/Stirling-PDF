@@ -20,5 +20,7 @@ export {
 
 /** GET /v1/users?tier=… — summary strip, members table, role catalogue, access. */
 export async function fetchUsers(tier: Tier): Promise<UsersResponse> {
-  return apiClient.mock.json<UsersResponse>(`/v1/users?tier=${encodeURIComponent(tier)}`);
+  return apiClient.mock.json<UsersResponse>(
+    `/v1/users?tier=${encodeURIComponent(tier)}`,
+  );
 }

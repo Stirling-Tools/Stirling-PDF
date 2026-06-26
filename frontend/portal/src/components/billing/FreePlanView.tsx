@@ -33,7 +33,9 @@ export function FreePlanView({ wallet, onSubscribed }: Props) {
 
   function openCheckout() {
     if (wallet.teamId == null) {
-      setMissingTeam("No team is resolved on your wallet yet — refresh and try again.");
+      setMissingTeam(
+        "No team is resolved on your wallet yet — refresh and try again.",
+      );
       return;
     }
     setMissingTeam(null);
