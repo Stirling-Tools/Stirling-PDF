@@ -918,7 +918,7 @@ public class ApplicationProperties {
         public static class ServerCertificate {
             private boolean enabled =
                     true; // Enable server-side "Sign with Stirling-PDF" certificate
-            private String organizationName = "Stirling-PDF";
+            private String organizationName = "Stirling PDF Inc";
             private int validity = 365; // Certificate validity in days
             private boolean regenerateOnStartup =
                     false; // Generate a new certificate on each startup
