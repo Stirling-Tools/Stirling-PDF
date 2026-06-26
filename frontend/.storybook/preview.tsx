@@ -32,7 +32,8 @@ initialize({ onUnhandledRequest: "bypass" }, handlers);
 // method, wallet) clear the session check and reach the MSW handlers instead of
 // failing with "No SaaS session". VITE_SAAS_SUPABASE_URL/KEY are intentionally
 // unset, so ensureSaasSupabase() is a no-op and never replaces this client; only
-// VITE_SAAS_API_URL (frontend/.env, a mock origin MSW matches) is configured.
+// VITE_SAAS_API_URL (a mock origin MSW matches) is configured — injected via
+// .storybook/main.ts's viteFinal define, not a frontend/.env file.
 const saasStub = configureSupabase({
   url: "http://saas.mock",
   key: "storybook-anon-key",
@@ -89,7 +90,8 @@ function ThemeWatcher() {
 
 const withProviders: Decorator = (Story, context) => {
   const tier = (context.globals.tier as Tier) ?? "pro";
-  const linkState = (context.globals.linkState as LinkState) ?? "linked-subscribed";
+  const linkState =
+    (context.globals.linkState as LinkState) ?? "linked-subscribed";
   // withThemeByDataAttribute exposes the toolbar theme as the `theme` global.
   // Bind Mantine's color scheme to it so Mantine chrome (inputs, focus rings,
   // default surfaces) follows the dark toggle alongside the SUI CSS variables.
