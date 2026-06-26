@@ -85,7 +85,8 @@ public class SourceOverviewService {
                 configRows(source),
                 docs.total(),
                 docs.last24h(),
-                docs.last30d());
+                docs.last30d(),
+                docs.dailySeries());
     }
 
     /** A disabled (paused) source reads as "disabled"; an unreferenced one reads as "unused". */

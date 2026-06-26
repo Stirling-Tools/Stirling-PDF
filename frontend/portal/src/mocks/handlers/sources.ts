@@ -77,12 +77,22 @@ const docCounts: Record<
   "src-legacy": { total: 48600, last24h: 0, last30d: 0 },
 };
 
+/** A gentle deterministic 30-day series averaging ~last30d/30, so the sparkline has shape. */
+function dailySeries(last30d: number): number[] {
+  const avg = last30d / 30;
+  return Array.from({ length: 30 }, (_, i) =>
+    Math.round(avg * (0.5 + Math.abs(Math.sin((i + 1) / 3)))),
+  );
+}
+
 function docsFor(id: string): {
   total: number;
   last24h: number;
   last30d: number;
+  daily: number[];
 } {
-  return docCounts[id] ?? { total: 0, last24h: 0, last30d: 0 };
+  const counts = docCounts[id] ?? { total: 0, last24h: 0, last30d: 0 };
+  return { ...counts, daily: dailySeries(counts.last30d) };
 }
 
 let store: StoredSource[] = seedSources();
@@ -128,6 +138,7 @@ function toSourceView(
     docsTotal: docs.total,
     docs24h: docs.last24h,
     docs30d: docs.last30d,
+    docsDaily: docs.daily,
   };
 }
 

@@ -2,6 +2,10 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { SourceView } from "@portal/api/sources";
 import { SourceDetailPanel } from "@portal/components/sources/SourceDetailPanel";
 
+const SAMPLE_SERIES: number[] = Array.from({ length: 30 }, (_, i) =>
+  Math.round(330 * (0.5 + Math.abs(Math.sin((i + 1) / 3)))),
+);
+
 const IN_USE: SourceView = {
   id: "src-claims",
   name: "Claims intake",
@@ -19,6 +23,7 @@ const IN_USE: SourceView = {
   docsTotal: 45230,
   docs24h: 312,
   docs30d: 9870,
+  docsDaily: SAMPLE_SERIES,
 };
 
 const ORPHANED: SourceView = {
@@ -32,6 +37,7 @@ const ORPHANED: SourceView = {
   docsTotal: 1180,
   docs24h: 0,
   docs30d: 0,
+  docsDaily: [],
 };
 
 const meta: Meta<typeof SourceDetailPanel> = {

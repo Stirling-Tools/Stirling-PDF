@@ -32,6 +32,8 @@ export interface SourceView {
   docsTotal: number;
   docs24h: number;
   docs30d: number;
+  /** Per-day document counts over the last 30 days, oldest first, for a sparkline. */
+  docsDaily: number[];
 }
 
 export interface SourceKpi {

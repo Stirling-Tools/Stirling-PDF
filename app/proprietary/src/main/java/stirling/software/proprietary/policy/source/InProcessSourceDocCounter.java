@@ -14,9 +14,6 @@ import java.util.function.Supplier;
  */
 public class InProcessSourceDocCounter implements SourceDocCounter {
 
-    private static final long HOURS_IN_24H = 24;
-    private static final long HOURS_IN_30D = 24 * 30;
-
     private final Supplier<Instant> clock;
     private final Map<String, Map<Long, Long>> bucketsBySource = new ConcurrentHashMap<>();
 
@@ -45,21 +42,9 @@ public class InProcessSourceDocCounter implements SourceDocCounter {
         for (String id : sourceIds) {
             Map<Long, Long> buckets = bucketsBySource.getOrDefault(id, Map.of());
             long total = buckets.values().stream().mapToLong(Long::longValue).sum();
-            stats.put(
-                    id,
-                    new DocStats(
-                            total,
-                            sumSince(buckets, now - (HOURS_IN_24H - 1)),
-                            sumSince(buckets, now - (HOURS_IN_30D - 1))));
+            stats.put(id, SourceDocWindows.compute(total, buckets, now));
         }
         return stats;
-    }
-
-    private static long sumSince(Map<Long, Long> buckets, long since) {
-        return buckets.entrySet().stream()
-                .filter(entry -> entry.getKey() >= since)
-                .mapToLong(Map.Entry::getValue)
-                .sum();
     }
 
     private long currentHour() {

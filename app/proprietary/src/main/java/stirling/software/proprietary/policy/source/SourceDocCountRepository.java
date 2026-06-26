@@ -31,14 +31,13 @@ public interface SourceDocCountRepository
     List<SourceDocSum> sumBySource(@Param("ids") Collection<String> ids);
 
     /**
-     * Document total per source counting only buckets at or after {@code since}
-     * (hours-since-epoch).
+     * Hourly buckets at or after {@code since} (hours-since-epoch) for the given sources. The
+     * caller derives the 24h / 30d windows and the daily series from these, so one read covers all
+     * three.
      */
     @Query(
-            "select new stirling.software.proprietary.policy.source.SourceDocSum("
-                    + "e.sourceId, sum(e.docCount))"
-                    + " from SourceDocCountEntity e"
-                    + " where e.sourceId in :ids and e.bucketHour >= :since group by e.sourceId")
-    List<SourceDocSum> sumBySourceSince(
+            "select e from SourceDocCountEntity e"
+                    + " where e.sourceId in :ids and e.bucketHour >= :since")
+    List<SourceDocCountEntity> bucketsSince(
             @Param("ids") Collection<String> ids, @Param("since") long since);
 }

@@ -24,9 +24,9 @@ import lombok.RequiredArgsConstructor;
 @ConditionalOnBooleanProperty(name = "policies.enabled")
 public class JpaSourceDocCounter implements SourceDocCounter {
 
-    // Window sizes as a count of hourly buckets, inclusive of the current (partial) hour.
-    private static final long HOURS_IN_24H = 24;
-    private static final long HOURS_IN_30D = 24 * 30;
+    // The widest window we report, as a count of hourly buckets back from now (inclusive). One
+    // fetch of these covers the 24h / 30d totals and the daily series.
+    private static final long WINDOW_HOURS = 24L * DocStats.DAYS;
 
     private final SourceDocCountRepository repository;
 
@@ -54,20 +54,18 @@ public class JpaSourceDocCounter implements SourceDocCounter {
             return Map.of();
         }
         long now = currentHour();
-        Map<String, Long> total = sums(repository.sumBySource(sourceIds));
-        Map<String, Long> last24h =
-                sums(repository.sumBySourceSince(sourceIds, now - (HOURS_IN_24H - 1)));
-        Map<String, Long> last30d =
-                sums(repository.sumBySourceSince(sourceIds, now - (HOURS_IN_30D - 1)));
+        Map<String, Long> totals = sums(repository.sumBySource(sourceIds));
+        Map<String, Map<Long, Long>> windowBuckets =
+                bucketsBySource(repository.bucketsSince(sourceIds, now - (WINDOW_HOURS - 1)));
 
         Map<String, DocStats> stats = new HashMap<>();
         for (String id : sourceIds) {
             stats.put(
                     id,
-                    new DocStats(
-                            total.getOrDefault(id, 0L),
-                            last24h.getOrDefault(id, 0L),
-                            last30d.getOrDefault(id, 0L)));
+                    SourceDocWindows.compute(
+                            totals.getOrDefault(id, 0L),
+                            windowBuckets.getOrDefault(id, Map.of()),
+                            now));
         }
         return stats;
     }
@@ -82,5 +80,15 @@ public class JpaSourceDocCounter implements SourceDocCounter {
             map.put(row.sourceId(), row.count() == null ? 0L : row.count());
         }
         return map;
+    }
+
+    private static Map<String, Map<Long, Long>> bucketsBySource(
+            List<SourceDocCountEntity> buckets) {
+        Map<String, Map<Long, Long>> bySource = new HashMap<>();
+        for (SourceDocCountEntity bucket : buckets) {
+            bySource.computeIfAbsent(bucket.getSourceId(), key -> new HashMap<>())
+                    .put(bucket.getBucketHour(), bucket.getDocCount());
+        }
+        return bySource;
     }
 }

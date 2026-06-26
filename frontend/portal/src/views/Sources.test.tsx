@@ -46,6 +46,7 @@ const RESPONSE: SourcesResponse = {
       docsTotal: 1240,
       docs24h: 18,
       docs30d: 540,
+      docsDaily: [],
     },
     {
       id: "src-orphan",
@@ -58,6 +59,7 @@ const RESPONSE: SourcesResponse = {
       docsTotal: 1240,
       docs24h: 18,
       docs30d: 540,
+      docsDaily: [],
     },
   ],
 };

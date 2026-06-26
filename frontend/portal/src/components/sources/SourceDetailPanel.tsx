@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Chip, StatTile } from "@shared/components";
 import type { SourceView } from "@portal/api/sources";
+import { Sparkline } from "@portal/components/sources/Sparkline";
 import "@portal/views/Sources.css";
 
 /**
@@ -57,6 +58,12 @@ export function SourceDetailPanel({ source }: { source: SourceView }) {
             value={source.docs30d.toLocaleString()}
           />
         </div>
+        {source.docsDaily.length > 0 && (
+          <Sparkline
+            data={source.docsDaily}
+            ariaLabel={t("sources.detail.docsTrend")}
+          />
+        )}
       </div>
     </div>
   );

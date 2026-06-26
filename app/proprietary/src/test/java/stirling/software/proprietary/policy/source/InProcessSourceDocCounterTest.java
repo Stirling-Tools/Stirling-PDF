@@ -36,6 +36,13 @@ class InProcessSourceDocCounterTest {
         assertEquals(157, stats.total());
         assertEquals(7, stats.last24h());
         assertEquals(57, stats.last30d());
+
+        // 30-day daily series, oldest first: today (index 29) and 10 days ago (index 19) only.
+        List<Long> series = stats.dailySeries();
+        assertEquals(30, series.size());
+        assertEquals(7L, series.get(29));
+        assertEquals(50L, series.get(19));
+        assertEquals(57L, series.stream().mapToLong(Long::longValue).sum());
     }
 
     @Test
