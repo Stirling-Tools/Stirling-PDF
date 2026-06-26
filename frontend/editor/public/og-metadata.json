@@ -480,6 +480,16 @@
       "title": "Legal Settings - Stirling PDF",
       "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
     },
+    "/settings/backendThirdPartyLicenses": {
+      "image": "/og_images/home.png",
+      "title": "Backend Third Party Licenses Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/frontendThirdPartyLicenses": {
+      "image": "/og_images/home.png",
+      "title": "Frontend Third Party Licenses Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
     "/settings/payg": {
       "image": "/og_images/home.png",
       "title": "Payg Settings - Stirling PDF",
@@ -635,6 +645,8 @@
     "/settings/adminMcp": "/settings/adminMcp",
     "/settings/help": "/settings/help",
     "/settings/legal": "/settings/legal",
+    "/settings/backendThirdPartyLicenses": "/settings/backendThirdPartyLicenses",
+    "/settings/frontendThirdPartyLicenses": "/settings/frontendThirdPartyLicenses",
     "/settings/payg": "/settings/payg"
   }
 }
