@@ -23,7 +23,6 @@ import {
 } from "@app/components/policies/policyRunStore";
 import {
   runQueued,
-  getQueueJobs,
   type EnforcementTrigger,
 } from "@app/components/policies/enforcementQueue";
 import { ROW_ACCENT } from "@app/components/policies/policyStatus";
