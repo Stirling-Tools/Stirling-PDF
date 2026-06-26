@@ -57,6 +57,11 @@ class PolicyControllerTest {
     @Mock private PolicyAccessGuard policyAccessGuard;
     @Mock private PolicyManagementAuthority policyManagementAuthority;
     @Mock private PolicyTriggerManager policyTriggerManager;
+
+    @Mock
+    private stirling.software.proprietary.policy.overview.PolicyOverviewService
+            policyOverviewService;
+
     @Mock private TempFileManager tempFileManager;
     @Mock private JobOwnershipService jobOwnershipService;
 
@@ -77,6 +82,7 @@ class PolicyControllerTest {
                         policyAccessGuard,
                         policyManagementAuthority,
                         policyTriggerManager,
+                        policyOverviewService,
                         applicationProperties,
                         tempFileManager,
                         jobOwnershipService);

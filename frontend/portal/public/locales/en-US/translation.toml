@@ -206,141 +206,89 @@ description = "The component catalogue could not be loaded. Try again shortly."
 
 [pipelines]
 title = "Pipelines"
-subtitle = "Document workflows composed from typed operations — deployed, versioned, and continuously validated against a golden set."
+subtitle = "Every automated document pipeline on the backend: an ordered chain of operations over a set of sources, run on a trigger. Click a row for its steps and sources."
+
+[pipelines.actions]
 newPipeline = "New pipeline"
 
+[pipelines.kpi]
+total = "Pipelines"
+active = "Active"
+paused = "Paused"
+
 [pipelines.status]
-healthy = "Healthy"
-degraded = "Degraded"
+active = "Active"
+paused = "Paused"
 
-[pipelines.fleet]
-healthy_one = "{{count}} healthy"
-healthy_other = "{{count}} healthy"
-degraded_one = "{{count}} degraded"
-degraded_other = "{{count}} degraded"
-deployed_one = "{{count}} deployed"
-deployed_other = "{{count}} deployed"
+[pipelines.trigger]
+manual = "Manual"
+schedule = "Scheduled"
+folder-watch = "Folder watch"
 
-[pipelines.evals]
-title = "Shadow + comparative evals active"
-body_one = "{{count}} pipeline running a shadow eval, {{comparativeCount}} in a comparative run. {{detail}}"
-body_other = "{{count}} pipelines running a shadow eval, {{comparativeCount}} in a comparative run. {{detail}}"
+[pipelines.output]
+inline = "Return files"
+folder = "Write to folder"
 
 [pipelines.empty]
 title = "No pipelines yet"
-description = "Compose your first document workflow from the typed operation library — pick a source, chain the ops, and route the output."
-action = "Build your first pipeline"
-
-[pipelines.reliability]
-heading = "Golden-set reliability"
-description = "Pass rate against each pipeline's golden set, judged against its own bound. Anything below bound shows amber or red."
-
-[pipelines.promoted]
-heading = "Promoted from the Editor"
-description = "Watch-folder flows built in the Editor and promoted into the portal. Promote one to a policy to apply its rules fleet-wide."
-policyCreated = "Policy created"
-promoteToPolicy = "Promote to policy"
-
-[pipelines.promoted.table]
-sourceDocType = "Source doc type"
-watchFolder = "Watch folder"
-status = "Status"
-
-[pipelines.promoted.status]
-deployed = "Deployed"
-staged = "Staged"
-review = "Needs review"
-
-[pipelines.table.header]
-name = "Pipeline"
-health = "Health"
-goldenSet = "Golden set"
-docs24h = "Docs / 24h"
-version = "Version"
+description = "Create your first pipeline: pick the sources it runs over, chain the operations, and choose where output goes."
+action = "Create a pipeline"
 
 [pipelines.table]
-boundTooltip = "Bound: {{bound}}"
+name = "Pipeline"
+status = "Status"
+steps = "Steps"
+sources = "Sources"
 
-[pipelines.metrics]
-docs24h = "Docs / 24h"
-throughput = "Throughput"
-errorRate = "Error rate"
-p95Latency = "P95 latency"
-uptime = "Uptime"
+[pipelines.detail]
+subtitle = "{{trigger}} · {{status}}"
+closeAriaLabel = "Close detail"
+steps = "Operations"
+noSteps = "No operations configured."
+sources = "Sources"
+noSources = "No sources. Files are supplied directly to each run."
+output = "Output"
+edit = "Edit"
+pause = "Pause"
+resume = "Resume"
+delete = "Delete pipeline"
 
-[pipelines.card]
-stageTooltip_one = "{{label}}: {{count}} op"
-stageTooltip_other = "{{label}}: {{count}} ops"
-golden = "Golden {{passing}}/{{total}}"
-drift_one = "{{count}} drift"
-drift_other = "{{count}} drifts"
+[pipelines.delete]
+title = "Delete pipeline?"
+body = "Delete \"{{name}}\"? This can't be undone."
+cancel = "Cancel"
+confirm = "Delete"
 
 [pipelines.composer]
 title = "New pipeline"
-subtitle = "Pick a source, compose the operation chain, then route the output."
+editTitle = "Edit pipeline"
+subtitle = "Pick the sources it runs over, chain the operations, then choose when it runs and where output goes."
 cancel = "Cancel"
-back = "Back"
-deploy = "Deploy pipeline"
-continue = "Continue"
-quickAddBundles = "Quick-add bundles"
-chainEmpty = "Add operations from the library below."
-operationChain_one = "Operation chain ({{count}})"
-operationChain_other = "Operation chain ({{count}})"
-destination = "Destination"
-alerts = "Alerts"
+create = "Create pipeline"
+save = "Save changes"
+name = "Name"
+namePlaceholder = "e.g. Redaction sweep"
+sources = "Sources"
+sourcesLoading = "Loading sources..."
+noSources = "No sources connected yet. The pipeline can still run on files supplied to it directly."
+operations_one = "Operation ({{count}})"
+operations_other = "Operations ({{count}})"
+chainEmpty = "Add operations from the palette below."
+moveUp = "Move up"
+moveDown = "Move down"
+removeStep = "Remove operation"
+trigger = "Trigger"
+triggerManual = "Manual only"
+triggerSchedule = "On a schedule"
+scheduleEvery = "Run every"
+output = "Output"
+directory = "Output folder"
+directoryHelp = "Absolute path on the server. Must be within the configured allowed folders."
 
-[pipelines.composer.steps]
-source = "Source"
-operations = "Operations"
-routing = "Routing"
-
-[pipelines.composer.anySource]
-label = "Any source"
-desc = "Accept documents from every connected channel"
-
-[pipelines.composer.opKind]
-ingest = "Ingest"
-validate = "Validate"
-modify = "Modify"
-secure = "Secure"
-store = "Route / Store"
-alert = "Alerts"
-
-[pipelines.composer.alert.email]
-title = "Email on failure"
-desc = "Notify the on-call list when error rate trips its bound"
-
-[pipelines.composer.alert.webhook]
-title = "Webhook on completion"
-desc = "POST a run summary to a URL you control"
-
-[pipelines.composer.alert.review]
-title = "Route low-confidence to review"
-desc = "Send docs under the confidence bound to a human queue"
-
-[pipelines.detail]
-subtitle = "{{version}} · {{source}} → {{destination}}"
-
-[pipelines.detail.stages]
-heading = "Pipeline stages"
-description = "Every document flows through five stages between {{source}} and {{destination}}."
-noOps = "No ops"
-
-[pipelines.detail.golden]
-heading = "Golden-set validation"
-passing = "{{passing}} of {{total}} passing"
-lastRun = "last run {{lastRun}}"
-barLabel = "Golden set {{passing}} of {{total}} passing"
-
-[pipelines.detail.drift]
-heading = "Schema drift"
-confidence = "{{delta}} conf"
-docs_one = "{{count}} docs"
-docs_other = "{{count}} docs"
-
-[pipelines.detail.drift.empty]
-title = "No drift detected"
-description = "Every document in the last 24h matched its inferred schema."
+[pipelines.composer.unit]
+minutes = "minutes"
+hours = "hours"
+days = "days"
 
 [sources]
 title = "Sources"

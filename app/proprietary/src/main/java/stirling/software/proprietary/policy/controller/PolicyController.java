@@ -52,6 +52,8 @@ import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.PolicyRunStatus;
 import stirling.software.proprietary.policy.model.PolicyRunView;
+import stirling.software.proprietary.policy.overview.PoliciesOverviewResponse;
+import stirling.software.proprietary.policy.overview.PolicyOverviewService;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
 import stirling.software.proprietary.policy.source.SourceAccessGuard;
 import stirling.software.proprietary.policy.source.SourceStore;
@@ -80,6 +82,7 @@ public class PolicyController {
     private final PolicyAccessGuard policyAccessGuard;
     private final PolicyManagementAuthority policyManagementAuthority;
     private final PolicyTriggerManager policyTriggerManager;
+    private final PolicyOverviewService policyOverviewService;
     private final ApplicationProperties applicationProperties;
     private final TempFileManager tempFileManager;
     private final JobOwnershipService jobOwnershipService;
@@ -285,6 +288,17 @@ public class PolicyController {
             description = "Lists the policies belonging to the caller's team.")
     public List<Policy> listPolicies() {
         return policyAccessGuard.visibleFrom(policyStore);
+    }
+
+    @GetMapping("/overview")
+    @Operation(
+            summary = "Pipelines overview",
+            description =
+                    "Returns the KPI strip plus one row per policy the caller's team owns, each with"
+                            + " its referenced sources resolved to names, its pipeline steps, and a"
+                            + " trigger/output summary. Backs the portal's all-pipelines surface.")
+    public PoliciesOverviewResponse overview() {
+        return policyOverviewService.overview();
     }
 
     @GetMapping("/{policyId}")
