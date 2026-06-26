@@ -22,8 +22,8 @@ export function EnterpriseUpsell({ bare = false }: Props) {
           </p>
         </div>
         {/* Destination wired when the enterprise/sales URL is confirmed. */}
-        <Button variant="outline" size="sm" disabled>
-          Build your Enterprise quote →
+        <Button variant="gradient" size="sm" disabled>
+          Build your Enterprise quote
         </Button>
       </div>
     </>
