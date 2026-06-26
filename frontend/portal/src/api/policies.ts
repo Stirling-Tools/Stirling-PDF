@@ -158,29 +158,37 @@ export async function deletePolicy(id: string): Promise<void> {
 const DEFAULT_RETRIES = 3;
 const DEFAULT_RETRY_DELAY = 5;
 
+// Catalogue policy bodies carry categoryId at the top level so the pipelines
+// mock handler can discriminate them from raw pipeline saves on the shared
+// POST /api/v1/policies endpoint. The real backend ignores unknown fields.
+type CatalogueWireBody = WirePolicy & { categoryId: string };
+
 /** Build a wire policy from a setup wizard result. */
 export function buildWireFromSetup(
   entry: CatalogueEntry,
   result: PolicySetupResult,
   enabled = true,
-): WirePolicy {
-  return toWirePolicy({
-    id: entry.policy?.state.backendId ?? "",
-    name: `${entry.category.label} Policy`,
-    enabled,
+): CatalogueWireBody {
+  return {
     categoryId: entry.category.id,
-    sources: result.sources,
-    scopeTypes: result.scopeTypes,
-    reviewerEmail: result.reviewerEmail,
-    fieldValues: result.fieldValues,
-    runOn: result.runOn,
-    outputMode: result.outputMode,
-    outputName: result.outputName,
-    outputNamePosition: result.outputNamePosition,
-    maxRetries: DEFAULT_RETRIES,
-    retryDelayMinutes: DEFAULT_RETRY_DELAY,
-    steps: result.steps,
-  });
+    ...toWirePolicy({
+      id: entry.policy?.state.backendId ?? "",
+      name: `${entry.category.label} Policy`,
+      enabled,
+      categoryId: entry.category.id,
+      sources: result.sources,
+      scopeTypes: result.scopeTypes,
+      reviewerEmail: result.reviewerEmail,
+      fieldValues: result.fieldValues,
+      runOn: result.runOn,
+      outputMode: result.outputMode,
+      outputName: result.outputName,
+      outputNamePosition: result.outputNamePosition,
+      maxRetries: DEFAULT_RETRIES,
+      retryDelayMinutes: DEFAULT_RETRY_DELAY,
+      steps: result.steps,
+    }),
+  };
 }
 
 /** Build a wire policy from an existing decorated policy (e.g. for pause/resume). */
@@ -188,23 +196,26 @@ export function buildWireFromState(
   entry: CatalogueEntry,
   policy: DecoratedPolicy,
   enabled: boolean,
-): WirePolicy {
+): CatalogueWireBody {
   const s = policy.state;
-  return toWirePolicy({
-    id: s.backendId ?? "",
-    name: `${entry.category.label} Policy`,
-    enabled,
+  return {
     categoryId: entry.category.id,
-    sources: s.sources,
-    scopeTypes: s.scopeTypes,
-    reviewerEmail: s.reviewerEmail,
-    fieldValues: s.fieldValues,
-    runOn: s.runOn ?? "upload",
-    outputMode: s.outputMode ?? "new_version",
-    outputName: s.outputName ?? "",
-    outputNamePosition: "suffix",
-    maxRetries: DEFAULT_RETRIES,
-    retryDelayMinutes: DEFAULT_RETRY_DELAY,
-    steps: policy.steps,
-  });
+    ...toWirePolicy({
+      id: s.backendId ?? "",
+      name: `${entry.category.label} Policy`,
+      enabled,
+      categoryId: entry.category.id,
+      sources: s.sources,
+      scopeTypes: s.scopeTypes,
+      reviewerEmail: s.reviewerEmail,
+      fieldValues: s.fieldValues,
+      runOn: s.runOn ?? "upload",
+      outputMode: s.outputMode ?? "new_version",
+      outputName: s.outputName ?? "",
+      outputNamePosition: "suffix",
+      maxRetries: DEFAULT_RETRIES,
+      retryDelayMinutes: DEFAULT_RETRY_DELAY,
+      steps: policy.steps,
+    }),
+  };
 }
