@@ -75,7 +75,7 @@ const sharedLayerPatterns = [
 ];
 
 export default defineConfig({
-  plugins: ["typescript"],
+  plugins: ["typescript", "import"],
   categories: { correctness: "off" },
   env: { builtin: true },
   ignorePatterns: [
@@ -167,6 +167,7 @@ export default defineConfig({
     "no-array-constructor": "error",
     "no-unused-expressions": "error",
     "no-restricted-imports": ["error", { patterns: aliasImportPatterns }],
+    "import/no-cycle": "error",
     "typescript/ban-ts-comment": "error",
     "typescript/no-duplicate-enum-values": "error",
     "typescript/no-empty-object-type": [
