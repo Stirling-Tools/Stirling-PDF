@@ -63,7 +63,7 @@ function toStoreRequest(
   };
 }
 
-export function usePolicies() {
+export function usePolicies(enabled = true) {
   const [policies, setPolicies] = useState<PoliciesByCategory>(loadPolicies);
   const { config } = useAppConfig();
   const { isTeamLeader } = useSaaSTeam();
@@ -75,6 +75,7 @@ export function usePolicies() {
   // doesn't track) is preserved. If the backend is unreachable we keep the
   // local cache as-is, so the surface still works offline.
   useEffect(() => {
+    if (!enabled) return;
     let cancelled = false;
     void (async () => {
       let byCategory;
@@ -99,7 +100,7 @@ export function usePolicies() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [enabled]);
 
   /**
    * Enable a new policy from the wizard result: persist it to the backend (the

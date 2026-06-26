@@ -66,7 +66,7 @@ export default function RightSidebar() {
   } = useToolWorkflow();
 
   const policiesEnabled = usePoliciesEnabled();
-  const policiesVisible = usePoliciesVisible();
+  const policiesVisible = usePoliciesVisible(policiesEnabled);
   const rawPolicyDetailActive = usePolicyDetailActive();
   const fullscreenExpanded = useIsFullscreenExpanded();
   const fullscreenGeometry = useToolPanelGeometry({

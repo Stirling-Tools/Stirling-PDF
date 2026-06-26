@@ -7,15 +7,15 @@
  * tool list unchanged.
  */
 
-import type { ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 
 /** Whether the right rail should host the Policies section. False in core. */
 export function usePoliciesEnabled(): boolean {
-  return false;
+  return useMemo(() => false, []);
 }
 
 /** Whether the Policies list should appear for the current user. False in core. */
-export function usePoliciesVisible(): boolean {
+export function usePoliciesVisible(_enabled = false): boolean {
   return false;
 }
 

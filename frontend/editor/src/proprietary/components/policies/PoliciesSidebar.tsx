@@ -64,10 +64,10 @@ export function usePoliciesEnabled(): boolean {
 /**
  * Whether the right rail should show the Policies section.
  */
-export function usePoliciesVisible(): boolean {
-  const pol = usePolicies();
+export function usePoliciesVisible(enabled = POLICIES_ENABLED): boolean {
+  const pol = usePolicies(enabled);
   const { categories } = usePolicyCatalog();
-  if (!POLICIES_ENABLED) return false;
+  if (!enabled) return false;
   return pol.canConfigure || categories.some((c) => !c.comingSoon);
 }
 
