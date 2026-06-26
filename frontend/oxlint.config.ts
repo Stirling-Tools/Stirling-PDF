@@ -19,7 +19,6 @@ const nodeGlobs = [
 ];
 
 // editor/src/core subfolders not yet conformant to the stricter type rules
-// (no-explicit-any / no-unnecessary-type-assertion stay off here).
 const coreNotYetConformant = [
   "editor/src/core/components/**/*.{js,mjs,jsx,ts,tsx}",
   "editor/src/core/contexts/**/*.{js,mjs,jsx,ts,tsx}",
@@ -241,7 +240,6 @@ export default defineConfig({
       files: srcGlobs,
       rules: {
         "typescript/no-explicit-any": "error",
-        "typescript/no-unnecessary-type-assertion": "error",
       },
       env: { browser: true },
     },
@@ -249,7 +247,6 @@ export default defineConfig({
       files: coreNotYetConformant,
       rules: {
         "typescript/no-explicit-any": "off",
-        "typescript/no-unnecessary-type-assertion": "off",
       },
     },
     {

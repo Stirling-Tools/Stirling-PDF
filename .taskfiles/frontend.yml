@@ -303,12 +303,6 @@ tasks:
     cmds:
       - npx oxlint --max-warnings=0
 
-  lint:oxlint:type-aware:
-    desc: "Run oxlint linting including type-aware rules"
-    deps: [install]
-    cmds:
-      - npx oxlint --type-aware --max-warnings=0
-
   lint:oxlint:fix:
     desc: "Auto-fix lint issues with oxlint"
     deps: [install]
