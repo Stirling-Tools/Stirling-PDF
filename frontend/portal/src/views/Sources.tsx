@@ -9,7 +9,7 @@ import {
 } from "@shared/components";
 import { useView } from "@portal/contexts/ViewContext";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
-import { HttpError } from "@portal/api/http";
+import { errorMessage } from "@portal/api/http";
 import {
   createSource,
   deleteSource,
@@ -25,19 +25,6 @@ import { SourcesTable } from "@portal/components/sources/SourcesTable";
 import { SourceDetailCard } from "@portal/components/sources/SourceDetailCard";
 import { ConnectWizard } from "@portal/components/sources/ConnectWizard";
 import "@portal/views/Sources.css";
-
-/** Best-effort human message from a thrown error (ProblemDetail or classic shape). */
-function messageFor(error: unknown): string {
-  if (error instanceof HttpError) {
-    const body = error.body as {
-      detail?: string;
-      message?: string;
-      error?: string;
-    } | null;
-    return body?.detail ?? body?.message ?? body?.error ?? error.message;
-  }
-  return error instanceof Error ? error.message : String(error);
-}
 
 export function Sources() {
   const { t } = useTranslation();
@@ -77,7 +64,7 @@ export function Sources() {
       setEditingSource(await fetchSource(source.id));
       setWizardOpen(true);
     } catch (e) {
-      setPageError(messageFor(e));
+      setPageError(errorMessage(e));
     } finally {
       setMutating(false);
     }
@@ -94,7 +81,7 @@ export function Sources() {
       await createSource({ ...raw, enabled: !raw.enabled });
       refetch();
     } catch (e) {
-      setPageError(messageFor(e));
+      setPageError(errorMessage(e));
     } finally {
       setMutating(false);
     }
@@ -115,7 +102,7 @@ export function Sources() {
       setExpandedId(null);
       refetch();
     } catch (e) {
-      setDeleteError(messageFor(e));
+      setDeleteError(errorMessage(e));
     } finally {
       setDeleting(false);
     }

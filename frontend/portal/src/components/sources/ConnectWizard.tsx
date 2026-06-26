@@ -9,7 +9,7 @@ import {
   Select,
   StatTile,
 } from "@shared/components";
-import { HttpError } from "@portal/api/http";
+import { errorMessage } from "@portal/api/http";
 import { createSource, type Source } from "@portal/api/sources";
 import {
   CREATABLE_SOURCE_TYPES,
@@ -33,19 +33,6 @@ interface ConnectWizardProps {
   onCreated: () => void;
   /** When set, the wizard edits this existing source instead of creating one. */
   source?: Source;
-}
-
-/** Best-effort human message from a thrown error (ProblemDetail or classic shape). */
-function messageFor(error: unknown): string {
-  if (error instanceof HttpError) {
-    const body = error.body as {
-      detail?: string;
-      message?: string;
-      error?: string;
-    } | null;
-    return body?.detail ?? body?.message ?? body?.error ?? error.message;
-  }
-  return error instanceof Error ? error.message : String(error);
 }
 
 /** The creatable-type metadata for a source's stored type, falling back to folder. */
@@ -136,7 +123,7 @@ export function ConnectWizard({
       onCreated();
       onClose();
     } catch (e) {
-      setError(messageFor(e));
+      setError(errorMessage(e));
     } finally {
       setSubmitting(false);
     }
