@@ -62,4 +62,5 @@ jobs:
     uses: ./.github/workflows/tauri-build.yml
     with:
       platform: all
+      sign: false
     secrets: inherit

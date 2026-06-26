@@ -40,7 +40,7 @@ export function useAutomationForm({
   );
 
   const getToolDefaultParameters = useCallback(
-    (operation: string): Record<string, any> => {
+    (operation: string): Record<string, unknown> => {
       const config = toolRegistry[operation as ToolId]?.operationConfig;
       if (config?.defaultParameters) {
         return { ...config.defaultParameters };
