@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import DescriptionIcon from "@mui/icons-material/DescriptionOutlined";
 import { Button } from "@shared/components";
 import {
@@ -80,6 +80,16 @@ export function SpendCapControl({
   const [customText, setCustomText] = useState<string>(
     customActive ? String(capUsd) : "",
   );
+  // Resync the field to an externally-loaded custom cap — e.g. the wallet arrives
+  // after first render (capUsd null/preset -> 1234), which would otherwise leave the
+  // field blank since customText only seeds once at mount. Gated on !focused so it
+  // never clobbers what the user is actively typing.
+  const [focused, setFocused] = useState(false);
+  useEffect(() => {
+    if (!focused && customActive && String(capUsd) !== customText) {
+      setCustomText(String(capUsd));
+    }
+  }, [capUsd, customActive, focused, customText]);
   const previewDocs = docCapForMoney(capUsd, pricePerDocMinor);
   const dirty = onSave != null && capUsd !== (savedCapUsd ?? null);
   const busy = saving || disabled;
@@ -138,6 +148,8 @@ export function SpendCapControl({
             placeholder={L.custom}
             aria-label={L.amountAria}
             onChange={(e) => onCustomInput(e.target.value)}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
             disabled={busy}
           />
         </label>

@@ -35,8 +35,6 @@ export default defineConfig(async ({ mode }) => {
   };
   const backendProxyConfig = {
     "/api": backendProxy,
-    // Account-link/billing data calls use a bare /v1 prefix (not /api/v1).
-    "/v1": backendProxy,
     "/oauth2": backendProxy,
     "/saml2": backendProxy,
   };

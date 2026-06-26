@@ -52,10 +52,12 @@ function projectOverspend(wallet: Wallet): Projection | null {
   );
   if (totalDays <= 0) return null;
   const todayIso = new Date().toISOString().slice(0, 10);
-  const elapsed = Math.min(
-    totalDays,
-    Math.max(1, daysBetween(wallet.billingPeriodStart, todayIso)),
-  );
+  const rawElapsed = daysBetween(wallet.billingPeriodStart, todayIso);
+  // Need at least a full day of data to extrapolate. On day 0 (or clock skew / a
+  // UTC-vs-local boundary) rawElapsed is <= 0; projecting then would treat the whole
+  // period's spend as one day's run-rate and falsely "project to exceed".
+  if (rawElapsed < 1) return null;
+  const elapsed = Math.min(totalDays, rawElapsed);
 
   const spentMajor = wallet.estimatedBillMinor / 100;
   const dailyRateMajor = spentMajor / elapsed;
