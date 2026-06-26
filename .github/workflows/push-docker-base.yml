@@ -22,8 +22,6 @@ jobs:
     permissions:
       packages: write
       id-token: write
-    env:
-      DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
     steps:
       - name: Verify authorized user
         run: |
@@ -64,8 +62,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ github.token }}
 
-      - name: Set up Depot CLI
-        uses: depot/setup-action@15c09a5f77a0840ad4bce955686522a257853461 # v1.7.1
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4.0.0
 
       - name: Convert repository owner to lowercase
         id: repoowner
@@ -83,12 +85,14 @@ jobs:
 
       - name: Build and push base image
         id: build-push-base
-        uses: depot/build-push-action@98e78adca7817480b8185f474a400b451d74e287 # v1.18.0
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
-          project: ${{ vars.DEPOT_PROJECT_ID }}
+          builder: ${{ steps.buildx.outputs.name }}
           context: docker/base
           file: ./docker/base/Dockerfile
           push: true
+          cache-from: type=gha,scope=stirling-pdf-base
+          cache-to: type=gha,mode=max,scope=stirling-pdf-base
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64,linux/arm64/v8

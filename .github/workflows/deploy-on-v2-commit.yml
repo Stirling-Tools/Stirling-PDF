@@ -37,7 +37,7 @@ jobs:
 
       - name: Set up Depot CLI
         if: env.USE_DEPOT == 'true'
-        uses: depot/setup-action@15c09a5f77a0840ad4bce955686522a257853461 # v1.7.1
+        uses: depot/setup-action@15c09a5f77a0840ad4bce955686522a257853461 # v1.0.0
 
       - name: Set up Docker Buildx
         if: env.USE_DEPOT != 'true'
@@ -107,7 +107,7 @@ jobs:
 
       - name: Build and push frontend image (Depot)
         if: env.USE_DEPOT == 'true' && steps.check-frontend.outputs.exists == 'false'
-        uses: depot/build-push-action@98e78adca7817480b8185f474a400b451d74e287 # v1.18.0
+        uses: depot/build-push-action@98e78adca7817480b8185f474a400b451d74e287 # v1.16.0
         with:
           project: ${{ vars.DEPOT_PROJECT_ID }}
           context: .
@@ -126,6 +126,8 @@ jobs:
           context: .
           file: ./docker/frontend/Dockerfile
           push: true
+          cache-from: type=gha,scope=stirling-v2-frontend
+          cache-to: type=gha,mode=max,scope=stirling-v2-frontend
           tags: |
             ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-frontend-${{ steps.commit-hashes.outputs.frontend_short }}
             ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-frontend-latest
@@ -134,7 +136,7 @@ jobs:
 
       - name: Build and push backend image (Depot)
         if: env.USE_DEPOT == 'true' && steps.check-backend.outputs.exists == 'false'
-        uses: depot/build-push-action@98e78adca7817480b8185f474a400b451d74e287 # v1.18.0
+        uses: depot/build-push-action@98e78adca7817480b8185f474a400b451d74e287 # v1.16.0
         with:
           project: ${{ vars.DEPOT_PROJECT_ID }}
           context: .
@@ -153,6 +155,8 @@ jobs:
           context: .
           file: ./docker/backend/Dockerfile
           push: true
+          cache-from: type=gha,scope=stirling-v2-backend
+          cache-to: type=gha,mode=max,scope=stirling-v2-backend
           tags: |
             ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-backend-${{ steps.commit-hashes.outputs.backend_short }}
             ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-backend-latest
