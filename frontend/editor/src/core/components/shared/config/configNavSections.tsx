@@ -84,11 +84,6 @@ export const useConfigNavSections = (
           icon: "gavel-rounded",
           component: <LegalSection />,
         },
-      ],
-    },
-    {
-      title: t("settings.licenses.title", "Licensing"),
-      items: [
         {
           key: "backendThirdPartyLicenses",
           label: t("settings.licenses.backendLabel", "Backend Licenses"),
