@@ -1,8 +1,13 @@
 import "@testing-library/jest-dom";
+import { cleanup } from "@testing-library/react";
 import { vi } from "vitest";
 import { installFailOnConsole } from "@app/tests/failOnConsole";
 
 installFailOnConsole();
+
+afterEach(() => {
+  cleanup();
+});
 
 // Mock localStorage for tests
 const localStorageMock = (() => {
@@ -133,28 +138,42 @@ Object.defineProperty(globalThis, "crypto", {
 });
 
 // Mock Worker for tests (Web Workers not available in test environment)
-global.Worker = vi.fn().mockImplementation(() => ({
-  postMessage: vi.fn(),
-  terminate: vi.fn(),
-  addEventListener: vi.fn(),
-  removeEventListener: vi.fn(),
-  onmessage: null,
-  onerror: null,
-}));
+class MockWorker implements Worker {
+  onmessage: ((this: Worker, ev: MessageEvent) => any) | null = null;
+  onmessageerror: ((this: Worker, ev: MessageEvent) => any) | null = null;
+  onerror: ((this: AbstractWorker, ev: ErrorEvent) => any) | null = null;
+
+  postMessage = vi.fn();
+  terminate = vi.fn();
+  addEventListener = vi.fn();
+  removeEventListener = vi.fn();
+  dispatchEvent = vi.fn(() => true);
+}
+
+global.Worker = MockWorker as unknown as typeof Worker;
 
 // Mock ResizeObserver for Mantine components
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
+class MockResizeObserver implements ResizeObserver {
+  readonly observe = vi.fn();
+  readonly unobserve = vi.fn();
+  readonly disconnect = vi.fn();
+}
+
+global.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver;
 
 // Mock IntersectionObserver for components that might use it
-global.IntersectionObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
+class MockIntersectionObserver implements IntersectionObserver {
+  readonly root: Element | Document | null = null;
+  readonly rootMargin = "";
+  readonly thresholds: ReadonlyArray<number> = [];
+  readonly observe = vi.fn();
+  readonly unobserve = vi.fn();
+  readonly disconnect = vi.fn();
+  readonly takeRecords = vi.fn(() => []);
+}
+
+global.IntersectionObserver =
+  MockIntersectionObserver as unknown as typeof IntersectionObserver;
 
 // Mock matchMedia for responsive components
 Object.defineProperty(window, "matchMedia", {

@@ -12,13 +12,13 @@ import { ReactNode } from "react";
 vi.mock("@app/services/apiClient");
 
 describe("AppConfigContext", () => {
+  const setPathname = (pathname: string) => {
+    window.history.replaceState({}, "", pathname);
+  };
+
   beforeEach(() => {
-    vi.clearAllMocks();
-    // Mock window.location.pathname
-    Object.defineProperty(window, "location", {
-      value: { pathname: "/" },
-      writable: true,
-    });
+    vi.mocked(apiClient.get).mockReset();
+    setPathname("/");
   });
 
   afterEach(() => {
@@ -61,10 +61,7 @@ describe("AppConfigContext", () => {
 
   it("should skip fetch on auth pages and use default config", async () => {
     // Mock being on login page
-    Object.defineProperty(window, "location", {
-      value: { pathname: "/login" },
-      writable: true,
-    });
+    setPathname("/login");
 
     const { result } = renderHook(() => useAppConfig(), { wrapper });
 
@@ -113,10 +110,7 @@ describe("AppConfigContext", () => {
   });
 
   it("should skip fetch on signup page", async () => {
-    Object.defineProperty(window, "location", {
-      value: { pathname: "/signup" },
-      writable: true,
-    });
+    setPathname("/signup");
 
     const { result } = renderHook(() => useAppConfig(), { wrapper });
 
@@ -129,10 +123,7 @@ describe("AppConfigContext", () => {
   });
 
   it("should skip fetch on auth callback page", async () => {
-    Object.defineProperty(window, "location", {
-      value: { pathname: "/auth/callback" },
-      writable: true,
-    });
+    setPathname("/auth/callback");
 
     const { result } = renderHook(() => useAppConfig(), { wrapper });
 
@@ -145,10 +136,7 @@ describe("AppConfigContext", () => {
   });
 
   it("should skip fetch on invite accept page", async () => {
-    Object.defineProperty(window, "location", {
-      value: { pathname: "/invite/abc123" },
-      writable: true,
-    });
+    setPathname("/invite/abc123");
 
     const { result } = renderHook(() => useAppConfig(), { wrapper });
 
