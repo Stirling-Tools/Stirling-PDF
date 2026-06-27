@@ -48,10 +48,17 @@ test.describe("22. Username Change Flow", () => {
       // Step 5: Submit the form via "Save" button inside the modal
       const saveBtn = usernameModal.getByRole("button", { name: /Save/i });
       await expect(saveBtn).toBeVisible({ timeout: 3000 });
+      const changeUsernameResponsePromise = page.waitForResponse(
+        (response) =>
+          response.url().includes("/api/v1/user/change-username") &&
+          response.request().method() === "POST",
+      );
       await saveBtn.click();
+      const changeUsernameResponse = await changeUsernameResponsePromise;
+      expect(changeUsernameResponse.ok()).toBeTruthy();
 
-      // Step 6: Verify success or completion
-      await page.waitForTimeout(2000);
+      // Wait until the UI finishes the logout triggered by the username change.
+      await page.waitForURL(/\/login/, { timeout: 10_000 });
 
       // Restore the shared username so later live specs can keep using the
       // suite-wide admin/adminadmin credentials.

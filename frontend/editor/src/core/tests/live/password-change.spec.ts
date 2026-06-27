@@ -32,7 +32,9 @@ test.describe("21. Password Change Flow", () => {
       await updatePwBtn.click();
 
       // Step 2: Wait for the password change modal to appear
-      const passwordModal = page.getByRole("dialog", { name: /Security/i });
+      const passwordModal = page.getByRole("dialog", {
+        name: /Change password/i,
+      });
       await expect(passwordModal).toBeVisible({ timeout: 5000 });
 
       // Step 3: Enter the current password
@@ -53,10 +55,17 @@ test.describe("21. Password Change Flow", () => {
         name: /Update password/i,
       });
       await expect(modalSubmitBtn).toBeVisible({ timeout: 3000 });
+      const changePasswordResponsePromise = page.waitForResponse(
+        (response) =>
+          response.url().includes("/api/v1/user/change-password") &&
+          response.request().method() === "POST",
+      );
       await modalSubmitBtn.click();
+      const changePasswordResponse = await changePasswordResponsePromise;
+      expect(changePasswordResponse.ok()).toBeTruthy();
 
-      // Step 7: Verify a success message is shown (or no error)
-      await page.waitForTimeout(2000);
+      // Wait until the UI finishes the logout triggered by the password change.
+      await page.waitForURL(/\/login/, { timeout: 10_000 });
 
       // Restore the shared live-suite credentials so this mutation test does
       // not affect later specs in the same backend run.
@@ -111,7 +120,9 @@ test.describe("21. Password Change Flow", () => {
       await updatePwBtn.click();
 
       // Wait for the password change modal to appear
-      const passwordModal = page.getByRole("dialog", { name: /Security/i });
+      const passwordModal = page.getByRole("dialog", {
+        name: /Change password/i,
+      });
       await expect(passwordModal).toBeVisible({ timeout: 5000 });
 
       // Step 1: Enter the current password correctly

@@ -138,7 +138,7 @@ test.describe("E2E PDF Operations", () => {
         .click();
 
       // Wait for the settings step to expand and find the page numbers input
-      const pagesInput = page.getByPlaceholder(/Custom Page Selection/i);
+      const pagesInput = page.getByPlaceholder(/e\.g\. 1,3,5-10/i);
       await pagesInput.waitFor({ state: "visible", timeout: 10000 });
       await pagesInput.fill("1");
 
