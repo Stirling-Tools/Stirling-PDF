@@ -843,10 +843,10 @@ public class AdminSettingsController {
             return true;
         }
 
-        // Check for fields containing 'password' or 'secret' or 'botToken'
+        // Check for fields containing 'password' or 'secret' or 'bottoken'
         return lowerField.contains("password")
                 || lowerField.contains("secret")
-                || lowerField.contains("botToken");
+                || lowerField.contains("bottoken");
     }
 
     /** Create a masked representation for sensitive fields */
