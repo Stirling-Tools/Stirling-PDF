@@ -83,7 +83,9 @@ export async function seedAuthenticatedSession(
   const body = (await response.json()) as AuthLoginResponse;
   const accessToken = body.session?.access_token;
   if (!accessToken) {
-    throw new Error("Failed to seed authenticated session: missing access token");
+    throw new Error(
+      "Failed to seed authenticated session: missing access token",
+    );
   }
 
   await page.evaluate(
