@@ -216,8 +216,8 @@ export function buildWireFromState(
       outputMode: s.outputMode ?? "new_version",
       outputName: s.outputName ?? "",
       outputNamePosition: s.outputNamePosition ?? "suffix",
-      maxRetries: DEFAULT_RETRIES,
-      retryDelayMinutes: DEFAULT_RETRY_DELAY,
+      maxRetries: s.maxRetries ?? DEFAULT_RETRIES,
+      retryDelayMinutes: s.retryDelayMinutes ?? DEFAULT_RETRY_DELAY,
       steps: policy.steps,
     }),
   };

@@ -36,7 +36,10 @@ export function decorateForStory(categoryId: string): DecoratedPolicy {
     fieldValues: decoded.fieldValues,
     outputMode: decoded.outputMode,
     outputName: decoded.outputName,
+    outputNamePosition: decoded.outputNamePosition,
     runOn: decoded.runOn,
+    maxRetries: decoded.maxRetries,
+    retryDelayMinutes: decoded.retryDelayMinutes,
     backendId: wire.id,
     isDefault: true,
   };
