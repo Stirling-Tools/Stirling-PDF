@@ -52,7 +52,8 @@
         "desktopTemplate": "stirling-pdf.desktop"
       },
       "rpm": {
-        "desktopTemplate": "stirling-pdf.desktop"
+        "desktopTemplate": "stirling-pdf.desktop",
+        "compression": { "type": "zstd", "level": 3 }
       },
       "appimage": {
         "bundleMediaFramework": false
