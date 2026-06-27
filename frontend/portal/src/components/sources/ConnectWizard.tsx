@@ -1,166 +1,283 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, CodeBlock, Modal, StatTile } from "@shared/components";
-import { type Source, SOURCE_TYPE_META } from "@portal/api/sources";
+import {
+  Banner,
+  Button,
+  FormField,
+  Input,
+  Modal,
+  Select,
+  StatTile,
+} from "@shared/components";
+import { errorMessage } from "@portal/api/http";
+import { createSource, type Source } from "@portal/api/sources";
+import {
+  CREATABLE_SOURCE_TYPES,
+  defaultOptions,
+  sourceTypeMeta,
+  type CreatableSourceType,
+} from "@portal/components/sources/sourceTypes";
 import "@portal/views/Sources.css";
 
-const WIZARD_STEP_COUNT = 3;
+const DEFAULT_TYPE = CREATABLE_SOURCE_TYPES[0];
 
-const CONNECT_SNIPPET = `curl https://api.stirlingpdf.com/v1/extract \\
-  -H "Authorization: Bearer sk_live_••••" \\
-  -F "file=@invoice.pdf" \\
-  -F "pipeline=invoice-v3"`;
+/** Wizard steps. Editing skips type selection (the type is fixed once created). */
+type StepId = "type" | "configure" | "review";
+const CREATE_STEPS: StepId[] = ["type", "configure", "review"];
+const EDIT_STEPS: StepId[] = ["configure", "review"];
 
 interface ConnectWizardProps {
   open: boolean;
   onClose: () => void;
+  /** Called after a source is created or updated so the page can refetch. */
+  onCreated: () => void;
+  /** When set, the wizard edits this existing source instead of creating one. */
+  source?: Source;
+}
+
+/** The creatable-type metadata for a source's stored type, falling back to folder. */
+function typeFor(type: string | undefined): CreatableSourceType {
+  return CREATABLE_SOURCE_TYPES.find((t) => t.type === type) ?? DEFAULT_TYPE;
+}
+
+/** Source options coerced to strings for the form, defaulted from the type's fields. */
+function optionsFor(
+  type: CreatableSourceType,
+  options: Record<string, unknown> | undefined,
+): Record<string, string> {
+  const out = defaultOptions(type);
+  for (const [key, value] of Object.entries(options ?? {})) {
+    out[key] = value == null ? "" : String(value);
+  }
+  return out;
 }
 
 /**
- * Guided shell for connecting a new source. The final step is a demo stub that
- * closes without provisioning — wiring it to the backend creates the source.
+ * Guided flow for connecting a source (choose type -> configure -> review) or
+ * editing an existing one (configure -> review, type fixed). On submit a blank
+ * id creates and a set id updates, matching the backend's POST contract.
  */
-export function ConnectWizard({ open, onClose }: ConnectWizardProps) {
+export function ConnectWizard({
+  open,
+  onClose,
+  onCreated,
+  source,
+}: ConnectWizardProps) {
   const { t } = useTranslation();
-  const [step, setStep] = useState(0);
-  const [type, setType] = useState<Source["type"]>("agent");
+  const isEdit = source !== undefined;
+  const steps = isEdit ? EDIT_STEPS : CREATE_STEPS;
 
-  const wizardSteps = [
-    t("sources.wizard.steps.chooseType"),
-    t("sources.wizard.steps.configure"),
-    t("sources.wizard.steps.review"),
-  ];
+  const [stepIndex, setStepIndex] = useState(0);
+  const [type, setType] = useState<CreatableSourceType>(() =>
+    typeFor(source?.type),
+  );
+  const [name, setName] = useState(source?.name ?? "");
+  const [options, setOptions] = useState<Record<string, string>>(() =>
+    optionsFor(typeFor(source?.type), source?.options),
+  );
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  function close() {
-    onClose();
-    // Reset for the next open, after the close transition has finished.
-    setTimeout(() => {
-      setStep(0);
-      setType("agent");
-    }, 200);
+  // Re-seed the form whenever the wizard opens (or its target source changes) so
+  // editing prefills the current config and a reopened create starts clean.
+  useEffect(() => {
+    if (!open) return;
+    const ct = typeFor(source?.type);
+    setStepIndex(0);
+    setType(ct);
+    setName(source?.name ?? "");
+    setOptions(optionsFor(ct, source?.options));
+    setSubmitting(false);
+    setError(null);
+  }, [open, source]);
+
+  const stepId = steps[stepIndex];
+  const isLast = stepIndex === steps.length - 1;
+
+  function chooseType(next: CreatableSourceType) {
+    setType(next);
+    setOptions(defaultOptions(next));
   }
 
-  const isLast = step === WIZARD_STEP_COUNT - 1;
+  const requiredFilled = type.fields.every(
+    (f) => !f.required || (options[f.key] ?? "").trim() !== "",
+  );
+  const canContinue =
+    stepId === "configure" ? name.trim() !== "" && requiredFilled : true;
 
-  function advance() {
-    if (isLast) {
-      // TODO(backend): POST /v1/sources { type, pipeline, region } — provision
-      // the source, then close on success.
-      close();
-    } else {
-      setStep((s) => s + 1);
+  async function advance() {
+    if (!isLast) {
+      setStepIndex((i) => i + 1);
+      return;
+    }
+    setSubmitting(true);
+    setError(null);
+    try {
+      const fields = {
+        name: name.trim(),
+        type: type.type,
+        options,
+        enabled: source?.enabled ?? true,
+      };
+      await createSource(isEdit ? { ...fields, id: source.id } : fields);
+      onCreated();
+      onClose();
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setSubmitting(false);
     }
   }
+
+  const stepLabels: Record<StepId, string> = {
+    type: t("sources.wizard.steps.chooseType"),
+    configure: t("sources.wizard.steps.configure"),
+    review: t("sources.wizard.steps.review"),
+  };
 
   return (
     <Modal
       open={open}
-      onClose={close}
+      onClose={onClose}
       width="lg"
-      title={t("sources.wizard.title")}
+      title={isEdit ? t("sources.wizard.editTitle") : t("sources.wizard.title")}
       subtitle={t("sources.wizard.subtitle", {
-        current: step + 1,
-        total: WIZARD_STEP_COUNT,
-        label: wizardSteps[step],
+        current: stepIndex + 1,
+        total: steps.length,
+        label: stepLabels[stepId],
       })}
       footer={
         <div className="portal-sources__wizard-footer">
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => (step === 0 ? close() : setStep((s) => s - 1))}
+            disabled={submitting}
+            onClick={() =>
+              stepIndex === 0 ? onClose() : setStepIndex((i) => i - 1)
+            }
           >
-            {step === 0 ? t("sources.wizard.cancel") : t("sources.wizard.back")}
+            {stepIndex === 0
+              ? t("sources.wizard.cancel")
+              : t("sources.wizard.back")}
           </Button>
           <Button
             size="sm"
             onClick={advance}
+            loading={submitting}
+            disabled={!canContinue}
             trailingIcon={!isLast ? <span aria-hidden>→</span> : undefined}
           >
-            {isLast
-              ? t("sources.actions.connectSource")
-              : t("sources.wizard.continue")}
+            {!isLast
+              ? t("sources.wizard.continue")
+              : isEdit
+                ? t("sources.wizard.save")
+                : t("sources.actions.connectSource")}
           </Button>
         </div>
       }
     >
       <ol className="portal-sources__steps" aria-hidden>
-        {wizardSteps.map((label, i) => (
+        {steps.map((id, i) => (
           <li
-            key={label}
+            key={id}
             className={
               "portal-sources__step" +
-              (i === step ? " is-active" : i < step ? " is-done" : "")
+              (i === stepIndex ? " is-active" : i < stepIndex ? " is-done" : "")
             }
           >
             <span className="portal-sources__step-mark">
-              {i < step ? "✓" : i + 1}
+              {i < stepIndex ? "✓" : i + 1}
             </span>
-            {label}
+            {stepLabels[id]}
           </li>
         ))}
       </ol>
 
-      {step === 0 && (
+      {stepId === "type" && (
         <div className="portal-sources__type-grid">
-          {(Object.keys(SOURCE_TYPE_META) as Source["type"][]).map((t) => {
-            const meta = SOURCE_TYPE_META[t];
-            return (
-              <button
-                key={t}
-                type="button"
-                className={
-                  "portal-sources__type-card" +
-                  (type === t ? " is-selected" : "")
-                }
-                onClick={() => setType(t)}
-              >
-                <span className="portal-sources__type-icon" aria-hidden>
-                  {meta.icon}
-                </span>
-                <span className="portal-sources__type-name">{meta.label}</span>
-              </button>
-            );
-          })}
+          {CREATABLE_SOURCE_TYPES.map((ct) => (
+            <button
+              key={ct.type}
+              type="button"
+              className={
+                "portal-sources__type-card" +
+                (type.type === ct.type ? " is-selected" : "")
+              }
+              onClick={() => chooseType(ct)}
+            >
+              <span className="portal-sources__type-icon" aria-hidden>
+                {sourceTypeMeta(ct.type).icon}
+              </span>
+              <span className="portal-sources__type-name">
+                {t(ct.labelKey)}
+              </span>
+            </button>
+          ))}
         </div>
       )}
 
-      {step === 1 && (
+      {stepId === "configure" && (
         <div className="portal-sources__wizard-body">
-          <p className="portal-sources__wizard-lead">
-            {t("sources.wizard.configureLead.before")}{" "}
-            <strong>{SOURCE_TYPE_META[type].label}</strong>
-            {t("sources.wizard.configureLead.after")}
-          </p>
-          <CodeBlock code={CONNECT_SNIPPET} caption="quickstart.sh" />
-          <p className="portal-sources__wizard-note">
-            {t("sources.wizard.configureNote")}
-          </p>
+          <FormField label={t("sources.wizard.name")} required>
+            <Input
+              value={name}
+              placeholder={t("sources.wizard.namePlaceholder")}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </FormField>
+          {type.fields.map((field) => (
+            <FormField
+              key={field.key}
+              label={t(field.labelKey)}
+              helperText={
+                field.helperTextKey ? t(field.helperTextKey) : undefined
+              }
+              required={field.required}
+            >
+              {field.control === "select" ? (
+                <Select
+                  value={options[field.key] ?? ""}
+                  options={(field.options ?? []).map((o) => ({
+                    value: o.value,
+                    label: t(o.labelKey),
+                  }))}
+                  onChange={(e) =>
+                    setOptions((o) => ({ ...o, [field.key]: e.target.value }))
+                  }
+                />
+              ) : (
+                <Input
+                  value={options[field.key] ?? ""}
+                  placeholder={
+                    field.placeholderKey ? t(field.placeholderKey) : undefined
+                  }
+                  onChange={(e) =>
+                    setOptions((o) => ({ ...o, [field.key]: e.target.value }))
+                  }
+                />
+              )}
+            </FormField>
+          ))}
         </div>
       )}
 
-      {step === 2 && (
+      {stepId === "review" && (
         <div className="portal-sources__wizard-body">
-          <p className="portal-sources__wizard-lead">
-            {t("sources.wizard.reviewLead.before")}{" "}
-            <strong>{SOURCE_TYPE_META[type].label}</strong>
-            {t("sources.wizard.reviewLead.after")}
-          </p>
           <div className="portal-sources__stat-grid">
+            <StatTile label={t("sources.wizard.name")} value={name || "—"} />
             <StatTile
               label={t("sources.wizard.type")}
-              value={SOURCE_TYPE_META[type].label}
+              value={t(type.labelKey)}
             />
-            <StatTile
-              label={t("sources.wizard.defaultPipeline")}
-              value={t("sources.wizard.defaultPipelineValue")}
-            />
-            <StatTile
-              label={t("sources.wizard.initialState")}
-              value={t("sources.wizard.initialStateValue")}
-            />
-            <StatTile label={t("sources.wizard.region")} value="us-east-1" />
+            {type.fields.map((field) => (
+              <StatTile
+                key={field.key}
+                label={t(field.labelKey)}
+                value={options[field.key] || "—"}
+              />
+            ))}
           </div>
+          {error && <Banner tone="danger" description={error} />}
         </div>
       )}
     </Modal>
