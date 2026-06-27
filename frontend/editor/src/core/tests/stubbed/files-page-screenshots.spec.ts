@@ -12,6 +12,12 @@ interface SeedFile {
   folderId?: string | null;
 }
 
+interface SeedFolder {
+  id: string;
+  name: string;
+  parentFolderId: string | null;
+}
+
 async function seedFiles(page: Page, files: SeedFile[]): Promise<void> {
   // Build the server-side view from the cloud entries so reconcileServerFiles
   // sees them as still-existing on the server (otherwise they get detached
@@ -30,7 +36,7 @@ async function seedFiles(page: Page, files: SeedFile[]): Promise<void> {
       accessRole: "owner",
       shareLinks: [],
       filePurpose: "generic",
-      folderId: null,
+      folderId: f.folderId ?? null,
     }));
   await page.route("**/api/v1/storage/files", (route: Route) =>
     route.fulfill({ json: serverFiles }),
@@ -97,6 +103,40 @@ async function seedFiles(page: Page, files: SeedFile[]): Promise<void> {
       };
     },
     { records: files, dbVersion: DATABASE_CONFIGS.FILES.version },
+  );
+}
+
+async function seedFolders(page: Page, folders: SeedFolder[]): Promise<void> {
+  await page.addInitScript(
+    ({ records, dbVersion }) => {
+      const open = window.indexedDB.open("stirling-pdf-files", dbVersion);
+      open.onupgradeneeded = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result;
+        if (!db.objectStoreNames.contains("folders")) {
+          const store = db.createObjectStore("folders", { keyPath: "id" });
+          store.createIndex("parentFolderId", "parentFolderId", {
+            unique: false,
+          });
+          store.createIndex("name", "name", { unique: false });
+        }
+      };
+      open.onsuccess = () => {
+        const db = open.result;
+        db.onversionchange = () => db.close();
+        const tx = db.transaction("folders", "readwrite");
+        const store = tx.objectStore("folders");
+        const now = Date.now();
+        for (const folder of records) {
+          store.put({
+            ...folder,
+            createdAt: now,
+            updatedAt: now,
+          });
+        }
+        tx.oncomplete = () => db.close();
+      };
+    },
+    { records: folders, dbVersion: DATABASE_CONFIGS.FILES.version },
   );
 }
 
@@ -570,6 +610,13 @@ test.describe("Files page screenshots", () => {
         folderId: FOLDER_ID,
       },
     ]);
+    await seedFolders(page, [
+      {
+        id: FOLDER_ID,
+        name: "Reports",
+        parentFolderId: null,
+      },
+    ]);
     await page.route("**/api/v1/storage/folders", async (route: Route) => {
       await route.fulfill({
         json: [
@@ -586,6 +633,7 @@ test.describe("Files page screenshots", () => {
       });
     });
     await page.goto("/files", { waitUntil: "domcontentloaded" });
+    await page.getByRole("button", { name: /Refresh from server/i }).click();
     // Wait for the Reports folder card or list row.
     await expect(page.getByText("Reports").first()).toBeVisible({
       timeout: 5_000,

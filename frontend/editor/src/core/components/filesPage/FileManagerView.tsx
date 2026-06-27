@@ -1574,9 +1574,13 @@ export default function FileManagerView() {
             await moveFolderTo(moveDialog.folderId, target);
           }
         }}
-        // Inline-create folder; gated on serverReachable.
+        // Inline-create folder. Gate on account/storage availability, but do
+        // not wait for the first folder pull to flip `serverReachable`: users
+        // can open this dialog during that short startup window, and hiding
+        // the affordance there makes the UI (and screenshot tests) race the
+        // background folder sync.
         onCreateFolder={
-          folders.serverReachable
+          uploadEnabled && !isAnonymous
             ? (name, parentFolderId) =>
                 folders.createFolder(name, parentFolderId)
             : undefined
