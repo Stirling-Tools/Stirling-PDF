@@ -1,7 +1,6 @@
 import { resolve } from "node:path";
 import { defineConfig, loadEnv } from "vite";
-import react from "@vitejs/plugin-react-swc";
-import tsconfigPaths from "vite-tsconfig-paths";
+import react from "@vitejs/plugin-react";
 
 // Portal app — sibling to frontend/editor/. Standalone vite config so the
 // editor's config stays editor-only.
@@ -40,17 +39,13 @@ export default defineConfig(async ({ mode }) => {
   };
 
   return {
-    plugins: [
-      react(),
-      tsconfigPaths({
-        projects: [resolve(import.meta.dirname, "tsconfig.json")],
-      }),
-    ],
+    plugins: [react()],
     // Explicit aliases — tsconfigPaths only resolves imports inside files
     // covered by portal/tsconfig.json's `include`. shared/components/index.ts
     // re-exports via `@shared/*` from inside shared/ itself, so we need
     // resolve.alias for vite to handle those too.
     resolve: {
+      tsconfigPaths: true,
       alias: {
         "@portal": resolve(import.meta.dirname, "src"),
         "@shared": resolve(import.meta.dirname, "..", "shared"),

@@ -130,7 +130,7 @@
     "@typescript-eslint/eslint-plugin": "^8.61.1",
     "@typescript-eslint/parser": "^8.61.1",
     "@typescript/native-preview": "7.0.0-dev.20260624.1",
-    "@vitejs/plugin-react-swc": "^4.3.1",
+    "@vitejs/plugin-react": "^6.0.3",
     "@vitest/coverage-v8": "^4.1.9",
     "dotenv": "^16.4.7",
     "dpdm": "^3.14.0",
@@ -154,7 +154,6 @@
     "vite": "^8.1.0",
     "vite-plugin-compression2": "^2.5.3",
     "vite-plugin-static-copy": "^4.1.1",
-    "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^4.1.9"
   },
   "depcheck": {

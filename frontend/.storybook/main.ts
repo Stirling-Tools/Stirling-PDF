@@ -1,6 +1,5 @@
 import { resolve } from "node:path";
 import type { StorybookConfig } from "@storybook/react-vite";
-import tsconfigPaths from "vite-tsconfig-paths";
 
 /**
  * Storybook 9 ships essentials, interactions, and docs as built-ins, so the
@@ -30,27 +29,17 @@ const config: StorybookConfig = {
   // network calls the same way the dev portal does.
   staticDirs: ["../portal/public"],
   viteFinal: async (config) => {
+    const storybookDir = import.meta.dirname;
+
     // Wire @portal/* and @shared/* aliases directly on the Storybook bundler so
     // portal story imports resolve without needing the portal's vite config.
     config.resolve = config.resolve ?? {};
     config.resolve.alias = {
       ...(config.resolve.alias ?? {}),
-      "@portal": resolve(__dirname, "../portal/src"),
-      "@shared": resolve(__dirname, "../shared"),
+      "@portal": resolve(storybookDir, "../portal/src"),
+      "@shared": resolve(storybookDir, "../shared"),
     };
-    // Editor stories import via @app/* (proprietary→core fallback), @core/* and
-    // @proprietary/*. Resolve them exactly the way the editor's own build does —
-    // through vite-tsconfig-paths against the proprietary vite tsconfig — so the
-    // shared Storybook can host editor components without duplicating the alias
-    // map here.
-    config.plugins = config.plugins ?? [];
-    config.plugins.push(
-      tsconfigPaths({
-        projects: [
-          resolve(__dirname, "../editor/tsconfig.proprietary.vite.json"),
-        ],
-      }),
-    );
+    config.resolve.tsconfigPaths = true;
     return config;
   },
 };

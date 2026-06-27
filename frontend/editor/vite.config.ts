@@ -1,4 +1,4 @@
-import react from "@vitejs/plugin-react-swc";
+import react from "@vitejs/plugin-react";
 import { compression, defineAlgorithm } from "vite-plugin-compression2";
 import fs from "node:fs/promises";
 import path, { resolve } from "node:path";
@@ -7,7 +7,6 @@ import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { defineConfig, loadEnv } from "vite";
 import type { PluginOption } from "vite";
-import tsconfigPaths from "vite-tsconfig-paths";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 
 const gzipPromise = promisify(gzip);
@@ -142,14 +141,6 @@ const VALID_MODES = [
 ] as const;
 type BuildMode = (typeof VALID_MODES)[number];
 
-const TSCONFIG_MAP: Record<BuildMode, string> = {
-  core: "./tsconfig.core.vite.json",
-  proprietary: "./tsconfig.proprietary.vite.json",
-  saas: "./tsconfig.saas.vite.json",
-  desktop: "./tsconfig.desktop.vite.json",
-  prototypes: "./tsconfig.prototypes.vite.json",
-};
-
 export default defineConfig(async ({ mode }) => {
   // Load env files relative to this config (frontend/editor/), regardless of
   // where the build was invoked from. The previous `process.cwd()` worked when
@@ -175,8 +166,6 @@ export default defineConfig(async ({ mode }) => {
       : process.env.DISABLE_ADDITIONAL_FEATURES === "true"
         ? "core"
         : "proprietary");
-
-  const tsconfigProject = TSCONFIG_MAP[effectiveMode];
 
   // Backend proxy target: default localhost:8080. Override via BACKEND_URL env var
   // so the top-level dev launcher can wire a dynamically-assigned backend port.
@@ -217,9 +206,6 @@ export default defineConfig(async ({ mode }) => {
   return {
     plugins: [
       react(),
-      tsconfigPaths({
-        projects: [tsconfigProject],
-      }),
       compression({
         threshold: 1024,
         exclude: [/\.(png|jpg|jpeg|gif|webp|woff|woff2)$/],
@@ -277,6 +263,7 @@ export default defineConfig(async ({ mode }) => {
       prerenderOgPlugin(),
     ],
     resolve: {
+      tsconfigPaths: true,
       // Global alias so @shared resolves for ALL importers — including the
       // shared components' own `@shared/components/X.css` self-imports, which
       // live outside the editor tsconfig scope and so aren't rewritten by
@@ -309,9 +296,12 @@ export default defineConfig(async ({ mode }) => {
       target: "esnext",
       rollupOptions: {
         output: {
-          manualChunks: {
-            "vendor-react": ["react", "react-dom"],
-            "pdf-engine": ["@embedpdf/engines", "@embedpdf/pdfium"],
+          manualChunks(id) {
+            if (id.includes("node_modules/react")) return "vendor-react";
+            if (id.includes("node_modules/react-dom")) return "vendor-react";
+            if (id.includes("@embedpdf/engines")) return "pdf-engine";
+            if (id.includes("@embedpdf/pdfium")) return "pdf-engine";
+            return undefined;
           },
         },
       },

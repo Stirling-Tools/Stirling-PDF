@@ -1,6 +1,5 @@
 import { defineConfig } from "vitest/config";
-import react from "@vitejs/plugin-react-swc";
-import tsconfigPaths from "vite-tsconfig-paths";
+import react from "@vitejs/plugin-react";
 import path from "node:path";
 
 // Global @shared alias so SUI components (and their own `@shared/*` self-imports,
@@ -42,17 +41,10 @@ export default defineConfig({
           globals: true,
           setupFiles: ["./src/core/setupTests.ts"],
         },
-        plugins: [
-          react(),
-          tsconfigPaths({
-            projects: ["./tsconfig.core.vite.json"],
-          }),
-        ],
+        plugins: [react()],
         resolve: {
+          tsconfigPaths: true,
           alias: { "@shared": sharedDir },
-        },
-        esbuild: {
-          target: "es2020",
         },
       },
       {
@@ -63,17 +55,10 @@ export default defineConfig({
           globals: true,
           setupFiles: ["./src/core/setupTests.ts"],
         },
-        plugins: [
-          react(),
-          tsconfigPaths({
-            projects: ["./tsconfig.proprietary.vite.json"],
-          }),
-        ],
+        plugins: [react()],
         resolve: {
+          tsconfigPaths: true,
           alias: { "@shared": sharedDir },
-        },
-        esbuild: {
-          target: "es2020",
         },
       },
       {
@@ -84,17 +69,10 @@ export default defineConfig({
           globals: true,
           setupFiles: ["./src/core/setupTests.ts"],
         },
-        plugins: [
-          react(),
-          tsconfigPaths({
-            projects: ["./tsconfig.desktop.vite.json"],
-          }),
-        ],
+        plugins: [react()],
         resolve: {
+          tsconfigPaths: true,
           alias: { "@shared": sharedDir },
-        },
-        esbuild: {
-          target: "es2020",
         },
       },
       {
@@ -105,17 +83,10 @@ export default defineConfig({
           globals: true,
           setupFiles: ["./src/saas/setupTests.ts"],
         },
-        plugins: [
-          react(),
-          tsconfigPaths({
-            projects: ["./tsconfig.saas.vite.json"],
-          }),
-        ],
+        plugins: [react()],
         resolve: {
+          tsconfigPaths: true,
           alias: { "@shared": sharedDir },
-        },
-        esbuild: {
-          target: "es2020",
         },
       },
       {
@@ -126,22 +97,12 @@ export default defineConfig({
           globals: true,
           setupFiles: ["./src/core/setupTests.ts"],
         },
-        plugins: [
-          react(),
-          tsconfigPaths({
-            projects: ["./tsconfig.prototypes.vite.json"],
-          }),
-        ],
+        plugins: [react()],
         resolve: {
+          tsconfigPaths: true,
           alias: { "@shared": sharedDir },
-        },
-        esbuild: {
-          target: "es2020",
         },
       },
     ],
-  },
-  esbuild: {
-    target: "es2020",
   },
 });
