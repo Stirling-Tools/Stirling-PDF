@@ -41,6 +41,11 @@ jobs:
       - name: Install all Playwright browsers
         run: task e2e:install
 
+      - name: Build frontend (production bundle for vite preview)
+        env:
+          VITE_BUILD_FOR_PREVIEW: "1"
+        run: task frontend:build
+
       - name: Run E2E tests (all browsers)
         run: task e2e:cross-browser
 
@@ -62,4 +67,5 @@ jobs:
     uses: ./.github/workflows/tauri-build.yml
     with:
       platform: all
+      sign: false
     secrets: inherit
