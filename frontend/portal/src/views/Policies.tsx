@@ -9,6 +9,8 @@ import {
   deletePolicy,
   fetchPolicies,
   savePolicy,
+  POLICY_CATEGORIES,
+  POLICY_CONFIG,
   type CatalogueEntry,
   type PoliciesResponse,
   type PolicySetupResult,
@@ -33,6 +35,23 @@ export function Policies() {
 
   const catalogue = data?.catalogue ?? [];
   const refetch = useCallback(() => setVersion((v) => v + 1), []);
+
+  // When the API hasn't returned data (backend unreachable or mocks off), fall
+  // back to the static category list so the page stays actionable.
+  const displayCatalogue: CatalogueEntry[] =
+    catalogue.length > 0
+      ? catalogue
+      : POLICY_CATEGORIES.map((cat) => ({
+          category: cat,
+          config: POLICY_CONFIG[cat.id] ?? {
+            summary: "",
+            rules: [],
+            scopeLabel: "",
+            fields: [],
+            defaultOperations: [],
+          },
+          policy: null,
+        }));
 
   function openEntry(entry: CatalogueEntry) {
     if (entry.policy) setDetail(entry);
@@ -110,9 +129,9 @@ export function Policies() {
         </div>
       )}
 
-      {!isLoading && catalogue.length > 0 && (
+      {!isLoading && (
         <div className="portal-policies__grid">
-          {catalogue.map((entry) => (
+          {displayCatalogue.map((entry) => (
             <PolicyCategoryCard
               key={entry.category.id}
               entry={entry}
