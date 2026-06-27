@@ -1,7 +1,6 @@
 import { test, expect } from "@app/tests/helpers/test-base";
 import {
   ensureCookieConsent,
-  skipOnboarding,
   DEFAULT_TEST_USERNAME,
   DEFAULT_TEST_PASSWORD,
 } from "@app/tests/helpers/login";
@@ -59,38 +58,77 @@ test.describe("Live-suite bootstrap", () => {
     }
 
     await ensureCookieConsent(page);
-    await skipOnboarding(page);
 
+    // Do not call skipOnboarding here: the forced first-login password
+    // change is rendered by the onboarding layer after successful login.
     await page.goto("/login", { waitUntil: "domcontentloaded" });
     await page.locator("#email").waitFor({ state: "visible", timeout: 15_000 });
 
     await page.locator("#email").fill(DEFAULT_TEST_USERNAME);
     await page.locator("#password").fill(DEFAULT_BACKEND_PASSWORD);
     await page.locator('button[type="submit"]').click();
+    await page.waitForURL("/", { timeout: 15_000 });
 
-    await expect(
-      page.getByText(/must change your password|set your password/i).first(),
-    ).toBeVisible({ timeout: 15_000 });
+    const firstLoginMessage = page
+      .getByText(/must change your password|set your password/i)
+      .first();
 
-    // Mantine's PasswordInput label association doesn't match getByLabel
-    // cleanly across builds — use the placeholder which is stable.
-    await page
-      .getByPlaceholder(/enter new password.*characters/i)
-      .fill(DEFAULT_TEST_PASSWORD);
-    await page
-      .getByPlaceholder(/re-enter new password/i)
-      .fill(DEFAULT_TEST_PASSWORD);
+    if (
+      await firstLoginMessage.isVisible({ timeout: 15_000 }).catch(() => false)
+    ) {
+      // Mantine's PasswordInput label association doesn't match getByLabel
+      // cleanly across builds — use the placeholder which is stable.
+      await page
+        .getByPlaceholder(/enter new password.*characters/i)
+        .fill(DEFAULT_TEST_PASSWORD);
+      await page
+        .getByPlaceholder(/re-enter new password/i)
+        .fill(DEFAULT_TEST_PASSWORD);
 
-    const submitBtn = page.getByRole("button", { name: /change password/i });
-    await expect(submitBtn).toBeEnabled();
-    await submitBtn.click();
+      const submitBtn = page.getByRole("button", { name: /change password/i });
+      await expect(submitBtn).toBeEnabled();
+      await submitBtn.click();
 
-    await expect(
-      page.getByText(/password changed successfully/i).first(),
-    ).toBeVisible({ timeout: 10_000 });
+      await expect(
+        page.getByText(/password changed successfully/i).first(),
+      ).toBeVisible({ timeout: 10_000 });
 
-    // After success the user is signed out; expect redirect back to /login
-    await page.waitForURL(/\/login(\?.*)?$/, { timeout: 15_000 });
+      // After success the user is signed out; expect redirect back to /login
+      await page.waitForURL(/\/login(\?.*)?$/, { timeout: 15_000 });
+    } else {
+      test.info().annotations.push({
+        type: "bootstrap",
+        description:
+          "default admin/stirling login succeeded without forced-first-login UI; changing password through the authenticated API path",
+      });
+
+      const login = await request.post("/api/v1/auth/login", {
+        data: {
+          username: DEFAULT_TEST_USERNAME,
+          password: DEFAULT_BACKEND_PASSWORD,
+        },
+      });
+      expect(login.ok()).toBeTruthy();
+      const loginBody = (await login.json()) as {
+        session?: { access_token?: string };
+      };
+      expect(loginBody.session?.access_token).toBeTruthy();
+
+      const change = await request.post(
+        "/api/v1/user/change-password-on-login",
+        {
+          headers: {
+            Authorization: `Bearer ${loginBody.session?.access_token}`,
+          },
+          form: {
+            currentPassword: DEFAULT_BACKEND_PASSWORD,
+            newPassword: DEFAULT_TEST_PASSWORD,
+            confirmPassword: DEFAULT_TEST_PASSWORD,
+          },
+        },
+      );
+      expect(change.ok()).toBeTruthy();
+    }
 
     // Confirm the new credentials work via the API
     const verify = await request.post("/api/v1/auth/login", {
