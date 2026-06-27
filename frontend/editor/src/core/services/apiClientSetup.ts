@@ -1,10 +1,22 @@
 import type { AxiosInstance } from "axios";
 import { getBrowserId } from "@app/utils/browserIdentifier";
 
+function getJwtTokenFromStorage(): string | null {
+  try {
+    return localStorage.getItem("stirling_jwt");
+  } catch {
+    return null;
+  }
+}
+
 export function setupApiInterceptors(client: AxiosInstance): void {
   // Add browser ID header for WAU tracking
   client.interceptors.request.use(
     (config) => {
+      const jwt = getJwtTokenFromStorage();
+      if (jwt && !config.headers.Authorization) {
+        config.headers.Authorization = `Bearer ${jwt}`;
+      }
       const browserId = getBrowserId();
       config.headers["X-Browser-Id"] = browserId;
       return config;

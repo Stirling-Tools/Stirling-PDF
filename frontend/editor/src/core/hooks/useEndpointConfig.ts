@@ -43,6 +43,11 @@ export function useEndpointEnabled(endpoint: string): {
 
       const response = await apiClient.get<boolean>(
         `/api/v1/config/endpoint-enabled?endpoint=${encodeURIComponent(endpoint)}`,
+        {
+          suppressErrorToast: true,
+          skipAuthRedirect: true,
+          headers: { "X-Skip-Auth-Refresh": "true" },
+        },
       );
       const isEnabled = response.data;
       setEnabled(isEnabled);
@@ -135,6 +140,7 @@ export function useMultipleEndpointsEnabled(endpoints: string[]): {
         >(`/api/v1/config/endpoints-availability`, {
           suppressErrorToast: true,
           skipAuthRedirect: true,
+          headers: { "X-Skip-Auth-Refresh": "true" },
         });
 
         // Populate global cache with all results

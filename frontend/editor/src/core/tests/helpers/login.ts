@@ -46,6 +46,61 @@ export async function skipOnboarding(page: Page): Promise<void> {
 export const DEFAULT_TEST_USERNAME = "admin";
 export const DEFAULT_TEST_PASSWORD = "adminadmin";
 
+type AuthLoginResponse = {
+  session?: {
+    access_token?: string;
+    refresh_token?: string | null;
+  };
+};
+
+/**
+ * Seed the browser with a fresh authenticated session without navigating away
+ * from the current tool page.
+ *
+ * Some live operation tests spend enough time uploading/parsing PDFs that a
+ * previously bootstrapped client token can become stale before the tool POST is
+ * submitted. Re-authenticate through the same backend endpoint used by the UI
+ * and update the SPA token storage in-place.
+ */
+export async function seedAuthenticatedSession(
+  page: Page,
+  username = DEFAULT_TEST_USERNAME,
+  password = DEFAULT_TEST_PASSWORD,
+): Promise<void> {
+  await ensureCookieConsent(page);
+  await skipOnboarding(page);
+
+  const response = await page.context().request.post("/api/v1/auth/login", {
+    data: { username, password },
+  });
+
+  if (!response.ok()) {
+    throw new Error(
+      `Failed to seed authenticated session: ${response.status()} ${response.statusText()}`,
+    );
+  }
+
+  const body = (await response.json()) as AuthLoginResponse;
+  const accessToken = body.session?.access_token;
+  if (!accessToken) {
+    throw new Error("Failed to seed authenticated session: missing access token");
+  }
+
+  await page.evaluate(
+    ({ token, refreshToken }) => {
+      localStorage.setItem("stirling_jwt", token);
+      if (refreshToken) {
+        localStorage.setItem("stirling_refresh_token", refreshToken);
+      }
+      window.dispatchEvent(new Event("jwt-available"));
+    },
+    {
+      token: accessToken,
+      refreshToken: body.session?.refresh_token ?? null,
+    },
+  );
+}
+
 export async function login(
   page: Page,
   username = DEFAULT_TEST_USERNAME,
