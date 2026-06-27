@@ -95,6 +95,7 @@ tasks:
         vars:
           PORT: '{{.PORTAL_PORT}}'
           BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
+          MOCKS: 'false'
           OPEN: "true"
 
   dev:portal:all:
@@ -117,6 +118,7 @@ tasks:
           BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
           # Point the portal's "Editor" app switcher at the editor we spawn here.
           EDITOR_URL: 'http://localhost:{{.EDITOR_PORT}}/'
+          MOCKS: 'false'
           OPEN: "true"
       - task: frontend:dev
         vars:
@@ -141,6 +143,7 @@ tasks:
           PORT: '{{.PORTAL_PORT}}'
           BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
           EDITOR_URL: 'http://localhost:{{.EDITOR_PORT}}/'
+          MOCKS: 'false'
           OPEN: "true"
       - task: frontend:dev
         vars:

@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Skeleton } from "@shared/components";
+import { Banner, Skeleton } from "@shared/components";
+import { errorMessage } from "@portal/api/http";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import {
   buildWireFromSetup,
@@ -28,6 +29,7 @@ export function Policies() {
   const [detail, setDetail] = useState<CatalogueEntry | null>(null);
   const [wizard, setWizard] = useState<CatalogueEntry | null>(null);
   const [busy, setBusy] = useState(false);
+  const [pageError, setPageError] = useState<string | null>(null);
 
   const catalogue = data?.catalogue ?? [];
   const refetch = useCallback(() => setVersion((v) => v + 1), []);
@@ -41,19 +43,27 @@ export function Policies() {
     entry: CatalogueEntry,
     result: PolicySetupResult,
   ) {
-    await savePolicy(buildWireFromSetup(entry, result));
-    setWizard(null);
-    setDetail(null);
-    refetch();
+    setPageError(null);
+    try {
+      await savePolicy(buildWireFromSetup(entry, result));
+      setWizard(null);
+      setDetail(null);
+      refetch();
+    } catch (e) {
+      setPageError(errorMessage(e));
+    }
   }
 
   async function runLifecycle(action: () => Promise<unknown>) {
     if (busy) return;
+    setPageError(null);
     setBusy(true);
     try {
       await action();
       setDetail(null);
       refetch();
+    } catch (e) {
+      setPageError(errorMessage(e));
     } finally {
       setBusy(false);
     }
@@ -87,6 +97,8 @@ export function Policies() {
         <h1 className="portal-policies__title">{t("policies.title")}</h1>
         <p className="portal-policies__sub">{t("policies.subtitle")}</p>
       </header>
+
+      {pageError && <Banner tone="danger" description={pageError} />}
 
       <CatalogueSummary data={data} loading={loading} />
 
