@@ -1,6 +1,6 @@
 import "@testing-library/jest-dom";
 import { cleanup } from "@testing-library/react";
-import { vi } from "vitest";
+import { afterEach, vi } from "vitest";
 import { installFailOnConsole } from "@app/tests/failOnConsole";
 
 installFailOnConsole();
@@ -165,6 +165,7 @@ global.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver;
 class MockIntersectionObserver implements IntersectionObserver {
   readonly root: Element | Document | null = null;
   readonly rootMargin = "";
+  readonly scrollMargin = "";
   readonly thresholds: ReadonlyArray<number> = [];
   readonly observe = vi.fn();
   readonly unobserve = vi.fn();
