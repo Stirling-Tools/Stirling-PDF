@@ -90,6 +90,7 @@ tasks:
         vars:
           PORT: '{{.BACKEND_PORT}}'
           SECURITY_ENABLELOGIN: "true"
+          POLICIES_ENABLED: "true"
       - task: frontend:dev:portal
         vars:
           PORT: '{{.PORTAL_PORT}}'
@@ -109,6 +110,7 @@ tasks:
         vars:
           PORT: '{{.BACKEND_PORT}}'
           SECURITY_ENABLELOGIN: "true"
+          POLICIES_ENABLED: "true"
       - task: frontend:dev:portal
         vars:
           PORT: '{{.PORTAL_PORT}}'
@@ -135,6 +137,7 @@ tasks:
         vars:
           PORT: '{{.BACKEND_PORT}}'
           SECURITY_ENABLELOGIN: "true"
+          POLICIES_ENABLED: "true"
       - task: frontend:dev:proprietary
         vars:
           PORT: '{{.EDITOR_PORT}}'
@@ -210,6 +213,7 @@ tasks:
         vars:
           PORT: '{{.BACKEND_PORT}}'
           SECURITY_ENABLELOGIN: "true"
+          POLICIES_ENABLED: "true"
       - task: frontend:preview:portal:proxy
         vars:
           PORT: '{{.PROXY_PORT}}'
