@@ -2,6 +2,7 @@ package stirling.software.proprietary.policy.store;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,7 +30,7 @@ public class InProcessPolicyStore implements PolicyStore {
                         policy.owner(),
                         policy.enabled(),
                         policy.trigger(),
-                        policy.sources(),
+                        policy.sourceIds(),
                         policy.steps(),
                         policy.output(),
                         policy.teamId());
@@ -45,6 +46,13 @@ public class InProcessPolicyStore implements PolicyStore {
     @Override
     public List<Policy> all() {
         return List.copyOf(policies.values());
+    }
+
+    @Override
+    public List<Policy> findByTeam(Long teamId) {
+        return policies.values().stream()
+                .filter(policy -> Objects.equals(policy.teamId(), teamId))
+                .toList();
     }
 
     @Override
