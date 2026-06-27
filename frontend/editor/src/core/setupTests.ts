@@ -126,9 +126,11 @@ Object.defineProperty(globalThis, "crypto", {
 
 // Mock Worker for tests (Web Workers not available in test environment)
 class MockWorker implements Worker {
-  onmessage: ((this: Worker, ev: MessageEvent) => any) | null = null;
-  onmessageerror: ((this: Worker, ev: MessageEvent) => any) | null = null;
-  onerror: ((this: AbstractWorker, ev: ErrorEvent) => any) | null = null;
+  onmessage: ((this: Worker, ev: MessageEvent<unknown>) => void) | null =
+    null;
+  onmessageerror: ((this: Worker, ev: MessageEvent<unknown>) => void) | null =
+    null;
+  onerror: ((this: AbstractWorker, ev: ErrorEvent) => void) | null = null;
 
   postMessage = vi.fn();
   terminate = vi.fn();
