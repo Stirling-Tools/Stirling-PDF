@@ -20,7 +20,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.springframework.context.annotation.Profile;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -31,6 +31,8 @@ import stirling.software.proprietary.policy.engine.PolicyRunner;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.source.Source;
+import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
 
 /**
@@ -46,7 +48,7 @@ import stirling.software.proprietary.policy.store.PolicyStore;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Profile("saas")
+@ConditionalOnBooleanProperty(name = "policies.enabled")
 public class FolderWatchTrigger implements PolicyTrigger {
 
     private static final String TYPE = "folder-watch";
@@ -54,6 +56,7 @@ public class FolderWatchTrigger implements PolicyTrigger {
     private final PolicyStore policyStore;
     private final PolicyRunner policyRunner;
     private final List<InputSource> inputSources;
+    private final SourceStore sourceStore;
     private final ApplicationProperties applicationProperties;
 
     private final Map<Path, WatchKey> keysByDir = new ConcurrentHashMap<>();
@@ -118,6 +121,14 @@ public class FolderWatchTrigger implements PolicyTrigger {
         }
         keysByDir.clear();
         dirByKey.clear();
+    }
+
+    @Override
+    public void onPoliciesChanged() {
+        // A created/updated/deleted policy may add or drop a watched directory: register/cancel now
+        // instead of waiting up to watchReconcileSeconds for the next reconcile. A no-op until the
+        // trigger is started (watchService null), where the first reconcile picks everything up.
+        syncRegistrations();
     }
 
     private void watchLoop() {
@@ -269,12 +280,17 @@ public class FolderWatchTrigger implements PolicyTrigger {
     // the path was configured.
     private List<Path> watchDirsOf(Policy policy) {
         List<Path> dirs = new ArrayList<>();
-        for (InputSpec spec : policy.sources()) {
-            InputSource source = sourceFor(spec);
+        for (String sourceId : policy.sourceIds()) {
+            Source source = sourceStore.get(sourceId).orElse(null);
             if (source == null) {
                 continue;
             }
-            for (Path dir : source.watchTargets(spec)) {
+            InputSpec spec = source.toInputSpec();
+            InputSource inputSource = sourceFor(spec);
+            if (inputSource == null) {
+                continue;
+            }
+            for (Path dir : inputSource.watchTargets(spec)) {
                 dirs.add(dir.toAbsolutePath().normalize());
             }
         }

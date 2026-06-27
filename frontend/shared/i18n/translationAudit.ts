@@ -102,7 +102,12 @@ export const I18N_PROJECTS: TranslationProject[] = [
     srcRoot: front("portal/src"),
     extraRoots: [SHARED_SRC],
     localeFile: front("portal/public/locales/en-US/translation.toml"),
-    ignoredKeyPatterns: [],
+    ignoredKeyPatterns: [
+      // Source-type copy is referenced via metadata keys in
+      // components/sources/sourceTypes.ts (t(field.labelKey)), so the static
+      // scan can't see these as used.
+      /^sources\.types\./,
+    ],
     minUsedKeys: 20,
     minLocaleKeys: 20,
   },
