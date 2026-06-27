@@ -25,6 +25,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.FileReadinessChecker;
 import stirling.software.proprietary.policy.config.FolderAccessGuard;
 import stirling.software.proprietary.policy.model.InputSpec;
+import stirling.software.proprietary.policy.source.InProcessSourceStore;
 
 /** Tests for {@link FolderInputSource}: consume (claim + route) and snapshot (read-only) modes. */
 @ExtendWith(MockitoExtension.class)
@@ -40,7 +41,9 @@ class FolderInputSourceTest {
     void setUp() {
         ApplicationProperties properties = new ApplicationProperties();
         properties.getPolicies().setAllowedFolderRoots(List.of(tempDir.toString()));
-        FolderAccessGuard guard = new FolderAccessGuard(properties, new StandardEnvironment());
+        FolderAccessGuard guard =
+                new FolderAccessGuard(
+                        properties, new StandardEnvironment(), new InProcessSourceStore());
         source = new FolderInputSource(readinessChecker, guard);
         // Lenient: the missing-dir / nonexistent-dir cases return before any readiness check.
         lenient().when(readinessChecker.isReady(any())).thenReturn(true);

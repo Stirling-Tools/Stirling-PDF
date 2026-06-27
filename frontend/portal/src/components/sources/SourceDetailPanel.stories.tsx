@@ -1,11 +1,34 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import type { Source } from "@portal/api/sources";
-import { sourcesFor } from "@portal/mocks/sources";
+import type { SourceView } from "@portal/api/sources";
 import { SourceDetailPanel } from "@portal/components/sources/SourceDetailPanel";
 
-const ENTERPRISE = sourcesFor("enterprise");
-const byType = (type: Source["type"]) =>
-  ENTERPRISE.find((s) => s.type === type)!;
+const IN_USE: SourceView = {
+  id: "src-claims",
+  name: "Claims intake",
+  type: "folder",
+  status: "active",
+  referenceCount: 2,
+  referencingPolicies: [
+    { id: "a", name: "Security Policy" },
+    { id: "b", name: "Redaction Policy" },
+  ],
+  config: [
+    { label: "Directory", value: "/data/claims-intake" },
+    { label: "Mode", value: "consume" },
+  ],
+  docsTotal: null,
+};
+
+const ORPHANED: SourceView = {
+  id: "src-archive",
+  name: "Archive reprocess",
+  type: "folder",
+  status: "unused",
+  referenceCount: 0,
+  referencingPolicies: [],
+  config: [{ label: "Directory", value: "/data/archive" }],
+  docsTotal: null,
+};
 
 const meta: Meta<typeof SourceDetailPanel> = {
   title: "Portal/Sources/SourceDetailPanel",
@@ -22,8 +45,6 @@ const meta: Meta<typeof SourceDetailPanel> = {
 export default meta;
 type Story = StoryObj<typeof SourceDetailPanel>;
 
-export const Agent: Story = { args: { source: byType("agent") } };
-export const ApiClient: Story = { args: { source: byType("apiclient") } };
-export const Webhook: Story = { args: { source: byType("webhook") } };
-/** "basic" covers editor, connector, email, desktop and batch sources. */
-export const Basic: Story = { args: { source: byType("connector") } };
+export const InUse: Story = { args: { source: IN_USE } };
+/** A source no policy references is called out as safe to delete. */
+export const Orphaned: Story = { args: { source: ORPHANED } };
