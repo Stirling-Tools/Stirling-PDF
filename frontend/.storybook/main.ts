@@ -24,6 +24,9 @@ const config: StorybookConfig = {
   },
   typescript: {
     reactDocgen: "react-docgen-typescript",
+    reactDocgenTypescriptOptions: {
+      tsconfigPath: "./.storybook/tsconfig.json",
+    },
   },
   // Serve the MSW worker file from portal/public so Storybook can intercept
   // network calls the same way the dev portal does.

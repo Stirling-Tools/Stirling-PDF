@@ -1,0 +1,23 @@
+{
+  "extends": "../editor/tsconfig.proprietary.vite.json",
+  "compilerOptions": {
+    "baseUrl": "..",
+    "paths": {
+      "@app/*": ["editor/src/proprietary/*", "editor/src/core/*"],
+      "@portal/*": ["portal/src/*"],
+      "@proprietary/*": ["editor/src/proprietary/*"],
+      "@core/*": ["editor/src/core/*"],
+      "@shared/*": ["shared/*"]
+    }
+  },
+  "include": [
+    "./*.ts",
+    "./*.tsx",
+    "../portal/src/**/*.stories.ts",
+    "../portal/src/**/*.stories.tsx",
+    "../shared/**/*.stories.ts",
+    "../shared/**/*.stories.tsx",
+    "../editor/src/**/*.stories.ts",
+    "../editor/src/**/*.stories.tsx"
+  ]
+}
