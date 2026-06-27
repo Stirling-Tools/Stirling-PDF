@@ -33,6 +33,7 @@ import stirling.software.common.model.exception.UnsupportedProviderException;
             "stirling.software.proprietary.storage.repository",
             "stirling.software.proprietary.workflow.repository",
             "stirling.software.proprietary.policy.store",
+            "stirling.software.proprietary.policy.source",
             "stirling.software.proprietary.access.repository",
             "stirling.software.proprietary.integration.repository"
         })
@@ -42,6 +43,7 @@ import stirling.software.common.model.exception.UnsupportedProviderException;
     "stirling.software.proprietary.storage.model",
     "stirling.software.proprietary.workflow.model",
     "stirling.software.proprietary.policy.store",
+    "stirling.software.proprietary.policy.source",
     "stirling.software.proprietary.access.model",
     "stirling.software.proprietary.integration.model"
 })

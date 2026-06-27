@@ -341,8 +341,8 @@ title = "No drift detected"
 description = "Every document in the last 24h matched its inferred schema."
 
 [sources]
-title = "Sources & Agents"
-subtitle = "Every place documents flow into Stirling — agents, API clients, webhooks, connectors and more. Click a row for type-specific detail."
+title = "Sources"
+subtitle = "Reusable input connections that feed documents into Stirling. Configure a connection once, then reference it from any number of policies. Click a row for its config and which policies use it."
 
 [sources.actions]
 agentBuilder = "Agent Builder"
@@ -350,86 +350,75 @@ connectSource = "Connect source"
 
 [sources.empty]
 title = "No sources connected yet"
-description = "Connect an agent, API client, webhook, connector or inbox to start feeding documents into your pipelines."
+description = "Connect a folder (and, soon, cloud storage) so your policies have somewhere to pull documents from."
 
 [sources.kpi]
-agentsActive = "Agents active"
-scenarios = "Scenarios"
-evalPassRate = "Eval pass rate (7d)"
-docs24h = "Docs / 24h"
+total = "Connections"
+inUse = "In use"
+unused = "Unused"
+
+[sources.status]
+active = "Active"
+unused = "Unused"
+disabled = "Disabled"
 
 [sources.table]
 source = "Source"
 status = "Status"
-docs24h = "Docs / 24h"
-docs30d = "Docs / 30d"
-lastEvent = "Last event"
-owner = "Owner"
+usedBy = "Policies"
 
 [sources.detail]
-ownedBy = "{{type}} · owned by {{owner}}"
+subtitle = "{{type}} · {{status}}"
 closeAriaLabel = "Close detail"
+usedBy = "Used by"
+notReferenced = "Not referenced by any policy, so it's safe to delete."
+docsUntracked = "Per-source document volume isn't tracked yet."
+edit = "Edit"
+pause = "Pause"
+resume = "Resume"
+delete = "Delete source"
 
-[sources.agent]
-model = "Model"
-calls24h = "Calls / 24h"
-errorRate = "Error rate"
-escalations24h = "Escalations / 24h"
-meanConfidence = "Mean confidence"
-meanOutputConfidence = "Mean output confidence"
-assignedPipelines = "Assigned pipelines"
-scopes = "Scopes"
-viewEvalRuns = "View eval runs"
-pauseAgent = "Pause agent"
-
-[sources.apiClient]
-secretKey = "Secret key"
-rateLimit = "Rate limit"
-createdBy = "Created by"
-lastRotated = "Last rotated"
-rateLimitWindow = "Rate-limit window"
-usedPct = "{{pct}} used"
-rateLimitUsage = "Rate-limit usage"
-topEndpoints = "Top endpoints"
-callsPer24h = "{{count}} / 24h"
-rotateKey = "Rotate key"
-revoke = "Revoke"
-
-[sources.webhook]
-endpointUrl = "Endpoint URL"
-authType = "Auth type"
-successRate = "Success rate"
-retries24h = "Retries / 24h"
-recentDeliveries = "Recent deliveries"
-sendTestEvent = "Send test event"
-viewSigningSecret = "View signing secret"
+[sources.delete]
+title = "Delete source?"
+body = "Delete \"{{name}}\"? This can't be undone. Policies that reference it would need to be updated."
+cancel = "Cancel"
+confirm = "Delete"
 
 [sources.wizard]
 title = "Connect a source"
+editTitle = "Edit source"
 subtitle = "Step {{current}} of {{total}} · {{label}}"
 cancel = "Cancel"
 back = "Back"
 continue = "Continue"
-configureNote = "Scopes, rate limits and IP allowlists can be tuned after the source is connected."
+save = "Save changes"
+name = "Name"
+namePlaceholder = "e.g. Claims intake"
 type = "Type"
-defaultPipeline = "Default pipeline"
-defaultPipelineValue = "Redact & Flatten"
-initialState = "Initial state"
-initialStateValue = "Paused"
-region = "Region"
 
 [sources.wizard.steps]
 chooseType = "Choose type"
 configure = "Configure"
 review = "Review & connect"
 
-[sources.wizard.configureLead]
-before = "Configure your"
-after = ". Point it at Stirling and attach a default pipeline — every document this source ingests runs through it automatically."
+[sources.types.folder]
+label = "Folder"
+description = "Watch a directory on the server for new documents."
 
-[sources.wizard.reviewLead]
-before = "Ready to connect a new"
-after = ". It starts paused so you can verify the first few documents before going live."
+[sources.types.folder.fields.directory]
+label = "Directory path"
+placeholder = "/data/incoming"
+helperText = "Absolute path Stirling watches for files to process."
+
+[sources.types.folder.fields.mode]
+label = "Read mode"
+
+[sources.types.folder.fields.mode.options]
+consume = "Consume: process each file once"
+snapshot = "Snapshot: re-read the folder every run"
+
+[sources.types.unknown]
+label = "Source"
 
 [usage]
 title = "Usage & Billing"
@@ -1780,3 +1769,8 @@ or = "or"
 [auth]
 loading = "Loading"
 redirectingToEditor = "Redirecting to the editor..."
+
+[errorBoundary]
+title = "Something went wrong on this page"
+description = "This view hit an unexpected error. Try again, or pick another section from the sidebar."
+retry = "Try again"

@@ -22,6 +22,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.job.ResultFile;
 import stirling.software.proprietary.policy.config.FolderAccessGuard;
 import stirling.software.proprietary.policy.model.OutputSpec;
+import stirling.software.proprietary.policy.source.InProcessSourceStore;
 
 /** Tests for {@link FolderOutputSink}: outputs are written to the configured directory on disk. */
 class FolderOutputSinkTest {
@@ -34,7 +35,10 @@ class FolderOutputSinkTest {
     void setUp() {
         ApplicationProperties properties = new ApplicationProperties();
         properties.getPolicies().setAllowedFolderRoots(List.of(tempDir.toString()));
-        sink = new FolderOutputSink(new FolderAccessGuard(properties, new StandardEnvironment()));
+        sink =
+                new FolderOutputSink(
+                        new FolderAccessGuard(
+                                properties, new StandardEnvironment(), new InProcessSourceStore()));
     }
 
     @Test
