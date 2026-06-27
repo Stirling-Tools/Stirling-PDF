@@ -140,6 +140,10 @@ function PolicySetupWizardBody({
   const [runOn, setRunOn] = useState<"upload" | "export">(
     policy?.state.runOn ?? "upload",
   );
+  const [maxRetries, setMaxRetries] = useState(policy?.state.maxRetries ?? 3);
+  const [retryDelayMinutes, setRetryDelayMinutes] = useState(
+    policy?.state.retryDelayMinutes ?? 5,
+  );
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -187,6 +191,8 @@ function PolicySetupWizardBody({
         outputName: outputName.trim(),
         outputNamePosition,
         runOn,
+        maxRetries,
+        retryDelayMinutes,
         steps,
       });
     } catch {
@@ -512,6 +518,28 @@ function PolicySetupWizardBody({
                 type="email"
                 value={reviewerEmail}
                 onChange={(e) => setReviewerEmail(e.target.value)}
+              />
+            </FormField>
+            <FormField label={t("policies.wizard.output.retries.maxLabel")}>
+              <Input
+                inputSize="sm"
+                type="number"
+                value={String(maxRetries)}
+                onChange={(e) =>
+                  setMaxRetries(Math.max(0, Number(e.target.value) || 0))
+                }
+              />
+            </FormField>
+            <FormField label={t("policies.wizard.output.retries.delayLabel")}>
+              <Input
+                inputSize="sm"
+                type="number"
+                value={String(retryDelayMinutes)}
+                onChange={(e) =>
+                  setRetryDelayMinutes(
+                    Math.max(0, Number(e.target.value) || 0),
+                  )
+                }
               />
             </FormField>
           </div>

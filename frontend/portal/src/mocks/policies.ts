@@ -74,6 +74,8 @@ export interface PolicyState {
   outputName?: string;
   outputNamePosition?: "prefix" | "suffix" | "auto-number";
   runOn?: "upload" | "export";
+  maxRetries?: number;
+  retryDelayMinutes?: number;
   backendId?: string;
   isDefault?: boolean;
 }
@@ -87,6 +89,8 @@ export interface PolicySetupResult {
   outputName: string;
   outputNamePosition: "prefix" | "suffix" | "auto-number";
   runOn: "upload" | "export";
+  maxRetries: number;
+  retryDelayMinutes: number;
   steps: WirePipelineStep[];
 }
 

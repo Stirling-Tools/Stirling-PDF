@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Banner,
@@ -9,7 +10,11 @@ import {
   StatTile,
   StatusBadge,
 } from "@shared/components";
-import { humanizeEndpoint, type DecoratedPolicy } from "@portal/api/policies";
+import {
+  humanizeEndpoint,
+  type DecoratedPolicy,
+  type PolicyActivityItem,
+} from "@portal/api/policies";
 import { policyIcon } from "@portal/components/policies/policyIcons";
 import "@portal/views/Policies.css";
 
@@ -23,13 +28,77 @@ interface PolicyDetailPanelProps {
   onRun: () => void;
   onTogglePause: () => void;
   onDelete: () => void;
+  /** Re-run a failed activity item. Optional — retry button is hidden when absent. */
+  onRetry?: (item: PolicyActivityItem) => void;
 }
 
-const ACTIVITY_TONE = {
-  enforced: "success",
-  flagged: "warning",
-  processing: "info",
-} as const;
+/** SVG icons for activity row status — avoids MUI dep in the portal bundle. */
+function CheckIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+    </svg>
+  );
+}
+
+function WarnIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
+    </svg>
+  );
+}
+
+function SpinIcon() {
+  return (
+    <svg
+      width="13"
+      height="13"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className="portal-policies__activity-spin"
+      aria-hidden
+    >
+      <path d="M12 6v3l4-4-4-4v3c-4.42 0-8 3.58-8 8 0 1.57.46 3.03 1.24 4.26L6.7 14.8c-.45-.83-.7-1.79-.7-2.8 0-3.31 2.69-6 6-6zm6.76 1.74L17.3 9.2c.44.84.7 1.79.7 2.8 0 3.31-2.69 6-6 6v-3l-4 4 4 4v-3c4.42 0 8-3.58 8-8 0-1.57-.46-3.03-1.24-4.26z" />
+    </svg>
+  );
+}
+
+/**
+ * Long error messages (stack traces, verbose backend errors) are clamped by
+ * default and revealed with a Show more/less toggle.
+ */
+function ActivityError({
+  message,
+}: {
+  message: string;
+}) {
+  const { t } = useTranslation();
+  const [expanded, setExpanded] = useState(false);
+  const needsToggle = message.length > 80 || message.includes("\n");
+  if (!needsToggle) return <>{message}</>;
+  return (
+    <span className="portal-policies__activity-error">
+      <span
+        className={
+          "portal-policies__activity-error-text" +
+          (expanded ? "" : " portal-policies__activity-error-text--clamped")
+        }
+      >
+        {message}
+      </span>
+      <button
+        type="button"
+        className="portal-policies__link portal-policies__activity-error-toggle"
+        onClick={() => setExpanded((v) => !v)}
+      >
+        {expanded
+          ? t("policies.detail.showLess")
+          : t("policies.detail.showMore")}
+      </button>
+    </span>
+  );
+}
 
 /**
  * Narrative view for a configured policy: the enforced tool chain, recent
@@ -45,6 +114,7 @@ export function PolicyDetailPanel({
   onRun,
   onTogglePause,
   onDelete,
+  onRetry,
 }: PolicyDetailPanelProps) {
   const { t } = useTranslation();
   if (!policy) return null;
@@ -52,6 +122,9 @@ export function PolicyDetailPanel({
   const isPaused = state.status === "paused";
   const canDelete = state.isDefault !== true;
   const enforceItems = steps.length > 0 ? steps.map((s) => s.operation) : [];
+  const trigger = state.runOn === "export"
+    ? t("policies.detail.onEveryExport")
+    : t("policies.detail.onEveryUpload");
 
   return (
     <Modal
@@ -152,8 +225,25 @@ export function PolicyDetailPanel({
             ))}
           </div>
         )}
+        <div className="portal-policies__enforce-meta">
+          <span className="portal-policies__enforce-meta-item">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
+            </svg>
+            {config.scopeLabel}
+          </span>
+          <span className="portal-policies__enforce-meta-item">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+              <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z" />
+            </svg>
+            {trigger}
+          </span>
+        </div>
         <p className="portal-policies__enforce-note">
-          {t("policies.detail.enforceNote", { scope: config.scopeLabel })}
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden style={{ flexShrink: 0, marginTop: 1 }}>
+            <path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.05 21 12 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z" />
+          </svg>
+          {t("policies.detail.originalsNote")}
         </p>
       </Card>
 
@@ -168,20 +258,46 @@ export function PolicyDetailPanel({
               className="portal-policies__activity-row"
             >
               <span
-                className={`portal-policies__activity-dot portal-policies__activity-dot--${ACTIVITY_TONE[item.status]}`}
-                aria-hidden
-              />
+                className={`portal-policies__activity-icon portal-policies__activity-icon--${
+                  item.status === "flagged"
+                    ? "warning"
+                    : item.status === "processing"
+                      ? "info"
+                      : "success"
+                }`}
+              >
+                {item.status === "flagged" ? (
+                  <WarnIcon />
+                ) : item.status === "processing" ? (
+                  <SpinIcon />
+                ) : (
+                  <CheckIcon />
+                )}
+              </span>
               <span className="portal-policies__activity-text">
                 <span className="portal-policies__activity-doc">
                   {item.doc}
                 </span>
                 <span className="portal-policies__activity-action">
-                  {item.action}
+                  {item.status === "flagged" ? (
+                    <ActivityError message={item.action} />
+                  ) : (
+                    item.action
+                  )}
                 </span>
               </span>
               <span className="portal-policies__activity-time">
                 {item.time}
               </span>
+              {item.status === "flagged" && onRetry && (
+                <button
+                  type="button"
+                  className="portal-policies__link portal-policies__activity-retry"
+                  onClick={() => onRetry(item)}
+                >
+                  {t("policies.detail.retry")}
+                </button>
+              )}
             </div>
           ))}
         </Card>

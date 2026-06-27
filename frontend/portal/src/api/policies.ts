@@ -84,6 +84,8 @@ function decoratePolicy(
     outputName: decoded.outputName,
     outputNamePosition: decoded.outputNamePosition,
     runOn: decoded.runOn,
+    maxRetries: decoded.maxRetries,
+    retryDelayMinutes: decoded.retryDelayMinutes,
     backendId: decoded.id,
     isDefault,
   };
@@ -185,8 +187,8 @@ export function buildWireFromSetup(
       outputMode: result.outputMode,
       outputName: result.outputName,
       outputNamePosition: result.outputNamePosition,
-      maxRetries: DEFAULT_RETRIES,
-      retryDelayMinutes: DEFAULT_RETRY_DELAY,
+      maxRetries: result.maxRetries,
+      retryDelayMinutes: result.retryDelayMinutes,
       steps: result.steps,
     }),
   };
