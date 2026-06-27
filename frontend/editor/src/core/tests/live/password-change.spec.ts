@@ -1,9 +1,13 @@
 import { test, expect } from "@app/tests/helpers/test-base";
-import { loginAndSetup } from "@app/tests/helpers/login";
+import {
+  DEFAULT_TEST_PASSWORD,
+  DEFAULT_TEST_USERNAME,
+  loginAndSetup,
+} from "@app/tests/helpers/login";
 
 test.describe("21. Password Change Flow", () => {
   test.describe("21.1 Change Password", () => {
-    test("should change password end-to-end", async ({ page }) => {
+    test("should change password end-to-end", async ({ page, request }) => {
       await loginAndSetup(page);
 
       // Open settings dialog
@@ -32,15 +36,17 @@ test.describe("21. Password Change Flow", () => {
       await expect(passwordModal).toBeVisible({ timeout: 5000 });
 
       // Step 3: Enter the current password
-      await passwordModal.getByPlaceholder(/current password/i).fill("admin");
+      await passwordModal
+        .getByPlaceholder(/current password/i)
+        .fill(DEFAULT_TEST_PASSWORD);
 
       // Step 4: Enter a new password
       await passwordModal
         .getByPlaceholder(/Enter a new password/i)
-        .fill("admin");
+        .fill("adminadmin2");
 
       // Step 5: Confirm the new password
-      await passwordModal.getByPlaceholder(/Re-enter/i).fill("admin");
+      await passwordModal.getByPlaceholder(/Re-enter/i).fill("adminadmin2");
 
       // Step 6: Submit the form - click "Update password" button inside the modal
       const modalSubmitBtn = passwordModal.getByRole("button", {
@@ -51,6 +57,31 @@ test.describe("21. Password Change Flow", () => {
 
       // Step 7: Verify a success message is shown (or no error)
       await page.waitForTimeout(2000);
+
+      // Restore the shared live-suite credentials so this mutation test does
+      // not affect later specs in the same backend run.
+      const login = await request.post("/api/v1/auth/login", {
+        data: {
+          username: DEFAULT_TEST_USERNAME,
+          password: "adminadmin2",
+        },
+      });
+      expect(login.ok()).toBeTruthy();
+      const loginBody = (await login.json()) as {
+        session?: { access_token?: string };
+      };
+      expect(loginBody.session?.access_token).toBeTruthy();
+
+      const restore = await request.post("/api/v1/user/change-password", {
+        headers: {
+          Authorization: `Bearer ${loginBody.session?.access_token}`,
+        },
+        form: {
+          currentPassword: "adminadmin2",
+          newPassword: DEFAULT_TEST_PASSWORD,
+        },
+      });
+      expect(restore.ok()).toBeTruthy();
     });
   });
 
@@ -84,7 +115,9 @@ test.describe("21. Password Change Flow", () => {
       await expect(passwordModal).toBeVisible({ timeout: 5000 });
 
       // Step 1: Enter the current password correctly
-      await passwordModal.getByPlaceholder(/current password/i).fill("admin");
+      await passwordModal
+        .getByPlaceholder(/current password/i)
+        .fill(DEFAULT_TEST_PASSWORD);
 
       // Step 2: Enter a new password
       await passwordModal

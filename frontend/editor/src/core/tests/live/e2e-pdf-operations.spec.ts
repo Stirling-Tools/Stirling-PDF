@@ -1,5 +1,8 @@
 import { test, expect } from "@app/tests/helpers/test-base";
-import { loginAndSetup } from "@app/tests/helpers/login";
+import {
+  loginAndSetup,
+  seedAuthenticatedSession,
+} from "@app/tests/helpers/login";
 import {
   uploadFiles,
   switchToEditorIfViewerMode,
@@ -63,7 +66,17 @@ function testingFile(filename: string): string {
   );
 }
 
+async function openTool(
+  page: import("@playwright/test").Page,
+  name: RegExp,
+): Promise<void> {
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await page.getByRole("link", { name }).first().click();
+  await page.waitForURL((url) => url.pathname !== "/", { timeout: 10_000 });
+}
+
 async function executeAndWaitForResults(page: import("@playwright/test").Page) {
+  await seedAuthenticatedSession(page);
   await switchToEditorIfViewerMode(page);
   await runToolAndWaitForReview(page);
 }
@@ -79,8 +92,7 @@ test.describe("E2E PDF Operations", () => {
     test("should merge two PDF files and produce a result", async ({
       page,
     }) => {
-      await page.goto("/merge");
-      await page.waitForLoadState("domcontentloaded");
+      await openTool(page, /^Merge$/i);
 
       // Upload two PDF files (merge requires minimum 2)
       const file1 = testingFile("test_pdf_1.pdf");
@@ -98,8 +110,7 @@ test.describe("E2E PDF Operations", () => {
     });
 
     test("should merge three PDF files", async ({ page }) => {
-      await page.goto("/merge");
-      await page.waitForLoadState("domcontentloaded");
+      await openTool(page, /^Merge$/i);
 
       const file1 = testingFile("test_pdf_1.pdf");
       const file2 = testingFile("test_pdf_2.pdf");
@@ -115,8 +126,7 @@ test.describe("E2E PDF Operations", () => {
 
   test.describe("Split Tool - End to End", () => {
     test("should split a PDF by page numbers", async ({ page }) => {
-      await page.goto("/split");
-      await page.waitForLoadState("domcontentloaded");
+      await openTool(page, /^Split$/i);
 
       // Upload a PDF file
       await uploadFiles(page, [fixture("sample.pdf")]);
@@ -144,8 +154,7 @@ test.describe("E2E PDF Operations", () => {
 
   test.describe("Compress Tool - End to End", () => {
     test("should compress a PDF file", async ({ page }) => {
-      await page.goto("/compress");
-      await page.waitForLoadState("domcontentloaded");
+      await openTool(page, /^Compress$/i);
 
       // Upload a PDF file
       await uploadFiles(page, [fixture("sample.pdf")]);
@@ -162,8 +171,7 @@ test.describe("E2E PDF Operations", () => {
 
   test.describe("Add Password Tool - End to End", () => {
     test("should add a password to a PDF file", async ({ page }) => {
-      await page.goto("/add-password");
-      await page.waitForLoadState("domcontentloaded");
+      await openTool(page, /^Add Password$/i);
 
       // Upload a PDF file
       await uploadFiles(page, [fixture("sample.pdf")]);
@@ -185,8 +193,7 @@ test.describe("E2E PDF Operations", () => {
 
   test.describe("Convert Tool - End to End", () => {
     test("should convert an image to PDF", async ({ page }) => {
-      await page.goto("/convert");
-      await page.waitForLoadState("domcontentloaded");
+      await openTool(page, /^Convert$/i);
 
       // Upload an image file (PNG -> PDF conversion)
       await uploadFiles(page, [fixture("sample.png")]);

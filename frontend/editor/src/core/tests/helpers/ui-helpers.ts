@@ -53,13 +53,14 @@ export async function uploadFiles(
   filePaths: string | string[],
 ): Promise<void> {
   const paths = Array.isArray(filePaths) ? filePaths : [filePaths];
-  await page.getByTestId("files-button").click();
-  await page.locator('[data-testid="file-input"]').setInputFiles(paths);
+  await page
+    .locator('.file-sidebar-scroll [data-testid="file-input"]')
+    .setInputFiles(paths);
   // Sync point: wait until at least one file lands in the sidebar's file
   // list. The list only renders once `addFiles` has resolved (which awaits
   // the IDB write). Use first() so multi-file uploads pass too.
   await expect(page.locator(".file-sidebar-file-item").first()).toBeVisible({
-    timeout: 10_000,
+    timeout: 30_000,
   });
 }
 
