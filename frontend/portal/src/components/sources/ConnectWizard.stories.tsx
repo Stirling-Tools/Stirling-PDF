@@ -5,7 +5,7 @@ const meta: Meta<typeof ConnectWizard> = {
   title: "Portal/Sources/ConnectWizard",
   component: ConnectWizard,
   parameters: { layout: "fullscreen" },
-  args: { open: true, onClose: () => {} },
+  args: { open: true, onClose: () => {}, onCreated: () => {} },
 };
 export default meta;
 type Story = StoryObj<typeof ConnectWizard>;
