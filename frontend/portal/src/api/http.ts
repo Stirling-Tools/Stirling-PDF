@@ -84,5 +84,8 @@ export async function httpJson<T>(
     }
     throw new HttpError(res.status, res.statusText, body);
   }
+  if (res.status === 204 || res.headers.get("content-length") === "0") {
+    return undefined as T;
+  }
   return (await res.json()) as T;
 }
