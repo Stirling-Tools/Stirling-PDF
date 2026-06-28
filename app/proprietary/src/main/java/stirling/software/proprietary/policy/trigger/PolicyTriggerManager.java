@@ -2,8 +2,8 @@ package stirling.software.proprietary.policy.trigger;
 
 import java.util.List;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.context.SmartLifecycle;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Profile("saas")
+@ConditionalOnBooleanProperty(name = "policies.enabled")
 public class PolicyTriggerManager implements SmartLifecycle {
 
     private final List<PolicyTrigger> triggers;
@@ -47,5 +47,27 @@ public class PolicyTriggerManager implements SmartLifecycle {
     @Override
     public boolean isRunning() {
         return running;
+    }
+
+    /**
+     * Tell every trigger that the policy set changed so cached registrations refresh promptly
+     * instead of waiting for the next periodic reconcile. Best-effort and idempotent: a failing
+     * trigger is logged and the rest still run; a no-op before the subsystem has started.
+     */
+    public void notifyPoliciesChanged() {
+        if (!running) {
+            return;
+        }
+        for (PolicyTrigger trigger : triggers) {
+            try {
+                trigger.onPoliciesChanged();
+            } catch (RuntimeException e) {
+                log.error(
+                        "Failed to refresh trigger '{}' after policy change: {}",
+                        trigger.type(),
+                        e.getMessage(),
+                        e);
+            }
+        }
     }
 }

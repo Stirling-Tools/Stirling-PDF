@@ -1,6 +1,15 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { buildSourcesResponse } from "@portal/mocks/sources";
+import type { SourcesResponse } from "@portal/api/sources";
 import { KpiStrip } from "@portal/components/sources/KpiStrip";
+
+const RESPONSE: SourcesResponse = {
+  kpis: [
+    { value: 4, description: "connections" },
+    { value: 2, description: "referenced by a policy" },
+    { value: 2, description: "unused" },
+  ],
+  sources: [],
+};
 
 const meta: Meta<typeof KpiStrip> = {
   title: "Portal/Sources/KpiStrip",
@@ -10,20 +19,11 @@ const meta: Meta<typeof KpiStrip> = {
 export default meta;
 type Story = StoryObj<typeof KpiStrip>;
 
-export const Pro: Story = {
-  args: { data: buildSourcesResponse("pro"), loading: false },
-};
-
-export const Enterprise: Story = {
-  args: { data: buildSourcesResponse("enterprise"), loading: false },
+export const Ready: Story = {
+  args: { data: RESPONSE, loading: false },
 };
 
 /** Loading collapses every card to the placeholder dash. */
 export const Loading: Story = {
   args: { data: null, loading: true },
-};
-
-/** Free tier reports zeros and a "connect a source" prompt. */
-export const Free: Story = {
-  args: { data: buildSourcesResponse("free"), loading: false },
 };
