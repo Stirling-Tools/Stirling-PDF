@@ -146,7 +146,6 @@ export function Policies() {
         busy={busy}
         onClose={() => setDetail(null)}
         onEdit={handleEdit}
-        onRun={() => {}}
         onTogglePause={handleTogglePause}
         onDelete={handleDelete}
       />

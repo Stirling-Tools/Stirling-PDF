@@ -25,7 +25,8 @@ interface PolicyDetailPanelProps {
   busy?: boolean;
   onClose: () => void;
   onEdit: () => void;
-  onRun: () => void;
+  /** When absent the Run now button is hidden — use until the backend supports a trigger endpoint. */
+  onRun?: () => void;
   onTogglePause: () => void;
   onDelete: () => void;
   /** Re-run a failed activity item. Optional — retry button is hidden when absent. */
@@ -157,15 +158,17 @@ export function PolicyDetailPanel({
               {t("policies.detail.actions.delete")}
             </Button>
           )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onRun}
-            disabled={busy}
-            style={canDelete ? undefined : { marginRight: "auto" }}
-          >
-            {t("policies.detail.actions.runNow")}
-          </Button>
+          {onRun && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onRun}
+              disabled={busy}
+              style={canDelete ? undefined : { marginRight: "auto" }}
+            >
+              {t("policies.detail.actions.runNow")}
+            </Button>
+          )}
           <Button
             variant="outline"
             size="sm"

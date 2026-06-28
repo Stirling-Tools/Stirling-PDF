@@ -285,9 +285,7 @@ function PolicySetupWizardBody({
                 <span className="portal-policies__tool-name">
                   {humanizeEndpoint(tl.operation)}
                 </span>
-                <code className="portal-policies__tool-endpoint">
-                  {tl.operation}
-                </code>
+                <span style={{ flex: 1 }} />
                 <ToggleSwitch
                   size="sm"
                   checked={tl.enabled}

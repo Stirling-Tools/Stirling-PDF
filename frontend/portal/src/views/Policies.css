@@ -225,16 +225,6 @@
   color: var(--color-text-1);
 }
 
-.portal-policies__tool-endpoint {
-  flex: 1;
-  min-width: 0;
-  font-family: var(--font-mono, monospace);
-  font-size: 0.6875rem;
-  color: var(--color-text-4);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 
 /* Sources picker */
 .portal-policies__sources {
