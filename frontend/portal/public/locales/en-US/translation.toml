@@ -1034,6 +1034,7 @@ label = "Reviewer email"
 helper = "Low-confidence enforcements are routed here for review."
 
 [policies.wizard.output.retries]
+heading = "Retries"
 maxLabel = "Max retries"
 delayLabel = "Retry delay (min)"
 

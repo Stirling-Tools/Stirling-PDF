@@ -518,6 +518,9 @@ function PolicySetupWizardBody({
                 onChange={(e) => setReviewerEmail(e.target.value)}
               />
             </FormField>
+            <h4 className="portal-policies__wizard-subheading">
+              {t("policies.wizard.output.retries.heading")}
+            </h4>
             <FormField label={t("policies.wizard.output.retries.maxLabel")}>
               <Input
                 inputSize="sm"

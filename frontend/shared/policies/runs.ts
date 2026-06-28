@@ -7,6 +7,7 @@
 import type { PolicyActivityItem, PolicyRunView, PolicyStats } from "./types";
 
 function relativeTime(epochMs: number): string {
+  if (!epochMs) return "Just now";
   const mins = Math.floor((Date.now() - epochMs) / 60000);
   if (mins < 1) return "Just now";
   if (mins < 60) return `${mins}m ago`;
