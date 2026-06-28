@@ -30,7 +30,7 @@ export type {
 /*  Catalogue model — portal-specific (lifted from editor types/policies.ts) */
 /* ──────────────────────────────────────────────────────────────────────── */
 
-export type PolicyStatus = "default" | "active" | "paused";
+export type PolicyStatus = "active" | "paused";
 
 export type PolicyRowStatus = "active" | "paused" | "setup";
 

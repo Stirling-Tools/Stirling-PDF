@@ -17,6 +17,7 @@ function relativeTime(epochMs: number): string {
 }
 
 function durationSince(epochMs: number): string {
+  if (!epochMs) return "—";
   const ms = Date.now() - epochMs;
   const days = Math.floor(ms / 86400000);
   if (days >= 1) return `${days}d`;
