@@ -5,7 +5,7 @@ export type { FeaturedOp, OpResultMap };
 
 /** GET /v1/ops/featured */
 export async function fetchFeaturedOps(): Promise<FeaturedOp[]> {
-  return apiClient.mock.json<FeaturedOp[]>("/v1/ops/featured");
+  return apiClient.local.json<FeaturedOp[]>("/v1/ops/featured");
 }
 
 export class UnknownOpError extends Error {
@@ -21,7 +21,7 @@ export async function runSingleOp(
   sample: string,
 ): Promise<{ result: OpResultMap; durationMs: number }> {
   try {
-    return await apiClient.mock.json<{
+    return await apiClient.local.json<{
       result: OpResultMap;
       durationMs: number;
     }>(`/v1/ops/${encodeURIComponent(opId)}/run`, {

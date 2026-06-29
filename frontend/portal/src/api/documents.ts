@@ -20,7 +20,7 @@ export {
 
 /** GET /v1/documents?tier=… — summary strip + the review queue for the tier. */
 export async function fetchDocuments(tier: Tier): Promise<DocumentsResponse> {
-  return apiClient.mock.json<DocumentsResponse>(
+  return apiClient.local.json<DocumentsResponse>(
     `/v1/documents?tier=${encodeURIComponent(tier)}`,
   );
 }

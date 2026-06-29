@@ -19,21 +19,18 @@
  *                             state rather than silently routing to the wrong
  *                             domain.
  *
- *   apiClient.mock            Same wire shape as `local` (same-origin fetch)
- *                             BUT semantically marks paths that only exist in
- *                             MSW handlers (e.g. /v1/billing/*). With Mocks=on
- *                             they intercept; with Mocks=off they hit the local
- *                             backend and 404 (because those endpoints aren't
- *                             real on either backend). Use until the path is
- *                             migrated to a real SaaS endpoint via apiClient.saas.
+ * Endpoints that don't have a real backend yet still target their eventual
+ * domain (almost always `.local`): with Mocks=on the MSW handlers intercept;
+ * with Mocks=off they hit the real backend and 404 until the route ships, then
+ * self-heal — no call-site migration needed.
  *
  * ## Why this is split, not a single function
  *
  * The two backends speak two credentials and resolve different identities. A
  * single generic fetch reading the path prefix to pick a domain is implicit +
  * fragile (the bug we hit: /v1/billing/wallet fell through to the local
- * backend on a real run). Forcing the call site to say `.local` / `.saas` /
- * `.mock` keeps the routing intent reviewable in diffs.
+ * backend on a real run). Forcing the call site to say `.local` / `.saas`
+ * keeps the routing intent reviewable in diffs.
  *
  * ## Device credential isn't here
  *
@@ -212,14 +209,5 @@ export const apiClient = {
     json: saasJson,
     /** True when VITE_SAAS_API_URL is set. Doesn't check session liveness. */
     isConfigured: (): boolean => Boolean(saasBaseUrl()),
-  },
-  /**
-   * Same wire shape as `local`, but the path is an MSW-only invention (never
-   * served by the local backend OR SaaS). Calls hit MSW when mocks are on, and
-   * 404 against the local backend when mocks are off — that's intentional;
-   * migrate the call to `apiClient.saas` once the real endpoint exists.
-   */
-  mock: {
-    json: localJson,
   },
 } as const;

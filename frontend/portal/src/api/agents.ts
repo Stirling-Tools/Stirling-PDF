@@ -16,7 +16,7 @@ export { AGENT_STATUS_TONE, TOOL_CATALOGUE } from "@portal/mocks/agents";
 
 /** GET /v1/agents?tier=… — fleet summary + every agent with its full builder state. */
 export async function fetchAgents(tier: Tier): Promise<AgentsResponse> {
-  return apiClient.mock.json<AgentsResponse>(
+  return apiClient.local.json<AgentsResponse>(
     `/v1/agents?tier=${encodeURIComponent(tier)}`,
   );
 }

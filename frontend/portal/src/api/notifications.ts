@@ -8,12 +8,12 @@ export type { Notification, NotificationCategory };
 
 /** GET /v1/notifications */
 export async function fetchNotifications(): Promise<Notification[]> {
-  return apiClient.mock.json<Notification[]>("/v1/notifications");
+  return apiClient.local.json<Notification[]>("/v1/notifications");
 }
 
 /** POST /v1/notifications/mark-all-read */
 export async function markAllNotificationsRead(): Promise<void> {
-  await apiClient.mock.json<{ ok: true }>("/v1/notifications/mark-all-read", {
+  await apiClient.local.json<{ ok: true }>("/v1/notifications/mark-all-read", {
     method: "POST",
   });
 }

@@ -18,10 +18,10 @@ export type {
 
 /** GET /v1/docs/nav — the docs nav tree. */
 export async function fetchDocsNav(): Promise<DocsNavSection[]> {
-  return apiClient.mock.json<DocsNavSection[]>("/v1/docs/nav");
+  return apiClient.local.json<DocsNavSection[]>("/v1/docs/nav");
 }
 
 /** GET /v1/docs/content — the tier-scaled reference content. */
 export async function fetchDocsContent(tier: Tier): Promise<DocsContent> {
-  return apiClient.mock.json<DocsContent>(`/v1/docs/content?tier=${tier}`);
+  return apiClient.local.json<DocsContent>(`/v1/docs/content?tier=${tier}`);
 }

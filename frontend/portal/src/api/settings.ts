@@ -13,7 +13,7 @@ export type {
 
 /** GET /v1/settings?tier=… — the account + workspace snapshot the modal edits. */
 export async function fetchSettings(tier: Tier): Promise<SettingsSnapshot> {
-  return apiClient.mock.json<SettingsSnapshot>(
+  return apiClient.local.json<SettingsSnapshot>(
     `/v1/settings?tier=${encodeURIComponent(tier)}`,
   );
 }

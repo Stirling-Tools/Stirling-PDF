@@ -1,7 +1,7 @@
 /**
  * Account-settings fixtures and the types api/settings.ts shares with them.
  * api/settings.ts imports the types; the MSW handlers in mocks/handlers/ serve
- * the fixture data over the intercepted apiClient.mock.json() call. Components never reach
+ * the fixture data over the intercepted apiClient.local.json() call. Components never reach
  * into this module directly.
  *
  * The shape is tier-aware: the workspace plan label, available regions, and

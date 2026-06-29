@@ -12,7 +12,7 @@
  *     `POST /instances/{id}/revoke`), called with the admin's JWT.
  *
  * api/link.ts imports the types; the MSW handlers in mocks/handlers/link.ts serve
- * this fixture data over the intercepted apiClient.mock.json() calls. Components never reach
+ * this fixture data over the intercepted apiClient.local.json() calls. Components never reach
  * into this module directly. Once the real backend is wired the handlers stop
  * being registered and these fixtures can be deleted (or kept as test seeds).
  */

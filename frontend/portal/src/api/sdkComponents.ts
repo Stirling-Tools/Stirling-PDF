@@ -22,7 +22,7 @@ export {
 
 /** GET /v1/components?tier=… — summary strip + the embeddable SDK catalogue. */
 export async function fetchComponents(tier: Tier): Promise<ComponentsResponse> {
-  return apiClient.mock.json<ComponentsResponse>(
+  return apiClient.local.json<ComponentsResponse>(
     `/v1/components?tier=${encodeURIComponent(tier)}`,
   );
 }

@@ -16,7 +16,7 @@
  * ReactNode icons replaced by string icon keys (the portal renders its own).
  *
  * api/policies.ts re-exports these types; the MSW handlers serve the fixture
- * data over intercepted apiClient.mock.json() calls. Components never reach in here.
+ * data over intercepted apiClient.local.json() calls. Components never reach in here.
  */
 
 /* ──────────────────────────────────────────────────────────────────────── */

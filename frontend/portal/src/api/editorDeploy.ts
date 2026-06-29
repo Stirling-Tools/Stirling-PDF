@@ -29,7 +29,7 @@ export {
 export async function fetchEditorDeployment(
   tier: Tier,
 ): Promise<EditorDeploymentResponse> {
-  return apiClient.mock.json<EditorDeploymentResponse>(
+  return apiClient.local.json<EditorDeploymentResponse>(
     `/v1/editor/deployment?tier=${encodeURIComponent(tier)}`,
   );
 }

@@ -18,7 +18,7 @@ export type {
 
 /** GET /v1/pipelines?tier=… — the deployed fleet plus tier-specific extras. */
 export async function fetchPipelines(tier: Tier): Promise<PipelinesResponse> {
-  return apiClient.mock.json<PipelinesResponse>(
+  return apiClient.local.json<PipelinesResponse>(
     `/v1/pipelines?tier=${encodeURIComponent(tier)}`,
   );
 }
@@ -32,7 +32,7 @@ export async function fetchPipelines(tier: Tier): Promise<PipelinesResponse> {
  * handler resolves `{ ok: true }`; the UI treats a resolved promise as accepted.
  */
 export async function promoteToPolicy(id: string): Promise<{ ok: true }> {
-  return apiClient.mock.json<{ ok: true }>(
+  return apiClient.local.json<{ ok: true }>(
     `/v1/pipelines/${encodeURIComponent(id)}/promote-to-policy`,
     { method: "POST" },
   );

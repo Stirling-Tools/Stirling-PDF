@@ -5,5 +5,5 @@ export type { QuickAction };
 
 /** GET /v1/search/quick-actions */
 export async function fetchQuickActions(): Promise<QuickAction[]> {
-  return apiClient.mock.json<QuickAction[]>("/v1/search/quick-actions");
+  return apiClient.local.json<QuickAction[]>("/v1/search/quick-actions");
 }

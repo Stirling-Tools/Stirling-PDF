@@ -57,40 +57,40 @@ const q = (tier: Tier) => `?tier=${encodeURIComponent(tier)}`;
 export async function fetchDeployments(
   tier: Tier,
 ): Promise<DeploymentsResponse> {
-  return apiClient.mock.json<DeploymentsResponse>(
+  return apiClient.local.json<DeploymentsResponse>(
     `/v1/infrastructure/deployments${q(tier)}`,
   );
 }
 
 /** GET /v1/infrastructure/api-keys?tier=… */
 export async function fetchApiKeys(tier: Tier): Promise<ApiKey[]> {
-  return apiClient.mock.json<ApiKey[]>(`/v1/infrastructure/api-keys${q(tier)}`);
+  return apiClient.local.json<ApiKey[]>(`/v1/infrastructure/api-keys${q(tier)}`);
 }
 
 /** GET /v1/infrastructure/security?tier=… */
 export async function fetchSecurity(tier: Tier): Promise<SecurityConfig> {
-  return apiClient.mock.json<SecurityConfig>(
+  return apiClient.local.json<SecurityConfig>(
     `/v1/infrastructure/security${q(tier)}`,
   );
 }
 
 /** GET /v1/infrastructure/models?tier=… */
 export async function fetchModels(tier: Tier): Promise<ModelsResponse> {
-  return apiClient.mock.json<ModelsResponse>(
+  return apiClient.local.json<ModelsResponse>(
     `/v1/infrastructure/models${q(tier)}`,
   );
 }
 
 /** GET /v1/infrastructure/storage?tier=… */
 export async function fetchStorage(tier: Tier): Promise<StorageConfig> {
-  return apiClient.mock.json<StorageConfig>(
+  return apiClient.local.json<StorageConfig>(
     `/v1/infrastructure/storage${q(tier)}`,
   );
 }
 
 /** GET /v1/infrastructure/audit-log?tier=… */
 export async function fetchAuditLog(tier: Tier): Promise<AuditLogResponse> {
-  return apiClient.mock.json<AuditLogResponse>(
+  return apiClient.local.json<AuditLogResponse>(
     `/v1/infrastructure/audit-log${q(tier)}`,
   );
 }

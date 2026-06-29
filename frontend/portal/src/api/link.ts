@@ -31,10 +31,9 @@ export type {
  *   - POST /api/v1/account-link/instances/{id}/revoke
  *
  * The team-wide endpoints are served by the hosted SaaS Java backend (the
- * local backend has no such routes); calling them via apiClient.mock used to
- * 404 against the local backend whenever Mocks=off. They're MSW-intercepted in
- * dev/Storybook via wildcard handlers that match both the local and absolute
- * SaaS URLs.
+ * local backend has no such routes), so they go through apiClient.saas. They're
+ * MSW-intercepted in dev/Storybook via wildcard handlers that match both the
+ * local and absolute SaaS URLs.
  */
 
 const BASE = "/api/v1/account-link";
