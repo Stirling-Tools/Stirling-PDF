@@ -66,10 +66,14 @@ jobs:
 
       - name: Sync portal translation TOML files
         run: |
-          python .github/scripts/check_language_toml.py \
-            --reference-file "frontend/portal/public/locales/en-US/translation.toml" \
-            --locales-dir "frontend/portal/public/locales" \
-            --branch main
+          if [ -f "frontend/portal/public/locales/en-US/translation.toml" ]; then
+            python .github/scripts/check_language_toml.py \
+              --reference-file "frontend/portal/public/locales/en-US/translation.toml" \
+              --locales-dir "frontend/portal/public/locales" \
+              --branch main
+          else
+            echo "Portal en-US reference not yet on main — skipping portal sync"
+          fi
 
       - name: pre-commit run
         run: |
