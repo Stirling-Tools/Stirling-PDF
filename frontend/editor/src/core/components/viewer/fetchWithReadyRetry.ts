@@ -44,8 +44,8 @@ export async function fetchWithReadyRetry<T>(
   fetch: () => Promise<T[] | null>,
   options: FetchWithReadyRetryOptions = {},
 ): Promise<T[]> {
-  const maxAttempts = options.maxAttempts ?? 20;
-  const delayMs = options.delayMs ?? 50;
+  const maxAttempts = Math.max(1, options.maxAttempts ?? 20);
+  const delayMs = Math.max(0, options.delayMs ?? 50);
   const isNotReadyError = options.isNotReadyError ?? defaultIsNotReadyError;
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
