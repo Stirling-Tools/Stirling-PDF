@@ -1,6 +1,7 @@
 package stirling.software.saas.accountlink;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -8,9 +9,12 @@ import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
@@ -25,6 +29,8 @@ import stirling.software.saas.payg.billing.TeamBillingContext;
 import stirling.software.saas.payg.billing.TeamBillingService;
 import stirling.software.saas.payg.entitlement.EntitlementService;
 import stirling.software.saas.payg.entitlement.EntitlementSnapshot;
+import stirling.software.saas.payg.instance.InstanceUsageIngestService;
+import stirling.software.saas.payg.model.BillingCategory;
 import stirling.software.saas.payg.model.EntitlementState;
 import stirling.software.saas.payg.model.FeatureGate;
 import stirling.software.saas.payg.model.FeatureSet;
@@ -43,10 +49,17 @@ class InstanceControllerTest {
     @Mock private TeamBillingService billingService;
     @Mock private AccountLinkService accountLinkService;
     @Mock private PricingPolicyService pricingPolicyService;
+    @Mock private InstanceUsageIngestService usageIngestService;
+    @Mock private LinkedInstanceRepository linkedInstanceRepository;
 
     private InstanceController controller() {
         return new InstanceController(
-                entitlementService, billingService, accountLinkService, pricingPolicyService);
+                entitlementService,
+                billingService,
+                accountLinkService,
+                pricingPolicyService,
+                usageIngestService,
+                linkedInstanceRepository);
     }
 
     private static PricingPolicy policy() {
@@ -124,6 +137,37 @@ class InstanceControllerTest {
 
         assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
         verifyNoInteractions(entitlementService, billingService);
+    }
+
+    @Test
+    void sync_ingestsCumulativePerCategoryAndReturnsFreshEntitlement() {
+        Authentication token = new LinkedInstanceAuthenticationToken(4L, 99L);
+        LinkedInstance li = new LinkedInstance();
+        li.setCreatedByUserId(7L);
+        when(linkedInstanceRepository.findById(4L)).thenReturn(Optional.of(li));
+        when(billingService.forTeam(99L)).thenReturn(freeBilling(10L));
+        when(entitlementService.getSnapshot(99L))
+                .thenReturn(snapshot(EntitlementState.FULL, 5L, null));
+        when(pricingPolicyService.getEffectivePolicy(99L)).thenReturn(policy());
+
+        LocalDateTime period = LocalDateTime.of(2026, 6, 1, 0, 0);
+        InstanceController.UsageSyncRequest req =
+                new InstanceController.UsageSyncRequest(
+                        3L,
+                        period,
+                        new InstanceController.UsageSyncRequest.CategoryUnits(12, 4, 8));
+
+        ResponseEntity<EntitlementResponse> resp = controller().sync(token, req);
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Map<BillingCategory, Long>> cumulative = ArgumentCaptor.forClass(Map.class);
+        verify(usageIngestService)
+                .ingest(eq(99L), eq(7L), eq(3L), eq(period), cumulative.capture());
+        assertThat(cumulative.getValue())
+                .containsEntry(BillingCategory.API, 12L)
+                .containsEntry(BillingCategory.AI, 4L)
+                .containsEntry(BillingCategory.AUTOMATION, 8L);
     }
 
     @Test

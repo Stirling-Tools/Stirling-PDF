@@ -5,5 +5,7 @@ public enum ReferenceType {
     JOB,
     INVOICE,
     STRIPE_EVENT,
-    ADMIN
+    ADMIN,
+    /** A linked self-hosted instance's daily usage sync (combined-billing "Mode A"). */
+    INSTANCE_SYNC
 }
