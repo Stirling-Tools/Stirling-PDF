@@ -26,7 +26,7 @@ export function useDocumentReady() {
     let mounted = true;
 
     const unsubOpen = documentManagerCapability.onDocumentOpened?.(
-      (event: any) => {
+      (event: { documentId?: string; id?: string }) => {
         if (mounted && (event?.documentId || event?.id)) {
           setDocumentReady(true);
         }
