@@ -24,13 +24,17 @@ import tools.jackson.databind.ObjectMapper;
  * Outbound calls from a self-hosted instance to its linked SaaS backend (combined-billing "Mode
  * A").
  *
- * <p>Two calls:
+ * <p>Calls:
  *
  * <ul>
  *   <li>{@link #register} — relays the admin's short-lived Supabase JWT to {@code POST
  *       /api/v1/account-link/register}; the SaaS side mints + returns a device credential.
  *   <li>{@link #fetchEntitlement} — authenticates with the stored device credential against {@code
  *       GET /api/v1/instance/entitlement}; what the local gate consults.
+ *   <li>{@link #reportUsage} — daily usage sync ({@code POST /api/v1/instance/sync}); reports
+ *       cumulative units and returns the refreshed entitlement.
+ *   <li>{@link #revokeSelf} — self-revokes the credential on local unlink ({@code POST
+ *       /api/v1/instance/revoke-self}).
  * </ul>
  *
  * <p>Uses {@code java.net.http.HttpClient} (the established self-hosted outbound pattern, see
@@ -217,6 +221,69 @@ public class AccountLinkClient {
             return parseEntitlement(response.body());
         } catch (IOException e) {
             log.debug("Entitlement parse failed: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Reports the current period's cumulative per-category units to {@code POST
+     * /api/v1/instance/sync} and returns the fresh entitlement in the same reply — one round-trip
+     * both reports usage and refreshes the gate. SaaS bills the delta against its own last-seen
+     * cumulative, so reporting the same totals twice charges nothing (idempotent).
+     *
+     * <p>Same three outcomes as {@link #fetchEntitlement}: 2xx → parsed snapshot; 401/403 → {@link
+     * RevokedException}; transport / other non-2xx / malformed body → {@code null} (caller must not
+     * advance its last-synced markers, so the usage retries on the next sync).
+     */
+    public InstanceEntitlement reportUsage(
+            String deviceId,
+            String deviceSecret,
+            long syncSeq,
+            LocalDateTime periodStart,
+            long apiUnits,
+            long aiUnits,
+            long automationUnits) {
+        HttpResponse<String> response;
+        try {
+            String body =
+                    "{\"syncSeq\":"
+                            + syncSeq
+                            + ",\"periodStart\":\""
+                            + periodStart
+                            + "\",\"cumulativeUnits\":{\"api\":"
+                            + apiUnits
+                            + ",\"ai\":"
+                            + aiUnits
+                            + ",\"automation\":"
+                            + automationUnits
+                            + "}}";
+            HttpRequest request =
+                    HttpRequest.newBuilder()
+                            .uri(uri("/api/v1/instance/sync"))
+                            .header(HEADER_DEVICE_ID, deviceId)
+                            .header(HEADER_DEVICE_SECRET, deviceSecret)
+                            .header("Content-Type", "application/json")
+                            .header("Accept", "application/json")
+                            .timeout(timeout())
+                            .POST(HttpRequest.BodyPublishers.ofString(body))
+                            .build();
+            response = send(request);
+        } catch (Exception e) {
+            log.debug("Usage sync failed: {}", e.getMessage());
+            return null;
+        }
+        int status = response.statusCode();
+        if (status == 401 || status == 403) {
+            throw new RevokedException(status);
+        }
+        if (status / 100 != 2) {
+            log.debug("Usage sync returned HTTP {}", status);
+            return null;
+        }
+        try {
+            return parseEntitlement(response.body());
+        } catch (IOException e) {
+            log.debug("Usage sync parse failed: {}", e.getMessage());
             return null;
         }
     }

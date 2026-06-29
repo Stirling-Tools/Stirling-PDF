@@ -31,4 +31,27 @@ public interface UsageCounterRepository extends JpaRepository<UsageCounter, Long
 
     /** All counters for a period — the daily sync reads these to report cumulative totals. */
     List<UsageCounter> findByPeriodStart(LocalDateTime periodStart);
+
+    /**
+     * Periods (oldest first) that still hold usage not yet accepted by SaaS. The sync reports each
+     * so end-of-period usage isn't stranded when the billing period rolls over between syncs.
+     */
+    @Query(
+            "SELECT DISTINCT c.periodStart FROM UsageCounter c"
+                    + " WHERE c.cumulativeUnits > c.lastSyncedUnits ORDER BY c.periodStart")
+    List<LocalDateTime> findPeriodsWithUnsyncedUsage();
+
+    /**
+     * Marks a counter synced up to {@code syncedUnits} (the cumulative value just accepted by
+     * SaaS), not the live cumulative — concurrent accruals during the sync stay correctly unsynced.
+     */
+    @Modifying
+    @Transactional
+    @Query(
+            "UPDATE UsageCounter c SET c.lastSyncedUnits = :syncedUnits"
+                    + " WHERE c.periodStart = :periodStart AND c.category = :category")
+    int markSynced(
+            @Param("periodStart") LocalDateTime periodStart,
+            @Param("category") String category,
+            @Param("syncedUnits") long syncedUnits);
 }

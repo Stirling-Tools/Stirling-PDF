@@ -54,6 +54,13 @@ public class UsageCounter {
     @Column(name = "cumulative_units", nullable = false)
     private long cumulativeUnits;
 
+    /**
+     * Value of {@link #cumulativeUnits} as of the last sync SaaS accepted. {@code cumulativeUnits −
+     * lastSyncedUnits} is the as-yet-unreported usage the portal shows on top of SaaS-synced spend.
+     */
+    @Column(name = "last_synced_units", nullable = false)
+    private long lastSyncedUnits;
+
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
