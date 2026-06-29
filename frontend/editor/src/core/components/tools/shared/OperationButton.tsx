@@ -32,9 +32,9 @@ export const operationButtonVariantMap: Record<
   NonNullable<OperationButtonProps["variant"]>,
   ButtonVariant
 > = {
-  filled: "filled",
-  outline: "outlined",
-  subtle: "ghost",
+  filled: "primary",
+  outline: "secondary",
+  subtle: "tertiary",
 };
 
 export const operationButtonAccentMap: Record<string, ButtonAccent> = {
@@ -103,7 +103,7 @@ const OperationButton = ({
       : null;
 
   const sharedVariant: ButtonVariant =
-    operationButtonVariantMap[variant] ?? "filled";
+    operationButtonVariantMap[variant] ?? "primary";
   const sharedAccent: ButtonAccent =
     operationButtonAccentMap[color] ?? "neutral";
 

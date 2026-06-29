@@ -2,7 +2,6 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import {
   Box,
-  Button,
   Stack,
   Text,
   Group,
@@ -1202,14 +1201,14 @@ export default function MobileScannerPage() {
                 style={{ display: "none" }}
                 onChange={handleFileSelect}
               />
-              <Button
+              <DSButton
                 size="lg"
                 fullWidth
                 onClick={() => fileInputRef.current?.click()}
                 leftSection={<AddPhotoAlternateRoundedIcon />}
               >
                 {t("mobileScanner.selectImage", "Select Image")}
-              </Button>
+              </DSButton>
             </Stack>
           </Card>
         </Stack>

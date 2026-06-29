@@ -47,10 +47,9 @@ export const FullWidth: Story = {
   },
 };
 
-/** `solid` (default) boxes the track with a raised card and neutral selected
- * text; `subtle` drops the chrome and tints the selected pill + label in the
- * accent colour. The highlight slides between segments, and a divider shows in
- * the gap between two adjacent unselected segments. */
+/** `primary` (default) shows an accent-filled active pill; `secondary` drops the
+ * track chrome and tints the active pill + label in the accent colour. The
+ * highlight slides between segments. */
 export const Variants: Story = {
   render: () => {
     const [a, setA] = useState("viewer");
@@ -63,14 +62,14 @@ export const Variants: Story = {
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
         <SegmentedControl
-          variant="solid"
+          variant="primary"
           value={a}
           onChange={setA}
           options={options}
         />
         <SegmentedControl
-          variant="subtle"
-          accent="blue"
+          variant="secondary"
+          accent="default"
           value={b}
           onChange={setB}
           options={options}
@@ -97,39 +96,3 @@ export const Small: Story = {
   },
 };
 
-/** Action items (`onClick` instead of `value`) sit inside the control but never
- *  become the active selection — the indicator ignores them. Clicking an action
- *  triggers its own handler without changing the active segment. Useful for
- *  "Upload" buttons embedded in a file-picker tab bar. */
-export const WithActionItem: Story = {
-  render: () => {
-    const [tab, setTab] = useState("saved");
-    const [lastAction, setLastAction] = useState<string | null>(null);
-    return (
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: 16,
-          alignItems: "flex-start",
-        }}
-      >
-        <SegmentedControl
-          size="sm"
-          value={tab}
-          onChange={setTab}
-          options={[
-            { label: "Saved files", value: "saved" },
-            { label: "Workbench", value: "workbench" },
-            { label: "Upload", onClick: () => setLastAction("Upload clicked") },
-          ]}
-        />
-        {lastAction && (
-          <span style={{ fontSize: "0.75rem", color: "var(--color-text-3)" }}>
-            {lastAction}
-          </span>
-        )}
-      </div>
-    );
-  },
-};

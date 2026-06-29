@@ -7,7 +7,7 @@
 
 import React from "react";
 import { Modal, Stack } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import DiamondOutlinedIcon from "@mui/icons-material/DiamondOutlined";
 
 import type {
@@ -137,11 +137,10 @@ export default function OnboardingModalSlide({
             slideKey={slideContent.key}
           />
           {allowDismiss && (
-            <Button
+            <ActionIcon
               onClick={onSkip}
               variant="tertiary"
               aria-label="Close"
-              leftSection={<>&times;</>}
               style={{
                 position: "absolute",
                 top: 16,
@@ -150,8 +149,12 @@ export default function OnboardingModalSlide({
                 color: "white",
                 backdropFilter: "blur(4px)",
                 zIndex: 10,
+                fontSize: "1.25rem",
+                lineHeight: 1,
               }}
-            />
+            >
+              <span aria-hidden>&times;</span>
+            </ActionIcon>
           )}
           <div className={styles.heroLogo} key={`logo-${slideContent.key}`}>
             {renderHero()}

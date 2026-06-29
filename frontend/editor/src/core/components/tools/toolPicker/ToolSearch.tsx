@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from "react";
-import { Stack, Button, Text } from "@mantine/core";
+import { Stack, Text } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
@@ -131,7 +132,7 @@ const ToolSearch = ({
             {filteredTools.map(({ id, tool }) => (
               <Button
                 key={id}
-                variant="subtle"
+                variant="tertiary"
                 onClick={() => {
                   onToolSelect?.(id as ToolId);
                   setDropdownOpen(false);
@@ -142,7 +143,7 @@ const ToolSearch = ({
                   </div>
                 }
                 fullWidth
-                justify="flex-start"
+                justify="start"
                 style={{
                   borderRadius: "6px",
                   color: "var(--tools-text-and-icon-color)",

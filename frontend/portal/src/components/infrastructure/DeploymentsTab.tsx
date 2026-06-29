@@ -141,9 +141,9 @@ export function DeploymentsTab() {
         <Chip
           accent={
             d.environment === "production"
-              ? "blue"
+              ? "default"
               : d.environment === "canary"
-                ? "purple"
+                ? "premium"
                 : "neutral"
           }
           size="sm"

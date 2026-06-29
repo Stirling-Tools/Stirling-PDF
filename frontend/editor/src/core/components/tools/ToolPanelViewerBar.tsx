@@ -50,7 +50,7 @@ export function ToolPanelViewerBar() {
       const buttonNode = (
         <Button
           leftSection={btn.icon}
-          variant={isActive ? "filled" : "ghost"}
+          variant={isActive ? "primary" : "tertiary"}
           className="workbench-bar-action-icon"
           onClick={triggerAction}
           disabled={disabled}

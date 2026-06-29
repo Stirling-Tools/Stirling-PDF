@@ -91,14 +91,17 @@ function UserMenu() {
   return (
     <Dropdown.Root align="end">
       <Dropdown.Trigger>
-        <button
+        <Button
+          variant="tertiary"
+          hover={false}
           type="button"
           className="portal-header__user"
           aria-label={t("shell.header.accountMenu", "Account menu")}
           title={name}
+          style={{ padding: 0 }}
         >
           <Avatar name={name} size="md" tone="blue" />
-        </button>
+        </Button>
       </Dropdown.Trigger>
       <Dropdown.Menu width="12rem">
         <Dropdown.Item disabled>{name}</Dropdown.Item>

@@ -49,7 +49,7 @@ export function ApiClientPanel({ d }: { d: ApiClientDetail }) {
           {d.endpoints.map((e) => (
             <div key={e.path} className="portal-sources__endpoint">
               <Chip
-                accent={e.method === "GET" ? "green" : "blue"}
+                accent={e.method === "GET" ? "success" : "default"}
                 size="sm"
                 className="portal-sources__method"
               >
@@ -69,10 +69,10 @@ export function ApiClientPanel({ d }: { d: ApiClientDetail }) {
       {/* TODO(backend): wire to POST /v1/sources/{id}/rotate-key and
           DELETE /v1/sources/{id} — currently inert demo controls. */}
       <div className="portal-sources__detail-actions">
-        <Button size="sm" variant="outlined" accent="danger">
+        <Button size="sm" variant="secondary" accent="danger">
           {t("sources.apiClient.rotateKey", "Rotate key")}
         </Button>
-        <Button size="sm" variant="ghost" accent="danger">
+        <Button size="sm" variant="tertiary" accent="danger">
           {t("sources.apiClient.revoke", "Revoke")}
         </Button>
       </div>

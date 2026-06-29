@@ -5,15 +5,8 @@ import React, {
   useRef,
   useState,
 } from "react";
-import {
-  ActionIcon,
-  Box,
-  Group,
-  Menu,
-  Modal,
-  Stack,
-  Text,
-} from "@mantine/core";
+import { Box, Group, Menu, Modal, Stack, Text } from "@mantine/core";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { Button } from "@shared/components/Button";
 import { SegmentedControl } from "@shared/components/SegmentedControl";
 import { useTranslation } from "react-i18next";
@@ -528,10 +521,10 @@ export default function SignControlsStrip({
                       <Group gap="sm" wrap="nowrap" justify="space-between">
                         {renderSavedSignaturePreview(sig)}
                         <ActionIcon
-                          component="div"
-                          size="xs"
-                          color="red"
-                          variant="subtle"
+                          as="span"
+                          size="sm"
+                          accent="danger"
+                          variant="tertiary"
                           onClick={(e) => {
                             e.stopPropagation();
                             removeSignature(sig.id);

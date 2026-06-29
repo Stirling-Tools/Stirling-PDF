@@ -7,9 +7,9 @@ import {
   Stack,
   Group,
   Text,
-  FileButton,
 } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { FilePicker } from "@shared/components/FilePicker";
 import { SegmentedControl } from "@shared/components/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
@@ -277,33 +277,26 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
                       "Upload your .lic or .cert license file",
                     )}
                   </Text>
-                  <FileButton
+                  <FilePicker
                     onChange={setLicenseFile}
                     accept=".lic,.cert"
                     disabled={!loginEnabled || savingLicense}
+                    variant="secondary"
+                    leftSection={
+                      <LocalIcon
+                        icon="upload-file-rounded"
+                        width="1rem"
+                        height="1rem"
+                      />
+                    }
                   >
-                    {(props) => (
-                      <Button
-                        {...props}
-                        variant="secondary"
-                        leftSection={
-                          <LocalIcon
-                            icon="upload-file-rounded"
-                            width="1rem"
-                            height="1rem"
-                          />
-                        }
-                        disabled={!loginEnabled || savingLicense}
-                      >
-                        {licenseFile
-                          ? licenseFile.name
-                          : t(
-                              "admin.settings.premium.file.choose",
-                              "Choose License File",
-                            )}
-                      </Button>
-                    )}
-                  </FileButton>
+                    {licenseFile
+                      ? licenseFile.name
+                      : t(
+                          "admin.settings.premium.file.choose",
+                          "Choose License File",
+                        )}
+                  </FilePicker>
                   {licenseFile && (
                     <Text size="xs" c="dimmed" mt="xs">
                       {t(

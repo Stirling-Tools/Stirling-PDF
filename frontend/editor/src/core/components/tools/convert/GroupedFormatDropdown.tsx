@@ -5,7 +5,6 @@ import {
   Group,
   Box,
   Popover,
-  UnstyledButton,
   useMantineTheme,
 } from "@mantine/core";
 import { Button } from "@shared/components/Button";
@@ -78,7 +77,10 @@ const GroupedFormatDropdown = ({
       zIndex={zIndex}
     >
       <Popover.Target>
-        <UnstyledButton
+        <Button
+          variant="tertiary"
+          hover={false}
+          fullWidth
           name={name}
           data-testid={name}
           onClick={() => setDropdownOpened(!dropdownOpened)}
@@ -97,7 +99,7 @@ const GroupedFormatDropdown = ({
               : "var(--dropdown-trigger-text)",
           }}
         >
-          <Group justify="space-between">
+          <Group justify="space-between" style={{ width: "100%" }}>
             <Text size="sm" c={value ? undefined : "dimmed"}>
               {selectedLabel}
             </Text>
@@ -110,7 +112,7 @@ const GroupedFormatDropdown = ({
               }}
             />
           </Group>
-        </UnstyledButton>
+        </Button>
       </Popover.Target>
       <Popover.Dropdown
         style={{
@@ -138,7 +140,7 @@ const GroupedFormatDropdown = ({
                   <Button
                     key={option.value}
                     data-testid={`format-option-${option.value}`}
-                    variant={value === option.value ? "filled" : "outlined"}
+                    variant={value === option.value ? "primary" : "secondary"}
                     size="sm"
                     onClick={() => handleOptionSelect(option.value)}
                     disabled={option.enabled === false}

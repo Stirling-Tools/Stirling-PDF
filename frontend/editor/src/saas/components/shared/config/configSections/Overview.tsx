@@ -2,9 +2,7 @@ import React, { useState } from "react";
 import {
   Alert,
   Avatar,
-  Button,
   Divider,
-  FileButton,
   Group,
   Image,
   LoadingOverlay,
@@ -14,6 +12,7 @@ import {
   Modal,
 } from "@mantine/core";
 import { Button as DSButton } from "@shared/components/Button";
+import { FilePicker } from "@shared/components/FilePicker";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@app/auth/UseSession";
 import {
@@ -420,17 +419,14 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
               }}
             >
               <Group gap="sm">
-                <FileButton
+                <FilePicker
                   onChange={handleProfileUpload}
                   accept="image/png,image/jpeg,image/webp"
                   disabled={!user || profileUploading}
+                  loading={profileUploading}
                 >
-                  {(props) => (
-                    <Button {...props} loading={profileUploading}>
-                      {t("config.account.profilePicture.upload", "Upload")}
-                    </Button>
-                  )}
-                </FileButton>
+                  {t("config.account.profilePicture.upload", "Upload")}
+                </FilePicker>
                 <DSButton
                   variant="secondary"
                   onClick={handleProfileRemove}
@@ -509,8 +505,8 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
                     key={provider.id}
                     content={`${t("config.account.upgrade.linkWith", "Link with")} ${provider.label}`}
                   >
-                    <Button
-                      variant="outline"
+                    <DSButton
+                      variant="secondary"
                       size="sm"
                       leftSection={
                         <Image
@@ -531,7 +527,7 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
                       disabled={isLoading}
                     >
                       {provider.label}
-                    </Button>
+                    </DSButton>
                   </Tooltip>
                 ))}
             </div>

@@ -10,7 +10,6 @@ import {
   TextInput,
   Menu,
   Modal,
-  UnstyledButton,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@shared/components/Button";
@@ -836,7 +835,9 @@ export function CommentsSidebar({
                                             >
                                               {canEditReply &&
                                               !isEditingReply ? (
-                                                <UnstyledButton
+                                                <Button
+                                                  variant="tertiary"
+                                                  size="sm"
                                                   type="button"
                                                   onClick={() => {
                                                     setEditingReplyKey(
@@ -855,7 +856,7 @@ export function CommentsSidebar({
                                                       "Edit",
                                                     )}
                                                   </Text>
-                                                </UnstyledButton>
+                                                </Button>
                                               ) : null}
                                               {rTimestamp ? (
                                                 <Text size="xs" c="dimmed">

@@ -59,8 +59,7 @@ export function PairingPanel({ pairings, onUpgrade }: Props) {
                 </p>
                 <Button
                   size="sm"
-                  variant="outlined"
-                  accent="neutral"
+                  variant="secondary"
                   onClick={onUpgrade}
                 >
                   {t("editorAdmin.pairing.talkToSales")}
@@ -77,13 +76,13 @@ export function PairingPanel({ pairings, onUpgrade }: Props) {
                 )}
                 <div className="portal-editor__pairing-foot">
                   {p.expires && (
-                    <Chip size="sm" accent="neutral">
+                    <Chip size="sm">
                       {p.expires}
                     </Chip>
                   )}
                   <Button
                     size="sm"
-                    variant="outlined"
+                    variant="secondary"
                     onClick={() => rotate(p.method)}
                   >
                     {rotated === p.method

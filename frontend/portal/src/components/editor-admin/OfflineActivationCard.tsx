@@ -51,8 +51,7 @@ export function OfflineActivationCard({ available, onUpgrade }: Props) {
             {t("editorAdmin.offlineActivation.lockCopy")}
           </p>
           <Button
-            variant="outlined"
-            accent="neutral"
+            variant="secondary"
             size="sm"
             onClick={onUpgrade}
           >
@@ -73,8 +72,7 @@ export function OfflineActivationCard({ available, onUpgrade }: Props) {
           )}
           <div className="portal-editor__panel-actions">
             <Button
-              variant="outlined"
-              accent="neutral"
+              variant="secondary"
               loading={generating}
               onClick={generate}
             >

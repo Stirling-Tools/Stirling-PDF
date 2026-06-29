@@ -99,21 +99,21 @@ export function PropertiesPopover({
         <Group gap="xs">
           <Button
             aria-label={t("annotation.alignLeft", "Align left")}
-            variant={currentAlign === "left" ? "filled" : "outlined"}
+            variant={currentAlign === "left" ? "primary" : "secondary"}
             onClick={() => onUpdate({ textAlign: 0 })}
             size="md"
             leftSection={<FormatAlignLeftIcon style={{ fontSize: 18 }} />}
           />
           <Button
             aria-label={t("annotation.alignCenter", "Align center")}
-            variant={currentAlign === "center" ? "filled" : "outlined"}
+            variant={currentAlign === "center" ? "primary" : "secondary"}
             onClick={() => onUpdate({ textAlign: 1 })}
             size="md"
             leftSection={<FormatAlignCenterIcon style={{ fontSize: 18 }} />}
           />
           <Button
             aria-label={t("annotation.alignRight", "Align right")}
-            variant={currentAlign === "right" ? "filled" : "outlined"}
+            variant={currentAlign === "right" ? "primary" : "secondary"}
             onClick={() => onUpdate({ textAlign: 2 })}
             size="md"
             leftSection={<FormatAlignRightIcon style={{ fontSize: 18 }} />}
@@ -169,7 +169,7 @@ export function PropertiesPopover({
           </div>
           <Button
             size="sm"
-            variant={!borderVisible ? "filled" : "outlined"}
+            variant={!borderVisible ? "primary" : "secondary"}
             onClick={() => {
               const newValue = borderVisible ? 0 : 1;
               onUpdate({
@@ -194,15 +194,11 @@ export function PropertiesPopover({
         <Tooltip label={t("annotation.properties", "Properties")}>
           <Button
             aria-label={t("annotation.properties", "Properties")}
-            variant="outlined"
+            variant="secondary"
+            accent="neutral"
             size="md"
             onClick={() => setOpened(!opened)}
             disabled={disabled}
-            style={{
-              "--sui-btn-bg": "var(--bg-raised)",
-              "--sui-btn-fg": "var(--text-secondary)",
-              "--sui-btn-bd": "var(--border-default)",
-            }}
             leftSection={<TuneIcon style={{ fontSize: 18 }} />}
           />
         </Tooltip>

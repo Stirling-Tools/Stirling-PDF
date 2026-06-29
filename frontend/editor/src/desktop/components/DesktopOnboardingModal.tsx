@@ -106,7 +106,7 @@ export function DesktopOnboardingModal() {
           />
           <Button
             onClick={handleClose}
-            variant="ghost"
+            variant="tertiary"
             size="md"
             leftSection={<CloseIcon fontSize="small" />}
             aria-label={t("close", "Close")}
@@ -161,13 +161,7 @@ export function DesktopOnboardingModal() {
               <OnboardingStepper totalSteps={totalSteps} activeStep={step} />
               <div className={styles.buttonContainer}>
                 <Group justify="flex-end">
-                  <Button
-                    onClick={() => setStep(1)}
-                    style={{
-                      "--sui-btn-bg": "var(--onboarding-primary-button-bg)",
-                      "--sui-btn-fg": "var(--onboarding-primary-button-text)",
-                    }}
-                  >
+                  <Button onClick={() => setStep(1)} accent="neutral">
                     {t("onboarding.buttons.next", "Next →")}
                   </Button>
                 </Group>

@@ -136,10 +136,10 @@ export const MODEL_TYPE_LABEL: Record<ModelType, string> = {
 };
 
 export const MODEL_TYPE_TONE: Record<ModelType, ChipAccent> = {
-  extraction: "blue",
-  classification: "purple",
-  ocr: "green",
-  llm: "amber",
+  extraction: "default",
+  classification: "premium",
+  ocr: "success",
+  llm: "warning",
 };
 
 export const MODEL_PROVIDER_LABEL: Record<ModelProvider, string> = {

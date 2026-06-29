@@ -11,7 +11,6 @@ import {
   Alert,
   Table,
   Badge,
-  UnstyledButton,
 } from "@mantine/core";
 import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
@@ -258,7 +257,10 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
                       }}
                       fz="sm"
                     >
-                      <UnstyledButton
+                      <Button
+                        type="button"
+                        variant="tertiary"
+                        hover={false}
                         onClick={() => toggleSort("timestamp")}
                         style={{
                           display: "flex",
@@ -274,7 +276,7 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
                           width="0.9rem"
                           height="0.9rem"
                         />
-                      </UnstyledButton>
+                      </Button>
                     </Table.Th>
                     <Table.Th
                       style={{
@@ -284,7 +286,10 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
                       }}
                       fz="sm"
                     >
-                      <UnstyledButton
+                      <Button
+                        type="button"
+                        variant="tertiary"
+                        hover={false}
                         onClick={() => toggleSort("eventType")}
                         style={{
                           display: "flex",
@@ -300,7 +305,7 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
                           width="0.9rem"
                           height="0.9rem"
                         />
-                      </UnstyledButton>
+                      </Button>
                     </Table.Th>
                     <Table.Th
                       style={{
@@ -310,7 +315,10 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
                       }}
                       fz="sm"
                     >
-                      <UnstyledButton
+                      <Button
+                        type="button"
+                        variant="tertiary"
+                        hover={false}
                         onClick={() => toggleSort("username")}
                         style={{
                           display: "flex",
@@ -326,7 +334,7 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
                           width="0.9rem"
                           height="0.9rem"
                         />
-                      </UnstyledButton>
+                      </Button>
                     </Table.Th>
                     <Table.Th
                       style={{

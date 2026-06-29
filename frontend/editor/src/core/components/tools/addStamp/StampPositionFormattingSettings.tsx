@@ -55,7 +55,7 @@ const StampPositionFormattingSettings = ({
               return (
                 <Button
                   key={idx}
-                  variant={selected ? "filled" : "outlined"}
+                  variant={selected ? "primary" : "secondary"}
                   onClick={() => {
                     onParameterChange("position", idx);
                     // Ensure we're using grid positioning, not custom overrides
@@ -91,7 +91,7 @@ const StampPositionFormattingSettings = ({
             }
             aria-label={t("AddStampRequest.rotation", "Rotation")}
             variant={
-              parameters._activePill === "rotation" ? "filled" : "outlined"
+              parameters._activePill === "rotation" ? "primary" : "secondary"
             }
             className="flex-1"
             onClick={() => onParameterChange("_activePill", "rotation")}
@@ -107,7 +107,7 @@ const StampPositionFormattingSettings = ({
             }
             aria-label={t("AddStampRequest.opacity", "Opacity")}
             variant={
-              parameters._activePill === "opacity" ? "filled" : "outlined"
+              parameters._activePill === "opacity" ? "primary" : "secondary"
             }
             className="flex-1"
             onClick={() => onParameterChange("_activePill", "opacity")}
@@ -135,7 +135,7 @@ const StampPositionFormattingSettings = ({
                 : t("AddStampRequest.fontSize", "Font Size")
             }
             variant={
-              parameters._activePill === "fontSize" ? "filled" : "outlined"
+              parameters._activePill === "fontSize" ? "primary" : "secondary"
             }
             className="flex-1"
             onClick={() => onParameterChange("_activePill", "fontSize")}

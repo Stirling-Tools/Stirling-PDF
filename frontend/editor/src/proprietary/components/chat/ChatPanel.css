@@ -122,10 +122,11 @@
   border-color: var(--border-subtle);
 }
 
-/* The neutral ghost accent defaults to blue — use the surface text colour
-   instead so the pill label and close icon don't look like interactive links. */
-.chat-panel__header .sui-btn--ghost {
-  --sui-btn-fg: var(--text-primary);
+/* The default tertiary accent is blue — use the surface text colour instead so
+   the pill label and close icon don't look like interactive links. Overrides
+   the Mantine button colour var the shared Button sets inline. */
+.chat-panel__header .sui-btn--tertiary {
+  --button-color: var(--text-primary) !important;
 }
 
 [data-mantine-color-scheme="dark"] .chat-panel__agent-pill:hover {

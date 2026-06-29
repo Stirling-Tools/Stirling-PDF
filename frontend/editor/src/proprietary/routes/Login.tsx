@@ -487,14 +487,16 @@ export default function Login() {
         beforeEmailForm={
           hasSSOProviders && !showEmailForm && isUserPassAllowed ? (
             <div className="auth-section">
-              <button
+              <Button
                 type="button"
+                variant="tertiary"
+                hover={false}
                 onClick={() => setShowEmailForm(true)}
                 disabled={login.isSubmitting}
                 className="w-full px-4 py-[0.75rem] rounded-[0.625rem] text-base font-semibold mb-2 cursor-pointer border-0 disabled:opacity-50 disabled:cursor-not-allowed auth-cta-button"
               >
                 {t("login.useEmailInstead", "Login with email")}
-              </button>
+              </Button>
             </div>
           ) : undefined
         }

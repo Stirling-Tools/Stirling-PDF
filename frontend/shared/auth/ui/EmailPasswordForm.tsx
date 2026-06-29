@@ -131,13 +131,9 @@ export default function EmailPasswordForm({
         }
         fullWidth
         loading={isSubmitting}
-        // Own the brand colour inline so the host app's Mantine primaryColor
-        // can't win over .auth-button (editor vs portal Mantine themes differ).
-        // The fallback keeps it red even if auth-theme.css is absent.
-        style={{
-          "--sui-btn-bg": "var(--auth-button-bg-light-only, #af3434)",
-          "--sui-btn-fg": "var(--auth-button-text-light-only, #ffffff)",
-        }}
+        // Stirling-red brand CTA; the brand accent sets the colour inline so the
+        // host app's Mantine primaryColor can't win (editor vs portal differ).
+        accent="brand"
       >
         {submitButtonText}
       </Button>

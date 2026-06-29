@@ -96,7 +96,7 @@ const AuditFiltersForm: React.FC<AuditFiltersFormProps> = ({
         </Text>
         <Group gap="xs">
           <Button
-            variant={isPresetActive("today") ? "filled" : "outlined"}
+            variant={isPresetActive("today") ? "primary" : "secondary"}
             size="sm"
             onClick={() => handleQuickPreset("today")}
             disabled={disabled}
@@ -104,7 +104,7 @@ const AuditFiltersForm: React.FC<AuditFiltersFormProps> = ({
             {t("audit.filters.today", "Today")}
           </Button>
           <Button
-            variant={isPresetActive("last7") ? "filled" : "outlined"}
+            variant={isPresetActive("last7") ? "primary" : "secondary"}
             size="sm"
             onClick={() => handleQuickPreset("last7")}
             disabled={disabled}
@@ -112,7 +112,7 @@ const AuditFiltersForm: React.FC<AuditFiltersFormProps> = ({
             {t("audit.filters.last7Days", "Last 7 days")}
           </Button>
           <Button
-            variant={isPresetActive("last30") ? "filled" : "outlined"}
+            variant={isPresetActive("last30") ? "primary" : "secondary"}
             size="sm"
             onClick={() => handleQuickPreset("last30")}
             disabled={disabled}
@@ -120,7 +120,7 @@ const AuditFiltersForm: React.FC<AuditFiltersFormProps> = ({
             {t("audit.filters.last30Days", "Last 30 days")}
           </Button>
           <Button
-            variant={isPresetActive("thisMonth") ? "filled" : "outlined"}
+            variant={isPresetActive("thisMonth") ? "primary" : "secondary"}
             size="sm"
             onClick={() => handleQuickPreset("thisMonth")}
             disabled={disabled}
@@ -210,7 +210,7 @@ const AuditFiltersForm: React.FC<AuditFiltersFormProps> = ({
       {/* Clear Button */}
       <Group justify="flex-end">
         <Button
-          variant="outlined"
+          variant="secondary"
           size="sm"
           onClick={onClearFilters}
           disabled={disabled}

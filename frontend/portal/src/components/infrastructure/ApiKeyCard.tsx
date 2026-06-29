@@ -14,7 +14,7 @@ export function ApiKeyCard({ apiKey }: { apiKey: ApiKey }) {
   return (
     <Card padding="default" className="portal-infra__key">
       <Button
-        variant="ghost"
+        variant="tertiary"
         className="portal-infra__key-head"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
@@ -71,7 +71,7 @@ export function ApiKeyCard({ apiKey }: { apiKey: ApiKey }) {
               <dt>{t("infrastructure.apiKeys.card.permissions")}</dt>
               <dd className="portal-infra__chips">
                 {apiKey.permissions.map((p) => (
-                  <Chip key={p} accent="blue" size="sm">
+                  <Chip key={p} size="sm">
                     {p}
                   </Chip>
                 ))}
@@ -86,7 +86,7 @@ export function ApiKeyCard({ apiKey }: { apiKey: ApiKey }) {
                   </span>
                 ) : (
                   apiKey.allowedIps.map((ip) => (
-                    <Chip key={ip} accent="neutral" size="sm">
+                    <Chip key={ip} size="sm">
                       <span className="portal-infra__mono">{ip}</span>
                     </Chip>
                   ))

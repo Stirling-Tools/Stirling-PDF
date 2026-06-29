@@ -66,8 +66,7 @@ function ProductCard({
       </div>
       <p className="portal-home__product-blurb">{blurb}</p>
       <Button
-        variant="outlined"
-        accent="neutral"
+        variant="secondary"
         size="sm"
         onClick={() => setActiveView(target)}
         rightSection={<span aria-hidden>→</span>}
@@ -130,7 +129,7 @@ function QuickActions({ onTryOp }: { onTryOp: () => void }) {
       </div>
       <div className="portal-home__quick-list">
         <Button
-          variant="ghost"
+          variant="tertiary"
           justify="start"
           fullWidth
           className="portal-home__quick-row"
@@ -155,7 +154,7 @@ function QuickActions({ onTryOp }: { onTryOp: () => void }) {
           </span>
         </Button>
         <Button
-          variant="ghost"
+          variant="tertiary"
           justify="start"
           fullWidth
           className="portal-home__quick-row"
@@ -180,7 +179,7 @@ function QuickActions({ onTryOp }: { onTryOp: () => void }) {
           </span>
         </Button>
         <Button
-          variant="ghost"
+          variant="tertiary"
           justify="start"
           fullWidth
           className="portal-home__quick-row"
@@ -205,7 +204,7 @@ function QuickActions({ onTryOp }: { onTryOp: () => void }) {
           </span>
         </Button>
         <Button
-          variant="ghost"
+          variant="tertiary"
           justify="start"
           fullWidth
           className="portal-home__quick-row"
@@ -250,7 +249,7 @@ function FreeOnboarding({ onTryOp }: { onTryOp: () => void }) {
   function renderCta(step: OnboardingStep) {
     if (step.done) {
       return (
-        <Button size="sm" variant="ghost" onClick={onTryOp}>
+        <Button size="sm" variant="tertiary" onClick={onTryOp}>
           {t("home.onboarding.runAgain")}
         </Button>
       );
@@ -258,7 +257,7 @@ function FreeOnboarding({ onTryOp }: { onTryOp: () => void }) {
     if (!step.cta) return null;
     if (step.cta.kind === "try-op") {
       return (
-        <Button size="sm" variant="outlined" onClick={onTryOp}>
+        <Button size="sm" variant="secondary" onClick={onTryOp}>
           {t("home.onboarding.start", "Start")}
         </Button>
       );
@@ -267,7 +266,7 @@ function FreeOnboarding({ onTryOp }: { onTryOp: () => void }) {
     return (
       <Button
         size="sm"
-        variant="outlined"
+        variant="secondary"
         onClick={() => setActiveView(target as ViewId)}
       >
         {t("home.onboarding.start")}

@@ -1,16 +1,8 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Alert,
-  Button,
-  Divider,
-  FileButton,
-  Stack,
-  Switch,
-  Text,
-  Tooltip,
-} from "@mantine/core";
+import { Alert, Divider, Stack, Switch, Text, Tooltip } from "@mantine/core";
 import { Button as DSButton } from "@shared/components/Button";
+import { FilePicker } from "@shared/components/FilePicker";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { BookmarkNode } from "@app/utils/editTableOfContents";
 interface EditTableOfContentsSettingsProps {
@@ -115,23 +107,16 @@ export default function EditTableOfContentsSettings({
             {t("editTableOfContents.actions.loadFromPdf", "Load from PDF")}
           </DSButton>
         </Tooltip>
-        <FileButton
+        <FilePicker
           onChange={(file) => file && onImportJson(file)}
           accept="application/json"
           disabled={disabled}
+          variant="secondary"
+          leftSection={<LocalIcon icon="upload-rounded" />}
+          fullWidth
         >
-          {(props) => (
-            <Button
-              {...props}
-              variant="default"
-              leftSection={<LocalIcon icon="upload-rounded" />}
-              disabled={disabled}
-              fullWidth
-            >
-              {t("editTableOfContents.actions.importJson", "Import JSON")}
-            </Button>
-          )}
-        </FileButton>
+          {t("editTableOfContents.actions.importJson", "Import JSON")}
+        </FilePicker>
         <Tooltip
           label={
             canReadClipboard

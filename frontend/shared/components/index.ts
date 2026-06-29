@@ -1,4 +1,6 @@
 export * from "@shared/components/Button";
+export * from "@shared/components/ActionIcon";
+export * from "@shared/components/FilePicker";
 export * from "@shared/components/StatusBadge";
 export * from "@shared/components/MethodBadge";
 export * from "@shared/components/ToggleSwitch";

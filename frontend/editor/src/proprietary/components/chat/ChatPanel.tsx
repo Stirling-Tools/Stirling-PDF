@@ -18,7 +18,6 @@ import {
   Stack,
   Text,
   Textarea,
-  UnstyledButton,
 } from "@mantine/core";
 import { Button } from "@shared/components/Button";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
@@ -250,7 +249,10 @@ function CompletedProgressLogDropdown({
   }
   return (
     <div className="chat-completed-log">
-      <UnstyledButton
+      <Button
+        type="button"
+        variant="tertiary"
+        hover={false}
         className="chat-completed-log__toggle"
         onClick={() => setExpanded((v) => !v)}
         aria-expanded={expanded}
@@ -265,7 +267,7 @@ function CompletedProgressLogDropdown({
             {label}
           </Text>
         </Group>
-      </UnstyledButton>
+      </Button>
       <Collapse in={expanded}>
         <ol className="chat-completed-log__tools">
           {toolSteps.map((step, i) => {

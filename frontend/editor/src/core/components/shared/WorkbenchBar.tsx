@@ -292,7 +292,7 @@ export default function WorkbenchBar({
         (typeof btn.tooltip === "string" ? (btn.tooltip as string) : btn.id);
       const buttonNode = (
         <Button
-          variant={isActive ? "filled" : "ghost"}
+          variant={isActive ? "primary" : "tertiary"}
           className="workbench-bar-action-icon"
           onClick={triggerAction}
           disabled={disabled}
@@ -387,7 +387,7 @@ export default function WorkbenchBar({
         {returnRoute && hasFiles && (
           <>
             <Button
-              variant="ghost"
+              variant="tertiary"
               className="workbench-bar-view-btn workbench-bar-back-btn"
               onClick={handleBackToFiles}
               aria-label={t(
@@ -417,7 +417,7 @@ export default function WorkbenchBar({
             size="sm"
             value={currentView}
             onChange={setCurrentView}
-            variant="subtle"
+            variant="secondary"
             options={viewOptions.map((opt) => ({
               value: opt.value,
               label: (
@@ -459,7 +459,7 @@ export default function WorkbenchBar({
         {currentView === "viewer" &&
           renderWithTooltip(
             <Button
-              variant="ghost"
+              variant="tertiary"
               hover={false}
               className="workbench-bar-action-icon"
               onClick={handlePrint}
@@ -476,7 +476,7 @@ export default function WorkbenchBar({
         {!isCustomView &&
           renderWithTooltip(
             <Button
-              variant="ghost"
+              variant="tertiary"
               hover={false}
               className="workbench-bar-action-icon"
               onClick={() => handleExportAll()}
@@ -500,7 +500,7 @@ export default function WorkbenchBar({
           icons.saveAsIconName &&
           renderWithTooltip(
             <Button
-              variant="ghost"
+              variant="tertiary"
               hover={false}
               className="workbench-bar-action-icon"
               onClick={() => handleExportAll(true)}
@@ -528,7 +528,7 @@ export default function WorkbenchBar({
         {!isCustomView &&
           renderWithTooltip(
             <Button
-              variant="ghost"
+              variant="tertiary"
               hover={false}
               className="workbench-bar-action-icon"
               onClick={handleClose}

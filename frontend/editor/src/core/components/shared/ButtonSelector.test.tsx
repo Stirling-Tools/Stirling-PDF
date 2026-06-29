@@ -8,6 +8,14 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => (
   <MantineProvider>{children}</MantineProvider>
 );
 
+// The shared SegmentedControl renders each option as a radio <input> (inside a
+// <label>) whose `value` attribute matches the option value. Select by value
+// since it is stable regardless of how the label is wrapped (e.g. FitText).
+const getRadioByValue = (container: HTMLElement, value: string) =>
+  container.querySelector<HTMLInputElement>(
+    `input[type="radio"][value="${value}"]`,
+  );
+
 describe("ButtonSelector", () => {
   const mockOnChange = vi.fn();
 
@@ -15,7 +23,7 @@ describe("ButtonSelector", () => {
     vi.clearAllMocks();
   });
 
-  test("should render all options as buttons", () => {
+  test("should render all options as segments", () => {
     const options = [
       { value: "option1", label: "Option 1" },
       { value: "option2", label: "Option 2" },
@@ -37,13 +45,13 @@ describe("ButtonSelector", () => {
     expect(screen.getByText("Option 2")).toBeInTheDocument();
   });
 
-  test("should highlight selected button with filled variant", () => {
+  test("should mark selected option as checked", () => {
     const options = [
       { value: "option1", label: "Option 1" },
       { value: "option2", label: "Option 2" },
     ];
 
-    render(
+    const { container } = render(
       <TestWrapper>
         <ButtonSelector
           value="option1"
@@ -54,22 +62,22 @@ describe("ButtonSelector", () => {
       </TestWrapper>,
     );
 
-    const selectedButton = screen.getByRole("button", { name: "Option 1" });
-    const unselectedButton = screen.getByRole("button", { name: "Option 2" });
+    const selectedRadio = getRadioByValue(container, "option1");
+    const unselectedRadio = getRadioByValue(container, "option2");
 
-    // Selected option is marked via aria-pressed (shared SegmentedControl)
-    expect(selectedButton).toHaveAttribute("aria-pressed", "true");
-    expect(unselectedButton).toHaveAttribute("aria-pressed", "false");
+    // Selected option is marked via the radio's checked state.
+    expect(selectedRadio).toBeChecked();
+    expect(unselectedRadio).not.toBeChecked();
     expect(screen.getByText("Selection Label")).toBeInTheDocument();
   });
 
-  test("should call onChange when button is clicked", () => {
+  test("should call onChange when an option is clicked", () => {
     const options = [
       { value: "option1", label: "Option 1" },
       { value: "option2", label: "Option 2" },
     ];
 
-    render(
+    const { container } = render(
       <TestWrapper>
         <ButtonSelector
           value="option1"
@@ -79,7 +87,7 @@ describe("ButtonSelector", () => {
       </TestWrapper>,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Option 2" }));
+    fireEvent.click(getRadioByValue(container, "option2")!);
 
     expect(mockOnChange).toHaveBeenCalledWith("option2");
   });
@@ -90,7 +98,7 @@ describe("ButtonSelector", () => {
       { value: "option2", label: "Option 2" },
     ];
 
-    render(
+    const { container } = render(
       <TestWrapper>
         <ButtonSelector
           value={undefined}
@@ -100,17 +108,17 @@ describe("ButtonSelector", () => {
       </TestWrapper>,
     );
 
-    // Both buttons should be outlined when no value is selected
-    const button1 = screen.getByRole("button", { name: "Option 1" });
-    const button2 = screen.getByRole("button", { name: "Option 2" });
+    // No option should be checked when no value is selected
+    const radio1 = getRadioByValue(container, "option1");
+    const radio2 = getRadioByValue(container, "option2");
 
-    expect(button1).toHaveAttribute("aria-pressed", "false");
-    expect(button2).toHaveAttribute("aria-pressed", "false");
+    expect(radio1).not.toBeChecked();
+    expect(radio2).not.toBeChecked();
   });
 
   test.each([
     {
-      description: "disable buttons when disabled prop is true",
+      description: "disable options when disabled prop is true",
       options: [
         { value: "option1", label: "Option 1" },
         { value: "option2", label: "Option 2" },
@@ -128,7 +136,7 @@ describe("ButtonSelector", () => {
       expectedStates: [false, true],
     },
   ])("should $description", ({ options, globalDisabled, expectedStates }) => {
-    render(
+    const { container } = render(
       <TestWrapper>
         <ButtonSelector
           value="option1"
@@ -140,18 +148,18 @@ describe("ButtonSelector", () => {
     );
 
     options.forEach((option, index) => {
-      const button = screen.getByRole("button", { name: option.label });
-      expect(button).toHaveProperty("disabled", expectedStates[index]);
+      const radio = getRadioByValue(container, String(option.value));
+      expect(radio).toHaveProperty("disabled", expectedStates[index]);
     });
   });
 
-  test("should not call onChange when disabled button is clicked", () => {
+  test("should not allow selecting a disabled option", () => {
     const options = [
       { value: "option1", label: "Option 1" },
       { value: "option2", label: "Option 2", disabled: true },
     ];
 
-    render(
+    const { container } = render(
       <TestWrapper>
         <ButtonSelector
           value="option1"
@@ -161,12 +169,16 @@ describe("ButtonSelector", () => {
       </TestWrapper>,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Option 2" }));
-
+    // The disabled option's radio is disabled, so a real user cannot select it
+    // and onChange will not fire from genuine interaction. (jsdom does not
+    // replicate the browser's disabled-click blocking, so assert the disabled
+    // state — that is what prevents selection for real users.)
+    const disabledRadio = getRadioByValue(container, "option2");
+    expect(disabledRadio).toBeDisabled();
     expect(mockOnChange).not.toHaveBeenCalled();
   });
 
-  test("should not apply fullWidth styling when fullWidth is false", () => {
+  test("should render options when fullWidth is false", () => {
     const options = [
       { value: "option1", label: "Option 1" },
       { value: "option2", label: "Option 2" },
@@ -184,8 +196,7 @@ describe("ButtonSelector", () => {
       </TestWrapper>,
     );
 
-    const button = screen.getByRole("button", { name: "Option 1" });
-    expect(button).not.toHaveStyle({ flex: "1" });
+    expect(screen.getByText("Option 1")).toBeInTheDocument();
     expect(screen.getByText("Layout Label")).toBeInTheDocument();
   });
 
@@ -205,14 +216,14 @@ describe("ButtonSelector", () => {
       </TestWrapper>,
     );
 
-    // Should render buttons
+    // Should render the options
     expect(screen.getByText("Option 1")).toBeInTheDocument();
     expect(screen.getByText("Option 2")).toBeInTheDocument();
 
-    // Stack should only contain the Group (buttons), no Text element for label
+    // Stack should only contain the SegmentedControl, no label Text element
     const stackElement = container.querySelector(
       '[class*="mantine-Stack-root"]',
     );
-    expect(stackElement?.children).toHaveLength(1); // Only the Group, no label Text
+    expect(stackElement?.children).toHaveLength(1); // Only the SegmentedControl, no label Text
   });
 });

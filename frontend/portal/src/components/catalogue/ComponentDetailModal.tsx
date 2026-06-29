@@ -147,7 +147,7 @@ export function ComponentDetailModal({
             </p>
             <div className="portal-components__frameworks">
               {component.frameworks.map((fw) => (
-                <Chip key={fw} size="sm" accent="blue">
+                <Chip key={fw} size="sm">
                   {fw}
                 </Chip>
               ))}

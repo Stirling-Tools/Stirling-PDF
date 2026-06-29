@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
-import { Stack, Button, Text, Image } from "@mantine/core";
-import { Button as DsButton } from "@shared/components/Button";
+import { Stack, Text, Image } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -88,7 +88,7 @@ export const UploadSignatureImage: React.FC<UploadSignatureImageProps> = ({
               style={{ maxHeight: "150px", maxWidth: "100%" }}
             />
           </div>
-          <DsButton
+          <Button
             variant="secondary"
             accent="danger"
             leftSection={<DeleteIcon sx={{ fontSize: 16 }} />}
@@ -97,11 +97,11 @@ export const UploadSignatureImage: React.FC<UploadSignatureImageProps> = ({
             fullWidth
           >
             {t("certSign.collab.signRequest.removeImage", "Remove Image")}
-          </DsButton>
+          </Button>
         </Stack>
       ) : (
         <Button
-          variant="outline"
+          variant="secondary"
           leftSection={<UploadFileIcon sx={{ fontSize: 16 }} />}
           onClick={handleUploadClick}
           disabled={disabled}

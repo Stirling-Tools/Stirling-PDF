@@ -42,13 +42,9 @@ function CopyInline({ value, label }: { value: string; label: string }) {
         >
           <Button
             size="sm"
-            variant="outlined"
+            variant="secondary"
+            accent={copied ? "success" : undefined}
             onClick={copy}
-            style={
-              copied
-                ? { "--sui-btn-fg": "teal", "--sui-btn-bd": "teal" }
-                : undefined
-            }
             leftSection={
               <LocalIcon
                 icon={copied ? "check-rounded" : "content-copy-rounded"}
@@ -184,7 +180,7 @@ export default function McpSection() {
                 </Text>
                 <Button
                   size="sm"
-                  variant="filled"
+                  variant="primary"
                   onClick={goToAccount}
                   style={{ flexShrink: 0 }}
                 >
@@ -283,7 +279,7 @@ export default function McpSection() {
                 </Text>
                 <Button
                   size="sm"
-                  variant="outlined"
+                  variant="secondary"
                   style={{ flexShrink: 0 }}
                   leftSection={
                     <LocalIcon icon="key-rounded" width={14} height={14} />

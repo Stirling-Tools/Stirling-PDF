@@ -195,7 +195,7 @@ function PolicySetupWizardBody({
       subtitle={config.summary}
       footer={
         <div className="portal-policies__wizard-foot">
-          <Button variant="ghost" size="sm" onClick={onClose}>
+          <Button variant="tertiary" size="sm" onClick={onClose}>
             {t("policies.wizard.actions.cancel")}
           </Button>
           {step === "workflow" ? (
@@ -209,7 +209,7 @@ function PolicySetupWizardBody({
           ) : (
             <>
               <Button
-                variant="outlined"
+                variant="secondary"
                 size="sm"
                 style={{ marginLeft: "auto" }}
                 onClick={() => setStep("workflow")}
@@ -299,7 +299,7 @@ function PolicySetupWizardBody({
             {POLICY_SOURCES.map((src) => (
               <Button
                 key={src.id}
-                variant="ghost"
+                variant="tertiary"
                 className={
                   "portal-policies__source" +
                   (sources.includes(src.id)
@@ -343,7 +343,7 @@ function PolicySetupWizardBody({
                       })}
                 </span>
                 <Button
-                  variant="ghost"
+                  variant="tertiary"
                   className="portal-policies__link"
                   onClick={() => setScopeNarrow((v) => !v)}
                 >
@@ -357,7 +357,7 @@ function PolicySetupWizardBody({
                   {POLICY_DOC_TYPES.map((dt) => (
                     <Chip
                       key={dt}
-                      accent={scopeTypes.includes(dt) ? "blue" : "neutral"}
+                      accent={scopeTypes.includes(dt) ? "default" : "neutral"}
                       size="sm"
                       onClick={() => toggleScopeType(dt)}
                     >

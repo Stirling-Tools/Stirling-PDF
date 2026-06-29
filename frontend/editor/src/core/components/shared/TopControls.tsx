@@ -209,8 +209,7 @@ const TopControls = ({
           options={viewOptions}
           value={currentView}
           onChange={handleViewChange}
-          variant="subtle"
-          accent="blue"
+          variant="secondary"
           fullWidth
           style={{
             transition: "all 0.2s ease",

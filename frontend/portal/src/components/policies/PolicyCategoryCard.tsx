@@ -29,7 +29,7 @@ export function PolicyCategoryCard({ entry, onOpen }: PolicyCategoryCardProps) {
           <span className="portal-policies__card-blurb">{category.desc}</span>
         </div>
         {comingSoon ? (
-          <Chip accent="neutral" size="sm">
+          <Chip size="sm">
             {t("policies.card.comingSoon")}
           </Chip>
         ) : policy ? (
@@ -43,7 +43,7 @@ export function PolicyCategoryCard({ entry, onOpen }: PolicyCategoryCardProps) {
               : t("policies.status.active")}
           </StatusBadge>
         ) : (
-          <Chip accent="blue" size="sm">
+          <Chip size="sm">
             {t("policies.card.notSetUp")}
           </Chip>
         )}
@@ -70,13 +70,13 @@ export function PolicyCategoryCard({ entry, onOpen }: PolicyCategoryCardProps) {
         <footer className="portal-policies__card-foot">
           <div className="portal-policies__card-rules">
             {config.rules.slice(0, 3).map((rule) => (
-              <Chip key={rule} accent="neutral" size="sm">
+              <Chip key={rule} size="sm">
                 {rule}
               </Chip>
             ))}
           </div>
           {!comingSoon && (
-            <Button variant="ghost" size="sm">
+            <Button variant="tertiary" size="sm">
               {t("policies.card.setUp")}
             </Button>
           )}

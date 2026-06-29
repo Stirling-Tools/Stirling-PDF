@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import "@shared/components/Banner.css";
 
 export type BannerTone = "info" | "success" | "warning" | "danger" | "neutral";
@@ -46,14 +46,17 @@ export function Banner({
       </div>
       {action && <div className="sui-banner__action">{action}</div>}
       {onDismiss && (
-        <Button
+        <ActionIcon
           variant="tertiary"
+          accent="neutral"
+          size="sm"
           shape="circle"
           className="sui-banner__close"
           onClick={onDismiss}
           aria-label="Dismiss"
-          leftSection={<span aria-hidden>×</span>}
-        />
+        >
+          <span aria-hidden>×</span>
+        </ActionIcon>
       )}
     </div>
   );

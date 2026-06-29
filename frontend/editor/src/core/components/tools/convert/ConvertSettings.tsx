@@ -1,12 +1,6 @@
 import { useMemo } from "react";
-import {
-  Stack,
-  Text,
-  Group,
-  Divider,
-  UnstyledButton,
-  useMantineTheme,
-} from "@mantine/core";
+import { Stack, Text, Group, Divider, useMantineTheme } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useTranslation } from "react-i18next";
 import { useMultipleEndpointsEnabled } from "@app/hooks/useEndpointConfig";
@@ -306,7 +300,11 @@ const ConvertSettings = ({
           {t("convert.convertTo", "Convert to")}:
         </Text>
         {!parameters.fromExtension ? (
-          <UnstyledButton
+          <Button
+            variant="tertiary"
+            hover={false}
+            fullWidth
+            disabled
             style={{
               padding: "0.5rem 0.75rem",
               border: `0.0625rem solid ${theme.colors.gray[4]}`,
@@ -316,7 +314,7 @@ const ConvertSettings = ({
               cursor: "not-allowed",
             }}
           >
-            <Group justify="space-between">
+            <Group justify="space-between" style={{ width: "100%" }}>
               <Text size="sm">
                 {t(
                   "convert.selectSourceFormatFirst",
@@ -330,7 +328,7 @@ const ConvertSettings = ({
                 }}
               />
             </Group>
-          </UnstyledButton>
+          </Button>
         ) : (
           <GroupedFormatDropdown
             name="convert-to-dropdown"

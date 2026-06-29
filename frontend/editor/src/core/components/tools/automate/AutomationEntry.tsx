@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Group, Text, Menu, Button, Box } from "@mantine/core";
+import { Group, Text, Menu, Box } from "@mantine/core";
 import { Button as SharedButton } from "@shared/components/Button";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import EditIcon from "@mui/icons-material/Edit";
@@ -173,31 +173,24 @@ export default function AutomationEntry({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <Button
-        variant="subtle"
+      <SharedButton
+        variant="tertiary"
         onClick={onClick}
         size="sm"
-        radius="md"
         fullWidth
-        justify="flex-start"
+        justify="start"
         className="tool-button"
-        styles={{
-          root: {
-            borderRadius: 0,
-            color: "var(--tools-text-and-icon-color)",
-            overflow: "visible",
-            backgroundColor: shouldShowMenu
-              ? "var(--automation-entry-hover-bg)"
-              : undefined,
-            "&:hover": {
-              backgroundColor: "var(--automation-entry-hover-bg)",
-            },
-          },
-          label: { overflow: "visible" },
+        style={{
+          borderRadius: 0,
+          color: "var(--tools-text-and-icon-color)",
+          overflow: "visible",
+          backgroundColor: shouldShowMenu
+            ? "var(--automation-entry-hover-bg)"
+            : undefined,
         }}
       >
         {buttonContent}
-      </Button>
+      </SharedButton>
       {showMenu && (
         <Menu
           position="bottom-end"

@@ -63,7 +63,7 @@ export function AgentPanel({ d }: { d: AgentDetail }) {
         </span>
         <div className="portal-sources__chips">
           {d.assignedPipelines.map((p) => (
-            <Chip key={p} accent="blue" size="sm">
+            <Chip key={p} size="sm">
               {p}
             </Chip>
           ))}
@@ -76,7 +76,7 @@ export function AgentPanel({ d }: { d: AgentDetail }) {
         </span>
         <div className="portal-sources__chips">
           {d.scopes.map((s) => (
-            <Chip key={s} accent="neutral" size="sm">
+            <Chip key={s} size="sm">
               {s}
             </Chip>
           ))}
@@ -86,10 +86,10 @@ export function AgentPanel({ d }: { d: AgentDetail }) {
       {/* TODO(backend): wire to GET /v1/sources/{id}/eval-runs and
           POST /v1/sources/{id}/pause — currently inert demo controls. */}
       <div className="portal-sources__detail-actions">
-        <Button size="sm" variant="outlined">
+        <Button size="sm" variant="secondary">
           {t("sources.agent.viewEvalRuns", "View eval runs")}
         </Button>
-        <Button size="sm" variant="ghost">
+        <Button size="sm" variant="tertiary">
           {t("sources.agent.pauseAgent")}
         </Button>
       </div>

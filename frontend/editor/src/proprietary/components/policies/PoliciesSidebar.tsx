@@ -221,9 +221,11 @@ export function PoliciesSection({
               }
               const status = deriveRowStatus(pol.policies[cat.id]);
               return (
-                <button
+                <Button
                   key={cat.id}
                   type="button"
+                  variant="tertiary"
+                  hover={false}
                   className="pol-row"
                   onClick={() =>
                     guestBlocked ? promptGuestSignup() : selectPolicy(cat.id)
@@ -253,7 +255,7 @@ export function PoliciesSection({
                       sx={{ fontSize: "1rem" }}
                     />
                   </span>
-                </button>
+                </Button>
               );
             })}
           </div>
@@ -513,8 +515,10 @@ export function PoliciesCollapsedButton({
               arrow
               delay={300}
             >
-              <button
+              <Button
                 type="button"
+                variant="tertiary"
+                hover={false}
                 className="pol-crail-btn"
                 data-status={status}
                 aria-label={t(
@@ -535,7 +539,7 @@ export function PoliciesCollapsedButton({
                 {(status === "active" || status === "paused") && (
                   <span className="pol-crail-dot" data-status={status} />
                 )}
-              </button>
+              </Button>
             </AppTooltip>
           );
         })}

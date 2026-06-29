@@ -1,13 +1,40 @@
 import { useRef } from "react";
-import { FileButton, Button } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import { FilePicker } from "@shared/components/FilePicker";
+import type { ButtonVariant } from "@shared/components/Button";
+
+// Accept both shared DS variants and the legacy Mantine variant names that
+// existing callers still pass, mapping the latter onto the DS equivalents.
+type LegacyVariant =
+  | "outline"
+  | "filled"
+  | "light"
+  | "default"
+  | "subtle"
+  | "gradient";
+
+const VARIANT_MAP: Record<LegacyVariant, ButtonVariant> = {
+  filled: "primary",
+  outline: "secondary",
+  default: "secondary",
+  light: "tertiary",
+  subtle: "tertiary",
+  gradient: "primary",
+};
+
+function resolveVariant(variant: ButtonVariant | LegacyVariant): ButtonVariant {
+  return variant in VARIANT_MAP
+    ? VARIANT_MAP[variant as LegacyVariant]
+    : (variant as ButtonVariant);
+}
+
 interface FileUploadButtonProps {
   file?: File;
   onChange: (file: File | null) => void;
   accept?: string;
   disabled?: boolean;
   placeholder?: string;
-  variant?: "outline" | "filled" | "light" | "default" | "subtle" | "gradient";
+  variant?: ButtonVariant | LegacyVariant;
   fullWidth?: boolean;
 }
 const FileUploadButton = ({
@@ -16,25 +43,23 @@ const FileUploadButton = ({
   accept,
   disabled = false,
   placeholder,
-  variant = "outline",
+  variant = "secondary",
   fullWidth = true,
 }: FileUploadButtonProps) => {
   const { t } = useTranslation();
   const resetRef = useRef<() => void>(null);
   const defaultPlaceholder = t("chooseFile", "Choose File");
   return (
-    <FileButton
+    <FilePicker
       resetRef={resetRef}
       onChange={onChange}
       accept={accept}
       disabled={disabled}
+      variant={resolveVariant(variant)}
+      fullWidth={fullWidth}
     >
-      {(props) => (
-        <Button {...props} variant={variant} fullWidth={fullWidth} color="blue">
-          {file ? file.name : placeholder || defaultPlaceholder}
-        </Button>
-      )}
-    </FileButton>
+      {file ? file.name : placeholder || defaultPlaceholder}
+    </FilePicker>
   );
 };
 export default FileUploadButton;

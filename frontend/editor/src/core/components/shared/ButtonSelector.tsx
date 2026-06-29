@@ -16,7 +16,6 @@ interface ButtonSelectorProps<T> {
   label?: string;
   disabled?: boolean;
   fullWidth?: boolean;
-  buttonClassName?: string;
   textClassName?: string;
 }
 
@@ -27,7 +26,6 @@ const ButtonSelector = <T extends string | number>({
   label = undefined,
   disabled = false,
   fullWidth = true,
-  buttonClassName,
   textClassName,
 }: ButtonSelectorProps<T>) => {
   const selectedValue = value === undefined ? "" : String(value);
@@ -85,7 +83,6 @@ const ButtonSelector = <T extends string | number>({
         value={selectedValue}
         onChange={handleChange}
         fullWidth={fullWidth}
-        itemClassName={buttonClassName}
       />
     </Stack>
   );

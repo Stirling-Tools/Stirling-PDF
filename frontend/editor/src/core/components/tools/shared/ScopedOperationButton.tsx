@@ -81,7 +81,7 @@ export function ScopedOperationButton({
     selectedFiles.length === 0;
 
   const loadingVariant: ButtonVariant =
-    operationButtonVariantMap[props.variant ?? "filled"] ?? "filled";
+    operationButtonVariantMap[props.variant ?? "filled"] ?? "primary";
   const loadingAccent: ButtonAccent =
     operationButtonAccentMap[props.color ?? "blue"] ?? "neutral";
 

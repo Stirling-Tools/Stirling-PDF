@@ -112,11 +112,11 @@ export function PipelineComposer({ open, onClose }: PipelineComposerProps) {
               </span>
             ))}
           </div>
-          <Button variant="ghost" onClick={close}>
+          <Button variant="tertiary" onClick={close}>
             {t("pipelines.composer.cancel")}
           </Button>
           {step > 0 && (
-            <Button variant="outlined" onClick={() => setStep((s) => s - 1)}>
+            <Button variant="secondary" onClick={() => setStep((s) => s - 1)}>
               {t("pipelines.composer.back", "Back")}
             </Button>
           )}
@@ -141,7 +141,7 @@ export function PipelineComposer({ open, onClose }: PipelineComposerProps) {
           <div className="portal-pipelines__composer-body">
             <div className="portal-pipelines__composer-grid">
               <Button
-                variant="ghost"
+                variant="tertiary"
                 className={
                   "portal-pipelines__option" +
                   (source === "any" ? " is-selected" : "")
@@ -158,7 +158,7 @@ export function PipelineComposer({ open, onClose }: PipelineComposerProps) {
               {SOURCE_OPTIONS.map((opt) => (
                 <Button
                   key={opt.id}
-                  variant="ghost"
+                  variant="tertiary"
                   className={
                     "portal-pipelines__option" +
                     (source === opt.id ? " is-selected" : "")
@@ -192,7 +192,7 @@ export function PipelineComposer({ open, onClose }: PipelineComposerProps) {
                 ) : (
                   selectedOps.map((id) => {
                     const op = lookupPickerOp(id);
-                    const accent = op ? OP_KIND_ACCENT[op.kind] : "purple";
+                    const accent = op ? OP_KIND_ACCENT[op.kind] : "premium";
                     return (
                       <Chip
                         key={id}
@@ -215,7 +215,6 @@ export function PipelineComposer({ open, onClose }: PipelineComposerProps) {
                 {PIPELINE_AGENTS.map((agent) => (
                   <Chip
                     key={agent.id}
-                    accent="neutral"
                     size="sm"
                     onClick={() => applyAgent(agent.ops)}
                   >
@@ -267,7 +266,7 @@ export function PipelineComposer({ open, onClose }: PipelineComposerProps) {
               {DESTINATION_OPTIONS.map((opt) => (
                 <Button
                   key={opt.id}
-                  variant="ghost"
+                  variant="tertiary"
                   className={
                     "portal-pipelines__option" +
                     (destination === opt.id ? " is-selected" : "")

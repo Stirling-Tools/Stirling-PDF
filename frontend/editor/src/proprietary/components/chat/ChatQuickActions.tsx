@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Box, Group, Stack, Text, UnstyledButton } from "@mantine/core";
+import { Box, Group, Stack, Text } from "@mantine/core";
 import { Button } from "@shared/components/Button";
 import CloseIcon from "@mui/icons-material/Close";
 import CompressIcon from "@mui/icons-material/Compress";
@@ -24,7 +24,10 @@ interface QuickAction {
 }
 function QuickActionCard({ action }: { action: QuickAction }) {
   return (
-    <UnstyledButton
+    <Button
+      type="button"
+      variant="tertiary"
+      hover={false}
       className="chat-quick-action"
       onClick={action.onClick}
       aria-label={action.title}
@@ -49,7 +52,7 @@ function QuickActionCard({ action }: { action: QuickAction }) {
           }}
         />
       </Group>
-    </UnstyledButton>
+    </Button>
   );
 }
 function WorkbenchFilePills({
@@ -89,12 +92,15 @@ function WorkbenchFilePills({
         </span>
       ))}
       {overflow > 0 && (
-        <UnstyledButton
+        <Button
+          type="button"
+          variant="tertiary"
+          hover={false}
           className="chat-file-pill chat-file-pill--more"
           onClick={onOpenFilesModal}
         >
           {moreLabel(overflow)}
-        </UnstyledButton>
+        </Button>
       )}
     </div>
   );

@@ -41,7 +41,7 @@ export function ToolsPanel({ agent, governanceUnlocked }: ToolsPanelProps) {
               : t("agentBuilder.tools.governanceGate")
           }
         />
-        <Chip accent={restricted ? "amber" : "green"} size="sm">
+        <Chip accent={restricted ? "warning" : "success"} size="sm">
           {restricted
             ? t("agentBuilder.tools.restricted", "Restricted")
             : t("agentBuilder.tools.broadAccess", "Broad access")}
@@ -61,7 +61,7 @@ export function ToolsPanel({ agent, governanceUnlocked }: ToolsPanelProps) {
               return (
                 <Chip
                   key={tool}
-                  accent={isDenied ? "red" : "neutral"}
+                  accent={isDenied ? "danger" : "neutral"}
                   size="sm"
                   onClick={
                     governanceUnlocked ? () => toggleDenied(tool) : undefined

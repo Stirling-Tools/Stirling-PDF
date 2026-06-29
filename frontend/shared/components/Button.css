@@ -1,288 +1,42 @@
-/* One button. Three dials: variant (filled/outlined/ghost) × accent
- * (neutral/danger/warning/success) × size (sm/md/lg/xl). Every colour is
- * overridable via --sui-btn-bg / --sui-btn-fg / --sui-btn-bd (set them in
- * `style` or a wrapping rule). Accent classes set the internal --_* palette;
- * variant classes consume it; the public override vars always win. */
-.sui-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5em;
-  box-sizing: border-box;
-  border: 1px solid var(--sui-btn-bd, transparent);
-  border-radius: var(--radius-md);
-  font-family: var(--font-sans);
-  font-weight: 500;
-  line-height: 1;
-  cursor: pointer;
-  user-select: none;
-  text-decoration: none;
-  transition:
-    background 120ms ease,
-    color 120ms ease,
-    border-color 120ms ease,
-    transform 80ms ease;
-}
-.sui-btn:disabled,
-.sui-btn[aria-disabled="true"] {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-.sui-btn:focus-visible {
-  outline: 2px solid var(--_text, var(--color-blue));
-  outline-offset: 2px;
-}
-/* slight press animation */
-.sui-btn:active:not(:disabled):not([aria-disabled="true"]) {
-  transform: scale(0.97);
+/* Mantine-backed Button. The shared <Button> renders a Mantine <Button> and
+ * drives its colour CSS vars (--button-bg/-hover/-color/-bd) from the shared
+ * accent palette (accents.css), so Mantine owns layout/sizing/a11y while we
+ * own the palette.
+ *
+ *   variant = primary (filled) | secondary (outlined) | tertiary (ghost)
+ *   accent  = default | neutral | brand | ai | premium | danger | success | warning
+ *
+ * Button.tsx adds `sui-acc-<accent>` (palette) + `sui-btn--<variant>` and maps
+ * the palette onto Mantine's button vars inline so they win over the defaults. */
+@import "./accents.css";
+
+/* ---- icon-only: square, no horizontal padding ---- */
+.sui-btn--icon.mantine-Button-root {
+  --button-padding-x: 0;
+  width: var(--button-height);
+  min-width: var(--button-height);
 }
 
-/* ---- sizes (text) ---- */
-.sui-btn--sm {
-  font-size: 0.75rem;
-  padding: 0.3125rem 0.625rem;
-  min-height: 1.75rem;
+/* ---- shape ---- */
+.sui-btn--circle.mantine-Button-root {
+  --button-radius: 50%;
 }
-.sui-btn--md {
-  font-size: 0.8125rem;
-  padding: 0.4375rem 0.875rem;
-  min-height: 2.25rem;
-}
-.sui-btn--lg {
-  font-size: 0.9375rem;
-  padding: 0.5625rem 1.125rem;
-  min-height: 2.75rem;
-}
-.sui-btn--xl {
-  font-size: 1.0625rem;
-  padding: 0.6875rem 1.375rem;
-  min-height: 3.25rem;
+.sui-btn--pill.mantine-Button-root {
+  --button-radius: 9999px;
 }
 
-/* ---- icon-only: square, centred, no label padding ---- */
-.sui-btn--icon {
-  padding: 0;
-  aspect-ratio: 1 / 1;
-}
-.sui-btn--icon.sui-btn--sm {
-  width: 1.75rem;
-}
-.sui-btn--icon.sui-btn--md {
-  width: 2.25rem;
-}
-.sui-btn--icon.sui-btn--lg {
-  width: 2.75rem;
-}
-.sui-btn--icon.sui-btn--xl {
-  width: 3.25rem;
-}
-
-.sui-btn--full {
-  width: 100%;
-}
-.sui-btn__label {
-  display: inline-block;
-}
-
-/* ---- shape: corner rounding ---- */
-.sui-btn--circle {
-  border-radius: 50%;
-}
-.sui-btn--pill {
-  border-radius: 9999px;
-}
-
-/* ---- content justification (only bites when wider than the content) ---- */
-.sui-btn--justify-start {
-  justify-content: flex-start;
-}
-.sui-btn--justify-end {
-  justify-content: flex-end;
-}
-/* `between`: leftSection hard-left, label in middle, rightSection hard-right. */
-.sui-btn--justify-between {
-  justify-content: space-between;
-  width: 100%;
-}
-
-/* ---- accents: define the palette the variants consume ---- */
-.sui-btn--neutral {
-  --_solid: #2563eb;
-  --_solid-hover: #1d4ed8;
-  --_on-solid: #ffffff;
-  --_text: #2563eb;
-  --_border: #bfdbfe;
-  --_tint: rgba(37, 99, 235, 0.08);
-}
-.sui-btn--danger {
-  --_solid: #dc2626;
-  --_solid-hover: #b91c1c;
-  --_on-solid: #ffffff;
-  --_text: #dc2626;
-  --_border: #fca5a5;
-  --_tint: rgba(220, 38, 38, 0.08);
-}
-.sui-btn--warning {
-  --_solid: #d97706;
-  --_solid-hover: #b45309;
-  --_on-solid: #ffffff;
-  --_text: #b45309;
-  --_border: #fcd34d;
-  --_tint: rgba(217, 119, 6, 0.1);
-}
-.sui-btn--success {
-  --_solid: #16a34a;
-  --_solid-hover: #15803d;
-  --_on-solid: #ffffff;
-  --_text: #16a34a;
-  --_border: #86efac;
-  --_tint: rgba(22, 163, 74, 0.08);
-}
-/* brand — Stirling red, the primary CTA */
-.sui-btn--brand {
-  --_solid: #8e3131;
-  --_solid-hover: #7a2929;
-  --_on-solid: #ffffff;
-  --_text: #8e3131;
-  --_border: #d9a8a8;
-  --_tint: rgba(142, 49, 49, 0.09);
-}
-/* premium — gradient for upgrade CTAs. `--_solid` is a gradient, so `filled`
- * consumes it directly; outlined/ghost fall back to a violet text/border. */
-.sui-btn--premium {
-  --_solid: linear-gradient(
-    135deg,
-    #8b5cf6 0%,
-    #6366f1 38%,
-    #3b82f6 72%,
-    #22d3ee 100%
-  );
-  --_solid-hover: linear-gradient(
-    135deg,
-    #8b5cf6 0%,
-    #6366f1 38%,
-    #3b82f6 72%,
-    #22d3ee 100%
-  );
-  --_on-solid: #ffffff;
-  --_text: #7c3aed;
-  --_border: #c4b5fd;
-  --_tint: rgba(124, 58, 237, 0.1);
-}
-
-/* ---- variants: consume the accent palette; public vars override ---- */
-.sui-btn--filled {
-  background: var(--sui-btn-bg, var(--_solid));
-  color: var(--sui-btn-fg, var(--_on-solid));
-  border-color: var(--sui-btn-bd, transparent);
-}
-.sui-btn--filled:hover:not(:disabled):not([aria-disabled="true"]) {
-  background: var(--sui-btn-bg, var(--_solid-hover));
-}
-
-.sui-btn--outlined {
-  background: var(--sui-btn-bg, transparent);
-  color: var(--sui-btn-fg, var(--_text));
-  border-color: var(--sui-btn-bd, var(--_border));
-}
-.sui-btn--outlined:hover:not(:disabled):not([aria-disabled="true"]) {
-  background: var(--sui-btn-bg, var(--_tint));
-}
-
-.sui-btn--ghost {
-  background: var(--sui-btn-bg, transparent);
-  color: var(--sui-btn-fg, var(--_text));
-  border-color: transparent;
-}
-.sui-btn--ghost:hover:not(:disabled):not([aria-disabled="true"]) {
-  background: var(--sui-btn-bg, var(--_tint));
-}
-
-/* ---- premium filled: a plain gradient with a subtle hover brighten. No glow,
- * border shine, sheen, lift, or entrance animation — keep it generic. ---- */
-.sui-btn--premium.sui-btn--filled {
-  transition:
-    background 120ms ease,
-    filter 120ms ease,
-    transform 80ms ease;
-}
-.sui-btn--premium.sui-btn--filled:hover:not(:disabled):not(
-    [aria-disabled="true"]
-  ) {
+/* ---- gradient accents: brighten on hover instead of a hard bg swap ---- */
+.sui-acc-ai.sui-btn--primary:not(:disabled):hover,
+.sui-acc-premium.sui-btn--primary:not(:disabled):hover {
   filter: brightness(1.06);
 }
 
-/* ---- dark mode: nudge accents for dark surfaces ---- */
-[data-theme="dark"] .sui-btn--neutral {
-  --_solid: #3b82f6;
-  --_solid-hover: #2563eb;
-  --_text: #60a5fa;
-  --_border: #1e3a5f;
-  --_tint: rgba(96, 165, 250, 0.16);
-}
-[data-theme="dark"] .sui-btn--danger {
-  --_text: #f87171;
-  --_border: #7f1d1d;
-  --_tint: rgba(248, 113, 113, 0.16);
-}
-[data-theme="dark"] .sui-btn--warning {
-  --_text: #fbbf24;
-  --_border: #78350f;
-  --_tint: rgba(251, 191, 36, 0.16);
-}
-[data-theme="dark"] .sui-btn--success {
-  --_text: #4ade80;
-  --_border: #14532d;
-  --_tint: rgba(74, 222, 128, 0.16);
-}
-[data-theme="dark"] .sui-btn--brand {
-  --_text: #d98a8a;
-  --_border: #5a2424;
-  --_tint: rgba(217, 138, 138, 0.16);
-}
-[data-theme="dark"] .sui-btn--premium {
-  --_text: #c4b5fd;
-  --_border: #5b21b6;
-  --_tint: rgba(167, 139, 250, 0.18);
+/* ---- overflow: default wraps the label; Mantine's label is nowrap ---- */
+.sui-btn--wrap .mantine-Button-label {
+  white-space: normal;
 }
 
-/* ---- overflow: hidden truncates label text; default wraps ---- */
-.sui-btn--overflow-hidden {
-  white-space: nowrap;
-}
-.sui-btn--overflow-hidden .sui-btn__label {
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* ---- no-hover: suppress background change on hover ---- */
-.sui-btn--no-hover:hover:not(:disabled):not([aria-disabled="true"]) {
-  background: transparent;
-}
-
-/* ---- button group: collapses inner borders between adjacent buttons ---- */
-.sui-btn-group {
-  display: inline-flex;
-  align-items: stretch;
-}
-
-.sui-btn-group .sui-btn:not(:first-child) {
-  margin-left: -1px;
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-}
-
-.sui-btn-group .sui-btn:not(:last-child) {
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-}
-
-/* ---- spinner ---- */
-.sui-btn__spinner {
-  width: 0.875rem;
-  height: 0.875rem;
-  border-radius: 50%;
-  border: 2px solid currentColor;
-  border-right-color: transparent;
-  animation: spin 0.7s linear infinite;
+/* ---- no-hover: suppress hover background change ---- */
+.sui-btn--no-hover:not(:disabled):hover {
+  background: var(--button-bg, transparent) !important;
 }

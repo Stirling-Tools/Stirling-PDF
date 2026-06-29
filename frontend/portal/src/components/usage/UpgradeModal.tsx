@@ -110,12 +110,12 @@ export function UpgradeModal({
       subtitle={copy.subtitle}
       footer={
         <div className="portal-usage__modal-actions">
-          <Button variant="ghost" onClick={onClose}>
+          <Button variant="tertiary" onClick={onClose}>
             {t("usage.upgrade.notNow")}
           </Button>
           {/* TODO(backend): POST /v1/billing/plan-change { tier } (or hand off to
               sales) — for now the CTA just dismisses the modal. */}
-          <Button accent="neutral" onClick={onClose}>
+          <Button onClick={onClose}>
             {copy.cta}
           </Button>
         </div>

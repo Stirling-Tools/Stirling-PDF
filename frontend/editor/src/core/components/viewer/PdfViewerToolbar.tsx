@@ -155,7 +155,7 @@ export function PdfViewerToolbar({
       {/* First Page Button */}
       {!isPhone && (
         <Button
-          variant="ghost"
+          variant="tertiary"
           size={buttonSize}
           onClick={handleFirstPage}
           disabled={scrollState.currentPage === 1}
@@ -168,7 +168,7 @@ export function PdfViewerToolbar({
 
       {/* Previous Page Button */}
       <Button
-        variant="ghost"
+        variant="tertiary"
         size={buttonSize}
         onClick={handlePreviousPage}
         disabled={scrollState.currentPage === 1}
@@ -207,7 +207,7 @@ export function PdfViewerToolbar({
 
       {/* Next Page Button */}
       <Button
-        variant="ghost"
+        variant="tertiary"
         size={buttonSize}
         onClick={handleNextPage}
         disabled={scrollState.currentPage === scrollState.totalPages}
@@ -220,7 +220,7 @@ export function PdfViewerToolbar({
       {/* Last Page Button */}
       {!isPhone && (
         <Button
-          variant="ghost"
+          variant="tertiary"
           size={buttonSize}
           onClick={handleLastPage}
           disabled={scrollState.currentPage === scrollState.totalPages}
@@ -243,7 +243,7 @@ export function PdfViewerToolbar({
           arrow
         >
           <Button
-            variant={isDualPageActive ? "filled" : "outlined"}
+            variant={isDualPageActive ? "primary" : "secondary"}
             size={buttonSize}
             onClick={handleDualPageToggle}
             disabled={scrollState.totalPages <= 1}
@@ -278,7 +278,7 @@ export function PdfViewerToolbar({
           arrow
         >
           <Button
-            variant={pdfRenderMode !== "normal" ? "filled" : "outlined"}
+            variant={pdfRenderMode !== "normal" ? "primary" : "secondary"}
             size={buttonSize}
             onClick={cyclePdfRenderMode}
             style={{ minWidth: buttonMinWidth }}
@@ -313,7 +313,7 @@ export function PdfViewerToolbar({
           style={{ marginLeft: 16, flexShrink: 0 }}
         >
           <Button
-            variant="ghost"
+            variant="tertiary"
             onClick={handleZoomOut}
             aria-label={t("viewer.zoomOut", "Zoom out")}
             leftSection={<ZoomOutIcon fontSize="small" />}
@@ -333,7 +333,7 @@ export function PdfViewerToolbar({
             label={null}
           />
           <Button
-            variant="ghost"
+            variant="tertiary"
             onClick={handleZoomIn}
             aria-label={t("viewer.zoomIn", "Zoom in")}
             leftSection={<ZoomInIcon fontSize="small" />}
@@ -360,7 +360,7 @@ export function PdfViewerToolbar({
         >
           <Menu.Target>
             <Button
-              variant="outlined"
+              variant="secondary"
               size="lg"
               aria-label={t("viewer.moreOptions", "More")}
               style={{ marginLeft: 4 }}

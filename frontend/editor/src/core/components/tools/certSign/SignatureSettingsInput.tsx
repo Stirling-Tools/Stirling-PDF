@@ -43,7 +43,7 @@ const SignatureSettingsInput = ({
       {/* Signature Visibility */}
       <div style={{ display: "flex", gap: "4px" }}>
         <Button
-          variant={!value.showSignature ? "filled" : "outlined"}
+          variant={!value.showSignature ? "primary" : "secondary"}
           onClick={() => handleChange("showSignature", false)}
           disabled={disabled}
           style={{
@@ -60,7 +60,7 @@ const SignatureSettingsInput = ({
           </div>
         </Button>
         <Button
-          variant={value.showSignature ? "filled" : "outlined"}
+          variant={value.showSignature ? "primary" : "secondary"}
           onClick={() => handleChange("showSignature", true)}
           disabled={disabled}
           style={{

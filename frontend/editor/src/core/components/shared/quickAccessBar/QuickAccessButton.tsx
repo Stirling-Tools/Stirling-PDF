@@ -1,5 +1,5 @@
 import React from "react";
-import { ActionIcon } from "@mantine/core";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import FitText from "@app/components/shared/FitText";
 interface QuickAccessButtonProps {
   icon: React.ReactNode;
@@ -45,7 +45,7 @@ const QuickAccessButton: React.FC<QuickAccessButtonProps> = ({
   const actionIconProps =
     component === "a" && href
       ? {
-          component: "a" as const,
+          as: "a" as const,
           href,
           onClick,
           "aria-label": ariaLabel,
@@ -59,7 +59,7 @@ const QuickAccessButton: React.FC<QuickAccessButtonProps> = ({
       <ActionIcon
         {...actionIconProps}
         size={buttonSize}
-        variant="subtle"
+        variant="tertiary"
         disabled={disabled}
         style={{
           backgroundColor: bgColor,

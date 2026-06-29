@@ -324,7 +324,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
         <MantineTooltip key={tool.id} label={tool.label} withArrow>
           <Button
             variant={
-              activeTool === tool.id && annotationsVisible ? "filled" : "ghost"
+              activeTool === tool.id && annotationsVisible ? "primary" : "tertiary"
             }
             onClick={() => activateAnnotationTool(tool.id)}
             disabled={!annotationsVisible}
@@ -597,7 +597,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                   </Text>
                   <Group gap="xs">
                     <Button
-                      variant={textAlignment === "left" ? "filled" : "outlined"}
+                      variant={textAlignment === "left" ? "primary" : "secondary"}
                       onClick={() => setTextAlignment("left")}
                       size="md"
                       aria-label={t("annotation.alignLeft", "Align left")}
@@ -611,7 +611,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                     />
                     <Button
                       variant={
-                        textAlignment === "center" ? "filled" : "outlined"
+                        textAlignment === "center" ? "primary" : "secondary"
                       }
                       onClick={() => setTextAlignment("center")}
                       size="md"
@@ -626,7 +626,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                     />
                     <Button
                       variant={
-                        textAlignment === "right" ? "filled" : "outlined"
+                        textAlignment === "right" ? "primary" : "secondary"
                       }
                       onClick={() => setTextAlignment("right")}
                       size="md"
@@ -656,7 +656,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                     />
                     <Button
                       size="sm"
-                      variant="outlined"
+                      variant="secondary"
                       onClick={() => {
                         setTextBackgroundColor("");
                         annotationApiRef?.current?.setAnnotationStyle?.(
@@ -704,7 +704,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                   />
                   <Button
                     size="sm"
-                    variant="outlined"
+                    variant="secondary"
                     onClick={() => {
                       setNoteBackgroundColor("");
                       annotationApiRef?.current?.setAnnotationStyle?.(
@@ -779,7 +779,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                       </Box>
                       <Button
                         size="sm"
-                        variant={shapeThickness === 0 ? "filled" : "ghost"}
+                        variant={shapeThickness === 0 ? "primary" : "tertiary"}
                         onClick={() =>
                           setShapeThickness(shapeThickness === 0 ? 1 : 0)
                         }
@@ -1146,8 +1146,8 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
           <Button
             variant={
               activeTool === "select" && annotationsVisible
-                ? "filled"
-                : "outlined"
+                ? "primary"
+                : "secondary"
             }
             disabled={!annotationsVisible}
             onClick={() => {

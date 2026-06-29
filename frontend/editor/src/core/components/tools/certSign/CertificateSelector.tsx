@@ -152,7 +152,7 @@ export const CertificateSelector: React.FC<CertificateSelectorProps> = ({
               <Button
                 key={fmt}
                 size="sm"
-                variant={uploadFormat === fmt ? "filled" : "outlined"}
+                variant={uploadFormat === fmt ? "primary" : "secondary"}
                 onClick={() => handleFormatChange(fmt)}
                 disabled={disabled}
               >

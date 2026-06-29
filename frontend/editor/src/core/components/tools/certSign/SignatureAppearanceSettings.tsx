@@ -22,7 +22,7 @@ const SignatureAppearanceSettings = ({
       <Stack gap="sm">
         <div style={{ display: "flex", gap: "4px" }}>
           <Button
-            variant={!parameters.showSignature ? "filled" : "outlined"}
+            variant={!parameters.showSignature ? "primary" : "secondary"}
             onClick={() => onParameterChange("showSignature", false)}
             disabled={disabled}
             style={{
@@ -43,7 +43,7 @@ const SignatureAppearanceSettings = ({
             </div>
           </Button>
           <Button
-            variant={parameters.showSignature ? "filled" : "outlined"}
+            variant={parameters.showSignature ? "primary" : "secondary"}
             onClick={() => onParameterChange("showSignature", true)}
             disabled={disabled}
             style={{
@@ -109,7 +109,7 @@ const SignatureAppearanceSettings = ({
             </Text>
             <div style={{ display: "flex", gap: "4px" }}>
               <Button
-                variant={!parameters.showLogo ? "filled" : "outlined"}
+                variant={!parameters.showLogo ? "primary" : "secondary"}
                 onClick={() => onParameterChange("showLogo", false)}
                 disabled={disabled}
                 style={{
@@ -130,7 +130,7 @@ const SignatureAppearanceSettings = ({
                 </div>
               </Button>
               <Button
-                variant={parameters.showLogo ? "filled" : "outlined"}
+                variant={parameters.showLogo ? "primary" : "secondary"}
                 onClick={() => onParameterChange("showLogo", true)}
                 disabled={disabled}
                 style={{

@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Card, Chip } from "@shared/components";
 import type { Role } from "@portal/api/users";
+import { chipAccentForRole } from "@portal/components/users/format";
 import "@portal/views/Users.css";
 
 interface RolesGridProps {
@@ -22,7 +23,7 @@ export function RolesGrid({ roles }: RolesGridProps) {
         {roles.map((role) => (
           <Card key={role.id} padding="default" className="portal-users__role">
             <div className="portal-users__role-head">
-              <Chip accent={role.tone} size="sm">
+              <Chip accent={chipAccentForRole(role.id)} size="sm">
                 {role.label}
               </Chip>
             </div>

@@ -52,15 +52,24 @@ const meta: Meta<typeof Button> = {
   title: "Primitives/Button",
   component: Button,
   parameters: { layout: "centered" },
-  args: { text: "Button", variant: "filled", accent: "neutral", size: "md" },
+  args: { text: "Button", variant: "primary", accent: "default", size: "md" },
   argTypes: {
     variant: {
       control: "inline-radio",
-      options: ["filled", "outlined", "ghost"],
+      options: ["primary", "secondary", "tertiary"],
     },
     accent: {
       control: "inline-radio",
-      options: ["neutral", "brand", "danger", "warning", "success", "premium"],
+      options: [
+        "default",
+        "neutral",
+        "brand",
+        "ai",
+        "premium",
+        "danger",
+        "success",
+        "warning",
+      ],
     },
     size: { control: "inline-radio", options: ["sm", "md", "lg", "xl"] },
     justify: {
@@ -89,33 +98,35 @@ export const Playground: Story = {};
 export const Variants: Story = {
   render: (args) => (
     <Wrap>
-      <Button {...args} variant="filled" text="Filled" />
-      <Button {...args} variant="outlined" text="Outlined" />
-      <Button {...args} variant="ghost" text="Ghost" />
+      <Button {...args} variant="primary" text="Primary" />
+      <Button {...args} variant="secondary" text="Secondary" />
+      <Button {...args} variant="tertiary" text="Tertiary" />
     </Wrap>
   ),
 };
 
-/** Traffic-light accents × the three variants. `neutral` is the default. */
+/** Every accent × the three variants. Unset = `default` (blue). */
 export const Accents: Story = {
   render: () => (
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "repeat(4, auto)",
+        gridTemplateColumns: "repeat(8, auto)",
         gap: 10,
         justifyContent: "start",
       }}
     >
-      {(["filled", "outlined", "ghost"] as const).flatMap((variant) =>
+      {(["primary", "secondary", "tertiary"] as const).flatMap((variant) =>
         (
           [
+            "default",
             "neutral",
             "brand",
-            "danger",
-            "warning",
-            "success",
+            "ai",
             "premium",
+            "danger",
+            "success",
+            "warning",
           ] as const
         ).map((accent) => (
           <Button
@@ -169,9 +180,9 @@ export const IconOnly: Story = {
           aria-label="Add"
         />
       ))}
-      <Button variant="outlined" leftSection={<Plus />} aria-label="Add" />
+      <Button variant="secondary" leftSection={<Plus />} aria-label="Add" />
       <Button
-        variant="ghost"
+        variant="tertiary"
         accent="danger"
         leftSection={<Trash />}
         aria-label="Delete"
@@ -193,7 +204,7 @@ export const Justify: Story = {
           key={justify}
           fullWidth
           justify={justify}
-          variant="outlined"
+          variant="secondary"
           leftSection={<Plus />}
           rightSection={<Arrow />}
           text={justify}
@@ -209,24 +220,24 @@ export const Shape: Story = {
     <Wrap>
       <Button
         shape="circle"
-        variant="outlined"
+        variant="secondary"
         leftSection={<Plus />}
         aria-label="Add"
       />
       <Button
         shape="circle"
-        variant="ghost"
+        variant="tertiary"
         leftSection={<Arrow />}
         aria-label="Next"
       />
       <Button
         shape="circle"
-        variant="filled"
+        variant="primary"
         leftSection={<Trash />}
         aria-label="Delete"
       />
-      <Button shape="pill" variant="filled" text="Pill" />
-      <Button shape="default" variant="outlined" text="Default" />
+      <Button shape="pill" variant="primary" text="Pill" />
+      <Button shape="default" variant="secondary" text="Default" />
     </Wrap>
   ),
 };
@@ -262,8 +273,8 @@ export const Premium: Story = {
         />
       </Wrap>
       <Wrap>
-        <Button accent="premium" variant="outlined" text="Outlined" />
-        <Button accent="premium" variant="ghost" text="Ghost" />
+        <Button accent="premium" variant="secondary" text="Outlined" />
+        <Button accent="premium" variant="tertiary" text="Ghost" />
         <Button accent="premium" disabled text="Disabled" />
       </Wrap>
       <Wrap>

@@ -1,0 +1,19 @@
+/* Mantine ActionIcon-backed icon-only button. Drives Mantine's --ai-* colour
+ * vars from the shared accent palette (accents.css), mirroring Button.
+ *
+ *   variant = primary (filled) | secondary (outlined) | tertiary (ghost) */
+@import "./accents.css";
+
+/* ---- shape ---- */
+.sui-ai--circle.mantine-ActionIcon-root {
+  --ai-radius: 50%;
+}
+.sui-ai--pill.mantine-ActionIcon-root {
+  --ai-radius: 9999px;
+}
+
+/* ---- gradient accents: brighten on hover instead of a hard bg swap ---- */
+.sui-acc-ai.sui-ai--primary:not([data-disabled]):hover,
+.sui-acc-premium.sui-ai--primary:not([data-disabled]):hover {
+  filter: brightness(1.06);
+}

@@ -50,8 +50,7 @@ export function PlanCard({
         ))}
       </ul>
       <Button
-        variant={isCurrent ? "outlined" : "filled"}
-        accent="neutral"
+        variant={isCurrent ? "secondary" : "primary"}
         size="sm"
         fullWidth
         disabled={isCurrent}

@@ -170,7 +170,7 @@ export function useViewerWorkbenchBarButtons(
               <Popover.Target>
                 <div style={{ display: "inline-flex" }}>
                   <Button
-                    variant="ghost"
+                    variant="tertiary"
                     className="workbench-bar-action-icon"
                     disabled={disabled}
                     aria-label={searchLabel}
@@ -360,7 +360,7 @@ export function useViewerWorkbenchBarButtons(
                   portalTarget={document.body}
                 >
                   <Button
-                    variant={isReadingAloud ? "filled" : "ghost"}
+                    variant={isReadingAloud ? "primary" : "tertiary"}
                     className="workbench-bar-action-icon"
                     disabled={
                       disabled ||
@@ -447,7 +447,7 @@ export function useViewerWorkbenchBarButtons(
             portalTarget={document.body}
           >
             <Button
-              variant={isAnnotationsActive ? "filled" : "ghost"}
+              variant={isAnnotationsActive ? "primary" : "tertiary"}
               className="workbench-bar-action-icon"
               onClick={() => {
                 if (disabled || isAnnotationsActive) return;
@@ -503,7 +503,7 @@ export function useViewerWorkbenchBarButtons(
             portalTarget={document.body}
           >
             <Button
-              variant={isFormFillActive ? "filled" : "ghost"}
+              variant={isFormFillActive ? "primary" : "tertiary"}
               className="workbench-bar-action-icon"
               onClick={() => {
                 if (disabled) return;

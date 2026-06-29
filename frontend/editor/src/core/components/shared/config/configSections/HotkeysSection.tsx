@@ -216,7 +216,7 @@ const HotkeysSection: React.FC = () => {
                       <Group gap="xs">
                         <Button
                           size="sm"
-                          variant={isEditing ? "filled" : "outlined"}
+                          variant={isEditing ? "primary" : "secondary"}
                           onClick={() => handleStartCapture(toolId)}
                         >
                           {isEditing
@@ -228,7 +228,7 @@ const HotkeysSection: React.FC = () => {
                         </Button>
                         <Button
                           size="sm"
-                          variant="ghost"
+                          variant="tertiary"
                           disabled={bindingEquals(
                             currentBinding,
                             defaultBinding,

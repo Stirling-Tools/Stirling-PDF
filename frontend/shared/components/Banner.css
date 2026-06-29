@@ -76,19 +76,10 @@
   align-items: center;
 }
 
+/* Sizing/background/hover are owned by the ActionIcon; this just keeps it from
+ * stretching and sizes the × glyph. */
 .sui-banner__close {
   flex: 0 0 auto;
-  width: 1.5rem;
-  height: 1.5rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-sm);
-  color: var(--color-text-4);
-  font-size: 1rem;
+  font-size: 1.125rem;
   line-height: 1;
-}
-.sui-banner__close:hover {
-  background: rgba(0, 0, 0, 0.06);
-  color: var(--color-text-1);
 }

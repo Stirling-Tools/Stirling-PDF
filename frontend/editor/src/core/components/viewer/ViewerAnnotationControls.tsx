@@ -186,7 +186,7 @@ export default function ViewerAnnotationControls({
         portalTarget={document.body}
       >
         <Button
-          variant={isRedactMode ? "filled" : "ghost"}
+          variant={isRedactMode ? "primary" : "tertiary"}
           className="workbench-bar-action-icon"
           onClick={handleRedactionToggle}
           disabled={disabled || currentView !== "viewer"}
@@ -216,7 +216,7 @@ export default function ViewerAnnotationControls({
         portalTarget={document.body}
       >
         <Button
-          variant={annotationsHidden ? "filled" : "ghost"}
+          variant={annotationsHidden ? "primary" : "tertiary"}
           className="workbench-bar-action-icon"
           onClick={handleToggleAnnotationsVisibility}
           disabled={

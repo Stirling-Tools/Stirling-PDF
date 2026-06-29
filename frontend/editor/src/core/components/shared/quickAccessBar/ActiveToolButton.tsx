@@ -12,7 +12,8 @@
  * - Only appears for tools that don't have dedicated nav buttons (read, sign, automate)
  */
 import React, { useEffect, useRef, useState } from "react";
-import { ActionIcon, Divider } from "@mantine/core";
+import { Divider } from "@mantine/core";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import { useTranslation } from "react-i18next";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
@@ -156,8 +157,7 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({
                 maxWidth={140}
               >
                 <ActionIcon
-                  component="a"
-                  href={getHomeNavigation().href}
+                  {...{ as: "a" as const, href: getHomeNavigation().href }}
                   onClick={(e: React.MouseEvent) => {
                     const performNavigation = () => {
                       setActiveButton("tools");
@@ -171,7 +171,7 @@ const ActiveToolButton: React.FC<ActiveToolButtonProps> = ({
                     handleUnlessSpecialClick(e, performNavigation);
                   }}
                   size={"lg"}
-                  variant="subtle"
+                  variant="tertiary"
                   onMouseEnter={() => setIsBackHover(true)}
                   onMouseLeave={() => setIsBackHover(false)}
                   aria-label={

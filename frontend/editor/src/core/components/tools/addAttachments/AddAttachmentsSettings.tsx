@@ -3,14 +3,7 @@
  *
  * Allows selecting files to attach to PDFs with optional PDF/A-3b conversion support.
  */
-import {
-  Stack,
-  Text,
-  Group,
-  ScrollArea,
-  Button,
-  Checkbox,
-} from "@mantine/core";
+import { Stack, Text, Group, ScrollArea, Checkbox } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { AddAttachmentsParameters } from "@app/hooks/tools/addAttachments/useAddAttachmentsParameters";
 import LocalIcon from "@app/components/shared/LocalIcon";
@@ -51,10 +44,9 @@ const AddAttachmentsSettings = ({
           style={{ display: "none" }}
           id="attachments-input"
         />
-        <Button
-          size="xs"
-          color="blue"
-          component="label"
+        <DSButton
+          size="sm"
+          as="label"
           htmlFor="attachments-input"
           disabled={disabled}
           leftSection={<LocalIcon icon="add" width="14" height="14" />}
@@ -62,7 +54,7 @@ const AddAttachmentsSettings = ({
           {parameters.attachments?.length > 0
             ? t("AddAttachmentsRequest.addMoreFiles", "Add more files...")
             : t("AddAttachmentsRequest.placeholder", "Choose files...")}
-        </Button>
+        </DSButton>
       </Stack>
       {parameters.attachments?.length > 0 && (
         <Stack gap="xs">

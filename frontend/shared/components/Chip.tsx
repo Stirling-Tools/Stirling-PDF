@@ -1,44 +1,24 @@
-import type { CSSProperties, HTMLAttributes, ReactNode } from "react";
+import { Pill as MantinePill } from "@mantine/core";
+import type { CSSProperties, ReactNode } from "react";
 import "@shared/components/Chip.css";
-import { Button } from "@shared/components/Button";
 
-export type ChipNamedAccent =
+/** Same accent dial as Button. */
+export type ChipAccent =
+  | "default"
   | "neutral"
-  | "blue"
-  | "purple"
-  | "green"
-  | "amber"
-  | "red";
-/** Named palette accent or any CSS colour (`var(--x)`, hex, rgb). */
-export type ChipAccent = ChipNamedAccent | (string & {});
+  | "brand"
+  | "ai"
+  | "premium"
+  | "danger"
+  | "success"
+  | "warning";
 export type ChipSize = "xs" | "sm" | "md" | "lg";
+/** primary = solid fill; secondary = soft tinted tag (the default tag look). */
+export type ChipVariant = "primary" | "secondary";
 
-/** Accepts `--sui-chip-bg`/`-fg`/`-bd` color-override vars. */
-export type ChipStyle = CSSProperties &
-  Partial<Record<"--sui-chip-bg" | "--sui-chip-fg" | "--sui-chip-bd", string>>;
-
-const NAMED_ACCENTS: readonly string[] = [
-  "neutral",
-  "blue",
-  "purple",
-  "green",
-  "amber",
-  "red",
-];
-
-function customAccentVars(color: string): CSSProperties {
-  return {
-    "--sui-chip-bg": `color-mix(in srgb, ${color} 14%, transparent)`,
-    "--sui-chip-fg": color,
-    "--sui-chip-bd": `color-mix(in srgb, ${color} 35%, transparent)`,
-  } as CSSProperties;
-}
-
-export interface ChipProps extends Omit<
-  HTMLAttributes<HTMLElement>,
-  "onClick" | "style"
-> {
+export interface ChipProps {
   accent?: ChipAccent;
+  variant?: ChipVariant;
   size?: ChipSize;
   leadingIcon?: ReactNode;
   trailingIcon?: ReactNode;
@@ -48,14 +28,16 @@ export interface ChipProps extends Omit<
   onClick?: () => void;
   /** Leading status dot. Use for status-style chips. */
   showDot?: boolean;
-  style?: ChipStyle;
+  style?: CSSProperties;
   children?: ReactNode;
   className?: string;
+  "data-consolidate-as"?: string;
 }
 
-/** Open-ended chip/tag. For semantic status use StatusBadge instead. */
+/** Open-ended chip/tag (Mantine Pill-backed). For semantic status use StatusBadge. */
 export function Chip({
-  accent = "neutral",
+  accent = "default",
+  variant = "secondary",
   size = "md",
   leadingIcon,
   trailingIcon,
@@ -68,29 +50,27 @@ export function Chip({
   className,
   ...rest
 }: ChipProps) {
-  const Tag = onClick ? "button" : "span";
-  const isNamedAccent = NAMED_ACCENTS.includes(accent);
   const classes = [
     "sui-chip",
-    isNamedAccent ? `sui-chip--${accent}` : "",
-    `sui-chip--${size}`,
+    `sui-acc-${accent}`,
+    `sui-chip--${variant}`,
     onClick ? "sui-chip--interactive" : "",
     loading ? "sui-chip--loading" : "",
     className ?? "",
   ]
     .filter(Boolean)
     .join(" ");
-  const mergedStyle: ChipStyle | undefined = isNamedAccent
-    ? style
-    : { ...customAccentVars(accent), ...style };
 
   return (
-    <Tag
-      className={classes}
-      onClick={loading ? undefined : onClick}
-      type={onClick ? "button" : undefined}
-      style={mergedStyle}
+    <MantinePill
       {...rest}
+      className={classes}
+      style={style}
+      size={size}
+      withRemoveButton={!!onRemove && !loading}
+      onRemove={onRemove}
+      onClick={loading ? undefined : onClick}
+      {...(onClick ? { role: "button", tabIndex: 0 } : {})}
     >
       {showDot && <span className="sui-chip__dot" aria-hidden />}
       {loading ? (
@@ -106,19 +86,6 @@ export function Chip({
           {trailingIcon}
         </span>
       )}
-      {onRemove && (
-        <Button
-          variant="ghost"
-          shape="circle"
-          className="sui-chip__remove"
-          leftSection={<>×</>}
-          aria-label="Remove"
-          onClick={(e) => {
-            e.stopPropagation();
-            onRemove();
-          }}
-        />
-      )}
-    </Tag>
+    </MantinePill>
   );
 }

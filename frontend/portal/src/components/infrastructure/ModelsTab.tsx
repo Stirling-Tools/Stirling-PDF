@@ -46,7 +46,7 @@ export function ModelsTab() {
       render: (m) => (
         <div className="portal-infra__cell-stack">
           <span className="portal-infra__cell-strong">{m.name}</span>
-          <Chip accent="neutral" size="sm">
+          <Chip size="sm">
             {MODEL_PROVIDER_LABEL[m.provider]}
           </Chip>
         </div>
@@ -134,7 +134,7 @@ export function ModelsTab() {
         <div className="portal-infra__cell-stack">
           <span className="portal-infra__cell-strong">{r.operation}</span>
           {r.isDefault && (
-            <Chip accent="blue" size="sm">
+            <Chip size="sm">
               {t("infrastructure.models.routingColumns.default")}
             </Chip>
           )}

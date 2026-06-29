@@ -87,7 +87,7 @@ export function PipelineForkWizard() {
           {PIPELINE_TEMPLATES.map((t) => (
             <Button
               key={t.id}
-              variant="ghost"
+              variant="tertiary"
               className="portal-fork__template"
               data-accent={t.accent}
               onClick={() => fork(t)}
@@ -96,7 +96,7 @@ export function PipelineForkWizard() {
               <span className="portal-fork__template-blurb">{t.blurb}</span>
               <span className="portal-fork__template-types">
                 {t.docTypes.map((d) => (
-                  <Chip key={d} size="sm" accent="neutral">
+                  <Chip key={d} size="sm">
                     {d}
                   </Chip>
                 ))}
@@ -139,7 +139,7 @@ export function PipelineForkWizard() {
           </ol>
 
           <div className="portal-fork__build-actions">
-            <Button variant="ghost" size="sm" onClick={reset}>
+            <Button variant="tertiary" size="sm" onClick={reset}>
               {phase === "ready"
                 ? t("forkWizard.action.pickAnother")
                 : t("forkWizard.action.cancel")}

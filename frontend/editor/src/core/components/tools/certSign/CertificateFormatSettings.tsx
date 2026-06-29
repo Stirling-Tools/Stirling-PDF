@@ -19,7 +19,9 @@ const CertificateFormatSettings = ({
         {/* First row - PKCS#12 and PFX */}
         <div style={{ display: "flex", gap: "4px" }}>
           <Button
-            variant={parameters.certType === "PKCS12" ? "filled" : "outlined"}
+            variant={
+              parameters.certType === "PKCS12" ? "primary" : "secondary"
+            }
             onClick={() => onParameterChange("certType", "PKCS12")}
             disabled={disabled}
             style={{
@@ -40,7 +42,7 @@ const CertificateFormatSettings = ({
             </div>
           </Button>
           <Button
-            variant={parameters.certType === "PFX" ? "filled" : "outlined"}
+            variant={parameters.certType === "PFX" ? "primary" : "secondary"}
             onClick={() => onParameterChange("certType", "PFX")}
             disabled={disabled}
             style={{
@@ -64,7 +66,7 @@ const CertificateFormatSettings = ({
         {/* Second row - PEM and JKS */}
         <div style={{ display: "flex", gap: "4px" }}>
           <Button
-            variant={parameters.certType === "PEM" ? "filled" : "outlined"}
+            variant={parameters.certType === "PEM" ? "primary" : "secondary"}
             onClick={() => onParameterChange("certType", "PEM")}
             disabled={disabled}
             style={{
@@ -85,7 +87,7 @@ const CertificateFormatSettings = ({
             </div>
           </Button>
           <Button
-            variant={parameters.certType === "JKS" ? "filled" : "outlined"}
+            variant={parameters.certType === "JKS" ? "primary" : "secondary"}
             onClick={() => onParameterChange("certType", "JKS")}
             disabled={disabled}
             style={{

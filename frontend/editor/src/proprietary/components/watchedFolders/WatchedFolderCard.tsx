@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Box, Button, Text, Group, Loader } from "@mantine/core";
-import { Button as SharedButton } from "@shared/components/Button";
+import { Box, Text, Group, Loader } from "@mantine/core";
+import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { useTranslation } from "react-i18next";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -78,11 +79,17 @@ export function WatchedFolderCard({
       }
     >
       <Button
-        variant={isActive ? "light" : "subtle"}
+        variant="tertiary"
+        accent="neutral"
+        size="sm"
         className="tool-button"
         fullWidth
-        justify="flex-start"
-        px="sm"
+        justify="start"
+        style={
+          isActive
+            ? { backgroundColor: "var(--tool-button-selected-bg)" }
+            : undefined
+        }
         leftSection={
           <Box
             style={{
@@ -104,22 +111,26 @@ export function WatchedFolderCard({
         rightSection={
           isHovered ? (
             <Group gap={2} onClick={(e) => e.stopPropagation()}>
-              <SharedButton
+              <ActionIcon
+                as="span"
                 size="sm"
                 variant="tertiary"
                 onClick={onEdit}
                 aria-label={t("watchedFolders.card.edit", "Edit folder")}
-                leftSection={<EditIcon style={{ fontSize: 11 }} />}
-              />
+              >
+                <EditIcon style={{ fontSize: 11 }} />
+              </ActionIcon>
               {!folder.isDefault && (
-                <SharedButton
+                <ActionIcon
+                  as="span"
                   size="sm"
                   variant="tertiary"
                   accent="danger"
                   onClick={onDelete}
                   aria-label={t("watchedFolders.card.delete", "Delete folder")}
-                  leftSection={<DeleteIcon style={{ fontSize: 11 }} />}
-                />
+                >
+                  <DeleteIcon style={{ fontSize: 11 }} />
+                </ActionIcon>
               )}
             </Group>
           ) : folder.isPaused ? (

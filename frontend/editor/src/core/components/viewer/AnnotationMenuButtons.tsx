@@ -16,15 +16,10 @@ export function DeleteButton({ onDelete }: { onDelete: () => void }) {
     <Tooltip label={t("annotation.delete", "Delete")}>
       <Button
         aria-label={t("annotation.delete", "Delete")}
-        variant="outlined"
+        variant="secondary"
         accent="danger"
         size="md"
         onClick={onDelete}
-        style={{
-          "--sui-btn-bg": "var(--bg-raised)",
-          "--sui-btn-fg": "var(--text-secondary)",
-          "--sui-btn-bd": "var(--border-default)",
-        }}
         leftSection={<DeleteIcon style={{ fontSize: 18 }} />}
       />
     </Tooltip>
@@ -37,14 +32,10 @@ export function EditTextButton({ onEdit }: { onEdit: () => void }) {
     <Tooltip label={t("annotation.editText", "Edit Text")}>
       <Button
         aria-label={t("annotation.editText", "Edit Text")}
-        variant="outlined"
+        variant="secondary"
+        accent="neutral"
         size="md"
         onClick={onEdit}
-        style={{
-          "--sui-btn-bg": "var(--bg-raised)",
-          "--sui-btn-fg": "var(--text-secondary)",
-          "--sui-btn-bd": "var(--border-default)",
-        }}
         leftSection={<EditIcon style={{ fontSize: 18 }} />}
       />
     </Tooltip>
@@ -70,18 +61,10 @@ export function AttachCommentButton({
     <Tooltip label={label}>
       <Button
         aria-label={label}
-        variant={isInSidebar ? "filled" : "outlined"}
+        variant={isInSidebar ? "primary" : "secondary"}
+        accent={isInSidebar ? undefined : "neutral"}
         size="md"
         onClick={isInSidebar ? onView : onAdd}
-        style={
-          isInSidebar
-            ? undefined
-            : {
-                "--sui-btn-bg": "var(--bg-raised)",
-                "--sui-btn-fg": "var(--text-secondary)",
-                "--sui-btn-bd": "var(--border-default)",
-              }
-        }
         leftSection={<AddCommentIcon style={{ fontSize: 18 }} />}
       />
     </Tooltip>
@@ -102,14 +85,10 @@ export function CommentButton({ hasContent, onClick }: CommentButtonProps) {
     <Tooltip label={label}>
       <Button
         aria-label={label}
-        variant="outlined"
+        variant="secondary"
+        accent="neutral"
         size="md"
         onClick={onClick}
-        style={{
-          "--sui-btn-bg": "var(--bg-raised)",
-          "--sui-btn-fg": "var(--text-secondary)",
-          "--sui-btn-bd": "var(--border-default)",
-        }}
         leftSection={<CommentIcon style={{ fontSize: 18 }} />}
       />
     </Tooltip>
@@ -136,14 +115,10 @@ export function LinkButton({
       <Tooltip label={t("viewer.comments.goToLink", "Go to link")}>
         <Button
           aria-label={t("viewer.comments.goToLink", "Go to link")}
-          variant="outlined"
+          variant="secondary"
+          accent="neutral"
           size="md"
           onClick={onGoToLink}
-          style={{
-            "--sui-btn-bg": "var(--bg-raised)",
-            "--sui-btn-fg": "var(--text-secondary)",
-            "--sui-btn-bd": "var(--border-default)",
-          }}
           leftSection={<OpenInNewIcon style={{ fontSize: 18 }} />}
         />
       </Tooltip>
@@ -156,14 +131,10 @@ export function LinkButton({
         <Tooltip label={t("viewer.comments.addLink", "Add link")}>
           <Button
             aria-label={t("viewer.comments.addLink", "Add link")}
-            variant="outlined"
+            variant="secondary"
+            accent="neutral"
             size="md"
             onClick={() => setOpen((o) => !o)}
-            style={{
-              "--sui-btn-bg": "var(--bg-raised)",
-              "--sui-btn-fg": "var(--text-secondary)",
-              "--sui-btn-bd": "var(--border-default)",
-            }}
             leftSection={
               <LocalIcon icon="link" width="1.25rem" height="1.25rem" />
             }

@@ -1,4 +1,4 @@
-import { Modal, Stack, Text, Group, Box, UnstyledButton } from "@mantine/core";
+import { Modal, Stack, Text, Group, Box } from "@mantine/core";
 import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import {
@@ -122,7 +122,9 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
                     overflow: "hidden",
                   }}
                 >
-                  <UnstyledButton
+                  <Button
+                    variant="tertiary"
+                    hover={false}
                     onClick={() => {
                       onSignatureSelected(sig);
                       onClose();
@@ -130,7 +132,7 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
                     style={{ flex: 1, padding: "12px" }}
                   >
                     {renderSignaturePreview(sig)}
-                  </UnstyledButton>
+                  </Button>
                   <Button
                     leftSection={<CloseIcon sx={{ fontSize: "1rem" }} />}
                     variant="tertiary"

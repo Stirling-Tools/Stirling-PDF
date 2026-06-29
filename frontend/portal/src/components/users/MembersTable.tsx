@@ -14,9 +14,11 @@ import {
   type RoleId,
   MEMBER_STATUS_TONE,
   ROLE_LABEL,
-  ROLE_TONE,
 } from "@portal/api/users";
-import { avatarToneForRole } from "@portal/components/users/format";
+import {
+  avatarToneForRole,
+  chipAccentForRole,
+} from "@portal/components/users/format";
 import "@portal/views/Users.css";
 
 interface MembersTableProps {
@@ -64,7 +66,7 @@ export function MembersTable({
         key: "role",
         header: t("users.table.role"),
         render: (m) => (
-          <Chip accent={ROLE_TONE[m.role]} size="sm">
+          <Chip accent={chipAccentForRole(m.role)} size="sm">
             {ROLE_LABEL[m.role]}
           </Chip>
         ),
@@ -103,7 +105,7 @@ export function MembersTable({
                 className="portal-users__row-action"
                 aria-label={t("users.table.actionsFor", { name: m.name })}
                 onClick={(e) => e.stopPropagation()}
-                variant="ghost"
+                variant="tertiary"
                 leftSection="⋯"
               />
             </Menu.Target>
