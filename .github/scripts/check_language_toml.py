@@ -166,7 +166,7 @@ def read_toml_keys(file_path):
     return {}
 
 
-def check_for_differences(reference_file, file_list, branch, actor):
+def check_for_differences(reference_file, file_list, branch, actor, locales_dir=None):
     reference_branch = branch
     reference_file = Path(reference_file)
     basename_reference_file = reference_file.name
@@ -184,7 +184,7 @@ def check_for_differences(reference_file, file_list, branch, actor):
     if len(file_list) == 1:
         file_arr = file_list[0].split()
 
-    base_dir = Path.cwd() / "frontend" / "public" / "locales"
+    base_dir = Path(locales_dir).resolve() if locales_dir else Path.cwd() / "frontend" / "public" / "locales"
 
     for file_path in file_arr:
         file_path = Path(file_path)
@@ -353,6 +353,13 @@ if __name__ == "__main__":
         required=False,
         help="List of changed files, separated by spaces.",
     )
+    parser.add_argument(
+        "--locales-dir",
+        type=str,
+        required=False,
+        default=None,
+        help="Path to the locales directory (defaults to frontend/editor/public/locales).",
+    )
     args = parser.parse_args()
 
     # Sanitize --actor input to avoid injection attacks
@@ -363,21 +370,18 @@ if __name__ == "__main__":
     if args.branch:
         args.branch = re.sub(r"[^a-zA-Z0-9\\-]", "", args.branch)
 
+    locales_dir = args.locales_dir or os.path.join(
+        os.getcwd(), "frontend", "public", "locales"
+    )
+
     file_list = args.files
     if file_list is None:
         if args.check_file:
             file_list = [args.check_file]
         else:
-            file_list = glob.glob(
-                os.path.join(
-                    os.getcwd(),
-                    "frontend",
-                    "public",
-                    "locales",
-                    "*",
-                    "translation.toml",
-                )
-            )
+            file_list = glob.glob(os.path.join(locales_dir, "*", "translation.toml"))
         update_missing_keys(args.reference_file, file_list)
     else:
-        check_for_differences(args.reference_file, file_list, args.branch, args.actor)
+        check_for_differences(
+            args.reference_file, file_list, args.branch, args.actor, locales_dir
+        )

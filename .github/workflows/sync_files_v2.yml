@@ -12,6 +12,7 @@ on:
       - "app/proprietary/build.gradle"
       - "README.md"
       - "frontend/public/locales/*/translation.toml"
+      - "frontend/portal/public/locales/*/translation.toml"
       - "app/core/src/main/resources/static/3rdPartyLicenses.json"
       - "scripts/ignore_translation.toml"
 
@@ -63,6 +64,13 @@ jobs:
         run: |
           python .github/scripts/check_language_toml.py --reference-file "frontend/public/locales/en-GB/translation.toml" --branch main
 
+      - name: Sync portal translation TOML files
+        run: |
+          python .github/scripts/check_language_toml.py \
+            --reference-file "frontend/portal/public/locales/en-US/translation.toml" \
+            --locales-dir "frontend/portal/public/locales" \
+            --branch main
+
       - name: pre-commit run
         run: |
           pre-commit run toml-sort-fix --all-files
@@ -70,6 +78,7 @@ jobs:
       - name: Commit translation files
         run: |
           git add frontend/public/locales/*/translation.toml
+          git add frontend/portal/public/locales/*/translation.toml
           git diff --staged --quiet || git commit -m ":memo: Sync translation files (TOML)" || echo "No changes detected"
 
       - name: Sync README.md
@@ -125,4 +134,5 @@ jobs:
           add-paths: |
             README.md
             frontend/public/locales/*/translation.toml
+            frontend/portal/public/locales/*/translation.toml
             scripts/ignore_translation.toml
