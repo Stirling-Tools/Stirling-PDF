@@ -536,8 +536,10 @@ const SignPopout = ({
             pdfFile = new File([pdfResponse.data], session.documentName, {
               type: "application/pdf",
             });
-          } catch (pdfError: any) {
-            if (pdfError?.response?.status === 404) {
+          } catch (pdfError: unknown) {
+            const status = (pdfError as { response?: { status?: number } })
+              ?.response?.status;
+            if (status === 404) {
               // Finalized but signed PDF not available - backend issue
               alert({
                 alertType: "warning",
@@ -760,7 +762,7 @@ const SignPopout = ({
     // Update workbench data, preserving PDF and callbacks
     setCustomWorkbenchViewData(
       SESSION_DETAIL_WORKBENCH_ID,
-      (prevData: any) => ({
+      (prevData: Record<string, unknown>) => ({
         ...prevData,
         session: response.data,
       }),
