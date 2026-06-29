@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Banner, Button } from "@shared/components";
 import { meterState } from "@shared/billing";
 import type { Wallet } from "@portal/api/billing";
+import type { LocalUsage } from "@portal/api/link";
 import { useStripePortal } from "@portal/hooks/useStripePortal";
 import { FreePdfEditorsCard } from "@portal/components/billing/FreePdfEditorsCard";
 import { PdfsProcessedCard } from "@portal/components/billing/PdfsProcessedCard";
@@ -13,6 +14,8 @@ import { InvoicesList } from "@portal/components/billing/InvoicesList";
 
 interface Props {
   wallet: Wallet;
+  /** Instance-local usage not yet synced to SaaS; folded into the PDFs-processed card. */
+  unsynced?: LocalUsage | null;
   onWalletChange?: () => void;
 }
 
@@ -30,7 +33,11 @@ interface Props {
  * page-header "Manage Payment" action and the payment card's "Update" button
  * deep-link there via {@link useStripePortal}.
  */
-export function SubscribedPlanView({ wallet, onWalletChange }: Props) {
+export function SubscribedPlanView({
+  wallet,
+  unsynced,
+  onWalletChange,
+}: Props) {
   const { t } = useTranslation();
   const [adjusting, setAdjusting] = useState(false);
   const portal = useStripePortal(wallet);
@@ -77,7 +84,7 @@ export function SubscribedPlanView({ wallet, onWalletChange }: Props) {
 
       <FreePdfEditorsCard />
 
-      <PdfsProcessedCard wallet={wallet} />
+      <PdfsProcessedCard wallet={wallet} unsynced={unsynced} />
 
       <div className="portal-billing__spend-row">
         <SpendThisMonthCard wallet={wallet} />

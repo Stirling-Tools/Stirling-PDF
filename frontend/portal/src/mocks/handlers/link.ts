@@ -1,6 +1,7 @@
 import { http, HttpResponse, delay } from "msw";
 import {
   getLocalStatus,
+  getLocalUsage,
   linkLocal,
   listInstances,
   revokeInstance,
@@ -35,6 +36,11 @@ export const linkHandlers = [
       // empty body — name stays undefined
     }
     return HttpResponse.json(linkLocal(name), { status: 201 });
+  }),
+
+  http.get("/api/v1/account-link/usage", async () => {
+    await delay(120);
+    return HttpResponse.json(getLocalUsage());
   }),
 
   http.post("/api/v1/account-link/unlink", async () => {

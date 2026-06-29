@@ -3,12 +3,14 @@ import type {
   LinkInstanceRequest,
   LinkStatus,
   LinkedInstanceRow,
+  LocalUsage,
 } from "@portal/mocks/link";
 
 export type {
   LinkInstanceRequest,
   LinkStatus,
   LinkedInstanceRow,
+  LocalUsage,
 } from "@portal/mocks/link";
 
 /**
@@ -55,6 +57,15 @@ export async function linkInstance(
 /** Linked / Not-linked for this instance. */
 export async function fetchStatus(): Promise<LinkStatus> {
   return apiClient.local.json<LinkStatus>(`${BASE}/status`);
+}
+
+/**
+ * Locally-accrued usage not yet reported to SaaS — the portal adds this on top
+ * of the SaaS-synced spend so "current usage" includes work done since the last
+ * daily sync. Local-backend call; returns zeros when metering is off.
+ */
+export async function fetchLocalUsage(): Promise<LocalUsage> {
+  return apiClient.local.json<LocalUsage>(`${BASE}/usage`);
 }
 
 /**

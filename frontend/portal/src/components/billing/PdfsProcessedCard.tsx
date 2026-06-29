@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Card } from "@shared/components";
 import type { Wallet, WalletCategoryBreakdown } from "@portal/api/billing";
+import type { LocalUsage } from "@portal/api/link";
 
 /**
  * "PDFs processed this period" headline + a stacked split of where the metered
@@ -8,6 +9,10 @@ import type { Wallet, WalletCategoryBreakdown } from "@portal/api/billing";
  * (API / Agents / Automation — the same buckets the entitlement service tracks;
  * the "AI" bucket surfaces as "Agents" here). Real data only: the bar hides when
  * nothing metered has run yet.
+ *
+ * <p>When a linked instance has accrued usage SaaS hasn't billed yet ({@code
+ * unsynced}), it's folded into the headline + split so "current usage" reflects
+ * work done since the last daily sync, with a "pending sync" note for honesty.
  */
 const SEGMENTS: ReadonlyArray<{
   key: keyof WalletCategoryBreakdown;
@@ -35,10 +40,25 @@ const SEGMENTS: ReadonlyArray<{
   },
 ];
 
-export function PdfsProcessedCard({ wallet }: { wallet: Wallet }) {
+export function PdfsProcessedCard({
+  wallet,
+  unsynced,
+}: {
+  wallet: Wallet;
+  unsynced?: LocalUsage | null;
+}) {
   const { t } = useTranslation();
-  const b = wallet.categoryBreakdown;
+  // Fold instance-local unsynced usage into both the headline and the split, so
+  // the card shows synced + not-yet-billed work as a single current-usage figure.
+  const pending = unsynced?.totalUnsyncedUnits ?? 0;
+  const base = wallet.categoryBreakdown;
+  const b: WalletCategoryBreakdown = {
+    api: base.api + (unsynced?.apiUnsyncedUnits ?? 0),
+    ai: base.ai + (unsynced?.aiUnsyncedUnits ?? 0),
+    automation: base.automation + (unsynced?.automationUnsyncedUnits ?? 0),
+  };
   const total = b.api + b.ai + b.automation;
+  const headline = wallet.billableUsed + pending;
 
   return (
     <Card padding="loose">
@@ -47,12 +67,21 @@ export function PdfsProcessedCard({ wallet }: { wallet: Wallet }) {
       </span>
       <div className="portal-billing__bignum-row">
         <span className="portal-billing__bignum">
-          {wallet.billableUsed.toLocaleString()}
+          {headline.toLocaleString()}
         </span>
         <span className="portal-billing__bignum-unit">
           {t("billing.pdfsProcessed.unit")}
         </span>
       </div>
+
+      {pending > 0 && (
+        <p className="portal-billing__section-sub">
+          {t("billing.pdfsProcessed.pendingSync", {
+            count: pending,
+            formatted: pending.toLocaleString(),
+          })}
+        </p>
+      )}
 
       {total > 0 ? (
         <>

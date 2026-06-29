@@ -26,7 +26,7 @@ class AccountLinkControllerTest {
     @BeforeEach
     void setUp() {
         service = mock(AccountLinkService.class);
-        controller = new AccountLinkController(service);
+        controller = new AccountLinkController(service, mock(LocalUsageService.class));
     }
 
     @Test

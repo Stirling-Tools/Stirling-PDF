@@ -64,14 +64,25 @@ public class UsageCounter {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    /** Fresh-accrual row: nothing synced yet. */
     public UsageCounter(
             LocalDateTime periodStart,
             String category,
             long cumulativeUnits,
             LocalDateTime updatedAt) {
+        this(periodStart, category, cumulativeUnits, 0L, updatedAt);
+    }
+
+    public UsageCounter(
+            LocalDateTime periodStart,
+            String category,
+            long cumulativeUnits,
+            long lastSyncedUnits,
+            LocalDateTime updatedAt) {
         this.periodStart = periodStart;
         this.category = category;
         this.cumulativeUnits = cumulativeUnits;
+        this.lastSyncedUnits = lastSyncedUnits;
         this.updatedAt = updatedAt;
     }
 }

@@ -23,7 +23,8 @@ import lombok.extern.slf4j.Slf4j;
  * <p>The portal (served from this same origin, admin authenticated by the existing self-hosted
  * security chain) calls these. {@code POST /link} relays the admin's Supabase JWT to the SaaS
  * backend, which mints + returns a device credential we store locally. {@code GET /status} backs
- * the portal's link card.
+ * the portal's link card; {@code GET /usage} exposes locally-accrued unsynced usage the portal adds
+ * to SaaS-synced spend.
  *
  * <p>Admin-only, {@code @Profile("!saas")}, gated behind {@code
  * stirling.billing.account-link.enabled} — off → bean absent → 404.
@@ -38,9 +39,11 @@ import lombok.extern.slf4j.Slf4j;
 public class AccountLinkController {
 
     private final AccountLinkService service;
+    private final LocalUsageService localUsageService;
 
-    public AccountLinkController(AccountLinkService service) {
+    public AccountLinkController(AccountLinkService service, LocalUsageService localUsageService) {
         this.service = service;
+        this.localUsageService = localUsageService;
     }
 
     /** {@code supabaseJwt} is the admin's short-lived token the portal already holds. */
@@ -84,5 +87,14 @@ public class AccountLinkController {
     public ResponseEntity<Void> unlink() {
         service.unlink();
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Locally accrued usage not yet reported to SaaS — the portal adds it to the SaaS-synced spend
+     * so "current usage" includes work done since the last daily sync.
+     */
+    @GetMapping("/usage")
+    public ResponseEntity<LocalUsageService.LocalUsage> usage() {
+        return ResponseEntity.ok(localUsageService.currentPeriodUnsynced());
     }
 }
