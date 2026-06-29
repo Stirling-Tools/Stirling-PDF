@@ -13,6 +13,7 @@ import { useFileState } from "@app/contexts/FileContext";
 import { isStirlingFile } from "@app/types/fileContext";
 import type { FileId } from "@app/types/file";
 import { enforceExportPolicies } from "@app/services/policyExport";
+import { useTranslation } from "react-i18next";
 import { alert } from "@app/components/toast";
 import {
   preferencesService,
@@ -219,6 +220,7 @@ interface ViewerProviderProps {
 }
 
 export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
+  const { t } = useTranslation();
   // UI state - only state directly managed by this context
   const [isThumbnailSidebarVisible, setIsThumbnailSidebarVisible] =
     useState(false);
@@ -569,8 +571,8 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     }
     alert({
       alertType: "warning",
-      title: "Policy applied before printing",
-      body: "This PDF was updated to meet a policy. Review the changes, then print again.",
+      title: t("policies.enforcement.printPolicyAppliedTitle"),
+      body: t("policies.enforcement.printPolicyAppliedBody"),
     });
   }, [activeFileId, selectors, printActions]);
 

@@ -4,17 +4,12 @@
  * so a slow policy run would otherwise be invisible — this surfaces what's being
  * enforced (before export, print, convert, …) and how many jobs are waiting.
  */
+import { useTranslation } from "react-i18next";
 import { Group, Text, Loader } from "@mantine/core";
 import { useEnforcementQueue } from "@app/components/policies/enforcementQueue";
 
-const TRIGGER_VERB: Record<string, string> = {
-  export: "Enforcing before export",
-  print: "Enforcing before print",
-  convert: "Enforcing before convert",
-  input: "Enforcing on import",
-};
-
 export function EnforcementQueueStatus() {
+  const { t } = useTranslation();
   const jobs = useEnforcementQueue();
   const active = jobs.filter(
     (j) => j.status === "pending" || j.status === "running",
@@ -36,8 +31,13 @@ export function EnforcementQueueStatus() {
     >
       <Loader size="xs" />
       <Text size="xs" c="dimmed" truncate>
-        {TRIGGER_VERB[lead.trigger] ?? "Enforcing"}: {lead.label}
-        {queued > 0 ? ` · +${queued} queued` : "…"}
+        {t(`policies.enforcement.triggerVerb.${lead.trigger}`, {
+          defaultValue: t("policies.enforcement.triggerVerb.default"),
+        })}
+        : {lead.label}
+        {queued > 0
+          ? ` · ${t("policies.enforcement.queued", { count: queued })}`
+          : "…"}
       </Text>
     </Group>
   );

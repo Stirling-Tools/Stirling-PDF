@@ -192,8 +192,8 @@ export default function WorkbenchBar({
         enforced = filesToExport as File[];
         showAlert({
           alertType: "warning",
-          title: "Exported without enforcement",
-          body: "Security policies couldn't be applied. Files were exported as-is.",
+          title: t("policies.enforcement.exportFailureTitle"),
+          body: t("policies.enforcement.exportFailureBody"),
         });
       }
 

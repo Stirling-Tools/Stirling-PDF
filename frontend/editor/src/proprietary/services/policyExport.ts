@@ -28,6 +28,7 @@ import {
 import { ROW_ACCENT } from "@app/components/policies/policyStatus";
 import { alert, updateToast, dismissToast } from "@app/components/toast";
 import { POLICIES_ENABLED } from "@app/constants/featureFlags";
+import i18n from "@app/i18n";
 
 /** Poll cadence + cap for a single export run (≈2.5 min worst case). */
 const POLL_MS = 2000;
@@ -116,8 +117,16 @@ async function runToCompletion(
 
 function enforcedFilesSummary(names: string[]): string {
   if (names.length === 1) return names[0];
-  if (names.length === 2) return `${names[0]} and ${names[1]}`;
-  return `${names[0]}, ${names[1]} and ${names.length - 2} more`;
+  if (names.length === 2)
+    return i18n.t("policies.enforcement.summaryTwo", {
+      first: names[0],
+      second: names[1],
+    });
+  return i18n.t("policies.enforcement.summaryMore", {
+    first: names[0],
+    second: names[1],
+    more: names.length - 2,
+  });
 }
 
 /**
@@ -160,8 +169,12 @@ export async function enforceExportPolicies(
     const total = pending.length;
     const progressTitle = (done: number) =>
       total === 1
-        ? `Applying ${names}`
-        : `Applying ${names} (${done + 1} of ${total})`;
+        ? i18n.t("policies.enforcement.applying", { names })
+        : i18n.t("policies.enforcement.applyingProgress", {
+            names,
+            done: done + 1,
+            total,
+          });
     const progressBody = (done: number) => files[pending[done]].name;
 
     const toastId = alert({
@@ -222,14 +235,17 @@ export async function enforceExportPolicies(
       failures
         ? {
             alertType: "warning",
-            title: "Exported without full enforcement",
-            body: `${failures} of ${total} file(s) couldn't be processed and were exported as-is.`,
+            title: i18n.t("policies.enforcement.failureTitle"),
+            body: i18n.t("policies.enforcement.failureBody", {
+              failures,
+              total,
+            }),
             isPersistentPopup: false,
             glowColor: undefined,
           }
         : {
             alertType: "success",
-            title: `${names} applied`,
+            title: i18n.t("policies.enforcement.successTitle", { names }),
             body: enforcedFilesSummary(pending.map((i) => files[i].name)),
             isPersistentPopup: false,
             glowColor: undefined,
