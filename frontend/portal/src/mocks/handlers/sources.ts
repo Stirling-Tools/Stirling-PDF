@@ -7,6 +7,7 @@ import type {
   SourceView,
   SourcesResponse,
 } from "@portal/api/sources";
+import { sampleDailySeries } from "@portal/mocks/sampleDailySeries";
 
 /**
  * Stateful mock for the Sources surface so the portal works fully offline with
@@ -77,14 +78,6 @@ const docCounts: Record<
   "src-legacy": { total: 48600, last24h: 0, last30d: 0 },
 };
 
-/** A gentle deterministic 30-day series averaging ~last30d/30, so the sparkline has shape. */
-function dailySeries(last30d: number): number[] {
-  const avg = last30d / 30;
-  return Array.from({ length: 30 }, (_, i) =>
-    Math.round(avg * (0.5 + Math.abs(Math.sin((i + 1) / 3)))),
-  );
-}
-
 function docsFor(id: string): {
   total: number;
   last24h: number;
@@ -92,7 +85,7 @@ function docsFor(id: string): {
   daily: number[];
 } {
   const counts = docCounts[id] ?? { total: 0, last24h: 0, last30d: 0 };
-  return { ...counts, daily: dailySeries(counts.last30d) };
+  return { ...counts, daily: sampleDailySeries(counts.last30d / 30) };
 }
 
 let store: StoredSource[] = seedSources();

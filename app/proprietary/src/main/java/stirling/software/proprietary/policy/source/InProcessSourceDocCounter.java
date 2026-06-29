@@ -42,7 +42,12 @@ public class InProcessSourceDocCounter implements SourceDocCounter {
         for (String id : sourceIds) {
             Map<Long, Long> buckets = bucketsBySource.getOrDefault(id, Map.of());
             long total = buckets.values().stream().mapToLong(Long::longValue).sum();
-            stats.put(id, SourceDocWindows.compute(total, buckets, now));
+            long last24h =
+                    SourceDocWindows.sumSince(buckets, now - (SourceDocWindows.HOURS_IN_24H - 1));
+            stats.put(
+                    id,
+                    SourceDocWindows.compute(
+                            total, last24h, SourceDocWindows.byDay(buckets), now / 24));
         }
         return stats;
     }

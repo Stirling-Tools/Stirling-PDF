@@ -1,10 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { SourceView } from "@portal/api/sources";
 import { SourceDetailPanel } from "@portal/components/sources/SourceDetailPanel";
+import { sampleDailySeries } from "@portal/mocks/sampleDailySeries";
 
-const SAMPLE_SERIES: number[] = Array.from({ length: 30 }, (_, i) =>
-  Math.round(330 * (0.5 + Math.abs(Math.sin((i + 1) / 3)))),
-);
+const SAMPLE_SERIES = sampleDailySeries(330);
 
 const IN_USE: SourceView = {
   id: "src-claims",

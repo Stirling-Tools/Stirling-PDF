@@ -9,7 +9,6 @@ import java.util.Map;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,14 +23,13 @@ import lombok.RequiredArgsConstructor;
 @ConditionalOnBooleanProperty(name = "policies.enabled")
 public class JpaSourceDocCounter implements SourceDocCounter {
 
-    // The widest window we report, as a count of hourly buckets back from now (inclusive). One
-    // fetch of these covers the 24h / 30d totals and the daily series.
+    // The widest window we report, as a count of hourly buckets back from now (inclusive); it spans
+    // the 30-day daily series.
     private static final long WINDOW_HOURS = 24L * DocStats.DAYS;
 
     private final SourceDocCountRepository repository;
 
     @Override
-    @Transactional
     public void record(String sourceId, long docs) {
         if (docs <= 0) {
             return;
@@ -40,8 +38,12 @@ public class JpaSourceDocCounter implements SourceDocCounter {
         if (repository.increment(sourceId, bucketHour, docs) > 0) {
             return;
         }
+        // No bucket for this hour yet: insert one. saveAndFlush forces the INSERT now (in its own
+        // transaction) so a concurrent run's winning insert surfaces here as a constraint violation
+        // rather than at a later commit. record() is deliberately not @Transactional, so the retry
+        // increment below runs in a fresh transaction instead of a doomed rollback-only one.
         try {
-            repository.save(new SourceDocCountEntity(sourceId, bucketHour, docs));
+            repository.saveAndFlush(new SourceDocCountEntity(sourceId, bucketHour, docs));
         } catch (DataIntegrityViolationException concurrentInsert) {
             // Another run created the bucket between our increment and insert; add to it now.
             repository.increment(sourceId, bucketHour, docs);
@@ -55,17 +57,23 @@ public class JpaSourceDocCounter implements SourceDocCounter {
         }
         long now = currentHour();
         Map<String, Long> totals = sums(repository.sumBySource(sourceIds));
-        Map<String, Map<Long, Long>> windowBuckets =
-                bucketsBySource(repository.bucketsSince(sourceIds, now - (WINDOW_HOURS - 1)));
+        Map<String, Long> last24h =
+                sums(
+                        repository.sumBySourceSince(
+                                sourceIds, now - (SourceDocWindows.HOURS_IN_24H - 1)));
+        Map<String, Map<Long, Long>> dailyCounts =
+                dailyBySource(repository.dailyCountsSince(sourceIds, now - (WINDOW_HOURS - 1)));
 
+        long currentDay = now / 24;
         Map<String, DocStats> stats = new HashMap<>();
         for (String id : sourceIds) {
             stats.put(
                     id,
                     SourceDocWindows.compute(
                             totals.getOrDefault(id, 0L),
-                            windowBuckets.getOrDefault(id, Map.of()),
-                            now));
+                            last24h.getOrDefault(id, 0L),
+                            dailyCounts.getOrDefault(id, Map.of()),
+                            currentDay));
         }
         return stats;
     }
@@ -82,12 +90,11 @@ public class JpaSourceDocCounter implements SourceDocCounter {
         return map;
     }
 
-    private static Map<String, Map<Long, Long>> bucketsBySource(
-            List<SourceDocCountEntity> buckets) {
+    private static Map<String, Map<Long, Long>> dailyBySource(List<SourceDayDocSum> rows) {
         Map<String, Map<Long, Long>> bySource = new HashMap<>();
-        for (SourceDocCountEntity bucket : buckets) {
-            bySource.computeIfAbsent(bucket.getSourceId(), key -> new HashMap<>())
-                    .put(bucket.getBucketHour(), bucket.getDocCount());
+        for (SourceDayDocSum row : rows) {
+            bySource.computeIfAbsent(row.sourceId(), key -> new HashMap<>())
+                    .merge(row.day(), row.docs() == null ? 0L : row.docs(), Long::sum);
         }
         return bySource;
     }
