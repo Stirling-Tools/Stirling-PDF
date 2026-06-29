@@ -145,7 +145,7 @@ export async function createCheckoutSession(
 
 /** {@code VITE_STRIPE_PUBLISHABLE_KEY} — the Stripe pk used by embedded Checkout. */
 export function getStripePublishableKey(): string {
-  return import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ?? "";
+  return import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
 }
 
 /**
