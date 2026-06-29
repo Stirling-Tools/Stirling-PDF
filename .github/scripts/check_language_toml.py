@@ -358,7 +358,7 @@ if __name__ == "__main__":
         type=str,
         required=False,
         default=None,
-        help="Path to the locales directory (defaults to frontend/editor/public/locales).",
+        help="Path to the locales directory. Defaults to the parent of the reference file's language directory (i.e. two levels up from --reference-file).",
     )
     args = parser.parse_args()
 
@@ -370,9 +370,10 @@ if __name__ == "__main__":
     if args.branch:
         args.branch = re.sub(r"[^a-zA-Z0-9\\-]", "", args.branch)
 
-    locales_dir = args.locales_dir or os.path.join(
-        os.getcwd(), "frontend", "public", "locales"
-    )
+    # Derive locales dir from the reference file path so there is no hardcoded
+    # default that can drift: reference is always locales/{lng}/translation.toml,
+    # so parent.parent is the locales directory for whichever app is being synced.
+    locales_dir = args.locales_dir or str(Path(args.reference_file).resolve().parent.parent)
 
     file_list = args.files
     if file_list is None:
