@@ -14,6 +14,7 @@ function run(over: Partial<PolicyRunRecord>): PolicyRunRecord {
     fileId: "f1",
     fileName: "f.pdf",
     fileSize: 0,
+    target: "saas",
     status: "COMPLETED",
     outputs: [],
     error: null,
