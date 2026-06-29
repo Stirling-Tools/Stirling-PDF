@@ -10,6 +10,7 @@ import {
 } from "@mantine/core";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useViewer } from "@app/contexts/ViewerContext";
+import { fetchWithReadyRetry } from "@app/components/viewer/fetchWithReadyRetry";
 import { PdfAttachmentObject } from "@embedpdf/models";
 import AttachmentIcon from "@mui/icons-material/AttachmentRounded";
 import DownloadIcon from "@mui/icons-material/DownloadRounded";
@@ -162,33 +163,7 @@ export const AttachmentSidebar = ({
       }),
     );
 
-    const fetchWithRetry = async () => {
-      const maxAttempts = 10;
-      for (let attempt = 0; attempt < maxAttempts; attempt++) {
-        try {
-          const result = await attachmentActions.getAttachments();
-          return Array.isArray(result) ? result : [];
-        } catch (error: any) {
-          const message =
-            typeof error?.message === "string"
-              ? error.message.toLowerCase()
-              : "";
-          const notReady =
-            message.includes("document") &&
-            message.includes("not") &&
-            message.includes("open");
-
-          if (!notReady || attempt === maxAttempts - 1) {
-            throw error;
-          }
-
-          await new Promise((resolve) => setTimeout(resolve, 50));
-        }
-      }
-      return [];
-    };
-
-    fetchWithRetry()
+    fetchWithReadyRetry(() => attachmentActions.getAttachments())
       .then((attachments) => {
         if (cancelled) return;
         const entry = createEntry({
