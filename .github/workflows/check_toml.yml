@@ -6,7 +6,7 @@ on:
   pull_request_target:
     types: [opened, synchronize, reopened]
     paths:
-      - "frontend/public/locales/*/translation.toml"
+      - "frontend/editor/public/locales/*/translation.toml"
       - ".github/scripts/check_language_toml.py"
       - ".github/workflows/check_toml.yml"
 
@@ -27,7 +27,7 @@ jobs:
       pull-requests: write # Allow writing to pull requests
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
         with:
           egress-policy: audit
 
@@ -43,7 +43,7 @@ jobs:
 
       - name: Get PR data
         id: get-pr-data
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           github-token: ${{ steps.setup-bot.outputs.token }}
           script: |
@@ -76,7 +76,7 @@ jobs:
             exit 1
           fi
           # Get changed files and filter for TOML translation files
-          gh pr view ${{ steps.get-pr-data.outputs.pr_number }} --json files -q ".files[].path" | grep -E '^frontend/public/locales/[a-zA-Z-]+/translation\.toml$' > changed_files.txt || echo "No matching TOML files found in PR"
+          gh pr view ${{ steps.get-pr-data.outputs.pr_number }} --json files -q ".files[].path" | grep -E '^frontend/editor/public/locales/[a-zA-Z-]+/translation\.toml$' > changed_files.txt || echo "No matching TOML files found in PR"
           # Check if any files were found
           if [ ! -s changed_files.txt ]; then
             echo "No TOML translation files changed in this PR"
@@ -87,7 +87,7 @@ jobs:
 
       - name: Determine reference file
         id: determine-file
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           github-token: ${{ steps.setup-bot.outputs.token }}
           script: |
@@ -166,16 +166,16 @@ jobs:
 
             // Determine reference file
             let referenceFilePath;
-            if (changedFiles.includes("frontend/public/locales/en-GB/translation.toml")) {
+            if (changedFiles.includes("frontend/editor/public/locales/en-US/translation.toml")) {
               console.log("Using PR branch reference file.");
               const { data: fileContent } = await github.rest.repos.getContent({
                 owner: prRepoOwner,
                 repo: prRepoName,
-                path: "frontend/public/locales/en-GB/translation.toml",
+                path: "frontend/editor/public/locales/en-US/translation.toml",
                 ref: branch,
               });
 
-              referenceFilePath = "pr-branch-translation-en-GB.toml";
+              referenceFilePath = "pr-branch-translation-en-US.toml";
               const content = Buffer.from(fileContent.content, "base64").toString("utf-8");
               fs.writeFileSync(referenceFilePath, content);
             } else {
@@ -183,11 +183,11 @@ jobs:
               const { data: fileContent } = await github.rest.repos.getContent({
                 owner: repoOwner,
                 repo: repoName,
-                path: "frontend/public/locales/en-GB/translation.toml",
+                path: "frontend/editor/public/locales/en-US/translation.toml",
                 ref: "main",
               });
 
-              referenceFilePath = "main-branch-translation-en-GB.toml";
+              referenceFilePath = "main-branch-translation-en-US.toml";
               const content = Buffer.from(fileContent.content, "base64").toString("utf-8");
               fs.writeFileSync(referenceFilePath, content);
             }
@@ -201,7 +201,8 @@ jobs:
           python-version: "3.12"
 
       - name: Install Python dependencies
-        run: pip install --require-hashes -r ./.github/scripts/requirements_sync_readme.txt
+        run: |
+          pip install --require-hashes --only-binary=:all: -r ./.github/scripts/requirements_sync_readme.txt
 
       - name: Run Python script to check files
         id: run-check
@@ -239,7 +240,7 @@ jobs:
 
       - name: Post comment on PR
         if: env.SCRIPT_OUTPUT != ''
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           github-token: ${{ steps.setup-bot.outputs.token }}
           script: |
@@ -292,6 +293,6 @@ jobs:
         run: |
           echo "Cleaning up temporary files..."
           rm -rf pr-branch
-          rm -f pr-branch-translation-en-GB.toml main-branch-translation-en-GB.toml changed_files.txt result.txt
+          rm -f pr-branch-translation-en-US.toml main-branch-translation-en-US.toml changed_files.txt result.txt
           echo "Cleanup complete."
         continue-on-error: true # Ensure cleanup runs even if previous steps fail

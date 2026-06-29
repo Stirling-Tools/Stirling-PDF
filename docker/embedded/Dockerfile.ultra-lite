@@ -2,15 +2,20 @@
 # Single JAR contains both frontend and backend with minimal dependencies
 
 # Stage 1: Build application with embedded frontend
-FROM gradle:9.3.1-jdk25 AS build
+FROM gradle:9.6.0-jdk25@sha256:e3905233ae349e72016daf8a0e19f085a1dd89ded8ec88b3d8335d3fd0b350f4 AS build
 
 # Install Node.js and npm for frontend build
+ARG TASK_VERSION=3.49.1
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && npm --version \
     && node --version \
+    && ARCH=$(dpkg --print-architecture) \
+    && curl -fsSL "https://github.com/go-task/task/releases/download/v${TASK_VERSION}/task_${TASK_VERSION}_linux_${ARCH}.deb" -o /tmp/task.deb \
+    && dpkg -i /tmp/task.deb \
+    && rm /tmp/task.deb \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -34,17 +39,23 @@ RUN ./gradlew dependencies --no-daemon || true
 # Copy entire project
 COPY . .
 
-# Build ultra-lite JAR with embedded frontend (minimal features)
-RUN DISABLE_ADDITIONAL_FEATURES=true \
+# Build ultra-lite JAR with embedded frontend (minimal features).
+# Bundle only the JPDFium native for this image's target arch.
+ARG TARGETARCH
+RUN JPDFIUM_PLATFORM="$([ "$TARGETARCH" = arm64 ] && echo linux-arm64 || echo linux-x64)" && \
+    DISABLE_ADDITIONAL_FEATURES=true \
     ./gradlew clean build \
       -PbuildWithFrontend=true \
+      -PjpdfiumPlatforms="$JPDFIUM_PLATFORM" \
       -x spotlessApply -x spotlessCheck -x test -x sonarqube \
       --no-daemon
 
 # Stage 2: Runtime image
-FROM eclipse-temurin:25-jre-alpine
+# glibc base (not Alpine/musl): JPDFium's PDFium natives are glibc-linked.
+FROM eclipse-temurin:25-jre-noble@sha256:b27ca47660a8fa837e47a8533b9b1a3a430295cf29ca28d91af4fd121572dc29
 
-ENV LANG=C.UTF-8 \
+ENV DEBIAN_FRONTEND=noninteractive \
+    LANG=C.UTF-8 \
     LC_ALL=C.UTF-8
 
 ARG VERSION_TAG
@@ -82,23 +93,23 @@ ENV VERSION_TAG=$VERSION_TAG \
     ENDPOINTS_GROUPS_TO_REMOVE=CLI
 
 # Install minimal dependencies
-RUN echo "@main https://dl-cdn.alpinelinux.org/alpine/edge/main" | tee -a /etc/apk/repositories && \
-    echo "@community https://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories && \
-    echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" | tee -a /etc/apk/repositories && \
-    apk upgrade --no-cache -a && \
-    apk add --no-cache \
+RUN mkdir -p $HOME /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders /storage /tmp/stirling-pdf /tmp/stirling-pdf/heap_dumps && \
+    mkdir -p /usr/share/fonts/opentype/noto && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
     ca-certificates \
     tzdata \
     tini \
     bash \
     curl \
-    shadow \
-    su-exec && \
-    mkdir -p $HOME /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders /tmp/stirling-pdf /tmp/stirling-pdf/heap_dumps && \
-    mkdir -p /usr/share/fonts/opentype/noto && \
+    procps \
+    util-linux && \
+    rm -rf /var/lib/apt/lists/* && \
     # User permissions
-    addgroup -S stirlingpdfgroup && adduser -S stirlingpdfuser -G stirlingpdfgroup && \
-    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /configs /customFiles /pipeline /tmp/stirling-pdf
+    userdel -r ubuntu 2>/dev/null || true && \
+    groupdel ubuntu 2>/dev/null || true && \
+    groupadd -g 1000 stirlingpdfgroup && useradd -u 1000 -d $HOME -s /bin/bash -g stirlingpdfgroup stirlingpdfuser && \
+    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /configs /customFiles /pipeline /storage /tmp/stirling-pdf
 
 # Copy scripts and built artifacts after OS package layer to maximize cache reuse.
 COPY --chown=1000:1000 scripts/init-without-ocr.sh /scripts/init-without-ocr.sh

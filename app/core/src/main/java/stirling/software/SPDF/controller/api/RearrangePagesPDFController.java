@@ -8,6 +8,8 @@ import java.util.Locale;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageTree;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -24,9 +26,12 @@ import stirling.software.SPDF.model.api.PDFWithPageNums;
 import stirling.software.SPDF.model.api.general.RearrangePagesRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.FormUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @GeneralApi
@@ -35,8 +40,12 @@ import stirling.software.common.util.WebResponseUtils;
 public class RearrangePagesPDFController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/remove-pages")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/remove-pages",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @StandardPdfResponse
     @Operation(
             summary = "Remove pages from a PDF file",
@@ -44,7 +53,7 @@ public class RearrangePagesPDFController {
                     "This endpoint removes specified pages from a given PDF file. Users can provide"
                             + " a comma-separated list of page numbers or ranges to delete. Input:PDF"
                             + " Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> deletePages(@ModelAttribute PDFWithPageNums request)
+    public ResponseEntity<Resource> deletePages(@ModelAttribute PDFWithPageNums request)
             throws IOException {
 
         MultipartFile pdfFile = request.getFileInput();
@@ -64,10 +73,12 @@ public class RearrangePagesPDFController {
                 int pageIndex = pagesToRemove.get(i);
                 document.removePage(pageIndex);
             }
+            FormUtils.pruneOrphanedFormFields(document);
             return WebResponseUtils.pdfDocToWebResponse(
                     document,
                     GeneralUtils.generateFilename(
-                            pdfFile.getOriginalFilename(), "_removed_pages.pdf"));
+                            pdfFile.getOriginalFilename(), "_removed_pages.pdf"),
+                    tempFileManager);
         }
     }
 
@@ -215,7 +226,10 @@ public class RearrangePagesPDFController {
         }
     }
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/rearrange-pages")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/rearrange-pages",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
     @StandardPdfResponse
     @Operation(
             summary = "Rearrange pages in a PDF file",
@@ -224,7 +238,7 @@ public class RearrangePagesPDFController {
                             + " order or custom mode. Users can provide a page order as a"
                             + " comma-separated list of page numbers or page ranges, or a custom mode."
                             + " Input:PDF Output:PDF")
-    public ResponseEntity<byte[]> rearrangePages(@ModelAttribute RearrangePagesRequest request)
+    public ResponseEntity<Resource> rearrangePages(@ModelAttribute RearrangePagesRequest request)
             throws IOException {
         MultipartFile pdfFile = request.getFileInput();
         String pageOrder = request.getPageNumbers();
@@ -246,26 +260,31 @@ public class RearrangePagesPDFController {
                 }
                 log.info("newPageOrder = {}", newPageOrder);
                 log.info("totalPages = {}", totalPages);
-                // Create a new list to hold the pages in the new order
-                List<PDPage> newPages = new ArrayList<>();
-                for (int i = 0; i < newPageOrder.size(); i++) {
-                    newPages.add(document.getPage(newPageOrder.get(i)));
+
+                // Snapshot the desired pages before mutating the source document's page tree.
+                List<PDPage> newPages = new ArrayList<>(newPageOrder.size());
+                for (Integer idx : newPageOrder) {
+                    newPages.add(document.getPage(idx));
                 }
 
-                // Create a new document based on the original one
-                try (PDDocument rearrangedDocument =
-                        pdfDocumentFactory.createNewDocumentBasedOnOldDocument(document)) {
-
-                    // Add the pages in the new order
-                    for (PDPage page : newPages) {
-                        rearrangedDocument.addPage(page);
-                    }
-
-                    return WebResponseUtils.pdfDocToWebResponse(
-                            rearrangedDocument,
-                            GeneralUtils.generateFilename(
-                                    pdfFile.getOriginalFilename(), "_rearranged.pdf"));
+                // Rearrange in-place on the source document rather than copying pages into a
+                // freshly-created PDDocument. Copying pages across documents triggers a PDFBox
+                // 3.0.7 compressed-save regression (PDFBOX-6203, fixed for 3.0.8) where shared
+                // resource objects (fonts, etc.) imported from the source can be silently
+                // dropped from the output, producing pages with "font not found" errors.
+                PDPageTree pages = document.getPages();
+                for (int i = totalPages - 1; i >= 0; i--) {
+                    pages.remove(i);
                 }
+                for (PDPage page : newPages) {
+                    pages.add(page);
+                }
+
+                return WebResponseUtils.pdfDocToWebResponse(
+                        document,
+                        GeneralUtils.generateFilename(
+                                pdfFile.getOriginalFilename(), "_rearranged.pdf"),
+                        tempFileManager);
             }
         } catch (IOException e) {
             ExceptionUtils.logException("document rearrangement", e);

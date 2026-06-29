@@ -28,7 +28,17 @@ public class SpringDocConfig {
                         "/api/v1/proprietary/ui-data/**",
                         "/api/v1/info/**",
                         "/api/v1/general/job/**",
-                        "/api/v1/general/files/**")
+                        "/api/v1/general/files/**",
+                        "/api/v1/general/signatures/**",
+                        "/api/v1/database/**",
+                        "/api/v1/storage/**",
+                        "/api/v1/proprietary/signatures/**",
+                        "/api/v1/workflow/participant/**",
+                        "/api/v1/security/cert-sign/sessions",
+                        "/api/v1/security/cert-sign/sessions/**",
+                        "/api/v1/security/cert-sign/sign-requests",
+                        "/api/v1/security/cert-sign/sign-requests/**",
+                        "/api/v1/security/cert-sign/validate-certificate")
                 .addOpenApiCustomizer(pdfFileOneOfCustomizer)
                 .addOpenApiCustomizer(
                         openApi -> {
@@ -53,7 +63,16 @@ public class SpringDocConfig {
                         "/api/v1/team/**",
                         "/api/v1/auth/**",
                         "/api/v1/invite/**",
-                        "/api/v1/audit/**")
+                        "/api/v1/audit/**",
+                        "/api/v1/database/**",
+                        "/api/v1/storage/**",
+                        "/api/v1/proprietary/signatures/**",
+                        "/api/v1/workflow/participant/**",
+                        "/api/v1/security/cert-sign/sessions",
+                        "/api/v1/security/cert-sign/sessions/**",
+                        "/api/v1/security/cert-sign/sign-requests",
+                        "/api/v1/security/cert-sign/sign-requests/**",
+                        "/api/v1/security/cert-sign/validate-certificate")
                 .addOpenApiCustomizer(
                         openApi -> {
                             openApi.info(
@@ -75,7 +94,8 @@ public class SpringDocConfig {
                         "/api/v1/proprietary/ui-data/**",
                         "/api/v1/info/**",
                         "/api/v1/general/job/**",
-                        "/api/v1/general/files/**")
+                        "/api/v1/general/files/**",
+                        "/api/v1/general/signatures/**")
                 .addOpenApiCustomizer(
                         openApi -> {
                             openApi.info(

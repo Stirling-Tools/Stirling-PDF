@@ -1,5 +1,6 @@
 package stirling.software.proprietary.controller.api;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -51,7 +52,7 @@ import tools.jackson.databind.ObjectMapper;
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/audit")
-@PreAuthorize("hasRole('ROLE_ADMIN')")
+@PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
 @EnterpriseEndpoint
 @Tag(name = "Audit", description = "Only Enterprise - Audit related operations")
@@ -206,16 +207,14 @@ public class AuditDashboardController {
 
         // Include standard enum types in case they're not in the database yet
         List<String> enumTypes =
-                Arrays.stream(AuditEventType.values())
-                        .map(AuditEventType::name)
-                        .collect(Collectors.toList());
+                Arrays.stream(AuditEventType.values()).map(AuditEventType::name).toList();
 
         // Combine both sources, remove duplicates, and sort
         Set<String> combinedTypes = new HashSet<>();
         combinedTypes.addAll(dbTypes);
         combinedTypes.addAll(enumTypes);
 
-        return combinedTypes.stream().sorted().collect(Collectors.toList());
+        return combinedTypes.stream().sorted().toList();
     }
 
     /** Export audit data as CSV. */
@@ -239,7 +238,7 @@ public class AuditDashboardController {
             csv.append(escapeCSV(event.getData())).append("\n");
         }
 
-        byte[] csvBytes = csv.toString().getBytes();
+        byte[] csvBytes = csv.toString().getBytes(StandardCharsets.UTF_8);
 
         // Set up HTTP headers for download
         HttpHeaders headers = new HttpHeaders();

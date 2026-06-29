@@ -1,0 +1,25 @@
+{
+  "extends": "./tsconfig.proprietary.vite.json",
+  "compilerOptions": {
+    "paths": {
+      "@app/*": [
+        "./src/desktop/*",
+        "./src/cloud/*",
+        "./src/proprietary/*",
+        "./src/core/*"
+      ],
+      "@cloud/*": ["./src/cloud/*"],
+      "@proprietary/*": ["./src/proprietary/*"],
+      "@core/*": ["./src/core/*"],
+      "@shared/*": ["../shared/*"]
+    }
+  },
+  "exclude": [
+    "src/core/**/*.test.ts*",
+    "src/core/**/*.spec.ts*",
+    "src/proprietary/**/*.test.ts*",
+    "src/proprietary/**/*.spec.ts*",
+    "src/cloud/**/*.test.ts*",
+    "src/cloud/**/*.spec.ts*"
+  ]
+}

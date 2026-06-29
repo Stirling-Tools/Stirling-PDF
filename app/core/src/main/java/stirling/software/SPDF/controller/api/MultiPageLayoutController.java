@@ -1,7 +1,6 @@
 package stirling.software.SPDF.controller.api;
 
 import java.awt.Color;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import org.apache.pdfbox.multipdf.LayerUtility;
@@ -11,6 +10,7 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.util.Matrix;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -24,10 +24,12 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.general.MergeMultiplePagesRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralFormCopyUtils;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @GeneralApi
@@ -36,16 +38,18 @@ import stirling.software.common.util.WebResponseUtils;
 public class MultiPageLayoutController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
     @AutoJobPostMapping(
             value = "/multi-page-layout",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @Operation(
             summary = "Merge multiple pages of a PDF document into a single page",
             description =
                     "This operation takes an input PDF file and the number of pages to merge into a"
                             + " single sheet in the output PDF file. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> mergeMultiplePagesIntoOne(
+    public ResponseEntity<Resource> mergeMultiplePagesIntoOne(
             @ModelAttribute MergeMultiplePagesRequest request) throws IOException {
 
         int MAX_PAGES = 100000;
@@ -338,13 +342,11 @@ public class MultiPageLayoutController {
                     }
                 }
 
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                newDocument.save(baos);
-                byte[] result = baos.toByteArray();
-                return WebResponseUtils.bytesToWebResponse(
-                        result,
+                return WebResponseUtils.pdfDocToWebResponse(
+                        newDocument,
                         GeneralUtils.generateFilename(
-                                file.getOriginalFilename(), "_multi_page_layout.pdf"));
+                                file.getOriginalFilename(), "_multi_page_layout.pdf"),
+                        tempFileManager);
             } // newDocument is closed here
         } // sourceDocument is closed here
     }

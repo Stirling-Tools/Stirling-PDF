@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 TOML Beautifier and Structure Fixer for Stirling PDF Frontend
-Restructures translation TOML files to match en-GB structure and key order exactly.
+Restructures translation TOML files to match en-US structure and key order exactly.
 """
 
 import sys
@@ -15,9 +15,9 @@ import tomli_w
 
 
 class TOMLBeautifier:
-    def __init__(self, locales_dir: str = "frontend/public/locales"):
+    def __init__(self, locales_dir: str = "frontend/editor/public/locales"):
         self.locales_dir = Path(locales_dir)
-        self.golden_truth_file = self.locales_dir / "en-GB" / "translation.toml"
+        self.golden_truth_file = self.locales_dir / "en-US" / "translation.toml"
         self.golden_structure = self._load_toml(self.golden_truth_file)
 
     def _load_toml(self, file_path: Path) -> Dict:
@@ -95,7 +95,7 @@ class TOMLBeautifier:
         return build_recursive(reference_structure) or OrderedDict()
 
     def restructure_translation_file(self, target_file: Path) -> Dict[str, Any]:
-        """Restructure a translation file to match en-GB structure exactly."""
+        """Restructure a translation file to match en-US structure exactly."""
         if not target_file.exists():
             print(f"Error: Target file does not exist: {target_file}")
             return {}
@@ -177,7 +177,7 @@ class TOMLBeautifier:
         }
 
     def validate_key_order(self, target_file: Path) -> Dict[str, Any]:
-        """Validate that keys appear in the same order as en-GB."""
+        """Validate that keys appear in the same order as en-US."""
         target_data = self._load_toml(target_file)
 
         def get_key_order(obj: Dict, path: str = "") -> List[str]:
@@ -225,7 +225,7 @@ def main():
     )
     parser.add_argument(
         "--locales-dir",
-        default="frontend/public/locales",
+        default="frontend/editor/public/locales",
         help="Path to locales directory",
     )
     parser.add_argument("--language", help="Restructure specific language only")
@@ -276,7 +276,7 @@ def main():
     elif args.all_languages:
         results = []
         for lang_dir in Path(args.locales_dir).iterdir():
-            if lang_dir.is_dir() and lang_dir.name != "en-GB":
+            if lang_dir.is_dir() and lang_dir.name != "en-US":
                 translation_file = lang_dir / "translation.toml"
                 if translation_file.exists():
                     if args.validate_only:

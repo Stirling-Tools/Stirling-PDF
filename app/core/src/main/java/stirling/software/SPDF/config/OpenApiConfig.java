@@ -18,6 +18,7 @@ import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
+import io.swagger.v3.oas.models.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
@@ -47,7 +48,7 @@ public class OpenApiConfig {
                         .version(version)
                         .license(
                                 new License()
-                                        .name("MIT")
+                                        .name("Open-Core - MIT Licensed")
                                         .url(
                                                 "https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/refs/heads/main/LICENSE"))
                         .termsOfService("https://www.stirlingpdf.com/terms")
@@ -59,6 +60,15 @@ public class OpenApiConfig {
                         .description(DEFAULT_DESCRIPTION);
 
         OpenAPI openAPI = new OpenAPI().info(info).openapi("3.0.3");
+
+        // Register a single global "AI" tag so every AI endpoint groups under it in the docs.
+        // The AI controllers are currently @Hidden, so they don't emit this tag themselves yet;
+        // defining it here keeps the grouping ready for when those endpoints are unhidden.
+        openAPI.addTagsItem(
+                new Tag()
+                        .name("AI")
+                        .description(
+                                "AI-powered document creation, editing, and assistant endpoints."));
 
         // Add server configuration from environment variable
         String swaggerServerUrl = System.getenv("SWAGGER_SERVER_URL");

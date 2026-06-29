@@ -19,11 +19,11 @@ import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -34,6 +34,7 @@ import stirling.software.SPDF.config.swagger.MultiFileResponse;
 import stirling.software.SPDF.model.api.PDFExtractImagesRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -49,7 +50,10 @@ public class ExtractImagesController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/extract-images")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/extract-images",
+            resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @MultiFileResponse
     @Operation(
             summary = "Extract images from a PDF file",
@@ -57,8 +61,8 @@ public class ExtractImagesController {
                     "This endpoint extracts images from a given PDF file and returns them in a zip"
                             + " file. Users can specify the output image format. Input:PDF"
                             + " Output:IMAGE/ZIP Type:SIMO")
-    public ResponseEntity<StreamingResponseBody> extractImages(
-            @ModelAttribute PDFExtractImagesRequest request) throws IOException {
+    public ResponseEntity<Resource> extractImages(@ModelAttribute PDFExtractImagesRequest request)
+            throws IOException {
         MultipartFile file = request.getFileInput();
         String imageFormat = request.getFormat();
 

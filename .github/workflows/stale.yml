@@ -17,12 +17,12 @@ jobs:
       pull-requests: write
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
         with:
           egress-policy: audit
 
       - name: 30 days stale issues
-        uses: actions/stale@997185467fa4f803885201cee163a9f38240193d # v10.1.1
+        uses: actions/stale@eb5cf3af3ac0a1aa4c9c45633dd1ae542a27a899 # v10.3.0
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           days-before-stale: 30

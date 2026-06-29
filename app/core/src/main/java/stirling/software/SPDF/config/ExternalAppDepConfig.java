@@ -73,7 +73,8 @@ public class ExternalAppDepConfig {
         tmp.put("tesseract", List.of("tesseract"));
         tmp.put("rar", List.of("rar")); // Required for real CBR output
         tmp.put(calibrePath, List.of("Calibre"));
-        tmp.put("ffmpeg", List.of("FFmpeg"));
+        // ffmpeg disabled due to raised CVEs
+        // tmp.put("ffmpeg", List.of("FFmpeg"));
         tmp.put("magick", List.of("ImageMagick"));
         this.commandToGroupMapping = Collections.unmodifiableMap(tmp);
     }
@@ -94,7 +95,7 @@ public class ExternalAppDepConfig {
                                                 checkDependencyAndDisableGroup(cmd);
                                                 return null;
                                             })
-                            .collect(Collectors.toList());
+                            .toList();
             invokeAllWithTimeout(tasks, DEFAULT_TIMEOUT.plusSeconds(3));
 
             // Python / OpenCV special handling

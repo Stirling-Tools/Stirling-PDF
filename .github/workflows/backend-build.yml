@@ -1,0 +1,257 @@
+name: Backend build, format check, and coverage
+
+# Reusable workflow called from build.yml. Runs the backend build matrix
+# (JDK 25 × every flavor), Spotless formatting check, JUnit, and
+# posts Jacoco coverage to PRs.
+#
+# Flavor axis (maps to STIRLING_FLAVOR in settings.gradle):
+#   core         - DISABLE_ADDITIONAL_FEATURES=true, no proprietary, no saas
+#   proprietary  - default build, no saas
+#   saas         - proprietary + the saas subproject (build + JUnit only,
+#                  never any runtime/integration testing)
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+  actions: read
+  security-events: write
+  pull-requests: write
+
+jobs:
+  pick:
+    uses: ./.github/workflows/_runner-pick.yml
+
+  build:
+    needs: pick
+    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-8' }}
+    env:
+      DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
+    strategy:
+      fail-fast: false
+      matrix:
+        jdk-version: [25]
+        flavor: [core, proprietary, saas]
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        with:
+          egress-policy: audit
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up JDK ${{ matrix.jdk-version }}
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          java-version: ${{ matrix.jdk-version }}
+          distribution: "temurin"
+
+      - name: Cache Gradle dependency artifacts
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: |
+            ~/.gradle/wrapper
+            ~/.gradle/caches/modules-2/files-2.1
+            ~/.gradle/caches/modules-2/metadata-2.*
+          key: gradle-deps-${{ runner.os }}-jdk-${{ matrix.jdk-version }}-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties', '**/*.gradle', '**/*.gradle.kts', 'settings.gradle', 'settings.gradle.kts', 'gradle/libs.versions.toml') }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
+        with:
+          gradle-version: 9.6.0
+          cache-disabled: true
+
+      - name: Install Task
+        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
+      - name: Check Java formatting (Spotless)
+        # Runs once per matrix combination - pick the cheapest leg
+        # (core - no proprietary, no saas) so we don't wait for the
+        # heavier flavors just to fail formatting.
+        if: matrix.jdk-version == 25 && matrix.flavor == 'core'
+        id: spotless-check
+        run: task backend:format:check
+        continue-on-error: true
+        env:
+          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
+
+      - name: Comment on backend format check failure
+        # Only post a comment on PRs. github-script's PR helpers need an
+        # issue/PR number, which doesn't exist on merge_group runs.
+        if: steps.spotless-check.outcome == 'failure' && github.event_name == 'pull_request'
+        continue-on-error: true
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const marker = '<!-- java-formatting-check -->';
+            const body = [
+              marker,
+              '### Backend Format Check Failed',
+              '',
+              'There are formatting issues in your Java code that will need to be fixed before they can be merged in.',
+              '',
+              'Run `task backend:format` to auto-fix, then commit and push the changes.',
+            ].join('\n');
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+      - name: Fail if backend format check failed
+        if: steps.spotless-check.outcome == 'failure'
+        run: |
+          echo "============================================"
+          echo "  Backend Format Check Failed"
+          echo "============================================"
+          echo ""
+          echo "There are formatting issues in your Java code"
+          echo "that will need to be fixed before they can be"
+          echo "merged in."
+          echo ""
+          echo "Run 'task backend:format' to auto-fix, then"
+          echo "commit and push the changes."
+          echo "============================================"
+          exit 1
+
+      - name: Remove backend format check comment on success
+        if: steps.spotless-check.outcome == 'success' && github.event_name == 'pull_request'
+        continue-on-error: true
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const marker = '<!-- java-formatting-check -->';
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.deleteComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+              });
+            }
+
+      - name: Build with Gradle (flavor=${{ matrix.flavor }})
+        # STIRLING_FLAVOR is read by settings.gradle and expands into the
+        # right combination of DISABLE_ADDITIONAL_FEATURES + ENABLE_SAAS
+        # so we don't have to set them by hand. The saas flavor pulls in
+        # the app/saas subproject (unit tests only - no runtime tests).
+        run: task backend:build:ci
+        env:
+          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
+          STIRLING_FLAVOR: ${{ matrix.flavor }}
+
+      - name: Check Test Reports Exist
+        if: always()
+        run: |
+          # Common + core + proprietary always build (proprietary is
+          # excluded only at runtime, not from the gradle subproject
+          # graph). Saas builds add a fourth report dir.
+          declare -a dirs=(
+            "app/core/build/reports/tests/"
+            "app/core/build/test-results/"
+            "app/common/build/reports/tests/"
+            "app/common/build/test-results/"
+            "app/proprietary/build/reports/tests/"
+            "app/proprietary/build/test-results/"
+          )
+          if [ "${{ matrix.flavor }}" = "saas" ]; then
+            dirs+=("app/saas/build/reports/tests/" "app/saas/build/test-results/")
+          fi
+          for dir in "${dirs[@]}"; do
+            if [ ! -d "$dir" ]; then
+              echo "Missing $dir"
+              exit 1
+            fi
+          done
+
+      - name: Upload Test Reports
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: test-reports-jdk-${{ matrix.jdk-version }}-flavor-${{ matrix.flavor }}
+          path: |
+            app/**/build/reports/jacoco/test
+            app/**/build/reports/tests/
+            app/**/build/test-results/
+            app/**/build/reports/problems/
+            build/reports/problems/
+          retention-days: 3
+          if-no-files-found: warn
+
+      - name: Install defusedxml for coverage summary
+        # coverage-summary.py parses JaCoCo XML through defusedxml to
+        # silence security scanners that pattern-match on the stdlib
+        # xml.etree.ElementTree.parse call.
+        if: always() && matrix.flavor == 'saas'
+        run: python -m pip install --quiet defusedxml
+
+      - name: JaCoCo coverage step summary
+        # Only the saas leg posts the JUnit summary - it's a strict
+        # superset of the core + proprietary legs (same .exec files plus
+        # the saas subproject). Posting from all three would mean three
+        # near-identical tables crowding out the aggregate report.
+        if: always() && matrix.flavor == 'saas'
+        run: |
+          python scripts/coverage-summary.py \
+            --title "Backend JUnit coverage (JDK ${{ matrix.jdk-version }})" \
+            --jacoco "common=app/common/build/reports/jacoco/test/jacocoTestReport.xml" \
+            --jacoco "core=app/core/build/reports/jacoco/test/jacocoTestReport.xml" \
+            --jacoco "proprietary=app/proprietary/build/reports/jacoco/test/jacocoTestReport.xml" \
+            --jacoco "saas=app/saas/build/reports/jacoco/test/jacocoTestReport.xml" \
+            --github-step-summary
+
+      - name: Upload raw JUnit .exec for aggregate merge
+        # Same dedup rationale as the summary step: upload from the saas
+        # leg only (the most complete set, includes app/saas/.../test.exec)
+        # so the aggregate workflow merges the union rather than three
+        # overlapping subsets.
+        #
+        # Separate artifact from the HTML reports so the aggregate
+        # workflow can grab just the .exec files with a name pattern
+        # (`jacoco-exec-*`) instead of unpacking the whole test-reports
+        # tarball.
+        if: always() && matrix.flavor == 'saas'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: jacoco-exec-junit-jdk-${{ matrix.jdk-version }}
+          path: app/*/build/jacoco/*.exec
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Add coverage to PR (flavor=${{ matrix.flavor }}, JDK=${{ matrix.jdk-version }})
+        # The action only supports the pull_request event (it posts a PR comment),
+        # so skip it for merge_group runs and workflow_dispatch.
+        if: github.event_name == 'pull_request'
+        id: jacoco
+        uses: madrapps/jacoco-report@50d3aff4548aa991e6753342d9ba291084e63848 # v1.7.2
+        with:
+          paths: |
+            ${{ github.workspace }}/**/build/reports/jacoco/test/jacocoTestReport.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          min-coverage-overall: 10
+          min-coverage-changed-files: 0
+          comment-type: summary

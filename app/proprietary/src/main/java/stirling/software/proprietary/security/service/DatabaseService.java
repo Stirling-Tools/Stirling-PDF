@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.security.MessageDigest;
@@ -23,11 +22,11 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import javax.sql.DataSource;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.datasource.init.CannotReadScriptException;
 import org.springframework.jdbc.datasource.init.ScriptException;
 import org.springframework.stereotype.Service;
@@ -42,6 +41,7 @@ import stirling.software.proprietary.security.model.exception.BackupNotFoundExce
 
 @Slf4j
 @Service
+@Profile("!saas")
 public class DatabaseService implements DatabaseServiceInterface {
 
     public static final String BACKUP_PREFIX = "backup_";
@@ -90,6 +90,20 @@ public class DatabaseService implements DatabaseServiceInterface {
                     Pattern.compile("(?i)\\bFALSE\\b"),
                     Pattern.compile("(?i)\\bNULL\\b"));
 
+    private static final java.util.List<Pattern> DENIED_PATTERNS =
+            java.util.List.of(
+                    Pattern.compile("(?i)\\bCREATE\\s+(FORCE\\s+)?ALIAS\\b"),
+                    Pattern.compile("(?i)\\bCREATE\\s+(FORCE\\s+)?TRIGGER\\b"),
+                    Pattern.compile("(?i)\\bCREATE\\s+(FORCE\\s+)?AGGREGATE\\b"),
+                    Pattern.compile("(?i)\\bCREATE\\s+LINKED\\s+TABLE\\b"),
+                    Pattern.compile("(?i)\\bFILE_WRITE\\s*\\("),
+                    Pattern.compile("(?i)\\bFILE_READ\\s*\\("),
+                    Pattern.compile("(?i)\\bCSVWRITE\\s*\\("),
+                    Pattern.compile("(?i)\\bCSVREAD\\s*\\("),
+                    Pattern.compile("(?i)\\bLINK_SCHEMA\\s*\\("),
+                    Pattern.compile("(?i)\\bRUNSCRIPT\\b"),
+                    Pattern.compile("(?i)\\bSCRIPT\\s+TO\\b"));
+
     private final ApplicationProperties.Datasource datasourceProps;
     private final DataSource dataSource;
     private final DatabaseNotificationServiceInterface backupNotificationService;
@@ -98,7 +112,7 @@ public class DatabaseService implements DatabaseServiceInterface {
             ApplicationProperties.Datasource datasourceProps,
             DataSource dataSource,
             DatabaseNotificationServiceInterface backupNotificationService) {
-        this.BACKUP_DIR = Paths.get(InstallationPathConfig.getBackupPath()).normalize();
+        this.BACKUP_DIR = Path.of(InstallationPathConfig.getBackupPath()).normalize();
         this.datasourceProps = datasourceProps;
         this.dataSource = dataSource;
         this.backupNotificationService = backupNotificationService;
@@ -109,7 +123,7 @@ public class DatabaseService implements DatabaseServiceInterface {
     @Deprecated(since = "2.0.0", forRemoval = true)
     private void moveBackupFiles() {
         Path sourceDir =
-                Paths.get(InstallationPathConfig.getConfigPath(), "db", "backup").normalize();
+                Path.of(InstallationPathConfig.getConfigPath(), "db", "backup").normalize();
 
         if (!Files.exists(sourceDir)) {
             log.info("Source directory does not exist: {}", sourceDir);
@@ -215,7 +229,7 @@ public class DatabaseService implements DatabaseServiceInterface {
         List<FileInfo> backupList = this.getBackupList();
         backupList.sort(Comparator.comparing(FileInfo::getModificationDate).reversed());
 
-        Path latestExport = Paths.get(backupList.get(0).getFilePath());
+        Path latestExport = Path.of(backupList.get(0).getFilePath());
 
         executeDatabaseScript(latestExport);
     }
@@ -256,9 +270,13 @@ public class DatabaseService implements DatabaseServiceInterface {
     @Override
     public void exportDatabase() {
         List<FileInfo> filteredBackupList =
-                this.getBackupList().stream()
-                        .filter(backup -> !backup.getFileName().startsWith(BACKUP_PREFIX + "user_"))
-                        .collect(Collectors.toList());
+                new ArrayList<>(
+                        this.getBackupList().stream()
+                                .filter(
+                                        backup ->
+                                                !backup.getFileName()
+                                                        .startsWith(BACKUP_PREFIX + "user_"))
+                                .toList());
 
         if (filteredBackupList.size() > 5) {
             deleteOldestBackup(filteredBackupList);
@@ -339,7 +357,7 @@ public class DatabaseService implements DatabaseServiceInterface {
 
         for (FileInfo backup : backupList) {
             try {
-                Files.deleteIfExists(Paths.get(backup.getFilePath()));
+                Files.deleteIfExists(Path.of(backup.getFilePath()));
                 deletedFiles.add(Pair.of(backup, true));
             } catch (IOException e) {
                 log.error("Error deleting backup file: {}", backup.getFileName(), e);
@@ -357,7 +375,7 @@ public class DatabaseService implements DatabaseServiceInterface {
         if (!backupList.isEmpty()) {
             FileInfo lastBackup = backupList.get(backupList.size() - 1);
             try {
-                Files.deleteIfExists(Paths.get(lastBackup.getFilePath()));
+                Files.deleteIfExists(Path.of(lastBackup.getFilePath()));
                 deletedFiles.add(Pair.of(lastBackup, true));
             } catch (IOException e) {
                 log.error("Error deleting last backup file: {}", lastBackup.getFileName(), e);
@@ -379,7 +397,7 @@ public class DatabaseService implements DatabaseServiceInterface {
                             p -> p.getFileName().substring(7, p.getFileName().length() - 4)));
 
             FileInfo oldestFile = filteredBackupList.get(0);
-            Files.deleteIfExists(Paths.get(oldestFile.getFilePath()));
+            Files.deleteIfExists(Path.of(oldestFile.getFilePath()));
             log.info("Deleted oldest backup: {}", oldestFile.getFileName());
         } catch (IOException e) {
             log.error("Unable to delete oldest backup, message: {}", e.getMessage(), e);
@@ -391,6 +409,7 @@ public class DatabaseService implements DatabaseServiceInterface {
      *
      * @return <code>String</code> of the H2 version
      */
+    @Override
     public String getH2Version() {
         String version = "Unknown";
 
@@ -411,39 +430,18 @@ public class DatabaseService implements DatabaseServiceInterface {
         return version;
     }
 
-    /*
-     * Checks if the current datasource is H2.
-     *
-     * @return true if the datasource is H2, false otherwise
-     */
+    /** Returns {@code true} when the active runtime DataSource is genuinely H2. */
     private boolean isH2Database() {
-        boolean isTypeH2 =
-                datasourceProps.getType().equalsIgnoreCase(ApplicationProperties.Driver.H2.name());
-        boolean isDBUrlH2 =
-                datasourceProps.getCustomDatabaseUrl().contains("h2")
-                        || datasourceProps.getCustomDatabaseUrl().contains("H2");
-        boolean isCustomDatabase = datasourceProps.isEnableCustomDatabase();
-
-        if (isCustomDatabase) {
-            if (isTypeH2 && !isDBUrlH2) {
-                log.warn(
-                        "Datasource type is H2, but the URL does not contain 'h2'. "
-                                + "Please check your configuration.");
-                throw new IllegalStateException(
-                        "Datasource type is H2, but the URL does not contain 'h2'. Please check"
-                                + " your configuration.");
-            } else if (!isTypeH2 && isDBUrlH2) {
-                log.warn(
-                        "Datasource URL contains 'h2', but the type is not H2. "
-                                + "Please check your configuration.");
-                throw new IllegalStateException(
-                        "Datasource URL contains 'h2', but the type is not H2. Please check your"
-                                + " configuration.");
-            }
+        try (Connection conn = dataSource.getConnection()) {
+            String product = conn.getMetaData().getDatabaseProductName();
+            return product != null && product.toLowerCase().contains("h2");
+        } catch (SQLException e) {
+            log.warn(
+                    "Could not read DatabaseMetaData to determine driver; assuming non-H2 to avoid"
+                            + " issuing H2-only SQL against another database: {}",
+                    e.getMessage());
+            return false;
         }
-        boolean isH2 = isTypeH2 && isDBUrlH2;
-
-        return !isCustomDatabase || isH2;
     }
 
     /**
@@ -524,6 +522,17 @@ public class DatabaseService implements DatabaseServiceInterface {
             String content = Files.readString(scriptPath);
             String normalizedContent = normalizeSqlContent(content);
 
+            String codeOnly = stripStringLiterals(normalizedContent);
+            for (Pattern deniedPattern : DENIED_PATTERNS) {
+                if (deniedPattern.matcher(codeOnly).find()) {
+                    log.error(
+                            "Blocked disallowed SQL in backup file matching: {}",
+                            deniedPattern.pattern());
+                    throw new IllegalArgumentException(
+                            "SQL script contains disallowed operations and was rejected.");
+                }
+            }
+
             // Validate that content only contains allowed operations (whitelist approach)
             // Split by semicolons to check individual statements
             String[] statements = normalizedContent.split(";");
@@ -572,6 +581,10 @@ public class DatabaseService implements DatabaseServiceInterface {
         // Collapse multiple whitespaces
         sql = sql.replaceAll("\\s+", " ");
         return sql.trim();
+    }
+
+    private String stripStringLiterals(String sql) {
+        return sql.replaceAll("'(?:[^']|'')*'", "''");
     }
 
     /**

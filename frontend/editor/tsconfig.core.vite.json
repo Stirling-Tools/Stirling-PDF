@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@app/*": ["./src/core/*"],
+      "@shared/*": ["../shared/*"]
+    }
+  },
+  "exclude": ["src/proprietary", "src/desktop"]
+}

@@ -1,0 +1,328 @@
+.portal-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  max-width: 84rem;
+  margin: 0 auto;
+}
+
+/* Header */
+.portal-editor__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.portal-editor__title {
+  margin: 0;
+  font-size: 1.375rem;
+  font-weight: 650;
+  color: var(--color-text-1);
+}
+
+.portal-editor__sub {
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-text-3);
+  max-width: 52rem;
+}
+
+/* Section headings */
+.portal-editor__section-head {
+  margin-bottom: 0.875rem;
+}
+
+.portal-editor__section-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+
+.portal-editor__section-sub {
+  margin: 0.1875rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-text-4);
+  max-width: 52rem;
+}
+
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Deployment targets                                                       */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+.portal-editor__targets {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (max-width: 64rem) {
+  .portal-editor__targets {
+    grid-template-columns: 1fr;
+  }
+}
+
+.portal-editor__target {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.portal-editor__target-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+}
+
+.portal-editor__target-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+}
+
+.portal-editor__target-icon--neutral {
+  background: var(--color-bg-subtle);
+  color: var(--color-text-3);
+}
+.portal-editor__target-icon--blue {
+  background: var(--color-blue-light);
+  color: var(--color-blue);
+}
+.portal-editor__target-icon--purple {
+  background: var(--color-purple-light);
+  color: var(--color-purple);
+}
+
+.portal-editor__target-titles {
+  flex: 1;
+  min-width: 0;
+}
+
+.portal-editor__target-name {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+
+.portal-editor__target-tagline {
+  margin: 0.1875rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--color-text-4);
+}
+
+.portal-editor__target-meta {
+  margin: 0;
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  color: var(--color-text-3);
+}
+
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Upgrade nudge (shared by locked targets / pairings / offline card)        */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+.portal-editor__lock {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.625rem;
+  padding: 0.875rem;
+  background: var(--color-bg-subtle);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.portal-editor__lock-copy {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--color-text-3);
+}
+
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Pairing                                                                  */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+.portal-editor__pairings {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (max-width: 64rem) {
+  .portal-editor__pairings {
+    grid-template-columns: 1fr;
+  }
+}
+
+.portal-editor__pairing {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.portal-editor__pairing-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+}
+
+.portal-editor__pairing-icon {
+  font-size: 1.125rem;
+  line-height: 1.4;
+}
+
+.portal-editor__pairing-titles {
+  flex: 1;
+  min-width: 0;
+}
+
+.portal-editor__pairing-name {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+
+.portal-editor__pairing-desc {
+  margin: 0.1875rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--color-text-4);
+}
+
+.portal-editor__pairing-value {
+  padding: 0.625rem 0.75rem;
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+}
+
+.portal-editor__pairing-value code {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--color-text-1);
+  word-break: break-all;
+}
+
+.portal-editor__pairing-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Instance health table cells                                              */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+.portal-editor__cell-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3125rem;
+  min-width: 0;
+}
+
+.portal-editor__cell-strong {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+
+.portal-editor__cell-muted {
+  display: flex;
+}
+
+.portal-editor__mono {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--color-text-2);
+}
+
+.portal-editor__muted {
+  font-size: 0.8125rem;
+  color: var(--color-text-4);
+}
+
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Operations row (rotation + offline activation)                           */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+.portal-editor__ops {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (max-width: 64rem) {
+  .portal-editor__ops {
+    grid-template-columns: 1fr;
+  }
+}
+
+.portal-editor__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.portal-editor__panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.portal-editor__panel-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+
+.portal-editor__panel-sub {
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-text-4);
+}
+
+.portal-editor__enterprise-tag {
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.125rem 0.4375rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-purple-light);
+  color: var(--color-purple);
+}
+
+.portal-editor__token-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.875rem;
+}
+
+.portal-editor__panel-actions {
+  display: flex;
+  gap: 0.5rem;
+}

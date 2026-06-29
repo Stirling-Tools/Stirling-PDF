@@ -1,10 +1,10 @@
 # Translation Management Scripts
 
-This directory contains Python scripts for managing frontend translations in Stirling PDF. These tools help analyze, merge, validate, and manage translations against the en-GB golden truth file.
+This directory contains Python scripts for managing frontend translations in Stirling PDF. These tools help analyze, merge, validate, and manage translations against the en-US golden truth file.
 
 ## Current Format: TOML
 
-**Stirling PDF uses TOML format for translations** in `frontend/public/locales/{lang}/translation.toml`.
+**Stirling PDF uses TOML format for translations** in `frontend/editor/public/locales/{lang}/translation.toml`.
 
 **All scripts now support TOML format!**
 
@@ -33,7 +33,7 @@ python3 scripts/translations/auto_translate.py es-ES --no-cleanup
 4. Validates placeholders are preserved
 5. Merges translated batches
 6. Applies translations to language file
-7. Beautifies structure to match en-GB
+7. Beautifies structure to match en-US
 8. Cleans up temporary files
 9. Reports final completion percentage
 
@@ -86,7 +86,7 @@ python scripts/translations/json_validator.py --all-batches ar_AR --quiet
 - Trailing commas before closing braces
 
 #### `validate_placeholders.py`
-Validates that translation files have correct placeholders matching en-GB (source of truth).
+Validates that translation files have correct placeholders matching en-US (source of truth).
 
 **Usage:**
 ```bash
@@ -105,12 +105,12 @@ python scripts/translations/validate_placeholders.py --json
 
 **Features:**
 - Detects missing placeholders (e.g., {n}, {total}, {filename})
-- Detects extra placeholders not in en-GB
+- Detects extra placeholders not in en-US
 - Shows exact keys and text where issues occur
 - Exit code 1 if issues found (good for CI/CD)
 
 #### `validate_json_structure.py`
-Validates JSON structure and key consistency with en-GB.
+Validates JSON structure and key consistency with en-US.
 
 **Usage:**
 ```bash
@@ -130,7 +130,7 @@ python scripts/translations/validate_json_structure.py --json
 **Features:**
 - Validates JSON syntax
 - Detects missing keys (not translated yet)
-- Detects extra keys (not in en-GB, should be removed)
+- Detects extra keys (not in en-US, should be removed)
 - Reports key counts and structure differences
 - Exit code 1 if issues found (good for CI/CD)
 
@@ -160,21 +160,21 @@ python scripts/translations/translation_analyzer.py --format json
 
 **Features:**
 - Finds missing translation keys
-- Identifies untranslated entries (identical to en-GB and [UNTRANSLATED] markers)
+- Identifies untranslated entries (identical to en-US and [UNTRANSLATED] markers)
 - Shows accurate completion percentages using ignore patterns
-- Identifies extra keys not in en-GB
+- Identifies extra keys not in en-US
 - Supports JSON and text output formats
 - Uses `scripts/ignore_translation.toml` for language-specific exclusions
 
 ### 2. `translation_merger.py`
-Merges missing translations from en-GB into target language files and manages translation workflows.
+Merges missing translations from en-US into target language files and manages translation workflows.
 
 **Usage:**
 ```bash
-# Operate on all locales (except en-GB) when language is omitted
+# Operate on all locales (except en-US) when language is omitted
 python scripts/translations/translation_merger.py add-missing
 
-# Add missing translations from en-GB to French
+# Add missing translations from en-US to French
 python scripts/translations/translation_merger.py fr-FR add-missing
 
 # Create backups before modifying files
@@ -190,21 +190,21 @@ python scripts/translations/translation_merger.py fr-FR create-template --output
 python scripts/translations/translation_merger.py fr-FR apply-translations --translations-file fr_translated.json
 
 # Override default paths if needed
-python scripts/translations/translation_merger.py fr-FR add-missing --locales-dir ./frontend/public/locales --ignore-file ./scripts/ignore_translation.toml
+python scripts/translations/translation_merger.py fr-FR add-missing --locales-dir ./frontend/editor/public/locales --ignore-file ./scripts/ignore_translation.toml
 
-# Remove unused translations not present in en-GB
+# Remove unused translations not present in en-US
 python scripts/translations/translation_merger.py fr-FR remove-unused
 ```
 
 **Features:**
-- Adds missing keys from en-GB (copies English text directly)
+- Adds missing keys from en-US (copies English text directly)
 - Runs across all locales for add-missing/remove-unused when language is omitted
 - Extracts untranslated entries for external translation
 - Creates structured templates for AI translation
 - Applies translated content back to language files (template format or plain JSON)
 - Supports `--backup` on mutating commands
 - Automatic backup creation
-- Removes unused translations not present in en-GB
+- Removes unused translations not present in en-US
 
 ### 3. `ai_translation_helper.py`
 Specialized tool for AI-assisted translation workflows with batch processing and validation.
@@ -290,7 +290,7 @@ python3 scripts/translations/auto_translate.py es-ES --skip-verification
 4. **Validate**: Ensures placeholders are preserved
 5. **Merge**: Combines all translated batches
 6. **Apply**: Updates the language file
-7. **Beautify**: Restructures to match en-GB format
+7. **Beautify**: Restructures to match en-US format
 8. **Cleanup**: Removes temporary files
 9. **Verify**: Reports final completion percentage
 
@@ -302,7 +302,7 @@ python3 scripts/translations/auto_translate.py es-ES --skip-verification
 - Uses appropriate formal/informal tone per language
 
 **Supported Languages:**
-All language codes from `frontend/public/locales/` (e.g., es-ES, de-DE, fr-FR, zh-CN, ar-AR, etc.)
+All language codes from `frontend/editor/public/locales/` (e.g., es-ES, de-DE, fr-FR, zh-CN, ar-AR, etc.)
 
 ### 6. `batch_translator.py` - GPT-5 Translation Engine
 
@@ -337,11 +337,11 @@ python3 scripts/translations/batch_translator.py batch.json --language it-IT --s
 - `gpt-5-nano`: Fastest, most economical
 
 ### 7. `json_beautifier.py`
-Restructures and beautifies translation JSON files to match en-GB structure exactly.
+Restructures and beautifies translation JSON files to match en-US structure exactly.
 
 **Usage:**
 ```bash
-# Restructure single language to match en-GB structure
+# Restructure single language to match en-US structure
 python scripts/translations/json_beautifier.py --language de-DE
 
 # Restructure all languages
@@ -355,7 +355,7 @@ python scripts/translations/json_beautifier.py --language de-DE --no-backup
 ```
 
 **Features:**
-- Restructures JSON to match en-GB nested structure exactly
+- Restructures JSON to match en-US nested structure exactly
 - Preserves key ordering for line-by-line comparison
 - Creates automatic backups before modification
 - Validates structure and key ordering
@@ -469,7 +469,7 @@ python scripts/translations/translation_merger.py fr-FR apply-translations --tra
 
 ## Translation File Structure
 
-Translation files are located in `frontend/public/locales/{language}/translation.toml` with TOML structure:
+Translation files are located in `frontend/editor/public/locales/{language}/translation.toml` with TOML structure:
 
 ```toml
 [addPageNumbers]
@@ -481,6 +481,46 @@ title = "Add Page Numbers"
 ```
 
 Keys use dot notation internally (e.g., `addPageNumbers.selectText.1`).
+
+### Pluralization Suffixes
+
+Pluralized i18n keys use the i18next/Intl plural suffixes:
+`_zero`, `_one`, `_two`, `_few`, `_many`, and `_other`.
+
+Define the shared base key plus one entry for each plural category the language
+needs. Always provide `_other`; i18next uses it as the fallback plural form.
+Use `{{count}}` as the count placeholder, and call the base key from code with a
+`count` value:
+
+```toml
+[common]
+fileCount_one = "{{count}} file"
+fileCount_other = "{{count}} files"
+fileCount_zero = "No files"
+```
+
+Languages with more plural categories can add their required forms. For example,
+Arabic-style plural rules distinguish `0`, `1`, `2`, small counts, large counts,
+and the fallback form:
+
+```toml
+[common]
+uploadCount_zero = "No files uploaded"              # count = 0
+uploadCount_one = "One file uploaded"               # count = 1
+uploadCount_two = "Two files uploaded"              # count = 2
+uploadCount_few = "{{count}} files uploaded"        # count = 3-10
+uploadCount_many = "{{count}} files uploaded"       # count = 11-99
+uploadCount_other = "{{count}} files uploaded"      # count = 100, fractions, fallback
+```
+
+```ts
+t("common.uploadCount", { count: files.length });
+```
+
+Do not translate the suffix names themselves. They are CLDR plural categories,
+not English words. Add only the forms required by the target language, but keep
+the plural key set aligned with `en-US` unless the target language needs
+additional CLDR forms such as `_few` or `_many`.
 
 ## Key Features
 
@@ -585,7 +625,7 @@ python scripts/translations/json_validator.py --all-batches ar_AR
 
 #### JSON Structure Mismatches
 **Problem**: Flattened dot-notation keys instead of proper nested objects
-**Solution**: Use `json_beautifier.py` to restructure files to match en-GB exactly
+**Solution**: Use `json_beautifier.py` to restructure files to match en-US exactly
 
 ## Real-World Examples
 
@@ -629,7 +669,7 @@ EOF
 python scripts/translations/translation_merger.py ar-AR apply-translations --translations-file ar_AR_merged.json
 # Result: Applied 1088 translations
 
-# Beautify to match en-GB structure
+# Beautify to match en-US structure
 python scripts/translations/json_beautifier.py --language ar-AR
 
 # Check final progress
@@ -685,7 +725,7 @@ python scripts/translations/ai_translation_helper.py apply-batch de_batch_1.json
 ## Integration with Development
 
 These scripts integrate with the existing translation system:
-- Works with the current `frontend/public/locales/` structure
+- Works with the current `frontend/editor/public/locales/` structure
 - Compatible with the i18n system used in the React frontend
 - Respects the JSON format expected by the translation loader
 - Maintains the nested structure required by the UI components
@@ -711,4 +751,4 @@ These scripts integrate with the existing translation system:
 3. **Updating Existing Language**: Use analyzer to find gaps, then compact or batch method
 4. **Quality Assurance**: Use analyzer with `--summary` for completion metrics and issue detection
 5. **External Translation Services**: Use export functionality to generate CSV files for translators
-6. **Structure Maintenance**: Use json_beautifier to keep files aligned with en-GB structure
+6. **Structure Maintenance**: Use json_beautifier to keep files aligned with en-US structure

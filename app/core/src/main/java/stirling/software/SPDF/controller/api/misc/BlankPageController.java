@@ -1,8 +1,9 @@
 package stirling.software.SPDF.controller.api.misc;
 
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -14,6 +15,7 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageTree;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -29,12 +31,15 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.misc.RemoveBlankPagesRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PdfUtils;
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 
 @MiscApi
@@ -43,6 +48,7 @@ import stirling.software.common.util.WebResponseUtils;
 public class BlankPageController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final TempFileManager tempFileManager;
 
     public static boolean isBlankImage(
             BufferedImage image, int threshold, double whitePercent, int blurSize) {
@@ -76,14 +82,18 @@ public class BlankPageController {
         return whitePixelPercentage >= whitePercent;
     }
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/remove-blanks")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/remove-blanks",
+            resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @Operation(
             summary = "Remove blank pages from a PDF file",
             description =
                     "This endpoint removes blank pages from a given PDF file. Users can specify the"
                             + " threshold and white percentage to tune the detection of blank pages."
                             + " Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> removeBlankPages(@ModelAttribute RemoveBlankPagesRequest request)
+    public ResponseEntity<Resource> removeBlankPages(
+            @ModelAttribute RemoveBlankPagesRequest request)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
         int threshold = request.getThreshold();
@@ -149,28 +159,29 @@ public class BlankPageController {
                 pageIndex++;
             }
 
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ZipOutputStream zos = new ZipOutputStream(baos);
-
             String filename =
                     GeneralUtils.removeExtension(
                             Filenames.toSimpleFileName(inputFile.getOriginalFilename()));
 
-            if (!nonBlankPages.isEmpty()) {
-                createZipEntry(zos, nonBlankPages, filename + "_nonBlankPages.pdf");
-            } else {
-                createZipEntry(zos, blankPages, filename + "_allBlankPages.pdf");
-            }
+            TempFile tempOut = tempFileManager.createManagedTempFile(".zip");
+            try (OutputStream fos = Files.newOutputStream(tempOut.getFile().toPath());
+                    ZipOutputStream zos = new ZipOutputStream(fos)) {
+                if (!nonBlankPages.isEmpty()) {
+                    createZipEntry(zos, nonBlankPages, filename + "_nonBlankPages.pdf");
+                } else {
+                    createZipEntry(zos, blankPages, filename + "_allBlankPages.pdf");
+                }
 
-            if (!nonBlankPages.isEmpty() && !blankPages.isEmpty()) {
-                createZipEntry(zos, blankPages, filename + "_blankPages.pdf");
+                if (!nonBlankPages.isEmpty() && !blankPages.isEmpty()) {
+                    createZipEntry(zos, blankPages, filename + "_blankPages.pdf");
+                }
+            } catch (IOException e) {
+                tempOut.close();
+                throw e;
             }
-
-            zos.close();
 
             log.info("Returning ZIP file: {}", filename + "_processed.zip");
-            return WebResponseUtils.baosToWebResponse(
-                    baos, filename + "_processed.zip", MediaType.APPLICATION_OCTET_STREAM);
+            return WebResponseUtils.zipFileToWebResponse(tempOut, filename + "_processed.zip");
 
         } catch (ExceptionUtils.OutOfMemoryDpiException e) {
             throw e;

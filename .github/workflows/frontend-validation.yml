@@ -1,0 +1,152 @@
+name: Frontend lint, type-check, and build
+
+# Reusable workflow called from build.yml when frontend / testing sources
+# change. Runs the consolidated `task frontend:check:all` (lint, types,
+# unit tests, build) and uploads the dist artifact for downstream jobs.
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  pick:
+    uses: ./.github/workflows/_runner-pick.yml
+
+  frontend-validation:
+    needs: pick
+    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        with:
+          egress-policy: audit
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install Task
+        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
+      - name: Quality-check frontend
+        id: frontend-check
+        run: task frontend:check:all
+        continue-on-error: true
+      - name: Comment on frontend check failure
+        # Only post a comment on PRs. github-script's PR helpers need an
+        # issue/PR number, which doesn't exist on merge_group runs.
+        if: steps.frontend-check.outcome == 'failure' && github.event_name == 'pull_request'
+        continue-on-error: true
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const marker = '<!-- frontend-check -->';
+            const body = [
+              marker,
+              '### Frontend Check Failed',
+              '',
+              'There are issues with your frontend code that will need to be fixed before they can be merged in.',
+              '',
+              'Run `task frontend:fix` to auto-fix what can be fixed automatically, then run `task frontend:check:all` to see what still needs fixing manually.',
+            ].join('\n');
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+      - name: Fail if frontend check failed
+        if: steps.frontend-check.outcome == 'failure'
+        run: |
+          echo "============================================"
+          echo "  Frontend Check Failed"
+          echo "============================================"
+          echo ""
+          echo "There are issues with your frontend code that"
+          echo "will need to be fixed before they can be merged in."
+          echo ""
+          echo "Run 'task frontend:fix' to auto-fix what can be"
+          echo "fixed automatically, then run 'task frontend:check:all'"
+          echo "to see what still needs fixing manually."
+          echo "============================================"
+          exit 1
+      - name: Remove frontend check comment on success
+        if: steps.frontend-check.outcome == 'success' && github.event_name == 'pull_request'
+        continue-on-error: true
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const marker = '<!-- frontend-check -->';
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.deleteComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+              });
+            }
+      - name: Vitest coverage
+        # Separate from `frontend:check:all` so the quality-gate run stays
+        # uninstrumented (faster signal) and coverage stays an informational
+        # follow-up. Continue-on-error keeps the workflow green even when
+        # a handful of test files refuse to import (e.g. missing icon
+        # specifiers) - the summary still gets posted with whatever
+        # vitest managed to instrument.
+        id: frontend-coverage
+        continue-on-error: true
+        run: task frontend:test:coverage
+      - name: Set up Python for coverage summary
+        if: always()
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.12"
+      - name: Install defusedxml for coverage summary
+        # See coverage-summary.py header - it parses XML through defusedxml
+        # to dodge the stdlib parser's exposure to XXE / billion-laughs.
+        if: always()
+        run: python -m pip install --quiet defusedxml
+      - name: Vitest coverage step summary
+        if: always()
+        run: |
+          python scripts/coverage-summary.py \
+            --title "Frontend Vitest coverage" \
+            --vitest frontend/editor/coverage/coverage-summary.json \
+            --github-step-summary
+      - name: Upload vitest coverage report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: frontend-coverage
+          path: frontend/editor/coverage/
+          retention-days: 7
+          if-no-files-found: warn
+      - name: Upload frontend build artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: frontend-build
+          path: frontend/editor/dist/
+          retention-days: 3

@@ -12,6 +12,7 @@ import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 import lombok.Getter;
@@ -30,13 +31,19 @@ import stirling.software.common.model.exception.UnsupportedProviderException;
             "stirling.software.proprietary.security.repository",
             "stirling.software.proprietary.repository",
             "stirling.software.proprietary.storage.repository",
-            "stirling.software.proprietary.workflow.repository"
+            "stirling.software.proprietary.workflow.repository",
+            "stirling.software.proprietary.policy.store",
+            "stirling.software.proprietary.accountlink",
+            "stirling.software.proprietary.policy.source"
         })
 @EntityScan({
     "stirling.software.proprietary.security.model",
     "stirling.software.proprietary.model",
     "stirling.software.proprietary.storage.model",
-    "stirling.software.proprietary.workflow.model"
+    "stirling.software.proprietary.workflow.model",
+    "stirling.software.proprietary.policy.store",
+    "stirling.software.proprietary.accountlink",
+    "stirling.software.proprietary.policy.source"
 })
 public class DatabaseConfig {
 
@@ -71,6 +78,7 @@ public class DatabaseConfig {
     @Bean
     @Qualifier("dataSource")
     @Primary
+    @Profile("!saas")
     public DataSource dataSource() throws UnsupportedProviderException {
         DataSourceBuilder<?> dataSourceBuilder = DataSourceBuilder.create();
 

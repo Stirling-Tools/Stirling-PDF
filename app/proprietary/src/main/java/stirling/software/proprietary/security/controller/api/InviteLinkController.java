@@ -3,7 +3,6 @@ package stirling.software.proprietary.security.controller.api;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -52,7 +51,7 @@ public class InviteLinkController {
      * @param request The HTTP request
      * @return ResponseEntity with the invite link or error
      */
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/generate")
     public ResponseEntity<?> generateInviteLink(
             @RequestParam(name = "email", required = false) String email,
@@ -257,7 +256,7 @@ public class InviteLinkController {
      *
      * @return List of active invite tokens
      */
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/list")
     public ResponseEntity<?> listInviteLinks() {
         try {
@@ -280,7 +279,7 @@ public class InviteLinkController {
                                                 "expiresAt", invite.getExpiresAt().toString());
                                         return inviteMap;
                                     })
-                            .collect(Collectors.toList());
+                            .toList();
 
             return ResponseEntity.ok(Map.of("invites", inviteList));
 
@@ -297,7 +296,7 @@ public class InviteLinkController {
      * @param inviteId The invite token ID to revoke
      * @return Success or error response
      */
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/revoke/{inviteId}")
     public ResponseEntity<?> revokeInviteLink(@PathVariable Long inviteId) {
         try {
@@ -324,14 +323,14 @@ public class InviteLinkController {
      *
      * @return Number of deleted tokens
      */
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/cleanup")
     public ResponseEntity<?> cleanupExpiredInvites() {
         try {
             List<InviteToken> expiredInvites =
                     inviteTokenRepository.findAll().stream()
                             .filter(invite -> !invite.isValid())
-                            .collect(Collectors.toList());
+                            .toList();
 
             int count = expiredInvites.size();
             inviteTokenRepository.deleteAll(expiredInvites);

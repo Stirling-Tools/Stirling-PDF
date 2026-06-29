@@ -1,0 +1,296 @@
+name: Build Docker images (PR test)
+
+# Reusable workflow called from build.yml on PRs to verify the three
+# embedded Dockerfiles (default, ultra-lite, fat) still build cleanly,
+# optionally against a freshly-built base image when the PR touches the
+# base Dockerfile.
+on:
+  workflow_call:
+    inputs:
+      docker-base-changed:
+        description: "Whether the docker base image changed (forwarded from files-changed)."
+        required: false
+        type: string
+        default: "false"
+      depot_cores:
+        description: "Depot runner vCPU count (used in runs-on). Override for benchmarking."
+        required: false
+        type: string
+        default: "8"
+
+permissions:
+  contents: read
+
+jobs:
+  pick:
+    uses: ./.github/workflows/_runner-pick.yml
+
+  # TODO: extract a pre-matrix `prepare` job that runs once and produces
+  # shared artifacts for the three matrix entries below to consume:
+  #   1. `task backend:build` — currently runs 3× in parallel with
+  #      identical env (DISABLE_ADDITIONAL_FEATURES=true,
+  #      STIRLING_PDF_DESKTOP_UI=false). Build once, upload the JAR as an
+  #      artifact, matrix entries download.
+  #   2. The base-image `docker build` (gated on docker-base-changed) —
+  #      currently runs 3× in parallel against the same Dockerfile and
+  #      context. Build once, `docker save` to an artifact, matrix entries
+  #      `docker load` before the embedded build.
+  # Saves ~2 full backend builds + 2 base-image builds per PR that touches
+  # docker. May also be reusable from backend-build.yml's jdk-25 +
+  # spring-security=true matrix entry if `task backend:build` and
+  # `task backend:build:ci` produce equivalent JARs (verify before wiring).
+  test-build-docker-images:
+    needs: pick
+    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || format('depot-ubuntu-24.04-{0}', inputs.depot_cores || '8') }}
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      USE_DEPOT: ${{ needs.pick.outputs.is_fork != 'true' && inputs.docker-base-changed != 'true' }}
+      DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - docker-rev: docker/embedded/Dockerfile
+            artifact-suffix: Dockerfile
+            cache-scope: stirling-pdf-latest
+          - docker-rev: docker/embedded/Dockerfile.ultra-lite
+            artifact-suffix: Dockerfile.ultra-lite
+            cache-scope: stirling-pdf-ultra-lite
+          - docker-rev: docker/embedded/Dockerfile.fat
+            artifact-suffix: Dockerfile.fat
+            cache-scope: stirling-pdf-fat
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        with:
+          egress-policy: audit
+
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Convert repository owner to lowercase
+        id: repoowner
+        run: echo "lowercase=$(echo ${{ github.repository_owner }} | awk '{print tolower($0)}')" >> $GITHUB_OUTPUT
+
+      - name: Free disk space on runner
+        run: |
+          echo "Disk space before cleanup:" && df -h
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /usr/local/share/boost
+          docker system prune -af || true
+          echo "Disk space after cleanup:" && df -h
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          java-version: "25"
+          distribution: "temurin"
+
+      - name: Cache Gradle dependency artifacts
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: |
+            ~/.gradle/wrapper
+            ~/.gradle/caches/modules-2/files-2.1
+            ~/.gradle/caches/modules-2/metadata-2.*
+          key: gradle-deps-${{ runner.os }}-jdk-25-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties', '**/*.gradle', '**/*.gradle.kts', 'settings.gradle', 'settings.gradle.kts', 'gradle/libs.versions.toml') }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
+        with:
+          gradle-version: 9.6.0
+          cache-disabled: true
+
+      - name: Install Task
+        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
+      - name: Build application
+        run: task backend:build
+        env:
+          MAVEN_USER: ${{ secrets.MAVEN_USER }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
+          DISABLE_ADDITIONAL_FEATURES: true
+          STIRLING_PDF_DESKTOP_UI: false
+
+      - name: Set up Depot CLI
+        if: env.USE_DEPOT == 'true'
+        uses: depot/setup-action@15c09a5f77a0840ad4bce955686522a257853461 # v1.0.0
+
+      - name: Set up QEMU
+        if: env.USE_DEPOT != 'true'
+        uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4.0.0
+
+      - name: Set up Docker Buildx
+        if: env.USE_DEPOT != 'true'
+        id: buildx
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
+
+      - name: Build base image locally (PR base change only)
+        if: github.event_name == 'pull_request' && inputs.docker-base-changed == 'true'
+        run: |
+          docker build -t stirling-pdf-base:pr-test -f docker/base/Dockerfile docker/base
+
+      - name: Set base image and platform for this build
+        id: build-params
+        # Pass workflow inputs through env vars rather than expanding `${{ }}`
+        # directly into the shell — defense-in-depth against template injection
+        # if any upstream provider of these values ever becomes less trusted.
+        # GITHUB_EVENT_NAME is already provided by the runner.
+        env:
+          DOCKER_BASE_CHANGED: ${{ inputs.docker-base-changed }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "pull_request" ] && [ "$DOCKER_BASE_CHANGED" = "true" ]; then
+            echo "base_image=stirling-pdf-base:pr-test" >> "$GITHUB_OUTPUT"
+            echo "platforms=linux/amd64" >> "$GITHUB_OUTPUT"
+          else
+            echo "base_image=stirlingtools/stirling-pdf-base:latest" >> "$GITHUB_OUTPUT"
+            echo "platforms=linux/amd64,linux/arm64/v8" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Base-changed PRs build the embedded image with the local docker driver
+      # so the locally-built stirling-pdf-base:pr-test (in the daemon image
+      # store) resolves. A buildx container builder cannot see it and would try
+      # to pull it from a registry, which fails. Single-platform, no gha cache.
+      - name: Build ${{ matrix.docker-rev }} against local base (PR base change)
+        if: github.event_name == 'pull_request' && inputs.docker-base-changed == 'true'
+        run: |
+          DOCKER_BUILDKIT=1 docker build \
+            --build-arg BASE_IMAGE=${{ steps.build-params.outputs.base_image }} \
+            --file ./${{ matrix.docker-rev }} \
+            --tag stirling-pdf-embedded:pr-test \
+            .
+
+      - name: Build ${{ matrix.docker-rev }} (Depot)
+        if: env.USE_DEPOT == 'true'
+        uses: depot/build-push-action@98e78adca7817480b8185f474a400b451d74e287 # v1.16.0
+        with:
+          project: ${{ vars.DEPOT_PROJECT_ID }}
+          context: .
+          file: ./${{ matrix.docker-rev }}
+          push: false
+          platforms: ${{ steps.build-params.outputs.platforms }}
+          build-args: |
+            BASE_IMAGE=${{ steps.build-params.outputs.base_image }}
+          provenance: true
+          sbom: true
+
+      # Fork PRs that did NOT change the base use the buildx container builder
+      # (multi-platform + gha cache) against the published base image.
+      - name: Build ${{ matrix.docker-rev }} (Docker fork fallback)
+        if: env.USE_DEPOT != 'true' && inputs.docker-base-changed != 'true'
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          context: .
+          file: ./${{ matrix.docker-rev }}
+          push: false
+          cache-from: type=gha,scope=${{ matrix.cache-scope }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.cache-scope }}
+          platforms: ${{ steps.build-params.outputs.platforms }}
+          build-args: |
+            BASE_IMAGE=${{ steps.build-params.outputs.base_image }}
+          provenance: true
+          sbom: true
+
+      - name: Upload Reports
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: reports-docker-${{ matrix.artifact-suffix }}
+          path: |
+            build/reports/tests/
+            build/test-results/
+            build/reports/problems/
+          retention-days: 3
+          if-no-files-found: warn
+
+  test-build-unoserver-image:
+    needs: pick
+    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || format('depot-ubuntu-24.04-{0}', inputs.depot_cores || '8') }}
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      USE_DEPOT: ${{ needs.pick.outputs.is_fork != 'true' && inputs.docker-base-changed != 'true' }}
+      DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        with:
+          egress-policy: audit
+
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up Depot CLI
+        if: env.USE_DEPOT == 'true'
+        uses: depot/setup-action@15c09a5f77a0840ad4bce955686522a257853461 # v1.0.0
+
+      - name: Set up QEMU
+        if: env.USE_DEPOT != 'true'
+        uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4.0.0
+
+      - name: Set up Docker Buildx
+        if: env.USE_DEPOT != 'true'
+        id: buildx
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
+
+      - name: Build docker/unoserver/Dockerfile (Depot)
+        if: env.USE_DEPOT == 'true'
+        uses: depot/build-push-action@98e78adca7817480b8185f474a400b451d74e287 # v1.16.0
+        with:
+          project: ${{ vars.DEPOT_PROJECT_ID }}
+          context: .
+          file: ./docker/unoserver/Dockerfile
+          push: false
+          load: true
+          platforms: linux/amd64
+          tags: stirling-unoserver:pr-test
+          provenance: false
+          sbom: false
+
+      - name: Build docker/unoserver/Dockerfile (Docker fork fallback)
+        if: env.USE_DEPOT != 'true'
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          context: .
+          file: ./docker/unoserver/Dockerfile
+          push: false
+          load: true
+          cache-from: type=gha,scope=stirling-unoserver
+          cache-to: type=gha,mode=max,scope=stirling-unoserver
+          platforms: linux/amd64
+          tags: stirling-unoserver:pr-test
+          provenance: false
+          sbom: false
+
+      - name: Smoke test the built image
+        run: |
+          set -eu
+          docker run -d --name unoserver-smoke \
+            -e UNOSERVER_RECYCLE_INTERVAL_SECONDS=0 \
+            stirling-unoserver:pr-test
+          deadline=$((SECONDS + 60))
+          while [ $SECONDS -lt $deadline ]; do
+            status=$(docker inspect -f '{{.State.Health.Status}}' unoserver-smoke 2>/dev/null || echo "starting")
+            if [ "$status" = "healthy" ]; then
+              echo "unoserver became healthy"
+              docker logs unoserver-smoke | tail -30
+              docker rm -f unoserver-smoke
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "unoserver did not become healthy in time"
+          docker logs unoserver-smoke || true
+          docker rm -f unoserver-smoke || true
+          exit 1

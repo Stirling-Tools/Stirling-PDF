@@ -1,10 +1,15 @@
 {
-  "extends": "../tsconfig.json",
   "compilerOptions": {
-    "module": "node16",
-    "moduleResolution": "node16",
+    "target": "es2022",
+    "lib": ["es2022"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "types": ["node"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
     "noEmit": true
   },
-  "include": ["./**/*.ts"],
-  "exclude": []
+  "include": ["./**/*.ts", "./**/*.mts"]
 }

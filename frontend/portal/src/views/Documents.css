@@ -1,0 +1,225 @@
+.portal-documents {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.5rem;
+  max-width: 84rem;
+  margin: 0 auto;
+}
+
+/* Header */
+.portal-documents__head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.portal-documents__title {
+  margin: 0;
+  font-size: 1.375rem;
+  font-weight: 650;
+  color: var(--color-text-1);
+}
+
+.portal-documents__sub {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-text-3);
+  max-width: 46rem;
+}
+
+/* Review queue layout */
+.portal-documents__queue {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.portal-documents__table-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Table cells */
+.portal-documents__name-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.4375rem;
+  min-width: 0;
+}
+
+.portal-documents__name {
+  font-weight: 600;
+  color: var(--color-text-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.portal-documents__lock {
+  font-size: 0.75rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.portal-documents__muted {
+  font-size: 0.8125rem;
+  color: var(--color-text-4);
+}
+
+.portal-documents__mono {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--color-text-2);
+}
+
+.portal-documents__confidence {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.portal-documents__confidence-pct {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.portal-documents__confidence-pct--success {
+  color: var(--color-green-dark);
+}
+.portal-documents__confidence-pct--warning {
+  color: var(--color-amber-dark);
+}
+.portal-documents__confidence-pct--danger {
+  color: var(--color-red);
+}
+
+/* Drawer body */
+.portal-documents__drawer {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.portal-documents__drawer-status {
+  display: flex;
+}
+
+.portal-documents__drawer-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+/* Overview stat grid */
+.portal-documents__stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.875rem;
+}
+
+.portal-documents__field {
+  font-weight: 500;
+  color: var(--color-text-1);
+}
+
+/* Masked / sensitive placeholder */
+.portal-documents__masked {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 2rem 1rem;
+  text-align: center;
+  background: var(--color-bg-subtle);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.portal-documents__masked-icon {
+  font-size: 1.5rem;
+}
+
+.portal-documents__masked-text {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-text-3);
+  max-width: 22rem;
+}
+
+/* Audit timeline */
+.portal-documents__timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.portal-documents__timeline-item {
+  position: relative;
+  display: flex;
+  gap: 0.75rem;
+  padding: 0 0 1rem 0;
+}
+
+.portal-documents__timeline-item:last-child {
+  padding-bottom: 0;
+}
+
+.portal-documents__timeline-dot {
+  position: relative;
+  flex-shrink: 0;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-top: 0.375rem;
+  border-radius: 50%;
+  background: var(--color-blue);
+}
+
+/* Connecting line between successive timeline dots. */
+.portal-documents__timeline-item:not(:last-child)
+  .portal-documents__timeline-dot::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0.75rem;
+  transform: translateX(-50%);
+  width: 1px;
+  height: calc(100% + 1rem);
+  background: var(--color-border);
+}
+
+.portal-documents__timeline-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.portal-documents__timeline-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.portal-documents__timeline-time {
+  font-size: 0.6875rem;
+  color: var(--color-text-5);
+}
+
+.portal-documents__timeline-detail {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-text-2);
+  line-height: 1.45;
+}
+
+.portal-documents__timeline-actor {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--color-text-4);
+}

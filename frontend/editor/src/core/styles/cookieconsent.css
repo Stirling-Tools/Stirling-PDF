@@ -1,0 +1,59 @@
+/* Cookie Consent Modal Styling - Ensure proper z-index */
+
+/* Ensure cookie consent appears above everything */
+#cc-main {
+  z-index: 999999 !important;
+}
+
+/* Additional styling if needed */
+.cm-wrapper,
+.pm-wrapper {
+  z-index: 999999 !important;
+}
+
+/* Dark mode styling */
+.cc--darkmode .cm {
+  background: #2d2d2d !important;
+  color: #ffffff !important;
+  border-top: 1px solid #444 !important;
+}
+
+.cc--darkmode .pm {
+  background: #2d2d2d !important;
+  color: #ffffff !important;
+}
+
+.cc--darkmode .pm-overlay {
+  background: rgba(0, 0, 0, 0.7) !important;
+}
+
+/* Button styling */
+.cc--darkmode .cm__btn {
+  background: #444 !important;
+  color: #ffffff !important;
+  border: 1px solid #666 !important;
+}
+
+.cc--darkmode .cm__btn:hover {
+  background: #555 !important;
+}
+
+.cc--darkmode .pm__btn {
+  background: #444 !important;
+  color: #ffffff !important;
+  border: 1px solid #666 !important;
+}
+
+.cc--darkmode .pm__btn:hover {
+  background: #555 !important;
+}
+
+/* Ensure ScrollArea doesn't interfere */
+.mantine-ScrollArea-root {
+  position: relative !important;
+}
+
+/* Override any potential conflicts */
+[data-mantine-color-scheme="dark"] #cc-main {
+  color: #ffffff !important;
+}

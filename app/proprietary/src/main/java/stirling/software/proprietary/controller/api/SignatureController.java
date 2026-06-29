@@ -3,7 +3,6 @@ package stirling.software.proprietary.controller.api;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -18,6 +17,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +38,9 @@ import stirling.software.proprietary.service.SignatureService;
 @RestController
 @RequestMapping("/api/v1/proprietary/signatures")
 @RequiredArgsConstructor
+@Tag(
+        name = "Saved Signatures",
+        description = "Manage saved signature templates for authenticated users")
 public class SignatureController {
 
     private final SignatureService signatureService;
@@ -178,7 +182,7 @@ public class SignatureController {
      */
     private boolean deleteFromSharedFolder(String signatureId) throws IOException {
         String signatureBasePath = InstallationPathConfig.getSignaturesPath();
-        Path sharedFolder = Paths.get(signatureBasePath, ALL_USERS_FOLDER);
+        Path sharedFolder = Path.of(signatureBasePath, ALL_USERS_FOLDER);
         boolean deleted = false;
 
         if (Files.exists(sharedFolder)) {

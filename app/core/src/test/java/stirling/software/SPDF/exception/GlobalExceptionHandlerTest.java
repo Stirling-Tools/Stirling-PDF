@@ -18,6 +18,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.MessageSource;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -177,14 +179,14 @@ class GlobalExceptionHandlerTest {
     void handleMaxUploadSize_returns_413() {
         MaxUploadSizeExceededException ex = new MaxUploadSizeExceededException(10485760);
         ResponseEntity<ProblemDetail> resp = handler.handleMaxUploadSize(ex, request);
-        assertEquals(HttpStatus.PAYLOAD_TOO_LARGE, resp.getStatusCode());
+        assertEquals(HttpStatus.CONTENT_TOO_LARGE, resp.getStatusCode());
     }
 
     @Test
     void handleMaxUploadSize_unknown_limit() {
         MaxUploadSizeExceededException ex = new MaxUploadSizeExceededException(-1);
         ResponseEntity<ProblemDetail> resp = handler.handleMaxUploadSize(ex, request);
-        assertEquals(HttpStatus.PAYLOAD_TOO_LARGE, resp.getStatusCode());
+        assertEquals(HttpStatus.CONTENT_TOO_LARGE, resp.getStatusCode());
         assertNull(resp.getBody().getProperties().get("maxSizeBytes"));
     }
 
@@ -206,6 +208,19 @@ class GlobalExceptionHandlerTest {
         NoHandlerFoundException ex = new NoHandlerFoundException("GET", "/api/missing", null);
         ResponseEntity<ProblemDetail> resp = handler.handleNotFound(ex, request);
         assertEquals(HttpStatus.NOT_FOUND, resp.getStatusCode());
+    }
+
+    // ---- NoResourceFoundException ----
+    // Regression guard: was falling through to the 500 catch-all.
+
+    @Test
+    void handleNoResourceFound_returns_404_not_500() {
+        when(request.getMethod()).thenReturn("GET");
+        NoResourceFoundException ex =
+                new NoResourceFoundException(HttpMethod.GET, "/api/v1/storage/folders", "");
+        ResponseEntity<ProblemDetail> resp = handler.handleNoResourceFound(ex, request);
+        assertEquals(HttpStatus.NOT_FOUND, resp.getStatusCode());
+        assertEquals("GET", resp.getBody().getProperties().get("method"));
     }
 
     // ---- IllegalArgumentException ----

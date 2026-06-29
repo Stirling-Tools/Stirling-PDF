@@ -1,0 +1,168 @@
+/* ===================== PanelHeader ===================== */
+/* The header shared by the active-tool panel, the AI chat panel and the        */
+/* Policies detail/wizard. Mirrors the AI chat header treatment so it reads well */
+/* in both light and dark mode (thin border, no heavy fill).                     */
+
+.sui-panelhdr {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 1rem 0.75rem;
+  flex-shrink: 0;
+}
+
+.sui-panelhdr__bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+  padding: 0.4rem 0.75rem 0.4rem 0.4rem;
+  border: 1px solid var(--border-subtle, var(--mantine-color-default-border));
+  border-radius: 9999px;
+  background: var(--mantine-color-body);
+  text-align: left;
+  color: inherit;
+}
+
+/* Only the menu-trigger variant is interactive. */
+button.sui-panelhdr__bar {
+  cursor: pointer;
+  transition:
+    background 120ms ease-out,
+    border-color 120ms ease-out;
+}
+
+button.sui-panelhdr__bar:hover {
+  background: var(--mantine-color-default-hover);
+}
+
+.sui-panelhdr__icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 9999px;
+  background: var(--mantine-color-blue-light);
+  color: var(--mantine-color-blue-filled);
+  flex-shrink: 0;
+}
+
+.sui-panelhdr__icon svg {
+  font-size: 1rem;
+  width: 1rem;
+  height: 1rem;
+}
+
+/* ToolIcon wraps its glyph in .tool-button-icon with its own margin/transform;
+   reset them so the glyph sits dead-centre in the circular badge. */
+.sui-panelhdr__icon .tool-button-icon {
+  margin: 0 !important;
+  transform: none !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.sui-panelhdr__label {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--mantine-color-text);
+}
+
+.sui-panelhdr__chevron {
+  flex-shrink: 0;
+  color: var(--mantine-color-dimmed);
+}
+
+/* Right-aligned content inside the bar (e.g. a status badge); the flexible
+   label pushes it to the trailing edge of the pill. */
+.sui-panelhdr__actions {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* Running / in-progress status dot, anchored to the header icon. */
+.sui-panelhdr__dot {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--mantine-color-blue-5);
+  border: 1.5px solid var(--mantine-color-body);
+  animation: sui-panelhdr-dot-pulse 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes sui-panelhdr-dot-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sui-panelhdr__dot {
+    animation: none;
+  }
+}
+
+.sui-panelhdr__bar--loading {
+  border-color: color-mix(
+    in srgb,
+    var(--mantine-color-blue-5) 60%,
+    var(--border-subtle, var(--mantine-color-default-border))
+  );
+}
+
+/* Dark mode: let the header blend into the rail — just a thin border, no fill —
+   so it doesn't read as a clashing lighter card on the dark toolbar. */
+[data-mantine-color-scheme="dark"] .sui-panelhdr__bar {
+  background: transparent;
+  border-color: var(--border-subtle, var(--mantine-color-default-border));
+}
+
+[data-mantine-color-scheme="dark"] button.sui-panelhdr__bar:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+[data-mantine-color-scheme="dark"] .sui-panelhdr__bar--loading {
+  border-color: color-mix(
+    in srgb,
+    var(--mantine-color-blue-4) 55%,
+    var(--border-subtle, var(--mantine-color-default-border))
+  );
+}
+
+[data-mantine-color-scheme="dark"] .sui-panelhdr__icon {
+  background: color-mix(
+    in srgb,
+    var(--mantine-color-blue-filled) 18%,
+    transparent
+  );
+  color: var(--mantine-color-blue-3, var(--mantine-color-blue-filled));
+}
+
+/* Dark mode: the subtle gray close button is too dim against the dark rail —
+   brighten it to a clearly-visible light grey (near-white on hover). */
+[data-mantine-color-scheme="dark"] .sui-panelhdr__close {
+  color: var(--mantine-color-gray-4);
+}
+
+[data-mantine-color-scheme="dark"] .sui-panelhdr__close:hover {
+  color: var(--mantine-color-gray-2);
+}

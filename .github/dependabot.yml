@@ -13,63 +13,152 @@ updates:
       - "/app/proprietary"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
     rebase-strategy: "auto"
 
   - package-ecosystem: "docker"
-    directory: "/" # Location of Dockerfile
+    directories:
+      - "/" # Location of Dockerfile
+      - "/docker/backend"
+      - "/docker/embedded"
+      - "/docker/frontend"
+      - "/docker/base"
+      - "/docker/engine"
+      - "/docker/unoserver"
+      - "/engine"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
     rebase-strategy: "auto"
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
     rebase-strategy: "auto"
 
   - package-ecosystem: npm
-    directory: /devTools
+    directories:
+      - /devTools
+      - /frontend
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
     rebase-strategy: "auto"
-
-  - package-ecosystem: docker
-    directory: /docker/backend
-    schedule:
-      interval: "weekly"
-    rebase-strategy: "auto"
-
-  - package-ecosystem: docker
-    directory: /docker/embedded
-    schedule:
-      interval: "weekly"
-    rebase-strategy: "auto"
-
-  - package-ecosystem: docker
-    directory: /docker/frontend
-    schedule:
-      interval: "weekly"
-    rebase-strategy: "auto"
-
-  - package-ecosystem: npm
-    directory: /frontend
-    schedule:
-      interval: "weekly"
-    rebase-strategy: "auto"
+    groups:
+      embedpdf:
+        patterns:
+          - "@embedpdf/*"
+      mantine:
+        patterns:
+          - "@mantine/*"
+          - "postcss-preset-mantine"
+      mui:
+        patterns:
+          - "@mui/*"
+      tauri-js:
+        patterns:
+          - "@tauri-apps/*"
+      emotion:
+        patterns:
+          - "@emotion/*"
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
+      typescript-eslint:
+        patterns:
+          - "@typescript-eslint/*"
+          - "typescript-eslint"
+      eslint:
+        patterns:
+          - "eslint"
+          - "@eslint/*"
+      vite:
+        patterns:
+          - "vite"
+          - "vite-*"
+          - "@vitejs/*"
+      vitest:
+        patterns:
+          - "vitest"
+          - "@vitest/*"
+      testing-library:
+        patterns:
+          - "@testing-library/*"
+      i18next:
+        patterns:
+          - "i18next"
+          - "i18next-*"
+          - "react-i18next"
+      iconify:
+        patterns:
+          - "@iconify/*"
+          - "@iconify-json/*"
+      stripe:
+        patterns:
+          - "@stripe/*"
+      posthog:
+        patterns:
+          - "@posthog/*"
+          - "posthog-js"
+      supabase:
+        patterns:
+          - "@supabase/*"
+      dnd-kit:
+        patterns:
+          - "@dnd-kit/*"
+      tailwind:
+        patterns:
+          - "tailwindcss"
+          - "@tailwindcss/*"
+      postcss:
+        patterns:
+          - "postcss"
+          - "postcss-*"
+        exclude-patterns:
+          - "postcss-preset-mantine"
 
   - package-ecosystem: cargo
-    directory: /frontend/src-tauri
+    directories:
+      - /frontend/editor/src-tauri
+      - /frontend/editor/src-tauri/thumbnail-handler
+      - /frontend/editor/src-tauri/provisioner
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
     rebase-strategy: "auto"
+    groups:
+      tauri:
+        patterns:
+          - "tauri"
+          - "tauri-build"
+          - "tauri-plugin-*"
+      serde:
+        patterns:
+          - "serde"
+          - "serde_*"
+      tracing:
+        patterns:
+          - "tracing"
+          - "tracing-*"
+      tokio:
+        patterns:
+          - "tokio"
+          - "tokio-*"
 
   - package-ecosystem: pip
     directory: /testing/cucumber
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
     rebase-strategy: "auto"
-
-  - package-ecosystem: cargo
-    directory: /frontend/src-tauri/provisioner
-    schedule:
-      interval: daily

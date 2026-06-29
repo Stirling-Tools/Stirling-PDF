@@ -22,7 +22,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -196,12 +198,12 @@ public class GlobalExceptionHandler {
     /**
      * Checks whether the given IOException indicates that the client disconnected before the
      * response could be written (broken pipe, connection reset, etc.). When this happens there is
-     * no point in serialising a {@link ProblemDetail} body because the socket is already closed —
+     * no point in serialising a {@link ProblemDetail} body because the socket is already closed -
      * and attempting to do so may trigger a secondary {@code HttpMessageNotWritableException} if
      * the response Content-Type was already committed as a non-JSON type (e.g. image/png).
      */
     private static boolean isClientDisconnectException(IOException ex) {
-        // Walk the causal chain — Jetty/Tomcat may wrap the low-level SocketException
+        // Walk the causal chain - Jetty/Tomcat may wrap the low-level SocketException
         Throwable current = ex;
         while (current != null) {
             String msg = current.getMessage();
@@ -682,7 +684,7 @@ public class GlobalExceptionHandler {
      *
      * @param ex the MaxUploadSizeExceededException
      * @param request the HTTP servlet request
-     * @return ProblemDetail with HTTP 413 PAYLOAD_TOO_LARGE
+     * @return ProblemDetail with HTTP 413 CONTENT_TOO_LARGE
      */
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<ProblemDetail> handleMaxUploadSize(
@@ -706,7 +708,7 @@ public class GlobalExceptionHandler {
                 getLocalizedMessage("error.fileTooLarge.title", ErrorTitles.FILE_TOO_LARGE_DEFAULT);
 
         ProblemDetail problemDetail =
-                createBaseProblemDetail(HttpStatus.PAYLOAD_TOO_LARGE, message, request);
+                createBaseProblemDetail(HttpStatus.CONTENT_TOO_LARGE, message, request);
         problemDetail.setType(URI.create(ErrorTypes.FILE_TOO_LARGE));
         problemDetail.setTitle(title);
         problemDetail.setProperty("title", title); // Ensure serialization
@@ -724,7 +726,7 @@ public class GlobalExceptionHandler {
         problemDetail.setProperty(
                 "actionRequired", "Reduce the file size to be within the upload limit.");
 
-        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+        return ResponseEntity.status(HttpStatus.CONTENT_TOO_LARGE)
                 .contentType(PROBLEM_JSON)
                 .body(problemDetail);
     }
@@ -992,6 +994,49 @@ public class GlobalExceptionHandler {
                 .body(problemDetail);
     }
 
+    /** Unmapped path → clean 404 instead of falling through to the generic 500 catch-all. */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ProblemDetail> handleNoResourceFound(
+            NoResourceFoundException ex, HttpServletRequest request) {
+        // /api/* miss = likely missing controller (operator-relevant); other paths = favicons,
+        // robots.txt, scanner noise. Demote the latter so prod logs aren't flooded.
+        String uri = request.getRequestURI();
+        if (uri != null && uri.startsWith("/api/")) {
+            log.warn("No resource at {}: {}", uri, ex.getMessage());
+        } else {
+            log.debug("No resource at {}: {}", uri, ex.getMessage());
+        }
+
+        String title = getLocalizedMessage("error.notFound.title", ErrorTitles.NOT_FOUND_DEFAULT);
+        String detail =
+                getLocalizedMessage(
+                        "error.notFound.detail",
+                        String.format(
+                                "No endpoint found for %s %s",
+                                request.getMethod(), request.getRequestURI()),
+                        request.getMethod(),
+                        request.getRequestURI());
+
+        ProblemDetail problemDetail =
+                createBaseProblemDetail(HttpStatus.NOT_FOUND, detail, request);
+        problemDetail.setType(URI.create(ErrorTypes.NOT_FOUND));
+        problemDetail.setTitle(title);
+        problemDetail.setProperty("title", title);
+        problemDetail.setProperty("method", request.getMethod());
+        addStandardHints(
+                problemDetail,
+                "error.notFound.hints",
+                List.of(
+                        "Verify the URL path and HTTP method are correct.",
+                        "Check the API base path and version if applicable.",
+                        "Ensure there are no typos in the endpoint path."));
+        problemDetail.setProperty("actionRequired", "Use a valid endpoint URL and method.");
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .contentType(PROBLEM_JSON)
+                .body(problemDetail);
+    }
+
     /**
      * Handle IllegalArgumentException.
      *
@@ -1040,6 +1085,43 @@ public class GlobalExceptionHandler {
      * @param request the HTTP servlet request
      * @return ProblemDetail with appropriate HTTP status
      */
+    /**
+     * Handle ResponseStatusException explicitly so its embedded HTTP status reaches the client
+     * instead of being swallowed by the {@code RuntimeException} catch-all (which would downgrade
+     * every controller-thrown 400/404/409 to a generic 500). Folder/file storage controllers and
+     * any other code that throws {@code ResponseStatusException} relies on this handler taking
+     * precedence.
+     */
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ProblemDetail> handleResponseStatusException(
+            ResponseStatusException ex, HttpServletRequest request) {
+        HttpStatus status =
+                HttpStatus.resolve(ex.getStatusCode().value()) != null
+                        ? HttpStatus.valueOf(ex.getStatusCode().value())
+                        : HttpStatus.INTERNAL_SERVER_ERROR;
+        String reason = ex.getReason() != null ? ex.getReason() : status.getReasonPhrase();
+        ProblemDetail problemDetail = createBaseProblemDetail(status, reason, request);
+        problemDetail.setType(URI.create("/errors/" + status.value()));
+        problemDetail.setTitle(status.getReasonPhrase());
+        problemDetail.setProperty("title", status.getReasonPhrase());
+        // 5xx is operator-relevant; 4xx is a normal client-rejection - log at the right level.
+        if (status.is5xxServerError()) {
+            log.error(
+                    "ResponseStatusException {} at {}: {}",
+                    status.value(),
+                    request.getRequestURI(),
+                    reason,
+                    ex);
+        } else {
+            log.debug(
+                    "ResponseStatusException {} at {}: {}",
+                    status.value(),
+                    request.getRequestURI(),
+                    reason);
+        }
+        return ResponseEntity.status(status).contentType(PROBLEM_JSON).body(problemDetail);
+    }
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ProblemDetail> handleRuntimeException(
             RuntimeException ex, HttpServletRequest request) {

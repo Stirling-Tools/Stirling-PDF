@@ -1,0 +1,217 @@
+name: Playwright E2E (live backend)
+
+# Reusable workflow called from build.yml. Live-backend Playwright suite —
+# boots Spring Boot and runs auth + real tool round-trips against the live
+# server.
+on:
+  workflow_call:
+    inputs:
+      depot_cores:
+        description: "Depot runner vCPU count (used in runs-on). Override for benchmarking."
+        required: false
+        type: string
+        default: "8"
+
+permissions:
+  contents: read
+
+jobs:
+  pick:
+    uses: ./.github/workflows/_runner-pick.yml
+
+  playwright-e2e-live:
+    needs: pick
+    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || format('depot-ubuntu-24.04-{0}', inputs.depot_cores || '8') }}
+    timeout-minutes: 30
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        with:
+          egress-policy: audit
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Set up JDK 25
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          java-version: "25"
+          distribution: "temurin"
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install Task
+        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
+      - name: Install Playwright (chromium only)
+        run: task e2e:install -- chromium
+      - name: Build frontend (production bundle for vite preview)
+        env:
+          VITE_BUILD_FOR_PREVIEW: "1"
+        run: task frontend:build
+      - name: Run live E2E tests (chromium) with coverage
+        id: live-tests
+        env:
+          # Attaches the JaCoCo agent to the bootRun JVM (see
+          # .taskfiles/e2e.yml live:backend). The .exec gets flushed on
+          # graceful shutdown when the runner traps EXIT/INT/TERM, so the
+          # report step below sees a populated file.
+          COVERAGE: "1"
+          # Tells the Playwright fixture (test-base.ts) to capture per-test
+          # V8 JS coverage. Raw dumps land under
+          # .test-state/playwright/coverage-pw/ for the post-process step
+          # to aggregate. Chromium-only - other engines silently skip.
+          PW_COVERAGE: "1"
+        run: task e2e:live
+      - name: Generate JaCoCo report from e2e:live .exec
+        if: always()
+        id: live-coverage
+        # `if: always()` so even a failed test run still produces a
+        # report from whatever flows did exercise the backend before
+        # the failure. The task itself tolerates a missing .exec
+        # (jacoco emits an empty report rather than crashing) but we
+        # guard with `test -s` to keep the job log clean.
+        run: |
+          if [ -s .test-state/playwright/jacoco.exec ]; then
+            ./gradlew jacocoReportFromExec \
+              -PexecFile=.test-state/playwright/jacoco.exec \
+              -PreportDir=build/reports/jacoco/e2e-live \
+              -PnoSpotless
+            echo "report=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::No e2e:live .exec found at .test-state/playwright/jacoco.exec; skipping report"
+            echo "report=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Set up Python for coverage summary
+        if: always() && steps.live-coverage.outputs.report == 'true'
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.12"
+      - name: Install defusedxml for coverage summary
+        # coverage-summary.py uses defusedxml instead of stdlib xml.etree
+        # to dodge XXE / billion-laughs scanner findings.
+        if: always() && steps.live-coverage.outputs.report == 'true'
+        run: python -m pip install --quiet defusedxml
+      - name: e2e:live coverage step summary
+        if: always() && steps.live-coverage.outputs.report == 'true'
+        run: |
+          python scripts/coverage-summary.py \
+            --title "Playwright (live backend) JaCoCo coverage" \
+            --jacoco "e2e-live=build/reports/jacoco/e2e-live/jacocoTestReport.xml" \
+            --github-step-summary
+      - name: Upload e2e:live JaCoCo report
+        if: always() && steps.live-coverage.outputs.report == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: jacoco-e2e-live-${{ github.run_id }}
+          path: build/reports/jacoco/e2e-live/
+          retention-days: 7
+
+      - name: Upload raw e2e:live .exec for aggregate merge
+        # Picked up by the coverage-aggregate workflow via the
+        # `jacoco-exec-*` artifact name pattern.
+        if: always() && steps.live-coverage.outputs.report == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: jacoco-exec-e2e-live
+          path: .test-state/playwright/jacoco.exec
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Set up Python for frontend coverage summary
+        # Separate from the backend-coverage python step because the
+        # frontend path doesn't depend on a JaCoCo report - it produces
+        # a summary even on backend failure, as long as some Playwright
+        # tests ran far enough to dump V8 coverage.
+        if: always()
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.12"
+
+      - name: Install defusedxml for frontend coverage summary
+        # Idempotent re-install: the backend-coverage step may have
+        # installed it already, but this leg can run on its own when the
+        # backend report step skips (e.g. .exec missing).
+        if: always()
+        run: python -m pip install --quiet defusedxml
+
+      - name: Aggregate Playwright frontend (V8) coverage
+        # Rolls per-test V8 dumps from the test-base fixture into one
+        # vitest-shaped coverage-summary.json. Tolerates a missing dump
+        # dir (firefox/webkit runs, or a failure before any test got
+        # far enough to dump).
+        if: always()
+        id: pw-frontend-coverage
+        run: |
+          if [ -d .test-state/playwright/coverage-pw ] && \
+             find .test-state/playwright/coverage-pw -name '*.json' -type f | grep -q .; then
+            python scripts/playwright-coverage-summary.py \
+              .test-state/playwright/coverage-pw \
+              --out .test-state/playwright/coverage-pw-summary/coverage-summary.json
+            echo "summary=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::No Playwright frontend coverage dumps found (chromium-only feature)"
+            echo "summary=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Playwright frontend coverage step summary
+        if: always() && steps.pw-frontend-coverage.outputs.summary == 'true'
+        run: |
+          python scripts/coverage-summary.py \
+            --title "Playwright (live) frontend coverage" \
+            --vitest .test-state/playwright/coverage-pw-summary/coverage-summary.json \
+            --github-step-summary
+
+      - name: Upload Playwright frontend coverage
+        # Bundle both the aggregated summary and the raw V8 dumps so
+        # someone debugging "why is this function showing as covered"
+        # can trace it back to the source dump.
+        if: always() && steps.pw-frontend-coverage.outputs.summary == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: playwright-frontend-coverage-${{ github.run_id }}
+          path: |
+            .test-state/playwright/coverage-pw-summary/
+            .test-state/playwright/coverage-pw/
+          retention-days: 7
+
+      - name: Print backend log on failure
+        if: failure() && steps.live-tests.conclusion == 'failure'
+        run: |
+          echo "::group::Spring Boot backend log (last 500 lines)"
+          tail -500 .test-state/playwright/backend.log || echo "no backend log found"
+          echo "::endgroup::"
+      - name: Upload backend log
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: backend-log-live-${{ github.run_id }}
+          path: .test-state/playwright/backend.log
+          retention-days: 7
+      - name: List Playwright output locations (debug)
+        if: always()
+        run: |
+          echo "::group::Playwright output dirs"
+          # Playwright anchors its default outputDir + HTML report to the
+          # nearest package.json, which is frontend/ (frontend/editor has
+          # none), so artifacts land under frontend/, not frontend/editor/.
+          ls -la frontend/playwright-report 2>/dev/null \
+            || echo "no playwright-report at frontend/"
+          ls -la frontend/test-results 2>/dev/null \
+            || echo "no test-results at frontend/"
+          find . -name node_modules -prune -o -name 'trace.zip' -print 2>/dev/null || true
+          echo "::endgroup::"
+      - name: Upload Playwright report + traces
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: playwright-report-live-${{ github.run_id }}
+          # test-results/ holds the per-test trace.zip (with browser console
+          # logs) + screenshots/video; playwright-report/ is the HTML report.
+          # Both live under frontend/ (Playwright anchors them to the nearest
+          # package.json, which is frontend/; frontend/editor has none).
+          path: |
+            frontend/playwright-report/
+            frontend/test-results/
+          retention-days: 7
+          if-no-files-found: warn

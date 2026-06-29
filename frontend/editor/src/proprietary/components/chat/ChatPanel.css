@@ -1,0 +1,642 @@
+.chat-panel {
+  display: flex;
+  flex-direction: column;
+  /* Clip + allow shrink so tall welcome content squeezes the scrollable
+     quick-actions block instead of pushing the composer off-screen. */
+  overflow: hidden;
+  min-height: 0;
+  /* Match the right-rail toolbar background so dark-mode doesn't show a
+     lighter card behind the chat, and so the agent-card → pill morph
+     doesn't flash a different colour mid-transition. */
+  background: var(--bg-toolbar);
+}
+
+.chat-panel--embedded {
+  height: 100%;
+  width: 100%;
+}
+
+/* Top header: agent pill + close. */
+.chat-panel__header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 1rem 0.75rem;
+  flex-shrink: 0;
+}
+
+.chat-panel__agent-pill-vt {
+  view-transition-name: stirling-agent;
+}
+
+/* Match the active-tool morph timing for a consistent rail feel. */
+::view-transition-group(stirling-agent),
+::view-transition-old(stirling-agent),
+::view-transition-new(stirling-agent) {
+  animation-duration: 220ms;
+  animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Same treatment for the input pill and quick-action cards. */
+[data-mantine-color-scheme="dark"] .chat-panel-input {
+  background: transparent;
+  box-shadow:
+    0 0 0 1px var(--border-subtle),
+    0 6px 16px rgba(0, 0, 0, 0.25);
+}
+
+[data-mantine-color-scheme="dark"] .chat-panel-input:focus-within {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--mantine-color-blue-3) 40%, transparent),
+    0 8px 22px color-mix(in srgb, var(--mantine-color-blue-6) 18%, transparent);
+}
+
+[data-mantine-color-scheme="dark"] .chat-quick-action {
+  background: transparent;
+}
+
+[data-mantine-color-scheme="dark"] .chat-quick-action:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--border-subtle);
+}
+
+.chat-panel__agent-pill-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  flex: 1;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chat-panel-messages {
+  flex: 1;
+  min-height: 0;
+  /* Establish a size container so the message list's bottom padding can be
+     expressed relative to the scroll viewport height (cqh) below. */
+  container-type: size;
+}
+
+/* Extra room beneath the last message so that, scrolled to the bottom, the most
+   recent turn rests near the vertical centre of the conversation rather than
+   jammed against the composer. cqh is a fraction of the scroll viewport height. */
+.chat-panel-messages__content {
+  padding-bottom: 15cqh;
+}
+
+/* Quick action cards above the input. */
+.chat-panel__quick-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem 0.75rem 0.25rem;
+  /* When the panel is short, this block (file pills + actions) shrinks and
+     scrolls internally instead of pushing the composer off-screen — the input
+     must always stay pinned and visible at the bottom. */
+  flex-shrink: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.chat-panel__quick-actions-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-top: 0.25rem;
+  margin-bottom: 0.1rem;
+}
+
+/* File pills shown above the quick actions when files are loaded. */
+.chat-file-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.chat-file-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  max-width: 11rem;
+  padding: 0.2rem 0.35rem 0.2rem 0.45rem;
+  border: 1px solid var(--mantine-color-blue-light);
+  border-radius: 9999px;
+  background: var(--mantine-color-blue-light);
+  color: var(--mantine-color-blue-filled);
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.1;
+}
+
+.chat-file-pill__icon {
+  flex-shrink: 0;
+}
+
+.chat-file-pill__label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chat-file-pill__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  padding: 0;
+  border: none;
+  border-radius: 9999px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.7;
+  transition:
+    background 120ms ease-out,
+    opacity 120ms ease-out;
+}
+
+.chat-file-pill__remove:hover {
+  background: var(--mantine-color-default-hover);
+  opacity: 1;
+}
+
+.chat-file-pill--more {
+  background: transparent;
+  border: 1px dashed var(--border-subtle);
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.2rem 0.55rem;
+}
+
+.chat-file-pill--more:hover {
+  background: var(--mantine-color-default-hover);
+}
+
+.chat-quick-action {
+  display: block;
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.65rem;
+  background: var(--mantine-color-body);
+  transition:
+    background 120ms ease-out,
+    border-color 120ms ease-out;
+}
+
+.chat-quick-action:hover {
+  background: var(--mantine-color-default-hover);
+  border-color: var(--mantine-color-default-border);
+}
+
+.chat-quick-action__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  background: var(--mantine-color-blue-light);
+  color: var(--mantine-color-blue-filled);
+  flex-shrink: 0;
+}
+
+/* Input area: send button on the left, textarea fills the rest — one compact
+   row so the composer stays short when the welcome screen is fully populated. */
+.chat-panel-input {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 0.8rem;
+  margin: 0.75rem 0.75rem 1rem;
+  border: none;
+  border-radius: 1.1rem;
+  background: var(--mantine-color-body);
+  flex-shrink: 0;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.04),
+    0 4px 14px rgba(15, 23, 42, 0.08);
+  transition: box-shadow 160ms ease-out;
+}
+
+.chat-panel-input:focus-within {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--mantine-color-blue-6) 20%, transparent),
+    0 6px 18px color-mix(in srgb, var(--mantine-color-blue-6) 12%, transparent);
+}
+
+/* Kill the Mantine Textarea's own border/outline — the wrapper owns the chrome. */
+.chat-panel-input__field,
+.chat-panel-input__field:focus,
+.chat-panel-input__field:focus-visible {
+  font-size: 1.05rem;
+  padding: 0.15rem 0 !important;
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Textarea grows to fill the row; the send button keeps its size on the left. */
+.chat-panel-input__textarea {
+  flex: 1;
+  min-width: 0;
+}
+
+.chat-panel-input__send {
+  flex-shrink: 0;
+}
+
+/* AI disclaimer. Two presentations share one base:
+   - --banner: a soft grey card below the header on the welcome screen.
+   - --inline: a compact line pinned above the composer once a chat is underway. */
+.chat-panel-disclaimer {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+.chat-panel-disclaimer__icon {
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+/* Welcome-screen banner: a little grey box just under the header. */
+.chat-panel-disclaimer--banner {
+  margin: 0.35rem 0.75rem 0;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.65rem;
+  background: var(--mantine-color-gray-light);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+/* Compact line above the composer once the conversation has started. */
+.chat-panel-disclaimer--inline {
+  justify-content: center;
+  padding: 0.1rem 1.25rem 0;
+  font-size: 0.7rem;
+  line-height: 1.3;
+}
+
+/* Message layout */
+.chat-message {
+  display: flex;
+}
+
+.chat-message-user {
+  justify-content: flex-end;
+  margin: 0.2rem 0;
+}
+
+.chat-message-user__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  max-width: 85%;
+}
+
+.chat-message-assistant {
+  justify-content: flex-start;
+}
+
+/* Hover action row — copy, like, timestamp */
+.chat-message-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  margin-top: 0.3rem;
+  opacity: 0;
+  transition: opacity 120ms ease-out;
+  pointer-events: none;
+}
+
+.chat-message:hover .chat-message-actions,
+.chat-message-actions:focus-within {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.chat-message-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: none;
+  border-radius: 0.375rem;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    background 100ms ease-out,
+    color 100ms ease-out;
+}
+
+.chat-message-action-btn:hover {
+  background: var(--mantine-color-default-hover);
+  color: var(--mantine-color-text);
+}
+
+.chat-message-action-btn--active {
+  color: var(--mantine-color-blue-filled);
+}
+
+.chat-message-timestamp {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  padding: 0 0.25rem;
+  white-space: nowrap;
+}
+
+/* Bubble styling — user only */
+
+.chat-bubble {
+  width: fit-content;
+  max-width: 100%;
+}
+
+.chat-bubble-user {
+  background: var(--mantine-color-blue-filled) !important;
+  color: white !important;
+}
+
+.chat-bubble-user * {
+  color: white !important;
+}
+
+/* Assistant messages: no bubble, free-flowing with side padding */
+.chat-bubble-assistant {
+  width: 100%;
+  padding: 0 0.5rem;
+  font-size: var(--mantine-font-size-sm);
+}
+
+.chat-bubble-assistant p {
+  margin: 0 0 0.5em;
+}
+
+.chat-bubble-assistant p:last-child {
+  margin-bottom: 0;
+}
+
+/* ─── Live progress indicator ──────────────────────────────────────────── */
+
+/*
+ * Shown while the AI works — one step at a time, no growing list. Our animated
+ * logo sits on the left, the current step's label shimmers in the middle, and
+ * the phase-specific icon (what it's doing right now) sits on the right.
+ */
+.chat-progress-live {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.2rem 0.5rem 0.35rem;
+}
+
+.chat-progress-live__logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--mantine-color-blue-filled);
+}
+
+/* Shimmer: a soft highlight sweeps left-to-right across the muted label. */
+.chat-progress-live__label {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  font-size: 0.875rem;
+  line-height: 1.35;
+  background: linear-gradient(
+    90deg,
+    var(--text-muted) 0%,
+    var(--text-muted) 40%,
+    var(--mantine-color-text) 50%,
+    var(--text-muted) 60%,
+    var(--text-muted) 100%
+  );
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: chat-shimmer 1.8s linear infinite;
+}
+
+.chat-progress-live__phase-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  overflow: hidden;
+  color: var(--text-muted);
+  animation: chat-phase-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes chat-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes chat-phase-pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/*
+ * Wrapper that scales a registry tool icon (LocalIcon, typically 1.5rem/24px)
+ * down to fit the compact icon slots used by the live indicator and the
+ * completed tool list. Transform does not affect layout, so the parent's
+ * overflow:hidden clips the un-scaled footprint cleanly.
+ */
+.chat-step-icon-scaled {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transform: scale(0.75);
+  transform-origin: center;
+  flex-shrink: 0;
+}
+
+/* ─── Completed tool breakdown ─────────────────────────────────────────── */
+
+/*
+ * Shown above each completed assistant turn. The toggle displays a small
+ * "Ran for X seconds" label; expanding reveals a numbered list of just the
+ * tools that ran. Turns with no tools show the duration as a plain label.
+ */
+
+.chat-completed-log {
+  margin-bottom: 0.55rem;
+}
+
+.chat-completed-log__toggle {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.25rem 0.1rem 0.1rem;
+  border-radius: 0.35rem;
+  color: var(--text-muted);
+  transition: background 120ms ease-out;
+}
+
+.chat-completed-log__toggle:hover {
+  background: var(--mantine-color-default-hover);
+}
+
+.chat-completed-log__static {
+  display: inline-block;
+  padding: 0.1rem;
+}
+
+/* Numbered list of the tools that ran — icon + name, no connector lines. */
+.chat-completed-log__tools {
+  list-style: none;
+  margin: 0.25rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.chat-completed-log__tool {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.2rem 0.25rem;
+  font-size: 0.8rem;
+  color: var(--mantine-color-text);
+}
+
+.chat-completed-log__tool-num {
+  flex-shrink: 0;
+  min-width: 1.1rem;
+  text-align: right;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.chat-completed-log__tool-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  overflow: hidden;
+  color: var(--text-muted);
+}
+
+.chat-completed-log__tool-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Legacy thinking indicator (kept in case any other code references it). */
+.chat-thinking {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.125rem 0.5rem;
+  color: var(--mantine-color-blue-filled);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-progress-live__label {
+    animation: none;
+    background: none;
+    -webkit-text-fill-color: var(--text-muted);
+    color: var(--text-muted);
+  }
+  .chat-progress-live__phase-icon {
+    animation: none;
+    opacity: 0.85;
+  }
+}
+
+/* ─── Stirling logo thinking animation ─────────────────────────────────── */
+
+.stirling-thinking__path-right {
+  animation: stirling-orbit-right 2s ease-in-out infinite;
+}
+
+.stirling-thinking__path-left {
+  animation: stirling-orbit-left 2s ease-in-out infinite;
+}
+
+@keyframes stirling-orbit-right {
+  0%,
+  100% {
+    transform: translate(0, 0);
+    opacity: 0.5;
+  }
+  25% {
+    transform: translate(-1px, -5px);
+    opacity: 0.45;
+  }
+  50% {
+    transform: translate(-6px, 0);
+    opacity: 0.9;
+  }
+  75% {
+    transform: translate(-1px, 5px);
+    opacity: 0.55;
+  }
+}
+
+@keyframes stirling-orbit-left {
+  0%,
+  100% {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+  25% {
+    transform: translate(1px, 5px);
+    opacity: 0.85;
+  }
+  50% {
+    transform: translate(6px, 0);
+    opacity: 0.5;
+  }
+  75% {
+    transform: translate(1px, -5px);
+    opacity: 0.85;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stirling-thinking__path-right {
+    animation: none;
+    opacity: 0.5;
+  }
+  .stirling-thinking__path-left {
+    animation: none;
+    opacity: 1;
+  }
+}

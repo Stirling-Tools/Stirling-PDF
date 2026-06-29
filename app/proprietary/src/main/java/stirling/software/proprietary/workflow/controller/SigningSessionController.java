@@ -47,7 +47,9 @@ import stirling.software.proprietary.workflow.service.WorkflowSessionService;
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/security")
-@Tag(name = "Security", description = "Security APIs - Signing Workflows")
+@Tag(
+        name = "Signing Sessions",
+        description = "Signing session lifecycle and participant management")
 @RequiredArgsConstructor
 public class SigningSessionController {
 
@@ -74,7 +76,7 @@ public class SigningSessionController {
                             .map(
                                     stirling.software.proprietary.workflow.util.WorkflowMapper
                                             ::toResponse)
-                            .collect(java.util.stream.Collectors.toList());
+                            .toList();
             return ResponseEntity.ok(responses);
         } catch (Exception e) {
             log.error("Error listing sessions for user {}", principal.getName(), e);

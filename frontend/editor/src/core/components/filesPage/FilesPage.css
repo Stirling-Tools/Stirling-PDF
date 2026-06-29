@@ -1,0 +1,1470 @@
+.files-page {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-background);
+  color: var(--text-primary);
+  overflow: hidden;
+}
+
+.files-page-header {
+  /* 3-column grid keeps the search bar position-stable regardless of
+   * breadcrumb length. Left column flexes for the breadcrumb (truncating
+   * via overflow:hidden), middle column holds the search, right column
+   * holds the action buttons right-aligned. */
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(min(14rem, 100%), 40rem) minmax(
+      0,
+      1fr
+    );
+  align-items: center;
+  gap: 1rem;
+  min-height: 48px;
+  padding: 0 0.75rem;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-toolbar);
+  flex-shrink: 0;
+}
+
+.files-page-header-actions {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.files-page-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.95rem;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.files-page-breadcrumbs::-webkit-scrollbar {
+  display: none;
+}
+
+.files-page-breadcrumb {
+  background: none;
+  border: none;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: inherit;
+  font-weight: 500;
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease;
+  white-space: nowrap;
+  max-width: 18rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.files-page-breadcrumb:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+}
+
+.files-page-breadcrumb.is-current {
+  color: var(--text-primary);
+  background: var(--hover-bg);
+}
+
+.files-page-breadcrumb-sep {
+  color: var(--text-muted);
+  font-size: 1rem !important;
+  width: 1rem;
+  height: 1rem;
+  opacity: 0.55;
+  flex-shrink: 0;
+}
+
+.files-page-search {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  padding: 0.2rem 0.75rem;
+  /* Fills its grid cell; the cell's minmax(...) clamps to a sensible range. */
+  width: 100%;
+  min-width: 0;
+}
+
+.files-page-search input {
+  background: transparent;
+  border: none;
+  outline: none;
+  flex: 1;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.files-page-body {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.files-page-tree {
+  width: 17rem;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border-subtle);
+  background: var(--bg-toolbar);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.files-page-tree[data-collapsed="true"] {
+  width: 3.25rem;
+}
+
+.files-page-tree-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 0.75rem 0.5rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+/* Tree node styles moved to FolderTreePanel.css - that's where the
+   .files-page-tree-* elements actually render (the slide-out panel from
+   HomePage), so the styles need to load whether or not the standalone
+   /files route is mounted. */
+
+.files-page-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.files-page-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.55rem 1.25rem;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-background);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  min-height: 3rem;
+}
+
+.files-page-toolbar-info {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* Upload + New folder at the start of the toolbar. */
+.files-page-toolbar-create {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.files-page-toolbar-info span {
+  color: var(--text-muted);
+}
+
+.files-page-toolbar-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  /* Allow this container to shrink below its intrinsic content width so
+     the bulk-action group + filter selects + view toggle can compete for
+     space without bursting out of the toolbar (which previously bled
+     under the right-hand details panel at wider viewports). */
+  min-width: 0;
+}
+
+/* Bulk-action buttons (Add to workspace, Quick view, Move to, Remove)
+   are ICON-ONLY at every viewport. Even at 1280px when both side panels
+   are visible, the main area is only ~616px wide - the labelled versions
+   of these 4 buttons plus the 2 filter selects + view toggle simply
+   don't fit. Each button has a Tooltip + aria-label, so the icon alone
+   is accessible. */
+.files-page-toolbar-actions .mantine-Button-root {
+  padding-left: 0.55rem;
+  padding-right: 0.55rem;
+  flex-shrink: 0;
+}
+.files-page-toolbar-actions .mantine-Button-section[data-position="left"] {
+  margin-right: 0;
+}
+.files-page-toolbar-actions .mantine-Button-label {
+  display: none;
+}
+/* Pin the view toggle: never let it clip off the right. flex-shrink:0
+   keeps its width fixed; the rest of the row shrinks around it. */
+.files-page-toolbar-actions .mantine-SegmentedControl-root {
+  flex-shrink: 0;
+}
+/* Clip overflow on the toolbar itself as a safety net - the content
+   should always fit thanks to the rules above, but if a future addition
+   ever breaks that, this prevents the action group from bleeding into
+   sibling areas (notably the details panel on the right). */
+.files-page-toolbar {
+  overflow-x: hidden;
+}
+
+.files-page-toolbar-divider {
+  width: 1px;
+  height: 1.4rem;
+  background: var(--border-subtle);
+  margin: 0 0.15rem;
+}
+
+/* SegmentedControl in the toolbar uses icon-only options; this centers the
+   MUI icon inside Mantine's `.mantine-SegmentedControl-innerLabel` (which
+   defaults to `display: inline` and baseline-aligns its children, leaving
+   the icon visually pinned to the top of the label box). */
+.files-page-view-toggle-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  vertical-align: middle;
+}
+
+/* Visually-hidden text that screen readers still announce. Lets us put
+   localised labels next to icon-only buttons (SegmentedControl options,
+   icon-only action rows) without growing the visible UI. Standard
+   "sr-only" / "visually-hidden" recipe. */
+.files-page-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.files-page-content {
+  flex: 1 1 auto;
+  overflow: auto;
+  padding: 1.25rem;
+  position: relative;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-subtle) transparent;
+}
+
+.files-page-content::-webkit-scrollbar {
+  width: 0.5rem;
+  height: 0.5rem;
+}
+
+.files-page-content::-webkit-scrollbar-thumb {
+  background: var(--border-subtle);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.files-page-content::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+  background-clip: content-box;
+}
+
+.files-page-tree-list,
+.folder-tree-panel-inner,
+.files-page-details-body {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-subtle) transparent;
+}
+
+.files-page-tree-list::-webkit-scrollbar,
+.folder-tree-panel-inner::-webkit-scrollbar,
+.files-page-details-body::-webkit-scrollbar {
+  width: 0.4rem;
+}
+
+.files-page-tree-list::-webkit-scrollbar-thumb,
+.folder-tree-panel-inner::-webkit-scrollbar-thumb,
+.files-page-details-body::-webkit-scrollbar-thumb {
+  background: var(--border-subtle);
+  border-radius: 999px;
+}
+
+.files-page-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: 1rem;
+}
+
+.files-page-list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.6rem;
+  overflow: hidden;
+  background: var(--bg-surface);
+}
+
+.files-page-list-row {
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 3fr) 1fr 1fr 1fr 2.5rem;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border-subtle);
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.12s ease;
+}
+
+.files-page-list-row:last-child {
+  border-bottom: none;
+}
+
+.files-page-list-row.is-header {
+  background: var(--bg-toolbar);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  cursor: default;
+  user-select: none;
+}
+
+.files-page-list-row.is-header [data-sortable="true"] {
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  margin: -0.2rem -0.4rem;
+  border-radius: 0.3rem;
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease;
+}
+
+.files-page-list-row.is-header [data-sortable="true"]:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+}
+
+.files-page-list-row:not(.is-header):hover {
+  background: var(--hover-bg);
+}
+
+.files-page-list-row.is-selected {
+  background: var(--hover-bg);
+}
+
+.files-page-list-row.is-drop-target {
+  background: color-mix(
+    in srgb,
+    var(--accent-interactive, #6366f1) 12%,
+    transparent
+  );
+  box-shadow: inset 0 0 0 1px var(--accent-interactive, #6366f1);
+}
+
+.files-page-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.85rem;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition:
+    transform 0.16s cubic-bezier(0.32, 0.72, 0.32, 1),
+    border-color 0.14s ease,
+    box-shadow 0.18s ease;
+}
+
+.files-page-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(
+    in srgb,
+    var(--accent-interactive, #6366f1) 35%,
+    var(--border-subtle)
+  );
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.08),
+    0 8px 24px -8px rgba(0, 0, 0, 0.18);
+}
+
+.files-page-card:focus-visible {
+  outline: 2px solid var(--accent-interactive, #6366f1);
+  outline-offset: 2px;
+}
+
+.files-page-card.is-selected {
+  border-color: var(--accent-interactive, #6366f1);
+  box-shadow:
+    0 0 0 2px var(--accent-interactive, #6366f1),
+    0 6px 18px -6px
+      color-mix(in srgb, var(--accent-interactive, #6366f1) 35%, transparent);
+}
+
+.files-page-card.is-folder {
+  cursor: pointer;
+}
+
+.files-page-card-thumb {
+  aspect-ratio: 4 / 3;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--text-muted) 5%, var(--bg-surface)),
+    var(--bg-surface)
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.files-page-card-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s cubic-bezier(0.32, 0.72, 0.32, 1);
+}
+
+.files-page-card:hover .files-page-card-thumb img {
+  transform: scale(1.03);
+}
+
+.files-page-card-thumb-fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.files-page-card-body {
+  padding: 0.65rem 0.85rem 0.7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.files-page-card-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-primary);
+  letter-spacing: -0.005em;
+}
+
+.files-page-card-meta {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* Policy activity badges (a shield per policy that has run on the file). */
+.files-page-policy-badges {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+.files-page-policy-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 4px;
+  /* `color` set inline to the policy accent; tint follows it. */
+  background: color-mix(in srgb, currentColor 16%, transparent);
+}
+
+/* Parent-folder breadcrumb shown on cards/rows during recursive search so
+   the user can tell which folder each hit lives in without navigating. */
+.files-page-card-path {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 0.15rem;
+  font-style: italic;
+}
+
+.files-page-card .files-page-card-selector {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 2;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Reveal on hover, on focus-within (keyboard navigation), and when the card is selected.
+   :focus-within is what makes the checkbox + kebab discoverable without a pointer device. */
+.files-page-card:hover .files-page-card-selector,
+.files-page-card:focus-within .files-page-card-selector,
+.files-page-card.is-selected .files-page-card-selector {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Style the Mantine checkbox so it reads as a soft pill rather than a
+   bare form control. */
+.files-page-card-selector :where(.mantine-Checkbox-input) {
+  background: var(--bg-surface);
+  border-color: var(--border-subtle);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+}
+
+.files-page-card-actions {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+  z-index: 4;
+}
+
+/* Make the kebab a high-contrast pill that works on dark thumbnails,
+   white PDFs, and any background underneath.
+   Use stronger specificity + !important to win over Mantine's
+   variant=filled inline styles. */
+.files-page-card .files-page-card-actions button.mantine-ActionIcon-root {
+  background-color: var(--bg-raised, var(--bg-surface)) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-default, var(--border-subtle)) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(6px);
+}
+
+.files-page-card .files-page-card-actions button.mantine-ActionIcon-root:hover {
+  background-color: var(--hover-bg) !important;
+}
+
+/* Row-view kebab: same high-contrast treatment so it's readable
+   against selected (tinted) and in-workspace rows. */
+.files-page-list-row .mantine-ActionIcon-root[aria-label$="actions"] {
+  color: var(--text-secondary);
+}
+
+.files-page-list-row .mantine-ActionIcon-root[aria-label$="actions"]:hover {
+  background-color: var(--hover-bg) !important;
+  color: var(--text-primary);
+}
+
+.files-page-card-origin {
+  position: absolute;
+  bottom: 0.4rem;
+  left: 0.4rem;
+  pointer-events: none;
+}
+
+/* "Open" badge - file is currently loaded in the active workspace.
+   Solid pill with white text so it reads against any thumbnail
+   (white PDFs, dark covers, photos). */
+.files-page-card-open-badge {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.22rem 0.55rem;
+  border-radius: 999px;
+  background: var(--mantine-color-teal-6, #10b981);
+  color: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.85),
+    0 2px 6px rgba(0, 0, 0, 0.18);
+  pointer-events: none;
+}
+
+.files-page-card-open-dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35);
+  animation: files-page-open-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes files-page-open-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(0.85);
+  }
+}
+
+.files-page-card.is-in-workspace {
+  border-color: color-mix(
+    in srgb,
+    var(--mantine-color-teal-6, #10b981) 35%,
+    var(--border-subtle)
+  );
+}
+
+.files-page-card.is-in-workspace::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--mantine-color-teal-6, #10b981) 6%, transparent) 0%,
+    transparent 40%
+  );
+  z-index: 0;
+}
+
+.files-page-row-open-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.12rem 0.5rem;
+  border-radius: 999px;
+  background: var(--mantine-color-teal-6, #10b981);
+  color: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  margin-left: 0.25rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+.files-page-list-row.is-in-workspace {
+  background: color-mix(
+    in srgb,
+    var(--mantine-color-teal-6, #10b981) 4%,
+    transparent
+  );
+}
+
+.files-page-card:hover .files-page-card-actions,
+.files-page-card:focus-within .files-page-card-actions,
+.files-page-card.is-selected .files-page-card-actions {
+  opacity: 1;
+}
+
+.files-page-card.is-folder .files-page-card-thumb {
+  aspect-ratio: 1.6 / 1;
+  transition:
+    filter 0.16s ease,
+    transform 0.18s cubic-bezier(0.32, 0.72, 0.32, 1);
+}
+
+.files-page-card.is-folder:hover .files-page-card-thumb {
+  filter: brightness(1.04);
+}
+
+.files-page-card.is-folder.is-drop-target {
+  transform: translateY(-3px);
+}
+
+.files-page-card.is-folder.is-drop-target .files-page-card-thumb {
+  filter: brightness(1.08);
+  transform: scale(1.03);
+}
+
+.files-page-card.is-drop-target {
+  background: color-mix(
+    in srgb,
+    var(--accent-interactive, #6366f1) 10%,
+    var(--bg-surface)
+  );
+  box-shadow: 0 0 0 2px var(--accent-interactive, #6366f1);
+  border-color: var(--accent-interactive, #6366f1);
+}
+
+@keyframes files-page-skeleton-pulse {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.files-page-skeleton-bar {
+  display: block;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--text-muted) 12%, transparent) 25%,
+    color-mix(in srgb, var(--text-muted) 22%, transparent) 50%,
+    color-mix(in srgb, var(--text-muted) 12%, transparent) 75%
+  );
+  background-size: 200% 100%;
+  animation: files-page-skeleton-pulse 1.4s ease-in-out infinite;
+  border-radius: 0.4rem;
+}
+
+.files-page-skeleton-card {
+  pointer-events: none;
+  border-color: var(--border-subtle);
+  box-shadow: none;
+}
+
+.files-page-skeleton-card:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: var(--border-subtle);
+}
+
+.files-page-skeleton-row {
+  pointer-events: none;
+}
+
+.files-page-skeleton-row .files-page-skeleton-bar {
+  height: 0.7rem;
+}
+
+.files-page-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 0.75rem;
+  color: var(--text-muted);
+  padding: 4rem 1.5rem;
+  text-align: center;
+}
+
+.files-page-empty-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 5rem;
+  height: 5rem;
+  border-radius: 50%;
+  background: color-mix(
+    in srgb,
+    var(--accent-interactive, #6366f1) 12%,
+    transparent
+  );
+  color: var(--accent-interactive, #6366f1);
+  margin-bottom: 0.25rem;
+}
+
+.files-page-empty-title {
+  font-size: 1.15rem;
+  color: var(--text-primary);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.files-page-empty-hint {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  max-width: 30rem;
+  line-height: 1.5;
+}
+
+/* Empty-state CTA row; stacks on phones. */
+.files-page-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-top: 0.75rem;
+}
+
+@media (max-width: 480px) {
+  .files-page-empty-actions {
+    flex-direction: column;
+    width: min(100%, 16rem);
+  }
+}
+
+.files-page-details {
+  width: 22rem;
+  flex-shrink: 0;
+  border-left: 1px solid var(--border-subtle);
+  background: var(--bg-toolbar);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.files-page-details-header {
+  /* Tight vertical padding so the "DETAILS" label hugs the body content
+     below it - it's a quiet section header, not a banner, and the old
+     ~16px top + 18px body padding wasted nearly two character heights
+     of vertical space before the user saw the file thumbnail. */
+  padding: 0.35rem 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.files-page-details-header strong {
+  font-weight: 600;
+}
+
+.files-page-details-body {
+  /* Smaller top padding to pair with the tightened header above. Side
+     and bottom padding stays at 1.1rem so the content still breathes
+     against the panel edges. */
+  padding: 0.3rem 1.1rem 1.1rem;
+  /* Grow to fill the panel and scroll internally so the action footer below
+     stays pinned and visible regardless of how tall the content gets. */
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+/* Pinned action footer - always visible so the buttons never scroll off. */
+.files-page-details-actions {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.6rem 1.1rem;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-toolbar);
+}
+
+/* Collapsible "File info" header (size/type/dates). */
+.files-page-details-collapse-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  color: var(--text-secondary, var(--text-primary));
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.files-page-details-collapse-chevron {
+  transition: transform 0.15s ease;
+}
+.files-page-details-collapse-chevron.is-open {
+  transform: rotate(180deg);
+}
+
+.files-page-details-thumb {
+  /* Compact fixed height (was a tall 4:3 box that dominated the panel and
+     pushed the action buttons off the bottom). */
+  height: 6.5rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  /* Inside an overflow-y:auto flex column, `aspect-ratio` alone doesn't
+     guarantee intrinsic height - flex-shrink:1 (default) can squash the
+     thumb to a 2px sliver when the column gets cramped (notably after
+     tightening the body padding above). Pin shrink so the thumb keeps
+     its 4:3 box. */
+  flex-shrink: 0;
+}
+
+.files-page-details-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* On small screens (drawer) the preview isn't worth the vertical space. */
+.files-page-details-thumb.is-compact {
+  display: none;
+}
+
+.files-page-details-fieldlist {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  font-size: 0.85rem;
+  padding: 0.65rem 0.75rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.5rem;
+}
+
+.files-page-details-field {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.files-page-details-field-label {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+.files-page-details-field-value {
+  color: var(--text-primary);
+  text-align: right;
+  word-break: break-word;
+  font-weight: 500;
+}
+
+.files-page-details-tool-history {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.5rem 0.6rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.5rem;
+}
+
+.files-page-details-tool-history-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+/* Filename chip next to the title - "PDF", "DOCX", etc.
+   Mantine's <Badge variant="default"> rendered effectively invisible
+   in dark mode; project CSS vars track the active color scheme. */
+.files-page-details-ext-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.12rem 0.5rem;
+  border-radius: 0.4rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary, var(--text-primary));
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+/* Vertical timeline of version history.
+   Each row has a left rail (dot + connector) and a body (summary + meta
+   + expandable detail). The rail visually threads versions together
+   like a commit graph; clicking a row's summary toggles its expanded
+   detail (cumulative tool chain, full meta). Long chains (> 6) collapse
+   the middle behind a "Show N earlier versions" button. */
+.files-page-details-version-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.55rem 0.7rem 0.7rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.5rem;
+}
+.files-page-details-version-timeline-label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+.files-page-details-version-timeline-count {
+  margin-left: auto;
+  font-weight: 600;
+  color: var(--text-secondary, var(--text-muted));
+  text-transform: none;
+  letter-spacing: 0;
+}
+.files-page-details-version-timeline-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.files-page-details-version-timeline-row,
+.files-page-details-version-timeline-ellipsis {
+  display: flex;
+  gap: 0.6rem;
+  padding: 0.15rem 0;
+  position: relative;
+}
+.files-page-details-version-timeline-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  width: 0.8rem;
+  padding-top: 0.45rem;
+}
+.files-page-details-version-timeline-rail-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--bg-toolbar);
+  border: 2px solid var(--border-strong, var(--border-subtle));
+  z-index: 1;
+  flex-shrink: 0;
+}
+.files-page-details-version-timeline-rail-dot.is-active {
+  background: var(--accent-interactive, #6366f1);
+  border-color: var(--accent-interactive, #6366f1);
+  box-shadow: 0 0 0 3px
+    color-mix(in srgb, var(--accent-interactive, #6366f1) 25%, transparent);
+}
+.files-page-details-version-timeline-rail-dot.is-ellipsis {
+  width: 0.35rem;
+  height: 0.35rem;
+  background: var(--text-muted);
+  border-color: transparent;
+}
+.files-page-details-version-timeline-rail-line {
+  width: 2px;
+  flex: 1;
+  background: var(--border-subtle);
+  min-height: 0.6rem;
+  margin-top: 2px;
+}
+.files-page-details-version-timeline-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.25rem 0.3rem 0.4rem;
+  border-radius: 0.35rem;
+  transition: background-color 0.12s ease;
+}
+.files-page-details-version-timeline-row.is-active
+  .files-page-details-version-timeline-body {
+  background: color-mix(
+    in srgb,
+    var(--accent-interactive, #6366f1) 10%,
+    transparent
+  );
+}
+.files-page-details-version-timeline-summary {
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+}
+.files-page-details-version-timeline-summary:hover
+  .files-page-details-version-timeline-chevron {
+  color: var(--text-primary);
+}
+.files-page-details-version-timeline-delta {
+  font-size: 0.82rem;
+  color: var(--text-primary);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.25rem;
+}
+.files-page-details-version-timeline-delta.is-origin {
+  font-weight: 400;
+  color: var(--text-muted);
+  font-style: italic;
+}
+.files-page-details-version-timeline-delta-plus {
+  color: var(--accent-interactive, #6366f1);
+  font-weight: 700;
+}
+.files-page-details-version-timeline-spacer {
+  flex: 1;
+}
+.files-page-details-version-timeline-chevron {
+  color: var(--text-muted);
+  transition: transform 0.15s ease;
+}
+.files-page-details-version-timeline-chevron.is-expanded {
+  transform: rotate(180deg);
+  color: var(--text-primary);
+}
+.files-page-details-version-timeline-meta-line {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+.files-page-details-version-timeline-expanded {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.45rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--border-subtle);
+}
+.files-page-details-version-timeline-toolchain {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.files-page-details-version-timeline-toolchain-label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.files-page-details-version-timeline-ellipsis-btn,
+.files-page-details-version-timeline-collapse-btn {
+  appearance: none;
+  background: none;
+  border: 1px dashed var(--border-subtle);
+  border-radius: 0.3rem;
+  padding: 0.25rem 0.5rem;
+  margin: 0.1rem 0;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color 0.12s ease,
+    color 0.12s ease;
+}
+.files-page-details-version-timeline-ellipsis-btn:hover,
+.files-page-details-version-timeline-collapse-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--border-strong, var(--text-muted));
+}
+.files-page-details-version-timeline-collapse-btn {
+  align-self: flex-start;
+  margin-top: 0.2rem;
+}
+
+.files-page-drop-overlay {
+  position: absolute;
+  inset: 1rem;
+  background: color-mix(
+    in srgb,
+    var(--accent-interactive, #6366f1) 14%,
+    var(--bg-background)
+  );
+  border: 2px dashed var(--accent-interactive, #6366f1);
+  border-radius: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  pointer-events: none;
+  color: var(--accent-interactive, #6366f1);
+  font-weight: 600;
+  font-size: 1.1rem;
+  z-index: 10;
+  animation: files-page-drop-overlay-pulse 1.6s ease-in-out infinite;
+  backdrop-filter: blur(2px);
+}
+
+.files-page-drop-overlay-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 50%;
+  background: color-mix(
+    in srgb,
+    var(--accent-interactive, #6366f1) 30%,
+    transparent
+  );
+}
+
+.files-page-drop-overlay-icon svg {
+  font-size: 2.5rem !important;
+  color: var(--bg-background);
+}
+
+.files-page-drop-overlay-sub {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: color-mix(
+    in srgb,
+    var(--accent-interactive, #6366f1) 80%,
+    var(--text-secondary)
+  );
+}
+
+@keyframes files-page-drop-overlay-pulse {
+  0%,
+  100% {
+    border-color: var(--accent-interactive, #6366f1);
+    transform: scale(1);
+  }
+  50% {
+    border-color: color-mix(
+      in srgb,
+      var(--accent-interactive, #6366f1) 60%,
+      transparent
+    );
+    transform: scale(1.005);
+  }
+}
+
+@media (max-width: 1024px) {
+  .files-page-tree {
+    width: 14rem;
+  }
+  .files-page-details {
+    width: 18rem;
+  }
+}
+
+@media (max-width: 800px) {
+  /* Tree slot inside the inline layout can't fit at this width - the
+     tree itself is still reachable via the FolderTreePanel slide-out.
+     Details panel visibility is controlled by JSX (conditional Drawer)
+     at this width, not CSS, so we don't blanket-hide .files-page-details
+     here - that would also hide it when it lives inside the Drawer's
+     portaled overlay tree. */
+  .files-page-tree {
+    display: none;
+  }
+  .files-page-content {
+    padding: 0.75rem;
+  }
+}
+
+/* ── Tablet / narrow desktop (≤900px) ────────────────────────────────
+   As soon as the right-hand details panel disappears (at 800px) and
+   even slightly before, the toolbar gets crowded - the bulk-action
+   strip ("Add to workspace", "Quick view", "Move to…", "Remove") +
+   filter selects + grid/list toggle is too wide to fit. This block
+   collapses bulk-action button labels to icon-only, shrinks the
+   filter selects, and pins the view toggle so it never clips off the
+   right edge. The header stays in desktop layout here (it has fewer
+   items and the side panels disappearing actually GIVES it room). */
+.files-page-header [data-desktop-hide="true"] {
+  /* The mobile-only overflow menu trigger. Hidden by default; shown
+     inside the mobile breakpoint below. Live as inline-flex so it
+     sits next to the Upload button without breaking the action row. */
+  display: none;
+}
+@media (max-width: 900px) {
+  .files-page-toolbar {
+    /* nowrap so "7 items" + "Select all" sit on the same row as the
+       filter dropdowns and view-toggle instead of stacking on three
+       separate lines. Per-child min-width:0 lets them shrink as needed.
+       Used to only kick in at ≤640px which left a broken zone where
+       both side panels were hidden but the toolbar was still wrapping
+       to multiple rows. */
+    flex-wrap: nowrap;
+    gap: 0.35rem;
+    padding: 0.35rem 0.5rem;
+    min-height: auto;
+    overflow-x: hidden;
+  }
+  .files-page-toolbar-info {
+    /* Was `flex-basis: 100%` which forced a row break. Let it share
+       the row, shrink hard if needed, and ellipsize so the count line
+       collapses gracefully (was overlapping the bulk-action buttons
+       at ~400px because no truncation rule existed). */
+    flex: 0 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .files-page-toolbar-actions {
+    flex-wrap: nowrap;
+    gap: 0.3rem;
+  }
+  .files-page-toolbar-actions .mantine-Select-root,
+  .files-page-toolbar-actions .mantine-Select-input {
+    /* Mantine Select defaults to ~12rem which is huge for narrow widths.
+       The inline `style={{ width: 140|160 }}` on the Selects gets
+       overridden here so they actually shrink. */
+    min-width: 0;
+    max-width: 7.5rem;
+    width: auto !important;
+  }
+  /* The "Select all" / "Clear selection" toggle is a Mantine Button
+     directly inside .files-page-toolbar (NOT inside the actions group),
+     so the icon-only collapse from base styles doesn't apply to it.
+     Pin it to full text + nowrap so it never truncates to "Select al"
+     mid-word. */
+  .files-page-toolbar > .mantine-Button-root {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+}
+
+/* ── Mobile (≤640px) ────────────────────────────────────────────────
+   Tighten the chrome so the file manager fits inside the mobile
+   workspace slide. The slide-rail's bottom tab bar already provides
+   navigation, so the in-header Home/Apps/Close trio is duplicated
+   and the first to go. Same for "Upload" - the user can use the
+   centre drop overlay. */
+@media (max-width: 640px) {
+  /* Drop the 3-column grid on phones; flex-wrap lets the search slip onto
+   * its own row when chrome is too cramped to share. */
+  .files-page-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    padding: 0 0.4rem;
+    overflow-x: hidden;
+  }
+  .files-page-header [data-mobile-hide="true"] {
+    display: none !important;
+  }
+  .files-page-header [data-desktop-hide="true"] {
+    display: inline-flex !important;
+  }
+  /* Mobile-hide for sub-toolbar create buttons. */
+  .files-page-toolbar [data-mobile-hide="true"] {
+    display: none !important;
+  }
+  .files-page-header-actions {
+    margin-left: auto;
+    gap: 0.3rem;
+    flex-wrap: nowrap;
+  }
+  .files-page-search {
+    flex: 1 1 100%;
+  }
+  .files-page-breadcrumbs {
+    font-size: 0.85rem;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    min-width: 0;
+  }
+  .files-page-search {
+    /* Shrink hard so the search bar doesn't eat the whole action row.
+       Users still see the icon + a few chars of the placeholder.
+       `overflow: hidden` clips the input's natural intrinsic width so
+       placeholder text never leaks outside the rounded pill. */
+    min-width: 0;
+    flex: 0 1 5.5rem;
+    max-width: 6.5rem;
+    overflow: hidden;
+  }
+  .files-page-search input {
+    /* `min-width: 0` lets flex actually shrink the input below its
+       default ~20-char intrinsic size - without this, the placeholder
+       extends beyond the parent's clip box and bleeds onto neighbours. */
+    min-width: 0;
+    text-overflow: ellipsis;
+  }
+  /* Upload becomes an icon-only square button on mobile so the action
+     row stops getting clipped. Scoped to `.files-page-header-actions`
+     so the Back button at the header level keeps its visible "Back"
+     label (Back has no other on-screen indicator that it's about leaving). */
+  .files-page-header-actions .mantine-Button-root {
+    padding-left: 0.55rem;
+    padding-right: 0.55rem;
+  }
+  .files-page-header-actions .mantine-Button-section[data-position="left"] {
+    margin-right: 0;
+  }
+  .files-page-header-actions .mantine-Button-label {
+    display: none;
+  }
+  /* Grid: single column on very narrow phones; two columns from ~440px */
+  .files-page-grid {
+    grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+    gap: 0.75rem;
+  }
+  .files-page-content {
+    padding: 0.5rem;
+  }
+}
+
+@media (max-width: 420px) {
+  /* Don't force 1fr - auto-fill with the 9rem floor already keeps two cards
+     per row on a 360px phone, which feels right for one-handed taps. The
+     real fix at this width is the list view, which had 6 columns that wouldn't
+     fit at all. */
+  .files-page-grid {
+    grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
+    gap: 0.5rem;
+  }
+  /* List view at tiny widths becomes cramped - drop the size + type + modified
+     columns and let name + actions take the room. */
+  .files-page-list-row {
+    grid-template-columns: 1.75rem minmax(0, 1fr) 2rem;
+  }
+  .files-page-list-row > :nth-child(3),
+  .files-page-list-row > :nth-child(4),
+  .files-page-list-row > :nth-child(5) {
+    display: none;
+  }
+}
+
+/* Honour user preference for reduced motion (WCAG 2.3.3). Disables the
+   open-badge pulse, drop-overlay pulse + scale, and the card hover lift -
+   keeps focus rings and selection borders so state is still visible. */
+@media (prefers-reduced-motion: reduce) {
+  .files-page-card-open-dot,
+  .files-page-drop-overlay {
+    animation: none;
+  }
+  .files-page-card,
+  .files-page-card-thumb img {
+    transition: none;
+  }
+  .files-page-card:hover {
+    transform: none;
+  }
+  .files-page-card.is-folder.is-drop-target {
+    transform: none;
+  }
+  .files-page-card.is-folder.is-drop-target .files-page-card-thumb {
+    transform: none;
+  }
+}

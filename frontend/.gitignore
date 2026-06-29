@@ -11,17 +11,26 @@
 # production
 /build
 /dist
+/dist-portal
+/storybook-static
+
+/editor/build
+/editor/dist
 
 # misc
 .DS_Store
-.env
-.env.saas
-.env.desktop
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
-!.env*.example
+.env.*.local
+/editor/.env.local
+/editor/.env.*.local
+
+# Root .gitignore ignores all .env* - whitelist only our committed ones, anchored
+# to their app so a stray top-level frontend/.env stays ignored (Storybook's SaaS
+# mock env is injected via .storybook/main.ts, not a file).
+!/portal/.env
+!/editor/.env
+!/editor/.env.desktop
+!/editor/.env.saas
 
 npm-debug.log*
 yarn-debug.log*
@@ -31,5 +40,11 @@ playwright-report
 test-results
 
 # auto-generated files
-/src/assets/material-symbols-icons.json
-/src/assets/material-symbols-icons.d.ts
+/editor/src/assets/material-symbols-icons.json
+/editor/src/assets/material-symbols-icons.d.ts
+
+# dev update testing - keys, built bundles, screenshots, and generated config override
+/scripts/dev-update-test/.keys/
+/scripts/dev-update-test/.update-dist/
+/scripts/dev-update-test/screenshots/
+/editor/src-tauri/tauri.conf.dev-update.json

@@ -233,8 +233,7 @@ Feature: API Validation
         When I send the API request to the endpoint "/api/v1/convert/pdf/markdown"
         Then the response status code should be 200
         And the response file should have size greater than 100
-        And the response file should have extension ".zip"
-        And the response ZIP should contain 4 files
+        And the response file should have extension ".md"
 
 
     @positive @pdftocsv
@@ -249,34 +248,6 @@ Feature: API Validation
         And the response file should have size greater than 200
         And the response file should have extension ".zip"
         And the response ZIP should contain 3 files
-
-
-    @ffmpeg @positive @pdftovideo
-    Scenario: Convert PDF to video (MP4)
-        Given I generate a PDF file as "fileInput"
-        And the pdf contains 3 pages with random text
-        And the request data includes
-            | parameter   | value |
-            | videoFormat | mp4   |
-            | fps         | 1     |
-        When I send the API request to the endpoint "/api/v1/convert/pdf/video"
-        Then the response status code should be 200
-        And the response file should have size greater than 1000
-        And the response file should have extension ".mp4"
-
-
-    @ffmpeg @positive @pdftovideo
-    Scenario: Convert PDF to video (WebM)
-        Given I generate a PDF file as "fileInput"
-        And the pdf contains 2 pages with random text
-        And the request data includes
-            | parameter   | value |
-            | videoFormat | webm  |
-            | fps         | 2     |
-        When I send the API request to the endpoint "/api/v1/convert/pdf/video"
-        Then the response status code should be 200
-        And the response file should have size greater than 1000
-        And the response file should have extension ".webm"
 
 
     @positive @pdftojson

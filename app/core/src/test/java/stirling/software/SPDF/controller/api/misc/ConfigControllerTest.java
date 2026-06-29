@@ -15,10 +15,15 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.config.EndpointConfiguration.DisableReason;
 import stirling.software.SPDF.config.EndpointConfiguration.EndpointAvailability;
+import stirling.software.common.configuration.AppConfig;
+import stirling.software.common.configuration.interfaces.ShowAdminInterface;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.ApplicationProperties.System;
 import stirling.software.common.service.LicenseServiceInterface;
 import stirling.software.common.service.ServerCertificateServiceInterface;
 import stirling.software.common.service.UserServiceInterface;
@@ -31,6 +36,7 @@ class ConfigControllerTest {
     @Mock private EndpointConfiguration endpointConfiguration;
     @Mock private ServerCertificateServiceInterface serverCertificateService;
     @Mock private UserServiceInterface userService;
+    @Mock private ShowAdminInterface showAdmin;
     @Mock private LicenseServiceInterface licenseService;
 
     private ConfigController configController;
@@ -44,6 +50,7 @@ class ConfigControllerTest {
                         endpointConfiguration,
                         serverCertificateService,
                         userService,
+                        showAdmin,
                         licenseService,
                         mock(stirling.software.SPDF.config.ExternalAppDepConfig.class));
     }
@@ -172,5 +179,120 @@ class ConfigControllerTest {
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         verify(endpointConfiguration).getAllEndpoints();
+    }
+
+    @Test
+    void resolveFrontendUrl_prefersExplicitConfiguredValue() {
+        System sys = mock(System.class);
+        when(applicationProperties.getSystem()).thenReturn(sys);
+        when(sys.getFrontendUrl()).thenReturn("https://pdf.example.com");
+
+        // Request would say something else, but configured wins.
+        HttpServletRequest req = mock(HttpServletRequest.class);
+        AppConfig appConfig = mock(AppConfig.class);
+
+        assertEquals(
+                "https://pdf.example.com", configController.resolveFrontendUrl(req, appConfig));
+    }
+
+    @Test
+    void resolveFrontendUrl_usesRequestHostWhenNotConfigured() {
+        System sys = mock(System.class);
+        when(applicationProperties.getSystem()).thenReturn(sys);
+        when(sys.getFrontendUrl()).thenReturn(null);
+
+        HttpServletRequest req = mock(HttpServletRequest.class);
+        when(req.getServerName()).thenReturn("192.168.1.100");
+        when(req.getScheme()).thenReturn("http");
+        when(req.getServerPort()).thenReturn(8080);
+
+        assertEquals(
+                "http://192.168.1.100:8080",
+                configController.resolveFrontendUrl(req, mock(AppConfig.class)));
+    }
+
+    @Test
+    void resolveFrontendUrl_elidesDefaultHttpsPort() {
+        System sys = mock(System.class);
+        when(applicationProperties.getSystem()).thenReturn(sys);
+        when(sys.getFrontendUrl()).thenReturn("");
+
+        HttpServletRequest req = mock(HttpServletRequest.class);
+        when(req.getServerName()).thenReturn("pdf.example.com");
+        when(req.getScheme()).thenReturn("https");
+        when(req.getServerPort()).thenReturn(443);
+
+        assertEquals(
+                "https://pdf.example.com",
+                configController.resolveFrontendUrl(req, mock(AppConfig.class)));
+    }
+
+    @Test
+    void resolveFrontendUrl_fallsThroughOnLoopbackHost() {
+        System sys = mock(System.class);
+        when(applicationProperties.getSystem()).thenReturn(sys);
+        when(sys.getFrontendUrl()).thenReturn(null);
+
+        HttpServletRequest req = mock(HttpServletRequest.class);
+        when(req.getServerName()).thenReturn("localhost");
+
+        AppConfig appConfig = mock(AppConfig.class);
+        when(appConfig.getBackendUrl()).thenReturn("http://localhost:8080");
+        when(appConfig.getServerPort()).thenReturn("8080");
+
+        // Detected IP (if any) wins over loopback request host. We can't assert the
+        // exact value (depends on the host running the test) but we can assert it
+        // never returns "localhost".
+        String result = configController.resolveFrontendUrl(req, appConfig);
+        assertNotNull(result);
+        assertFalse(result.contains("localhost"));
+    }
+
+    @Test
+    void resolveFrontendUrl_usesActualPortWhenServerPortIsEphemeral() {
+        System sys = mock(System.class);
+        when(applicationProperties.getSystem()).thenReturn(sys);
+        when(sys.getFrontendUrl()).thenReturn(null);
+
+        // Loopback host forces the detected-LAN-IP branch, which is where an
+        // ephemeral server.port=0 would otherwise leak through as ":0".
+        HttpServletRequest req = mock(HttpServletRequest.class);
+        when(req.getServerName()).thenReturn("localhost");
+
+        AppConfig appConfig = mock(AppConfig.class);
+        when(appConfig.getBackendUrl()).thenReturn("http://localhost");
+        when(appConfig.getServerPort()).thenReturn("0");
+
+        org.springframework.core.env.Environment environment =
+                mock(org.springframework.core.env.Environment.class);
+        when(applicationContext.getEnvironment()).thenReturn(environment);
+        when(environment.getProperty("local.server.port")).thenReturn("54321");
+
+        String result = configController.resolveFrontendUrl(req, appConfig);
+        assertNotNull(result);
+        assertTrue(result.endsWith(":54321"));
+        assertFalse(result.contains(":0"));
+    }
+
+    @Test
+    void resolveEffectiveServerPort_prefersActualBoundPortWhenConfiguredZero() {
+        AppConfig appConfig = mock(AppConfig.class);
+        when(appConfig.getServerPort()).thenReturn("0");
+
+        org.springframework.core.env.Environment environment =
+                mock(org.springframework.core.env.Environment.class);
+        when(applicationContext.getEnvironment()).thenReturn(environment);
+        when(environment.getProperty("local.server.port")).thenReturn("54321");
+
+        assertEquals("54321", configController.resolveEffectiveServerPort(appConfig));
+    }
+
+    @Test
+    void resolveEffectiveServerPort_keepsConfiguredNonZeroPort() {
+        AppConfig appConfig = mock(AppConfig.class);
+        when(appConfig.getServerPort()).thenReturn("8080");
+
+        // Non-zero configured port is authoritative; the runtime env is never consulted.
+        assertEquals("8080", configController.resolveEffectiveServerPort(appConfig));
     }
 }

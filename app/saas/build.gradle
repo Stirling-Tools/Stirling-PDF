@@ -1,0 +1,45 @@
+bootRun {
+    enabled = false
+}
+
+spotless {
+    java {
+        target 'src/**/java/**/*.java'
+        targetExclude 'src/main/java/org/apache/**'
+        googleJavaFormat(googleJavaFormatVersion).aosp().reorderImports(false)
+        suppressLintsFor { setStep('google-java-format') }
+
+        importOrder("java", "javax", "org", "com", "net", "io", "jakarta", "lombok", "me", "stirling")
+        trimTrailingWhitespace()
+        leadingTabsToSpaces()
+        endWithNewline()
+    }
+    yaml {
+        target '**/*.yml', '**/*.yaml'
+        trimTrailingWhitespace()
+        leadingTabsToSpaces()
+        endWithNewline()
+    }
+    format 'gradle', {
+        target '**/gradle/*.gradle', '**/*.gradle'
+        trimTrailingWhitespace()
+        leadingTabsToSpaces()
+        endWithNewline()
+    }
+}
+
+dependencies {
+    implementation project(':common')
+    implementation project(':proprietary')
+
+    api 'org.springframework.boot:spring-boot-starter-security'
+    api 'org.springframework.boot:spring-boot-starter-data-jpa'
+    api 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+    api 'org.springframework.boot:spring-boot-starter-webmvc'
+    api 'org.springframework.boot:spring-boot-starter-aspectj'
+
+    api 'org.flywaydb:flyway-core'
+    runtimeOnly 'org.flywaydb:flyway-database-postgresql'
+
+    testImplementation "com.tngtech.archunit:archunit-junit5:${archunitVersion}"
+}

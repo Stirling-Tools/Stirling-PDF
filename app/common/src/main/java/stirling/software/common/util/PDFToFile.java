@@ -1,9 +1,9 @@
 package stirling.software.common.util;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -16,6 +16,7 @@ import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -48,7 +49,7 @@ public class PDFToFile {
         this.runtimePathConfig = runtimePathConfig;
     }
 
-    public ResponseEntity<byte[]> processPdfToMarkdown(MultipartFile inputFile)
+    public ResponseEntity<Resource> processPdfToMarkdown(MultipartFile inputFile)
             throws IOException, InterruptedException {
         if (!MediaType.APPLICATION_PDF_VALUE.equals(inputFile.getContentType())) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -85,78 +86,77 @@ public class PDFToFile {
             pdfBaseName = originalPdfFileName.substring(0, originalPdfFileName.lastIndexOf('.'));
         }
 
-        byte[] fileBytes;
-        String fileName;
+        String fileName = pdfBaseName + "ToMarkdown.zip";
+        TempFile finalOut = tempFileManager.createManagedTempFile(".zip");
+        try {
+            try (TempFile tempInputFile = new TempFile(tempFileManager, ".pdf");
+                    TempDirectory tempOutputDir = new TempDirectory(tempFileManager)) {
+                inputFile.transferTo(tempInputFile.getFile());
 
-        try (TempFile tempInputFile = new TempFile(tempFileManager, ".pdf");
-                TempDirectory tempOutputDir = new TempDirectory(tempFileManager)) {
-            inputFile.transferTo(tempInputFile.getFile());
+                List<String> command =
+                        new ArrayList<>(
+                                Arrays.asList(
+                                        "pdftohtml",
+                                        "-s",
+                                        "-noframes",
+                                        "-c",
+                                        tempInputFile.getAbsolutePath(),
+                                        pdfBaseName));
 
-            List<String> command =
-                    new ArrayList<>(
-                            Arrays.asList(
-                                    "pdftohtml",
-                                    "-s",
-                                    "-noframes",
-                                    "-c",
-                                    tempInputFile.getAbsolutePath(),
-                                    pdfBaseName));
+                ProcessExecutorResult returnCode =
+                        ProcessExecutor.getInstance(ProcessExecutor.Processes.PDFTOHTML)
+                                .runCommandWithOutputHandling(
+                                        command, tempOutputDir.getPath().toFile());
+                // Process HTML files to Markdown
+                File[] outputFiles =
+                        Objects.requireNonNull(tempOutputDir.getPath().toFile().listFiles());
+                List<File> markdownFiles = new ArrayList<>();
+                List<File> imageFiles = new ArrayList<>();
 
-            ProcessExecutorResult returnCode =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.PDFTOHTML)
-                            .runCommandWithOutputHandling(
-                                    command, tempOutputDir.getPath().toFile());
-            // Process HTML files to Markdown
-            File[] outputFiles =
-                    Objects.requireNonNull(tempOutputDir.getPath().toFile().listFiles());
-            List<File> markdownFiles = new ArrayList<>();
-            List<File> imageFiles = new ArrayList<>();
+                // Convert HTML files to Markdown and collect image files
+                for (File outputFile : outputFiles) {
+                    if (outputFile.getName().endsWith(".html")) {
+                        String html = Files.readString(outputFile.toPath());
+                        String markdown = htmlToMarkdownConverter.convert(html);
 
-            // Convert HTML files to Markdown and collect image files
-            for (File outputFile : outputFiles) {
-                if (outputFile.getName().endsWith(".html")) {
-                    String html = Files.readString(outputFile.toPath());
-                    String markdown = htmlToMarkdownConverter.convert(html);
+                        // Update image references to point to images/ folder
+                        markdown = updateImageReferences(markdown);
 
-                    // Update image references to point to images/ folder
-                    markdown = updateImageReferences(markdown);
+                        String mdFileName = outputFile.getName().replace(".html", ".md");
+                        File mdFile = new File(tempOutputDir.getPath().toFile(), mdFileName);
+                        Files.writeString(mdFile.toPath(), markdown);
+                        markdownFiles.add(mdFile);
+                    } else if (!outputFile.getName().endsWith(".md")) {
+                        // Collect non-HTML, non-MD files as images/assets
+                        imageFiles.add(outputFile);
+                    }
+                }
 
-                    String mdFileName = outputFile.getName().replace(".html", ".md");
-                    File mdFile = new File(tempOutputDir.getPath().toFile(), mdFileName);
-                    Files.writeString(mdFile.toPath(), markdown);
-                    markdownFiles.add(mdFile);
-                } else if (!outputFile.getName().endsWith(".md")) {
-                    // Collect non-HTML, non-MD files as images/assets
-                    imageFiles.add(outputFile);
+                try (OutputStream fos = Files.newOutputStream(finalOut.getPath());
+                        ZipOutputStream zipOutputStream = new ZipOutputStream(fos)) {
+                    // Add markdown files to root of ZIP
+                    for (File mdFile : markdownFiles) {
+                        ZipEntry mdEntry = new ZipEntry(mdFile.getName());
+                        zipOutputStream.putNextEntry(mdEntry);
+                        Files.copy(mdFile.toPath(), zipOutputStream);
+                        zipOutputStream.closeEntry();
+                    }
+
+                    // Add images and other assets to images/ folder
+                    for (File imageFile : imageFiles) {
+                        ZipEntry assetEntry = new ZipEntry("images/" + imageFile.getName());
+                        zipOutputStream.putNextEntry(assetEntry);
+                        Files.copy(imageFile.toPath(), zipOutputStream);
+                        zipOutputStream.closeEntry();
+                    }
                 }
             }
-
-            // Always create a ZIP file
-            fileName = pdfBaseName + "ToMarkdown.zip";
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-
-            try (ZipOutputStream zipOutputStream = new ZipOutputStream(byteArrayOutputStream)) {
-                // Add markdown files to root of ZIP
-                for (File mdFile : markdownFiles) {
-                    ZipEntry mdEntry = new ZipEntry(mdFile.getName());
-                    zipOutputStream.putNextEntry(mdEntry);
-                    Files.copy(mdFile.toPath(), zipOutputStream);
-                    zipOutputStream.closeEntry();
-                }
-
-                // Add images and other assets to images/ folder
-                for (File imageFile : imageFiles) {
-                    ZipEntry assetEntry = new ZipEntry("images/" + imageFile.getName());
-                    zipOutputStream.putNextEntry(assetEntry);
-                    Files.copy(imageFile.toPath(), zipOutputStream);
-                    zipOutputStream.closeEntry();
-                }
-            }
-
-            fileBytes = byteArrayOutputStream.toByteArray();
+        } catch (Exception e) {
+            finalOut.close();
+            throw e;
         }
-        return WebResponseUtils.bytesToWebResponse(
-                fileBytes, fileName, MediaType.APPLICATION_OCTET_STREAM);
+        return WebResponseUtils.fileToWebResponse(
+                finalOut, fileName, MediaType.APPLICATION_OCTET_STREAM);
     }
 
     /**
@@ -169,7 +169,7 @@ public class PDFToFile {
         return PATTERN.matcher(markdown).replaceAll("$1(images/$2)");
     }
 
-    public ResponseEntity<byte[]> processPdfToHtml(MultipartFile inputFile)
+    public ResponseEntity<Resource> processPdfToHtml(MultipartFile inputFile)
             throws IOException, InterruptedException {
         if (!MediaType.APPLICATION_PDF_VALUE.equals(inputFile.getContentType())) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -182,56 +182,57 @@ public class PDFToFile {
             pdfBaseName = originalPdfFileName.substring(0, originalPdfFileName.lastIndexOf('.'));
         }
 
-        byte[] fileBytes;
-        String fileName;
+        String fileName = pdfBaseName + "ToHtml.zip";
+        TempFile finalOut = tempFileManager.createManagedTempFile(".zip");
+        try {
+            try (TempFile inputFileTemp = new TempFile(tempFileManager, ".pdf");
+                    TempDirectory outputDirTemp = new TempDirectory(tempFileManager)) {
 
-        try (TempFile inputFileTemp = new TempFile(tempFileManager, ".pdf");
-                TempDirectory outputDirTemp = new TempDirectory(tempFileManager)) {
+                Path tempInputFile = inputFileTemp.getPath();
+                Path tempOutputDir = outputDirTemp.getPath();
 
-            Path tempInputFile = inputFileTemp.getPath();
-            Path tempOutputDir = outputDirTemp.getPath();
+                // Save the uploaded file to a temporary location
+                inputFile.transferTo(tempInputFile);
 
-            // Save the uploaded file to a temporary location
-            inputFile.transferTo(tempInputFile);
+                // Run the pdftohtml command with complex output
+                List<String> command =
+                        new ArrayList<>(
+                                Arrays.asList(
+                                        "pdftohtml", "-c", tempInputFile.toString(), pdfBaseName));
 
-            // Run the pdftohtml command with complex output
-            List<String> command =
-                    new ArrayList<>(
-                            Arrays.asList(
-                                    "pdftohtml", "-c", tempInputFile.toString(), pdfBaseName));
+                ProcessExecutorResult returnCode =
+                        ProcessExecutor.getInstance(ProcessExecutor.Processes.PDFTOHTML)
+                                .runCommandWithOutputHandling(command, tempOutputDir.toFile());
 
-            ProcessExecutorResult returnCode =
-                    ProcessExecutor.getInstance(ProcessExecutor.Processes.PDFTOHTML)
-                            .runCommandWithOutputHandling(command, tempOutputDir.toFile());
+                // Get output files
+                File[] outputFiles = Objects.requireNonNull(tempOutputDir.toFile().listFiles());
 
-            // Get output files
-            File[] outputFiles = Objects.requireNonNull(tempOutputDir.toFile().listFiles());
-
-            // Return output files in a ZIP archive
-            fileName = pdfBaseName + "ToHtml.zip";
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            try (ZipOutputStream zipOutputStream = new ZipOutputStream(byteArrayOutputStream)) {
-                for (File outputFile : outputFiles) {
-                    ZipEntry entry = new ZipEntry(outputFile.getName());
-                    zipOutputStream.putNextEntry(entry);
-                    try (FileInputStream fis = new FileInputStream(outputFile)) {
-                        IOUtils.copy(fis, zipOutputStream);
-                    } catch (IOException e) {
-                        log.error("Exception writing zip entry", e);
+                try (OutputStream fos = Files.newOutputStream(finalOut.getPath());
+                        ZipOutputStream zipOutputStream = new ZipOutputStream(fos)) {
+                    for (File outputFile : outputFiles) {
+                        ZipEntry entry = new ZipEntry(outputFile.getName());
+                        zipOutputStream.putNextEntry(entry);
+                        try (FileInputStream fis = new FileInputStream(outputFile)) {
+                            IOUtils.copy(fis, zipOutputStream);
+                        } catch (IOException e) {
+                            log.error("Exception writing zip entry", e);
+                        }
+                        zipOutputStream.closeEntry();
                     }
-                    zipOutputStream.closeEntry();
+                } catch (IOException e) {
+                    log.error("Exception writing zip", e);
                 }
-            } catch (IOException e) {
-                log.error("Exception writing zip", e);
             }
-            fileBytes = byteArrayOutputStream.toByteArray();
+        } catch (Exception e) {
+            finalOut.close();
+            throw e;
         }
 
-        return WebResponseUtils.bytesToWebResponse(
-                fileBytes, fileName, MediaType.APPLICATION_OCTET_STREAM);
+        return WebResponseUtils.fileToWebResponse(
+                finalOut, fileName, MediaType.APPLICATION_OCTET_STREAM);
     }
 
-    public ResponseEntity<byte[]> processPdfToOfficeFormat(
+    public ResponseEntity<Resource> processPdfToOfficeFormat(
             MultipartFile inputFile, String outputFormat, String libreOfficeFilter)
             throws IOException, InterruptedException {
 
@@ -257,109 +258,115 @@ public class PDFToFile {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
-        byte[] fileBytes;
         String fileName;
-
+        TempFile finalOut =
+                tempFileManager.createManagedTempFile("." + resolvePrimaryExtension(outputFormat));
         Path libreOfficeProfile = null;
-        try (TempFile inputFileTemp = new TempFile(tempFileManager, ".pdf");
-                TempDirectory outputDirTemp = new TempDirectory(tempFileManager)) {
+        try {
+            try (TempFile inputFileTemp = new TempFile(tempFileManager, ".pdf");
+                    TempDirectory outputDirTemp = new TempDirectory(tempFileManager)) {
 
-            Path tempInputFile = inputFileTemp.getPath();
-            Path tempOutputDir = outputDirTemp.getPath();
-            Path unoOutputFile =
-                    tempOutputDir.resolve(
-                            pdfBaseName + "." + resolvePrimaryExtension(outputFormat));
+                Path tempInputFile = inputFileTemp.getPath();
+                Path tempOutputDir = outputDirTemp.getPath();
+                Path unoOutputFile =
+                        tempOutputDir.resolve(
+                                pdfBaseName + "." + resolvePrimaryExtension(outputFormat));
 
-            // Save the uploaded file to a temporary location
-            inputFile.transferTo(tempInputFile);
+                // Save the uploaded file to a temporary location
+                inputFile.transferTo(tempInputFile);
 
-            // Run the LibreOffice command
-            ProcessExecutorResult returnCode = null;
-            IOException unoconvertException = null;
+                // Run the LibreOffice command
+                ProcessExecutorResult returnCode = null;
+                IOException unoconvertException = null;
 
-            if (isUnoConvertEnabled()) {
-                try {
-                    List<String> unoCommand =
-                            buildUnoConvertCommand(
-                                    tempInputFile, unoOutputFile, outputFormat, libreOfficeFilter);
-                    returnCode =
-                            ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE)
-                                    .runCommandWithOutputHandling(unoCommand);
-                } catch (IOException e) {
-                    unoconvertException = e;
-                    log.warn(
-                            "Unoconvert command failed ({}). Falling back to soffice command.",
-                            e.getMessage());
-                }
-            }
-
-            if (returnCode == null) {
-                // Run the LibreOffice command as a fallback
-                libreOfficeProfile = Files.createTempDirectory("libreoffice_profile_");
-                List<String> command = new ArrayList<>();
-                command.add(runtimePathConfig.getSOfficePath());
-                command.add("-env:UserInstallation=" + libreOfficeProfile.toUri().toString());
-                command.add("--headless");
-                command.add("--nologo");
-                command.add("--infilter=" + libreOfficeFilter);
-                command.add("--convert-to");
-                command.add(outputFormat);
-                command.add("--outdir");
-                command.add(tempOutputDir.toString());
-                command.add(tempInputFile.toString());
-
-                try {
-                    returnCode =
-                            ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE)
-                                    .runCommandWithOutputHandling(command);
-                } catch (IOException e) {
-                    if (unoconvertException != null) {
-                        e.addSuppressed(unoconvertException);
+                if (isUnoConvertEnabled()) {
+                    try {
+                        List<String> unoCommand =
+                                buildUnoConvertCommand(
+                                        tempInputFile,
+                                        unoOutputFile,
+                                        outputFormat,
+                                        libreOfficeFilter);
+                        returnCode =
+                                ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE)
+                                        .runCommandWithOutputHandling(unoCommand);
+                    } catch (IOException e) {
+                        unoconvertException = e;
+                        log.warn(
+                                "Unoconvert command failed ({}). Falling back to soffice command.",
+                                e.getMessage());
                     }
-                    throw e;
                 }
-            }
 
-            // Get output files
-            List<File> outputFiles = Arrays.asList(tempOutputDir.toFile().listFiles());
+                if (returnCode == null) {
+                    // Run the LibreOffice command as a fallback
+                    libreOfficeProfile = Files.createTempDirectory("libreoffice_profile_");
+                    List<String> command = new ArrayList<>();
+                    command.add(runtimePathConfig.getSOfficePath());
+                    command.add("-env:UserInstallation=" + libreOfficeProfile.toUri().toString());
+                    command.add("--headless");
+                    command.add("--nologo");
+                    command.add("--infilter=" + libreOfficeFilter);
+                    command.add("--convert-to");
+                    command.add(outputFormat);
+                    command.add("--outdir");
+                    command.add(tempOutputDir.toString());
+                    command.add(tempInputFile.toString());
 
-            if (outputFiles.size() == 1) {
-                // Return single output file
-                File outputFile = outputFiles.get(0);
-                if ("txt:Text".equals(outputFormat)) {
-                    outputFormat = "txt";
-                }
-                fileName = pdfBaseName + "." + outputFormat;
-                fileBytes = FileUtils.readFileToByteArray(outputFile);
-            } else {
-                // Return output files in a ZIP archive
-                fileName = pdfBaseName + "To" + outputFormat + ".zip";
-                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                try (ZipOutputStream zipOutputStream = new ZipOutputStream(byteArrayOutputStream)) {
-                    for (File outputFile : outputFiles) {
-                        ZipEntry entry = new ZipEntry(outputFile.getName());
-                        zipOutputStream.putNextEntry(entry);
-                        try (FileInputStream fis = new FileInputStream(outputFile)) {
-                            IOUtils.copy(fis, zipOutputStream);
-                        } catch (IOException e) {
-                            log.error("Exception writing zip entry", e);
+                    try {
+                        returnCode =
+                                ProcessExecutor.getInstance(ProcessExecutor.Processes.LIBRE_OFFICE)
+                                        .runCommandWithOutputHandling(command);
+                    } catch (IOException e) {
+                        if (unoconvertException != null) {
+                            e.addSuppressed(unoconvertException);
                         }
-
-                        zipOutputStream.closeEntry();
+                        throw e;
                     }
-                } catch (IOException e) {
-                    log.error("Exception writing zip", e);
                 }
 
-                fileBytes = byteArrayOutputStream.toByteArray();
+                // Get output files
+                List<File> outputFiles = Arrays.asList(tempOutputDir.toFile().listFiles());
+
+                if (outputFiles.size() == 1) {
+                    // Return single output file
+                    File outputFile = outputFiles.get(0);
+                    if ("txt:Text".equals(outputFormat)) {
+                        outputFormat = "txt";
+                    }
+                    fileName = pdfBaseName + "." + outputFormat;
+                    FileUtils.copyFile(outputFile, finalOut.getFile());
+                } else {
+                    // Return output files in a ZIP archive
+                    fileName = pdfBaseName + "To" + outputFormat + ".zip";
+                    try (OutputStream fos = Files.newOutputStream(finalOut.getPath());
+                            ZipOutputStream zipOutputStream = new ZipOutputStream(fos)) {
+                        for (File outputFile : outputFiles) {
+                            ZipEntry entry = new ZipEntry(outputFile.getName());
+                            zipOutputStream.putNextEntry(entry);
+                            try (FileInputStream fis = new FileInputStream(outputFile)) {
+                                IOUtils.copy(fis, zipOutputStream);
+                            } catch (IOException e) {
+                                log.error("Exception writing zip entry", e);
+                            }
+
+                            zipOutputStream.closeEntry();
+                        }
+                    } catch (IOException e) {
+                        log.error("Exception writing zip", e);
+                    }
+                }
             }
+        } catch (Exception e) {
+            finalOut.close();
+            throw e;
         } finally {
             if (libreOfficeProfile != null) {
                 FileUtils.deleteQuietly(libreOfficeProfile.toFile());
             }
         }
-        return WebResponseUtils.bytesToWebResponse(
-                fileBytes, fileName, MediaType.APPLICATION_OCTET_STREAM);
+        return WebResponseUtils.fileToWebResponse(
+                finalOut, fileName, MediaType.APPLICATION_OCTET_STREAM);
     }
 
     private boolean isUnoConvertEnabled() {

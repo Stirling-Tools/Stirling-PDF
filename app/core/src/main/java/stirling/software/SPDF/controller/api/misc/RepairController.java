@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -18,6 +19,7 @@ import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.config.swagger.StandardPdfResponse;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.MiscApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
@@ -45,7 +47,10 @@ public class RepairController {
         return endpointConfiguration.isGroupEnabled("qpdf");
     }
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/repair")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/repair",
+            resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @StandardPdfResponse
     @Operation(
             summary = "Repair a PDF file",
@@ -53,13 +58,12 @@ public class RepairController {
                     "This endpoint repairs a given PDF file by running Ghostscript (primary), qpdf (fallback), or PDFBox (if no external tools available). The PDF is"
                             + " first saved to a temporary location, repaired, read back, and then"
                             + " returned as a response. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> repairPdf(@ModelAttribute PDFFile file)
+    public ResponseEntity<Resource> repairPdf(@ModelAttribute PDFFile file)
             throws IOException, InterruptedException {
         MultipartFile inputFile = file.getFileInput();
 
-        // Use TempFile with try-with-resources for automatic cleanup
-        try (TempFile tempInputFile = new TempFile(tempFileManager, ".pdf");
-                TempFile tempOutputFile = new TempFile(tempFileManager, ".pdf")) {
+        TempFile tempOutputFile = new TempFile(tempFileManager, ".pdf");
+        try (TempFile tempInputFile = new TempFile(tempFileManager, ".pdf")) {
 
             // Save the uploaded file to the temporary location
             inputFile.transferTo(tempInputFile.getFile());
@@ -121,14 +125,17 @@ public class RepairController {
                 }
             }
 
-            // Read the repaired PDF file
-            byte[] pdfBytes = pdfDocumentFactory.loadToBytes(tempOutputFile.getFile());
-
-            // Return the repaired PDF as a response
-            return WebResponseUtils.bytesToWebResponse(
-                    pdfBytes,
+            // Return the repaired PDF as a streaming response
+            return WebResponseUtils.pdfFileToWebResponse(
+                    tempOutputFile,
                     GeneralUtils.generateFilename(
                             inputFile.getOriginalFilename(), "_repaired.pdf"));
+        } catch (IOException | InterruptedException e) {
+            tempOutputFile.close();
+            throw e;
+        } catch (RuntimeException e) {
+            tempOutputFile.close();
+            throw e;
         }
     }
 }

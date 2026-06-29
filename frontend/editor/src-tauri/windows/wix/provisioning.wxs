@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Fragment>
+    <Property Id="STIRLING_SERVER_URL" Secure="yes" />
+    <Property Id="STIRLING_LOCK_CONNECTION" Secure="yes" />
+    <!-- STIRLING_LOGIN_AGREEMENT — "1"/"true" enables the login agreement popup on this install. -->
+    <Property Id="STIRLING_LOGIN_AGREEMENT" Secure="yes" />
+    <!--
+      STIRLING_UPDATE_MODE — headless auto-update policy for MDM/Intune deploys.
+      Accepts "prompt" (default, user-interactive), "auto" (silent download+install on
+      startup), or "disabled" (never check). Leaving it unset preserves whatever was
+      configured on the previous install (or defaults to "prompt" on a fresh install).
+    -->
+    <Property Id="STIRLING_UPDATE_MODE" Secure="yes" />
+
+    <DirectoryRef Id="TARGETDIR">
+      <Directory Id="AppDataFolder" />
+      <Directory Id="CommonAppDataFolder" />
+    </DirectoryRef>
+
+    <DirectoryRef Id="INSTALLDIR">
+      <Component Id="ProvisionerBinaryComponent" Guid="*">
+        <File Id="ProvisionerExe" Source="$(sys.SOURCEFILEDIR)stirling-provision.exe" KeyPath="yes" />
+      </Component>
+      <Component Id="ThumbnailHandlerDllComponent" Guid="*">
+        <File Id="ThumbnailHandlerDll" Source="$(sys.SOURCEFILEDIR)stirling_thumbnail_handler.dll" KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <!-- PDF Thumbnail Handler COM registration -->
+    <DirectoryRef Id="TARGETDIR">
+      <Component Id="ThumbnailHandlerClsidComponent" Guid="*">
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\CLSID\{2D2FBE3A-9A88-4308-A52E-7EF63CA7CF48}">
+          <RegistryValue Type="string" Value="Stirling-PDF Thumbnail Handler" KeyPath="yes" />
+        </RegistryKey>
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\CLSID\{2D2FBE3A-9A88-4308-A52E-7EF63CA7CF48}\InprocServer32">
+          <RegistryValue Type="string" Value="[INSTALLDIR]stirling_thumbnail_handler.dll" />
+          <RegistryValue Type="string" Name="ThreadingModel" Value="Apartment" />
+        </RegistryKey>
+      </Component>
+      <Component Id="ThumbnailHandlerShellexComponent" Guid="*">
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\.pdf\shellex\{E357FCCD-A995-4576-B01F-234630154E96}">
+          <RegistryValue Type="string" Value="{2D2FBE3A-9A88-4308-A52E-7EF63CA7CF48}" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+    </DirectoryRef>
+
+    <ComponentGroup Id="ProvisioningComponentGroup">
+      <ComponentRef Id="ProvisionerBinaryComponent" />
+      <ComponentRef Id="ThumbnailHandlerDllComponent" />
+      <ComponentRef Id="ThumbnailHandlerClsidComponent" />
+      <ComponentRef Id="ThumbnailHandlerShellexComponent" />
+    </ComponentGroup>
+
+    <CustomAction
+      Id="WriteProvisioningFilePerUser"
+      FileKey="ProvisionerExe"
+      Execute="deferred"
+      Impersonate="yes"
+      Return="check"
+      ExeCommand="[WriteProvisioningFilePerUser]"
+    />
+
+    <CustomAction
+      Id="WriteProvisioningFileAllUsers"
+      FileKey="ProvisionerExe"
+      Execute="deferred"
+      Impersonate="no"
+      Return="check"
+      ExeCommand="[WriteProvisioningFileAllUsers]"
+    />
+
+    <CustomAction
+      Id="SetWriteProvisioningFilePerUser"
+      Property="WriteProvisioningFilePerUser"
+      Value="--output &quot;[AppDataFolder]Stirling-PDF\stirling-provisioning.json&quot; --url &quot;[STIRLING_SERVER_URL]&quot; --lock &quot;[STIRLING_LOCK_CONNECTION]&quot; --login-agreement &quot;[STIRLING_LOGIN_AGREEMENT]&quot; --update-mode &quot;[STIRLING_UPDATE_MODE]&quot;"
+    />
+
+    <CustomAction
+      Id="SetWriteProvisioningFileAllUsers"
+      Property="WriteProvisioningFileAllUsers"
+      Value="--output &quot;[CommonAppDataFolder]Stirling-PDF\stirling-provisioning.json&quot; --url &quot;[STIRLING_SERVER_URL]&quot; --lock &quot;[STIRLING_LOCK_CONNECTION]&quot; --login-agreement &quot;[STIRLING_LOGIN_AGREEMENT]&quot; --update-mode &quot;[STIRLING_UPDATE_MODE]&quot;"
+    />
+
+    <!--
+      Run the provisioner when ANY of STIRLING_SERVER_URL, STIRLING_LOGIN_AGREEMENT, or
+      STIRLING_UPDATE_MODE is set. The provisioner is a no-op if all values end up empty,
+      so passing none is safe.
+    -->
+    <InstallExecuteSequence>
+      <Custom Action="SetWriteProvisioningFilePerUser" After="InstallFiles">(STIRLING_SERVER_URL &lt;&gt; &quot;&quot; OR STIRLING_LOGIN_AGREEMENT &lt;&gt; &quot;&quot; OR STIRLING_UPDATE_MODE &lt;&gt; &quot;&quot;) AND (NOT ALLUSERS OR ALLUSERS=0)</Custom>
+      <Custom Action="WriteProvisioningFilePerUser" After="SetWriteProvisioningFilePerUser">(STIRLING_SERVER_URL &lt;&gt; &quot;&quot; OR STIRLING_LOGIN_AGREEMENT &lt;&gt; &quot;&quot; OR STIRLING_UPDATE_MODE &lt;&gt; &quot;&quot;) AND (NOT ALLUSERS OR ALLUSERS=0)</Custom>
+      <Custom Action="SetWriteProvisioningFileAllUsers" After="InstallFiles">(STIRLING_SERVER_URL &lt;&gt; &quot;&quot; OR STIRLING_LOGIN_AGREEMENT &lt;&gt; &quot;&quot; OR STIRLING_UPDATE_MODE &lt;&gt; &quot;&quot;) AND (ALLUSERS=1 OR ALLUSERS=2)</Custom>
+      <Custom Action="WriteProvisioningFileAllUsers" After="SetWriteProvisioningFileAllUsers">(STIRLING_SERVER_URL &lt;&gt; &quot;&quot; OR STIRLING_LOGIN_AGREEMENT &lt;&gt; &quot;&quot; OR STIRLING_UPDATE_MODE &lt;&gt; &quot;&quot;) AND (ALLUSERS=1 OR ALLUSERS=2)</Custom>
+    </InstallExecuteSequence>
+  </Fragment>
+</Wix>

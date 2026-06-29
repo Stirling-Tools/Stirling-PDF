@@ -56,6 +56,7 @@ import stirling.software.SPDF.model.api.security.PDFVerificationResult;
 import stirling.software.SPDF.service.VeraPDFService;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.SecurityApi;
+import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
@@ -1061,7 +1062,10 @@ public class GetInfoOnPDF {
         return stats;
     }
 
-    @AutoJobPostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, value = "/get-info-on-pdf")
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/get-info-on-pdf",
+            resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @Operation(
             summary = "Get comprehensive PDF information",
             description =

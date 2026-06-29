@@ -18,9 +18,9 @@ import tomli_w
 
 
 class AITranslationHelper:
-    def __init__(self, locales_dir: str = "frontend/public/locales"):
+    def __init__(self, locales_dir: str = "frontend/editor/public/locales"):
         self.locales_dir = Path(locales_dir)
-        self.golden_truth_file = self.locales_dir / "en-GB" / "translation.toml"
+        self.golden_truth_file = self.locales_dir / "en-US" / "translation.toml"
 
     def _load_translation_file(self, file_path: Path) -> Dict:
         """Load TOML translation file."""
@@ -47,7 +47,7 @@ class AITranslationHelper:
         batch_data = {
             "metadata": {
                 "created_at": datetime.now().isoformat(),
-                "source_language": "en-GB",
+                "source_language": "en-US",
                 "target_languages": languages,
                 "max_entries_per_language": max_entries_per_language,
                 "instructions": {
@@ -320,7 +320,7 @@ class AITranslationHelper:
             )
 
             with open(output_file, "w", newline="", encoding="utf-8") as csvfile:
-                fieldnames = ["key", "context", "en_GB"] + languages
+                fieldnames = ["key", "context", "en_US"] + languages
                 writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
                 writer.writeheader()
 
@@ -331,7 +331,7 @@ class AITranslationHelper:
                     row = {
                         "key": key,
                         "context": self._get_key_context(key),
-                        "en_GB": en_value,
+                        "en_US": en_value,
                     }
 
                     for lang in languages:
@@ -363,7 +363,7 @@ class AITranslationHelper:
                     continue
 
                 export_data["translations"][key] = {
-                    "en_GB": en_value,
+                    "en_US": en_value,
                     "context": self._get_key_context(key),
                 }
 
@@ -391,7 +391,7 @@ def main():
     )
     parser.add_argument(
         "--locales-dir",
-        default="frontend/public/locales",
+        default="frontend/editor/public/locales",
         help="Path to locales directory",
     )
 

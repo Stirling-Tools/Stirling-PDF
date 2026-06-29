@@ -1,0 +1,274 @@
+/* Light theme variables */
+:root {
+  --cc-bg: #ffffff;
+  --cc-primary-color: #1c1c1c;
+  --cc-secondary-color: #666666;
+
+  --cc-btn-primary-bg: #007bff;
+  --cc-btn-primary-color: #ffffff;
+  --cc-btn-primary-border-color: #007bff;
+  --cc-btn-primary-hover-bg: #0056b3;
+  --cc-btn-primary-hover-color: #ffffff;
+  --cc-btn-primary-hover-border-color: #0056b3;
+
+  --cc-btn-secondary-bg: #f1f3f4;
+  --cc-btn-secondary-color: #1c1c1c;
+  --cc-btn-secondary-border-color: #f1f3f4;
+  --cc-btn-secondary-hover-bg: #007bff;
+  --cc-btn-secondary-hover-color: #ffffff;
+  --cc-btn-secondary-hover-border-color: #007bff;
+
+  --cc-separator-border-color: #e0e0e0;
+
+  /* Toggle colors mirror Mantine Switch (light scheme) */
+  --cc-toggle-on-bg: var(--mantine-primary-color-filled, #007bff);
+  --cc-toggle-off-bg: var(--mantine-color-gray-3, #dee2e6);
+  --cc-toggle-on-knob-bg: var(--mantine-color-white, #ffffff);
+  --cc-toggle-off-knob-bg: var(--mantine-color-white, #ffffff);
+
+  --cc-toggle-enabled-icon-color: #ffffff;
+  --cc-toggle-disabled-icon-color: #ffffff;
+
+  --cc-toggle-readonly-bg: var(--mantine-color-disabled, #f1f3f4);
+  --cc-toggle-readonly-knob-bg: var(--mantine-color-gray-0, #f8f9fa);
+  --cc-toggle-readonly-knob-icon-color: transparent;
+
+  --cc-section-category-border: #e0e0e0;
+
+  --cc-cookie-category-block-bg: #f1f3f4;
+  --cc-cookie-category-block-border: #f1f3f4;
+  --cc-cookie-category-block-hover-bg: #e9eff4;
+  --cc-cookie-category-block-hover-border: #e9eff4;
+
+  --cc-cookie-category-expanded-block-bg: #f1f3f4;
+  --cc-cookie-category-expanded-block-hover-bg: #e9eff4;
+
+  --cc-footer-bg: #ffffff;
+  --cc-footer-color: #1c1c1c;
+  --cc-footer-border-color: #ffffff;
+}
+
+/* Dark theme variables */
+.cc--darkmode {
+  --cc-bg: #2d2d2d;
+  --cc-primary-color: #e5e5e5;
+  --cc-secondary-color: #b0b0b0;
+
+  --cc-btn-primary-bg: #4dabf7;
+  --cc-btn-primary-color: #ffffff;
+  --cc-btn-primary-border-color: #4dabf7;
+  --cc-btn-primary-hover-bg: #3d3d3d;
+  --cc-btn-primary-hover-color: #ffffff;
+  --cc-btn-primary-hover-border-color: #3d3d3d;
+
+  --cc-btn-secondary-bg: #3d3d3d;
+  --cc-btn-secondary-color: #ffffff;
+  --cc-btn-secondary-border-color: #3d3d3d;
+  --cc-btn-secondary-hover-bg: #4dabf7;
+  --cc-btn-secondary-hover-color: #ffffff;
+  --cc-btn-secondary-hover-border-color: #4dabf7;
+
+  --cc-separator-border-color: #555555;
+
+  /* Toggle colors mirror Mantine Switch (dark scheme) */
+  --cc-toggle-on-bg: var(--mantine-primary-color-filled, #4dabf7);
+  --cc-toggle-off-bg: var(--mantine-color-dark-5, #555555);
+  --cc-toggle-on-knob-bg: var(--mantine-color-white, #ffffff);
+  --cc-toggle-off-knob-bg: var(--mantine-color-white, #ffffff);
+
+  --cc-toggle-enabled-icon-color: #2d2d2d;
+  --cc-toggle-disabled-icon-color: #2d2d2d;
+
+  --cc-toggle-readonly-bg: var(--mantine-color-disabled, #555555);
+  --cc-toggle-readonly-knob-bg: var(--mantine-color-dark-3, #8e8e8e);
+  --cc-toggle-readonly-knob-icon-color: transparent;
+
+  --cc-section-category-border: #555555;
+
+  --cc-cookie-category-block-bg: #3d3d3d;
+  --cc-cookie-category-block-border: #3d3d3d;
+  --cc-cookie-category-block-hover-bg: #4d4d4d;
+  --cc-cookie-category-block-hover-border: #4d4d4d;
+
+  --cc-cookie-category-expanded-block-bg: #3d3d3d;
+  --cc-cookie-category-expanded-block-hover-bg: #4d4d4d;
+
+  --cc-footer-bg: #2d2d2d;
+  --cc-footer-color: #e5e5e5;
+  --cc-footer-border-color: #2d2d2d;
+}
+.cm__body {
+  max-width: 90% !important;
+  flex-direction: row !important;
+  align-items: center !important;
+}
+
+.cm__desc {
+  max-width: 70rem !important;
+}
+
+.cm__btns {
+  flex-direction: row-reverse !important;
+  gap: 10px !important;
+  padding-top: 3.4rem !important;
+}
+
+@media only screen and (max-width: 1400px) {
+  .cm__body {
+    max-width: 90% !important;
+    flex-direction: column !important;
+    align-items: normal !important;
+  }
+
+  .cm__btns {
+    padding-top: 1rem !important;
+  }
+}
+
+/* Toggle visibility fixes */
+#cc-main .section__toggle {
+  opacity: 0 !important; /* Keep invisible but functional */
+}
+
+#cc-main .toggle__icon {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+}
+
+#cc-main .toggle__icon-circle {
+  display: block !important;
+  position: absolute !important;
+  transition: transform 0.25s ease !important;
+}
+
+#cc-main .toggle__icon-on,
+#cc-main .toggle__icon-off {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: absolute !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Ensure toggles are visible in both themes */
+#cc-main .toggle__icon {
+  background: var(--cc-toggle-off-bg) !important;
+  border: 1px solid var(--cc-toggle-off-bg) !important;
+}
+
+#cc-main .section__toggle:checked ~ .toggle__icon {
+  background: var(--cc-toggle-on-bg) !important;
+  border: 1px solid var(--cc-toggle-on-bg) !important;
+}
+
+/* Ensure toggle text is visible */
+#cc-main .pm__section-title {
+  color: var(--cc-primary-color) !important;
+}
+
+#cc-main .pm__section-desc {
+  color: var(--cc-secondary-color) !important;
+}
+
+/* Make sure the modal has proper contrast */
+#cc-main .pm {
+  background: var(--cc-bg) !important;
+  color: var(--cc-primary-color) !important;
+}
+
+/* Banner sits above the chat FAB but behind all modals and onboarding; value
+   is Z_INDEX_COOKIE_CONSENT_BANNER, set as this variable by useCookieConsent */
+#cc-main {
+  z-index: var(--z-index-cookie-consent) !important;
+}
+
+/* Preferences dialog sits above the settings modal it opens from; value is
+   Z_INDEX_COOKIE_PREFERENCES_MODAL, set as this variable by useCookieConsent */
+.show--preferences #cc-main {
+  z-index: var(--z-index-cookie-preferences) !important;
+}
+
+/* Ensure consent modal text is visible in both themes */
+#cc-main .cm {
+  background: var(--cc-bg) !important;
+  color: var(--cc-primary-color) !important;
+}
+
+#cc-main .cm__title {
+  color: var(--cc-primary-color) !important;
+}
+
+#cc-main .cm__desc {
+  color: var(--cc-primary-color) !important;
+}
+
+#cc-main .cm__footer {
+  color: var(--cc-primary-color) !important;
+}
+
+#cc-main .cm__footer-links a,
+#cc-main .cm__link {
+  color: var(--cc-primary-color) !important;
+}
+
+/* ── Category toggles restyled to match Mantine Switch (size sm) ──────────
+   Mantine sm metrics: 38×20 track, 14px plain thumb, 2.5px inline padding,
+   150ms ease transitions, no icon inside the thumb. Colors come from the
+   --cc-toggle-* variables above, which point at the Mantine palette. */
+#cc-main .section__toggle,
+#cc-main .section__toggle-wrapper,
+#cc-main .toggle__icon,
+#cc-main .toggle__label {
+  width: 38px !important;
+  height: 20px !important;
+  border-radius: 1000px !important;
+}
+
+/* Track: flat fill, no outline ring or border */
+#cc-main .toggle__icon {
+  border: none !important;
+  box-shadow: none !important;
+  transition: background-color 150ms ease !important;
+}
+
+#cc-main .section__toggle:checked ~ .toggle__icon {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Always-enabled categories = Mantine disabled switch (must out-prioritise
+   the !important checked-track rule above) */
+#cc-main .section__toggle:checked:disabled ~ .toggle__icon {
+  background: var(--cc-toggle-readonly-bg) !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+#cc-main .section__toggle:disabled {
+  cursor: not-allowed !important;
+}
+
+/* Thumb: small plain circle, vertically centred, no drop shadow */
+#cc-main .toggle__icon-circle {
+  width: 14px !important;
+  height: 14px !important;
+  top: 3px !important;
+  left: 2.5px !important;
+  box-shadow: none !important;
+  transition:
+    transform 150ms ease,
+    background-color 150ms ease !important;
+}
+
+/* Checked thumb travel: 38 − 14 − 2.5 = 21.5px end position */
+#cc-main .section__toggle:checked ~ .toggle__icon .toggle__icon-circle {
+  transform: translateX(19px) !important;
+}
+
+/* Mantine switches have no check/cross glyph inside the thumb */
+#cc-main .toggle__icon-on,
+#cc-main .toggle__icon-off {
+  display: none !important;
+}

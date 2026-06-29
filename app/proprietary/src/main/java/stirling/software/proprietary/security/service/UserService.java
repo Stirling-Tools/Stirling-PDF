@@ -198,6 +198,15 @@ public class UserService implements UserServiceInterface {
         return user.getApiKey();
     }
 
+    @Override
+    public String getCurrentUserApiKey() {
+        String username = getCurrentUsername();
+        if (username == null || username.isEmpty()) {
+            throw new IllegalStateException("Cannot determine calling user for API key lookup");
+        }
+        return getApiKeyForUser(username);
+    }
+
     public boolean isValidApiKey(String apiKey) {
         return userRepository.findByApiKey(apiKey).isPresent();
     }
@@ -327,6 +336,22 @@ public class UserService implements UserServiceInterface {
 
     public Optional<User> findByUsername(String username) {
         return userRepository.findByUsername(username);
+    }
+
+    /** Resolves a user by Supabase auth UUID; empty for rows with no supabase_id. */
+    public Optional<User> findBySupabaseId(UUID supabaseId) {
+        return userRepository.findBySupabaseId(supabaseId);
+    }
+
+    @Transactional
+    public void trackApiKeyFirstUse(User user) {
+        // No-op default; saas mode overrides via SaasUserExtensionService#trackApiKeyFirstUse.
+    }
+
+    /** Low-level user persistence; bypasses {@link #saveUserCore}'s settings/audit lifecycle. */
+    @Transactional
+    public User saveUser(User user) {
+        return userRepository.save(user);
     }
 
     public Optional<User> findByUsernameIgnoreCase(String username) {

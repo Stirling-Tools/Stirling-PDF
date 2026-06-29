@@ -1,0 +1,292 @@
+version: '3'
+
+output: prefixed
+
+vars:
+  FIND_FREE_PORT_PS: powershell -NoProfile -File scripts/find-free-port.ps1
+  FIND_FREE_PORT_SH: bash scripts/find-free-port.sh
+
+includes:
+  backend:
+    taskfile: .taskfiles/backend.yml
+    dir: .
+  frontend:
+    taskfile: .taskfiles/frontend.yml
+    dir: frontend
+  engine:
+    taskfile: .taskfiles/engine.yml
+    dir: engine
+  docker:
+    taskfile: .taskfiles/docker.yml
+    dir: .
+  desktop:
+    taskfile: .taskfiles/desktop.yml
+    dir: frontend
+  e2e:
+    taskfile: .taskfiles/e2e.yml
+    dir: .
+  pre-commit:
+    taskfile: .taskfiles/pre-commit.yml
+    dir: .
+
+tasks:
+  # ============================================================
+  # Help (shown when you run `task` with no arguments)
+  # ============================================================
+
+  default:
+    desc: "List the most common commands"
+    silent: true
+    cmds:
+      - |
+        echo "Common commands (run 'task --list' to see all):"
+        echo ""
+        echo "  task dev            Start backend & frontend on free ports"
+        echo "  task backend:dev    Start backend on default port"
+        echo "  task frontend:dev   Start frontend on default port"
+        echo "  task desktop:dev    Start desktop app"
+        echo "  task check          Quality gate (lint, typecheck, test, etc.)"
+
+  # ============================================================
+  # Setup & Prerequisites
+  # ============================================================
+
+  install:
+    desc: "Install all project dependencies"
+    cmds:
+      - task: frontend:install
+      - task: engine:install
+
+  # ============================================================
+  # Development
+  # ============================================================
+
+  dev:
+    desc: "Start backend + frontend concurrently on free ports"
+    vars:
+      PORTS:
+        sh: '{{if eq OS "windows"}}{{.FIND_FREE_PORT_PS}} 8080 5173{{else}}{{.FIND_FREE_PORT_SH}} 8080 5173{{end}}'
+      BACKEND_PORT: '{{index (splitList "\n" .PORTS) 0}}'
+      FRONTEND_PORT: '{{index (splitList "\n" .PORTS) 1}}'
+    deps:
+      - task: backend:dev
+        vars:
+          PORT: '{{.BACKEND_PORT}}'
+      - task: frontend:dev
+        vars:
+          PORT: '{{.FRONTEND_PORT}}'
+          BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
+          OPEN: "true"
+
+  dev:portal:
+    desc: "Start backend + developer portal concurrently on free ports"
+    vars:
+      PORTS:
+        sh: '{{if eq OS "windows"}}{{.FIND_FREE_PORT_PS}} 8080 5173{{else}}{{.FIND_FREE_PORT_SH}} 8080 5173{{end}}'
+      BACKEND_PORT: '{{index (splitList "\n" .PORTS) 0}}'
+      PORTAL_PORT: '{{index (splitList "\n" .PORTS) 1}}'
+    deps:
+      - task: backend:dev
+        vars:
+          PORT: '{{.BACKEND_PORT}}'
+          SECURITY_ENABLELOGIN: "true"
+          POLICIES_ENABLED: "true"
+      - task: frontend:dev:portal
+        vars:
+          PORT: '{{.PORTAL_PORT}}'
+          BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
+          OPEN: "true"
+
+  dev:portal:all:
+    desc: "Start backend + developer portal + editor concurrently on free ports"
+    vars:
+      PORTS:
+        sh: '{{if eq OS "windows"}}{{.FIND_FREE_PORT_PS}} 8080 5173 5174{{else}}{{.FIND_FREE_PORT_SH}} 8080 5173 5174{{end}}'
+      BACKEND_PORT: '{{index (splitList "\n" .PORTS) 0}}'
+      PORTAL_PORT: '{{index (splitList "\n" .PORTS) 1}}'
+      EDITOR_PORT: '{{index (splitList "\n" .PORTS) 2}}'
+    deps:
+      - task: backend:dev
+        vars:
+          PORT: '{{.BACKEND_PORT}}'
+          SECURITY_ENABLELOGIN: "true"
+          POLICIES_ENABLED: "true"
+      - task: frontend:dev:portal
+        vars:
+          PORT: '{{.PORTAL_PORT}}'
+          BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
+          # Point the portal's "Editor" app switcher at the editor we spawn here.
+          EDITOR_URL: 'http://localhost:{{.EDITOR_PORT}}/'
+          OPEN: "true"
+      - task: frontend:dev
+        vars:
+          PORT: '{{.EDITOR_PORT}}'
+          BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
+
+  dev:portal:proxy:
+    desc: "Editor + portal on ONE origin + backend via live dev servers (shared-token login)"
+    vars:
+      PORTS:
+        sh: '{{if eq OS "windows"}}{{.FIND_FREE_PORT_PS}} 8080 3000 5173 5174{{else}}{{.FIND_FREE_PORT_SH}} 8080 3000 5173 5174{{end}}'
+      BACKEND_PORT: '{{index (splitList "\n" .PORTS) 0}}'
+      PROXY_PORT: '{{index (splitList "\n" .PORTS) 1}}'
+      EDITOR_PORT: '{{index (splitList "\n" .PORTS) 2}}'
+      PORTAL_PORT: '{{index (splitList "\n" .PORTS) 3}}'
+    deps:
+      - task: backend:dev
+        vars:
+          PORT: '{{.BACKEND_PORT}}'
+          SECURITY_ENABLELOGIN: "true"
+          POLICIES_ENABLED: "true"
+      - task: frontend:dev:proprietary
+        vars:
+          PORT: '{{.EDITOR_PORT}}'
+          BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
+      - task: frontend:dev:portal
+        vars:
+          PORT: '{{.PORTAL_PORT}}'
+          BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
+          SUBPATH: portal
+          MOCKS: 'false'
+      - task: frontend:dev:portal:proxy:serve
+        vars:
+          PORT: '{{.PROXY_PORT}}'
+          BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
+          EDITOR_DEV_URL: 'http://localhost:{{.EDITOR_PORT}}'
+          PORTAL_DEV_URL: 'http://localhost:{{.PORTAL_PORT}}'
+
+  dev:saas:
+    desc: "Start SaaS backend + frontend concurrently on free ports"
+    cmds:
+      - task: dev:_all
+        vars: { FRONTEND: saas, BACKEND: saas }
+
+  dev:all:
+    desc: "Start backend + frontend + engine concurrently on free ports"
+    cmds:
+      - task: dev:_all
+
+  dev:_all:
+    internal: true
+    vars:
+      FRONTEND: '{{.FRONTEND | default "proprietary"}}'
+      BACKEND: '{{.BACKEND | default "proprietary"}}'
+      PORTS:
+        sh: '{{if eq OS "windows"}}{{.FIND_FREE_PORT_PS}} 8080 5173 5001{{else}}{{.FIND_FREE_PORT_SH}} 8080 5173 5001{{end}}'
+      BACKEND_PORT: '{{index (splitList "\n" .PORTS) 0}}'
+      FRONTEND_PORT: '{{index (splitList "\n" .PORTS) 1}}'
+      ENGINE_PORT: '{{index (splitList "\n" .PORTS) 2}}'
+    deps:
+      - task: engine:dev
+        vars:
+          PORT: '{{.ENGINE_PORT}}'
+      - task: 'backend:dev:{{.BACKEND}}'
+        vars:
+          PORT: '{{.BACKEND_PORT}}'
+          AIENGINE_URL: 'http://localhost:{{.ENGINE_PORT}}'
+          AIENGINE_ENABLED: "true"
+      - task: 'frontend:dev:{{.FRONTEND}}'
+        vars:
+          PORT: '{{.FRONTEND_PORT}}'
+          BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
+          OPEN: "true"
+
+  # ============================================================
+  # Build
+  # ============================================================
+
+  build:
+    desc: "Build all components"
+    cmds:
+      - task: backend:build
+      - task: frontend:build
+
+  preview:portal:proxy:
+    desc: "Build + serve editor + portal on ONE origin + backend (prod-like auth test)"
+    vars:
+      PORTS:
+        sh: '{{if eq OS "windows"}}{{.FIND_FREE_PORT_PS}} 8080 3000{{else}}{{.FIND_FREE_PORT_SH}} 8080 3000{{end}}'
+      BACKEND_PORT: '{{index (splitList "\n" .PORTS) 0}}'
+      PROXY_PORT: '{{index (splitList "\n" .PORTS) 1}}'
+    deps:
+      - task: backend:dev
+        vars:
+          PORT: '{{.BACKEND_PORT}}'
+          SECURITY_ENABLELOGIN: "true"
+          POLICIES_ENABLED: "true"
+      - task: frontend:preview:portal:proxy
+        vars:
+          PORT: '{{.PROXY_PORT}}'
+          BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
+
+  # ============================================================
+  # Test
+  # ============================================================
+
+  test:
+    desc: "Run ALL tests (backend + frontend + engine)"
+    cmds:
+      - task: backend:test
+      - task: frontend:test
+      - task: engine:test
+
+  # ============================================================
+  # Lint & Format
+  # ============================================================
+
+  lint:
+    desc: "Run all linters"
+    cmds:
+      - task: frontend:lint
+      - task: engine:lint
+
+  fix:
+    desc: "Auto-fix all components"
+    cmds:
+      - task: backend:fix
+      - task: frontend:fix
+      - task: engine:fix
+
+  format:
+    desc: "Auto-fix formatting across all components"
+    cmds:
+      - task: backend:format
+      - task: frontend:format
+      - task: engine:format
+
+  format:check:
+    desc: "Check formatting across all components"
+    cmds:
+      - task: backend:format:check
+      - task: frontend:format:check
+      - task: engine:format:check
+
+  # ============================================================
+  # Quality Gate
+  # ============================================================
+
+  check:
+    desc: "Quick quality gate for local development"
+    cmds:
+      - task: backend:check
+      - task: frontend:check
+      - task: engine:check
+
+  check:all:
+    desc: "Full CI quality gate"
+    cmds:
+      - task: backend:check
+      - task: frontend:check:all
+      - task: engine:check
+
+  # ============================================================
+  # Clean
+  # ============================================================
+
+  clean:
+    desc: "Clean all build artifacts"
+    cmds:
+      - task: backend:clean
+      - task: frontend:clean
+      - task: engine:clean
+      - task: pre-commit:clean
