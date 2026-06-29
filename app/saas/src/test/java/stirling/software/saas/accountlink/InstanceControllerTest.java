@@ -19,6 +19,7 @@ import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
+import stirling.software.proprietary.billing.UnitCalcPolicy;
 import stirling.software.saas.accountlink.InstanceController.EntitlementResponse;
 import stirling.software.saas.payg.billing.TeamBillingContext;
 import stirling.software.saas.payg.billing.TeamBillingService;
@@ -27,6 +28,8 @@ import stirling.software.saas.payg.entitlement.EntitlementSnapshot;
 import stirling.software.saas.payg.model.EntitlementState;
 import stirling.software.saas.payg.model.FeatureGate;
 import stirling.software.saas.payg.model.FeatureSet;
+import stirling.software.saas.payg.policy.PricingPolicy;
+import stirling.software.saas.payg.policy.PricingPolicyService;
 
 /**
  * Pure-Mockito unit tests for {@link InstanceController} — the device-credential entitlement read.
@@ -39,9 +42,15 @@ class InstanceControllerTest {
     @Mock private EntitlementService entitlementService;
     @Mock private TeamBillingService billingService;
     @Mock private AccountLinkService accountLinkService;
+    @Mock private PricingPolicyService pricingPolicyService;
 
     private InstanceController controller() {
-        return new InstanceController(entitlementService, billingService, accountLinkService);
+        return new InstanceController(
+                entitlementService, billingService, accountLinkService, pricingPolicyService);
+    }
+
+    private static PricingPolicy policy() {
+        return new PricingPolicy(1, 1_048_576L, 1, 1000);
     }
 
     @Test
@@ -50,6 +59,7 @@ class InstanceControllerTest {
         when(billingService.forTeam(42L)).thenReturn(subscribedBilling("sub_42", 120L));
         when(entitlementService.getSnapshot(42L))
                 .thenReturn(snapshot(EntitlementState.WARNED, 90L, 1250L));
+        when(pricingPolicyService.getEffectivePolicy(42L)).thenReturn(policy());
 
         ResponseEntity<EntitlementResponse> resp = controller().entitlement(token);
 
@@ -62,6 +72,10 @@ class InstanceControllerTest {
         assertThat(body.periodCapUnits()).isEqualTo(1250L);
         // WARNED is still within budget for the gate's purposes → coarse OK.
         assertThat(body.state()).isEqualTo("OK");
+        // Phase 2: the metering inputs the instance needs ride along.
+        assertThat(body.unitCalcPolicy()).isEqualTo(new UnitCalcPolicy(1, 1_048_576L, 1, 1000));
+        assertThat(body.periodStart()).isNotNull();
+        assertThat(body.periodEnd()).isNotNull();
     }
 
     @Test
@@ -70,6 +84,7 @@ class InstanceControllerTest {
         when(billingService.forTeam(7L)).thenReturn(freeBilling(500L));
         when(entitlementService.getSnapshot(7L))
                 .thenReturn(snapshot(EntitlementState.FULL, 0L, null));
+        when(pricingPolicyService.getEffectivePolicy(7L)).thenReturn(policy());
 
         ResponseEntity<EntitlementResponse> resp = controller().entitlement(token);
 
@@ -89,6 +104,7 @@ class InstanceControllerTest {
         when(billingService.forTeam(8L)).thenReturn(subscribedBilling("sub_8", 0L));
         when(entitlementService.getSnapshot(8L))
                 .thenReturn(snapshot(EntitlementState.DEGRADED, 1300L, 1250L));
+        when(pricingPolicyService.getEffectivePolicy(8L)).thenReturn(policy());
 
         EntitlementResponse body = controller().entitlement(token).getBody();
 

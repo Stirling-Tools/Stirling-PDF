@@ -1,5 +1,7 @@
 package stirling.software.saas.accountlink;
 
+import java.time.LocalDateTime;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
@@ -16,11 +18,14 @@ import io.swagger.v3.oas.annotations.Hidden;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.proprietary.billing.UnitCalcPolicy;
 import stirling.software.saas.payg.billing.TeamBillingContext;
 import stirling.software.saas.payg.billing.TeamBillingService;
 import stirling.software.saas.payg.entitlement.EntitlementService;
 import stirling.software.saas.payg.entitlement.EntitlementSnapshot;
 import stirling.software.saas.payg.model.EntitlementState;
+import stirling.software.saas.payg.policy.PricingPolicy;
+import stirling.software.saas.payg.policy.PricingPolicyService;
 
 /**
  * Instance-facing surface (combined-billing "Mode A"), authenticated by the <b>device
@@ -46,14 +51,17 @@ public class InstanceController {
     private final EntitlementService entitlementService;
     private final TeamBillingService billingService;
     private final AccountLinkService accountLinkService;
+    private final PricingPolicyService pricingPolicyService;
 
     public InstanceController(
             EntitlementService entitlementService,
             TeamBillingService billingService,
-            AccountLinkService accountLinkService) {
+            AccountLinkService accountLinkService,
+            PricingPolicyService pricingPolicyService) {
         this.entitlementService = entitlementService;
         this.billingService = billingService;
         this.accountLinkService = accountLinkService;
+        this.pricingPolicyService = pricingPolicyService;
     }
 
     public record WhoAmIResponse(Long instanceId, Long teamId) {}
@@ -68,7 +76,13 @@ public class InstanceController {
             long freeRemainingUnits,
             long periodSpendUnits,
             Long periodCapUnits,
-            String state) {}
+            String state,
+            // Metering inputs the instance needs to cost + bucket its own usage (Phase 2). The
+            // instance computes units locally with this policy and resets its per-period cumulative
+            // counters on the [periodStart, periodEnd) boundary.
+            UnitCalcPolicy unitCalcPolicy,
+            LocalDateTime periodStart,
+            LocalDateTime periodEnd) {}
 
     @GetMapping("/whoami")
     @PreAuthorize("hasRole('LINKED_INSTANCE')")
@@ -109,6 +123,7 @@ public class InstanceController {
         // TeamBillingService, period spend/cap + state from the entitlement snapshot.
         TeamBillingContext billing = billingService.forTeam(teamId);
         EntitlementSnapshot snap = entitlementService.getSnapshot(teamId);
+        PricingPolicy policy = pricingPolicyService.getEffectivePolicy(teamId);
 
         return ResponseEntity.ok(
                 new EntitlementResponse(
@@ -116,7 +131,14 @@ public class InstanceController {
                         billing.freeRemainingUnits(),
                         snap.periodSpendUnits(),
                         snap.periodCapUnits(),
-                        coarseState(snap.state())));
+                        coarseState(snap.state()),
+                        new UnitCalcPolicy(
+                                policy.getDocPagesPerUnit(),
+                                policy.getDocBytesPerUnit(),
+                                policy.getMinChargeUnits(),
+                                policy.getFileUnitCap()),
+                        snap.periodStart(),
+                        snap.periodEnd()));
     }
 
     /**

@@ -6,6 +6,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.time.LocalDateTime;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -13,6 +14,8 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.proprietary.billing.UnitCalcPolicy;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -226,7 +229,45 @@ public class AccountLinkClient {
         Long periodCap =
                 root.hasNonNull("periodCapUnits") ? root.get("periodCapUnits").asLong() : null;
         EntitlementState state = mapState(root.path("state").asText(null));
-        return new InstanceEntitlement(subscribed, freeRemaining, periodSpend, periodCap, state);
+        return new InstanceEntitlement(
+                subscribed,
+                freeRemaining,
+                periodSpend,
+                periodCap,
+                state,
+                parseUnitCalcPolicy(root),
+                parseDateTime(root, "periodStart"),
+                parseDateTime(root, "periodEnd"));
+    }
+
+    /** Parses the nested unit-calc policy; null if absent or any knob is invalid (e.g. zero). */
+    private static UnitCalcPolicy parseUnitCalcPolicy(JsonNode root) {
+        if (!root.hasNonNull("unitCalcPolicy")) {
+            return null;
+        }
+        JsonNode node = root.get("unitCalcPolicy");
+        try {
+            return new UnitCalcPolicy(
+                    node.path("docPagesPerUnit").asInt(),
+                    node.path("docBytesPerUnit").asLong(),
+                    node.path("minChargeUnits").asInt(),
+                    node.path("fileUnitCap").asInt());
+        } catch (RuntimeException e) {
+            // Malformed policy → degrade to "none" rather than fail the whole entitlement parse.
+            return null;
+        }
+    }
+
+    /** ISO date-time field → LocalDateTime; null if absent or unparseable. */
+    private static LocalDateTime parseDateTime(JsonNode root, String field) {
+        if (!root.hasNonNull(field)) {
+            return null;
+        }
+        try {
+            return LocalDateTime.parse(root.get(field).asText(null));
+        } catch (RuntimeException e) {
+            return null;
+        }
     }
 
     /** Maps the SaaS state string to our coarse enum; unrecognised → UNKNOWN. */
