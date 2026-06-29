@@ -11,31 +11,46 @@ import { MantineProvider } from "@mantine/core";
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import { parse } from "smol-toml";
+import { rtlLanguages, supportedLanguages } from "@shared/i18n/languages";
 
 // Reference React so the import isn't dropped as unused by the bundler — the
 // classic runtime needs it present even though it's not named in the JSX.
 void React;
 
-// Import translation files as raw strings so Vite bundles them at build time.
-// This avoids HTTP fetches in Storybook (no backend URL needed) and sidesteps
-// the static-dir conflict that would arise from both portal and editor serving
-// files at the same /locales/ path.
+// Portal only has en-US today; import it directly.
 // @ts-ignore — ?raw is a Vite-only import suffix; tsc doesn't know the type.
 import portalEnUS from "../portal/public/locales/en-US/translation.toml?raw";
+
+// Pull every editor locale file at build time via glob so all 41 languages
+// are bundled without listing each one individually.
 // @ts-ignore
-import editorEnUS from "../editor/public/locales/en-US/translation.toml?raw";
+const editorLocaleModules = import.meta.glob<string>(
+  "../editor/public/locales/*/translation.toml",
+  { as: "raw", eager: true },
+);
+
+// Build the i18next resources map. en-US merges portal + editor keys; every
+// other locale is editor-only until the portal adds translations.
+const resources: Record<string, { translation: Record<string, unknown> }> = {};
+for (const [path, raw] of Object.entries(editorLocaleModules)) {
+  const lng = path.match(/\/locales\/([^/]+)\/translation\.toml$/)?.[1];
+  if (!lng) continue;
+  const editorTranslations = parse(raw as string) as Record<string, unknown>;
+  resources[lng] = {
+    translation:
+      lng === "en-US"
+        ? {
+            ...(parse(portalEnUS as string) as Record<string, unknown>),
+            ...editorTranslations,
+          }
+        : editorTranslations,
+  };
+}
 
 i18n.use(initReactI18next).init({
   lng: "en-US",
   fallbackLng: "en-US",
-  resources: {
-    "en-US": {
-      translation: {
-        ...(parse(portalEnUS as string) as Record<string, unknown>),
-        ...(parse(editorEnUS as string) as Record<string, unknown>),
-      },
-    },
-  },
+  resources,
   interpolation: { escapeValue: false },
   // Resources are bundled synchronously — no async backend fetch.
   react: { useSuspense: false },
@@ -115,6 +130,17 @@ function ThemeWatcher() {
   }, []);
   return null;
 }
+
+/** Switches i18next to the toolbar locale and keeps document.dir in sync. */
+const withLocale: Decorator = (Story, context) => {
+  const locale = (context.globals.locale as string) ?? "en-US";
+  useEffect(() => {
+    i18n.changeLanguage(locale);
+    document.documentElement.dir = rtlLanguages.includes(locale) ? "rtl" : "ltr";
+    document.documentElement.lang = locale;
+  }, [locale]);
+  return <Story />;
+};
 
 const withProviders: Decorator = (Story, context) => {
   const tier = (context.globals.tier as Tier) ?? "pro";
@@ -199,8 +225,22 @@ const preview: Preview = {
         dynamicTitle: true,
       },
     },
+    locale: {
+      name: "Locale",
+      description: "Active language — drives useTranslation() in all stories",
+      defaultValue: "en-US",
+      toolbar: {
+        icon: "globe",
+        items: Object.entries(supportedLanguages).map(([value, title]) => ({
+          value,
+          title: `${value} — ${title}`,
+        })),
+        dynamicTitle: true,
+      },
+    },
   },
   decorators: [
+    withLocale,
     withProviders,
     withThemeByDataAttribute({
       themes: { light: "light", dark: "dark" },
