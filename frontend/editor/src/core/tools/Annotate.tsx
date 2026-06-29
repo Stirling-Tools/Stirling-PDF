@@ -89,7 +89,8 @@ const Annotate = (_props: BaseToolProps) => {
     placementPreviewSize,
     setPlacementPreviewSize,
   } = useSignature();
-  const { activateAnnotationToolRef } = useAnnotationContext();
+  const { activateAnnotationToolRef, setActiveAnnotationToolId } =
+    useAnnotationContext();
   const viewerContext = useContext(ViewerContext);
   const viewerContextRef = useRef(viewerContext);
   useEffect(() => {
@@ -141,7 +142,21 @@ const Annotate = (_props: BaseToolProps) => {
 
   useEffect(() => {
     activeToolRef.current = activeTool;
-  }, [activeTool]);
+    // Mirror the panel's armed tool to AnnotationContext so callers
+    // outside the panel (CommentsSidebar's Add Comment hint) can react
+    // without coupling to this component's internals. "select" means
+    // nothing is armed - publish null so consumers can branch cheaply.
+    setActiveAnnotationToolId(activeTool === "select" ? null : activeTool);
+  }, [activeTool, setActiveAnnotationToolId]);
+
+  // Make sure we clear the published tool when the annotation panel
+  // unmounts (user navigated away from /annotate). Otherwise the
+  // sidebar would think textComment is still armed.
+  useEffect(() => {
+    return () => {
+      setActiveAnnotationToolId(null);
+    };
+  }, [setActiveAnnotationToolId]);
 
   // CSS to PDF size conversion accounting for zoom
   const cssToPdfSize = useCallback(
