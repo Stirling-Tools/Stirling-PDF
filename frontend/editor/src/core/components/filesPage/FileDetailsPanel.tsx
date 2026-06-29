@@ -20,14 +20,60 @@ import {
   downloadFileFromStorage,
   downloadMultipleFiles,
 } from "@app/utils/downloadUtils";
-import ToolChain from "@app/components/shared/ToolChain";
 import ShareManagementModal from "@app/components/shared/ShareManagementModal";
 import { useSharingEnabled } from "@app/hooks/useSharingEnabled";
 import { fileStorage } from "@app/services/fileStorage";
+import { extractPDFMetadata } from "@app/services/pdfMetadataService";
 import {
   VersionTimeline,
   DetailField,
 } from "@app/components/filesPage/VersionTimeline";
+
+/** Custom PDF Info-dictionary key the classify-and-tag tool writes (must match
+ *  the backend's PdfMetadataService.CLASSIFICATION_KEY). */
+const CLASSIFICATION_KEY = "StirlingPDFClassification";
+
+/** Reading classification means loading the file's bytes through PDF.js, so cap
+ *  the auto-read by size — the app handles very large PDFs and we won't pull a
+ *  multi-GB file into memory just to surface a metadata tag. */
+const MAX_CLASSIFICATION_READ_BYTES = 25 * 1024 * 1024;
+
+interface DocumentClassification {
+  category: string;
+  docType: string;
+  typeConfidence?: number;
+  tags: string[];
+}
+
+/** Parse the classification JSON stored in PDF metadata; null if absent/invalid. */
+function parseClassification(value: string): DocumentClassification | null {
+  try {
+    const raw = JSON.parse(value) as Record<string, unknown>;
+    const category = typeof raw.category === "string" ? raw.category : "";
+    const docType = typeof raw.docType === "string" ? raw.docType : "";
+    if (!category && !docType) return null;
+    return {
+      category,
+      docType,
+      typeConfidence:
+        typeof raw.typeConfidence === "number" ? raw.typeConfidence : undefined,
+      tags: Array.isArray(raw.tags)
+        ? raw.tags.filter((tag): tag is string => typeof tag === "string")
+        : [],
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** "lab_result" → "Lab result" for display. */
+function prettyLabel(id: string): string {
+  return id
+    .split(/[_\s]+/)
+    .filter(Boolean)
+    .map((word) => word[0].toUpperCase() + word.slice(1))
+    .join(" ");
+}
 
 interface FileDetailsPanelProps {
   selectedFileIds: FileId[];
@@ -76,6 +122,12 @@ export function FileDetailsPanel({
   // Metadata (size/type/dates) is collapsed by default so the panel stays
   // short and the action buttons keep their pinned footer in view.
   const [fieldsOpen, setFieldsOpen] = useState(false);
+  // Version journey is collapsed by default so the panel stays short.
+  const [versionsOpen, setVersionsOpen] = useState(false);
+  // Document classification read from PDF metadata, plus its (collapsed) section.
+  const [classification, setClassification] =
+    useState<DocumentClassification | null>(null);
+  const [classificationOpen, setClassificationOpen] = useState(false);
   // Version chain for the selected file; empty for v1 or multi-select.
   const [versionChain, setVersionChain] = useState<StirlingFileStub[]>([]);
   const singleFileForChain = files.length === 1 ? files[0] : null;
@@ -96,6 +148,35 @@ export function FileDetailsPanel({
         console.error("Failed to load version history", err);
         if (!cancelled) setVersionChain([]);
       });
+    return () => {
+      cancelled = true;
+    };
+  }, [singleFileForChain]);
+
+  // Read the classification the policy wrote into PDF metadata
+  useEffect(() => {
+    setClassification(null);
+    const stub = singleFileForChain;
+    if (!stub) return;
+    if (stub.type && !stub.type.toLowerCase().includes("pdf")) return;
+    if (stub.size > MAX_CLASSIFICATION_READ_BYTES) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const file = await fileStorage.getStirlingFile(stub.id);
+        if (cancelled || !file) return;
+        const result = await extractPDFMetadata(file);
+        if (cancelled || !result.success) return;
+        const entry = result.metadata.customMetadata.find(
+          (item) => item.key === CLASSIFICATION_KEY,
+        );
+        if (!entry) return;
+        const parsed = parseClassification(entry.value);
+        if (parsed && !cancelled) setClassification(parsed);
+      } catch (err) {
+        console.error("Failed to read classification metadata", err);
+      }
+    })();
     return () => {
       cancelled = true;
     };
@@ -232,17 +313,74 @@ export function FileDetailsPanel({
                 />
               </div>
             )}
-            {single.toolHistory && single.toolHistory.length > 0 && (
-              <div className="files-page-details-tool-history">
-                <div className="files-page-details-tool-history-label">
-                  {t("filesPage.field.toolHistory", "Tool history")}
-                </div>
-                <ToolChain
-                  toolChain={single.toolHistory}
-                  displayStyle="badges"
-                  size="xs"
-                />
-              </div>
+            {classification && (
+              <>
+                <button
+                  type="button"
+                  className="files-page-details-collapse-toggle"
+                  onClick={() => setClassificationOpen((o) => !o)}
+                  aria-expanded={classificationOpen}
+                >
+                  <span>{t("filesPage.classification", "Classification")}</span>
+                  <KeyboardArrowDownIcon
+                    className={`files-page-details-collapse-chevron${
+                      classificationOpen ? " is-open" : ""
+                    }`}
+                    fontSize="small"
+                  />
+                </button>
+                {classificationOpen && (
+                  <div className="files-page-details-fieldlist">
+                    {classification.category && (
+                      <DetailField
+                        label={t("filesPage.field.category", "Category")}
+                        value={prettyLabel(classification.category)}
+                      />
+                    )}
+                    {classification.docType && (
+                      <DetailField
+                        label={t("filesPage.field.type", "Type")}
+                        value={prettyLabel(classification.docType)}
+                      />
+                    )}
+                    {classification.typeConfidence != null && (
+                      <DetailField
+                        label={t("filesPage.field.confidence", "Confidence")}
+                        value={`${Math.round(
+                          classification.typeConfidence * 100,
+                        )}%`}
+                      />
+                    )}
+                    {classification.tags.length > 0 && (
+                      <div className="files-page-details-field">
+                        <span className="files-page-details-field-label">
+                          {t("filesPage.field.tags", "Tags")}
+                        </span>
+                        <span
+                          className="files-page-details-field-value"
+                          style={{
+                            display: "flex",
+                            flexWrap: "wrap",
+                            gap: "0.25rem",
+                            justifyContent: "flex-end",
+                          }}
+                        >
+                          {classification.tags.map((tag) => (
+                            <Badge
+                              key={tag}
+                              size="xs"
+                              variant="light"
+                              color="orange"
+                            >
+                              {tag}
+                            </Badge>
+                          ))}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
             )}
             {/* Version journey. Each tool run writes a new StirlingFile
                 with the same `originalFileId` and an incremented
@@ -266,12 +404,37 @@ export function FileDetailsPanel({
                   )}
                 </Button>
               ) : (
-                <VersionTimeline
-                  chain={versionChain}
-                  currentId={single.id}
-                  onAddToWorkspace={onAddToWorkspace}
-                  onRemove={onRemove}
-                />
+                <>
+                  <button
+                    type="button"
+                    className="files-page-details-collapse-toggle"
+                    onClick={() => setVersionsOpen((o) => !o)}
+                    aria-expanded={versionsOpen}
+                  >
+                    <span>
+                      {t(
+                        "filesPage.viewVersionHistory",
+                        "Version journey ({{count}})",
+                        { count: versionChain.length },
+                      )}
+                    </span>
+                    <KeyboardArrowDownIcon
+                      className={`files-page-details-collapse-chevron${
+                        versionsOpen ? " is-open" : ""
+                      }`}
+                      fontSize="small"
+                    />
+                  </button>
+                  {versionsOpen && (
+                    <VersionTimeline
+                      chain={versionChain}
+                      currentId={single.id}
+                      onAddToWorkspace={onAddToWorkspace}
+                      onRemove={onRemove}
+                      hideHeader
+                    />
+                  )}
+                </>
               ))}
           </>
         ) : (

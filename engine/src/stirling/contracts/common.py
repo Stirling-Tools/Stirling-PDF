@@ -63,6 +63,7 @@ class WorkflowOutcome(StrEnum):
     UNSUPPORTED_CAPABILITY = "unsupported_capability"
     GENERATE_FILE = "generate_file"
     CONVERT_MARKDOWN = "convert_markdown"
+    CLASSIFICATION = "classification"
 
 
 class ArtifactKind(StrEnum):

@@ -7,6 +7,7 @@ import DescriptionIcon from "@mui/icons-material/Description";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import LockIcon from "@mui/icons-material/Lock";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import { PanelHeader } from "@shared/components/PanelHeader";
@@ -115,6 +116,7 @@ export function PolicyDetailPanel({
 }: PolicyDetailPanelProps) {
   const { t } = useTranslation();
   const isPaused = status === "paused";
+  const [activityOpen, setActivityOpen] = useState(true);
   // Real configured steps drive the flow; fall back to the preset's rule labels.
   const enforceItems =
     steps && steps.length > 0
@@ -181,70 +183,87 @@ export function PolicyDetailPanel({
 
         {/* Recent Activity */}
         <div>
-          <p className="pol-section-label">
-            {t("policies.detail.recentActivity", "Recent Activity")}
-          </p>
-          {activityItems.length > 0 ? (
-            <Card padding="none">
-              {activityItems.map((item, i) => (
-                <ListRow
-                  key={item.runId ?? `${item.doc}-${item.time}`}
-                  divider={i > 0}
-                  leadingTone={
-                    item.status === "flagged"
-                      ? "warning"
-                      : item.status === "processing"
-                        ? "info"
-                        : "success"
-                  }
-                  leading={
-                    item.status === "flagged" ? (
-                      <WarningAmberIcon sx={{ fontSize: "0.85rem" }} />
-                    ) : item.status === "processing" ? (
-                      <AutorenewIcon
-                        className="pol-spin"
-                        sx={{ fontSize: "0.85rem" }}
-                      />
-                    ) : (
-                      <CheckCircleIcon sx={{ fontSize: "0.85rem" }} />
-                    )
-                  }
-                  title={item.doc}
-                  description={
-                    item.status === "flagged" ? (
-                      <ActivityError message={item.action} t={t} />
-                    ) : (
-                      item.action
-                    )
-                  }
-                  meta={item.time}
-                  trailing={
-                    item.status === "flagged" && onRetry ? (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onRetry(item)}
-                      >
-                        {t("policies.detail.retry", "Retry")}
-                      </Button>
-                    ) : undefined
-                  }
+          <button
+            type="button"
+            className="pol-section-label pol-section-toggle"
+            onClick={() => setActivityOpen((o) => !o)}
+            aria-expanded={activityOpen}
+          >
+            <span>
+              {t("policies.detail.recentActivity", "Recent Activity")}
+            </span>
+            <KeyboardArrowDownIcon
+              className={`pol-section-chevron${activityOpen ? " is-open" : ""}`}
+              fontSize="small"
+            />
+          </button>
+          {activityOpen &&
+            (activityItems.length > 0 ? (
+              <Card padding="none">
+                <div className="pol-activity-list">
+                  {activityItems.map((item, i) => (
+                    <ListRow
+                      key={item.runId ?? `${item.doc}-${item.time}`}
+                      divider={i > 0}
+                      leadingTone={
+                        item.status === "flagged"
+                          ? "warning"
+                          : item.status === "processing"
+                            ? "info"
+                            : "success"
+                      }
+                      leading={
+                        item.status === "flagged" ? (
+                          <WarningAmberIcon sx={{ fontSize: "0.85rem" }} />
+                        ) : item.status === "processing" ? (
+                          <AutorenewIcon
+                            className="pol-spin"
+                            sx={{ fontSize: "0.85rem" }}
+                          />
+                        ) : (
+                          <CheckCircleIcon sx={{ fontSize: "0.85rem" }} />
+                        )
+                      }
+                      title={item.doc}
+                      description={
+                        item.status === "flagged" ? (
+                          <ActivityError message={item.action} t={t} />
+                        ) : (
+                          item.action
+                        )
+                      }
+                      meta={item.time}
+                      trailing={
+                        item.status === "flagged" && onRetry ? (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onRetry(item)}
+                          >
+                            {t("policies.detail.retry", "Retry")}
+                          </Button>
+                        ) : undefined
+                      }
+                    />
+                  ))}
+                </div>
+              </Card>
+            ) : (
+              <Card padding="default">
+                <EmptyState
+                  size="compact"
+                  icon={<DescriptionIcon sx={{ fontSize: "1.5rem" }} />}
+                  title={t(
+                    "policies.detail.noActivityTitle",
+                    "No activity yet",
+                  )}
+                  description={t(
+                    "policies.detail.noActivityDescription",
+                    "Documents will appear here once this policy runs.",
+                  )}
                 />
-              ))}
-            </Card>
-          ) : (
-            <Card padding="default">
-              <EmptyState
-                size="compact"
-                icon={<DescriptionIcon sx={{ fontSize: "1.5rem" }} />}
-                title={t("policies.detail.noActivityTitle", "No activity yet")}
-                description={t(
-                  "policies.detail.noActivityDescription",
-                  "Documents will appear here once this policy runs.",
-                )}
-              />
-            </Card>
-          )}
+              </Card>
+            ))}
         </div>
 
         {/* Stats — one grouped card with divided columns, intentionally

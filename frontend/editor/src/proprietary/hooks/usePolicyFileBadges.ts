@@ -1,4 +1,10 @@
-import { useMemo } from "react";
+import {
+  useMemo,
+  cloneElement,
+  isValidElement,
+  type ReactElement,
+  type ReactNode,
+} from "react";
 import { usePolicyRuns } from "@app/components/policies/policyRunStore";
 import type { PolicyRunRecord } from "@app/components/policies/policyRunStore";
 import { useAllFiles } from "@app/contexts/FileContext";
@@ -18,7 +24,21 @@ const ACCENT_VAR: Record<string, string> = {
   green: "var(--color-green)",
   amber: "var(--color-amber)",
   red: "var(--color-red)",
+  orange: "var(--color-orange)",
 };
+
+/** Glyph size for the file-sidebar policy badge. */
+const BADGE_ICON_SIZE = "0.7rem";
+
+/** Reuse a policy category's own icon at badge size,
+ * so each badge reflects its policy */
+function toBadgeIcon(icon: ReactNode): ReactNode {
+  return isValidElement(icon)
+    ? cloneElement(icon as ReactElement<{ sx?: object }>, {
+        sx: { fontSize: BADGE_ICON_SIZE },
+      })
+    : icon;
+}
 
 /** Minimal provenance shape needed to resolve a file's inherited badges. */
 type LineageStub = {
@@ -58,6 +78,7 @@ export function buildPolicyBadgeMap(
   stubs: ReadonlyArray<LineageStub>,
   labelById: ReadonlyMap<string, string>,
   now: number,
+  iconById?: ReadonlyMap<string, ReactNode>,
 ): Map<string, FileItemPolicyRef[]> {
   // Direct badges: a file that IS a policy run's output.
   const directByFile = new Map<string, FileItemPolicyRef[]>();
@@ -71,6 +92,7 @@ export function buildPolicyBadgeMap(
         list.push({
           id: run.categoryId,
           name,
+          icon: iconById?.get(run.categoryId),
           accentColor: ACCENT_VAR[ROW_ACCENT[run.categoryId] ?? "blue"],
           recent,
         });
@@ -121,9 +143,17 @@ export function usePolicyFileBadges(): Map<string, FileItemPolicyRef[]> {
   const runs = usePolicyRuns();
   const { fileStubs } = useAllFiles();
   return useMemo(() => {
-    const labelById = new Map(
-      loadPolicyCatalog().categories.map((c) => [c.id, c.label]),
+    const categories = loadPolicyCatalog().categories;
+    const labelById = new Map(categories.map((c) => [c.id, c.label]));
+    const iconById = new Map<string, ReactNode>(
+      categories.map((c) => [c.id, toBadgeIcon(c.icon)]),
     );
-    return buildPolicyBadgeMap(runs, fileStubs, labelById, Date.now());
+    return buildPolicyBadgeMap(
+      runs,
+      fileStubs,
+      labelById,
+      Date.now(),
+      iconById,
+    );
   }, [runs, fileStubs]);
 }

@@ -22,6 +22,7 @@ export const STATUS_LABEL: Record<PolicyRowStatus, string> = {
  */
 export const ROW_ACCENT: Record<string, IconBadgeAccent> = {
   ingestion: "blue",
+  classification: "orange",
   security: "purple",
   compliance: "green",
   routing: "amber",

@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Menu, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
@@ -135,6 +135,8 @@ export interface FileItemFolderRef {
 export interface FileItemPolicyRef {
   id: string;
   name: string;
+  /** Badge glyph — the policy's own icon; falls back to a shield. */
+  icon?: ReactNode;
   /** CSS colour for the badge (matches the policy's accent). */
   accentColor: string;
   /** True only just after the policy was applied — drives the one-off glow, so
@@ -313,7 +315,9 @@ export function FileItem({
                       className="file-sidebar-policy-badge"
                       style={{ color: policy.accentColor }}
                     >
-                      <ShieldOutlinedIcon sx={{ fontSize: "0.7rem" }} />
+                      {policy.icon ?? (
+                        <ShieldOutlinedIcon sx={{ fontSize: "0.7rem" }} />
+                      )}
                     </span>
                   </Tooltip>
                 ))}
