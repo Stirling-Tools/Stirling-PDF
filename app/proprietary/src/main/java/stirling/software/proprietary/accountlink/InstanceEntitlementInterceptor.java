@@ -3,6 +3,7 @@ package stirling.software.proprietary.accountlink;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -10,6 +11,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.proprietary.billing.BillingCategory;
+import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 
 /**
  * Request-time gate for combined-billing "Mode A". Runs before billable (AI / automation) work and
@@ -41,7 +45,13 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
             throws Exception {
         GateDecision decision;
         try {
-            decision = gate.evaluate(BillableOperationClassifier.isBillable(request));
+            // API-key tool calls are billable too (category API), so resolve the auth principal and
+            // gate on "not a manual UI tool". Same categorisation the meter will use.
+            boolean apiKey =
+                    SecurityContextHolder.getContext().getAuthentication()
+                            instanceof ApiKeyAuthenticationToken;
+            BillingCategory category = BillableOperationClassifier.categorize(request, apiKey);
+            decision = gate.evaluate(category != BillingCategory.BYPASSED);
         } catch (RuntimeException e) {
             // Fail open: an inability to resolve entitlement (e.g. a DB or SaaS blip) must never
             // turn into a hard block on billable work.
