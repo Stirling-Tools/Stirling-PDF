@@ -44,7 +44,6 @@ def test_classify_returns_camel_cased_result(classification_client: TestClient) 
     )
     assert response.status_code == 200
     body = response.json()
-    assert body["outcome"] == "classification"
     assert body["category"] == "contract"
     assert body["docType"] == "nda"
     assert body["typeConfidence"] == 0.96

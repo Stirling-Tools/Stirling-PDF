@@ -34,7 +34,15 @@ const outPath = resolve(
   "engine/src/stirling/agents/default_taxonomy.generated.json",
 );
 
-const json = JSON.stringify(DEFAULT_CLASSIFICATION_TAXONOMY, null, 2) + "\n";
+const NOTICE =
+  "AUTO-GENERATED from frontend/editor/src/proprietary/data/classificationTaxonomy.ts " +
+  "by editor/scripts/generate-taxonomy.mts — do NOT edit by hand; run `task frontend:taxonomy`.";
+const json =
+  JSON.stringify(
+    { _generated: NOTICE, ...DEFAULT_CLASSIFICATION_TAXONOMY },
+    null,
+    2,
+  ) + "\n";
 
 if (process.argv.includes("--check")) {
   const current = existsSync(outPath) ? readFileSync(outPath, "utf8") : "";

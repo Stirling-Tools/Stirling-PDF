@@ -1,7 +1,5 @@
 package stirling.software.proprietary.controller.api;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -18,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Hidden;
@@ -152,8 +152,8 @@ public class ClassifyTagController {
 
     /**
      * Override point for a future per-org / DB-configured taxonomy: resolve the caller's taxonomy
-     * here and return it (engine shape) to classify against; {@code null} falls back to the engine's
-     * generated default. Always null today.
+     * here and return it (engine shape) to classify against; {@code null} falls back to the
+     * engine's generated default. Always null today.
      */
     private JsonNode resolveTaxonomyOverride() {
         return null;

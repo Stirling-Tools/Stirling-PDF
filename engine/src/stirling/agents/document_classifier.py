@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import logging
 from pathlib import Path
 
@@ -36,7 +37,12 @@ WINDOW_PAGES = 2
 # `task frontend:taxonomy` — edit that file, not this JSON. Validated into the
 # typed contract on import, so a malformed entry fails fast.
 _DEFAULT_TAXONOMY_PATH = Path(__file__).with_name("default_taxonomy.generated.json")
-DEFAULT_TAXONOMY = ClassificationTaxonomy.model_validate_json(_DEFAULT_TAXONOMY_PATH.read_text(encoding="utf-8"))
+# The file carries an underscore-prefixed "_generated" notice (JSON has no
+# comments); drop meta keys before validating against the strict contract.
+_raw_taxonomy = json.loads(_DEFAULT_TAXONOMY_PATH.read_text(encoding="utf-8"))
+DEFAULT_TAXONOMY = ClassificationTaxonomy.model_validate(
+    {key: value for key, value in _raw_taxonomy.items() if not key.startswith("_")}
+)
 
 
 _SYSTEM_PROMPT = (

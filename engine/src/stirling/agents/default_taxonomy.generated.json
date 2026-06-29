@@ -1,4 +1,5 @@
 {
+  "_generated": "AUTO-GENERATED from frontend/editor/src/proprietary/data/classificationTaxonomy.ts by editor/scripts/generate-taxonomy.mts — do NOT edit by hand; run `task frontend:taxonomy`.",
   "categories": [
     {
       "id": "invoice",

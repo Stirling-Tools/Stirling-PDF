@@ -1,12 +1,9 @@
 from __future__ import annotations
 
-from typing import Literal
-
 from pydantic import Field
 
 from stirling.models import ApiModel
 
-from .common import WorkflowOutcome
 from .documents import PageText
 
 
@@ -55,10 +52,11 @@ class DocumentClassificationResponse(ApiModel):
 
     ``category`` and ``doc_type`` are ids drawn from the taxonomy, or the
     sentinel ``"unknown"`` when the model's answer fell outside it. ``tags`` are
-    the subset of the model's tags that exist in the taxonomy.
+    the subset of the model's tags that exist in the taxonomy. This is a plain
+    answer from a dedicated endpoint — it carries no ``outcome`` discriminator
+    (it isn't one of the orchestrator's WorkflowOutcome-routed union responses).
     """
 
-    outcome: Literal[WorkflowOutcome.CLASSIFICATION] = WorkflowOutcome.CLASSIFICATION
     category: str
     doc_type: str
     type_confidence: float = Field(ge=0.0, le=1.0)

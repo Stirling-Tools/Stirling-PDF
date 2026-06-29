@@ -4298,10 +4298,6 @@ desc = "Compares and shows the differences between 2 PDF Documents"
 tags = "difference,compare,diff,compare PDFs,compare documents,find differences,show differences,changes,what changed,track changes,revisions,version compare,side by side,contrast,delta"
 title = "Compare"
 
-[home.classify]
-desc = "Identify a document's type and tag its metadata."
-title = "Classify"
-
 [home.compress]
 desc = "Compress PDFs to reduce their file size."
 tags = "shrink,reduce,optimize,compress,smaller,downsize,file size,reduce size,minimize,make smaller,decrease size,optimize size"
