@@ -8,10 +8,38 @@ import { initialize, mswLoader } from "msw-storybook-addon";
 import { MemoryRouter } from "react-router-dom";
 import { withThemeByDataAttribute } from "@storybook/addon-themes";
 import { MantineProvider } from "@mantine/core";
+import i18n from "i18next";
+import { initReactI18next } from "react-i18next";
+import { parse } from "smol-toml";
 
 // Reference React so the import isn't dropped as unused by the bundler — the
 // classic runtime needs it present even though it's not named in the JSX.
 void React;
+
+// Import translation files as raw strings so Vite bundles them at build time.
+// This avoids HTTP fetches in Storybook (no backend URL needed) and sidesteps
+// the static-dir conflict that would arise from both portal and editor serving
+// files at the same /locales/ path.
+// @ts-ignore — ?raw is a Vite-only import suffix; tsc doesn't know the type.
+import portalEnUS from "../portal/public/locales/en-US/translation.toml?raw";
+// @ts-ignore
+import editorEnUS from "../editor/public/locales/en-US/translation.toml?raw";
+
+i18n.use(initReactI18next).init({
+  lng: "en-US",
+  fallbackLng: "en-US",
+  resources: {
+    "en-US": {
+      translation: {
+        ...(parse(portalEnUS as string) as Record<string, unknown>),
+        ...(parse(editorEnUS as string) as Record<string, unknown>),
+      },
+    },
+  },
+  interpolation: { escapeValue: false },
+  // Resources are bundled synchronously — no async backend fetch.
+  react: { useSuspense: false },
+});
 
 import { TierProvider, type Tier } from "@portal/contexts/TierContext";
 import { LinkProvider, type LinkState } from "@portal/contexts/LinkContext";
