@@ -1211,14 +1211,14 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
           </Text>
           <Group justify="flex-end" gap="sm">
             <Button
-              variant="outlined"
+              variant="secondary"
               onClick={() => resolveDeleteChoice("cancel")}
             >
               {t("cancel", "Cancel")}
             </Button>
             {!deletePromptIsServerOnly && (
               <Button
-                variant="outlined"
+                variant="secondary"
                 onClick={() => resolveDeleteChoice("local")}
               >
                 {t("fileManager.removeLocalOnly", "This device only")}
@@ -1226,7 +1226,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
             )}
             {deletePromptCanLeaveShare && (
               <Button
-                variant="outlined"
+                variant="secondary"
                 onClick={() => resolveDeleteChoice("leave")}
               >
                 {t("fileManager.leaveShare", "Remove from my list")}
@@ -1235,7 +1235,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
             {deletePromptFile?.remoteOwnedByCurrentUser !== false && (
               <>
                 <Button
-                  variant="outlined"
+                  variant="secondary"
                   onClick={() => resolveDeleteChoice("server")}
                 >
                   {t("fileManager.removeServerOnly", "Server only")}

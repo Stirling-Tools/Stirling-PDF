@@ -92,7 +92,7 @@ export function SettingsShell({
             {headerActions}
             {onClose && (
               <Button
-                variant="ghost"
+                variant="tertiary"
                 shape="circle"
                 className="sui-settings-shell__close"
                 onClick={onClose}

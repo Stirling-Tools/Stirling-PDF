@@ -14,7 +14,7 @@ export function NonPdfBanner({ onConvertToPdf }: NonPdfBannerProps) {
   return (
     <Button
       size="sm"
-      variant="outlined"
+      variant="secondary"
       accent="warning"
       leftSection={<PictureAsPdfIcon style={{ fontSize: "0.9rem" }} />}
       onClick={onConvertToPdf}

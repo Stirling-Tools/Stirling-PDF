@@ -84,7 +84,7 @@ export default function EditTableOfContentsSettings({
       </Stack>
       <Stack gap="sm">
         <DSButton
-          variant="outlined"
+          variant="secondary"
           leftSection={<LocalIcon icon="folder-rounded" />}
           onClick={onSelectFiles}
           fullWidth
@@ -105,7 +105,7 @@ export default function EditTableOfContentsSettings({
           disabled={Boolean(selectedFileName)}
         >
           <DSButton
-            variant="outlined"
+            variant="secondary"
             leftSection={<LocalIcon icon="picture-as-pdf-rounded" />}
             onClick={onLoadFromPdf}
             loading={isLoading}
@@ -144,7 +144,7 @@ export default function EditTableOfContentsSettings({
           disabled={canReadClipboard}
         >
           <DSButton
-            variant="outlined"
+            variant="secondary"
             leftSection={<LocalIcon icon="content-paste-rounded" />}
             onClick={onImportClipboard}
             disabled={disabled || !canReadClipboard}
@@ -174,7 +174,7 @@ export default function EditTableOfContentsSettings({
       </Stack>
       <Stack gap="sm">
         <DSButton
-          variant="outlined"
+          variant="secondary"
           leftSection={<LocalIcon icon="download-rounded" />}
           onClick={onExportJson}
           disabled={disabled || bookmarks.length === 0}
@@ -194,7 +194,7 @@ export default function EditTableOfContentsSettings({
           disabled={canWriteClipboard}
         >
           <DSButton
-            variant="outlined"
+            variant="secondary"
             leftSection={<LocalIcon icon="content-copy-rounded" />}
             onClick={onExportClipboard}
             disabled={disabled || bookmarks.length === 0 || !canWriteClipboard}

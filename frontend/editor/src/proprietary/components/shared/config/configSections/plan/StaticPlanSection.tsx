@@ -215,7 +215,7 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
                   if (plan.id === "free") {
                     return (
                       <Button
-                        variant="filled"
+                        variant="primary"
                         disabled
                         fullWidth
                         className="plan-button"
@@ -232,7 +232,7 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
                     if (currentTier === "free") {
                       return (
                         <Button
-                          variant="filled"
+                          variant="primary"
                           fullWidth
                           onClick={() => handleOpenCheckout("server", false)}
                           className="plan-button"
@@ -244,7 +244,7 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
                     if (isCurrent) {
                       return (
                         <Button
-                          variant="filled"
+                          variant="primary"
                           fullWidth
                           onClick={handleManageBilling}
                           className="plan-button"
@@ -256,7 +256,7 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
                     if (isDowngradePlan) {
                       return (
                         <Button
-                          variant="filled"
+                          variant="primary"
                           disabled
                           fullWidth
                           className="plan-button"
@@ -280,7 +280,7 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
                           withArrow
                         >
                           <Button
-                            variant="filled"
+                            variant="primary"
                             disabled
                             fullWidth
                             className="plan-button"
@@ -297,7 +297,7 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
                       // TODO: Re-enable checkout flow when account syncing is ready
                       // return (
                       //   <Button
-                      //     variant="filled"
+                      //     variant="primary"
                       //     fullWidth
                       //     onClick={() => handleOpenCheckout('enterprise', true)}
                       //     className="plan-button"
@@ -307,7 +307,7 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
                       // );
                       return (
                         <Button
-                          variant="filled"
+                          variant="primary"
                           fullWidth
                           disabled
                           className="plan-button"
@@ -319,7 +319,7 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
                     if (isCurrent) {
                       return (
                         <Button
-                          variant="filled"
+                          variant="primary"
                           fullWidth
                           onClick={handleManageBilling}
                           className="plan-button"
@@ -340,7 +340,7 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
         {/* Feature Comparison Toggle */}
         <div style={{ textAlign: "center", marginTop: "1rem" }}>
           <Button
-            variant="ghost"
+            variant="tertiary"
             onClick={() => setShowComparison(!showComparison)}
           >
             {showComparison

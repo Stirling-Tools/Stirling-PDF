@@ -96,7 +96,7 @@ export function FolderNameDialog({
           </Alert>
         )}
         <Group justify="flex-end">
-          <Button variant="outlined" onClick={onClose}>
+          <Button variant="secondary" onClick={onClose}>
             {t("filesPage.folderName.cancel", "Cancel")}
           </Button>
           <Button

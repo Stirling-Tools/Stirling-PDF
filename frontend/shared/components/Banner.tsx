@@ -47,7 +47,7 @@ export function Banner({
       {action && <div className="sui-banner__action">{action}</div>}
       {onDismiss && (
         <Button
-          variant="ghost"
+          variant="tertiary"
           shape="circle"
           className="sui-banner__close"
           onClick={onDismiss}

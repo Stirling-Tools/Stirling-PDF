@@ -129,11 +129,8 @@ function ReviewStepContent<TParams = unknown>({
         >
           <Button
             leftSection={<UndoIcon />}
-            variant="outlined"
-            style={{
-              "--sui-btn-fg": "var(--mantine-color-gray-6)",
-              "--sui-btn-bd": "var(--mantine-color-gray-6)",
-            }}
+            variant="secondary"
+            accent="neutral"
             onClick={handleUndo}
             fullWidth
           >

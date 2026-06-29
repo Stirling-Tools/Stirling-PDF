@@ -71,10 +71,10 @@ export const WithFooter: Story = {
             subtitle="COI Compliance · us-east-1"
             footer={
               <>
-                <Button variant="ghost" onClick={() => setOpen(false)}>
+                <Button variant="tertiary" onClick={() => setOpen(false)}>
                   Close
                 </Button>
-                <Button variant="outlined">Edit composition</Button>
+                <Button variant="secondary">Edit composition</Button>
                 <Button>View runs</Button>
               </>
             }

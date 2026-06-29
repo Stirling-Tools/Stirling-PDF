@@ -350,7 +350,7 @@ export function FileItem({
           )}
         </div>
         <Button
-          variant="ghost"
+          variant="tertiary"
           size="sm"
           className="file-sidebar-eye-btn"
           onClick={(e) => {
@@ -382,7 +382,7 @@ export function FileItem({
           <Menu position="bottom-end" withinPortal shadow="md" width={190}>
             <Menu.Target>
               <Button
-                variant="ghost"
+                variant="tertiary"
                 size="sm"
                 className="file-sidebar-kebab-btn"
                 onClick={(e) => e.stopPropagation()}

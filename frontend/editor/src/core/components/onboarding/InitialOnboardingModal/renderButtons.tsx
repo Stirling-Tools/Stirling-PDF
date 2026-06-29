@@ -62,14 +62,10 @@ export function SlideButtons({
         <Button
           key={button.key}
           onClick={() => onAction(button.action)}
-          variant="outlined"
+          variant="secondary"
+          accent="neutral"
           disabled={disabled}
           aria-label={t("onboarding.buttons.back", "Back")}
-          style={{
-            "--sui-btn-bg": "var(--onboarding-secondary-button-bg)",
-            "--sui-btn-fg": "var(--onboarding-secondary-button-text)",
-            "--sui-btn-bd": "var(--onboarding-secondary-button-border)",
-          }}
           leftSection={
             button.icon === "chevron-left" ? (
               <ChevronLeftIcon fontSize="small" />
@@ -87,18 +83,8 @@ export function SlideButtons({
         key={button.key}
         onClick={() => onAction(button.action)}
         disabled={disabled}
-        style={
-          variant === "primary"
-            ? {
-                "--sui-btn-bg": "var(--onboarding-primary-button-bg)",
-                "--sui-btn-fg": "var(--onboarding-primary-button-text)",
-              }
-            : {
-                "--sui-btn-bg": "var(--onboarding-secondary-button-bg)",
-                "--sui-btn-fg": "var(--onboarding-secondary-button-text)",
-                "--sui-btn-bd": "var(--onboarding-secondary-button-border)",
-              }
-        }
+        variant={variant === "primary" ? "primary" : "secondary"}
+        accent="neutral"
       >
         {label}
       </Button>

@@ -286,7 +286,7 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
         {/* Advanced Settings - Optional */}
         <div>
           <Button
-            variant="ghost"
+            variant="tertiary"
             size="sm"
             onClick={() => setShowAdvanced(!showAdvanced)}
             disabled={disabled || signing}
@@ -331,7 +331,7 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
         </div>
 
         <Group justify="space-between" wrap="wrap" mt="md">
-          <Button variant="outlined" onClick={onClose} disabled={signing}>
+          <Button variant="secondary" onClick={onClose} disabled={signing}>
             {t("cancel", "Cancel")}
           </Button>
           <Button

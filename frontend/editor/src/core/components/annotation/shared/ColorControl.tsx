@@ -67,15 +67,11 @@ export function ColorControl({
         <Tooltip label={label}>
           <Button
             aria-label={label}
-            variant="outlined"
+            variant="secondary"
+            accent="neutral"
             size="md"
             onClick={() => setOpened(!opened)}
             disabled={disabled}
-            style={{
-              "--sui-btn-bg": "var(--bg-raised)",
-              "--sui-btn-fg": "var(--text-secondary)",
-              "--sui-btn-bd": "var(--border-default)",
-            }}
             leftSection={<ColorSwatch color={localColor} size={18} />}
           />
         </Tooltip>
@@ -112,10 +108,10 @@ export function ColorControl({
                     "color.eyeDropper.tooltip",
                     "Pick colour from screen",
                   )}
-                  variant="ghost"
+                  variant="tertiary"
+                  accent="neutral"
                   size="sm"
                   onClick={handleEyeDropper}
-                  style={{ "--sui-btn-fg": "var(--text-primary)" }}
                   leftSection={<ColorizeIcon style={{ fontSize: 16 }} />}
                 />
               </Tooltip>

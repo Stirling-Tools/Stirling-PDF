@@ -139,7 +139,7 @@ export default function OnboardingModalSlide({
           {allowDismiss && (
             <Button
               onClick={onSkip}
-              variant="ghost"
+              variant="tertiary"
               aria-label="Close"
               leftSection={<>&times;</>}
               style={{

@@ -68,7 +68,7 @@ export const DesktopInstallTitle: React.FC<DesktopInstallTitleProps> = ({
       <Menu position="bottom" offset={5} zIndex={10000}>
         <Menu.Target>
           <Button
-            variant="ghost"
+            variant="tertiary"
             size="sm"
             aria-label={t(
               "onboarding.desktopInstall.selectOs",

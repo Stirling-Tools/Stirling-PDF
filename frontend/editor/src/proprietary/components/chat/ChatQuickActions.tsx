@@ -80,7 +80,7 @@ function WorkbenchFilePills({
           </span>
           <Button
             type="button"
-            variant="ghost"
+            variant="tertiary"
             className="chat-file-pill__remove"
             onClick={() => onRemove(stub.id)}
             aria-label={removeLabel(stub.name)}

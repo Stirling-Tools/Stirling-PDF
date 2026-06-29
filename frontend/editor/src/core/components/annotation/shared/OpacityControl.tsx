@@ -24,15 +24,11 @@ export function OpacityControl({
         <Tooltip label={t("annotation.opacity", "Opacity")}>
           <Button
             aria-label={t("annotation.opacity", "Opacity")}
-            variant="outlined"
+            variant="secondary"
+            accent="neutral"
             size="md"
             onClick={() => setOpened(!opened)}
             disabled={disabled}
-            style={{
-              "--sui-btn-bg": "var(--bg-raised)",
-              "--sui-btn-fg": "var(--text-secondary)",
-              "--sui-btn-bd": "var(--border-default)",
-            }}
             leftSection={<OpacityIcon style={{ fontSize: 18 }} />}
           />
         </Tooltip>

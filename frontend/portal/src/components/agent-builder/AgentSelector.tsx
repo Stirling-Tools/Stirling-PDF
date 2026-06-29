@@ -24,7 +24,7 @@ export function AgentSelector({
       {agents.map((a) => (
         <Button
           key={a.id}
-          variant="ghost"
+          variant="tertiary"
           justify="start"
           fullWidth
           className={

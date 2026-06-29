@@ -57,14 +57,13 @@ export default function ApiKeySection({
           </Box>
           <Button
             size="sm"
-            variant="outlined"
+            variant="secondary"
+            accent="neutral"
             onClick={() => onCopy(publicKey, "public")}
             leftSection={
               <LocalIcon icon="content-copy-rounded" width={14} height={14} />
             }
             style={{
-              "--sui-btn-bg": "var(--api-keys-button-bg)",
-              "--sui-btn-fg": "var(--api-keys-button-color)",
               marginLeft: 12,
             }}
             aria-label={t("config.apiKeys.copyKeyAriaLabel", "Copy API key")}
@@ -75,14 +74,13 @@ export default function ApiKeySection({
           </Button>
           <Button
             size="sm"
-            variant="outlined"
+            variant="secondary"
+            accent="neutral"
             onClick={onRefresh}
             leftSection={
               <LocalIcon icon="refresh-rounded" width={14} height={14} />
             }
             style={{
-              "--sui-btn-bg": "var(--api-keys-button-bg)",
-              "--sui-btn-fg": "var(--api-keys-button-color)",
               marginLeft: 8,
             }}
             disabled={disabled}

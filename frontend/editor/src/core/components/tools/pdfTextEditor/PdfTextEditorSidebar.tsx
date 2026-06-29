@@ -148,7 +148,7 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
                   pinOnClick
                 >
                   <Button
-                    variant="ghost"
+                    variant="tertiary"
                     size="sm"
                     aria-label={t("pdfTextEditor.title", "PDF Text Editor")}
                     leftSection={
@@ -198,7 +198,7 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
                       position="top"
                     >
                       <Button
-                        variant="ghost"
+                        variant="tertiary"
                         size="sm"
                         aria-label={t(
                           "pdfTextEditor.options.autoScaleText.title",
@@ -322,7 +322,7 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
                       position="top"
                     >
                       <Button
-                        variant="ghost"
+                        variant="tertiary"
                         size="sm"
                         aria-label={t(
                           "pdfTextEditor.options.forceSingleElement.title",
@@ -375,7 +375,7 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
           <Menu position="bottom-end" withinPortal>
             <Menu.Target>
               <Button
-                variant="outlined"
+                variant="secondary"
                 size="lg"
                 disabled={!hasDocument || isConverting}
                 aria-label={t(
@@ -420,7 +420,7 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
             )}
           </Text>
           <Group justify="flex-end" gap="sm">
-            <Button variant="outlined" onClick={handleCancelModeChange}>
+            <Button variant="secondary" onClick={handleCancelModeChange}>
               {t("pdfTextEditor.modeChange.cancel", "Cancel")}
             </Button>
             <Button accent="danger" onClick={handleConfirmModeChange}>

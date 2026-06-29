@@ -479,7 +479,7 @@ export function WatchedFolderManagementModal({
                           </Stack>
                           <Button
                             size="sm"
-                            variant="ghost"
+                            variant="tertiary"
                             onClick={async () => {
                               try {
                                 const handle = await (
@@ -506,7 +506,7 @@ export function WatchedFolderManagementModal({
                           {inputDirName && (
                             <Button
                               size="sm"
-                              variant="ghost"
+                              variant="tertiary"
                               accent="danger"
                               onClick={() => {
                                 pendingInputDirHandle.current = null;
@@ -576,7 +576,7 @@ export function WatchedFolderManagementModal({
                       >
                         <Button
                           size="sm"
-                          variant="ghost"
+                          variant="tertiary"
                           disabled={!canWriteLocalFolder}
                           onClick={async () => {
                             try {
@@ -602,7 +602,7 @@ export function WatchedFolderManagementModal({
                       {outputDirName && (
                         <Button
                           size="sm"
-                          variant="ghost"
+                          variant="tertiary"
                           accent="danger"
                           onClick={() => {
                             pendingDirHandle.current = null;
@@ -620,7 +620,7 @@ export function WatchedFolderManagementModal({
               {/* ── Advanced (collapsible) ── */}
               <div>
                 <Button
-                  variant="ghost"
+                  variant="tertiary"
                   onClick={() => setShowAdvanced((v) => !v)}
                   style={{
                     display: "flex",
@@ -826,11 +826,11 @@ export function WatchedFolderManagementModal({
               </Alert>
             )}
             <Group justify="flex-end" gap="sm">
-              <Button variant="ghost" size="sm" onClick={handleClose}>
+              <Button variant="tertiary" size="sm" onClick={handleClose}>
                 {t("cancel", "Cancel")}
               </Button>
               <Button
-                variant="filled"
+                variant="primary"
                 size="sm"
                 onClick={handleSave}
                 loading={saving}

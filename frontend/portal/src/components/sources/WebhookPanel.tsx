@@ -58,10 +58,10 @@ export function WebhookPanel({ d }: { d: WebhookDetail }) {
       {/* TODO(backend): wire to POST /v1/sources/{id}/test-event and
           GET /v1/sources/{id}/signing-secret — currently inert demo controls. */}
       <div className="portal-sources__detail-actions">
-        <Button size="sm" variant="outlined">
+        <Button size="sm" variant="secondary">
           {t("sources.webhook.sendTestEvent", "Send test event")}
         </Button>
-        <Button size="sm" variant="ghost">
+        <Button size="sm" variant="tertiary">
           {t("sources.webhook.viewSigningSecret")}
         </Button>
       </div>

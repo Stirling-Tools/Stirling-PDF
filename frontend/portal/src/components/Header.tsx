@@ -20,7 +20,7 @@ function ThemeToggle() {
   const { t } = useTranslation();
   return (
     <Button
-      variant="ghost"
+      variant="tertiary"
       className="portal-header__icon-btn"
       onClick={toggle}
       aria-label={
@@ -47,7 +47,7 @@ function TierSwitcher() {
     <Dropdown.Root align="end">
       <Dropdown.Trigger>
         <Button
-          variant="ghost"
+          variant="tertiary"
           size="sm"
           className="portal-header__tier-btn"
           leftSection={
@@ -123,7 +123,7 @@ export function Header() {
       </div>
 
       <Button
-        variant="ghost"
+        variant="tertiary"
         className="portal-header__search"
         aria-label={t("shell.header.search")}
         onClick={openSearch}

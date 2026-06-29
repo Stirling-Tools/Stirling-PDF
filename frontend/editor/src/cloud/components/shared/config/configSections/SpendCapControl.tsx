@@ -199,7 +199,7 @@ const SpendCapControl: React.FC<SpendCapControlProps> = ({
 
         {onSave && (
           <Button
-            variant="outlined"
+            variant="secondary"
             size="sm"
             className="scc-row__spacer"
             disabled={!dirty || saving}

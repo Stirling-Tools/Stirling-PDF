@@ -533,7 +533,7 @@ export function CommentsSidebar({
         {totalCount > 0 && (
           <Tooltip label={t("viewer.comments.addComment", "Add comment")}>
             <Button
-              variant="ghost"
+              variant="tertiary"
               size="sm"
               aria-label={t("viewer.comments.addComment", "Add comment")}
               onClick={handleAddComment}
@@ -561,7 +561,7 @@ export function CommentsSidebar({
                 )}
               </Text>
               <Button
-                variant="outlined"
+                variant="secondary"
                 size="sm"
                 onClick={handleAddComment}
                 leftSection={
@@ -661,7 +661,7 @@ export function CommentsSidebar({
                                 )}
                               >
                                 <Button
-                                  variant="ghost"
+                                  variant="tertiary"
                                   size="sm"
                                   aria-label={t(
                                     "viewer.comments.locateAnnotation",
@@ -684,7 +684,7 @@ export function CommentsSidebar({
                                     )}
                                   >
                                     <Button
-                                      variant="ghost"
+                                      variant="tertiary"
                                       size="sm"
                                       aria-label={t(
                                         "viewer.comments.moreActions",
@@ -1011,7 +1011,7 @@ export function CommentsSidebar({
           )}
         </Text>
         <Group justify="flex-end" gap="sm">
-          <Button variant="outlined" onClick={handleRemoveFromSidebar}>
+          <Button variant="secondary" onClick={handleRemoveFromSidebar}>
             {t("viewer.comments.removeCommentOnly", "Remove comment only")}
           </Button>
           <Button accent="danger" onClick={handleDeleteAnnotation}>

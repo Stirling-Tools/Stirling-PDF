@@ -438,7 +438,7 @@ const SignSettings = ({
     const button = (
       <Button
         size="sm"
-        variant="outlined"
+        variant="secondary"
         accent={isSaved ? "success" : undefined}
         onClick={() => onClick(scope)}
         disabled={
@@ -1123,7 +1123,7 @@ const SignSettings = ({
       isPlacementMode ? (
         <Tooltip label={translate("mode.pause", "Pause placement")}>
           <Button
-            variant="outlined"
+            variant="secondary"
             aria-label={translate("mode.pause", "Pause placement")}
             onClick={handlePausePlacement}
             disabled={disabled || !onDeactivateSignature}
@@ -1137,7 +1137,7 @@ const SignSettings = ({
       ) : (
         <Tooltip label={translate("mode.resume", "Resume placement")}>
           <Button
-            variant="outlined"
+            variant="secondary"
             aria-label={translate("mode.resume", "Resume placement")}
             onClick={handleResumePlacement}
             disabled={

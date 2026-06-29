@@ -83,7 +83,7 @@ export function GuestUserBanner({ className = "" }: GuestUserBannerProps) {
         </div>
         <div className="guest-banner-actions">
           <Button
-            variant="ghost"
+            variant="tertiary"
             onClick={handleDismiss}
             aria-label={t("guestBanner.dismiss", "Dismiss banner")}
             leftSection={<CloseIcon className="guest-banner-icon" />}

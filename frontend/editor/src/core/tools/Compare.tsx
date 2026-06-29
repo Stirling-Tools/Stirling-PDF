@@ -366,13 +366,13 @@ const Compare = (props: BaseToolProps) => {
             }}
           >
             <Button
-              variant="ghost"
+              variant="tertiary"
+              accent="neutral"
               size="sm"
               style={{
                 position: "absolute",
                 top: "0.5rem",
                 right: "0.5rem",
-                "--sui-btn-fg": "var(--mantine-color-gray-8)",
               }}
               onClick={() => clearSlot(role)}
               aria-label={t("compare.clearSlot", "Remove file")}
@@ -476,7 +476,7 @@ const Compare = (props: BaseToolProps) => {
           <Stack gap="sm" className="compare-step-selection">
             <div className="compare-step-selection__clear-row">
               <Button
-                variant="ghost"
+                variant="tertiary"
                 size="sm"
                 onClick={() => setClearConfirmOpen(true)}
                 disabled={!hasAnySelected}
@@ -539,7 +539,7 @@ const Compare = (props: BaseToolProps) => {
                 </Text>
                 <Group justify="flex-end" gap="sm">
                   <Button
-                    variant="outlined"
+                    variant="secondary"
                     onClick={() => setSwapConfirmOpen(false)}
                   >
                     {t("cancel", "Cancel")}
@@ -572,7 +572,7 @@ const Compare = (props: BaseToolProps) => {
                 </Text>
                 <Group justify="flex-end" gap="sm">
                   <Button
-                    variant="outlined"
+                    variant="secondary"
                     onClick={() => setClearConfirmOpen(false)}
                   >
                     {t("cancel", "Cancel")}

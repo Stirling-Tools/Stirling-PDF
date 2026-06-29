@@ -167,12 +167,12 @@ export function SingleOpRunner({
               </StatusBadge>
             )}
           </div>
-          <Button variant="ghost" onClick={onClose}>
+          <Button variant="tertiary" onClick={onClose}>
             {t("opRunner.action.close")}
           </Button>
           {phase === "done" ? (
             <>
-              <Button variant="outlined" onClick={reset}>
+              <Button variant="secondary" onClick={reset}>
                 {t("opRunner.action.runAgain")}
               </Button>
               <Button
@@ -238,7 +238,7 @@ export function SingleOpRunner({
               )}
             </div>
             <Button
-              variant="ghost"
+              variant="tertiary"
               size="sm"
               className="portal-runner__sample-btn"
               onClick={pickSample}
@@ -276,7 +276,7 @@ export function SingleOpRunner({
               {ops?.map((op) => (
                 <Button
                   key={op.id}
-                  variant="ghost"
+                  variant="tertiary"
                   className={
                     "portal-runner__op" +
                     (selectedOpId === op.id ? " is-selected" : "")

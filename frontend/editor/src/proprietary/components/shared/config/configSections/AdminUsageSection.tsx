@@ -293,7 +293,7 @@ const AdminUsageSection: React.FC = () => {
             </Text>
             <Group gap="sm">
               <Button
-                variant="outlined"
+                variant="secondary"
                 size="sm"
                 onClick={() => navigate("/settings/adminSecurity")}
                 rightSection={
@@ -307,7 +307,7 @@ const AdminUsageSection: React.FC = () => {
                 {t("usage.configureSettings", "Configure Analytics Settings")}
               </Button>
               <Button
-                variant="outlined"
+                variant="secondary"
                 size="sm"
                 onClick={() => navigate("/settings/adminSecurity#auditLogging")}
                 rightSection={
@@ -354,7 +354,7 @@ const AdminUsageSection: React.FC = () => {
                 ]}
               />
               <Button
-                variant="outlined"
+                variant="secondary"
                 leftSection={
                   <LocalIcon icon="refresh" width="1rem" height="1rem" />
                 }

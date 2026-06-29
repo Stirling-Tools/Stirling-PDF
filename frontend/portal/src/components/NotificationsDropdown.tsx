@@ -46,7 +46,7 @@ export function NotificationsDropdown() {
     <Dropdown.Root align="end">
       <Dropdown.Trigger>
         <Button
-          variant="ghost"
+          variant="tertiary"
           leftSection={<BellIcon size={16} />}
           className="portal-header__icon-btn portal-header__icon-btn--badge"
           aria-label={
@@ -116,7 +116,7 @@ export function NotificationsDropdown() {
         )}
         <div className="portal-notif__footer">
           <Button
-            variant="ghost"
+            variant="tertiary"
             size="sm"
             className="portal-notif__action"
             onClick={onMarkAllRead}
@@ -124,7 +124,7 @@ export function NotificationsDropdown() {
           >
             {t("notifications.markAllRead")}
           </Button>
-          <Button variant="ghost" size="sm" className="portal-notif__action">
+          <Button variant="tertiary" size="sm" className="portal-notif__action">
             {t("notifications.viewAll")}
           </Button>
         </div>

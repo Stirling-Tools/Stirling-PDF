@@ -783,7 +783,7 @@ const SignPopout = ({
       {/* Header */}
       <div className="quick-access-popout__header">
         <Button
-          variant="ghost"
+          variant="tertiary"
           className={`quick-access-popout__back ${showCreatePanel ? "is-visible" : ""}`}
           onClick={() => setShowCreatePanel(false)}
           aria-label={t("quickAccess.back", "Back")}
@@ -803,7 +803,7 @@ const SignPopout = ({
         <div className="quick-access-popout__header-actions">
           {!showCreatePanel && (
             <Button
-              variant="ghost"
+              variant="tertiary"
               className="quick-access-popout__header-action"
               onClick={fetchData}
               disabled={loading}
@@ -815,7 +815,7 @@ const SignPopout = ({
             />
           )}
           <Button
-            variant="ghost"
+            variant="tertiary"
             className="quick-access-popout__header-action"
             onClick={onClose}
             aria-label={t("close", "Close")}
@@ -834,7 +834,7 @@ const SignPopout = ({
           </div>
           <div className="quick-access-popout__quick-sign-actions">
             <Button
-              variant="ghost"
+              variant="tertiary"
               className="quick-access-popout__quick-sign-btn"
               onClick={() => {
                 onClose();
@@ -845,7 +845,7 @@ const SignPopout = ({
               {t("quickAccess.wetSign", "Add Signature")}
             </Button>
             <Button
-              variant="ghost"
+              variant="tertiary"
               className="quick-access-popout__quick-sign-btn"
               onClick={() => {
                 onClose();
@@ -871,7 +871,7 @@ const SignPopout = ({
               {t("quickAccess.signatureRequests", "Signature Requests")}
             </span>
             <Button
-              variant="ghost"
+              variant="tertiary"
               className="quick-access-popout__section-action"
               onClick={() => setShowCreatePanel(true)}
               aria-label={t("quickAccess.newRequest", "New request")}
@@ -970,7 +970,7 @@ const SignPopout = ({
       {groupSigningEnabled && showCreatePanel && (
         <div className="quick-access-popout__footer">
           <Button
-            variant="ghost"
+            variant="tertiary"
             className="quick-access-popout__primary"
             onClick={handleCreateSession}
             disabled={

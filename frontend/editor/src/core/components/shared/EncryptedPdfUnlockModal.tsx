@@ -81,20 +81,17 @@ const EncryptedPdfUnlockModal = ({
 
         <Group justify="space-between">
           <Button
-            variant="outlined"
+            variant="secondary"
+            accent="neutral"
             onClick={onSkip}
             disabled={isProcessing}
-            style={{
-              "--sui-btn-fg": "var(--mantine-color-gray-8)",
-              "--sui-btn-bd": "var(--mantine-color-gray-8)",
-            }}
           >
             {t("encryptedPdfUnlock.skip", "Skip for now")}
           </Button>
           <Group gap="xs">
             {remainingCount > 0 && (
               <Button
-                variant="outlined"
+                variant="secondary"
                 onClick={onUnlockAll}
                 loading={isProcessing}
                 disabled={password.trim().length === 0}

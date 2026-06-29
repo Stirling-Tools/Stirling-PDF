@@ -28,7 +28,7 @@ const NavigationArrows: React.FC<NavigationArrowsProps> = ({
     <Box style={{ position: "relative", width: "100%", height: "100%" }}>
       {/* Left Navigation Arrow */}
       <Button
-        variant="outlined"
+        variant="secondary"
         size="sm"
         onClick={onPrevious}
         disabled={disabled}
@@ -55,7 +55,7 @@ const NavigationArrows: React.FC<NavigationArrowsProps> = ({
 
       {/* Right Navigation Arrow */}
       <Button
-        variant="outlined"
+        variant="secondary"
         size="sm"
         onClick={onNext}
         disabled={disabled}

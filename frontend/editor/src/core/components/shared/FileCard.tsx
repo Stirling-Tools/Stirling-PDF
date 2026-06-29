@@ -100,7 +100,7 @@ const FileCard = ({
                 <Tooltip label={t("fileCard.viewInViewer", "View in Viewer")}>
                   <Button
                     size="sm"
-                    variant="ghost"
+                    variant="tertiary"
                     aria-label={t("fileCard.viewInViewer", "View in Viewer")}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -116,7 +116,7 @@ const FileCard = ({
                 >
                   <Button
                     size="sm"
-                    variant="ghost"
+                    variant="tertiary"
                     accent="warning"
                     aria-label={t(
                       "fileCard.openInFileEditor",
@@ -169,7 +169,7 @@ const FileCard = ({
         <Button
           accent="danger"
           size="sm"
-          variant="outlined"
+          variant="secondary"
           onClick={(e) => {
             e.stopPropagation();
             onRemove();

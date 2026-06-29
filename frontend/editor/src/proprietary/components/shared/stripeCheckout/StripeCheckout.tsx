@@ -276,7 +276,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
         <Group gap="sm" wrap="nowrap">
           {canGoBack && (
             <Button
-              variant="ghost"
+              variant="tertiary"
               size="lg"
               onClick={navigation.goBack}
               aria-label={t("common.back", "Back")}

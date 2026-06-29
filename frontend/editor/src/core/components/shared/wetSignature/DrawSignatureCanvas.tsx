@@ -154,7 +154,7 @@ export const DrawSignatureCanvas: React.FC<DrawSignatureCanvasProps> = ({
       </Group>
 
       <Button
-        variant="outlined"
+        variant="secondary"
         accent="danger"
         leftSection={<DeleteIcon sx={{ fontSize: 16 }} />}
         onClick={clearCanvas}

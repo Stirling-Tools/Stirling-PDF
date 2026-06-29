@@ -306,7 +306,7 @@ export function LayerSidebar({
         {status === "ready" && leafIds.length > 0 && (
           <div className="layer-sidebar__header-actions">
             <Button
-              variant="ghost"
+              variant="tertiary"
               size="sm"
               onClick={showAll}
               disabled={allVisible || isApplying}
@@ -315,7 +315,7 @@ export function LayerSidebar({
               leftSection={<VisibilityIcon sx={{ fontSize: "1rem" }} />}
             />
             <Button
-              variant="ghost"
+              variant="tertiary"
               size="sm"
               onClick={hideAll}
               disabled={allHidden || isApplying}

@@ -254,7 +254,7 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
                   ) : null}
                 </Text>
                 <Button
-                  variant="ghost"
+                  variant="tertiary"
                   onClick={onClose}
                   aria-label="Close"
                   leftSection={
@@ -278,7 +278,7 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
         <div className="confirm-modal-content">
           <Text>Are you sure you want to sign out?</Text>
           <div className="confirm-modal-buttons">
-            <Button variant="outlined" onClick={() => setConfirmOpen(false)}>
+            <Button variant="secondary" onClick={() => setConfirmOpen(false)}>
               Cancel
             </Button>
             <Button

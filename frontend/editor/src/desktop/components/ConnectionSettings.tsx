@@ -154,14 +154,14 @@ export const ConnectionSettings: React.FC = () => {
 
           <Group mt="md">
             {config.mode === "local" ? (
-              <Button onClick={handleSignIn} variant="outlined">
+              <Button onClick={handleSignIn} variant="secondary">
                 {t("settings.connection.signIn", "Sign In")}
               </Button>
             ) : (
               <Button
                 onClick={handleLogout}
                 accent="danger"
-                variant="outlined"
+                variant="secondary"
                 disabled={loading}
               >
                 {t("settings.connection.logout", "Log Out")}

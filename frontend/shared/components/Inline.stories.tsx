@@ -16,8 +16,8 @@ export const Default: Story = {
   render: () => (
     <Inline gap="2">
       <Button>Primary</Button>
-      <Button variant="outlined">Secondary</Button>
-      <Button variant="ghost">Cancel</Button>
+      <Button variant="secondary">Secondary</Button>
+      <Button variant="tertiary">Cancel</Button>
     </Inline>
   ),
 };

@@ -601,7 +601,7 @@ const FileEditorThumbnail = ({
                 <PrivateContent>{file.name}</PrivateContent>
               </Text>
               <Group justify="flex-end" gap="sm">
-                <Button variant="outlined" onClick={handleCancelClose}>
+                <Button variant="secondary" onClick={handleCancelClose}>
                   {t("confirmCloseCancel", "Cancel")}
                 </Button>
                 <Button accent="danger" onClick={handleConfirmClose}>
@@ -624,7 +624,7 @@ const FileEditorThumbnail = ({
                 <PrivateContent>{file.name}</PrivateContent>
               </Text>
               <Group justify="flex-end" gap="sm">
-                <Button variant="outlined" onClick={handleCancelClose}>
+                <Button variant="secondary" onClick={handleCancelClose}>
                   {t("confirmCloseCancel", "Cancel")}
                 </Button>
                 <Button accent="danger" onClick={handleConfirmClose}>

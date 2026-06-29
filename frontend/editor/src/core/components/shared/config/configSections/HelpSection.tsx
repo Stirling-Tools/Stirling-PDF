@@ -38,7 +38,7 @@ const HelpSection: React.FC<HelpSectionProps> = ({
               </Text>
             </div>
             <Button
-              variant="outlined"
+              variant="secondary"
               size="sm"
               leftSection={
                 <LocalIcon
@@ -67,7 +67,7 @@ const HelpSection: React.FC<HelpSectionProps> = ({
                 </Text>
               </div>
               <Button
-                variant="outlined"
+                variant="secondary"
                 size="sm"
                 leftSection={
                   <LocalIcon icon="person-rounded" width="1rem" height="1rem" />

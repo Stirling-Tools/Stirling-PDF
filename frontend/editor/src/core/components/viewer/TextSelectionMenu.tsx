@@ -73,14 +73,12 @@ export function TextSelectionMenu({
       >
         <Tooltip label={t("viewer.copyText", "Copy")} withArrow>
           <Button
-            variant="outlined"
+            variant="secondary"
+            accent="neutral"
             size="md"
             onClick={handleCopy}
             aria-label={t("viewer.copyText", "Copy")}
             style={{
-              "--sui-btn-bg": "var(--mantine-color-body)",
-              "--sui-btn-fg": "var(--text-primary)",
-              "--sui-btn-bd": "var(--mantine-color-default-border)",
               boxShadow: "0 2px 12px rgba(0, 0, 0, 0.25)",
             }}
             leftSection={<ContentCopyIcon style={{ fontSize: 18 }} />}

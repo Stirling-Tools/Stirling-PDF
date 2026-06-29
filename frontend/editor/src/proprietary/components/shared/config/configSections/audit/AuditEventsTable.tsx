@@ -463,7 +463,7 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
                           )}
                           <Table.Td ta="center">
                             <Button
-                              variant="ghost"
+                              variant="tertiary"
                               size="sm"
                               onClick={() => setSelectedEvent(event)}
                               disabled={!loginEnabled}

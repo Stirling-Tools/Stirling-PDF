@@ -265,7 +265,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
             <Button
               onClick={onClose}
               size="lg"
-              variant="ghost"
+              variant="tertiary"
               aria-label={t("update.closeModal", "Close update modal")}
               leftSection={
                 <LocalIcon icon="close-rounded" width={20} height={20} />
@@ -518,7 +518,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                           href={guide.url}
                           target="_blank"
                           onClick={handleExternalLink(guide.url)}
-                          variant="outlined"
+                          variant="secondary"
                           size="sm"
                           rightSection={
                             <OpenInNewIcon style={{ fontSize: 12 }} />
@@ -613,7 +613,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                             as="a"
                             href={`https://github.com/Stirling-Tools/Stirling-PDF/releases/tag/v${version.version}`}
                             target="_blank"
-                            variant="ghost"
+                            variant="tertiary"
                             size="sm"
                             onClick={handleExternalLink(
                               `https://github.com/Stirling-Tools/Stirling-PDF/releases/tag/v${version.version}`,
@@ -691,7 +691,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                                       version.compatibility
                                         .migration_guide_url ?? "",
                                     )}
-                                    variant="outlined"
+                                    variant="secondary"
                                     accent="warning"
                                     size="sm"
                                     style={{
@@ -719,7 +719,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
               {sortedVersions.length > 10 && (
                 <Center mt="sm">
                   <Button
-                    variant="ghost"
+                    variant="tertiary"
                     size="sm"
                     onClick={() => setShowAllVersions(!showAllVersions)}
                   >
@@ -832,7 +832,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
       >
         <Group justify="flex-end" gap="sm">
           <Button
-            variant="outlined"
+            variant="secondary"
             onClick={handleLater}
             disabled={!canClose}
             size="md"
@@ -862,7 +862,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                       href={downloadUrl}
                       target="_blank"
                       onClick={handleExternalLink(downloadUrl)}
-                      variant="outlined"
+                      variant="secondary"
                       size="md"
                       leftSection={<DownloadIcon style={{ fontSize: 16 }} />}
                     >

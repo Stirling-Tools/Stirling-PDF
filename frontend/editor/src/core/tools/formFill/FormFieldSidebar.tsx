@@ -110,7 +110,7 @@ export function FormFieldSidebar({ visible, onToggle }: FormFieldSidebarProps) {
           </Badge>
         </div>
         <Button
-          variant="ghost"
+          variant="tertiary"
           size="sm"
           onClick={onToggle}
           aria-label={t("formFill.sidebar.close", "Close sidebar")}

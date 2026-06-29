@@ -1057,7 +1057,7 @@ export default function MobileScannerPage() {
           {/* Back button - floating top left */}
           <DSButton
             onClick={() => setMode("choice")}
-            variant="filled"
+            variant="primary"
             size="sm"
             style={{
               position: "absolute",
@@ -1151,7 +1151,7 @@ export default function MobileScannerPage() {
                 size="md"
                 onClick={captureImage}
                 loading={isProcessing}
-                variant="filled"
+                variant="primary"
               >
                 {isProcessing
                   ? t("mobileScanner.processing", "Processing...")
@@ -1171,7 +1171,7 @@ export default function MobileScannerPage() {
         >
           <DSButton
             onClick={() => setMode("choice")}
-            variant="ghost"
+            variant="tertiary"
             size="sm"
             style={{ alignSelf: "flex-start" }}
           >
@@ -1257,16 +1257,16 @@ export default function MobileScannerPage() {
           >
             <Stack gap="sm">
               <Group grow>
-                <DSButton variant="outlined" onClick={retake} size="md">
+                <DSButton variant="secondary" onClick={retake} size="md">
                   {t("mobileScanner.retake", "Retake")}
                 </DSButton>
-                <DSButton variant="filled" onClick={addToBatch} size="md">
+                <DSButton variant="primary" onClick={addToBatch} size="md">
                   {t("mobileScanner.addToBatch", "Add to Batch")}
                 </DSButton>
               </Group>
               <DSButton
                 fullWidth
-                variant="filled"
+                variant="primary"
                 size="md"
                 onClick={uploadImages}
                 loading={isUploading}
@@ -1287,14 +1287,14 @@ export default function MobileScannerPage() {
             <Group gap="xs">
               <DSButton
                 size="sm"
-                variant="outlined"
+                variant="secondary"
                 accent="danger"
                 onClick={clearBatch}
               >
                 {t("mobileScanner.clearBatch", "Clear")}
               </DSButton>
               <DSButton
-                variant="filled"
+                variant="primary"
                 size="sm"
                 onClick={uploadImages}
                 loading={isUploading}

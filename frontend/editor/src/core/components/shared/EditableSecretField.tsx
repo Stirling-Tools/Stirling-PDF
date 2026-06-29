@@ -90,7 +90,7 @@ export default function EditableSecretField({
           <TextInput value="••••••••" disabled style={{ flex: 1 }} readOnly />
           <Tooltip label={t("editSecret")} withArrow>
             <Button
-              variant="outlined"
+              variant="secondary"
               onClick={handleEdit}
               disabled={disabled}
               title={t("editableSecretField.edit", "Edit")}

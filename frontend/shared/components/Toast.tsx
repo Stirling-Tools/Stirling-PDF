@@ -129,7 +129,7 @@ function ToastItem({
         )}
       </div>
       <Button
-        variant="ghost"
+        variant="tertiary"
         shape="circle"
         className="sui-toast__close"
         onClick={() => onDismiss(entry.id)}

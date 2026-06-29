@@ -74,7 +74,7 @@ export function ScenariosPanel({ agent }: ScenariosPanelProps) {
             </div>
             <Button
               size="sm"
-              variant="ghost"
+              variant="tertiary"
               onClick={() => toggleEnabled(s.id)}
             >
               {s.enabled

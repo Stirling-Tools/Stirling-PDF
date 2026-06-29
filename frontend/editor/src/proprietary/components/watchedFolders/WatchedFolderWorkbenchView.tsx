@@ -859,7 +859,7 @@ export function WatchedFolderWorkbenchView({
         <Group justify="space-between" align="center">
           <Group gap="md" align="center">
             <Button
-              variant="ghost"
+              variant="tertiary"
               size="sm"
               onClick={goHome}
               aria-label={t("watchedFolders.actions.back", "Back")}
@@ -975,7 +975,7 @@ export function WatchedFolderWorkbenchView({
             {folder.isPaused ? (
               <Button
                 size="sm"
-                variant="outlined"
+                variant="secondary"
                 accent="success"
                 onClick={handlePauseResume}
                 leftSection={<PlayArrowIcon style={{ fontSize: "0.875rem" }} />}
@@ -985,7 +985,7 @@ export function WatchedFolderWorkbenchView({
             ) : (
               <Button
                 size="sm"
-                variant="ghost"
+                variant="tertiary"
                 onClick={handlePauseResume}
                 leftSection={<PauseIcon style={{ fontSize: "0.875rem" }} />}
               >
@@ -994,7 +994,7 @@ export function WatchedFolderWorkbenchView({
             )}
             <Button
               size="sm"
-              variant="outlined"
+              variant="secondary"
               onClick={() =>
                 document
                   .getElementById(`folder-file-input-${folderId}`)
@@ -1274,7 +1274,7 @@ export function WatchedFolderWorkbenchView({
               filteredActivityIds.length > 0 && (
                 <Button
                   size="sm"
-                  variant="outlined"
+                  variant="secondary"
                   onClick={handleRetryAllFiltered}
                   leftSection={<ReplayIcon style={{ fontSize: "0.75rem" }} />}
                 >
@@ -1286,7 +1286,7 @@ export function WatchedFolderWorkbenchView({
                 <>
                   <Button
                     size="sm"
-                    variant="outlined"
+                    variant="secondary"
                     onClick={() =>
                       void handleBatchDownload(filteredActivityIds)
                     }
@@ -1298,7 +1298,7 @@ export function WatchedFolderWorkbenchView({
                   </Button>
                   <Button
                     size="sm"
-                    variant="outlined"
+                    variant="secondary"
                     onClick={() =>
                       void handleBatchDownloadSeparate(filteredActivityIds)
                     }
@@ -1381,7 +1381,7 @@ export function WatchedFolderWorkbenchView({
                   {selectedActivityIds.size < filteredActivityIds.length && (
                     <Button
                       size="sm"
-                      variant="ghost"
+                      variant="tertiary"
                       onClick={() =>
                         setSelectedActivityIds(new Set(filteredActivityIds))
                       }
@@ -1396,7 +1396,7 @@ export function WatchedFolderWorkbenchView({
                   {showRetry && (
                     <Button
                       size="sm"
-                      variant="outlined"
+                      variant="secondary"
                       onClick={handleBatchRetry}
                       leftSection={
                         <ReplayIcon style={{ fontSize: "0.75rem" }} />
@@ -1409,7 +1409,7 @@ export function WatchedFolderWorkbenchView({
                     <>
                       <Button
                         size="sm"
-                        variant="outlined"
+                        variant="secondary"
                         onClick={() => void handleBatchDownload()}
                         leftSection={
                           <DownloadIcon style={{ fontSize: "0.75rem" }} />
@@ -1419,7 +1419,7 @@ export function WatchedFolderWorkbenchView({
                       </Button>
                       <Button
                         size="sm"
-                        variant="outlined"
+                        variant="secondary"
                         onClick={() => void handleBatchDownloadSeparate()}
                         leftSection={
                           <DownloadIcon style={{ fontSize: "0.75rem" }} />
@@ -1434,7 +1434,7 @@ export function WatchedFolderWorkbenchView({
                   )}
                   <Button
                     size="sm"
-                    variant="outlined"
+                    variant="secondary"
                     accent="danger"
                     onClick={() => void handleBatchDelete()}
                     leftSection={
@@ -1444,7 +1444,7 @@ export function WatchedFolderWorkbenchView({
                     {t("watchedFolders.workbench.delete", "Delete")}
                   </Button>
                   <Button
-                    variant="ghost"
+                    variant="tertiary"
                     size="sm"
                     onClick={() => setSelectedActivityIds(new Set())}
                     aria-label={t(
@@ -1530,7 +1530,7 @@ export function WatchedFolderWorkbenchView({
                           }
                         >
                           <Button
-                            variant="ghost"
+                            variant="tertiary"
                             size="sm"
                             style={{ flexShrink: 0 }}
                             onClick={(e) => {
@@ -1660,7 +1660,7 @@ export function WatchedFolderWorkbenchView({
                             >
                               {!isExpanded && primaryFile && (
                                 <Button
-                                  variant="ghost"
+                                  variant="tertiary"
                                   size="sm"
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -1679,7 +1679,7 @@ export function WatchedFolderWorkbenchView({
                               )}
                               {!isExpanded && primaryFile && (
                                 <Button
-                                  variant="ghost"
+                                  variant="tertiary"
                                   size="sm"
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -1700,7 +1700,7 @@ export function WatchedFolderWorkbenchView({
                                 />
                               )}
                               <Button
-                                variant="ghost"
+                                variant="tertiary"
                                 size="sm"
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -1771,7 +1771,7 @@ export function WatchedFolderWorkbenchView({
                                   {formatBytes(inputFile.size)}
                                 </Text>
                                 <Button
-                                  variant="ghost"
+                                  variant="tertiary"
                                   size="sm"
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -1788,7 +1788,7 @@ export function WatchedFolderWorkbenchView({
                                   }
                                 />
                                 <Button
-                                  variant="ghost"
+                                  variant="tertiary"
                                   size="sm"
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -1846,7 +1846,7 @@ export function WatchedFolderWorkbenchView({
                                   {formatBytes(out.size)}
                                 </Text>
                                 <Button
-                                  variant="ghost"
+                                  variant="tertiary"
                                   size="sm"
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -1863,7 +1863,7 @@ export function WatchedFolderWorkbenchView({
                                   }
                                 />
                                 <Button
-                                  variant="ghost"
+                                  variant="tertiary"
                                   size="sm"
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -1910,7 +1910,7 @@ export function WatchedFolderWorkbenchView({
                                 {inputFile && (
                                   <Button
                                     size="sm"
-                                    variant="outlined"
+                                    variant="secondary"
                                     style={{ flexShrink: 0 }}
                                     leftSection={
                                       <ReplayIcon
@@ -1995,7 +1995,7 @@ export function WatchedFolderWorkbenchView({
                 <Button
                   key={p}
                   size="sm"
-                  variant={statsPeriod === p ? "outlined" : "ghost"}
+                  variant={statsPeriod === p ? "secondary" : "tertiary"}
                   onClick={() => setStatsPeriod(p)}
                 >
                   {p === "all"
@@ -2405,11 +2405,11 @@ export function WatchedFolderWorkbenchView({
             )}
           </Text>
           <Group justify="flex-end">
-            <Button variant="outlined" onClick={() => setDeleteConfirm(null)}>
+            <Button variant="secondary" onClick={() => setDeleteConfirm(null)}>
               {t("watchedFolders.workbench.cancel", "Cancel")}
             </Button>
             <Button
-              variant="outlined"
+              variant="secondary"
               onClick={() =>
                 deleteConfirm && void execDelete(deleteConfirm.ids, false)
               }
@@ -2420,7 +2420,7 @@ export function WatchedFolderWorkbenchView({
               )}
             </Button>
             <Button
-              variant="filled"
+              variant="primary"
               accent="danger"
               onClick={() =>
                 deleteConfirm && void execDelete(deleteConfirm.ids, true)

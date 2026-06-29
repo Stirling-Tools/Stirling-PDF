@@ -30,7 +30,7 @@ export const DefaultAppSettings: React.FC = () => {
           </Text>
         </div>
         <Button
-          variant={isDefault ? "outlined" : "filled"}
+          variant={isDefault ? "secondary" : "primary"}
           size="sm"
           onClick={handleSetDefault}
           loading={isLoading}

@@ -106,7 +106,7 @@ export function WatchedFolderCard({
             <Group gap={2} onClick={(e) => e.stopPropagation()}>
               <SharedButton
                 size="sm"
-                variant="ghost"
+                variant="tertiary"
                 onClick={onEdit}
                 aria-label={t("watchedFolders.card.edit", "Edit folder")}
                 leftSection={<EditIcon style={{ fontSize: 11 }} />}
@@ -114,7 +114,7 @@ export function WatchedFolderCard({
               {!folder.isDefault && (
                 <SharedButton
                   size="sm"
-                  variant="ghost"
+                  variant="tertiary"
                   accent="danger"
                   onClick={onDelete}
                   aria-label={t("watchedFolders.card.delete", "Delete folder")}

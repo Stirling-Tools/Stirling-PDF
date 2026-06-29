@@ -201,7 +201,7 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
           {t("search.title", "Search PDF")}
         </Text>
         <Button
-          variant="ghost"
+          variant="tertiary"
           size="sm"
           onClick={handleCloseClick}
           aria-label={t("viewer.search.close", "Close search")}
@@ -225,7 +225,7 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
           rightSection={
             searchQuery.trim() && (
               <Button
-                variant="ghost"
+                variant="tertiary"
                 onClick={handleClearSearch}
                 aria-label={t("viewer.search.clear", "Clear search")}
                 leftSection={
@@ -276,7 +276,7 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
 
         <Group gap="xs">
           <Button
-            variant="ghost"
+            variant="tertiary"
             size="sm"
             onClick={handlePrevious}
             disabled={!resultInfo || resultInfo.currentIndex <= 1}
@@ -286,7 +286,7 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
             }
           />
           <Button
-            variant="ghost"
+            variant="tertiary"
             size="sm"
             onClick={handleNext}
             disabled={

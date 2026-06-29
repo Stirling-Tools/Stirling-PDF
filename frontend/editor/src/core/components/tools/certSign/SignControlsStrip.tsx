@@ -508,7 +508,7 @@ export default function SignControlsStrip({
             >
               <Menu.Target>
                 <Button
-                  variant="ghost"
+                  variant="tertiary"
                   className={styles.signingPreviewButton}
                   aria-label={t(
                     "certSign.collab.signRequest.changeSignature",
@@ -595,7 +595,7 @@ export default function SignControlsStrip({
             </Menu>
             <div className={styles.signingDivider} aria-hidden="true" />
             <Button
-              variant="ghost"
+              variant="tertiary"
               className={`${styles.iconButton} ${styles.signStripMobileDelete}`}
               onClick={onDeleteSelected}
               disabled={!hasSelectedAnnotation}
@@ -611,7 +611,7 @@ export default function SignControlsStrip({
               <DeleteOutlineIcon sx={{ fontSize: "1.2rem" }} />
             </Button>
             <Button
-              variant="ghost"
+              variant="tertiary"
               className={`${styles.iconButton} ${styles.iconTextButton}`}
               onClick={onComplete}
               disabled={!canComplete}
@@ -710,7 +710,7 @@ export default function SignControlsStrip({
             )}
           />
           <Group justify="flex-end">
-            <Button variant="ghost" onClick={handleCancelCreate}>
+            <Button variant="tertiary" onClick={handleCancelCreate}>
               {t("cancel", "Cancel")}
             </Button>
             <Button onClick={handleSaveText} disabled={!textSignerName.trim()}>

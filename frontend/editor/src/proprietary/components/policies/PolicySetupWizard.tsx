@@ -627,7 +627,7 @@ export function PolicySetupWizard({
                 )}
                 action={
                   <Button
-                    variant="ghost"
+                    variant="tertiary"
                     size="sm"
                     onClick={onSetupClassification}
                   >
@@ -654,7 +654,7 @@ export function PolicySetupWizard({
                         )}
                   </span>
                   <Button
-                    variant="ghost"
+                    variant="tertiary"
                     className="pol-link"
                     onClick={() => setScopeNarrow((v) => !v)}
                   >
@@ -688,7 +688,7 @@ export function PolicySetupWizard({
       </div>
 
       <div className="pol-footer">
-        <Button variant="ghost" size="sm" onClick={back}>
+        <Button variant="tertiary" size="sm" onClick={back}>
           {step > 1 ? t("policies.wizard.back", "Back") : t("cancel", "Cancel")}
         </Button>
         {step < TOTAL_STEPS ? (

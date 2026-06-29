@@ -17,7 +17,7 @@ export const SelfHostedLink: React.FC<SelfHostedLinkProps> = ({
   return (
     <div className="navigation-link-container" style={{ marginTop: "1.5rem" }}>
       <Button
-        variant="ghost"
+        variant="tertiary"
         onClick={onClick}
         disabled={disabled}
         className="navigation-link-button"

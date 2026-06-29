@@ -215,7 +215,8 @@ const ToolButton: React.FC<ToolButtonProps> = ({
       as="a"
       href={navProps.href}
       onClick={navProps.onClick}
-      variant="ghost"
+      variant="tertiary"
+      accent="neutral"
       size="sm"
       fullWidth
       justify="start"
@@ -224,7 +225,6 @@ const ToolButton: React.FC<ToolButtonProps> = ({
       leftSection={buttonIcon}
       style={{
         borderRadius: 0,
-        "--sui-btn-fg": "var(--tools-text-and-icon-color)",
         overflow: "visible",
         ...selectedBg,
       }}
@@ -239,7 +239,8 @@ const ToolButton: React.FC<ToolButtonProps> = ({
       target="_blank"
       rel="noopener noreferrer"
       onClick={handleExternalClick}
-      variant="ghost"
+      variant="tertiary"
+      accent="neutral"
       size="sm"
       fullWidth
       justify="start"
@@ -248,7 +249,6 @@ const ToolButton: React.FC<ToolButtonProps> = ({
       leftSection={buttonIcon}
       style={{
         borderRadius: 0,
-        "--sui-btn-fg": "var(--tools-text-and-icon-color)",
         overflow: "visible",
         ...selectedBg,
       }}
@@ -258,7 +258,8 @@ const ToolButton: React.FC<ToolButtonProps> = ({
   ) : (
     // For unavailable tools, use regular button
     <Button
-      variant="ghost"
+      variant="tertiary"
+      accent="neutral"
       onClick={() => handleClick(id)}
       size="sm"
       fullWidth
@@ -269,7 +270,6 @@ const ToolButton: React.FC<ToolButtonProps> = ({
       leftSection={buttonIcon}
       style={{
         borderRadius: 0,
-        "--sui-btn-fg": "var(--tools-text-and-icon-color)",
         cursor: visuallyUnavailable ? "not-allowed" : undefined,
         overflow: "visible",
       }}

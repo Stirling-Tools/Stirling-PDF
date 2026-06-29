@@ -53,7 +53,7 @@ export function FolderAppearancePicker({
           {FOLDER_COLOR_PALETTE.map((c) => (
             <Button
               key={c}
-              variant="outlined"
+              variant="secondary"
               disabled={disabled}
               aria-label={t(
                 "filesPage.appearance.useColour",
@@ -148,7 +148,7 @@ function IconButton({
   return (
     <Tooltip label={icon.label} withinPortal>
       <Button
-        variant="ghost"
+        variant="tertiary"
         disabled={disabled}
         aria-label={icon.label}
         onClick={(e) => {

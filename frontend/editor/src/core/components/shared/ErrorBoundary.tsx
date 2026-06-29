@@ -131,7 +131,7 @@ export default class ErrorBoundary extends React.Component<
           )}
           <Button
             onClick={this.retry}
-            variant="outlined"
+            variant="secondary"
             style={{ marginTop: "var(--mantine-spacing-md)" }}
           >
             Try Again

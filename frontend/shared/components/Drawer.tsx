@@ -100,7 +100,7 @@ export function Drawer({
                 {subtitle && <div className="sui-drawer__sub">{subtitle}</div>}
               </div>
               <Button
-                variant="ghost"
+                variant="tertiary"
                 shape="circle"
                 className="sui-drawer__close"
                 onClick={onClose}

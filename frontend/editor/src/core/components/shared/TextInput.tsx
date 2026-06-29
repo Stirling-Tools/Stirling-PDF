@@ -112,7 +112,7 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
         />
         {shouldShowClearButton && (
           <Button
-            variant="ghost"
+            variant="tertiary"
             className={styles.clearButton}
             onClick={handleClear}
             aria-label={t("textInput.clear", "Clear input")}

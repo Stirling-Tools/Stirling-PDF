@@ -226,7 +226,7 @@ export default function ChangeUserPasswordModal({
         <Button
           aria-label={t("common.close", "Close")}
           leftSection={<LocalIcon icon="close-rounded" />}
-          variant="ghost"
+          variant="tertiary"
           onClick={handleClose}
           size="lg"
           disabled={processing}
@@ -351,7 +351,7 @@ export default function ChangeUserPasswordModal({
                         />
                       }
                       size="sm"
-                      variant="ghost"
+                      variant="tertiary"
                       onClick={handleCopyPassword}
                       disabled={processing}
                     />

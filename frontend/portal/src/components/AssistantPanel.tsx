@@ -97,7 +97,7 @@ export function AssistantPanel() {
           </span>
         </div>
         <Button
-          variant="ghost"
+          variant="tertiary"
           className="portal-assistant__close"
           onClick={closeAssistant}
           aria-label={t("assistant.close", "Close assistant")}
@@ -115,7 +115,7 @@ export function AssistantPanel() {
               {suggestions.map((s) => (
                 <Button
                   key={s}
-                  variant="outlined"
+                  variant="secondary"
                   size="sm"
                   className="portal-assistant__suggestion"
                   onClick={() => send(s)}

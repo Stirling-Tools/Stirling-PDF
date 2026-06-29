@@ -241,7 +241,7 @@ export default function AutomationRun({
           </Button>
 
           {hasResults && (
-            <Button variant="outlined" onClick={onComplete}>
+            <Button variant="secondary" onClick={onComplete}>
               {t("automate.sequence.finish", "Finish")}
             </Button>
           )}

@@ -211,7 +211,7 @@ export default function Signup() {
 
       {/* Email & Password button */}
       <Button
-        variant="outlined"
+        variant="secondary"
         disabled={isSigningUp}
         onClick={() => setShowEmailForm((v) => !v)}
         className={`oauth-button-fullwidth auth-expandable-trigger ${showEmailForm ? "auth-expandable-trigger--active" : ""}`}
@@ -251,7 +251,7 @@ export default function Signup() {
       {/* Skip */}
       <div style={{ textAlign: "center", margin: "1rem 0" }}>
         <Button
-          variant="ghost"
+          variant="tertiary"
           onClick={handleAnonymousSignIn}
           disabled={isSigningUp}
           style={{
@@ -278,7 +278,7 @@ export default function Signup() {
         }}
       >
         <Button
-          variant="ghost"
+          variant="tertiary"
           onClick={() => navigate("/login")}
           style={{
             background: "none",

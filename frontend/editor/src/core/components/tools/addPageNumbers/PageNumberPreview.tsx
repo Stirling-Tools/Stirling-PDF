@@ -258,7 +258,7 @@ export default function PageNumberPreview({
               const selected = parameters.position === idx;
               return (
                 <Button
-                  variant="ghost"
+                  variant="tertiary"
                   key={idx}
                   className={`${styles.gridTile} ${selected || hoverTile === idx ? styles.gridTileSelected : ""} ${hoverTile === idx ? styles.gridTileHovered : ""}`}
                   onClick={() => onParameterChange("position", idx as any)}

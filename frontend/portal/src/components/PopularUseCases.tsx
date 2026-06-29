@@ -42,7 +42,7 @@ export function PopularUseCases() {
           {t("useCases.title", "Popular use cases")}
         </h2>
         <Button
-          variant="ghost"
+          variant="tertiary"
           size="sm"
           className="portal-usecases__viewall"
           onClick={() => setActiveView("pipelines")}

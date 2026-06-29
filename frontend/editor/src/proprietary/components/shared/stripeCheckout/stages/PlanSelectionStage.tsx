@@ -74,7 +74,7 @@ export const PlanSelectionStage: React.FC<PlanSelectionStageProps> = ({
                   />
                 )}
                 <div style={{ marginTop: "auto", paddingTop: "1rem" }}>
-                  <Button variant="outlined" fullWidth>
+                  <Button variant="secondary" fullWidth>
                     {t("payment.planStage.selectMonthly", "Select Monthly")}
                   </Button>
                 </div>

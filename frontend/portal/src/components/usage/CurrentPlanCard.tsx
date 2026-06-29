@@ -179,7 +179,7 @@ export function CurrentPlanCard({
               : t("usage.currentPlan.actions.talkToSales", "Talk to sales")}
           </Button>
         ) : (
-          <Button variant="outlined" onClick={onUpgrade}>
+          <Button variant="secondary" onClick={onUpgrade}>
             {t(
               "usage.currentPlan.actions.adjustCommitment",
               "Adjust commitment",
@@ -187,7 +187,7 @@ export function CurrentPlanCard({
           </Button>
         )}
         {/* TODO(backend): GET /v1/billing/invoices?format=pdf — bundle + download invoice PDFs. */}
-        <Button variant="ghost" size="md">
+        <Button variant="tertiary" size="md">
           {t("usage.currentPlan.actions.downloadInvoices")}
         </Button>
       </div>

@@ -58,7 +58,7 @@ const DetailedToolItem: React.FC<DetailedToolItemProps> = ({
 
   return (
     <Button
-      variant="ghost"
+      variant="tertiary"
       className={`tool-panel__fullscreen-item ${getItemClasses(true)} ${isSelected ? "tool-panel__fullscreen-item--selected" : ""} tool-panel__fullscreen-item--with-star`}
       onClick={onClick}
       aria-disabled={disabled}

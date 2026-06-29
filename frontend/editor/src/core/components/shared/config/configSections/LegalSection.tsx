@@ -127,7 +127,7 @@ const LegalSection: React.FC = () => {
               </Text>
             </div>
             <Button
-              variant="outlined"
+              variant="secondary"
               size="sm"
               id="cookieBanner"
               onClick={showCookiePreferences}

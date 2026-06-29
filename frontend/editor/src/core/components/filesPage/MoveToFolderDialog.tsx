@@ -226,7 +226,7 @@ export function MoveToFolderDialog({
                   withinPortal
                 >
                   <Button
-                    variant="ghost"
+                    variant="tertiary"
                     size="lg"
                     onClick={handleCancel}
                     disabled={creating}
@@ -240,7 +240,7 @@ export function MoveToFolderDialog({
               </Group>
             ) : (
               <Button
-                variant="ghost"
+                variant="tertiary"
                 size="sm"
                 leftSection={<CreateNewFolderIcon fontSize="small" />}
                 onClick={() => {
@@ -268,7 +268,7 @@ export function MoveToFolderDialog({
           </Alert>
         )}
         <Group justify="flex-end">
-          <Button variant="outlined" onClick={onClose} disabled={submitting}>
+          <Button variant="secondary" onClick={onClose} disabled={submitting}>
             {t("filesPage.moveDialog.cancel", "Cancel")}
           </Button>
           <Button
@@ -322,7 +322,7 @@ function FolderPick({
 }: FolderPickProps) {
   return (
     <Button
-      variant="ghost"
+      variant="tertiary"
       justify="start"
       fullWidth
       onClick={onPick}

@@ -218,7 +218,7 @@ export default function OverlayPdfsSettings({
                       </Group>
                       <Button
                         size="sm"
-                        variant="ghost"
+                        variant="tertiary"
                         accent="danger"
                         className={styles.removeButton}
                         onClick={() => {

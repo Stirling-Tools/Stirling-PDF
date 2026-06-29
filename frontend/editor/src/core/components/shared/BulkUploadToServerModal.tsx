@@ -152,7 +152,7 @@ const BulkUploadToServerModal: React.FC<BulkUploadToServerModalProps> = ({
         )}
 
         <Group justify="flex-end" gap="sm">
-          <Button variant="outlined" onClick={onClose} disabled={isUploading}>
+          <Button variant="secondary" onClick={onClose} disabled={isUploading}>
             {t("cancel", "Cancel")}
           </Button>
           <Button

@@ -129,7 +129,7 @@ const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
 
       <div style={{ textAlign: "center" }}>
         <Button
-          variant="ghost"
+          variant="tertiary"
           onClick={() => setShowComparison(!showComparison)}
         >
           {showComparison

@@ -119,7 +119,7 @@ const UserSelector = ({
         </Text>
         <Button
           size="sm"
-          variant="outlined"
+          variant="secondary"
           onClick={() => navigate("/settings/people")}
         >
           {t("certSign.collab.userSelector.inviteUsers", "Add Users")}

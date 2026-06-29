@@ -112,7 +112,7 @@ export function DocHelp() {
   return (
     <div className="payg-help">
       <Button
-        variant="ghost"
+        variant="tertiary"
         className="payg-help__toggle"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
@@ -448,7 +448,7 @@ function CapReachedHelp() {
   return (
     <div className="payg-help">
       <Button
-        variant="ghost"
+        variant="tertiary"
         className="payg-help__toggle"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
@@ -657,7 +657,7 @@ function StripePortalLink({
         onClick={handleClick}
         loading={loading}
         rightSection={<OpenInNewIcon sx={{ fontSize: 16 }} />}
-        variant="outlined"
+        variant="secondary"
       >
         {t("payg.stripe.open", "Open billing portal")}
       </Button>

@@ -79,11 +79,11 @@ const PageSelectionInput = ({
         rightSection={
           csvInput && (
             <Button
-              variant="ghost"
+              variant="tertiary"
+              accent="neutral"
               size="sm"
               onClick={onClear}
               aria-label={t("clear", "Clear")}
-              style={{ "--sui-btn-fg": "var(--text-muted)" }}
               leftSection={<>&times;</>}
             />
           )

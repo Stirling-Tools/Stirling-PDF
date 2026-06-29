@@ -313,7 +313,7 @@ const StaticCheckoutModal: React.FC<StaticCheckoutModalProps> = ({
 
                 <Group justify="space-between">
                   <Button
-                    variant="ghost"
+                    variant="tertiary"
                     onClick={handleClose}
                     disabled={savingLicense}
                   >
@@ -361,7 +361,7 @@ const StaticCheckoutModal: React.FC<StaticCheckoutModalProps> = ({
         <Group gap="sm" wrap="nowrap">
           {canGoBack && (
             <Button
-              variant="ghost"
+              variant="tertiary"
               size="lg"
               onClick={handleGoBack}
               aria-label={t("common.back", "Back")}

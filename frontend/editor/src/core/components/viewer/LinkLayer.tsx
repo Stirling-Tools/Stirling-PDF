@@ -187,7 +187,7 @@ const LinkToolbar: React.FC<LinkToolbarProps> = React.memo(
       >
         {/* Delete */}
         <Button
-          variant="ghost"
+          variant="tertiary"
           className="pdf-link-toolbar-btn pdf-link-toolbar-btn--delete"
           onClick={(e) => {
             e.stopPropagation();
@@ -201,7 +201,7 @@ const LinkToolbar: React.FC<LinkToolbarProps> = React.memo(
         <span className="pdf-link-toolbar-sep" />
         {/* Navigate / Open */}
         <Button
-          variant="ghost"
+          variant="tertiary"
           className="pdf-link-toolbar-btn pdf-link-toolbar-btn--go"
           onClick={(e) => {
             e.stopPropagation();

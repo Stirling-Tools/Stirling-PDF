@@ -275,7 +275,7 @@ export function SelfHostedOfflineBanner() {
           </Popover>
         )}
         <Button
-          variant="ghost"
+          variant="tertiary"
           size="sm"
           onClick={() => setDismissed(true)}
           aria-label={t("close", "Close")}

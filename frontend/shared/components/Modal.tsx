@@ -93,7 +93,7 @@ export function Modal({
                 {subtitle && <div className="sui-modal__sub">{subtitle}</div>}
               </div>
               <Button
-                variant="ghost"
+                variant="tertiary"
                 shape="circle"
                 className="sui-modal__close"
                 onClick={onClose}

@@ -79,7 +79,7 @@ export function DeploymentTargets({ targets, onUpgrade }: Props) {
                 <p className="portal-editor__lock-copy">{lockCopy(target)}</p>
                 <Button
                   size="sm"
-                  variant="outlined"
+                  variant="secondary"
                   onClick={onUpgrade}
                   disabled={tier === "enterprise"}
                 >

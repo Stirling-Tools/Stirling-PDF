@@ -142,7 +142,7 @@ export function AccessControls({ access }: AccessControlsProps) {
                 value={access.sso.domains.join(", ") || "—"}
               />
             </div>
-            <Button variant="ghost" size="sm">
+            <Button variant="tertiary" size="sm">
               {t("users.access.sso.manage")}
             </Button>
           </Card>

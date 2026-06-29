@@ -34,7 +34,7 @@ export const WithCTAs: Story = {
         <Button rightSection={<span aria-hidden>→</span>}>
           Browse templates
         </Button>
-        <Button variant="outlined">Build from scratch</Button>
+        <Button variant="secondary">Build from scratch</Button>
       </>
     ),
   },

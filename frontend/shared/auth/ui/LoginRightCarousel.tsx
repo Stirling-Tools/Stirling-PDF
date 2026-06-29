@@ -211,7 +211,7 @@ function LoginRightCarousel({
         {Array.from({ length: totalSlides }).map((_, i) => (
           <Button
             key={i}
-            variant="ghost"
+            variant="tertiary"
             aria-label={`Go to slide ${i + 1}`}
             onClick={() => setIndex(i)}
             style={{

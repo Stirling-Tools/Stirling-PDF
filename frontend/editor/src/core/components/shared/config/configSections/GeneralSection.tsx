@@ -192,7 +192,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
           }}
         >
           <Button
-            variant="ghost"
+            variant="tertiary"
             size="sm"
             style={{ position: "absolute", top: "0.5rem", right: "0.5rem" }}
             onClick={handleDismissBanner}
@@ -343,7 +343,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               <Group gap="sm">
                 <Button
                   size="sm"
-                  variant="outlined"
+                  variant="secondary"
                   onClick={checkForUpdate}
                   loading={checkingUpdate}
                   disabled={!currentVersion}

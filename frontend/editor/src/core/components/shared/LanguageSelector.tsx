@@ -74,21 +74,14 @@ const LanguageItem: React.FC<LanguageItemProps> = ({
       }}
     >
       <Button
-        variant="ghost"
+        variant="tertiary"
+        accent="neutral"
         size="sm"
         fullWidth
         onClick={disabled ? undefined : onClick}
         data-selected={isSelected}
         disabled={disabled}
         style={{
-          "--sui-btn-bg": isSelected
-            ? "light-dark(var(--mantine-color-blue-1), var(--mantine-color-blue-8))"
-            : "transparent",
-          "--sui-btn-fg": disabled
-            ? "var(--text-muted)"
-            : isSelected
-              ? "light-dark(var(--mantine-color-blue-9), var(--mantine-color-blue-3))"
-              : "var(--text-primary)",
           justifyContent: "flex-start",
           position: "relative",
           overflow: "hidden",
@@ -247,24 +240,24 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
         <Menu.Target>
           {compact ? (
             <Button
-              variant="ghost"
+              variant="tertiary"
+              accent="neutral"
               data-testid="language-selector-button"
               title={!opened && tooltip ? tooltip : undefined}
               aria-label={tooltip ?? currentLanguage}
-              style={{ "--sui-btn-fg": "var(--text-secondary)" }}
               leftSection={
                 <LocalIcon icon="language" width="1.5rem" height="1.5rem" />
               }
             />
           ) : (
             <Button
-              variant="ghost"
+              variant="tertiary"
+              accent="neutral"
               size="sm"
               data-testid="language-selector-button"
               leftSection={
                 <LocalIcon icon="language" width="1.5rem" height="1.5rem" />
               }
-              style={{ "--sui-btn-fg": "var(--text-primary)" }}
             >
               <span className={styles.languageText}>{currentLanguage}</span>
             </Button>

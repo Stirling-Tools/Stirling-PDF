@@ -332,7 +332,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
           </PrivateContent>
 
           <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <Button variant="ghost" accent="danger" onClick={clear}>
+            <Button variant="tertiary" accent="danger" onClick={clear}>
               {t("sign.canvas.clear", "Clear canvas")}
             </Button>
             <Button onClick={closeModal}>{t("common.done", "Done")}</Button>

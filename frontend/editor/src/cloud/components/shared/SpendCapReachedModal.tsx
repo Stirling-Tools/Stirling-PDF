@@ -168,7 +168,7 @@ export function SpendCapReachedModal({ onClose }: SpendCapReachedModalProps) {
               >
                 <Button
                   onClick={onClose}
-                  variant="outlined"
+                  variant="secondary"
                   size="sm"
                   className="spend-cap-modal-button"
                   style={{

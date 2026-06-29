@@ -186,7 +186,7 @@ const UpdateSeatsModal: React.FC<UpdateSeatsModalProps> = ({
         </Alert>
 
         <Group justify="flex-end" gap="sm">
-          <Button variant="outlined" onClick={handleClose}>
+          <Button variant="secondary" onClick={handleClose}>
             {t("common.cancel", "Cancel")}
           </Button>
           <Button

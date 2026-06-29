@@ -52,7 +52,7 @@ export default function IconSelector({
       >
         <Popover.Target>
           <Button
-            variant="outlined"
+            variant="secondary"
             size={size}
             aria-label={t("automate.creation.icon.label", "Icon")}
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}

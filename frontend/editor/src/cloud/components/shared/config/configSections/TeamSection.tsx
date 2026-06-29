@@ -241,7 +241,7 @@ const TeamSection: React.FC = () => {
                   }
                 />
                 <Button
-                  variant="ghost"
+                  variant="tertiary"
                   onClick={handleCancelRename}
                   disabled={renamingTeam}
                   aria-label={t("team.renameCancel", "Cancel rename")}
@@ -257,7 +257,7 @@ const TeamSection: React.FC = () => {
                 </Text>
                 {isTeamLeader && !isPersonalTeam && (
                   <Button
-                    variant="ghost"
+                    variant="tertiary"
                     size="sm"
                     onClick={handleStartRename}
                     aria-label={t("team.editName", "Edit team name")}
@@ -287,7 +287,7 @@ const TeamSection: React.FC = () => {
           {!isPersonalTeam && !isTeamLeader && !isEditingName && (
             <Button
               accent="danger"
-              variant="outlined"
+              variant="secondary"
               size="sm"
               onClick={handleLeaveTeam}
               leftSection={
@@ -451,7 +451,7 @@ const TeamSection: React.FC = () => {
                           >
                             <Menu.Target>
                               <Button
-                                variant="ghost"
+                                variant="tertiary"
                                 aria-label={t(
                                   "team.members.actions",
                                   "Member actions",
@@ -512,7 +512,7 @@ const TeamSection: React.FC = () => {
                       {isTeamLeader && !isPersonalTeam && (
                         <Table.Td>
                           <Button
-                            variant="ghost"
+                            variant="tertiary"
                             accent="danger"
                             onClick={() =>
                               handleCancelInvitation(

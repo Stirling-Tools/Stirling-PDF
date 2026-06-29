@@ -68,7 +68,7 @@ const MergeFileSorter: React.FC<MergeFileSorterProps> = ({
           />
 
           <Button
-            variant="outlined"
+            variant="secondary"
             size="md"
             onClick={handleDirectionToggle}
             disabled={disabled}
@@ -89,7 +89,7 @@ const MergeFileSorter: React.FC<MergeFileSorterProps> = ({
         </Group>
 
         <Button
-          variant="outlined"
+          variant="secondary"
           size="sm"
           leftSection={<SortIcon />}
           onClick={handleSort}

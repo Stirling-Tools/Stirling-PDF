@@ -28,7 +28,7 @@ export const UpdateSeatsButton: React.FC<UpdateSeatsButtonProps> = ({
 
   return (
     <Button
-      variant="outlined"
+      variant="secondary"
       onClick={handleClick}
       loading={isLoading}
       {...buttonProps}

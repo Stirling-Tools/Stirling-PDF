@@ -36,7 +36,7 @@ export default function AnalyticsChoiceSlide({
         <br />
         <div style={{ textAlign: "right", marginTop: 0 }}>
           <Button
-            variant="outlined"
+            variant="secondary"
             size="sm"
             onClick={() =>
               window.open(

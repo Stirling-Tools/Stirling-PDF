@@ -119,7 +119,7 @@ export const AddSignaturesStep: React.FC<AddSignaturesStepProps> = ({
             </Button>
           ) : (
             <Button
-              variant="outlined"
+              variant="secondary"
               accent="danger"
               leftSection={<CancelIcon />}
               onClick={onCancelPlacement}

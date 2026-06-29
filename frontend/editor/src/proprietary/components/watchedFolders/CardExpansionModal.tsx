@@ -199,7 +199,7 @@ export function CardExpansionModal({
             </div>
 
             <Button
-              variant="ghost"
+              variant="tertiary"
               size="lg"
               onClick={onClose}
               aria-label={t("close", "Close")}

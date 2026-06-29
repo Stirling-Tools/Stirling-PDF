@@ -179,7 +179,7 @@ export function WelcomeCarousel({ onTryOp }: WelcomeCarouselProps) {
               {t(slide.primary.labelKey)}
             </Button>
             <Button
-              variant="outlined"
+              variant="secondary"
               onClick={() => runAction(slide.secondary)}
             >
               {t(slide.secondary.labelKey)}
@@ -202,7 +202,7 @@ export function WelcomeCarousel({ onTryOp }: WelcomeCarouselProps) {
         {SLIDES.map((s, i) => (
           <Button
             key={s.id}
-            variant="ghost"
+            variant="tertiary"
             aria-current={i === index ? "true" : undefined}
             aria-label={t("welcome.slideLabel", {
               number: i + 1,

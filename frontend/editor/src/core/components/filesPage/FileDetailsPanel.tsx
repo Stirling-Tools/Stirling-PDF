@@ -145,7 +145,7 @@ export function FileDetailsPanel({
           withinPortal
         >
           <Button
-            variant="ghost"
+            variant="tertiary"
             size="sm"
             onClick={onClose}
             aria-label={t("filesPage.closeDetails", "Close details")}
@@ -192,7 +192,7 @@ export function FileDetailsPanel({
               )}
             </div>
             <Button
-              variant="ghost"
+              variant="tertiary"
               className="files-page-details-collapse-toggle"
               onClick={() => setFieldsOpen((o) => !o)}
               aria-expanded={fieldsOpen}
@@ -263,7 +263,7 @@ export function FileDetailsPanel({
               (compactVersions && onOpenVersionHistory ? (
                 <Button
                   leftSection={<HistoryIcon fontSize="small" />}
-                  variant="outlined"
+                  variant="secondary"
                   onClick={onOpenVersionHistory}
                 >
                   {t(
@@ -308,7 +308,7 @@ export function FileDetailsPanel({
         </Button>
         <Button
           leftSection={<DownloadIcon fontSize="small" />}
-          variant="outlined"
+          variant="secondary"
           onClick={handleDownload}
           loading={downloading}
         >
@@ -335,7 +335,7 @@ export function FileDetailsPanel({
           >
             <Button
               leftSection={<LinkIcon fontSize="small" />}
-              variant="outlined"
+              variant="secondary"
               disabled={!sharingEnabled}
               onClick={() => setShareModalOpen(true)}
               style={{
@@ -349,7 +349,7 @@ export function FileDetailsPanel({
         )}
         <Button
           leftSection={<DriveFileMoveIcon fontSize="small" />}
-          variant="outlined"
+          variant="secondary"
           onClick={() => onMove(selectedFileIds)}
         >
           {t("filesPage.moveTo", "Move to…")}
@@ -367,7 +367,7 @@ export function FileDetailsPanel({
           >
             <Button
               leftSection={<CloudUploadIcon fontSize="small" />}
-              variant="outlined"
+              variant="secondary"
               disabled={Boolean(saveToServerDisabledReason)}
               onClick={() => onSaveToServer(localOnlyFiles)}
               style={{

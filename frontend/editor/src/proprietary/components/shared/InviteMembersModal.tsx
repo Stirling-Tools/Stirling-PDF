@@ -364,7 +364,7 @@ export default function InviteMembersModal({
         <Button
           aria-label={t("common.close", "Close")}
           leftSection={<LocalIcon icon="close-rounded" />}
-          variant="ghost"
+          variant="tertiary"
           onClick={handleClose}
           size="lg"
           style={{
@@ -425,7 +425,7 @@ export default function InviteMembersModal({
                   {licenseInfo.availableSlots === 0 && (
                     <Button
                       size="sm"
-                      variant="outlined"
+                      variant="secondary"
                       onClick={handleGoToPlan}
                     >
                       {t("workspace.people.actions.upgrade", "Upgrade")}
@@ -593,7 +593,7 @@ export default function InviteMembersModal({
                         style={{ flex: 1 }}
                       />
                       <Button
-                        variant="outlined"
+                        variant="secondary"
                         onClick={async () => {
                           try {
                             await navigator.clipboard.writeText(

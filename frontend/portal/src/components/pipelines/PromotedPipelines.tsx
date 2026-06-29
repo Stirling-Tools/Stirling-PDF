@@ -114,7 +114,7 @@ export function PromotedPipelines({ promoted }: PromotedPipelinesProps) {
           }
           return (
             <Button
-              variant="outlined"
+              variant="secondary"
               size="sm"
               loading={state === "pending"}
               onClick={() => onPromote(p)}

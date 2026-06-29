@@ -66,7 +66,7 @@ export function ConnectWizard({ open, onClose }: ConnectWizardProps) {
       footer={
         <div className="portal-sources__wizard-footer">
           <Button
-            variant="ghost"
+            variant="tertiary"
             size="sm"
             onClick={() => (step === 0 ? close() : setStep((s) => s - 1))}
           >
@@ -108,7 +108,7 @@ export function ConnectWizard({ open, onClose }: ConnectWizardProps) {
             return (
               <Button
                 key={t}
-                variant="ghost"
+                variant="tertiary"
                 className={
                   "portal-sources__type-card" +
                   (type === t ? " is-selected" : "")

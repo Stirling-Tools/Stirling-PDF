@@ -29,7 +29,7 @@ export function DocsNav({
               return (
                 <li key={item.id}>
                   <Button
-                    variant="ghost"
+                    variant="tertiary"
                     justify="start"
                     fullWidth
                     className={

@@ -129,7 +129,7 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
         {hasMultipleFiles && (
           <Box style={{ display: "flex", gap: "0.25rem" }}>
             <Button
-              variant="ghost"
+              variant="tertiary"
               size="sm"
               onClick={onPrevious}
               disabled={isAnimating}
@@ -137,7 +137,7 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
               leftSection={<ChevronLeftIcon style={{ fontSize: 16 }} />}
             />
             <Button
-              variant="ghost"
+              variant="tertiary"
               size="sm"
               onClick={onNext}
               disabled={isAnimating}
@@ -151,16 +151,10 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
       {/* Action Button */}
       <Button
         size="sm"
+        accent="neutral"
         onClick={onOpenFiles}
         disabled={!hasSelection && !canCloseAll}
         fullWidth
-        style={{
-          "--sui-btn-bg":
-            hasSelection || canCloseAll
-              ? "var(--btn-open-file)"
-              : "var(--mantine-color-gray-4)",
-          "--sui-btn-fg": "white",
-        }}
       >
         {canCloseAll
           ? t("fileManager.closeAllFiles", "Close all files")

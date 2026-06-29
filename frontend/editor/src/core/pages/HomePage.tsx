@@ -406,7 +406,7 @@ export default function HomePage() {
             )}
             <div className="mobile-bottom-bar">
               <Button
-                variant="ghost"
+                variant="tertiary"
                 className="mobile-bottom-button"
                 aria-label={t("quickAccess.allTools", "Tools")}
                 onClick={() => {
@@ -423,7 +423,7 @@ export default function HomePage() {
               </Button>
               {toolAvailability["automate"]?.available !== false && (
                 <Button
-                  variant="ghost"
+                  variant="tertiary"
                   className="mobile-bottom-button"
                   aria-label={t("quickAccess.automate", "Automate")}
                   onClick={() => {
@@ -444,7 +444,7 @@ export default function HomePage() {
                 </Button>
               )}
               <Button
-                variant="ghost"
+                variant="tertiary"
                 className="mobile-bottom-button"
                 aria-label={t("home.mobile.openFiles", "Open files")}
                 onClick={() => navigate("/files")}
@@ -459,7 +459,7 @@ export default function HomePage() {
                 </span>
               </Button>
               <Button
-                variant="ghost"
+                variant="tertiary"
                 className="mobile-bottom-button"
                 aria-label={t("quickAccess.config", "Config")}
                 onClick={() => setConfigModalOpen(true)}

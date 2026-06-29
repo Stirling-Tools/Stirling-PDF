@@ -238,7 +238,7 @@ export default function OAuthConsent() {
           )}
         </p>
         <Button
-          variant="outlined"
+          variant="secondary"
           className="oauth-button-fullwidth"
           onClick={() => navigate(`/login?next=${encodeURIComponent(next)}`)}
         >
@@ -380,7 +380,7 @@ export default function OAuthConsent() {
             : t("oauthConsent.approve", "Allow access")}
         </Button>
         <Button
-          variant="outlined"
+          variant="secondary"
           disabled={deciding !== null}
           onClick={() => decide("deny")}
           className="oauth-button-fullwidth"

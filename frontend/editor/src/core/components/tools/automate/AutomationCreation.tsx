@@ -302,7 +302,7 @@ export default function AutomationCreation({
 
               <Group gap="sm" grow>
                 <Button
-                  variant="outlined"
+                  variant="secondary"
                   leftSection={<DownloadIcon />}
                   onClick={() => {
                     downloadAutomationConfig(buildExportableAutomation());
@@ -312,7 +312,7 @@ export default function AutomationCreation({
                   {t("automate.creation.export", "Export")}
                 </Button>
                 <Button
-                  variant="outlined"
+                  variant="secondary"
                   leftSection={<DownloadIcon />}
                   onClick={() => {
                     downloadFolderScanningConfig(
@@ -360,7 +360,7 @@ export default function AutomationCreation({
             )}
           </Text>
           <Group gap="md" justify="flex-end">
-            <Button variant="outlined" onClick={handleCancelBack}>
+            <Button variant="secondary" onClick={handleCancelBack}>
               {t("automate.creation.unsavedChanges.cancel", "Cancel")}
             </Button>
             <Button accent="danger" onClick={handleConfirmBack}>

@@ -225,7 +225,7 @@ export default function ProviderCard({
 
           <Group gap="xs" wrap="nowrap">
             <Button
-              variant={isConfigured ? "ghost" : "filled"}
+              variant={isConfigured ? "tertiary" : "primary"}
               size="sm"
               onClick={
                 isConfigured
@@ -280,7 +280,7 @@ export default function ProviderCard({
               <Group justify="flex-end" mt="sm">
                 {onDisconnect && (
                   <Button
-                    variant="outlined"
+                    variant="secondary"
                     accent="danger"
                     size="sm"
                     onClick={onDisconnect}

@@ -218,7 +218,7 @@ export default function AutomationImportModal({
         )}
 
         <Group gap="sm" justify="flex-end">
-          <Button variant="ghost" onClick={onCancel} disabled={submitting}>
+          <Button variant="tertiary" onClick={onCancel} disabled={submitting}>
             {t("automate.importModal.cancel", "Cancel")}
           </Button>
           <Button

@@ -8,7 +8,7 @@ function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <Button
-      variant="ghost"
+      variant="tertiary"
       onClick={() =>
         navigator.clipboard.writeText(text).then(() => {
           setCopied(true);

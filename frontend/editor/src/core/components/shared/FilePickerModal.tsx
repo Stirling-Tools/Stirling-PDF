@@ -151,10 +151,10 @@ const FilePickerModal = ({
                 )}
               </Text>
               <Group gap="xs">
-                <Button size="sm" variant="outlined" onClick={selectAll}>
+                <Button size="sm" variant="secondary" onClick={selectAll}>
                   {t("pageEdit.selectAll", "Select All")}
                 </Button>
-                <Button size="sm" variant="outlined" onClick={selectNone}>
+                <Button size="sm" variant="secondary" onClick={selectNone}>
                   {t("pageEdit.deselectAll", "Select None")}
                 </Button>
               </Group>
@@ -249,7 +249,7 @@ const FilePickerModal = ({
 
         {/* Action buttons */}
         <Group justify="flex-end" mt="md">
-          <Button variant="outlined" onClick={onClose}>
+          <Button variant="secondary" onClick={onClose}>
             {t("close", "Cancel")}
           </Button>
           <Button

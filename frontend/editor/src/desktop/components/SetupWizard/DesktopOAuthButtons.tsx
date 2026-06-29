@@ -151,7 +151,7 @@ export const DesktopOAuthButtons: React.FC<DesktopOAuthButtonsProps> = ({
               : t("setup.login.sso", "Single Sign-On"));
           return (
             <Button
-              variant="outlined"
+              variant="secondary"
               key={providerEntry.id}
               onClick={() => handleOAuthLogin(providerEntry)}
               disabled={isDisabled || oauthLoading}

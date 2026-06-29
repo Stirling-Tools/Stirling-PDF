@@ -366,7 +366,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
                 />
                 <Button
                   ref={closeButtonRef}
-                  variant="ghost"
+                  variant="tertiary"
                   onClick={handleClose}
                   aria-label={t("settings.close", "Close")}
                   data-autofocus

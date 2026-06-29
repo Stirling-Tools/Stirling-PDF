@@ -23,7 +23,7 @@ const OperatorsSection = ({
       <Group gap="sm" wrap="nowrap">
         <Button
           size="sm"
-          variant="outlined"
+          variant="secondary"
           className={classes.operatorChip}
           onClick={() => onInsertOperator("and")}
           disabled={!csvInput.trim()}
@@ -38,7 +38,7 @@ const OperatorsSection = ({
         </Button>
         <Button
           size="sm"
-          variant="outlined"
+          variant="secondary"
           className={classes.operatorChip}
           onClick={() => onInsertOperator("or")}
           disabled={!csvInput.trim()}
@@ -53,7 +53,7 @@ const OperatorsSection = ({
         </Button>
         <Button
           size="sm"
-          variant="outlined"
+          variant="secondary"
           className={classes.operatorChip}
           onClick={() => onInsertOperator("not")}
           disabled={!csvInput.trim()}
@@ -71,7 +71,7 @@ const OperatorsSection = ({
       <Group gap="sm" wrap="nowrap">
         <Button
           size="sm"
-          variant="outlined"
+          variant="secondary"
           className={classes.operatorChip}
           onClick={() => onInsertOperator("even")}
           title={t(
@@ -85,7 +85,7 @@ const OperatorsSection = ({
         </Button>
         <Button
           size="sm"
-          variant="outlined"
+          variant="secondary"
           className={classes.operatorChip}
           onClick={() => onInsertOperator("odd")}
           title={t(

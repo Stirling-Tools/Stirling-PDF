@@ -53,7 +53,7 @@ const ValidateSignatureSettings = ({
           />
           {certFile && (
             <Button
-              variant="ghost"
+              variant="tertiary"
               onClick={() => handleCertFileChange(null)}
               disabled={disabled}
             >

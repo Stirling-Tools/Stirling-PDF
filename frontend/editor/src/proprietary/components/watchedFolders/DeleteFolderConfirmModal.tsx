@@ -44,11 +44,11 @@ export function DeleteFolderConfirmModal({
           )}
         </Text>
         <Group gap="sm" justify="flex-end">
-          <Button variant="outlined" size="sm" onClick={onCancel}>
+          <Button variant="secondary" size="sm" onClick={onCancel}>
             {t("cancel", "Cancel")}
           </Button>
           <Button
-            variant="filled"
+            variant="primary"
             accent="danger"
             size="sm"
             onClick={onConfirm}

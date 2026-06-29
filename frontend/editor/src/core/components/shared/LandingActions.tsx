@@ -45,7 +45,7 @@ export function LandingActions({
           {terminology.uploadFromComputer}
         </Button>
         <Button
-          variant="outlined"
+          variant="secondary"
           className="landing-btn-secondary"
           leftSection={
             <LocalIcon
@@ -66,7 +66,7 @@ export function LandingActions({
           <Tooltip label={terminology.mobileUpload} position="bottom">
             <Button
               size="lg"
-              variant="outlined"
+              variant="secondary"
               aria-label={terminology.mobileUpload}
               className="landing-btn-secondary landing-btn-icon"
               onClick={(e) => {

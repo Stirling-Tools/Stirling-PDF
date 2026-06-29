@@ -133,7 +133,7 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
                   </UnstyledButton>
                   <Button
                     leftSection={<CloseIcon sx={{ fontSize: "1rem" }} />}
-                    variant="ghost"
+                    variant="tertiary"
                     accent="danger"
                     size="sm"
                     onClick={() => removeSignature(sig.id)}
@@ -160,7 +160,7 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
         </Text>
         <Group grow>
           <Button
-            variant="outlined"
+            variant="secondary"
             leftSection={<DrawIcon />}
             onClick={() => {
               onCreateNew("canvas");
@@ -170,7 +170,7 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
             {t("certSign.collab.signRequest.modeTabs.draw", "Draw")}
           </Button>
           <Button
-            variant="outlined"
+            variant="secondary"
             leftSection={<TextFieldsIcon />}
             onClick={() => {
               onCreateNew("text");
@@ -180,7 +180,7 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
             {t("certSign.collab.signRequest.modeTabs.text", "Type")}
           </Button>
           <Button
-            variant="outlined"
+            variant="secondary"
             leftSection={<ImageIcon />}
             onClick={() => {
               onCreateNew("image");

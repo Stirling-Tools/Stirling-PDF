@@ -9,7 +9,7 @@ export function AssistantButton() {
   const { t } = useTranslation();
   return (
     <Button
-      variant="ghost"
+      variant="tertiary"
       className={"portal-assistant-btn" + (assistantOpen ? " is-active" : "")}
       onClick={toggleAssistant}
       aria-label={assistantOpen ? t("assistant.close") : t("assistant.open")}

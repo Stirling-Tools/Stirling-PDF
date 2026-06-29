@@ -45,7 +45,7 @@ export default function RefreshModal({
           )}
         </Text>
         <Group justify="flex-end" gap="sm">
-          <Button variant="outlined" onClick={onClose}>
+          <Button variant="secondary" onClick={onClose}>
             {t("common.cancel", "Cancel")}
           </Button>
           <Button accent="danger" onClick={onConfirm}>

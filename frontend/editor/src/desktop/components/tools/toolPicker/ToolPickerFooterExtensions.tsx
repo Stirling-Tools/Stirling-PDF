@@ -50,7 +50,7 @@ export function ToolPickerFooterExtensions() {
       </Text>
       <Button
         size="sm"
-        variant="outlined"
+        variant="secondary"
         style={{ flexShrink: 0 }}
         onClick={() =>
           window.dispatchEvent(new CustomEvent(OPEN_SIGN_IN_EVENT))

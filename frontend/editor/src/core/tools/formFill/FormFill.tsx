@@ -523,7 +523,7 @@ const FormFill = (_props: BaseToolProps) => {
                       position="bottom"
                     >
                       <Button
-                        variant="outlined"
+                        variant="secondary"
                         size="md"
                         onClick={handleRefresh}
                         aria-label={t(
@@ -537,7 +537,7 @@ const FormFill = (_props: BaseToolProps) => {
 
                   <div className={styles.secondaryActions}>
                     <Button
-                      variant="outlined"
+                      variant="secondary"
                       leftSection={<FileDownloadIcon sx={{ fontSize: 14 }} />}
                       loading={extracting}
                       onClick={handleExtractJson}
@@ -547,7 +547,7 @@ const FormFill = (_props: BaseToolProps) => {
                     </Button>
 
                     <Button
-                      variant="outlined"
+                      variant="secondary"
                       leftSection={<FileDownloadIcon sx={{ fontSize: 14 }} />}
                       loading={extracting}
                       onClick={handleExtractCsv}
@@ -557,7 +557,7 @@ const FormFill = (_props: BaseToolProps) => {
                     </Button>
 
                     <Button
-                      variant="outlined"
+                      variant="secondary"
                       leftSection={<FileDownloadIcon sx={{ fontSize: 14 }} />}
                       loading={extracting}
                       onClick={handleExtractXlsx}

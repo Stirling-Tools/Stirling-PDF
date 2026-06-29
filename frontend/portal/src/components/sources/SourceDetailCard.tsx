@@ -33,7 +33,7 @@ export function SourceDetailCard({ source, onClose }: SourceDetailCardProps) {
           </span>
         </div>
         <Button
-          variant="ghost"
+          variant="tertiary"
           className="portal-sources__expanded-close"
           onClick={onClose}
           aria-label={t("sources.detail.closeAriaLabel")}

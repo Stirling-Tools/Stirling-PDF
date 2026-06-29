@@ -34,7 +34,7 @@ export function MocksToggle() {
 
   return (
     <Button
-      variant="ghost"
+      variant="tertiary"
       className={
         "portal-mocks-toggle" +
         (enabled ? " is-on" : " is-off") +

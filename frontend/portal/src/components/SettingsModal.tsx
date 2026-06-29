@@ -225,7 +225,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
             <span className="portal-settings__footer-note">
               {t("settings.footerNote")}
             </span>
-            <Button variant="ghost" onClick={onClose}>
+            <Button variant="tertiary" onClick={onClose}>
               {t("settings.cancel")}
             </Button>
             <Button accent="brand" onClick={onClose}>
@@ -364,7 +364,7 @@ function ProfilePanel({
           </div>
           <span className="portal-settings__identity-email">{email}</span>
         </div>
-        <Button variant="outlined" size="sm" disabled>
+        <Button variant="secondary" size="sm" disabled>
           {t("settings.profile.changePhoto")}
         </Button>
       </div>
@@ -422,7 +422,7 @@ function AppearancePanel({
         >
           {THEME_OPTIONS.map((opt) => (
             <Button
-              variant="ghost"
+              variant="tertiary"
               key={opt.value}
               role="radio"
               aria-checked={theme === opt.value}
@@ -596,7 +596,7 @@ function WorkspacePanel({
             </span>
           </div>
         )}
-        <Button variant="outlined" size="sm" disabled>
+        <Button variant="secondary" size="sm" disabled>
           {t("settings.workspace.manageBilling")}
         </Button>
       </div>
@@ -764,7 +764,7 @@ function SessionsPanel({
                 </StatusBadge>
               ) : (
                 // TODO(backend): DELETE /v1/settings/sessions/{id}
-                <Button variant="ghost" size="sm">
+                <Button variant="tertiary" size="sm">
                   {t("settings.sessions.revoke")}
                 </Button>
               )}

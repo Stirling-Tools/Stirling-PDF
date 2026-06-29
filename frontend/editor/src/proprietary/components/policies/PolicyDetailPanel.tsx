@@ -85,7 +85,7 @@ function ActivityError({
         {message}
       </span>
       <Button
-        variant="ghost"
+        variant="tertiary"
         className="pol-activity-error__toggle"
         onClick={() => setExpanded((v) => !v)}
       >
@@ -221,7 +221,7 @@ export function PolicyDetailPanel({
                   trailing={
                     item.status === "flagged" && onRetry ? (
                       <Button
-                        variant="ghost"
+                        variant="tertiary"
                         size="sm"
                         onClick={() => onRetry(item)}
                       >
@@ -290,7 +290,7 @@ export function PolicyDetailPanel({
         <div className={`pol-footer${canDelete ? "" : " pol-footer-end"}`}>
           {canDelete && (
             <Button
-              variant="ghost"
+              variant="tertiary"
               accent="danger"
               size="sm"
               leftSection={<DeleteOutlineIcon sx={{ fontSize: "0.9rem" }} />}
@@ -300,7 +300,7 @@ export function PolicyDetailPanel({
               {t("delete", "Delete")}
             </Button>
           )}
-          <Button variant="outlined" size="sm" onClick={onTogglePause}>
+          <Button variant="secondary" size="sm" onClick={onTogglePause}>
             {isPaused
               ? t("policies.detail.resume", "Resume")
               : t("policies.detail.pause", "Pause")}

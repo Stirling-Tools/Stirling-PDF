@@ -183,7 +183,7 @@ export const ProfilePictureCropper: React.FC<ProfilePictureCropperProps> = ({
         <div
           style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}
         >
-          <Button variant="ghost" onClick={onClose} disabled={processing}>
+          <Button variant="tertiary" onClick={onClose} disabled={processing}>
             {t("common.cancel", "Cancel")}
           </Button>
           <Button onClick={handleSave} loading={processing}>

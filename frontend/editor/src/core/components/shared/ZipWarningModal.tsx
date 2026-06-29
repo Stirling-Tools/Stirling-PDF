@@ -56,13 +56,12 @@ const ZipWarningModal = ({
       {/* Desktop layout: centered buttons */}
       <Group justify="center" gap="sm" visibleFrom="md">
         <Button
-          variant="outlined"
+          variant="secondary"
+          accent="neutral"
           onClick={onCancel}
           leftSection={<CancelIcon fontSize="small" />}
           style={{
             width: "10rem",
-            "--sui-btn-fg": "var(--mantine-color-gray-8)",
-            "--sui-btn-bd": "var(--mantine-color-gray-8)",
           }}
         >
           {t("zipWarning.cancel", "Cancel")}
@@ -72,7 +71,6 @@ const ZipWarningModal = ({
           leftSection={<CheckCircleOutlineIcon fontSize="small" />}
           style={{
             width: "10rem",
-            "--sui-btn-bg": "var(--mantine-color-blue-9)",
           }}
         >
           {t("zipWarning.confirm", "Extract")}
@@ -82,13 +80,12 @@ const ZipWarningModal = ({
       {/* Mobile layout: vertical stack */}
       <Stack align="center" gap="sm" hiddenFrom="md">
         <Button
-          variant="outlined"
+          variant="secondary"
+          accent="neutral"
           onClick={onCancel}
           leftSection={<CancelIcon fontSize="small" />}
           style={{
             width: "10rem",
-            "--sui-btn-fg": "var(--mantine-color-gray-8)",
-            "--sui-btn-bd": "var(--mantine-color-gray-8)",
           }}
         >
           {t("zipWarning.cancel", "Cancel")}
@@ -98,7 +95,6 @@ const ZipWarningModal = ({
           leftSection={<CheckCircleOutlineIcon fontSize="small" />}
           style={{
             width: "10rem",
-            "--sui-btn-bg": "var(--mantine-color-blue-9)",
           }}
         >
           {t("zipWarning.confirm", "Extract")}

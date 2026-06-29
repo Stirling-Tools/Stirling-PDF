@@ -753,7 +753,7 @@ export default function AdminAdvancedSection() {
                 <Group justify="flex-end">
                   <Button
                     size="sm"
-                    variant="outlined"
+                    variant="secondary"
                     onClick={handleDownloadTessdataLanguages}
                     loading={downloadLanguagesLoading}
                     disabled={

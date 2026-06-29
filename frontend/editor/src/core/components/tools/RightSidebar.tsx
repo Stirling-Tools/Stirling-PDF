@@ -226,13 +226,10 @@ export default function RightSidebar() {
             <Button
               leftSection={<ChevronLeftIcon sx={{ fontSize: "1.1rem" }} />}
               aria-label={t("toolPanel.expand", "Expand panel")}
-              variant="outlined"
+              variant="secondary"
+              accent="neutral"
               size="md"
               shape="circle"
-              style={{
-                "--sui-btn-fg": "var(--mantine-color-gray-4)",
-                "--sui-btn-bd": "var(--mantine-color-gray-4)",
-              }}
               className="tool-panel__expand-btn tool-panel__toggle-vt"
               onClick={handleExpand}
             />
@@ -253,7 +250,7 @@ export default function RightSidebar() {
                 <Button
                   leftSection={<ToolIcon icon={tool.icon} marginRight="0" />}
                   aria-label={tool.name}
-                  variant="ghost"
+                  variant="tertiary"
                   className="tool-panel__collapsed-tool-btn"
                   data-selected={selectedToolKey === id}
                   onClick={() => {
@@ -323,7 +320,7 @@ export default function RightSidebar() {
                     ) : null}
                     {showCloseButton ? (
                       <Button
-                        variant="ghost"
+                        variant="tertiary"
                         size="md"
                         shape="circle"
                         leftSection={<CloseIcon sx={{ fontSize: "1.1rem" }} />}
@@ -337,7 +334,7 @@ export default function RightSidebar() {
                       />
                     ) : (
                       <Button
-                        variant="outlined"
+                        variant="secondary"
                         size="md"
                         shape="circle"
                         leftSection={
@@ -359,7 +356,7 @@ export default function RightSidebar() {
                         <ChevronRightIcon sx={{ fontSize: "1.1rem" }} />
                       }
                       aria-label={t("toolPanel.collapse", "Collapse panel")}
-                      variant="outlined"
+                      variant="secondary"
                       size="md"
                       shape="circle"
                       onClick={handleCollapse}

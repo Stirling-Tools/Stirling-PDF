@@ -1120,7 +1120,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
             <div className="quick-access-popout__card">
               <div className="quick-access-popout__header">
                 <Button
-                  variant="ghost"
+                  variant="tertiary"
                   className={`quick-access-popout__back ${accessInviteOpen ? "is-visible" : ""}`}
                   onClick={() => setAccessInviteOpen(false)}
                   aria-label={t("quickAccess.accessBack", "Back")}
@@ -1140,7 +1140,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                 <div className="quick-access-popout__header-actions">
                   {!accessInviteOpen && (
                     <Button
-                      variant="ghost"
+                      variant="tertiary"
                       className="quick-access-popout__header-action"
                       onClick={() => {
                         void openShareManage();
@@ -1156,7 +1156,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                     />
                   )}
                   <Button
-                    variant="ghost"
+                    variant="tertiary"
                     className="quick-access-popout__header-action"
                     onClick={() => setAccessMenuOpen(false)}
                     aria-label={t("close", "Close")}
@@ -1317,7 +1317,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                         </select>
                       </div>
                       <Button
-                        variant="ghost"
+                        variant="tertiary"
                         accent="danger"
                         className="quick-access-popout__remove"
                         onClick={() => handleRemoveInviteRow(row.id)}
@@ -1334,7 +1334,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                     </div>
                   ))}
                   <Button
-                    variant="ghost"
+                    variant="tertiary"
                     className="quick-access-popout__add"
                     onClick={handleAddInviteRow}
                     leftSection={
@@ -1365,7 +1365,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                     </Button>
                     {shareLinksEnabled && (
                       <Button
-                        variant="ghost"
+                        variant="tertiary"
                         className="quick-access-popout__link"
                         onClick={handleCopyShareLink}
                         leftSection={
@@ -1399,7 +1399,7 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                     )}
                     {shareLinksEnabled && (
                       <Button
-                        variant="ghost"
+                        variant="tertiary"
                         className="quick-access-popout__link"
                         onClick={handleCopyShareLink}
                         leftSection={

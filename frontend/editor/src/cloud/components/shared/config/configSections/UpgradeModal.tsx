@@ -154,7 +154,7 @@ export default function UpgradeModal({
             <div className="upm-header__left">
               {step === "checkout" && (
                 <Button
-                  variant="ghost"
+                  variant="tertiary"
                   aria-label={t("payg.upgrade.backAria", "Back")}
                   onClick={goBackToCap}
                   style={{ marginLeft: -6 }}
@@ -171,7 +171,7 @@ export default function UpgradeModal({
               </h2>
             </div>
             <Button
-              variant="ghost"
+              variant="tertiary"
               aria-label={t("payg.upgrade.closeAria", "Close")}
               onClick={closeAndReset}
               leftSection={<CloseIcon fontSize="small" />}
@@ -197,7 +197,7 @@ export default function UpgradeModal({
                           { symbol: sym, amount: effectiveCap },
                         )}
                     <Button
-                      variant="ghost"
+                      variant="tertiary"
                       className="upm-step__edit"
                       onClick={goBackToCap}
                     >
@@ -262,7 +262,7 @@ export default function UpgradeModal({
               <div className="upm-footer__actions">
                 {step === "cap" && (
                   <>
-                    <Button variant="outlined" onClick={closeAndReset}>
+                    <Button variant="secondary" onClick={closeAndReset}>
                       {t("payg.upgrade.button.cancel", "Cancel")}
                     </Button>
                     <Button onClick={goToCheckout}>

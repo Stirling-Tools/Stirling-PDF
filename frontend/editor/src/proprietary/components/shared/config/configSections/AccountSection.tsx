@@ -391,7 +391,7 @@ const AccountSection: React.FC = () => {
 
               {!isSsoUser && (
                 <Button
-                  variant="outlined"
+                  variant="secondary"
                   leftSection={<LocalIcon icon="edit-rounded" />}
                   onClick={() => setUsernameModalOpen(true)}
                 >
@@ -400,7 +400,7 @@ const AccountSection: React.FC = () => {
               )}
 
               <Button
-                variant="outlined"
+                variant="secondary"
                 accent="danger"
                 leftSection={<LocalIcon icon="logout-rounded" />}
                 onClick={handleLogout}
@@ -452,7 +452,7 @@ const AccountSection: React.FC = () => {
                 </Button>
               ) : (
                 <Button
-                  variant="outlined"
+                  variant="secondary"
                   accent="danger"
                   leftSection={<LocalIcon icon="close-rounded" />}
                   onClick={() => {
@@ -546,7 +546,7 @@ const AccountSection: React.FC = () => {
 
             <Group justify="flex-end" gap="sm">
               <Button
-                variant="outlined"
+                variant="secondary"
                 onClick={() => setPasswordModalOpen(false)}
               >
                 {t("common.cancel", "Cancel")}
@@ -641,7 +641,7 @@ const AccountSection: React.FC = () => {
               required
             />
             <Group justify="flex-end" gap="sm">
-              <Button variant="outlined" onClick={handleCloseMfaSetupModal}>
+              <Button variant="secondary" onClick={handleCloseMfaSetupModal}>
                 {t("common.cancel", "Cancel")}
               </Button>
               <Button type="submit" loading={mfaLoading}>
@@ -699,7 +699,7 @@ const AccountSection: React.FC = () => {
               required
             />
             <Group justify="flex-end" gap="sm">
-              <Button variant="outlined" onClick={handleCloseMfaDisableModal}>
+              <Button variant="secondary" onClick={handleCloseMfaDisableModal}>
                 {t("common.cancel", "Cancel")}
               </Button>
               <Button accent="danger" type="submit" loading={mfaLoading}>
@@ -760,7 +760,7 @@ const AccountSection: React.FC = () => {
 
             <Group justify="flex-end" gap="sm">
               <Button
-                variant="outlined"
+                variant="secondary"
                 onClick={() => setUsernameModalOpen(false)}
               >
                 {t("common.cancel", "Cancel")}

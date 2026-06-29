@@ -67,7 +67,7 @@ export default function WordsToRedactInput({
           </Text>
           <Button
             size="sm"
-            variant="ghost"
+            variant="tertiary"
             accent="danger"
             onClick={() => removeWord(index)}
             disabled={disabled}
@@ -93,7 +93,7 @@ export default function WordsToRedactInput({
         />
         <Button
           size="sm"
-          variant="outlined"
+          variant="secondary"
           onClick={addWord}
           disabled={disabled || !currentWord.trim()}
         >

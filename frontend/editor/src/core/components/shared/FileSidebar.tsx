@@ -904,7 +904,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                     {t("fileSidebar.files", "Files")}
                   </span>
                   <Button
-                    variant="ghost"
+                    variant="tertiary"
                     className="file-sidebar-section-btn file-sidebar-section-btn-external"
                     onClick={() => navigate("/files")}
                     title={t(
@@ -919,7 +919,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                     leftSection={<OpenInNewIcon sx={{ fontSize: "1rem" }} />}
                   />
                   <Button
-                    variant="ghost"
+                    variant="tertiary"
                     className="file-sidebar-section-btn file-sidebar-section-btn-add"
                     onClick={() => nativeFileInputRef.current?.click()}
                     title={t("fileSidebar.addFiles", "Add files")}

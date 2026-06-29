@@ -235,7 +235,7 @@ const FileThumbnail = ({
         {/* Kebab menu */}
         <Button
           aria-label={t("moreOptions", "More options")}
-          variant="ghost"
+          variant="tertiary"
           className={styles.kebab}
           onClick={(e) => {
             e.stopPropagation();
@@ -252,7 +252,7 @@ const FileThumbnail = ({
           onClick={(e) => e.stopPropagation()}
         >
           <Button
-            variant="ghost"
+            variant="tertiary"
             justify="start"
             fullWidth
             className={styles.actionRow}
@@ -279,7 +279,7 @@ const FileThumbnail = ({
             {isPinned ? t("unpin", "Unpin") : t("pin", "Pin")}
           </Button>
           <Button
-            variant="ghost"
+            variant="tertiary"
             justify="start"
             fullWidth
             className={styles.actionRow}
@@ -293,7 +293,7 @@ const FileThumbnail = ({
           </Button>
           <div className={styles.actionsDivider} />
           <Button
-            variant="ghost"
+            variant="tertiary"
             justify="start"
             fullWidth
             className={`${styles.actionRow} ${styles.actionDanger}`}

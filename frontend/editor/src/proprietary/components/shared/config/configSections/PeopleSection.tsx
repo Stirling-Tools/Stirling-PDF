@@ -506,7 +506,7 @@ export default function PeopleSection() {
               </Badge>
               <Button
                 size="sm"
-                variant="outlined"
+                variant="secondary"
                 onClick={() => navigate("/settings/adminPlan")}
               >
                 {t("workspace.people.actions.upgrade", "Upgrade")}
@@ -782,7 +782,7 @@ export default function PeopleSection() {
                       zIndex={Z_INDEX_OVER_CONFIG_MODAL + 10}
                     >
                       <Button
-                        variant="ghost"
+                        variant="tertiary"
                         size="sm"
                         leftSection={
                           <LocalIcon icon="info" width="1rem" height="1rem" />
@@ -796,7 +796,7 @@ export default function PeopleSection() {
                       <Menu position="bottom-end" withinPortal>
                         <Menu.Target>
                           <Button
-                            variant="ghost"
+                            variant="tertiary"
                             disabled={!loginEnabled}
                             leftSection={
                               <LocalIcon
@@ -1007,7 +1007,7 @@ export default function PeopleSection() {
           <Button
             onClick={closeEditModal}
             size="lg"
-            variant="ghost"
+            variant="tertiary"
             leftSection={
               <LocalIcon icon="close" width="1.25rem" height="1.25rem" />
             }

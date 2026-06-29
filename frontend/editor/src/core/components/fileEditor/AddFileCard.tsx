@@ -107,7 +107,7 @@ const AddFileCard = ({
           >
             {!isUploadHover && (
               <Button
-                variant="ghost"
+                variant="tertiary"
                 style={{
                   backgroundColor: "var(--landing-button-bg)",
                   color: "var(--landing-button-color)",
@@ -135,7 +135,7 @@ const AddFileCard = ({
               </Button>
             )}
             <Button
-              variant="ghost"
+              variant="tertiary"
               aria-label={t("addFileCard.upload", "Upload")}
               title={terminology.uploadFromComputer}
               style={{

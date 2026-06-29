@@ -301,7 +301,7 @@ export const SavedSignaturesSection = ({
                 </Text>
                 <Group gap={4}>
                   <Button
-                    variant="outlined"
+                    variant="secondary"
                     aria-label={translate("saved.prev", "Previous")}
                     onClick={() =>
                       setActivePersonalIndex((prev) => Math.max(0, prev - 1))
@@ -316,7 +316,7 @@ export const SavedSignaturesSection = ({
                     }
                   />
                   <Button
-                    variant="outlined"
+                    variant="secondary"
                     aria-label={translate("saved.next", "Next")}
                     onClick={() =>
                       setActivePersonalIndex((prev) =>
@@ -353,7 +353,7 @@ export const SavedSignaturesSection = ({
                     </Badge>
                     <Group gap="xs">
                       <Button
-                        variant="ghost"
+                        variant="tertiary"
                         aria-label={t("sign.saved.use", "Use signature")}
                         onClick={() => onUseSignature(activePersonalSignature)}
                         disabled={disabled}
@@ -367,7 +367,7 @@ export const SavedSignaturesSection = ({
                       />
                       <Tooltip label={translate("saved.delete", "Remove")}>
                         <Button
-                          variant="ghost"
+                          variant="tertiary"
                           accent="danger"
                           aria-label={translate("saved.delete", "Remove")}
                           onClick={() =>
@@ -435,7 +435,7 @@ export const SavedSignaturesSection = ({
                 </Text>
                 <Group gap={4}>
                   <Button
-                    variant="outlined"
+                    variant="secondary"
                     aria-label={translate("saved.prev", "Previous")}
                     onClick={() =>
                       setActiveSharedIndex((prev) => Math.max(0, prev - 1))
@@ -450,7 +450,7 @@ export const SavedSignaturesSection = ({
                     }
                   />
                   <Button
-                    variant="outlined"
+                    variant="secondary"
                     aria-label={translate("saved.next", "Next")}
                     onClick={() =>
                       setActiveSharedIndex((prev) =>
@@ -483,7 +483,7 @@ export const SavedSignaturesSection = ({
                     </Badge>
                     <Group gap="xs">
                       <Button
-                        variant="ghost"
+                        variant="tertiary"
                         aria-label={t("sign.saved.use", "Use signature")}
                         onClick={() => onUseSignature(activeSharedSignature)}
                         disabled={disabled}
@@ -498,7 +498,7 @@ export const SavedSignaturesSection = ({
                       {isAdmin && (
                         <Tooltip label={translate("saved.delete", "Remove")}>
                           <Button
-                            variant="ghost"
+                            variant="tertiary"
                             accent="danger"
                             aria-label={translate("saved.delete", "Remove")}
                             onClick={() =>
@@ -570,7 +570,7 @@ export const SavedSignaturesSection = ({
                   </Text>
                   <Group gap={4}>
                     <Button
-                      variant="outlined"
+                      variant="secondary"
                       aria-label={translate("saved.prev", "Previous")}
                       onClick={() =>
                         setActiveLocalStorageIndex((prev) =>
@@ -587,7 +587,7 @@ export const SavedSignaturesSection = ({
                       }
                     />
                     <Button
-                      variant="outlined"
+                      variant="secondary"
                       aria-label={translate("saved.next", "Next")}
                       onClick={() =>
                         setActiveLocalStorageIndex((prev) =>
@@ -624,7 +624,7 @@ export const SavedSignaturesSection = ({
                       </Badge>
                       <Group gap="xs">
                         <Button
-                          variant="ghost"
+                          variant="tertiary"
                           aria-label={t("sign.saved.use", "Use signature")}
                           onClick={() =>
                             onUseSignature(activeLocalStorageSignature)
@@ -640,7 +640,7 @@ export const SavedSignaturesSection = ({
                         />
                         <Tooltip label={translate("saved.delete", "Remove")}>
                           <Button
-                            variant="ghost"
+                            variant="tertiary"
                             accent="danger"
                             aria-label={translate("saved.delete", "Remove")}
                             onClick={() =>

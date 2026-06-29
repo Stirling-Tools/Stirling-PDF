@@ -61,7 +61,7 @@ const HoverActionMenu: React.FC<HoverActionMenuProps> = ({
         <Tooltip key={action.id} label={action.label}>
           <Button
             size="md"
-            variant="ghost"
+            variant="tertiary"
             disabled={action.disabled}
             onClick={action.onClick}
             aria-label={action.label}

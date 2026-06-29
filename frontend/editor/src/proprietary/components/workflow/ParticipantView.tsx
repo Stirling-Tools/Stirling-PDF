@@ -314,7 +314,7 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
               size="sm"
               leftSection={<DownloadIcon fontSize="small" />}
               onClick={() => downloadDocument(token)}
-              variant="outlined"
+              variant="secondary"
             >
               {t("workflow.participant.downloadDocument", "Download Document")}
             </Button>
@@ -498,7 +498,7 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
               <Button
                 leftSection={<CancelIcon fontSize="small" />}
                 onClick={handleDecline}
-                variant="outlined"
+                variant="secondary"
                 accent="danger"
                 data-testid="decline-button"
               >

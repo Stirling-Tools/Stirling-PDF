@@ -104,7 +104,7 @@ export default function OAuthButtons({
               disabled={isSubmitting}
               className="oauth-button-icon"
               aria-label={`${t("login.signInWith", "Sign in with")} ${p.label}`}
-              variant="ghost"
+              variant="tertiary"
             >
               <img
                 src={oauthIconUrl(p.file)}
@@ -130,7 +130,7 @@ export default function OAuthButtons({
               disabled={isSubmitting}
               className="oauth-button-grid"
               aria-label={`${t("login.signInWith", "Sign in with")} ${p.label}`}
-              variant="ghost"
+              variant="tertiary"
             >
               <img
                 src={oauthIconUrl(p.file)}
@@ -149,7 +149,7 @@ export default function OAuthButtons({
         {providers.map((p) => (
           <DSButton
             key={p.id}
-            variant="outlined"
+            variant="secondary"
             onClick={() => onProviderClick(p.id)}
             disabled={isSubmitting}
             className="oauth-button-fullwidth"
@@ -185,7 +185,7 @@ export default function OAuthButtons({
             disabled={!demoMode && isSubmitting}
             className={`oauth-button-vertical${useNewStyle && isSingleProvider ? " oauth-button-vertical-single" : ""}${!useNewStyle ? " oauth-button-vertical-legacy" : ""}${isTinted ? " oauth-button-vertical-tinted" : ""}${isOutline ? " oauth-button-vertical-outline" : ""}${isLight ? " oauth-button-vertical-light" : ""}`}
             aria-label={`${t("login.signInWith", "Sign in with")} ${p.label}`}
-            variant="ghost"
+            variant="tertiary"
             style={
               isTinted
                 ? ({

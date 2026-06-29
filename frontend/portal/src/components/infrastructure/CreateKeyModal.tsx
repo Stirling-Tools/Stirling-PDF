@@ -77,7 +77,7 @@ export function CreateKeyModal({
           </Button>
         ) : (
           <div className="portal-infra__modal-actions">
-            <Button variant="ghost" onClick={close}>
+            <Button variant="tertiary" onClick={close}>
               {t("infrastructure.createKey.cancel")}
             </Button>
             <Button

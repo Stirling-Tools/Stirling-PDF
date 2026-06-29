@@ -96,7 +96,7 @@ const RotateSettings = ({
       <Group justify="center" gap="lg">
         <Button
           size="lg"
-          variant="outlined"
+          variant="secondary"
           onClick={parameters.rotateAnticlockwise}
           disabled={disabled}
           aria-label={t("rotate.rotateLeft", "Rotate Anticlockwise")}
@@ -106,7 +106,7 @@ const RotateSettings = ({
 
         <Button
           size="lg"
-          variant="outlined"
+          variant="secondary"
           onClick={parameters.rotateClockwise}
           disabled={disabled}
           aria-label={t("rotate.rotateRight", "Rotate Clockwise")}

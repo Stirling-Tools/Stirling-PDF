@@ -301,7 +301,7 @@ export default function Login() {
         {/* Magic link button + its expandable form as one unit */}
         <div>
           <Button
-            variant="outlined"
+            variant="secondary"
             disabled={isSigningIn}
             onClick={toggleMagicLink}
             className={`oauth-button-fullwidth auth-expandable-trigger ${showMagicLinkForm ? "auth-expandable-trigger--active" : ""}`}
@@ -372,7 +372,7 @@ export default function Login() {
 
       {/* Email & Password button */}
       <Button
-        variant="outlined"
+        variant="secondary"
         disabled={isSigningIn}
         onClick={toggleEmailForm}
         className={`oauth-button-fullwidth auth-expandable-trigger ${showEmailForm ? "auth-expandable-trigger--active" : ""}`}
@@ -402,7 +402,7 @@ export default function Login() {
               }
             />
             <Button
-              variant="ghost"
+              variant="tertiary"
               onClick={() => navigate("/auth/reset")}
               className="auth-link-black"
               style={{ fontSize: "0.8125rem", marginTop: "0.25rem" }}
@@ -416,7 +416,7 @@ export default function Login() {
       {/* Skip */}
       <div style={{ textAlign: "center", margin: "1rem 0" }}>
         <Button
-          variant="ghost"
+          variant="tertiary"
           onClick={handleAnonymousSignIn}
           disabled={isSigningIn}
           style={{
@@ -443,7 +443,7 @@ export default function Login() {
         }}
       >
         <Button
-          variant="ghost"
+          variant="tertiary"
           onClick={() => navigate("/signup")}
           style={{
             background: "none",

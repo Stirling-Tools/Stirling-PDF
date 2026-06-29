@@ -59,7 +59,7 @@ const StorageStatsCard: React.FC<StorageStatsCardProps> = ({
         <Group gap="xs">
           {filesCount > 0 && (
             <Button
-              variant="outlined"
+              variant="secondary"
               accent="danger"
               size="sm"
               onClick={onClearAll}
@@ -68,7 +68,7 @@ const StorageStatsCard: React.FC<StorageStatsCardProps> = ({
               {t("fileManager.clearAll", "Clear All")}
             </Button>
           )}
-          <Button variant="outlined" size="sm" onClick={onReloadFiles}>
+          <Button variant="secondary" size="sm" onClick={onReloadFiles}>
             Reload Files
           </Button>
         </Group>

@@ -15,7 +15,7 @@ export default function NavigationLink({
         onClick={onClick}
         disabled={isDisabled}
         className="navigation-link-button"
-        variant="ghost"
+        variant="tertiary"
       >
         {text}
       </Button>

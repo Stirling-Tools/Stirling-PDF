@@ -193,7 +193,7 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
               {t("crop.preview.title", "Crop Area Selection")}
             </Text>
             <Button
-              variant="outlined"
+              variant="secondary"
               onClick={handleReset}
               disabled={disabled || isFullCrop}
               title={t("crop.reset", "Reset to full PDF")}

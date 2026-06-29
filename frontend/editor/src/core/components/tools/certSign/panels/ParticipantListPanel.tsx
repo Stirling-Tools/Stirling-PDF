@@ -86,7 +86,7 @@ export const ParticipantListPanel: React.FC<ParticipantListPanelProps> = ({
                   <Button
                     leftSection={<DeleteIcon sx={{ fontSize: "1rem" }} />}
                     size="sm"
-                    variant="ghost"
+                    variant="tertiary"
                     accent="danger"
                     onClick={() => onRemove(participant.id)}
                     title={t(

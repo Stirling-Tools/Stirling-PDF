@@ -497,7 +497,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
               </DisabledButtonWithTooltip>
             ) : (
               <Button
-                variant="outlined"
+                variant="secondary"
                 fullWidth
                 loading={loading}
                 onClick={() => {
@@ -512,8 +512,8 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
               </Button>
             )}
             <Button
-              variant="ghost"
-              style={{ "--sui-btn-fg": "white" }}
+              variant="tertiary"
+              accent="neutral"
               fullWidth
               onClick={handleLocalMode}
             >
@@ -546,7 +546,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
               style={{ marginTop: "1.5rem" }}
             >
               <Button
-                variant="ghost"
+                variant="tertiary"
                 onClick={handleLocalMode}
                 className="navigation-link-button"
                 disabled={loading}
@@ -564,7 +564,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
           style={{ marginTop: "1.5rem" }}
         >
           <Button
-            variant="ghost"
+            variant="tertiary"
             onClick={handleBack}
             className="navigation-link-button"
           >

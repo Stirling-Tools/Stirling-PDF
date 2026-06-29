@@ -102,7 +102,7 @@ export function SearchModal() {
                 {items.map((item) => (
                   <Button
                     key={item.label}
-                    variant="ghost"
+                    variant="tertiary"
                     justify="start"
                     fullWidth
                     className="portal-search__item"

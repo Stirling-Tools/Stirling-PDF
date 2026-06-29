@@ -166,7 +166,7 @@ export function DeleteFilesDialog({
         )}
 
         <Group justify="flex-end">
-          <Button variant="outlined" onClick={onClose} disabled={submitting}>
+          <Button variant="secondary" onClick={onClose} disabled={submitting}>
             {t("filesPage.cancel", "Cancel")}
           </Button>
           <Button

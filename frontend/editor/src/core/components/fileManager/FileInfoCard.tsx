@@ -208,7 +208,7 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({
               <Divider />
               <Button
                 size="sm"
-                variant="outlined"
+                variant="secondary"
                 onClick={() => onMakeCopy(currentFile)}
                 fullWidth
               >
@@ -260,7 +260,7 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({
                   </Group>
                   <Button
                     size="sm"
-                    variant="outlined"
+                    variant="secondary"
                     onClick={() => setShowShareManageModal(true)}
                     fullWidth
                   >

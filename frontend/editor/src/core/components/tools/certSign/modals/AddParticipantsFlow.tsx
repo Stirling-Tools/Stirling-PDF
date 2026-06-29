@@ -75,7 +75,7 @@ export const AddParticipantsFlow: React.FC<AddParticipantsFlowProps> = ({
         />
 
         <Group justify="flex-end">
-          <Button variant="outlined" onClick={handleClose}>
+          <Button variant="secondary" onClick={handleClose}>
             {t("common.cancel", "Cancel")}
           </Button>
           <Button

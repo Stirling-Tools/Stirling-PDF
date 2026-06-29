@@ -324,7 +324,7 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
               </p>
             )}
           </div>
-          <DSButton variant="filled" accent="danger" onClick={onLogoutClick}>
+          <DSButton variant="primary" accent="danger" onClick={onLogoutClick}>
             {t("logOut", "Log out")}
           </DSButton>
         </div>
@@ -391,7 +391,7 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
                 )}
               </Text>
               <DSButton
-                variant="outlined"
+                variant="secondary"
                 onClick={handleUseCustomPicture}
                 disabled={profileUploading}
               >
@@ -432,7 +432,7 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
                   )}
                 </FileButton>
                 <DSButton
-                  variant="outlined"
+                  variant="secondary"
                   onClick={handleProfileRemove}
                   disabled={!profilePictureUrl || profileUploading}
                 >
@@ -573,7 +573,7 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
                   )}
                   style={{ flex: 1 }}
                 />
-                <DSButton type="submit" variant="filled" disabled={isLoading}>
+                <DSButton type="submit" variant="primary" disabled={isLoading}>
                   {t("config.account.upgrade.upgradeButton", "Upgrade Account")}
                 </DSButton>
               </Group>
@@ -593,7 +593,7 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
           }}
         >
           <DSButton
-            variant="outlined"
+            variant="secondary"
             accent="danger"
             onClick={() => setDeleteModalOpen(true)}
           >
@@ -641,14 +641,14 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
           />
           <Group justify="flex-end" gap="sm">
             <DSButton
-              variant="outlined"
+              variant="secondary"
               onClick={closeDeleteModal}
               type="button"
             >
               {t("cancel", "Cancel")}
             </DSButton>
             <DSButton
-              variant="filled"
+              variant="primary"
               accent="danger"
               disabled={
                 confirmEmail.toLowerCase() !== user?.email?.toLowerCase()

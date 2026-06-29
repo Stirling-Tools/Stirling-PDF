@@ -53,10 +53,10 @@ export const WithActions: Story = {
         <StatusBadge tone="success" pulse>
           Healthy
         </StatusBadge>
-        <Button size="sm" variant="outlined">
+        <Button size="sm" variant="secondary">
           Edit composition
         </Button>
-        <Button size="sm" variant="filled">
+        <Button size="sm" variant="primary">
           View runs
         </Button>
       </>

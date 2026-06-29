@@ -26,7 +26,7 @@ export default function MagicLinkForm({
     return (
       <div className="auth-toggle-wrapper">
         <Button
-          variant="ghost"
+          variant="tertiary"
           onClick={() => {
             setShowMagicLink(true);
           }}

@@ -136,7 +136,7 @@ const PageEditorControls = ({
         {/* Undo/Redo */}
         <Tooltip label={t("pageEditor.toolbar.undo", "Undo")}>
           <Button
-            variant="ghost"
+            variant="tertiary"
             size="lg"
             onClick={onUndo}
             disabled={!canUndo}
@@ -146,7 +146,7 @@ const PageEditorControls = ({
         </Tooltip>
         <Tooltip label={t("pageEditor.toolbar.redo", "Redo")}>
           <Button
-            variant="ghost"
+            variant="tertiary"
             size="lg"
             onClick={onRedo}
             disabled={!canRedo}
@@ -169,7 +169,7 @@ const PageEditorControls = ({
           label={t("pageEditor.toolbar.rotateLeft", "Rotate Selected Left")}
         >
           <Button
-            variant="ghost"
+            variant="tertiary"
             size="lg"
             onClick={() => onRotate("left")}
             disabled={selectedPageIds.length === 0}
@@ -184,7 +184,7 @@ const PageEditorControls = ({
           label={t("pageEditor.toolbar.rotateRight", "Rotate Selected Right")}
         >
           <Button
-            variant="ghost"
+            variant="tertiary"
             size="lg"
             onClick={() => onRotate("right")}
             disabled={selectedPageIds.length === 0}
@@ -197,7 +197,7 @@ const PageEditorControls = ({
         </Tooltip>
         <Tooltip label={t("pageEditor.toolbar.delete", "Delete Selected")}>
           <Button
-            variant="ghost"
+            variant="tertiary"
             size="lg"
             onClick={onDelete}
             disabled={selectedPageIds.length === 0}
@@ -207,7 +207,7 @@ const PageEditorControls = ({
         </Tooltip>
         <Tooltip label={getSplitTooltip()}>
           <Button
-            variant="ghost"
+            variant="tertiary"
             size="lg"
             onClick={onSplit}
             disabled={selectedPageIds.length === 0}
@@ -217,7 +217,7 @@ const PageEditorControls = ({
         </Tooltip>
         <Tooltip label={getPageBreakTooltip()}>
           <Button
-            variant="ghost"
+            variant="tertiary"
             size="lg"
             onClick={onPageBreak}
             disabled={selectedPageIds.length === 0}

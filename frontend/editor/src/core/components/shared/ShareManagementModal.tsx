@@ -622,7 +622,7 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
                       </Text>
                       <Group justify="flex-end" gap="sm">
                         <Button
-                          variant="outlined"
+                          variant="secondary"
                           onClick={() => setShowEmailWarning(false)}
                           disabled={isLoading}
                         >
@@ -715,7 +715,7 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
                                 {t("confirm", "Confirm")}
                               </Button>
                               <Button
-                                variant="outlined"
+                                variant="secondary"
                                 size="sm"
                                 onClick={() => setConfirmRemoveUser(null)}
                               >
@@ -724,7 +724,7 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
                             </Group>
                           ) : (
                             <Button
-                              variant="outlined"
+                              variant="secondary"
                               accent="danger"
                               size="sm"
                               leftSection={
@@ -786,7 +786,7 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
                             label={t("storageShare.linkLabel", "Share link")}
                             rightSection={
                               <Button
-                                variant="ghost"
+                                variant="tertiary"
                                 size="sm"
                                 leftSection={
                                   <ContentCopyRoundedIcon
@@ -847,7 +847,7 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
                             </Stack>
                             <Group gap="xs">
                               <Button
-                                variant={isSelected ? "outlined" : "filled"}
+                                variant={isSelected ? "secondary" : "primary"}
                                 size="sm"
                                 leftSection={
                                   <HistoryIcon style={{ fontSize: 16 }} />
@@ -881,7 +881,7 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
                                     {t("confirm", "Confirm")}
                                   </Button>
                                   <Button
-                                    variant="outlined"
+                                    variant="secondary"
                                     size="sm"
                                     onClick={() => setConfirmRevokeToken(null)}
                                   >
@@ -890,7 +890,7 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
                                 </Group>
                               ) : (
                                 <Button
-                                  variant="outlined"
+                                  variant="secondary"
                                   accent="danger"
                                   size="sm"
                                   leftSection={

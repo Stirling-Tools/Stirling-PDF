@@ -170,7 +170,7 @@ export function FreeLimitReachedModal({ onClose }: FreeLimitReachedModalProps) {
               >
                 <Button
                   onClick={onClose}
-                  variant="outlined"
+                  variant="secondary"
                   size="sm"
                   className="free-limit-modal-button"
                   style={{

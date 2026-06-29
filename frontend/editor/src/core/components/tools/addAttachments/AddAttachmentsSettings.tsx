@@ -124,7 +124,7 @@ const AddAttachmentsSettings = ({
                       "Remove file",
                     )}
                     size="sm"
-                    variant="ghost"
+                    variant="tertiary"
                     accent="danger"
                     style={{ flexShrink: 0 }}
                     onClick={() => {

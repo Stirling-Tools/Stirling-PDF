@@ -58,7 +58,7 @@ export const SessionActionsPanel: React.FC<SessionActionsPanelProps> = ({
         <>
           <Divider />
           <Button
-            variant="outlined"
+            variant="secondary"
             leftSection={<AddIcon />}
             onClick={onAddParticipants}
             fullWidth

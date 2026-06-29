@@ -35,7 +35,7 @@ export function Sources() {
         </div>
         <div className="portal-sources__actions">
           <Button
-            variant="outlined"
+            variant="secondary"
             onClick={() => setActiveView("agent-builder")}
             leftSection={<AgentBuilderIcon size={16} />}
           >

@@ -24,7 +24,7 @@ const NavigationControls = ({
         <Button
           leftSection={<ChevronLeftIcon style={{ fontSize: "1rem" }} />}
           aria-label="Previous"
-          variant="outlined"
+          variant="secondary"
           size="sm"
           onClick={onPrevious}
           disabled={totalFiles <= 1}
@@ -37,7 +37,7 @@ const NavigationControls = ({
         <Button
           leftSection={<ChevronRightIcon style={{ fontSize: "1rem" }} />}
           aria-label="Next"
-          variant="outlined"
+          variant="secondary"
           size="sm"
           onClick={onNext}
           disabled={totalFiles <= 1}

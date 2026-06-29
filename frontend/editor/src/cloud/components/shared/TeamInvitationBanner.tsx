@@ -76,14 +76,11 @@ export function TeamInvitationBanner() {
   const actionButtons = (
     <Group gap="xs" wrap="nowrap">
       <Button
-        variant="outlined"
+        variant="secondary"
+        accent="neutral"
         size="sm"
         onClick={handleAccept}
         loading={processing}
-        style={{
-          "--sui-btn-bg": "var(--mantine-color-white)",
-          "--sui-btn-fg": "var(--mantine-color-dark-9)",
-        }}
         leftSection={
           <LocalIcon
             icon="check"
@@ -96,7 +93,7 @@ export function TeamInvitationBanner() {
         {t("team.invitationBanner.acceptButton", "Accept")}
       </Button>
       <Button
-        variant="ghost"
+        variant="tertiary"
         size="sm"
         onClick={handleReject}
         loading={processing}

@@ -31,7 +31,7 @@ const CustomMetadataStep = ({
           {t("changeMetadata.customFields.title", "Custom Metadata")}
         </Text>
         <Button
-          variant="outlined"
+          variant="secondary"
           size="sm"
           onClick={() => addCustomMetadata()}
           disabled={disabled}
@@ -74,7 +74,7 @@ const CustomMetadataStep = ({
             disabled={disabled}
           />
           <Button
-            variant="outlined"
+            variant="secondary"
             accent="danger"
             size="sm"
             onClick={() => removeCustomMetadata(entry.id)}

@@ -243,7 +243,7 @@ const BulkShareModal: React.FC<BulkShareModalProps> = ({
                 label={t("storageShare.linkLabel", "Share link")}
                 rightSection={
                   <Button
-                    variant="ghost"
+                    variant="tertiary"
                     size="sm"
                     leftSection={
                       <ContentCopyRoundedIcon style={{ fontSize: 16 }} />
@@ -297,7 +297,7 @@ const BulkShareModal: React.FC<BulkShareModalProps> = ({
         </Paper>
 
         <Group justify="flex-end" gap="sm">
-          <Button variant="outlined" onClick={onClose} disabled={isWorking}>
+          <Button variant="secondary" onClick={onClose} disabled={isWorking}>
             {t("cancel", "Cancel")}
           </Button>
           <Button

@@ -80,7 +80,7 @@ export default function ToolList({
               {index > 1 && (
                 <Button
                   leftSection={<CloseIcon style={{ fontSize: 16 }} />}
-                  variant="ghost"
+                  variant="tertiary"
                   size="sm"
                   hover={false}
                   onClick={() => onToolRemove(index)}
@@ -120,7 +120,7 @@ export default function ToolList({
                   {tool.operation && (
                     <Button
                       leftSection={<SettingsIcon style={{ fontSize: 16 }} />}
-                      variant="ghost"
+                      variant="tertiary"
                       size="sm"
                       onClick={() => onToolConfigure(index)}
                       aria-label={t(

@@ -40,7 +40,7 @@ export function Infrastructure() {
           <p className="portal-infra__sub">{t("infrastructure.subtitle")}</p>
         </div>
         <Button
-          variant="outlined"
+          variant="secondary"
           size="sm"
           onClick={() => setActiveView("editor")}
         >

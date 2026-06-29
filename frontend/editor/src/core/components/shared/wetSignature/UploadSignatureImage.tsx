@@ -89,7 +89,7 @@ export const UploadSignatureImage: React.FC<UploadSignatureImageProps> = ({
             />
           </div>
           <DsButton
-            variant="outlined"
+            variant="secondary"
             accent="danger"
             leftSection={<DeleteIcon sx={{ fontSize: 16 }} />}
             onClick={handleClear}

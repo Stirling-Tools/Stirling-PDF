@@ -69,7 +69,7 @@ const CompactToolItem: React.FC<CompactToolItemProps> = ({
 
   const compactButton = (
     <Button
-      variant="ghost"
+      variant="tertiary"
       justify="start"
       fullWidth
       className={`tool-panel__fullscreen-list-item ${getItemClasses(false)} ${isSelected ? "tool-panel__fullscreen-list-item--selected" : ""} ${!disabled ? "tool-panel__fullscreen-list-item--with-star" : ""}`}

@@ -113,7 +113,7 @@ export default function SignupRequiredBootstrap() {
             gap: "0.5rem",
           }}
         >
-          <Button variant="outlined" onClick={() => setOpened(false)}>
+          <Button variant="secondary" onClick={() => setOpened(false)}>
             {t("payg.signupRequired.cancel", "Not now")}
           </Button>
           <Button

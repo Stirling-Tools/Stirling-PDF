@@ -37,7 +37,7 @@ const MultiSelectControls = ({
           {selectedCount} {t("fileManager.filesSelected", "files")}
         </Text>
         <Group>
-          <Button variant="outlined" size="sm" onClick={onClearSelection}>
+          <Button variant="secondary" size="sm" onClick={onClearSelection}>
             {t("fileManager.clearSelection", "Clear files")}
           </Button>
 

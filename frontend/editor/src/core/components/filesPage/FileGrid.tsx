@@ -287,7 +287,7 @@ function EmptyState({
                 <span style={{ display: "inline-flex" }}>
                   <Button
                     size="md"
-                    variant="outlined"
+                    variant="secondary"
                     leftSection={<CreateNewFolderIcon fontSize="small" />}
                     disabled
                     style={{ pointerEvents: "auto" }}
@@ -299,7 +299,7 @@ function EmptyState({
             ) : (
               <Button
                 size="md"
-                variant="outlined"
+                variant="secondary"
                 leftSection={<CreateNewFolderIcon fontSize="small" />}
                 onClick={onCreateFolder}
               >
@@ -1117,7 +1117,7 @@ function FolderRow({
         <Menu.Target>
           <Button
             ref={kebabRef}
-            variant="ghost"
+            variant="tertiary"
             size="sm"
             onClick={(e) => e.stopPropagation()}
             aria-label={t("filesPage.folderMenu", "Folder actions")}
@@ -1333,7 +1333,7 @@ function FileRow({
         <Menu.Target>
           <Button
             ref={kebabRef}
-            variant="ghost"
+            variant="tertiary"
             size="sm"
             onClick={(e) => e.stopPropagation()}
             aria-label={t("filesPage.fileMenu", "File actions")}

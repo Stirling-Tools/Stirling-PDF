@@ -57,7 +57,7 @@ export default function LoginHeader({
         {onClose && (
           <Button
             onClick={onClose}
-            variant="ghost"
+            variant="tertiary"
             leftSection={<CloseIcon fontSize="small" />}
             aria-label="Close"
             style={{

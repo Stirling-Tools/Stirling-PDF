@@ -57,7 +57,7 @@ export function CodeBlock({
         <span className="sui-code__lang">{lang}</span>
         {copyable && (
           <Button
-            variant="ghost"
+            variant="tertiary"
             shape="circle"
             className="sui-code__copy"
             onClick={copy}

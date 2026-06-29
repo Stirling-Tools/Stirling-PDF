@@ -411,7 +411,7 @@ function TreeNodeRow({
           <Menu.Target>
             <Button
               size="sm"
-              variant="ghost"
+              variant="tertiary"
               className="files-page-tree-kebab"
               aria-label={t(
                 "filesPage.treeMenu.actions",

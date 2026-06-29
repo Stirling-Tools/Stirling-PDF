@@ -902,7 +902,7 @@ export default function FileManagerView() {
                   withinPortal
                 >
                   <Button
-                    variant="outlined"
+                    variant="secondary"
                     size="md"
                     loading={refreshing}
                     disabled={refreshing || Boolean(signInRequiredReason)}
@@ -921,7 +921,7 @@ export default function FileManagerView() {
                   >
                     <span style={{ display: "inline-flex" }}>
                       <Button
-                        variant="outlined"
+                        variant="secondary"
                         size="sm"
                         leftSection={<CreateNewFolderIcon fontSize="small" />}
                         disabled
@@ -933,7 +933,7 @@ export default function FileManagerView() {
                   </Tooltip>
                 ) : (
                   <Button
-                    variant="outlined"
+                    variant="secondary"
                     size="sm"
                     leftSection={<CreateNewFolderIcon fontSize="small" />}
                     onClick={() => openNewFolderDialog()}
@@ -958,7 +958,7 @@ export default function FileManagerView() {
                   >
                     <Button
                       size="lg"
-                      variant="outlined"
+                      variant="secondary"
                       onClick={() => setMobileUploadModalOpen(true)}
                       aria-label={t(
                         "filesPage.uploadFromMobile",
@@ -1001,7 +1001,7 @@ export default function FileManagerView() {
           <span>{folders.error}</span>
           <Button
             size="sm"
-            variant="ghost"
+            variant="tertiary"
             aria-label={t("filesPage.dismissError", "Dismiss")}
             onClick={() => folders.setError(null)}
             leftSection={<>&times;</>}
@@ -1135,7 +1135,7 @@ export default function FileManagerView() {
                   w={280}
                 >
                   <Button
-                    variant="ghost"
+                    variant="tertiary"
                     size="sm"
                     onClick={() => {
                       if (allSelected) {
@@ -1198,7 +1198,7 @@ export default function FileManagerView() {
                         >
                           <Button
                             size="sm"
-                            variant="outlined"
+                            variant="secondary"
                             leftSection={<CloudUploadIcon fontSize="small" />}
                             disabled={Boolean(saveToServerDisabledReason)}
                             onClick={() =>
@@ -1228,7 +1228,7 @@ export default function FileManagerView() {
                           >
                             <Button
                               size="sm"
-                              variant="outlined"
+                              variant="secondary"
                               leftSection={
                                 <InfoOutlinedIcon fontSize="small" />
                               }
@@ -1245,7 +1245,7 @@ export default function FileManagerView() {
                       <Tooltip label={moveLabel} withinPortal>
                         <Button
                           size="sm"
-                          variant="outlined"
+                          variant="secondary"
                           leftSection={<DriveFileMoveIcon fontSize="small" />}
                           onClick={() => promptMoveFiles(selectedFiles)}
                           aria-label={moveLabel}
@@ -1257,7 +1257,7 @@ export default function FileManagerView() {
                         <Button
                           size="sm"
                           accent="danger"
-                          variant="outlined"
+                          variant="secondary"
                           leftSection={<DeleteIcon fontSize="small" />}
                           onClick={() => handleRemoveFiles(selectedFiles)}
                           aria-label={removeLabel}
@@ -1270,7 +1270,7 @@ export default function FileManagerView() {
                         withinPortal
                       >
                         <Button
-                          variant="ghost"
+                          variant="tertiary"
                           size="md"
                           onClick={() => clearSelection()}
                           aria-label={t(
@@ -1671,7 +1671,7 @@ const SearchField = React.forwardRef<
       />
       {value && (
         <Button
-          variant="ghost"
+          variant="tertiary"
           size="sm"
           onClick={() => onChange("")}
           aria-label={t("filesPage.clearSearch", "Clear search")}
@@ -1697,7 +1697,7 @@ function Breadcrumbs() {
         return (
           <React.Fragment key={entry.id ?? "root"}>
             <Button
-              variant="ghost"
+              variant="tertiary"
               className={`files-page-breadcrumb${isLast ? " is-current" : ""}`}
               onClick={() => folders.setCurrentFolderId(entry.id)}
               onDragOver={(e) => {

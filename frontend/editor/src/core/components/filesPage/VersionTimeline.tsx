@@ -146,7 +146,7 @@ export function VersionTimeline({
                   )}
                 </div>
                 <Button
-                  variant="ghost"
+                  variant="tertiary"
                   className="files-page-details-version-timeline-ellipsis-btn"
                   onClick={() => setShowAllCollapsed(true)}
                 >
@@ -183,7 +183,7 @@ export function VersionTimeline({
               </div>
               <div className="files-page-details-version-timeline-body">
                 <Button
-                  variant="ghost"
+                  variant="tertiary"
                   className="files-page-details-version-timeline-summary"
                   onClick={() => toggleExpand(v.id)}
                   aria-expanded={isExpanded}
@@ -231,7 +231,7 @@ export function VersionTimeline({
                   <Menu position="bottom-end" withinPortal shadow="md">
                     <Menu.Target>
                       <Button
-                        variant="ghost"
+                        variant="tertiary"
                         size="sm"
                         aria-label={t(
                           "filesPage.versionActions",
@@ -304,7 +304,7 @@ export function VersionTimeline({
       </ol>
       {collapsible && showAllCollapsed && (
         <Button
-          variant="ghost"
+          variant="tertiary"
           className="files-page-details-version-timeline-collapse-btn"
           onClick={() => setShowAllCollapsed(false)}
         >

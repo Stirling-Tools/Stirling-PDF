@@ -227,7 +227,7 @@ export default function BookmarkEditor({
             <Group gap="sm" align="flex-start">
               <Button
                 leftSection={<LocalIcon icon={chevronIcon} />}
-                variant="ghost"
+                variant="tertiary"
                 onMouseDown={(e) => {
                   e.preventDefault();
                   if (hasChildren) handleToggle(bookmark.id);
@@ -272,7 +272,7 @@ export default function BookmarkEditor({
                   leftSection={
                     <LocalIcon icon="subdirectory-arrow-right-rounded" />
                   }
-                  variant="ghost"
+                  variant="tertiary"
                   accent="success"
                   onMouseDown={(e) => {
                     e.preventDefault();
@@ -293,7 +293,7 @@ export default function BookmarkEditor({
               >
                 <Button
                   leftSection={<LocalIcon icon="add-rounded" />}
-                  variant="ghost"
+                  variant="tertiary"
                   onMouseDown={(e) => {
                     e.preventDefault();
                     handleAddSibling(bookmark.id);
@@ -313,7 +313,7 @@ export default function BookmarkEditor({
               >
                 <Button
                   leftSection={<LocalIcon icon="delete-rounded" />}
-                  variant="ghost"
+                  variant="tertiary"
                   accent="danger"
                   onMouseDown={(e) => {
                     e.preventDefault();
@@ -406,7 +406,7 @@ export default function BookmarkEditor({
           </Text>
         </div>
         <Button
-          variant="outlined"
+          variant="secondary"
           leftSection={<LocalIcon icon="bookmark-add-rounded" />}
           onMouseDown={(e) => {
             e.preventDefault();
@@ -438,7 +438,7 @@ export default function BookmarkEditor({
               )}
             </Text>
             <Button
-              variant="ghost"
+              variant="tertiary"
               leftSection={<LocalIcon icon="add-rounded" />}
               onMouseDown={(e) => {
                 e.preventDefault();

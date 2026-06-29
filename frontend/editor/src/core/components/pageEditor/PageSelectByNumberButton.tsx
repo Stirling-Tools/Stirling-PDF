@@ -38,7 +38,7 @@ export default function PageSelectByNumberButton({
           <Popover.Target>
             <div style={{ display: "inline-flex" }}>
               <Button
-                variant="ghost"
+                variant="tertiary"
                 disabled={disabled || totalPages === 0}
                 aria-label={label}
                 leftSection={

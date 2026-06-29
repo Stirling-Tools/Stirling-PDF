@@ -50,7 +50,7 @@ export const ManageBillingButton: React.FC<ManageBillingButtonProps> = ({
   };
 
   return (
-    <Button variant="outlined" onClick={handleClick} loading={loading}>
+    <Button variant="secondary" onClick={handleClick} loading={loading}>
       {t("billing.manageBilling", "Manage Billing")}
     </Button>
   );

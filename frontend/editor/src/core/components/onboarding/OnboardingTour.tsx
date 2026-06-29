@@ -137,7 +137,7 @@ export default function OnboardingTour({
                 setIsOpen,
               })
             }
-            variant="ghost"
+            variant="tertiary"
             size="lg"
             aria-label={
               isLast
@@ -152,7 +152,7 @@ export default function OnboardingTour({
         Close: ({ onClick }) => (
           <Button
             onClick={onClick}
-            variant="ghost"
+            variant="tertiary"
             size="md"
             aria-label={t("onboarding.close", "Close")}
             leftSection={<>&times;</>}

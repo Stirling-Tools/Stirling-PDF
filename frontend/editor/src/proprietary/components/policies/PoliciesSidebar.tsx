@@ -170,7 +170,7 @@ export function PoliciesSection({
         >
           <Button
             type="button"
-            variant="ghost"
+            variant="tertiary"
             className="pol-info-btn"
             aria-label={t(
               "policies.sidebar.infoAriaLabel",
@@ -203,9 +203,9 @@ export function PoliciesSection({
                     </span>
                     <span className="pol-row-trail">
                       <Button
-                        variant="ghost"
+                        variant="tertiary"
                         size="sm"
-                        style={{ "--sui-btn-fg": "var(--color-text-3)" }}
+                        accent="neutral"
                         onClick={() =>
                           window.open("https://stirling.com/contact", "_blank")
                         }

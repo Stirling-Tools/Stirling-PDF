@@ -168,14 +168,14 @@ export const ReviewSignatureStep: React.FC<ReviewSignatureStepProps> = ({
       {/* Action Buttons */}
       <Group gap="sm" mt="md">
         <Button
-          variant="outlined"
+          variant="secondary"
           onClick={onBack}
           leftSection={<ArrowBackIcon sx={{ fontSize: 16 }} />}
         >
           {t("certSign.collab.signRequest.steps.back", "Back")}
         </Button>
         <Button
-          variant="outlined"
+          variant="secondary"
           accent="danger"
           onClick={onDecline}
           disabled={disabled}

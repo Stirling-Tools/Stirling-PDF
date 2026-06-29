@@ -232,7 +232,7 @@ export default function ShareLinkPage() {
                   {t("storageShare.openInApp", "Open in Stirling PDF")}
                 </Button>
                 <Button
-                  variant="outlined"
+                  variant="secondary"
                   leftSection={<DownloadIcon style={{ fontSize: 18 }} />}
                   onClick={handleDownload}
                   loading={isWorking}

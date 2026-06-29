@@ -41,15 +41,15 @@ function toSharedButtonVariant(
 ): ButtonVariant {
   switch (variant) {
     case "filled":
-      return "filled";
+      return "primary";
     case "outline":
-      return "outlined";
+      return "secondary";
     case "subtle":
-      return "ghost";
+      return "tertiary";
     case "light":
     case "white":
     default:
-      return "outlined";
+      return "secondary";
   }
 }
 
@@ -66,7 +66,7 @@ function toSharedButtonAccent(color: string | undefined): ButtonAccent {
       return "warning";
     case "blue":
     default:
-      return "neutral";
+      return "default";
   }
 }
 
@@ -226,7 +226,7 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
           )}
           {dismissible && (
             <Button
-              variant="ghost"
+              variant="tertiary"
               size="sm"
               onClick={handleDismiss}
               aria-label={t("infoBanner.dismiss", "Dismiss")}

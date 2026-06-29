@@ -32,7 +32,7 @@ const DismissAllErrorsButton: React.FC<DismissAllErrorsButtonProps> = ({
   return (
     <Group className={className}>
       <Button
-        variant="outlined"
+        variant="secondary"
         accent="danger"
         size="sm"
         onClick={handleDismissAllErrors}

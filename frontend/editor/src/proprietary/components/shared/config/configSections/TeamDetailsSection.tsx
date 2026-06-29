@@ -352,7 +352,7 @@ export default function TeamDetailsSection({
         <Text size="sm" c="red">
           {t("workspace.teams.teamNotFound", "Team not found")}
         </Text>
-        <Button variant="outlined" onClick={onBack}>
+        <Button variant="secondary" onClick={onBack}>
           {t("workspace.teams.backToTeams", "Back to Teams")}
         </Button>
       </Stack>
@@ -364,7 +364,7 @@ export default function TeamDetailsSection({
       {/* Header with back button */}
       <Group>
         <Button
-          variant="ghost"
+          variant="tertiary"
           onClick={onBack}
           aria-label={t("common.back", "Back")}
           leftSection={
@@ -566,7 +566,7 @@ export default function TeamDetailsSection({
                         zIndex={Z_INDEX_OVER_CONFIG_MODAL + 10}
                       >
                         <Button
-                          variant="ghost"
+                          variant="tertiary"
                           size="sm"
                           aria-label={t(
                             "workspace.people.userInfo",
@@ -582,7 +582,7 @@ export default function TeamDetailsSection({
                       <Menu position="bottom-end" withinPortal>
                         <Menu.Target>
                           <Button
-                            variant="ghost"
+                            variant="tertiary"
                             aria-label={t(
                               "workspace.people.memberActions",
                               "Member actions",
@@ -716,7 +716,7 @@ export default function TeamDetailsSection({
           <Button
             onClick={() => setAddMemberModalOpened(false)}
             size="lg"
-            variant="ghost"
+            variant="tertiary"
             aria-label={t("common.close", "Close")}
             leftSection={<LocalIcon icon="close-rounded" />}
             style={{
@@ -798,7 +798,7 @@ export default function TeamDetailsSection({
           <Button
             onClick={() => setChangeTeamModalOpened(false)}
             size="lg"
-            variant="ghost"
+            variant="tertiary"
             aria-label={t("common.close", "Close")}
             leftSection={<LocalIcon icon="close-rounded" />}
             style={{

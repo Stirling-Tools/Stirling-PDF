@@ -61,7 +61,7 @@ function MockChatContent({
       >
         <span style={{ fontWeight: 600 }}>Stirling</span>
         <Button
-          variant="ghost"
+          variant="tertiary"
           shape="circle"
           onClick={onClose}
           aria-label="Close chat"

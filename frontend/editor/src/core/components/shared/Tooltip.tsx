@@ -398,7 +398,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
     >
       {shouldShowCloseButton && (
         <Button
-          variant="ghost"
+          variant="tertiary"
           className={styles["tooltip-pin-button"]}
           onClick={(e) => {
             e.stopPropagation();

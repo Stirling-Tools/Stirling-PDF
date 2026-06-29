@@ -1554,7 +1554,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
         <Button
           aria-label={t("pdfTextEditor.actions.clearText", "Clear text")}
           size="sm"
-          variant="ghost"
+          variant="tertiary"
           accent="danger"
           style={{
             position: "absolute",
@@ -2006,7 +2006,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                 </Text>
                 <Group justify="flex-end" gap="sm" mt="xs">
                   <Button
-                    variant="outlined"
+                    variant="secondary"
                     onClick={handleDismissWelcomeBanner}
                   >
                     {t("pdfTextEditor.welcomeBanner.gotIt", "Got it")}
@@ -2124,7 +2124,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                           >
                             <Button
                               size="sm"
-                              variant="outlined"
+                              variant="secondary"
                               aria-label={t(
                                 "pdfTextEditor.manual.merge",
                                 "Merge selection",
@@ -2143,7 +2143,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                           >
                             <Button
                               size="sm"
-                              variant="outlined"
+                              variant="secondary"
                               aria-label={t(
                                 "pdfTextEditor.manual.ungroup",
                                 "Ungroup selection",
@@ -2162,7 +2162,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                           <Menu.Target>
                             <Button
                               size="sm"
-                              variant="outlined"
+                              variant="secondary"
                               aria-label={t(
                                 "pdfTextEditor.manual.widthMenu",
                                 "Width options",

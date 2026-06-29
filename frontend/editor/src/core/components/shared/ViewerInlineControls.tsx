@@ -38,7 +38,7 @@ export function ViewerInlineControls() {
 
       {/* Zoom controls */}
       <Button
-        variant="ghost"
+        variant="tertiary"
         className="workbench-bar-action-icon"
         onClick={() => viewer.zoomActions.zoomOut()}
         aria-label={t("viewer.zoomOut", "Zoom out")}
@@ -65,7 +65,7 @@ export function ViewerInlineControls() {
       </div>
 
       <Button
-        variant="ghost"
+        variant="tertiary"
         className="workbench-bar-action-icon"
         onClick={() => viewer.zoomActions.zoomIn()}
         aria-label={t("viewer.zoomIn", "Zoom in")}

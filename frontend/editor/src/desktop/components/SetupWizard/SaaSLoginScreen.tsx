@@ -109,7 +109,7 @@ export const SaaSLoginScreen: React.FC<SaaSLoginScreenProps> = ({
         style={{ marginTop: "0.5rem", textAlign: "right" }}
       >
         <Button
-          variant="ghost"
+          variant="tertiary"
           onClick={() => {
             setValidationError(null);
             onSwitchToSignup();
@@ -129,7 +129,7 @@ export const SaaSLoginScreen: React.FC<SaaSLoginScreenProps> = ({
           style={{ marginTop: "0.5rem", textAlign: "center" }}
         >
           <Button
-            variant="ghost"
+            variant="tertiary"
             onClick={onSkipSignIn}
             className="navigation-link-button"
             disabled={loading}

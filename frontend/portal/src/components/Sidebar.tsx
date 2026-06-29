@@ -147,7 +147,7 @@ export function Sidebar() {
         <Dropdown.Root align="end" className="portal-sidebar__app-switch">
           <Dropdown.Trigger>
             <Button
-              variant="ghost"
+              variant="tertiary"
               className="portal-sidebar__app-switch-btn"
               aria-label={t("shell.sidebar.switchApp")}
             >

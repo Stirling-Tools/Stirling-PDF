@@ -117,7 +117,7 @@ export default function ToolConfigurationModal({
 
         <Group justify="flex-end" gap="sm">
           <Button
-            variant="outlined"
+            variant="secondary"
             leftSection={<CloseIcon />}
             onClick={onCancel}
           >

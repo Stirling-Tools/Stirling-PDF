@@ -40,7 +40,7 @@ export default function OAuthButtons({
             position="top"
           >
             <Button
-              variant="outlined"
+              variant="secondary"
               onClick={() => onProviderClick(p.id as "github" | "google")}
               disabled={isSubmitting || p.isDisabled}
               className="oauth-button-icon"
@@ -68,7 +68,7 @@ export default function OAuthButtons({
             position="top"
           >
             <Button
-              variant="outlined"
+              variant="secondary"
               onClick={() => onProviderClick(p.id as "github" | "google")}
               disabled={isSubmitting || p.isDisabled}
               className="oauth-button-grid"
@@ -92,7 +92,7 @@ export default function OAuthButtons({
         {oauthProviders.map((p) => (
           <Button
             key={p.id}
-            variant="outlined"
+            variant="secondary"
             onClick={() => onProviderClick(p.id as "github" | "google")}
             disabled={isSubmitting || p.isDisabled}
             className="oauth-button-fullwidth"
@@ -121,7 +121,7 @@ export default function OAuthButtons({
       {oauthProviders.map((p) => (
         <Button
           key={p.id}
-          variant="outlined"
+          variant="secondary"
           onClick={() => onProviderClick(p.id as "github" | "google")}
           disabled={isSubmitting || p.isDisabled}
           className="oauth-button-vertical"

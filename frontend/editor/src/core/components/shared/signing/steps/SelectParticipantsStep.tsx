@@ -54,7 +54,7 @@ export const SelectParticipantsStep: React.FC<SelectParticipantsStepProps> = ({
 
       <Group gap="sm">
         <Button
-          variant="outlined"
+          variant="secondary"
           onClick={onBack}
           leftSection={<ArrowBackIcon sx={{ fontSize: 16 }} />}
         >

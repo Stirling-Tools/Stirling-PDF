@@ -318,7 +318,7 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({
         {serverUrl && (
           <div className="navigation-link-container">
             <Button
-              variant="ghost"
+              variant="tertiary"
               className="navigation-link-button"
               disabled={testing || loading}
               onClick={() => {
@@ -341,9 +341,9 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({
           loading={testing || loading}
           disabled={loading}
           fullWidth
+          accent="danger"
           style={{
             marginTop: "var(--mantine-spacing-md)",
-            "--sui-btn-bg": "#AF3434",
           }}
         >
           {testing

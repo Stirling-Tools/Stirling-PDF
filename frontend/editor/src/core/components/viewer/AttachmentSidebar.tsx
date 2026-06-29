@@ -254,7 +254,7 @@ export const AttachmentSidebar = ({
             )}
           </div>
           <Button
-            variant="ghost"
+            variant="tertiary"
             size="sm"
             className="attachment-item__download-icon"
             aria-label={t("viewer.attachments.download", "Download attachment")}
@@ -364,7 +364,7 @@ export const AttachmentSidebar = ({
                 {currentError}
               </Text>
               <Button
-                variant="outlined"
+                variant="secondary"
                 aria-label={t("viewer.attachments.retry", "Retry")}
                 onClick={requestReload}
                 leftSection={<LocalIcon icon="refresh" />}

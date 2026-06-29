@@ -156,7 +156,7 @@ export function StorageTab() {
                 ) : (
                   // TODO(backend): launch the provider OAuth/credential flow,
                   // then POST /v1/infrastructure/storage/providers/{id}/connect
-                  <Button variant="outlined" size="sm">
+                  <Button variant="secondary" size="sm">
                     {t("infrastructure.storage.providers.connect", "Connect")}
                   </Button>
                 )}

@@ -36,7 +36,7 @@ export function PolicyDeleteConfirmModal({
           )}
         </Text>
         <Group gap="sm" justify="flex-end">
-          <Button variant="outlined" size="sm" onClick={onCancel}>
+          <Button variant="secondary" size="sm" onClick={onCancel}>
             {t("cancel", "Cancel")}
           </Button>
           <Button accent="danger" size="sm" onClick={onConfirm}>

@@ -127,7 +127,7 @@ const FileActions: React.FC = () => {
           }
         >
           <Button
-            variant="outlined"
+            variant="secondary"
             size="sm"
             onClick={handleSelectAll}
             disabled={filteredFiles.length === 0}
@@ -175,7 +175,7 @@ const FileActions: React.FC = () => {
         {uploadEnabled && (
           <Tooltip label={t("fileManager.uploadSelected", "Upload Selected")}>
             <Button
-              variant="outlined"
+              variant="secondary"
               size="sm"
               onClick={() => setShowBulkUploadModal(true)}
               disabled={!canBulkUpload}
@@ -187,7 +187,7 @@ const FileActions: React.FC = () => {
         {shareLinksEnabled && (
           <Tooltip label={t("fileManager.shareSelected", "Share Selected")}>
             <Button
-              variant="outlined"
+              variant="secondary"
               size="sm"
               onClick={() => setShowBulkShareModal(true)}
               disabled={!canBulkShare}
@@ -198,7 +198,7 @@ const FileActions: React.FC = () => {
         )}
         <Tooltip label={t("fileManager.deleteSelected", "Delete Selected")}>
           <Button
-            variant="outlined"
+            variant="secondary"
             size="sm"
             accent="danger"
             onClick={handleDeleteSelected}
@@ -210,7 +210,7 @@ const FileActions: React.FC = () => {
 
         <Tooltip label={terminology.downloadSelected}>
           <Button
-            variant="outlined"
+            variant="secondary"
             size="sm"
             onClick={handleDownloadSelected}
             disabled={!hasSelection || !hasDownloadAccess}

@@ -28,15 +28,11 @@ export function WidthControl({
         <Tooltip label={t("annotation.width", "Width")}>
           <Button
             aria-label={t("annotation.width", "Width")}
-            variant="outlined"
+            variant="secondary"
+            accent="neutral"
             size="md"
             onClick={() => setOpened(!opened)}
             disabled={disabled}
-            style={{
-              "--sui-btn-bg": "var(--bg-raised)",
-              "--sui-btn-fg": "var(--text-secondary)",
-              "--sui-btn-bd": "var(--border-default)",
-            }}
             leftSection={<LineWeightIcon style={{ fontSize: 18 }} />}
           />
         </Tooltip>

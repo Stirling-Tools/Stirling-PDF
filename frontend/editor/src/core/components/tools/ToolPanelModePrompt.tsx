@@ -184,7 +184,7 @@ const ToolPanelModePrompt = ({
           </Card>
         </div>
         <Button
-          variant="ghost"
+          variant="tertiary"
           className="tool-panel-mode-prompt__maybe-later"
           onClick={handleDismiss}
         >

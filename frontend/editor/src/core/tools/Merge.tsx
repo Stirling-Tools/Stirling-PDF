@@ -182,7 +182,7 @@ const Merge = (props: BaseToolProps) => {
             )}
           </Text>
           <Button
-            variant="outlined"
+            variant="secondary"
             size="sm"
             onClick={() => navActions.setWorkbench("fileEditor")}
           >

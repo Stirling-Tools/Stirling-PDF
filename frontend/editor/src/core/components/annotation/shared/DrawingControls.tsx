@@ -38,7 +38,7 @@ export const DrawingControls: React.FC<DrawingControlsProps> = ({
       {onUndo && (
         <Tooltip label={t("sign.undo", "Undo")}>
           <Button
-            variant="ghost"
+            variant="tertiary"
             size="lg"
             aria-label={t("sign.undo", "Undo")}
             onClick={onUndo}
@@ -57,7 +57,7 @@ export const DrawingControls: React.FC<DrawingControlsProps> = ({
       {onRedo && (
         <Tooltip label={t("sign.redo", "Redo")}>
           <Button
-            variant="ghost"
+            variant="tertiary"
             size="lg"
             aria-label={t("sign.redo", "Redo")}
             onClick={onRedo}

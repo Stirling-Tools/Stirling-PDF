@@ -78,7 +78,7 @@ const EmptyFilesState: React.FC = () => {
           onMouseLeave={() => setIsUploadHover(false)}
         >
           <Button
-            variant="ghost"
+            variant="tertiary"
             aria-label={t("emptyFilesState.upload", "Upload")}
             style={{
               backgroundColor: "var(--bg-file-manager)",

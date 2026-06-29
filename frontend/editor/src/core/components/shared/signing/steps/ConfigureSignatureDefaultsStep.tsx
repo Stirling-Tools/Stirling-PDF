@@ -73,7 +73,7 @@ export const ConfigureSignatureDefaultsStep: React.FC<
 
       <Group gap="sm">
         <Button
-          variant="outlined"
+          variant="secondary"
           onClick={onBack}
           leftSection={<ArrowBackIcon sx={{ fontSize: 16 }} />}
         >

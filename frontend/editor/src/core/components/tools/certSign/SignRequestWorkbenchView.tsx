@@ -336,15 +336,11 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
             justify={isPhone ? "flex-end" : undefined}
           >
             <Button
-              variant="outlined"
+              variant="secondary"
+              accent="neutral"
               size="sm"
               leftSection={<FolderOpenIcon fontSize="small" />}
               onClick={handleAddToActiveFiles}
-              style={{
-                "--sui-btn-bg": "var(--landing-inner-paper-bg)",
-                "--sui-btn-fg": "var(--btn-open-file)",
-                "--sui-btn-bd": "var(--landing-inner-paper-border)",
-              }}
             >
               {t(
                 "certSign.collab.signRequest.addToFiles",
@@ -354,7 +350,7 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
             {signRequest.myStatus !== "SIGNED" &&
               signRequest.myStatus !== "DECLINED" && (
                 <Button
-                  variant="outlined"
+                  variant="secondary"
                   accent="danger"
                   size="sm"
                   leftSection={<CancelIcon fontSize="small" />}
@@ -370,7 +366,7 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
                 <Button.Group>
                   <Button
                     leftSection={<ZoomOutIcon fontSize="small" />}
-                    variant="ghost"
+                    variant="tertiary"
                     size="sm"
                     onClick={() => annotationApiRef.current?.zoomOut()}
                     title={t("viewer.zoomOut", "Zoom out")}
@@ -378,7 +374,7 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
                   />
                   <Button
                     leftSection={<ZoomOutMapIcon fontSize="small" />}
-                    variant="ghost"
+                    variant="tertiary"
                     size="sm"
                     onClick={() => annotationApiRef.current?.resetZoom()}
                     title={t("viewer.resetZoom", "Reset zoom")}
@@ -386,7 +382,7 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
                   />
                   <Button
                     leftSection={<ZoomInIcon fontSize="small" />}
-                    variant="ghost"
+                    variant="tertiary"
                     size="sm"
                     onClick={() => annotationApiRef.current?.zoomIn()}
                     title={t("viewer.zoomIn", "Zoom in")}
@@ -398,7 +394,7 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
             <Divider orientation="vertical" />
             <Button
               leftSection={<CloseIcon />}
-              variant="ghost"
+              variant="tertiary"
               size="md"
               onClick={onBack}
               title={t(

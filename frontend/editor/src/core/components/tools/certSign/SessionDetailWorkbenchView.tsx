@@ -244,7 +244,7 @@ const SessionDetailWorkbenchView = ({
         <Group justify="space-between">
           <Group gap="md">
             <Button
-              variant="ghost"
+              variant="tertiary"
               leftSection={<ArrowBackIcon />}
               onClick={onBack}
               size="sm"
@@ -292,7 +292,7 @@ const SessionDetailWorkbenchView = ({
               <Button.Group>
                 <Button
                   leftSection={<ZoomOutIcon fontSize="small" />}
-                  variant="outlined"
+                  variant="secondary"
                   size="sm"
                   onClick={() => annotationApiRef.current?.zoomOut()}
                   title={t("viewer.zoomOut", "Zoom out")}
@@ -300,7 +300,7 @@ const SessionDetailWorkbenchView = ({
                 />
                 <Button
                   leftSection={<ZoomOutMapIcon fontSize="small" />}
-                  variant="outlined"
+                  variant="secondary"
                   size="sm"
                   onClick={() => annotationApiRef.current?.resetZoom()}
                   title={t("viewer.resetZoom", "Reset zoom")}
@@ -308,7 +308,7 @@ const SessionDetailWorkbenchView = ({
                 />
                 <Button
                   leftSection={<ZoomInIcon fontSize="small" />}
-                  variant="outlined"
+                  variant="secondary"
                   size="sm"
                   onClick={() => annotationApiRef.current?.zoomIn()}
                   title={t("viewer.zoomIn", "Zoom in")}
@@ -322,7 +322,7 @@ const SessionDetailWorkbenchView = ({
               <Button
                 leftSection={<DeleteIcon />}
                 accent="danger"
-                variant="outlined"
+                variant="secondary"
                 onClick={() => setDeleteModalOpen(true)}
                 size="sm"
               >
@@ -503,7 +503,7 @@ const SessionDetailWorkbenchView = ({
             )}
           </Text>
           <Group justify="flex-end">
-            <Button variant="ghost" onClick={() => setDeleteModalOpen(false)}>
+            <Button variant="tertiary" onClick={() => setDeleteModalOpen(false)}>
               {t("cancel", "Cancel")}
             </Button>
             <Button accent="danger" onClick={handleDelete} loading={deleting}>

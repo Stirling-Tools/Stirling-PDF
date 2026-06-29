@@ -55,7 +55,7 @@ export const SuccessStage: React.FC<SuccessStageProps> = ({
               </Text>
               <Code block>{licenseKey}</Code>
               <Button
-                variant="outlined"
+                variant="secondary"
                 size="sm"
                 onClick={() => navigator.clipboard.writeText(licenseKey)}
               >

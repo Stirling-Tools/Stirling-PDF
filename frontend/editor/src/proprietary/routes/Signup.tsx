@@ -132,7 +132,7 @@ export default function Signup() {
       {/* Bottom row - centered */}
       <div style={{ textAlign: "center", margin: "0.5rem 0 0.25rem" }}>
         <Button
-          variant="ghost"
+          variant="tertiary"
           onClick={() => navigate("/login")}
           className="auth-link-black"
         >

@@ -1168,7 +1168,7 @@ const EmbedPdfViewerContent = ({
       {/* Close Button - Only show in preview mode */}
       {onClose && previewFile && (
         <Button
-          variant="outlined"
+          variant="secondary"
           size="lg"
           aria-label={t("common.close", "Close")}
           style={{

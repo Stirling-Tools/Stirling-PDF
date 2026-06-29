@@ -210,7 +210,7 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
 
               <Group justify="space-between" wrap="wrap">
                 <Button
-                  variant="outlined"
+                  variant="secondary"
                   type="button"
                   onClick={fetchMfaSetup}
                   disabled={mfaLoading || submitting || setupComplete}
@@ -226,7 +226,7 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
                 >
                   Enable MFA
                 </Button>
-                <Button variant="outlined" type="button" onClick={onLogout}>
+                <Button variant="secondary" type="button" onClick={onLogout}>
                   Logout
                 </Button>
               </Group>

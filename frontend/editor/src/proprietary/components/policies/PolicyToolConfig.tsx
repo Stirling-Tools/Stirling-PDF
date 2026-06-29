@@ -88,7 +88,7 @@ export function PolicyToolConfig({
                 >
                   <Button
                     type="button"
-                    variant="ghost"
+                    variant="tertiary"
                     className="pol-info-btn"
                     aria-label={t(
                       "policies.toolConfig.infoAriaLabel",

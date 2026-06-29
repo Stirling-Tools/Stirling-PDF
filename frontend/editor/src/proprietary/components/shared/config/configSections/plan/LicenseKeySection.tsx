@@ -102,7 +102,7 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
   return (
     <div>
       <Button
-        variant="ghost"
+        variant="tertiary"
         leftSection={
           <LocalIcon
             icon={
@@ -285,7 +285,7 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
                     {(props) => (
                       <Button
                         {...props}
-                        variant="outlined"
+                        variant="secondary"
                         leftSection={
                           <LocalIcon
                             icon="upload-file-rounded"

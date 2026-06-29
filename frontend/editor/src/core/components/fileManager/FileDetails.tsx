@@ -109,16 +109,10 @@ const FileDetails: React.FC<FileDetailsProps> = ({ compact = false }) => {
 
       <Button
         size="md"
+        accent="neutral"
         onClick={onOpenFiles}
         disabled={!hasSelection && !canCloseAll}
         fullWidth
-        style={{
-          "--sui-btn-bg":
-            hasSelection || canCloseAll
-              ? "var(--btn-open-file)"
-              : "var(--mantine-color-gray-4)",
-          "--sui-btn-fg": "white",
-        }}
       >
         {canCloseAll
           ? t("fileManager.closeAllFiles", "Close all files")

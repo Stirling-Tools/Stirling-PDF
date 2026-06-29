@@ -165,7 +165,7 @@ const ToolPicker = ({
             )}
             {onShowAllTools && (
               <Button
-                variant="ghost"
+                variant="tertiary"
                 size="sm"
                 fullWidth
                 onClick={onShowAllTools}

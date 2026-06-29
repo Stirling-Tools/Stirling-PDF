@@ -143,14 +143,10 @@ function RedactionSelectionMenuInner({
         <Tooltip label={t("viewer.redaction.removeMark", "Remove this mark")}>
           <Button
             aria-label={t("viewer.redaction.removeMark", "Remove this mark")}
-            variant="outlined"
+            variant="secondary"
+            accent="neutral"
             size="md"
             onClick={handleRemove}
-            style={{
-              "--sui-btn-bg": "var(--bg-raised)",
-              "--sui-btn-fg": "var(--text-secondary)",
-              "--sui-btn-bd": "var(--border-default)",
-            }}
             leftSection={<DeleteIcon style={{ fontSize: 18 }} />}
           />
         </Tooltip>

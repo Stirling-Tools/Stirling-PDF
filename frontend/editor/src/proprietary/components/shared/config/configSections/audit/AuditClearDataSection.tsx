@@ -173,7 +173,7 @@ const AuditClearDataSection: React.FC<AuditClearDataSectionProps> = ({
 
             <Group justify="space-between">
               <Button
-                variant="outlined"
+                variant="secondary"
                 onClick={resetForm}
                 disabled={clearing}
               >

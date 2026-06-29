@@ -378,7 +378,7 @@ export default function TeamsSection() {
                   <Menu position="bottom-end" withinPortal>
                     <Menu.Target>
                       <Button
-                        variant="ghost"
+                        variant="tertiary"
                         disabled={!loginEnabled}
                         leftSection={
                           <LocalIcon
@@ -461,7 +461,7 @@ export default function TeamsSection() {
           <Button
             onClick={() => setCreateModalOpened(false)}
             size="lg"
-            variant="ghost"
+            variant="tertiary"
             leftSection={
               <LocalIcon icon="close" width="1.25rem" height="1.25rem" />
             }
@@ -522,7 +522,7 @@ export default function TeamsSection() {
           <Button
             onClick={() => setRenameModalOpened(false)}
             size="lg"
-            variant="ghost"
+            variant="tertiary"
             leftSection={
               <LocalIcon icon="close" width="1.25rem" height="1.25rem" />
             }
@@ -589,7 +589,7 @@ export default function TeamsSection() {
           <Button
             onClick={() => setAddMemberModalOpened(false)}
             size="lg"
-            variant="ghost"
+            variant="tertiary"
             leftSection={
               <LocalIcon icon="close" width="1.25rem" height="1.25rem" />
             }

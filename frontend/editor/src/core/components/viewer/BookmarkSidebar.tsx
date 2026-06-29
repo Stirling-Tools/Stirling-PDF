@@ -358,7 +358,7 @@ export const BookmarkSidebar = ({
           >
             {hasChildren ? (
               <Button
-                variant="ghost"
+                variant="tertiary"
                 size="sm"
                 className="bookmark-item__expand-icon"
                 aria-label={isNodeExpanded ? "Collapse" : "Expand"}
@@ -447,7 +447,7 @@ export const BookmarkSidebar = ({
           <>
             {Object.values(expanded).some((val) => val === false) ? (
               <Button
-                variant="ghost"
+                variant="tertiary"
                 size="sm"
                 onClick={expandAll}
                 aria-label="Expand all bookmarks"
@@ -462,7 +462,7 @@ export const BookmarkSidebar = ({
               />
             ) : (
               <Button
-                variant="ghost"
+                variant="tertiary"
                 size="sm"
                 onClick={collapseAll}
                 aria-label="Collapse all bookmarks"
@@ -515,7 +515,7 @@ export const BookmarkSidebar = ({
               <Text size="sm" c="red" ta="center">
                 {currentError}
               </Text>
-              <Button variant="outlined" size="sm" onClick={requestReload}>
+              <Button variant="secondary" size="sm" onClick={requestReload}>
                 Retry
               </Button>
             </Stack>

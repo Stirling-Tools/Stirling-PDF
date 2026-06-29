@@ -15,7 +15,7 @@ export const ErrorStage: React.FC<ErrorStageProps> = ({ error, onClose }) => {
     <Alert color="red" title={t("payment.error", "Payment Error")}>
       <Stack gap="md">
         <Text size="sm">{error}</Text>
-        <Button variant="outlined" onClick={onClose}>
+        <Button variant="secondary" onClick={onClose}>
           {t("common.close", "Close")}
         </Button>
       </Stack>

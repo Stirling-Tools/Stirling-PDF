@@ -30,7 +30,7 @@ export function SettingsStickyFooter({
           {t("admin.settings.unsavedChanges.hint", "You have unsaved changes")}
         </Text>
         <Group gap="sm">
-          <Button variant="outlined" onClick={onDiscard} size="sm">
+          <Button variant="secondary" onClick={onDiscard} size="sm">
             {t("admin.settings.discard", "Discard")}
           </Button>
           <Button onClick={onSave} loading={saving} size="sm">

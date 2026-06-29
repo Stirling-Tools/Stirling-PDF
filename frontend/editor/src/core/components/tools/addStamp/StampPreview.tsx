@@ -431,7 +431,7 @@ export default function StampPreview({
                 (parameters.overrideX < 0 || parameters.overrideY < 0);
               return (
                 <Button
-                  variant="ghost"
+                  variant="tertiary"
                   key={idx}
                   className={`${styles.gridTile} ${selected || hoverTile === idx ? styles.gridTileSelected : ""} ${hoverTile === idx ? styles.gridTileHovered : ""}`}
                   onClick={() => {

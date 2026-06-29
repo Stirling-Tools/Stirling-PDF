@@ -161,7 +161,7 @@ const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
             <Button
               leftSection={<ArrowUpwardRoundedIcon fontSize="small" />}
               size="sm"
-              variant="ghost"
+              variant="tertiary"
               onClick={() => {
                 if (matches.length)
                   setActive((p) => (p - 1 + matches.length) % matches.length);
@@ -171,7 +171,7 @@ const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
             <Button
               leftSection={<ArrowDownwardRoundedIcon fontSize="small" />}
               size="sm"
-              variant="ghost"
+              variant="tertiary"
               onClick={() => {
                 if (matches.length) setActive((p) => (p + 1) % matches.length);
               }}
@@ -180,7 +180,7 @@ const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
           </Group>
           <Group gap="xs" align="center" className="showjs-toolbar-controls">
             <Button
-              variant="ghost"
+              variant="tertiary"
               size="sm"
               className="showjs-outline-button"
               onClick={handleDownload}
@@ -190,7 +190,7 @@ const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
               {terminology.download}
             </Button>
             <Button
-              variant="ghost"
+              variant="tertiary"
               size="sm"
               className="showjs-outline-button"
               onClick={handleCopy}
@@ -312,7 +312,7 @@ const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
                     <div className="code-gutter">
                       {end != null ? (
                         <Button
-                          variant="ghost"
+                          variant="tertiary"
                           className={`fold-toggle ${folded ? "fold-collapsed" : ""}`}
                           onClick={() => toggleFold(ln)}
                           aria-label={

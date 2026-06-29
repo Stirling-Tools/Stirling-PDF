@@ -166,7 +166,7 @@ const PasswordSecurity: React.FC = () => {
             <Group justify="flex-end">
               <Button
                 type="button"
-                variant="outlined"
+                variant="secondary"
                 onClick={() => setOpened(false)}
               >
                 {t("common.cancel", "Cancel")}

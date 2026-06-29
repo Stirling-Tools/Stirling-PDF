@@ -134,7 +134,7 @@ export default function Footer({
         )}
         {finalAnalyticsEnabled && (
           <Button
-            variant="ghost"
+            variant="tertiary"
             className="footer-link px-3"
             id="cookieBanner"
             onClick={showCookiePreferences}

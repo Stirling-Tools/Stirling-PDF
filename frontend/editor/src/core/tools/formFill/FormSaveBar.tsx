@@ -157,7 +157,7 @@ export function FormSaveBar({
                 </Group>
                 <Button
                   size="sm"
-                  variant="ghost"
+                  variant="tertiary"
                   onClick={() => setDismissed(true)}
                   aria-label={t("viewer.formBar.dismiss", "Dismiss")}
                   leftSection={<CloseIcon sx={{ fontSize: 16 }} />}
@@ -168,7 +168,7 @@ export function FormSaveBar({
                 <Group gap="xs" mt="xs">
                   <Button
                     size="sm"
-                    variant="outlined"
+                    variant="secondary"
                     leftSection={<SaveIcon sx={{ fontSize: 18 }} />}
                     loading={applying}
                     disabled={saving}

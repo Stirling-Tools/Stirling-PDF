@@ -117,7 +117,7 @@ const BookletImpositionSettings = ({
       {/* Advanced Options */}
       <Stack gap="sm">
         <Button
-          variant="ghost"
+          variant="tertiary"
           onClick={() => setAdvancedOpen(!advancedOpen)}
           disabled={disabled}
         >

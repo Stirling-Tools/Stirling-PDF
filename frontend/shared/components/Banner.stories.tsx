@@ -39,7 +39,7 @@ export const WithAction: Story = {
     title: "Approaching cap",
     description: "389k of 500k docs processed.",
     action: (
-      <Button size="sm" variant="outlined" accent="warning">
+      <Button size="sm" variant="secondary" accent="warning">
         Upgrade
       </Button>
     ),

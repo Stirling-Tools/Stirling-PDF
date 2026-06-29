@@ -803,7 +803,7 @@ export default function AdminDatabaseSection() {
                   </Group>
                   <Group gap="xs">
                     <Button
-                      variant="outlined"
+                      variant="secondary"
                       leftSection={
                         <LocalIcon icon="refresh" width="1rem" height="1rem" />
                       }
@@ -848,7 +848,7 @@ export default function AdminDatabaseSection() {
                       styles={{ input: { minWidth: 280 } }}
                     />
                     <Button
-                      variant="outlined"
+                      variant="secondary"
                       onClick={handleUploadImport}
                       loading={importingUpload}
                       disabled={!loginEnabled || !isEmbeddedH2}
@@ -926,7 +926,7 @@ export default function AdminDatabaseSection() {
                                 withArrow
                               >
                                 <Button
-                                  variant="ghost"
+                                  variant="tertiary"
                                   onClick={() =>
                                     handleDownload(backup.fileName)
                                   }
@@ -956,7 +956,7 @@ export default function AdminDatabaseSection() {
                                 withArrow
                               >
                                 <Button
-                                  variant="ghost"
+                                  variant="tertiary"
                                   onClick={() =>
                                     handleImportExisting(backup.fileName)
                                   }
@@ -986,7 +986,7 @@ export default function AdminDatabaseSection() {
                                 withArrow
                               >
                                 <Button
-                                  variant="ghost"
+                                  variant="tertiary"
                                   accent="danger"
                                   onClick={() =>
                                     handleDeleteClick(backup.fileName)
@@ -1082,7 +1082,7 @@ export default function AdminDatabaseSection() {
             </Stack>
             <Group justify="flex-end" gap="sm">
               <Button
-                variant="outlined"
+                variant="secondary"
                 onClick={closeConfirmImportModal}
                 disabled={importingUpload}
               >
@@ -1126,7 +1126,7 @@ export default function AdminDatabaseSection() {
             </Alert>
             <Group justify="flex-end" gap="sm">
               <Button
-                variant="outlined"
+                variant="secondary"
                 onClick={() => setDeleteConfirmFile(null)}
                 disabled={deletingFile !== null}
               >

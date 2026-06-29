@@ -213,7 +213,7 @@ const EditTableOfContentsWorkbenchView = ({
                   </Button>
                 )}
                 <Button
-                  variant="outlined"
+                  variant="secondary"
                   leftSection={<LocalIcon icon="rotate-left" />}
                   onClick={onUndo}
                   disabled={isExecuting}

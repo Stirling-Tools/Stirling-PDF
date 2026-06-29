@@ -174,7 +174,7 @@ const AdminAuditSection: React.FC = () => {
               )}
             </Text>
             <Button
-              variant="outlined"
+              variant="secondary"
               size="sm"
               onClick={() => navigate("/settings/adminSecurity#auditLogging")}
               rightSection={

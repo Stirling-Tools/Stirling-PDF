@@ -101,7 +101,7 @@ export default function ToastRenderer() {
                   <div className="toast-controls">
                     {t.expandable && (
                       <Button
-                        variant="ghost"
+                        variant="tertiary"
                         leftSection={<LocalIcon icon="expand-more-rounded" />}
                         aria-label={translate(
                           "toast.toggleDetails",
@@ -117,7 +117,7 @@ export default function ToastRenderer() {
                       />
                     )}
                     <Button
-                      variant="ghost"
+                      variant="tertiary"
                       leftSection={<>&times;</>}
                       aria-label={translate("toast.dismiss", "Dismiss")}
                       onClick={() => dismiss(t.id)}

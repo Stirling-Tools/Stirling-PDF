@@ -36,7 +36,7 @@ export default function ObscuredOverlay({
             )}
             {buttonText && onButtonClick && (
               <Button
-                variant="ghost"
+                variant="tertiary"
                 onClick={onButtonClick}
                 className={styles.overlayButton}
               >

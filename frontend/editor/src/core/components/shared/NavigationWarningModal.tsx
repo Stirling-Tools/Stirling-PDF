@@ -100,12 +100,11 @@ const NavigationWarningModal = () => {
         <Group justify="space-between" gap="xl" visibleFrom="md">
           <Group gap="sm">
             <Button
-              variant="outlined"
+              variant="secondary"
+              accent="neutral"
               onClick={handleKeepWorking}
               style={{
                 width: BUTTON_WIDTH,
-                "--sui-btn-fg": "var(--mantine-color-gray-8)",
-                "--sui-btn-bd": "var(--mantine-color-gray-8)",
               }}
               leftSection={<ArrowBackIcon fontSize="small" />}
             >
@@ -114,10 +113,10 @@ const NavigationWarningModal = () => {
           </Group>
           <Group gap="sm">
             <Button
+              accent="danger"
               onClick={handleDiscardChanges}
               style={{
                 width: BUTTON_WIDTH,
-                "--sui-btn-bg": "var(--mantine-color-red-9)",
               }}
               leftSection={<DeleteOutlineIcon fontSize="small" />}
             >
@@ -147,7 +146,8 @@ const NavigationWarningModal = () => {
         {/* Mobile layout: centered stack of 4 buttons */}
         <Stack align="center" gap="sm" hiddenFrom="md">
           <Button
-            variant="outlined"
+            variant="secondary"
+            accent="neutral"
             onClick={handleKeepWorking}
             style={{ width: BUTTON_WIDTH }}
             leftSection={<ArrowBackIcon fontSize="small" />}
@@ -155,10 +155,10 @@ const NavigationWarningModal = () => {
             {t("keepWorking", "Keep Working")}
           </Button>
           <Button
+            accent="danger"
             onClick={handleDiscardChanges}
             style={{
               width: BUTTON_WIDTH,
-              "--sui-btn-bg": "var(--mantine-color-red-9)",
             }}
             leftSection={<DeleteOutlineIcon fontSize="small" />}
           >

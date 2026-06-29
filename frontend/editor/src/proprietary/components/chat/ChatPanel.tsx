@@ -316,7 +316,7 @@ function ChatMessageBubble({
     <div className="chat-message-actions">
       <Button
         type="button"
-        variant="ghost"
+        variant="tertiary"
         className={`chat-message-action-btn${copied ? " chat-message-action-btn--active" : ""}`}
         onClick={handleCopy}
         title={t("chat.actions.copy", "Copy message")}

@@ -221,7 +221,7 @@ function FolderCard({
       <div className="wf-card-actions" onClick={(e) => e.stopPropagation()}>
         <Button
           size="md"
-          variant="ghost"
+          variant="tertiary"
           onClick={() => onTogglePause(folder)}
           aria-label={
             isPaused
@@ -243,14 +243,14 @@ function FolderCard({
         />
         <Button
           size="md"
-          variant="ghost"
+          variant="tertiary"
           onClick={() => onEdit(folder)}
           aria-label={t("watchedFolders.home.editFolder", "Edit folder")}
           leftSection={<EditIcon style={{ fontSize: "1.125rem" }} />}
         />
         <Button
           size="md"
-          variant="ghost"
+          variant="tertiary"
           accent="danger"
           onClick={() => onDelete(folder)}
           aria-label={t("watchedFolders.home.deleteFolder", "Delete folder")}
@@ -316,7 +316,7 @@ function HowItWorks() {
         </Group>
         <Button
           size="sm"
-          variant="ghost"
+          variant="tertiary"
           onClick={() => {
             sessionStorage.setItem("wf_howItWorks_dismissed", "1");
             setDismissed(true);
@@ -390,7 +390,7 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
       </div>
       <Button
         size="md"
-        variant="filled"
+        variant="primary"
         leftSection={<AddIcon style={{ fontSize: "1.125rem" }} />}
         onClick={onCreate}
         style={{ marginTop: "var(--mantine-spacing-sm)" }}
