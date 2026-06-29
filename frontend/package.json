@@ -129,6 +129,7 @@
     "@types/react-dom": "^19.1.9",
     "@typescript-eslint/eslint-plugin": "^8.61.1",
     "@typescript-eslint/parser": "^8.61.1",
+    "@typescript/native-preview": "7.0.0-dev.20260624.1",
     "@vitejs/plugin-react-swc": "^4.1.0",
     "@vitest/coverage-v8": "^3.2.4",
     "dotenv": "^16.4.7",

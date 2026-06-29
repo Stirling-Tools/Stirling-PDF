@@ -41,5 +41,5 @@ dependencies {
     api 'org.flywaydb:flyway-core'
     runtimeOnly 'org.flywaydb:flyway-database-postgresql'
 
-    testImplementation 'com.tngtech.archunit:archunit-junit5:1.4.2'
+    testImplementation "com.tngtech.archunit:archunit-junit5:${archunitVersion}"
 }
