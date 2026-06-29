@@ -64,7 +64,9 @@ export async function fetchDeployments(
 
 /** GET /v1/infrastructure/api-keys?tier=… */
 export async function fetchApiKeys(tier: Tier): Promise<ApiKey[]> {
-  return apiClient.local.json<ApiKey[]>(`/v1/infrastructure/api-keys${q(tier)}`);
+  return apiClient.local.json<ApiKey[]>(
+    `/v1/infrastructure/api-keys${q(tier)}`,
+  );
 }
 
 /** GET /v1/infrastructure/security?tier=… */
