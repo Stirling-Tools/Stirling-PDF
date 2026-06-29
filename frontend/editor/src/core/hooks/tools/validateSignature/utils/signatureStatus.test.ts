@@ -70,6 +70,24 @@ describe("computeSignatureStatus - trust surfacing", () => {
     expect(status.details.join(" ")).toMatch(/revoked/i);
   });
 
+  test("content appended after signing -> warning", () => {
+    const status = computeSignatureStatus(
+      sig({ coversEntireDocument: false }),
+      t,
+    );
+    expect(status.kind).toBe("warning");
+    expect(status.details.join(" ")).toMatch(/modified after signing/i);
+  });
+
+  test("revocation not checked -> still valid but surfaced as a caveat", () => {
+    const status = computeSignatureStatus(
+      sig({ revocationStatus: "not-checked" }),
+      t,
+    );
+    expect(status.kind).toBe("valid");
+    expect(status.details.join(" ")).toMatch(/revocation was not checked/i);
+  });
+
   test("cryptographic failure -> red Invalid regardless of trust", () => {
     const status = computeSignatureStatus(sig({ valid: false }), t);
     expect(status.kind).toBe("invalid");

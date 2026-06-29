@@ -204,6 +204,7 @@ public class CertSignController {
         KeyStore ks = null;
         String keystorePassword = password;
         Provider signingProvider = null;
+        HardwareKeyStoreService.Pkcs11Session pkcs11Session = null;
 
         switch (certType) {
             case "PEM":
@@ -262,11 +263,18 @@ public class CertSignController {
                 break;
             case "PKCS11":
                 hardwareKeyStoreService.assertLocalDesktop(httpRequest);
-                HardwareKeyStoreService.Pkcs11Session pkcs11Session =
-                        hardwareKeyStoreService.openPkcs11(
-                                request.getPkcs11LibraryPath(),
-                                request.getPkcs11Slot(),
-                                password != null ? password.toCharArray() : null);
+                char[] pkcs11Pin = password != null ? password.toCharArray() : null;
+                try {
+                    pkcs11Session =
+                            hardwareKeyStoreService.openPkcs11(
+                                    request.getPkcs11LibraryPath(),
+                                    request.getPkcs11Slot(),
+                                    pkcs11Pin);
+                } finally {
+                    if (pkcs11Pin != null) {
+                        java.util.Arrays.fill(pkcs11Pin, '\0');
+                    }
+                }
                 ks = pkcs11Session.keyStore();
                 signingProvider = pkcs11Session.provider();
                 keystorePassword = password;
@@ -297,6 +305,14 @@ public class CertSignController {
         } catch (IOException e) {
             signedOut.close();
             throw e;
+        } finally {
+            // Clear the PIN copy and log out the token session once signing is done.
+            if (pin != null) {
+                java.util.Arrays.fill(pin, '\0');
+            }
+            if (pkcs11Session != null) {
+                pkcs11Session.close();
+            }
         }
         // Return the signed PDF
         return WebResponseUtils.pdfFileToWebResponse(

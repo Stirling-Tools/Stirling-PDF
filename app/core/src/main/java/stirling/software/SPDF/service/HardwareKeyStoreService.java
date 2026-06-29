@@ -278,8 +278,24 @@ public class HardwareKeyStoreService {
     // PKCS#11 tokens
     // ---------------------------------------------------------------------
 
-    /** A configured, logged-in PKCS#11 keystore plus the provider that must service signing. */
-    public record Pkcs11Session(KeyStore keyStore, Provider provider) {}
+    /**
+     * A configured, logged-in PKCS#11 keystore plus the provider that must service signing. Closing
+     * logs the session out so the PIN-authenticated session does not outlive the request. The
+     * provider stays cached (logout is C_Logout, not C_Finalize) so the next call reuses the same
+     * C_Initialize. Single-user desktop model - logout is best-effort.
+     */
+    public record Pkcs11Session(KeyStore keyStore, Provider provider) implements AutoCloseable {
+        @Override
+        public void close() {
+            if (provider instanceof java.security.AuthProvider authProvider) {
+                try {
+                    authProvider.logout();
+                } catch (Exception e) {
+                    // Not logged in / already logged out - nothing to clear.
+                }
+            }
+        }
+    }
 
     // One SunPKCS11 provider per driver+slot, reused across enumerate + sign. A PKCS#11 module
     // typically allows C_Initialize only once per process, so configuring a fresh provider on every
@@ -304,7 +320,12 @@ public class HardwareKeyStoreService {
             ks.load(null, pin);
             return new Pkcs11Session(ks, provider);
         } catch (Exception e) {
-            // Token may have been removed/re-inserted, leaving a stale provider. Rebuild once.
+            // A wrong PIN must not be retried: a second C_Login would burn the token's retry
+            // counter twice per attempt and can lock the token. Only rebuild on provider/init
+            // failures (e.g. token removed/re-inserted leaving a stale provider).
+            if (isAuthFailure(e)) {
+                throw e;
+            }
             pkcs11Providers.remove(cacheKey, provider);
             Provider fresh =
                     pkcs11Providers.computeIfAbsent(
@@ -313,6 +334,21 @@ public class HardwareKeyStoreService {
             ks.load(null, pin);
             return new Pkcs11Session(ks, fresh);
         }
+    }
+
+    /** True when the failure is a bad/locked PIN rather than a provider/init/device problem. */
+    private static boolean isAuthFailure(Throwable t) {
+        while (t != null) {
+            if (t instanceof javax.security.auth.login.FailedLoginException) {
+                return true;
+            }
+            String msg = t.getMessage();
+            if (msg != null && msg.toUpperCase(Locale.ROOT).contains("CKR_PIN")) {
+                return true; // CKR_PIN_INCORRECT / CKR_PIN_LOCKED / CKR_PIN_INVALID / ...
+            }
+            t = t.getCause();
+        }
+        return false;
     }
 
     private Provider buildPkcs11Provider(String libraryPath, Integer slot) {
@@ -334,8 +370,9 @@ public class HardwareKeyStoreService {
 
     public List<HardwareCertificateInfo> listPkcs11Certificates(
             String libraryPath, Integer slot, char[] pin) throws Exception {
-        Pkcs11Session session = openPkcs11(libraryPath, slot, pin);
-        return listSigningCertificates(session.keyStore(), SOURCE_PKCS11);
+        try (Pkcs11Session session = openPkcs11(libraryPath, slot, pin)) {
+            return listSigningCertificates(session.keyStore(), SOURCE_PKCS11);
+        }
     }
 
     /**

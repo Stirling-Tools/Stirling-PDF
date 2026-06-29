@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Stack, Button } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { CertSignParameters } from "@app/hooks/tools/certSign/useCertSignParameters";
@@ -33,13 +34,20 @@ const CertificateTypeSettings = ({
   const isHardwareAvailable = config?.hardwareSigningAvailable ?? false;
 
   // Fall back to upload if a previously chosen source is no longer available
-  // (e.g. an automation saved with DEVICE running on a server).
-  if (parameters.signMode === "AUTO" && !isServerCertificateEnabled) {
-    onParameterChange("signMode", "MANUAL");
-  }
-  if (parameters.signMode === "DEVICE" && !isHardwareAvailable) {
-    onParameterChange("signMode", "MANUAL");
-  }
+  // (e.g. an automation saved with DEVICE running on a server). Runs as an effect so we don't
+  // call the parent's setter while rendering.
+  useEffect(() => {
+    if (parameters.signMode === "AUTO" && !isServerCertificateEnabled) {
+      onParameterChange("signMode", "MANUAL");
+    } else if (parameters.signMode === "DEVICE" && !isHardwareAvailable) {
+      onParameterChange("signMode", "MANUAL");
+    }
+  }, [
+    parameters.signMode,
+    isServerCertificateEnabled,
+    isHardwareAvailable,
+    onParameterChange,
+  ]);
 
   const selectUpload = () => {
     onParameterChange("signMode", "MANUAL");

@@ -72,8 +72,14 @@ public class HardwareSigningController {
             throws Exception {
         hardwareKeyStoreService.assertLocalDesktop(request);
         char[] pin = body.pin() != null ? body.pin().toCharArray() : null;
-        return ResponseEntity.ok(
-                hardwareKeyStoreService.listPkcs11Certificates(
-                        body.libraryPath(), body.slot(), pin));
+        try {
+            return ResponseEntity.ok(
+                    hardwareKeyStoreService.listPkcs11Certificates(
+                            body.libraryPath(), body.slot(), pin));
+        } finally {
+            if (pin != null) {
+                java.util.Arrays.fill(pin, '\0');
+            }
+        }
     }
 }

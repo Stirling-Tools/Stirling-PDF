@@ -78,8 +78,30 @@ export const computeSignatureStatus = (
     );
   }
 
+  // Content appended after signing: the signed bytes are intact but the document carries unsigned
+  // additions the signature can't attest to. Treat as a trust caveat (downgrades to warning).
+  if (signature.coversEntireDocument === false) {
+    trustIssues.push(
+      t(
+        "validateSignature.issue.documentModified",
+        "Document modified after signing - content was added outside the signed area",
+      ),
+    );
+  }
+
   // Aggregate all issues for details UI (ignore missing metadata fields; they are optional)
   issues.push(...trustIssues);
+
+  // Revocation was not checked at all (disabled by config). Surface as an informational caveat
+  // without downgrading the badge, so an otherwise-clean signature still reads as valid.
+  if (revStatus === "not-checked") {
+    issues.push(
+      t(
+        "validateSignature.issue.revocationNotChecked",
+        "Revocation was not checked",
+      ),
+    );
+  }
 
   // If cryptographic validation failed, mark as Invalid
   if (!signature.valid) {
