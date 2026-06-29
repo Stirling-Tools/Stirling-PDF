@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Banner, Skeleton, StatusBadge } from "@shared/components";
 import { useAsync } from "@portal/hooks/useAsync";
 import { useAccountLinkContext } from "@portal/contexts/AccountLinkContext";
@@ -20,6 +21,7 @@ import "@portal/views/AccountLink.css";
  * intentionally rather than via a top-level sidebar nav entry.
  */
 export function AccountLinkPanel() {
+  const { t } = useTranslation();
   const link = useAccountLinkContext();
   const { linkState } = useLink();
 
@@ -54,10 +56,7 @@ export function AccountLinkPanel() {
     <div className="portal-link portal-link--in-settings">
       <header className="portal-link__header">
         <div>
-          <p className="portal-link__page-sub">
-            Link this self-hosted org to its Stirling account so unattended
-            processing bills against your org wallet.
-          </p>
+          <p className="portal-link__page-sub">{t("accountLink.panel.sub")}</p>
         </div>
         <StatusBadge
           tone={
@@ -69,7 +68,7 @@ export function AccountLinkPanel() {
           }
           size="md"
         >
-          {LINK_INFO[linkState].label}
+          {t(LINK_INFO[linkState].labelKey)}
         </StatusBadge>
       </header>
 
@@ -78,10 +77,11 @@ export function AccountLinkPanel() {
       {linked && (
         <section className="portal-link__instances">
           <div className="portal-link__section-head">
-            <h2 className="portal-link__section-title">Linked instances</h2>
+            <h2 className="portal-link__section-title">
+              {t("accountLink.panel.instancesTitle")}
+            </h2>
             <p className="portal-link__section-sub">
-              Every self-hosted instance registered to this org. Revoke a
-              credential to immediately cut off its unattended access.
+              {t("accountLink.panel.instancesSub")}
             </p>
           </div>
           {instancesState.loading ? (
@@ -91,11 +91,14 @@ export function AccountLinkPanel() {
               ))}
             </div>
           ) : instancesState.error ? (
-            <Banner tone="danger" title="Couldn't load linked instances">
+            <Banner
+              tone="danger"
+              title={t("accountLink.panel.loadError.title")}
+            >
               {instancesState.error instanceof HttpError &&
               instancesState.error.status === 403
-                ? "Only the team owner can view the org's linked instances."
-                : "Couldn't load the team's linked instances. Try again in a moment."}
+                ? t("accountLink.panel.loadError.forbidden")
+                : t("accountLink.panel.loadError.generic")}
             </Banner>
           ) : (
             <LinkedInstancesTable
@@ -106,7 +109,7 @@ export function AccountLinkPanel() {
           )}
 
           {revokeError && (
-            <Banner tone="danger" title="Couldn't revoke instance">
+            <Banner tone="danger" title={t("accountLink.panel.revokeError")}>
               {revokeError}
             </Banner>
           )}

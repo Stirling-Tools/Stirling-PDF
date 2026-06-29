@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Button, Card } from "@shared/components";
 
 interface Props {
@@ -10,22 +11,24 @@ interface Props {
  * views. The CTA is intentionally inert until the sales/quote URL is confirmed.
  */
 export function EnterpriseUpsell({ bare = false }: Props) {
+  const { t } = useTranslation();
   const body = (
     <>
       <span className="portal-billing__eyebrow">
-        Volume discount · 1M+ PDFs
+        {t("billing.enterpriseUpsell.eyebrow")}
       </span>
       <div className="portal-billing__enterprise-head">
         <div>
-          <h3 className="portal-billing__section-title">Stirling Enterprise</h3>
+          <h3 className="portal-billing__section-title">
+            {t("billing.enterpriseUpsell.title")}
+          </h3>
           <p className="portal-billing__section-sub">
-            Committed volume discounts, air-gapped deployment, custom MSA and
-            security reviews, and 3rd-party distributor partnerships.
+            {t("billing.enterpriseUpsell.description")}
           </p>
         </div>
         {/* Destination wired when the enterprise/sales URL is confirmed. */}
         <Button variant="gradient" size="sm" disabled>
-          Build your Enterprise quote
+          {t("billing.enterpriseUpsell.cta")}
         </Button>
       </div>
     </>

@@ -1602,3 +1602,252 @@ redirectingToEditor = "Redirecting to the editor..."
 title = "Something went wrong on this page"
 description = "This view hit an unexpected error. Try again, or pick another section from the sidebar."
 retry = "Try again"
+
+# ── Account link (combined-billing Mode A) ───────────────────────────────────
+[accountLink.state]
+unlinked = "Not linked"
+free = "Editor plan"
+subscribed = "Processor plan"
+
+[accountLink.panel]
+sub = "Link this self-hosted org to its Stirling account so unattended processing bills against your org wallet."
+instancesTitle = "Linked instances"
+instancesSub = "Every self-hosted instance registered to this org. Revoke a credential to immediately cut off its unattended access."
+revokeError = "Couldn't revoke instance"
+
+[accountLink.panel.loadError]
+title = "Couldn't load linked instances"
+forbidden = "Only the team owner can view the org's linked instances."
+generic = "Couldn't load the team's linked instances. Try again in a moment."
+
+[accountLink.card]
+eyebrow = "Account link"
+title = "Link this org to its Stirling account"
+linked = "Linked"
+notLinked = "Not linked"
+unlink = "Unlink"
+linkButton = "Link your Stirling account"
+linkedAs = "Linked as {{name}}."
+linkedGeneric = "This instance is linked."
+billingNote = "Unattended processing bills against your org wallet."
+
+[accountLink.card.error]
+title = "Couldn't link"
+
+[accountLink.card.loginNotConfigured]
+title = "SaaS login not configured"
+before = "Set"
+after = "to enable account linking against the hosted Stirling account. In dev you can simulate sign-in from the link dialog."
+
+[accountLink.modal]
+linkTitle = "Link your Stirling account"
+reauthTitle = "Sign in again"
+linkSubtitle = "Sign in to the account this server should bill against."
+reauthSubtitle = "Your session expired — sign back in to your Stirling account. Your instance stays linked."
+simulateSignIn = "Simulate sign-in (dev)"
+
+[accountLink.modal.loginNotConfigured]
+title = "SaaS login not configured"
+before = "Set"
+and = "and"
+after = "to enable in-app linking against the hosted Stirling account."
+
+[accountLink.gate]
+title = "Link to unlock"
+titleFeature = "Link to unlock {{feature}}"
+description = "Link this org's Stirling account to use billable features."
+action = "Link account"
+
+[accountLink.instances]
+unnamed = "Unnamed instance"
+revoked = "Revoked"
+active = "Active"
+revoke = "Revoke"
+
+[accountLink.instances.columns]
+instance = "Instance"
+status = "Status"
+lastSeen = "Last seen"
+linked = "Linked"
+
+[accountLink.instances.empty]
+title = "No linked instances"
+description = "Link this org's account, then register your self-hosted instances to see them here."
+
+[accountLink.instances.time]
+never = "never"
+justNow = "just now"
+minutesAgo_one = "{{count}}m ago"
+minutesAgo_other = "{{count}}m ago"
+hoursAgo_one = "{{count}}h ago"
+hoursAgo_other = "{{count}}h ago"
+daysAgo_one = "{{count}}d ago"
+daysAgo_other = "{{count}}d ago"
+
+# ── Billing surface (Usage & billing) ────────────────────────────────────────
+[billing.enterpriseUpsell]
+eyebrow = "Volume discount · 1M+ PDFs"
+title = "Stirling Enterprise"
+description = "Committed volume discounts, air-gapped deployment, custom MSA and security reviews, and 3rd-party distributor partnerships."
+cta = "Build your Enterprise quote"
+
+[billing.freeEditors]
+title = "Free PDF Editors"
+previewBadge = "Preview · sample data"
+subtitle = "Deploy anywhere, for your whole team."
+editorsDeployed = "Editors deployed"
+activeThisMonth = "Active this month"
+pdfsEdited = "PDFs edited"
+cost = "Cost"
+inviteTeammates = "Invite teammates"
+
+[billing.freePlan]
+currentPlan = "Current plan"
+planName = "Editor"
+freeForever = "Free forever"
+ssoIncluded = "SSO included"
+unlimitedUsers = "Unlimited users"
+switchOnProcessor = "Switch on the Processor →"
+noTeamResolved = "No team is resolved on your wallet yet — refresh and try again."
+checkoutErrorTitle = "Couldn't start checkout"
+ownerOnly = "Only the team owner can switch on the Processor plan."
+
+[billing.linkPrompt]
+title = "Link your Stirling account"
+description = "Manual PDF editing — view, sign, merge, split, watermark, compress, convert, manual OCR — is always free, linked or not. Link to claim 500 free PDFs of metered processing (automation, AI, and the API); when you need more, turn on the Processor plan and only pay for what you use."
+cta = "Link Stirling account"
+
+[billing.walletMeter]
+eyebrow = "Processor trial"
+sub = "Use the PDF Editor for free. Pay to process PDFs automatically."
+title_one = "Process {{allowance}} PDFs free"
+title_other = "Process {{allowance}} PDFs free"
+titleWithRate_one = "Process {{allowance}} PDFs free, then {{rate}}/PDF"
+titleWithRate_other = "Process {{allowance}} PDFs free, then {{rate}}/PDF"
+capSuffix_one = "of {{allowance}} free PDFs used"
+capSuffix_other = "of {{allowance}} free PDFs used"
+statusLabel_one = "{{remaining}} left"
+statusLabel_other = "{{remaining}} left"
+
+[billing.pdfsProcessed]
+eyebrow = "PDFs processed this period"
+unit = "metered PDFs"
+segbarAriaLabel = "Metered PDFs split by category"
+segmentApiLabel = "API"
+segmentApiDesc = "Direct API requests"
+segmentAgentsLabel = "Agents"
+segmentAgentsDesc = "AI agent actions"
+segmentAutomationLabel = "Automation"
+segmentAutomationDesc = "Automations & pipelines"
+legendValue_one = "{{formatted}} PDFs"
+legendValue_other = "{{formatted}} PDFs"
+emptyPeriod = "No metered processing yet this period."
+
+[billing.spendThisMonth]
+eyebrow = "Spend this month"
+processed_one = "{{formattedCount}} PDF processed."
+processed_other = "{{formattedCount}} PDFs processed."
+processedWithRate_one = "{{formattedCount}} PDF processed, at {{rate}} each."
+processedWithRate_other = "{{formattedCount}} PDFs processed, at {{rate}} each."
+
+[billing.spendLimit]
+eyebrow = "Spend limit"
+editTitle = "Set your monthly ceiling"
+capControlNote = "Changes apply immediately — raise or lower the ceiling any time."
+useSuggested = "Use suggested · {{amount}} / month"
+guardrailLabel = "Your guardrail:"
+guardrailBody = "a hard ceiling — you're never billed past it. At the cap, metered processing pauses (unlimited PDF editing keeps working) until you raise it or the cycle resets. Nothing is lost."
+saveError = "Couldn't save limit"
+cancel = "Cancel"
+save = "Save limit"
+displaySub = "You're only billed for what you process automatically — never past the ceiling."
+adjustLimit = "Adjust limit"
+capSuffix = "/ month"
+capSuffixWithDocs = "/ month · ≈ {{documents}} documents"
+noCap = "no cap"
+pctUsed = "{{pct}}% used"
+usedThisMonth = "{{amount}} used this month"
+remaining = "{{amount}} remaining"
+thisPeriodUncapped = "{{amount}} this period · uncapped"
+
+[billing.spendLimit.projection]
+label = "Projected to exceed."
+body_one = "At {{rate}}/day you reach the cap in ~{{count}} day (~{{monthEnd}} month-end). Suggested limit ~{{suggested}}."
+body_other = "At {{rate}}/day you reach the cap in ~{{count}} days (~{{monthEnd}} month-end). Suggested limit ~{{suggested}}."
+
+[billing.invoices]
+title = "Invoice history"
+columnDate = "Date"
+columnPdfsProcessed = "PDFs processed"
+columnAmount = "Amount"
+columnStatus = "Status"
+columnDescription = "Description"
+descriptionFallback = "Invoice"
+viewLink = "View ↗"
+viewAriaLabel = "View invoice {{number}} in Stripe"
+pdfLink = "PDF ↓"
+downloadAriaLabel = "Download invoice {{number}} as PDF"
+loadError = "Couldn't load invoices: {{error}}"
+emptyTitle = "No invoices yet"
+emptyDescription = "Once your team subscribes and the first cycle closes, your invoices appear here."
+showFewer_one = "Show fewer (top {{count}})"
+showFewer_other = "Show fewer (top {{count}})"
+showMostRecent_one = "Show {{count}} most recent"
+showMostRecent_other = "Show {{count}} most recent"
+showAll_one = "Show all {{count}}"
+showAll_other = "Show all {{count}}"
+fetchLimitNote_one = "Showing your {{count}} most recent invoices. Older invoices are in the Stripe portal."
+fetchLimitNote_other = "Showing your {{count}} most recent invoices. Older invoices are in the Stripe portal."
+
+[billing.paymentMethod]
+eyebrow = "Payment method"
+cardEnding = "{{brand}} ending {{last4}}"
+cardFallback = "Card"
+expiresBilledMonthly = "Expires {{expiry}} · billed monthly"
+billedMonthly = "Billed monthly"
+managedTitle = "Managed in Stripe"
+managedSub = "Your card and billing details are kept securely in Stripe's customer portal."
+update = "Update"
+
+[billing.checkout]
+title = "Turn on the Processor plan"
+subtitle = "Add a card to keep going past your free Editor-plan grant. Stripe handles the rest."
+noClientSecret = "Edge function returned no client_secret."
+
+[billing.checkout.notConfigured]
+title = "Stripe not configured"
+bodyBefore = "Set"
+bodyAfter = "in the portal env to enable in-app checkout."
+
+[billing.checkout.error]
+title = "Couldn't start checkout"
+
+[billing.subscribedPlan.capWarn]
+reachedTitle = "Monthly spend limit reached"
+approachingTitle = "You're at {{pct}}% of your monthly spend limit"
+raiseLimit = "Raise limit"
+reachedBody = "Metered processing is paused until you raise the limit or the cycle resets. Unlimited PDF editing keeps working."
+approachingBody = "Raise it now so automated processing never pauses."
+
+[billing.subscribedPlan.portalError]
+title = "Couldn't open Stripe portal"
+
+# ── Usage & billing view ─────────────────────────────────────────────────────
+[usage]
+title = "Usage & billing"
+subtitle = "Consumption, invoices, and plan management for every PDF Stirling has billed, in one console."
+managePayment = "Manage Payment"
+
+[usage.finalizing]
+title = "Finalizing your subscription…"
+body = "It can take a few seconds for your subscription to activate. This page updates automatically."
+
+[usage.sessionExpired]
+title = "Session expired"
+action = "Sign in again"
+body = "Your Stirling account session has expired. Sign in again to view billing — your instance stays linked."
+
+[usage.error]
+loadWallet = "Couldn't load wallet"
+openStripePortal = "Couldn't open Stripe portal"
+walletUnavailable = "Wallet unavailable: {{status}} {{statusText}}"

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Banner, Modal, Skeleton } from "@shared/components";
 import {
   EmbeddedCheckout,
@@ -52,6 +53,7 @@ export function StripeCheckoutModal({
   billingOwnerEmail,
   onComplete,
 }: Props) {
+  const { t } = useTranslation();
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -87,7 +89,7 @@ export function StripeCheckoutModal({
           return;
         }
         if (!session.clientSecret) {
-          setError("Edge function returned no client_secret.");
+          setError(t("billing.checkout.noClientSecret"));
           return;
         }
         setClientSecret(session.clientSecret);
@@ -103,7 +105,7 @@ export function StripeCheckoutModal({
     return () => {
       cancelled = true;
     };
-  }, [open, teamId, currency, billingOwnerEmail, onClose]);
+  }, [open, teamId, currency, billingOwnerEmail, onClose, t]);
 
   const stripe = publishableKey ? loadStripeOnce(publishableKey) : null;
   const canRender = Boolean(stripe && clientSecret);
@@ -113,17 +115,21 @@ export function StripeCheckoutModal({
       open={open}
       onClose={onClose}
       width="lg"
-      title="Turn on the Processor plan"
-      subtitle="Add a card to keep going past your free Editor-plan grant. Stripe handles the rest."
+      title={t("billing.checkout.title")}
+      subtitle={t("billing.checkout.subtitle")}
     >
       {!publishableKey && (
-        <Banner tone="neutral" title="Stripe not configured">
-          Set <code>VITE_STRIPE_PUBLISHABLE_KEY</code> in the portal env to
-          enable in-app checkout.
+        <Banner
+          tone="neutral"
+          title={t("billing.checkout.notConfigured.title")}
+        >
+          {t("billing.checkout.notConfigured.bodyBefore")}{" "}
+          <code>VITE_STRIPE_PUBLISHABLE_KEY</code>{" "}
+          {t("billing.checkout.notConfigured.bodyAfter")}
         </Banner>
       )}
       {publishableKey && error && (
-        <Banner tone="danger" title="Couldn't start checkout">
+        <Banner tone="danger" title={t("billing.checkout.error.title")}>
           {error}
         </Banner>
       )}

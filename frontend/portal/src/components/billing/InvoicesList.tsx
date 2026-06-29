@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Button,
   Card,
@@ -47,6 +48,7 @@ function statusTone(
  * handlers so they're real user gestures (popup blockers don't trip).
  */
 export function InvoicesList() {
+  const { t } = useTranslation();
   const [invoices, setInvoices] = useState<Invoice[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
@@ -81,13 +83,13 @@ export function InvoicesList() {
   const columns: TableColumn<Invoice>[] = [
     {
       key: "date",
-      header: "Date",
+      header: t("billing.invoices.columnDate"),
       render: (inv) =>
         inv.createdAt ? formatPeriodDate(inv.createdAt, { year: true }) : "—",
     },
     {
       key: "pdfs",
-      header: "PDFs processed",
+      header: t("billing.invoices.columnPdfsProcessed"),
       align: "right",
       // Billed units on the invoice's metered line item; "—" when the
       // line-item table isn't synced into the Stripe mirror.
@@ -96,7 +98,7 @@ export function InvoicesList() {
     },
     {
       key: "amount",
-      header: "Amount",
+      header: t("billing.invoices.columnAmount"),
       align: "right",
       render: (inv) =>
         inv.totalMinor == null
@@ -105,7 +107,7 @@ export function InvoicesList() {
     },
     {
       key: "status",
-      header: "Status",
+      header: t("billing.invoices.columnStatus"),
       render: (inv) => (
         <StatusBadge tone={statusTone(inv.status)} size="sm">
           {inv.status}
@@ -114,10 +116,10 @@ export function InvoicesList() {
     },
     {
       key: "description",
-      header: "Description",
+      header: t("billing.invoices.columnDescription"),
       render: (inv) => (
         <span className="portal-billing__invoice-desc">
-          {inv.description ?? "Invoice"}
+          {inv.description ?? t("billing.invoices.descriptionFallback")}
         </span>
       ),
     },
@@ -133,9 +135,11 @@ export function InvoicesList() {
               href={inv.hostedInvoiceUrl}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label={`View invoice ${inv.number ?? inv.id} in Stripe`}
+              aria-label={t("billing.invoices.viewAriaLabel", {
+                number: inv.number ?? inv.id,
+              })}
             >
-              View ↗
+              {t("billing.invoices.viewLink")}
             </a>
           )}
           {inv.invoicePdf && (
@@ -144,9 +148,11 @@ export function InvoicesList() {
               href={inv.invoicePdf}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label={`Download invoice ${inv.number ?? inv.id} as PDF`}
+              aria-label={t("billing.invoices.downloadAriaLabel", {
+                number: inv.number ?? inv.id,
+              })}
             >
-              PDF ↓
+              {t("billing.invoices.pdfLink")}
             </a>
           )}
         </div>
@@ -156,7 +162,9 @@ export function InvoicesList() {
 
   return (
     <Card padding="loose">
-      <h3 className="portal-billing__section-title">Invoice history</h3>
+      <h3 className="portal-billing__section-title">
+        {t("billing.invoices.title")}
+      </h3>
 
       {invoices === null && !error && (
         <div className="portal-billing__skeleton" aria-hidden>
@@ -168,15 +176,15 @@ export function InvoicesList() {
 
       {error && (
         <p className="portal-billing__error" role="alert">
-          Couldn't load invoices: {error}
+          {t("billing.invoices.loadError", { error })}
         </p>
       )}
 
       {invoices !== null && invoices.length === 0 && !error && (
         <EmptyState
           size="compact"
-          title="No invoices yet"
-          description="Once your team subscribes and the first cycle closes, your invoices appear here."
+          title={t("billing.invoices.emptyTitle")}
+          description={t("billing.invoices.emptyDescription")}
         />
       )}
 
@@ -196,15 +204,14 @@ export function InvoicesList() {
                 onClick={() => setShowAll((v) => !v)}
               >
                 {showAll
-                  ? `Show fewer (top ${DEFAULT_VISIBLE})`
+                  ? t("billing.invoices.showFewer", { count: DEFAULT_VISIBLE })
                   : atFetchLimit
-                    ? `Show ${total} most recent`
-                    : `Show all ${total}`}
+                    ? t("billing.invoices.showMostRecent", { count: total })
+                    : t("billing.invoices.showAll", { count: total })}
               </Button>
               {showAll && atFetchLimit && (
                 <span className="portal-billing__invoice-note">
-                  Showing your {FETCH_LIMIT} most recent invoices. Older
-                  invoices are in the Stripe portal.
+                  {t("billing.invoices.fetchLimitNote", { count: FETCH_LIMIT })}
                 </span>
               )}
             </div>

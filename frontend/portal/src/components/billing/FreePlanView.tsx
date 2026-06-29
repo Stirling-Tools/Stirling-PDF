@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Banner, Button, StatusBadge } from "@shared/components";
 import type { Wallet } from "@portal/api/billing";
 import type { SaasCurrency } from "@portal/billing/stripe";
@@ -23,6 +24,7 @@ function isSaasCurrency(c: string | null): c is SaasCurrency {
  * Processor" CTA → embedded Stripe Checkout), and the Enterprise upsell.
  */
 export function FreePlanView({ wallet, onSubscribed }: Props) {
+  const { t } = useTranslation();
   const [modalOpen, setModalOpen] = useState(false);
   const [missingTeam, setMissingTeam] = useState<string | null>(null);
 
@@ -33,9 +35,7 @@ export function FreePlanView({ wallet, onSubscribed }: Props) {
 
   function openCheckout() {
     if (wallet.teamId == null) {
-      setMissingTeam(
-        "No team is resolved on your wallet yet — refresh and try again.",
-      );
+      setMissingTeam(t("billing.freePlan.noTeamResolved"));
       return;
     }
     setMissingTeam(null);
@@ -48,7 +48,7 @@ export function FreePlanView({ wallet, onSubscribed }: Props) {
       onClick={openCheckout}
       disabled={wallet.teamId == null}
     >
-      Switch on the Processor →
+      {t("billing.freePlan.switchOnProcessor")}
     </Button>
   ) : null;
 
@@ -56,17 +56,21 @@ export function FreePlanView({ wallet, onSubscribed }: Props) {
     <div className="portal-billing__stack">
       {/* Current plan */}
       <div className="portal-billing__current-plan">
-        <span className="portal-billing__eyebrow">Current plan</span>
+        <span className="portal-billing__eyebrow">
+          {t("billing.freePlan.currentPlan")}
+        </span>
         <div className="portal-billing__current-plan-row">
-          <h2 className="portal-billing__current-plan-name">Editor</h2>
+          <h2 className="portal-billing__current-plan-name">
+            {t("billing.freePlan.planName")}
+          </h2>
           <StatusBadge tone="success" size="sm" showDot={false}>
-            Free forever
+            {t("billing.freePlan.freeForever")}
           </StatusBadge>
           <StatusBadge tone="info" size="sm" showDot={false}>
-            SSO included
+            {t("billing.freePlan.ssoIncluded")}
           </StatusBadge>
           <StatusBadge tone="purple" size="sm" showDot={false}>
-            Unlimited users
+            {t("billing.freePlan.unlimitedUsers")}
           </StatusBadge>
         </div>
       </div>
@@ -77,13 +81,13 @@ export function FreePlanView({ wallet, onSubscribed }: Props) {
       <WalletMeter wallet={wallet} action={switchOnAction} />
 
       {missingTeam && (
-        <Banner tone="warning" title="Couldn't start checkout">
+        <Banner tone="warning" title={t("billing.freePlan.checkoutErrorTitle")}>
           {missingTeam}
         </Banner>
       )}
       {!isLeader && (
         <p className="portal-billing__plan-readonly">
-          Only the team owner can switch on the Processor plan.
+          {t("billing.freePlan.ownerOnly")}
         </p>
       )}
 

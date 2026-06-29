@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Banner, Button, Card, StatusBadge } from "@shared/components";
 import type { UseAccountLink } from "@portal/hooks/useAccountLink";
 import { useUI } from "@portal/contexts/UIContext";
@@ -13,6 +14,7 @@ interface Props {
  * the device secret server-side; the secret is never received or rendered here.
  */
 export function LinkAccountCard({ link }: Props) {
+  const { t } = useTranslation();
   const { openLinkModal } = useUI();
   const linking = link.phase === "linking";
   const linked = link.status?.linked ?? false;
@@ -21,26 +23,31 @@ export function LinkAccountCard({ link }: Props) {
     <Card padding="loose" className="portal-link__card">
       <div className="portal-link__card-head">
         <div>
-          <span className="portal-link__eyebrow">Account link</span>
-          <h2 className="portal-link__title">
-            Link this org to its Stirling account
-          </h2>
+          <span className="portal-link__eyebrow">
+            {t("accountLink.card.eyebrow")}
+          </span>
+          <h2 className="portal-link__title">{t("accountLink.card.title")}</h2>
         </div>
         <StatusBadge tone={linked ? "success" : "neutral"} size="sm">
-          {linked ? "Linked" : "Not linked"}
+          {linked
+            ? t("accountLink.card.linked")
+            : t("accountLink.card.notLinked")}
         </StatusBadge>
       </div>
 
       {!link.loginConfigured && (
-        <Banner tone="neutral" title="SaaS login not configured">
-          Set <code>VITE_SAAS_SUPABASE_URL</code> to enable account linking
-          against the hosted Stirling account. In dev you can simulate sign-in
-          from the link dialog.
+        <Banner
+          tone="neutral"
+          title={t("accountLink.card.loginNotConfigured.title")}
+        >
+          {t("accountLink.card.loginNotConfigured.before")}{" "}
+          <code>VITE_SAAS_SUPABASE_URL</code>{" "}
+          {t("accountLink.card.loginNotConfigured.after")}
         </Banner>
       )}
 
       {link.error && (
-        <Banner tone="danger" title="Couldn't link">
+        <Banner tone="danger" title={t("accountLink.card.error.title")}>
           {link.error}
         </Banner>
       )}
@@ -49,9 +56,9 @@ export function LinkAccountCard({ link }: Props) {
         <div className="portal-link__actions">
           <span className="portal-link__muted">
             {link.status?.name
-              ? `Linked as ${link.status.name}.`
-              : "This instance is linked."}{" "}
-            Unattended processing bills against your org wallet.
+              ? t("accountLink.card.linkedAs", { name: link.status.name })
+              : t("accountLink.card.linkedGeneric")}{" "}
+            {t("accountLink.card.billingNote")}
           </span>
           <Button
             variant="outline"
@@ -59,13 +66,13 @@ export function LinkAccountCard({ link }: Props) {
             loading={linking}
             onClick={link.unlink}
           >
-            Unlink
+            {t("accountLink.card.unlink")}
           </Button>
         </div>
       ) : (
         <div className="portal-link__actions">
           <Button loading={linking} onClick={() => openLinkModal()}>
-            Link your Stirling account
+            {t("accountLink.card.linkButton")}
           </Button>
         </div>
       )}

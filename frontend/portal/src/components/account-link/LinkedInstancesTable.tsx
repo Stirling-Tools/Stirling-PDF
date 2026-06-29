@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import {
   Button,
   Card,
@@ -16,15 +18,18 @@ interface Props {
   revokingId?: number | null;
 }
 
-function relativeTime(iso: string | null): string {
-  if (!iso) return "never";
+function relativeTime(iso: string | null, t: TFunction): string {
+  if (!iso) return t("accountLink.instances.time.never");
   const diffMs = Date.now() - new Date(iso).getTime();
   const mins = Math.round(diffMs / 60_000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 1) return t("accountLink.instances.time.justNow");
+  if (mins < 60)
+    return t("accountLink.instances.time.minutesAgo", { count: mins });
   const hrs = Math.round(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.round(hrs / 24)}d ago`;
+  if (hrs < 24) return t("accountLink.instances.time.hoursAgo", { count: hrs });
+  return t("accountLink.instances.time.daysAgo", {
+    count: Math.round(hrs / 24),
+  });
 }
 
 /** List of linked self-hosted instances with a leader-only revoke action. */
@@ -33,14 +38,15 @@ export function LinkedInstancesTable({
   onRevoke,
   revokingId,
 }: Props) {
+  const { t } = useTranslation();
   const cols: TableColumn<LinkedInstanceRow>[] = [
     {
       key: "name",
-      header: "Instance",
+      header: t("accountLink.instances.columns.instance"),
       render: (i) => (
         <div className="portal-link__cell-stack">
           <span className="portal-link__cell-strong">
-            {i.name ?? "Unnamed instance"}
+            {i.name ?? t("accountLink.instances.unnamed")}
           </span>
           <code className="portal-link__device-id">{i.deviceId}</code>
         </div>
@@ -48,30 +54,34 @@ export function LinkedInstancesTable({
     },
     {
       key: "status",
-      header: "Status",
+      header: t("accountLink.instances.columns.status"),
       render: (i) =>
         i.revoked ? (
           <StatusBadge tone="danger" size="sm">
-            Revoked
+            {t("accountLink.instances.revoked")}
           </StatusBadge>
         ) : (
           <StatusBadge tone="success" size="sm" pulse>
-            Active
+            {t("accountLink.instances.active")}
           </StatusBadge>
         ),
     },
     {
       key: "lastSeen",
-      header: "Last seen",
+      header: t("accountLink.instances.columns.lastSeen"),
       render: (i) => (
-        <span className="portal-link__muted">{relativeTime(i.lastSeenAt)}</span>
+        <span className="portal-link__muted">
+          {relativeTime(i.lastSeenAt, t)}
+        </span>
       ),
     },
     {
       key: "created",
-      header: "Linked",
+      header: t("accountLink.instances.columns.linked"),
       render: (i) => (
-        <span className="portal-link__muted">{relativeTime(i.createdAt)}</span>
+        <span className="portal-link__muted">
+          {relativeTime(i.createdAt, t)}
+        </span>
       ),
     },
     {
@@ -87,7 +97,7 @@ export function LinkedInstancesTable({
             loading={revokingId === i.instanceId}
             onClick={() => onRevoke(i)}
           >
-            Revoke
+            {t("accountLink.instances.revoke")}
           </Button>
         ),
     },
@@ -98,8 +108,8 @@ export function LinkedInstancesTable({
       {instances.length === 0 ? (
         <EmptyState
           size="compact"
-          title="No linked instances"
-          description="Link this org's account, then register your self-hosted instances to see them here."
+          title={t("accountLink.instances.empty.title")}
+          description={t("accountLink.instances.empty.description")}
         />
       ) : (
         <Table

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button, Card } from "@shared/components";
 import { fetchPaymentMethod, type PaymentMethod } from "@portal/api/billing";
 
@@ -20,6 +21,7 @@ function titleCase(s: string): string {
  * the Update button just deep-links there.
  */
 export function PaymentMethodCard({ onManage, managing }: Props) {
+  const { t } = useTranslation();
   // undefined = loading, null = none/unavailable, object = real card.
   const [pm, setPm] = useState<PaymentMethod | null | undefined>(undefined);
 
@@ -43,26 +45,34 @@ export function PaymentMethodCard({ onManage, managing }: Props) {
     <Card padding="loose">
       <div className="portal-billing__subscription-head">
         <div>
-          <span className="portal-billing__eyebrow">Payment method</span>
+          <span className="portal-billing__eyebrow">
+            {t("billing.paymentMethod.eyebrow")}
+          </span>
           {hasCard ? (
             <>
               <h3 className="portal-billing__section-title">
-                {titleCase(pm.brand ?? "Card")} ending {pm.last4}
+                {t("billing.paymentMethod.cardEnding", {
+                  brand: titleCase(
+                    pm.brand ?? t("billing.paymentMethod.cardFallback"),
+                  ),
+                  last4: pm.last4,
+                })}
               </h3>
               <p className="portal-billing__section-sub">
                 {pm.expMonth != null && pm.expYear != null
-                  ? `Expires ${String(pm.expMonth).padStart(2, "0")}/${pm.expYear} · billed monthly`
-                  : "Billed monthly"}
+                  ? t("billing.paymentMethod.expiresBilledMonthly", {
+                      expiry: `${String(pm.expMonth).padStart(2, "0")}/${pm.expYear}`,
+                    })
+                  : t("billing.paymentMethod.billedMonthly")}
               </p>
             </>
           ) : (
             <>
               <h3 className="portal-billing__section-title">
-                Managed in Stripe
+                {t("billing.paymentMethod.managedTitle")}
               </h3>
               <p className="portal-billing__section-sub">
-                Your card and billing details are kept securely in Stripe's
-                customer portal.
+                {t("billing.paymentMethod.managedSub")}
               </p>
             </>
           )}
@@ -73,7 +83,7 @@ export function PaymentMethodCard({ onManage, managing }: Props) {
           loading={managing}
           onClick={onManage}
         >
-          Update
+          {t("billing.paymentMethod.update")}
         </Button>
       </div>
     </Card>

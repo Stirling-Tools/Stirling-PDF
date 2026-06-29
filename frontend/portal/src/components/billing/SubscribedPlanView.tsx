@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Banner, Button } from "@shared/components";
 import { meterState } from "@shared/billing";
 import type { Wallet } from "@portal/api/billing";
@@ -30,6 +31,7 @@ interface Props {
  * deep-link there via {@link useStripePortal}.
  */
 export function SubscribedPlanView({ wallet, onWalletChange }: Props) {
+  const { t } = useTranslation();
   const [adjusting, setAdjusting] = useState(false);
   const portal = useStripePortal(wallet);
 
@@ -54,20 +56,22 @@ export function SubscribedPlanView({ wallet, onWalletChange }: Props) {
           tone={state === "DEGRADED" ? "danger" : "warning"}
           title={
             state === "DEGRADED"
-              ? "Monthly spend limit reached"
-              : `You're at ${Math.round(pct)}% of your monthly spend limit`
+              ? t("billing.subscribedPlan.capWarn.reachedTitle")
+              : t("billing.subscribedPlan.capWarn.approachingTitle", {
+                  pct: Math.round(pct),
+                })
           }
           action={
             isLeader ? (
               <Button size="sm" onClick={raiseLimit}>
-                Raise limit
+                {t("billing.subscribedPlan.capWarn.raiseLimit")}
               </Button>
             ) : undefined
           }
         >
           {state === "DEGRADED"
-            ? "Metered processing is paused until you raise the limit or the cycle resets. Unlimited PDF editing keeps working."
-            : "Raise it now so automated processing never pauses."}
+            ? t("billing.subscribedPlan.capWarn.reachedBody")
+            : t("billing.subscribedPlan.capWarn.approachingBody")}
         </Banner>
       )}
 
@@ -90,7 +94,10 @@ export function SubscribedPlanView({ wallet, onWalletChange }: Props) {
       <PaymentMethodCard onManage={portal.open} managing={portal.opening} />
 
       {portal.error && (
-        <Banner tone="danger" title="Couldn't open Stripe portal">
+        <Banner
+          tone="danger"
+          title={t("billing.subscribedPlan.portalError.title")}
+        >
           {portal.error}
         </Banner>
       )}

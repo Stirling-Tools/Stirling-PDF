@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Card } from "@shared/components";
 import type { Wallet, WalletCategoryBreakdown } from "@portal/api/billing";
 
@@ -10,34 +11,47 @@ import type { Wallet, WalletCategoryBreakdown } from "@portal/api/billing";
  */
 const SEGMENTS: ReadonlyArray<{
   key: keyof WalletCategoryBreakdown;
-  label: string;
-  desc: string;
+  labelKey: string;
+  descKey: string;
   cls: string;
 }> = [
-  { key: "api", label: "API", desc: "Direct API requests", cls: "blue" },
-  { key: "ai", label: "Agents", desc: "AI agent actions", cls: "purple" },
+  {
+    key: "api",
+    labelKey: "billing.pdfsProcessed.segmentApiLabel",
+    descKey: "billing.pdfsProcessed.segmentApiDesc",
+    cls: "blue",
+  },
+  {
+    key: "ai",
+    labelKey: "billing.pdfsProcessed.segmentAgentsLabel",
+    descKey: "billing.pdfsProcessed.segmentAgentsDesc",
+    cls: "purple",
+  },
   {
     key: "automation",
-    label: "Automation",
-    desc: "Automations & pipelines",
+    labelKey: "billing.pdfsProcessed.segmentAutomationLabel",
+    descKey: "billing.pdfsProcessed.segmentAutomationDesc",
     cls: "teal",
   },
 ];
 
 export function PdfsProcessedCard({ wallet }: { wallet: Wallet }) {
+  const { t } = useTranslation();
   const b = wallet.categoryBreakdown;
   const total = b.api + b.ai + b.automation;
 
   return (
     <Card padding="loose">
       <span className="portal-billing__eyebrow">
-        PDFs processed this period
+        {t("billing.pdfsProcessed.eyebrow")}
       </span>
       <div className="portal-billing__bignum-row">
         <span className="portal-billing__bignum">
           {wallet.billableUsed.toLocaleString()}
         </span>
-        <span className="portal-billing__bignum-unit">metered PDFs</span>
+        <span className="portal-billing__bignum-unit">
+          {t("billing.pdfsProcessed.unit")}
+        </span>
       </div>
 
       {total > 0 ? (
@@ -45,7 +59,7 @@ export function PdfsProcessedCard({ wallet }: { wallet: Wallet }) {
           <div
             className="portal-billing__segbar"
             role="img"
-            aria-label="Metered PDFs split by category"
+            aria-label={t("billing.pdfsProcessed.segbarAriaLabel")}
           >
             {SEGMENTS.map((s) =>
               b[s.key] > 0 ? (
@@ -65,19 +79,24 @@ export function PdfsProcessedCard({ wallet }: { wallet: Wallet }) {
                   aria-hidden
                 />
                 <span className="portal-billing__seglegend-label">
-                  {s.label}
+                  {t(s.labelKey)}
                 </span>
                 <span className="portal-billing__seglegend-val">
-                  {b[s.key].toLocaleString()} PDFs
+                  {t("billing.pdfsProcessed.legendValue", {
+                    count: b[s.key],
+                    formatted: b[s.key].toLocaleString(),
+                  })}
                 </span>
-                <span className="portal-billing__seglegend-desc">{s.desc}</span>
+                <span className="portal-billing__seglegend-desc">
+                  {t(s.descKey)}
+                </span>
               </div>
             ))}
           </div>
         </>
       ) : (
         <p className="portal-billing__section-sub">
-          No metered processing yet this period.
+          {t("billing.pdfsProcessed.emptyPeriod")}
         </p>
       )}
     </Card>

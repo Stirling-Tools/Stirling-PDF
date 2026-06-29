@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Banner, Button, Modal } from "@shared/components";
 import SupabaseLoginForm from "@shared/auth/ui/SupabaseLoginForm";
 import {
@@ -40,6 +41,7 @@ export function LinkAccountModal({
   mode = "link",
   onLinked,
 }: Props) {
+  const { t } = useTranslation();
   useEffect(() => {
     if (open) ensureSaasSupabase();
   }, [open]);
@@ -62,21 +64,30 @@ export function LinkAccountModal({
       open={open}
       onClose={onClose}
       width="md"
-      title={reauth ? "Sign in again" : "Link your Stirling account"}
+      title={
+        reauth
+          ? t("accountLink.modal.reauthTitle")
+          : t("accountLink.modal.linkTitle")
+      }
       subtitle={
         reauth
-          ? "Your session expired — sign back in to your Stirling account. Your instance stays linked."
-          : "Sign in to the account this server should bill against."
+          ? t("accountLink.modal.reauthSubtitle")
+          : t("accountLink.modal.linkSubtitle")
       }
     >
       {isSaasSupabaseConfigured ? (
         <SupabaseLoginForm state={login} />
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          <Banner tone="neutral" title="SaaS login not configured">
-            Set <code>VITE_SAAS_SUPABASE_URL</code> and{" "}
-            <code>VITE_SAAS_SUPABASE_ANON_KEY</code> to enable in-app linking
-            against the hosted Stirling account.
+          <Banner
+            tone="neutral"
+            title={t("accountLink.modal.loginNotConfigured.title")}
+          >
+            {t("accountLink.modal.loginNotConfigured.before")}{" "}
+            <code>VITE_SAAS_SUPABASE_URL</code>{" "}
+            {t("accountLink.modal.loginNotConfigured.and")}{" "}
+            <code>VITE_SAAS_SUPABASE_ANON_KEY</code>{" "}
+            {t("accountLink.modal.loginNotConfigured.after")}
           </Banner>
           {import.meta.env.DEV && (
             <Button
@@ -86,7 +97,7 @@ export function LinkAccountModal({
                 onClose();
               }}
             >
-              Simulate sign-in (dev)
+              {t("accountLink.modal.simulateSignIn")}
             </Button>
           )}
         </div>

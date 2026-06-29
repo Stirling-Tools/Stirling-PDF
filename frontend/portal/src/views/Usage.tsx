@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Banner, Button, Skeleton } from "@shared/components";
 import { useLink } from "@portal/contexts/LinkContext";
 import { useUI } from "@portal/contexts/UIContext";
@@ -30,6 +31,7 @@ import "@portal/components/billing/billing.css";
  * status.
  */
 export function Usage() {
+  const { t } = useTranslation();
   const { isLinked, setLinkState, saasSessionNonce } = useLink();
   const { openLinkModal } = useUI();
   const [wallet, setWallet] = useState<Wallet | null>(null);
@@ -86,7 +88,12 @@ export function Usage() {
         } else if (e instanceof SaasUnconfiguredError) {
           setError(e.message);
         } else if (e instanceof HttpError) {
-          setError(`Wallet unavailable: ${e.status} ${e.statusText}`);
+          setError(
+            t("usage.error.walletUnavailable", {
+              status: e.status,
+              statusText: e.statusText,
+            }),
+          );
         } else {
           setError(e instanceof Error ? e.message : String(e));
         }
@@ -133,11 +140,8 @@ export function Usage() {
       <header className="portal-usage__header">
         <div className="portal-usage__header-inner">
           <div>
-            <h1 className="portal-usage__title">Usage & billing</h1>
-            <p className="portal-usage__subtitle">
-              Consumption, invoices, and plan management for every PDF Stirling
-              has billed, in one console.
-            </p>
+            <h1 className="portal-usage__title">{t("usage.title")}</h1>
+            <p className="portal-usage__subtitle">{t("usage.subtitle")}</p>
           </div>
           {wallet?.status === "subscribed" && (
             <Button
@@ -146,7 +150,7 @@ export function Usage() {
               loading={portal.opening}
               onClick={portal.open}
             >
-              Manage Payment
+              {t("usage.managePayment")}
             </Button>
           )}
         </div>
@@ -163,35 +167,33 @@ export function Usage() {
         )}
 
         {isLinked && finalizing && (
-          <Banner tone="info" title="Finalizing your subscription…">
-            It can take a few seconds for your subscription to activate. This
-            page updates automatically.
+          <Banner tone="info" title={t("usage.finalizing.title")}>
+            {t("usage.finalizing.body")}
           </Banner>
         )}
 
         {isLinked && needsReauth && (
           <Banner
             tone="warning"
-            title="Session expired"
+            title={t("usage.sessionExpired.title")}
             action={
               <Button size="sm" onClick={() => openLinkModal("reauth")}>
-                Sign in again
+                {t("usage.sessionExpired.action")}
               </Button>
             }
           >
-            Your Stirling account session has expired. Sign in again to view
-            billing — your instance stays linked.
+            {t("usage.sessionExpired.body")}
           </Banner>
         )}
 
         {isLinked && error && (
-          <Banner tone="danger" title="Couldn't load wallet">
+          <Banner tone="danger" title={t("usage.error.loadWallet")}>
             {error}
           </Banner>
         )}
 
         {isLinked && portal.error && (
-          <Banner tone="danger" title="Couldn't open Stripe portal">
+          <Banner tone="danger" title={t("usage.error.openStripePortal")}>
             {portal.error}
           </Banner>
         )}

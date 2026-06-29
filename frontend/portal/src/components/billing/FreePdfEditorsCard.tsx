@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   Button,
   Card,
@@ -25,6 +26,7 @@ const SAMPLE = {
 
 export function FreePdfEditorsCard() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   return (
     <Card padding="loose">
       <div className="portal-billing__fleet-row">
@@ -34,24 +36,30 @@ export function FreePdfEditorsCard() {
           </span>
           <div>
             <h3 className="portal-billing__section-title">
-              Free PDF Editors{" "}
+              {t("billing.freeEditors.title")}{" "}
               <StatusBadge tone="warning" size="sm" showDot={false}>
-                Preview · sample data
+                {t("billing.freeEditors.previewBadge")}
               </StatusBadge>
             </h3>
             <p className="portal-billing__section-sub">
-              Deploy anywhere, for your whole team.
+              {t("billing.freeEditors.subtitle")}
             </p>
           </div>
         </div>
         <MetricStrip className="portal-billing__fleet-metrics">
-          <MetricCard label="Editors deployed" value={SAMPLE.editorsDeployed} />
           <MetricCard
-            label="Active this month"
+            label={t("billing.freeEditors.editorsDeployed")}
+            value={SAMPLE.editorsDeployed}
+          />
+          <MetricCard
+            label={t("billing.freeEditors.activeThisMonth")}
             value={SAMPLE.activeThisMonth}
           />
-          <MetricCard label="PDFs edited" value={SAMPLE.pdfsEdited} />
-          <MetricCard label="Cost" value="$0" />
+          <MetricCard
+            label={t("billing.freeEditors.pdfsEdited")}
+            value={SAMPLE.pdfsEdited}
+          />
+          <MetricCard label={t("billing.freeEditors.cost")} value="$0" />
         </MetricStrip>
         {/* Opens the Users tab with its invite-member modal (via the ?invite param). */}
         <Button
@@ -60,7 +68,7 @@ export function FreePdfEditorsCard() {
           leadingIcon={<PersonAddIcon sx={{ fontSize: 16 }} />}
           onClick={() => navigate("/users?invite=1")}
         >
-          Invite teammates
+          {t("billing.freeEditors.inviteTeammates")}
         </Button>
       </div>
     </Card>

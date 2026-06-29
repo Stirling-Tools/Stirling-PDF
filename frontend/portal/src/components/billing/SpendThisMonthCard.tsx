@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Card } from "@shared/components";
 import { formatMinor } from "@shared/billing";
 import type { Wallet } from "@portal/api/billing";
@@ -9,6 +10,7 @@ import { EnterpriseUpsell } from "@portal/components/billing/EnterpriseUpsell";
  * upsell pins to the bottom and the card matches the spend-limit card's height.
  */
 export function SpendThisMonthCard({ wallet }: { wallet: Wallet }) {
+  const { t } = useTranslation();
   const rateLabel =
     wallet.pricePerDocMinor != null && wallet.pricePerDocMinor > 0
       ? formatMinor(wallet.pricePerDocMinor, wallet.currency)
@@ -16,15 +18,25 @@ export function SpendThisMonthCard({ wallet }: { wallet: Wallet }) {
 
   return (
     <Card padding="loose" className="portal-billing__spend-this-month">
-      <span className="portal-billing__eyebrow">Spend this month</span>
+      <span className="portal-billing__eyebrow">
+        {t("billing.spendThisMonth.eyebrow")}
+      </span>
       <div className="portal-billing__bignum-row">
         <span className="portal-billing__bignum">
           {formatMinor(wallet.estimatedBillMinor ?? 0, wallet.currency)}
         </span>
       </div>
       <p className="portal-billing__section-sub">
-        {wallet.billableUsed.toLocaleString()} PDFs processed
-        {rateLabel ? `, at ${rateLabel} each` : ""}.
+        {rateLabel
+          ? t("billing.spendThisMonth.processedWithRate", {
+              count: wallet.billableUsed,
+              formattedCount: wallet.billableUsed.toLocaleString(),
+              rate: rateLabel,
+            })
+          : t("billing.spendThisMonth.processed", {
+              count: wallet.billableUsed,
+              formattedCount: wallet.billableUsed.toLocaleString(),
+            })}
       </p>
 
       <div className="portal-billing__spend-foot">

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Button, Card, EmptyState } from "@shared/components";
 import { useUI } from "@portal/contexts/UIContext";
 
@@ -7,16 +8,17 @@ import { useUI } from "@portal/contexts/UIContext";
  * directly (no detour through Settings).
  */
 export function LinkAccountPrompt() {
+  const { t } = useTranslation();
   const { openLinkModal } = useUI();
   return (
     <Card padding="loose">
       <EmptyState
         size="default"
-        title="Link your Stirling account"
-        description="Manual PDF editing — view, sign, merge, split, watermark, compress, convert, manual OCR — is always free, linked or not. Link to claim 500 free PDFs of metered processing (automation, AI, and the API); when you need more, turn on the Processor plan and only pay for what you use."
+        title={t("billing.linkPrompt.title")}
+        description={t("billing.linkPrompt.description")}
         actions={
           <Button variant="gradient" onClick={() => openLinkModal()}>
-            Link Stirling account
+            {t("billing.linkPrompt.cta")}
           </Button>
         }
       />

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Banner, Button, Card } from "@shared/components";
 import {
   currencySymbol,
@@ -89,6 +90,7 @@ export function SpendLimitCard({
   adjusting,
   onAdjustingChange,
 }: Props) {
+  const { t } = useTranslation();
   const isLeader = wallet.role === "leader";
   const symbol = currencySymbol(wallet.currency);
   const persistedCap = persistedCapOf(wallet);
@@ -124,9 +126,11 @@ export function SpendLimitCard({
   if (isLeader && adjusting) {
     return (
       <Card padding="loose">
-        <span className="portal-billing__eyebrow">Spend limit</span>
+        <span className="portal-billing__eyebrow">
+          {t("billing.spendLimit.eyebrow")}
+        </span>
         <h3 className="portal-billing__section-title">
-          Set your monthly ceiling
+          {t("billing.spendLimit.editTitle")}
         </h3>
 
         <SharedSpendCapControl
@@ -134,7 +138,7 @@ export function SpendLimitCard({
           onChange={setDraftCap}
           pricePerDocMinor={wallet.pricePerDocMinor}
           currency={wallet.currency}
-          note="Changes apply immediately — raise or lower the ceiling any time."
+          note={t("billing.spendLimit.capControlNote")}
         />
 
         {proj && draftCap !== proj.suggestedMajor && (
@@ -143,20 +147,19 @@ export function SpendLimitCard({
             className="portal-billing__suggested"
             onClick={() => setDraftCap(proj.suggestedMajor)}
           >
-            Use suggested ·{" "}
-            {formatMoneyMajor(proj.suggestedMajor, wallet.currency)} / month
+            {t("billing.spendLimit.useSuggested", {
+              amount: formatMoneyMajor(proj.suggestedMajor, wallet.currency),
+            })}
           </button>
         )}
 
         <div className="portal-billing__guardrail">
-          <strong>Your guardrail:</strong> a hard ceiling — you're never billed
-          past it. At the cap, metered processing pauses (unlimited PDF editing
-          keeps working) until you raise it or the cycle resets. Nothing is
-          lost.
+          <strong>{t("billing.spendLimit.guardrailLabel")}</strong>{" "}
+          {t("billing.spendLimit.guardrailBody")}
         </div>
 
         {error && (
-          <Banner tone="danger" title="Couldn't save limit">
+          <Banner tone="danger" title={t("billing.spendLimit.saveError")}>
             {error}
           </Banner>
         )}
@@ -167,10 +170,10 @@ export function SpendLimitCard({
             size="sm"
             onClick={() => onAdjustingChange(false)}
           >
-            Cancel
+            {t("billing.spendLimit.cancel")}
           </Button>
           <Button variant="gradient" size="sm" loading={saving} onClick={save}>
-            Save limit
+            {t("billing.spendLimit.save")}
           </Button>
         </div>
       </Card>
@@ -190,10 +193,11 @@ export function SpendLimitCard({
     <Card padding="loose" id="portal-spend-limit">
       <div className="portal-billing__subscription-head">
         <div>
-          <span className="portal-billing__eyebrow">Spend limit</span>
+          <span className="portal-billing__eyebrow">
+            {t("billing.spendLimit.eyebrow")}
+          </span>
           <p className="portal-billing__section-sub">
-            You're only billed for what you process automatically — never past
-            the ceiling.
+            {t("billing.spendLimit.displaySub")}
           </p>
         </div>
         {isLeader && (
@@ -202,7 +206,7 @@ export function SpendLimitCard({
             size="sm"
             onClick={() => onAdjustingChange(true)}
           >
-            Adjust limit
+            {t("billing.spendLimit.adjustLimit")}
           </Button>
         )}
       </div>
@@ -217,22 +221,38 @@ export function SpendLimitCard({
           capSuffix={
             capActive
               ? docEstimate != null
-                ? `/ month · ≈ ${docEstimate.toLocaleString()} documents`
-                : "/ month"
-              : "no cap"
+                ? t("billing.spendLimit.capSuffixWithDocs", {
+                    documents: docEstimate.toLocaleString(),
+                  })
+                : t("billing.spendLimit.capSuffix")
+              : t("billing.spendLimit.noCap")
           }
-          statusLabel={capActive ? `${Math.round(pct)}% used` : null}
+          statusLabel={
+            capActive
+              ? t("billing.spendLimit.pctUsed", { pct: Math.round(pct) })
+              : null
+          }
           showBar={capActive}
           meta={
             capActive ? (
               <>
-                <span>{spentLabel} used this month</span>
                 <span>
-                  {formatMinor(remainingMinor, wallet.currency)} remaining
+                  {t("billing.spendLimit.usedThisMonth", {
+                    amount: spentLabel,
+                  })}
+                </span>
+                <span>
+                  {t("billing.spendLimit.remaining", {
+                    amount: formatMinor(remainingMinor, wallet.currency),
+                  })}
                 </span>
               </>
             ) : (
-              <span>{spentLabel} this period · uncapped</span>
+              <span>
+                {t("billing.spendLimit.thisPeriodUncapped", {
+                  amount: spentLabel,
+                })}
+              </span>
             )
           }
         />
@@ -240,18 +260,18 @@ export function SpendLimitCard({
 
       {proj && (
         <p className="portal-billing__projection">
-          <strong>Projected to exceed.</strong> At {symbol}
-          {proj.dailyRateMajor.toLocaleString(undefined, {
-            maximumFractionDigits: 2,
+          <strong>{t("billing.spendLimit.projection.label")}</strong>{" "}
+          {t("billing.spendLimit.projection.body", {
+            count: proj.daysToCap,
+            rate: `${symbol}${proj.dailyRateMajor.toLocaleString(undefined, {
+              maximumFractionDigits: 2,
+            })}`,
+            monthEnd: formatMoneyMajor(
+              Math.round(proj.projectedEndMajor),
+              wallet.currency,
+            ),
+            suggested: formatMoneyMajor(proj.suggestedMajor, wallet.currency),
           })}
-          /day you reach the cap in ~{proj.daysToCap}{" "}
-          {proj.daysToCap === 1 ? "day" : "days"} (~
-          {formatMoneyMajor(
-            Math.round(proj.projectedEndMajor),
-            wallet.currency,
-          )}{" "}
-          month-end). Suggested limit ~
-          {formatMoneyMajor(proj.suggestedMajor, wallet.currency)}.
         </p>
       )}
     </Card>

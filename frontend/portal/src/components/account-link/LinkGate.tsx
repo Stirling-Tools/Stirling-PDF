@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { Banner, Button } from "@shared/components";
 import { useLink } from "@portal/contexts/LinkContext";
 import { useUI } from "@portal/contexts/UIContext";
@@ -17,6 +18,7 @@ interface Props {
  * work against a linked SaaS wallet.
  */
 export function LinkGate({ children, feature }: Props) {
+  const { t } = useTranslation();
   const { featuresUnlocked } = useLink();
   const { openLinkModal } = useUI();
 
@@ -25,11 +27,15 @@ export function LinkGate({ children, feature }: Props) {
   return (
     <Banner
       tone="info"
-      title={feature ? `Link to unlock ${feature}` : "Link to unlock"}
-      description="Link this org's Stirling account to use billable features."
+      title={
+        feature
+          ? t("accountLink.gate.titleFeature", { feature })
+          : t("accountLink.gate.title")
+      }
+      description={t("accountLink.gate.description")}
       action={
         <Button size="sm" onClick={() => openLinkModal()}>
-          Link account
+          {t("accountLink.gate.action")}
         </Button>
       }
     />

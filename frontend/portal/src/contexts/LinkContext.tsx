@@ -26,15 +26,19 @@ import {
 export type LinkState = "unlinked" | "linked-free" | "linked-subscribed";
 
 export interface LinkInfo {
-  label: string;
+  /** i18n key for the badge label; resolve with `t()` at the call site. */
+  labelKey: string;
   /** Whether billable features are unlocked (any linked state). */
   unlocked: boolean;
 }
 
 export const LINK_INFO: Record<LinkState, LinkInfo> = {
-  unlinked: { label: "Not linked", unlocked: false },
-  "linked-free": { label: "Editor plan", unlocked: true },
-  "linked-subscribed": { label: "Processor plan", unlocked: true },
+  unlinked: { labelKey: "accountLink.state.unlinked", unlocked: false },
+  "linked-free": { labelKey: "accountLink.state.free", unlocked: true },
+  "linked-subscribed": {
+    labelKey: "accountLink.state.subscribed",
+    unlocked: true,
+  },
 };
 
 interface LinkContextValue {
