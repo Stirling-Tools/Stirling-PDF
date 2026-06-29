@@ -34,7 +34,7 @@ WINDOW_PAGES = 2
 # The built-in vocabulary the classifier falls back to when a request doesn't
 # supply its own. GENERATED from the TS source of truth
 # (frontend/editor/src/proprietary/data/classificationTaxonomy.ts) via
-# `task frontend:taxonomy` — edit that file, not this JSON. Validated into the
+# `task frontend:classifier-categories` — edit that file, not this JSON. Validated into the
 # typed contract on import, so a malformed entry fails fast.
 _DEFAULT_TAXONOMY_PATH = Path(__file__).with_name("default_taxonomy.generated.json")
 # The file carries an underscore-prefixed "_generated" notice (JSON has no

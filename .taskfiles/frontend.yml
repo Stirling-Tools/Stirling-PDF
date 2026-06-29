@@ -55,10 +55,10 @@ tasks:
       - editor/src/core/data/ogImageMap.json
       - editor/public/og-metadata.json
 
-  prepare:taxonomy:
+  prepare:classifier-categories:
     internal: true
     run: when_changed
-    desc: "Regenerate the engine taxonomy JSON from the TS source of truth"
+    desc: "Regenerate the engine classifier categories JSON from the TS source of truth"
     cmds:
       - npx tsx editor/scripts/generate-taxonomy.mts
     sources:
@@ -74,7 +74,7 @@ tasks:
         vars: { MODE: '{{.MODE}}' }
       - prepare:icons
       - prepare:og
-      - prepare:taxonomy
+      - prepare:classifier-categories
 
   # ============================================================
   # Development
@@ -411,13 +411,13 @@ tasks:
     cmds:
       - node editor/scripts/generate-og-metadata.mjs --check
 
-  taxonomy:
-    desc: "Regenerate the engine classification taxonomy JSON from the TS source"
+  classifier-categories:
+    desc: "Regenerate the engine classifier categories JSON from the TS source"
     cmds:
       - npx tsx editor/scripts/generate-taxonomy.mts
 
-  taxonomy:check:
-    desc: "Fail if the committed classification taxonomy JSON is out of date"
+  classifier-categories:check:
+    desc: "Fail if the committed classifier categories JSON is out of date"
     cmds:
       - npx tsx editor/scripts/generate-taxonomy.mts --check
 
@@ -427,7 +427,7 @@ tasks:
       # Runs first, before prepare regenerates: guards the committed og-metadata.json /
       # ogImageMap.json that the Cloudflare Pages (plain `vite build`) deploy relies on.
       - task: og:check
-      - task: taxonomy:check
+      - task: classifier-categories:check
       - task: typecheck:all
       - task: lint
       - task: format:check

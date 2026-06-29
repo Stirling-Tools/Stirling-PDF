@@ -489,7 +489,6 @@ export async function runPolicyOnFile(
   backendId: string,
   fileId: FileId,
   fileName: string,
-  replaceRunId?: string,
 ): Promise<void> {
   // A freshly-uploaded file's bytes are written to IndexedDB asynchronously, so
   // its stub can appear in the file list a beat before getStirlingFile resolves
@@ -517,7 +516,6 @@ export async function runPolicyOnFile(
   }
   try {
     const runId = await runStoredPolicy(backendId, [file]);
-    if (replaceRunId) removeRun(replaceRunId);
     // recordRunStart marks this (policy, file) dispatched as it records the run.
     recordRunStart({
       runId,

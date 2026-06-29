@@ -33,10 +33,7 @@ vi.mock("@app/contexts/IndexedDBContext", () => ({
   useIndexedDB: () => ({ bumpRevision: vi.fn() }),
 }));
 
-import {
-  usePolicyAutoRun,
-  runPolicyOnFile,
-} from "@app/components/policies/usePolicyAutoRun";
+import { usePolicyAutoRun } from "@app/components/policies/usePolicyAutoRun";
 import {
   recordRunStart,
   getRun,
@@ -108,63 +105,5 @@ describe("auto-run queue-rejection retry", () => {
     expect(runStored).toHaveBeenCalledWith("backend-1", [{ size: 1234 }]);
     expect(getRun("run-1")).toBeUndefined();
     expect(getRun("run-2")?.status).toBe("PENDING");
-  });
-});
-
-describe("manual retry in place", () => {
-  it("replaces the failed run's row instead of stacking a second", async () => {
-    getFile.mockResolvedValue({ size: 999 } as never);
-    runStored.mockResolvedValue("run-new");
-
-    // A previously-failed run sits in the activity feed.
-    recordRunStart({
-      runId: "run-old",
-      categoryId: "security",
-      fileId: "file-1",
-      fileName: "doc.pdf",
-      fileSize: 999,
-      status: "FAILED",
-      outputs: [],
-      error: "AI engine unreachable",
-      startedAt: 0,
-    });
-
-    // Retrying that specific run (passing its id) drops it as the new run records.
-    await runPolicyOnFile(
-      "security",
-      "backend-1",
-      "file-1" as never,
-      "doc.pdf",
-      "run-old",
-    );
-
-    expect(getRun("run-old")).toBeUndefined();
-    expect(getRun("run-new")?.status).toBe("PENDING");
-  });
-
-  it("without a replace id, leaves any existing run untouched", async () => {
-    getFile.mockResolvedValue({ size: 999 } as never);
-    runStored.mockResolvedValue("run-new");
-    recordRunStart({
-      runId: "run-old",
-      categoryId: "security",
-      fileId: "file-2",
-      fileName: "doc2.pdf",
-      fileSize: 999,
-      status: "FAILED",
-      outputs: [],
-      error: "boom",
-      startedAt: 0,
-    });
-
-    await runPolicyOnFile(
-      "security",
-      "backend-1",
-      "file-2" as never,
-      "doc2.pdf",
-    );
-
-    expect(getRun("run-old")).toBeDefined();
-    expect(getRun("run-new")?.status).toBe("PENDING");
   });
 });

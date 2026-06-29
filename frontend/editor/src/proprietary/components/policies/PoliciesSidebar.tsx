@@ -439,7 +439,6 @@ export function PolicyDetailTakeover() {
               state.backendId,
               item.fileId as FileId,
               item.doc,
-              item.runId,
             );
           }
         }}

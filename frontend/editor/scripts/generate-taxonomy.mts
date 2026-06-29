@@ -36,7 +36,7 @@ const outPath = resolve(
 
 const NOTICE =
   "AUTO-GENERATED from frontend/editor/src/proprietary/data/classificationTaxonomy.ts " +
-  "by editor/scripts/generate-taxonomy.mts — do NOT edit by hand; run `task frontend:taxonomy`.";
+  "by editor/scripts/generate-taxonomy.mts — do NOT edit by hand; run `task frontend:classifier-categories`.";
 const json =
   JSON.stringify(
     { _generated: NOTICE, ...DEFAULT_CLASSIFICATION_TAXONOMY },
@@ -48,7 +48,7 @@ if (process.argv.includes("--check")) {
   const current = existsSync(outPath) ? readFileSync(outPath, "utf8") : "";
   if (current !== json) {
     console.error(
-      "default_taxonomy.generated.json is stale. Run `task frontend:taxonomy` " +
+      "default_taxonomy.generated.json is stale. Run `task frontend:classifier-categories` " +
         "(npx tsx editor/scripts/generate-taxonomy.mts).",
     );
     process.exit(1);
