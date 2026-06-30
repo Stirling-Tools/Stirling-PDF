@@ -184,7 +184,11 @@ def check_for_differences(reference_file, file_list, branch, actor, locales_dir=
     if len(file_list) == 1:
         file_arr = file_list[0].split()
 
-    base_dir = Path(locales_dir).resolve() if locales_dir else Path.cwd() / "frontend" / "editor" / "public" / "locales"
+    base_dir = (
+        Path(locales_dir).resolve()
+        if locales_dir
+        else Path.cwd() / "frontend" / "editor" / "public" / "locales"
+    )
 
     for file_path in file_arr:
         file_path = Path(file_path)
@@ -373,7 +377,9 @@ if __name__ == "__main__":
     # Derive locales dir from the reference file path so there is no hardcoded
     # default that can drift: reference is always locales/{lng}/translation.toml,
     # so parent.parent is the locales directory for whichever app is being synced.
-    locales_dir = args.locales_dir or str(Path(args.reference_file).resolve().parent.parent)
+    locales_dir = args.locales_dir or str(
+        Path(args.reference_file).resolve().parent.parent
+    )
 
     file_list = args.files
     if file_list is None:
