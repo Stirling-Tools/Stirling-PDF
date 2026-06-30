@@ -1,4 +1,4 @@
-import { httpJson } from "@portal/api/http";
+import { apiClient } from "@portal/api/http";
 import type { DocumentsResponse } from "@portal/mocks/documents";
 import type { Tier } from "@portal/contexts/TierContext";
 
@@ -20,7 +20,7 @@ export {
 
 /** GET /v1/documents?tier=… — summary strip + the review queue for the tier. */
 export async function fetchDocuments(tier: Tier): Promise<DocumentsResponse> {
-  return httpJson<DocumentsResponse>(
+  return apiClient.local.json<DocumentsResponse>(
     `/v1/documents?tier=${encodeURIComponent(tier)}`,
   );
 }
