@@ -27,7 +27,9 @@ class InstanceEntitlementGateWiringTest {
         properties.setEnabled(true);
         store = mock(DeviceCredentialStore.class);
         cache = mock(EntitlementCache.class);
-        gate = new InstanceEntitlementGate(properties, store, cache);
+        gate =
+                new InstanceEntitlementGate(
+                        properties, store, cache, mock(AccountLinkSyncStateRepository.class));
     }
 
     @Test

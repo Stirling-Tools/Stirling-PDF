@@ -19,6 +19,7 @@ import stirling.software.proprietary.billing.UnitCalcPolicy;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 /**
  * Outbound calls from a self-hosted instance to its linked SaaS backend (combined-billing "Mode
@@ -245,18 +246,16 @@ public class AccountLinkClient {
             long automationUnits) {
         HttpResponse<String> response;
         try {
-            String body =
-                    "{\"syncSeq\":"
-                            + syncSeq
-                            + ",\"periodStart\":\""
-                            + periodStart
-                            + "\",\"cumulativeUnits\":{\"api\":"
-                            + apiUnits
-                            + ",\"ai\":"
-                            + aiUnits
-                            + ",\"automation\":"
-                            + automationUnits
-                            + "}}";
+            ObjectNode root = mapper.createObjectNode();
+            root.put("syncSeq", syncSeq);
+            // periodStart as an explicit ISO-8601 string so it round-trips to the SaaS
+            // LocalDateTime regardless of the mapper's time-module config.
+            root.put("periodStart", periodStart.toString());
+            ObjectNode units = root.putObject("cumulativeUnits");
+            units.put("api", apiUnits);
+            units.put("ai", aiUnits);
+            units.put("automation", automationUnits);
+            String body = mapper.writeValueAsString(root);
             HttpRequest request =
                     HttpRequest.newBuilder()
                             .uri(uri("/api/v1/instance/sync"))
