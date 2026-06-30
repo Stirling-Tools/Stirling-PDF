@@ -36,30 +36,39 @@ export function FreePdfEditorsCard() {
           </span>
           <div>
             <h3 className="portal-billing__section-title">
-              {t("billing.freeEditors.title")}{" "}
+              {t("billing.freeEditors.title", "Free PDF Editors")}{" "}
               <StatusBadge tone="warning" size="sm" showDot={false}>
-                {t("billing.freeEditors.previewBadge")}
+                {t("billing.freeEditors.previewBadge", "Preview · sample data")}
               </StatusBadge>
             </h3>
             <p className="portal-billing__section-sub">
-              {t("billing.freeEditors.subtitle")}
+              {t(
+                "billing.freeEditors.subtitle",
+                "Deploy anywhere, for your whole team.",
+              )}
             </p>
           </div>
         </div>
         <MetricStrip className="portal-billing__fleet-metrics">
           <MetricCard
-            label={t("billing.freeEditors.editorsDeployed")}
+            label={t("billing.freeEditors.editorsDeployed", "Editors deployed")}
             value={SAMPLE.editorsDeployed}
           />
           <MetricCard
-            label={t("billing.freeEditors.activeThisMonth")}
+            label={t(
+              "billing.freeEditors.activeThisMonth",
+              "Active this month",
+            )}
             value={SAMPLE.activeThisMonth}
           />
           <MetricCard
-            label={t("billing.freeEditors.pdfsEdited")}
+            label={t("billing.freeEditors.pdfsEdited", "PDFs edited")}
             value={SAMPLE.pdfsEdited}
           />
-          <MetricCard label={t("billing.freeEditors.cost")} value="$0" />
+          <MetricCard
+            label={t("billing.freeEditors.cost", "Cost")}
+            value="$0"
+          />
         </MetricStrip>
         {/* Opens the Users tab with its invite-member modal (via the ?invite param). */}
         <Button
@@ -68,7 +77,7 @@ export function FreePdfEditorsCard() {
           leadingIcon={<PersonAddIcon sx={{ fontSize: 16 }} />}
           onClick={() => navigate("/users?invite=1")}
         >
-          {t("billing.freeEditors.inviteTeammates")}
+          {t("billing.freeEditors.inviteTeammates", "Invite teammates")}
         </Button>
       </div>
     </Card>
