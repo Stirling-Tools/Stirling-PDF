@@ -16,7 +16,7 @@ import {
   SignupFieldErrors,
 } from "@app/routes/signup/SignupFormValidation";
 import { useAuthService } from "@app/routes/signup/AuthService";
-import loginHeader from "@shared/assets/login/LoginLightModeHeader.svg";
+import loginHeader from "@shared/assets/brand/modern-logo/LoginLightModeHeader.svg";
 
 export default function Signup() {
   const navigate = useNavigate();

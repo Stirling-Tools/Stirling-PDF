@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.springframework.context.annotation.Profile;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -19,33 +19,51 @@ import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.PolicyRunStatus;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
+import stirling.software.proprietary.policy.source.Source;
+import stirling.software.proprietary.policy.source.SourceStore;
 
 /**
- * Turns a policy's configured {@link InputSpec sources} into runs. Triggers decide <em>when</em>
- * and call {@link #run(Policy)}; the controller uses the supplied-input and ad-hoc entry points.
+ * Turns a policy's referenced sources into runs: each {@code sourceId} is resolved live to its
+ * persisted {@link Source}, then to an {@link InputSpec}. Triggers decide <em>when</em> and call
+ * {@link #run(Policy)}; the controller uses the supplied-input and ad-hoc entry points.
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Profile("saas")
+@ConditionalOnBooleanProperty(name = "policies.enabled")
 public class PolicyRunner {
 
     private final PolicyEngine policyEngine;
     private final List<InputSource> inputSources;
+    private final SourceStore sourceStore;
 
     /**
-     * Trigger entry point. Pulls every configured source; each yielded unit becomes its own run so
+     * Trigger entry point. Pulls every referenced source; each yielded unit becomes its own run so
      * one failure does not affect the others. No sources means one run with no input (generator
-     * pipeline).
+     * pipeline). Missing or disabled sources are skipped so one broken reference does not stop the
+     * rest.
      */
     public void run(Policy policy) {
-        List<InputSpec> sources = policy.sources();
-        if (sources.isEmpty()) {
+        List<String> sourceIds = policy.sourceIds();
+        if (sourceIds.isEmpty()) {
             startRun(policy, PolicyInputs.of(List.of()), unused -> {});
             return;
         }
-        for (InputSpec spec : sources) {
-            pullAndRun(policy, spec);
+        for (String sourceId : sourceIds) {
+            Source source = sourceStore.get(sourceId).orElse(null);
+            if (source == null) {
+                log.warn("Policy {} references missing source {}; skipping", policy.id(), sourceId);
+                continue;
+            }
+            if (!source.enabled()) {
+                log.debug(
+                        "Source {} ({}) is disabled; skipping for policy {}",
+                        sourceId,
+                        source.name(),
+                        policy.id());
+                continue;
+            }
+            pullAndRun(policy, source.toInputSpec());
         }
     }
 

@@ -24,10 +24,10 @@
 /editor/.env.local
 /editor/.env.*.local
 
-# Root .gitignore ignores all .env* - whitelist our committed ones here
-!.env
-!.env.desktop
-!.env.saas
+# Root .gitignore ignores all .env* - whitelist only our committed ones, anchored
+# to their app so a stray top-level frontend/.env stays ignored (Storybook's SaaS
+# mock env is injected via .storybook/main.ts, not a file).
+!/portal/.env
 !/editor/.env
 !/editor/.env.desktop
 !/editor/.env.saas

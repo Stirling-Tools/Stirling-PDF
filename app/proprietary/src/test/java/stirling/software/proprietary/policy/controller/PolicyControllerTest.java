@@ -40,6 +40,9 @@ import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.PolicyRunView;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
+import stirling.software.proprietary.policy.source.SourceAccessGuard;
+import stirling.software.proprietary.policy.source.SourceStore;
+import stirling.software.proprietary.policy.trigger.PolicyTriggerManager;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("PolicyController")
@@ -48,9 +51,12 @@ class PolicyControllerTest {
     @Mock private PolicyRunner policyRunner;
     @Mock private PolicyRunRegistry runRegistry;
     @Mock private stirling.software.proprietary.policy.store.PolicyStore policyStore;
+    @Mock private SourceStore sourceStore;
+    @Mock private SourceAccessGuard sourceAccessGuard;
     @Mock private PolicyValidator policyValidator;
     @Mock private PolicyAccessGuard policyAccessGuard;
     @Mock private PolicyManagementAuthority policyManagementAuthority;
+    @Mock private PolicyTriggerManager policyTriggerManager;
     @Mock private TempFileManager tempFileManager;
     @Mock private JobOwnershipService jobOwnershipService;
 
@@ -65,9 +71,12 @@ class PolicyControllerTest {
                         policyRunner,
                         runRegistry,
                         policyStore,
+                        sourceStore,
+                        sourceAccessGuard,
                         policyValidator,
                         policyAccessGuard,
                         policyManagementAuthority,
+                        policyTriggerManager,
                         applicationProperties,
                         tempFileManager,
                         jobOwnershipService);
@@ -214,6 +223,7 @@ class PolicyControllerTest {
             assertThat(response.getBody().owner()).isEqualTo("alice");
             assertThat(response.getBody().teamId()).isEqualTo(7L);
             verify(policyValidator).validate(any());
+            verify(policyTriggerManager).notifyPoliciesChanged();
         }
 
         @Test
@@ -229,6 +239,7 @@ class PolicyControllerTest {
                                     assertThat(((ResponseStatusException) e).getStatusCode())
                                             .isEqualTo(HttpStatus.FORBIDDEN));
             verify(policyStore, never()).save(any());
+            verify(policyTriggerManager, never()).notifyPoliciesChanged();
         }
 
         @Test
@@ -295,8 +306,7 @@ class PolicyControllerTest {
         @DisplayName("listPolicies returns team-visible policies")
         void listVisible() {
             List<Policy> all = List.of(policy("a", 1L), policy("b", 1L));
-            when(policyStore.all()).thenReturn(all);
-            when(policyAccessGuard.visible(all)).thenReturn(all);
+            when(policyAccessGuard.visibleFrom(policyStore)).thenReturn(all);
 
             List<Policy> result = controller.listPolicies();
 
@@ -355,6 +365,7 @@ class PolicyControllerTest {
             ResponseEntity<Void> response = controller.deletePolicy("a");
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+            verify(policyTriggerManager).notifyPoliciesChanged();
         }
 
         @Test
@@ -369,6 +380,7 @@ class PolicyControllerTest {
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
             verify(policyStore, never()).delete(any());
+            verify(policyTriggerManager, never()).notifyPoliciesChanged();
         }
 
         @Test

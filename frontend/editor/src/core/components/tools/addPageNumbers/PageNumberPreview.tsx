@@ -260,7 +260,12 @@ export default function PageNumberPreview({
                   key={idx}
                   type="button"
                   className={`${styles.gridTile} ${selected || hoverTile === idx ? styles.gridTileSelected : ""} ${hoverTile === idx ? styles.gridTileHovered : ""}`}
-                  onClick={() => onParameterChange("position", idx as any)}
+                  onClick={() =>
+                    onParameterChange(
+                      "position",
+                      idx as AddPageNumbersParameters["position"],
+                    )
+                  }
                   onMouseEnter={() => setHoverTile(idx)}
                   onMouseLeave={() => setHoverTile(null)}
                   style={{

@@ -1,7 +1,7 @@
 /**
  * Pipelines fixtures and the types api/pipelines.ts shares with them.
  * api/pipelines.ts imports the types; the MSW handlers in mocks/handlers/
- * serve the fixture data over the intercepted httpJson() calls. Components
+ * serve the fixture data over the intercepted apiClient.local.json() calls. Components
  * never reach into this module directly.
  *
  * Fixtures are tier-shaped:

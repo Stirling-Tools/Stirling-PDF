@@ -14,10 +14,12 @@ import { MantineProvider } from "@mantine/core";
 void React;
 
 import { TierProvider, type Tier } from "@portal/contexts/TierContext";
+import { LinkProvider, type LinkState } from "@portal/contexts/LinkContext";
 import { ThemeProvider } from "@portal/contexts/ThemeContext";
 import { UIProvider } from "@portal/contexts/UIContext";
 import { mantineTheme } from "@portal/theme/mantineTheme";
 import { handlers } from "@portal/mocks/handlers";
+import { configureSupabase } from "@shared/auth/supabase/supabaseClient";
 
 import "@mantine/core/styles.css";
 import "@shared/tokens/tokens.css";
@@ -25,6 +27,27 @@ import "@shared/tokens/base.css";
 
 // Start MSW once. Storybook runs in a browser so this uses the service worker.
 initialize({ onUnhandledRequest: "bypass" }, handlers);
+
+// Storybook-only: stub a SaaS session so apiClient.saas reads (invoices, payment
+// method, wallet) clear the session check and reach the MSW handlers instead of
+// failing with "No SaaS session". VITE_SAAS_SUPABASE_URL/KEY are intentionally
+// unset, so ensureSaasSupabase() is a no-op and never replaces this client; only
+// VITE_SAAS_API_URL (a mock origin MSW matches) is configured — injected via
+// .storybook/main.ts's viteFinal define, not a frontend/.env file.
+const saasStub = configureSupabase({
+  url: "http://saas.mock",
+  key: "storybook-anon-key",
+  authOptions: {
+    persistSession: false,
+    autoRefreshToken: false,
+    detectSessionInUrl: false,
+  },
+});
+saasStub.auth.getSession = async () =>
+  ({
+    data: { session: { access_token: "storybook-fake-jwt" } },
+    error: null,
+  }) as Awaited<ReturnType<typeof saasStub.auth.getSession>>;
 
 /**
  * Bridge between Storybook's `tier` global toolbar and the actual TierProvider.
@@ -67,6 +90,8 @@ function ThemeWatcher() {
 
 const withProviders: Decorator = (Story, context) => {
   const tier = (context.globals.tier as Tier) ?? "pro";
+  const linkState =
+    (context.globals.linkState as LinkState) ?? "linked-subscribed";
   // withThemeByDataAttribute exposes the toolbar theme as the `theme` global.
   // Bind Mantine's color scheme to it so Mantine chrome (inputs, focus rings,
   // default surfaces) follows the dark toggle alongside the SUI CSS variables.
@@ -78,12 +103,16 @@ const withProviders: Decorator = (Story, context) => {
     <MemoryRouter initialEntries={["/"]}>
       <ThemeProvider>
         <MantineProvider theme={mantineTheme} forceColorScheme={colorScheme}>
-          <TierKey tier={tier}>
-            <UIProvider>
-              <ThemeWatcher />
-              <Story />
-            </UIProvider>
-          </TierKey>
+          {/* LinkProvider must wrap TierProvider: TierContext derives its tier
+              from useLink() (matches App.tsx's nesting). */}
+          <LinkProvider key={linkState} initialState={linkState}>
+            <TierKey tier={tier}>
+              <UIProvider>
+                <ThemeWatcher />
+                <Story />
+              </UIProvider>
+            </TierKey>
+          </LinkProvider>
         </MantineProvider>
       </ThemeProvider>
     </MemoryRouter>
@@ -124,6 +153,20 @@ const preview: Preview = {
           { value: "free", title: "Free" },
           { value: "pro", title: "Pay-as-you-go" },
           { value: "enterprise", title: "Enterprise" },
+        ],
+        dynamicTitle: true,
+      },
+    },
+    linkState: {
+      name: "Link",
+      description: "Account-link state — drives useLink() everywhere",
+      defaultValue: "linked-subscribed",
+      toolbar: {
+        icon: "link",
+        items: [
+          { value: "unlinked", title: "Unlinked" },
+          { value: "linked-free", title: "Linked · Free" },
+          { value: "linked-subscribed", title: "Linked · PAYG" },
         ],
         dynamicTitle: true,
       },
