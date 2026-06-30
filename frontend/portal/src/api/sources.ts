@@ -77,7 +77,7 @@ export async function fetchSource(id: string): Promise<Source> {
  * row, so the overview list stays lightweight.
  */
 export async function fetchSourceDocCounts(id: string): Promise<number[]> {
-  return httpJson<number[]>(
+  return apiClient.local.json<number[]>(
     `/api/v1/sources/${encodeURIComponent(id)}/document-counts`,
   );
 }
