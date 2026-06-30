@@ -14,11 +14,14 @@ export function LinkAccountPrompt() {
     <Card padding="loose">
       <EmptyState
         size="default"
-        title={t("billing.linkPrompt.title")}
-        description={t("billing.linkPrompt.description")}
+        title={t("billing.linkPrompt.title", "Link your Stirling account")}
+        description={t(
+          "billing.linkPrompt.description",
+          "Manual PDF editing — view, sign, merge, split, watermark, compress, convert, manual OCR — is always free, linked or not. Link to claim 500 free PDFs of metered processing (automation, AI, and the API); when you need more, turn on the Processor plan and only pay for what you use.",
+        )}
         actions={
           <Button variant="gradient" onClick={() => openLinkModal()}>
-            {t("billing.linkPrompt.cta")}
+            {t("billing.linkPrompt.cta", "Link Stirling account")}
           </Button>
         }
       />
