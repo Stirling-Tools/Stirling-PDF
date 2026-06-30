@@ -131,7 +131,6 @@ function toSourceView(
     docsTotal: docs.total,
     docs24h: docs.last24h,
     docs30d: docs.last30d,
-    docsDaily: docs.daily,
   };
 }
 
@@ -166,6 +165,13 @@ export const sourcesHandlers = [
     const source = store.find((s) => s.id === params.id);
     if (!source) return new HttpResponse(null, { status: 404 });
     return HttpResponse.json(source);
+  }),
+
+  http.get("/api/v1/sources/:id/document-counts", async ({ params }) => {
+    await delay(120);
+    const source = store.find((s) => s.id === params.id);
+    if (!source) return new HttpResponse(null, { status: 404 });
+    return HttpResponse.json(docsFor(source.id).daily);
   }),
 
   http.post("/api/v1/sources", async ({ request }) => {

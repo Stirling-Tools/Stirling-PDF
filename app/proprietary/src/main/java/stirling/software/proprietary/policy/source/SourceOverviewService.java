@@ -58,6 +58,14 @@ public class SourceOverviewService {
         return new SourcesResponse(buildKpis(views), views);
     }
 
+    /**
+     * The 30-day daily document series for one source (oldest first), for the expanded row's
+     * sparkline.
+     */
+    public List<Long> dailySeries(String sourceId) {
+        return docCounter.dailySeriesFor(sourceId);
+    }
+
     /** Policies referencing each source id, across the caller's visible policies. */
     private static Map<String, List<Policy>> referencesBySource(List<Policy> policies) {
         Map<String, List<Policy>> bySource = new HashMap<>();
@@ -85,8 +93,7 @@ public class SourceOverviewService {
                 configRows(source),
                 docs.total(),
                 docs.last24h(),
-                docs.last30d(),
-                docs.dailySeries());
+                docs.last30d());
     }
 
     /** A disabled (paused) source reads as "disabled"; an unreferenced one reads as "unused". */

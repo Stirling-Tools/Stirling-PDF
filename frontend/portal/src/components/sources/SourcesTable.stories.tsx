@@ -20,7 +20,6 @@ const SOURCES: SourceView[] = [
     docsTotal: 45230,
     docs24h: 312,
     docs30d: 9870,
-    docsDaily: [],
   },
   {
     id: "src-archive",
@@ -33,7 +32,6 @@ const SOURCES: SourceView[] = [
     docsTotal: 1180,
     docs24h: 0,
     docs30d: 0,
-    docsDaily: [],
   },
   {
     id: "src-legacy",
@@ -46,7 +44,6 @@ const SOURCES: SourceView[] = [
     docsTotal: 48600,
     docs24h: 0,
     docs30d: 0,
-    docsDaily: [],
   },
 ];
 

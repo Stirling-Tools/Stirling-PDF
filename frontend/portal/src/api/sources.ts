@@ -32,8 +32,6 @@ export interface SourceView {
   docsTotal: number;
   docs24h: number;
   docs30d: number;
-  /** Per-day document counts over the last 30 days, oldest first, for a sparkline. */
-  docsDaily: number[];
 }
 
 export interface SourceKpi {
@@ -70,6 +68,17 @@ export async function fetchSources(): Promise<SourcesResponse> {
 export async function fetchSource(id: string): Promise<Source> {
   return apiClient.local.json<Source>(
     `/api/v1/sources/${encodeURIComponent(id)}`,
+  );
+}
+
+/**
+ * GET /api/v1/sources/{id}/document-counts: the trailing 30-day daily document
+ * series (oldest first) for the source's sparkline. Fetched only for the expanded
+ * row, so the overview list stays lightweight.
+ */
+export async function fetchSourceDocCounts(id: string): Promise<number[]> {
+  return httpJson<number[]>(
+    `/api/v1/sources/${encodeURIComponent(id)}/document-counts`,
   );
 }
 

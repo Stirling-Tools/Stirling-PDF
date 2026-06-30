@@ -22,7 +22,6 @@ const IN_USE: SourceView = {
   docsTotal: 45230,
   docs24h: 312,
   docs30d: 9870,
-  docsDaily: SAMPLE_SERIES,
 };
 
 const ORPHANED: SourceView = {
@@ -36,7 +35,6 @@ const ORPHANED: SourceView = {
   docsTotal: 45230,
   docs24h: 312,
   docs30d: 9870,
-  docsDaily: SAMPLE_SERIES,
 };
 
 const meta: Meta<typeof SourceDetailCard> = {
@@ -44,6 +42,7 @@ const meta: Meta<typeof SourceDetailCard> = {
   component: SourceDetailCard,
   parameters: { layout: "padded" },
   args: {
+    docSeries: SAMPLE_SERIES,
     onClose: () => {},
     onEdit: () => {},
     onTogglePause: () => {},

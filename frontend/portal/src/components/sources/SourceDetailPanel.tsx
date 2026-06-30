@@ -4,12 +4,21 @@ import type { SourceView } from "@portal/api/sources";
 import { Sparkline } from "@portal/components/sources/Sparkline";
 import "@portal/views/Sources.css";
 
+interface SourceDetailPanelProps {
+  source: SourceView;
+  /** The 30-day daily series for the sparkline, fetched per source when expanded. */
+  docSeries: number[];
+}
+
 /**
  * Expanded detail for a source row: its config (key/value), the documents it has
  * fed into runs, and which policies reference it (a 0-reference source is called
  * out as safe to delete).
  */
-export function SourceDetailPanel({ source }: { source: SourceView }) {
+export function SourceDetailPanel({
+  source,
+  docSeries,
+}: SourceDetailPanelProps) {
   const { t } = useTranslation();
   return (
     <div className="portal-sources__detail">
@@ -58,9 +67,9 @@ export function SourceDetailPanel({ source }: { source: SourceView }) {
             value={source.docs30d.toLocaleString()}
           />
         </div>
-        {source.docsDaily.length > 0 && (
+        {docSeries.length > 0 && (
           <Sparkline
-            data={source.docsDaily}
+            data={docSeries}
             ariaLabel={t("sources.detail.docsTrend")}
           />
         )}

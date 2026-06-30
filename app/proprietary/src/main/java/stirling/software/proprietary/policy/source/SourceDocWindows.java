@@ -2,13 +2,15 @@ package stirling.software.proprietary.policy.source;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
  * Shared rolling-window math over a source's document buckets, so the JPA and in-memory counters
- * agree on what "last 24h", "last 30d" and the daily series mean. The JPA counter aggregates by day
- * in SQL; the in-memory counter groups its hourly buckets with {@link #byDay}; both then feed
- * {@link #compute}.
+ * agree on the window boundaries and the daily series. Both define "last 30 days" as the buckets at
+ * or after {@link #firstDayHour}, and build the series from per-day counts with {@link #series}
+ * (the JPA counter aggregates by day in SQL; the in-memory counter groups its hourly buckets with
+ * {@link #byDay}).
  */
 final class SourceDocWindows {
 
@@ -17,14 +19,20 @@ final class SourceDocWindows {
     private SourceDocWindows() {}
 
     /**
-     * Build a {@link DocStats} from per-day document counts (keyed by epoch-day, i.e.
-     * hours-since-epoch / 24) plus the lifetime {@code total} and {@code last24h} the caller
-     * already summed. {@code currentDay} is today's epoch-day; the series runs back {@link
-     * DocStats#DAYS} days from it. {@code last30d} is the sum of that series, so the "last 30 days"
-     * total and the sparkline always agree.
+     * The hours-since-epoch at the start of the oldest day in the 30-day window, given the current
+     * hour bucket. Both the "last 30 days" total and the daily series are measured from here, so
+     * the KPI and the sparkline always cover the same buckets.
      */
-    static DocStats compute(
-            long total, long last24h, Map<Long, Long> dailyCounts, long currentDay) {
+    static long firstDayHour(long nowHour) {
+        return ((nowHour / 24) - (DocStats.DAYS - 1)) * 24;
+    }
+
+    /**
+     * Build the {@link DocStats#DAYS}-day daily series (oldest first) from per-day document counts
+     * (keyed by epoch-day, i.e. hours-since-epoch / 24). {@code currentDay} is today's epoch-day;
+     * the series runs back {@code DAYS} days from it.
+     */
+    static List<Long> series(Map<Long, Long> dailyCounts, long currentDay) {
         long firstDay = currentDay - (DocStats.DAYS - 1);
         long[] daily = new long[DocStats.DAYS];
         for (Map.Entry<Long, Long> day : dailyCounts.entrySet()) {
@@ -33,8 +41,7 @@ final class SourceDocWindows {
                 daily[dayIndex] += day.getValue();
             }
         }
-        long last30d = Arrays.stream(daily).sum();
-        return new DocStats(total, last24h, last30d, Arrays.stream(daily).boxed().toList());
+        return Arrays.stream(daily).boxed().toList();
     }
 
     /** Collapse hourly buckets (keyed by hours-since-epoch) into per-day counts (keyed by day). */

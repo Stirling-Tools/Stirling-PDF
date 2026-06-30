@@ -3,6 +3,7 @@ package stirling.software.proprietary.policy.source;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
@@ -44,12 +45,17 @@ public class InProcessSourceDocCounter implements SourceDocCounter {
             long total = buckets.values().stream().mapToLong(Long::longValue).sum();
             long last24h =
                     SourceDocWindows.sumSince(buckets, now - (SourceDocWindows.HOURS_IN_24H - 1));
-            stats.put(
-                    id,
-                    SourceDocWindows.compute(
-                            total, last24h, SourceDocWindows.byDay(buckets), now / 24));
+            long last30d = SourceDocWindows.sumSince(buckets, SourceDocWindows.firstDayHour(now));
+            stats.put(id, new DocStats(total, last24h, last30d));
         }
         return stats;
+    }
+
+    @Override
+    public List<Long> dailySeriesFor(String sourceId) {
+        long now = currentHour();
+        Map<Long, Long> buckets = bucketsBySource.getOrDefault(sourceId, Map.of());
+        return SourceDocWindows.series(SourceDocWindows.byDay(buckets), now / 24);
     }
 
     private long currentHour() {

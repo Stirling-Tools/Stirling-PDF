@@ -41,7 +41,7 @@ class JpaSourceDocCounterDbTest {
         assertEquals(8, stats.total());
         assertEquals(8, stats.last24h());
         assertEquals(8, stats.last30d());
-        assertEquals(8L, stats.dailySeries().get(DocStats.DAYS - 1));
+        assertEquals(8L, counter.dailySeriesFor("s").get(DocStats.DAYS - 1));
     }
 
     @Test
@@ -56,7 +56,8 @@ class JpaSourceDocCounterDbTest {
         assertEquals(7, stats.last24h());
         assertEquals(57, stats.last30d());
 
-        List<Long> series = stats.dailySeries();
+        // The daily series (fetched separately, per source) covers the same 30-day window.
+        List<Long> series = counter().dailySeriesFor("s");
         assertEquals(DocStats.DAYS, series.size());
         assertEquals(7L, series.get(DocStats.DAYS - 1)); // today
         assertEquals(50L, series.get(DocStats.DAYS - 11)); // 10 days ago

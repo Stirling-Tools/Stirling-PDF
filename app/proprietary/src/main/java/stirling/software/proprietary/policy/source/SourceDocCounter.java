@@ -1,6 +1,7 @@
 package stirling.software.proprietary.policy.source;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -18,4 +19,10 @@ public interface SourceDocCounter {
      * DocStats#ZERO}.
      */
     Map<String, DocStats> statsFor(Collection<String> sourceIds);
+
+    /**
+     * The trailing {@link DocStats#DAYS}-day daily document series for one source, oldest first,
+     * for the detail-panel sparkline.
+     */
+    List<Long> dailySeriesFor(String sourceId);
 }

@@ -22,10 +22,6 @@ import org.springframework.stereotype.Service;
 @ConditionalOnBooleanProperty(name = "policies.enabled")
 public class JpaSourceDocCounter implements SourceDocCounter {
 
-    // The widest window we report, as a count of hourly buckets back from now (inclusive); it spans
-    // the 30-day daily series.
-    private static final long WINDOW_HOURS = 24L * DocStats.DAYS;
-
     private final SourceDocCountRepository repository;
     private final Supplier<Instant> clock;
 
@@ -72,21 +68,29 @@ public class JpaSourceDocCounter implements SourceDocCounter {
                 sums(
                         repository.sumBySourceSince(
                                 sourceIds, now - (SourceDocWindows.HOURS_IN_24H - 1)));
-        Map<String, Map<Long, Long>> dailyCounts =
-                dailyBySource(repository.dailyCountsSince(sourceIds, now - (WINDOW_HOURS - 1)));
+        Map<String, Long> last30d =
+                sums(repository.sumBySourceSince(sourceIds, SourceDocWindows.firstDayHour(now)));
 
-        long currentDay = now / 24;
         Map<String, DocStats> stats = new HashMap<>();
         for (String id : sourceIds) {
             stats.put(
                     id,
-                    SourceDocWindows.compute(
+                    new DocStats(
                             totals.getOrDefault(id, 0L),
                             last24h.getOrDefault(id, 0L),
-                            dailyCounts.getOrDefault(id, Map.of()),
-                            currentDay));
+                            last30d.getOrDefault(id, 0L)));
         }
         return stats;
+    }
+
+    @Override
+    public List<Long> dailySeriesFor(String sourceId) {
+        long now = currentHour();
+        Collection<String> ids = List.of(sourceId);
+        Map<Long, Long> dailyCounts =
+                dailyBySource(repository.dailyCountsSince(ids, SourceDocWindows.firstDayHour(now)))
+                        .getOrDefault(sourceId, Map.of());
+        return SourceDocWindows.series(dailyCounts, now / 24);
     }
 
     private long currentHour() {

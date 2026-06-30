@@ -22,7 +22,6 @@ const IN_USE: SourceView = {
   docsTotal: 45230,
   docs24h: 312,
   docs30d: 9870,
-  docsDaily: SAMPLE_SERIES,
 };
 
 const ORPHANED: SourceView = {
@@ -36,7 +35,6 @@ const ORPHANED: SourceView = {
   docsTotal: 1180,
   docs24h: 0,
   docs30d: 0,
-  docsDaily: [],
 };
 
 const meta: Meta<typeof SourceDetailPanel> = {
@@ -54,6 +52,8 @@ const meta: Meta<typeof SourceDetailPanel> = {
 export default meta;
 type Story = StoryObj<typeof SourceDetailPanel>;
 
-export const InUse: Story = { args: { source: IN_USE } };
+export const InUse: Story = {
+  args: { source: IN_USE, docSeries: SAMPLE_SERIES },
+};
 /** A source no policy references is called out as safe to delete. */
-export const Orphaned: Story = { args: { source: ORPHANED } };
+export const Orphaned: Story = { args: { source: ORPHANED, docSeries: [] } };
