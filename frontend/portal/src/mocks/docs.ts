@@ -1,7 +1,7 @@
 /**
  * Developer Docs fixtures and the types api/docs.ts shares with them.
  * api/docs.ts imports the types; the MSW handlers in mocks/handlers/ serve the
- * fixture data over the intercepted httpJson() calls. Components never reach
+ * fixture data over the intercepted apiClient.local.json() calls. Components never reach
  * into this module directly.
  *
  * Two payloads back the surface:

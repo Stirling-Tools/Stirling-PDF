@@ -1,7 +1,7 @@
 /**
  * Infrastructure surface fixtures and the types api/infrastructure.ts shares
  * with them. api/infrastructure.ts imports the types; the MSW handlers in
- * mocks/handlers/ serve the fixture data over the intercepted httpJson() calls.
+ * mocks/handlers/ serve the fixture data over the intercepted apiClient.local.json() calls.
  * Components never reach into this module directly.
  *
  * Everything here is tier-scaled deterministically: free sees a single region
