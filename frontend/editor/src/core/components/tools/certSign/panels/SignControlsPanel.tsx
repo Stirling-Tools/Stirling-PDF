@@ -60,8 +60,13 @@ export default function SignControlsPanel({
   onDeleteSelected,
 }: SignControlsPanelProps) {
   const { t } = useTranslation();
-  const { savedSignatures, addSignature, removeSignature, isAtCapacity, byTypeCounts } =
-    useSavedSignatures();
+  const {
+    savedSignatures,
+    addSignature,
+    removeSignature,
+    isAtCapacity,
+    byTypeCounts,
+  } = useSavedSignatures();
 
   // Create-signature modal state (reuses the shared wet-signature creation flow).
   const [createOpen, setCreateOpen] = useState(false);
@@ -184,7 +189,11 @@ export default function SignControlsPanel({
         signatureData: lastSig.dataUrl,
       });
     }
-  }, [sortedSavedSignatures, signatureConfig?.signatureData, onSignatureSelected]);
+  }, [
+    sortedSavedSignatures,
+    signatureConfig?.signatureData,
+    onSignatureSelected,
+  ]);
 
   const applySavedSignature = useCallback(
     (sig: SavedSignature) => {
@@ -220,7 +229,10 @@ export default function SignControlsPanel({
     if (!isAtCapacity) {
       const index = (byTypeCounts?.[storedType] ?? 0) + 1;
       const baseLabel = isText
-        ? t("certSign.collab.signRequest.saved.defaultTextLabel", "Typed signature")
+        ? t(
+            "certSign.collab.signRequest.saved.defaultTextLabel",
+            "Typed signature",
+          )
         : storedType === "image"
           ? t(
               "certSign.collab.signRequest.saved.defaultImageLabel",
@@ -416,7 +428,10 @@ export default function SignControlsPanel({
             onClick={openCreateModal}
             disabled={isAtCapacity}
           >
-            {t("certSign.collab.signRequest.createNewSignature", "Create New Signature")}
+            {t(
+              "certSign.collab.signRequest.createNewSignature",
+              "Create New Signature",
+            )}
           </Menu.Item>
         </Menu.Dropdown>
       </Menu>
@@ -485,7 +500,10 @@ export default function SignControlsPanel({
       <Modal
         opened={createOpen}
         onClose={() => setCreateOpen(false)}
-        title={t("certSign.collab.signRequest.createNewSignature", "Create New Signature")}
+        title={t(
+          "certSign.collab.signRequest.createNewSignature",
+          "Create New Signature",
+        )}
         size="md"
         withinPortal
       >
@@ -503,7 +521,10 @@ export default function SignControlsPanel({
           onFontSizeChange={setFontSize}
           onTextColorChange={setTextColor}
           onNext={handleUseCreated}
-          nextLabel={t("certSign.collab.signRequest.useSignature", "Use signature")}
+          nextLabel={t(
+            "certSign.collab.signRequest.useSignature",
+            "Use signature",
+          )}
         />
       </Modal>
     </Stack>

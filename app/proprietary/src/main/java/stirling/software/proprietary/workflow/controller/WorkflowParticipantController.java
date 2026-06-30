@@ -404,18 +404,17 @@ public class WorkflowParticipantController {
             certSubmission.put("reason", request.getReason());
             certSubmission.put("showLogo", request.getShowLogo());
 
-            // Store certificate files as base64
+            // Encrypt certificate keystores at rest (the bytes are sensitive — a passwordless
+            // keystore is otherwise extractable from DB access alone).
             if (request.getP12File() != null && !request.getP12File().isEmpty()) {
                 certSubmission.put(
                         "p12Keystore",
-                        java.util.Base64.getEncoder()
-                                .encodeToString(request.getP12File().getBytes()));
+                        metadataEncryptionService.encryptBytes(request.getP12File().getBytes()));
             }
             if (request.getJksFile() != null && !request.getJksFile().isEmpty()) {
                 certSubmission.put(
                         "jksKeystore",
-                        java.util.Base64.getEncoder()
-                                .encodeToString(request.getJksFile().getBytes()));
+                        metadataEncryptionService.encryptBytes(request.getJksFile().getBytes()));
             }
 
             metadata.put("certificateSubmission", certSubmission);

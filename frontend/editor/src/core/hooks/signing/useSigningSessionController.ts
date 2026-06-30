@@ -17,6 +17,7 @@ import { useFileActions } from "@app/contexts/FileContext";
 import { useSigningOverlay } from "@app/contexts/SigningOverlayContext";
 import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
 import { useSigningSessions } from "@app/hooks/signing/useSigningSessions";
+import { markSessionSeen } from "@app/services/signingSeenStore";
 import type { SignatureSettings } from "@app/components/tools/certSign/SignatureSettingsInput";
 
 /** Which Shared Signing screen the sidebar tool is currently showing. */
@@ -46,6 +47,10 @@ export interface SigningRequestData {
   onDecline: () => Promise<void>;
   onBack: () => void;
   canSign: boolean;
+}
+
+function countSignedParticipants(session: SessionDetail): number {
+  return session.participants.filter((p) => p.status === "SIGNED").length;
 }
 
 // Read-only overlay previews for every participant's already-placed wet
@@ -197,6 +202,7 @@ export function useSigningSessionController(enabled: boolean) {
       `/api/v1/security/cert-sign/sessions/${sessionId}`,
     );
     const session = response.data;
+    markSessionSeen(session.sessionId, countSignedParticipants(session));
     setDetailData((prev) => (prev ? { ...prev, session } : prev));
     // Keep the read-only overlay in sync as participants sign.
     setOverlay((prev) =>
@@ -301,6 +307,11 @@ export function useSigningSessionController(enabled: boolean) {
     try {
       const detailResponse = await apiClient.get<SessionDetail>(
         `/api/v1/security/cert-sign/sessions/${session.sessionId}`,
+      );
+      // Owner is now viewing this session — clear its "new signatures" badge.
+      markSessionSeen(
+        session.sessionId,
+        countSignedParticipants(detailResponse.data),
       );
       let pdfFile: File | null = null;
       if (detailResponse.data.finalized) {

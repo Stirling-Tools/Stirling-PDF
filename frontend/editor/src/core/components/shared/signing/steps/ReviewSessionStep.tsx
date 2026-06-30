@@ -56,7 +56,9 @@ export const ReviewSessionStep: React.FC<ReviewSessionStepProps> = ({
             backgroundColor: "var(--mantine-color-default-hover)",
           }}
         >
-          <Text size="sm">{selectedFile.name}</Text>
+          <Text size="sm" style={{ overflowWrap: "anywhere" }}>
+            {selectedFile.name}
+          </Text>
           {selectedFile.size && (
             <Text size="xs" c="dimmed">
               {(selectedFile.size / 1024 / 1024).toFixed(2)} MB

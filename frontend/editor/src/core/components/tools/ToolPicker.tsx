@@ -10,7 +10,7 @@ import NoToolsFound from "@app/components/tools/shared/NoToolsFound";
 import { renderToolButtons } from "@app/components/tools/shared/renderToolButtons";
 import ToolButton from "@app/components/tools/toolPicker/ToolButton";
 import { useToolWorkflowData } from "@app/contexts/ToolWorkflowContext";
-import { usePendingSignRequestCount } from "@app/hooks/signing/usePendingSignRequestCount";
+import { useSigningBadgeCount } from "@app/hooks/signing/useSigningBadgeCount";
 import { ToolId } from "@app/types/toolId";
 import { getSubcategoryLabel } from "@app/data/toolsTaxonomy";
 import { ToolPickerFooterExtensions } from "@app/components/tools/toolPicker/ToolPickerFooterExtensions";
@@ -79,17 +79,19 @@ const ToolPicker = ({
     [visibleSections],
   );
 
-  // Sign requests awaiting the current user (0 when group signing is disabled).
-  const pendingSignCount = usePendingSignRequestCount();
+  // Signing items needing the user's attention: requests awaiting their
+  // signature, plus their own sessions newly signed since last opened
+  // (0 when group signing is disabled).
+  const signingBadgeCount = useSigningBadgeCount();
 
   const recommendedItems = useMemo(() => {
     const items: Array<{ id: string; tool: ToolRegistryEntry }> = [];
     quickSection?.subcategories.forEach((sc: SubcategoryGroup) =>
       sc.tools.forEach((toolEntry) => items.push(toolEntry)),
     );
-    // While requests await the user's signature, surface Shared Signing at the
+    // While signing needs the user's attention, surface Shared Signing at the
     // top of Recommended so it's easy to find without hunting in the Signing group.
-    if (pendingSignCount > 0) {
+    if (signingBadgeCount > 0) {
       const sharedSignTool = toolRegistry["sharedSign" as ToolId];
       if (sharedSignTool) {
         return [
@@ -99,7 +101,7 @@ const ToolPicker = ({
       }
     }
     return items;
-  }, [quickSection, pendingSignCount, toolRegistry]);
+  }, [quickSection, signingBadgeCount, toolRegistry]);
 
   const allSection = useMemo(
     () => visibleSections.find((s) => s.key === "all"),
@@ -171,7 +173,9 @@ const ToolPicker = ({
                       onSelect={onSelect}
                       hasStars
                       showDescription
-                      badgeCount={id === "sharedSign" ? pendingSignCount : undefined}
+                      badgeCount={
+                        id === "sharedSign" ? signingBadgeCount : undefined
+                      }
                     />
                   ))}
               </div>
@@ -227,7 +231,7 @@ const ToolPicker = ({
                         onSelect={onSelect}
                         hasStars
                         badgeCount={
-                          id === "sharedSign" ? pendingSignCount : undefined
+                          id === "sharedSign" ? signingBadgeCount : undefined
                         }
                       />
                     ))}
