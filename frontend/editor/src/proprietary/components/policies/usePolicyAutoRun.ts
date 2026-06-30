@@ -20,6 +20,7 @@ import {
 import { fileStorage } from "@app/services/fileStorage";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
 import { POLICIES_ENABLED } from "@app/constants/featureFlags";
+import i18n from "@app/i18n";
 import {
   runStoredPolicy,
   getPolicyRun,
@@ -435,7 +436,13 @@ async function importOutputs(
 
   if (fetched.length === 0) {
     if (allFailuresPermanent) {
-      failRun(run.runId, "Policy outputs are no longer available to download.");
+      failRun(
+        run.runId,
+        i18n.t(
+          "policies.activity.outputsUnavailable",
+          "Policy outputs are no longer available to download.",
+        ),
+      );
     }
     return; // transient/mixed: retry the lot later; permanent: already failed.
   }
@@ -504,7 +511,10 @@ async function importOutputs(
   if (!imported && allFailuresPermanent) {
     failRun(
       run.runId,
-      "Some policy outputs are no longer available to download.",
+      i18n.t(
+        "policies.activity.partialOutputsUnavailable",
+        "Some policy outputs are no longer available to download.",
+      ),
     );
   }
 }
@@ -595,7 +605,13 @@ export async function poll(
       // the file stops enforcing forever; the user can retry.
       if (isNotFoundError(err)) {
         if (++notFoundStreak >= MAX_NOT_FOUND) {
-          failRun(runId, "The enforcement run could no longer be found.");
+          failRun(
+            runId,
+            i18n.t(
+              "policies.activity.runNotFound",
+              "The enforcement run could no longer be found.",
+            ),
+          );
           return;
         }
       } else {
@@ -622,5 +638,11 @@ export async function poll(
   }
   // Budget exhausted without a terminal status — stop here and fail it, so the
   // file doesn't enforce forever and reloads don't re-poll it.
-  failRun(runId, "Enforcement timed out — the run didn't finish in time.");
+  failRun(
+    runId,
+    i18n.t(
+      "policies.activity.timedOut",
+      "Enforcement timed out before the run could finish.",
+    ),
+  );
 }
