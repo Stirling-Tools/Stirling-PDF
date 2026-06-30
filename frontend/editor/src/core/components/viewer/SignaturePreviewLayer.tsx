@@ -331,6 +331,12 @@ export const SignaturePreviewLayer = memo(function SignaturePreviewLayer({
                             newY = startTop + (startHeight - newHeight);
                           }
 
+                          // Keep the box on-page (mirrors the placement clamp).
+                          newWidth = Math.min(newWidth, 1);
+                          newHeight = Math.min(newHeight, 1);
+                          newX = Math.max(0, Math.min(newX, 1 - newWidth));
+                          newY = Math.max(0, Math.min(newY, 1 - newHeight));
+
                           onChange(
                             previews.map((p) =>
                               p.id === preview.id
