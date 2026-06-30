@@ -7,7 +7,7 @@
  * tier-scoped access controls (seat limits, MFA, sessions, SSO/SCIM).
  *
  * api/users.ts imports the types; the MSW handlers serve the fixture data over
- * the intercepted httpJson() calls. Components never reach into this module
+ * the intercepted apiClient.local.json() calls. Components never reach into this module
  * directly. Once a real backend exists the handlers stop being registered and
  * these fixtures can be deleted (or kept as test seeds).
  */

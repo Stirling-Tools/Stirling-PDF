@@ -19,6 +19,7 @@ import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamRepository;
+import stirling.software.saas.accountlink.LinkedInstanceRepository;
 import stirling.software.saas.billing.repository.BillingSubscriptionRepository;
 import stirling.software.saas.config.SupabaseConfigurationProperties;
 import stirling.software.saas.model.TeamInvitation;
@@ -45,6 +46,7 @@ public class SaasTeamService {
     private final UserRoleService userRoleService;
     private final SaasTeamExtensionService saasTeamExtensionService;
     private final SaasTeamExtensionsRepository saasTeamExtensionsRepository;
+    private final LinkedInstanceRepository linkedInstanceRepository;
     private final stirling.software.proprietary.security.service.UserService userService;
 
     public static final String DEFAULT_TEAM_NAME = "Default";
@@ -458,20 +460,40 @@ public class SaasTeamService {
      * accept. The message points them at the right remedy — cancel the plan if the team is paid,
      * otherwise transfer leadership first.
      *
+     * <p>Linked self-hosted instances (combined-billing "Mode A") bind to a team via {@code
+     * linked_instance.team_id}, so they too orphan a team that is left memberless — a personal team
+     * that accept deletes, or a non-personal team left by its last leader. They're checked in that
+     * same orphaning branch (not for a non-leader leaving a team that lives on); the remedy is to
+     * revoke them.
+     *
      * @param user the user attempting to accept an invitation
-     * @throws IllegalStateException if accepting would orphan a team the user leads
+     * @throws IllegalStateException if accepting would orphan a team the user leads or its
+     *     instances
      */
     private void assertCanLeaveCurrentTeamsToJoinAnother(User user) {
         for (TeamMembership membership : membershipRepository.findByUserId(user.getId())) {
             Team team = membership.getTeam();
-            if (saasTeamExtensionService.isPersonal(team) || !membership.isLeader()) {
-                // Personal teams are deleted on accept; non-leaders leaving never orphans a team.
+            boolean personal = saasTeamExtensionService.isPersonal(team);
+            if (!personal && !membership.isLeader()) {
+                // A non-leader leaving a shared team never orphans it.
                 continue;
             }
-            // Only reached for a non-personal team the user leads — at most one such team in the
-            // one-team-per-user model — so this count runs ~once, not per membership.
-            if (membershipRepository.countByTeamIdAndRole(team.getId(), TeamRole.LEADER) > 1) {
+            if (!personal
+                    && membershipRepository.countByTeamIdAndRole(team.getId(), TeamRole.LEADER)
+                            > 1) {
                 // Another leader remains, so the team keeps an owner.
+                continue;
+            }
+            // Leaving here orphans the team: a personal team is deleted on accept; a non-personal
+            // team is being left by its last leader. Either way its linked self-hosted instances
+            // lose their billing team, so block until they're revoked.
+            if (linkedInstanceRepository.countByTeamIdAndRevokedAtIsNull(team.getId()) > 0) {
+                throw new IllegalStateException(
+                        "Revoke linked self-hosted instances on this team before joining another"
+                                + " team.");
+            }
+            if (personal) {
+                // Personal teams are disposable (deleted on accept) and never billed/shared.
                 continue;
             }
             if (hasActivePaidSubscription(team)) {

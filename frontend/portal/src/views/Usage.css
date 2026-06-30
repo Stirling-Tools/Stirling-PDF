@@ -1,18 +1,34 @@
 .portal-usage {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
-  padding: 1.5rem;
-  max-width: 84rem;
-  margin: 0 auto;
 }
 
-/* Header */
+/* Sticky page header: a full-bleed bar (sidebar tint + bottom border). The
+   scroll container is .portal-shell__view (overflow-y:auto), whose top already
+   sits just below the global .portal-header — so this pins at top:0 of the view,
+   flush under the global bar. */
 .portal-usage__header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--color-sidebar-bg);
+  border-bottom: 1px solid var(--color-border);
+}
+.portal-usage__header-inner {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 1rem;
+  padding: 1rem 1.5rem;
+}
+
+/* Body is full-bleed (just padding) — the billing surface runs edge-to-edge to
+   match marketing, same as the free view. */
+.portal-usage__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
 }
 
 .portal-usage__title {
@@ -88,6 +104,48 @@
   font-size: 1.125rem;
   font-weight: 600;
   color: var(--color-text-1);
+}
+
+/* Wallet contract card */
+.portal-usage__wallet {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.portal-usage__wallet-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.portal-usage__wallet-badges {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Wallet hero metric — mirrors the SaaS plan-card price block */
+.portal-usage__wallet-hero {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.portal-usage__wallet-hero-value {
+  font-size: 2.25rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--color-text-1);
+  font-variant-numeric: tabular-nums;
+}
+
+.portal-usage__wallet-hero-unit {
+  font-size: 0.875rem;
+  color: var(--color-text-4);
 }
 
 /* Cap progress (free) */

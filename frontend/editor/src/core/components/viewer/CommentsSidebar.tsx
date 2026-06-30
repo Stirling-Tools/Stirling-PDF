@@ -311,11 +311,17 @@ export function CommentsSidebar({
     clearHighlightCommentRequest,
     scrollActions,
     getZoomState,
+    toggleCommentsSidebar,
   } = useViewer() ?? {};
   const scrollViewportRef = useRef<HTMLDivElement | null>(null);
   const { state, provides } = useAnnotation(documentId);
   const { handleToolSelectForced } = useToolWorkflow();
-  const { activateAnnotationToolRef } = useAnnotationContext();
+  const {
+    activateAnnotationToolRef,
+    activeAnnotationToolId,
+    setActiveAnnotationToolId,
+  } = useAnnotationContext();
+  const isPlacingComment = activeAnnotationToolId === TEXT_COMMENT_TOOL_ID;
   const [draftContents, setDraftContents] = useState<Record<string, string>>(
     {},
   );
@@ -639,11 +645,33 @@ export function CommentsSidebar({
   );
 
   const handleAddComment = useCallback(() => {
+    // Keep the sidebar open this time - the button morphs into a
+    // "Click on a page... cancel" hint so the user can see exactly
+    // what state the viewer is in.
     handleToolSelectForced(ANNOTATE_PANEL_ID);
     requestAnimationFrame(() => {
       activateAnnotationToolRef.current?.(TEXT_COMMENT_TOOL_ID);
     });
   }, [handleToolSelectForced, activateAnnotationToolRef]);
+
+  const handleCancelPlacingComment = useCallback(() => {
+    // De-arm the textComment tool. The panel's activateAnnotationTool
+    // takes the AnnotationToolId "select" to reset to no-tool state.
+    activateAnnotationToolRef.current?.("select" as never);
+    setActiveAnnotationToolId(null);
+  }, [activateAnnotationToolRef, setActiveAnnotationToolId]);
+
+  // ESC cancels placement mode while the sidebar is open.
+  useEffect(() => {
+    if (!visible || !isPlacingComment) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        handleCancelPlacingComment();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [visible, isPlacingComment, handleCancelPlacingComment]);
 
   if (!visible) return null;
 
@@ -716,6 +744,18 @@ export function CommentsSidebar({
             </Menu>
           </Group>
         )}
+        {toggleCommentsSidebar && (
+          <ActionIcon
+            variant="subtle"
+            size="sm"
+            color="gray"
+            onClick={toggleCommentsSidebar}
+            aria-label="Close comments sidebar"
+            title={t("viewer.comments.close", "Close comments")}
+          >
+            <LocalIcon icon="close-rounded" width="1.1rem" height="1.1rem" />
+          </ActionIcon>
+        )}
       </div>
       <ScrollArea style={{ flex: 1 }}>
         <Stack p="sm" gap="md">
@@ -733,434 +773,517 @@ export function CommentsSidebar({
                   "Place comments with the Comment, Insert Text, or Replace Text tools. They will appear here by page.",
                 )}
               </Text>
-              <Button
-                variant="light"
-                size="xs"
-                onClick={handleAddComment}
-                leftSection={
-                  <LocalIcon icon="add" width="1rem" height="1rem" />
-                }
-              >
-                {t("viewer.comments.addComment", "Add comment")}
-              </Button>
+              {isPlacingComment ? (
+                <Button
+                  variant="light"
+                  color="orange"
+                  size="xs"
+                  onClick={handleCancelPlacingComment}
+                  leftSection={
+                    <LocalIcon
+                      icon="touch-app-rounded"
+                      width="1rem"
+                      height="1rem"
+                    />
+                  }
+                >
+                  {t(
+                    "viewer.comments.placingHint",
+                    "Click a page to place… (cancel)",
+                  )}
+                </Button>
+              ) : (
+                <Button
+                  variant="light"
+                  size="xs"
+                  onClick={handleAddComment}
+                  leftSection={
+                    <LocalIcon icon="add" width="1rem" height="1rem" />
+                  }
+                >
+                  {t("viewer.comments.addComment", "Add comment")}
+                </Button>
+              )}
             </Stack>
           ) : (
-            pageNumbers.map((pageIndex) => {
-              const entries = byPage[pageIndex] ?? [];
-              const pageNum = pageIndex + 1;
-              return (
-                <Box key={pageIndex} mb="md">
-                  <Text size="sm" fw={700} mb={2}>
-                    {t("viewer.comments.pageLabel", "Page {{page}}", {
-                      page: pageNum,
-                    })}
-                  </Text>
-                  <Text size="xs" c="dimmed" mb="sm">
-                    {t("viewer.comments.nComments", "{{count}} comment(s)", {
-                      count: entries.length,
-                    })}
-                  </Text>
-                  <Box
-                    mb="xs"
-                    style={{
-                      borderBottom: "1px solid var(--border-subtle)",
-                    }}
-                  />
-                  <Stack gap="sm">
-                    {entries.map((entry) => {
-                      const ann = entry.annotation?.object;
-                      const id = ann?.id;
-                      if (!id) return null;
-                      const key = `${pageIndex}_${id}`;
-                      const replyKey = `${pageIndex}_${id}_reply`;
-                      const displayContent = getCommentDisplayContent(entry);
-                      const draft =
-                        draftContents[key] !== undefined
-                          ? draftContents[key]
-                          : displayContent;
-                      const replyDraft = replyDrafts[replyKey] ?? "";
-                      const authorName = getAuthorName(ann, displayName);
-                      /** Only treat as "comment posted" when annotation actually has content (user clicked Send), not on every keystroke. */
-                      const hasMainContent =
-                        (displayContent ?? "").trim().length > 0;
-                      const isEditingMain = editingMainKey === key;
+            <>
+              {isPlacingComment ? (
+                <Button
+                  variant="light"
+                  color="orange"
+                  size="compact-xs"
+                  fullWidth
+                  onClick={handleCancelPlacingComment}
+                  leftSection={
+                    <LocalIcon
+                      icon="touch-app-rounded"
+                      width="0.9rem"
+                      height="0.9rem"
+                    />
+                  }
+                  styles={{
+                    root: {
+                      justifyContent: "flex-start",
+                      paddingInline: 6,
+                    },
+                  }}
+                >
+                  {t(
+                    "viewer.comments.placingHint",
+                    "Click a page to place… (cancel)",
+                  )}
+                </Button>
+              ) : (
+                <Button
+                  variant="subtle"
+                  size="compact-xs"
+                  fullWidth
+                  onClick={handleAddComment}
+                  leftSection={
+                    <LocalIcon icon="add" width="0.9rem" height="0.9rem" />
+                  }
+                  styles={{
+                    root: {
+                      justifyContent: "flex-start",
+                      paddingInline: 6,
+                    },
+                  }}
+                >
+                  {t("viewer.comments.addComment", "Add comment")}
+                </Button>
+              )}
+              {pageNumbers.map((pageIndex) => {
+                const entries = byPage[pageIndex] ?? [];
+                const pageNum = pageIndex + 1;
+                return (
+                  <Box key={pageIndex} mb="md">
+                    <Text size="sm" fw={700} mb={2}>
+                      {t("viewer.comments.pageLabel", "Page {{page}}", {
+                        page: pageNum,
+                      })}
+                    </Text>
+                    <Text size="xs" c="dimmed" mb="sm">
+                      {t("viewer.comments.nComments", "{{count}} comments", {
+                        count: entries.length,
+                      })}
+                    </Text>
+                    <Box
+                      mb="xs"
+                      style={{
+                        borderBottom: "1px solid var(--border-subtle)",
+                      }}
+                    />
+                    <Stack gap="sm">
+                      {entries.map((entry) => {
+                        const ann = entry.annotation?.object;
+                        const id = ann?.id;
+                        if (!id) return null;
+                        const key = `${pageIndex}_${id}`;
+                        const replyKey = `${pageIndex}_${id}_reply`;
+                        const displayContent = getCommentDisplayContent(entry);
+                        const draft =
+                          draftContents[key] !== undefined
+                            ? draftContents[key]
+                            : displayContent;
+                        const replyDraft = replyDrafts[replyKey] ?? "";
+                        const authorName = getAuthorName(ann, displayName);
+                        /** Only treat as "comment posted" when annotation actually has content (user clicked Send), not on every keystroke. */
+                        const hasMainContent =
+                          (displayContent ?? "").trim().length > 0;
+                        const isEditingMain = editingMainKey === key;
 
-                      const mainTimestamp = formatCommentDate(ann);
-                      const typeLabel = getAnnotationTypeLabel(ann, t);
+                        const mainTimestamp = formatCommentDate(ann);
+                        const typeLabel = getAnnotationTypeLabel(ann, t);
 
-                      return (
-                        <Box
-                          key={key}
-                          data-comment-card={key}
-                          p="sm"
-                          style={{
-                            border: selectedAnnotationIds.has(id)
-                              ? "1px solid var(--mantine-color-blue-3)"
-                              : "1px solid var(--border-subtle)",
-                            borderRadius: 8,
-                            backgroundColor: "var(--bg-raised)",
-                          }}
-                        >
-                          <Group
-                            wrap="nowrap"
-                            gap="xs"
-                            justify="space-between"
-                            align="flex-start"
-                            mb="xs"
+                        return (
+                          <Box
+                            key={key}
+                            data-comment-card={key}
+                            p="sm"
+                            style={{
+                              border: selectedAnnotationIds.has(id)
+                                ? "1px solid var(--mantine-color-blue-3)"
+                                : "1px solid var(--border-subtle)",
+                              borderRadius: 8,
+                              backgroundColor: "var(--bg-raised)",
+                            }}
                           >
                             <Group
                               wrap="nowrap"
                               gap="xs"
-                              style={{ minWidth: 0, flex: 1 }}
+                              justify="space-between"
+                              align="flex-start"
+                              mb="xs"
                             >
-                              <AnnotationTypeIcon ann={ann} />
-                              <Box style={{ minWidth: 0 }}>
-                                <Text size="sm" fw={600}>
-                                  {authorName}
-                                </Text>
-                                <Text size="xs" c="dimmed">
-                                  {typeLabel}
-                                  {mainTimestamp ? ` · ${mainTimestamp}` : ""}
-                                </Text>
-                              </Box>
-                            </Group>
-                            <Group
-                              gap={2}
-                              wrap="nowrap"
-                              style={{ flexShrink: 0 }}
-                            >
-                              <Tooltip
-                                label={t(
-                                  "viewer.comments.locateAnnotation",
-                                  "Locate in document",
-                                )}
+                              <Group
+                                wrap="nowrap"
+                                gap="xs"
+                                style={{ minWidth: 0, flex: 1 }}
                               >
-                                <ActionIcon
-                                  variant="subtle"
-                                  size="sm"
-                                  color="gray"
-                                  onClick={() =>
-                                    handleLocateAnnotation(pageIndex, ann)
-                                  }
-                                >
-                                  <VisibilityIcon style={{ fontSize: 16 }} />
-                                </ActionIcon>
-                              </Tooltip>
-                              <Menu position="bottom-end" withArrow>
-                                <Menu.Target>
-                                  <Tooltip
-                                    label={t(
-                                      "viewer.comments.moreActions",
-                                      "More actions",
-                                    )}
-                                  >
-                                    <ActionIcon
-                                      variant="subtle"
-                                      size="sm"
-                                      color="gray"
-                                    >
-                                      <MoreHorizIcon style={{ fontSize: 20 }} />
-                                    </ActionIcon>
-                                  </Tooltip>
-                                </Menu.Target>
-                                <Menu.Dropdown>
-                                  <Menu.Item
-                                    leftSection={
-                                      <EditIcon style={{ fontSize: 18 }} />
-                                    }
-                                    onClick={() => setEditingMainKey(key)}
-                                  >
-                                    {t("annotation.editText", "Edit")}
-                                  </Menu.Item>
-                                  <Menu.Item
-                                    leftSection={
-                                      <DeleteIcon style={{ fontSize: 18 }} />
-                                    }
-                                    color="red"
-                                    onClick={() =>
-                                      handleDeleteClick(pageIndex, id, ann)
-                                    }
-                                  >
-                                    {t("annotation.delete", "Delete")}
-                                  </Menu.Item>
-                                </Menu.Dropdown>
-                              </Menu>
-                            </Group>
-                          </Group>
-
-                          {!hasMainContent || isEditingMain ? (
-                            <>
-                              <Textarea
-                                placeholder={t(
-                                  "viewer.comments.addCommentPlaceholder",
-                                  "Add comment...",
-                                )}
-                                minRows={2}
-                                autosize
-                                value={draft ?? ""}
-                                onChange={(e) => {
-                                  const v =
-                                    (e?.currentTarget ?? e?.target)?.value ??
-                                    "";
-                                  setDraftContents((prev) => ({
-                                    ...prev,
-                                    [key]: v,
-                                  }));
-                                  if (isEditingMain) {
-                                    handleContentsChange(pageIndex, id, v);
-                                  }
-                                }}
-                                styles={{ root: { width: "100%" } }}
-                                mb="xs"
-                              />
-                              <Group gap={4} wrap="nowrap" justify="flex-end">
+                                <AnnotationTypeIcon ann={ann} />
+                                <Box style={{ minWidth: 0 }}>
+                                  <Text size="sm" fw={600}>
+                                    {authorName}
+                                  </Text>
+                                  <Text size="xs" c="dimmed">
+                                    {typeLabel}
+                                    {mainTimestamp ? ` · ${mainTimestamp}` : ""}
+                                  </Text>
+                                </Box>
+                              </Group>
+                              <Group
+                                gap={2}
+                                wrap="nowrap"
+                                style={{ flexShrink: 0 }}
+                              >
                                 <Tooltip
                                   label={t(
-                                    "viewer.comments.addComment",
-                                    "Add comment",
+                                    "viewer.comments.locateAnnotation",
+                                    "Locate in document",
                                   )}
                                 >
                                   <ActionIcon
-                                    variant="filled"
+                                    variant="subtle"
                                     size="sm"
-                                    color="blue"
-                                    onClick={() => {
-                                      handleSendMainComment(
-                                        pageIndex,
-                                        id,
-                                        draft ?? "",
-                                      );
-                                      setEditingMainKey(null);
-                                    }}
-                                    disabled={!(draft ?? "").trim()}
+                                    color="gray"
+                                    onClick={() =>
+                                      handleLocateAnnotation(pageIndex, ann)
+                                    }
                                   >
-                                    <CheckIcon
-                                      style={{ fontSize: 18, color: "white" }}
-                                    />
+                                    <VisibilityIcon style={{ fontSize: 16 }} />
                                   </ActionIcon>
                                 </Tooltip>
-                              </Group>
-                            </>
-                          ) : (
-                            <>
-                              <Text
-                                size="sm"
-                                mb="sm"
-                                style={{ whiteSpace: "pre-wrap" }}
-                              >
-                                {displayContent}
-                              </Text>
-
-                              {entry.replies?.length ? (
-                                <Stack gap="sm" mb="sm">
-                                  {entry.replies.map((r) => {
-                                    const rObj = r?.object;
-                                    const rId = rObj?.id;
-                                    if (!rId) return null;
-                                    const rAuthor = getAuthorName(
-                                      rObj,
-                                      displayName,
-                                    );
-                                    const rTimestamp = formatCommentDate(rObj);
-                                    const replyEditKey = `${pageIndex}_${id}_${rId}`;
-                                    const isEditingReply =
-                                      editingReplyKey === replyEditKey;
-                                    const canEditReply =
-                                      isReplyAuthoredByCurrentUser(
-                                        rObj,
-                                        displayName,
-                                      );
-                                    const replyBody =
-                                      replyEditDrafts[replyEditKey] !==
-                                      undefined
-                                        ? replyEditDrafts[replyEditKey]
-                                        : (rObj?.contents ?? "");
-                                    return (
-                                      <Box
-                                        key={rId}
-                                        pl="xs"
-                                        style={{
-                                          borderLeft:
-                                            "2px solid var(--mantine-color-blue-3)",
-                                        }}
+                                <Menu position="bottom-end" withArrow>
+                                  <Menu.Target>
+                                    <Tooltip
+                                      label={t(
+                                        "viewer.comments.moreActions",
+                                        "More actions",
+                                      )}
+                                    >
+                                      <ActionIcon
+                                        variant="subtle"
+                                        size="sm"
+                                        color="gray"
                                       >
-                                        <Box style={{ minWidth: 0 }}>
-                                          <Group
-                                            wrap="nowrap"
-                                            justify="space-between"
-                                            align="flex-start"
-                                            gap={4}
-                                            mb={2}
-                                          >
-                                            <Text size="sm" fw={600}>
-                                              {rAuthor}
-                                            </Text>
-                                            <Group
-                                              wrap="nowrap"
-                                              gap="xs"
-                                              align="center"
-                                            >
-                                              {canEditReply &&
-                                              !isEditingReply ? (
-                                                <UnstyledButton
-                                                  type="button"
-                                                  onClick={() => {
-                                                    setEditingReplyKey(
-                                                      replyEditKey,
-                                                    );
-                                                    setReplyEditDrafts(() => ({
-                                                      [replyEditKey]: String(
-                                                        rObj?.contents ?? "",
-                                                      ),
-                                                    }));
-                                                  }}
-                                                >
-                                                  <Text size="xs" c="blue">
-                                                    {t(
-                                                      "annotation.editText",
-                                                      "Edit",
-                                                    )}
-                                                  </Text>
-                                                </UnstyledButton>
-                                              ) : null}
-                                              {rTimestamp ? (
-                                                <Text size="xs" c="dimmed">
-                                                  {rTimestamp}
-                                                </Text>
-                                              ) : null}
-                                            </Group>
-                                          </Group>
-                                          {isEditingReply ? (
-                                            <>
-                                              <Textarea
-                                                minRows={2}
-                                                autosize
-                                                value={replyBody}
-                                                onChange={(e) => {
-                                                  const v =
-                                                    (
-                                                      e?.currentTarget ??
-                                                      e?.target
-                                                    )?.value ?? "";
-                                                  setReplyEditDrafts((p) => ({
-                                                    ...p,
-                                                    [replyEditKey]: v,
-                                                  }));
-                                                }}
-                                                styles={{
-                                                  root: { width: "100%" },
-                                                }}
-                                                mb="xs"
-                                              />
-                                              <Group
-                                                gap={4}
-                                                wrap="nowrap"
-                                                justify="flex-end"
-                                              >
-                                                <Tooltip
-                                                  label={t(
-                                                    "viewer.comments.saveReply",
-                                                    "Save reply",
-                                                  )}
-                                                >
-                                                  <ActionIcon
-                                                    variant="filled"
-                                                    size="sm"
-                                                    color="blue"
-                                                    onClick={() =>
-                                                      handleSaveReplyEdit(
-                                                        replyEditKey,
-                                                        pageIndex,
-                                                        rId,
-                                                        replyBody,
-                                                      )
-                                                    }
-                                                    disabled={!replyBody.trim()}
-                                                  >
-                                                    <CheckIcon
-                                                      style={{
-                                                        fontSize: 18,
-                                                        color: "white",
-                                                      }}
-                                                    />
-                                                  </ActionIcon>
-                                                </Tooltip>
-                                              </Group>
-                                            </>
-                                          ) : (
-                                            <Text
-                                              size="sm"
-                                              style={{ whiteSpace: "pre-wrap" }}
-                                            >
-                                              {rObj?.contents ?? ""}
-                                            </Text>
-                                          )}
-                                        </Box>
-                                      </Box>
-                                    );
-                                  })}
-                                </Stack>
-                              ) : null}
+                                        <MoreHorizIcon
+                                          style={{ fontSize: 20 }}
+                                        />
+                                      </ActionIcon>
+                                    </Tooltip>
+                                  </Menu.Target>
+                                  <Menu.Dropdown>
+                                    <Menu.Item
+                                      leftSection={
+                                        <EditIcon style={{ fontSize: 18 }} />
+                                      }
+                                      onClick={() => setEditingMainKey(key)}
+                                    >
+                                      {t("annotation.editText", "Edit")}
+                                    </Menu.Item>
+                                    <Menu.Item
+                                      leftSection={
+                                        <DeleteIcon style={{ fontSize: 18 }} />
+                                      }
+                                      color="red"
+                                      onClick={() =>
+                                        handleDeleteClick(pageIndex, id, ann)
+                                      }
+                                    >
+                                      {t("annotation.delete", "Delete")}
+                                    </Menu.Item>
+                                  </Menu.Dropdown>
+                                </Menu>
+                              </Group>
+                            </Group>
 
-                              <Group gap="xs" wrap="nowrap" align="flex-end">
-                                <TextInput
+                            {!hasMainContent || isEditingMain ? (
+                              <>
+                                <Textarea
                                   placeholder={t(
-                                    "viewer.comments.addReplyPlaceholder",
-                                    "Add reply...",
+                                    "viewer.comments.addCommentPlaceholder",
+                                    "Add comment...",
                                   )}
-                                  size="xs"
-                                  value={replyDraft}
+                                  minRows={2}
+                                  autosize
+                                  value={draft ?? ""}
                                   onChange={(e) => {
                                     const v =
                                       (e?.currentTarget ?? e?.target)?.value ??
                                       "";
-                                    setReplyDrafts((p) => ({
-                                      ...p,
-                                      [replyKey]: v,
+                                    setDraftContents((prev) => ({
+                                      ...prev,
+                                      [key]: v,
                                     }));
-                                  }}
-                                  style={{ flex: 1, minWidth: 0 }}
-                                  styles={{
-                                    input: {
-                                      borderColor:
-                                        "var(--mantine-color-blue-3)",
-                                    },
-                                  }}
-                                />
-                                <Tooltip
-                                  label={t(
-                                    "viewer.comments.addComment",
-                                    "Add comment",
-                                  )}
-                                >
-                                  <ActionIcon
-                                    variant="filled"
-                                    size="md"
-                                    color="blue"
-                                    style={{
-                                      backgroundColor:
-                                        "var(--mantine-color-blue-6)",
-                                    }}
-                                    onClick={() =>
-                                      handleSendReply(pageIndex, id, ann?.rect)
+                                    if (isEditingMain) {
+                                      handleContentsChange(pageIndex, id, v);
                                     }
-                                    disabled={!replyDraft.trim()}
+                                  }}
+                                  styles={{ root: { width: "100%" } }}
+                                  mb="xs"
+                                />
+                                <Group gap={4} wrap="nowrap" justify="flex-end">
+                                  <Tooltip
+                                    label={t(
+                                      "viewer.comments.addComment",
+                                      "Add comment",
+                                    )}
                                   >
-                                    <CheckIcon
-                                      style={{ fontSize: 20, color: "white" }}
-                                    />
-                                  </ActionIcon>
-                                </Tooltip>
-                              </Group>
-                            </>
-                          )}
-                        </Box>
-                      );
-                    })}
-                  </Stack>
-                </Box>
-              );
-            })
+                                    <ActionIcon
+                                      variant="filled"
+                                      size="sm"
+                                      color="blue"
+                                      onClick={() => {
+                                        handleSendMainComment(
+                                          pageIndex,
+                                          id,
+                                          draft ?? "",
+                                        );
+                                        setEditingMainKey(null);
+                                      }}
+                                      disabled={!(draft ?? "").trim()}
+                                    >
+                                      <CheckIcon
+                                        style={{ fontSize: 18, color: "white" }}
+                                      />
+                                    </ActionIcon>
+                                  </Tooltip>
+                                </Group>
+                              </>
+                            ) : (
+                              <>
+                                <Text
+                                  size="sm"
+                                  mb="sm"
+                                  style={{ whiteSpace: "pre-wrap" }}
+                                >
+                                  {displayContent}
+                                </Text>
+
+                                {entry.replies?.length ? (
+                                  <Stack gap="sm" mb="sm">
+                                    {entry.replies.map((r) => {
+                                      const rObj = r?.object;
+                                      const rId = rObj?.id;
+                                      if (!rId) return null;
+                                      const rAuthor = getAuthorName(
+                                        rObj,
+                                        displayName,
+                                      );
+                                      const rTimestamp =
+                                        formatCommentDate(rObj);
+                                      const replyEditKey = `${pageIndex}_${id}_${rId}`;
+                                      const isEditingReply =
+                                        editingReplyKey === replyEditKey;
+                                      const canEditReply =
+                                        isReplyAuthoredByCurrentUser(
+                                          rObj,
+                                          displayName,
+                                        );
+                                      const replyBody =
+                                        replyEditDrafts[replyEditKey] !==
+                                        undefined
+                                          ? replyEditDrafts[replyEditKey]
+                                          : (rObj?.contents ?? "");
+                                      return (
+                                        <Box
+                                          key={rId}
+                                          pl="xs"
+                                          style={{
+                                            borderLeft:
+                                              "2px solid var(--mantine-color-blue-3)",
+                                          }}
+                                        >
+                                          <Box style={{ minWidth: 0 }}>
+                                            <Group
+                                              wrap="nowrap"
+                                              justify="space-between"
+                                              align="flex-start"
+                                              gap={4}
+                                              mb={2}
+                                            >
+                                              <Text size="sm" fw={600}>
+                                                {rAuthor}
+                                              </Text>
+                                              <Group
+                                                wrap="nowrap"
+                                                gap="xs"
+                                                align="center"
+                                              >
+                                                {canEditReply &&
+                                                !isEditingReply ? (
+                                                  <UnstyledButton
+                                                    type="button"
+                                                    onClick={() => {
+                                                      setEditingReplyKey(
+                                                        replyEditKey,
+                                                      );
+                                                      setReplyEditDrafts(
+                                                        () => ({
+                                                          [replyEditKey]:
+                                                            String(
+                                                              rObj?.contents ??
+                                                                "",
+                                                            ),
+                                                        }),
+                                                      );
+                                                    }}
+                                                  >
+                                                    <Text size="xs" c="blue">
+                                                      {t(
+                                                        "annotation.editText",
+                                                        "Edit",
+                                                      )}
+                                                    </Text>
+                                                  </UnstyledButton>
+                                                ) : null}
+                                                {rTimestamp ? (
+                                                  <Text size="xs" c="dimmed">
+                                                    {rTimestamp}
+                                                  </Text>
+                                                ) : null}
+                                              </Group>
+                                            </Group>
+                                            {isEditingReply ? (
+                                              <>
+                                                <Textarea
+                                                  minRows={2}
+                                                  autosize
+                                                  value={replyBody}
+                                                  onChange={(e) => {
+                                                    const v =
+                                                      (
+                                                        e?.currentTarget ??
+                                                        e?.target
+                                                      )?.value ?? "";
+                                                    setReplyEditDrafts((p) => ({
+                                                      ...p,
+                                                      [replyEditKey]: v,
+                                                    }));
+                                                  }}
+                                                  styles={{
+                                                    root: { width: "100%" },
+                                                  }}
+                                                  mb="xs"
+                                                />
+                                                <Group
+                                                  gap={4}
+                                                  wrap="nowrap"
+                                                  justify="flex-end"
+                                                >
+                                                  <Tooltip
+                                                    label={t(
+                                                      "viewer.comments.saveReply",
+                                                      "Save reply",
+                                                    )}
+                                                  >
+                                                    <ActionIcon
+                                                      variant="filled"
+                                                      size="sm"
+                                                      color="blue"
+                                                      onClick={() =>
+                                                        handleSaveReplyEdit(
+                                                          replyEditKey,
+                                                          pageIndex,
+                                                          rId,
+                                                          replyBody,
+                                                        )
+                                                      }
+                                                      disabled={
+                                                        !replyBody.trim()
+                                                      }
+                                                    >
+                                                      <CheckIcon
+                                                        style={{
+                                                          fontSize: 18,
+                                                          color: "white",
+                                                        }}
+                                                      />
+                                                    </ActionIcon>
+                                                  </Tooltip>
+                                                </Group>
+                                              </>
+                                            ) : (
+                                              <Text
+                                                size="sm"
+                                                style={{
+                                                  whiteSpace: "pre-wrap",
+                                                }}
+                                              >
+                                                {rObj?.contents ?? ""}
+                                              </Text>
+                                            )}
+                                          </Box>
+                                        </Box>
+                                      );
+                                    })}
+                                  </Stack>
+                                ) : null}
+
+                                <Group gap="xs" wrap="nowrap" align="flex-end">
+                                  <TextInput
+                                    placeholder={t(
+                                      "viewer.comments.addReplyPlaceholder",
+                                      "Add reply...",
+                                    )}
+                                    size="xs"
+                                    value={replyDraft}
+                                    onChange={(e) => {
+                                      const v =
+                                        (e?.currentTarget ?? e?.target)
+                                          ?.value ?? "";
+                                      setReplyDrafts((p) => ({
+                                        ...p,
+                                        [replyKey]: v,
+                                      }));
+                                    }}
+                                    style={{ flex: 1, minWidth: 0 }}
+                                    styles={{
+                                      input: {
+                                        borderColor:
+                                          "var(--mantine-color-blue-3)",
+                                      },
+                                    }}
+                                  />
+                                  <Tooltip
+                                    label={t(
+                                      "viewer.comments.addComment",
+                                      "Add comment",
+                                    )}
+                                  >
+                                    <ActionIcon
+                                      variant="filled"
+                                      size="md"
+                                      color="blue"
+                                      style={{
+                                        backgroundColor:
+                                          "var(--mantine-color-blue-6)",
+                                      }}
+                                      onClick={() =>
+                                        handleSendReply(
+                                          pageIndex,
+                                          id,
+                                          ann?.rect,
+                                        )
+                                      }
+                                      disabled={!replyDraft.trim()}
+                                    >
+                                      <CheckIcon
+                                        style={{ fontSize: 20, color: "white" }}
+                                      />
+                                    </ActionIcon>
+                                  </Tooltip>
+                                </Group>
+                              </>
+                            )}
+                          </Box>
+                        );
+                      })}
+                    </Stack>
+                  </Box>
+                );
+              })}
+            </>
           )}
         </Stack>
       </ScrollArea>

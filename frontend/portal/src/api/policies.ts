@@ -10,7 +10,7 @@
  * approach the editor uses for its own catalogue view.
  */
 
-import { httpJson } from "@portal/api/http";
+import { apiClient } from "@portal/api/http";
 import { fromWirePolicy, toWirePolicy } from "@shared/policies/codec";
 import { runsToActivity, runsToStats } from "@shared/policies/runs";
 import type { PolicyDecodedState, WirePolicy } from "@shared/policies/types";
@@ -103,8 +103,8 @@ function decoratePolicy(
 /** GET /api/v1/policies + GET /api/v1/policies/runs → assembled catalogue. */
 export async function fetchPolicies(): Promise<PoliciesResponse> {
   const [wirePolicies, runs] = await Promise.all([
-    httpJson<WirePolicy[]>("/api/v1/policies"),
-    httpJson<PolicyRunView[]>("/api/v1/policies/runs").catch(() => [] as PolicyRunView[]),
+    apiClient.local.json<WirePolicy[]>("/api/v1/policies"),
+    apiClient.local.json<PolicyRunView[]>("/api/v1/policies/runs").catch(() => [] as PolicyRunView[]),
   ]);
 
   const decodedByCategory = new Map<string, { decoded: PolicyDecodedState; isDefault: boolean }>();
@@ -138,12 +138,19 @@ export async function fetchPolicies(): Promise<PoliciesResponse> {
   return { summary, catalogue };
 }
 
+/** GET /api/v1/policies/{id} — one stored policy's raw record. */
+export async function fetchPolicy(id: string): Promise<WirePolicy> {
+  return apiClient.local.json<WirePolicy>(
+    `/api/v1/policies/${encodeURIComponent(id)}`,
+  );
+}
+
 /**
  * POST /api/v1/policies — create (blank id) or update (matched id). The
  * backend stamps owner + teamId server-side and returns the stored record.
  */
 export async function savePolicy(wire: WirePolicy): Promise<WirePolicy> {
-  return httpJson<WirePolicy>("/api/v1/policies", {
+  return apiClient.local.json<WirePolicy>("/api/v1/policies", {
     method: "POST",
     body: wire,
   });
@@ -151,9 +158,12 @@ export async function savePolicy(wire: WirePolicy): Promise<WirePolicy> {
 
 /** DELETE /api/v1/policies/{id} */
 export async function deletePolicy(id: string): Promise<void> {
-  await httpJson<void>(`/api/v1/policies/${encodeURIComponent(id)}`, {
-    method: "DELETE",
-  });
+  await apiClient.local.json<void>(
+    `/api/v1/policies/${encodeURIComponent(id)}`,
+    {
+      method: "DELETE",
+    },
+  );
 }
 
 // ── Wire-build helpers (so Policies.tsx doesn't need codec knowledge) ────────
@@ -221,4 +231,16 @@ export function buildWireFromState(
       steps: policy.steps,
     }),
   };
+}
+
+/**
+ * POST /api/v1/policies/{id}/run — trigger a stored policy immediately. The
+ * real endpoint is multipart; the portal sends no files, relying on whatever
+ * the backend has queued for this policy.
+ */
+export async function runPolicy(id: string): Promise<{ runId: string }> {
+  return apiClient.local.json<{ runId: string }>(
+    `/api/v1/policies/${encodeURIComponent(id)}/run`,
+    { method: "POST" },
+  );
 }
