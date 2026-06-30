@@ -5886,6 +5886,17 @@ successMessage = "Лицензът ви беше активиран успешн
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
 deleteConfirmTitle = "Delete {{label}} policy?"
 
+[policies.activity]
+enforced = "приложено"
+enforcing = "Прилагане..."
+failed = "Прилагането е неуспешно"
+outputsUnavailable = "Резултатите от политиките вече не са налични за изтегляне."
+partialOutputsUnavailable = "Някои резултати от политиките вече не са налични за изтегляне."
+retrying = "Заето, нов опит..."
+runNotFound = "Процесът по прилагане вече не може да бъде намерен."
+step = "стъпка {{current}}/{{total}}"
+timedOut = "Времето за прилагане изтече, преди процесът да приключи."
+
 [policies.catalog]
 compliance = "Compliance"
 ingestion = "Ingestion"
@@ -5914,12 +5925,40 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
+[policies.enforcement]
+applying = "Прилагане на {{names}}"
+applyingProgress = "Прилагане на {{names}} ({{done}} от {{total}})"
+exportFailureBody = "Политиките за сигурност не можаха да бъдат приложени. Файловете бяха експортирани както са."
+exportFailureTitle = "Експортирано без прилагане"
+failureBody = "{{failures}} от {{total}} файл(а) не можаха да бъдат обработени и бяха експортирани както са."
+failureTitle = "Експортирано без пълно прилагане"
+printPolicyAppliedBody = "Този PDF беше актуализиран, за да отговаря на политика. Прегледайте промените и след това отпечатайте отново."
+printPolicyAppliedTitle = "Политика приложена преди печат"
+queued = "+{{count}} в опашката"
+successTitle = "{{names}} приложени"
+summaryMore = "{{first}}, {{second}} и още {{more}}"
+summaryTwo = "{{first}} и {{second}}"
+
+[policies.enforcement.triggerVerb]
+convert = "Прилагане преди конвертиране"
+default = "Прилагане"
+export = "Прилагане преди експортиране"
+input = "Прилагане при импортиране"
+print = "Прилагане преди печат"
+
 [policies.fields]
 selectedCount = "{{count}} selected"
 
 [policies.pii]
+account = "Номера на сметки (с етикет)"
+card = "Кредитни/дебитни карти"
+email = "Имейл адреси"
 fieldLabel = "PII to redact"
+iban = "IBAN номера"
+phone = "Телефонни номера"
 placeholder = "Select PII types"
+routing = "Номера за маршрутизация в САЩ (ABA)"
+ssn = "Социалноосигурителни номера"
 
 [policies.sidebar]
 activeCount = "{{count}} active"
@@ -5941,6 +5980,11 @@ setup = "Set up"
 [policies.toolConfig]
 enableAriaLabel = "Enable {{tool}}"
 infoAriaLabel = "What does {{tool}} do?"
+
+[policies.toolConfig.info]
+redact = "Автоматично открива и зачернява чувствителни данни — като социалноосигурителни и номера на карти — за да не могат да се четат в документа."
+sanitize = "Премахва скрит JavaScript от файла, така че нищо да не се изпълнява автоматично при отваряне."
+watermark = "Поставя видим воден знак (напр. „Поверително“) върху всяка страница."
 
 [policies.wizard]
 allDocTypesDescription = "Enable the Classification policy to filter by document type."
@@ -8027,6 +8071,8 @@ zoomIn = "Увеличи"
 zoomOut = "Намали"
 
 [viewer.attachments]
+addAttachment = "Добави прикачен файл"
+close = "Затвори прикачените файлове"
 empty = "В този документ няма прикачени файлове"
 loading = "Зареждане на прикачени файлове..."
 noDocument = "Отворете PDF, за да видите прикачените му файлове."
@@ -8044,6 +8090,7 @@ cancelClearAll = "Отказ"
 clearAll = "Изчистване на всички коментари"
 clearAllDescription = "Това премахва коментарите и отговорите от страничната лента, като запазва всички прикачени анотации в документа."
 clearAllTitle = "Да се изчистят ли всички коментари?"
+close = "Затвори коментарите"
 deleteAnnotationAndComment = "Изтриване на анотация и коментар"
 deleteDescription = "Тази анотация има прикачен коментар. Можете да премахнете само коментара от страничната лента и да запазите анотацията или да изтриете всичко."
 deleteTitle = "Да се премахне ли анотацията от коментарите?"
@@ -8054,6 +8101,7 @@ moreActions = "Още действия"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
 pageLabel = "Страница {{page}}"
+placingHint = "Щракнете върху страница, за да поставите… (отказ)"
 removeCommentOnly = "Премахване само на коментара"
 saveReply = "Запис на отговора"
 title = "Коментари"

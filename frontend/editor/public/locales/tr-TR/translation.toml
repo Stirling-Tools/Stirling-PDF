@@ -5886,6 +5886,17 @@ successMessage = "Lisansınız başarıyla etkinleştirildi. Bu pencereyi şimdi
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
 deleteConfirmTitle = "Delete {{label}} policy?"
 
+[policies.activity]
+enforced = "uygulandı"
+enforcing = "Uygulanıyor..."
+failed = "Uygulama başarısız oldu"
+outputsUnavailable = "Politika çıktıları artık indirilemiyor."
+partialOutputsUnavailable = "Bazı politika çıktıları artık indirilemiyor."
+retrying = "Meşgul, yeniden deneniyor..."
+runNotFound = "Uygulama çalışması artık bulunamıyor."
+step = "adım {{current}}/{{total}}"
+timedOut = "İşlem tamamlanmadan önce uygulama zaman aşımına uğradı."
+
 [policies.catalog]
 compliance = "Compliance"
 ingestion = "Ingestion"
@@ -5914,12 +5925,40 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
+[policies.enforcement]
+applying = "{{names}} uygulanıyor"
+applyingProgress = "{{names}} uygulanıyor ({{done}} / {{total}})"
+exportFailureBody = "Güvenlik politikaları uygulanamadı. Dosyalar olduğu gibi dışa aktarıldı."
+exportFailureTitle = "Uygulama olmadan dışa aktarıldı"
+failureBody = "{{total}} dosyadan {{failures}} işlenemedi ve olduğu gibi dışa aktarıldı."
+failureTitle = "Tam uygulama olmadan dışa aktarıldı"
+printPolicyAppliedBody = "Bu PDF bir politikayı karşılamak için güncellendi. Değişiklikleri gözden geçirin, ardından yeniden yazdırın."
+printPolicyAppliedTitle = "Yazdırmadan önce politika uygulandı"
+queued = "+{{count}} sıraya alındı"
+successTitle = "{{names}} uygulandı"
+summaryMore = "{{first}}, {{second}} ve {{more}} daha"
+summaryTwo = "{{first}} ve {{second}}"
+
+[policies.enforcement.triggerVerb]
+convert = "Dönüştürmeden önce uygulanıyor"
+default = "Uygulanıyor"
+export = "Dışa aktarmadan önce uygulanıyor"
+input = "İçe aktarırken uygulanıyor"
+print = "Yazdırmadan önce uygulanıyor"
+
 [policies.fields]
 selectedCount = "{{count}} selected"
 
 [policies.pii]
+account = "Hesap numaraları (etiketli)"
+card = "Kredi / banka kartları"
+email = "E-posta adresleri"
 fieldLabel = "PII to redact"
+iban = "IBAN'lar"
+phone = "Telefon numaraları"
 placeholder = "Select PII types"
+routing = "ABD yönlendirme numaraları (ABA)"
+ssn = "Sosyal Güvenlik numaraları"
 
 [policies.sidebar]
 activeCount = "{{count}} active"
@@ -5941,6 +5980,11 @@ setup = "Set up"
 [policies.toolConfig]
 enableAriaLabel = "Enable {{tool}}"
 infoAriaLabel = "What does {{tool}} do?"
+
+[policies.toolConfig.info]
+redact = "Belgedeki hassas ayrıntıları — Sosyal Güvenlik ve kart numaraları gibi — otomatik olarak bulur ve okunamayacak şekilde karartır."
+sanitize = "Dosyadan gizli JavaScript'i kaldırır; böylece biri açtığında hiçbir şey otomatik olarak çalışmaz."
+watermark = "Her sayfaya görünür bir işaret (ör. \"Gizli\") basar."
 
 [policies.wizard]
 allDocTypesDescription = "Enable the Classification policy to filter by document type."
@@ -8027,6 +8071,8 @@ zoomIn = "Yakınlaştır"
 zoomOut = "Uzaklaştır"
 
 [viewer.attachments]
+addAttachment = "Ek ekle"
+close = "Ekleri kapat"
 empty = "Bu belgede ek yok"
 loading = "Ekler yükleniyor..."
 noDocument = "Eklerini görmek için bir PDF açın."
@@ -8044,6 +8090,7 @@ cancelClearAll = "İptal"
 clearAll = "Tüm yorumları temizle"
 clearAllDescription = "Bu, kenar çubuğundaki yorumları ve yanıtları kaldırır; belgedeki bağlı ek açıklamalar ise korunur."
 clearAllTitle = "Tüm yorumlar temizlensin mi?"
+close = "Yorumları kapat"
 deleteAnnotationAndComment = "Açıklamayı ve yorumu sil"
 deleteDescription = "Bu açıklamaya bir yorum eklenmiş. Açıklamayı koruyup kenar çubuğundan yalnızca yorumu kaldırabilir veya hepsini silebilirsiniz."
 deleteTitle = "Açıklamayı yorumlardan kaldır?"
@@ -8054,6 +8101,7 @@ moreActions = "Diğer işlemler"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
 pageLabel = "Sayfa {{page}}"
+placingHint = "Yerleştirmek için bir sayfaya tıklayın… (iptal)"
 removeCommentOnly = "Yalnızca yorumu kaldır"
 saveReply = "Yanıtı kaydet"
 title = "Yorumlar"

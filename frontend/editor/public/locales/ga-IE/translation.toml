@@ -5886,6 +5886,17 @@ successMessage = "Tá do cheadúnas gníomhachtaithe go rathúil. Is féidir lea
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
 deleteConfirmTitle = "Delete {{label}} policy?"
 
+[policies.activity]
+enforced = "curtha i bhfeidhm"
+enforcing = "Á chur i bhfeidhm..."
+failed = "Theip ar an bhforfheidhmiú"
+outputsUnavailable = "Níl aschuir na beartais ar fáil le híoslódáil a thuilleadh."
+partialOutputsUnavailable = "Níl cuid d'aschuir na beartais ar fáil le híoslódáil a thuilleadh."
+retrying = "Gnóthach, ag iarraidh arís..."
+runNotFound = "Ní raibh an rith forfheidhmithe le fáil a thuilleadh."
+step = "céim {{current}}/{{total}}"
+timedOut = "Chuaigh an forfheidhmiú thar am sular fhéad an rith críochnú."
+
 [policies.catalog]
 compliance = "Compliance"
 ingestion = "Ingestion"
@@ -5914,12 +5925,40 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
+[policies.enforcement]
+applying = "Á chur {{names}} i bhfeidhm"
+applyingProgress = "Á chur {{names}} i bhfeidhm ({{done}} as {{total}})"
+exportFailureBody = "Níorbh fhéidir na beartais slándála a chur i bhfeidhm. Easpórtáladh na comhaid mar a bhí."
+exportFailureTitle = "Easpórtáladh gan fhorfheidhmiú"
+failureBody = "Níor próiseáladh {{failures}} as {{total}} comhad agus easpórtáladh iad mar a bhí."
+failureTitle = "Easpórtáladh gan fhorfheidhmiú iomlán"
+printPolicyAppliedBody = "Nuashonraíodh an PDF seo chun beartas a chomhlíonadh. Athbhreithnigh na hathruithe, ansin priontáil arís."
+printPolicyAppliedTitle = "Beartas curtha i bhfeidhm roimh phriontáil"
+queued = "+{{count}} sa scuaine"
+successTitle = "Cuireadh {{names}} i bhfeidhm"
+summaryMore = "{{first}}, {{second}} agus {{more}} eile"
+summaryTwo = "{{first}} agus {{second}}"
+
+[policies.enforcement.triggerVerb]
+convert = "Forfheidhmiú roimh thiontú"
+default = "Forfheidhmiú"
+export = "Forfheidhmiú roimh easpórtáil"
+input = "Forfheidhmiú ar iompórtáil"
+print = "Forfheidhmiú roimh phriontáil"
+
 [policies.fields]
 selectedCount = "{{count}} selected"
 
 [policies.pii]
+account = "Uimhreacha cuntais (lipéadaithe)"
+card = "Cártaí creidmheasa / dochair"
+email = "Seoltaí ríomhphoist"
 fieldLabel = "PII to redact"
+iban = "IBANs"
+phone = "Uimhreacha gutháin"
 placeholder = "Select PII types"
+routing = "Uimhreacha ródaithe SAM (ABA)"
+ssn = "Uimhreacha Slándála Sóisialta"
 
 [policies.sidebar]
 activeCount = "{{count}} active"
@@ -5941,6 +5980,11 @@ setup = "Set up"
 [policies.toolConfig]
 enableAriaLabel = "Enable {{tool}}"
 infoAriaLabel = "What does {{tool}} do?"
+
+[policies.toolConfig.info]
+redact = "Aimsíonn agus dubháilann sé sonraí íogaire go huathoibríoch — amhail uimhreacha Slándála Sóisialta agus uimhreacha cárta — ionas nach féidir iad a léamh sa cháipéis."
+sanitize = "Baineann sé JavaScript folaithe den chomhad, ionas nach rithfidh aon rud go huathoibríoch nuair a osclaíonn duine é."
+watermark = "Stampálann sé marc infheicthe (m.sh. \"Confidential\") trasna gach leathanaigh."
 
 [policies.wizard]
 allDocTypesDescription = "Enable the Classification policy to filter by document type."
@@ -8027,6 +8071,8 @@ zoomIn = "Súmáil Isteach"
 zoomOut = "Súmáil Amach"
 
 [viewer.attachments]
+addAttachment = "Cuir ceangaltán leis"
+close = "Dún ceangaltáin"
 empty = "Níl iatáin sa cháipéis seo"
 loading = "Iatáin á luchtú..."
 noDocument = "Oscail PDF chun a iatáin a fheiceáil."
@@ -8044,6 +8090,7 @@ cancelClearAll = "Cealaigh"
 clearAll = "Glan na tráchtanna go léir"
 clearAllDescription = "Baineann sé seo tráchtanna agus freagraí ón bharra taoibh agus coinníonn sé aon anótálacha ceangailte sa doiciméad."
 clearAllTitle = "Glan na tráchtanna go léir?"
+close = "Dún tráchtanna"
 deleteAnnotationAndComment = "Scrios anótáil agus trácht"
 deleteDescription = "Tá trácht ceangailte leis an anótáil seo. Is féidir leat an trácht a bhaint den bharra taoibh agus an anótáil a choinneáil, nó gach rud a scriosadh."
 deleteTitle = "Bain an anótáil ó na tráchtanna?"
@@ -8054,6 +8101,7 @@ moreActions = "Tuilleadh gníomhartha"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
 pageLabel = "Leathanach {{page}}"
+placingHint = "Cliceáil ar leathanach chun é a chur… (cealaigh)"
 removeCommentOnly = "Bain an trácht amháin"
 saveReply = "Sábháil freagra"
 title = "Tráchtanna"

@@ -5886,6 +5886,17 @@ successMessage = "Licența a fost activată cu succes. Puteți închide această
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
 deleteConfirmTitle = "Delete {{label}} policy?"
 
+[policies.activity]
+enforced = "aplicată"
+enforcing = "Se aplică..."
+failed = "Aplicarea a eșuat"
+outputsUnavailable = "Rezultatele politicii nu mai sunt disponibile pentru descărcare."
+partialOutputsUnavailable = "Unele rezultate ale politicii nu mai sunt disponibile pentru descărcare."
+retrying = "Ocupat, se reîncearcă..."
+runNotFound = "Rularea aplicării nu a mai putut fi găsită."
+step = "pas {{current}}/{{total}}"
+timedOut = "Aplicarea a expirat înainte ca rularea să se finalizeze."
+
 [policies.catalog]
 compliance = "Compliance"
 ingestion = "Ingestion"
@@ -5914,12 +5925,40 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
+[policies.enforcement]
+applying = "Se aplică {{names}}"
+applyingProgress = "Se aplică {{names}} ({{done}} din {{total}})"
+exportFailureBody = "Politicile de securitate nu au putut fi aplicate. Fișierele au fost exportate ca atare."
+exportFailureTitle = "Exportat fără aplicarea politicilor"
+failureBody = "{{failures}} din {{total}} fișier(e) nu au putut fi procesate și au fost exportate ca atare."
+failureTitle = "Exportat fără aplicare completă"
+printPolicyAppliedBody = "Acest PDF a fost actualizat pentru a respecta o politică. Revizuiți modificările, apoi imprimați din nou."
+printPolicyAppliedTitle = "Politică aplicată înainte de imprimare"
+queued = "+{{count}} în așteptare"
+successTitle = "{{names}} aplicate"
+summaryMore = "{{first}}, {{second}} și încă {{more}}"
+summaryTwo = "{{first}} și {{second}}"
+
+[policies.enforcement.triggerVerb]
+convert = "Se aplică înainte de conversie"
+default = "Se aplică"
+export = "Se aplică înainte de export"
+input = "Se aplică la import"
+print = "Se aplică înainte de imprimare"
+
 [policies.fields]
 selectedCount = "{{count}} selected"
 
 [policies.pii]
+account = "Numere de cont (etichetate)"
+card = "Carduri de credit / debit"
+email = "Adrese de email"
 fieldLabel = "PII to redact"
+iban = "IBAN-uri"
+phone = "Numere de telefon"
 placeholder = "Select PII types"
+routing = "Numere de rutare din SUA (ABA)"
+ssn = "Numere de securitate socială"
 
 [policies.sidebar]
 activeCount = "{{count}} active"
@@ -5941,6 +5980,11 @@ setup = "Set up"
 [policies.toolConfig]
 enableAriaLabel = "Enable {{tool}}"
 infoAriaLabel = "What does {{tool}} do?"
+
+[policies.toolConfig.info]
+redact = "Găsește automat și acoperă cu negru detalii sensibile — precum numerele de securitate socială și de card — astfel încât să nu poată fi citite în document."
+sanitize = "Elimină JavaScript ascuns din fișier, astfel încât nimic să nu ruleze automat când cineva îl deschide."
+watermark = "Aplică o marcă vizibilă (de ex. \"Confidențial\") pe fiecare pagină."
 
 [policies.wizard]
 allDocTypesDescription = "Enable the Classification policy to filter by document type."
@@ -8027,6 +8071,8 @@ zoomIn = "Măriți"
 zoomOut = "Micșorați"
 
 [viewer.attachments]
+addAttachment = "Adăugați atașament"
+close = "Închideți atașamentele"
 empty = "Nu există atașamente în acest document"
 loading = "Se încarcă atașamentele..."
 noDocument = "Deschide un PDF pentru a-i vedea atașamentele."
@@ -8044,6 +8090,7 @@ cancelClearAll = "Anulați"
 clearAll = "Ștergeți toate comentariile"
 clearAllDescription = "Aceasta elimină comentariile și răspunsurile din bara laterală, păstrând în document orice adnotări atașate."
 clearAllTitle = "Ștergeți toate comentariile?"
+close = "Închideți comentariile"
 deleteAnnotationAndComment = "Ștergeți adnotarea și comentariul"
 deleteDescription = "Această adnotare are un comentariu atașat. Puteți elimina doar comentariul din bara laterală păstrând adnotarea sau puteți șterge totul."
 deleteTitle = "Eliminați adnotarea din comentarii?"
@@ -8054,6 +8101,7 @@ moreActions = "Mai multe acțiuni"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
 pageLabel = "Pagina {{page}}"
+placingHint = "Faceți clic pe o pagină pentru a plasa… (anulare)"
 removeCommentOnly = "Eliminați doar comentariul"
 saveReply = "Salvați răspunsul"
 title = "Comentarii"

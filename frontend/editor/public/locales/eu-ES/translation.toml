@@ -5886,6 +5886,17 @@ successMessage = "Zure lizentzia ongi aktibatu da. Orain leiho hau itxi dezakezu
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
 deleteConfirmTitle = "Delete {{label}} policy?"
 
+[policies.activity]
+enforced = "betearazita"
+enforcing = "Betearazten..."
+failed = "Betearazteak huts egin du"
+outputsUnavailable = "Politikaren emaitzak ez daude jada deskargatzeko eskuragarri."
+partialOutputsUnavailable = "Politikaren emaitza batzuk ez daude jada deskargatzeko eskuragarri."
+retrying = "Lanpetuta, berriz saiatzen..."
+runNotFound = "Betearazte-exekuzioa ezin da jada aurkitu."
+step = "urratsa {{current}}/{{total}}"
+timedOut = "Betearazteak denbora-muga gainditu du exekuzioa amaitu aurretik."
+
 [policies.catalog]
 compliance = "Compliance"
 ingestion = "Ingestion"
@@ -5914,12 +5925,40 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
+[policies.enforcement]
+applying = "{{names}} aplikatzen"
+applyingProgress = "{{names}} aplikatzen ({{done}}/{{total}})"
+exportFailureBody = "Segurtasun-politikak ezin izan dira aplikatu. Fitxategiak dauden bezala esportatu dira."
+exportFailureTitle = "Betearazi gabe esportatuta"
+failureBody = "{{total}} fitxategitatik {{failures}} ezin izan dira prozesatu eta dauden bezala esportatu dira."
+failureTitle = "Betearazpen osorik gabe esportatuta"
+printPolicyAppliedBody = "PDF hau politika bat betetzeko eguneratu da. Aldaketak berrikusi eta, ondoren, inprimatu berriro."
+printPolicyAppliedTitle = "Inprimatu aurretik politika aplikatuta"
+queued = "+{{count}} ilaran"
+successTitle = "{{names}} aplikatuta"
+summaryMore = "{{first}}, {{second}} eta {{more}} gehiago"
+summaryTwo = "{{first}} eta {{second}}"
+
+[policies.enforcement.triggerVerb]
+convert = "Bihurtu aurretik betearazten"
+default = "Betearazten"
+export = "Esportatu aurretik betearazten"
+input = "Inportatzean betearazten"
+print = "Inprimatu aurretik betearazten"
+
 [policies.fields]
 selectedCount = "{{count}} selected"
 
 [policies.pii]
+account = "Kontu-zenbakiak (etiketatuak)"
+card = "Kreditu / debitu txartelak"
+email = "Posta elektronikoko helbideak"
 fieldLabel = "PII to redact"
+iban = "IBANak"
+phone = "Telefono-zenbakiak"
 placeholder = "Select PII types"
+routing = "AEBetako bideratze-zenbakiak (ABA)"
+ssn = "Gizarte Segurantzako zenbakiak"
 
 [policies.sidebar]
 activeCount = "{{count}} active"
@@ -5941,6 +5980,11 @@ setup = "Set up"
 [policies.toolConfig]
 enableAriaLabel = "Enable {{tool}}"
 infoAriaLabel = "What does {{tool}} do?"
+
+[policies.toolConfig.info]
+redact = "Automatikoki aurkitzen eta beltzez estaltzen ditu datu sentikorrak — adibidez, Gizarte Segurantzako eta txartel-zenbakiak —, dokumentuan irakurri ez daitezen."
+sanitize = "Fitxategitik ezkutuko JavaScript kentzen du, norbaitek irekitzean ezer ez dadin automatikoki exekutatu."
+watermark = "Orri bakoitzean marka ikusgai bat jartzen du (adib., \"Confidential\")."
 
 [policies.wizard]
 allDocTypesDescription = "Enable the Classification policy to filter by document type."
@@ -8027,6 +8071,8 @@ zoomIn = "Zoom handitu"
 zoomOut = "Zoom txikitu"
 
 [viewer.attachments]
+addAttachment = "Gehitu eranskina"
+close = "Itxi eranskinak"
 empty = "Ez dago eranskinik dokumentu honetan"
 loading = "Eranskinak kargatzen..."
 noDocument = "Ireki PDF bat bere eranskinak ikusteko."
@@ -8044,6 +8090,7 @@ cancelClearAll = "Ezeztatu"
 clearAll = "Ezabatu iruzkin guztiak"
 clearAllDescription = "Honek albo-barratik iruzkinak eta erantzunak kentzen ditu, dokumentuan erantsitako edozein anotazio mantenduz."
 clearAllTitle = "Iruzkin guztiak ezabatu?"
+close = "Itxi iruzkinak"
 deleteAnnotationAndComment = "Ezabatu anotazioa eta iruzkina"
 deleteDescription = "Anotazio honek iruzkin bat du erantsita. Alboko barratik iruzkina bakarrik ken dezakezu anotazioa mantenduz, edo dena ezabatu."
 deleteTitle = "Kendu anotazioa iruzkinenetik?"
@@ -8054,6 +8101,7 @@ moreActions = "Ekintza gehiago"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
 pageLabel = "Orrialdea {{page}}"
+placingHint = "Egin klik orri batean kokatzeko… (utzi)"
 removeCommentOnly = "Kendu iruzkina bakarrik"
 saveReply = "Gorde erantzuna"
 title = "Iruzkinak"

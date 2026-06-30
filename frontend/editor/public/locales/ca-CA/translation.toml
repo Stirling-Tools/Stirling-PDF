@@ -5886,6 +5886,17 @@ successMessage = "La llicència s'ha activat correctament. Ara pots tancar aques
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
 deleteConfirmTitle = "Delete {{label}} policy?"
 
+[policies.activity]
+enforced = "aplicada"
+enforcing = "Aplicant..."
+failed = "Ha fallat l'aplicació"
+outputsUnavailable = "Els resultats de la política ja no estan disponibles per a descarregar."
+partialOutputsUnavailable = "Alguns resultats de la política ja no estan disponibles per a descarregar."
+retrying = "Ocupat, reintentant..."
+runNotFound = "Ja no s'ha pogut trobar l'execució de l'aplicació."
+step = "pas {{current}}/{{total}}"
+timedOut = "S'ha esgotat el temps d'aplicació abans que l'execució pogués finalitzar."
+
 [policies.catalog]
 compliance = "Compliance"
 ingestion = "Ingestion"
@@ -5914,12 +5925,40 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
+[policies.enforcement]
+applying = "Aplicant {{names}}"
+applyingProgress = "Aplicant {{names}} ({{done}} de {{total}})"
+exportFailureBody = "No s'han pogut aplicar les polítiques de seguretat. Els fitxers s'han exportat tal com estan."
+exportFailureTitle = "Exportat sense aplicar polítiques"
+failureBody = "{{failures}} de {{total}} fitxer(s) no s'han pogut processar i s'han exportat tal com estan."
+failureTitle = "Exportat sense aplicació completa"
+printPolicyAppliedBody = "S'ha actualitzat aquest PDF per complir una política. Reviseu els canvis i torneu a imprimir."
+printPolicyAppliedTitle = "Política aplicada abans d'imprimir"
+queued = "+{{count}} en cua"
+successTitle = "S'ha aplicat {{names}}"
+summaryMore = "{{first}}, {{second}} i {{more}} més"
+summaryTwo = "{{first}} i {{second}}"
+
+[policies.enforcement.triggerVerb]
+convert = "Aplicant abans de convertir"
+default = "Aplicant"
+export = "Aplicant abans d'exportar"
+input = "Aplicant en importar"
+print = "Aplicant abans d'imprimir"
+
 [policies.fields]
 selectedCount = "{{count}} selected"
 
 [policies.pii]
+account = "Números de compte (etiquetats)"
+card = "Targetes de crèdit / dèbit"
+email = "Adreces de correu electrònic"
 fieldLabel = "PII to redact"
+iban = "IBAN"
+phone = "Números de telèfon"
 placeholder = "Select PII types"
+routing = "Números d'encaminament bancari dels EUA (ABA)"
+ssn = "Números de la Seguretat Social"
 
 [policies.sidebar]
 activeCount = "{{count}} active"
@@ -5941,6 +5980,11 @@ setup = "Set up"
 [policies.toolConfig]
 enableAriaLabel = "Enable {{tool}}"
 infoAriaLabel = "What does {{tool}} do?"
+
+[policies.toolConfig.info]
+redact = "Troba i ennegreix automàticament detalls sensibles — com números de la Seguretat Social i de targetes — perquè no es puguin llegir al document."
+sanitize = "Elimina JavaScript ocult del fitxer, perquè no s'executi res automàticament quan algú l'obri."
+watermark = "Estampa una marca visible (p. ex., \"Confidencial\") a cada pàgina."
 
 [policies.wizard]
 allDocTypesDescription = "Enable the Classification policy to filter by document type."
@@ -8027,6 +8071,8 @@ zoomIn = "Amplia"
 zoomOut = "Redueix"
 
 [viewer.attachments]
+addAttachment = "Afegeix un adjunt"
+close = "Tanca els adjunts"
 empty = "No hi ha adjunts en aquest document"
 loading = "Carregant els adjunts..."
 noDocument = "Obre un PDF per veure'n els adjunts."
@@ -8044,6 +8090,7 @@ cancelClearAll = "Cancel·la"
 clearAll = "Esborra tots els comentaris"
 clearAllDescription = "Això elimina els comentaris i les respostes de la barra lateral, tot mantenint qualsevol anotació adjunta al document."
 clearAllTitle = "Voleu esborrar tots els comentaris?"
+close = "Tanca els comentaris"
 deleteAnnotationAndComment = "Suprimeix l’anotació i el comentari"
 deleteDescription = "Aquesta anotació té un comentari adjunt. Pots eliminar només el comentari de la barra lateral i mantenir l’anotació, o bé suprimir-ho tot."
 deleteTitle = "Eliminar l’anotació dels comentaris?"
@@ -8054,6 +8101,7 @@ moreActions = "Més accions"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
 pageLabel = "Pàgina {{page}}"
+placingHint = "Feu clic a una pàgina per col·locar… (cancel·la)"
 removeCommentOnly = "Elimina només el comentari"
 saveReply = "Desa la resposta"
 title = "Comentaris"

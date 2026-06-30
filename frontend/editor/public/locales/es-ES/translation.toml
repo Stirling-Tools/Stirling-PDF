@@ -5886,6 +5886,17 @@ successMessage = "Tu licencia se ha activado correctamente. Ya puedes cerrar est
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
 deleteConfirmTitle = "Delete {{label}} policy?"
 
+[policies.activity]
+enforced = "aplicado"
+enforcing = "Aplicando..."
+failed = "Error en la aplicación"
+outputsUnavailable = "Los resultados de la política ya no están disponibles para descargar."
+partialOutputsUnavailable = "Algunos resultados de la política ya no están disponibles para descargar."
+retrying = "Ocupado, reintentando..."
+runNotFound = "No se pudo encontrar la ejecución de la aplicación."
+step = "paso {{current}}/{{total}}"
+timedOut = "La aplicación agotó el tiempo de espera antes de que la ejecución pudiera finalizar."
+
 [policies.catalog]
 compliance = "Compliance"
 ingestion = "Ingestion"
@@ -5914,12 +5925,40 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
+[policies.enforcement]
+applying = "Aplicando {{names}}"
+applyingProgress = "Aplicando {{names}} ({{done}} de {{total}})"
+exportFailureBody = "No se pudieron aplicar las políticas de seguridad. Los archivos se exportaron tal cual."
+exportFailureTitle = "Exportado sin aplicación"
+failureBody = "{{failures}} de {{total}} archivo(s) no se pudieron procesar y se exportaron tal cual."
+failureTitle = "Exportado sin aplicación completa"
+printPolicyAppliedBody = "Este PDF se actualizó para cumplir una política. Revisa los cambios y vuelve a imprimir."
+printPolicyAppliedTitle = "Política aplicada antes de imprimir"
+queued = "+{{count}} en cola"
+successTitle = "{{names}} aplicadas"
+summaryMore = "{{first}}, {{second}} y {{more}} más"
+summaryTwo = "{{first}} y {{second}}"
+
+[policies.enforcement.triggerVerb]
+convert = "Aplicando antes de convertir"
+default = "Aplicando"
+export = "Aplicando antes de exportar"
+input = "Aplicando al importar"
+print = "Aplicando antes de imprimir"
+
 [policies.fields]
 selectedCount = "{{count}} selected"
 
 [policies.pii]
+account = "Números de cuenta (etiquetados)"
+card = "Tarjetas de crédito / débito"
+email = "Direcciones de correo electrónico"
 fieldLabel = "PII to redact"
+iban = "IBAN"
+phone = "Números de teléfono"
 placeholder = "Select PII types"
+routing = "Números de enrutamiento de EE. UU. (ABA)"
+ssn = "Números de la Seguridad Social"
 
 [policies.sidebar]
 activeCount = "{{count}} active"
@@ -5941,6 +5980,11 @@ setup = "Set up"
 [policies.toolConfig]
 enableAriaLabel = "Enable {{tool}}"
 infoAriaLabel = "What does {{tool}} do?"
+
+[policies.toolConfig.info]
+redact = "Encuentra y oculta automáticamente detalles sensibles —como números de la Seguridad Social y de tarjetas— para que no puedan leerse en el documento."
+sanitize = "Elimina JavaScript oculto del archivo, para que nada se ejecute automáticamente cuando alguien lo abra."
+watermark = "Estampa una marca visible (p. ej., \"Confidential\") en cada página."
 
 [policies.wizard]
 allDocTypesDescription = "Enable the Classification policy to filter by document type."
@@ -8027,6 +8071,8 @@ zoomIn = "Acercar"
 zoomOut = "Alejar"
 
 [viewer.attachments]
+addAttachment = "Añadir adjunto"
+close = "Cerrar adjuntos"
 empty = "No hay adjuntos en este documento"
 loading = "Cargando adjuntos..."
 noDocument = "Abre un PDF para ver sus adjuntos."
@@ -8044,6 +8090,7 @@ cancelClearAll = "Cancelar"
 clearAll = "Borrar todos los comentarios"
 clearAllDescription = "Esto elimina los comentarios y respuestas de la barra lateral, conservando cualquier anotación adjunta en el documento."
 clearAllTitle = "¿Borrar todos los comentarios?"
+close = "Cerrar comentarios"
 deleteAnnotationAndComment = "Eliminar anotación y comentario"
 deleteDescription = "Esta anotación tiene un comentario adjunto. Puedes quitar solo el comentario de la barra lateral y mantener la anotación, o eliminar todo."
 deleteTitle = "¿Quitar la anotación de los comentarios?"
@@ -8054,6 +8101,7 @@ moreActions = "Más acciones"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
 pageLabel = "Página {{page}}"
+placingHint = "Haz clic en una página para colocar… (cancelar)"
 removeCommentOnly = "Quitar solo el comentario"
 saveReply = "Guardar respuesta"
 title = "Comentarios"

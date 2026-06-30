@@ -5886,6 +5886,17 @@ successMessage = "Lisensi Anda berhasil diaktifkan. Anda sekarang dapat menutup 
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
 deleteConfirmTitle = "Delete {{label}} policy?"
 
+[policies.activity]
+enforced = "diterapkan"
+enforcing = "Menegakkan..."
+failed = "Penegakan gagal"
+outputsUnavailable = "Output kebijakan tidak lagi tersedia untuk diunduh."
+partialOutputsUnavailable = "Beberapa output kebijakan tidak lagi tersedia untuk diunduh."
+retrying = "Sibuk, mencoba lagi..."
+runNotFound = "Proses penegakan tidak dapat ditemukan lagi."
+step = "langkah {{current}}/{{total}}"
+timedOut = "Penegakan mencapai batas waktu sebelum proses selesai."
+
 [policies.catalog]
 compliance = "Compliance"
 ingestion = "Ingestion"
@@ -5914,12 +5925,40 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
+[policies.enforcement]
+applying = "Menerapkan {{names}}"
+applyingProgress = "Menerapkan {{names}} ({{done}} dari {{total}})"
+exportFailureBody = "Kebijakan keamanan tidak dapat diterapkan. File diekspor apa adanya."
+exportFailureTitle = "Diekspor tanpa penegakan"
+failureBody = "{{failures}} dari {{total}} file tidak dapat diproses dan diekspor apa adanya."
+failureTitle = "Diekspor tanpa penegakan penuh"
+printPolicyAppliedBody = "PDF ini diperbarui agar memenuhi kebijakan. Tinjau perubahan, lalu cetak lagi."
+printPolicyAppliedTitle = "Kebijakan diterapkan sebelum mencetak"
+queued = "+{{count}} dalam antrean"
+successTitle = "{{names}} diterapkan"
+summaryMore = "{{first}}, {{second}} dan {{more}} lainnya"
+summaryTwo = "{{first}} dan {{second}}"
+
+[policies.enforcement.triggerVerb]
+convert = "Menegakkan sebelum konversi"
+default = "Menegakkan"
+export = "Menegakkan sebelum ekspor"
+input = "Menegakkan saat impor"
+print = "Menegakkan sebelum mencetak"
+
 [policies.fields]
 selectedCount = "{{count}} selected"
 
 [policies.pii]
+account = "Nomor rekening (berlabel)"
+card = "Kartu kredit / debit"
+email = "Alamat email"
 fieldLabel = "PII to redact"
+iban = "IBAN"
+phone = "Nomor telepon"
 placeholder = "Select PII types"
+routing = "Nomor routing AS (ABA)"
+ssn = "Nomor Social Security"
 
 [policies.sidebar]
 activeCount = "{{count}} active"
@@ -5941,6 +5980,11 @@ setup = "Set up"
 [policies.toolConfig]
 enableAriaLabel = "Enable {{tool}}"
 infoAriaLabel = "What does {{tool}} do?"
+
+[policies.toolConfig.info]
+redact = "Secara otomatis menemukan dan menghitamkan detail sensitif — seperti nomor Social Security dan kartu — agar tidak dapat dibaca di dokumen."
+sanitize = "Menghapus JavaScript tersembunyi dari file, sehingga tidak ada yang berjalan otomatis saat seseorang membukanya."
+watermark = "Mencap tanda yang terlihat (mis. \"Confidential\") di setiap halaman."
 
 [policies.wizard]
 allDocTypesDescription = "Enable the Classification policy to filter by document type."
@@ -8027,6 +8071,8 @@ zoomIn = "Perbesar"
 zoomOut = "Perkecil"
 
 [viewer.attachments]
+addAttachment = "Tambahkan lampiran"
+close = "Tutup lampiran"
 empty = "Tidak ada lampiran dalam dokumen ini"
 loading = "Memuat lampiran..."
 noDocument = "Buka PDF untuk melihat lampirannya."
@@ -8044,6 +8090,7 @@ cancelClearAll = "Batal"
 clearAll = "Hapus semua komentar"
 clearAllDescription = "Ini akan menghapus komentar dan balasan dari bilah samping sambil mempertahankan anotasi yang terlampir pada dokumen."
 clearAllTitle = "Hapus semua komentar?"
+close = "Tutup komentar"
 deleteAnnotationAndComment = "Hapus anotasi & komentar"
 deleteDescription = "Anotasi ini memiliki komentar terkait. Anda dapat menghapus hanya komentarnya dari bilah samping sambil mempertahankan anotasinya, atau menghapus semuanya."
 deleteTitle = "Hapus anotasi dari komentar?"
@@ -8054,6 +8101,7 @@ moreActions = "Tindakan lainnya"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
 pageLabel = "Halaman {{page}}"
+placingHint = "Klik sebuah halaman untuk menempatkan… (batalkan)"
 removeCommentOnly = "Hanya hapus komentar"
 saveReply = "Simpan balasan"
 title = "Komentar"

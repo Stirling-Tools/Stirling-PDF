@@ -5886,6 +5886,17 @@ successMessage = "Вашу ліцензію успішно активовано.
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
 deleteConfirmTitle = "Delete {{label}} policy?"
 
+[policies.activity]
+enforced = "застосовано"
+enforcing = "Застосування..."
+failed = "Застосування не вдалося"
+outputsUnavailable = "Результати політик більше недоступні для завантаження."
+partialOutputsUnavailable = "Деякі результати політик більше недоступні для завантаження."
+retrying = "Зайнято, повторна спроба..."
+runNotFound = "Запуск застосування більше не знайдено."
+step = "крок {{current}}/{{total}}"
+timedOut = "Час очікування застосування вичерпано до завершення запуску."
+
 [policies.catalog]
 compliance = "Compliance"
 ingestion = "Ingestion"
@@ -5914,12 +5925,40 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
+[policies.enforcement]
+applying = "Застосовуємо {{names}}"
+applyingProgress = "Застосовуємо {{names}} ({{done}} з {{total}})"
+exportFailureBody = "Не вдалося застосувати політики безпеки. Файли експортовано як є."
+exportFailureTitle = "Експорт без застосування"
+failureBody = "{{failures}} з {{total}} файлів не вдалося обробити; їх експортовано як є."
+failureTitle = "Експорт без повного застосування"
+printPolicyAppliedBody = "Цей PDF оновлено відповідно до політики. Перегляньте зміни, потім надрукуйте ще раз."
+printPolicyAppliedTitle = "Політику застосовано перед друком"
+queued = "+{{count}} у черзі"
+successTitle = "{{names}} застосовано"
+summaryMore = "{{first}}, {{second}} і ще {{more}}"
+summaryTwo = "{{first}} і {{second}}"
+
+[policies.enforcement.triggerVerb]
+convert = "Застосування перед перетворенням"
+default = "Застосування"
+export = "Застосування перед експортом"
+input = "Застосування під час імпорту"
+print = "Застосування перед друком"
+
 [policies.fields]
 selectedCount = "{{count}} selected"
 
 [policies.pii]
+account = "Номери рахунків (позначені)"
+card = "Кредитні / дебетові картки"
+email = "Адреси електронної пошти"
 fieldLabel = "PII to redact"
+iban = "IBAN"
+phone = "Номери телефонів"
 placeholder = "Select PII types"
+routing = "Маршрутні номери США (ABA)"
+ssn = "Номери соціального страхування"
 
 [policies.sidebar]
 activeCount = "{{count}} active"
@@ -5941,6 +5980,11 @@ setup = "Set up"
 [policies.toolConfig]
 enableAriaLabel = "Enable {{tool}}"
 infoAriaLabel = "What does {{tool}} do?"
+
+[policies.toolConfig.info]
+redact = "Автоматично знаходить і замальовує конфіденційні дані — наприклад номери соціального страхування та карток — щоб їх не можна було прочитати в документі."
+sanitize = "Видаляє прихований JavaScript з файлу, щоб нічого не запускалося автоматично під час відкриття."
+watermark = "Додає видиму позначку (напр., \"Confidential\") на кожній сторінці."
 
 [policies.wizard]
 allDocTypesDescription = "Enable the Classification policy to filter by document type."
@@ -8027,6 +8071,8 @@ zoomIn = "Збільшити"
 zoomOut = "Зменшити"
 
 [viewer.attachments]
+addAttachment = "Додати вкладення"
+close = "Закрити вкладення"
 empty = "У цьому документі немає вкладень"
 loading = "Завантаження вкладень..."
 noDocument = "Відкрийте PDF, щоб переглянути його вкладення."
@@ -8044,6 +8090,7 @@ cancelClearAll = "Скасувати"
 clearAll = "Очистити всі коментарі"
 clearAllDescription = "Це видалить коментарі та відповіді з бічної панелі, зберігши будь-які прикріплені анотації в документі."
 clearAllTitle = "Очистити всі коментарі?"
+close = "Закрити коментарі"
 deleteAnnotationAndComment = "Видалити анотацію і коментар"
 deleteDescription = "Ця анотація має пов’язаний коментар. Ви можете прибрати лише коментар із бічної панелі, зберігши анотацію, або видалити все."
 deleteTitle = "Прибрати анотацію з коментарів?"
@@ -8054,6 +8101,7 @@ moreActions = "Додаткові дії"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
 pageLabel = "Сторінка {{page}}"
+placingHint = "Клацніть сторінку, щоб розмістити… (скасувати)"
 removeCommentOnly = "Прибрати лише коментар"
 saveReply = "Зберегти відповідь"
 title = "Коментарі"

@@ -5886,6 +5886,17 @@ successMessage = "Ihre Lizenz wurde erfolgreich aktiviert. Sie können dieses Fe
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
 deleteConfirmTitle = "Delete {{label}} policy?"
 
+[policies.activity]
+enforced = "durchgesetzt"
+enforcing = "Wird durchgesetzt..."
+failed = "Durchsetzung fehlgeschlagen"
+outputsUnavailable = "Richtlinienergebnisse stehen nicht mehr zum Download bereit."
+partialOutputsUnavailable = "Einige Richtlinienergebnisse stehen nicht mehr zum Download bereit."
+retrying = "Ausgelastet, versuche es erneut..."
+runNotFound = "Der Durchsetzungsdurchlauf konnte nicht mehr gefunden werden."
+step = "Schritt {{current}}/{{total}}"
+timedOut = "Zeitüberschreitung bei der Durchsetzung, bevor der Durchlauf abgeschlossen werden konnte."
+
 [policies.catalog]
 compliance = "Compliance"
 ingestion = "Ingestion"
@@ -5914,12 +5925,40 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
+[policies.enforcement]
+applying = "Wende {{names}} an"
+applyingProgress = "Wende {{names}} an ({{done}} von {{total}})"
+exportFailureBody = "Sicherheitsrichtlinien konnten nicht angewendet werden. Dateien wurden unverändert exportiert."
+exportFailureTitle = "Ohne Durchsetzung exportiert"
+failureBody = "{{failures}} von {{total}} Datei(en) konnten nicht verarbeitet werden und wurden unverändert exportiert."
+failureTitle = "Ohne vollständige Durchsetzung exportiert"
+printPolicyAppliedBody = "Dieses PDF wurde aktualisiert, um eine Richtlinie zu erfüllen. Prüfen Sie die Änderungen und drucken Sie anschließend erneut."
+printPolicyAppliedTitle = "Richtlinie vor dem Drucken angewendet"
+queued = "+{{count}} in Warteschlange"
+successTitle = "{{names}} angewendet"
+summaryMore = "{{first}}, {{second}} und {{more}} weitere"
+summaryTwo = "{{first}} und {{second}}"
+
+[policies.enforcement.triggerVerb]
+convert = "Durchsetzen vor dem Konvertieren"
+default = "Durchsetzen"
+export = "Durchsetzen vor dem Export"
+input = "Durchsetzen beim Import"
+print = "Durchsetzen vor dem Drucken"
+
 [policies.fields]
 selectedCount = "{{count}} selected"
 
 [policies.pii]
+account = "Kontonummern (beschriftet)"
+card = "Kredit-/Debitkarten"
+email = "E-Mail-Adressen"
 fieldLabel = "PII to redact"
+iban = "IBANs"
+phone = "Telefonnummern"
 placeholder = "Select PII types"
+routing = "US-Routingnummern (ABA)"
+ssn = "Sozialversicherungsnummern"
 
 [policies.sidebar]
 activeCount = "{{count}} active"
@@ -5941,6 +5980,11 @@ setup = "Set up"
 [policies.toolConfig]
 enableAriaLabel = "Enable {{tool}}"
 infoAriaLabel = "What does {{tool}} do?"
+
+[policies.toolConfig.info]
+redact = "Findet automatisch sensible Daten – wie Sozialversicherungs- und Kartennummern – und schwärzt sie, sodass sie im Dokument nicht gelesen werden können."
+sanitize = "Entfernt verstecktes JavaScript aus der Datei, sodass beim Öffnen nichts automatisch ausgeführt wird."
+watermark = "Bringt einen sichtbaren Vermerk (z. B. \"Vertraulich\") über jede Seite auf."
 
 [policies.wizard]
 allDocTypesDescription = "Enable the Classification policy to filter by document type."
@@ -8027,6 +8071,8 @@ zoomIn = "Vergrößern"
 zoomOut = "Verkleinern"
 
 [viewer.attachments]
+addAttachment = "Anhang hinzufügen"
+close = "Anhänge schließen"
 empty = "No attachments in this document"
 loading = "Loading attachments..."
 noDocument = "Open a PDF to view its attachments."
@@ -8044,6 +8090,7 @@ cancelClearAll = "Abbrechen"
 clearAll = "Alle Kommentare löschen"
 clearAllDescription = "Dies entfernt Kommentare und Antworten aus der Seitenleiste, lässt jedoch alle angehängten Anmerkungen im Dokument bestehen."
 clearAllTitle = "Alle Kommentare löschen?"
+close = "Kommentare schließen"
 deleteAnnotationAndComment = "Anmerkung und Kommentar löschen"
 deleteDescription = "Diese Anmerkung hat einen Kommentar. Sie können nur den Kommentar aus der Seitenleiste entfernen und die Anmerkung behalten oder alles löschen."
 deleteTitle = "Anmerkung aus Kommentaren entfernen?"
@@ -8054,6 +8101,7 @@ moreActions = "Weitere Aktionen"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
 pageLabel = "Seite {{page}}"
+placingHint = "Zum Platzieren auf eine Seite klicken… (Abbrechen)"
 removeCommentOnly = "Nur Kommentar entfernen"
 saveReply = "Antwort speichern"
 title = "Kommentare"

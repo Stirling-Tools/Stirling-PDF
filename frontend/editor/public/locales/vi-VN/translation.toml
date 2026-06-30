@@ -5886,6 +5886,17 @@ successMessage = "Giấy phép của bạn đã được kích hoạt thành cô
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
 deleteConfirmTitle = "Delete {{label}} policy?"
 
+[policies.activity]
+enforced = "đã thực thi"
+enforcing = "Đang thực thi..."
+failed = "Thực thi thất bại"
+outputsUnavailable = "Đầu ra của chính sách không còn khả dụng để tải xuống."
+partialOutputsUnavailable = "Một số đầu ra của chính sách không còn khả dụng để tải xuống."
+retrying = "Đang bận, thử lại..."
+runNotFound = "Không còn tìm thấy lần thực thi."
+step = "bước {{current}}/{{total}}"
+timedOut = "Thực thi đã hết thời gian chờ trước khi hoàn tất."
+
 [policies.catalog]
 compliance = "Compliance"
 ingestion = "Ingestion"
@@ -5914,12 +5925,40 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
+[policies.enforcement]
+applying = "Đang áp dụng {{names}}"
+applyingProgress = "Đang áp dụng {{names}} ({{done}} trong {{total}})"
+exportFailureBody = "Không thể áp dụng các chính sách bảo mật. Các tệp đã được xuất nguyên trạng."
+exportFailureTitle = "Đã xuất mà không thực thi"
+failureBody = "Không thể xử lý {{failures}} trong số {{total}} tệp và đã xuất nguyên trạng."
+failureTitle = "Đã xuất mà không thực thi đầy đủ"
+printPolicyAppliedBody = "PDF này đã được cập nhật để đáp ứng một chính sách. Hãy xem lại các thay đổi, rồi in lại."
+printPolicyAppliedTitle = "Đã áp dụng chính sách trước khi in"
+queued = "+{{count}} đang chờ"
+successTitle = "Đã áp dụng {{names}}"
+summaryMore = "{{first}}, {{second}} và còn {{more}} nữa"
+summaryTwo = "{{first}} và {{second}}"
+
+[policies.enforcement.triggerVerb]
+convert = "Thực thi trước khi chuyển đổi"
+default = "Đang thực thi"
+export = "Thực thi trước khi xuất"
+input = "Thực thi khi nhập"
+print = "Thực thi trước khi in"
+
 [policies.fields]
 selectedCount = "{{count}} selected"
 
 [policies.pii]
+account = "Số tài khoản (được gắn nhãn)"
+card = "Thẻ tín dụng / thẻ ghi nợ"
+email = "Địa chỉ email"
 fieldLabel = "PII to redact"
+iban = "IBAN"
+phone = "Số điện thoại"
 placeholder = "Select PII types"
+routing = "Số routing của Mỹ (ABA)"
+ssn = "Số An sinh Xã hội"
 
 [policies.sidebar]
 activeCount = "{{count}} active"
@@ -5941,6 +5980,11 @@ setup = "Set up"
 [policies.toolConfig]
 enableAriaLabel = "Enable {{tool}}"
 infoAriaLabel = "What does {{tool}} do?"
+
+[policies.toolConfig.info]
+redact = "Tự động tìm và làm đen các thông tin nhạy cảm — như số An sinh Xã hội và số thẻ — để không thể đọc được trong tài liệu."
+sanitize = "Xóa JavaScript ẩn khỏi tệp, để không có gì chạy tự động khi ai đó mở tệp."
+watermark = "Đóng một dấu hiển thị (ví dụ: \"Confidential\") trên mọi trang."
 
 [policies.wizard]
 allDocTypesDescription = "Enable the Classification policy to filter by document type."
@@ -8027,6 +8071,8 @@ zoomIn = "Phóng to"
 zoomOut = "Thu nhỏ"
 
 [viewer.attachments]
+addAttachment = "Thêm tệp đính kèm"
+close = "Đóng tệp đính kèm"
 empty = "Không có tệp đính kèm trong tài liệu này"
 loading = "Đang tải tệp đính kèm..."
 noDocument = "Mở một PDF để xem các tệp đính kèm của nó."
@@ -8044,6 +8090,7 @@ cancelClearAll = "Hủy"
 clearAll = "Xóa tất cả bình luận"
 clearAllDescription = "Việc này xóa bình luận và trả lời khỏi thanh bên nhưng giữ lại mọi chú thích đính kèm trong tài liệu."
 clearAllTitle = "Xóa tất cả bình luận?"
+close = "Đóng bình luận"
 deleteAnnotationAndComment = "Xóa chú thích & bình luận"
 deleteDescription = "Chú thích này có kèm một bình luận. Bạn có thể chỉ gỡ bình luận khỏi thanh bên và giữ lại chú thích, hoặc xóa tất cả."
 deleteTitle = "Gỡ chú thích khỏi phần bình luận?"
@@ -8054,6 +8101,7 @@ moreActions = "Thao tác khác"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
 pageLabel = "Trang {{page}}"
+placingHint = "Nhấp vào một trang để đặt… (hủy)"
 removeCommentOnly = "Chỉ gỡ bình luận"
 saveReply = "Lưu trả lời"
 title = "Bình luận"

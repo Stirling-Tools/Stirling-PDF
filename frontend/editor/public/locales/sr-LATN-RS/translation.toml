@@ -5886,6 +5886,17 @@ successMessage = "Vaša licenca je uspešno aktivirana. Sada možete zatvoriti o
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
 deleteConfirmTitle = "Delete {{label}} policy?"
 
+[policies.activity]
+enforced = "primenjeno"
+enforcing = "Sprovodi se..."
+failed = "Primena nije uspela"
+outputsUnavailable = "Rezultati politike više nisu dostupni za preuzimanje."
+partialOutputsUnavailable = "Neki rezultati politike više nisu dostupni za preuzimanje."
+retrying = "Zauzeto, pokušavam ponovo..."
+runNotFound = "Izvršavanje primene više nije moguće pronaći."
+step = "korak {{current}}/{{total}}"
+timedOut = "Vreme za primenu je isteklo pre nego što je izvršavanje moglo da se završi."
+
 [policies.catalog]
 compliance = "Compliance"
 ingestion = "Ingestion"
@@ -5914,12 +5925,40 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
+[policies.enforcement]
+applying = "Primena {{names}}"
+applyingProgress = "Primena {{names}} ({{done}} od {{total}})"
+exportFailureBody = "Bezbednosne politike nije bilo moguće primeniti. Datoteke su izvezene onakve kakve jesu."
+exportFailureTitle = "Izvezeno bez primene"
+failureBody = "Obrada {{failures}} od {{total}} datoteka nije uspela, pa su izvezene onakve kakve jesu."
+failureTitle = "Izvezeno bez potpune primene"
+printPolicyAppliedBody = "Ovaj PDF je ažuriran da bi ispunio politiku. Pregledajte izmene, zatim ponovo odštampajte."
+printPolicyAppliedTitle = "Politika primenjena pre štampanja"
+queued = "+{{count}} na čekanju"
+successTitle = "{{names}} primenjeno"
+summaryMore = "{{first}}, {{second}} i još {{more}}"
+summaryTwo = "{{first}} i {{second}}"
+
+[policies.enforcement.triggerVerb]
+convert = "Primena pre konverzije"
+default = "Primena"
+export = "Primena pre izvoza"
+input = "Primena pri uvozu"
+print = "Primena pre štampanja"
+
 [policies.fields]
 selectedCount = "{{count}} selected"
 
 [policies.pii]
+account = "Brojevi računa (označeni)"
+card = "Kreditne/debitne kartice"
+email = "Adrese e-pošte"
 fieldLabel = "PII to redact"
+iban = "IBAN-ovi"
+phone = "Telefonski brojevi"
 placeholder = "Select PII types"
+routing = "Brojevi za rutiranje u SAD (ABA)"
+ssn = "Brojevi socijalnog osiguranja"
 
 [policies.sidebar]
 activeCount = "{{count}} active"
@@ -5941,6 +5980,11 @@ setup = "Set up"
 [policies.toolConfig]
 enableAriaLabel = "Enable {{tool}}"
 infoAriaLabel = "What does {{tool}} do?"
+
+[policies.toolConfig.info]
+redact = "Automatski pronalazi i zatamnjuje osetljive podatke — kao što su brojevi socijalnog osiguranja i brojevi kartica — kako ne bi mogli da se čitaju u dokumentu."
+sanitize = "Uklanja skriveni JavaScript iz datoteke, tako da se ništa ne pokreće automatski kada je neko otvori."
+watermark = "Postavlja vidljivu oznaku (npr. \"Poverljivo\") preko svake stranice."
 
 [policies.wizard]
 allDocTypesDescription = "Enable the Classification policy to filter by document type."
@@ -8027,6 +8071,8 @@ zoomIn = "Uvećaj"
 zoomOut = "Umanji"
 
 [viewer.attachments]
+addAttachment = "Dodaj prilog"
+close = "Zatvori priloge"
 empty = "Nema priloga u ovom dokumentu"
 loading = "Učitavanje priloga..."
 noDocument = "Otvorite PDF da biste videli njegove priloge."
@@ -8044,6 +8090,7 @@ cancelClearAll = "Otkaži"
 clearAll = "Obriši sve komentare"
 clearAllDescription = "Ovo uklanja komentare i odgovore iz bočne trake, ali zadržava sve pridružene anotacije u dokumentu."
 clearAllTitle = "Obrisati sve komentare?"
+close = "Zatvori komentare"
 deleteAnnotationAndComment = "Obriši anotaciju i komentar"
 deleteDescription = "Ovoj anotaciji je pridružen komentar. Možete ukloniti samo komentar iz bočne trake i zadržati anotaciju ili obrisati sve."
 deleteTitle = "Ukloniti anotaciju iz komentara?"
@@ -8054,6 +8101,7 @@ moreActions = "Više radnji"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
 pageLabel = "Stranica {{page}}"
+placingHint = "Kliknite na stranicu da postavite… (otkaži)"
 removeCommentOnly = "Ukloni samo komentar"
 saveReply = "Sačuvaj odgovor"
 title = "Komentari"

@@ -5886,6 +5886,17 @@ successMessage = "Din licens har aktiverats. Du kan nu stänga detta fönster."
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
 deleteConfirmTitle = "Delete {{label}} policy?"
 
+[policies.activity]
+enforced = "tillämpad"
+enforcing = "Tillämpas..."
+failed = "Tillämpningen misslyckades"
+outputsUnavailable = "Policyutdata är inte längre tillgängliga att ladda ned."
+partialOutputsUnavailable = "Vissa policyutdata är inte längre tillgängliga att ladda ned."
+retrying = "Upptagen, försöker igen..."
+runNotFound = "Tillämpningskörningen kunde inte längre hittas."
+step = "steg {{current}}/{{total}}"
+timedOut = "Tillämpningen överskred tidsgränsen innan körningen kunde slutföras."
+
 [policies.catalog]
 compliance = "Compliance"
 ingestion = "Ingestion"
@@ -5914,12 +5925,40 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
+[policies.enforcement]
+applying = "Tillämpning av {{names}}"
+applyingProgress = "Tillämpning av {{names}} ({{done}} av {{total}})"
+exportFailureBody = "Säkerhetspolicyer kunde inte tillämpas. Filerna exporterades som de är."
+exportFailureTitle = "Exporterades utan tillämpning"
+failureBody = "{{failures}} av {{total}} fil(er) kunde inte bearbetas och exporterades som de är."
+failureTitle = "Exporterades utan fullständig tillämpning"
+printPolicyAppliedBody = "Denna PDF uppdaterades för att uppfylla en policy. Granska ändringarna och skriv sedan ut igen."
+printPolicyAppliedTitle = "Policy tillämpad före utskrift"
+queued = "+{{count}} i kö"
+successTitle = "{{names}} har tillämpats"
+summaryMore = "{{first}}, {{second}} och {{more}} till"
+summaryTwo = "{{first}} och {{second}}"
+
+[policies.enforcement.triggerVerb]
+convert = "Tillämpa före konvertering"
+default = "Tillämpa"
+export = "Tillämpa före export"
+input = "Tillämpa vid import"
+print = "Tillämpa före utskrift"
+
 [policies.fields]
 selectedCount = "{{count}} selected"
 
 [policies.pii]
+account = "Kontonummer (etiketterade)"
+card = "Kredit-/betalkort"
+email = "E-postadresser"
 fieldLabel = "PII to redact"
+iban = "IBAN-nummer"
+phone = "Telefonnummer"
 placeholder = "Select PII types"
+routing = "USA-routingnummer (ABA)"
+ssn = "Social Security-nummer"
 
 [policies.sidebar]
 activeCount = "{{count}} active"
@@ -5941,6 +5980,11 @@ setup = "Set up"
 [policies.toolConfig]
 enableAriaLabel = "Enable {{tool}}"
 infoAriaLabel = "What does {{tool}} do?"
+
+[policies.toolConfig.info]
+redact = "Hittar och svartmarkerar automatiskt känsliga uppgifter — som Social Security- och kortnummer — så att de inte kan läsas i dokumentet."
+sanitize = "Tar bort dold JavaScript-kod från filen, så att inget kan köras automatiskt när någon öppnar den."
+watermark = "Stämplar en synlig markering (t.ex. \"Confidential\") över varje sida."
 
 [policies.wizard]
 allDocTypesDescription = "Enable the Classification policy to filter by document type."
@@ -8027,6 +8071,8 @@ zoomIn = "Zooma in"
 zoomOut = "Zooma ut"
 
 [viewer.attachments]
+addAttachment = "Lägg till bilaga"
+close = "Stäng bilagor"
 empty = "Inga bilagor i det här dokumentet"
 loading = "Läser in bilagor..."
 noDocument = "Öppna en PDF för att visa dess bilagor."
@@ -8044,6 +8090,7 @@ cancelClearAll = "Avbryt"
 clearAll = "Rensa alla kommentarer"
 clearAllDescription = "Detta tar bort kommentarer och svar från sidopanelen men behåller eventuella kopplade anteckningar i dokumentet."
 clearAllTitle = "Rensa alla kommentarer?"
+close = "Stäng kommentarer"
 deleteAnnotationAndComment = "Ta bort annotering & kommentar"
 deleteDescription = "Denna annotering har en kommentar kopplad. Du kan ta bort bara kommentaren i sidofältet och behålla annoteringen, eller ta bort allt."
 deleteTitle = "Ta bort annotering från kommentarer?"
@@ -8054,6 +8101,7 @@ moreActions = "Fler åtgärder"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
 pageLabel = "Sida {{page}}"
+placingHint = "Klicka på en sida för att placera… (avbryt)"
 removeCommentOnly = "Ta bort endast kommentaren"
 saveReply = "Spara svar"
 title = "Kommentarer"

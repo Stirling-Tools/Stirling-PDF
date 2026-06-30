@@ -5886,6 +5886,17 @@ successMessage = "A licenc sikeresen aktiválva. Most bezárhatja ezt az ablakot
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
 deleteConfirmTitle = "Delete {{label}} policy?"
 
+[policies.activity]
+enforced = "érvényesítve"
+enforcing = "Érvényesítés folyamatban..."
+failed = "Az érvényesítés sikertelen"
+outputsUnavailable = "A házirend kimenetei már nem tölthetők le."
+partialOutputsUnavailable = "A házirend egyes kimenetei már nem tölthetők le."
+retrying = "Foglalt, újrapróbálás..."
+runNotFound = "Az érvényesítési futtatás már nem található."
+step = "lépés {{current}}/{{total}}"
+timedOut = "Időtúllépés történt az érvényesítésben, mielőtt a futtatás befejeződhetett volna."
+
 [policies.catalog]
 compliance = "Compliance"
 ingestion = "Ingestion"
@@ -5914,12 +5925,40 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
+[policies.enforcement]
+applying = "A(z) {{names}} alkalmazása"
+applyingProgress = "A(z) {{names}} alkalmazása ({{done}} / {{total}})"
+exportFailureBody = "A biztonsági házirendeket nem sikerült alkalmazni. A fájlok változtatás nélkül lettek exportálva."
+exportFailureTitle = "Exportálva érvényesítés nélkül"
+failureBody = "{{failures}} / {{total}} fájlt nem sikerült feldolgozni, és változtatás nélkül lettek exportálva."
+failureTitle = "Exportálva teljes érvényesítés nélkül"
+printPolicyAppliedBody = "Ez a PDF frissítve lett, hogy megfeleljen egy házirendnek. Tekintse át a változtatásokat, majd nyomtasson újra."
+printPolicyAppliedTitle = "Házirend alkalmazva nyomtatás előtt"
+queued = "+{{count}} várólistán"
+successTitle = "{{names}} alkalmazva"
+summaryMore = "{{first}}, {{second}} és még {{more}}"
+summaryTwo = "{{first}} és {{second}}"
+
+[policies.enforcement.triggerVerb]
+convert = "Érvényesítés konvertálás előtt"
+default = "Érvényesítés"
+export = "Érvényesítés exportálás előtt"
+input = "Érvényesítés importáláskor"
+print = "Érvényesítés nyomtatás előtt"
+
 [policies.fields]
 selectedCount = "{{count}} selected"
 
 [policies.pii]
+account = "Számlaszámok (címkézett)"
+card = "Hitel-/betéti kártyák"
+email = "E-mail-címek"
 fieldLabel = "PII to redact"
+iban = "IBAN-ok"
+phone = "Telefonszámok"
 placeholder = "Select PII types"
+routing = "US routing számok (ABA)"
+ssn = "Társadalombiztosítási számok"
 
 [policies.sidebar]
 activeCount = "{{count}} active"
@@ -5941,6 +5980,11 @@ setup = "Set up"
 [policies.toolConfig]
 enableAriaLabel = "Enable {{tool}}"
 infoAriaLabel = "What does {{tool}} do?"
+
+[policies.toolConfig.info]
+redact = "Automatikusan megkeresi és kitakarja az érzékeny adatokat — például a társadalombiztosítási és kártyaszámokat — így a dokumentumban nem olvashatók."
+sanitize = "Eltávolítja a rejtett JavaScriptet a fájlból, így megnyitáskor semmi nem fut le automatikusan."
+watermark = "Látható jelölést helyez el (pl. \"Bizalmas\") minden oldalra."
 
 [policies.wizard]
 allDocTypesDescription = "Enable the Classification policy to filter by document type."
@@ -8027,6 +8071,8 @@ zoomIn = "Nagyítás"
 zoomOut = "Kicsinyítés"
 
 [viewer.attachments]
+addAttachment = "Melléklet hozzáadása"
+close = "Mellékletek bezárása"
 empty = "Nincsenek mellékletek ebben a dokumentumban"
 loading = "Mellékletek betöltése..."
 noDocument = "Nyisson meg egy PDF-et a mellékletek megtekintéséhez."
@@ -8044,6 +8090,7 @@ cancelClearAll = "Mégse"
 clearAll = "Összes megjegyzés törlése"
 clearAllDescription = "Ez eltávolítja a megjegyzéseket és a válaszokat az oldalsávból, miközben a dokumentumban megmaradnak a hozzájuk csatolt jelölések."
 clearAllTitle = "Összes megjegyzés törlése?"
+close = "Megjegyzések bezárása"
 deleteAnnotationAndComment = "Jelölés és megjegyzés törlése"
 deleteDescription = "Ehhez a jelöléshez megjegyzés tartozik. Eltávolíthatja csak a megjegyzést az oldalsávról a jelölés megtartásával, vagy mindent törölhet."
 deleteTitle = "Eltávolítja a jelölést a megjegyzésekből?"
@@ -8054,6 +8101,7 @@ moreActions = "További műveletek"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
 pageLabel = "Oldal {{page}}"
+placingHint = "Kattintson egy oldalra az elhelyezéshez… (mégse)"
 removeCommentOnly = "Csak a megjegyzés eltávolítása"
 saveReply = "Válasz mentése"
 title = "Megjegyzések"

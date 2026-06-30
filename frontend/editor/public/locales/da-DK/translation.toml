@@ -5886,6 +5886,17 @@ successMessage = "Din licens er aktiveret. Du kan nu lukke dette vindue."
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
 deleteConfirmTitle = "Delete {{label}} policy?"
 
+[policies.activity]
+enforced = "håndhævet"
+enforcing = "Håndhæver..."
+failed = "Håndhævelsen mislykkedes"
+outputsUnavailable = "Politikoutput er ikke længere tilgængelige til download."
+partialOutputsUnavailable = "Nogle politikoutput er ikke længere tilgængelige til download."
+retrying = "Optaget, prøver igen..."
+runNotFound = "Håndhævelseskørslen kunne ikke længere findes."
+step = "trin {{current}}/{{total}}"
+timedOut = "Håndhævelsen fik timeout, før kørslen kunne afsluttes."
+
 [policies.catalog]
 compliance = "Compliance"
 ingestion = "Ingestion"
@@ -5914,12 +5925,40 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
+[policies.enforcement]
+applying = "Anvender {{names}}"
+applyingProgress = "Anvender {{names}} ({{done}} af {{total}})"
+exportFailureBody = "Sikkerhedspolitikker kunne ikke anvendes. Filer blev eksporteret som de er."
+exportFailureTitle = "Eksporteret uden håndhævelse"
+failureBody = "{{failures}} af {{total}} fil(er) kunne ikke behandles og blev eksporteret som de er."
+failureTitle = "Eksporteret uden fuld håndhævelse"
+printPolicyAppliedBody = "Denne PDF blev opdateret for at opfylde en politik. Gennemse ændringerne, og udskriv derefter igen."
+printPolicyAppliedTitle = "Politik anvendt før udskrivning"
+queued = "+{{count}} i kø"
+successTitle = "{{names}} anvendt"
+summaryMore = "{{first}}, {{second}} og {{more}} mere"
+summaryTwo = "{{first}} og {{second}}"
+
+[policies.enforcement.triggerVerb]
+convert = "Håndhæver før konvertering"
+default = "Håndhæver"
+export = "Håndhæver før eksport"
+input = "Håndhæver ved import"
+print = "Håndhæver før udskrivning"
+
 [policies.fields]
 selectedCount = "{{count}} selected"
 
 [policies.pii]
+account = "Kontonumre (mærkede)"
+card = "Kredit-/debitkort"
+email = "E-mailadresser"
 fieldLabel = "PII to redact"
+iban = "IBANs"
+phone = "Telefonnumre"
 placeholder = "Select PII types"
+routing = "US routingnumre (ABA)"
+ssn = "Social Security-numre"
 
 [policies.sidebar]
 activeCount = "{{count}} active"
@@ -5941,6 +5980,11 @@ setup = "Set up"
 [policies.toolConfig]
 enableAriaLabel = "Enable {{tool}}"
 infoAriaLabel = "What does {{tool}} do?"
+
+[policies.toolConfig.info]
+redact = "Finder og maskerer automatisk følsomme oplysninger — som Social Security- og kortnumre — så de ikke kan læses i dokumentet."
+sanitize = "Fjerner skjult JavaScript fra filen, så intet kan køre automatisk, når nogen åbner den."
+watermark = "Sætter et synligt mærke (f.eks. \"Fortroligt\") på hver side."
 
 [policies.wizard]
 allDocTypesDescription = "Enable the Classification policy to filter by document type."
@@ -8027,6 +8071,8 @@ zoomIn = "Zoom ind"
 zoomOut = "Zoom ud"
 
 [viewer.attachments]
+addAttachment = "Tilføj vedhæftet fil"
+close = "Luk vedhæftede filer"
 empty = "Ingen vedhæftninger i dette dokument"
 loading = "Indlæser vedhæftninger..."
 noDocument = "Åbn en PDF for at se dens vedhæftninger."
@@ -8044,6 +8090,7 @@ cancelClearAll = "Annuller"
 clearAll = "Ryd alle kommentarer"
 clearAllDescription = "Dette fjerner kommentarer og svar fra sidepanelet, mens eventuelle tilknyttede annoteringer bevares i dokumentet."
 clearAllTitle = "Ryd alle kommentarer?"
+close = "Luk kommentarer"
 deleteAnnotationAndComment = "Slet annotering og kommentar"
 deleteDescription = "Denne annotering har en kommentar knyttet. Du kan fjerne kun kommentaren fra sidepanelet og beholde annoteringen eller slette alt."
 deleteTitle = "Fjern annotering fra kommentarer?"
@@ -8054,6 +8101,7 @@ moreActions = "Flere handlinger"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
 pageLabel = "Side {{page}}"
+placingHint = "Klik på en side for at placere… (annuller)"
 removeCommentOnly = "Fjern kun kommentar"
 saveReply = "Gem svar"
 title = "Kommentarer"

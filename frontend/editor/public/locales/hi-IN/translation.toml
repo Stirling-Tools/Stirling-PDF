@@ -5886,6 +5886,17 @@ successMessage = "आपका लाइसेंस सफलतापूर्
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
 deleteConfirmTitle = "Delete {{label}} policy?"
 
+[policies.activity]
+enforced = "लागू किया गया"
+enforcing = "लागू किया जा रहा है..."
+failed = "लागू करना विफल रहा"
+outputsUnavailable = "नीति आउटपुट अब डाउनलोड के लिए उपलब्ध नहीं हैं।"
+partialOutputsUnavailable = "कुछ नीति आउटपुट अब डाउनलोड के लिए उपलब्ध नहीं हैं।"
+retrying = "व्यस्त है, पुनः प्रयास किया जा रहा है..."
+runNotFound = "लागू करने की प्रक्रिया अब नहीं मिली।"
+step = "चरण {{current}}/{{total}}"
+timedOut = "रन पूरा होने से पहले लागू करने की समय-सीमा समाप्त हो गई।"
+
 [policies.catalog]
 compliance = "Compliance"
 ingestion = "Ingestion"
@@ -5914,12 +5925,40 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
+[policies.enforcement]
+applying = "{{names}} लागू किए जा रहे हैं"
+applyingProgress = "{{names}} लागू किए जा रहे हैं ({{done}}/{{total}})"
+exportFailureBody = "सुरक्षा नीतियाँ लागू नहीं की जा सकीं। फ़ाइलें बिना बदलाव के निर्यात की गईं।"
+exportFailureTitle = "लागू किए बिना निर्यात किया गया"
+failureBody = "{{total}} में से {{failures}} फ़ाइल(ें) संसाधित नहीं की जा सकीं और उन्हें बिना बदलाव के निर्यात किया गया।"
+failureTitle = "पूर्ण रूप से लागू किए बिना निर्यात किया गया"
+printPolicyAppliedBody = "इस PDF को किसी नीति के अनुरूप अद्यतन किया गया। बदलावों की समीक्षा करें, फिर पुनः प्रिंट करें।"
+printPolicyAppliedTitle = "प्रिंट करने से पहले नीति लागू की गई"
+queued = "+{{count}} कतार में"
+successTitle = "{{names}} लागू किए गए"
+summaryMore = "{{first}}, {{second}} और {{more}} अन्य"
+summaryTwo = "{{first}} और {{second}}"
+
+[policies.enforcement.triggerVerb]
+convert = "रूपांतरण से पहले लागू करना"
+default = "लागू करना"
+export = "निर्यात से पहले लागू करना"
+input = "आयात पर लागू करना"
+print = "प्रिंट से पहले लागू करना"
+
 [policies.fields]
 selectedCount = "{{count}} selected"
 
 [policies.pii]
+account = "खाता संख्याएँ (लेबल युक्त)"
+card = "क्रेडिट/डेबिट कार्ड"
+email = "ईमेल पते"
 fieldLabel = "PII to redact"
+iban = "IBANs"
+phone = "फोन नंबर"
 placeholder = "Select PII types"
+routing = "US रूटिंग नंबर (ABA)"
+ssn = "सोशल सिक्योरिटी नंबर"
 
 [policies.sidebar]
 activeCount = "{{count}} active"
@@ -5941,6 +5980,11 @@ setup = "Set up"
 [policies.toolConfig]
 enableAriaLabel = "Enable {{tool}}"
 infoAriaLabel = "What does {{tool}} do?"
+
+[policies.toolConfig.info]
+redact = "संवेदनशील विवरण—जैसे सोशल सिक्योरिटी और कार्ड नंबर—को स्वतः ढूँढकर काला कर देता है, ताकि दस्तावेज़ में उन्हें पढ़ा न जा सके।"
+sanitize = "फ़ाइल से छिपा हुआ JavaScript हटाता है, ताकि इसे खोलने पर कुछ भी स्वतः न चले।"
+watermark = "प्रत्येक पृष्ठ पर एक दृश्यमान निशान (जैसे \"Confidential\") लगाता है।"
 
 [policies.wizard]
 allDocTypesDescription = "Enable the Classification policy to filter by document type."
@@ -8027,6 +8071,8 @@ zoomIn = "ज़ूम इन"
 zoomOut = "ज़ूम आउट"
 
 [viewer.attachments]
+addAttachment = "संलग्नक जोड़ें"
+close = "संलग्नक बंद करें"
 empty = "इस दस्तावेज़ में कोई संलग्नक नहीं हैं"
 loading = "संलग्नक लोड हो रहे हैं..."
 noDocument = "संलग्नक देखने के लिए कोई PDF खोलें।"
@@ -8044,6 +8090,7 @@ cancelClearAll = "रद्द करें"
 clearAll = "सभी टिप्पणियाँ साफ़ करें"
 clearAllDescription = "यह साइडबार से टिप्पणियाँ और उत्तर हटाता है, जबकि दस्तावेज़ में संलग्न किसी भी एनोटेशन को बनाए रखता है।"
 clearAllTitle = "सभी टिप्पणियाँ साफ़ करें?"
+close = "टिप्पणियाँ बंद करें"
 deleteAnnotationAndComment = "एनोटेशन और टिप्पणी हटाएँ"
 deleteDescription = "इस एनोटेशन के साथ एक टिप्पणी जुड़ी है। आप साइडबार से केवल टिप्पणी हटा सकते हैं और एनोटेशन बनाए रख सकते हैं, या सब कुछ हटा सकते हैं।"
 deleteTitle = "टिप्पणियों से एनोटेशन हटाएँ?"
@@ -8054,6 +8101,7 @@ moreActions = "और क्रियाएँ"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
 pageLabel = "पेज {{page}}"
+placingHint = "रखने के लिए किसी पृष्ठ पर क्लिक करें… (रद्द करें)"
 removeCommentOnly = "केवल टिप्पणी हटाएँ"
 saveReply = "उत्तर सहेजें"
 title = "टिप्पणियाँ"

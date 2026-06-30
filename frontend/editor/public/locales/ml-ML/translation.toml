@@ -5886,6 +5886,17 @@ successMessage = "നിങ്ങളുടെ ലൈസൻസ് വിജയക
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
 deleteConfirmTitle = "Delete {{label}} policy?"
 
+[policies.activity]
+enforced = "പ്രാബല്യപ്പെടുത്തി"
+enforcing = "പ്രാബല്യപ്പെടുത്തുന്നു..."
+failed = "പ്രാബല്യപ്പെടുത്തൽ പരാജയപ്പെട്ടു"
+outputsUnavailable = "നയത്തിന്റെ ഔട്ട്‌പുട്ടുകൾ ഇനി ഡൗൺലോഡ് ചെയ്യാൻ ലഭ്യമല്ല."
+partialOutputsUnavailable = "ചില നയ ഔട്ട്‌പുട്ടുകൾ ഇനി ഡൗൺലോഡ് ചെയ്യാൻ ലഭ്യമല്ല."
+retrying = "തിരക്കിലാണ്, വീണ്ടും ശ്രമിക്കുന്നു..."
+runNotFound = "പ്രാബല്യപ്പെടുത്തൽ റൺ ഇനി കണ്ടെത്താനായില്ല."
+step = "ഘട്ടം {{current}}/{{total}}"
+timedOut = "റൺ പൂർത്തിയാകുന്നതിന് മുമ്പ് പ്രാബല്യപ്പെടുത്തൽ ടൈംഔട്ട് ആയി."
+
 [policies.catalog]
 compliance = "Compliance"
 ingestion = "Ingestion"
@@ -5914,12 +5925,40 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
+[policies.enforcement]
+applying = "പ്രാബല്യപ്പെടുത്തുന്നു {{names}}"
+applyingProgress = "പ്രാബല്യപ്പെടുത്തുന്നു {{names}} ({{total}} ൽ {{done}})"
+exportFailureBody = "സുരക്ഷാ നയങ്ങൾ പ്രാബല്യപ്പെടുത്താൻ കഴിഞ്ഞില്ല. ഫയലുകൾ അതേപടി എക്സ്പോർട്ട് ചെയ്തു."
+exportFailureTitle = "പ്രാബല്യപ്പെടുത്തൽ ഇല്ലാതെ എക്സ്പോർട്ട് ചെയ്തു"
+failureBody = "{{total}} ഫയലുകളിൽ {{failures}} എണ്ണം പ്രോസസ് ചെയ്യാൻ കഴിഞ്ഞില്ല, അവ അതേപടി എക്സ്പോർട്ട് ചെയ്തു."
+failureTitle = "പൂർണ്ണ പ്രാബല്യപ്പെടുത്തൽ ഇല്ലാതെ എക്സ്പോർട്ട് ചെയ്തു"
+printPolicyAppliedBody = "ഒരു നയം പാലിക്കുന്നതിനായി ഈ PDF പുതുക്കി. മാറ്റങ്ങൾ പരിശോധിച്ച് വീണ്ടും പ്രിന്റ് ചെയ്യുക."
+printPolicyAppliedTitle = "പ്രിന്റ് ചെയ്യുന്നതിന് മുമ്പ് നയം പ്രാബല്യപ്പെടുത്തി"
+queued = "+{{count}} ക്യൂവിൽ"
+successTitle = "{{names}} പ്രാബല്യപ്പെടുത്തി"
+summaryMore = "{{first}}, {{second}} കൂടാതെ {{more}} എണ്ണം കൂടി"
+summaryTwo = "{{first}} കൂടാതെ {{second}}"
+
+[policies.enforcement.triggerVerb]
+convert = "പരിവർത്തനം ചെയ്യുന്നതിന് മുമ്പ് പ്രാബല്യപ്പെടുത്തുന്നു"
+default = "പ്രാബല്യപ്പെടുത്തുന്നു"
+export = "എക്സ്പോർട്ടിന് മുമ്പ് പ്രാബല്യപ്പെടുത്തുന്നു"
+input = "ഇംപോർട്ട് ചെയ്യുമ്പോൾ പ്രാബല്യപ്പെടുത്തുന്നു"
+print = "പ്രിന്റ് ചെയ്യുന്നതിനുമുമ്പ് പ്രാബല്യപ്പെടുത്തുന്നു"
+
 [policies.fields]
 selectedCount = "{{count}} selected"
 
 [policies.pii]
+account = "അക്കൗണ്ട് നമ്പറുകൾ (ലേബൽ ചെയ്തവ)"
+card = "ക്രെഡിറ്റ് / ഡെബിറ്റ് കാർഡുകൾ"
+email = "ഇമെയിൽ വിലാസങ്ങൾ"
 fieldLabel = "PII to redact"
+iban = "IBAN നമ്പറുകൾ"
+phone = "ഫോൺ നമ്പറുകൾ"
 placeholder = "Select PII types"
+routing = "US റൂട്ടിങ് നമ്പറുകൾ (ABA)"
+ssn = "സോഷ്യൽ സെക്യൂരിറ്റി നമ്പറുകൾ"
 
 [policies.sidebar]
 activeCount = "{{count}} active"
@@ -5941,6 +5980,11 @@ setup = "Set up"
 [policies.toolConfig]
 enableAriaLabel = "Enable {{tool}}"
 infoAriaLabel = "What does {{tool}} do?"
+
+[policies.toolConfig.info]
+redact = "സോഷ്യൽ സെക്യൂരിറ്റി, കാർഡ് നമ്പറുകൾ പോലെയുള്ള സെൻസിറ്റീവ് വിവരങ്ങൾ സ്വയമേവ കണ്ടെത്തി കറുപ്പിച്ചു മറയ്ക്കും — അതിനാൽ പ്രമാണത്തിൽ അവ വായിക്കാൻ സാധിക്കില്ല."
+sanitize = "ഫയലിൽ നിന്നുള്ള മറഞ്ഞിരിക്കുന്ന JavaScript നീക്കം ചെയ്യും, അതിനാൽ ആരെങ്കിലും അത് തുറക്കുമ്പോൾ ഒന്നും സ്വയമേവ പ്രവർത്തിക്കില്ല."
+watermark = "ഓരോ പേജിലും ദൃശ്യമായ ഒരു മുദ്ര (ഉദാ: \"Confidential\") പതിപ്പിക്കും."
 
 [policies.wizard]
 allDocTypesDescription = "Enable the Classification policy to filter by document type."
@@ -8027,6 +8071,8 @@ zoomIn = "സൂം ഇൻ"
 zoomOut = "സൂം ഔട്ട്"
 
 [viewer.attachments]
+addAttachment = "അറ്റാച്ച്മെന്റ് ചേർക്കുക"
+close = "അറ്റാച്ച്മെന്റുകൾ അടയ്ക്കുക"
 empty = "ഈ ഡോക്യുമെന്റിൽ അറ്റാച്ച്മെന്റുകളില്ല"
 loading = "അറ്റാച്ച്മെന്റുകൾ ലോഡ് ചെയ്യുന്നു..."
 noDocument = "അറ്റാച്ച്മെന്റുകൾ കാണാൻ ഒരു PDF തുറക്കുക."
@@ -8044,6 +8090,7 @@ cancelClearAll = "റദ്ദാക്കുക"
 clearAll = "എല്ലാ കമന്റുകളും മായ്ക്കുക"
 clearAllDescription = "ഇത് സൈഡ്ബാറിലെ കമന്റുകളും മറുപടികളും നീക്കം ചെയ്യുകയും, ഡോക്യുമെന്റിൽ ബന്ധപ്പെട്ടിരിക്കുന്ന അനോട്ടേഷനുകൾ നിലനിർത്തുകയും ചെയ്യും."
 clearAllTitle = "എല്ലാ കമന്റുകളും മായ്ക്കണമോ?"
+close = "അഭിപ്രായങ്ങൾ അടയ്ക്കുക"
 deleteAnnotationAndComment = "അനോട്ടേഷനും കമന്റും ഇല്ലാതാക്കുക"
 deleteDescription = "ഈ അനോട്ടേഷനോടൊപ്പം ഒരു കമന്റ് ചേർത്തിട്ടുണ്ട്. അനോട്ടേഷൻ നിലനിർത്തിക്കൊണ്ട് സൈഡ്‌ബാറിൽ നിന്ന് കമന്റ് മാത്രം നീക്കാനോ, അല്ലെങ്കിൽ എല്ലാം ഇല്ലാതാക്കാനോ കഴിയും."
 deleteTitle = "കമന്റുകളിൽ നിന്ന് അനോട്ടേഷൻ നീക്കാമോ?"
@@ -8054,6 +8101,7 @@ moreActions = "കൂടുതൽ പ്രവർത്തികൾ"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
 pageLabel = "പേജ് {{page}}"
+placingHint = "ഇടാൻ ഒരു പേജിൽ ക്ലിക്ക് ചെയ്യുക… (റദ്ദാക്കുക)"
 removeCommentOnly = "കമന്റ് മാത്രം നീക്കുക"
 saveReply = "മറുപടി സംരക്ഷിക്കുക"
 title = "കമന്റുകൾ"

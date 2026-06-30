@@ -5886,6 +5886,17 @@ successMessage = "Lisensen din er aktivert. Du kan nå lukke dette vinduet."
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
 deleteConfirmTitle = "Delete {{label}} policy?"
 
+[policies.activity]
+enforced = "håndhevet"
+enforcing = "Håndhever..."
+failed = "Håndheving mislyktes"
+outputsUnavailable = "Policy-utdata er ikke lenger tilgjengelige for nedlasting."
+partialOutputsUnavailable = "Noen policy-utdata er ikke lenger tilgjengelige for nedlasting."
+retrying = "Opptatt, prøver på nytt..."
+runNotFound = "Håndhevingskjøringen kunne ikke lenger finnes."
+step = "trinn {{current}}/{{total}}"
+timedOut = "Håndhevingen fikk tidsavbrudd før kjøringen kunne fullføres."
+
 [policies.catalog]
 compliance = "Compliance"
 ingestion = "Ingestion"
@@ -5914,12 +5925,40 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
+[policies.enforcement]
+applying = "Tar i bruk {{names}}"
+applyingProgress = "Tar i bruk {{names}} ({{done}} av {{total}})"
+exportFailureBody = "Sikkerhetspolicyer kunne ikke tas i bruk. Filene ble eksportert som de er."
+exportFailureTitle = "Eksportert uten håndheving"
+failureBody = "{{failures}} av {{total}} filer kunne ikke behandles og ble eksportert som de er."
+failureTitle = "Eksportert uten full håndheving"
+printPolicyAppliedBody = "Denne PDF-en ble oppdatert for å oppfylle en policy. Gå gjennom endringene, og skriv deretter ut på nytt."
+printPolicyAppliedTitle = "Policy tatt i bruk før utskrift"
+queued = "+{{count}} i kø"
+successTitle = "{{names}} tatt i bruk"
+summaryMore = "{{first}}, {{second}} og {{more}} til"
+summaryTwo = "{{first}} og {{second}}"
+
+[policies.enforcement.triggerVerb]
+convert = "Håndhever før konvertering"
+default = "Håndhever"
+export = "Håndhever før eksport"
+input = "Håndhever ved import"
+print = "Håndhever før utskrift"
+
 [policies.fields]
 selectedCount = "{{count}} selected"
 
 [policies.pii]
+account = "Kontonumre (merket)"
+card = "Kreditt-/debetkort"
+email = "E-postadresser"
 fieldLabel = "PII to redact"
+iban = "IBAN-er"
+phone = "Telefonnumre"
 placeholder = "Select PII types"
+routing = "Amerikanske routing-numre (ABA)"
+ssn = "Social Security-numre"
 
 [policies.sidebar]
 activeCount = "{{count}} active"
@@ -5941,6 +5980,11 @@ setup = "Set up"
 [policies.toolConfig]
 enableAriaLabel = "Enable {{tool}}"
 infoAriaLabel = "What does {{tool}} do?"
+
+[policies.toolConfig.info]
+redact = "Finner automatisk og sverter ut sensitive opplysninger — som Social Security- og kortnumre — slik at de ikke kan leses i dokumentet."
+sanitize = "Fjerner skjult JavaScript fra filen, slik at ingenting kan kjøres automatisk når noen åpner den."
+watermark = "Setter et synlig stempel (f.eks. \"Konfidensielt\") over hver side."
 
 [policies.wizard]
 allDocTypesDescription = "Enable the Classification policy to filter by document type."
@@ -8027,6 +8071,8 @@ zoomIn = "Zoom inn"
 zoomOut = "Zoom ut"
 
 [viewer.attachments]
+addAttachment = "Legg til vedlegg"
+close = "Lukk vedlegg"
 empty = "Ingen vedlegg i dette dokumentet"
 loading = "Laster vedlegg..."
 noDocument = "Åpne en PDF for å se vedleggene."
@@ -8044,6 +8090,7 @@ cancelClearAll = "Avbryt"
 clearAll = "Fjern alle kommentarer"
 clearAllDescription = "Dette fjerner kommentarer og svar fra sidepanelet, men beholder eventuelle tilknyttede merknader i dokumentet."
 clearAllTitle = "Fjerne alle kommentarer?"
+close = "Lukk kommentarer"
 deleteAnnotationAndComment = "Slett merknad og kommentar"
 deleteDescription = "Denne merknaden har en kommentar tilknyttet. Du kan fjerne bare kommentaren fra sidepanelet og beholde merknaden, eller slette alt."
 deleteTitle = "Fjerne merknad fra kommentarer?"
@@ -8054,6 +8101,7 @@ moreActions = "Flere handlinger"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
 pageLabel = "Side {{page}}"
+placingHint = "Klikk på en side for å plassere… (avbryt)"
 removeCommentOnly = "Fjern bare kommentaren"
 saveReply = "Lagre svar"
 title = "Kommentarer"

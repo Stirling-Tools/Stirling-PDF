@@ -5886,6 +5886,17 @@ successMessage = "Lisenziyanız uğurla aktivləşdirildi. Bu pəncərəni indi 
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
 deleteConfirmTitle = "Delete {{label}} policy?"
 
+[policies.activity]
+enforced = "tətbiq edildi"
+enforcing = "Tətbiq edilir..."
+failed = "Tətbiq etmə uğursuz oldu"
+outputsUnavailable = "Siyasət çıxışlarını yükləmək artıq mümkün deyil."
+partialOutputsUnavailable = "Bəzi siyasət çıxışlarını yükləmək artıq mümkün deyil."
+retrying = "Məşğuldur, yenidən cəhd edilir..."
+runNotFound = "Tətbiq etmə icrası artıq tapılmır."
+step = "addım {{current}}/{{total}}"
+timedOut = "Tətbiq etmə, icra tamamlanmadan vaxt aşımı oldu."
+
 [policies.catalog]
 compliance = "Compliance"
 ingestion = "Ingestion"
@@ -5914,12 +5925,40 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
+[policies.enforcement]
+applying = "{{names}} tətbiq edilir"
+applyingProgress = "{{names}} tətbiq edilir ({{done}}/{{total}})"
+exportFailureBody = "Təhlükəsizlik siyasətləri tətbiq edilə bilmədi. Fayllar olduğu kimi ixrac edildi."
+exportFailureTitle = "Tətbiq etmədən ixrac edildi"
+failureBody = "{{total}} fayldan {{failures}} fayl işlənə bilmədi və olduğu kimi ixrac edildi."
+failureTitle = "Tam tətbiq edilmədən ixrac edildi"
+printPolicyAppliedBody = "Bu PDF siyasətə uyğunlaşdırmaq üçün yeniləndi. Dəyişiklikləri yoxlayın, sonra yenidən çap edin."
+printPolicyAppliedTitle = "Çapdan əvvəl siyasət tətbiq edildi"
+queued = "+{{count}} növbədə"
+successTitle = "{{names}} tətbiq edildi"
+summaryMore = "{{first}}, {{second}} və daha {{more}}"
+summaryTwo = "{{first}} və {{second}}"
+
+[policies.enforcement.triggerVerb]
+convert = "Çevirmədən əvvəl tətbiq edilir"
+default = "Tətbiq edilir"
+export = "İxracdan əvvəl tətbiq edilir"
+input = "İdxal zamanı tətbiq edilir"
+print = "Çapdan əvvəl tətbiq edilir"
+
 [policies.fields]
 selectedCount = "{{count}} selected"
 
 [policies.pii]
+account = "Hesab nömrələri (etiketlənmiş)"
+card = "Kredit / debet kartları"
+email = "E-poçt ünvanları"
 fieldLabel = "PII to redact"
+iban = "IBAN-lar"
+phone = "Telefon nömrələri"
 placeholder = "Select PII types"
+routing = "ABŞ routing nömrələri (ABA)"
+ssn = "Sosial Təminat nömrələri"
 
 [policies.sidebar]
 activeCount = "{{count}} active"
@@ -5941,6 +5980,11 @@ setup = "Set up"
 [policies.toolConfig]
 enableAriaLabel = "Enable {{tool}}"
 infoAriaLabel = "What does {{tool}} do?"
+
+[policies.toolConfig.info]
+redact = "Sosial Təminat və kart nömrələri kimi həssas detalları avtomatik tapır və qaraldır ki, sənəddə oxunmasın."
+sanitize = "Fayldan gizli JavaScript-i silir ki, kimsə onu açanda heç nə avtomatik işləməsin."
+watermark = "Hər səhifənin üzərinə görünən bir işarə (məs., \"Confidential\") qoyur."
 
 [policies.wizard]
 allDocTypesDescription = "Enable the Classification policy to filter by document type."
@@ -8027,6 +8071,8 @@ zoomIn = "Böyüt"
 zoomOut = "Kiçilt"
 
 [viewer.attachments]
+addAttachment = "Qoşma əlavə et"
+close = "Qoşmaları bağla"
 empty = "Bu sənəddə qoşma yoxdur"
 loading = "Qoşmalar yüklənir..."
 noDocument = "Qoşmalarını görmək üçün PDF açın."
@@ -8044,6 +8090,7 @@ cancelClearAll = "Ləğv et"
 clearAll = "Bütün şərhləri təmizlə"
 clearAllDescription = "Bu, yan paneldən şərhləri və cavabları silir, lakin sənəddə bağlı anotasiyaları saxlayır."
 clearAllTitle = "Bütün şərhlər təmizlənsin?"
+close = "Şərhləri bağla"
 deleteAnnotationAndComment = "Annotasiya və şərhi sil"
 deleteDescription = "Bu annotasiyaya qoşulmuş şərh var. Annotasiyanı saxlayaraq yalnız şərhi yan paneldən silə və ya hər ikisini silə bilərsiniz."
 deleteTitle = "Annotasiyanı şərhlərdən silək?"
@@ -8054,6 +8101,7 @@ moreActions = "Daha çox əməl"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
 pageLabel = "Səhifə {{page}}"
+placingHint = "Yerləşdirmək üçün bir səhifəyə klikləyin… (ləğv et)"
 removeCommentOnly = "Yalnız şərhi sil"
 saveReply = "Cavabı saxla"
 title = "Şərhlər"

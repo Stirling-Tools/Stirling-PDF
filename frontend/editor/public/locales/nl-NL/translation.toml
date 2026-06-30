@@ -5886,6 +5886,17 @@ successMessage = "Uw licentie is met succes geactiveerd. U kunt dit venster nu s
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
 deleteConfirmTitle = "Delete {{label}} policy?"
 
+[policies.activity]
+enforced = "afgedwongen"
+enforcing = "Bezig met afdwingen..."
+failed = "Afdwingen mislukt"
+outputsUnavailable = "Beleidsuitvoer is niet langer beschikbaar om te downloaden."
+partialOutputsUnavailable = "Sommige beleidsuitvoer is niet langer beschikbaar om te downloaden."
+retrying = "Bezig, opnieuw proberen..."
+runNotFound = "De afdwingingsuitvoering kon niet meer worden gevonden."
+step = "stap {{current}}/{{total}}"
+timedOut = "Time-out bij afdwingen voordat de uitvoering kon worden voltooid."
+
 [policies.catalog]
 compliance = "Compliance"
 ingestion = "Ingestion"
@@ -5914,12 +5925,40 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
+[policies.enforcement]
+applying = "Bezig met toepassen van {{names}}"
+applyingProgress = "Bezig met toepassen van {{names}} ({{done}} van {{total}})"
+exportFailureBody = "Beveiligingsbeleid kon niet worden toegepast. Bestanden zijn ongewijzigd geëxporteerd."
+exportFailureTitle = "Geëxporteerd zonder afdwinging"
+failureBody = "{{failures}} van {{total}} bestand(en) konden niet worden verwerkt en zijn ongewijzigd geëxporteerd."
+failureTitle = "Geëxporteerd zonder volledige afdwinging"
+printPolicyAppliedBody = "Deze PDF is bijgewerkt om aan een beleid te voldoen. Controleer de wijzigingen en druk vervolgens opnieuw af."
+printPolicyAppliedTitle = "Beleid toegepast vóór het afdrukken"
+queued = "+{{count}} in wachtrij"
+successTitle = "{{names}} toegepast"
+summaryMore = "{{first}}, {{second}} en nog {{more}}"
+summaryTwo = "{{first}} en {{second}}"
+
+[policies.enforcement.triggerVerb]
+convert = "Afdwingen vóór converteren"
+default = "Afdwingen"
+export = "Afdwingen vóór exporteren"
+input = "Afdwingen bij importeren"
+print = "Afdwingen vóór afdrukken"
+
 [policies.fields]
 selectedCount = "{{count}} selected"
 
 [policies.pii]
+account = "Rekeningnummers (gelabeld)"
+card = "Credit-/debetkaarten"
+email = "E-mailadressen"
 fieldLabel = "PII to redact"
+iban = "IBAN's"
+phone = "Telefoonnummers"
 placeholder = "Select PII types"
+routing = "US-routingnummers (ABA)"
+ssn = "Social Security-nummers"
 
 [policies.sidebar]
 activeCount = "{{count}} active"
@@ -5941,6 +5980,11 @@ setup = "Set up"
 [policies.toolConfig]
 enableAriaLabel = "Enable {{tool}}"
 infoAriaLabel = "What does {{tool}} do?"
+
+[policies.toolConfig.info]
+redact = "Zoekt automatisch gevoelige gegevens en maakt ze zwart — zoals Social Security- en kaartnummers — zodat ze niet in het document kunnen worden gelezen."
+sanitize = "Verwijdert verborgen JavaScript uit het bestand, zodat er niets automatisch wordt uitgevoerd wanneer iemand het opent."
+watermark = "Plaatst een zichtbaar merkteken (bijv. \"Confidential\") over elke pagina."
 
 [policies.wizard]
 allDocTypesDescription = "Enable the Classification policy to filter by document type."
@@ -8027,6 +8071,8 @@ zoomIn = "Inzoomen"
 zoomOut = "Uitzoomen"
 
 [viewer.attachments]
+addAttachment = "Bijlage toevoegen"
+close = "Bijlagen sluiten"
 empty = "Geen bijlagen in dit document"
 loading = "Bijlagen laden..."
 noDocument = "Open een PDF om de bijlagen te bekijken."
@@ -8044,6 +8090,7 @@ cancelClearAll = "Annuleren"
 clearAll = "Alle opmerkingen wissen"
 clearAllDescription = "Hiermee verwijdert u opmerkingen en antwoorden uit de zijbalk, terwijl gekoppelde annotaties in het document behouden blijven."
 clearAllTitle = "Alle opmerkingen wissen?"
+close = "Opmerkingen sluiten"
 deleteAnnotationAndComment = "Annotatie en opmerking verwijderen"
 deleteDescription = "Deze annotatie heeft een opmerking gekoppeld. Je kunt alleen de opmerking uit de zijbalk verwijderen en de annotatie behouden, of alles verwijderen."
 deleteTitle = "Annotatie uit opmerkingen verwijderen?"
@@ -8054,6 +8101,7 @@ moreActions = "Meer acties"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
 pageLabel = "Pagina {{page}}"
+placingHint = "Klik op een pagina om te plaatsen… (annuleren)"
 removeCommentOnly = "Alleen opmerking verwijderen"
 saveReply = "Antwoord opslaan"
 title = "Opmerkingen"

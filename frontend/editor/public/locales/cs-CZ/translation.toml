@@ -5886,6 +5886,17 @@ successMessage = "Your license has been successfully activated. You can now clos
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
 deleteConfirmTitle = "Delete {{label}} policy?"
 
+[policies.activity]
+enforced = "vynuceno"
+enforcing = "Probíhá vynucování..."
+failed = "Vynucení selhalo"
+outputsUnavailable = "Výstupy zásad již nejsou k dispozici ke stažení."
+partialOutputsUnavailable = "Některé výstupy zásad již nejsou k dispozici ke stažení."
+retrying = "Zaneprázdněno, opakuji..."
+runNotFound = "Běh vynucení již nelze najít."
+step = "krok {{current}}/{{total}}"
+timedOut = "Časový limit vynucení vypršel dříve, než se běh mohl dokončit."
+
 [policies.catalog]
 compliance = "Compliance"
 ingestion = "Ingestion"
@@ -5914,12 +5925,40 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
+[policies.enforcement]
+applying = "Probíhá použití {{names}}"
+applyingProgress = "Probíhá použití {{names}} ({{done}} z {{total}})"
+exportFailureBody = "Zásady zabezpečení se nepodařilo použít. Soubory byly exportovány beze změny."
+exportFailureTitle = "Exportováno bez vynucení"
+failureBody = "{{failures}} z {{total}} souborů se nepodařilo zpracovat a byly exportovány beze změny."
+failureTitle = "Exportováno bez úplného vynucení"
+printPolicyAppliedBody = "Tento soubor PDF byl upraven tak, aby vyhověl zásadě. Zkontrolujte změny a poté znovu vytiskněte."
+printPolicyAppliedTitle = "Zásada použita před tiskem"
+queued = "+{{count}} ve frontě"
+successTitle = "{{names}} použito"
+summaryMore = "{{first}}, {{second}} a dalších {{more}}"
+summaryTwo = "{{first}} a {{second}}"
+
+[policies.enforcement.triggerVerb]
+convert = "Vynucování před převodem"
+default = "Vynucování"
+export = "Vynucování před exportem"
+input = "Vynucování při importu"
+print = "Vynucování před tiskem"
+
 [policies.fields]
 selectedCount = "{{count}} selected"
 
 [policies.pii]
+account = "Čísla účtů (označená)"
+card = "Kreditní / debetní karty"
+email = "E-mailové adresy"
 fieldLabel = "PII to redact"
+iban = "IBANy"
+phone = "Telefonní čísla"
 placeholder = "Select PII types"
+routing = "Směrovací čísla v USA (ABA)"
+ssn = "Čísla sociálního zabezpečení"
 
 [policies.sidebar]
 activeCount = "{{count}} active"
@@ -5941,6 +5980,11 @@ setup = "Set up"
 [policies.toolConfig]
 enableAriaLabel = "Enable {{tool}}"
 infoAriaLabel = "What does {{tool}} do?"
+
+[policies.toolConfig.info]
+redact = "Automaticky najde a začerní citlivé údaje — například čísla sociálního zabezpečení a karet — aby je v dokumentu nešlo přečíst."
+sanitize = "Odstraní skrytý JavaScript ze souboru, aby se při otevření někým nic nespouštělo automaticky."
+watermark = "Označí viditelnou značkou (např. \"Důvěrné\") přes každou stránku."
 
 [policies.wizard]
 allDocTypesDescription = "Enable the Classification policy to filter by document type."
@@ -8027,6 +8071,8 @@ zoomIn = "Přiblížit"
 zoomOut = "Oddálit"
 
 [viewer.attachments]
+addAttachment = "Přidat přílohu"
+close = "Zavřít přílohy"
 empty = "Tento dokument neobsahuje žádné přílohy"
 loading = "Načítání příloh..."
 noDocument = "Otevřete PDF a zobrazte jeho přílohy."
@@ -8044,6 +8090,7 @@ cancelClearAll = "Zrušit"
 clearAll = "Vymazat všechny komentáře"
 clearAllDescription = "Tímto odstraníte komentáře a odpovědi z postranního panelu, připojené anotace však v dokumentu zůstanou."
 clearAllTitle = "Vymazat všechny komentáře?"
+close = "Zavřít komentáře"
 deleteAnnotationAndComment = "Smazat anotaci i komentář"
 deleteDescription = "Tato anotace má připojený komentář. Můžete odebrat pouze komentář z postranního panelu a ponechat anotaci, nebo vše smazat."
 deleteTitle = "Odebrat anotaci z komentářů?"
@@ -8054,6 +8101,7 @@ moreActions = "Další akce"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
 pageLabel = "Stránka {{page}}"
+placingHint = "Klikněte na stránku pro umístění… (zrušit)"
 removeCommentOnly = "Odebrat pouze komentář"
 saveReply = "Uložit odpověď"
 title = "Komentáře"

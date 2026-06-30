@@ -5886,6 +5886,17 @@ successMessage = "Vaša licencia bola úspešne aktivovaná. Teraz môžete toto
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
 deleteConfirmTitle = "Delete {{label}} policy?"
 
+[policies.activity]
+enforced = "vynútené"
+enforcing = "Prebieha vynucovanie..."
+failed = "Vynucovanie zlyhalo"
+outputsUnavailable = "Výstupy zásad už nie sú dostupné na stiahnutie."
+partialOutputsUnavailable = "Niektoré výstupy zásad už nie sú dostupné na stiahnutie."
+retrying = "Zaneprázdnené, skúšam znova..."
+runNotFound = "Spustenie vynucovania sa už nedá nájsť."
+step = "krok {{current}}/{{total}}"
+timedOut = "Časový limit vynucovania vypršal skôr, než sa spustenie dokončilo."
+
 [policies.catalog]
 compliance = "Compliance"
 ingestion = "Ingestion"
@@ -5914,12 +5925,40 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
+[policies.enforcement]
+applying = "Uplatňuje sa {{names}}"
+applyingProgress = "Uplatňuje sa {{names}} ({{done}} z {{total}})"
+exportFailureBody = "Zásady zabezpečenia sa nepodarilo uplatniť. Súbory boli exportované tak, ako sú."
+exportFailureTitle = "Exportované bez vynucovania"
+failureBody = "{{failures}} z {{total}} súborov nebolo možné spracovať a boli exportované tak, ako sú."
+failureTitle = "Exportované bez úplného vynucovania"
+printPolicyAppliedBody = "Tento PDF súbor bol upravený, aby spĺňal zásadu. Skontrolujte zmeny a potom vytlačte znova."
+printPolicyAppliedTitle = "Zásada uplatnená pred tlačou"
+queued = "+{{count}} v poradí"
+successTitle = "{{names}} uplatnené"
+summaryMore = "{{first}}, {{second}} a ďalších {{more}}"
+summaryTwo = "{{first}} a {{second}}"
+
+[policies.enforcement.triggerVerb]
+convert = "Vynucovanie pred konverziou"
+default = "Vynucovanie"
+export = "Vynucovanie pred exportom"
+input = "Vynucovanie pri importe"
+print = "Vynucovanie pred tlačou"
+
 [policies.fields]
 selectedCount = "{{count}} selected"
 
 [policies.pii]
+account = "Čísla účtov (označené)"
+card = "Kreditné/debetné karty"
+email = "E-mailové adresy"
 fieldLabel = "PII to redact"
+iban = "IBANy"
+phone = "Telefónne čísla"
 placeholder = "Select PII types"
+routing = "US smerovacie čísla (ABA)"
+ssn = "Čísla sociálneho zabezpečenia"
 
 [policies.sidebar]
 activeCount = "{{count}} active"
@@ -5941,6 +5980,11 @@ setup = "Set up"
 [policies.toolConfig]
 enableAriaLabel = "Enable {{tool}}"
 infoAriaLabel = "What does {{tool}} do?"
+
+[policies.toolConfig.info]
+redact = "Automaticky nájde a zatemní citlivé údaje — napríklad čísla sociálneho zabezpečenia a čísla kariet — aby nebolo možné ich v dokumente prečítať."
+sanitize = "Odstráni skrytý JavaScript zo súboru, aby sa pri otvorení nič nespúšťalo automaticky."
+watermark = "Vloží viditeľnú značku (napr. „Dôverné“) na každú stranu."
 
 [policies.wizard]
 allDocTypesDescription = "Enable the Classification policy to filter by document type."
@@ -8027,6 +8071,8 @@ zoomIn = "Priblížiť"
 zoomOut = "Oddialiť"
 
 [viewer.attachments]
+addAttachment = "Pridať prílohu"
+close = "Zavrieť prílohy"
 empty = "Tento dokument neobsahuje žiadne prílohy"
 loading = "Načítavajú sa prílohy..."
 noDocument = "Otvorte PDF, aby ste videli jeho prílohy."
@@ -8044,6 +8090,7 @@ cancelClearAll = "Zrušiť"
 clearAll = "Vymazať všetky komentáre"
 clearAllDescription = "Týmto odstránite komentáre a odpovede z bočného panela, pričom pripojené anotácie zostanú v dokumente zachované."
 clearAllTitle = "Vymazať všetky komentáre?"
+close = "Zavrieť komentáre"
 deleteAnnotationAndComment = "Odstrániť anotáciu aj komentár"
 deleteDescription = "Táto anotácia má pripojený komentár. Môžete odstrániť iba komentár z bočného panela a ponechať anotáciu, alebo vymazať všetko."
 deleteTitle = "Odstrániť anotáciu z komentárov?"
@@ -8054,6 +8101,7 @@ moreActions = "Ďalšie akcie"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
 pageLabel = "Strana {{page}}"
+placingHint = "Kliknite na stránku a umiestnite… (zrušiť)"
 removeCommentOnly = "Odstrániť iba komentár"
 saveReply = "Uložiť odpoveď"
 title = "Komentáre"

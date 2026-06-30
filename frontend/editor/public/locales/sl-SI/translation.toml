@@ -5886,6 +5886,17 @@ successMessage = "Vaša licenca je bila uspešno aktivirana. To okno lahko zapre
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
 deleteConfirmTitle = "Delete {{label}} policy?"
 
+[policies.activity]
+enforced = "uveljavljeno"
+enforcing = "Uveljavljanje..."
+failed = "Uveljavljanje ni uspelo"
+outputsUnavailable = "Rezultati politike niso več na voljo za prenos."
+partialOutputsUnavailable = "Nekateri rezultati politike niso več na voljo za prenos."
+retrying = "Zasedeno, ponovno poskušam..."
+runNotFound = "Izvedbe uveljavljanja ni bilo več mogoče najti."
+step = "korak {{current}}/{{total}}"
+timedOut = "Čas za uveljavljanje je potekel, preden se je izvajanje zaključilo."
+
 [policies.catalog]
 compliance = "Compliance"
 ingestion = "Ingestion"
@@ -5914,12 +5925,40 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
+[policies.enforcement]
+applying = "Uveljavljanje {{names}}"
+applyingProgress = "Uveljavljanje {{names}} ({{done}} od {{total}})"
+exportFailureBody = "Varnostnih politik ni bilo mogoče uveljaviti. Datoteke so bile izvožene takšne, kot so."
+exportFailureTitle = "Izvoženo brez uveljavljanja"
+failureBody = "{{failures}} od {{total}} datotek ni bilo mogoče obdelati in so bile izvožene takšne, kot so."
+failureTitle = "Izvoženo brez popolnega uveljavljanja"
+printPolicyAppliedBody = "Ta PDF je bil posodobljen, da ustreza politiki. Preglejte spremembe, nato znova natisnite."
+printPolicyAppliedTitle = "Politika uveljavljena pred tiskanjem"
+queued = "+{{count}} v čakalni vrsti"
+successTitle = "{{names}} uveljavljeno"
+summaryMore = "{{first}}, {{second}} in še {{more}}"
+summaryTwo = "{{first}} in {{second}}"
+
+[policies.enforcement.triggerVerb]
+convert = "Uveljavljanje pred pretvorbo"
+default = "Uveljavljanje"
+export = "Uveljavljanje pred izvozom"
+input = "Uveljavljanje ob uvozu"
+print = "Uveljavljanje pred tiskanjem"
+
 [policies.fields]
 selectedCount = "{{count}} selected"
 
 [policies.pii]
+account = "Številke računov (označene)"
+card = "Kreditne / debetne kartice"
+email = "E-poštni naslovi"
 fieldLabel = "PII to redact"
+iban = "IBAN-i"
+phone = "Telefonske številke"
 placeholder = "Select PII types"
+routing = "Ameriške bančne usmerjevalne številke (ABA)"
+ssn = "Številke socialnega zavarovanja"
 
 [policies.sidebar]
 activeCount = "{{count}} active"
@@ -5941,6 +5980,11 @@ setup = "Set up"
 [policies.toolConfig]
 enableAriaLabel = "Enable {{tool}}"
 infoAriaLabel = "What does {{tool}} do?"
+
+[policies.toolConfig.info]
+redact = "Samodejno najde in prečrni občutljive podatke — kot so številke socialnega zavarovanja in kartic — tako da jih v dokumentu ni mogoče prebrati."
+sanitize = "Odstrani skriti JavaScript iz datoteke, tako da se ob odprtju nič ne zažene samodejno, ko jo nekdo odpre."
+watermark = "Odtisne viden znak (npr. \"Zaupno\") čez vsako stran."
 
 [policies.wizard]
 allDocTypesDescription = "Enable the Classification policy to filter by document type."
@@ -8027,6 +8071,8 @@ zoomIn = "Povečaj"
 zoomOut = "Pomanjšaj"
 
 [viewer.attachments]
+addAttachment = "Dodaj prilogo"
+close = "Zapri priloge"
 empty = "Ta dokument ne vsebuje prilog"
 loading = "Nalaganje prilog..."
 noDocument = "Odprite PDF, da si ogledate njegove priloge."
@@ -8044,6 +8090,7 @@ cancelClearAll = "Prekliči"
 clearAll = "Počisti vse komentarje"
 clearAllDescription = "To odstrani komentarje in odgovore iz stranske vrstice, pri čemer ohrani vse priložene anotacije v dokumentu."
 clearAllTitle = "Počistiti vse komentarje?"
+close = "Zapri komentarje"
 deleteAnnotationAndComment = "Izbriši pripombo in komentar"
 deleteDescription = "Ta pripomba ima priložen komentar. Iz stranske vrstice lahko odstranite samo komentar in ohranite pripombo ali pa izbrišete vse."
 deleteTitle = "Odstraniti pripombo iz komentarjev?"
@@ -8054,6 +8101,7 @@ moreActions = "Več dejanj"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
 pageLabel = "Stran {{page}}"
+placingHint = "Kliknite stran za postavitev… (prekliči)"
 removeCommentOnly = "Odstrani samo komentar"
 saveReply = "Shrani odgovor"
 title = "Komentarji"

@@ -5886,6 +5886,17 @@ successMessage = "Twoja licencja została pomyślnie aktywowana. Możesz zamkną
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
 deleteConfirmTitle = "Delete {{label}} policy?"
 
+[policies.activity]
+enforced = "wyegzekwowano"
+enforcing = "Egzekwowanie..."
+failed = "Egzekwowanie nie powiodło się"
+outputsUnavailable = "Wyniki polityki nie są już dostępne do pobrania."
+partialOutputsUnavailable = "Niektóre wyniki polityki nie są już dostępne do pobrania."
+retrying = "Zajęte, ponawianie próby..."
+runNotFound = "Nie można już znaleźć przebiegu egzekwowania."
+step = "krok {{current}}/{{total}}"
+timedOut = "Upłynął limit czasu egzekwowania, zanim przebieg mógł się zakończyć."
+
 [policies.catalog]
 compliance = "Compliance"
 ingestion = "Ingestion"
@@ -5914,12 +5925,40 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
+[policies.enforcement]
+applying = "Stosowanie {{names}}"
+applyingProgress = "Stosowanie {{names}} ({{done}} z {{total}})"
+exportFailureBody = "Nie udało się zastosować polityk bezpieczeństwa. Pliki wyeksportowano bez zmian."
+exportFailureTitle = "Wyeksportowano bez egzekwowania"
+failureBody = "{{failures}} z {{total}} plików nie można było przetworzyć i wyeksportowano je bez zmian."
+failureTitle = "Wyeksportowano bez pełnego egzekwowania"
+printPolicyAppliedBody = "Ten PDF został zaktualizowany, aby był zgodny z polityką. Sprawdź zmiany, a następnie wydrukuj ponownie."
+printPolicyAppliedTitle = "Politykę zastosowano przed drukowaniem"
+queued = "+{{count}} w kolejce"
+successTitle = "{{names}} zastosowano"
+summaryMore = "{{first}}, {{second}} i {{more}} więcej"
+summaryTwo = "{{first}} i {{second}}"
+
+[policies.enforcement.triggerVerb]
+convert = "Egzekwowanie przed konwersją"
+default = "Egzekwowanie"
+export = "Egzekwowanie przed eksportem"
+input = "Egzekwowanie przy imporcie"
+print = "Egzekwowanie przed drukowaniem"
+
 [policies.fields]
 selectedCount = "{{count}} selected"
 
 [policies.pii]
+account = "Numery kont (oznaczone)"
+card = "Karty kredytowe/debetowe"
+email = "Adresy e-mail"
 fieldLabel = "PII to redact"
+iban = "Numery IBAN"
+phone = "Numery telefonów"
 placeholder = "Select PII types"
+routing = "Numery routingu w USA (ABA)"
+ssn = "Numery Social Security"
 
 [policies.sidebar]
 activeCount = "{{count}} active"
@@ -5941,6 +5980,11 @@ setup = "Set up"
 [policies.toolConfig]
 enableAriaLabel = "Enable {{tool}}"
 infoAriaLabel = "What does {{tool}} do?"
+
+[policies.toolConfig.info]
+redact = "Automatycznie znajduje i zaczernia wrażliwe dane — takie jak numery Social Security i kart — aby nie można ich było odczytać w dokumencie."
+sanitize = "Usuwa ukryty JavaScript z pliku, aby nic nie uruchamiało się automatycznie po jego otwarciu."
+watermark = "Umieszcza widoczny znak (np. \"Poufne\") na każdej stronie."
 
 [policies.wizard]
 allDocTypesDescription = "Enable the Classification policy to filter by document type."
@@ -8027,6 +8071,8 @@ zoomIn = "Powiększ"
 zoomOut = "Pomniejsz"
 
 [viewer.attachments]
+addAttachment = "Dodaj załącznik"
+close = "Zamknij załączniki"
 empty = "Brak załączników w tym dokumencie"
 loading = "Wczytywanie załączników..."
 noDocument = "Otwórz plik PDF, aby wyświetlić jego załączniki."
@@ -8044,6 +8090,7 @@ cancelClearAll = "Anuluj"
 clearAll = "Wyczyść wszystkie komentarze"
 clearAllDescription = "Spowoduje to usunięcie komentarzy i odpowiedzi z panelu bocznego, przy jednoczesnym zachowaniu wszelkich powiązanych adnotacji w dokumencie."
 clearAllTitle = "Wyczyścić wszystkie komentarze?"
+close = "Zamknij komentarze"
 deleteAnnotationAndComment = "Usuń adnotację i komentarz"
 deleteDescription = "Ta adnotacja ma dołączony komentarz. Możesz usunąć sam komentarz z panelu bocznego, pozostawiając adnotację, lub usunąć wszystko."
 deleteTitle = "Usunąć adnotację z komentarzy?"
@@ -8054,6 +8101,7 @@ moreActions = "Więcej działań"
 nComments_one = "{{count}} comment"
 nComments_other = "{{count}} comments"
 pageLabel = "Strona {{page}}"
+placingHint = "Kliknij stronę, aby umieścić… (anuluj)"
 removeCommentOnly = "Usuń tylko komentarz"
 saveReply = "Zapisz odpowiedź"
 title = "Komentarze"
