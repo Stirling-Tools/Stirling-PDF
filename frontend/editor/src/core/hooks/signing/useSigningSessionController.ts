@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import apiClient from "@app/services/apiClient";
 import { alert } from "@app/components/toast";
@@ -103,6 +103,10 @@ export function useSigningSessionController(enabled: boolean) {
   const [requestData, setRequestData] = useState<SigningRequestData | null>(
     null,
   );
+  // The session currently shown in the detail view. A refresh checks this at
+  // resolve time so a request dispatched before navigation is discarded rather
+  // than painting its data onto whatever is now on screen.
+  const openDetailSessionIdRef = useRef<string | null>(null);
 
   // Leaving the tool (panel unmounts) must not leave the signing document and
   // overlays lingering on the shared viewer.
@@ -111,6 +115,7 @@ export function useSigningSessionController(enabled: boolean) {
   }, [setOverlay]);
 
   const backToList = useCallback(() => {
+    openDetailSessionIdRef.current = null;
     setOverlay(null);
     setDetailData(null);
     setRequestData(null);
@@ -203,15 +208,10 @@ export function useSigningSessionController(enabled: boolean) {
     );
     const session = response.data;
     markSessionSeen(session.sessionId, countSignedParticipants(session));
-    // A refresh dispatched before navigation can resolve after the user has
-    // moved to another session sharing the overlay. Only apply if this session
-    // is still the one on screen, so we never paint its data onto another doc.
-    let isCurrent = false;
-    setDetailData((prev) => {
-      isCurrent = prev?.session.sessionId === session.sessionId;
-      return isCurrent ? { ...prev!, session } : prev;
-    });
-    if (!isCurrent) return;
+    // Discard a refresh that resolves after the user navigated away, so we
+    // never paint this session's data onto another document.
+    if (openDetailSessionIdRef.current !== session.sessionId) return;
+    setDetailData((prev) => (prev ? { ...prev, session } : prev));
     // Keep the read-only overlay in sync as participants sign.
     setOverlay((prev) =>
       prev
@@ -283,6 +283,8 @@ export function useSigningSessionController(enabled: boolean) {
         detailResponse.data.myStatus === "NOTIFIED" ||
         detailResponse.data.myStatus === "VIEWED";
 
+      // Leaving the detail view: stop any in-flight detail refresh from applying.
+      openDetailSessionIdRef.current = null;
       // Seed the viewer with the document immediately; the request panel enriches
       // the overlay with interactive placement props once it mounts.
       setOverlay({ file: pdfFile });
@@ -361,6 +363,7 @@ export function useSigningSessionController(enabled: boolean) {
         }
       }
 
+      openDetailSessionIdRef.current = session.sessionId;
       setOverlay({
         file: pdfFile,
         signaturePreviews: computeWetSignaturePreviews(detailResponse.data),
