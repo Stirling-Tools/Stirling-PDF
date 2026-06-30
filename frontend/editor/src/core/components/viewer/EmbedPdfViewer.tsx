@@ -26,6 +26,10 @@ import {
 import { useSignature } from "@app/contexts/SignatureContext";
 import { useRedaction } from "@app/contexts/RedactionContext";
 import type { RedactionPendingTrackerAPI } from "@app/components/viewer/RedactionPendingTracker";
+import type {
+  SignaturePreview,
+  SignatureOverlayAPI,
+} from "@app/components/viewer/viewerTypes";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
 import { isStirlingFile, getFormFillFileId } from "@app/types/fileContext";
 import { useViewerWorkbenchBarButtons } from "@app/components/viewer/useViewerWorkbenchBarButtons";
@@ -41,6 +45,7 @@ import { useWheelZoom } from "@app/hooks/useWheelZoom";
 import { useFormFill } from "@app/tools/formFill/FormFillContext";
 import { FormSaveBar } from "@app/tools/formFill/FormSaveBar";
 import { useViewerKeyCommand } from "@app/hooks/useViewerKeyCommand";
+import { alert } from "@app/components/toast";
 
 // ─── Measure dictionary extraction ────────────────────────────────────────────
 
@@ -140,6 +145,14 @@ export interface EmbedPdfViewerProps {
   setSidebarsVisible: (v: boolean) => void;
   onClose?: () => void;
   previewFile?: File | null;
+  // ── Signature overlay pass-through (opt-in; all default off) ──────────────
+  signaturePreviews?: SignaturePreview[];
+  signaturePreviewsReadOnly?: boolean;
+  signaturePlacementMode?: boolean;
+  signaturePlacementData?: string;
+  signaturePlacementType?: "canvas" | "image" | "text";
+  onSignaturePreviewsChange?: (previews: SignaturePreview[]) => void;
+  signatureOverlayApiRef?: React.RefObject<SignatureOverlayAPI | null>;
 }
 
 const EmbedPdfViewerContent = ({
@@ -147,6 +160,13 @@ const EmbedPdfViewerContent = ({
   setSidebarsVisible: _setSidebarsVisible,
   onClose,
   previewFile,
+  signaturePreviews,
+  signaturePreviewsReadOnly,
+  signaturePlacementMode,
+  signaturePlacementData,
+  signaturePlacementType,
+  onSignaturePreviewsChange,
+  signatureOverlayApiRef,
 }: EmbedPdfViewerProps) => {
   const { t } = useTranslation();
   const viewerRef = React.useRef<HTMLDivElement>(null);
@@ -173,6 +193,7 @@ const EmbedPdfViewerContent = ({
     isAnnotationsVisible,
     exportActions,
     printActions,
+    selectionActions,
     setApplyChanges,
     applyChanges: viewerApplyChanges,
     pdfRenderMode,
@@ -209,6 +230,10 @@ const EmbedPdfViewerContent = ({
   // This is our source of truth for navigation guards; it is set when the
   // annotation history changes, and cleared after we successfully apply changes.
   const hasAnnotationChangesRef = useRef(false);
+  // EmbedPDF can emit once from the saved undo stack before the saved file remounts.
+  // Ignore that stale update without suppressing future edits on the same instance.
+  const savedAnnotationHistoryApiRef =
+    useRef<typeof historyApiRef.current>(null);
 
   // Scroll position preservation system
   // We continuously track the last known good scroll position, so we always have it available
@@ -222,6 +247,7 @@ const EmbedPdfViewerContent = ({
   const rotationRestoreAttemptsRef = useRef<number>(0);
 
   const formApplyInProgressRef = useRef(false);
+  const applyChangesInFlightRef = useRef<Promise<void> | null>(null);
 
   // Get redaction context
   const { redactionsApplied, setRedactionsApplied } = useRedaction();
@@ -442,6 +468,17 @@ const EmbedPdfViewerContent = ({
                 event.preventDefault();
                 printActions.print();
                 return;
+              case "a":
+              case "A":
+                // Intercept unconditionally so the browser can't blanket-select the surrounding UI chrome.
+                event.preventDefault();
+                {
+                  const totalPages = getScrollState().totalPages;
+                  if (totalPages > 0) {
+                    void selectionActions.selectAll(totalPages);
+                  }
+                }
+                return;
               case "=":
               case "+":
                 event.preventDefault();
@@ -469,11 +506,6 @@ const EmbedPdfViewerContent = ({
       // Modifier key shortcuts (Ctrl/Cmd + key)
       if (mod) {
         switch (event.key) {
-          case "a":
-          case "A":
-            // Ctrl+A: Prevent browser from selecting all UI text
-            event.preventDefault();
-            return;
           case "f":
           case "F":
             event.preventDefault();
@@ -558,6 +590,8 @@ const EmbedPdfViewerContent = ({
     viewerApplyChanges,
     cyclePdfRenderMode,
     viewerKeyCommand,
+    selectionActions,
+    getScrollState,
   ]);
 
   // Watch the annotation history API to detect when the document becomes "dirty".
@@ -570,6 +604,11 @@ const EmbedPdfViewerContent = ({
     }
 
     const updateHasChanges = () => {
+      if (savedAnnotationHistoryApiRef.current === historyApi) {
+        savedAnnotationHistoryApiRef.current = null;
+        return;
+      }
+
       const canUndo = historyApi.canUndo?.() ?? false;
       if (!hasAnnotationChangesRef.current && canUndo) {
         hasAnnotationChangesRef.current = true;
@@ -623,9 +662,13 @@ const EmbedPdfViewerContent = ({
 
   // Save changes - save annotations and redactions to file (overwrites active file)
   const applyChanges = useCallback(async () => {
+    if (applyChangesInFlightRef.current) {
+      return applyChangesInFlightRef.current;
+    }
+
     if (!currentFile || activeFileIds.length === 0) return;
 
-    try {
+    const saveChanges = async () => {
       console.log(
         "[Viewer] Applying changes - exporting PDF with annotations/redactions",
       );
@@ -693,21 +736,45 @@ const EmbedPdfViewerContent = ({
       await actions.consumeFiles([currentFileId], stirlingFiles, stubs);
 
       // Mark annotations as saved so navigation away from the viewer is allowed.
+      savedAnnotationHistoryApiRef.current = historyApiRef.current;
       hasAnnotationChangesRef.current = false;
       setHasUnsavedChanges(false);
       setRedactionsApplied(false);
-    } catch (error) {
-      console.error("Apply changes failed:", error);
-    }
+    };
+
+    const savePromise = saveChanges()
+      .catch((error) => {
+        console.error("Apply changes failed:", error);
+        alert({
+          title: t("viewer.saveChangesErrorTitle", "Could not save changes"),
+          body:
+            error instanceof Error && error.message
+              ? error.message
+              : t(
+                  "viewer.saveChangesErrorBody",
+                  "The document could not be saved. Try again.",
+                ),
+          alertType: "error",
+        });
+        throw error;
+      })
+      .finally(() => {
+        applyChangesInFlightRef.current = null;
+      });
+
+    applyChangesInFlightRef.current = savePromise;
+    return savePromise;
   }, [
     currentFile,
     activeFiles,
     exportActions,
     actions,
     selectors,
+    historyApiRef,
     setHasUnsavedChanges,
     setRedactionsApplied,
     rotationState.rotation,
+    t,
   ]);
 
   // Apply form fill changes - reload the filled PDF into the viewer
@@ -1253,6 +1320,13 @@ const EmbedPdfViewerContent = ({
                 // Handle signature added - for debugging, enable console logs as needed
                 // Future: Handle signature completion
               }}
+              signaturePreviews={signaturePreviews}
+              signaturePreviewsReadOnly={signaturePreviewsReadOnly}
+              signaturePlacementMode={signaturePlacementMode}
+              signaturePlacementData={signaturePlacementData}
+              signaturePlacementType={signaturePlacementType}
+              onSignaturePreviewsChange={onSignaturePreviewsChange}
+              signatureOverlayApiRef={signatureOverlayApiRef}
             />
             {/* Floating save bar for form-filled PDFs (like Chrome/Firefox PDF viewers) */}
             <FormSaveBar

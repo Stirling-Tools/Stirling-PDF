@@ -243,6 +243,7 @@ function FileContextInner({
         skipAutoUnzip?: boolean;
         /** Persist to IDB without dispatching to workspace state. */
         skipWorkspaceDispatch?: boolean;
+        skipUploadTracking?: boolean;
       },
     ): Promise<StirlingFile[]> => {
       const stirlingFiles = await addFiles(
@@ -286,6 +287,7 @@ function FileContextInner({
           fileName: string,
         ) => Promise<boolean>;
         allowDuplicates?: boolean;
+        skipUploadTracking?: boolean;
       },
     ): Promise<StirlingFile[]> => {
       const stirlingFiles = await addFiles(

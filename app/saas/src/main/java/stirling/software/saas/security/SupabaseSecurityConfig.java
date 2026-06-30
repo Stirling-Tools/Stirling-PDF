@@ -10,6 +10,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,8 +24,10 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
@@ -44,9 +47,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.RequestUriUtils;
+import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
-import stirling.software.saas.service.CreditService;
+import stirling.software.saas.accountlink.DeviceCredentialAuthenticationFilter;
 import stirling.software.saas.service.SaasTeamService;
 import stirling.software.saas.service.SupabaseUserService;
 
@@ -63,7 +67,6 @@ public class SupabaseSecurityConfig {
     private final UserService userService;
     private final TeamService teamService;
     private final SupabaseUserService supabaseUserService;
-    private final CreditService creditService;
     private final SaasTeamService saasTeamService;
     private final ApplicationProperties applicationProperties;
 
@@ -79,7 +82,10 @@ public class SupabaseSecurityConfig {
     private long clockSkewSeconds;
 
     @Bean
-    SecurityFilterChain saasSecurityFilterChain(HttpSecurity http, JwtDecoder jwtDecoder)
+    SecurityFilterChain saasSecurityFilterChain(
+            HttpSecurity http,
+            JwtDecoder jwtDecoder,
+            ObjectProvider<DeviceCredentialAuthenticationFilter> deviceCredentialFilterProvider)
             throws Exception {
         // CSRF protection intentionally disabled: this chain is bearer-token only (Supabase JWT in
         // Authorization header / X-API-KEY) with SessionCreationPolicy.STATELESS, so there is no
@@ -118,7 +124,6 @@ public class SupabaseSecurityConfig {
                                 teamService,
                                 userService,
                                 supabaseUserService,
-                                creditService,
                                 saasTeamService,
                                 jwtDecoder),
                         BearerTokenAuthenticationFilter.class)
@@ -135,6 +140,16 @@ public class SupabaseSecurityConfig {
                                                         .jwtAuthenticationConverter(
                                                                 SupabaseSecurityConfig
                                                                         ::toAuthentication)));
+
+        // Device-credential auth for linked self-hosted instances (combined-billing Mode A).
+        // The filter bean exists only when stirling.billing.account-link.enabled=true; when off it
+        // is absent here, so the instance surface cannot authenticate at all until release.
+        DeviceCredentialAuthenticationFilter deviceFilter =
+                deviceCredentialFilterProvider.getIfAvailable();
+        if (deviceFilter != null) {
+            http.addFilterBefore(deviceFilter, BearerTokenAuthenticationFilter.class);
+        }
+
         return http.build();
     }
 
@@ -257,7 +272,7 @@ public class SupabaseSecurityConfig {
                 applicationProperties.getSystem() != null
                         && applicationProperties.getSystem().getCorsAllowedOrigins() != null
                         && !applicationProperties.getSystem().getCorsAllowedOrigins().isEmpty();
-        List<String> origins =
+        List<String> configuredOrigins =
                 operatorOverride
                         ? applicationProperties.getSystem().getCorsAllowedOrigins()
                         : List.of(
@@ -267,6 +282,18 @@ public class SupabaseSecurityConfig {
                                 "https://stirling.com",
                                 "https://app.stirling.com",
                                 "https://api.stirling.com");
+        // Always allow the desktop (Tauri) app's webview origins so the bundled
+        // desktop client can reach the cloud backend regardless of the operator's
+        // configured web origins. A browser can never present a tauri:// (or
+        // tauri.localhost) origin, so these are desktop-app identities — safe to
+        // allow alongside allowCredentials=true. Mirrors core WebMvcConfig.
+        List<String> origins = new ArrayList<>(configuredOrigins);
+        for (String desktopOrigin :
+                List.of("tauri://localhost", "http://tauri.localhost", "https://tauri.localhost")) {
+            if (!origins.contains(desktopOrigin)) {
+                origins.add(desktopOrigin);
+            }
+        }
         if (origins.stream().anyMatch(o -> o.contains("*"))) {
             log.warn(
                     "CORS origins contain a wildcard paired with allowCredentials=true: {}."
@@ -284,8 +311,9 @@ public class SupabaseSecurityConfig {
                         "X-Requested-With",
                         "Accept",
                         "Origin",
-                        "X-API-KEY"));
-        cfg.setExposedHeaders(List.of("WWW-Authenticate", "X-Credits-Remaining"));
+                        "X-API-KEY",
+                        "X-Browser-Id"));
+        cfg.setExposedHeaders(List.of("WWW-Authenticate"));
         cfg.setAllowCredentials(true);
         cfg.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -333,6 +361,16 @@ public class SupabaseSecurityConfig {
                             .map(GrantedAuthority::getAuthority)
                             .collect(Collectors.joining(",")));
         }
-        return new EnhancedJwtAuthenticationToken(jwt, authorities, email, supabaseId);
+        // BearerTokenAuthenticationFilter overwrites the context SupabaseAuthenticationFilter
+        // built; carry its resolved User across so instanceof-User authorization keeps working.
+        User user = null;
+        Authentication existing = SecurityContextHolder.getContext().getAuthentication();
+        if (existing instanceof EnhancedJwtAuthenticationToken enhanced
+                && supabaseId != null
+                && supabaseId.equals(enhanced.getSupabaseId())
+                && enhanced.getPrincipal() instanceof User existingUser) {
+            user = existingUser;
+        }
+        return new EnhancedJwtAuthenticationToken(jwt, authorities, email, supabaseId, user);
     }
 }

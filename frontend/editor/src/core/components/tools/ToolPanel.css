@@ -201,6 +201,13 @@
   border-color: var(--border-subtle) !important;
 }
 
+/* The collapse/expand toggle keeps a stable identity across the collapsed strip
+   and the expanded header, so a view transition translates it between the two
+   (same size) instead of cross-fading/scaling it ("big then small"). */
+.tool-panel__toggle-vt {
+  view-transition-name: sidebar-toggle;
+}
+
 .tool-panel__expand-btn svg {
   color: var(--text-secondary) !important;
 }
@@ -271,65 +278,20 @@
   width: 100%;
 }
 
-.tool-panel__active-tool-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex: 1 1 auto;
-  min-width: 0;
-  padding: 0.35rem 0.75rem 0.35rem 0.4rem;
-  border: 1px solid var(--border-subtle);
-  border-radius: 9999px;
-  background: var(--mantine-color-body);
+/* Search that separates the Policies section from the Tools list below it. */
+.tool-panel__between-search {
+  padding: 0.5rem 0.75rem 0.25rem;
+  border-top: 1px solid var(--border-subtle, var(--color-border));
 }
 
-.tool-panel__active-tool-pill-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  border-radius: 9999px;
-  background: var(--mantine-color-blue-light);
-  color: var(--mantine-color-blue-filled);
-  flex-shrink: 0;
+.tool-panel__between-search .search-input-container {
+  width: 100%;
+  margin-bottom: 0;
 }
 
-[data-mantine-color-scheme="dark"] .tool-panel__active-tool-pill-icon {
-  background: color-mix(
-    in srgb,
-    var(--mantine-color-blue-filled) 18%,
-    transparent
-  );
-  color: var(--mantine-color-blue-3, var(--mantine-color-blue-filled));
-}
-
-/* The inner .tool-button-icon wrapper carries its own transform/margin; reset
-   them so the icon glyph sits dead-centre in the circular background. */
-.tool-panel__active-tool-pill-icon .tool-button-icon {
-  margin: 0 !important;
-  transform: none !important;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-}
-
-.tool-panel__active-tool-pill-icon svg {
-  font-size: 1rem;
-  width: 1rem;
-  height: 1rem;
-}
-
-.tool-panel__active-tool-pill-label {
-  font-size: 0.9rem;
-  font-weight: 600;
-  flex: 1;
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  color: var(--text-primary);
+/* Slightly recessed search field so it reads as distinct from the panel. */
+.tool-panel__between-search input {
+  background-color: var(--bg-muted);
 }
 
 ::view-transition-old(tool-rail) {
@@ -360,15 +322,6 @@
   ::view-transition-new(tool-rail) {
     animation-duration: 1ms !important;
   }
-}
-
-.tool-panel__section-label {
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-muted);
-  line-height: 1;
 }
 
 .tool-panel__mode-toggle {
@@ -830,33 +783,6 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-}
-
-/* Agents card lives in its own column above the tool grid. It uses the same
-   .tool-panel__fullscreen-group base styles but with a colourful gradient
-   border so it stands out as a distinct surface (and doesn't blend into the
-   neighbouring category cards). */
-.tool-panel__fullscreen-agents {
-  padding: 1.5rem 1.75rem 0;
-}
-
-.tool-panel__fullscreen-group--agents {
-  position: relative;
-  background:
-    linear-gradient(var(--fullscreen-bg-group), var(--fullscreen-bg-group))
-      padding-box,
-    linear-gradient(
-        135deg,
-        var(--mantine-color-blue-6) 0%,
-        var(--mantine-color-violet-6) 45%,
-        var(--mantine-color-pink-6) 100%
-      )
-      border-box;
-  border: 1.5px solid transparent;
-}
-
-.tool-panel__fullscreen-section-icon--agents {
-  color: var(--mantine-color-blue-6);
 }
 
 @keyframes tool-panel-fullscreen-slide-in {

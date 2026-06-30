@@ -5,6 +5,11 @@ vars:
   # NoClassDefFoundError: jdk/dynalink/Namespace at runtime in get-info-on-pdf and verify-pdf
   JLINK_MODULES: "java.base,java.compiler,java.desktop,java.instrument,java.logging,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.security.sasl,java.sql,java.transaction.xa,java.xml,java.xml.crypto,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.unsupported,jdk.dynalink"
 
+  # Minimum Java major the bundled JRE must be. Keep in sync with build.gradle
+  # `modernJavaVersion` - the app JAR is compiled for this, so an older runtime
+  # fails at launch with UnsupportedClassVersionError. Enforced by jlink:verify.
+  REQUIRED_JAVA: "25"
+
   # Override via JPDFIUM_PLATFORMS env (csv of platform keys, or 'all').
   JPDFIUM_PLATFORMS:
     sh: |
@@ -102,6 +107,20 @@ tasks:
   jlink:
     desc: "Build backend JAR and create JLink runtime for Tauri"
     deps: [jlink:jar, jlink:runtime]
+    # Runs after the runtime is in place. Lives here (not in jlink:runtime's
+    # cmds) so it still fires when jlink:runtime short-circuits on its `status:`
+    # check and reuses an existing runtime/jre - that reuse path is exactly how
+    # a stale, too-old JRE slips through.
+    cmds:
+      - task: jlink:verify
+
+  jlink:verify:
+    desc: "Fail the build if the bundled JRE is older than the app JAR requires"
+    dir: editor
+    env:
+      REQUIRED_JAVA: "{{.REQUIRED_JAVA}}"
+    cmds:
+      - node scripts/verify-bundled-jre.mjs src-tauri/runtime/jre/release
 
   jlink:jar:
     desc: "Build backend JAR for Tauri bundling (host-OS natives only by default)"
@@ -127,14 +146,19 @@ tasks:
     cmds:
       - rm -rf runtime/jre
       - mkdir -p runtime
-      - >-
-        jlink
-        --add-modules {{.JLINK_MODULES}}
-        --strip-debug
-        --compress=zip-6
-        --no-header-files
-        --no-man-pages
-        --output runtime/jre
+      # Pin jlink to JAVA_HOME so the bundled JRE matches the JDK the build
+      # uses. Bare `jlink` on PATH can resolve to an older system Java (the
+      # ubuntu runner ships Java 11), producing a runtime jlink:verify rejects.
+      - |
+        JLINK="${JAVA_HOME:+$JAVA_HOME/bin/}jlink"
+        JLINK_COMPRESS="$("$JLINK" --help 2>&1 | grep -q 'zip-\[0-9\]' && echo zip-6 || echo 2)"
+        "$JLINK" \
+          --add-modules {{.JLINK_MODULES}} \
+          --strip-debug \
+          --compress="$JLINK_COMPRESS" \
+          --no-header-files \
+          --no-man-pages \
+          --output runtime/jre
       # jlink emits its files mode 444 (read-only). Tauri's build-script
       # resource copier preserves source permissions when staging
       # `runtime/jre/**/*` into `target/<profile>/runtime/jre/...`, so the

@@ -1,9 +1,11 @@
 package stirling.software.proprietary.policy.engine;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -18,47 +20,57 @@ import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.PolicyRunStatus;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
+import stirling.software.proprietary.policy.source.Source;
+import stirling.software.proprietary.policy.source.SourceStore;
 
 /**
- * Runs policies, and is the one place that knows how to turn a policy's configured {@link InputSpec
- * sources} into actual runs. Triggers (schedule, and future webhook/folder-watch) decide
- * <em>when</em> to run and call {@link #run(Policy)}; they never touch sources themselves. The
- * controller uses the supplied-input and ad-hoc entry points for on-demand work.
- *
- * <p>This is the seam that keeps triggers and sources independent: a trigger depends on the runner,
- * the runner depends on the {@link InputSource} beans, and a source depends on neither - it just
- * yields {@link ResolvedInput units of work}, each carrying its own completion hook.
+ * Turns a policy's referenced sources into runs: each {@code sourceId} is resolved live to its
+ * persisted {@link Source}, then to an {@link InputSpec}. Triggers decide <em>when</em> and call
+ * {@link #run(Policy)}; the controller uses the supplied-input and ad-hoc entry points.
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@ConditionalOnBooleanProperty(name = "policies.enabled")
 public class PolicyRunner {
 
     private final PolicyEngine policyEngine;
     private final List<InputSource> inputSources;
+    private final SourceStore sourceStore;
 
     /**
-     * Run a policy by pulling from every source it configures: each source yields zero or more
-     * units of work, and each unit becomes its own run so one failure does not affect the others. A
-     * policy with no sources runs once with no input files (a generator pipeline). Used by
-     * automatic triggers.
+     * Trigger entry point. Pulls every referenced source; each yielded unit becomes its own run so
+     * one failure does not affect the others. No sources means one run with no input (generator
+     * pipeline). Missing or disabled sources are skipped so one broken reference does not stop the
+     * rest. Returns the ids of the runs it started (empty when sources yielded no work), so a
+     * manual trigger can report back which runs to follow.
      */
-    public void run(Policy policy) {
-        List<InputSpec> sources = policy.sources();
-        if (sources.isEmpty()) {
-            startRun(policy, PolicyInputs.of(List.of()), unused -> {});
-            return;
+    public List<String> run(Policy policy) {
+        List<String> sourceIds = policy.sourceIds();
+        if (sourceIds.isEmpty()) {
+            return List.of(startRun(policy, PolicyInputs.of(List.of()), unused -> {}));
         }
-        for (InputSpec spec : sources) {
-            pullAndRun(policy, spec);
+        List<String> runIds = new ArrayList<>();
+        for (String sourceId : sourceIds) {
+            Source source = sourceStore.get(sourceId).orElse(null);
+            if (source == null) {
+                log.warn("Policy {} references missing source {}; skipping", policy.id(), sourceId);
+                continue;
+            }
+            if (!source.enabled()) {
+                log.debug(
+                        "Source {} ({}) is disabled; skipping for policy {}",
+                        sourceId,
+                        source.name(),
+                        policy.id());
+                continue;
+            }
+            runIds.addAll(pullAndRun(policy, source.toInputSpec()));
         }
+        return runIds;
     }
 
-    /**
-     * Run a stored policy on files supplied directly by the caller (e.g. a manual run with
-     * uploads), bypassing its configured sources. Returns the run handle so callers can stream
-     * progress.
-     */
+    /** Run a stored policy on caller-supplied files (e.g. manual upload), bypassing its sources. */
     public PolicyRunHandle runWith(
             Policy policy, PolicyInputs inputs, PolicyProgressListener listener) {
         return policyEngine.runPolicy(policy, inputs, listener);
@@ -70,14 +82,14 @@ public class PolicyRunner {
         return policyEngine.submit(definition, inputs, listener);
     }
 
-    private void pullAndRun(Policy policy, InputSpec spec) {
+    private List<String> pullAndRun(Policy policy, InputSpec spec) {
         InputSource source = sourceFor(spec);
         if (source == null) {
             log.warn(
                     "No input source for type '{}' (policy {}); skipping",
                     spec.type(),
                     policy.id());
-            return;
+            return List.of();
         }
         List<ResolvedInput> work;
         try {
@@ -88,19 +100,22 @@ public class PolicyRunner {
                     spec.type(),
                     policy.id(),
                     e.getMessage());
-            return;
+            return List.of();
         }
+        List<String> runIds = new ArrayList<>();
         for (ResolvedInput unit : work) {
-            startRun(policy, unit.inputs(), unit.onComplete());
+            runIds.add(startRun(policy, unit.inputs(), unit.onComplete()));
         }
+        return runIds;
     }
 
-    private void startRun(Policy policy, PolicyInputs inputs, Consumer<Boolean> onComplete) {
+    private String startRun(Policy policy, PolicyInputs inputs, Consumer<Boolean> onComplete) {
         log.info("Running policy {} ({})", policy.id(), policy.name());
         PolicyRunHandle handle =
                 policyEngine.runPolicy(policy, inputs, PolicyProgressListener.NOOP);
         handle.completion()
                 .whenComplete((run, throwable) -> onComplete.accept(succeeded(run, throwable)));
+        return handle.runId();
     }
 
     private static boolean succeeded(PolicyRun run, Throwable throwable) {

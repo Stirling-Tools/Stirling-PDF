@@ -1,65 +1,36 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { Home } from "@portal/views/Home";
+import { Users } from "@portal/views/Users";
 import { Documents } from "@portal/views/Documents";
-import { Placeholder } from "@portal/views/Placeholder";
-import { VIEW_PATHS, type ViewId } from "@portal/contexts/ViewContext";
-
-const PLACEHOLDER_PHASES: Partial<Record<ViewId, string>> = {
-  editor: "Phase 8 — Editor",
-  sources: "Phase 5 — Sources & Agents",
-  pipelines: "Phase 4 — Pipelines",
-  infrastructure: "Phase 7 — Infrastructure",
-  usage: "Phase 8 — Usage & Billing",
-  docs: "Phase 8 — Developer Docs",
-  settings: "Settings — modal overlay",
-};
+import { Pipelines } from "@portal/views/Pipelines";
+import { Sources } from "@portal/views/Sources";
+import { AgentBuilder } from "@portal/views/AgentBuilder";
+import { Policies } from "@portal/views/Policies";
+import { Components } from "@portal/views/Components";
+import { EditorAdmin } from "@portal/views/EditorAdmin";
+import { Infrastructure } from "@portal/views/Infrastructure";
+import { Usage } from "@portal/views/Usage";
+import { DeveloperDocs } from "@portal/views/DeveloperDocs";
+import { VIEW_PATHS } from "@portal/contexts/ViewContext";
 
 export function ViewRouter() {
   return (
     <Routes>
       <Route path={VIEW_PATHS.home} element={<Home />} />
-      <Route
-        path={VIEW_PATHS.pipelines}
-        element={
-          <Placeholder view="pipelines" phase={PLACEHOLDER_PHASES.pipelines} />
-        }
-      />
-      <Route
-        path={VIEW_PATHS.editor}
-        element={
-          <Placeholder view="editor" phase={PLACEHOLDER_PHASES.editor} />
-        }
-      />
-      <Route
-        path={VIEW_PATHS.sources}
-        element={
-          <Placeholder view="sources" phase={PLACEHOLDER_PHASES.sources} />
-        }
-      />
+      <Route path={VIEW_PATHS.users} element={<Users />} />
+      <Route path={VIEW_PATHS.pipelines} element={<Pipelines />} />
+      <Route path={VIEW_PATHS.sources} element={<Sources />} />
+      <Route path={VIEW_PATHS["agent-builder"]} element={<AgentBuilder />} />
+      <Route path={VIEW_PATHS.policies} element={<Policies />} />
       <Route path={VIEW_PATHS.documents} element={<Documents />} />
-      <Route
-        path={VIEW_PATHS.infrastructure}
-        element={
-          <Placeholder
-            view="infrastructure"
-            phase={PLACEHOLDER_PHASES.infrastructure}
-          />
-        }
-      />
-      <Route
-        path={VIEW_PATHS.usage}
-        element={<Placeholder view="usage" phase={PLACEHOLDER_PHASES.usage} />}
-      />
-      <Route
-        path={VIEW_PATHS.docs}
-        element={<Placeholder view="docs" phase={PLACEHOLDER_PHASES.docs} />}
-      />
-      <Route
-        path={VIEW_PATHS.settings}
-        element={
-          <Placeholder view="settings" phase={PLACEHOLDER_PHASES.settings} />
-        }
-      />
+      <Route path={VIEW_PATHS.components} element={<Components />} />
+      <Route path={VIEW_PATHS.editor} element={<EditorAdmin />} />
+      <Route path={VIEW_PATHS.infrastructure} element={<Infrastructure />} />
+      <Route path={VIEW_PATHS.usage} element={<Usage />} />
+      <Route path={VIEW_PATHS.docs} element={<DeveloperDocs />} />
+      {/* Account-link is now a Settings panel; redirect legacy bookmarks home. */}
+      <Route path="/account-link" element={<Navigate to="/" replace />} />
+      {/* Settings is a modal overlay, not a route (see AppShell + UIContext). */}
       {/* Unknown paths land on Home. */}
       <Route path="*" element={<Navigate to={VIEW_PATHS.home} replace />} />
     </Routes>

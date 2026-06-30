@@ -58,15 +58,23 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          pip install --require-hashes --only-binary=:all: -r ./.github/scripts/requirements_sync_readme.txt -r ./.github/scripts/requirements_pre_commit.txt
+          pip install --require-hashes --only-binary=:all: -r ./.github/scripts/requirements_sync_readme.txt
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+        with:
+          enable-cache: true
+
+      - name: Install Task
+        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
 
       - name: Sync translation TOML files
         run: |
-          python .github/scripts/check_language_toml.py --reference-file "frontend/editor/public/locales/en-GB/translation.toml" --branch main
+          python .github/scripts/check_language_toml.py --reference-file "frontend/editor/public/locales/en-US/translation.toml" --branch main
 
-      - name: pre-commit run
+      - name: Sort translation TOML files
         run: |
-          pre-commit run toml-sort-fix --all-files
+          task pre-commit:toml-sort FIX=1
 
       - name: Commit translation files
         run: |
@@ -100,7 +108,7 @@ jobs:
             This Pull Request was automatically generated to synchronize updates to translation files and documentation. Below are the details of the changes made:
 
             #### **1. Synchronization of Translation Files**
-            - Updated translation files (`frontend/editor/public/locales/*/translation.toml`) to reflect changes in the reference file `en-GB/translation.toml`.
+            - Updated translation files (`frontend/editor/public/locales/*/translation.toml`) to reflect changes in the reference file `en-US/translation.toml`.
             - Ensured consistency and synchronization across all supported language files.
             - Highlighted any missing or incomplete translations.
             - **Format**: TOML

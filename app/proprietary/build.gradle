@@ -1,12 +1,6 @@
 repositories {
-    maven { url = "https://build.shibboleth.net/maven/releases" }
     maven { url = "https://repository.jboss.org/" }
-}
-
-ext {
-    jwtVersion = '0.13.0'
-    awsSdkVersion = '2.44.12'
-    testcontainersMinioVersion = '1.21.4'
+    maven { url = "https://build.shibboleth.net/maven/releases" }
 }
 
 bootRun {
@@ -41,7 +35,7 @@ spotless {
 }
 dependencies {
     implementation project(':common')
-    api 'com.google.guava:guava:33.6.0-jre'
+    api "com.google.guava:guava:${guavaVersion}"
 
     api 'org.springframework:spring-jdbc'
     api 'org.springframework:spring-webmvc'
@@ -61,37 +55,37 @@ dependencies {
     api 'com.github.ben-manes.caffeine:caffeine'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     api 'io.swagger.core.v3:swagger-core-jakarta:2.2.46'
-    implementation 'com.bucket4j:bucket4j_jdk17-core:8.19.0'
+    implementation "com.bucket4j:bucket4j_jdk17-core:${bucket4jVersion}"
     // Lettuce-backed Bucket4j ProxyManager used by ValkeyRateLimitStore for cluster-wide
     // token-bucket rate limiting (parity with in-process Bucket4j semantics; no fixed-window
     // boundary doubling).
-    implementation 'com.bucket4j:bucket4j_jdk17-lettuce:8.19.0'
+    implementation "com.bucket4j:bucket4j_jdk17-lettuce:${bucket4jVersion}"
 
     // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17
     implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
 
-    implementation 'com.google.code.gson:gson:2.13.2'
+    implementation "com.google.code.gson:gson:${gsonVersion}"
 
     api 'io.micrometer:micrometer-registry-prometheus'
 
-    api "io.jsonwebtoken:jjwt-api:$jwtVersion"
-    runtimeOnly "io.jsonwebtoken:jjwt-impl:$jwtVersion"
-    runtimeOnly "io.jsonwebtoken:jjwt-jackson:$jwtVersion"
+    api "io.jsonwebtoken:jjwt-api:${jwtVersion}"
+    runtimeOnly "io.jsonwebtoken:jjwt-impl:${jwtVersion}"
+    runtimeOnly "io.jsonwebtoken:jjwt-jackson:${jwtVersion}"
     runtimeOnly 'com.h2database:h2:2.3.232' // Don't upgrade h2database - file format incompatible with 2.4.x, would break existing user databases
     runtimeOnly 'org.postgresql:postgresql:42.7.11'
     implementation('com.coveo:saml-client:5.0.0') {
         exclude group: 'org.opensaml', module: 'opensaml-core'
     }
 
-    implementation "software.amazon.awssdk:s3:$awsSdkVersion"
-    implementation "software.amazon.awssdk:url-connection-client:$awsSdkVersion"
+    implementation "software.amazon.awssdk:s3:${awsSdkVersion}"
+    implementation "software.amazon.awssdk:url-connection-client:${awsSdkVersion}"
 
     // Testcontainers: real MinIO/LocalStack (S3) and Valkey for integration tests in CI without
     // manually-started instances. Tests skip cleanly when Docker is unavailable.
-    testImplementation "org.testcontainers:testcontainers:$testcontainersMinioVersion"
-    testImplementation "org.testcontainers:minio:$testcontainersMinioVersion"
-    testImplementation "org.testcontainers:localstack:$testcontainersMinioVersion"
-    testImplementation "org.testcontainers:junit-jupiter:$testcontainersMinioVersion"
+    testImplementation "org.testcontainers:testcontainers:${testcontainersMinioVersion}"
+    testImplementation "org.testcontainers:minio:${testcontainersMinioVersion}"
+    testImplementation "org.testcontainers:localstack:${testcontainersMinioVersion}"
+    testImplementation "org.testcontainers:junit-jupiter:${testcontainersMinioVersion}"
 }
 
 tasks.register('prepareKotlinBuildScriptModel') {}

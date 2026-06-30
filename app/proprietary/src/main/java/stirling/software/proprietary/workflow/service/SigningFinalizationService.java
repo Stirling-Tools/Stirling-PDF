@@ -98,7 +98,7 @@ public class SigningFinalizationService {
 
         // Step 1.5: Add summary page BEFORE digital signing (if enabled)
         // CRITICAL: Must be done before signing to avoid invalidating signatures
-        if (Boolean.TRUE.equals(settings.includeSummaryPage)) {
+        if (Boolean.TRUE.equals(settings.includeSummaryPage())) {
             log.info(
                     "Adding summary page before digital signing for session {}",
                     session.getSessionId());
@@ -108,11 +108,13 @@ public class SigningFinalizationService {
         // Suppress digital certificate visual block when summary page is enabled
         // (wet signatures already applied in Step 1 and will still appear)
         Boolean showVisualSignature =
-                Boolean.TRUE.equals(settings.includeSummaryPage) ? false : settings.showSignature;
+                Boolean.TRUE.equals(settings.includeSummaryPage())
+                        ? false
+                        : settings.showSignature();
 
         log.info(
                 "Finalization settings: includeSummaryPage={}, showVisualSignature={}",
-                settings.includeSummaryPage,
+                settings.includeSummaryPage(),
                 showVisualSignature);
 
         // Step 2: Apply digital certificates per SIGNED participant
@@ -150,8 +152,8 @@ public class SigningFinalizationService {
             log.info(
                     "Applying signature for {} with reason='{}', location='{}'",
                     fresh.getEmail(),
-                    sigMeta.reason,
-                    sigMeta.location);
+                    sigMeta.reason(),
+                    sigMeta.location());
 
             pdf =
                     applyDigitalSignature(
@@ -159,10 +161,10 @@ public class SigningFinalizationService {
                             fresh,
                             submission,
                             showVisualSignature,
-                            settings.pageNumber,
-                            sigMeta.reason,
-                            sigMeta.location,
-                            settings.showLogo);
+                            settings.pageNumber(),
+                            sigMeta.reason(),
+                            sigMeta.location(),
+                            settings.showLogo());
         }
 
         return pdf;
@@ -682,7 +684,7 @@ public class SigningFinalizationService {
                                 textDark,
                                 textMuted,
                                 "Subject:",
-                                certInfo.subjectCN);
+                                certInfo.subjectCN());
                         rRowY -= LINE_H;
                         drawLabelValue(
                                 cs,
@@ -693,7 +695,7 @@ public class SigningFinalizationService {
                                 textDark,
                                 textMuted,
                                 "Issuer:",
-                                certInfo.issuerCN);
+                                certInfo.issuerCN());
                         rRowY -= LINE_H;
                         drawLabelValue(
                                 cs,
@@ -704,7 +706,7 @@ public class SigningFinalizationService {
                                 textDark,
                                 textMuted,
                                 "Serial:",
-                                certInfo.serialNumber);
+                                certInfo.serialNumber());
                         rRowY -= LINE_H;
                         drawLabelValue(
                                 cs,
@@ -715,7 +717,7 @@ public class SigningFinalizationService {
                                 textDark,
                                 textMuted,
                                 "Valid From:",
-                                certInfo.validFrom);
+                                certInfo.validFrom());
                         rRowY -= LINE_H;
                         drawLabelValue(
                                 cs,
@@ -726,7 +728,7 @@ public class SigningFinalizationService {
                                 textDark,
                                 textMuted,
                                 "Valid Until:",
-                                certInfo.validUntil);
+                                certInfo.validUntil());
                         rRowY -= LINE_H;
                         drawLabelValue(
                                 cs,
@@ -737,7 +739,7 @@ public class SigningFinalizationService {
                                 textDark,
                                 textMuted,
                                 "Algorithm:",
-                                certInfo.algorithm);
+                                certInfo.algorithm());
                     }
 
                     yPos -= cardH + 12;
@@ -1037,17 +1039,18 @@ public class SigningFinalizationService {
                             metadataEncryptionService.decrypt(submission.getPassword()));
                 }
 
-                // Decode base64 keystore bytes
+                // Decrypt + decode keystore bytes (supports both legacy plaintext base64 and
+                // encrypted values).
                 var certNode = node.get("certificateSubmission");
                 if (certNode.has("p12Keystore")) {
                     submission.setP12Keystore(
-                            java.util.Base64.getDecoder()
-                                    .decode(certNode.get("p12Keystore").asText()));
+                            metadataEncryptionService.decryptBytes(
+                                    certNode.get("p12Keystore").asText()));
                 }
                 if (certNode.has("jksKeystore")) {
                     submission.setJksKeystore(
-                            java.util.Base64.getDecoder()
-                                    .decode(certNode.get("jksKeystore").asText()));
+                            metadataEncryptionService.decryptBytes(
+                                    certNode.get("jksKeystore").asText()));
                 }
                 return submission;
             }
@@ -1075,10 +1078,9 @@ public class SigningFinalizationService {
             }
             String alias = aliases.nextElement();
             Certificate cert = keystore.getCertificate(alias);
-            if (!(cert instanceof X509Certificate)) {
+            if (!(cert instanceof X509Certificate x509)) {
                 return null;
             }
-            X509Certificate x509 = (X509Certificate) cert;
 
             String subjectCN = extractCN(x509.getSubjectX500Principal().getName());
             String issuerCN = extractCN(x509.getIssuerX500Principal().getName());
@@ -1256,55 +1258,19 @@ public class SigningFinalizationService {
 
     // ===== PRIVATE INNER TYPES =====
 
-    private static class SessionSignatureSettings {
-        final Boolean showSignature;
-        final Integer pageNumber;
-        final Boolean showLogo;
-        final Boolean includeSummaryPage;
+    private record SessionSignatureSettings(
+            Boolean showSignature,
+            Integer pageNumber,
+            Boolean showLogo,
+            Boolean includeSummaryPage) {}
 
-        SessionSignatureSettings(
-                Boolean showSignature,
-                Integer pageNumber,
-                Boolean showLogo,
-                Boolean includeSummaryPage) {
-            this.showSignature = showSignature;
-            this.pageNumber = pageNumber;
-            this.showLogo = showLogo;
-            this.includeSummaryPage = includeSummaryPage;
-        }
-    }
+    private record ParticipantSignatureMetadata(String reason, String location) {}
 
-    private static class ParticipantSignatureMetadata {
-        final String reason;
-        final String location;
-
-        ParticipantSignatureMetadata(String reason, String location) {
-            this.reason = reason;
-            this.location = location;
-        }
-    }
-
-    private static class CertificateInfo {
-        final String subjectCN;
-        final String issuerCN;
-        final String serialNumber;
-        final String validFrom;
-        final String validUntil;
-        final String algorithm;
-
-        CertificateInfo(
-                String subjectCN,
-                String issuerCN,
-                String serialNumber,
-                String validFrom,
-                String validUntil,
-                String algorithm) {
-            this.subjectCN = subjectCN;
-            this.issuerCN = issuerCN;
-            this.serialNumber = serialNumber;
-            this.validFrom = validFrom;
-            this.validUntil = validUntil;
-            this.algorithm = algorithm;
-        }
-    }
+    private record CertificateInfo(
+            String subjectCN,
+            String issuerCN,
+            String serialNumber,
+            String validFrom,
+            String validUntil,
+            String algorithm) {}
 }

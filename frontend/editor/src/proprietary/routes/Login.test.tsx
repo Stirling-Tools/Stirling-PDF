@@ -5,9 +5,11 @@ import { BrowserRouter, MemoryRouter } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
 import Login from "@app/routes/Login";
 import { useAuth } from "@app/auth/UseSession";
-import { springAuth } from "@app/auth/springAuthClient";
+import { springAuth } from "@shared/auth/spring/springAuthClient";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
 import apiClient from "@app/services/apiClient";
+import { configureSpringAuth } from "@shared/auth/config";
+import type { AxiosInstance } from "axios";
 
 // Mock i18n to return fallback text
 vi.mock("react-i18next", () => ({
@@ -26,10 +28,10 @@ vi.mock("react-i18next", () => ({
 // Mock i18n module to avoid initialization
 vi.mock("@app/i18n", () => ({
   updateSupportedLanguages: vi.fn(),
-  supportedLanguages: { "en-GB": "English" },
+  supportedLanguages: { "en-US": "English (US)" },
   rtlLanguages: [],
   default: {
-    language: "en-GB",
+    language: "en-US",
     changeLanguage: vi.fn(),
     options: {},
   },
@@ -41,10 +43,10 @@ vi.mock("@app/auth/UseSession", () => ({
 }));
 
 // Mock springAuth; keep the real redirect-path helpers.
-vi.mock("@app/auth/springAuthClient", async () => {
+vi.mock("@shared/auth/spring/springAuthClient", async () => {
   const actual = await vi.importActual<
-    typeof import("@app/auth/springAuthClient")
-  >("@app/auth/springAuthClient");
+    typeof import("@shared/auth/spring/springAuthClient")
+  >("@shared/auth/spring/springAuthClient");
   return {
     ...actual,
     springAuth: {
@@ -110,6 +112,9 @@ describe("Login", () => {
       session: null,
       user: null,
       displayName: null,
+      isAnonymous: false,
+      isAdmin: false,
+      role: null,
       loading: false,
       error: null,
       signOut: vi.fn(),
@@ -123,6 +128,11 @@ describe("Login", () => {
         providerList: {},
       },
     });
+
+    // The shared login hook reads getSpringAuthConfig().http; in the real app,
+    // startup points that at apiClient. Mirror that here so the mocked apiClient
+    // serves the login-ui-data fetch.
+    configureSpringAuth({ http: apiClient as unknown as AxiosInstance });
   });
 
   it("should render login form", async () => {
@@ -157,6 +167,9 @@ describe("Login", () => {
       session: mockSession,
       user: mockSession.user,
       displayName: mockSession.user.username,
+      isAnonymous: false,
+      isAdmin: false,
+      role: mockSession.user.role,
       loading: false,
       error: null,
       signOut: vi.fn(),
@@ -181,6 +194,9 @@ describe("Login", () => {
       session: null,
       user: null,
       displayName: null,
+      isAnonymous: false,
+      isAdmin: false,
+      role: null,
       loading: true,
       error: null,
       signOut: vi.fn(),

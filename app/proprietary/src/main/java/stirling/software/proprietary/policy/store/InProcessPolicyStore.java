@@ -2,6 +2,7 @@ package stirling.software.proprietary.policy.store;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -9,9 +10,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import stirling.software.proprietary.policy.model.Policy;
 
 /**
- * In-memory {@link PolicyStore}. Not the runtime bean - {@link JpaPolicyStore} is the durable
- * store. Kept as a lightweight, dependency-free implementation for tests and for any future no-
- * database mode.
+ * In-memory {@link PolicyStore} for tests and any future no-database mode. {@link JpaPolicyStore}
+ * is the runtime bean.
  */
 public class InProcessPolicyStore implements PolicyStore {
 
@@ -30,9 +30,10 @@ public class InProcessPolicyStore implements PolicyStore {
                         policy.owner(),
                         policy.enabled(),
                         policy.trigger(),
-                        policy.sources(),
+                        policy.sourceIds(),
                         policy.steps(),
-                        policy.output());
+                        policy.output(),
+                        policy.teamId());
         policies.put(id, stored);
         return stored;
     }
@@ -45,6 +46,13 @@ public class InProcessPolicyStore implements PolicyStore {
     @Override
     public List<Policy> all() {
         return List.copyOf(policies.values());
+    }
+
+    @Override
+    public List<Policy> findByTeam(Long teamId) {
+        return policies.values().stream()
+                .filter(policy -> Objects.equals(policy.teamId(), teamId))
+                .toList();
     }
 
     @Override

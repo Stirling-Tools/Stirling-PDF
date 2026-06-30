@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { useTranslation } from "react-i18next";
 import type { UsagePoint } from "@portal/api/home";
 import "@portal/components/UsageAreaChart.css";
 
@@ -29,10 +30,12 @@ function formatNumber(value: number): string {
 
 export function UsageAreaChart({
   data,
-  totalLabel = "Docs processed · last 30 days",
+  totalLabel: totalLabelProp,
   totalValue,
   deltaPct,
 }: UsageAreaChartProps) {
+  const { t } = useTranslation();
+  const totalLabel = totalLabelProp ?? t("usageChart.defaultLabel");
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
 
@@ -150,7 +153,9 @@ export function UsageAreaChart({
             }
           >
             <span aria-hidden>{deltaPct >= 0 ? "↑" : "↓"}</span>
-            {Math.abs(Math.round(deltaPct * 100))}% vs prior 30d
+            {t("usageChart.delta", {
+              pct: Math.abs(Math.round(deltaPct * 100)),
+            })}
           </div>
         )}
       </header>
@@ -260,17 +265,22 @@ export function UsageAreaChart({
             })}
           </div>
           <div className="portal-chart__tooltip-value">
-            {hovered.raw.value.toLocaleString()} docs
+            {t("usageChart.docsValue", {
+              value: hovered.raw.value.toLocaleString(),
+            })}
           </div>
         </div>
       )}
       <div className="sr-only" aria-live="polite" aria-atomic="true">
         {hovered
-          ? `${new Date(hovered.raw.date).toLocaleDateString(undefined, {
-              weekday: "short",
-              month: "short",
-              day: "numeric",
-            })}: ${hovered.raw.value.toLocaleString()} docs`
+          ? t("usageChart.srAnnounce", {
+              date: new Date(hovered.raw.date).toLocaleDateString(undefined, {
+                weekday: "short",
+                month: "short",
+                day: "numeric",
+              }),
+              value: hovered.raw.value.toLocaleString(),
+            })
           : ""}
       </div>
     </div>
