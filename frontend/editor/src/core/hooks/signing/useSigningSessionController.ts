@@ -1,49 +1,83 @@
-import { lazy, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import apiClient from "@app/services/apiClient";
 import { alert } from "@app/components/toast";
 import { fileStorage } from "@app/services/fileStorage";
+import { createFileFromApiResponse } from "@app/utils/fileResponseUtils";
 import {
   SignRequestSummary,
   SignRequestDetail,
   SessionSummary,
   SessionDetail,
 } from "@app/types/signingSession";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
-import {
-  useNavigationActions,
-  useNavigationState,
-} from "@app/contexts/NavigationContext";
+import type { SignaturePreview } from "@app/components/viewer/viewerTypes";
+import { getFileColor } from "@app/components/pageEditor/fileColors";
+import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { useFileActions } from "@app/contexts/FileContext";
+import { useSigningOverlay } from "@app/contexts/SigningOverlayContext";
 import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
 import { useSigningSessions } from "@app/hooks/signing/useSigningSessions";
 import type { SignatureSettings } from "@app/components/tools/certSign/SignatureSettingsInput";
 
-// The workbench views pull in the PDF viewer / pdfium chain, so they are loaded
-// on demand when the user actually opens a request/session.
-const SignRequestWorkbenchView = lazy(
-  () => import("@app/components/tools/certSign/SignRequestWorkbenchView"),
-);
-const SessionDetailWorkbenchView = lazy(
-  () => import("@app/components/tools/certSign/SessionDetailWorkbenchView"),
-);
+/** Which Shared Signing screen the sidebar tool is currently showing. */
+export type SigningView = "list" | "detail" | "request";
 
-export const SIGN_REQUEST_WORKBENCH_TYPE =
-  "custom:signRequestWorkbench" as const;
-export const SESSION_DETAIL_WORKBENCH_TYPE =
-  "custom:sessionDetailWorkbench" as const;
-const SIGN_REQUEST_WORKBENCH_ID = "signRequestWorkbench";
-const SESSION_DETAIL_WORKBENCH_ID = "sessionDetailWorkbench";
+/** Data the session-detail sidebar panel needs to render and act. */
+export interface SigningDetailData {
+  session: SessionDetail;
+  pdfFile: File | null;
+  onFinalize: () => Promise<void>;
+  onLoadSignedPdf: () => Promise<void>;
+  onAddParticipants: (
+    userIds: number[],
+    defaultReason?: string,
+  ) => Promise<void>;
+  onRemoveParticipant: (participantId: number) => Promise<void>;
+  onDelete: () => Promise<void>;
+  onBack: () => void;
+  onRefresh: () => Promise<void>;
+}
 
-/**
- * Owns all collaborative-signing session state and behaviour: data fetching,
- * registering the request/session detail workbench views, creating sessions,
- * and opening a request/session into its workbench view (wiring the sign /
- * decline / finalize / participant callbacks).
- *
- * UI-agnostic — consumed by the Shared Signing tool to render a panel. Ported
- * from the legacy QuickAccessBar SignPopout so the behaviour is unchanged.
- */
+/** Data the sign-request sidebar panel needs to render and act. */
+export interface SigningRequestData {
+  signRequest: SignRequestDetail;
+  pdfFile: File;
+  onSign: (certificateData: FormData) => Promise<void>;
+  onDecline: () => Promise<void>;
+  onBack: () => void;
+  canSign: boolean;
+}
+
+// Read-only overlay previews for every participant's already-placed wet
+// signatures, coloured per participant (matches the participant list dots).
+function computeWetSignaturePreviews(
+  session: SessionDetail,
+): SignaturePreview[] {
+  const previews: SignaturePreview[] = [];
+  session.participants.forEach((participant, participantIndex) => {
+    if (participant.wetSignatures && participant.wetSignatures.length > 0) {
+      const color = getFileColor(participantIndex);
+      const participantName = participant.name || participant.email;
+      participant.wetSignatures.forEach((wetSig, sigIndex) => {
+        previews.push({
+          id: `participant-${participant.userId}-sig-${sigIndex}`,
+          pageIndex: wetSig.page,
+          x: wetSig.x,
+          y: wetSig.y,
+          width: wetSig.width,
+          height: wetSig.height,
+          signatureData: wetSig.data,
+          signatureType: "image" as const,
+          color,
+          participantName,
+        });
+      });
+    }
+  });
+  return previews;
+}
+
+/** Owns Shared Signing state: data fetch, session creation, and opening a request/session into the sidebar tool (driving the viewer overlay). */
 export function useSigningSessionController(enabled: boolean) {
   const { t } = useTranslation();
   const { signRequests, mySessions, loading, refetch } = useSigningSessions({
@@ -56,62 +90,29 @@ export function useSigningSessionController(enabled: boolean) {
   // requires exactly one file.
   const selectedFiles = useViewScopedFiles();
   const { actions: navigationActions } = useNavigationActions();
-  const { workbench: currentView } = useNavigationState();
-  const {
-    registerCustomWorkbenchView,
-    unregisterCustomWorkbenchView,
-    setCustomWorkbenchViewData,
-    clearCustomWorkbenchViewData,
-  } = useToolWorkflow();
+  const { setOverlay } = useSigningOverlay();
 
   const [creating, setCreating] = useState(false);
+  const [view, setView] = useState<SigningView>("list");
+  const [detailData, setDetailData] = useState<SigningDetailData | null>(null);
+  const [requestData, setRequestData] = useState<SigningRequestData | null>(
+    null,
+  );
 
-  // Register the request/session workbench views while the feature is enabled.
-  // No unmount cleanup: navigating into a view unmounts this hook's host (the
-  // tool panel), and the view must stay registered. Re-registration is
-  // idempotent; we only unregister when the feature is explicitly disabled.
+  // Leaving the tool (panel unmounts) must not leave the signing document and
+  // overlays lingering on the shared viewer.
   useEffect(() => {
-    if (!enabled) return;
-    registerCustomWorkbenchView({
-      id: SIGN_REQUEST_WORKBENCH_ID,
-      workbenchId: SIGN_REQUEST_WORKBENCH_TYPE,
-      label: t("certSign.collab.signRequest.workbenchTitle", "Sign Request"),
-      component: SignRequestWorkbenchView,
-      hideTopControls: true,
-      hideToolPanel: true,
-    });
-    registerCustomWorkbenchView({
-      id: SESSION_DETAIL_WORKBENCH_ID,
-      workbenchId: SESSION_DETAIL_WORKBENCH_TYPE,
-      label: t(
-        "certSign.collab.sessionDetail.workbenchTitle",
-        "Session Management",
-      ),
-      component: SessionDetailWorkbenchView,
-      hideTopControls: true,
-      hideToolPanel: true,
-    });
-  }, [enabled]);
+    return () => setOverlay(null);
+  }, [setOverlay]);
 
-  useEffect(() => {
-    if (enabled) return;
-    unregisterCustomWorkbenchView(SIGN_REQUEST_WORKBENCH_ID);
-    unregisterCustomWorkbenchView(SESSION_DETAIL_WORKBENCH_ID);
-  }, [enabled, unregisterCustomWorkbenchView]);
+  const backToList = useCallback(() => {
+    setOverlay(null);
+    setDetailData(null);
+    setRequestData(null);
+    setView("list");
+  }, [setOverlay]);
 
-  // Clear workbench data once the user navigates away from a view.
-  useEffect(() => {
-    if (currentView !== SIGN_REQUEST_WORKBENCH_TYPE) {
-      clearCustomWorkbenchViewData(SIGN_REQUEST_WORKBENCH_ID);
-    }
-  }, [currentView]);
-  useEffect(() => {
-    if (currentView !== SESSION_DETAIL_WORKBENCH_TYPE) {
-      clearCustomWorkbenchViewData(SESSION_DETAIL_WORKBENCH_ID);
-    }
-  }, [currentView]);
-
-  // --- Action handlers (invoked from the workbench views via their data) ---
+  // --- Action handlers (invoked from the sidebar panels) ---
 
   const handleSign = async (sessionId: string, certificateData: FormData) => {
     await apiClient.post(
@@ -125,8 +126,7 @@ export function useSigningSessionController(enabled: boolean) {
       expandable: false,
       durationMs: 2500,
     });
-    clearCustomWorkbenchViewData(SIGN_REQUEST_WORKBENCH_ID);
-    navigationActions.setWorkbench("viewer");
+    backToList();
     await refetch();
   };
 
@@ -141,8 +141,7 @@ export function useSigningSessionController(enabled: boolean) {
       expandable: false,
       durationMs: 2500,
     });
-    clearCustomWorkbenchViewData(SIGN_REQUEST_WORKBENCH_ID);
-    navigationActions.setWorkbench("viewer");
+    backToList();
     await refetch();
   };
 
@@ -152,14 +151,11 @@ export function useSigningSessionController(enabled: boolean) {
       null,
       { responseType: "blob" },
     );
-    const contentDisposition = response.headers["content-disposition"];
-    const filenameMatch = contentDisposition?.match(/filename="?(.+?)"?$/);
-    const filename = filenameMatch
-      ? filenameMatch[1]
-      : `${documentName}_signed.pdf`;
-    const signedFile = new File([response.data], filename, {
-      type: "application/pdf",
-    });
+    const signedFile = createFileFromApiResponse(
+      response.data,
+      response.headers,
+      `${documentName}_signed.pdf`,
+    );
     await fileActions.addFiles([signedFile], { skipUploadTracking: true });
     alert({
       alertType: "success",
@@ -168,8 +164,7 @@ export function useSigningSessionController(enabled: boolean) {
       expandable: false,
       durationMs: 2500,
     });
-    clearCustomWorkbenchViewData(SESSION_DETAIL_WORKBENCH_ID);
-    navigationActions.setWorkbench("viewer");
+    backToList();
     await refetch();
   };
 
@@ -181,14 +176,11 @@ export function useSigningSessionController(enabled: boolean) {
       `/api/v1/security/cert-sign/sessions/${sessionId}/signed-pdf`,
       { responseType: "blob" },
     );
-    const contentDisposition = response.headers["content-disposition"];
-    const filenameMatch = contentDisposition?.match(/filename="?(.+?)"?$/);
-    const filename = filenameMatch
-      ? filenameMatch[1]
-      : `${documentName}_signed.pdf`;
-    const signedFile = new File([response.data], filename, {
-      type: "application/pdf",
-    });
+    const signedFile = createFileFromApiResponse(
+      response.data,
+      response.headers,
+      `${documentName}_signed.pdf`,
+    );
     await fileActions.addFiles([signedFile], { skipUploadTracking: true });
     alert({
       alertType: "success",
@@ -197,17 +189,20 @@ export function useSigningSessionController(enabled: boolean) {
       expandable: false,
       durationMs: 2500,
     });
-    clearCustomWorkbenchViewData(SESSION_DETAIL_WORKBENCH_ID);
-    navigationActions.setWorkbench("viewer");
+    backToList();
   };
 
   const handleRefreshSession = async (sessionId: string) => {
     const response = await apiClient.get<SessionDetail>(
       `/api/v1/security/cert-sign/sessions/${sessionId}`,
     );
-    setCustomWorkbenchViewData(
-      SESSION_DETAIL_WORKBENCH_ID,
-      (prevData: any) => ({ ...prevData, session: response.data }),
+    const session = response.data;
+    setDetailData((prev) => (prev ? { ...prev, session } : prev));
+    // Keep the read-only overlay in sync as participants sign.
+    setOverlay((prev) =>
+      prev
+        ? { ...prev, signaturePreviews: computeWetSignaturePreviews(session) }
+        : prev,
     );
   };
 
@@ -247,12 +242,11 @@ export function useSigningSessionController(enabled: boolean) {
       expandable: false,
       durationMs: 2500,
     });
-    clearCustomWorkbenchViewData(SESSION_DETAIL_WORKBENCH_ID);
-    navigationActions.setWorkbench("viewer");
+    backToList();
     await refetch();
   };
 
-  // --- Open into workbench views ---
+  // --- Open into the sidebar detail/request views ---
 
   const openSignRequest = async (request: SignRequestSummary) => {
     try {
@@ -275,20 +269,19 @@ export function useSigningSessionController(enabled: boolean) {
         detailResponse.data.myStatus === "NOTIFIED" ||
         detailResponse.data.myStatus === "VIEWED";
 
-      setCustomWorkbenchViewData(SIGN_REQUEST_WORKBENCH_ID, {
+      // Seed the viewer with the document immediately; the request panel enriches
+      // the overlay with interactive placement props once it mounts.
+      setOverlay({ file: pdfFile });
+      setRequestData({
         signRequest: detailResponse.data,
         pdfFile,
         onSign: (certData: FormData) => handleSign(request.sessionId, certData),
         onDecline: () => handleDecline(request.sessionId),
-        onBack: () => {
-          clearCustomWorkbenchViewData(SIGN_REQUEST_WORKBENCH_ID);
-          navigationActions.setWorkbench("viewer");
-        },
+        onBack: backToList,
         canSign,
       });
-      requestAnimationFrame(() => {
-        navigationActions.setWorkbench(SIGN_REQUEST_WORKBENCH_TYPE);
-      });
+      setView("request");
+      navigationActions.setWorkbench("viewer");
     } catch (error) {
       console.error(
         "Failed to load sign request:",
@@ -349,7 +342,12 @@ export function useSigningSessionController(enabled: boolean) {
         }
       }
 
-      setCustomWorkbenchViewData(SESSION_DETAIL_WORKBENCH_ID, {
+      setOverlay({
+        file: pdfFile,
+        signaturePreviews: computeWetSignaturePreviews(detailResponse.data),
+        signaturePreviewsReadOnly: true,
+      });
+      setDetailData({
         session: detailResponse.data,
         pdfFile,
         onFinalize: () =>
@@ -361,15 +359,11 @@ export function useSigningSessionController(enabled: boolean) {
         onRemoveParticipant: (participantId: number) =>
           handleRemoveParticipant(session.sessionId, participantId),
         onDelete: () => handleDeleteSession(session.sessionId),
-        onBack: () => {
-          clearCustomWorkbenchViewData(SESSION_DETAIL_WORKBENCH_ID);
-          navigationActions.setWorkbench("viewer");
-        },
+        onBack: backToList,
         onRefresh: () => handleRefreshSession(session.sessionId),
       });
-      requestAnimationFrame(() => {
-        navigationActions.setWorkbench(SESSION_DETAIL_WORKBENCH_TYPE);
-      });
+      setView("detail");
+      navigationActions.setWorkbench("viewer");
     } catch (error) {
       console.error(
         "Failed to load session:",
@@ -459,5 +453,9 @@ export function useSigningSessionController(enabled: boolean) {
     createSession,
     openSignRequest,
     openSession,
+    view,
+    detailData,
+    requestData,
+    backToList,
   };
 }

@@ -20,6 +20,8 @@ import { useGroupSigningEnabled } from "@app/hooks/useGroupSigningEnabled";
 import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
 import { useSigningSessionController } from "@app/hooks/signing/useSigningSessionController";
 import { CreateSessionFlow } from "@app/components/shared/signing/CreateSessionFlow";
+import { SessionDetailPanel } from "@app/components/tools/certSign/panels/SessionDetailPanel";
+import SignRequestPanel from "@app/components/tools/certSign/panels/SignRequestPanel";
 import type {
   SignRequestSummary,
   SessionSummary,
@@ -27,9 +29,9 @@ import type {
 
 type Tab = "active" | "completed";
 
-type SessionItem = (SignRequestSummary | SessionSummary) & {
-  itemType: "signRequest" | "mySession";
-};
+type SessionItem =
+  | (SignRequestSummary & { itemType: "signRequest" })
+  | (SessionSummary & { itemType: "mySession" });
 
 function sortByRecency(items: SessionItem[]): SessionItem[] {
   return [...items].sort(
@@ -149,6 +151,14 @@ const SharedSign = (_props: BaseToolProps) => {
     );
   }
 
+  if (controller.view === "detail" && controller.detailData) {
+    return <SessionDetailPanel data={controller.detailData} />;
+  }
+
+  if (controller.view === "request" && controller.requestData) {
+    return <SignRequestPanel data={controller.requestData} />;
+  }
+
   if (showCreate) {
     return (
       <Stack p="md" gap="md">
@@ -208,10 +218,14 @@ const SharedSign = (_props: BaseToolProps) => {
       result = result.filter((s) => s.itemType === "mySession");
     }
     if (filters.includes("overdue")) {
-      result = result.filter((s) => {
-        const due = (s as SignRequestSummary).dueDate;
-        return Boolean(due) && new Date(due as string).getTime() < now;
-      });
+      // Only sign requests carry a dueDate; owned sessions (SessionSummary) don't
+      // expose one in the list payload, so overdue filtering requires a backend change.
+      result = result.filter(
+        (s) =>
+          s.itemType === "signRequest" &&
+          Boolean(s.dueDate) &&
+          new Date(s.dueDate).getTime() < now,
+      );
     }
     if (filters.includes("signed")) {
       result = result.filter(

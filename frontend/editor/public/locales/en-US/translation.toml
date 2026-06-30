@@ -2277,7 +2277,6 @@ addParticipants = "Add Participants"
 addParticipantsError = "Failed to add participants"
 backToList = "Back to Sessions"
 deleteConfirm = "Are you sure? This cannot be undone."
-deleted = "Session deleted"
 deleteError = "Failed to delete session"
 deleteSession = "Delete Session"
 dueDate = "Due Date"
@@ -2293,7 +2292,6 @@ removeParticipant = "Remove"
 removeParticipantError = "Failed to remove participant"
 selectUsers = "Select users..."
 sessionInfo = "Session Info"
-workbenchTitle = "Session Management"
 
 [certSign.collab.sessionList]
 active = "Active"
@@ -2353,11 +2351,7 @@ usePersonalCert = "Personal Certificate"
 usePersonalCertDesc = "Auto-generated for your account"
 useServerCert = "Organization Certificate"
 useServerCertDesc = "Shared organization certificate"
-workbenchTitle = "Sign Request"
-
-[certSign.collab.signRequest.canvas]
-colorPickerTitle = "Choose stroke color"
-continue = "Continue"
+useSignature = "Use signature"
 
 [certSign.collab.signRequest.certModal]
 certInvalid = "Certificate invalid: {{error}}"
@@ -2420,15 +2414,6 @@ visibility = "Visibility:"
 visible = "Visible"
 yourSignatures = "Your Signatures ({{count}})"
 
-[certSign.collab.signRequest.text]
-colorLabel = "Color"
-fontLabel = "Font"
-fontSizeLabel = "Size"
-fontSizePlaceholder = "16"
-label = "Signature Text"
-modalHint = "Enter your name, then click Continue to place it on the PDF."
-placeholder = "Enter your name..."
-
 [certSign.collab.userSelector]
 inviteUsers = "Add Users"
 loadError = "Failed to load users"
@@ -2438,11 +2423,6 @@ placeholder = "Select users..."
 
 [certSign.error]
 failed = "An error occurred while processing signatures."
-
-[certSign.mobile]
-panelActions = "Actions"
-panelDocument = "Document"
-panelPeople = "People"
 
 [certSign.sessions]
 deleted = "Session deleted"
@@ -7061,6 +7041,7 @@ previous = "Previous page"
 redo = "Redo"
 save = "Save Signature"
 sharedSigningOpen = "Open shared signing"
+sharedSigningRequest = "Request signatures"
 sharedSigningStepDesc = "Send this document to others to sign instead of signing it yourself."
 sharedSigs = "Shared Signatures"
 submit = "Sign Document"
@@ -7934,7 +7915,6 @@ nextPage = "Next Page"
 onlyPdfSupported = "This file format is not supported for preview."
 pageNavigation = "Page navigation"
 previousPage = "Previous Page"
-resetZoom = "Reset zoom"
 singlePageView = "Single Page View"
 unknownFile = "Unknown file"
 view = "View"

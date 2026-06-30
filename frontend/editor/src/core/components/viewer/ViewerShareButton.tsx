@@ -78,15 +78,21 @@ export default function ViewerShareButton({
         remoteOwnedByCurrentUser: true,
         remoteSharedViaLink: false,
       };
-      // Stub updates are synchronous React dispatches; the IndexedDB writes
-      // each touch a distinct file id, so run them in parallel rather than
-      // awaiting serially (avoids N× round-trip latency).
-      await Promise.all(
-        chain.map((s) => {
-          actions.updateStirlingFileStub(s.id, metadata);
-          return fileStorage.updateFileMetadata(s.id, metadata);
-        }),
-      );
+      // Best-effort local cache sync — server upload is the source of truth.
+      // Swallow local write failures; the file is already on the server.
+      try {
+        await Promise.all(
+          chain.map((s) => {
+            actions.updateStirlingFileStub(s.id, metadata);
+            return fileStorage.updateFileMetadata(s.id, metadata);
+          }),
+        );
+      } catch (cacheError) {
+        console.error(
+          "Saved to server, but failed to sync local file metadata:",
+          cacheError,
+        );
+      }
       setConfirmOpen(false);
       openShare({ ...stub, ...metadata });
     } catch (error) {
