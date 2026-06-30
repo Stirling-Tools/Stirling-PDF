@@ -306,67 +306,6 @@
   background-color: var(--bg-muted);
 }
 
-.tool-panel__active-tool-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex: 1 1 auto;
-  min-width: 0;
-  padding: 0.35rem 0.75rem 0.35rem 0.4rem;
-  border: 1px solid var(--border-subtle);
-  border-radius: 9999px;
-  background: var(--mantine-color-body);
-}
-
-.tool-panel__active-tool-pill-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  border-radius: 9999px;
-  background: var(--mantine-color-blue-light);
-  color: var(--mantine-color-blue-filled);
-  flex-shrink: 0;
-}
-
-[data-mantine-color-scheme="dark"] .tool-panel__active-tool-pill-icon {
-  background: color-mix(
-    in srgb,
-    var(--mantine-color-blue-filled) 18%,
-    transparent
-  );
-  color: var(--mantine-color-blue-3, var(--mantine-color-blue-filled));
-}
-
-/* The inner .tool-button-icon wrapper carries its own transform/margin; reset
-   them so the icon glyph sits dead-centre in the circular background. */
-.tool-panel__active-tool-pill-icon .tool-button-icon {
-  margin: 0 !important;
-  transform: none !important;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-}
-
-.tool-panel__active-tool-pill-icon svg {
-  font-size: 1rem;
-  width: 1rem;
-  height: 1rem;
-}
-
-.tool-panel__active-tool-pill-label {
-  font-size: 0.9rem;
-  font-weight: 600;
-  flex: 1;
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  color: var(--text-primary);
-}
-
 ::view-transition-old(tool-rail) {
   animation: vt-rail-fade-out 180ms ease-out forwards;
 }

@@ -314,7 +314,7 @@ class CbzToPdfParams(ApiModel):
 
 class CertType(StrEnum):
     """
-    The type of the digital certificate
+    The type of the digital certificate. WINDOWS_STORE and PKCS11 are hardware-backed and only available in the desktop app.
     """
 
     pem = "PEM"
@@ -322,17 +322,35 @@ class CertType(StrEnum):
     pfx = "PFX"
     jks = "JKS"
     server = "SERVER"
+    windows_store = "WINDOWS_STORE"
+    pkcs11 = "PKCS11"
 
 
 class CertSignParams(ApiModel):
-    cert_type: CertType = Field(..., description="The type of the digital certificate")
+    alias: str | None = Field(
+        None,
+        description="The alias of the certificate to sign with. Required for WINDOWS_STORE and recommended for PKCS11 tokens holding multiple certificates.",
+    )
+    cert_type: CertType = Field(
+        ...,
+        description="The type of the digital certificate. WINDOWS_STORE and PKCS11 are hardware-backed and only available in the desktop app.",
+    )
     location: str = Field("SPDF", description="The location where the PDF is signed")
     name: str = Field("SPDF", description="The name of the signer")
     page_number: int = Field(
         1,
         description="The page number where the signature should be visible. This is required if showSignature is set to true",
     )
-    password: SecretStr | None = Field(None, description="The password for the keystore or the private key")
+    password: SecretStr | None = Field(
+        None, description="The password for the keystore / private key, or the token PIN for PKCS11"
+    )
+    pkcs11_library_path: str | None = Field(
+        None,
+        description="Absolute path to the PKCS#11 driver library (required for PKCS11 type). Must be an allowed driver - a detected one or configured via STIRLING_PKCS11_LIBRARIES.",
+    )
+    pkcs11_slot: int | None = Field(
+        None, description="Optional PKCS#11 slot index. When omitted the first slot with a token is used."
+    )
     reason: str = Field("Signed by SPDF", description="The reason for signing the PDF")
     show_logo: bool = Field(True, description="Whether to visually show a signature logo along with the signature")
     show_signature: bool = Field(False, description="Whether to visually show the signature in the PDF file")
@@ -961,6 +979,12 @@ class PdfToXlsxParams(ApiModel):
     )
 
 
+class Pkcs11CertificatesParams(ApiModel):
+    library_path: str | None = None
+    pin: str | None = None
+    slot: int | None = None
+
+
 class CustomMode(StrEnum):
     """
     The custom mode for page rearrangement. Valid values are:
@@ -1493,6 +1517,7 @@ class Model(
         | AddWatermarkParams
         | AutoRedactParams
         | CertSignParams
+        | Pkcs11CertificatesParams
         | SessionsParams
         | ValidateCertificateParams
         | RedactParams
@@ -1562,6 +1587,7 @@ class Model(
         | AddWatermarkParams
         | AutoRedactParams
         | CertSignParams
+        | Pkcs11CertificatesParams
         | SessionsParams
         | ValidateCertificateParams
         | RedactParams
@@ -1632,6 +1658,7 @@ type ParamToolModel = (
     | AddWatermarkParams
     | AutoRedactParams
     | CertSignParams
+    | Pkcs11CertificatesParams
     | SessionsParams
     | ValidateCertificateParams
     | RedactParams
@@ -1703,6 +1730,7 @@ class ToolEndpoint(StrEnum):
     ADD_WATERMARK = "/api/v1/security/add-watermark"
     AUTO_REDACT = "/api/v1/security/auto-redact"
     CERT_SIGN = "/api/v1/security/cert-sign"
+    PKCS11_CERTIFICATES = "/api/v1/security/cert-sign/hardware/pkcs11-certificates"
     SESSIONS = "/api/v1/security/cert-sign/sessions"
     VALIDATE_CERTIFICATE = "/api/v1/security/cert-sign/validate-certificate"
     REDACT = "/api/v1/security/redact"
@@ -1772,6 +1800,7 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.ADD_WATERMARK: AddWatermarkParams,
     ToolEndpoint.AUTO_REDACT: AutoRedactParams,
     ToolEndpoint.CERT_SIGN: CertSignParams,
+    ToolEndpoint.PKCS11_CERTIFICATES: Pkcs11CertificatesParams,
     ToolEndpoint.SESSIONS: SessionsParams,
     ToolEndpoint.VALIDATE_CERTIFICATE: ValidateCertificateParams,
     ToolEndpoint.REDACT: RedactParams,

@@ -24,7 +24,12 @@ import { WorkbenchType, isBaseWorkbench } from "@app/types/workbench";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
+import ViewerShareButton from "@app/components/viewer/ViewerShareButton";
+import { useSharingEnabled } from "@app/hooks/useSharingEnabled";
 import { downloadFileWithPolicy as downloadFile } from "@app/services/exportWithPolicy";
+import { enforceExportPolicies } from "@app/services/policyExport";
+import { downloadFile as downloadRaw } from "@app/services/downloadService";
+import { alert as showAlert } from "@app/components/toast";
 import {
   WorkbenchBarButtonConfig,
   WorkbenchBarRenderContext,
@@ -107,6 +112,7 @@ export default function WorkbenchBar({
     toolPanelMode === "fullscreen" && leftPanelView === "toolPicker";
   const terminology = useFileActionTerminology();
   const icons = useFileActionIcons();
+  const { sharingEnabled } = useSharingEnabled();
   const viewerContext = React.useContext(ViewerContext);
 
   const { selectors } = useFileState();
@@ -174,13 +180,35 @@ export default function WorkbenchBar({
 
       const filesToExport =
         selectedFiles.length > 0 ? selectedFiles : activeFiles;
-      for (const file of filesToExport) {
-        const stub = isStirlingFile(file)
+      const stubs = filesToExport.map((file) =>
+        isStirlingFile(file)
           ? selectors.getStirlingFileStub(file.fileId)
-          : undefined;
+          : undefined,
+      );
+
+      // Enforce all files in one batch so the toast shows progress across the
+      // whole set (e.g. "report.pdf (2 of 5)") rather than N invisible solo runs.
+      let enforced: File[];
+      try {
+        enforced = await enforceExportPolicies(
+          filesToExport as File[],
+          stubs.map((s) => s?.id),
+        );
+      } catch {
+        enforced = filesToExport as File[];
+        showAlert({
+          alertType: "warning",
+          title: t("policies.enforcement.exportFailureTitle"),
+          body: t("policies.enforcement.exportFailureBody"),
+        });
+      }
+
+      for (let idx = 0; idx < filesToExport.length; idx++) {
+        const file = filesToExport[idx];
+        const stub = stubs[idx];
         try {
-          const result = await downloadFile({
-            data: file,
+          const result = await downloadRaw({
+            data: enforced[idx],
             filename: file.name,
             localPath: forceNewFile ? undefined : stub?.localFilePath,
             fileId: stub?.id,
@@ -439,101 +467,107 @@ export default function WorkbenchBar({
           </div>
         )}
 
-      {/* Right: Global buttons - export group left, close anchored right.
-          File-only; hidden on the homepage so only the search shows. */}
-      {hasFiles && (
-        <div className="workbench-bar-globals">
-          {/* Print */}
-          {currentView === "viewer" &&
-            renderWithTooltip(
-              <ActionIcon
-                variant="subtle"
-                radius="md"
-                className="workbench-bar-action-icon"
-                onClick={handlePrint}
-                disabled={
-                  totalItems === 0 || allButtonsDisabled || disableForFullscreen
-                }
-                aria-label={t("workbenchBar.print", "Print PDF")}
-              >
-                <PrintIcon sx={{ fontSize: "1rem" }} />
-              </ActionIcon>,
-              t("workbenchBar.print", "Print PDF"),
-            )}
+      {/* Right: Global buttons - export group left, close anchored right */}
+      <div className="workbench-bar-globals">
+        {/* Share (viewer only; opens the same modal as My Files "Manage sharing") */}
+        {currentView === "viewer" && sharingEnabled && (
+          <ViewerShareButton
+            disabled={
+              totalItems === 0 || allButtonsDisabled || disableForFullscreen
+            }
+          />
+        )}
 
-          {/* Download (file-level action — not relevant in custom views) */}
-          {!isCustomView &&
-            renderWithTooltip(
-              <ActionIcon
-                variant="subtle"
-                radius="md"
-                className="workbench-bar-action-icon"
-                onClick={() => handleExportAll()}
-                disabled={
-                  disableForFullscreen || totalItems === 0 || allButtonsDisabled
-                }
-              >
-                <LocalIcon
-                  icon={icons.downloadIconName}
-                  width="1rem"
-                  height="1rem"
-                />
-              </ActionIcon>,
-              downloadTooltip,
-            )}
-
-          {/* Save As */}
-          {!isCustomView &&
-            icons.saveAsIconName &&
-            renderWithTooltip(
-              <ActionIcon
-                variant="subtle"
-                radius="md"
-                className="workbench-bar-action-icon"
-                onClick={() => handleExportAll(true)}
-                disabled={
-                  disableForFullscreen || totalItems === 0 || allButtonsDisabled
-                }
-              >
-                <LocalIcon
-                  icon={icons.saveAsIconName}
-                  width="1rem"
-                  height="1rem"
-                />
-              </ActionIcon>,
-              t("workbenchBar.saveAs", "Save As"),
-            )}
-
-          {/* Separator: export group | close */}
-          {!isCustomView && (
-            <div className="workbench-bar-divider workbench-bar-globals-sep" />
+        {/* Print */}
+        {currentView === "viewer" &&
+          renderWithTooltip(
+            <ActionIcon
+              variant="subtle"
+              radius="md"
+              className="workbench-bar-action-icon"
+              onClick={handlePrint}
+              disabled={
+                totalItems === 0 || allButtonsDisabled || disableForFullscreen
+              }
+              aria-label={t("workbenchBar.print", "Print PDF")}
+            >
+              <PrintIcon sx={{ fontSize: "1rem" }} />
+            </ActionIcon>,
+            t("workbenchBar.print", "Print PDF"),
           )}
 
-          {/* Close (context-aware: close all / close viewer file / close page editor) */}
-          {!isCustomView &&
-            renderWithTooltip(
-              <ActionIcon
-                variant="subtle"
-                radius="md"
-                className="workbench-bar-action-icon"
-                onClick={handleClose}
-                disabled={
-                  totalItems === 0 || allButtonsDisabled || disableForFullscreen
-                }
-                aria-label={
-                  currentView === "fileEditor"
-                    ? t("workbenchBar.closeAll", "Close All")
-                    : t("workbenchBar.closePdf", "Close PDF")
-                }
-              >
-                <CloseIcon sx={{ fontSize: "1rem" }} />
-              </ActionIcon>,
-              currentView === "fileEditor"
-                ? t("workbenchBar.closeAll", "Close All")
-                : t("workbenchBar.closePdf", "Close PDF"),
-            )}
-        </div>
-      )}
+        {/* Download (file-level action — not relevant in custom views) */}
+        {!isCustomView &&
+          renderWithTooltip(
+            <ActionIcon
+              variant="subtle"
+              radius="md"
+              className="workbench-bar-action-icon"
+              onClick={() => handleExportAll()}
+              disabled={
+                disableForFullscreen || totalItems === 0 || allButtonsDisabled
+              }
+            >
+              <LocalIcon
+                icon={icons.downloadIconName}
+                width="1rem"
+                height="1rem"
+              />
+            </ActionIcon>,
+            downloadTooltip,
+          )}
+
+        {/* Save As */}
+        {!isCustomView &&
+          icons.saveAsIconName &&
+          renderWithTooltip(
+            <ActionIcon
+              variant="subtle"
+              radius="md"
+              className="workbench-bar-action-icon"
+              onClick={() => handleExportAll(true)}
+              disabled={
+                disableForFullscreen || totalItems === 0 || allButtonsDisabled
+              }
+            >
+              <LocalIcon
+                icon={icons.saveAsIconName}
+                width="1rem"
+                height="1rem"
+              />
+            </ActionIcon>,
+            t("workbenchBar.saveAs", "Save As"),
+          )}
+
+        {/* Separator: export group | close */}
+        {!isCustomView && (
+          <div className="workbench-bar-divider workbench-bar-globals-sep" />
+        )}
+
+        {/* Close (context-aware: close all / close viewer file / close page editor) */}
+        {!isCustomView &&
+          renderWithTooltip(
+            <ActionIcon
+              variant="subtle"
+              radius="md"
+              className="workbench-bar-action-icon"
+              onClick={handleClose}
+              disabled={
+                totalItems === 0 || allButtonsDisabled || disableForFullscreen
+              }
+              aria-label={
+                currentView === "fileEditor"
+                  ? t("workbenchBar.closeAll", "Close All")
+                  : t("workbenchBar.closePdf", "Close PDF")
+              }
+            >
+              <CloseIcon sx={{ fontSize: "1rem" }} />
+            </ActionIcon>,
+            currentView === "fileEditor"
+              ? t("workbenchBar.closeAll", "Close All")
+              : t("workbenchBar.closePdf", "Close PDF"),
+          )}
+      </div>
     </div>
   );
 }

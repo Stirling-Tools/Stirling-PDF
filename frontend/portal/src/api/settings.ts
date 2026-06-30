@@ -1,4 +1,4 @@
-import { httpJson } from "@portal/api/http";
+import { apiClient } from "@portal/api/http";
 import type { SettingsSnapshot } from "@portal/mocks/settings";
 import type { Tier } from "@portal/contexts/TierContext";
 
@@ -13,7 +13,7 @@ export type {
 
 /** GET /v1/settings?tier=… — the account + workspace snapshot the modal edits. */
 export async function fetchSettings(tier: Tier): Promise<SettingsSnapshot> {
-  return httpJson<SettingsSnapshot>(
+  return apiClient.local.json<SettingsSnapshot>(
     `/v1/settings?tier=${encodeURIComponent(tier)}`,
   );
 }
