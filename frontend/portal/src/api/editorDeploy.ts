@@ -1,4 +1,4 @@
-import { httpJson } from "@portal/api/http";
+import { apiClient } from "@portal/api/http";
 import type { EditorDeploymentResponse } from "@portal/mocks/editorDeploy";
 import type { Tier } from "@portal/contexts/TierContext";
 
@@ -29,7 +29,7 @@ export {
 export async function fetchEditorDeployment(
   tier: Tier,
 ): Promise<EditorDeploymentResponse> {
-  return httpJson<EditorDeploymentResponse>(
+  return apiClient.local.json<EditorDeploymentResponse>(
     `/v1/editor/deployment?tier=${encodeURIComponent(tier)}`,
   );
 }
