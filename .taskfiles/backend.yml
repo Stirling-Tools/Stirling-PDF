@@ -30,6 +30,10 @@ tasks:
 
   dev:proprietary:
     desc: "Start backend dev server in proprietary mode"
+    # `dotenv:` reads from the root Taskfile's directory (".") because this
+    # subtaskfile is included with `dir: .`. Local overrides in
+    # .env.proprietary.local win over the committed .env.proprietary defaults.
+    dotenv: ['app/.env.proprietary.local', 'app/.env.proprietary']
     ignore_error: true
     vars:
       PORT: '{{.PORT | default "8080"}}'
