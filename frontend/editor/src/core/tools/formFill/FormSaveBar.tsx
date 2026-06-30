@@ -25,6 +25,7 @@ import DownloadIcon from "@mui/icons-material/Download";
 import SaveIcon from "@mui/icons-material/Save";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import { useFormFill } from "@app/tools/formFill/FormFillContext";
+import { downloadFileWithPolicy } from "@app/services/exportWithPolicy";
 
 interface FormSaveBarProps {
   /** The current file being viewed */
@@ -77,15 +78,12 @@ export function FormSaveBar({
     setSaving(true);
     try {
       const blob = await submitForm(file, false);
-      // Trigger browser download
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = file instanceof File ? file.name : "filled-form.pdf";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      // Route through the export gateway so a "run on export" policy enforces on
+      // the filled PDF before it leaves the app (no-op when no such policy is set).
+      await downloadFileWithPolicy({
+        data: blob,
+        filename: file instanceof File ? file.name : "filled-form.pdf",
+      });
     } catch (err) {
       console.error("[FormSaveBar] Download failed:", err);
     } finally {

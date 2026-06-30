@@ -7,7 +7,7 @@
  * shown directly or behind a zero-standing-access elevation request.
  *
  * api/documents.ts imports the types; the MSW handlers serve the fixture data
- * over the intercepted httpJson() calls. Components never reach into this
+ * over the intercepted apiClient.local.json() calls. Components never reach into this
  * module directly. Once a real backend exists the handlers stop being
  * registered and these fixtures can be deleted (or kept as test seeds).
  */

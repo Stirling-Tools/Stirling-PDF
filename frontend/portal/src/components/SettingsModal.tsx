@@ -31,7 +31,9 @@ import {
   PoliciesIcon,
   InfrastructureIcon,
   SparklesIcon,
+  LinkIcon,
 } from "@portal/components/icons";
+import { AccountLinkPanel } from "@portal/components/account-link/AccountLinkPanel";
 import "@portal/components/SettingsModal.css";
 
 type SettingsSection =
@@ -41,7 +43,21 @@ type SettingsSection =
   | "general"
   | "authentication"
   | "sessions"
-  | "early-access";
+  | "early-access"
+  | "account-link";
+
+function isSettingsSection(value: string | null): value is SettingsSection {
+  return (
+    value === "profile" ||
+    value === "appearance" ||
+    value === "notifications" ||
+    value === "general" ||
+    value === "authentication" ||
+    value === "sessions" ||
+    value === "early-access" ||
+    value === "account-link"
+  );
+}
 
 /** Org-wide auth posture the Admin sections edit, mirrored into local state. */
 interface SecurityForm {
@@ -54,6 +70,12 @@ interface SecurityForm {
 interface SettingsModalProps {
   open: boolean;
   onClose: () => void;
+  /**
+   * Optional section to land on when opening. When `null`/unsupported the modal
+   * picks the default ("profile"). Set by callers like the sidebar's "Link
+   * account" affordance → "account-link".
+   */
+  initialSection?: string | null;
 }
 
 /**
@@ -83,7 +105,11 @@ const SESSION_TIMEOUT_VALUES = ["60", "240", "480", "720", "1440"] as const;
  * state. Save is a no-op for the demo — it closes — but the theme control
  * writes straight through to ThemeProvider so the change is real and visible.
  */
-export function SettingsModal({ open, onClose }: SettingsModalProps) {
+export function SettingsModal({
+  open,
+  onClose,
+  initialSection,
+}: SettingsModalProps) {
   const { t } = useTranslation();
   const { tier } = useTier();
   const { theme, setTheme } = useTheme();
@@ -124,6 +150,11 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
       {
         title: t("settings.groups.admin"),
         items: [
+          {
+            key: "account-link",
+            label: t("settings.sections.account-link"),
+            icon: <LinkIcon size={16} />,
+          },
           {
             key: "authentication",
             label: t("settings.sections.authentication"),
@@ -189,8 +220,10 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
   }, [snapshot]);
 
   useEffect(() => {
-    if (open) setSection("profile");
-  }, [open]);
+    if (!open) return;
+    const requested = initialSection ?? null;
+    setSection(isSettingsSection(requested) ? requested : "profile");
+  }, [open, initialSection]);
 
   const regionOptions = useMemo<SelectOption[]>(() => {
     if (!snapshot) return [];
@@ -301,6 +334,8 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
             }
           />
         )}
+
+        {section === "account-link" && <AccountLinkPanel />}
       </SettingsShell>
     </Modal>
   );
