@@ -1,11 +1,15 @@
 package stirling.software.proprietary.accountlink;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-import org.apache.pdfbox.Loader;
-import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
@@ -22,7 +26,11 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.util.TempFile;
+import stirling.software.common.util.TempFileManager;
+import stirling.software.jpdfium.PdfDocument;
 import stirling.software.proprietary.billing.BillingCategory;
+import stirling.software.proprietary.billing.ContentHasher;
 import stirling.software.proprietary.billing.DocumentUnitCalculator;
 import stirling.software.proprietary.billing.DocumentUnitCalculator.FileSize;
 import stirling.software.proprietary.billing.UnitCalcPolicy;
@@ -33,6 +41,12 @@ import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
  * and blocks billable (API / AI / automation) work when the instance is unlinked or over its limit;
  * manual tools pass straight through. {@code afterCompletion} meters a <em>successful</em> billable
  * op into the per-period cumulative counter (the daily sync later reports the totals).
+ *
+ * <p>Metering materialises each uploaded input once to a temp file and reads it twice from disk:
+ * the page count via <b>jpdfium</b> (parser-identical to the SaaS classifier, so the page axis
+ * can't drift between instance and cloud) and a SHA-256 via the shared {@link ContentHasher} (the
+ * input-set signature for lineage dedup — a re-submission of the identical inputs isn't re-charged,
+ * matching the in-cloud lineage join). Either read failing degrades gracefully to bytes-only.
  *
  * <p>Blocking responds {@code 402 Payment Required} with a small machine-readable body — {@code
  * {"error":"ACCOUNT_LINK_REQUIRED","reason":"NOT_LINKED"}} — that the FE maps to a "link to
@@ -54,14 +68,17 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
     private final InstanceEntitlementGate gate;
     private final EntitlementCache entitlementCache;
     private final ObjectProvider<UsageMeterService> meterProvider;
+    private final TempFileManager tempFileManager;
 
     public InstanceEntitlementInterceptor(
             InstanceEntitlementGate gate,
             EntitlementCache entitlementCache,
-            ObjectProvider<UsageMeterService> meterProvider) {
+            ObjectProvider<UsageMeterService> meterProvider,
+            TempFileManager tempFileManager) {
         this.gate = gate;
         this.entitlementCache = entitlementCache;
         this.meterProvider = meterProvider;
+        this.tempFileManager = tempFileManager;
     }
 
     @Override
@@ -123,58 +140,107 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
                 // Not yet synced (no policy/period) — can't compute units; skip until next sync.
                 return;
             }
-            meter.accrue(ent.periodStart(), category, computeUnits(request, ent.unitCalcPolicy()));
+            meterRequest(request, category, ent, meter);
         } catch (RuntimeException e) {
             // Metering must never affect the response that already completed.
             log.debug("Usage metering failed for {}", request.getRequestURI(), e);
         }
     }
 
-    // Bytes above this aren't page-counted: parsing a huge upload on the metering path isn't worth
-    // it, and the byte axis already dominates the unit count at that size.
-    private static final long MAX_BYTES_FOR_PAGE_COUNT = 50L * 1024 * 1024;
-
     /**
-     * Doc-units for this request via the shared calculator, on both the page and byte axes. The
-     * instance is authoritative for units here — SaaS bills the delta of what we report and never
-     * sees the file — so a page-heavy but small PDF must be page-counted or it under-bills. A
-     * non-file billable op costs 1 unit.
+     * Computes doc-units (page + byte axes) and the input-set signature for the request, then
+     * accrues. The instance is authoritative for units — SaaS bills the delta of what we report and
+     * never sees the file — so a page-heavy but small PDF must be page-counted or it under-bills. A
+     * fileless billable op has no input identity, so it carries a null signature (no dedup) and is
+     * billed the 1-unit floor each time.
      */
-    private static long computeUnits(HttpServletRequest request, UnitCalcPolicy policy) {
+    private void meterRequest(
+            HttpServletRequest request,
+            BillingCategory category,
+            InstanceEntitlement ent,
+            UsageMeterService meter) {
+        UnitCalcPolicy policy = ent.unitCalcPolicy();
         MultipartHttpServletRequest mreq =
                 WebUtils.getNativeRequest(request, MultipartHttpServletRequest.class);
         if (mreq == null) {
-            return DocumentUnitCalculator.unitsForFile(0, 0, policy);
+            meter.accrue(
+                    ent.periodStart(),
+                    category,
+                    DocumentUnitCalculator.unitsForFile(0, 0, policy),
+                    null);
+            return;
         }
-        List<FileSize> sizes = new ArrayList<>();
-        for (List<MultipartFile> files : mreq.getMultiFileMap().values()) {
-            for (MultipartFile f : files) {
-                sizes.add(new FileSize(pageCount(f), f.getSize()));
+        List<TempFile> temps = new ArrayList<>();
+        try {
+            List<FileSize> sizes = new ArrayList<>();
+            List<String> hashes = new ArrayList<>();
+            int fileCount = 0;
+            for (List<MultipartFile> files : mreq.getMultiFileMap().values()) {
+                for (MultipartFile f : files) {
+                    fileCount++;
+                    try {
+                        TempFile temp = tempFileManager.createManagedTempFile(".bin");
+                        temps.add(temp);
+                        try (InputStream in = f.getInputStream();
+                                OutputStream out = Files.newOutputStream(temp.getPath())) {
+                            in.transferTo(out);
+                        }
+                        sizes.add(new FileSize(pageCount(temp.getPath(), f), f.getSize()));
+                        hashes.add(ContentHasher.sha256(temp.getPath()));
+                    } catch (IOException | RuntimeException perFile) {
+                        // Couldn't materialise/hash this input — bill it on bytes only and (by
+                        // leaving it out of `hashes`) drop dedup for the whole op rather than risk
+                        // a
+                        // wrong match.
+                        log.debug(
+                                "Metering materialise/hash failed for {}; bytes-only",
+                                f.getOriginalFilename());
+                        sizes.add(new FileSize(0, f.getSize()));
+                    }
+                }
+            }
+            long units =
+                    sizes.isEmpty()
+                            ? DocumentUnitCalculator.unitsForFile(0, 0, policy)
+                            : DocumentUnitCalculator.unitsForGroup(sizes, policy);
+            // Only dedup when every input hashed — a partial signature could collide with a
+            // different input set, so fall back to no-dedup (bill it) if any file failed.
+            String opSignature =
+                    fileCount > 0 && hashes.size() == fileCount ? opSignature(hashes) : null;
+            meter.accrue(ent.periodStart(), category, units, opSignature);
+        } finally {
+            for (TempFile temp : temps) {
+                try {
+                    temp.close();
+                } catch (RuntimeException cleanup) {
+                    log.debug("Temp file cleanup failed: {}", cleanup.getMessage());
+                }
             }
         }
-        return sizes.isEmpty()
-                ? DocumentUnitCalculator.unitsForFile(0, 0, policy)
-                : DocumentUnitCalculator.unitsForGroup(sizes, policy);
     }
 
-    /**
-     * Page count for a PDF upload, or 0 for non-PDFs / oversized / unreadable inputs — the byte
-     * axis still produces a charge, matching the SaaS classifier's malformed-PDF fallback.
-     */
-    private static int pageCount(MultipartFile file) {
-        long size = file.getSize();
-        if (!isPdf(file) || size <= 0 || size > MAX_BYTES_FOR_PAGE_COUNT) {
+    /** Page count via jpdfium (parser-identical to SaaS); 0 for non-PDF / unreadable inputs. */
+    private static int pageCount(Path path, MultipartFile file) {
+        if (!isPdf(file)) {
             return 0;
         }
-        try (PDDocument doc = Loader.loadPDF(file.getBytes())) {
-            return doc.getNumberOfPages();
-        } catch (IOException | RuntimeException e) {
-            // Malformed / encrypted / already-consumed part → fall back to the byte axis only.
+        try (PdfDocument doc = PdfDocument.open(path)) {
+            return doc.pageCount();
+        } catch (RuntimeException e) {
+            // Malformed / encrypted → fall back to the byte axis only, matching the SaaS
+            // classifier.
             log.debug(
                     "Page count unavailable for {}; metering on bytes only",
                     file.getOriginalFilename());
             return 0;
         }
+    }
+
+    /** Order-independent signature of the input set: sorted per-file hashes, hashed together. */
+    private static String opSignature(List<String> hashes) {
+        List<String> sorted = new ArrayList<>(hashes);
+        Collections.sort(sorted);
+        return ContentHasher.sha256(String.join("\n", sorted).getBytes(StandardCharsets.UTF_8));
     }
 
     private static boolean isPdf(MultipartFile file) {
