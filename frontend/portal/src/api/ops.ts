@@ -1,11 +1,11 @@
-import { HttpError, httpJson } from "@portal/api/http";
+import { apiClient, HttpError } from "@portal/api/http";
 import type { FeaturedOp, OpResultMap } from "@portal/mocks/ops";
 
 export type { FeaturedOp, OpResultMap };
 
 /** GET /v1/ops/featured */
 export async function fetchFeaturedOps(): Promise<FeaturedOp[]> {
-  return httpJson<FeaturedOp[]>("/v1/ops/featured");
+  return apiClient.local.json<FeaturedOp[]>("/v1/ops/featured");
 }
 
 export class UnknownOpError extends Error {
@@ -21,13 +21,13 @@ export async function runSingleOp(
   sample: string,
 ): Promise<{ result: OpResultMap; durationMs: number }> {
   try {
-    return await httpJson<{ result: OpResultMap; durationMs: number }>(
-      `/v1/ops/${encodeURIComponent(opId)}/run`,
-      {
-        method: "POST",
-        body: { sample },
-      },
-    );
+    return await apiClient.local.json<{
+      result: OpResultMap;
+      durationMs: number;
+    }>(`/v1/ops/${encodeURIComponent(opId)}/run`, {
+      method: "POST",
+      body: { sample },
+    });
   } catch (err) {
     if (err instanceof HttpError && err.status === 404) {
       throw new UnknownOpError(opId);
