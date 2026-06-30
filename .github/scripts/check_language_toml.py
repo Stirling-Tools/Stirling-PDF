@@ -9,11 +9,19 @@ The script also provides functionality to update the translation files to match 
 adjusting the format.
 
 Usage:
-    python check_language_toml.py --reference-file <path_to_reference_file> --branch <branch_name> [--actor <actor_name>] [--files <list_of_changed_files>]
+    python check_language_toml.py --reference-file <path_to_reference_file> --branch <branch_name> [--actor <actor_name>] [--files <list_of_changed_files>] [--locales-dir <path_to_locales_directory>]
+
+    --locales-dir   Directory containing all locale subdirectories (e.g. frontend/portal/public/locales).
+                    Defaults to the parent of the reference file's parent directory, so it is normally
+                    inferred automatically and only needs to be set when the locales tree lives outside
+                    the standard layout.
 """
 
-# Sample for Windows:
+# Sample for Windows (editor locales — locales-dir inferred automatically):
 # python .github/scripts/check_language_toml.py --reference-file frontend/editor/public/locales/en-US/translation.toml --branch "" --files frontend/editor/public/locales/de-DE/translation.toml frontend/editor/public/locales/fr-FR/translation.toml
+
+# Sample for Windows (portal locales — explicit locales-dir):
+# python .github/scripts/check_language_toml.py --reference-file frontend/portal/public/locales/en-US/translation.toml --locales-dir frontend/portal/public/locales --branch ""
 
 import argparse
 import glob
