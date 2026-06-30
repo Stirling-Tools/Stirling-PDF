@@ -29,12 +29,16 @@ public interface SourceDocCountRepository
             @Param("bucketHour") long bucketHour,
             @Param("docs") long docs);
 
-    /** Lifetime document total per source, for the given sources. */
-    @Query(
-            "select new stirling.software.proprietary.policy.source.SourceDocSum("
-                    + "e.sourceId, sum(e.docCount))"
-                    + " from SourceDocCountEntity e where e.sourceId in :ids group by e.sourceId")
-    List<SourceDocSum> sumBySource(@Param("ids") Collection<String> ids);
+    /**
+     * Delete hourly buckets older than {@code floor} (hours-since-epoch). Nothing reads buckets
+     * before the 30-day window ({@code SourceDocWindows.firstDayHour}); the lifetime total lives in
+     * {@code policy_source_doc_totals}, so retiring old buckets keeps the table bounded without
+     * losing any reported figure.
+     */
+    @Modifying
+    @Transactional
+    @Query("delete from SourceDocCountEntity e where e.bucketHour < :floor")
+    int deleteOlderThan(@Param("floor") long floor);
 
     /**
      * Document total per source restricted to buckets at or after {@code since} (the 24h window).

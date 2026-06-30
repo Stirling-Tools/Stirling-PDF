@@ -26,19 +26,20 @@ class JpaSourceDocCounterDbTest {
     private static final long NOW_HOUR = NOW.getEpochSecond() / 3600;
 
     @Autowired private SourceDocCountRepository repository;
+    @Autowired private SourceDocTotalRepository totalRepository;
 
     private JpaSourceDocCounter counter() {
-        return new JpaSourceDocCounter(repository, () -> NOW);
+        return new JpaSourceDocCounter(repository, totalRepository, () -> NOW);
     }
 
     @Test
-    void recordCreatesThenIncrementsTheCurrentHourBucket() {
+    void recordIncrementsBothTheHourlyBucketAndTheLifetimeTotal() {
         JpaSourceDocCounter counter = counter();
         counter.record("s", 5);
         counter.record("s", 3);
 
         DocStats stats = counter.statsFor(List.of("s")).get("s");
-        assertEquals(8, stats.total());
+        assertEquals(8, stats.total()); // from the denormalized lifetime row
         assertEquals(8, stats.last24h());
         assertEquals(8, stats.last30d());
         assertEquals(8L, counter.dailySeriesFor("s").get(DocStats.DAYS - 1));
@@ -46,13 +47,15 @@ class JpaSourceDocCounterDbTest {
 
     @Test
     void statsBucketDocsByDayAndWindowFromTheDatabase() {
-        // Seed buckets directly at controlled hours: today, 10 days ago, 40 days ago.
+        // Seed buckets directly at controlled hours: today, 10 days ago, 40 days ago, plus the
+        // lifetime row (record() would write it, but here we seed history directly).
         repository.saveAndFlush(new SourceDocCountEntity("s", NOW_HOUR, 7));
         repository.saveAndFlush(new SourceDocCountEntity("s", NOW_HOUR - 24L * 10, 50));
         repository.saveAndFlush(new SourceDocCountEntity("s", NOW_HOUR - 24L * 40, 100));
+        totalRepository.saveAndFlush(new SourceDocTotalEntity("s", 157));
 
         DocStats stats = counter().statsFor(List.of("s")).get("s");
-        assertEquals(157, stats.total());
+        assertEquals(157, stats.total()); // lifetime, including the out-of-window 40-days-ago docs
         assertEquals(7, stats.last24h());
         assertEquals(57, stats.last30d());
 
@@ -62,6 +65,21 @@ class JpaSourceDocCounterDbTest {
         assertEquals(7L, series.get(DocStats.DAYS - 1)); // today
         assertEquals(50L, series.get(DocStats.DAYS - 11)); // 10 days ago
         assertEquals(57L, series.stream().mapToLong(Long::longValue).sum());
+    }
+
+    @Test
+    void pruneRetiresOutOfWindowBucketsButKeepsTheLifetimeTotal() {
+        repository.saveAndFlush(new SourceDocCountEntity("s", NOW_HOUR, 7)); // today
+        repository.saveAndFlush(new SourceDocCountEntity("s", NOW_HOUR - 24L * 40, 100)); // 40d ago
+        totalRepository.saveAndFlush(new SourceDocTotalEntity("s", 107));
+
+        counter().pruneOldBuckets();
+
+        assertEquals(1, repository.count()); // only the in-window bucket remains
+        DocStats stats = counter().statsFor(List.of("s")).get("s");
+        assertEquals(107, stats.total()); // lifetime survives pruning
+        assertEquals(7, stats.last24h());
+        assertEquals(7, stats.last30d());
     }
 
     @Test
