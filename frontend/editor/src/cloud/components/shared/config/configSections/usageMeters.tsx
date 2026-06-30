@@ -7,35 +7,9 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useWallet, type Wallet } from "@app/hooks/useWallet";
+import { currencySymbol, MeterBar, meterState } from "@shared/billing";
 import "@app/components/shared/config/configSections/Payg.css";
 import "@app/components/shared/config/configSections/PaygFree.css";
-
-export type MeterState = "FULL" | "WARNED" | "DEGRADED";
-
-/** Warn/degrade band for a usage meter (mirrors the BE thresholds). */
-export function meterState(
-  used: number,
-  limit: number,
-): { state: MeterState; pct: number } {
-  const pct = limit > 0 ? Math.min(100, (used / limit) * 100) : 100;
-  const state: MeterState =
-    pct >= 100 ? "DEGRADED" : pct >= 80 ? "WARNED" : "FULL";
-  return { state, pct };
-}
-
-/** Currency symbol for compact inline use; falls back to the ISO code. */
-function currencySymbol(currency: string | null): string {
-  switch ((currency ?? "").toLowerCase()) {
-    case "usd":
-      return "$";
-    case "eur":
-      return "€";
-    case "gbp":
-      return "£";
-    default:
-      return currency ? currency.toUpperCase() + " " : "$";
-  }
-}
 
 // ─── One-time free grant meter ──────────────────────────────────────────────
 
@@ -78,38 +52,20 @@ export function FreeMeterPanel({ snap }: { snap: FreeSnapshot }) {
         : t("payg.free.state.plentyLeft", "Plenty left");
 
   return (
-    <div className="paygf-meter" data-state={state}>
-      <div className="paygf-meter__top">
-        <div className="paygf-meter__figure">
-          <span className="paygf-meter__num">
-            {snap.billableUsed.toLocaleString()}
-          </span>
-          <span className="paygf-meter__cap">
-            {t("payg.free.hero.capSuffix", "/ {{limit}} free PDFs", {
-              limit: snap.billableLimit.toLocaleString(),
-            })}
-          </span>
-        </div>
-        <span className="payg-status" data-state={state}>
-          <span className="payg-status__dot" />
-          {stateLabel}
-        </span>
-      </div>
-
-      <div className="payg-bar">
-        <div
-          className="payg-bar__fill"
-          data-state={state}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-
-      <div className="paygf-meter__meta">
+    <MeterBar
+      state={state}
+      pct={pct}
+      figure={snap.billableUsed.toLocaleString()}
+      capSuffix={t("payg.free.hero.capSuffix", "/ {{limit}} free PDFs", {
+        limit: snap.billableLimit.toLocaleString(),
+      })}
+      statusLabel={stateLabel}
+      meta={
         <span>
           {t("payg.free.hero.metaCategories", "Automation · AI · API requests")}
         </span>
-      </div>
-    </div>
+      }
+    />
   );
 }
 
@@ -158,45 +114,28 @@ export function SpendCapMeterPanel({ snap }: { snap: SpendCapSnapshot }) {
   const symbol = currencySymbol(snap.currency);
 
   return (
-    <div className="paygf-meter" data-state={state}>
-      <div className="paygf-meter__top">
-        <div className="paygf-meter__figure">
-          <span className="paygf-meter__num">
-            {symbol}
-            {snap.spent.toLocaleString()}
+    <MeterBar
+      state={state}
+      pct={pct}
+      figure={`${symbol}${snap.spent.toLocaleString()}`}
+      capSuffix={t("payg.spendCapMeter.capSuffix", "/ {{amount}} cap", {
+        amount: `${symbol}${snap.cap.toLocaleString()}`,
+      })}
+      statusLabel={stateLabel}
+      meta={
+        <>
+          <span>
+            {t(
+              "payg.spendCapMeter.metaCategories",
+              "Automation · AI · API spend",
+            )}
           </span>
-          <span className="paygf-meter__cap">
-            {t("payg.spendCapMeter.capSuffix", "/ {{amount}} cap", {
-              amount: `${symbol}${snap.cap.toLocaleString()}`,
-            })}
+          <span className="payg-hero__meta-dot">•</span>
+          <span>
+            {t("payg.spendCapMeter.resets", "Resets each billing period")}
           </span>
-        </div>
-        <span className="payg-status" data-state={state}>
-          <span className="payg-status__dot" />
-          {stateLabel}
-        </span>
-      </div>
-
-      <div className="payg-bar">
-        <div
-          className="payg-bar__fill"
-          data-state={state}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-
-      <div className="paygf-meter__meta">
-        <span>
-          {t(
-            "payg.spendCapMeter.metaCategories",
-            "Automation · AI · API spend",
-          )}
-        </span>
-        <span className="payg-hero__meta-dot">•</span>
-        <span>
-          {t("payg.spendCapMeter.resets", "Resets each billing period")}
-        </span>
-      </div>
-    </div>
+        </>
+      }
+    />
   );
 }

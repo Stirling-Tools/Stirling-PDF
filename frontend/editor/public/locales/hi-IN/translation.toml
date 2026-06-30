@@ -5854,6 +5854,7 @@ routing = "Routing"
 security = "Security"
 
 [policies.detail]
+close = "बंद करें"
 editSettings = "Edit Settings"
 enforces = "Enforces"
 managedByOrg = "Managed by your organisation. Contact a team leader to change this policy."
@@ -5907,6 +5908,7 @@ allDocTypesTitle = "All document types"
 back = "Back"
 builderDesc = "Build the sequence of tools this policy runs on each document."
 clear = "Clear"
+close = "बंद करें"
 continue = "Continue"
 docTypesLabel = "Document types"
 edit = "Edit"
@@ -7784,8 +7786,6 @@ allReleases = "सभी रिलीज़"
 breaking = "ब्रेकिंग"
 breakingChanges = "असंगत परिवर्तन"
 breakingChangesDefault = "इस संस्करण में असंगत परिवर्तन शामिल हैं।"
-breakingChangesDetected = "असंगत परिवर्तन मिले"
-breakingChangesMessage = "कुछ संस्करणों में असंगत परिवर्तन हैं। अपडेट से पहले नीचे दिए गए माइग्रेशन गाइड्स देखें।"
 close = "बंद करें"
 closeModal = "अपडेट मोडल बंद करें"
 current = "वर्तमान संस्करण"
@@ -8606,6 +8606,7 @@ disableByAdmin = "MFA अक्षम करें"
 
 [workspace.people.roleDescriptions]
 admin = "सेटिंग्स और आमंत्रण प्रबंधित कर सकता है, पूर्ण प्रशासनिक पहुंच के साथ।"
+currentRole = "वर्तमान सौंपी गई भूमिका।"
 user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]

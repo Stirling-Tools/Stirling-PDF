@@ -1,8 +1,23 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { Box, ScrollArea, Text, Loader, Stack, TextInput } from "@mantine/core";
+import {
+  Box,
+  ScrollArea,
+  Text,
+  Loader,
+  Stack,
+  TextInput,
+  NumberInput,
+  Group,
+} from "@mantine/core";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { useViewer } from "@app/contexts/ViewerContext";
+import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import { useFileContext } from "@app/contexts/FileContext";
+import { isStirlingFile, type FileId } from "@app/types/fileContext";
+import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
+import apiClient from "@app/services/apiClient";
 import { PdfBookmarkObject, PdfActionType } from "@embedpdf/models";
 import BookmarksIcon from "@mui/icons-material/BookmarksRounded";
 import "@app/components/viewer/SidebarBase.css";
@@ -56,9 +71,25 @@ export const BookmarkSidebar = ({
   documentCacheKey,
   preloadCacheKeys = [],
 }: BookmarkSidebarProps) => {
-  const { bookmarkActions, scrollActions, hasBookmarkSupport } = useViewer();
+  const {
+    bookmarkActions,
+    scrollActions,
+    hasBookmarkSupport,
+    activeFileId,
+    activeFileIndex,
+    setActiveFileId,
+    getScrollState,
+    toggleBookmarkSidebar,
+  } = useViewer();
+  const { handleToolSelectForced } = useToolWorkflow();
+  const { selectors, actions: fileActions } = useFileContext();
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [searchTerm, setSearchTerm] = useState("");
+  const [isAddingBookmark, setIsAddingBookmark] = useState(false);
+  const [newBookmarkTitle, setNewBookmarkTitle] = useState("");
+  const [newBookmarkPage, setNewBookmarkPage] = useState<number>(1);
+  const [isSavingBookmark, setIsSavingBookmark] = useState(false);
+  const [addBookmarkError, setAddBookmarkError] = useState<string | null>(null);
   const [bookmarkSupport, setBookmarkSupport] = useState(() =>
     hasBookmarkSupport(),
   );
@@ -135,15 +166,22 @@ export const BookmarkSidebar = ({
     if (!bookmarkSupport || !documentCacheKey) return;
     const key = documentCacheKey;
     const cached = cacheRef.current.get(key);
-    if (
-      cached &&
-      (cached.status === "loading" || cached.status === "success")
-    ) {
+    // Only short-circuit on a finalised success cache. Skipping when
+    // cached.status === "loading" causes the sidebar to get stuck if
+    // the previous fetch was cancelled by a parent re-render (the
+    // bookmarkActions reference changes every viewer render because
+    // createViewerActions rebuilds the object). See matching change
+    // in AttachmentSidebar.
+    if (cached && cached.status === "success") {
       return;
     }
     let cancelled = false;
+    // Don't write "loading" into the cache - cache only terminal
+    // states so a cancelled run can't poison the cache.
     const updateEntry = (entry: BookmarkCacheEntry) => {
-      cacheRef.current.set(key, entry);
+      if (entry.status === "success" || entry.status === "error") {
+        cacheRef.current.set(key, entry);
+      }
       if (!cancelled && currentKeyRef.current === key) {
         setActiveEntry(entry);
       }
@@ -156,10 +194,24 @@ export const BookmarkSidebar = ({
       }),
     );
     const fetchWithRetry = async () => {
-      const maxAttempts = 10;
+      // 30 × 50ms = 1.5s window. After consumeFiles swaps the file the
+      // embedpdf bookmark plugin tears down for the old document and
+      // re-registers for the new one; until the bridge is back the
+      // action returns null. Without retrying on null we'd cache an
+      // empty "success" and the just-added bookmark would never show
+      // up in the sidebar.
+      const maxAttempts = 30;
       for (let attempt = 0; attempt < maxAttempts; attempt++) {
         try {
           const result = await bookmarkActions.fetchBookmarks();
+          if (result === null) {
+            // Bridge not registered yet (document still loading). Wait
+            // and retry instead of caching this as a successful empty
+            // list.
+            if (attempt === maxAttempts - 1) return [];
+            await new Promise((resolve) => setTimeout(resolve, 50));
+            continue;
+          }
           return Array.isArray(result) ? result : [];
         } catch (error: any) {
           const message =
@@ -218,6 +270,144 @@ export const BookmarkSidebar = ({
     bookmarkActions.clearBookmarks();
     setFetchNonce((value) => value + 1);
   }, [documentCacheKey, bookmarkActions]);
+
+  const handleOpenAddBookmark = useCallback(() => {
+    setAddBookmarkError(null);
+    setNewBookmarkTitle("");
+    // Default the new bookmark's target page to whatever page the user is
+    // currently viewing - matches Acrobat / Foxit behaviour.
+    const currentPage = getScrollState?.()?.currentPage ?? 1;
+    setNewBookmarkPage(currentPage);
+    setIsAddingBookmark(true);
+  }, [getScrollState]);
+
+  const handleCancelAddBookmark = useCallback(() => {
+    setIsAddingBookmark(false);
+    setAddBookmarkError(null);
+    setNewBookmarkTitle("");
+  }, []);
+
+  // Fallback: open the full Edit Table of Contents tool when inline add is
+  // not viable (e.g. the active file is a preview / unmanaged file we
+  // cannot consume + replace via FileContext).
+  const handleFallbackToTool = useCallback(() => {
+    handleToolSelectForced("editTableOfContents");
+  }, [handleToolSelectForced]);
+
+  const handleSubmitAddBookmark = useCallback(async () => {
+    const title = newBookmarkTitle.trim();
+    if (!title) {
+      setAddBookmarkError("Bookmark title is required");
+      return;
+    }
+    // Resolve the file the viewer is currently displaying. activeFileId
+    // is only set explicitly (user clicked a thumbnail / a tool ran);
+    // on a fresh /read upload it stays null and the viewer falls back
+    // to activeFileIndex - so we mirror that here. Without this, Save
+    // would silently route to the full editor every time on a fresh
+    // upload.
+    const allFiles = selectors.getFiles();
+    const resolvedFile = activeFileId
+      ? allFiles.find((f) => isStirlingFile(f) && f.fileId === activeFileId)
+      : (allFiles[activeFileIndex] ?? allFiles[0]);
+    const resolvedFileId =
+      resolvedFile && isStirlingFile(resolvedFile)
+        ? (resolvedFile.fileId as FileId)
+        : null;
+    if (!resolvedFileId) {
+      handleFallbackToTool();
+      return;
+    }
+    const fileId = resolvedFileId;
+    const file = selectors.getFile(fileId);
+    const parentStub = selectors.getStirlingFileStub(fileId);
+    if (!file || !parentStub) {
+      handleFallbackToTool();
+      return;
+    }
+
+    setIsSavingBookmark(true);
+    setAddBookmarkError(null);
+    try {
+      // Convert existing PDF bookmarks (from embedpdf) to the backend's
+      // payload shape, then append the new one.
+      const toPayload = (
+        b: PdfBookmarkObject,
+      ): {
+        title: string;
+        pageNumber: number;
+        children: any[];
+      } => ({
+        title: b.title ?? "",
+        pageNumber: resolvePageNumber(b) ?? 1,
+        children: (b.children ?? []).map(toPayload),
+      });
+      const existing = (activeEntry.bookmarks ?? []).map(toPayload);
+      const bookmarkData = [
+        ...existing,
+        { title, pageNumber: newBookmarkPage, children: [] },
+      ];
+
+      const formData = new FormData();
+      formData.append("fileInput", file);
+      formData.append("replaceExisting", "true");
+      formData.append("bookmarkData", JSON.stringify(bookmarkData));
+
+      const response = await apiClient.post(
+        "/api/v1/general/edit-table-of-contents",
+        formData,
+        { responseType: "blob" },
+      );
+
+      const newFile = new File([response.data as Blob], file.name, {
+        type: "application/pdf",
+      });
+      const { stirlingFiles, stubs } = await createStirlingFilesAndStubs(
+        [newFile],
+        parentStub,
+        "editTableOfContents",
+      );
+      const outputFileIds = await fileActions.consumeFiles(
+        [fileId],
+        stirlingFiles,
+        stubs,
+      );
+
+      // Point the viewer at the new file. Without this the viewer's
+      // activeFileId-removed effect nulls activeFileId (old file is
+      // gone) and the activeFileIndex falls back to 0, which races
+      // against the embedpdf plugin reloading - the bookmark /
+      // attachment bridges can end up stuck in a "loading" state.
+      // useToolOperation does the same thing after consumeFiles.
+      if (outputFileIds.length === 1) {
+        setActiveFileId(outputFileIds[0]);
+      }
+
+      // Reset form. The cache is keyed by documentCacheKey (== fileId);
+      // the new fileId triggers our document-switch effect, which
+      // resets state and re-fetches once the embedpdf bookmark
+      // capability has the new document loaded.
+      setIsAddingBookmark(false);
+      setNewBookmarkTitle("");
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to save bookmark";
+      setAddBookmarkError(message);
+    } finally {
+      setIsSavingBookmark(false);
+    }
+  }, [
+    newBookmarkTitle,
+    newBookmarkPage,
+    activeFileId,
+    activeFileIndex,
+    selectors,
+    fileActions,
+    setActiveFileId,
+    activeEntry.bookmarks,
+    handleFallbackToTool,
+  ]);
+
   const bookmarksWithIds = useMemo(() => {
     const assignIds = (
       nodes: PdfBookmarkObject[],
@@ -443,41 +633,53 @@ export const BookmarkSidebar = ({
             Bookmarks
           </Text>
         </div>
-        {bookmarkSupport && bookmarksWithIds.length > 0 && (
-          <>
-            {Object.values(expanded).some((val) => val === false) ? (
-              <Button
-                variant="tertiary"
-                size="sm"
-                onClick={expandAll}
-                aria-label="Expand all bookmarks"
-                title="Expand all"
-                leftSection={
-                  <LocalIcon
-                    icon="unfold-more"
-                    width="1.1rem"
-                    height="1.1rem"
-                  />
-                }
-              />
-            ) : (
-              <Button
-                variant="tertiary"
-                size="sm"
-                onClick={collapseAll}
-                aria-label="Collapse all bookmarks"
-                title="Collapse all"
-                leftSection={
-                  <LocalIcon
-                    icon="unfold-less"
-                    width="1.1rem"
-                    height="1.1rem"
-                  />
-                }
-              />
-            )}
-          </>
-        )}
+        <Box style={{ display: "flex", alignItems: "center", gap: 2 }}>
+          {bookmarkSupport && bookmarksWithIds.length > 0 && (
+            <>
+              {Object.values(expanded).some((val) => val === false) ? (
+                <Button
+                  variant="tertiary"
+                  size="sm"
+                  onClick={expandAll}
+                  aria-label="Expand all bookmarks"
+                  title="Expand all"
+                  leftSection={
+                    <LocalIcon
+                      icon="unfold-more"
+                      width="1.1rem"
+                      height="1.1rem"
+                    />
+                  }
+                />
+              ) : (
+                <Button
+                  variant="tertiary"
+                  size="sm"
+                  onClick={collapseAll}
+                  aria-label="Collapse all bookmarks"
+                  title="Collapse all"
+                  leftSection={
+                    <LocalIcon
+                      icon="unfold-less"
+                      width="1.1rem"
+                      height="1.1rem"
+                    />
+                  }
+                />
+              )}
+            </>
+          )}
+          <ActionIcon
+            variant="tertiary"
+            accent="neutral"
+            size="sm"
+            onClick={toggleBookmarkSidebar}
+            aria-label="Close bookmarks sidebar"
+            title="Close bookmarks"
+          >
+            <LocalIcon icon="close-rounded" width="1.1rem" height="1.1rem" />
+          </ActionIcon>
+        </Box>
       </div>
       <Box
         px="sm"
@@ -534,17 +736,113 @@ export const BookmarkSidebar = ({
               </Text>
             </Stack>
           )}
-          {showEmptyState && (
-            <div className="sidebar-base__empty-state">
+          {showEmptyState && !isAddingBookmark && (
+            <Stack align="center" gap="sm" py="lg">
+              <LocalIcon
+                icon="bookmark-add-rounded"
+                width="2rem"
+                height="2rem"
+                style={{ color: "var(--mantine-color-dimmed)" }}
+              />
               <Text size="sm" c="dimmed" ta="center">
                 No bookmarks in this document
               </Text>
-            </div>
+              <Button
+                variant="tertiary"
+                size="sm"
+                onClick={handleOpenAddBookmark}
+                leftSection={
+                  <LocalIcon icon="add" width="1rem" height="1rem" />
+                }
+              >
+                Add bookmark
+              </Button>
+            </Stack>
+          )}
+
+          {isAddingBookmark && (
+            <Box
+              mb="sm"
+              p="sm"
+              data-testid="bookmark-add-form"
+              style={{
+                border: "1px solid var(--border-subtle)",
+                borderRadius: 6,
+                background: "var(--bg-raised, var(--mantine-color-gray-0))",
+              }}
+            >
+              <Stack gap="xs">
+                <Text size="xs" fw={600} c="dimmed" tt="uppercase">
+                  Add bookmark
+                </Text>
+                <TextInput
+                  size="xs"
+                  placeholder="Bookmark title"
+                  aria-label="Bookmark title"
+                  value={newBookmarkTitle}
+                  onChange={(e) => setNewBookmarkTitle(e.currentTarget.value)}
+                  autoFocus
+                  disabled={isSavingBookmark}
+                />
+                <NumberInput
+                  size="xs"
+                  label="Page"
+                  min={1}
+                  clampBehavior="strict"
+                  value={newBookmarkPage}
+                  onChange={(v) =>
+                    setNewBookmarkPage(typeof v === "number" ? v : 1)
+                  }
+                  disabled={isSavingBookmark}
+                />
+                {addBookmarkError && (
+                  <Text size="xs" c="red">
+                    {addBookmarkError}
+                  </Text>
+                )}
+                <Group justify="flex-end" gap="xs">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={handleCancelAddBookmark}
+                    disabled={isSavingBookmark}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="primary"
+                    onClick={handleSubmitAddBookmark}
+                    loading={isSavingBookmark}
+                    disabled={!newBookmarkTitle.trim()}
+                  >
+                    Save
+                  </Button>
+                </Group>
+              </Stack>
+            </Box>
           )}
           {showBookmarkList && (
-            <div className="bookmark-list">
-              {renderBookmarks(filteredBookmarks)}
-            </div>
+            <>
+              {!isAddingBookmark && (
+                <Button
+                  variant="tertiary"
+                  size="sm"
+                  fullWidth
+                  justify="start"
+                  onClick={handleOpenAddBookmark}
+                  leftSection={
+                    <LocalIcon icon="add" width="0.9rem" height="0.9rem" />
+                  }
+                  style={{ marginBottom: "var(--space-xs)" }}
+                >
+                  Add bookmark
+                </Button>
+              )}
+              <div className="bookmark-list">
+                {renderBookmarks(filteredBookmarks)}
+              </div>
+            </>
           )}
           {showSearchEmpty && (
             <div className="sidebar-base__empty-state">
@@ -555,6 +853,44 @@ export const BookmarkSidebar = ({
           )}
         </Box>
       </ScrollArea>
+
+      {bookmarkSupport && documentCacheKey && (
+        <Box
+          px="sm"
+          py="xs"
+          style={{
+            borderTop: "1px solid var(--border-subtle)",
+            backgroundColor: "var(--bg-toolbar)",
+            flexShrink: 0,
+          }}
+        >
+          <Button
+            variant="tertiary"
+            hover={false}
+            type="button"
+            onClick={handleFallbackToTool}
+            fullWidth
+            style={{ width: "100%" }}
+          >
+            <Group gap="xs" justify="center" wrap="nowrap">
+              <LocalIcon
+                icon="bookmark-add-rounded"
+                width="0.95rem"
+                height="0.95rem"
+                style={{ color: "var(--mantine-color-blue-5)" }}
+              />
+              <Text
+                size="xs"
+                c="blue.5"
+                ta="center"
+                style={{ textDecoration: "underline" }}
+              >
+                Need to reorder or nest? Open the Bookmark Editor
+              </Text>
+            </Group>
+          </Button>
+        </Box>
+      )}
     </Box>
   );
 };

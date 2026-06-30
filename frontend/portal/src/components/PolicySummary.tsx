@@ -125,7 +125,7 @@ export function PolicySummary() {
     },
   ];
 
-  const rows: PolicyRow[] = data?.catalogue.map(toRow) ?? [];
+  const rows: PolicyRow[] = data?.catalogue?.map(toRow) ?? [];
 
   return (
     <section className="portal-policysum" aria-label={t("policySummary.title")}>
@@ -139,7 +139,7 @@ export function PolicySummary() {
               {t("policySummary.subtitle")}
             </p>
           </div>
-          {data && (
+          {data?.summary && (
             <StatusBadge tone="info" size="sm">
               {t("policySummary.activeSummary", {
                 active: data.summary.active,

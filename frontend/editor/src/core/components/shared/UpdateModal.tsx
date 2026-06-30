@@ -130,18 +130,27 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
     new Set([0]),
   );
 
+  const { machineType, activeSecurity, licenseType } = machineInfo;
   useEffect(() => {
-    if (opened) {
-      setLoading(true);
-      setExpandedVersions(new Set([0]));
-      updateService
-        .getFullUpdateInfo(currentVersion, machineInfo)
-        .then((info) => {
-          setFullUpdateInfo(info);
-          setLoading(false);
-        });
-    }
-  }, [opened, currentVersion, machineInfo]);
+    if (!opened) return;
+    let cancelled = false;
+    setLoading(true);
+    setExpandedVersions(new Set([0]));
+    updateService
+      .getFullUpdateInfo(currentVersion, {
+        machineType,
+        activeSecurity,
+        licenseType,
+      })
+      .then((info) => {
+        if (cancelled) return;
+        setFullUpdateInfo(info);
+        setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [opened, currentVersion, machineType, activeSecurity, licenseType]);
 
   const toggleVersion = (index: number) => {
     setExpandedVersions((prev) => {

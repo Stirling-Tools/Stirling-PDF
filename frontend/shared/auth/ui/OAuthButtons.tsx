@@ -31,6 +31,10 @@ export const oauthProviderConfig: Record<
 interface OAuthButtonsProps {
   onProviderClick: (provider: OAuthProvider) => void;
   isSubmitting: boolean;
+  /**
+   * `fullwidth` is the SaaS-login canonical look — rounded pill buttons stacked
+   * vertically. `vertical` (default) uses the Spring/Mantine button shape.
+   */
   layout?: "vertical" | "grid" | "icons" | "fullwidth";
   enabledProviders?: OAuthProvider[]; // List of full auth paths from backend (e.g., '/oauth2/authorization/google', '/saml2/authenticate/stirling')
   ctaPrefix?: string;
@@ -144,6 +148,8 @@ export default function OAuthButtons({
     );
   }
   if (layout === "fullwidth") {
+    // Mirrors the SaaS editor login: rounded pill buttons stacked vertically,
+    // each with the provider's icon + "Sign in with X" label.
     return (
       <div className="oauth-container-fullwidth">
         {providers.map((p) => (
@@ -153,6 +159,8 @@ export default function OAuthButtons({
             onClick={() => onProviderClick(p.id)}
             disabled={isSubmitting}
             className="oauth-button-fullwidth"
+            title={p.label}
+            aria-label={ctaPrefix ? `${ctaPrefix} ${p.label}` : p.label}
           >
             <span className="oauth-btn-group">
               <img

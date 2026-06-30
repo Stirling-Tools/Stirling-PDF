@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button, EmptyState, Skeleton } from "@shared/components";
 import { useTier } from "@portal/contexts/TierContext";
@@ -24,6 +25,17 @@ export function Users() {
   const { isLoading, isEmpty } = useSectionFlags(state);
 
   const [inviteOpen, setInviteOpen] = useState(false);
+
+  // Deep-link from elsewhere (e.g. billing's "Invite teammates"): ?invite opens
+  // the modal, then the param is cleared so a refresh/back doesn't re-open it.
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    if (searchParams.get("invite") === null) return;
+    setInviteOpen(true);
+    const next = new URLSearchParams(searchParams);
+    next.delete("invite");
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   const members = data?.members ?? [];
 

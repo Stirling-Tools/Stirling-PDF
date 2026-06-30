@@ -49,10 +49,14 @@ const NavigationWarningModal = () => {
 
   const handleApplyAndContinue = async () => {
     const handlers = navigationWarningHandlersRef.current;
-    if (handlers?.onApplyAndContinue) {
-      await handlers.onApplyAndContinue();
+    try {
+      if (handlers?.onApplyAndContinue) {
+        await handlers.onApplyAndContinue();
+      }
+      finishAndNavigate();
+    } catch (error) {
+      console.error("Failed to apply changes before navigating:", error);
     }
-    finishAndNavigate();
   };
 
   const handleExportAndContinue = async () => {

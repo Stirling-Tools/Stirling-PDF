@@ -6,7 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.context.annotation.Profile;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
@@ -53,7 +53,10 @@ import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.PolicyRunStatus;
 import stirling.software.proprietary.policy.model.PolicyRunView;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
+import stirling.software.proprietary.policy.source.SourceAccessGuard;
+import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
+import stirling.software.proprietary.policy.trigger.PolicyTriggerManager;
 
 /**
  * Policy CRUD plus pipeline runs (stored or ad-hoc). Runs are async: returns a run id, poll {@code
@@ -65,15 +68,18 @@ import stirling.software.proprietary.policy.store.PolicyStore;
 @Hidden
 @RequiredArgsConstructor
 @Tag(name = "Policies", description = "Run tool pipelines on the backend")
-@Profile("saas")
+@ConditionalOnBooleanProperty(name = "policies.enabled")
 public class PolicyController {
 
     private final PolicyRunner policyRunner;
     private final PolicyRunRegistry runRegistry;
     private final PolicyStore policyStore;
+    private final SourceStore sourceStore;
+    private final SourceAccessGuard sourceAccessGuard;
     private final PolicyValidator policyValidator;
     private final PolicyAccessGuard policyAccessGuard;
     private final PolicyManagementAuthority policyManagementAuthority;
+    private final PolicyTriggerManager policyTriggerManager;
     private final ApplicationProperties applicationProperties;
     private final TempFileManager tempFileManager;
     private final JobOwnershipService jobOwnershipService;
@@ -187,12 +193,33 @@ public class PolicyController {
     public ResponseEntity<Policy> savePolicy(@RequestBody Policy policy) {
         requirePolicyEditingAllowed();
         Policy owned = resolveOwnership(policy);
+        requireAccessibleSources(owned);
         try {
             policyValidator.validate(owned);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
-        return ResponseEntity.ok(policyStore.save(owned));
+        Policy saved = policyStore.save(owned);
+        // Re-sync trigger registrations now so a new/changed folder-watch policy starts being
+        // watched immediately instead of after the next reconcile sweep.
+        policyTriggerManager.notifyPoliciesChanged();
+        return ResponseEntity.ok(saved);
+    }
+
+    /**
+     * Every {@code sourceId} a policy references must resolve to a source in the caller's team, so
+     * a client can neither reference a non-existent source nor reach across teams to use another
+     * team's connection. A bad reference is a client error.
+     */
+    private void requireAccessibleSources(Policy policy) {
+        for (String sourceId : policy.sourceIds()) {
+            boolean accessible =
+                    sourceStore.get(sourceId).filter(sourceAccessGuard::canAccess).isPresent();
+            if (!accessible) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST, "Unknown or inaccessible source: " + sourceId);
+            }
+        }
     }
 
     /**
@@ -225,7 +252,7 @@ public class PolicyController {
                 owner,
                 policy.enabled(),
                 policy.trigger(),
-                policy.sources(),
+                policy.sourceIds(),
                 policy.steps(),
                 policy.output(),
                 teamId);
@@ -257,7 +284,7 @@ public class PolicyController {
             summary = "List policies",
             description = "Lists the policies belonging to the caller's team.")
     public List<Policy> listPolicies() {
-        return policyAccessGuard.visible(policyStore.all());
+        return policyAccessGuard.visibleFrom(policyStore);
     }
 
     @GetMapping("/{policyId}")
@@ -278,6 +305,9 @@ public class PolicyController {
         boolean accessible =
                 policyStore.get(policyId).filter(policyAccessGuard::canAccess).isPresent();
         if (accessible && policyStore.delete(policyId)) {
+            // Cancel any now-orphaned folder watch promptly rather than leaving the WatchKey open
+            // until the next reconcile sweep.
+            policyTriggerManager.notifyPoliciesChanged();
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();

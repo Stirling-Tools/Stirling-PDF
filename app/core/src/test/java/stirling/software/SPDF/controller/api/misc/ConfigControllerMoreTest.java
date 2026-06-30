@@ -26,6 +26,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.config.ExternalAppDepConfig;
 import stirling.software.common.configuration.AppConfig;
+import stirling.software.common.configuration.interfaces.ShowAdminInterface;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.LicenseServiceInterface;
 import stirling.software.common.service.ServerCertificateServiceInterface;
@@ -45,6 +46,7 @@ class ConfigControllerMoreTest {
     @Mock private EndpointConfiguration endpointConfiguration;
     @Mock private ServerCertificateServiceInterface serverCertificateService;
     @Mock private UserServiceInterface userService;
+    @Mock private ShowAdminInterface showAdmin;
     @Mock private LicenseServiceInterface licenseService;
     @Mock private ExternalAppDepConfig externalAppDepConfig;
     @Mock private AppConfig appConfig;
@@ -70,6 +72,7 @@ class ConfigControllerMoreTest {
                 endpointConfiguration,
                 serverCertificateService,
                 userService,
+                showAdmin,
                 licenseService,
                 externalAppDepConfig);
     }

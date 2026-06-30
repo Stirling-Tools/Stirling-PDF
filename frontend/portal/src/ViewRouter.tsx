@@ -28,6 +28,8 @@ export function ViewRouter() {
       <Route path={VIEW_PATHS.infrastructure} element={<Infrastructure />} />
       <Route path={VIEW_PATHS.usage} element={<Usage />} />
       <Route path={VIEW_PATHS.docs} element={<DeveloperDocs />} />
+      {/* Account-link is now a Settings panel; redirect legacy bookmarks home. */}
+      <Route path="/account-link" element={<Navigate to="/" replace />} />
       {/* Settings is a modal overlay, not a route (see AppShell + UIContext). */}
       {/* Unknown paths land on Home. */}
       <Route path="*" element={<Navigate to={VIEW_PATHS.home} replace />} />

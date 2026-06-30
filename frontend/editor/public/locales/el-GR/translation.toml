@@ -5854,6 +5854,7 @@ routing = "Routing"
 security = "Security"
 
 [policies.detail]
+close = "Κλείσιμο"
 editSettings = "Edit Settings"
 enforces = "Enforces"
 managedByOrg = "Managed by your organisation. Contact a team leader to change this policy."
@@ -5907,6 +5908,7 @@ allDocTypesTitle = "All document types"
 back = "Back"
 builderDesc = "Build the sequence of tools this policy runs on each document."
 clear = "Clear"
+close = "Κλείσιμο"
 continue = "Continue"
 docTypesLabel = "Document types"
 edit = "Edit"
@@ -7784,8 +7786,6 @@ allReleases = "Όλες οι εκδόσεις"
 breaking = "Ασυμβατό"
 breakingChanges = "Ασύμβατες αλλαγές"
 breakingChangesDefault = "Αυτή η έκδοση περιέχει ασύμβατες αλλαγές."
-breakingChangesDetected = "Εντοπίστηκαν ασύμβατες αλλαγές"
-breakingChangesMessage = "Ορισμένες εκδόσεις περιέχουν ασύμβατες αλλαγές. Ελέγξτε τους οδηγούς μετεγκατάστασης παρακάτω πριν ενημερώσετε."
 close = "Κλείσιμο"
 closeModal = "Κλείσιμο παραθύρου ενημέρωσης"
 current = "Τρέχουσα έκδοση"
@@ -8606,6 +8606,7 @@ disableByAdmin = "Απενεργοποίηση MFA"
 
 [workspace.people.roleDescriptions]
 admin = "Μπορεί να διαχειρίζεται ρυθμίσεις και να προσκαλεί μέλη, με πλήρη δικαιώματα διαχείρισης."
+currentRole = "Τρέχων ανατεθειμένος ρόλος."
 user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]

@@ -5854,6 +5854,7 @@ routing = "Routing"
 security = "Security"
 
 [policies.detail]
+close = "關閉"
 editSettings = "Edit Settings"
 enforces = "Enforces"
 managedByOrg = "Managed by your organisation. Contact a team leader to change this policy."
@@ -5907,6 +5908,7 @@ allDocTypesTitle = "All document types"
 back = "Back"
 builderDesc = "Build the sequence of tools this policy runs on each document."
 clear = "Clear"
+close = "關閉"
 continue = "Continue"
 docTypesLabel = "Document types"
 edit = "Edit"
@@ -7784,8 +7786,6 @@ allReleases = "所有版本"
 breaking = "重大變更"
 breakingChanges = "重大變更"
 breakingChangesDefault = "此版本包含重大變更。"
-breakingChangesDetected = "偵測到重大變更"
-breakingChangesMessage = "部分版本包含重大變更。更新前請先查看下方的遷移指南。"
 close = "關閉"
 closeModal = "關閉更新視窗"
 current = "目前版本"
@@ -8606,6 +8606,7 @@ disableByAdmin = "停用 MFA"
 
 [workspace.people.roleDescriptions]
 admin = "可管理設定並邀請成員，具完整的管理存取權。"
+currentRole = "目前指派的角色。"
 user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]
