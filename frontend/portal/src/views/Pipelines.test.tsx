@@ -19,11 +19,17 @@ const fetchPipelines = vi.fn();
 const fetchPipeline = vi.fn();
 const savePipeline = vi.fn();
 const deletePipeline = vi.fn();
+const fetchTriggers = vi.fn();
+const triggerPipeline = vi.fn();
+const fetchRun = vi.fn();
 vi.mock("@portal/api/pipelines", () => ({
   fetchPipelines: () => fetchPipelines(),
   fetchPipeline: (id: string) => fetchPipeline(id),
   savePipeline: (policy: unknown) => savePipeline(policy),
   deletePipeline: (id: string) => deletePipeline(id),
+  fetchTriggers: () => fetchTriggers(),
+  triggerPipeline: (id: string) => triggerPipeline(id),
+  fetchRun: (runId: string) => fetchRun(runId),
 }));
 
 const fetchSources = vi.fn();
@@ -107,6 +113,11 @@ describe("Pipelines view", () => {
     savePipeline.mockReset();
     deletePipeline.mockReset();
     fetchSources.mockReset();
+    fetchTriggers.mockReset();
+    triggerPipeline.mockReset();
+    fetchRun.mockReset();
+    // The composer loads the trigger registry on open; default to none.
+    fetchTriggers.mockResolvedValue([]);
   });
 
   it("surfaces the inline error message when a delete fails", async () => {
@@ -148,6 +159,55 @@ describe("Pipelines view", () => {
     expect(savePipeline).toHaveBeenCalledWith(
       expect.objectContaining({ id: "plc-redaction", enabled: false }),
     );
+  });
+
+  it("runs a pipeline now and reports success inline", async () => {
+    fetchPipelines.mockResolvedValue(RESPONSE);
+    triggerPipeline.mockResolvedValue(["run-1"]);
+    fetchRun.mockResolvedValue({
+      runId: "run-1",
+      policyId: "plc-redaction",
+      status: "COMPLETED",
+      currentStep: 1,
+      stepCount: 1,
+      error: null,
+      errorCode: null,
+      createdAt: 0,
+    });
+
+    renderView();
+
+    fireEvent.click(await screen.findByText("Redaction sweep"));
+    fireEvent.click(await screen.findByText("pipelines.detail.run"));
+
+    await waitFor(() => {
+      expect(triggerPipeline).toHaveBeenCalledWith("plc-redaction");
+    });
+    expect(
+      await screen.findByText("pipelines.run.completed"),
+    ).toBeInTheDocument();
+  });
+
+  it("surfaces an execution failure from a manual run", async () => {
+    fetchPipelines.mockResolvedValue(RESPONSE);
+    triggerPipeline.mockResolvedValue(["run-1"]);
+    fetchRun.mockResolvedValue({
+      runId: "run-1",
+      policyId: "plc-redaction",
+      status: "FAILED",
+      currentStep: 1,
+      stepCount: 1,
+      error: "step 1 blew up",
+      errorCode: null,
+      createdAt: 0,
+    });
+
+    renderView();
+
+    fireEvent.click(await screen.findByText("Redaction sweep"));
+    fireEvent.click(await screen.findByText("pipelines.detail.run"));
+
+    expect(await screen.findByText("pipelines.run.failed")).toBeInTheDocument();
   });
 
   it("creates a pipeline with the chosen name and chained operation", async () => {

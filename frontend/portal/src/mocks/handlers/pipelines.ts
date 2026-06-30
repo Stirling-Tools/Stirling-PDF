@@ -132,6 +132,42 @@ export const pipelinesHandlers = [
     return HttpResponse.json(buildOverview());
   }),
 
+  // Available triggers + their source-type compatibility. Registered before the
+  // ":id" handler so "triggers" isn't matched as a policy id.
+  http.get("/api/v1/policies/triggers", async () => {
+    await delay(120);
+    return HttpResponse.json([
+      { type: "schedule", requiresSource: false, supportedSourceTypes: [] },
+      {
+        type: "folder-watch",
+        requiresSource: true,
+        supportedSourceTypes: ["folder"],
+      },
+    ]);
+  }),
+
+  // Run status: the mock completes runs immediately, so polling resolves at once.
+  http.get("/api/v1/policies/run/:runId", async ({ params }) => {
+    await delay(120);
+    return HttpResponse.json({
+      runId: String(params.runId),
+      policyId: null,
+      status: "COMPLETED",
+      currentStep: 1,
+      stepCount: 1,
+      error: null,
+      errorCode: null,
+      createdAt: Date.now(),
+    });
+  }),
+
+  // Manual trigger: pretends to start one run and returns its id to poll.
+  http.post("/api/v1/policies/:id/trigger", async ({ params }) => {
+    if (!store.some((p) => p.id === params.id)) return undefined;
+    await delay(120);
+    return HttpResponse.json([`run_${Date.now().toString(36)}`]);
+  }),
+
   // Raw policy by id. Only our pipeline ids are served here; everything else falls
   // through to the catalogue page's handler.
   http.get("/api/v1/policies/:id", async ({ params }) => {

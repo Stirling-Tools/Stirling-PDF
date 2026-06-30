@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Banner,
@@ -13,11 +13,13 @@ import {
 } from "@shared/components";
 import { errorMessage } from "@portal/api/http";
 import {
+  fetchTriggers,
   savePipeline,
   type OutputSpec,
   type PipelineStep,
   type Policy,
   type TriggerConfig,
+  type TriggerInfo,
 } from "@portal/api/pipelines";
 import { fetchSources, type SourceView } from "@portal/api/sources";
 import { useAsync } from "@portal/hooks/useAsync";
@@ -27,11 +29,12 @@ import {
 } from "@portal/components/pipelines/pipelineOperations";
 import "@portal/views/Pipelines.css";
 
-type TriggerMode = "manual" | "schedule";
 type OutputMode = "inline" | "folder";
 type ScheduleUnit = "MINUTES" | "HOURS" | "DAYS";
 
 const SCHEDULE_UNITS: ScheduleUnit[] = ["MINUTES", "HOURS", "DAYS"];
+/** Empty trigger type = manual-only (no automatic trigger). */
+const MANUAL = "";
 
 interface PipelineComposerProps {
   open: boolean;
@@ -42,31 +45,32 @@ interface PipelineComposerProps {
   pipeline?: Policy;
 }
 
-/** A schedule trigger's fields, parsed from a policy's trigger for editing. */
-function parseSchedule(trigger: TriggerConfig | null): {
-  mode: TriggerMode;
+/**
+ * A policy's trigger parsed into the composer's fields: which trigger type (empty
+ * = manual), and the schedule interval when it's a schedule trigger.
+ */
+function parseTrigger(trigger: TriggerConfig | null): {
+  triggerType: string;
   count: string;
   unit: ScheduleUnit;
 } {
-  const fallback = {
-    mode: "manual" as TriggerMode,
-    count: "1",
-    unit: "HOURS" as ScheduleUnit,
-  };
-  if (!trigger || trigger.type !== "schedule") return fallback;
-  const schedule = trigger.options?.schedule as
-    | { type?: string; count?: number; unit?: ScheduleUnit }
-    | undefined;
-  if (schedule?.type !== "every") {
-    // Non-interval schedules (daily/weekly/monthly) aren't editable here; surface
-    // it as a schedule but with defaults the user can re-set.
-    return { mode: "schedule", count: "1", unit: "HOURS" };
+  if (!trigger) return { triggerType: MANUAL, count: "1", unit: "HOURS" };
+  if (trigger.type === "schedule") {
+    const schedule = trigger.options?.schedule as
+      | { type?: string; count?: number; unit?: ScheduleUnit }
+      | undefined;
+    if (schedule?.type === "every") {
+      return {
+        triggerType: "schedule",
+        count: String(schedule.count ?? 1),
+        unit: schedule.unit ?? "HOURS",
+      };
+    }
+    // Non-interval schedules (daily/weekly/monthly) aren't editable here; show
+    // the schedule choice with defaults the user can re-set.
+    return { triggerType: "schedule", count: "1", unit: "HOURS" };
   }
-  return {
-    mode: "schedule",
-    count: String(schedule.count ?? 1),
-    unit: schedule.unit ?? "HOURS",
-  };
+  return { triggerType: trigger.type, count: "1", unit: "HOURS" };
 }
 
 /** Output sink fields parsed from a policy's output for editing. */
@@ -84,10 +88,11 @@ function parseOutput(output: OutputSpec | undefined): {
 }
 
 /**
- * Compose a pipeline (a backend policy): name it, pick the sources it pulls from,
- * chain operations, set when it runs, and where output goes. On submit a blank id
- * creates and a set id updates, matching the backend's POST contract. Per-operation
- * parameter editing is out of scope here; operations are chained with their defaults.
+ * Compose a pipeline (a backend policy): name it, pick the sources it pulls from
+ * and how it's triggered, chain operations, and choose where output goes. On submit
+ * a blank id creates and a set id updates, matching the backend's POST contract.
+ * Per-operation parameter editing is out of scope here; operations are chained with
+ * their defaults.
  */
 export function PipelineComposer({
   open,
@@ -104,10 +109,21 @@ export function PipelineComposer({
   );
   const availableSources = sourcesState.data ?? [];
 
+  // The triggers the backend supports, with their source-type compatibility, so
+  // the UI offers them (and pairs them with sources) without hard-coding the set.
+  const triggersState = useAsync<TriggerInfo[]>(
+    async () => (open ? await fetchTriggers() : []),
+    [open],
+  );
+  const triggers = useMemo(
+    () => triggersState.data ?? [],
+    [triggersState.data],
+  );
+
   const [name, setName] = useState("");
   const [sourceIds, setSourceIds] = useState<string[]>([]);
   const [steps, setSteps] = useState<PipelineStep[]>([]);
-  const [triggerMode, setTriggerMode] = useState<TriggerMode>("manual");
+  const [triggerType, setTriggerType] = useState<string>(MANUAL);
   const [scheduleCount, setScheduleCount] = useState("1");
   const [scheduleUnit, setScheduleUnit] = useState<ScheduleUnit>("HOURS");
   const [outputMode, setOutputMode] = useState<OutputMode>("inline");
@@ -119,19 +135,47 @@ export function PipelineComposer({
   // prefills the current config and a reopened create starts clean.
   useEffect(() => {
     if (!open) return;
-    const schedule = parseSchedule(pipeline?.trigger ?? null);
+    const trigger = parseTrigger(pipeline?.trigger ?? null);
     const output = parseOutput(pipeline?.output);
     setName(pipeline?.name ?? "");
     setSourceIds(pipeline?.sourceIds ?? []);
     setSteps(pipeline?.steps ?? []);
-    setTriggerMode(schedule.mode);
-    setScheduleCount(schedule.count);
-    setScheduleUnit(schedule.unit);
+    setTriggerType(trigger.triggerType);
+    setScheduleCount(trigger.count);
+    setScheduleUnit(trigger.unit);
     setOutputMode(output.mode);
     setOutputDirectory(output.directory);
     setSubmitting(false);
     setError(null);
   }, [open, pipeline]);
+
+  // Types of the currently-selected sources, for trigger compatibility.
+  const selectedSourceTypes = useMemo(
+    () =>
+      new Set(
+        availableSources
+          .filter((s) => sourceIds.includes(s.id))
+          .map((s) => s.type),
+      ),
+    [availableSources, sourceIds],
+  );
+
+  const triggerAvailable = useMemo(
+    () => (trigger: TriggerInfo) =>
+      !trigger.requiresSource ||
+      trigger.supportedSourceTypes.some((type) =>
+        selectedSourceTypes.has(type),
+      ),
+    [selectedSourceTypes],
+  );
+
+  // A source-requiring trigger stops being valid the moment its compatible source
+  // is deselected; fall back to manual so we never submit an impossible trigger.
+  useEffect(() => {
+    if (triggerType === MANUAL) return;
+    const selected = triggers.find((trigger) => trigger.type === triggerType);
+    if (selected && !triggerAvailable(selected)) setTriggerType(MANUAL);
+  }, [triggerType, triggers, triggerAvailable]);
 
   function toggleSource(id: string, checked: boolean) {
     setSourceIds((ids) =>
@@ -161,28 +205,43 @@ export function PipelineComposer({
   }
 
   const scheduleCountValid =
-    triggerMode !== "schedule" || Number(scheduleCount) > 0;
+    triggerType !== "schedule" || Number(scheduleCount) > 0;
   const outputValid = outputMode !== "folder" || outputDirectory.trim() !== "";
   const canSave =
     name.trim() !== "" && scheduleCountValid && outputValid && !submitting;
+
+  const triggerOptions = [
+    { value: MANUAL, label: t("pipelines.composer.triggerManual") },
+    ...triggers.map((trigger) => ({
+      value: trigger.type,
+      label: t(`pipelines.trigger.${trigger.type}`, {
+        defaultValue: trigger.type,
+      }),
+      disabled: !triggerAvailable(trigger),
+    })),
+  ];
+
+  function buildTrigger(): TriggerConfig | null {
+    if (triggerType === MANUAL) return null;
+    if (triggerType === "schedule") {
+      return {
+        type: "schedule",
+        options: {
+          schedule: {
+            type: "every",
+            count: Number(scheduleCount),
+            unit: scheduleUnit,
+          },
+        },
+      };
+    }
+    return { type: triggerType, options: {} };
+  }
 
   async function submit() {
     if (!canSave) return;
     setSubmitting(true);
     setError(null);
-    const trigger: TriggerConfig | null =
-      triggerMode === "schedule"
-        ? {
-            type: "schedule",
-            options: {
-              schedule: {
-                type: "every",
-                count: Number(scheduleCount),
-                unit: scheduleUnit,
-              },
-            },
-          }
-        : null;
     const output: OutputSpec =
       outputMode === "folder"
         ? { type: "folder", options: { directory: outputDirectory.trim() } }
@@ -191,7 +250,7 @@ export function PipelineComposer({
       id: pipeline?.id,
       name: name.trim(),
       enabled: pipeline?.enabled ?? true,
-      trigger,
+      trigger: buildTrigger(),
       sourceIds,
       steps,
       output,
@@ -275,6 +334,44 @@ export function PipelineComposer({
               ))}
             </div>
           )}
+
+          <span className="portal-pipelines__detail-heading">
+            {t("pipelines.composer.trigger")}
+          </span>
+          <RadioGroup<string>
+            name="pipeline-trigger"
+            value={triggerType}
+            onChange={setTriggerType}
+            direction="horizontal"
+            options={triggerOptions}
+          />
+          {triggerType === "schedule" && (
+            <div className="portal-pipelines__schedule">
+              <span className="portal-pipelines__muted">
+                {t("pipelines.composer.scheduleEvery")}
+              </span>
+              <Input
+                inputSize="sm"
+                type="number"
+                min={1}
+                value={scheduleCount}
+                invalid={!scheduleCountValid}
+                onChange={(e) => setScheduleCount(e.target.value)}
+                className="portal-pipelines__schedule-count"
+              />
+              <Select
+                inputSize="sm"
+                value={scheduleUnit}
+                onChange={(e) =>
+                  setScheduleUnit(e.target.value as ScheduleUnit)
+                }
+                options={SCHEDULE_UNITS.map((unit) => ({
+                  value: unit,
+                  label: t(`pipelines.composer.unit.${unit.toLowerCase()}`),
+                }))}
+              />
+            </div>
+          )}
         </div>
 
         {/* Operations */}
@@ -338,56 +435,6 @@ export function PipelineComposer({
               </Chip>
             ))}
           </div>
-        </div>
-
-        {/* Trigger */}
-        <div className="portal-pipelines__composer-section">
-          <span className="portal-pipelines__detail-heading">
-            {t("pipelines.composer.trigger")}
-          </span>
-          <RadioGroup<TriggerMode>
-            name="pipeline-trigger"
-            value={triggerMode}
-            onChange={setTriggerMode}
-            direction="horizontal"
-            options={[
-              {
-                value: "manual",
-                label: t("pipelines.composer.triggerManual"),
-              },
-              {
-                value: "schedule",
-                label: t("pipelines.composer.triggerSchedule"),
-              },
-            ]}
-          />
-          {triggerMode === "schedule" && (
-            <div className="portal-pipelines__schedule">
-              <span className="portal-pipelines__muted">
-                {t("pipelines.composer.scheduleEvery")}
-              </span>
-              <Input
-                inputSize="sm"
-                type="number"
-                min={1}
-                value={scheduleCount}
-                invalid={!scheduleCountValid}
-                onChange={(e) => setScheduleCount(e.target.value)}
-                className="portal-pipelines__schedule-count"
-              />
-              <Select
-                inputSize="sm"
-                value={scheduleUnit}
-                onChange={(e) =>
-                  setScheduleUnit(e.target.value as ScheduleUnit)
-                }
-                options={SCHEDULE_UNITS.map((unit) => ({
-                  value: unit,
-                  label: t(`pipelines.composer.unit.${unit.toLowerCase()}`),
-                }))}
-              />
-            </div>
-          )}
         </div>
 
         {/* Output */}

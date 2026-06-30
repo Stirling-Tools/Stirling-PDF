@@ -82,24 +82,89 @@ export interface PipelinesOverviewResponse {
   pipelines: PipelineView[];
 }
 
+/** A trigger kind and the source types it works with. Mirrors the backend `TriggerInfo`. */
+export interface TriggerInfo {
+  /** Matches `TriggerConfig.type` (e.g. "schedule", "folder-watch"). */
+  type: string;
+  /** Whether the trigger needs at least one compatible source to function. */
+  requiresSource: boolean;
+  /** Source types it supports; empty means source-agnostic (no constraint). */
+  supportedSourceTypes: string[];
+}
+
+export type PolicyRunStatus =
+  | "PENDING"
+  | "RUNNING"
+  | "WAITING_FOR_INPUT"
+  | "COMPLETED"
+  | "FAILED"
+  | "CANCELLED";
+
+/** A run's current state. Mirrors the backend `PolicyRunView` (outputs elided). */
+export interface PolicyRunView {
+  runId: string;
+  policyId: string | null;
+  status: PolicyRunStatus;
+  currentStep: number;
+  stepCount: number;
+  /** Human-readable failure message; set when status is FAILED. */
+  error: string | null;
+  errorCode: string | null;
+  createdAt: number;
+}
+
 /** GET /api/v1/policies/overview: KPI strip + one row per policy for the admin. */
 export async function fetchPipelines(): Promise<PipelinesOverviewResponse> {
-  return apiClient.local.json<PipelinesOverviewResponse>("/api/v1/policies/overview");
+  return apiClient.local.json<PipelinesOverviewResponse>(
+    "/api/v1/policies/overview",
+  );
 }
 
 /** GET /api/v1/policies/{id}: the raw policy record (steps, sources, trigger), for editing. */
 export async function fetchPipeline(id: string): Promise<Policy> {
-  return apiClient.local.json<Policy>(`/api/v1/policies/${encodeURIComponent(id)}`);
+  return apiClient.local.json<Policy>(
+    `/api/v1/policies/${encodeURIComponent(id)}`,
+  );
 }
 
 /** POST /api/v1/policies: create (blank id) or update (matched id) a policy. */
 export async function savePipeline(policy: Policy): Promise<Policy> {
-  return apiClient.local.json<Policy>("/api/v1/policies", { method: "POST", body: policy });
+  return apiClient.local.json<Policy>("/api/v1/policies", {
+    method: "POST",
+    body: policy,
+  });
 }
 
 /** DELETE /api/v1/policies/{id}: remove a policy. */
 export async function deletePipeline(id: string): Promise<void> {
-  await apiClient.local.json<void>(`/api/v1/policies/${encodeURIComponent(id)}`, {
-    method: "DELETE",
-  });
+  await apiClient.local.json<void>(
+    `/api/v1/policies/${encodeURIComponent(id)}`,
+    {
+      method: "DELETE",
+    },
+  );
+}
+
+/** GET /api/v1/policies/triggers: available triggers + their source compatibility. */
+export async function fetchTriggers(): Promise<TriggerInfo[]> {
+  return apiClient.local.json<TriggerInfo[]>("/api/v1/policies/triggers");
+}
+
+/**
+ * POST /api/v1/policies/{id}/trigger: run the pipeline now against its configured
+ * sources, regardless of the enabled flag. Returns the ids of the runs started
+ * (empty when the sources yielded no work); poll {@link fetchRun} for each.
+ */
+export async function triggerPipeline(id: string): Promise<string[]> {
+  return apiClient.local.json<string[]>(
+    `/api/v1/policies/${encodeURIComponent(id)}/trigger`,
+    { method: "POST" },
+  );
+}
+
+/** GET /api/v1/policies/run/{runId}: current status, error, and step cursor of a run. */
+export async function fetchRun(runId: string): Promise<PolicyRunView> {
+  return apiClient.local.json<PolicyRunView>(
+    `/api/v1/policies/run/${encodeURIComponent(runId)}`,
+  );
 }
