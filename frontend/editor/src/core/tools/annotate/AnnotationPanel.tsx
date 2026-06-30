@@ -365,7 +365,9 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
         <MantineTooltip key={tool.id} label={tool.label} withArrow>
           <Button
             variant={
-              activeTool === tool.id && annotationsVisible ? "primary" : "tertiary"
+              activeTool === tool.id && annotationsVisible
+                ? "primary"
+                : "tertiary"
             }
             onClick={() => activateAnnotationTool(tool.id)}
             disabled={!annotationsVisible}
@@ -638,7 +640,9 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                   </Text>
                   <Group gap="xs">
                     <Button
-                      variant={textAlignment === "left" ? "primary" : "secondary"}
+                      variant={
+                        textAlignment === "left" ? "primary" : "secondary"
+                      }
                       onClick={() => setTextAlignment("left")}
                       size="md"
                       aria-label={t("annotation.alignLeft", "Align left")}

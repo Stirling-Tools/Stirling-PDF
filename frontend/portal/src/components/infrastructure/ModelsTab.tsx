@@ -46,9 +46,7 @@ export function ModelsTab() {
       render: (m) => (
         <div className="portal-infra__cell-stack">
           <span className="portal-infra__cell-strong">{m.name}</span>
-          <Chip size="sm">
-            {MODEL_PROVIDER_LABEL[m.provider]}
-          </Chip>
+          <Chip size="sm">{MODEL_PROVIDER_LABEL[m.provider]}</Chip>
         </div>
       ),
     },

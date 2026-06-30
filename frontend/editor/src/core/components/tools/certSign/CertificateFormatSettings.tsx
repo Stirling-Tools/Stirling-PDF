@@ -19,9 +19,7 @@ const CertificateFormatSettings = ({
         {/* First row - PKCS#12 and PFX */}
         <div style={{ display: "flex", gap: "4px" }}>
           <Button
-            variant={
-              parameters.certType === "PKCS12" ? "primary" : "secondary"
-            }
+            variant={parameters.certType === "PKCS12" ? "primary" : "secondary"}
             onClick={() => onParameterChange("certType", "PKCS12")}
             disabled={disabled}
             style={{

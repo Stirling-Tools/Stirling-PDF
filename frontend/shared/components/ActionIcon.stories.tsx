@@ -38,7 +38,12 @@ const meta: Meta<typeof ActionIcon> = {
   title: "Primitives/ActionIcon",
   component: ActionIcon,
   parameters: { layout: "centered" },
-  args: { variant: "primary", accent: "default", size: "md", "aria-label": "Add" },
+  args: {
+    variant: "primary",
+    accent: "default",
+    size: "md",
+    "aria-label": "Add",
+  },
   argTypes: {
     variant: {
       control: "inline-radio",
@@ -53,7 +58,9 @@ export default meta;
 type Story = StoryObj<typeof ActionIcon>;
 
 const Wrap = ({ children }: { children: React.ReactNode }) => (
-  <div style={{ display: "flex", gap: 12, alignItems: "center" }}>{children}</div>
+  <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+    {children}
+  </div>
 );
 
 export const Playground: Story = {
@@ -67,7 +74,13 @@ export const Playground: Story = {
 /** The three variants × every accent. */
 export const Accents: Story = {
   render: () => (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(8, auto)", gap: 10 }}>
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(8, auto)",
+        gap: 10,
+      }}
+    >
       {(["primary", "secondary", "tertiary"] as const).flatMap((variant) =>
         ACCENTS.map((accent) => (
           <ActionIcon
@@ -106,7 +119,12 @@ export const Shapes: Story = {
       <ActionIcon shape="circle" variant="secondary" aria-label="Add">
         <Plus />
       </ActionIcon>
-      <ActionIcon shape="circle" variant="tertiary" accent="danger" aria-label="Delete">
+      <ActionIcon
+        shape="circle"
+        variant="tertiary"
+        accent="danger"
+        aria-label="Delete"
+      >
         <Trash />
       </ActionIcon>
     </Wrap>

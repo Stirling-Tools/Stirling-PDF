@@ -92,7 +92,9 @@ test.describe("PageEditor (multitool) rotation save", () => {
     const outDoc = await PDFDocument.load(fs.readFileSync(tmpOut));
     const outRotations = outDoc
       .getPages()
-      .map((p: { getRotation: () => { angle: number } }) => p.getRotation().angle);
+      .map(
+        (p: { getRotation: () => { angle: number } }) => p.getRotation().angle,
+      );
     fs.rmSync(tmpOut, { force: true });
     expect(outRotations).toEqual([0, 90, 0, 180]);
   });

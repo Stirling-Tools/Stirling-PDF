@@ -29,9 +29,7 @@ export function PolicyCategoryCard({ entry, onOpen }: PolicyCategoryCardProps) {
           <span className="portal-policies__card-blurb">{category.desc}</span>
         </div>
         {comingSoon ? (
-          <Chip size="sm">
-            {t("policies.card.comingSoon")}
-          </Chip>
+          <Chip size="sm">{t("policies.card.comingSoon")}</Chip>
         ) : policy ? (
           <StatusBadge
             tone={policy.state.status === "paused" ? "warning" : "success"}
@@ -43,9 +41,7 @@ export function PolicyCategoryCard({ entry, onOpen }: PolicyCategoryCardProps) {
               : t("policies.status.active")}
           </StatusBadge>
         ) : (
-          <Chip size="sm">
-            {t("policies.card.notSetUp")}
-          </Chip>
+          <Chip size="sm">{t("policies.card.notSetUp")}</Chip>
         )}
       </header>
 

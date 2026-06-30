@@ -503,7 +503,10 @@ const SessionDetailWorkbenchView = ({
             )}
           </Text>
           <Group justify="flex-end">
-            <Button variant="tertiary" onClick={() => setDeleteModalOpen(false)}>
+            <Button
+              variant="tertiary"
+              onClick={() => setDeleteModalOpen(false)}
+            >
               {t("cancel", "Cancel")}
             </Button>
             <Button accent="danger" onClick={handleDelete} loading={deleting}>

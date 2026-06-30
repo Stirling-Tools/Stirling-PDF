@@ -3,10 +3,14 @@ import type { ForwardedRef, ReactNode } from "react";
 import { Button } from "@shared/components/Button";
 import type { ButtonProps } from "@shared/components/Button";
 
-type TriggerButtonProps = Omit<ButtonProps, "onClick" | "onChange" | "children">;
+type TriggerButtonProps = Omit<
+  ButtonProps,
+  "onClick" | "onChange" | "children"
+>;
 
-export interface FilePickerProps<Multiple extends boolean = false>
-  extends TriggerButtonProps {
+export interface FilePickerProps<
+  Multiple extends boolean = false,
+> extends TriggerButtonProps {
   /** Called with the picked file(s); null when the dialog is dismissed. */
   onChange: (payload: Multiple extends true ? File[] : File | null) => void;
   accept?: string;

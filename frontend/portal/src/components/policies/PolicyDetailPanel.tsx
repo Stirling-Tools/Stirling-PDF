@@ -137,9 +137,7 @@ export function PolicyDetailPanel({
                     →
                   </span>
                 )}
-                <Chip size="sm">
-                  {humanizeEndpoint(op)}
-                </Chip>
+                <Chip size="sm">{humanizeEndpoint(op)}</Chip>
               </span>
             ))}
           </div>

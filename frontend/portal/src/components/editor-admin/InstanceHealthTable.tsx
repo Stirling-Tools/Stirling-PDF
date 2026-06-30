@@ -22,10 +22,7 @@ const TARGET_LABEL: Record<EditorInstance["target"], string> = {
 };
 
 /** Map the target palette tone onto the shared Chip accent set. */
-const TARGET_CHIP_ACCENT: Record<
-  "neutral" | "blue" | "purple",
-  ChipAccent
-> = {
+const TARGET_CHIP_ACCENT: Record<"neutral" | "blue" | "purple", ChipAccent> = {
   neutral: "neutral",
   blue: "default",
   purple: "premium",
@@ -47,7 +44,10 @@ export function InstanceHealthTable({ instances }: Props) {
         <div className="portal-editor__cell-stack">
           <span className="portal-editor__cell-strong">{i.host}</span>
           <span className="portal-editor__cell-muted">
-            <Chip size="sm" accent={TARGET_CHIP_ACCENT[TARGET_META[i.target].tone]}>
+            <Chip
+              size="sm"
+              accent={TARGET_CHIP_ACCENT[TARGET_META[i.target].tone]}
+            >
               {TARGET_LABEL[i.target]}
             </Chip>
           </span>

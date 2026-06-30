@@ -1313,7 +1313,10 @@ export function CommentsSidebar({
           )}
         </Text>
         <Group justify="flex-end" gap="sm">
-          <Button variant="secondary" onClick={() => setClearAllModalOpen(false)}>
+          <Button
+            variant="secondary"
+            onClick={() => setClearAllModalOpen(false)}
+          >
             {t("viewer.comments.cancelClearAll", "Cancel")}
           </Button>
           <Button accent="danger" onClick={handleClearAllComments}>

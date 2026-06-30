@@ -263,9 +263,7 @@ export function SecurityTab() {
                   {ATTESTATION_LABEL[a.status]}
                 </StatusBadge>
               </div>
-              <Chip size="sm">
-                {a.framework}
-              </Chip>
+              <Chip size="sm">{a.framework}</Chip>
               <p className="portal-infra__cert-detail">{a.detail}</p>
               {a.reportUrl ? (
                 <a

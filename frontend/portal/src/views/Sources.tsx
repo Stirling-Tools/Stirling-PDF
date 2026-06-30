@@ -123,8 +123,7 @@ export function Sources() {
           >
             {t("sources.actions.agentBuilder")}
           </Button>
-          <Button onClick={openCreate} 
-          leftSection={<span aria-hidden>+</span>}>
+          <Button onClick={openCreate} leftSection={<span aria-hidden>+</span>}>
             {t("sources.actions.connectSource")}
           </Button>
         </div>

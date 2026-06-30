@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { fireEvent, render as baseRender, screen } from "@testing-library/react";
+import {
+  fireEvent,
+  render as baseRender,
+  screen,
+} from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { ErrorBoundary } from "@portal/components/ErrorBoundary";
 

@@ -581,7 +581,9 @@ export function FileSelectorPicker({
                       })
                     }
                     onMouseLeave={() => setHoveredStub(null)}
-                    rightSection={isItemLoading ? <Loader size="xs" /> : undefined}
+                    rightSection={
+                      isItemLoading ? <Loader size="xs" /> : undefined
+                    }
                   >
                     <div className={styles.fileItemContent}>
                       <span className={styles.fileName} title={stub.name}>
