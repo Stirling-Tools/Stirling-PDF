@@ -1742,8 +1742,6 @@ segmentAutomationDesc = "Automations & pipelines"
 legendValue_one = "{{formatted}} PDFs"
 legendValue_other = "{{formatted}} PDFs"
 emptyPeriod = "No metered processing yet this period."
-pendingSync_one = "+{{formatted}} processed locally, pending sync"
-pendingSync_other = "+{{formatted}} processed locally, pending sync"
 
 [billing.spendThisMonth]
 eyebrow = "Spend this month"

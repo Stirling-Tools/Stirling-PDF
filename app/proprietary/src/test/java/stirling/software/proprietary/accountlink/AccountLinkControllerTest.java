@@ -2,12 +2,15 @@ package stirling.software.proprietary.accountlink;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -21,12 +24,18 @@ import stirling.software.proprietary.accountlink.AccountLinkController.LinkReque
 class AccountLinkControllerTest {
 
     private AccountLinkService service;
+    private UsageSyncService syncService;
+    private ObjectProvider<UsageSyncService> syncProvider;
     private AccountLinkController controller;
 
     @BeforeEach
+    @SuppressWarnings("unchecked")
     void setUp() {
         service = mock(AccountLinkService.class);
-        controller = new AccountLinkController(service, mock(LocalUsageService.class));
+        syncService = mock(UsageSyncService.class);
+        syncProvider = mock(ObjectProvider.class);
+        controller =
+                new AccountLinkController(service, mock(LocalUsageService.class), syncProvider);
     }
 
     @Test
@@ -64,5 +73,25 @@ class AccountLinkControllerTest {
         when(service.link("jwt", null)).thenThrow(new IOException("connection refused"));
         ResponseEntity<?> resp = controller.link(new LinkRequest("jwt", null));
         assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.BAD_GATEWAY);
+    }
+
+    @Test
+    void syncNow_triggersSyncWhenMeteringOn() {
+        when(syncProvider.getIfAvailable()).thenReturn(syncService);
+
+        ResponseEntity<Void> resp = controller.syncNow();
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        verify(syncService).syncNow();
+    }
+
+    @Test
+    void syncNow_returns409WhenMeteringOff() {
+        when(syncProvider.getIfAvailable()).thenReturn(null); // metering disabled → bean absent
+
+        ResponseEntity<Void> resp = controller.syncNow();
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        verify(syncService, never()).syncNow();
     }
 }

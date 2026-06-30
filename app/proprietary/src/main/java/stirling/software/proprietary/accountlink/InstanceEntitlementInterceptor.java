@@ -163,11 +163,15 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
         MultipartHttpServletRequest mreq =
                 WebUtils.getNativeRequest(request, MultipartHttpServletRequest.class);
         if (mreq == null) {
-            meter.accrue(
-                    ent.periodStart(),
+            long fileless = DocumentUnitCalculator.unitsForFile(0, 0, policy);
+            log.debug(
+                    "Account-link meter: {} {} category={} fileless (no multipart) units={} →"
+                            + " no dedup",
+                    request.getMethod(),
+                    request.getRequestURI(),
                     category,
-                    DocumentUnitCalculator.unitsForFile(0, 0, policy),
-                    null);
+                    fileless);
+            meter.accrue(ent.periodStart(), category, fileless, null);
             return;
         }
         List<TempFile> temps = new ArrayList<>();
@@ -207,6 +211,15 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
             // different input set, so fall back to no-dedup (bill it) if any file failed.
             String opSignature =
                     fileCount > 0 && hashes.size() == fileCount ? opSignature(hashes) : null;
+            log.debug(
+                    "Account-link meter: {} {} category={} files={} hashed={} units={} dedupSig={}",
+                    request.getMethod(),
+                    request.getRequestURI(),
+                    category,
+                    fileCount,
+                    hashes.size(),
+                    units,
+                    opSignature == null ? "none(no-dedup)" : opSignature);
             meter.accrue(ent.periodStart(), category, units, opSignature);
         } finally {
             for (TempFile temp : temps) {

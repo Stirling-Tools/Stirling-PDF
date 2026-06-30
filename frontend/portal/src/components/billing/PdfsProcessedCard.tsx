@@ -12,7 +12,8 @@ import type { LocalUsage } from "@portal/api/link";
  *
  * <p>When a linked instance has accrued usage SaaS hasn't billed yet ({@code
  * unsynced}), it's folded into the headline + split so "current usage" reflects
- * work done since the last daily sync, with a "pending sync" note for honesty.
+ * work done since the last daily sync. The synced-vs-pending split is an internal
+ * detail the customer doesn't need, so it's not surfaced — just the combined total.
  */
 const SEGMENTS: ReadonlyArray<{
   key: keyof WalletCategoryBreakdown;
@@ -73,15 +74,6 @@ export function PdfsProcessedCard({
           {t("billing.pdfsProcessed.unit")}
         </span>
       </div>
-
-      {pending > 0 && (
-        <p className="portal-billing__section-sub">
-          {t("billing.pdfsProcessed.pendingSync", {
-            count: pending,
-            formatted: pending.toLocaleString(),
-          })}
-        </p>
-      )}
 
       {total > 0 ? (
         <>
