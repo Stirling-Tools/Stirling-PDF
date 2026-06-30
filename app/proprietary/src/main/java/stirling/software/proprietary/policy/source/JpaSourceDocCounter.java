@@ -5,12 +5,12 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
-
-import lombok.RequiredArgsConstructor;
 
 /**
  * Durable {@link SourceDocCounter} backed by hourly buckets in {@link SourceDocCountEntity}; the
@@ -19,7 +19,6 @@ import lombok.RequiredArgsConstructor;
  * buckets, so storage stays bounded to roughly one row per source per active hour.
  */
 @Service
-@RequiredArgsConstructor
 @ConditionalOnBooleanProperty(name = "policies.enabled")
 public class JpaSourceDocCounter implements SourceDocCounter {
 
@@ -28,6 +27,18 @@ public class JpaSourceDocCounter implements SourceDocCounter {
     private static final long WINDOW_HOURS = 24L * DocStats.DAYS;
 
     private final SourceDocCountRepository repository;
+    private final Supplier<Instant> clock;
+
+    @Autowired
+    public JpaSourceDocCounter(SourceDocCountRepository repository) {
+        this(repository, Instant::now);
+    }
+
+    // Clock seam so tests can pin "now"; the runtime bean uses the wall clock above.
+    JpaSourceDocCounter(SourceDocCountRepository repository, Supplier<Instant> clock) {
+        this.repository = repository;
+        this.clock = clock;
+    }
 
     @Override
     public void record(String sourceId, long docs) {
@@ -78,8 +89,8 @@ public class JpaSourceDocCounter implements SourceDocCounter {
         return stats;
     }
 
-    private static long currentHour() {
-        return Instant.now().getEpochSecond() / 3600;
+    private long currentHour() {
+        return clock.get().getEpochSecond() / 3600;
     }
 
     private static Map<String, Long> sums(List<SourceDocSum> rows) {

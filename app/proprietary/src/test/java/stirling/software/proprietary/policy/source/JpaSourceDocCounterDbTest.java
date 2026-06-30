@@ -20,10 +20,15 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 @DataJpaTest
 class JpaSourceDocCounterDbTest {
 
+    // Pinned "now" so seeding and statsFor agree regardless of when the test runs (no hour-tick
+    // flake at the boundary of a wall-clock hour).
+    private static final Instant NOW = Instant.parse("2026-06-30T12:00:00Z");
+    private static final long NOW_HOUR = NOW.getEpochSecond() / 3600;
+
     @Autowired private SourceDocCountRepository repository;
 
     private JpaSourceDocCounter counter() {
-        return new JpaSourceDocCounter(repository);
+        return new JpaSourceDocCounter(repository, () -> NOW);
     }
 
     @Test
@@ -41,11 +46,10 @@ class JpaSourceDocCounterDbTest {
 
     @Test
     void statsBucketDocsByDayAndWindowFromTheDatabase() {
-        long nowHour = Instant.now().getEpochSecond() / 3600;
         // Seed buckets directly at controlled hours: today, 10 days ago, 40 days ago.
-        repository.saveAndFlush(new SourceDocCountEntity("s", nowHour, 7));
-        repository.saveAndFlush(new SourceDocCountEntity("s", nowHour - 24L * 10, 50));
-        repository.saveAndFlush(new SourceDocCountEntity("s", nowHour - 24L * 40, 100));
+        repository.saveAndFlush(new SourceDocCountEntity("s", NOW_HOUR, 7));
+        repository.saveAndFlush(new SourceDocCountEntity("s", NOW_HOUR - 24L * 10, 50));
+        repository.saveAndFlush(new SourceDocCountEntity("s", NOW_HOUR - 24L * 40, 100));
 
         DocStats stats = counter().statsFor(List.of("s")).get("s");
         assertEquals(157, stats.total());

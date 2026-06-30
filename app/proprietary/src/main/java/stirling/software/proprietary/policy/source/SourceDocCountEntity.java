@@ -2,11 +2,14 @@ package stirling.software.proprietary.policy.source;
 
 import java.io.Serializable;
 
+import org.springframework.data.domain.Persistable;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,7 +27,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Setter
-public class SourceDocCountEntity implements Serializable {
+public class SourceDocCountEntity implements Serializable, Persistable<SourceDocCountId> {
 
     private static final long serialVersionUID = 1L;
 
@@ -43,5 +46,17 @@ public class SourceDocCountEntity implements Serializable {
         this.sourceId = sourceId;
         this.bucketHour = bucketHour;
         this.docCount = docCount;
+    }
+
+    @Override
+    @Transient
+    public SourceDocCountId getId() {
+        return new SourceDocCountId(sourceId, bucketHour);
+    }
+
+    @Override
+    @Transient
+    public boolean isNew() {
+        return true;
     }
 }
