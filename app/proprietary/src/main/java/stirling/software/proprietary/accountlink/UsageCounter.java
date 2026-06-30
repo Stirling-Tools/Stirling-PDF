@@ -57,8 +57,15 @@ public class UsageCounter {
     /**
      * Value of {@link #cumulativeUnits} as of the last sync SaaS accepted. {@code cumulativeUnits −
      * lastSyncedUnits} is the as-yet-unreported usage the portal shows on top of SaaS-synced spend.
+     *
+     * <p>{@code columnDefinition} default keeps the {@code ddl-auto=update} ADD COLUMN safe if an
+     * earlier build already populated this table on an external Postgres (NOT NULL with no default
+     * would otherwise fail the ALTER).
      */
-    @Column(name = "last_synced_units", nullable = false)
+    @Column(
+            name = "last_synced_units",
+            nullable = false,
+            columnDefinition = "bigint not null default 0")
     private long lastSyncedUnits;
 
     @Column(name = "updated_at", nullable = false)

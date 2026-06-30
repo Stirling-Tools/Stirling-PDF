@@ -144,13 +144,13 @@ class InstanceControllerTest {
         Authentication token = new LinkedInstanceAuthenticationToken(4L, 99L);
         LinkedInstance li = new LinkedInstance();
         li.setCreatedByUserId(7L);
+        LocalDateTime period = LocalDateTime.of(2026, 6, 1, 0, 0);
         when(linkedInstanceRepository.findById(4L)).thenReturn(Optional.of(li));
         when(billingService.forTeam(99L)).thenReturn(freeBilling(10L));
-        when(entitlementService.getSnapshot(99L))
-                .thenReturn(snapshot(EntitlementState.FULL, 5L, null));
+        // The reported periodStart is validated against the authoritative snapshot period.
+        when(entitlementService.getSnapshot(99L)).thenReturn(snapshotForPeriod(period, null));
         when(pricingPolicyService.getEffectivePolicy(99L)).thenReturn(policy());
 
-        LocalDateTime period = LocalDateTime.of(2026, 6, 1, 0, 0);
         InstanceController.UsageSyncRequest req =
                 new InstanceController.UsageSyncRequest(
                         3L,
@@ -168,6 +168,25 @@ class InstanceControllerTest {
                 .containsEntry(BillingCategory.API, 12L)
                 .containsEntry(BillingCategory.AI, 4L)
                 .containsEntry(BillingCategory.AUTOMATION, 8L);
+    }
+
+    @Test
+    void sync_rejectsImplausiblePeriodStart() {
+        Authentication token = new LinkedInstanceAuthenticationToken(4L, 99L);
+        LocalDateTime period = LocalDateTime.of(2026, 6, 1, 0, 0);
+        when(entitlementService.getSnapshot(99L)).thenReturn(snapshotForPeriod(period, null));
+
+        // A fabricated far-future periodStart (would reset the dedup partition) → 400, no ingest.
+        InstanceController.UsageSyncRequest req =
+                new InstanceController.UsageSyncRequest(
+                        1L,
+                        period.plusYears(5),
+                        new InstanceController.UsageSyncRequest.CategoryUnits(99, 0, 0));
+
+        ResponseEntity<EntitlementResponse> resp = controller().sync(token, req);
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        verifyNoInteractions(usageIngestService);
     }
 
     @Test
@@ -242,6 +261,19 @@ class InstanceControllerTest {
                 FeatureSet.FULL,
                 List.of(FeatureGate.OFFSITE_PROCESSING),
                 spend,
+                cap,
+                start,
+                start.plusMonths(1),
+                false);
+    }
+
+    /** Snapshot with an explicit period — the sync tests need a deterministic period window. */
+    private static EntitlementSnapshot snapshotForPeriod(LocalDateTime start, Long cap) {
+        return new EntitlementSnapshot(
+                EntitlementState.FULL,
+                FeatureSet.FULL,
+                List.of(FeatureGate.OFFSITE_PROCESSING),
+                0L,
                 cap,
                 start,
                 start.plusMonths(1),

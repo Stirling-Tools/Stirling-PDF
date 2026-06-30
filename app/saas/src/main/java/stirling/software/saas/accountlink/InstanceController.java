@@ -154,6 +154,23 @@ public class InstanceController {
             return ResponseEntity.badRequest().build();
         }
         Long teamId = token.getTeamId();
+        // periodStart is the (team, period, category) partition key the dedup/regression guards key
+        // on, so a fabricated value could reset those guards. Bound it to a plausible window around
+        // the authoritative snapshot period — the current period or the immediately-prior one
+        // (rollover lag), never the future — rejecting anything else.
+        EntitlementSnapshot snap = entitlementService.getSnapshot(teamId);
+        LocalDateTime reported = req.periodStart();
+        if (!reported.isBefore(snap.periodEnd())
+                || reported.isBefore(snap.periodStart().minusMonths(1))) {
+            log.warn(
+                    "Instance sync for team {} reported implausible periodStart {} (authoritative"
+                            + " {}..{}); rejecting.",
+                    teamId,
+                    reported,
+                    snap.periodStart(),
+                    snap.periodEnd());
+            return ResponseEntity.badRequest().build();
+        }
         // Attribute the charge to the admin who linked the instance (the device credential carries
         // no user). Null is tolerated by the ingest service (it skips + retries next sync).
         Long actorUserId =

@@ -1,12 +1,15 @@
 package stirling.software.proprietary.accountlink;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.annotation.SchedulingConfigurer;
+import org.springframework.scheduling.config.FixedDelayTask;
+import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
@@ -31,32 +34,46 @@ import lombok.extern.slf4j.Slf4j;
 @ConditionalOnProperty(
         name = "stirling.billing.account-link.metering.enabled",
         havingValue = "true")
-public class UsageSyncService {
+public class UsageSyncService implements SchedulingConfigurer {
+
+    // First run waits out startup (entitlement fetch + any restart churn); then every interval.
+    private static final Duration INITIAL_DELAY = Duration.ofMinutes(5);
 
     private final UsageCounterRepository counters;
     private final AccountLinkSyncStateRepository syncState;
     private final DeviceCredentialStore credentialStore;
     private final AccountLinkClient client;
     private final EntitlementCache entitlementCache;
+    private final AccountLinkProperties properties;
 
     public UsageSyncService(
             UsageCounterRepository counters,
             AccountLinkSyncStateRepository syncState,
             DeviceCredentialStore credentialStore,
             AccountLinkClient client,
-            EntitlementCache entitlementCache) {
+            EntitlementCache entitlementCache,
+            AccountLinkProperties properties) {
         this.counters = counters;
         this.syncState = syncState;
         this.credentialStore = credentialStore;
         this.client = client;
         this.entitlementCache = entitlementCache;
+        this.properties = properties;
     }
 
-    // First run waits out startup (entitlement fetch + any restart churn); then every interval.
-    @Scheduled(
-            initialDelay = 300_000L,
-            fixedDelayString =
-                    "#{T(java.time.Duration).ofHours(${stirling.billing.account-link.metering.sync-interval-hours:24}).toMillis()}")
+    /**
+     * Registers the daily sync with the interval bound from {@code metering.sync-interval-hours} in
+     * code rather than a {@code @Scheduled} SpEL string — a bad interval is then a unit-test/boot
+     * failure, not a flags-on-bootRun-only surprise. {@code @EnableScheduling} (on the app) drives
+     * this.
+     */
+    @Override
+    public void configureTasks(ScheduledTaskRegistrar registrar) {
+        Duration interval = Duration.ofHours(properties.getMetering().getSyncIntervalHours());
+        registrar.addFixedDelayTask(
+                new FixedDelayTask(this::scheduledSync, interval, INITIAL_DELAY));
+    }
+
     public void scheduledSync() {
         try {
             syncNow();

@@ -33,7 +33,11 @@ public class AccountLinkSyncState {
 
     @Id private Long id;
 
-    @Column(name = "last_sync_seq", nullable = false)
+    // columnDefinition default keeps the ddl-auto ADD COLUMN safe on a populated external Postgres.
+    @Column(
+            name = "last_sync_seq",
+            nullable = false,
+            columnDefinition = "bigint not null default 0")
     private long lastSyncSeq;
 
     /** Null until the first sync SaaS accepts. */

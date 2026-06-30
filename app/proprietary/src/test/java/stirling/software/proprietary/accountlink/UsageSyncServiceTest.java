@@ -1,5 +1,6 @@
 package stirling.software.proprietary.accountlink;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
@@ -9,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -18,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 
 @ExtendWith(MockitoExtension.class)
 class UsageSyncServiceTest {
@@ -35,7 +38,29 @@ class UsageSyncServiceTest {
     void setUp() {
         service =
                 new UsageSyncService(
-                        counters, syncState, credentialStore, client, entitlementCache);
+                        counters,
+                        syncState,
+                        credentialStore,
+                        client,
+                        entitlementCache,
+                        new AccountLinkProperties());
+    }
+
+    @Test
+    void registersFixedDelayTaskWithConfiguredInterval() {
+        AccountLinkProperties props = new AccountLinkProperties();
+        props.getMetering().setSyncIntervalHours(6);
+        UsageSyncService svc =
+                new UsageSyncService(
+                        counters, syncState, credentialStore, client, entitlementCache, props);
+
+        ScheduledTaskRegistrar registrar = new ScheduledTaskRegistrar();
+        svc.configureTasks(registrar);
+
+        // Pins the interval binding in CI — the old @Scheduled SpEL only resolved at flags-on boot.
+        assertThat(registrar.getFixedDelayTaskList()).hasSize(1);
+        assertThat(registrar.getFixedDelayTaskList().get(0).getIntervalDuration())
+                .isEqualTo(Duration.ofHours(6));
     }
 
     private static DeviceCredential credential() {

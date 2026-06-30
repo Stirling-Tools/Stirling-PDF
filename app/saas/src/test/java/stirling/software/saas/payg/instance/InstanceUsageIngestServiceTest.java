@@ -34,16 +34,15 @@ class InstanceUsageIngestServiceTest {
 
     private InstanceUsageIngestService service;
     private final LocalDateTime period = LocalDateTime.of(2026, 6, 1, 0, 0);
-    private static final long MAX_UNITS_PER_SYNC = 1000L;
 
     @BeforeEach
     void setUp() {
-        service = new InstanceUsageIngestService(repo, chargeService, MAX_UNITS_PER_SYNC);
+        service = new InstanceUsageIngestService(repo, chargeService);
     }
 
     @Test
     void firstSyncChargesFullCumulativeAndSavesRow() {
-        when(repo.findByTeamIdAndPeriodStartAndCategory(1L, period, "AI"))
+        when(repo.findByTeamIdAndPeriodStartAndCategoryForUpdate(1L, period, "AI"))
                 .thenReturn(Optional.empty());
 
         service.ingest(1L, 7L, 1L, period, Map.of(BillingCategory.AI, 10L));
@@ -64,11 +63,13 @@ class InstanceUsageIngestServiceTest {
     @Test
     void secondSyncChargesOnlyDelta() {
         PaygInstanceUsage existing = new PaygInstanceUsage(1L, period, "API", 10L, 1L);
-        when(repo.findByTeamIdAndPeriodStartAndCategory(1L, period, "API"))
+        when(repo.findByTeamIdAndPeriodStartAndCategoryForUpdate(1L, period, "API"))
                 .thenReturn(Optional.of(existing));
 
         service.ingest(1L, 7L, 2L, period, Map.of(BillingCategory.API, 25L));
 
+        // One charge for the aggregated delta (15), not per underlying op — pins the per-delta
+        // model.
         verify(chargeService).chargeStandalone(any(ChargeContext.class), eq(15));
         verify(repo).save(existing);
         assertThat(existing.getLastCumulativeUnits()).isEqualTo(25L);
@@ -78,7 +79,7 @@ class InstanceUsageIngestServiceTest {
     @Test
     void replayIsIgnored() {
         PaygInstanceUsage existing = new PaygInstanceUsage(1L, period, "API", 25L, 2L);
-        when(repo.findByTeamIdAndPeriodStartAndCategory(1L, period, "API"))
+        when(repo.findByTeamIdAndPeriodStartAndCategoryForUpdate(1L, period, "API"))
                 .thenReturn(Optional.of(existing));
 
         service.ingest(1L, 7L, 2L, period, Map.of(BillingCategory.API, 25L));
@@ -90,7 +91,7 @@ class InstanceUsageIngestServiceTest {
     @Test
     void regressionIsRefusedAndNotAdvanced() {
         PaygInstanceUsage existing = new PaygInstanceUsage(1L, period, "API", 25L, 2L);
-        when(repo.findByTeamIdAndPeriodStartAndCategory(1L, period, "API"))
+        when(repo.findByTeamIdAndPeriodStartAndCategoryForUpdate(1L, period, "API"))
                 .thenReturn(Optional.of(existing));
 
         service.ingest(1L, 7L, 3L, period, Map.of(BillingCategory.API, 5L));
@@ -102,7 +103,7 @@ class InstanceUsageIngestServiceTest {
     @Test
     void zeroDeltaAdvancesSeqWithoutCharging() {
         PaygInstanceUsage existing = new PaygInstanceUsage(1L, period, "API", 25L, 2L);
-        when(repo.findByTeamIdAndPeriodStartAndCategory(1L, period, "API"))
+        when(repo.findByTeamIdAndPeriodStartAndCategoryForUpdate(1L, period, "API"))
                 .thenReturn(Optional.of(existing));
 
         service.ingest(1L, 7L, 3L, period, Map.of(BillingCategory.API, 25L));
@@ -113,15 +114,16 @@ class InstanceUsageIngestServiceTest {
     }
 
     @Test
-    void overBoundDeltaIsRefusedAndNotAdvanced() {
-        when(repo.findByTeamIdAndPeriodStartAndCategory(1L, period, "API"))
+    void billsAccruedDeltaWithoutConsultingCap() {
+        // Intent pin: the ingest has no cap input and always bills the accrued delta — cap
+        // enforcement is the request-time gate's job (the instance stops accruing at the cap), not
+        // this aggregate charge path's. A large valid delta is billed in full.
+        when(repo.findByTeamIdAndPeriodStartAndCategoryForUpdate(1L, period, "API"))
                 .thenReturn(Optional.empty());
 
-        // First sync, cumulative far above the per-sync ceiling → refuse + don't advance.
-        service.ingest(1L, 7L, 1L, period, Map.of(BillingCategory.API, MAX_UNITS_PER_SYNC + 1));
+        service.ingest(1L, 7L, 1L, period, Map.of(BillingCategory.API, 5_000_000L));
 
-        verify(chargeService, never()).chargeStandalone(any(), anyInt());
-        verify(repo, never()).save(any());
+        verify(chargeService).chargeStandalone(any(ChargeContext.class), eq(5_000_000));
     }
 
     @Test
