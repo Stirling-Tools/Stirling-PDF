@@ -27,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.policy.config.FolderAccessGuard;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.model.InputSpec;
@@ -72,6 +73,16 @@ public class FolderWatchTrigger implements PolicyTrigger {
     @Override
     public String type() {
         return TYPE;
+    }
+
+    @Override
+    public boolean requiresSource() {
+        return true;
+    }
+
+    @Override
+    public Set<String> supportedSourceTypes() {
+        return Set.of(FolderAccessGuard.FOLDER_TYPE);
     }
 
     @Override

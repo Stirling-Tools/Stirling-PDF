@@ -5870,6 +5870,17 @@ successMessage = "Your license has been successfully activated. You can now clos
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
 deleteConfirmTitle = "Delete {{label}} policy?"
 
+[policies.activity]
+enforced = "enforced"
+enforcing = "Enforcing..."
+failed = "Enforcement failed"
+outputsUnavailable = "Policy outputs are no longer available to download."
+partialOutputsUnavailable = "Some policy outputs are no longer available to download."
+retrying = "Busy, retrying..."
+runNotFound = "The enforcement run could no longer be found."
+step = "step {{current}}/{{total}}"
+timedOut = "Enforcement timed out before the run could finish."
+
 [policies.catalog]
 compliance = "Compliance"
 ingestion = "Ingestion"

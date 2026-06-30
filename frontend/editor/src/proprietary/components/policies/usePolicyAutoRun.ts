@@ -20,11 +20,13 @@ import {
 import { fileStorage } from "@app/services/fileStorage";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
 import { POLICIES_ENABLED } from "@app/constants/featureFlags";
+import i18n from "@app/i18n";
 import {
   runStoredPolicy,
   getPolicyRun,
   listPolicyRuns,
   downloadPolicyOutput,
+  resolvePolicyRunTarget,
 } from "@app/services/policyApi";
 import type {
   PolicyRunStatus,
@@ -82,9 +84,9 @@ const QUEUE_RETRY_BASE_MS = 4000;
  *  to an instance that hasn't seen it) then fail, rather than polling forever. */
 const MAX_NOT_FOUND = 3;
 
-/** A 404 from the run-status endpoint, across the web (axios) and desktop
- *  (tauri http client → {@code code: "ERR_NOT_FOUND"}) builds. */
-function isRunNotFound(err: unknown): boolean {
+/** A 404 (run status gone, or output file gone), across the web (axios) and
+ *  desktop (tauri http client → {@code code: "ERR_NOT_FOUND"}) builds. */
+function isNotFoundError(err: unknown): boolean {
   const e = err as
     | { code?: string; status?: number; response?: { status?: number } }
     | null
@@ -354,6 +356,9 @@ async function reconcileServerRuns(
       fileId: "",
       fileName: view.outputs[0]?.fileName ?? "",
       fileSize: 0,
+      // Rediscovered from the SaaS run registry (listPolicyRuns), so its outputs
+      // live on the cloud backend.
+      target: "saas",
       status: view.status,
       outputs: view.outputs,
       error: view.error,
@@ -403,9 +408,9 @@ async function importOutputs(
   const targetName = ctx.outputName
     ? undefined // use the run's per-output (renamed) name below
     : run.fileName;
-  const results = await Promise.allSettled(
+  const settled = await Promise.allSettled(
     pending.map(async (out) => {
-      const blob = await downloadPolicyOutput(out.fileId);
+      const blob = await downloadPolicyOutput(out.fileId, run.target);
       return {
         fileId: out.fileId,
         file: new File([blob], targetName ?? out.fileName ?? run.fileName, {
@@ -414,13 +419,33 @@ async function importOutputs(
       };
     }),
   );
-  const fetched = results
+  const fetched = settled
     .filter(
       (r): r is PromiseFulfilledResult<{ fileId: string; file: File }> =>
         r.status === "fulfilled",
     )
     .map((r) => r.value);
-  if (fetched.length === 0) return; // all failed — retry the lot on a later tick
+  // A 404 means the backend no longer has that output (past its retention
+  // window); retrying it can never succeed, so don't loop on it forever. Any
+  // other rejection is transient and worth retrying on a later tick.
+  const rejections = settled
+    .filter((r): r is PromiseRejectedResult => r.status === "rejected")
+    .map((r) => r.reason);
+  const allFailuresPermanent =
+    rejections.length > 0 && rejections.every(isNotFoundError);
+
+  if (fetched.length === 0) {
+    if (allFailuresPermanent) {
+      failRun(
+        run.runId,
+        i18n.t(
+          "policies.activity.outputsUnavailable",
+          "Policy outputs are no longer available to download.",
+        ),
+      );
+    }
+    return; // transient/mixed: retry the lot later; permanent: already failed.
+  }
 
   // Deliver, then mark exactly those imported. If delivery throws we don't mark
   // them, so they retry (without having been added).
@@ -472,12 +497,26 @@ async function importOutputs(
     deliveredIds = added.map((f) => f.fileId as string);
   }
   const importedFileIds = [...done, ...fetched.map((f) => f.fileId)];
+  const imported = run.outputs.every((out) =>
+    importedFileIds.includes(out.fileId),
+  );
   updateRun(run.runId, {
     importedFileIds,
     // Accumulate across partial-import retries rather than overwriting.
     outputFileIds: [...(run.outputFileIds ?? []), ...deliveredIds],
-    imported: run.outputs.every((out) => importedFileIds.includes(out.fileId)),
+    imported,
   });
+  // Some outputs landed but the rest are permanently gone (404): finalize so the
+  // run stops re-fetching the missing ones on every tick.
+  if (!imported && allFailuresPermanent) {
+    failRun(
+      run.runId,
+      i18n.t(
+        "policies.activity.partialOutputsUnavailable",
+        "Some policy outputs are no longer available to download.",
+      ),
+    );
+  }
 }
 
 /**
@@ -515,6 +554,7 @@ export async function runPolicyOnFile(
     return;
   }
   try {
+    const target = resolvePolicyRunTarget();
     const runId = await runStoredPolicy(backendId, [file]);
     // recordRunStart marks this (policy, file) dispatched as it records the run.
     recordRunStart({
@@ -523,6 +563,7 @@ export async function runPolicyOnFile(
       fileId,
       fileName,
       fileSize: file.size,
+      target,
       status: "PENDING",
       outputs: [],
       error: null,
@@ -562,9 +603,15 @@ export async function poll(
       // The server lost the run's (in-memory) state — a restart, or a poll that
       // hopped to an instance without it. Tolerate a brief blip, then fail so
       // the file stops enforcing forever; the user can retry.
-      if (isRunNotFound(err)) {
+      if (isNotFoundError(err)) {
         if (++notFoundStreak >= MAX_NOT_FOUND) {
-          failRun(runId, "The enforcement run could no longer be found.");
+          failRun(
+            runId,
+            i18n.t(
+              "policies.activity.runNotFound",
+              "The enforcement run could no longer be found.",
+            ),
+          );
           return;
         }
       } else {
@@ -591,5 +638,11 @@ export async function poll(
   }
   // Budget exhausted without a terminal status — stop here and fail it, so the
   // file doesn't enforce forever and reloads don't re-poll it.
-  failRun(runId, "Enforcement timed out — the run didn't finish in time.");
+  failRun(
+    runId,
+    i18n.t(
+      "policies.activity.timedOut",
+      "Enforcement timed out before the run could finish.",
+    ),
+  );
 }
