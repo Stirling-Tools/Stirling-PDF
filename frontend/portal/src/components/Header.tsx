@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Avatar, Dropdown } from "@shared/components";
+import { useAuth } from "@shared/auth";
 import { useTheme } from "@portal/contexts/ThemeContext";
 import { useTier, TIER_INFO, type Tier } from "@portal/contexts/TierContext";
 import { useView } from "@portal/contexts/ViewContext";
@@ -39,8 +40,12 @@ function ThemeToggle() {
 }
 
 function TierSwitcher() {
-  const { tier, setTier } = useTier();
+  const { tier, setTier, isDerived } = useTier();
   const info = TIER_INFO[tier];
+  // When mocks are off, the tier is derived from the real link/wallet state —
+  // pair the dropdown with the mocks toggle (hidden in prod) so testing real
+  // billing flows can't be perturbed by accidentally flipping the mock tier.
+  if (isDerived) return null;
   return (
     <Dropdown.Root align="end">
       <Dropdown.Trigger>
@@ -71,6 +76,32 @@ function TierSwitcher() {
             {TIER_INFO[id].label}
           </Dropdown.Item>
         ))}
+      </Dropdown.Menu>
+    </Dropdown.Root>
+  );
+}
+
+function UserMenu() {
+  const { t } = useTranslation();
+  const { displayName, signOut } = useAuth();
+  const name = displayName ?? t("shell.header.accountFallback", "Account");
+  return (
+    <Dropdown.Root align="end">
+      <Dropdown.Trigger>
+        <button
+          type="button"
+          className="portal-header__user"
+          aria-label={t("shell.header.accountMenu", "Account menu")}
+          title={name}
+        >
+          <Avatar name={name} size="md" tone="blue" />
+        </button>
+      </Dropdown.Trigger>
+      <Dropdown.Menu width="12rem">
+        <Dropdown.Item disabled>{name}</Dropdown.Item>
+        <Dropdown.Item onSelect={() => void signOut()}>
+          {t("shell.header.signOut", "Sign out")}
+        </Dropdown.Item>
       </Dropdown.Menu>
     </Dropdown.Root>
   );
@@ -108,7 +139,7 @@ export function Header() {
         <ThemeToggle />
         <NotificationsDropdown />
         <TierSwitcher />
-        <Avatar name="Reece" size="md" tone="blue" />
+        <UserMenu />
       </div>
     </header>
   );

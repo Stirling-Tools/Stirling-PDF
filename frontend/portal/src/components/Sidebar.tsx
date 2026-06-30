@@ -4,8 +4,10 @@ import { useView, type ViewId } from "@portal/contexts/ViewContext";
 import { useTier } from "@portal/contexts/TierContext";
 import { useTheme } from "@portal/contexts/ThemeContext";
 import { useUI } from "@portal/contexts/UIContext";
+import { useLink } from "@portal/contexts/LinkContext";
 import { useAsync } from "@portal/hooks/useAsync";
 import { fetchHomeKpis, type KpiEntry } from "@portal/api/home";
+import { EDITOR_URL } from "@portal/auth/editorUrl";
 import markLight from "@shared/assets/stirling-mark-light.svg";
 import markDark from "@shared/assets/stirling-mark-dark.svg";
 import {
@@ -18,17 +20,13 @@ import {
   ComponentsIcon,
   InfrastructureIcon,
   UsageIcon,
+  LinkIcon,
   DocsIcon,
   ProcurementIcon,
   SettingsIcon,
   ChevronDownIcon,
 } from "@portal/components/icons";
 import "@portal/components/Sidebar.css";
-
-// The editor is a separate Vite app with no shared shell, so switching apps is
-// a hard navigation — the editor's dev server in dev, the site root in prod.
-// A standalone portal deploy can gate this behind a configured editor URL.
-const EDITOR_URL = import.meta.env.DEV ? "http://localhost:5180/" : "/";
 
 interface NavEntry {
   id: ViewId;
@@ -51,6 +49,27 @@ const GROUP_PLATFORM: NavEntry[] = [
   { id: "usage", icon: <UsageIcon /> },
   { id: "docs", icon: <DocsIcon /> },
 ];
+
+/**
+ * Sidebar-footer link-account CTA. Only visible when the org is unlinked — once
+ * linked, the linked-instances row + plan badge already communicate the state,
+ * so a permanent footer button would be noise. Click → opens the login modal
+ * directly.
+ */
+function LinkAccountFooterItem() {
+  const { t } = useTranslation();
+  const { openLinkModal } = useUI();
+  const { linkState } = useLink();
+  if (linkState !== "unlinked") return null;
+  return (
+    <NavItem
+      id="account-link"
+      label={t("shell.sidebar.linkAccount", "Link Stirling account")}
+      icon={<LinkIcon />}
+      onClick={() => openLinkModal()}
+    />
+  );
+}
 
 function UsageFooter() {
   const { tier } = useTier();
@@ -95,8 +114,8 @@ function UsageFooter() {
 
   const planLabel =
     tier === "pro"
-      ? t("shell.sidebar.planPayAsYouGo")
-      : t("shell.sidebar.planEnterprise");
+      ? t("shell.sidebar.planProcessor", "Processor plan")
+      : t("shell.sidebar.planEnterprise", "Enterprise plan");
 
   return (
     <div className="portal-sidebar__usage">
@@ -213,6 +232,7 @@ export function Sidebar() {
       </nav>
 
       <div className="portal-sidebar__footer">
+        <LinkAccountFooterItem />
         <NavItem
           id="settings"
           label={t("nav.settings")}

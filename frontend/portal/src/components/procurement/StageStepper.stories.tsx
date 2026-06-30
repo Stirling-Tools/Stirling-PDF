@@ -12,7 +12,7 @@ const meta: Meta<typeof StageStepper> = {
 export default meta;
 type Story = StoryObj<typeof StageStepper>;
 
-export const AtAgreement: Story = { args: { currentStage: "agreement" } };
+export const AtAgreement: Story = { args: { currentStage: "security" } };
 
 export const AtTrial: Story = { args: { currentStage: "trial" } };
 

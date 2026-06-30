@@ -8,6 +8,27 @@
 /* scaffolding + the collapsed rail; spacing snaps to the SUI --space-*       */
 /* scale and colour to the SUI token set so it reads as one product.         */
 
+/* Dark mode only: remap SUI surface/border tokens to the app's neutral-grey values so policy cards read as one product with the rail; accent tokens are left alone. */
+[data-theme="dark"] .pol-list,
+[data-theme="dark"] .pol-takeover,
+[data-theme="dark"] .pol-detail,
+[data-theme="dark"] .pol-crail {
+  --color-bg: var(--bg-toolbar);
+  --color-bg-alt: var(--bg-toolbar);
+  --color-bg-subtle: var(--bg-toolbar);
+  --color-surface: var(--bg-surface);
+  --color-surface-alt: #323942;
+  --color-bg-hover: #323942;
+  --color-bg-muted: var(--bg-surface);
+  --color-border: var(--border-default);
+  --color-border-light: var(--border-subtle);
+  --color-border-input: var(--border-strong);
+  --color-border-hover: var(--border-strong);
+  --color-divider: var(--border-subtle);
+  --color-dropdown-bg: var(--bg-surface);
+  --color-dropdown-border: var(--border-default);
+}
+
 /* ---- List ---- */
 .pol-list {
   width: 100%;
@@ -69,6 +90,19 @@
   outline: 2px solid var(--color-blue);
   outline-offset: -2px;
 }
+/* Policy icons are colourless at rest; hovering or focusing the row reveals the
+   category colour (blue/purple/green/amber/red — see ROW_ACCENT). The accent
+   class sets --ib-base; we neutralise --ib-accent here and restore it on hover. */
+.pol-row .sui-iconbadge {
+  --ib-accent: var(--color-text-3);
+  transition:
+    color var(--motion-fast),
+    background var(--motion-fast);
+}
+.pol-row:hover .sui-iconbadge,
+.pol-row:focus-visible .sui-iconbadge {
+  --ib-accent: var(--ib-base);
+}
 .pol-row-label {
   flex: 1;
   min-width: 0;
@@ -126,19 +160,27 @@
   text-decoration: underline;
 }
 
-/* Locked "Coming soon" row — muted, not interactive. */
+/* Enterprise-only ("coming soon") row — shown to admins / team leaders but not
+   available on the current plan, so the whole box is dimmed to read as disabled.
+   The row itself isn't a button; its trailing "Upgrade to enterprise" link is. */
 .pol-row--soon {
-  opacity: 0.55;
   cursor: default;
+  opacity: 0.55;
 }
 .pol-row--soon:hover {
   background: transparent;
 }
-.pol-row-soon {
+/* Trailing "Upgrade to enterprise" link → contact us. Greyed to match the
+   disabled row; still clickable for admins who want to enquire. */
+.pol-row-upgrade {
   font-size: 0.6875rem;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--color-text-4);
+  text-decoration: none;
   white-space: nowrap;
+}
+.pol-row-upgrade:hover {
+  text-decoration: underline;
 }
 
 /* In-progress activity icon spins gently. */
@@ -192,8 +234,16 @@
 
 /* ---- Step indicator (wraps a SUI StepIndicator) ---- */
 .pol-steps {
-  padding: var(--space-3) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0 var(--space-5) var(--space-3);
   border-bottom: 1px solid var(--color-border);
+}
+.pol-step-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-4);
 }
 
 /* ---- Scroll body ---- */
@@ -211,6 +261,7 @@
   line-height: 1.5;
   color: var(--color-text-4);
   margin: 0;
+  margin-bottom: var(--space-3);
 }
 .pol-section-label {
   font-size: 0.6875rem;

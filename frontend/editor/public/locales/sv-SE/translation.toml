@@ -5854,6 +5854,7 @@ routing = "Routing"
 security = "Security"
 
 [policies.detail]
+close = "Stäng"
 editSettings = "Edit Settings"
 enforces = "Enforces"
 managedByOrg = "Managed by your organisation. Contact a team leader to change this policy."
@@ -5907,6 +5908,7 @@ allDocTypesTitle = "All document types"
 back = "Back"
 builderDesc = "Build the sequence of tools this policy runs on each document."
 clear = "Clear"
+close = "Stäng"
 continue = "Continue"
 docTypesLabel = "Document types"
 edit = "Edit"
@@ -7784,8 +7786,6 @@ allReleases = "Alla utgåvor"
 breaking = "Brytande"
 breakingChanges = "Brytande ändringar"
 breakingChangesDefault = "Denna version innehåller brytande ändringar."
-breakingChangesDetected = "Brytande ändringar upptäckta"
-breakingChangesMessage = "Vissa versioner innehåller brytande ändringar. Läs migreringsguiderna nedan innan du uppdaterar."
 close = "Stäng"
 closeModal = "Stäng uppdateringsfönster"
 current = "Aktuell version"
@@ -8606,6 +8606,7 @@ disableByAdmin = "Inaktivera MFA"
 
 [workspace.people.roleDescriptions]
 admin = "Kan hantera inställningar och bjuda in medlemmar, med full administrativ åtkomst."
+currentRole = "Aktuell tilldelad roll."
 user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]

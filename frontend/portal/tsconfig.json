@@ -4,9 +4,8 @@
     "jsx": "react-jsx",
     "module": "esnext",
     "moduleResolution": "bundler",
-    "baseUrl": "./",
     "paths": {
-      "@portal/*": ["src/*"],
+      "@portal/*": ["./src/*"],
       "@shared/*": ["../shared/*"]
     },
     "resolveJsonModule": true,

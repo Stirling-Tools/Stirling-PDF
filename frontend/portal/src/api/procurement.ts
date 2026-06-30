@@ -1,4 +1,4 @@
-import { httpJson } from "@portal/api/http";
+import { apiClient } from "@portal/api/http";
 import type { Tier } from "@portal/contexts/TierContext";
 import type {
   DealStage,
@@ -27,7 +27,7 @@ export { JOURNEY } from "@portal/mocks/procurement";
 export async function fetchProcurement(
   tier: Tier,
 ): Promise<ProcurementResponse> {
-  return httpJson<ProcurementResponse>(
+  return apiClient.local.json<ProcurementResponse>(
     `/v1/procurement?tier=${encodeURIComponent(tier)}`,
   );
 }
@@ -43,7 +43,7 @@ export async function fetchProcurement(
 export async function advanceStage(
   fromStage: DealStage,
 ): Promise<ProcurementResponse> {
-  return httpJson<ProcurementResponse>("/v1/procurement/advance", {
+  return apiClient.local.json<ProcurementResponse>("/v1/procurement/advance", {
     method: "POST",
     body: { fromStage },
   });
@@ -55,7 +55,7 @@ export async function signAgreement(
 ): Promise<ProcurementResponse> {
   // A real backend opens an e-signature envelope and completes on callback;
   // here it completes immediately and advances the deal.
-  return httpJson<ProcurementResponse>("/v1/procurement/sign", {
+  return apiClient.local.json<ProcurementResponse>("/v1/procurement/sign", {
     method: "POST",
     body: { docId },
   });
@@ -63,7 +63,7 @@ export async function signAgreement(
 
 /** Pay the contract online (card / bank transfer via Stripe). */
 export async function payOnline(): Promise<ProcurementResponse> {
-  return httpJson<ProcurementResponse>("/v1/procurement/pay", {
+  return apiClient.local.json<ProcurementResponse>("/v1/procurement/pay", {
     method: "POST",
   });
 }
@@ -73,10 +73,13 @@ export async function uploadPurchaseOrder(
   file: File,
 ): Promise<ProcurementResponse> {
   // A real backend takes the PO as multipart; the mock only needs the name.
-  return httpJson<ProcurementResponse>("/v1/procurement/purchase-order", {
-    method: "POST",
-    body: { fileName: file.name },
-  });
+  return apiClient.local.json<ProcurementResponse>(
+    "/v1/procurement/purchase-order",
+    {
+      method: "POST",
+      body: { fileName: file.name },
+    },
+  );
 }
 
 /** Request a document that is generated on demand (some carry a one-off fee). */
@@ -84,7 +87,7 @@ export async function requestDocument(
   docId: string,
   action: DocAction,
 ): Promise<ProcurementResponse> {
-  return httpJson<ProcurementResponse>(
+  return apiClient.local.json<ProcurementResponse>(
     `/v1/procurement/documents/${encodeURIComponent(docId)}/request`,
     { method: "POST", body: { action } },
   );

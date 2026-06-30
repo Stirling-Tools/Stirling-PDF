@@ -4,8 +4,8 @@
  * The editor and the portal both keep UI strings in a US-English source locale
  * (`public/locales/en-US/translation.toml`) and look them up with
  * react-i18next's `t()`. These helpers walk a project's source via the
- * TypeScript AST — finding static `t("…")` keys, `i18nKey` props, and dynamic
- * template-key shapes — flatten its locale to a key set, and report drift in
+ * TypeScript AST (finding static `t("...")` keys, `i18nKey` props, and dynamic
+ * template-key shapes), flatten its locale to a key set, and report drift in
  * both directions:
  *   - **missing**: a key used in source with no entry in the locale
  *   - **unused**:  a locale key no source reference (static or dynamic) reaches
@@ -29,15 +29,21 @@ export interface TranslationProject {
   name: string;
   /** Absolute path to the source tree to scan. */
   srcRoot: string;
+  /**
+   * Extra source trees that also contribute used keys (e.g. the shared layer
+   * (frontend/shared), whose components (login UI, etc.) are rendered by both
+   * apps and reference each app's locale keys).
+   */
+  extraRoots?: string[];
   /** Absolute path to the en-US source locale. */
   localeFile: string;
   /** Static keys flagged as missing that are genuinely fine (false positives). */
   ignoredKeys?: Set<string>;
   /** Locale keys assembled at runtime; exempt from the unused check. */
   ignoredKeyPatterns?: RegExp[];
-  /** Sanity floor — a working scan finds at least this many used keys. */
+  /** Sanity floor: a working scan finds at least this many used keys. */
   minUsedKeys?: number;
-  /** Sanity floor — a working parse finds at least this many locale keys. */
+  /** Sanity floor: a working parse finds at least this many locale keys. */
   minLocaleKeys?: number;
 }
 
@@ -62,14 +68,20 @@ const PLURAL_SUFFIX_RE = /_(zero|one|two|few|many|other)$/;
 
 const front = (rel: string): string => path.join(FRONTEND_ROOT, rel);
 
+// The shared layer is rendered by both apps, so its translation usage counts
+// toward each project (or keys used only from shared look unused, and a shared
+// component's keys go unvalidated against an app's locale).
+const SHARED_SRC = front("shared");
+
 /**
- * The projects the i18n suites guard. Each carries its own ignore lists — the
+ * The projects the i18n suites guard. Each carries its own ignore lists: the
  * editor exempts a few runtime-assembled key families; the portal starts clean.
  */
 export const I18N_PROJECTS: TranslationProject[] = [
   {
     name: "editor",
     srcRoot: front("editor/src"),
+    extraRoots: [SHARED_SRC],
     localeFile: front("editor/public/locales/en-US/translation.toml"),
     ignoredKeyPatterns: [
       // SignSettings / SavedSignaturesSection resolve every key as
@@ -88,8 +100,14 @@ export const I18N_PROJECTS: TranslationProject[] = [
   {
     name: "portal",
     srcRoot: front("portal/src"),
+    extraRoots: [SHARED_SRC],
     localeFile: front("portal/public/locales/en-US/translation.toml"),
-    ignoredKeyPatterns: [],
+    ignoredKeyPatterns: [
+      // Source-type copy is referenced via metadata keys in
+      // components/sources/sourceTypes.ts (t(field.labelKey)), so the static
+      // scan can't see these as used.
+      /^sources\.types\./,
+    ],
     minUsedKeys: 20,
     minLocaleKeys: 20,
   },
@@ -158,14 +176,23 @@ const getScriptKind = (file: string): ts.ScriptKind => {
   return ts.ScriptKind.JS;
 };
 
-const listSourceFiles = (srcRoot: string): string[] =>
-  ts.sys
-    .readDirectory(srcRoot, [".ts", ".tsx", ".js", ".jsx"], undefined, ["**/*"])
+const listSourceFiles = (roots: string[]): string[] =>
+  roots
+    .flatMap((root) =>
+      ts.sys.readDirectory(root, [".ts", ".tsx", ".js", ".jsx"], undefined, [
+        "**/*",
+      ]),
+    )
     .filter(
       (file) =>
         !file.split(path.sep).some((segment) => IGNORED_DIRS.has(segment)),
     )
     .filter((file) => !IGNORED_FILE_PATTERNS.some((re) => re.test(file)));
+
+const projectRoots = (project: TranslationProject): string[] => [
+  project.srcRoot,
+  ...(project.extraRoots ?? []),
+];
 
 const hasPluralCoverage = (key: string, available: Set<string>): boolean =>
   [...available].some(
@@ -179,7 +206,7 @@ const getLookupKeys = (key: string): string[] => {
 
 /**
  * Static first-argument keys of `t()` calls plus `i18nKey` JSX props. Dynamic
- * (template) keys are out of scope here — see the unused check's shape matching.
+ * (template) keys are out of scope here; see the unused check's shape matching.
  */
 const extractStaticKeys = (file: string): MissingKey[] => {
   const code = fs.readFileSync(file, "utf8");
@@ -253,9 +280,9 @@ const extractStaticKeys = (file: string): MissingKey[] => {
 };
 
 /**
- * Template-literal shapes that could form a dotted key, with each `${…}`
+ * Template-literal shapes that could form a dotted key, with each `${...}`
  * replaced by `*` (e.g. `nav.${id}` → `nav.*`). Collected from every template
- * (not just t() sites — keys are often assembled in helpers/constants), but
+ * (not just t() sites; keys are often assembled in helpers/constants), but
  * only kept if a shape carries an identifier-like static fragment.
  */
 const extractTemplateShapes = (file: string, acc: Set<string>): void => {
@@ -309,8 +336,8 @@ export function findMissingKeys(project: TranslationProject): {
   const ignored = project.ignoredKeys ?? new Set<string>();
 
   // A used key resolves if the locale has it exactly, a plural variant covers
-  // it, or it drills into an ancestor leaf — e.g. `t("…bullets.0")` indexing
-  // the array stored at `…bullets` (arrays flatten to their base key).
+  // it, or it drills into an ancestor leaf, e.g. `t("...bullets.0")` indexing
+  // the array stored at `...bullets` (arrays flatten to their base key).
   const resolves = (key: string): boolean => {
     if (localeKeys.has(key) || hasPluralCoverage(key, localeKeys)) return true;
     const parts = key.split(".");
@@ -320,20 +347,20 @@ export function findMissingKeys(project: TranslationProject): {
     return false;
   };
 
-  const used = listSourceFiles(project.srcRoot)
+  const used = listSourceFiles(projectRoots(project))
     .flatMap(extractStaticKeys)
     .filter(({ key }) => !ignored.has(key));
   const missing = used.filter(({ key }) => !resolves(key));
   return { missing, usedCount: used.length };
 }
 
-/** Locale keys no source reference — static or dynamic — can reach. */
+/** Locale keys no source reference (static or dynamic) can reach. */
 export function findUnusedKeys(project: TranslationProject): {
   unused: string[];
   localeCount: number;
 } {
   const localeKeys = Array.from(collectLocaleKeys(project.localeFile));
-  const files = listSourceFiles(project.srcRoot);
+  const files = listSourceFiles(projectRoots(project));
   const source = files.map((file) => fs.readFileSync(file, "utf8")).join("\n");
 
   const shapes = new Set<string>();
