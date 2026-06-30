@@ -356,25 +356,24 @@ jobs:
             exit 1
           fi
 
-      - name: Build Tauri app
+      - name: Build Tauri app (signed)
+        if: inputs.sign
         uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # v0.6.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Apple signing/notarization env is blanked when sign is false so the
-          # cache warmer compiles an unsigned bundle and skips notarization.
-          APPLE_CERTIFICATE: ${{ inputs.sign && secrets.APPLE_CERTIFICATE || '' }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ inputs.sign && secrets.APPLE_CERTIFICATE_PASSWORD || '' }}
-          APPLE_SIGNING_IDENTITY: ${{ inputs.sign && env.APPLE_SIGNING_IDENTITY || '' }}
-          APPLE_ID: ${{ inputs.sign && secrets.APPLE_ID || '' }}
-          APPLE_PASSWORD: ${{ inputs.sign && secrets.APPLE_ID_PASSWORD || '' }}
-          APPLE_TEAM_ID: ${{ inputs.sign && secrets.APPLE_TEAM_ID || '' }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ env.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           # AppImage signing — three env vars work together:
           #   SIGN=1                        tells linuxdeploy-plugin-appimage to forward --sign to appimagetool
           #   APPIMAGETOOL_SIGN_PASSPHRASE  appimagetool uses this to unlock the GPG key non-interactively
           #   SIGN_KEY                      appimagetool picks the key matching this fingerprint
           # Without SIGN=1, the other two are ignored and the AppImage is built unsigned even if a key is present.
-          # Mirror the Windows/macOS gate: only sign when enabled AND secret is present AND ref is main (skips PRs from forks/Dependabot and the cache warmer).
-          SIGN: ${{ (inputs.sign && env.RELEASE_GPG_PRIVATE_KEY != '' && github.ref == 'refs/heads/main') && '1' || '0' }}
+          # Mirror the Windows/macOS gate: only sign when secret is present AND ref is main (skips PRs from forks/Dependabot).
+          SIGN: ${{ (env.RELEASE_GPG_PRIVATE_KEY != '' && github.ref == 'refs/heads/main') && '1' || '0' }}
           APPIMAGETOOL_SIGN_PASSPHRASE: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
           SIGN_KEY: ${{ vars.RELEASE_GPG_FINGERPRINT }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
@@ -383,6 +382,26 @@ jobs:
           VITE_SAAS_SERVER_URL: ${{ secrets.VITE_SAAS_SERVER_URL || 'https://app.stirlingpdf.com' }}
           VITE_SAAS_BACKEND_API_URL: ${{ secrets.VITE_SAAS_BACKEND_API_URL || 'https://api.stirlingpdf.com' }}
           SM_CODE_SIGNING_CERT_SHA1_HASH: ${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}
+          CI: true
+        with:
+          projectPath: ./frontend/editor
+          tauriScript: npx tauri
+          # Linux: build deb+rpm only here. AppImage runs in its own
+          # continue-on-error step below so its persistent linuxdeploy
+          # failure (#6127 onwards) does not tank deb/rpm uploads.
+          args: ${{ matrix.platform == 'ubuntu-22.04' && '--bundles deb,rpm' || matrix.args }}
+
+      - name: Build Tauri app (unsigned)
+        if: ${{ !inputs.sign }}
+        uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # v0.6.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SIGN: "0"
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY || 'sb_publishable_UHz2SVRF5mvdrPHWkRteyA_yNlZTkYb' }}
+          VITE_SAAS_SERVER_URL: ${{ secrets.VITE_SAAS_SERVER_URL || 'https://app.stirlingpdf.com' }}
+          VITE_SAAS_BACKEND_API_URL: ${{ secrets.VITE_SAAS_BACKEND_API_URL || 'https://api.stirlingpdf.com' }}
           CI: true
         with:
           projectPath: ./frontend/editor

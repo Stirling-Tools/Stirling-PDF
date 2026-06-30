@@ -62,8 +62,6 @@ security:
     # IMPORTANT: For SAML setup, download your SP metadata from the BACKEND URL: http://localhost:8080/saml2/service-provider-metadata/{registrationId}
     # Do NOT use the frontend dev server URL (localhost:5173) as it will generate incorrect ACS URLs. Always use the backend URL (localhost:8080) for SAML configuration.
   jwt: # This feature is currently under development and not yet fully supported. Do not use in production.
-    persistence: true # Set to 'true' to enable JWT key store
-    enableKeyRotation: true # Set to 'true' to enable key pair rotation
     enableKeyCleanup: true # Set to 'true' to enable key pair cleanup
     tokenExpiryMinutes: 1440 # JWT access token lifetime in minutes for web clients (1 day).
     desktopTokenExpiryMinutes: 43200 # JWT access token lifetime in minutes for desktop clients (30 days).
@@ -141,10 +139,10 @@ telegram:
   botUsername: "" # Telegram bot username (without @)
   pipelineInboxFolder: telegram # Name of the pipeline inbox folder for Telegram uploads
   customFolderSuffix: true # set to 'true' to allow users to specify custom target folders via UserID
-  enableAllowUserIDs: true # set to 'true' to restrict access to specific Telegram user IDs
-  allowUserIDs: [] # List of allowed Telegram user IDs (e.g. [123456789, 987654321]). Leave empty to allow all users.
-  enableAllowChannelIDs: true # set to 'true' to restrict access to specific Telegram channel IDs
-  allowChannelIDs: [] # List of allowed Telegram channel IDs (e.g. [-1001234567890, -1009876543210]). Leave empty to allow all channels.
+  enableAllowUserIDs: true # set to 'true' to restrict access to specific Telegram user IDs. NOTE: only takes effect when allowUserIDs is non-empty; with an empty list every user is still allowed even when this is 'true'
+  allowUserIDs: [] # List of allowed Telegram user IDs (e.g. [123456789, 987654321]). Leave empty to allow all users (the enableAllowUserIDs toggle has no effect until this list is populated).
+  enableAllowChannelIDs: true # set to 'true' to restrict access to specific Telegram channel IDs. NOTE: only takes effect when allowChannelIDs is non-empty; with an empty list every channel is still allowed even when this is 'true'
+  allowChannelIDs: [] # List of allowed Telegram channel IDs (e.g. [-1001234567890, -1009876543210]). Leave empty to allow all channels (the enableAllowChannelIDs toggle has no effect until this list is populated).
   processingTimeoutSeconds: 180 # Maximum time in seconds to wait for processing a Telegram request
   pollingIntervalMillis: 2000 # Interval in milliseconds between polling for new messages
   feedback:
@@ -172,7 +170,7 @@ legal:
 
 system:
   defaultLocale: "" # force a default language for new users (e.g. 'en-US', 'de-DE'). Empty string auto-detects from the browser, falling back to en-US
-  googlevisibility: false # 'true' to allow Google visibility (via robots.txt), 'false' to disallow
+  googlevisibility: false # 'true' serves an allow-all /robots.txt; 'false' serves a disallow-all /robots.txt to keep the instance out of search engines
   enableAlphaFunctionality: false # set to enable functionality which might need more testing before it fully goes live (this feature might make no changes)
   showUpdate: true # see when a new update is available
   showUpdateOnlyAdmin: true # only admins can see when a new update is available, depending on showUpdate it must be set to 'true'
@@ -186,7 +184,7 @@ system:
   enableUrlToPDF: false # Set to 'true' to enable URL to PDF, INTERNAL ONLY, known security issues, should not be used externally
   disableSanitize: false # set to true to disable Sanitize HTML; (can lead to injections in HTML)
   maxDPI: 500 # Maximum allowed DPI for PDF to image conversion
-  corsAllowedOrigins: [] # List of allowed origins for CORS (e.g. ['http://localhost:5173', 'https://app.example.com']). Leave empty to disable CORS. For local development with frontend on port 5173, add 'http://localhost:5173'
+  corsAllowedOrigins: [] # List of allowed origins for CORS (e.g. ['http://localhost:5173', 'https://app.example.com']). WARNING: leaving this empty falls back to allowing ALL origins (with credentials), it does NOT disable CORS. Set explicit origins to lock it down.
   backendUrl: "" # Backend base URL for SAML/OAuth/API callbacks (e.g. 'http://localhost:8080' for dev, 'https://api.example.com' for production). REQUIRED for SSO authentication to work correctly. This is where your IdP will send SAML responses and OAuth callbacks. Leave empty to default to 'http://localhost:8080' in development.
   frontendUrl: "" # Frontend URL for invite email links (e.g. 'https://app.example.com'). Optional - if not set, will use backendUrl. This is the URL users click in invite emails.
   enableMobileScanner: true # Enable mobile phone QR code upload feature. Requires frontendUrl to be configured.
@@ -197,7 +195,7 @@ system:
     stretchToFit: false # Whether to stretch images to fill the entire page (may distort aspect ratio). If false, images are centered with preserved aspect ratio. Only applies when convertToPdf is true.
   serverCertificate:
     enabled: true # Enable server-side certificate for "Sign with Stirling-PDF" option
-    organizationName: Stirling-PDF # Organization name for generated certificates
+    organizationName: Stirling PDF Inc # Organization name for generated certificates
     validity: 365 # Certificate validity in days
     regenerateOnStartup: false # Generate new certificate on each startup
   html:
@@ -304,7 +302,7 @@ autoPipeline:
     allowedExtensions: [] # Optional extension allow-list (case-insensitive, without the leading dot). Empty list = accept all extensions. Example: ["pdf", "tiff"]
 
 ui:
-  appNameNavbar: "" # name displayed on the navigation bar
+  appNameNavbar: "" # custom app/brand name. NOTE: no longer shown in the navbar (the navbar renders the logo). It IS used as the browser tab title and as the TOTP/2FA issuer label in authenticator apps. Empty falls back to "Stirling PDF"
   logoStyle: classic # Options: 'classic' (default - classic S icon) or 'modern' (minimalist logo)
   languages: [] # If empty, all languages are enabled. To restrict to specific languages, use a whitelist like ["de_DE", "pl_PL", "sv_SE"]. Empty list or not restricting any languages will enable all available languages.
   defaultHideUnavailableTools: false # Default user preference: hide disabled tools instead of greying them out
