@@ -51,6 +51,16 @@ const config: StorybookConfig = {
         ],
       }),
     );
+    // Point apiClient.saas at a mock origin so the SaaS-backed billing stories
+    // (SubscribedPlanView, PaymentMethodCard, InvoicesList) resolve a base URL and
+    // their MSW handlers (which match "*/api/v1/payg/...") can intercept. The host
+    // never receives a real request — MSW answers first. Injected here, next to the
+    // MSW setup, rather than via a frontend/.env so no stray env file can leak into a
+    // real portal/editor build (those load env from their own roots).
+    config.define = {
+      ...(config.define ?? {}),
+      "import.meta.env.VITE_SAAS_API_URL": JSON.stringify("http://saas.mock"),
+    };
     return config;
   },
 };

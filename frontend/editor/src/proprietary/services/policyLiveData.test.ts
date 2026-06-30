@@ -14,6 +14,7 @@ function run(over: Partial<PolicyRunRecord>): PolicyRunRecord {
     fileId: "f1",
     fileName: "f.pdf",
     fileSize: 0,
+    target: "saas",
     status: "COMPLETED",
     outputs: [],
     error: null,
@@ -47,7 +48,7 @@ describe("runsToActivity", () => {
     expect(activity[0]).toMatchObject({
       doc: "fresh.pdf",
       status: "processing",
-      action: "Enforcing…",
+      action: "Enforcing...",
     });
     expect(activity[1]).toMatchObject({
       doc: "contract.pdf",
@@ -66,9 +67,9 @@ describe("runsToActivity", () => {
       run({ runId: "a", status: "RUNNING", currentStep: 1, stepCount: 2 }),
       run({ runId: "b", status: "RUNNING" }),
     ]);
-    expect(withStep.action).toBe("Enforcing… · step 1/2");
+    expect(withStep.action).toBe("Enforcing... · step 1/2");
     // Before the first status report (no step yet) it stays the plain label.
-    expect(noStep.action).toBe("Enforcing…");
+    expect(noStep.action).toBe("Enforcing...");
   });
 
   it("shows a queue-rejected run awaiting retry as busy, not a failure", () => {
@@ -81,7 +82,7 @@ describe("runsToActivity", () => {
       }),
     ]);
     expect(item.status).toBe("processing");
-    expect(item.action).toBe("Busy — retrying…");
+    expect(item.action).toBe("Busy, retrying...");
   });
 
   it("shows a queue rejection that has exhausted its retries as a failure", () => {

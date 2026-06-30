@@ -10,6 +10,11 @@ import type { LogoVariant } from "@app/services/preferencesService";
  */
 describe("useLogoAssets - Logo Asset Files", () => {
   const publicDir = path.resolve(__dirname, "../../../public");
+  // Brand logo assets live in the shared design system; the editor's vite
+  // config copies shared/assets/brand/<folder>/* into the served root at build
+  // time (see viteStaticCopy in editor/vite.config.ts), so useLogoAssets can
+  // keep referencing them by their public-URL path. Validate them at source.
+  const brandDir = path.resolve(__dirname, "../../../../shared/assets/brand");
 
   // All asset files that useLogoAssets references
   const requiredAssets = [
@@ -27,7 +32,7 @@ describe("useLogoAssets - Logo Asset Files", () => {
 
   describe.each(logoVariants)("%s logo variant", (variant) => {
     const folder = LOGO_FOLDER_BY_VARIANT[variant];
-    const folderPath = path.join(publicDir, folder);
+    const folderPath = path.join(brandDir, folder);
 
     test(`folder "${folder}" should exist`, () => {
       expect(fs.existsSync(folderPath)).toBe(true);
