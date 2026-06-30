@@ -10,7 +10,10 @@
  */
 
 import { useSyncExternalStore } from "react";
-import type { PolicyRunStatus } from "@app/services/policyPipeline";
+import type {
+  PolicyExecutionTarget,
+  PolicyRunStatus,
+} from "@app/services/policyPipeline";
 
 export interface PolicyRunRecord {
   runId: string;
@@ -18,6 +21,7 @@ export interface PolicyRunRecord {
   fileId: string;
   fileName: string;
   fileSize: number;
+  target: PolicyExecutionTarget;
   status: PolicyRunStatus;
   /** Pipeline progress reported by the run-status endpoint: the 1-based step
    *  currently running, and the total step count. Drive the "step X/Y" label
@@ -72,6 +76,8 @@ function read(): RunState {
               importedFileIds: Array.isArray(r.importedFileIds)
                 ? r.importedFileIds
                 : [],
+              // Records predating per-run targets all executed on SaaS.
+              target: r.target === "local" ? "local" : "saas",
             }))
           : [],
         dispatched: Array.isArray(parsed.dispatched) ? parsed.dispatched : [],
