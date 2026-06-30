@@ -152,7 +152,11 @@ export default function OnboardingModalSlide({
                 zIndex: 10,
               }}
             >
-              <LocalIcon icon="close-rounded" width="1.25rem" height="1.25rem" />
+              <LocalIcon
+                icon="close-rounded"
+                width="1.25rem"
+                height="1.25rem"
+              />
             </ActionIcon>
           )}
           <div className={styles.heroLogo} key={`logo-${slideContent.key}`}>

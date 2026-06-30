@@ -117,11 +117,7 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
             onClick={handleClear}
             aria-label={t("textInput.clear", "Clear input")}
           >
-            <LocalIcon
-              icon="close-rounded"
-              width="1.25rem"
-              height="1.25rem"
-            />
+            <LocalIcon icon="close-rounded" width="1.25rem" height="1.25rem" />
           </ActionIcon>
         )}
       </div>

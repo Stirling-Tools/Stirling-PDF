@@ -8029,9 +8029,9 @@ zoomIn = "Zoom In"
 zoomOut = "Zoom Out"
 
 [viewer.attachments]
-download = "Download attachment"
 addAttachment = "Add attachment"
 close = "Close attachments"
+download = "Download attachment"
 empty = "No attachments in this document"
 loading = "Loading attachments..."
 noDocument = "Open a PDF to view its attachments."

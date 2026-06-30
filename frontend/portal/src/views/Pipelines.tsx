@@ -116,10 +116,7 @@ export function Pipelines() {
           <h1 className="portal-pipelines__title">{t("pipelines.title")}</h1>
           <p className="portal-pipelines__sub">{t("pipelines.subtitle")}</p>
         </div>
-        <Button
-          onClick={openCreate}
-          leftSection={<span aria-hidden>+</span>}
-        >
+        <Button onClick={openCreate} leftSection={<span aria-hidden>+</span>}>
           {t("pipelines.newPipeline")}
         </Button>
       </header>

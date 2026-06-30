@@ -231,7 +231,11 @@ export default function OverlayPdfsSettings({
                         disabled={disabled}
                         aria-label={t("remove", "Remove")}
                       >
-                        <LocalIcon icon="close-rounded" width="14" height="14" />
+                        <LocalIcon
+                          icon="close-rounded"
+                          width="14"
+                          height="14"
+                        />
                       </ActionIcon>
                     </Group>
                   ))}
