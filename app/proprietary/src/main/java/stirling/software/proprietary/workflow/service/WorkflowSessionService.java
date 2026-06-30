@@ -756,8 +756,7 @@ public class WorkflowSessionService {
             certificateSubmissionValidator.validateAndExtractInfo(
                     p12, "PKCS12", request.getPassword());
             certSubmission.put("certType", "PKCS12");
-            // Encrypt at rest: the keystore bytes are sensitive (a passwordless keystore is
-            // otherwise extractable from DB access alone).
+            // Store the keystore encrypted at rest.
             certSubmission.put("p12Keystore", metadataEncryptionService.encryptBytes(p12));
         } else {
             certSubmission.put("certType", request.getCertType());

@@ -404,8 +404,7 @@ public class WorkflowParticipantController {
             certSubmission.put("reason", request.getReason());
             certSubmission.put("showLogo", request.getShowLogo());
 
-            // Encrypt certificate keystores at rest (the bytes are sensitive — a passwordless
-            // keystore is otherwise extractable from DB access alone).
+            // Store the certificate keystores encrypted at rest.
             if (request.getP12File() != null && !request.getP12File().isEmpty()) {
                 certSubmission.put(
                         "p12Keystore",
