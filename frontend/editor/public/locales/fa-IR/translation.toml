@@ -2463,8 +2463,38 @@ noTeam = "بدون تیم"
 noUsers = "کاربر دیگری یافت نشد."
 placeholder = "کاربران را انتخاب کنید..."
 
+[certSign.device]
+stepTitle = "این دستگاه"
+
 [certSign.error]
 failed = "هنگام پردازش امضاها خطایی رخ داد."
+
+[certSign.format]
+pkcs11 = "توکن USB"
+windowsStore = "فروشگاه گواهی Windows"
+
+[certSign.hardware]
+certificate = "گواهی"
+customLibrary = "مسیر درایور سفارشی…"
+driver = "درایور PKCS#11"
+driverPath = "مسیر کتابخانه درایور"
+driverPathPlaceholder = "مسیر کامل به درایور PKCS#11 شما (.dll، .so یا .dylib)"
+expired = "منقضی شده"
+expires = "منقضی می‌شود"
+listCerts = "فهرست گواهی‌ها"
+loading = "در حال خواندن گواهی‌ها…"
+noCerts = "هیچ گواهی امضایی یافت نشد"
+noDriver = "هیچ درایور PKCS#11 شناسایی نشد. درایور توکن خود را نصب کنید (مثلاً OpenSC)، سپس این را دوباره باز کنید - یا مسیر درایور را در پایین به‌صورت دستی وارد کنید."
+notYetValid = "هنوز معتبر نیست"
+pin = "PIN توکن"
+pkcs11Hint = "درایور PKCS#11 توکن خود را انتخاب کنید، PIN را وارد کنید، سپس گواهی‌های موجود روی توکن را فهرست کنید."
+pkcs11LoadError = "امکان خواندن گواهی‌ها از توکن نبود. PIN و درایور را بررسی کنید."
+refresh = "تازه‌سازی"
+selectCert = "انتخاب گواهی"
+selectDriver = "انتخاب درایور"
+slot = "اسلات (اختیاری)"
+windowsHint = "یک گواهی از فروشگاه گواهی Windows خود انتخاب کنید. امضا از کلید روی کارت/توکن شما استفاده می‌کند - Windows برای PIN از شما درخواست می‌کند."
+windowsLoadError = "امکان خواندن فروشگاه گواهی Windows نبود"
 
 [certSign.sessions]
 deleted = "نشست حذف شد"
@@ -2477,9 +2507,6 @@ pdfNotReadyDesc = "PDF امضاشده در حال تولید است. لطفاً 
 [certSign.sign]
 results = "PDF امضاشده"
 submit = "امضای PDF"
-
-[certSign.signMode]
-stepTitle = "حالت امضا"
 
 [certSign.signMode.tooltip.auto]
 text = "با یک گواهی <b>self-signed</b> سمت سرور امضا می‌کند. همان <b>tamper-evident seal</b> و <b>audit trail</b>؛ معمولاً در نمایشگرها <b>Unverified</b> نشان می‌دهد."
@@ -2501,6 +2528,12 @@ title = "امضاها چگونه کار می‌کنند"
 [certSign.signMode.tooltip.rule]
 text = "به وضعیت <b>Trusted</b> برای گیرنده نیاز دارید؟ <b>Manual</b>. به مُهر مقاوم در برابر دستکاری و مسیر ممیزی بدون راه‌اندازی نیاز دارید؟ <b>Auto</b>."
 title = "قاعده سرانگشتی"
+
+[certSign.source]
+device = "این دستگاه"
+server = "سرور"
+stepTitle = "منبع گواهی"
+upload = "بارگذاری"
 
 [certSign.tooltip.header]
 title = "درباره مدیریت امضاها"
@@ -7951,6 +7984,9 @@ certExpired = "گواهی منقضی شده است"
 certRevocationUnknown = "وضعیت ابطال گواهی نامشخص است"
 certRevoked = "گواهی ابطال شده است"
 chainInvalid = "زنجیره گواهی نامعتبر است"
+documentModified = "سند پس از امضا تغییر یافته است - محتوا خارج از ناحیه امضاشده افزوده شده است"
+revocationNotChecked = "ابطال بررسی نشد"
+selfSigned = "خودامضا - هویت امضاکننده تأیید نشده است"
 signatureInvalid = "بررسی رمزنگاری امضا ناموفق بود"
 trustInvalid = "گواهی مورد اعتماد نیست"
 
@@ -7958,7 +7994,8 @@ trustInvalid = "گواهی مورد اعتماد نیست"
 continued = "ادامه"
 downloads = "دانلودها"
 entryLabel = "خلاصه امضا"
-filesEvaluated = "{{count}} فایل ارزیابی شد"
+filesEvaluated_one = "{{count}} فایل ارزیابی شد"
+filesEvaluated_other = "{{count}} فایل ارزیابی شدند"
 footer = "اعتبارسنجی‌شده توسط Stirling PDF"
 generatedAt = "تولید شده"
 noPdf = "گزارش PDF پس از اعتبارسنجی موفق در دسترس خواهد بود."
@@ -7968,6 +8005,9 @@ signatureCountLabel_one = "{{count}} signature"
 signatureCountLabel_other = "{{count}} signatures"
 signaturesFound_one = "{{count}} signature detected"
 signaturesFound_other = "{{count}} signatures detected"
+signaturesInvalid = "{{count}} نامعتبر"
+signaturesUnverified_one = "{{count}} نیاز به بازبینی دارد"
+signaturesUnverified_other = "{{count}} نیاز به بازبینی دارند"
 signaturesValid = "{{count}} کاملاً معتبر"
 title = "گزارش اعتبارسنجی امضا"
 
@@ -7987,7 +8027,9 @@ _value = "امضا"
 [validateSignature.status]
 complete = "اعتبارسنجی کامل شد"
 invalid = "نامعتبر"
+untrustedShort = "تأییدنشده"
 valid = "معتبر"
+validUntrusted = "معتبر، امضاکننده تأیید نشده است"
 
 [viewer]
 cannotPreviewFile = "امکان پیش‌نمایش فایل نیست"

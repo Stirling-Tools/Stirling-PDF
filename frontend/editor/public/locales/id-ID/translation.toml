@@ -2463,8 +2463,38 @@ noTeam = "Tidak Ada Tim"
 noUsers = "Tidak ada pengguna lain yang ditemukan."
 placeholder = "Pilih pengguna..."
 
+[certSign.device]
+stepTitle = "Perangkat ini"
+
 [certSign.error]
 failed = "Terjadi kesalahan saat memproses tanda tangan."
+
+[certSign.format]
+pkcs11 = "Token USB"
+windowsStore = "Penyimpanan sertifikat Windows"
+
+[certSign.hardware]
+certificate = "Sertifikat"
+customLibrary = "Path driver kustom…"
+driver = "Driver PKCS#11"
+driverPath = "Path pustaka driver"
+driverPathPlaceholder = "Path lengkap ke driver PKCS#11 Anda (.dll, .so atau .dylib)"
+expired = "kedaluwarsa"
+expires = "berlaku hingga"
+listCerts = "Daftar sertifikat"
+loading = "Membaca sertifikat…"
+noCerts = "Tidak ditemukan sertifikat penandatanganan"
+noDriver = "Tidak ada driver PKCS#11 terdeteksi. Instal driver token Anda (mis. OpenSC), lalu buka kembali ini - atau masukkan path driver secara manual di bawah."
+notYetValid = "belum berlaku"
+pin = "PIN Token"
+pkcs11Hint = "Pilih driver PKCS#11 untuk token Anda, masukkan PIN, lalu daftar sertifikat pada token."
+pkcs11LoadError = "Tidak dapat membaca sertifikat dari token. Periksa PIN dan driver."
+refresh = "Segarkan"
+selectCert = "Pilih sertifikat"
+selectDriver = "Pilih driver"
+slot = "Slot (opsional)"
+windowsHint = "Pilih sertifikat dari penyimpanan sertifikat Windows Anda. Penandatanganan menggunakan kunci pada kartu/token Anda - Windows akan meminta PIN."
+windowsLoadError = "Tidak dapat membaca penyimpanan sertifikat Windows"
 
 [certSign.sessions]
 deleted = "Sesi dihapus"
@@ -2477,9 +2507,6 @@ pdfNotReadyDesc = "PDF bertanda tangan sedang dibuat. Silakan coba lagi sebentar
 [certSign.sign]
 results = "PDF Bertanda Tangan"
 submit = "Tandatangani PDF"
-
-[certSign.signMode]
-stepTitle = "Mode Tanda Tangan"
 
 [certSign.signMode.tooltip.auto]
 text = "Menandatangani dengan sertifikat server <b>self-signed</b>. Sama <b>tamper-evident seal</b> dan <b>audit trail</b>; biasanya menampilkan <b>Unverified</b> di penampil."
@@ -2501,6 +2528,12 @@ title = "Cara kerja tanda tangan"
 [certSign.signMode.tooltip.rule]
 text = "Perlu status penerima <b>Trusted</b>? <b>Manual</b>. Perlu segel cepat yang anti-manipulasi dan jejak audit tanpa penyiapan? <b>Auto</b>."
 title = "Patokan umum"
+
+[certSign.source]
+device = "Perangkat ini"
+server = "Server"
+stepTitle = "Sumber sertifikat"
+upload = "Unggah"
 
 [certSign.tooltip.header]
 title = "Tentang Mengelola Tanda Tangan"
@@ -7951,6 +7984,9 @@ certExpired = "Sertifikat kedaluwarsa"
 certRevocationUnknown = "Status pencabutan sertifikat tidak diketahui"
 certRevoked = "Sertifikat dicabut"
 chainInvalid = "Rantai sertifikat tidak valid"
+documentModified = "Dokumen diubah setelah penandatanganan - konten ditambahkan di luar area yang ditandatangani"
+revocationNotChecked = "Pencabutan tidak diperiksa"
+selfSigned = "Tertandatangani sendiri - identitas penandatangan tidak diverifikasi"
 signatureInvalid = "Pemeriksaan kriptografi tanda tangan gagal"
 trustInvalid = "Sertifikat tidak tepercaya"
 
@@ -7958,7 +7994,8 @@ trustInvalid = "Sertifikat tidak tepercaya"
 continued = "Bersambung"
 downloads = "Unduhan"
 entryLabel = "Ringkasan Tanda Tangan"
-filesEvaluated = "{{count}} file dievaluasi"
+filesEvaluated_one = "{{count}} file dievaluasi"
+filesEvaluated_other = "{{count}} file dievaluasi"
 footer = "Divalidasi melalui Stirling PDF"
 generatedAt = "Dibuat"
 noPdf = "Laporan PDF akan tersedia setelah validasi berhasil."
@@ -7968,6 +8005,9 @@ signatureCountLabel_one = "{{count}} signature"
 signatureCountLabel_other = "{{count}} signatures"
 signaturesFound_one = "{{count}} signature detected"
 signaturesFound_other = "{{count}} signatures detected"
+signaturesInvalid = "{{count}} tidak valid"
+signaturesUnverified_one = "{{count}} perlu ditinjau"
+signaturesUnverified_other = "{{count}} perlu ditinjau"
 signaturesValid = "{{count}} sepenuhnya valid"
 title = "Laporan Validasi Tanda Tangan"
 
@@ -7987,7 +8027,9 @@ _value = "Tanda Tangan"
 [validateSignature.status]
 complete = "Validasi selesai"
 invalid = "Tidak valid"
+untrustedShort = "Tidak terverifikasi"
 valid = "Valid"
+validUntrusted = "Valid, penandatangan tidak terverifikasi"
 
 [viewer]
 cannotPreviewFile = "Tidak dapat menampilkan pratinjau file"

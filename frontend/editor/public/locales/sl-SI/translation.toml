@@ -2463,8 +2463,38 @@ noTeam = "Brez ekipe"
 noUsers = "Ni najdenih drugih uporabnikov."
 placeholder = "Izberite uporabnike..."
 
+[certSign.device]
+stepTitle = "Ta naprava"
+
 [certSign.error]
 failed = "Pri obdelavi podpisov je prišlo do napake."
+
+[certSign.format]
+pkcs11 = "USB žeton"
+windowsStore = "Shramba potrdil Windows"
+
+[certSign.hardware]
+certificate = "Potrdilo"
+customLibrary = "Pot do gonilnika po meri…"
+driver = "Gonilnik PKCS#11"
+driverPath = "Pot do knjižnice gonilnika"
+driverPathPlaceholder = "Celotna pot do vašega gonilnika PKCS#11 (.dll, .so ali .dylib)"
+expired = "poteklo"
+expires = "poteče"
+listCerts = "Prikaži potrdila"
+loading = "Branje potrdil…"
+noCerts = "Ni najdenih potrdil za podpisovanje"
+noDriver = "Ni zaznanega gonilnika PKCS#11. Namestite gonilnik za vaš žeton (npr. OpenSC), nato to znova odprite - ali spodaj ročno vnesite pot do gonilnika."
+notYetValid = "še ni veljavno"
+pin = "PIN žetona"
+pkcs11Hint = "Izberite gonilnik PKCS#11 za svoj žeton, vnesite PIN, nato prikažite potrdila na žetonu."
+pkcs11LoadError = "Ni mogoče prebrati potrdil z žetona. Preverite PIN in gonilnik."
+refresh = "Osveži"
+selectCert = "Izberite potrdilo"
+selectDriver = "Izberite gonilnik"
+slot = "Reža (neobvezno)"
+windowsHint = "Izberite potrdilo iz shrambe potrdil Windows. Pri podpisovanju se uporabi ključ na vaši kartici/žetonu - Windows vas bo pozval k vnosu PIN-a."
+windowsLoadError = "Ni mogoče prebrati shrambe potrdil Windows"
 
 [certSign.sessions]
 deleted = "Seja izbrisana"
@@ -2477,9 +2507,6 @@ pdfNotReadyDesc = "Podpisani PDF se ustvarja. Poskusite znova čez trenutek."
 [certSign.sign]
 results = "Podpisan PDF"
 submit = "Podpiši PDF"
-
-[certSign.signMode]
-stepTitle = "Način podpisovanja"
 
 [certSign.signMode.tooltip.auto]
 text = "Podpiše s strežniškim <b>self-signed</b> potrdilom. Enak <b>tamper-evident seal</b> in <b>audit trail</b>; v pregledovalnikih običajno prikazuje <b>Unverified</b>."
@@ -2501,6 +2528,12 @@ title = "Kako delujejo podpisi"
 [certSign.signMode.tooltip.rule]
 text = "Potrebujete pri prejemniku status <b>Trusted</b>? <b>Manual</b>. Potrebujete hiter pečat, ki razkrije posege, in revizijsko sled brez nastavitve? <b>Auto</b>."
 title = "Splošno pravilo"
+
+[certSign.source]
+device = "Ta naprava"
+server = "Strežnik"
+stepTitle = "Vir potrdila"
+upload = "Naloži"
 
 [certSign.tooltip.header]
 title = "O upravljanju podpisov"
@@ -7951,6 +7984,9 @@ certExpired = "Potrdilu je potekla veljavnost"
 certRevocationUnknown = "Status preklica potrdila neznan"
 certRevoked = "Potrdilo preklicano"
 chainInvalid = "Veriga potrdil neveljavna"
+documentModified = "Dokument je bil po podpisu spremenjen - vsebina je bila dodana zunaj podpisanega območja"
+revocationNotChecked = "Preklic ni bil preverjen"
+selfSigned = "Samopodpisano - identiteta podpisnika ni preverjena"
 signatureInvalid = "Kriptografsko preverjanje podpisa ni uspelo"
 trustInvalid = "Potrdilo ni zaupanja vredno"
 
@@ -7958,7 +7994,8 @@ trustInvalid = "Potrdilo ni zaupanja vredno"
 continued = "Nadaljevanje"
 downloads = "Prenosi"
 entryLabel = "Povzetek podpisa"
-filesEvaluated = "{{count}} obravnavanih datotek"
+filesEvaluated_one = "{{count}} datoteka preverjena"
+filesEvaluated_other = "{{count}} datotek preverjenih"
 footer = "Preverjeno prek Stirling PDF"
 generatedAt = "Ustvarjeno"
 noPdf = "Poročilo PDF bo na voljo po uspešnem preverjanju."
@@ -7968,6 +8005,9 @@ signatureCountLabel_one = "{{count}} signature"
 signatureCountLabel_other = "{{count}} signatures"
 signaturesFound_one = "{{count}} signature detected"
 signaturesFound_other = "{{count}} signatures detected"
+signaturesInvalid = "{{count}} neveljavnih"
+signaturesUnverified_one = "{{count}} potrebuje pregled"
+signaturesUnverified_other = "{{count}} potrebujejo pregled"
 signaturesValid = "{{count}} v celoti veljavnih"
 title = "Poročilo o preverjanju podpisov"
 
@@ -7987,7 +8027,9 @@ _value = "Podpis"
 [validateSignature.status]
 complete = "Preverjanje zaključeno"
 invalid = "Neveljavno"
+untrustedShort = "Nepreverjeno"
 valid = "Veljaven"
+validUntrusted = "Veljavno, podpisnik ni preverjen"
 
 [viewer]
 cannotPreviewFile = "Predogled datoteke ni mogoč"

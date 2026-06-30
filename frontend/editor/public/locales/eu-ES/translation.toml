@@ -2463,8 +2463,38 @@ noTeam = "Talderik ez"
 noUsers = "Ez da beste erabiltzailerik aurkitu."
 placeholder = "Hautatu erabiltzaileak..."
 
+[certSign.device]
+stepTitle = "Gailu hau"
+
 [certSign.error]
 failed = "Errore bat gertatu da sinadurak prozesatzean."
+
+[certSign.format]
+pkcs11 = "USB tokena"
+windowsStore = "Windows ziurtagiri-biltegia"
+
+[certSign.hardware]
+certificate = "Ziurtagiria"
+customLibrary = "Kontrolatzaile pertsonalizatuaren bidea…"
+driver = "PKCS#11 kontrolatzailea"
+driverPath = "Kontrolatzaile-liburutegiaren bidea"
+driverPathPlaceholder = "Zure PKCS#11 kontrolatzailearen bide osoa (.dll, .so edo .dylib)"
+expired = "iraungita"
+expires = "iraungitzen da"
+listCerts = "Ziurtagiriak zerrendatu"
+loading = "Ziurtagiriak irakurtzen…"
+noCerts = "Ez da sinatzeko ziurtagiririk aurkitu"
+noDriver = "Ez da PKCS#11 kontrolatzailerik detektatu. Instalatu zure tokenaren kontrolatzailea (adib. OpenSC), gero ireki hau berriro - edo idatzi behean kontrolatzailearen bidea eskuz."
+notYetValid = "oraindik ez da baliozkoa"
+pin = "Tokenaren PINa"
+pkcs11Hint = "Hautatu zure tokenaren PKCS#11 kontrolatzailea, sartu PINa, eta ondoren zerrendatu tokeneko ziurtagiriak."
+pkcs11LoadError = "Ezin izan dira tokeneko ziurtagiriak irakurri. Egiaztatu PINa eta kontrolatzailea."
+refresh = "Freskatu"
+selectCert = "Hautatu ziurtagiria"
+selectDriver = "Hautatu kontrolatzailea"
+slot = "Slot (aukerakoa)"
+windowsHint = "Hautatu ziurtagiri bat zure Windows ziurtagiri-biltegian. Sinatzeak zure txartel/tokeneko gakoa erabiltzen du; Windows-ek PINa eskatuko du."
+windowsLoadError = "Ezin izan da Windows ziurtagiri-biltegia irakurri"
 
 [certSign.sessions]
 deleted = "Saioa ezabatuta"
@@ -2477,9 +2507,6 @@ pdfNotReadyDesc = "Sinatutako PDFa sortzen ari da. Saiatu berriro une batean."
 [certSign.sign]
 results = "Sinatutako PDFa"
 submit = "Sinatu PDFa"
-
-[certSign.signMode]
-stepTitle = "Sinatze modua"
 
 [certSign.signMode.tooltip.auto]
 text = "Zerbitzariaren <b>auto-ziurtatutako</b> ziurtagiriaz sinatzen du. <b>Manipulazio-aurkako zigilu</b> eta <b>ikuskaritza-arrasto</b> bera; normalean <b>Egiaztatu gabe</b> agertzen da ikustaileetan."
@@ -2501,6 +2528,12 @@ title = "Nola funtzionatzen dute sinaturek"
 [certSign.signMode.tooltip.rule]
 text = "Hartzaileak <b>Fidagarria</b> egoera behar al du? <b>Eskuzkoa</b>. Setup-ik gabe zigilu manipulazio-aurkakoa eta ikuskaritza-arrastoa azkar behar al dituzu? <b>Automatikoa</b>."
 title = "Arau orokorra"
+
+[certSign.source]
+device = "Gailu hau"
+server = "Zerbitzaria"
+stepTitle = "Ziurtagiriaren iturburua"
+upload = "Igo"
 
 [certSign.tooltip.header]
 title = "Sinadurak kudeatzeari buruz"
@@ -7951,6 +7984,9 @@ certExpired = "Ziurtagiria iraungita"
 certRevocationUnknown = "Ziurtagiriaren indargabetze-egoera ezezaguna"
 certRevoked = "Ziurtagiria indargabetua"
 chainInvalid = "Ziurtagiri-katea baliogabea"
+documentModified = "Dokumentua sinatu ondoren aldatu da - edukiak sinatutako eremutik kanpo gehitu dira"
+revocationNotChecked = "Indargabetzea ez da egiaztatu"
+selfSigned = "Auto-sinatua - sinatzailearen identitatea ez da egiaztatu"
 signatureInvalid = "Sinaduraren egiaztapen kriptografikoak huts egin du"
 trustInvalid = "Ziurtagiria ez da fidagarria"
 
@@ -7958,7 +7994,8 @@ trustInvalid = "Ziurtagiria ez da fidagarria"
 continued = "Jarraipena"
 downloads = "Deskargak"
 entryLabel = "Sinaduraren laburpena"
-filesEvaluated = "{{count}} fitxategi ebaluatu"
+filesEvaluated_one = "{{count}} fitxategi ebaluatu da"
+filesEvaluated_other = "{{count}} fitxategi ebaluatu dira"
 footer = "Balidatua Stirling PDF bidez"
 generatedAt = "Sortuta"
 noPdf = "PDF txostena erabilgarri egongo da balidazio arrakastatsu baten ostean."
@@ -7968,6 +8005,9 @@ signatureCountLabel_one = "{{count}} signature"
 signatureCountLabel_other = "{{count}} signatures"
 signaturesFound_one = "{{count}} signature detected"
 signaturesFound_other = "{{count}} signatures detected"
+signaturesInvalid = "{{count}} baliogabe"
+signaturesUnverified_one = "{{count}} berrikuspena behar du"
+signaturesUnverified_other = "{{count}} berrikuspena behar dute"
 signaturesValid = "{{count}} erabat baliozko"
 title = "Sinaduren balidazio-txostena"
 
@@ -7987,7 +8027,9 @@ _value = "Sinadura"
 [validateSignature.status]
 complete = "Balidazioa osatuta"
 invalid = "Baliogabea"
+untrustedShort = "Egiaztatu gabe"
 valid = "Baliozkoa"
+validUntrusted = "Baliozkoa, sinatzailea egiaztatu gabe"
 
 [viewer]
 cannotPreviewFile = "Ezin da fitxategia aurreikusi"

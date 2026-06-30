@@ -2463,8 +2463,38 @@ noTeam = "無團隊"
 noUsers = "找不到其他使用者。"
 placeholder = "選擇使用者..."
 
+[certSign.device]
+stepTitle = "此裝置"
+
 [certSign.error]
 failed = "處理簽章時發生錯誤。"
+
+[certSign.format]
+pkcs11 = "USB Token"
+windowsStore = "Windows 憑證存放區"
+
+[certSign.hardware]
+certificate = "憑證"
+customLibrary = "自訂驅動程式路徑…"
+driver = "PKCS#11 驅動程式"
+driverPath = "驅動程式函式庫路徑"
+driverPathPlaceholder = "PKCS#11 驅動程式的完整路徑（.dll、.so 或 .dylib）"
+expired = "已過期"
+expires = "到期日"
+listCerts = "列出憑證"
+loading = "正在讀取憑證…"
+noCerts = "找不到簽署用憑證"
+noDriver = "未偵測到 PKCS#11 驅動程式。請安裝您 Token 的驅動程式（例如 OpenSC），然後重新開啟此畫面，或在下方手動輸入驅動程式路徑。"
+notYetValid = "尚未生效"
+pin = "Token PIN 碼"
+pkcs11Hint = "選取您 Token 的 PKCS#11 驅動程式，輸入 PIN 碼，然後列出該 Token 上的憑證。"
+pkcs11LoadError = "無法從 Token 讀取憑證。請檢查 PIN 碼與驅動程式。"
+refresh = "重新整理"
+selectCert = "選取憑證"
+selectDriver = "選取驅動程式"
+slot = "插槽（選用）"
+windowsHint = "從 Windows 憑證存放區選取一個憑證。簽署會使用您卡片/Token 上的金鑰；Windows 會提示輸入 PIN 碼。"
+windowsLoadError = "無法讀取 Windows 憑證存放區"
 
 [certSign.sessions]
 deleted = "工作階段已刪除"
@@ -2477,9 +2507,6 @@ pdfNotReadyDesc = "已簽署的 PDF 正在產生中，請稍後再試。"
 [certSign.sign]
 results = "已簽署 PDF"
 submit = "簽署 PDF"
-
-[certSign.signMode]
-stepTitle = "簽署模式"
 
 [certSign.signMode.tooltip.auto]
 text = "使用伺服器<b>自我簽署</b>憑證簽署。提供相同的<b>防竄改封印</b>與<b>稽核軌跡</b>；在檢視器中通常顯示為<b>未驗證</b>。"
@@ -2501,6 +2528,12 @@ title = "簽章如何運作"
 [certSign.signMode.tooltip.rule]
 text = "需要收件方顯示<b>受信任</b>狀態？用<b>手動</b>。需要無設定的快速防竄改封印與稽核軌跡？用<b>自動</b>。"
 title = "經驗法則"
+
+[certSign.source]
+device = "此裝置"
+server = "伺服器"
+stepTitle = "憑證來源"
+upload = "上傳"
 
 [certSign.tooltip.header]
 title = "關於管理簽章"
@@ -7951,6 +7984,9 @@ certExpired = "憑證已過期"
 certRevocationUnknown = "憑證撤銷狀態未知"
 certRevoked = "憑證已撤銷"
 chainInvalid = "憑證鏈無效"
+documentModified = "文件在簽署後已被修改 - 有內容新增在簽章範圍之外"
+revocationNotChecked = "未檢查憑證撤銷狀態"
+selfSigned = "自我簽署 - 簽署者身分未驗證"
 signatureInvalid = "簽章加密檢查失敗"
 trustInvalid = "憑證不受信任"
 
@@ -7958,7 +7994,8 @@ trustInvalid = "憑證不受信任"
 continued = "續"
 downloads = "下載"
 entryLabel = "簽章摘要"
-filesEvaluated = "已評估 {{count}} 個檔案"
+filesEvaluated_one = "已評估 {{count}} 個檔案"
+filesEvaluated_other = "已評估 {{count}} 個檔案"
 footer = "透過 Stirling PDF 驗證"
 generatedAt = "產生時間"
 noPdf = "成功驗證後將提供 PDF 報告。"
@@ -7968,6 +8005,9 @@ signatureCountLabel_one = "{{count}} signature"
 signatureCountLabel_other = "{{count}} signatures"
 signaturesFound_one = "{{count}} signature detected"
 signaturesFound_other = "{{count}} signatures detected"
+signaturesInvalid = "{{count}} 項無效"
+signaturesUnverified_one = "{{count}} 項需要檢視"
+signaturesUnverified_other = "{{count}} 項需要檢視"
 signaturesValid = "{{count}} 個完全有效"
 title = "簽章驗證報告"
 
@@ -7987,7 +8027,9 @@ _value = "簽章"
 [validateSignature.status]
 complete = "驗證完成"
 invalid = "無效"
+untrustedShort = "未驗證"
 valid = "有效"
+validUntrusted = "有效，但簽署者未驗證"
 
 [viewer]
 cannotPreviewFile = "無法預覽檔案"

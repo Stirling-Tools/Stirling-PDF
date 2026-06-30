@@ -2463,8 +2463,38 @@ noTeam = "Ingen team"
 noUsers = "Ingen andre brukere funnet."
 placeholder = "Velg brukere ..."
 
+[certSign.device]
+stepTitle = "Denne enheten"
+
 [certSign.error]
 failed = "Det oppstod en feil under behandling av signaturer."
+
+[certSign.format]
+pkcs11 = "USB-token"
+windowsStore = "Windows-sertifikatlager"
+
+[certSign.hardware]
+certificate = "Sertifikat"
+customLibrary = "Egendefinert driversti …"
+driver = "PKCS#11-driver"
+driverPath = "Sti til driverbiblioteket"
+driverPathPlaceholder = "Full sti til PKCS#11-driveren din (.dll, .so eller .dylib)"
+expired = "utløpt"
+expires = "utløper"
+listCerts = "Vis sertifikater"
+loading = "Leser inn sertifikater …"
+noCerts = "Ingen signeringssertifikater funnet"
+noDriver = "Ingen PKCS#11-driver ble oppdaget. Installer driveren for tokenet ditt (f.eks. OpenSC), åpne dette på nytt - eller skriv inn driverstien manuelt nedenfor."
+notYetValid = "ikke gyldig ennå"
+pin = "Token-PIN"
+pkcs11Hint = "Velg PKCS#11-driveren for tokenet ditt, angi PIN-koden, og vis deretter sertifikatene på tokenet."
+pkcs11LoadError = "Kunne ikke lese sertifikater fra tokenet. Kontroller PIN-koden og driveren."
+refresh = "Oppdater"
+selectCert = "Velg sertifikat"
+selectDriver = "Velg driver"
+slot = "Spor (valgfritt)"
+windowsHint = "Velg et sertifikat fra Windows-sertifikatlageret ditt. Signering bruker nøkkelen på kortet/tokenet ditt - Windows vil be om PIN-koden."
+windowsLoadError = "Kunne ikke lese Windows-sertifikatlageret"
 
 [certSign.sessions]
 deleted = "Økt slettet"
@@ -2477,9 +2507,6 @@ pdfNotReadyDesc = "Den signerte PDF-en genereres. Prøv igjen om et øyeblikk."
 [certSign.sign]
 results = "Signert PDF"
 submit = "Signer PDF"
-
-[certSign.signMode]
-stepTitle = "Signeringsmodus"
 
 [certSign.signMode.tooltip.auto]
 text = "Signerer med et server-<b>selvsignert</b> sertifikat. Samme <b>manipulasjonssikre forsegling</b> og <b>revisjonsspor</b>; vises typisk som <b>Ubekreftet</b> i visningsprogrammer."
@@ -2501,6 +2528,12 @@ title = "Hvordan signaturer fungerer"
 [certSign.signMode.tooltip.rule]
 text = "Trenger mottaker <b>Klarert</b>-status? <b>Manuell</b>. Trenger du en rask, manipulasjonssikker forsegling og revisjonsspor uten oppsett? <b>Auto</b>."
 title = "Tommelfingerregel"
+
+[certSign.source]
+device = "Denne enheten"
+server = "Server"
+stepTitle = "Sertifikatkilde"
+upload = "Last opp"
 
 [certSign.tooltip.header]
 title = "Om håndtering av signaturer"
@@ -7951,6 +7984,9 @@ certExpired = "Sertifikat utløpt"
 certRevocationUnknown = "Status for sertifikat-tilbakekalling ukjent"
 certRevoked = "Sertifikat tilbakekalt"
 chainInvalid = "Sertifikatkjede ugyldig"
+documentModified = "Dokumentet er endret etter signering - innhold ble lagt til utenfor det signerte området"
+revocationNotChecked = "Sperrestatus ble ikke kontrollert"
+selfSigned = "Selvsignert - signatørens identitet ikke bekreftet"
 signatureInvalid = "Kryptografisk kontroll av signatur mislyktes"
 trustInvalid = "Sertifikat ikke klarert"
 
@@ -7958,7 +7994,8 @@ trustInvalid = "Sertifikat ikke klarert"
 continued = "Fortsatt"
 downloads = "Nedlastinger"
 entryLabel = "Signaturoppsummering"
-filesEvaluated = "{{count}} filer evaluert"
+filesEvaluated_one = "{{count}} fil vurdert"
+filesEvaluated_other = "{{count}} filer vurdert"
 footer = "Validert via Stirling PDF"
 generatedAt = "Generert"
 noPdf = "PDF-rapport vil være tilgjengelig etter en vellykket validering."
@@ -7968,6 +8005,9 @@ signatureCountLabel_one = "{{count}} signature"
 signatureCountLabel_other = "{{count}} signatures"
 signaturesFound_one = "{{count}} signature detected"
 signaturesFound_other = "{{count}} signatures detected"
+signaturesInvalid = "{{count}} ugyldig"
+signaturesUnverified_one = "{{count}} må gjennomgås"
+signaturesUnverified_other = "{{count}} må gjennomgås"
 signaturesValid = "{{count}} helt gyldige"
 title = "Rapport for signaturvalidering"
 
@@ -7987,7 +8027,9 @@ _value = "Signatur"
 [validateSignature.status]
 complete = "Validering fullført"
 invalid = "Ugyldig"
+untrustedShort = "Uverifisert"
 valid = "Gyldig"
+validUntrusted = "Gyldig, signatør ikke bekreftet"
 
 [viewer]
 cannotPreviewFile = "Kan ikke forhåndsvise fil"
