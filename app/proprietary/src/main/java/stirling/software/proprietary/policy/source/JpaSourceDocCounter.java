@@ -54,13 +54,13 @@ public class JpaSourceDocCounter implements SourceDocCounter {
         }
         long bucketHour = currentHour();
         upsert(
+                () -> totalRepository.increment(sourceId, docs),
+                () -> totalRepository.saveAndFlush(new SourceDocTotalEntity(sourceId, docs)));
+        upsert(
                 () -> countRepository.increment(sourceId, bucketHour, docs),
                 () ->
                         countRepository.saveAndFlush(
                                 new SourceDocCountEntity(sourceId, bucketHour, docs)));
-        upsert(
-                () -> totalRepository.increment(sourceId, docs),
-                () -> totalRepository.saveAndFlush(new SourceDocTotalEntity(sourceId, docs)));
     }
 
     /**

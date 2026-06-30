@@ -52,11 +52,18 @@ export function Sources() {
 
   // The 30-day sparkline series lives off the list endpoint; fetch it for the one
   // expanded row only (empty while collapsed, so no request fires).
-  const docSeriesState = useAsync<number[]>(
-    () => (expandedId ? fetchSourceDocCounts(expandedId) : Promise.resolve([])),
+  const docSeriesState = useAsync<{ id: string; series: number[] }>(
+    () =>
+      expandedId
+        ? fetchSourceDocCounts(expandedId).then((series) => ({
+            id: expandedId,
+            series,
+          }))
+        : Promise.resolve({ id: "", series: [] }),
     [expandedId],
   );
-  const docSeries = docSeriesState.data ?? [];
+  const docSeries =
+    docSeriesState.data?.id === expandedId ? docSeriesState.data.series : [];
 
   function openCreate() {
     setEditingSource(null);

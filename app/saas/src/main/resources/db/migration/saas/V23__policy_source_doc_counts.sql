@@ -19,10 +19,6 @@ CREATE TABLE IF NOT EXISTS policy_source_doc_counts (
     PRIMARY KEY (source_id, bucket_hour)
 );
 
--- Window sums filter by bucket_hour within a source's rows.
-CREATE INDEX IF NOT EXISTS idx_policy_source_doc_counts_hour
-    ON policy_source_doc_counts (source_id, bucket_hour);
-
 CREATE TABLE IF NOT EXISTS policy_source_doc_totals (
     source_id VARCHAR(255) NOT NULL,
     doc_total BIGINT       NOT NULL DEFAULT 0,
