@@ -4140,7 +4140,7 @@ current = "Current"
 stepLabel = "Step {{number}}"
 
 [groupSigning.steps.configureDefaults]
-continue = "Continue to Review"
+continue = "Continue"
 invisible = "Signatures will be invisible (metadata only)"
 locationLabel = "Location:"
 preview = "Preview"
@@ -4169,13 +4169,13 @@ visibility = "Visibility:"
 visible = "Visible on page {{page}}"
 
 [groupSigning.steps.selectDocument]
-continue = "Continue to Participant Selection"
+continue = "Continue"
 noFile = "Please select a single PDF file from your active files to create a signing session."
 selectedFile = "Selected document"
 title = "Select Document"
 
 [groupSigning.steps.selectParticipants]
-continue = "Continue to Signature Settings"
+continue = "Continue"
 count_one = "{{count}} participant selected"
 count_other = "{{count}} participants selected"
 label = "Select participants"
