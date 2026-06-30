@@ -32,11 +32,15 @@ const config: StorybookConfig = {
   viteFinal: async (config) => {
     // Wire @portal/* and @shared/* aliases directly on the Storybook bundler so
     // portal story imports resolve without needing the portal's vite config.
+    // @portal-locales and @editor-locales cover the public/locales directories
+    // used by preview.tsx to bundle translation TOML files via ?raw imports.
     config.resolve = config.resolve ?? {};
     config.resolve.alias = {
       ...(config.resolve.alias ?? {}),
       "@portal": resolve(__dirname, "../portal/src"),
       "@shared": resolve(__dirname, "../shared"),
+      "@portal-locales": resolve(__dirname, "../portal/public/locales"),
+      "@editor-locales": resolve(__dirname, "../editor/public/locales"),
     };
     // Editor stories import via @app/* (proprietary→core fallback), @core/* and
     // @proprietary/*. Resolve them exactly the way the editor's own build does —

@@ -20,10 +20,10 @@ void React;
 // This avoids HTTP fetches in Storybook (no backend URL needed) and sidesteps
 // the static-dir conflict that would arise from both portal and editor serving
 // files at the same /locales/ path.
-// @ts-ignore — ?raw is a Vite-only import suffix; tsc doesn't know the type.
-import portalEnUS from "../portal/public/locales/en-US/translation.toml?raw";
-// @ts-ignore
-import editorEnUS from "../editor/public/locales/en-US/translation.toml?raw";
+// @ts-expect-error — ?raw is a Vite-only import suffix; tsc doesn't know the type.
+import portalEnUS from "@portal-locales/en-US/translation.toml?raw";
+// @ts-expect-error — ?raw is a Vite-only import suffix; tsc doesn't know the type.
+import editorEnUS from "@editor-locales/en-US/translation.toml?raw";
 
 i18n.use(initReactI18next).init({
   lng: "en-US",
