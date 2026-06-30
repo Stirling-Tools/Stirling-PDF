@@ -1,18 +1,17 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "baseUrl": "../../",
     "paths": {
       "@app/*": [
-        "src/saas/*",
-        "src/cloud/*",
-        "src/proprietary/*",
-        "src/core/*"
+        "../../src/saas/*",
+        "../../src/cloud/*",
+        "../../src/proprietary/*",
+        "../../src/core/*"
       ],
-      "@cloud/*": ["src/cloud/*"],
-      "@proprietary/*": ["src/proprietary/*"],
-      "@core/*": ["src/core/*"],
-      "@shared/*": ["../shared/*"]
+      "@cloud/*": ["../../src/cloud/*"],
+      "@proprietary/*": ["../../src/proprietary/*"],
+      "@core/*": ["../../src/core/*"],
+      "@shared/*": ["../../../shared/*"]
     }
   },
   "include": ["../global.d.ts", "../*.js", "../*.ts", "../*.tsx", "."]

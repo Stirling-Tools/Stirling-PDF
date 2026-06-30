@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Card, Chip, StatusBadge, StatTile } from "@shared/components";
 import type { CatalogueEntry } from "@portal/api/policies";
 import { policyIcon } from "@portal/components/policies/policyIcons";
@@ -14,6 +15,7 @@ interface PolicyCategoryCardProps {
  * "Set up" affordance; coming-soon categories render locked and inert.
  */
 export function PolicyCategoryCard({ entry, onOpen }: PolicyCategoryCardProps) {
+  const { t } = useTranslation();
   const { category, config, policy } = entry;
   const comingSoon = category.comingSoon === true;
   const openable = !comingSoon;
@@ -53,7 +55,7 @@ export function PolicyCategoryCard({ entry, onOpen }: PolicyCategoryCardProps) {
         </div>
         {comingSoon ? (
           <Chip tone="neutral" size="sm">
-            Coming soon
+            {t("policies.card.comingSoon")}
           </Chip>
         ) : policy ? (
           <StatusBadge
@@ -61,11 +63,13 @@ export function PolicyCategoryCard({ entry, onOpen }: PolicyCategoryCardProps) {
             size="sm"
             pulse={status !== "paused"}
           >
-            {status === "paused" ? "Paused" : "Active"}
+            {status === "paused"
+              ? t("policies.status.paused")
+              : t("policies.status.active")}
           </StatusBadge>
         ) : (
           <Chip tone="blue" size="sm">
-            Not set up
+            {t("policies.card.notSetUp")}
           </Chip>
         )}
       </header>
@@ -75,11 +79,17 @@ export function PolicyCategoryCard({ entry, onOpen }: PolicyCategoryCardProps) {
       {policy ? (
         <footer className="portal-policies__card-stats">
           <StatTile
-            label="Docs enforced"
+            label={t("policies.stats.docsEnforced")}
             value={policy.stats.enforced.toLocaleString()}
           />
-          <StatTile label="Data processed" value={policy.stats.dataProcessed} />
-          <StatTile label="Active" value={policy.stats.activeFor} />
+          <StatTile
+            label={t("policies.stats.dataProcessed")}
+            value={policy.stats.dataProcessed}
+          />
+          <StatTile
+            label={t("policies.stats.activeFor")}
+            value={policy.stats.activeFor}
+          />
         </footer>
       ) : (
         <footer className="portal-policies__card-foot">
@@ -91,7 +101,9 @@ export function PolicyCategoryCard({ entry, onOpen }: PolicyCategoryCardProps) {
             ))}
           </div>
           {!comingSoon && (
-            <span className="portal-policies__card-cta">Set up →</span>
+            <span className="portal-policies__card-cta">
+              {t("policies.card.setUp")}
+            </span>
           )}
         </footer>
       )}

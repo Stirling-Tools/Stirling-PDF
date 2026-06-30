@@ -5854,6 +5854,7 @@ routing = "Routing"
 security = "Security"
 
 [policies.detail]
+close = "بستن"
 editSettings = "Edit Settings"
 enforces = "Enforces"
 managedByOrg = "Managed by your organisation. Contact a team leader to change this policy."
@@ -5907,6 +5908,7 @@ allDocTypesTitle = "All document types"
 back = "Back"
 builderDesc = "Build the sequence of tools this policy runs on each document."
 clear = "Clear"
+close = "בستن"
 continue = "Continue"
 docTypesLabel = "Document types"
 edit = "Edit"
@@ -7784,8 +7786,6 @@ allReleases = "همهٔ نسخه‌ها"
 breaking = "تغییرات مخرب"
 breakingChanges = "تغییرات ناسازگار"
 breakingChangesDefault = "این نسخه شامل تغییرات ناسازگار است."
-breakingChangesDetected = "تغییرات ناسازگار شناسایی شد"
-breakingChangesMessage = "برخی نسخه‌ها شامل تغییرات ناسازگارند. لطفاً پیش از به‌روزرسانی، راهنماهای مهاجرت زیر را مرور کنید."
 close = "بستن"
 closeModal = "بستن پنجرهٔ به‌روزرسانی"
 current = "نسخه فعلی"
@@ -8606,6 +8606,7 @@ disableByAdmin = "غیرفعال کردن MFA"
 
 [workspace.people.roleDescriptions]
 admin = "می‌تواند تنظیمات را مدیریت و اعضا را دعوت کند، با دسترسی کامل مدیریتی."
+currentRole = "نقش تخصیص‌یافتهٔ فعلی."
 user = "Can view and edit shared files, but cannot manage workspace settings or users."
 
 [workspace.people.toggleEnabled]

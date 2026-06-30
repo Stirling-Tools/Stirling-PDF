@@ -1,17 +1,19 @@
+import { useTranslation } from "react-i18next";
 import { Card, CodeBlock } from "@shared/components";
 import { DocsSection } from "@portal/components/docs/DocsSection";
 
 export function WebhooksSection() {
+  const { t } = useTranslation();
   return (
     <DocsSection
       id="webhooks"
-      eyebrow="API REFERENCE"
-      title="Webhooks"
-      lead="Subscribe to document.processed, pipeline.completed, and quota.threshold events. Payloads are signed with HMAC-SHA256."
+      eyebrow={t("docs.webhooks.eyebrow")}
+      title={t("docs.webhooks.title")}
+      lead={t("docs.webhooks.lead")}
     >
       <CodeBlock
         lang="json"
-        caption="document.processed"
+        caption={t("docs.webhooks.codeCaption")}
         code={`{
   "event": "document.processed",
   "id": "evt_91ac3f",
@@ -24,9 +26,10 @@ export function WebhooksSection() {
 }`}
       />
       <Card className="portal-docs__callout" accent="amber" padding="loose">
-        Verify the <code>Stirling-Signature</code> header against your signing
-        secret before trusting a payload. SDKs ship a{" "}
-        <code>verifyWebhook()</code> helper.
+        {t("docs.webhooks.callout.beforeSignature")}{" "}
+        <code>Stirling-Signature</code>{" "}
+        {t("docs.webhooks.callout.beforeHelper")} <code>verifyWebhook()</code>{" "}
+        {t("docs.webhooks.callout.afterHelper")}
       </Card>
     </DocsSection>
   );

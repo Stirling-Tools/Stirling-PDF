@@ -112,6 +112,8 @@ export default function ManualRedactionControls({
       isSavingRef.current = true;
       try {
         await applyChanges();
+      } catch {
+        // The viewer-level save handler reports the failure to the user.
       } finally {
         isSavingRef.current = false;
       }
