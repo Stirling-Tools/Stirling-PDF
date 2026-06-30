@@ -34,10 +34,11 @@ class InstanceUsageIngestServiceTest {
 
     private InstanceUsageIngestService service;
     private final LocalDateTime period = LocalDateTime.of(2026, 6, 1, 0, 0);
+    private static final long MAX_UNITS_PER_SYNC = 1000L;
 
     @BeforeEach
     void setUp() {
-        service = new InstanceUsageIngestService(repo, chargeService);
+        service = new InstanceUsageIngestService(repo, chargeService, MAX_UNITS_PER_SYNC);
     }
 
     @Test
@@ -109,6 +110,18 @@ class InstanceUsageIngestServiceTest {
         verify(chargeService, never()).chargeStandalone(any(), anyInt());
         verify(repo).save(existing);
         assertThat(existing.getLastSyncSeq()).isEqualTo(3L);
+    }
+
+    @Test
+    void overBoundDeltaIsRefusedAndNotAdvanced() {
+        when(repo.findByTeamIdAndPeriodStartAndCategory(1L, period, "API"))
+                .thenReturn(Optional.empty());
+
+        // First sync, cumulative far above the per-sync ceiling → refuse + don't advance.
+        service.ingest(1L, 7L, 1L, period, Map.of(BillingCategory.API, MAX_UNITS_PER_SYNC + 1));
+
+        verify(chargeService, never()).chargeStandalone(any(), anyInt());
+        verify(repo, never()).save(any());
     }
 
     @Test

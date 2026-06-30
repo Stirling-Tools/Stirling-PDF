@@ -10,9 +10,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayOutputStream;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -21,6 +24,8 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.mock.web.MockMultipartHttpServletRequest;
 
 import stirling.software.proprietary.billing.BillingCategory;
 import stirling.software.proprietary.billing.UnitCalcPolicy;
@@ -105,6 +110,51 @@ class InstanceEntitlementInterceptorTest {
 
         // No uploaded files → bytes axis → the 1-unit floor.
         verify(meter).accrue(eq(period), eq(BillingCategory.AI), eq(1L));
+    }
+
+    @Test
+    void metersPdfByPageCountNotJustBytes() throws Exception {
+        when(gate.evaluate(anyBoolean()))
+                .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
+        UsageMeterService meter = mock(UsageMeterService.class);
+        when(meterProvider.getIfAvailable()).thenReturn(meter);
+        // docPagesPerUnit=1, docBytesPerUnit=1MB → a tiny 5-page PDF costs 5 on the page axis but
+        // only 1 on the byte axis: page-counting is what makes this bill correctly.
+        UnitCalcPolicy policy = new UnitCalcPolicy(1, 1_048_576L, 1, 1000);
+        LocalDateTime period = LocalDateTime.of(2026, 6, 1, 0, 0);
+        when(entitlementCache.current())
+                .thenReturn(
+                        Optional.of(
+                                new InstanceEntitlement(
+                                        true,
+                                        0,
+                                        0,
+                                        100L,
+                                        EntitlementState.OK,
+                                        policy,
+                                        period,
+                                        period.plusMonths(1))));
+
+        InstanceEntitlementInterceptor interceptor = interceptor();
+        MockMultipartHttpServletRequest req = new MockMultipartHttpServletRequest();
+        req.setRequestURI("/api/v1/ai/x");
+        req.addFile(new MockMultipartFile("file", "doc.pdf", "application/pdf", fivePagePdf()));
+        MockHttpServletResponse resp = new MockHttpServletResponse();
+        interceptor.preHandle(req, resp, new Object());
+        interceptor.afterCompletion(req, resp, new Object(), null);
+
+        verify(meter).accrue(eq(period), eq(BillingCategory.AI), eq(5L));
+    }
+
+    private static byte[] fivePagePdf() throws Exception {
+        try (PDDocument doc = new PDDocument();
+                ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            for (int i = 0; i < 5; i++) {
+                doc.addPage(new PDPage());
+            }
+            doc.save(out);
+            return out.toByteArray();
+        }
     }
 
     @Test

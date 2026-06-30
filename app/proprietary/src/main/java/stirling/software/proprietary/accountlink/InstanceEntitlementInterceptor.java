@@ -1,8 +1,11 @@
 package stirling.software.proprietary.accountlink;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
@@ -127,10 +130,15 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
         }
     }
 
+    // Bytes above this aren't page-counted: parsing a huge upload on the metering path isn't worth
+    // it, and the byte axis already dominates the unit count at that size.
+    private static final long MAX_BYTES_FOR_PAGE_COUNT = 50L * 1024 * 1024;
+
     /**
-     * Doc-units for this request via the shared calculator. Counts uploaded file bytes; page counts
-     * are not read here yet (a follow-up will materialise PDFs for the page axis), so this is the
-     * bytes-axis lower bound — a non-file billable op costs 1 unit.
+     * Doc-units for this request via the shared calculator, on both the page and byte axes. The
+     * instance is authoritative for units here — SaaS bills the delta of what we report and never
+     * sees the file — so a page-heavy but small PDF must be page-counted or it under-bills. A
+     * non-file billable op costs 1 unit.
      */
     private static long computeUnits(HttpServletRequest request, UnitCalcPolicy policy) {
         MultipartHttpServletRequest mreq =
@@ -141,11 +149,40 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
         List<FileSize> sizes = new ArrayList<>();
         for (List<MultipartFile> files : mreq.getMultiFileMap().values()) {
             for (MultipartFile f : files) {
-                sizes.add(new FileSize(0, f.getSize()));
+                sizes.add(new FileSize(pageCount(f), f.getSize()));
             }
         }
         return sizes.isEmpty()
                 ? DocumentUnitCalculator.unitsForFile(0, 0, policy)
                 : DocumentUnitCalculator.unitsForGroup(sizes, policy);
+    }
+
+    /**
+     * Page count for a PDF upload, or 0 for non-PDFs / oversized / unreadable inputs — the byte
+     * axis still produces a charge, matching the SaaS classifier's malformed-PDF fallback.
+     */
+    private static int pageCount(MultipartFile file) {
+        long size = file.getSize();
+        if (!isPdf(file) || size <= 0 || size > MAX_BYTES_FOR_PAGE_COUNT) {
+            return 0;
+        }
+        try (PDDocument doc = Loader.loadPDF(file.getBytes())) {
+            return doc.getNumberOfPages();
+        } catch (IOException | RuntimeException e) {
+            // Malformed / encrypted / already-consumed part → fall back to the byte axis only.
+            log.debug(
+                    "Page count unavailable for {}; metering on bytes only",
+                    file.getOriginalFilename());
+            return 0;
+        }
+    }
+
+    private static boolean isPdf(MultipartFile file) {
+        String contentType = file.getContentType();
+        if (contentType != null && contentType.toLowerCase().contains("pdf")) {
+            return true;
+        }
+        String name = file.getOriginalFilename();
+        return name != null && name.toLowerCase().endsWith(".pdf");
     }
 }

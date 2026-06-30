@@ -3,6 +3,7 @@ package stirling.software.saas.payg.instance;
 import java.time.LocalDateTime;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,11 @@ import stirling.software.saas.payg.repository.PaygInstanceUsageRepository;
  * Stripe meter, and idempotency the in-cloud charge path uses — so there is no separate billing
  * logic for this flow.
  *
+ * <p>A per-category, per-sync upper bound ({@code max-units-per-sync}) guards against a runaway
+ * instance bug billing the customer for an implausible jump: an over-bound delta is refused (not
+ * billed, not advanced) and logged, so it surfaces for review rather than silently over-charging,
+ * and a corrected resend can reconcile once the threshold is understood.
+ *
  * <p>Gated behind {@code stirling.billing.account-link.enabled}.
  */
 @Slf4j
@@ -38,11 +44,16 @@ public class InstanceUsageIngestService {
 
     private final PaygInstanceUsageRepository usageRepository;
     private final JobChargeService chargeService;
+    private final long maxUnitsPerSync;
 
     public InstanceUsageIngestService(
-            PaygInstanceUsageRepository usageRepository, JobChargeService chargeService) {
+            PaygInstanceUsageRepository usageRepository,
+            JobChargeService chargeService,
+            @Value("${stirling.billing.account-link.max-units-per-sync:100000}")
+                    long maxUnitsPerSync) {
         this.usageRepository = usageRepository;
         this.chargeService = chargeService;
+        this.maxUnitsPerSync = maxUnitsPerSync;
     }
 
     /**
@@ -108,6 +119,19 @@ public class InstanceUsageIngestService {
                     category,
                     cumulative,
                     lastCumulative);
+            return;
+        }
+        if (delta > maxUnitsPerSync) {
+            // Implausible jump (likely a runaway instance bug). Refuse rather than over-bill the
+            // customer; don't advance, so it stays visible for review and a corrected resend can
+            // reconcile once understood.
+            log.warn(
+                    "Instance usage anomaly team={} category={} delta {} exceeds max-units-per-sync"
+                            + " {}; refusing to bill until reviewed.",
+                    teamId,
+                    category,
+                    delta,
+                    maxUnitsPerSync);
             return;
         }
         if (delta > 0) {
