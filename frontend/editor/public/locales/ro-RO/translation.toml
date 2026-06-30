@@ -2463,8 +2463,38 @@ noTeam = "Fără echipă"
 noUsers = "Nu s-au găsit alți utilizatori."
 placeholder = "Selectați utilizatori..."
 
+[certSign.device]
+stepTitle = "Acest dispozitiv"
+
 [certSign.error]
 failed = "A apărut o eroare la procesarea semnăturilor."
+
+[certSign.format]
+pkcs11 = "Token USB"
+windowsStore = "Stocarea de certificate Windows"
+
+[certSign.hardware]
+certificate = "Certificat"
+customLibrary = "Cale către driver personalizat…"
+driver = "Driver PKCS#11"
+driverPath = "Calea bibliotecii driverului"
+driverPathPlaceholder = "Calea completă către driverul PKCS#11 (.dll, .so sau .dylib)"
+expired = "expirat"
+expires = "expiră"
+listCerts = "Listează certificatele"
+loading = "Se citesc certificatele…"
+noCerts = "Nu s-au găsit certificate de semnare"
+noDriver = "Nu a fost detectat niciun driver PKCS#11. Instalați driverul tokenului (de ex. OpenSC), apoi redeschideți aceasta - sau introduceți manual mai jos calea driverului."
+notYetValid = "încă nevalid"
+pin = "PIN token"
+pkcs11Hint = "Selectați driverul PKCS#11 al tokenului, introduceți PIN-ul, apoi listați certificatele de pe token."
+pkcs11LoadError = "Nu s-au putut citi certificatele de pe token. Verificați PIN-ul și driverul."
+refresh = "Reîmprospătează"
+selectCert = "Selectați certificatul"
+selectDriver = "Selectați driverul"
+slot = "Slot (opțional)"
+windowsHint = "Alegeți un certificat din stocarea de certificate Windows. Semnarea folosește cheia de pe card/token - Windows va solicita PIN-ul."
+windowsLoadError = "Nu s-a putut citi stocarea de certificate Windows"
 
 [certSign.sessions]
 deleted = "Sesiune ștearsă"
@@ -2477,9 +2507,6 @@ pdfNotReadyDesc = "PDF-ul semnat este în curs de generare. Încercați din nou 
 [certSign.sign]
 results = "PDF semnat"
 submit = "Semnează PDF"
-
-[certSign.signMode]
-stepTitle = "Mod de semnare"
 
 [certSign.signMode.tooltip.auto]
 text = "Semnează cu un certificat de server <b>auto-semnat</b>. Același <b>sigiliu anti-alterare</b> și <b>pistă de audit</b>; de obicei afișează <b>Unverified</b> în vizualizatoare."
@@ -2501,6 +2528,12 @@ title = "Cum funcționează semnăturile"
 [certSign.signMode.tooltip.rule]
 text = "Aveți nevoie ca destinatarul să vadă statusul <b>Trusted</b>? <b>Manual</b>. Aveți nevoie de un sigiliu anti-alterare rapid și pistă de audit fără configurare? <b>Auto</b>."
 title = "Regulă generală"
+
+[certSign.source]
+device = "Acest dispozitiv"
+server = "Server"
+stepTitle = "Sursa certificatului"
+upload = "Încărcare"
 
 [certSign.tooltip.header]
 title = "Despre gestionarea semnăturilor"
@@ -7951,6 +7984,9 @@ certExpired = "Certificat expirat"
 certRevocationUnknown = "Starea de revocare a certificatului este necunoscută"
 certRevoked = "Certificat revocat"
 chainInvalid = "Lanț de certificate invalid"
+documentModified = "Document modificat după semnare - conținutul a fost adăugat în afara zonei semnate"
+revocationNotChecked = "Revocarea nu a fost verificată"
+selfSigned = "Autosemnat - identitatea semnatarului nu a fost verificată"
 signatureInvalid = "Verificarea criptografică a semnăturii a eșuat"
 trustInvalid = "Certificat neîncredințat"
 
@@ -7958,7 +7994,8 @@ trustInvalid = "Certificat neîncredințat"
 continued = "Continuare"
 downloads = "Descărcări"
 entryLabel = "Rezumat semnătură"
-filesEvaluated = "{{count}} fișiere evaluate"
+filesEvaluated_one = "{{count}} fișier evaluat"
+filesEvaluated_other = "{{count}} fișiere evaluate"
 footer = "Validat prin Stirling PDF"
 generatedAt = "Generat"
 noPdf = "Raportul PDF va fi disponibil după o validare reușită."
@@ -7968,6 +8005,9 @@ signatureCountLabel_one = "{{count}} signature"
 signatureCountLabel_other = "{{count}} signatures"
 signaturesFound_one = "{{count}} signature detected"
 signaturesFound_other = "{{count}} signatures detected"
+signaturesInvalid = "{{count}} nevalide"
+signaturesUnverified_one = "{{count}} necesită verificare"
+signaturesUnverified_other = "{{count}} necesită verificare"
 signaturesValid = "{{count}} complet valide"
 title = "Raport de validare a semnăturilor"
 
@@ -7987,7 +8027,9 @@ _value = "Semnătură"
 [validateSignature.status]
 complete = "Validare finalizată"
 invalid = "Invalid"
+untrustedShort = "Neverificat"
 valid = "Valid"
+validUntrusted = "Valid, semnatar neverificat"
 
 [viewer]
 cannotPreviewFile = "Nu se poate previzualiza fișierul"

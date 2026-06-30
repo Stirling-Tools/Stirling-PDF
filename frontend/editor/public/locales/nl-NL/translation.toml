@@ -2463,8 +2463,38 @@ noTeam = "Geen team"
 noUsers = "Geen andere gebruikers gevonden."
 placeholder = "Gebruikers selecteren..."
 
+[certSign.device]
+stepTitle = "Dit apparaat"
+
 [certSign.error]
 failed = "Er is een fout opgetreden bij het verwerken van handtekeningen."
+
+[certSign.format]
+pkcs11 = "USB-token"
+windowsStore = "Windows-certificaatopslag"
+
+[certSign.hardware]
+certificate = "Certificaat"
+customLibrary = "Aangepast stuurprogrammapad…"
+driver = "PKCS#11-stuurprogramma"
+driverPath = "Pad naar stuurprogrammabibliotheek"
+driverPathPlaceholder = "Volledig pad naar uw PKCS#11-stuurprogramma (.dll, .so of .dylib)"
+expired = "verlopen"
+expires = "verloopt"
+listCerts = "Certificaten weergeven"
+loading = "Certificaten worden gelezen…"
+noCerts = "Geen ondertekeningscertificaten gevonden"
+noDriver = "Er is geen PKCS#11-stuurprogramma gedetecteerd. Installeer het stuurprogramma van uw token (bijv. OpenSC), open dit daarna opnieuw of voer hieronder handmatig het pad naar het stuurprogramma in."
+notYetValid = "nog niet geldig"
+pin = "Token-PIN"
+pkcs11Hint = "Selecteer het PKCS#11-stuurprogramma van uw token, voer de PIN in en geef vervolgens de certificaten op het token weer."
+pkcs11LoadError = "Kon de certificaten niet van het token lezen. Controleer de PIN en het stuurprogramma."
+refresh = "Vernieuwen"
+selectCert = "Selecteer certificaat"
+selectDriver = "Selecteer stuurprogramma"
+slot = "Slot (optioneel)"
+windowsHint = "Kies een certificaat uit uw Windows-certificaatopslag. Ondertekenen gebruikt de sleutel op uw kaart/token - Windows zal om de PIN vragen."
+windowsLoadError = "Kon de Windows-certificaatopslag niet lezen"
 
 [certSign.sessions]
 deleted = "Sessie verwijderd"
@@ -2477,9 +2507,6 @@ pdfNotReadyDesc = "De ondertekende PDF wordt gegenereerd. Probeer het zo meteen 
 [certSign.sign]
 results = "Ondertekende PDF"
 submit = "PDF ondertekenen"
-
-[certSign.signMode]
-stepTitle = "Ondertekenmodus"
 
 [certSign.signMode.tooltip.auto]
 text = "Ondertekent met een <b>zelfondertekend</b> servercertificaat. Dezelfde <b>tamper-evident zegel</b> en <b>audittrail</b>; toont meestal <b>Ongeverifieerd</b> in viewers."
@@ -2501,6 +2528,12 @@ title = "Hoe handtekeningen werken"
 [certSign.signMode.tooltip.rule]
 text = "Ontvanger heeft <b>Vertrouwd</b>-status nodig? <b>Handmatig</b>. Snel tamper-evident zegel en audittrail zonder setup nodig? <b>Auto</b>."
 title = "Vuistregel"
+
+[certSign.source]
+device = "Dit apparaat"
+server = "Server"
+stepTitle = "Certificaatbron"
+upload = "Uploaden"
 
 [certSign.tooltip.header]
 title = "Over het beheren van handtekeningen"
@@ -7951,6 +7984,9 @@ certExpired = "Certificaat verlopen"
 certRevocationUnknown = "Certificaatintrekkingsstatus onbekend"
 certRevoked = "Certificaat ingetrokken"
 chainInvalid = "Certificaatketen ongeldig"
+documentModified = "Document gewijzigd na ondertekening - inhoud is buiten het ondertekende gebied toegevoegd"
+revocationNotChecked = "Intrekkingsstatus is niet gecontroleerd"
+selfSigned = "Zelfondertekend - identiteit van ondertekenaar niet geverifieerd"
 signatureInvalid = "Cryptografische controle van handtekening mislukt"
 trustInvalid = "Certificaat niet vertrouwd"
 
@@ -7958,7 +7994,8 @@ trustInvalid = "Certificaat niet vertrouwd"
 continued = "Vervolg"
 downloads = "Downloads"
 entryLabel = "Samenvatting van handtekeningen"
-filesEvaluated = "{{count}} bestanden geëvalueerd"
+filesEvaluated_one = "{{count}} bestand geëvalueerd"
+filesEvaluated_other = "{{count}} bestanden geëvalueerd"
 footer = "Gevalideerd via Stirling PDF"
 generatedAt = "Gegenereerd"
 noPdf = "PDF-rapport is beschikbaar na een geslaagde validatie."
@@ -7968,6 +8005,9 @@ signatureCountLabel_one = "{{count}} signature"
 signatureCountLabel_other = "{{count}} signatures"
 signaturesFound_one = "{{count}} signature detected"
 signaturesFound_other = "{{count}} signatures detected"
+signaturesInvalid = "{{count}} ongeldig"
+signaturesUnverified_one = "{{count}} moet worden gecontroleerd"
+signaturesUnverified_other = "{{count}} moeten worden gecontroleerd"
 signaturesValid = "{{count}} volledig geldig"
 title = "Rapport handtekeningenvalidatie"
 
@@ -7987,7 +8027,9 @@ _value = "Handtekening"
 [validateSignature.status]
 complete = "Validatie voltooid"
 invalid = "Ongeldig"
+untrustedShort = "Niet geverifieerd"
 valid = "Geldig"
+validUntrusted = "Geldig, ondertekenaar niet geverifieerd"
 
 [viewer]
 cannotPreviewFile = "Kan voorbeeld van bestand niet weergeven"

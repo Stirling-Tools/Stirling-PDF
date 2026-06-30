@@ -2463,8 +2463,38 @@ noTeam = "无团队"
 noUsers = "未找到其他用户。"
 placeholder = "选择用户..."
 
+[certSign.device]
+stepTitle = "此设备"
+
 [certSign.error]
 failed = "处理签名时发生错误。"
+
+[certSign.format]
+pkcs11 = "USB 令牌"
+windowsStore = "Windows 证书存储"
+
+[certSign.hardware]
+certificate = "证书"
+customLibrary = "自定义驱动程序路径…"
+driver = "PKCS#11 驱动程序"
+driverPath = "驱动程序库路径"
+driverPathPlaceholder = "PKCS#11 驱动程序的完整路径（.dll、.so 或 .dylib）"
+expired = "已过期"
+expires = "到期时间"
+listCerts = "列出证书"
+loading = "正在读取证书…"
+noCerts = "未找到签名证书"
+noDriver = "未检测到 PKCS#11 驱动程序。请安装令牌的驱动程序（例如 OpenSC），然后重新打开此界面 - 或在下方手动输入驱动程序路径。"
+notYetValid = "尚未生效"
+pin = "令牌 PIN"
+pkcs11Hint = "选择令牌的 PKCS#11 驱动程序，输入 PIN，然后列出令牌上的证书。"
+pkcs11LoadError = "无法从令牌读取证书。请检查 PIN 和驱动程序。"
+refresh = "刷新"
+selectCert = "选择证书"
+selectDriver = "选择驱动程序"
+slot = "插槽（可选）"
+windowsHint = "从 Windows 证书存储中选择一个证书。签名将使用您卡片/令牌上的密钥 - Windows 将提示输入 PIN。"
+windowsLoadError = "无法读取 Windows 证书存储"
 
 [certSign.sessions]
 deleted = "会话已删除"
@@ -2477,9 +2507,6 @@ pdfNotReadyDesc = "正在生成已签署的 PDF。请稍后重试。"
 [certSign.sign]
 results = "已签名 PDF"
 submit = "签署 PDF"
-
-[certSign.signMode]
-stepTitle = "签名模式"
 
 [certSign.signMode.tooltip.auto]
 text = "使用服务器<b>自签名</b>证书签署。提供相同的<b>防篡改封印</b>与<b>审计追踪</b>；在查看器中通常显示为<b>未验证</b>。"
@@ -2501,6 +2528,12 @@ title = "签名工作原理"
 [certSign.signMode.tooltip.rule]
 text = "需要收件人显示<b>受信任</b>？选<b>手动</b>。需要零配置、快速的防篡改封印与审计追踪？选<b>自动</b>。"
 title = "经验法则"
+
+[certSign.source]
+device = "此设备"
+server = "服务器"
+stepTitle = "证书来源"
+upload = "上传"
 
 [certSign.tooltip.header]
 title = "签名管理说明"
@@ -7951,6 +7984,9 @@ certExpired = "证书已过期"
 certRevocationUnknown = "证书吊销状态未知"
 certRevoked = "证书已吊销"
 chainInvalid = "证书链无效"
+documentModified = "文档在签名后被修改 - 在签名区域之外添加了内容"
+revocationNotChecked = "未检查吊销状态"
+selfSigned = "自签名 - 签名者身份未验证"
 signatureInvalid = "签名加密校验失败"
 trustInvalid = "证书不受信任"
 
@@ -7958,7 +7994,8 @@ trustInvalid = "证书不受信任"
 continued = "续"
 downloads = "下载"
 entryLabel = "签名摘要"
-filesEvaluated = "已评估 {{count}} 个文件"
+filesEvaluated_one = "已评估 {{count}} 个文件"
+filesEvaluated_other = "已评估 {{count}} 个文件"
 footer = "通过 Stirling PDF 验证"
 generatedAt = "生成时间"
 noPdf = "成功验证后将提供 PDF 报告。"
@@ -7968,6 +8005,9 @@ signatureCountLabel_one = "{{count}} signature"
 signatureCountLabel_other = "{{count}} signatures"
 signaturesFound_one = "{{count}} signature detected"
 signaturesFound_other = "{{count}} signatures detected"
+signaturesInvalid = "{{count}} 个无效"
+signaturesUnverified_one = "{{count}} 个需要审核"
+signaturesUnverified_other = "{{count}} 个需要审核"
 signaturesValid = "{{count}} 个完全有效"
 title = "签名验证报告"
 
@@ -7987,7 +8027,9 @@ _value = "签名"
 [validateSignature.status]
 complete = "验证完成"
 invalid = "无效"
+untrustedShort = "未验证"
 valid = "有效"
+validUntrusted = "有效，但签名者身份未验证"
 
 [viewer]
 cannotPreviewFile = "无法预览文件"

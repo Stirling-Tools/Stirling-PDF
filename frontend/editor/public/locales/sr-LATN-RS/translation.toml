@@ -2463,8 +2463,38 @@ noTeam = "Nema tima"
 noUsers = "Nisu pronađeni drugi korisnici."
 placeholder = "Izaberite korisnike..."
 
+[certSign.device]
+stepTitle = "Ovaj uređaj"
+
 [certSign.error]
 failed = "Došlo je do greške pri obradi potpisa."
+
+[certSign.format]
+pkcs11 = "USB token"
+windowsStore = "Windows skladište sertifikata"
+
+[certSign.hardware]
+certificate = "Sertifikat"
+customLibrary = "Prilagođena putanja upravljačkog programa…"
+driver = "PKCS#11 upravljački program"
+driverPath = "Putanja biblioteke upravljačkog programa"
+driverPathPlaceholder = "Puna putanja do vašeg PKCS#11 upravljačkog programa (.dll, .so ili .dylib)"
+expired = "istekao"
+expires = "ističe"
+listCerts = "Prikaži sertifikate"
+loading = "Učitavanje sertifikata…"
+noCerts = "Nisu pronađeni sertifikati za potpisivanje"
+noDriver = "PKCS#11 upravljački program nije detektovan. Instalirajte upravljački program za vaš token (npr. OpenSC), zatim ponovo otvorite ovo - ili ručno unesite putanju do upravljačkog programa ispod."
+notYetValid = "još nije važeći"
+pin = "PIN tokena"
+pkcs11Hint = "Izaberite PKCS#11 upravljački program za vaš token, unesite PIN, a zatim prikažite sertifikate na tokenu."
+pkcs11LoadError = "Nije moguće pročitati sertifikate sa tokena. Proverite PIN i upravljački program."
+refresh = "Osveži"
+selectCert = "Izaberite sertifikat"
+selectDriver = "Izaberite upravljački program"
+slot = "Slot (opciono)"
+windowsHint = "Izaberite sertifikat iz Windows skladišta sertifikata. Potpisivanje koristi ključ na vašoj kartici/tokenu - Windows će zatražiti PIN."
+windowsLoadError = "Nije moguće pročitati Windows skladište sertifikata"
 
 [certSign.sessions]
 deleted = "Sesija je obrisana"
@@ -2477,9 +2507,6 @@ pdfNotReadyDesc = "Potpisani PDF se generiše. Pokušajte ponovo za trenutak."
 [certSign.sign]
 results = "Potpisan PDF"
 submit = "Potpiši PDF"
-
-[certSign.signMode]
-stepTitle = "Režim potpisivanja"
 
 [certSign.signMode.tooltip.auto]
 text = "Potpisuje serverskim <b>self-signed</b> sertifikatom. Isti <b>tamper-evident pečat</b> i <b>revizioni trag</b>; obično prikazuje <b>Unverified</b> u čitačima."
@@ -2501,6 +2528,12 @@ title = "Kako potpisi rade"
 [certSign.signMode.tooltip.rule]
 text = "Treba li vam status primaoca <b>Trusted</b>? <b>Ručno</b>. Treba li vam brz, otporan na izmene pečat i revizioni trag bez podešavanja? <b>Automatski</b>."
 title = "Pravilo palca"
+
+[certSign.source]
+device = "Ovaj uređaj"
+server = "Server"
+stepTitle = "Izvor sertifikata"
+upload = "Otpremi"
 
 [certSign.tooltip.header]
 title = "O upravljanju potpisima"
@@ -7951,6 +7984,9 @@ certExpired = "Sertifikat istekao"
 certRevocationUnknown = "Status opoziva sertifikata nepoznat"
 certRevoked = "Sertifikat opozvan"
 chainInvalid = "Neispravna veriga sertifikata"
+documentModified = "Dokument je izmenjen nakon potpisivanja - sadržaj je dodat van potpisanog područja"
+revocationNotChecked = "Opoziv nije proveren"
+selfSigned = "Samopotpisan - identitet potpisnika nije potvrđen"
 signatureInvalid = "Kriptografska provera potpisa neuspešna"
 trustInvalid = "Sertifikatu se ne veruje"
 
@@ -7958,7 +7994,8 @@ trustInvalid = "Sertifikatu se ne veruje"
 continued = "Nastavak"
 downloads = "Preuzimanja"
 entryLabel = "Rezime potpisa"
-filesEvaluated = "{{count}} fajlova provereno"
+filesEvaluated_one = "Procenjena je {{count}} datoteka"
+filesEvaluated_other = "Procenjeno je {{count}} datoteka"
 footer = "Validirano preko Stirling PDF"
 generatedAt = "Generisano"
 noPdf = "PDF izveštaj će biti dostupan nakon uspešne validacije."
@@ -7968,6 +8005,9 @@ signatureCountLabel_one = "{{count}} signature"
 signatureCountLabel_other = "{{count}} signatures"
 signaturesFound_one = "{{count}} signature detected"
 signaturesFound_other = "{{count}} signatures detected"
+signaturesInvalid = "{{count}} nevažećih"
+signaturesUnverified_one = "{{count}} zahteva proveru"
+signaturesUnverified_other = "{{count}} zahtevaju proveru"
 signaturesValid = "{{count}} u potpunosti ispravnih"
 title = "Izveštaj o validaciji potpisa"
 
@@ -7987,7 +8027,9 @@ _value = "Potpis"
 [validateSignature.status]
 complete = "Validacija završena"
 invalid = "Invalidan"
+untrustedShort = "Neprovereno"
 valid = "Validan"
+validUntrusted = "Važeći, potpisnik nije potvrđen"
 
 [viewer]
 cannotPreviewFile = "Nije moguće pregledati datoteku"

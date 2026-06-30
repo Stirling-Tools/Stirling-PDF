@@ -2463,8 +2463,38 @@ noTeam = "Komanda yoxdur"
 noUsers = "Başqa istifadəçi tapılmadı."
 placeholder = "İstifadəçiləri seçin..."
 
+[certSign.device]
+stepTitle = "Bu cihaz"
+
 [certSign.error]
 failed = "İmzaları emal edərkən xəta baş verdi."
+
+[certSign.format]
+pkcs11 = "USB Token"
+windowsStore = "Windows sertifikat anbarı"
+
+[certSign.hardware]
+certificate = "Sertifikat"
+customLibrary = "Xüsusi sürücü yolu…"
+driver = "PKCS#11 sürücüsü"
+driverPath = "Sürücü kitabxanasının yolu"
+driverPathPlaceholder = "PKCS#11 sürücünüzə tam yol (.dll, .so və ya .dylib)"
+expired = "müddəti bitib"
+expires = "başа çatır"
+listCerts = "Sertifikatları siyahıya al"
+loading = "Sertifikatlar oxunur…"
+noCerts = "İmzalama sertifikatları tapılmadı"
+noDriver = "Heç bir PKCS#11 sürücüsü aşkar edilmədi. Tokeninizin sürücüsünü (məs., OpenSC) quraşdırın, sonra bunu yenidən açın — və ya aşağıda sürücünün yolunu əl ilə daxil edin."
+notYetValid = "hələ etibarlı deyil"
+pin = "Token PIN-i"
+pkcs11Hint = "Tokeniniz üçün PKCS#11 sürücüsünü seçin, PIN-i daxil edin, sonra tokendəki sertifikatları siyahıya alın."
+pkcs11LoadError = "Tokendən sertifikatları oxumaq mümkün olmadı. PIN-i və sürücünü yoxlayın."
+refresh = "Yenilə"
+selectCert = "Sertifikatı seçin"
+selectDriver = "Sürücünü seçin"
+slot = "Slot (istəyə bağlı)"
+windowsHint = "Windows sertifikat anbarınızdan bir sertifikat seçin. İmzalama kartınızdakı/tokeninizdəki açardan istifadə edəcək — Windows PIN-i soruşacaq."
+windowsLoadError = "Windows sertifikat anbarını oxumaq mümkün olmadı"
 
 [certSign.sessions]
 deleted = "Sessiya silindi"
@@ -2477,9 +2507,6 @@ pdfNotReadyDesc = "İmzalanmış PDF yaradılır. Zəhmət olmasa bir qədər so
 [certSign.sign]
 results = "İmzalanmış PDF"
 submit = "PDF-i imzala"
-
-[certSign.signMode]
-stepTitle = "İmzalama rejimi"
 
 [certSign.signMode.tooltip.auto]
 text = "Server <b>self-signed</b> sertifikatla imzalayır. Eyni <b>tamper-evident seal</b> və <b>audit trail</b>; adətən baxışçılarda <b>Unverified</b> göstərir."
@@ -2501,6 +2528,12 @@ title = "İmzalar necə işləyir"
 [certSign.signMode.tooltip.rule]
 text = "Qəbul edən tərəfdə <b>Trusted</b> statusu lazımdır? <b>Manual</b>. Quraşdırmasız, sürətli, müdaxilə-aşkar möhür və audit izi lazımdır? <b>Auto</b>."
 title = "Qayda"
+
+[certSign.source]
+device = "Bu cihaz"
+server = "Server"
+stepTitle = "Sertifikat mənbəyi"
+upload = "Yüklə"
 
 [certSign.tooltip.header]
 title = "İmzaların idarə olunması haqqında"
@@ -7951,6 +7984,9 @@ certExpired = "Sertifikatın müddəti bitib"
 certRevocationUnknown = "Sertifikatın ləğv statusu naməlumdur"
 certRevoked = "Sertifikat ləğv edilib"
 chainInvalid = "Sertifikat zənciri etibarsızdır"
+documentModified = "İmzalanmadan sonra sənəd dəyişdirilib — imzalanmış sahədən kənarda məzmun əlavə edilib"
+revocationNotChecked = "Ləğv statusu yoxlanılmadı"
+selfSigned = "Öz-özünə imzalı — imzalayanın şəxsiyyəti təsdiqlənməyib"
 signatureInvalid = "İmzanın kriptoqrafik yoxlaması uğursuz oldu"
 trustInvalid = "Sertifikata etibar edilmir"
 
@@ -7958,7 +7994,8 @@ trustInvalid = "Sertifikata etibar edilmir"
 continued = "Davamı"
 downloads = "Yükləmələr"
 entryLabel = "İmza xülasəsi"
-filesEvaluated = "{{count}} fayl qiymətləndirildi"
+filesEvaluated_one = "{{count}} fayl qiymətləndirildi"
+filesEvaluated_other = "{{count}} fayl qiymətləndirildi"
 footer = "Stirling PDF vasitəsilə təsdiqlənib"
 generatedAt = "Yaradılma vaxtı"
 noPdf = "PDF hesabatı uğurlu doğrulamadan sonra əlçatan olacaq."
@@ -7968,6 +8005,9 @@ signatureCountLabel_one = "{{count}} signature"
 signatureCountLabel_other = "{{count}} signatures"
 signaturesFound_one = "{{count}} signature detected"
 signaturesFound_other = "{{count}} signatures detected"
+signaturesInvalid = "{{count}} etibarsız"
+signaturesUnverified_one = "{{count}} nəzərdən keçirmə tələb edir"
+signaturesUnverified_other = "{{count}} nəzərdən keçirmə tələb edir"
 signaturesValid = "{{count}} tam etibarlı"
 title = "İmza doğrulama hesabatı"
 
@@ -7987,7 +8027,9 @@ _value = "İmza"
 [validateSignature.status]
 complete = "Doğrulama tamamlandı"
 invalid = "Etibarsız"
+untrustedShort = "Təsdiqlənməmiş"
 valid = "Etibarlı"
+validUntrusted = "Etibarlıdır, imzalayan təsdiqlənməyib"
 
 [viewer]
 cannotPreviewFile = "Faylın önizlənməsi mümkün deyil"

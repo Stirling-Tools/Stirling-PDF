@@ -2463,8 +2463,38 @@ noTeam = "Kein Team"
 noUsers = "Keine weiteren Benutzer gefunden."
 placeholder = "Benutzer auswählen..."
 
+[certSign.device]
+stepTitle = "Dieses Gerät"
+
 [certSign.error]
 failed = "Ein Fehler ist bei der Verarbeitung der Signaturen aufgetreten."
+
+[certSign.format]
+pkcs11 = "USB-Token"
+windowsStore = "Windows-Zertifikatsspeicher"
+
+[certSign.hardware]
+certificate = "Zertifikat"
+customLibrary = "Benutzerdefinierter Treiberpfad…"
+driver = "PKCS#11-Treiber"
+driverPath = "Pfad zur Treiberbibliothek"
+driverPathPlaceholder = "Vollständiger Pfad zu Ihrem PKCS#11-Treiber (.dll, .so oder .dylib)"
+expired = "abgelaufen"
+expires = "läuft ab"
+listCerts = "Zertifikate auflisten"
+loading = "Zertifikate werden gelesen…"
+noCerts = "Keine Signaturzertifikate gefunden"
+noDriver = "Kein PKCS#11-Treiber erkannt. Installieren Sie den Treiber Ihres Tokens (z. B. OpenSC), öffnen Sie dies erneut - oder geben Sie unten den Treiberpfad manuell ein."
+notYetValid = "noch nicht gültig"
+pin = "Token-PIN"
+pkcs11Hint = "Wählen Sie den PKCS#11-Treiber Ihres Tokens, geben Sie die PIN ein und listen Sie dann die Zertifikate auf dem Token auf."
+pkcs11LoadError = "Zertifikate konnten nicht vom Token gelesen werden. Prüfen Sie PIN und Treiber."
+refresh = "Aktualisieren"
+selectCert = "Zertifikat auswählen"
+selectDriver = "Treiber auswählen"
+slot = "Slot (optional)"
+windowsHint = "Wählen Sie ein Zertifikat aus Ihrem Windows-Zertifikatsspeicher. Beim Signieren wird der Schlüssel auf Ihrer Karte/Ihrem Token verwendet - Windows fordert zur Eingabe der PIN auf."
+windowsLoadError = "Windows-Zertifikatsspeicher konnte nicht gelesen werden"
 
 [certSign.sessions]
 deleted = "Sitzung gelöscht"
@@ -2477,9 +2507,6 @@ pdfNotReadyDesc = "Das signierte PDF wird erzeugt. Bitte versuchen Sie es in Kü
 [certSign.sign]
 results = "Signierte PDF"
 submit = "PDF signieren"
-
-[certSign.signMode]
-stepTitle = "Signatur-Modus"
 
 [certSign.signMode.tooltip.auto]
 text = "Signiert mit einem server <b>selbst-signierten</b> Zertifikat. Gleiches <b>manipulationssicheres Siegel</b> und <b>Prüfprotokoll</b>; zeigt normalerweise <b>Unverifiziert</b> in Viewern an."
@@ -2501,6 +2528,12 @@ title = "Wie Signaturen funktionieren"
 [certSign.signMode.tooltip.rule]
 text = "Benötigen Sie den <b>Vertrauenswürdig</b>-Status beim Empfänger? <b>Manuell</b>. Benötigen Sie ein schnelles, manipulationssicheres Siegel und Prüfprotokoll ohne Setup? <b>Auto</b>."
 title = "Faustregel"
+
+[certSign.source]
+device = "Dieses Gerät"
+server = "Server"
+stepTitle = "Zertifikatsquelle"
+upload = "Hochladen"
 
 [certSign.tooltip.header]
 title = "Über die Signatur-Verwaltung"
@@ -7951,6 +7984,9 @@ certExpired = "Zertifikat abgelaufen"
 certRevocationUnknown = "Zertifikatssperrstatus unbekannt"
 certRevoked = "Zertifikat widerrufen"
 chainInvalid = "Zertifikatskette ungültig"
+documentModified = "Dokument nach der Signatur geändert – Inhalt wurde außerhalb des signierten Bereichs hinzugefügt"
+revocationNotChecked = "Widerruf wurde nicht geprüft"
+selfSigned = "Selbstsigniert – Identität des Unterzeichners nicht verifiziert"
 signatureInvalid = "Kryptografische Signaturprüfung fehlgeschlagen"
 trustInvalid = "Zertifikat nicht vertrauenswürdig"
 
@@ -7958,7 +7994,8 @@ trustInvalid = "Zertifikat nicht vertrauenswürdig"
 continued = "Fortsetzung"
 downloads = "Downloads"
 entryLabel = "Signaturübersicht"
-filesEvaluated = "{{count}} Dateien ausgewertet"
+filesEvaluated_one = "{{count}} Datei ausgewertet"
+filesEvaluated_other = "{{count}} Dateien ausgewertet"
 footer = "Validiert mit Stirling PDF"
 generatedAt = "Erstellt"
 noPdf = "Der PDF-Bericht ist nach einer erfolgreichen Validierung verfügbar."
@@ -7968,6 +8005,9 @@ signatureCountLabel_one = "{{count}} signature"
 signatureCountLabel_other = "{{count}} signatures"
 signaturesFound_one = "{{count}} signature detected"
 signaturesFound_other = "{{count}} signatures detected"
+signaturesInvalid = "{{count}} ungültig"
+signaturesUnverified_one = "{{count}} muss überprüft werden"
+signaturesUnverified_other = "{{count}} müssen überprüft werden"
 signaturesValid = "{{count}} vollständig gültig"
 title = "Bericht zur Signaturvalidierung"
 
@@ -7987,7 +8027,9 @@ _value = "Signatur"
 [validateSignature.status]
 complete = "Validierung abgeschlossen"
 invalid = "Ungültig"
+untrustedShort = "Nicht verifiziert"
 valid = "Gültig"
+validUntrusted = "Gültig, Unterzeichner nicht verifiziert"
 
 [viewer]
 cannotPreviewFile = "Datei kann nicht in der Vorschau angezeigt werden"

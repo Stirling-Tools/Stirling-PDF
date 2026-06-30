@@ -2463,8 +2463,38 @@ noTeam = "Nincs csapat"
 noUsers = "Nem található más felhasználó."
 placeholder = "Felhasználók kiválasztása..."
 
+[certSign.device]
+stepTitle = "Ez az eszköz"
+
 [certSign.error]
 failed = "Hiba történt az aláírások feldolgozása közben."
+
+[certSign.format]
+pkcs11 = "USB token"
+windowsStore = "Windows tanúsítványtár"
+
+[certSign.hardware]
+certificate = "Tanúsítvány"
+customLibrary = "Egyéni illesztőprogram elérési útja…"
+driver = "PKCS#11 illesztőprogram"
+driverPath = "Illesztőprogram könyvtárának elérési útja"
+driverPathPlaceholder = "A PKCS#11 illesztőprogram teljes elérési útja (.dll, .so vagy .dylib)"
+expired = "lejárt"
+expires = "lejár"
+listCerts = "Tanúsítványok listázása"
+loading = "Tanúsítványok beolvasása…"
+noCerts = "Nem található aláíró tanúsítvány"
+noDriver = "Nem észleltünk PKCS#11 illesztőprogramot. Telepítse a token illesztőprogramját (pl. OpenSC), majd nyissa meg újra ezt – vagy adja meg alább kézzel az illesztőprogram útvonalát."
+notYetValid = "még nem érvényes"
+pin = "Token PIN-kód"
+pkcs11Hint = "Válassza ki a token PKCS#11 illesztőprogramját, adja meg a PIN-kódot, majd listázza a tokenen lévő tanúsítványokat."
+pkcs11LoadError = "Nem sikerült beolvasni a tanúsítványokat a tokenről. Ellenőrizze a PIN-kódot és az illesztőprogramot."
+refresh = "Frissítés"
+selectCert = "Tanúsítvány kiválasztása"
+selectDriver = "Illesztőprogram kiválasztása"
+slot = "Foglalat (opcionális)"
+windowsHint = "Válasszon tanúsítványt a Windows tanúsítványtárból. Az aláírás a kártyán/tokenen lévő kulcsot használja – a Windows bekéri a PIN-kódot."
+windowsLoadError = "Nem sikerült beolvasni a Windows tanúsítványtárat"
 
 [certSign.sessions]
 deleted = "Munkamenet törölve"
@@ -2477,9 +2507,6 @@ pdfNotReadyDesc = "Az aláírt PDF előállítása folyamatban van. Próbálja m
 [certSign.sign]
 results = "Aláírt PDF"
 submit = "PDF aláírása"
-
-[certSign.signMode]
-stepTitle = "Aláírás módja"
 
 [certSign.signMode.tooltip.auto]
 text = "Kiszolgáló <b>önaláírt</b> tanúsítvánnyal ír alá. Ugyanaz a <b>manipulációt jelző pecsét</b> és <b>audit trail</b>; a megjelenítőkben jellemzően <b>Nem ellenőrzött</b>."
@@ -2501,6 +2528,12 @@ title = "Hogyan működnek az aláírások"
 [certSign.signMode.tooltip.rule]
 text = "Szüksége van a címzett <b>Megbízható</b> státuszára? <b>Kézi</b>. Gyors, manipulációt jelző pecsétre és auditnaplóra van szüksége beállítás nélkül? <b>Automatikus</b>."
 title = "Ökölszabály"
+
+[certSign.source]
+device = "Ez az eszköz"
+server = "Szerver"
+stepTitle = "Tanúsítvány forrása"
+upload = "Feltöltés"
 
 [certSign.tooltip.header]
 title = "Aláírások kezelése"
@@ -7951,6 +7984,9 @@ certExpired = "Lejárt tanúsítvány"
 certRevocationUnknown = "Ismeretlen a tanúsítvány visszavonási állapota"
 certRevoked = "Visszavont tanúsítvány"
 chainInvalid = "Érvénytelen tanúsítványlánc"
+documentModified = "A dokumentum az aláírás után módosult – tartalmat adtak hozzá az aláírt területen kívül"
+revocationNotChecked = "A visszavonást nem ellenőrizték"
+selfSigned = "Önaláírt – az aláíró személyazonossága nincs ellenőrizve"
 signatureInvalid = "Az aláírás kriptográfiai ellenőrzése sikertelen"
 trustInvalid = "A tanúsítvány nem megbízható"
 
@@ -7958,7 +7994,8 @@ trustInvalid = "A tanúsítvány nem megbízható"
 continued = "Folytatás"
 downloads = "Letöltések"
 entryLabel = "Aláírási összegzés"
-filesEvaluated = "{{count}} fájl kiértékelve"
+filesEvaluated_one = "{{count}} fájl kiértékelve"
+filesEvaluated_other = "{{count}} fájl kiértékelve"
 footer = "Ellenőrizve a Stirling PDF segítségével"
 generatedAt = "Létrehozva"
 noPdf = "A PDF jelentés sikeres ellenőrzés után lesz elérhető."
@@ -7968,6 +8005,9 @@ signatureCountLabel_one = "{{count}} signature"
 signatureCountLabel_other = "{{count}} signatures"
 signaturesFound_one = "{{count}} signature detected"
 signaturesFound_other = "{{count}} signatures detected"
+signaturesInvalid = "{{count}} érvénytelen"
+signaturesUnverified_one = "{{count}} ellenőrzést igényel"
+signaturesUnverified_other = "{{count}} ellenőrzést igényel"
 signaturesValid = "{{count}} teljesen érvényes"
 title = "Aláírás-ellenőrzési jelentés"
 
@@ -7987,7 +8027,9 @@ _value = "Aláírás"
 [validateSignature.status]
 complete = "Ellenőrzés befejeződött"
 invalid = "Érvénytelen"
+untrustedShort = "Ellenőrizetlen"
 valid = "Érvényes"
+validUntrusted = "Érvényes, az aláíró nincs ellenőrizve"
 
 [viewer]
 cannotPreviewFile = "A fájl előnézete nem lehetséges"

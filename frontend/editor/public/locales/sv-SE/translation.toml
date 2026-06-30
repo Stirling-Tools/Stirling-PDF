@@ -2463,8 +2463,38 @@ noTeam = "Inget team"
 noUsers = "Inga andra användare hittades."
 placeholder = "Välj användare..."
 
+[certSign.device]
+stepTitle = "Den här enheten"
+
 [certSign.error]
 failed = "Ett fel inträffade vid bearbetning av signaturer."
+
+[certSign.format]
+pkcs11 = "USB-token"
+windowsStore = "Windows certifikatlager"
+
+[certSign.hardware]
+certificate = "Certifikat"
+customLibrary = "Anpassad drivrutinssökväg…"
+driver = "PKCS#11-drivrutin"
+driverPath = "Sökväg till drivrutinsbibliotek"
+driverPathPlaceholder = "Fullständig sökväg till din PKCS#11-drivrutin (.dll, .so eller .dylib)"
+expired = "utgånget"
+expires = "förfaller"
+listCerts = "Lista certifikat"
+loading = "Läser certifikat…"
+noCerts = "Inga signeringscertifikat hittades"
+noDriver = "Ingen PKCS#11-drivrutin upptäcktes. Installera din tokens drivrutin (t.ex. OpenSC) och öppna detta igen - eller ange drivrutinens sökväg manuellt nedan."
+notYetValid = "ännu inte giltigt"
+pin = "Token-PIN"
+pkcs11Hint = "Välj din tokens PKCS#11-drivrutin, ange PIN och lista sedan certifikaten på tokenen."
+pkcs11LoadError = "Kunde inte läsa certifikat från tokenen. Kontrollera PIN och drivrutin."
+refresh = "Uppdatera"
+selectCert = "Välj certifikat"
+selectDriver = "Välj drivrutin"
+slot = "Slot (valfritt)"
+windowsHint = "Välj ett certifikat från ditt Windows certifikatlager. Signeringen använder nyckeln på ditt kort/din token - Windows kommer att be om PIN."
+windowsLoadError = "Kunde inte läsa Windows certifikatlager"
 
 [certSign.sessions]
 deleted = "Session borttagen"
@@ -2477,9 +2507,6 @@ pdfNotReadyDesc = "Den signerade PDF:en genereras. Försök igen om en stund."
 [certSign.sign]
 results = "Signerad PDF"
 submit = "Signera PDF"
-
-[certSign.signMode]
-stepTitle = "Signeringsläge"
 
 [certSign.signMode.tooltip.auto]
 text = "Signerar med ett <b>självsignerat</b> servercertifikat. Samma <b>manipuleringsspårande sigill</b> och <b>revisionsspår</b>; visas normalt som <b>Unverified</b> i visningsprogram."
@@ -2501,6 +2528,12 @@ title = "Hur signaturer fungerar"
 [certSign.signMode.tooltip.rule]
 text = "Behöver mottagaren <b>Trusted</b>-status? <b>Manuell</b>. Behövs en snabb, manipuleringsspårande stämpel och revisionsspår utan inställning? <b>Auto</b>."
 title = "Tumregel"
+
+[certSign.source]
+device = "Den här enheten"
+server = "Server"
+stepTitle = "Certifikatkälla"
+upload = "Ladda upp"
 
 [certSign.tooltip.header]
 title = "Om hantering av signaturer"
@@ -7951,6 +7984,9 @@ certExpired = "Certifikat utgånget"
 certRevocationUnknown = "Okänd status för certifikatåterkallelse"
 certRevoked = "Certifikat återkallat"
 chainInvalid = "Ogiltig certifikatkedja"
+documentModified = "Dokumentet har ändrats efter signering - innehåll lades till utanför det signerade området"
+revocationNotChecked = "Spärrkontroll utfördes inte"
+selfSigned = "Självsignerat - undertecknarens identitet har inte verifierats"
 signatureInvalid = "Kryptografisk kontroll av signatur misslyckades"
 trustInvalid = "Certifikatet är inte betrott"
 
@@ -7958,7 +7994,8 @@ trustInvalid = "Certifikatet är inte betrott"
 continued = "Fortsättning"
 downloads = "Nedladdningar"
 entryLabel = "Signatursammanfattning"
-filesEvaluated = "{{count}} filer utvärderade"
+filesEvaluated_one = "{{count}} fil utvärderad"
+filesEvaluated_other = "{{count}} filer utvärderade"
 footer = "Validerad via Stirling PDF"
 generatedAt = "Genererad"
 noPdf = "PDF-rapporten blir tillgänglig efter en lyckad validering."
@@ -7968,6 +8005,9 @@ signatureCountLabel_one = "{{count}} signature"
 signatureCountLabel_other = "{{count}} signatures"
 signaturesFound_one = "{{count}} signature detected"
 signaturesFound_other = "{{count}} signatures detected"
+signaturesInvalid = "{{count}} ogiltiga"
+signaturesUnverified_one = "{{count}} behöver granskning"
+signaturesUnverified_other = "{{count}} behöver granskning"
 signaturesValid = "{{count}} helt giltiga"
 title = "Rapport för signaturvalidering"
 
@@ -7987,7 +8027,9 @@ _value = "Signatur"
 [validateSignature.status]
 complete = "Validering klar"
 invalid = "Ogiltig"
+untrustedShort = "Ej verifierad"
 valid = "Giltig"
+validUntrusted = "Giltig, undertecknare ej verifierad"
 
 [viewer]
 cannotPreviewFile = "Kan inte förhandsgranska filen"
