@@ -243,6 +243,7 @@ class SupabaseSecurityConfigMoreTest {
 
         @Test
         @DisplayName("builds and returns the SecurityFilterChain from http.build()")
+        @SuppressWarnings("unchecked")
         void buildsFilterChain() throws Exception {
             HttpSecurity http = mock(HttpSecurity.class, RETURNS_DEEP_STUBS);
             // http.build() returns DefaultSecurityFilterChain, so stub with that concrete type.
@@ -250,8 +251,16 @@ class SupabaseSecurityConfigMoreTest {
                     mock(org.springframework.security.web.DefaultSecurityFilterChain.class);
             when(http.build()).thenReturn(built);
 
+            // Device-credential filter is wired via an ObjectProvider; getIfAvailable() returns
+            // null here, so the optional filter is simply not added (fine for a build-only check).
+            org.springframework.beans.factory.ObjectProvider<
+                            stirling.software.saas.accountlink.DeviceCredentialAuthenticationFilter>
+                    deviceFilterProvider =
+                            mock(org.springframework.beans.factory.ObjectProvider.class);
+
             SecurityFilterChain result =
-                    config(new ApplicationProperties()).saasSecurityFilterChain(http, jwtDecoder);
+                    config(new ApplicationProperties())
+                            .saasSecurityFilterChain(http, jwtDecoder, deviceFilterProvider);
 
             assertThat(result).isSameAs(built);
         }

@@ -7,6 +7,7 @@
 export async function enforceExportPolicies(
   files: File[],
   _fileIds?: (string | undefined)[],
+  _trigger?: "export" | "print" | "convert" | "input",
 ): Promise<File[]> {
   return files;
 }
