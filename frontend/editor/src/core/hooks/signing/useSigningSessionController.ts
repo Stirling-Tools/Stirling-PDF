@@ -203,7 +203,15 @@ export function useSigningSessionController(enabled: boolean) {
     );
     const session = response.data;
     markSessionSeen(session.sessionId, countSignedParticipants(session));
-    setDetailData((prev) => (prev ? { ...prev, session } : prev));
+    // A refresh dispatched before navigation can resolve after the user has
+    // moved to another session sharing the overlay. Only apply if this session
+    // is still the one on screen, so we never paint its data onto another doc.
+    let isCurrent = false;
+    setDetailData((prev) => {
+      isCurrent = prev?.session.sessionId === session.sessionId;
+      return isCurrent ? { ...prev!, session } : prev;
+    });
+    if (!isCurrent) return;
     // Keep the read-only overlay in sync as participants sign.
     setOverlay((prev) =>
       prev

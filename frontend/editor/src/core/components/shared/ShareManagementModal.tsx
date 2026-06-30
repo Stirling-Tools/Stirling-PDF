@@ -130,7 +130,12 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
   }, [config?.frontendUrl]);
 
   const loadShareLinks = useCallback(async () => {
-    if (!file.remoteStorageId) return;
+    if (!file.remoteStorageId) {
+      // No remote file yet — clear any leftover state from a previously opened file.
+      setShareLinks([]);
+      setSharedUsers([]);
+      return;
+    }
     setIsLoading(true);
     setErrorMessage(null);
     try {
@@ -161,6 +166,10 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
 
   useEffect(() => {
     if (opened) {
+      // Clear the previous file's data before loading so a stale list is never
+      // shown (and never targeted by a Remove click) while the new file resolves.
+      setShareLinks([]);
+      setSharedUsers([]);
       loadShareLinks();
       setActivityMap({});
       setShareRole("editor");
