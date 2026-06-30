@@ -4477,14 +4477,14 @@ desc = "Detect and split scanned photos into separate pages"
 tags = "detect,split,photos,auto detect,detect photos,split photos,separate photos,split scanned images,multiple photos,auto split,photo detection,image detection,scan separation"
 title = "Detect & Split Scanned Photos"
 
+[home.sharedSign]
+desc = "Request signatures from others and track signing sessions"
+title = "Shared Signing"
+
 [home.showJS]
 desc = "Searches and displays any JS injected into a PDF"
 tags = "javascript,code,script,show javascript,show JS,find javascript,detect javascript,view javascript,embedded scripts,malware,security,inspect,debug"
 title = "Show Javascript"
-
-[home.sharedSign]
-desc = "Request signatures from others and track signing sessions"
-title = "Shared Signing"
 
 [home.sign]
 desc = "Adds signature to PDF by drawing, text or image"
@@ -7077,17 +7077,6 @@ title = "Login Not Enabled"
 description = "Enter the full URL of your self-hosted Stirling PDF server"
 label = "Server URL"
 
-[showJS]
-done = "JavaScript extracted"
-processing = "Extracting JavaScript..."
-results = "Result"
-submit = "Show"
-tags = "JS"
-title = "Show Javascript"
-
-[showJS.view]
-title = "Extracted JavaScript"
-
 [sharedSign]
 backToSessions = "Back to sessions"
 createdOn = "Created {{date}}"
@@ -7109,6 +7098,17 @@ completed = "No completed sessions"
 [sharedSign.tab]
 active = "Active"
 completed = "Completed"
+
+[showJS]
+done = "JavaScript extracted"
+processing = "Extracting JavaScript..."
+results = "Result"
+submit = "Show"
+tags = "JS"
+title = "Show Javascript"
+
+[showJS.view]
+title = "Extracted JavaScript"
 
 [sign]
 activate = "Activate Signature Placement"
@@ -8452,13 +8452,13 @@ rotateRight = "Rotate Right"
 ruler = "Ruler / Measure"
 save = "Save"
 saveAll = "Save All"
-share = "Share"
 saveAs = "Save As"
 saveChanges = "Save Changes"
 search = "Search PDF"
 selectAll = "Select All"
 selectByNumber = "Select by Page Numbers"
 selectLanguage = "Select language"
+share = "Share"
 toggleAnnotations = "Toggle Annotations Visibility"
 toggleAttachments = "Toggle Attachments"
 toggleBookmarks = "Toggle Bookmarks"
