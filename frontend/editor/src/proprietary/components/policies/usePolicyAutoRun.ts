@@ -210,8 +210,10 @@ export function usePolicyAutoRun(): void {
         s.configured &&
         s.status === "active" &&
         s.backendId &&
-        // Only auto-run on upload when the policy is set to run on upload
-        // (export-triggered policies enforce at export time instead).
+        // Only enforce in the editor when the policy includes "editor" as a source.
+        // runOn is an editor-specific parameter: "upload" fires here, "export" fires
+        // at export time via policyExport. Non-editor sources have their own triggers.
+        (s.sources.length === 0 || s.sources.includes("editor")) &&
         (s.runOn ?? "upload") === "upload",
     );
     for (const [categoryId, s] of active) {

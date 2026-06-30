@@ -20,4 +20,4 @@ export const WATCHED_FOLDERS_ENABLED: boolean = false;
  * build (which overrides this to `true`) and on desktop when connected to SaaS.
  * The self-hosted proprietary build and the core build keep it `false`.
  */
-export const POLICIES_ENABLED: boolean = false;
+export const POLICIES_ENABLED: boolean = true; // temp: enabled for local E2E testing
