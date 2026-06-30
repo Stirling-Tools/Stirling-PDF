@@ -16,6 +16,15 @@
   width: var(--button-height);
   min-width: var(--button-height);
 }
+/* Mantine gives the section a margin (the icon↔label gap) and the label
+ * side-padding; with no label that pushes the lone icon off-centre. Zero them
+ * so the icon sits dead-centre. (Prefer <ActionIcon> for icon-only buttons.) */
+.sui-btn--icon .mantine-Button-section {
+  margin-inline: 0;
+}
+.sui-btn--icon .mantine-Button-label {
+  display: none;
+}
 
 /* ---- shape ---- */
 .sui-btn--circle.mantine-Button-root {

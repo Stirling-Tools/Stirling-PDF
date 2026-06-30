@@ -165,7 +165,14 @@ function ButtonRoot({
       fullWidth={fullWidth}
       disabled={disabled}
       className={classes}
-      style={{ ...(accentVars as CSSProperties), ...style }}
+      style={{
+        ...(accentVars as CSSProperties),
+        // Icon-only: zero Mantine's size padding INLINE (it sets --button-padding-x
+        // inline, so a CSS class can't win) — otherwise the asymmetric
+        // with-section padding shoves the lone icon off-centre.
+        ...(iconOnly ? ({ "--button-padding-x": "0" } as CSSProperties) : {}),
+        ...style,
+      }}
     >
       {label}
     </Comp>

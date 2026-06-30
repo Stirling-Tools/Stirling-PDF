@@ -140,6 +140,7 @@ export default function OnboardingModalSlide({
             <ActionIcon
               onClick={onSkip}
               variant="tertiary"
+              size="lg"
               aria-label="Close"
               style={{
                 position: "absolute",
@@ -149,7 +150,7 @@ export default function OnboardingModalSlide({
                 color: "white",
                 backdropFilter: "blur(4px)",
                 zIndex: 10,
-                fontSize: "1.25rem",
+                fontSize: "1.5rem",
                 lineHeight: 1,
               }}
             >
