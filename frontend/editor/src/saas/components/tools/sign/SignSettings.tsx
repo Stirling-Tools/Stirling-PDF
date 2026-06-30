@@ -12,7 +12,6 @@ import {
 import { Button } from "@shared/components/Button";
 import { SegmentedControl } from "@shared/components/SegmentedControl";
 import { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
-import { SuggestedToolsSection } from "@app/components/tools/shared/SuggestedToolsSection";
 import { useSignature } from "@app/contexts/SignatureContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import {
@@ -1248,8 +1247,6 @@ const SignSettings = ({
           {translate("applySignatures", "Apply Signatures")}
         </Button>
       )}
-
-      <SuggestedToolsSection />
     </Stack>
   );
 };

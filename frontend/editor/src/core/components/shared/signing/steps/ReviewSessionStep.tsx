@@ -57,7 +57,9 @@ export const ReviewSessionStep: React.FC<ReviewSessionStepProps> = ({
             backgroundColor: "var(--mantine-color-default-hover)",
           }}
         >
-          <Text size="sm">{selectedFile.name}</Text>
+          <Text size="sm" style={{ overflowWrap: "anywhere" }}>
+            {selectedFile.name}
+          </Text>
           {selectedFile.size && (
             <Text size="xs" c="dimmed">
               {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
@@ -176,11 +178,11 @@ export const ReviewSessionStep: React.FC<ReviewSessionStepProps> = ({
           {t("groupSigning.steps.back", "Back")}
         </Button>
         <Button
-          accent="success"
           onClick={onSubmit}
           disabled={disabled}
           style={{ flex: 1 }}
           leftSection={<SendIcon sx={{ fontSize: 16 }} />}
+          accent="success"
         >
           {t("groupSigning.steps.review.send", "Send Signing Requests")}
         </Button>
