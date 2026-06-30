@@ -2,7 +2,7 @@ import { Tooltip, Popover, Stack, Slider, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import LineWeightIcon from "@mui/icons-material/LineWeight";
-import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 
 interface WidthControlProps {
   value: number;
@@ -26,15 +26,16 @@ export function WidthControl({
     <Popover opened={opened} onChange={setOpened} position="top" withArrow>
       <Popover.Target>
         <Tooltip label={t("annotation.width", "Width")}>
-          <Button
+          <ActionIcon
             aria-label={t("annotation.width", "Width")}
             variant="secondary"
             accent="neutral"
             size="md"
             onClick={() => setOpened(!opened)}
             disabled={disabled}
-            leftSection={<LineWeightIcon style={{ fontSize: 18 }} />}
-          />
+          >
+            <LineWeightIcon style={{ fontSize: 18 }} />
+          </ActionIcon>
         </Tooltip>
       </Popover.Target>
       <Popover.Dropdown>

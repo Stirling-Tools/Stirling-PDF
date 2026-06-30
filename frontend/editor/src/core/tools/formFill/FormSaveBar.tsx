@@ -12,6 +12,7 @@
 import React, { useCallback, useState } from "react";
 import { Stack, Group, Text, Transition, Paper, Badge } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { useTranslation } from "react-i18next";
 import DownloadIcon from "@mui/icons-material/Download";
 import SaveIcon from "@mui/icons-material/Save";
@@ -153,13 +154,14 @@ export function FormSaveBar({
                     </Text>
                   </div>
                 </Group>
-                <Button
+                <ActionIcon
                   size="sm"
                   variant="tertiary"
                   onClick={() => setDismissed(true)}
                   aria-label={t("viewer.formBar.dismiss", "Dismiss")}
-                  leftSection={<CloseIcon sx={{ fontSize: 16 }} />}
-                />
+                >
+                  <CloseIcon sx={{ fontSize: 16 }} />
+                </ActionIcon>
               </Group>
 
               {isDirty && (

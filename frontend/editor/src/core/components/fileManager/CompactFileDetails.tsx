@@ -1,6 +1,7 @@
 import React from "react";
 import { Stack, Box, Text, Center } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
@@ -128,22 +129,24 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
         {/* Navigation arrows for multiple files */}
         {hasMultipleFiles && (
           <Box style={{ display: "flex", gap: "0.25rem" }}>
-            <Button
+            <ActionIcon
               variant="tertiary"
               size="sm"
               onClick={onPrevious}
               disabled={isAnimating}
               aria-label={t("fileManager.previousFile", "Previous file")}
-              leftSection={<ChevronLeftIcon style={{ fontSize: 16 }} />}
-            />
-            <Button
+            >
+              <ChevronLeftIcon style={{ fontSize: 16 }} />
+            </ActionIcon>
+            <ActionIcon
               variant="tertiary"
               size="sm"
               onClick={onNext}
               disabled={isAnimating}
               aria-label={t("fileManager.nextFile", "Next file")}
-              leftSection={<ChevronRightIcon style={{ fontSize: 16 }} />}
-            />
+            >
+              <ChevronRightIcon style={{ fontSize: 16 }} />
+            </ActionIcon>
           </Box>
         )}
       </Box>

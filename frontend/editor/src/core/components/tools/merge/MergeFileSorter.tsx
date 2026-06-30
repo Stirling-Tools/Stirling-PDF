@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Group, Text, Stack, Select } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { useTranslation } from "react-i18next";
 import SortIcon from "@mui/icons-material/Sort";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
@@ -67,7 +68,7 @@ const MergeFileSorter: React.FC<MergeFileSorterProps> = ({
             }}
           />
 
-          <Button
+          <ActionIcon
             variant="secondary"
             size="md"
             onClick={handleDirectionToggle}
@@ -82,10 +83,9 @@ const MergeFileSorter: React.FC<MergeFileSorterProps> = ({
                 ? t("merge.sortBy.ascending", "Ascending")
                 : t("merge.sortBy.descending", "Descending")
             }
-            leftSection={
-              ascending ? <ArrowUpwardIcon /> : <ArrowDownwardIcon />
-            }
-          />
+          >
+            {ascending ? <ArrowUpwardIcon /> : <ArrowDownwardIcon />}
+          </ActionIcon>
         </Group>
 
         <Button

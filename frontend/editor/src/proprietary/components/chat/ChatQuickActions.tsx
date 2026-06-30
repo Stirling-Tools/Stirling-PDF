@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Box, Group, Stack, Text } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import CloseIcon from "@mui/icons-material/Close";
 import CompressIcon from "@mui/icons-material/Compress";
 import ContentCutIcon from "@mui/icons-material/ContentCut";
@@ -81,14 +82,15 @@ function WorkbenchFilePills({
           <span className="chat-file-pill__label" title={stub.name}>
             {stub.name}
           </span>
-          <Button
+          <ActionIcon
             type="button"
             variant="tertiary"
             className="chat-file-pill__remove"
             onClick={() => onRemove(stub.id)}
             aria-label={removeLabel(stub.name)}
-            leftSection={<CloseIcon sx={{ fontSize: 12 }} />}
-          />
+          >
+            <CloseIcon sx={{ fontSize: 12 }} />
+          </ActionIcon>
         </span>
       ))}
       {overflow > 0 && (

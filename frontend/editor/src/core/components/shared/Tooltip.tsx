@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { addEventListenerWithCleanup } from "@app/utils/genericUtils";
 import { useTooltipPosition } from "@app/hooks/useTooltipPosition";
@@ -397,7 +397,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
       }
     >
       {shouldShowCloseButton && (
-        <Button
+        <ActionIcon
           variant="tertiary"
           className={styles["tooltip-pin-button"]}
           onClick={(e) => {
@@ -407,10 +407,9 @@ export const Tooltip: React.FC<TooltipProps> = ({
           }}
           title={t("tooltip.close", "Close tooltip")}
           aria-label={t("tooltip.close", "Close tooltip")}
-          leftSection={
-            <LocalIcon icon="close-rounded" width="1.25rem" height="1.25rem" />
-          }
-        />
+        >
+          <LocalIcon icon="close-rounded" width="1.25rem" height="1.25rem" />
+        </ActionIcon>
       )}
       {arrow && !sidebarTooltip && (
         <div

@@ -17,3 +17,8 @@
 .sui-acc-premium.sui-ai--primary:not([data-disabled]):hover {
   filter: brightness(1.06);
 }
+
+/* ---- no-hover: suppress hover background change ---- */
+.sui-ai--no-hover:not([data-disabled]):hover {
+  background: var(--ai-bg, transparent) !important;
+}

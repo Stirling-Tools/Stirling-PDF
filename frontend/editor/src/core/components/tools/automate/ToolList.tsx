@@ -1,7 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Text, Stack, Group } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import SettingsIcon from "@mui/icons-material/Settings";
 import CloseIcon from "@mui/icons-material/Close";
 import AddCircleOutline from "@mui/icons-material/AddCircleOutlined";
@@ -78,8 +78,7 @@ export default function ToolList({
             >
               {/* Delete X - centered vertically, anchored right */}
               {index > 1 && (
-                <Button
-                  leftSection={<CloseIcon style={{ fontSize: 16 }} />}
+                <ActionIcon
                   variant="tertiary"
                   size="sm"
                   hover={false}
@@ -97,7 +96,9 @@ export default function ToolList({
                     zIndex: 1,
                     color: "var(--mantine-color-gray-6)",
                   }}
-                />
+                >
+                  <CloseIcon style={{ fontSize: 16 }} />
+                </ActionIcon>
               )}
 
               <div>
@@ -118,8 +119,7 @@ export default function ToolList({
 
                   {/* Settings cog - only show if tool is selected, aligned right */}
                   {tool.operation && (
-                    <Button
-                      leftSection={<SettingsIcon style={{ fontSize: 16 }} />}
+                    <ActionIcon
                       variant="tertiary"
                       size="sm"
                       onClick={() => onToolConfigure(index)}
@@ -132,7 +132,9 @@ export default function ToolList({
                         "Configure tool",
                       )}
                       style={{ color: "var(--mantine-color-gray-6)" }}
-                    />
+                    >
+                      <SettingsIcon style={{ fontSize: 16 }} />
+                    </ActionIcon>
                   )}
                 </Group>
               </div>

@@ -34,6 +34,7 @@ import type { WatchedFolder } from "@app/types/watchedFolders";
 import { POLICIES_ENABLED } from "@app/constants/featureFlags";
 import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { IconBadge } from "@shared/components/IconBadge";
 import {
   deriveRowStatus,
@@ -168,7 +169,7 @@ export function PoliciesSection({
           sidebarTooltip
           pinOnClick
         >
-          <Button
+          <ActionIcon
             type="button"
             variant="tertiary"
             className="pol-info-btn"
@@ -176,15 +177,14 @@ export function PoliciesSection({
               "policies.sidebar.infoAriaLabel",
               "What is a policy?",
             )}
-            leftSection={
-              <LocalIcon
-                icon="info-outline-rounded"
-                width="1.25rem"
-                height="1.25rem"
-                style={{ color: "var(--icon-files-color)" }}
-              />
-            }
-          />
+          >
+            <LocalIcon
+              icon="info-outline-rounded"
+              width="1.25rem"
+              height="1.25rem"
+              style={{ color: "var(--icon-files-color)" }}
+            />
+          </ActionIcon>
         </AppTooltip>
       </div>
 

@@ -1,6 +1,7 @@
 import { Tooltip, Popover, Stack, Slider, Text, Group } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { useState } from "react";
 import type { TrackedAnnotation } from "@embedpdf/plugin-annotation";
 import type { PdfAnnotationObject } from "@embedpdf/models";
@@ -97,27 +98,30 @@ export function PropertiesPopover({
           {t("annotation.textAlignment", "Text Alignment")}
         </Text>
         <Group gap="xs">
-          <Button
+          <ActionIcon
             aria-label={t("annotation.alignLeft", "Align left")}
             variant={currentAlign === "left" ? "primary" : "secondary"}
             onClick={() => onUpdate({ textAlign: 0 })}
             size="md"
-            leftSection={<FormatAlignLeftIcon style={{ fontSize: 18 }} />}
-          />
-          <Button
+          >
+            <FormatAlignLeftIcon style={{ fontSize: 18 }} />
+          </ActionIcon>
+          <ActionIcon
             aria-label={t("annotation.alignCenter", "Align center")}
             variant={currentAlign === "center" ? "primary" : "secondary"}
             onClick={() => onUpdate({ textAlign: 1 })}
             size="md"
-            leftSection={<FormatAlignCenterIcon style={{ fontSize: 18 }} />}
-          />
-          <Button
+          >
+            <FormatAlignCenterIcon style={{ fontSize: 18 }} />
+          </ActionIcon>
+          <ActionIcon
             aria-label={t("annotation.alignRight", "Align right")}
             variant={currentAlign === "right" ? "primary" : "secondary"}
             onClick={() => onUpdate({ textAlign: 2 })}
             size="md"
-            leftSection={<FormatAlignRightIcon style={{ fontSize: 18 }} />}
-          />
+          >
+            <FormatAlignRightIcon style={{ fontSize: 18 }} />
+          </ActionIcon>
         </Group>
       </div>
     </Stack>
@@ -192,15 +196,16 @@ export function PropertiesPopover({
     <Popover opened={opened} onChange={setOpened} position="bottom" withArrow>
       <Popover.Target>
         <Tooltip label={t("annotation.properties", "Properties")}>
-          <Button
+          <ActionIcon
             aria-label={t("annotation.properties", "Properties")}
             variant="secondary"
             accent="neutral"
             size="md"
             onClick={() => setOpened(!opened)}
             disabled={disabled}
-            leftSection={<TuneIcon style={{ fontSize: 18 }} />}
-          />
+          >
+            <TuneIcon style={{ fontSize: 18 }} />
+          </ActionIcon>
         </Tooltip>
       </Popover.Target>
       <Popover.Dropdown>

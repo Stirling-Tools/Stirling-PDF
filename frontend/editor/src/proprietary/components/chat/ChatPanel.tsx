@@ -20,6 +20,7 @@ import {
   Textarea,
 } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
 import BuildOutlinedIcon from "@mui/icons-material/BuildOutlined";
@@ -316,15 +317,16 @@ function ChatMessageBubble({
   }
   const actions = (
     <div className="chat-message-actions">
-      <Button
+      <ActionIcon
         type="button"
         variant="tertiary"
         className={`chat-message-action-btn${copied ? " chat-message-action-btn--active" : ""}`}
         onClick={handleCopy}
         title={t("chat.actions.copy", "Copy message")}
         aria-label={t("chat.actions.copy", "Copy message")}
-        leftSection={<ContentCopyIcon sx={{ fontSize: 13 }} />}
-      />
+      >
+        <ContentCopyIcon sx={{ fontSize: 13 }} />
+      </ActionIcon>
       <span className="chat-message-timestamp">
         {formatRelativeTime(timestamp, t)}
       </span>
@@ -517,14 +519,15 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
         </div>
       )}
       <div className="chat-panel-input">
-        <Button
+        <ActionIcon
           className="chat-panel-input__send"
           size="sm"
           onClick={() => handleSend()}
           disabled={!input.trim() || isLoading}
           aria-label={t("chat.input.send", "Send message")}
-          leftSection={<ArrowUpwardIcon sx={{ fontSize: 16 }} />}
-        />
+        >
+          <ArrowUpwardIcon sx={{ fontSize: 16 }} />
+        </ActionIcon>
         <Textarea
           ref={inputRef}
           placeholder={t("chat.input.placeholder", "What do you want to do?")}

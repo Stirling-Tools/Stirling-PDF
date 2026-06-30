@@ -7,6 +7,7 @@ import {
   Divider,
 } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { SegmentedControl } from "@shared/components/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import {
@@ -216,7 +217,7 @@ export default function OverlayPdfsSettings({
                           ({(file.size / 1024).toFixed(1)} KB)
                         </Text>
                       </Group>
-                      <Button
+                      <ActionIcon
                         size="sm"
                         variant="tertiary"
                         accent="danger"
@@ -229,14 +230,9 @@ export default function OverlayPdfsSettings({
                         }}
                         disabled={disabled}
                         aria-label={t("remove", "Remove")}
-                        leftSection={
-                          <LocalIcon
-                            icon="close-rounded"
-                            width="14"
-                            height="14"
-                          />
-                        }
-                      />
+                      >
+                        <LocalIcon icon="close-rounded" width="14" height="14" />
+                      </ActionIcon>
                     </Group>
                   ))}
                 </Stack>

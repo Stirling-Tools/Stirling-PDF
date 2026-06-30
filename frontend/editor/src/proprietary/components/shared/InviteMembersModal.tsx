@@ -15,6 +15,7 @@ import {
   Group,
 } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { SegmentedControl } from "@shared/components/SegmentedControl";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { alert } from "@app/components/toast";
@@ -361,9 +362,8 @@ export default function InviteMembersModal({
       withCloseButton={false}
     >
       <Box pos="relative">
-        <Button
+        <ActionIcon
           aria-label={t("common.close", "Close")}
-          leftSection={<LocalIcon icon="close-rounded" />}
           variant="tertiary"
           onClick={handleClose}
           size="lg"
@@ -373,7 +373,9 @@ export default function InviteMembersModal({
             right: -8,
             zIndex: 1,
           }}
-        />
+        >
+          <LocalIcon icon="close-rounded" />
+        </ActionIcon>
         <Stack gap="lg" pt="md">
           {/* Header with Icon */}
           <Stack gap="md" align="center">

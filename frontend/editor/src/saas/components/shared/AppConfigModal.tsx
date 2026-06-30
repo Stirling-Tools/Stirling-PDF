@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useState, useEffect } from "react";
 import { Modal, Text } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { useMediaQuery } from "@mantine/hooks";
 import { useAuth } from "@app/auth/UseSession";
 import { isUserAnonymous } from "@app/auth/supabase";
@@ -253,14 +254,13 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
                     </span>
                   ) : null}
                 </Text>
-                <Button
+                <ActionIcon
                   variant="tertiary"
                   onClick={onClose}
                   aria-label="Close"
-                  leftSection={
-                    <LocalIcon icon="close-rounded" width={18} height={18} />
-                  }
-                />
+                >
+                  <LocalIcon icon="close-rounded" width={18} height={18} />
+                </ActionIcon>
               </div>
               <div className="modal-body">{activeComponent}</div>
             </div>

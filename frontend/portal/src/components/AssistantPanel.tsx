@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Button } from "@shared/components";
+import { ActionIcon, Button } from "@shared/components";
 import { useTranslation } from "react-i18next";
 import { useUI } from "@portal/contexts/UIContext";
 import { useAsync } from "@portal/hooks/useAsync";
@@ -96,13 +96,14 @@ export function AssistantPanel() {
             {t("assistant.title")}
           </span>
         </div>
-        <Button
+        <ActionIcon
           variant="tertiary"
           className="portal-assistant__close"
           onClick={closeAssistant}
           aria-label={t("assistant.close", "Close assistant")}
-          leftSection={<CloseIcon size={16} />}
-        />
+        >
+          <CloseIcon size={16} />
+        </ActionIcon>
       </header>
 
       <div className="portal-assistant__messages" ref={messagesRef}>
@@ -167,13 +168,14 @@ export function AssistantPanel() {
           className="portal-assistant__input"
           disabled={typing}
         />
-        <Button
+        <ActionIcon
           type="submit"
           className="portal-assistant__send"
           disabled={!input.trim() || typing}
           aria-label={t("assistant.send")}
-          leftSection={<SendIcon size={14} />}
-        />
+        >
+          <SendIcon size={14} />
+        </ActionIcon>
       </form>
     </aside>
   );

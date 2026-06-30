@@ -22,6 +22,7 @@ import {
   Modal,
 } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { alert } from "@app/components/toast";
 import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
 import { useRestartServer } from "@app/components/shared/config/useRestartServer";
@@ -925,7 +926,7 @@ export default function AdminDatabaseSection() {
                                 )}
                                 withArrow
                               >
-                                <Button
+                                <ActionIcon
                                   variant="tertiary"
                                   onClick={() =>
                                     handleDownload(backup.fileName)
@@ -935,18 +936,17 @@ export default function AdminDatabaseSection() {
                                     "admin.settings.database.download",
                                     "Download",
                                   )}
-                                  leftSection={
-                                    downloadingFile === backup.fileName ? (
-                                      <Loader size="xs" />
-                                    ) : (
-                                      <LocalIcon
-                                        icon="download"
-                                        width="1rem"
-                                        height="1rem"
-                                      />
-                                    )
-                                  }
-                                />
+                                >
+                                  {downloadingFile === backup.fileName ? (
+                                    <Loader size="xs" />
+                                  ) : (
+                                    <LocalIcon
+                                      icon="download"
+                                      width="1rem"
+                                      height="1rem"
+                                    />
+                                  )}
+                                </ActionIcon>
                               </Tooltip>
                               <Tooltip
                                 label={t(
@@ -955,7 +955,7 @@ export default function AdminDatabaseSection() {
                                 )}
                                 withArrow
                               >
-                                <Button
+                                <ActionIcon
                                   variant="tertiary"
                                   onClick={() =>
                                     handleImportExisting(backup.fileName)
@@ -965,18 +965,17 @@ export default function AdminDatabaseSection() {
                                     "admin.settings.database.import",
                                     "Import",
                                   )}
-                                  leftSection={
-                                    importingBackupFile === backup.fileName ? (
-                                      <Loader size="xs" />
-                                    ) : (
-                                      <LocalIcon
-                                        icon="backup"
-                                        width="1rem"
-                                        height="1rem"
-                                      />
-                                    )
-                                  }
-                                />
+                                >
+                                  {importingBackupFile === backup.fileName ? (
+                                    <Loader size="xs" />
+                                  ) : (
+                                    <LocalIcon
+                                      icon="backup"
+                                      width="1rem"
+                                      height="1rem"
+                                    />
+                                  )}
+                                </ActionIcon>
                               </Tooltip>
                               <Tooltip
                                 label={t(
@@ -985,7 +984,7 @@ export default function AdminDatabaseSection() {
                                 )}
                                 withArrow
                               >
-                                <Button
+                                <ActionIcon
                                   variant="tertiary"
                                   accent="danger"
                                   onClick={() =>
@@ -996,18 +995,17 @@ export default function AdminDatabaseSection() {
                                     "admin.settings.database.delete",
                                     "Delete",
                                   )}
-                                  leftSection={
-                                    deletingFile === backup.fileName ? (
-                                      <Loader size="xs" />
-                                    ) : (
-                                      <LocalIcon
-                                        icon="delete"
-                                        width="1rem"
-                                        height="1rem"
-                                      />
-                                    )
-                                  }
-                                />
+                                >
+                                  {deletingFile === backup.fileName ? (
+                                    <Loader size="xs" />
+                                  ) : (
+                                    <LocalIcon
+                                      icon="delete"
+                                      width="1rem"
+                                      height="1rem"
+                                    />
+                                  )}
+                                </ActionIcon>
                               </Tooltip>
                             </Group>
                           </Table.Td>

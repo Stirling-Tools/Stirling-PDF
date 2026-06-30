@@ -5,6 +5,7 @@ import {
   type ButtonVariant,
   type ButtonAccent,
 } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 
@@ -225,20 +226,19 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
             </Button>
           )}
           {dismissible && (
-            <Button
+            <ActionIcon
               variant="tertiary"
               size="sm"
               onClick={handleDismiss}
               aria-label={t("infoBanner.dismiss", "Dismiss")}
               style={closeIconColor ? { color: closeIconColor } : undefined}
-              leftSection={
-                <LocalIcon
-                  icon="close-rounded"
-                  width={compact ? "0.85rem" : "1rem"}
-                  height={compact ? "0.85rem" : "1rem"}
-                />
-              }
-            />
+            >
+              <LocalIcon
+                icon="close-rounded"
+                width={compact ? "0.85rem" : "1rem"}
+                height={compact ? "0.85rem" : "1rem"}
+              />
+            </ActionIcon>
           )}
         </Group>
       </Group>

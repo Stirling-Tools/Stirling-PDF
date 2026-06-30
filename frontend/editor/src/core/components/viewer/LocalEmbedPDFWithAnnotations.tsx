@@ -52,7 +52,7 @@ import {
 import { CustomSearchLayer } from "@app/components/viewer/CustomSearchLayer";
 import ToolLoadingFallback from "@app/components/tools/ToolLoadingFallback";
 import { Center, Stack, Text, Tooltip } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import CloseIcon from "@mui/icons-material/Close";
 import { ScrollAPIBridge } from "@app/components/viewer/ScrollAPIBridge";
 import { SelectionAPIBridge } from "@app/components/viewer/SelectionAPIBridge";
@@ -633,7 +633,7 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
                                     >
                                       {/* Delete button - only show when not read-only */}
                                       {!readOnly && (
-                                        <Button
+                                        <ActionIcon
                                           size="sm"
                                           accent="danger"
                                           style={{
@@ -659,12 +659,11 @@ export const LocalEmbedPDFWithAnnotations = forwardRef<
                                             "viewer.signature.delete",
                                             "Delete signature",
                                           )}
-                                          leftSection={
-                                            <CloseIcon
-                                              style={{ fontSize: "0.8rem" }}
-                                            />
-                                          }
-                                        />
+                                        >
+                                          <CloseIcon
+                                            style={{ fontSize: "0.8rem" }}
+                                          />
+                                        </ActionIcon>
                                       )}
 
                                       <div

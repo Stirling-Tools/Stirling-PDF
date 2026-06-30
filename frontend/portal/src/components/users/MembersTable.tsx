@@ -2,8 +2,8 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Menu } from "@mantine/core";
 import {
+  ActionIcon,
   Avatar,
-  Button,
   Chip,
   StatusBadge,
   Table,
@@ -101,13 +101,14 @@ export function MembersTable({
           // a row-action menu needs; SUI has no equivalent.
           <Menu position="bottom-end" withinPortal shadow="md" width={200}>
             <Menu.Target>
-              <Button
+              <ActionIcon
                 className="portal-users__row-action"
                 aria-label={t("users.table.actionsFor", { name: m.name })}
                 onClick={(e) => e.stopPropagation()}
                 variant="tertiary"
-                leftSection="⋯"
-              />
+              >
+                ⋯
+              </ActionIcon>
             </Menu.Target>
             <Menu.Dropdown>
               <Menu.Label>{t("users.table.changeRole")}</Menu.Label>

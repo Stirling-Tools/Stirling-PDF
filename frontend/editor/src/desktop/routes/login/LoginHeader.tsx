@@ -1,5 +1,5 @@
 import CloseIcon from "@mui/icons-material/Close";
-import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { useLogoAssets } from "@app/hooks/useLogoAssets";
 
 interface LoginHeaderProps {
@@ -55,17 +55,18 @@ export default function LoginHeader({
           )}
         </div>
         {onClose && (
-          <Button
+          <ActionIcon
             onClick={onClose}
             variant="tertiary"
-            leftSection={<CloseIcon fontSize="small" />}
             aria-label="Close"
             style={{
               flexShrink: 0,
               color: "var(--text-secondary)",
               outline: "none",
             }}
-          />
+          >
+            <CloseIcon fontSize="small" />
+          </ActionIcon>
         )}
       </div>
       {subtitle && <p className="login-subtitle">{subtitle}</p>}

@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import { Box, Group, Stack, Text, ScrollArea, TextInput } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import ArrowUpwardRoundedIcon from "@mui/icons-material/ArrowUpwardRounded";
 import ArrowDownwardRoundedIcon from "@mui/icons-material/ArrowDownwardRounded";
@@ -158,8 +159,7 @@ const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
             <Text size="xs" c="dimmed">
               {matches.length ? `${active + 1}/${matches.length}` : "0/0"}
             </Text>
-            <Button
-              leftSection={<ArrowUpwardRoundedIcon fontSize="small" />}
+            <ActionIcon
               size="sm"
               variant="tertiary"
               onClick={() => {
@@ -167,16 +167,19 @@ const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
                   setActive((p) => (p - 1 + matches.length) % matches.length);
               }}
               aria-label={t("common.previous", "Previous")}
-            />
-            <Button
-              leftSection={<ArrowDownwardRoundedIcon fontSize="small" />}
+            >
+              <ArrowUpwardRoundedIcon fontSize="small" />
+            </ActionIcon>
+            <ActionIcon
               size="sm"
               variant="tertiary"
               onClick={() => {
                 if (matches.length) setActive((p) => (p + 1) % matches.length);
               }}
               aria-label={t("common.next", "Next")}
-            />
+            >
+              <ArrowDownwardRoundedIcon fontSize="small" />
+            </ActionIcon>
           </Group>
           <Group gap="xs" align="center" className="showjs-toolbar-controls">
             <Button

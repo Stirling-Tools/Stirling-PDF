@@ -10,6 +10,7 @@ import {
   Alert,
 } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { EmailStage } from "@app/components/shared/stripeCheckout/stages/EmailStage";
@@ -360,15 +361,14 @@ const StaticCheckoutModal: React.FC<StaticCheckoutModalProps> = ({
       title={
         <Group gap="sm" wrap="nowrap">
           {canGoBack && (
-            <Button
+            <ActionIcon
               variant="tertiary"
               size="lg"
               onClick={handleGoBack}
               aria-label={t("common.back", "Back")}
-              leftSection={
-                <LocalIcon icon="arrow-back" width={20} height={20} />
-              }
-            />
+            >
+              <LocalIcon icon="arrow-back" width={20} height={20} />
+            </ActionIcon>
           )}
           <Text fw={600} size="lg">
             {getModalTitle()}

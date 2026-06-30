@@ -9,6 +9,7 @@ import React, {
 import { createPortal } from "react-dom";
 import { Stack, Divider, Menu, Indicator } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useLocation } from "react-router-dom";
 import LocalIcon from "@app/components/shared/LocalIcon";
@@ -1119,19 +1120,18 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
           >
             <div className="quick-access-popout__card">
               <div className="quick-access-popout__header">
-                <Button
+                <ActionIcon
                   variant="tertiary"
                   className={`quick-access-popout__back ${accessInviteOpen ? "is-visible" : ""}`}
                   onClick={() => setAccessInviteOpen(false)}
                   aria-label={t("quickAccess.accessBack", "Back")}
-                  leftSection={
-                    <LocalIcon
-                      icon="arrow-back-rounded"
-                      width="1rem"
-                      height="1rem"
-                    />
-                  }
-                />
+                >
+                  <LocalIcon
+                    icon="arrow-back-rounded"
+                    width="1rem"
+                    height="1rem"
+                  />
+                </ActionIcon>
                 <div className="quick-access-popout__title">
                   {accessInviteOpen
                     ? t("quickAccess.accessInviteTitle", "Invite People")
@@ -1139,35 +1139,33 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                 </div>
                 <div className="quick-access-popout__header-actions">
                   {!accessInviteOpen && (
-                    <Button
+                    <ActionIcon
                       variant="tertiary"
                       className="quick-access-popout__header-action"
                       onClick={() => {
                         void openShareManage();
                       }}
                       aria-label={t("storageShare.manage", "Manage sharing")}
-                      leftSection={
-                        <LocalIcon
-                          icon="settings-rounded"
-                          width="1rem"
-                          height="1rem"
-                        />
-                      }
-                    />
+                    >
+                      <LocalIcon
+                        icon="settings-rounded"
+                        width="1rem"
+                        height="1rem"
+                      />
+                    </ActionIcon>
                   )}
-                  <Button
+                  <ActionIcon
                     variant="tertiary"
                     className="quick-access-popout__header-action"
                     onClick={() => setAccessMenuOpen(false)}
                     aria-label={t("close", "Close")}
-                    leftSection={
-                      <LocalIcon
-                        icon="close-rounded"
-                        width="1rem"
-                        height="1rem"
-                      />
-                    }
-                  />
+                  >
+                    <LocalIcon
+                      icon="close-rounded"
+                      width="1rem"
+                      height="1rem"
+                    />
+                  </ActionIcon>
                 </div>
               </div>
 
@@ -1316,21 +1314,20 @@ const QuickAccessBar = forwardRef<HTMLDivElement>((_, ref) => {
                           </option>
                         </select>
                       </div>
-                      <Button
+                      <ActionIcon
                         variant="tertiary"
                         accent="danger"
                         className="quick-access-popout__remove"
                         onClick={() => handleRemoveInviteRow(row.id)}
                         disabled={inviteRows.length === 1}
                         aria-label={t("quickAccess.accessRemove", "Remove")}
-                        leftSection={
-                          <LocalIcon
-                            icon="close-rounded"
-                            width="0.9rem"
-                            height="0.9rem"
-                          />
-                        }
-                      />
+                      >
+                        <LocalIcon
+                          icon="close-rounded"
+                          width="0.9rem"
+                          height="0.9rem"
+                        />
+                      </ActionIcon>
                     </div>
                   ))}
                   <Button

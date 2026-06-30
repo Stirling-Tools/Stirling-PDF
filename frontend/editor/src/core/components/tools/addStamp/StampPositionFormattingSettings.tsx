@@ -13,6 +13,7 @@ import LocalIcon from "@app/components/shared/LocalIcon";
 import styles from "@app/components/tools/addStamp/StampPreview.module.css";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface StampPositionFormattingSettingsProps {
@@ -81,37 +82,35 @@ const StampPositionFormattingSettings = ({
           content={t("AddStampRequest.rotation", "Rotation")}
           position="top"
         >
-          <Button
-            leftSection={
-              <LocalIcon
-                icon="rotate-right-rounded"
-                width="1.1rem"
-                height="1.1rem"
-              />
-            }
+          <ActionIcon
             aria-label={t("AddStampRequest.rotation", "Rotation")}
             variant={
               parameters._activePill === "rotation" ? "primary" : "secondary"
             }
             className="flex-1"
             onClick={() => onParameterChange("_activePill", "rotation")}
-          />
+          >
+            <LocalIcon
+              icon="rotate-right-rounded"
+              width="1.1rem"
+              height="1.1rem"
+            />
+          </ActionIcon>
         </Tooltip>
         <Tooltip
           content={t("AddStampRequest.opacity", "Opacity")}
           position="top"
         >
-          <Button
-            leftSection={
-              <LocalIcon icon="opacity" width="1.1rem" height="1.1rem" />
-            }
+          <ActionIcon
             aria-label={t("AddStampRequest.opacity", "Opacity")}
             variant={
               parameters._activePill === "opacity" ? "primary" : "secondary"
             }
             className="flex-1"
             onClick={() => onParameterChange("_activePill", "opacity")}
-          />
+          >
+            <LocalIcon icon="opacity" width="1.1rem" height="1.1rem" />
+          </ActionIcon>
         </Tooltip>
         <Tooltip
           content={
@@ -121,14 +120,7 @@ const StampPositionFormattingSettings = ({
           }
           position="top"
         >
-          <Button
-            leftSection={
-              <LocalIcon
-                icon="zoom-in-map-rounded"
-                width="1.1rem"
-                height="1.1rem"
-              />
-            }
+          <ActionIcon
             aria-label={
               parameters.stampType === "image"
                 ? t("AddStampRequest.imageSize", "Image Size")
@@ -139,7 +131,13 @@ const StampPositionFormattingSettings = ({
             }
             className="flex-1"
             onClick={() => onParameterChange("_activePill", "fontSize")}
-          />
+          >
+            <LocalIcon
+              icon="zoom-in-map-rounded"
+              width="1.1rem"
+              height="1.1rem"
+            />
+          </ActionIcon>
         </Tooltip>
       </div>
 

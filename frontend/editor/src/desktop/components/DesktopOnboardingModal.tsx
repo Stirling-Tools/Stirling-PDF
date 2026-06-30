@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { Modal, Stack, Group } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { useTranslation } from "react-i18next";
 import CloseIcon from "@mui/icons-material/Close";
 import LocalIcon from "@app/components/shared/LocalIcon";
@@ -104,11 +105,10 @@ export function DesktopOnboardingModal() {
             isActive
             slideKey={step === 0 ? "desktop-welcome" : "desktop-sign-in"}
           />
-          <Button
+          <ActionIcon
             onClick={handleClose}
             variant="tertiary"
             size="md"
-            leftSection={<CloseIcon fontSize="small" />}
             aria-label={t("close", "Close")}
             style={{
               position: "absolute",
@@ -119,7 +119,9 @@ export function DesktopOnboardingModal() {
               backdropFilter: "blur(4px)",
               zIndex: 10,
             }}
-          />
+          >
+            <CloseIcon fontSize="small" />
+          </ActionIcon>
           <div className={styles.heroLogo} key={`logo-${step}`}>
             <div className={styles.heroLogoCircle}>
               {step === 0 ? (

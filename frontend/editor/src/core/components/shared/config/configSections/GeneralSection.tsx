@@ -13,6 +13,7 @@ import {
   Badge,
 } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { SegmentedControl } from "@shared/components/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import { usePreferences } from "@app/contexts/PreferencesContext";
@@ -191,16 +192,15 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
             position: "relative",
           }}
         >
-          <Button
+          <ActionIcon
             variant="tertiary"
             size="sm"
             style={{ position: "absolute", top: "0.5rem", right: "0.5rem" }}
             onClick={handleDismissBanner}
             aria-label={t("settings.general.enableFeatures.dismiss", "Dismiss")}
-            leftSection={
-              <LocalIcon icon="close-rounded" width="1rem" height="1rem" />
-            }
-          />
+          >
+            <LocalIcon icon="close-rounded" width="1rem" height="1rem" />
+          </ActionIcon>
           <Stack gap="sm">
             <Group gap="xs">
               <LocalIcon

@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Menu } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import HomeIcon from "@mui/icons-material/Home";
@@ -409,7 +409,7 @@ function TreeNodeRow({
           width={200}
         >
           <Menu.Target>
-            <Button
+            <ActionIcon
               size="sm"
               variant="tertiary"
               className="files-page-tree-kebab"
@@ -422,8 +422,9 @@ function TreeNodeRow({
                 e.stopPropagation();
                 setMenuOpen((o) => !o);
               }}
-              leftSection={<MoreVertIcon fontSize="small" />}
-            />
+            >
+              <MoreVertIcon fontSize="small" />
+            </ActionIcon>
           </Menu.Target>
           <Menu.Dropdown>
             <Menu.Item

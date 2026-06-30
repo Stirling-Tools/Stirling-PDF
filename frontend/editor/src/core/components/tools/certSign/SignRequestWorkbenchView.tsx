@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Paper, Group, Text, Divider } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { useIsPhone } from "@app/hooks/useIsMobile";
 import CancelIcon from "@mui/icons-material/Cancel";
 import CloseIcon from "@mui/icons-material/Close";
@@ -392,8 +393,7 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
               </>
             )}
             <Divider orientation="vertical" />
-            <Button
-              leftSection={<CloseIcon />}
+            <ActionIcon
               variant="tertiary"
               size="md"
               onClick={onBack}
@@ -405,7 +405,9 @@ const SignRequestWorkbenchView = ({ data }: SignRequestWorkbenchViewProps) => {
                 "certSign.collab.signRequest.backToList",
                 "Back to Sign Requests",
               )}
-            />
+            >
+              <CloseIcon />
+            </ActionIcon>
           </Group>
         </Group>
       </Paper>

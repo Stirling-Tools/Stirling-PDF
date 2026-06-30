@@ -2,7 +2,7 @@ import { Tooltip, Popover, Stack, Slider, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import OpacityIcon from "@mui/icons-material/Opacity";
-import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 
 interface OpacityControlProps {
   value: number; // 0-100
@@ -22,15 +22,16 @@ export function OpacityControl({
     <Popover opened={opened} onChange={setOpened} position="top" withArrow>
       <Popover.Target>
         <Tooltip label={t("annotation.opacity", "Opacity")}>
-          <Button
+          <ActionIcon
             aria-label={t("annotation.opacity", "Opacity")}
             variant="secondary"
             accent="neutral"
             size="md"
             onClick={() => setOpened(!opened)}
             disabled={disabled}
-            leftSection={<OpacityIcon style={{ fontSize: 18 }} />}
-          />
+          >
+            <OpacityIcon style={{ fontSize: 18 }} />
+          </ActionIcon>
         </Tooltip>
       </Popover.Target>
       <Popover.Dropdown>

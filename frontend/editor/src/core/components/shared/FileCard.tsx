@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Card, Stack, Text, Group, Badge, Box, Tooltip } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { useTranslation } from "react-i18next";
 import StorageIcon from "@mui/icons-material/Storage";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -98,7 +99,7 @@ const FileCard = ({
             >
               {onView && (
                 <Tooltip label={t("fileCard.viewInViewer", "View in Viewer")}>
-                  <Button
+                  <ActionIcon
                     size="sm"
                     variant="tertiary"
                     aria-label={t("fileCard.viewInViewer", "View in Viewer")}
@@ -106,15 +107,16 @@ const FileCard = ({
                       e.stopPropagation();
                       onView();
                     }}
-                    leftSection={<VisibilityIcon style={{ fontSize: 16 }} />}
-                  />
+                  >
+                    <VisibilityIcon style={{ fontSize: 16 }} />
+                  </ActionIcon>
                 </Tooltip>
               )}
               {onEdit && (
                 <Tooltip
                   label={t("fileCard.openInFileEditor", "Open in File Editor")}
                 >
-                  <Button
+                  <ActionIcon
                     size="sm"
                     variant="tertiary"
                     accent="warning"
@@ -126,8 +128,9 @@ const FileCard = ({
                       e.stopPropagation();
                       onEdit();
                     }}
-                    leftSection={<EditIcon style={{ fontSize: 16 }} />}
-                  />
+                  >
+                    <EditIcon style={{ fontSize: 16 }} />
+                  </ActionIcon>
                 </Tooltip>
               )}
             </div>

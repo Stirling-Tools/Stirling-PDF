@@ -1,6 +1,6 @@
 import React from "react";
 import { Box } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 
@@ -27,7 +27,7 @@ const NavigationArrows: React.FC<NavigationArrowsProps> = ({
   return (
     <Box style={{ position: "relative", width: "100%", height: "100%" }}>
       {/* Left Navigation Arrow */}
-      <Button
+      <ActionIcon
         variant="secondary"
         size="sm"
         onClick={onPrevious}
@@ -37,8 +37,9 @@ const NavigationArrows: React.FC<NavigationArrowsProps> = ({
           ...navigationArrowStyle,
           left: "0",
         }}
-        leftSection={<ChevronLeftIcon />}
-      />
+      >
+        <ChevronLeftIcon />
+      </ActionIcon>
 
       {/* Content */}
       <Box
@@ -54,7 +55,7 @@ const NavigationArrows: React.FC<NavigationArrowsProps> = ({
       </Box>
 
       {/* Right Navigation Arrow */}
-      <Button
+      <ActionIcon
         variant="secondary"
         size="sm"
         onClick={onNext}
@@ -64,8 +65,9 @@ const NavigationArrows: React.FC<NavigationArrowsProps> = ({
           ...navigationArrowStyle,
           right: "0",
         }}
-        leftSection={<ChevronRightIcon />}
-      />
+      >
+        <ChevronRightIcon />
+      </ActionIcon>
     </Box>
   );
 };

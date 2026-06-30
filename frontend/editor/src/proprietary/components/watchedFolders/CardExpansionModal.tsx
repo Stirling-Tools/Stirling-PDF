@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { Text, ScrollArea } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import CloseIcon from "@mui/icons-material/Close";
 import {
   CardModalPhase,
@@ -198,7 +198,7 @@ export function CardExpansionModal({
               </Text>
             </div>
 
-            <Button
+            <ActionIcon
               variant="tertiary"
               size="lg"
               onClick={onClose}
@@ -208,8 +208,9 @@ export function CardExpansionModal({
                 top: "0.25rem",
                 right: "0.375rem",
               }}
-              leftSection={<CloseIcon style={{ fontSize: "1.25rem" }} />}
-            />
+            >
+              <CloseIcon style={{ fontSize: "1.25rem" }} />
+            </ActionIcon>
           </div>
         </div>
 

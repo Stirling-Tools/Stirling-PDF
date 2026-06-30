@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { Drawer } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { Chip } from "@shared/components/Chip";
 import { SegmentedControl } from "@shared/components/SegmentedControl";
 import { useIsPhone } from "@app/hooks/useIsMobile";
@@ -784,15 +785,14 @@ const SignPopout = ({
     >
       {/* Header */}
       <div className="quick-access-popout__header">
-        <Button
+        <ActionIcon
           variant="tertiary"
           className={`quick-access-popout__back ${showCreatePanel ? "is-visible" : ""}`}
           onClick={() => setShowCreatePanel(false)}
           aria-label={t("quickAccess.back", "Back")}
-          leftSection={
-            <LocalIcon icon="arrow-back-rounded" width="1rem" height="1rem" />
-          }
-        />
+        >
+          <LocalIcon icon="arrow-back-rounded" width="1rem" height="1rem" />
+        </ActionIcon>
         <div className="quick-access-popout__title">
           {showCreatePanel
             ? t("quickAccess.createSession", "Create Signing Request")
@@ -804,27 +804,25 @@ const SignPopout = ({
         </div>
         <div className="quick-access-popout__header-actions">
           {!showCreatePanel && (
-            <Button
+            <ActionIcon
               variant="tertiary"
               className="quick-access-popout__header-action"
               onClick={fetchData}
               disabled={loading}
               aria-label={t("quickAccess.refresh", "Refresh")}
               style={{ opacity: loading ? 0.5 : 0.7 }}
-              leftSection={
-                <LocalIcon icon="refresh-rounded" width="1rem" height="1rem" />
-              }
-            />
+            >
+              <LocalIcon icon="refresh-rounded" width="1rem" height="1rem" />
+            </ActionIcon>
           )}
-          <Button
+          <ActionIcon
             variant="tertiary"
             className="quick-access-popout__header-action"
             onClick={onClose}
             aria-label={t("close", "Close")}
-            leftSection={
-              <LocalIcon icon="close-rounded" width="1rem" height="1rem" />
-            }
-          />
+          >
+            <LocalIcon icon="close-rounded" width="1rem" height="1rem" />
+          </ActionIcon>
         </div>
       </div>
 
@@ -872,16 +870,15 @@ const SignPopout = ({
             <span>
               {t("quickAccess.signatureRequests", "Signature Requests")}
             </span>
-            <Button
+            <ActionIcon
               variant="tertiary"
               className="quick-access-popout__section-action"
               onClick={() => setShowCreatePanel(true)}
               aria-label={t("quickAccess.newRequest", "New request")}
               title={t("quickAccess.newRequest", "New request")}
-              leftSection={
-                <LocalIcon icon="add-rounded" width="1rem" height="1rem" />
-              }
-            />
+            >
+              <LocalIcon icon="add-rounded" width="1rem" height="1rem" />
+            </ActionIcon>
           </div>
           <SegmentedControl
             className="quick-access-popout__tab-nav"

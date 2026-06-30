@@ -5,6 +5,7 @@ import {
 import { PdfAnnotationSubtype } from "@embedpdf/models";
 import { Tooltip, Group } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 import { useEffect, useState, useRef, useCallback } from "react";
@@ -141,14 +142,15 @@ function RedactionSelectionMenuInner({
     >
       <Group gap="sm" wrap="nowrap" justify="center">
         <Tooltip label={t("viewer.redaction.removeMark", "Remove this mark")}>
-          <Button
+          <ActionIcon
             aria-label={t("viewer.redaction.removeMark", "Remove this mark")}
             variant="secondary"
             accent="neutral"
             size="md"
             onClick={handleRemove}
-            leftSection={<DeleteIcon style={{ fontSize: 18 }} />}
-          />
+          >
+            <DeleteIcon style={{ fontSize: 18 }} />
+          </ActionIcon>
         </Tooltip>
 
         <Tooltip

@@ -9,7 +9,7 @@ import {
 import { useState, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import ColorizeIcon from "@mui/icons-material/Colorize";
-import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 
 // safari and firefox do not support the eye dropper API, only edge, chrome and opera do.
 // the button is hidden in the UI if the API is not supported.
@@ -65,15 +65,16 @@ export function ColorControl({
     >
       <Popover.Target>
         <Tooltip label={label}>
-          <Button
+          <ActionIcon
             aria-label={label}
             variant="secondary"
             accent="neutral"
             size="md"
             onClick={() => setOpened(!opened)}
             disabled={disabled}
-            leftSection={<ColorSwatch color={localColor} size={18} />}
-          />
+          >
+            <ColorSwatch color={localColor} size={18} />
+          </ActionIcon>
         </Tooltip>
       </Popover.Target>
       <Popover.Dropdown>
@@ -103,7 +104,7 @@ export function ColorControl({
               <Tooltip
                 label={t("color.eyeDropper.tooltip", "Pick colour from screen")}
               >
-                <Button
+                <ActionIcon
                   aria-label={t(
                     "color.eyeDropper.tooltip",
                     "Pick colour from screen",
@@ -112,8 +113,9 @@ export function ColorControl({
                   accent="neutral"
                   size="sm"
                   onClick={handleEyeDropper}
-                  leftSection={<ColorizeIcon style={{ fontSize: 16 }} />}
-                />
+                >
+                  <ColorizeIcon style={{ fontSize: 16 }} />
+                </ActionIcon>
               </Tooltip>
             </Group>
           )}

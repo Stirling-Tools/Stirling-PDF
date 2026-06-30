@@ -1,5 +1,5 @@
 import { Tooltip } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -72,7 +72,7 @@ export function TextSelectionMenu({
         onMouseDown={(e) => e.preventDefault()}
       >
         <Tooltip label={t("viewer.copyText", "Copy")} withArrow>
-          <Button
+          <ActionIcon
             variant="secondary"
             accent="neutral"
             size="md"
@@ -81,8 +81,9 @@ export function TextSelectionMenu({
             style={{
               boxShadow: "0 2px 12px rgba(0, 0, 0, 0.25)",
             }}
-            leftSection={<ContentCopyIcon style={{ fontSize: 18 }} />}
-          />
+          >
+            <ContentCopyIcon style={{ fontSize: 18 }} />
+          </ActionIcon>
         </Tooltip>
       </div>,
       document.body,

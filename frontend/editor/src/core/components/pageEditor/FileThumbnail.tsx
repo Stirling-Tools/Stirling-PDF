@@ -6,6 +6,7 @@ import React, {
   useEffect,
 } from "react";
 import { CheckboxIndicator } from "@mantine/core";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
@@ -233,7 +234,7 @@ const FileThumbnail = ({
           {index + 1}
         </div>
         {/* Kebab menu */}
-        <Button
+        <ActionIcon
           aria-label={t("moreOptions", "More options")}
           variant="tertiary"
           className={styles.kebab}
@@ -241,8 +242,9 @@ const FileThumbnail = ({
             e.stopPropagation();
             setShowActions((v) => !v);
           }}
-          leftSection={<MoreVertIcon fontSize="small" />}
-        />
+        >
+          <MoreVertIcon fontSize="small" />
+        </ActionIcon>
       </div>
       {/* Actions overlay */}
       {showActions && (

@@ -10,6 +10,7 @@ import {
   Menu,
 } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { useTranslation } from "react-i18next";
 import { useSaaSTeam } from "@app/contexts/SaaSTeamContext";
 import LocalIcon from "@app/components/shared/LocalIcon";
@@ -231,24 +232,22 @@ const TeamSection: React.FC = () => {
                     if (e.key === "Escape") handleCancelRename();
                   }}
                 />
-                <Button
+                <ActionIcon
                   onClick={handleRenameSubmit}
                   loading={renamingTeam}
                   disabled={!newTeamName.trim()}
                   aria-label={t("team.renameSubmit", "Save team name")}
-                  leftSection={
-                    <LocalIcon icon="check" width="1rem" height="1rem" />
-                  }
-                />
-                <Button
+                >
+                  <LocalIcon icon="check" width="1rem" height="1rem" />
+                </ActionIcon>
+                <ActionIcon
                   variant="tertiary"
                   onClick={handleCancelRename}
                   disabled={renamingTeam}
                   aria-label={t("team.renameCancel", "Cancel rename")}
-                  leftSection={
-                    <LocalIcon icon="close" width="1rem" height="1rem" />
-                  }
-                />
+                >
+                  <LocalIcon icon="close" width="1rem" height="1rem" />
+                </ActionIcon>
               </Group>
             ) : (
               <Group gap="xs" align="center">
@@ -256,15 +255,14 @@ const TeamSection: React.FC = () => {
                   {currentTeam.name}
                 </Text>
                 {isTeamLeader && !isPersonalTeam && (
-                  <Button
+                  <ActionIcon
                     variant="tertiary"
                     size="sm"
                     onClick={handleStartRename}
                     aria-label={t("team.editName", "Edit team name")}
-                    leftSection={
-                      <LocalIcon icon="edit" width="1rem" height="1rem" />
-                    }
-                  />
+                  >
+                    <LocalIcon icon="edit" width="1rem" height="1rem" />
+                  </ActionIcon>
                 )}
                 {isTeamLeader && (
                   <Badge color="blue">{t("team.leader", "LEADER")}</Badge>
@@ -450,20 +448,19 @@ const TeamSection: React.FC = () => {
                             zIndex={Z_INDEX_OVER_CONFIG_MODAL}
                           >
                             <Menu.Target>
-                              <Button
+                              <ActionIcon
                                 variant="tertiary"
                                 aria-label={t(
                                   "team.members.actions",
                                   "Member actions",
                                 )}
-                                leftSection={
-                                  <LocalIcon
-                                    icon="more-vert"
-                                    width="1rem"
-                                    height="1rem"
-                                  />
-                                }
-                              />
+                              >
+                                <LocalIcon
+                                  icon="more-vert"
+                                  width="1rem"
+                                  height="1rem"
+                                />
+                              </ActionIcon>
                             </Menu.Target>
                             <Menu.Dropdown>
                               <Menu.Item
@@ -511,7 +508,7 @@ const TeamSection: React.FC = () => {
                       </Table.Td>
                       {isTeamLeader && !isPersonalTeam && (
                         <Table.Td>
-                          <Button
+                          <ActionIcon
                             variant="tertiary"
                             accent="danger"
                             onClick={() =>
@@ -524,14 +521,13 @@ const TeamSection: React.FC = () => {
                               "team.invite.cancelLabel",
                               "Cancel invitation",
                             )}
-                            leftSection={
-                              <LocalIcon
-                                icon="close"
-                                width="1rem"
-                                height="1rem"
-                              />
-                            }
-                          />
+                          >
+                            <LocalIcon
+                              icon="close"
+                              width="1rem"
+                              height="1rem"
+                            />
+                          </ActionIcon>
                         </Table.Td>
                       )}
                     </Table.Tr>

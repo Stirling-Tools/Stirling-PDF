@@ -8,7 +8,7 @@
 
 import React from "react";
 import { TourProvider, useTour, type StepType } from "@reactour/tour";
-import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CheckIcon from "@mui/icons-material/Check";
@@ -128,7 +128,7 @@ export default function OnboardingTour({
         const isLast = tourCurrentStep === stepsLength - 1;
         const ArrowIcon = isRTL ? ArrowBackIcon : ArrowForwardIcon;
         return (
-          <Button
+          <ActionIcon
             onClick={() =>
               onAdvance({
                 setCurrentStep,
@@ -144,20 +144,22 @@ export default function OnboardingTour({
                 ? t("onboarding.finish", "Finish")
                 : t("onboarding.next", "Next")
             }
-            leftSection={isLast ? <CheckIcon /> : <ArrowIcon />}
-          />
+          >
+            {isLast ? <CheckIcon /> : <ArrowIcon />}
+          </ActionIcon>
         );
       }}
       components={{
         Close: ({ onClick }) => (
-          <Button
+          <ActionIcon
             onClick={onClick}
             variant="tertiary"
             size="md"
             aria-label={t("onboarding.close", "Close")}
-            leftSection={<>&times;</>}
             style={{ position: "absolute", top: "8px", right: "8px" }}
-          />
+          >
+            &times;
+          </ActionIcon>
         ),
         Content: ({ content }: { content: string }) => (
           <div

@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { Box, Text, Stack, Group, Loader, ScrollArea } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { useTranslation } from "react-i18next";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
@@ -219,7 +220,7 @@ function FolderCard({
         </div>
       </div>
       <div className="wf-card-actions" onClick={(e) => e.stopPropagation()}>
-        <Button
+        <ActionIcon
           size="md"
           variant="tertiary"
           onClick={() => onTogglePause(folder)}
@@ -233,29 +234,30 @@ function FolderCard({
               ? t("watchedFolders.home.resume", "Resume")
               : t("watchedFolders.home.pause", "Pause")
           }
-          leftSection={
-            isPaused ? (
-              <PlayCircleOutlineIcon style={{ fontSize: "1.125rem" }} />
-            ) : (
-              <PauseCircleOutlineIcon style={{ fontSize: "1.125rem" }} />
-            )
-          }
-        />
-        <Button
+        >
+          {isPaused ? (
+            <PlayCircleOutlineIcon style={{ fontSize: "1.125rem" }} />
+          ) : (
+            <PauseCircleOutlineIcon style={{ fontSize: "1.125rem" }} />
+          )}
+        </ActionIcon>
+        <ActionIcon
           size="md"
           variant="tertiary"
           onClick={() => onEdit(folder)}
           aria-label={t("watchedFolders.home.editFolder", "Edit folder")}
-          leftSection={<EditIcon style={{ fontSize: "1.125rem" }} />}
-        />
-        <Button
+        >
+          <EditIcon style={{ fontSize: "1.125rem" }} />
+        </ActionIcon>
+        <ActionIcon
           size="md"
           variant="tertiary"
           accent="danger"
           onClick={() => onDelete(folder)}
           aria-label={t("watchedFolders.home.deleteFolder", "Delete folder")}
-          leftSection={<DeleteOutlineIcon style={{ fontSize: "1.125rem" }} />}
-        />
+        >
+          <DeleteOutlineIcon style={{ fontSize: "1.125rem" }} />
+        </ActionIcon>
       </div>
     </div>
   );
@@ -314,7 +316,7 @@ function HowItWorks() {
             {t("watchedFolders.howItWorks.title", "How Watched Folders work")}
           </Text>
         </Group>
-        <Button
+        <ActionIcon
           size="sm"
           variant="tertiary"
           onClick={() => {
@@ -322,15 +324,14 @@ function HowItWorks() {
             setDismissed(true);
           }}
           aria-label={t("watchedFolders.actions.dismiss", "Dismiss")}
-          leftSection={
-            <CloseIcon
-              style={{
-                fontSize: "0.75rem",
-                color: "var(--mantine-color-text)",
-              }}
-            />
-          }
-        />
+        >
+          <CloseIcon
+            style={{
+              fontSize: "0.75rem",
+              color: "var(--mantine-color-text)",
+            }}
+          />
+        </ActionIcon>
       </Group>
       <Group gap="xl" wrap="nowrap" align="flex-start">
         {steps.map((step) => (

@@ -16,6 +16,7 @@ import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlined";
 
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { FolderId, FolderRecord, ROOT_FOLDER_ID } from "@app/types/folder";
 
 interface MoveToFolderDialogProps {
@@ -225,7 +226,7 @@ export function MoveToFolderDialog({
                   label={t("filesPage.moveDialog.newFolderCancel", "Discard")}
                   withinPortal
                 >
-                  <Button
+                  <ActionIcon
                     variant="tertiary"
                     size="lg"
                     onClick={handleCancel}
@@ -234,8 +235,9 @@ export function MoveToFolderDialog({
                       "filesPage.moveDialog.newFolderCancel",
                       "Discard",
                     )}
-                    leftSection={<>&times;</>}
-                  />
+                  >
+                    &times;
+                  </ActionIcon>
                 </Tooltip>
               </Group>
             ) : (

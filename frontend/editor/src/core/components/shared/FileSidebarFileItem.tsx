@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Menu, Tooltip } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { useTranslation } from "react-i18next";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
@@ -349,7 +349,7 @@ export function FileItem({
             </span>
           )}
         </div>
-        <Button
+        <ActionIcon
           variant="tertiary"
           size="sm"
           className="file-sidebar-eye-btn"
@@ -363,25 +363,22 @@ export function FileItem({
               ? t("fileSidebar.fileItem.closeViewer", "Close viewer")
               : t("fileSidebar.fileItem.openInViewer", "Open in viewer")
           }
-          leftSection={
-            <>
-              <VisibilityOutlinedIcon
-                className="file-sidebar-eye-open"
-                sx={{ fontSize: "1.1rem" }}
-              />
-              <VisibilityOffOutlinedIcon
-                className="file-sidebar-eye-closed"
-                sx={{ fontSize: "1.1rem" }}
-              />
-            </>
-          }
-        />
+        >
+          <VisibilityOutlinedIcon
+            className="file-sidebar-eye-open"
+            sx={{ fontSize: "1.1rem" }}
+          />
+          <VisibilityOffOutlinedIcon
+            className="file-sidebar-eye-closed"
+            sx={{ fontSize: "1.1rem" }}
+          />
+        </ActionIcon>
         {(onDelete ||
           onSaveToCloud ||
           (hasVersionHistory && onVersionHistory)) && (
           <Menu position="bottom-end" withinPortal shadow="md" width={190}>
             <Menu.Target>
-              <Button
+              <ActionIcon
                 variant="tertiary"
                 size="sm"
                 className="file-sidebar-kebab-btn"
@@ -391,8 +388,9 @@ export function FileItem({
                   "fileSidebar.fileItem.moreActions",
                   "More actions",
                 )}
-                leftSection={<MoreVertIcon sx={{ fontSize: "1.1rem" }} />}
-              />
+              >
+                <MoreVertIcon sx={{ fontSize: "1.1rem" }} />
+              </ActionIcon>
             </Menu.Target>
             <Menu.Dropdown onClick={(e) => e.stopPropagation()}>
               {hasVersionHistory && onVersionHistory && (

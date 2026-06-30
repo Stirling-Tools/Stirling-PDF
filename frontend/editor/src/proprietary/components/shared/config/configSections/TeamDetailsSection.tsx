@@ -16,6 +16,7 @@ import {
   Box,
 } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { alert } from "@app/components/toast";
 import { teamService, Team } from "@app/services/teamService";
@@ -363,14 +364,13 @@ export default function TeamDetailsSection({
     <Stack gap="lg">
       {/* Header with back button */}
       <Group>
-        <Button
+        <ActionIcon
           variant="tertiary"
           onClick={onBack}
           aria-label={t("common.back", "Back")}
-          leftSection={
-            <LocalIcon icon="arrow-back" width="1.2rem" height="1.2rem" />
-          }
-        />
+        >
+          <LocalIcon icon="arrow-back" width="1.2rem" height="1.2rem" />
+        </ActionIcon>
         <div style={{ flex: 1 }}>
           <Text fw={600} size="lg">
             {team.name}
@@ -565,36 +565,34 @@ export default function TeamDetailsSection({
                         withArrow
                         zIndex={Z_INDEX_OVER_CONFIG_MODAL + 10}
                       >
-                        <Button
+                        <ActionIcon
                           variant="tertiary"
                           size="sm"
                           aria-label={t(
                             "workspace.people.userInfo",
                             "User info",
                           )}
-                          leftSection={
-                            <LocalIcon icon="info" width="1rem" height="1rem" />
-                          }
-                        />
+                        >
+                          <LocalIcon icon="info" width="1rem" height="1rem" />
+                        </ActionIcon>
                       </Tooltip>
 
                       {/* Actions menu */}
                       <Menu position="bottom-end" withinPortal>
                         <Menu.Target>
-                          <Button
+                          <ActionIcon
                             variant="tertiary"
                             aria-label={t(
                               "workspace.people.memberActions",
                               "Member actions",
                             )}
-                            leftSection={
-                              <LocalIcon
-                                icon="more-vert"
-                                width="1rem"
-                                height="1rem"
-                              />
-                            }
-                          />
+                          >
+                            <LocalIcon
+                              icon="more-vert"
+                              width="1rem"
+                              height="1rem"
+                            />
+                          </ActionIcon>
                         </Menu.Target>
                         <Menu.Dropdown
                           style={{ zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
@@ -713,19 +711,20 @@ export default function TeamDetailsSection({
         withCloseButton={false}
       >
         <div style={{ position: "relative" }}>
-          <Button
+          <ActionIcon
             onClick={() => setAddMemberModalOpened(false)}
             size="lg"
             variant="tertiary"
             aria-label={t("common.close", "Close")}
-            leftSection={<LocalIcon icon="close-rounded" />}
             style={{
               position: "absolute",
               top: -8,
               right: -8,
               zIndex: 1,
             }}
-          />
+          >
+            <LocalIcon icon="close-rounded" />
+          </ActionIcon>
           <Stack gap="lg" pt="md">
             {/* Header with Icon */}
             <Stack gap="md" align="center">
@@ -795,19 +794,20 @@ export default function TeamDetailsSection({
         withCloseButton={false}
       >
         <div style={{ position: "relative" }}>
-          <Button
+          <ActionIcon
             onClick={() => setChangeTeamModalOpened(false)}
             size="lg"
             variant="tertiary"
             aria-label={t("common.close", "Close")}
-            leftSection={<LocalIcon icon="close-rounded" />}
             style={{
               position: "absolute",
               top: -8,
               right: -8,
               zIndex: 1,
             }}
-          />
+          >
+            <LocalIcon icon="close-rounded" />
+          </ActionIcon>
           <Stack gap="lg" pt="md">
             {/* Header with Icon */}
             <Stack gap="md" align="center">

@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { Slider, Popover, Select } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { useTranslation } from "react-i18next";
 import { supportedLanguages } from "@app/i18n";
 import { useViewer } from "@app/contexts/ViewerContext";
@@ -169,16 +169,15 @@ export function useViewerWorkbenchBarButtons(
             >
               <Popover.Target>
                 <div style={{ display: "inline-flex" }}>
-                  <Button
+                  <ActionIcon
                     variant="tertiary"
                     className="workbench-bar-action-icon"
                     disabled={disabled}
                     aria-label={searchLabel}
                     onClick={viewer.searchInterfaceActions.toggle}
-                    leftSection={
-                      <LocalIcon icon="search" width="1rem" height="1rem" />
-                    }
-                  />
+                  >
+                    <LocalIcon icon="search" width="1rem" height="1rem" />
+                  </ActionIcon>
                 </div>
               </Popover.Target>
               <Popover.Dropdown>
@@ -359,7 +358,7 @@ export function useViewerWorkbenchBarButtons(
                   arrow
                   portalTarget={document.body}
                 >
-                  <Button
+                  <ActionIcon
                     variant={isReadingAloud ? "primary" : "tertiary"}
                     className="workbench-bar-action-icon"
                     disabled={
@@ -369,14 +368,13 @@ export function useViewerWorkbenchBarButtons(
                     }
                     aria-label={readAloudLabel}
                     onClick={handleReadAloud}
-                    leftSection={
-                      isReadingAloud ? (
-                        <StopIcon sx={{ fontSize: "1rem" }} />
-                      ) : (
-                        <VolumeUpIcon sx={{ fontSize: "1rem" }} />
-                      )
-                    }
-                  />
+                  >
+                    {isReadingAloud ? (
+                      <StopIcon sx={{ fontSize: "1rem" }} />
+                    ) : (
+                      <VolumeUpIcon sx={{ fontSize: "1rem" }} />
+                    )}
+                  </ActionIcon>
                 </Tooltip>
               </div>
             </Popover.Target>
@@ -446,7 +444,7 @@ export function useViewerWorkbenchBarButtons(
             arrow
             portalTarget={document.body}
           >
-            <Button
+            <ActionIcon
               variant={isAnnotationsActive ? "primary" : "tertiary"}
               className="workbench-bar-action-icon"
               onClick={() => {
@@ -475,8 +473,9 @@ export function useViewerWorkbenchBarButtons(
               disabled={disabled}
               aria-pressed={isAnnotationsActive}
               aria-label={annotationsLabel}
-              leftSection={<LocalIcon icon="edit" width="1rem" height="1rem" />}
-            />
+            >
+              <LocalIcon icon="edit" width="1rem" height="1rem" />
+            </ActionIcon>
           </Tooltip>
         ),
       },
@@ -502,7 +501,7 @@ export function useViewerWorkbenchBarButtons(
             arrow
             portalTarget={document.body}
           >
-            <Button
+            <ActionIcon
               variant={isFormFillActive ? "primary" : "tertiary"}
               className="workbench-bar-action-icon"
               onClick={() => {
@@ -516,8 +515,9 @@ export function useViewerWorkbenchBarButtons(
               disabled={disabled}
               aria-pressed={isFormFillActive}
               aria-label={formFillLabel}
-              leftSection={<TextFieldsIcon sx={{ fontSize: "1rem" }} />}
-            />
+            >
+              <TextFieldsIcon sx={{ fontSize: "1rem" }} />
+            </ActionIcon>
           </Tooltip>
         ),
       },

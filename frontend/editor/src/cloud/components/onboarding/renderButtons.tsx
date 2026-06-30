@@ -1,6 +1,7 @@
 import React from "react";
 import { Group } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import { TFunction } from "i18next";
 import {
@@ -47,7 +48,7 @@ export function renderButtons({
 
     if (button.type === "icon") {
       return (
-        <Button
+        <ActionIcon
           key={button.key}
           onClick={() => onAction(button.action)}
           size="lg"
@@ -55,12 +56,11 @@ export function renderButtons({
           accent="neutral"
           disabled={disabled}
           aria-label={t("onboarding.buttons.back", "Back")}
-          leftSection={
-            button.icon === "chevron-left" ? (
-              <ChevronLeftIcon fontSize="small" />
-            ) : null
-          }
-        />
+        >
+          {button.icon === "chevron-left" ? (
+            <ChevronLeftIcon fontSize="small" />
+          ) : null}
+        </ActionIcon>
       );
     }
 

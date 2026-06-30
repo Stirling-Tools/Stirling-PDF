@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Menu } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { useTranslation } from "react-i18next";
 import { supportedLanguages, setUserLanguage } from "@app/i18n";
@@ -239,16 +240,15 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
       >
         <Menu.Target>
           {compact ? (
-            <Button
+            <ActionIcon
               variant="tertiary"
               accent="neutral"
               data-testid="language-selector-button"
               title={!opened && tooltip ? tooltip : undefined}
               aria-label={tooltip ?? currentLanguage}
-              leftSection={
-                <LocalIcon icon="language" width="1.5rem" height="1.5rem" />
-              }
-            />
+            >
+              <LocalIcon icon="language" width="1.5rem" height="1.5rem" />
+            </ActionIcon>
           ) : (
             <Button
               variant="tertiary"

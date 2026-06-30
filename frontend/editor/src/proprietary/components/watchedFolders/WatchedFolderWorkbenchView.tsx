@@ -17,6 +17,7 @@ import {
   Select,
 } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@app/styles/zIndex";
 
 import { useCardModalAnimation } from "@app/hooks/useCardModalAnimation";
@@ -858,13 +859,14 @@ export function WatchedFolderWorkbenchView({
       >
         <Group justify="space-between" align="center">
           <Group gap="md" align="center">
-            <Button
+            <ActionIcon
               variant="tertiary"
               size="sm"
               onClick={goHome}
               aria-label={t("watchedFolders.actions.back", "Back")}
-              leftSection={<ArrowBackIcon style={{ fontSize: "1rem" }} />}
-            />
+            >
+              <ArrowBackIcon style={{ fontSize: "1rem" }} />
+            </ActionIcon>
 
             {/* Icon with status dot */}
             <Box style={{ position: "relative", flexShrink: 0 }}>
@@ -1443,7 +1445,7 @@ export function WatchedFolderWorkbenchView({
                   >
                     {t("watchedFolders.workbench.delete", "Delete")}
                   </Button>
-                  <Button
+                  <ActionIcon
                     variant="tertiary"
                     size="sm"
                     onClick={() => setSelectedActivityIds(new Set())}
@@ -1451,8 +1453,9 @@ export function WatchedFolderWorkbenchView({
                       "watchedFolders.workbench.clearSelection",
                       "Clear selection",
                     )}
-                    leftSection={<CloseIcon style={{ fontSize: "0.875rem" }} />}
-                  />
+                  >
+                    <CloseIcon style={{ fontSize: "0.875rem" }} />
+                  </ActionIcon>
                 </Box>
               );
             })()}
@@ -1529,7 +1532,7 @@ export function WatchedFolderWorkbenchView({
                             })
                           }
                         >
-                          <Button
+                          <ActionIcon
                             variant="tertiary"
                             size="sm"
                             style={{ flexShrink: 0 }}
@@ -1545,18 +1548,17 @@ export function WatchedFolderWorkbenchView({
                                   )
                                 : t("watchedFolders.actions.expand", "Expand")
                             }
-                            leftSection={
-                              <ChevronRightIcon
-                                style={{
-                                  fontSize: "0.75rem",
-                                  transform: isExpanded
-                                    ? "rotate(90deg)"
-                                    : "none",
-                                  transition: "transform 0.15s",
-                                }}
-                              />
-                            }
-                          />
+                          >
+                            <ChevronRightIcon
+                              style={{
+                                fontSize: "0.75rem",
+                                transform: isExpanded
+                                  ? "rotate(90deg)"
+                                  : "none",
+                                transition: "transform 0.15s",
+                              }}
+                            />
+                          </ActionIcon>
                           {status === "processed" && (
                             <CheckCircleOutlineIcon
                               style={{
@@ -1659,7 +1661,7 @@ export function WatchedFolderWorkbenchView({
                               }}
                             >
                               {!isExpanded && primaryFile && (
-                                <Button
+                                <ActionIcon
                                   variant="tertiary"
                                   size="sm"
                                   onClick={(e) => {
@@ -1670,15 +1672,14 @@ export function WatchedFolderWorkbenchView({
                                     "watchedFolders.workbench.preview",
                                     "Preview",
                                   )}
-                                  leftSection={
-                                    <VisibilityIcon
-                                      style={{ fontSize: "0.875rem" }}
-                                    />
-                                  }
-                                />
+                                >
+                                  <VisibilityIcon
+                                    style={{ fontSize: "0.875rem" }}
+                                  />
+                                </ActionIcon>
                               )}
                               {!isExpanded && primaryFile && (
-                                <Button
+                                <ActionIcon
                                   variant="tertiary"
                                   size="sm"
                                   onClick={(e) => {
@@ -1692,14 +1693,13 @@ export function WatchedFolderWorkbenchView({
                                     "watchedFolders.workbench.export",
                                     "Export",
                                   )}
-                                  leftSection={
-                                    <DownloadIcon
-                                      style={{ fontSize: "0.875rem" }}
-                                    />
-                                  }
-                                />
+                                >
+                                  <DownloadIcon
+                                    style={{ fontSize: "0.875rem" }}
+                                  />
+                                </ActionIcon>
                               )}
-                              <Button
+                              <ActionIcon
                                 variant="tertiary"
                                 size="sm"
                                 onClick={(e) => {
@@ -1710,12 +1710,11 @@ export function WatchedFolderWorkbenchView({
                                   "watchedFolders.workbench.delete",
                                   "Delete",
                                 )}
-                                leftSection={
-                                  <DeleteOutlineIcon
-                                    style={{ fontSize: "0.875rem" }}
-                                  />
-                                }
-                              />
+                              >
+                                <DeleteOutlineIcon
+                                  style={{ fontSize: "0.875rem" }}
+                                />
+                              </ActionIcon>
                             </Box>
                           )}
                         </Box>
@@ -1770,7 +1769,7 @@ export function WatchedFolderWorkbenchView({
                                 >
                                   {formatBytes(inputFile.size)}
                                 </Text>
-                                <Button
+                                <ActionIcon
                                   variant="tertiary"
                                   size="sm"
                                   onClick={(e) => {
@@ -1781,13 +1780,12 @@ export function WatchedFolderWorkbenchView({
                                     "watchedFolders.workbench.previewInput",
                                     "Preview input",
                                   )}
-                                  leftSection={
-                                    <VisibilityIcon
-                                      style={{ fontSize: "0.875rem" }}
-                                    />
-                                  }
-                                />
-                                <Button
+                                >
+                                  <VisibilityIcon
+                                    style={{ fontSize: "0.875rem" }}
+                                  />
+                                </ActionIcon>
+                                <ActionIcon
                                   variant="tertiary"
                                   size="sm"
                                   onClick={(e) => {
@@ -1798,12 +1796,11 @@ export function WatchedFolderWorkbenchView({
                                     "watchedFolders.actions.downloadInput",
                                     "Download input",
                                   )}
-                                  leftSection={
-                                    <DownloadIcon
-                                      style={{ fontSize: "0.875rem" }}
-                                    />
-                                  }
-                                />
+                                >
+                                  <DownloadIcon
+                                    style={{ fontSize: "0.875rem" }}
+                                  />
+                                </ActionIcon>
                               </Box>
                             )}
                             {/* Output files (stored in IDB) */}
@@ -1845,7 +1842,7 @@ export function WatchedFolderWorkbenchView({
                                 >
                                   {formatBytes(out.size)}
                                 </Text>
-                                <Button
+                                <ActionIcon
                                   variant="tertiary"
                                   size="sm"
                                   onClick={(e) => {
@@ -1856,13 +1853,12 @@ export function WatchedFolderWorkbenchView({
                                     "watchedFolders.workbench.previewOutput",
                                     "Preview output",
                                   )}
-                                  leftSection={
-                                    <VisibilityIcon
-                                      style={{ fontSize: "0.875rem" }}
-                                    />
-                                  }
-                                />
-                                <Button
+                                >
+                                  <VisibilityIcon
+                                    style={{ fontSize: "0.875rem" }}
+                                  />
+                                </ActionIcon>
+                                <ActionIcon
                                   variant="tertiary"
                                   size="sm"
                                   onClick={(e) => {
@@ -1873,12 +1869,11 @@ export function WatchedFolderWorkbenchView({
                                     "watchedFolders.actions.downloadOutput",
                                     "Download output",
                                   )}
-                                  leftSection={
-                                    <DownloadIcon
-                                      style={{ fontSize: "0.875rem" }}
-                                    />
-                                  }
-                                />
+                                >
+                                  <DownloadIcon
+                                    style={{ fontSize: "0.875rem" }}
+                                  />
+                                </ActionIcon>
                               </Box>
                             ))}
                             {/* Error detail + retry */}

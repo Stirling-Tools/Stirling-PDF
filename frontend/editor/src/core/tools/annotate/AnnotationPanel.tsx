@@ -363,7 +363,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
     <Group gap="xs">
       {tools.map((tool) => (
         <MantineTooltip key={tool.id} label={tool.label} withArrow>
-          <Button
+          <ActionIcon
             variant={
               activeTool === tool.id && annotationsVisible
                 ? "primary"
@@ -372,10 +372,9 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
             onClick={() => activateAnnotationTool(tool.id)}
             disabled={!annotationsVisible}
             aria-label={tool.label}
-            leftSection={
-              <LocalIcon icon={tool.icon} width="1.25rem" height="1.25rem" />
-            }
-          />
+          >
+            <LocalIcon icon={tool.icon} width="1.25rem" height="1.25rem" />
+          </ActionIcon>
         </MantineTooltip>
       ))}
     </Group>
@@ -639,51 +638,48 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                     {t("annotation.textAlignment", "Text Alignment")}
                   </Text>
                   <Group gap="xs">
-                    <Button
+                    <ActionIcon
                       variant={
                         textAlignment === "left" ? "primary" : "secondary"
                       }
                       onClick={() => setTextAlignment("left")}
                       size="md"
                       aria-label={t("annotation.alignLeft", "Align left")}
-                      leftSection={
-                        <LocalIcon
-                          icon="format-align-left"
-                          width={18}
-                          height={18}
-                        />
-                      }
-                    />
-                    <Button
+                    >
+                      <LocalIcon
+                        icon="format-align-left"
+                        width={18}
+                        height={18}
+                      />
+                    </ActionIcon>
+                    <ActionIcon
                       variant={
                         textAlignment === "center" ? "primary" : "secondary"
                       }
                       onClick={() => setTextAlignment("center")}
                       size="md"
                       aria-label={t("annotation.alignCenter", "Align center")}
-                      leftSection={
-                        <LocalIcon
-                          icon="format-align-center"
-                          width={18}
-                          height={18}
-                        />
-                      }
-                    />
-                    <Button
+                    >
+                      <LocalIcon
+                        icon="format-align-center"
+                        width={18}
+                        height={18}
+                      />
+                    </ActionIcon>
+                    <ActionIcon
                       variant={
                         textAlignment === "right" ? "primary" : "secondary"
                       }
                       onClick={() => setTextAlignment("right")}
                       size="md"
                       aria-label={t("annotation.alignRight", "Align right")}
-                      leftSection={
-                        <LocalIcon
-                          icon="format-align-right"
-                          width={18}
-                          height={18}
-                        />
-                      }
-                    />
+                    >
+                      <LocalIcon
+                        icon="format-align-right"
+                        width={18}
+                        height={18}
+                      />
+                    </ActionIcon>
                   </Group>
                 </Box>
                 <Box>

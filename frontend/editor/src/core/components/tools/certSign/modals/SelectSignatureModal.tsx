@@ -1,5 +1,6 @@
 import { Modal, Stack, Text, Group, Box } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { useTranslation } from "react-i18next";
 import {
   useSavedSignatures,
@@ -133,8 +134,7 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
                   >
                     {renderSignaturePreview(sig)}
                   </Button>
-                  <Button
-                    leftSection={<CloseIcon sx={{ fontSize: "1rem" }} />}
+                  <ActionIcon
                     variant="tertiary"
                     accent="danger"
                     size="sm"
@@ -144,7 +144,9 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
                       "Delete signature",
                     )}
                     style={{ margin: "0 6px" }}
-                  />
+                  >
+                    <CloseIcon sx={{ fontSize: "1rem" }} />
+                  </ActionIcon>
                 </Group>
               ))}
             </Stack>

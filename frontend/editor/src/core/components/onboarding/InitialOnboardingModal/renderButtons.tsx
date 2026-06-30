@@ -1,5 +1,6 @@
 import React from "react";
 import { Group } from "@mantine/core";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { Button } from "@shared/components/Button";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import { useTranslation } from "react-i18next";
@@ -59,19 +60,18 @@ export function SlideButtons({
 
     if (button.type === "icon") {
       return (
-        <Button
+        <ActionIcon
           key={button.key}
           onClick={() => onAction(button.action)}
           variant="secondary"
           accent="neutral"
           disabled={disabled}
           aria-label={t("onboarding.buttons.back", "Back")}
-          leftSection={
-            button.icon === "chevron-left" ? (
-              <ChevronLeftIcon fontSize="small" />
-            ) : null
-          }
-        />
+        >
+          {button.icon === "chevron-left" ? (
+            <ChevronLeftIcon fontSize="small" />
+          ) : null}
+        </ActionIcon>
       );
     }
 

@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { Modal, Text, Group } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import licenseService from "@app/services/licenseService";
@@ -275,15 +275,14 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
       title={
         <Group gap="sm" wrap="nowrap">
           {canGoBack && (
-            <Button
+            <ActionIcon
               variant="tertiary"
               size="lg"
               onClick={navigation.goBack}
               aria-label={t("common.back", "Back")}
-              leftSection={
-                <LocalIcon icon="arrow-back" width={20} height={20} />
-              }
-            />
+            >
+              <LocalIcon icon="arrow-back" width={20} height={20} />
+            </ActionIcon>
           )}
           <Text fw={600} size="lg">
             {getModalTitle(checkoutState.state.currentStage, planGroup.name, t)}

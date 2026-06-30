@@ -26,6 +26,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { useTranslation } from "react-i18next";
 import { isAxiosError } from "axios";
 import {
@@ -522,7 +523,7 @@ const FormFill = (_props: BaseToolProps) => {
                       withArrow
                       position="bottom"
                     >
-                      <Button
+                      <ActionIcon
                         variant="secondary"
                         size="md"
                         onClick={handleRefresh}
@@ -530,8 +531,9 @@ const FormFill = (_props: BaseToolProps) => {
                           "formFill.rescanFormFields",
                           "Re-scan form fields",
                         )}
-                        leftSection={<RefreshIcon sx={{ fontSize: 16 }} />}
-                      />
+                      >
+                        <RefreshIcon sx={{ fontSize: 16 }} />
+                      </ActionIcon>
                     </Tooltip>
                   </div>
 

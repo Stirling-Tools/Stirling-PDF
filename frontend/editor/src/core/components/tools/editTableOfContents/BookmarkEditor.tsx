@@ -12,6 +12,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import {
   BookmarkNode,
@@ -225,8 +226,7 @@ export default function BookmarkEditor({
         <Stack gap="sm">
           <Flex align="flex-start" justify="space-between" gap="md">
             <Group gap="sm" align="flex-start">
-              <Button
-                leftSection={<LocalIcon icon={chevronIcon} />}
+              <ActionIcon
                 variant="tertiary"
                 onMouseDown={(e) => {
                   e.preventDefault();
@@ -238,7 +238,9 @@ export default function BookmarkEditor({
                   "Toggle children",
                 )}
                 style={{ marginTop: 4 }}
-              />
+              >
+                <LocalIcon icon={chevronIcon} />
+              </ActionIcon>
               <Stack gap={2}>
                 <Group gap="xs" align="center">
                   <Text fw={600}>
@@ -268,10 +270,7 @@ export default function BookmarkEditor({
                   "Add child bookmark",
                 )}
               >
-                <Button
-                  leftSection={
-                    <LocalIcon icon="subdirectory-arrow-right-rounded" />
-                  }
+                <ActionIcon
                   variant="tertiary"
                   accent="success"
                   onMouseDown={(e) => {
@@ -283,7 +282,9 @@ export default function BookmarkEditor({
                     "editTableOfContents.editor.actions.addChild",
                     "Add child bookmark",
                   )}
-                />
+                >
+                  <LocalIcon icon="subdirectory-arrow-right-rounded" />
+                </ActionIcon>
               </Tooltip>
               <Tooltip
                 label={t(
@@ -291,8 +292,7 @@ export default function BookmarkEditor({
                   "Add sibling bookmark",
                 )}
               >
-                <Button
-                  leftSection={<LocalIcon icon="add-rounded" />}
+                <ActionIcon
                   variant="tertiary"
                   onMouseDown={(e) => {
                     e.preventDefault();
@@ -303,7 +303,9 @@ export default function BookmarkEditor({
                     "editTableOfContents.editor.actions.addSibling",
                     "Add sibling bookmark",
                   )}
-                />
+                >
+                  <LocalIcon icon="add-rounded" />
+                </ActionIcon>
               </Tooltip>
               <Tooltip
                 label={t(
@@ -311,8 +313,7 @@ export default function BookmarkEditor({
                   "Remove bookmark",
                 )}
               >
-                <Button
-                  leftSection={<LocalIcon icon="delete-rounded" />}
+                <ActionIcon
                   variant="tertiary"
                   accent="danger"
                   onMouseDown={(e) => {
@@ -324,7 +325,9 @@ export default function BookmarkEditor({
                     "editTableOfContents.editor.actions.remove",
                     "Remove bookmark",
                   )}
-                />
+                >
+                  <LocalIcon icon="delete-rounded" />
+                </ActionIcon>
               </Tooltip>
             </Group>
           </Flex>

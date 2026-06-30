@@ -288,14 +288,15 @@ export const AttachmentSidebar = ({
               </Text>
             )}
           </div>
-          <Button
+          <ActionIcon
             variant="tertiary"
             size="sm"
             className="attachment-item__download-icon"
             aria-label={t("viewer.attachments.download", "Download attachment")}
             onClick={(event) => handleDownload(attachment, event)}
-            leftSection={<DownloadIcon sx={{ fontSize: "1.2rem" }} />}
-          />
+          >
+            <DownloadIcon sx={{ fontSize: "1.2rem" }} />
+          </ActionIcon>
         </div>
       </div>
     ));
@@ -410,12 +411,13 @@ export const AttachmentSidebar = ({
               <Text size="sm" c="red" ta="center">
                 {currentError}
               </Text>
-              <Button
+              <ActionIcon
                 variant="secondary"
                 aria-label={t("viewer.attachments.retry", "Retry")}
                 onClick={requestReload}
-                leftSection={<LocalIcon icon="refresh" />}
-              />
+              >
+                <LocalIcon icon="refresh" />
+              </ActionIcon>
             </Stack>
           )}
           {attachmentSupport && documentCacheKey && isLocalLoading && (

@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Button } from "@shared/components";
+import { ActionIcon, Button } from "@shared/components";
 import type { SourceView } from "@portal/api/sources";
 import { SourceDetailPanel } from "@portal/components/sources/SourceDetailPanel";
 import { sourceTypeMeta } from "@portal/components/sources/sourceTypes";
@@ -46,13 +46,14 @@ export function SourceDetailCard({
             })}
           </span>
         </div>
-        <Button
+        <ActionIcon
           variant="tertiary"
           className="portal-sources__expanded-close"
           onClick={onClose}
           aria-label={t("sources.detail.closeAriaLabel")}
-          leftSection={<CloseIcon />}
-        ></Button>
+        >
+          <CloseIcon />
+        </ActionIcon>
       </header>
 
       <SourceDetailPanel source={source} />

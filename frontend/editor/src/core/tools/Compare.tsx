@@ -4,6 +4,7 @@ import CompareRoundedIcon from "@mui/icons-material/CompareRounded";
 import CloseIcon from "@mui/icons-material/Close";
 import { Box, Group, Stack, Text, Modal } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import SwapVertRoundedIcon from "@mui/icons-material/SwapVertRounded";
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
@@ -365,7 +366,7 @@ const Compare = (props: BaseToolProps) => {
               position: "relative",
             }}
           >
-            <Button
+            <ActionIcon
               variant="tertiary"
               accent="neutral"
               size="sm"
@@ -376,8 +377,9 @@ const Compare = (props: BaseToolProps) => {
               }}
               onClick={() => clearSlot(role)}
               aria-label={t("compare.clearSlot", "Remove file")}
-              leftSection={<CloseIcon fontSize="small" />}
-            />
+            >
+              <CloseIcon fontSize="small" />
+            </ActionIcon>
             <Group align="flex-start" wrap="nowrap" gap="md">
               <Box style={{ alignSelf: "center" }}>
                 <DocumentThumbnail

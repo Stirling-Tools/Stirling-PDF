@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Drawer, Group, MultiSelect, Select, Tooltip } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { SegmentedControl } from "@shared/components/SegmentedControl";
 import { useMediaQuery } from "@mantine/hooks";
 import SearchIcon from "@mui/icons-material/Search";
@@ -901,7 +902,7 @@ export default function FileManagerView() {
                   }
                   withinPortal
                 >
-                  <Button
+                  <ActionIcon
                     variant="secondary"
                     size="md"
                     loading={refreshing}
@@ -909,8 +910,9 @@ export default function FileManagerView() {
                     aria-busy={refreshing}
                     onClick={handleRefresh}
                     aria-label={t("filesPage.refresh", "Refresh from server")}
-                    leftSection={<RefreshIcon />}
-                  />
+                  >
+                    <RefreshIcon />
+                  </ActionIcon>
                 </Tooltip>
                 {newFolderDisabledReason ? (
                   <Tooltip
@@ -956,7 +958,7 @@ export default function FileManagerView() {
                     )}
                     withinPortal
                   >
-                    <Button
+                    <ActionIcon
                       size="lg"
                       variant="secondary"
                       onClick={() => setMobileUploadModalOpen(true)}
@@ -964,8 +966,9 @@ export default function FileManagerView() {
                         "filesPage.uploadFromMobile",
                         "Upload from Mobile",
                       )}
-                      leftSection={<QrCode2Icon fontSize="small" />}
-                    />
+                    >
+                      <QrCode2Icon fontSize="small" />
+                    </ActionIcon>
                   </Tooltip>
                 )}
                 <input
@@ -999,13 +1002,14 @@ export default function FileManagerView() {
           }}
         >
           <span>{folders.error}</span>
-          <Button
+          <ActionIcon
             size="sm"
             variant="tertiary"
             aria-label={t("filesPage.dismissError", "Dismiss")}
             onClick={() => folders.setError(null)}
-            leftSection={<>&times;</>}
-          />
+          >
+            &times;
+          </ActionIcon>
         </div>
       )}
 
@@ -1269,7 +1273,7 @@ export default function FileManagerView() {
                         label={t("filesPage.clearSelection", "Clear selection")}
                         withinPortal
                       >
-                        <Button
+                        <ActionIcon
                           variant="tertiary"
                           size="md"
                           onClick={() => clearSelection()}
@@ -1277,8 +1281,9 @@ export default function FileManagerView() {
                             "filesPage.clearSelection",
                             "Clear selection",
                           )}
-                          leftSection={<>&times;</>}
-                        />
+                        >
+                          &times;
+                        </ActionIcon>
                       </Tooltip>
                     </Group>
                   );
@@ -1670,13 +1675,14 @@ const SearchField = React.forwardRef<
         aria-label={t("filesPage.search", "Search")}
       />
       {value && (
-        <Button
+        <ActionIcon
           variant="tertiary"
           size="sm"
           onClick={() => onChange("")}
           aria-label={t("filesPage.clearSearch", "Clear search")}
-          leftSection={<>&times;</>}
-        />
+        >
+          &times;
+        </ActionIcon>
       )}
     </div>
   );

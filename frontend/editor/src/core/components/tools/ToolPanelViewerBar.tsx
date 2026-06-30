@@ -1,5 +1,5 @@
 import React, { useCallback } from "react";
-import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { useWorkbenchBar } from "@app/contexts/WorkbenchBarContext";
 import { useNavigationState } from "@app/contexts/NavigationContext";
 import { Tooltip } from "@app/components/shared/Tooltip";
@@ -48,15 +48,16 @@ export function ToolPanelViewerBar() {
         btn.ariaLabel ||
         (typeof btn.tooltip === "string" ? btn.tooltip : undefined);
       const buttonNode = (
-        <Button
-          leftSection={btn.icon}
+        <ActionIcon
           variant={isActive ? "primary" : "tertiary"}
           className="workbench-bar-action-icon"
           onClick={triggerAction}
           disabled={disabled}
           aria-label={ariaLabel ?? ""}
           aria-pressed={isActive || undefined}
-        />
+        >
+          {btn.icon}
+        </ActionIcon>
       );
 
       if (!btn.tooltip) return buttonNode;

@@ -12,6 +12,7 @@ import {
   Text,
 } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { SegmentedControl } from "@shared/components/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
@@ -147,18 +148,17 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
                   header={pdfTextEditorTips.header}
                   pinOnClick
                 >
-                  <Button
+                  <ActionIcon
                     variant="tertiary"
                     size="sm"
                     aria-label={t("pdfTextEditor.title", "PDF Text Editor")}
-                    leftSection={
-                      <LocalIcon
-                        icon="info-outline-rounded"
-                        width="1.25rem"
-                        height="1.25rem"
-                      />
-                    }
-                  />
+                  >
+                    <LocalIcon
+                      icon="info-outline-rounded"
+                      width="1.25rem"
+                      height="1.25rem"
+                    />
+                  </ActionIcon>
                 </Tooltip>
               </Flex>
 
@@ -197,7 +197,7 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
                       )}
                       position="top"
                     >
-                      <Button
+                      <ActionIcon
                         variant="tertiary"
                         size="sm"
                         aria-label={t(
@@ -205,8 +205,9 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
                           "Auto-scale text to fit boxes",
                         )}
                         style={{ flexShrink: 0 }}
-                        leftSection={<InfoOutlinedIcon fontSize="small" />}
-                      />
+                      >
+                        <InfoOutlinedIcon fontSize="small" />
+                      </ActionIcon>
                     </Tooltip>
                     <Text fw={500} size="sm" style={{ flex: 1 }}>
                       {t(
@@ -321,7 +322,7 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
                       )}
                       position="top"
                     >
-                      <Button
+                      <ActionIcon
                         variant="tertiary"
                         size="sm"
                         aria-label={t(
@@ -329,8 +330,9 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
                           "Lock edited text to a single PDF element",
                         )}
                         style={{ flexShrink: 0 }}
-                        leftSection={<InfoOutlinedIcon fontSize="small" />}
-                      />
+                      >
+                        <InfoOutlinedIcon fontSize="small" />
+                      </ActionIcon>
                     </Tooltip>
                     <Text fw={500} size="sm" style={{ flex: 1 }}>
                       {t(
@@ -374,7 +376,7 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
           </Button>
           <Menu position="bottom-end" withinPortal>
             <Menu.Target>
-              <Button
+              <ActionIcon
                 variant="secondary"
                 size="lg"
                 disabled={!hasDocument || isConverting}
@@ -382,8 +384,9 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
                   "pdfTextEditor.actions.moreOptions",
                   "More options",
                 )}
-                leftSection={<MoreHorizIcon fontSize="small" />}
-              />
+              >
+                <MoreHorizIcon fontSize="small" />
+              </ActionIcon>
             </Menu.Target>
             <Menu.Dropdown>
               <Menu.Item

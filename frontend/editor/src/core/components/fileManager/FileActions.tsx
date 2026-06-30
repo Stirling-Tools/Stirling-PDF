@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { Group, Text, Tooltip } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { SegmentedControl } from "@shared/components/SegmentedControl";
 import SelectAllIcon from "@mui/icons-material/SelectAll";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -126,7 +126,7 @@ const FileActions: React.FC = () => {
               : t("fileManager.selectAll", "Select All")
           }
         >
-          <Button
+          <ActionIcon
             variant="secondary"
             size="sm"
             onClick={handleSelectAll}
@@ -136,8 +136,9 @@ const FileActions: React.FC = () => {
                 ? t("fileManager.deselectAll", "Deselect All")
                 : t("fileManager.selectAll", "Select All")
             }
-            leftSection={<SelectAllIcon style={{ fontSize: "1rem" }} />}
-          />
+          >
+            <SelectAllIcon style={{ fontSize: "1rem" }} />
+          </ActionIcon>
         </Tooltip>
         {showStorageFilter && (
           <SegmentedControl
@@ -174,49 +175,53 @@ const FileActions: React.FC = () => {
       <Group gap="xs">
         {uploadEnabled && (
           <Tooltip label={t("fileManager.uploadSelected", "Upload Selected")}>
-            <Button
+            <ActionIcon
               variant="secondary"
               size="sm"
               onClick={() => setShowBulkUploadModal(true)}
               disabled={!canBulkUpload}
               aria-label={t("fileManager.uploadSelected", "Upload Selected")}
-              leftSection={<CloudUploadIcon style={{ fontSize: "1rem" }} />}
-            />
+            >
+              <CloudUploadIcon style={{ fontSize: "1rem" }} />
+            </ActionIcon>
           </Tooltip>
         )}
         {shareLinksEnabled && (
           <Tooltip label={t("fileManager.shareSelected", "Share Selected")}>
-            <Button
+            <ActionIcon
               variant="secondary"
               size="sm"
               onClick={() => setShowBulkShareModal(true)}
               disabled={!canBulkShare}
               aria-label={t("fileManager.shareSelected", "Share Selected")}
-              leftSection={<LinkIcon style={{ fontSize: "1rem" }} />}
-            />
+            >
+              <LinkIcon style={{ fontSize: "1rem" }} />
+            </ActionIcon>
           </Tooltip>
         )}
         <Tooltip label={t("fileManager.deleteSelected", "Delete Selected")}>
-          <Button
+          <ActionIcon
             variant="secondary"
             size="sm"
             accent="danger"
             onClick={handleDeleteSelected}
             disabled={!hasSelection}
             aria-label={t("fileManager.deleteSelected", "Delete Selected")}
-            leftSection={<DeleteIcon style={{ fontSize: "1rem" }} />}
-          />
+          >
+            <DeleteIcon style={{ fontSize: "1rem" }} />
+          </ActionIcon>
         </Tooltip>
 
         <Tooltip label={terminology.downloadSelected}>
-          <Button
+          <ActionIcon
             variant="secondary"
             size="sm"
             onClick={handleDownloadSelected}
             disabled={!hasSelection || !hasDownloadAccess}
             aria-label={terminology.downloadSelected}
-            leftSection={<DownloadIcon style={{ fontSize: "1rem" }} />}
-          />
+          >
+            <DownloadIcon style={{ fontSize: "1rem" }} />
+          </ActionIcon>
         </Tooltip>
       </Group>
 

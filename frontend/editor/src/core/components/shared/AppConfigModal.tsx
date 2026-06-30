@@ -6,7 +6,7 @@ import React, {
   useRef,
 } from "react";
 import { Badge, Modal, Text, Tooltip, Group } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
@@ -364,16 +364,15 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
                   onNavigate={handleNavigation}
                   isMobile={isMobile}
                 />
-                <Button
+                <ActionIcon
                   ref={closeButtonRef}
                   variant="tertiary"
                   onClick={handleClose}
                   aria-label={t("settings.close", "Close")}
                   data-autofocus
-                  leftSection={
-                    <LocalIcon icon="close-rounded" width={18} height={18} />
-                  }
-                />
+                >
+                  <LocalIcon icon="close-rounded" width={18} height={18} />
+                </ActionIcon>
               </Group>
             </div>
             <div className="modal-body">{activeComponent}</div>

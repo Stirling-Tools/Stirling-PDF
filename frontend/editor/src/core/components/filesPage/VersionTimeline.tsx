@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Badge, Menu } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -230,7 +231,7 @@ export function VersionTimeline({
                   <span className="files-page-details-version-timeline-spacer" />
                   <Menu position="bottom-end" withinPortal shadow="md">
                     <Menu.Target>
-                      <Button
+                      <ActionIcon
                         variant="tertiary"
                         size="sm"
                         aria-label={t(
@@ -238,8 +239,9 @@ export function VersionTimeline({
                           "Version actions",
                         )}
                         onClick={(e) => e.stopPropagation()}
-                        leftSection={<MoreVertIcon fontSize="small" />}
-                      />
+                      >
+                        <MoreVertIcon fontSize="small" />
+                      </ActionIcon>
                     </Menu.Target>
                     <Menu.Dropdown>
                       <Menu.Item

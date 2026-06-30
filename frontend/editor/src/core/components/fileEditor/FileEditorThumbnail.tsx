@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useRef, useMemo } from "react";
 import { Text, Modal, Group, Stack, Tooltip } from "@mantine/core";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { Button } from "@shared/components/Button";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { alert } from "@app/components/toast";
@@ -537,7 +538,7 @@ const FileEditorThumbnail = ({
                       "Unlock PDF to continue",
                     )}
                   >
-                    <Button
+                    <ActionIcon
                       size="sm"
                       accent="warning"
                       aria-label={t(
@@ -549,8 +550,9 @@ const FileEditorThumbnail = ({
                         openEncryptedUnlockPrompt(file.id);
                       }}
                       style={{ pointerEvents: "auto" }}
-                      leftSection={<LockOpenIcon style={{ fontSize: 12 }} />}
-                    />
+                    >
+                      <LockOpenIcon style={{ fontSize: 12 }} />
+                    </ActionIcon>
                   </Tooltip>
                 )}
               </div>

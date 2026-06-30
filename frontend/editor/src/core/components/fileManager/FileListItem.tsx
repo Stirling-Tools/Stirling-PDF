@@ -8,7 +8,7 @@ import {
   Menu,
   Badge,
 } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -322,19 +322,20 @@ const FileListItem: React.FC<FileListItemProps> = ({
             zIndex={Z_INDEX_OVER_FILE_MANAGER_MODAL}
           >
             <Menu.Target>
-              <Button
+              <ActionIcon
                 variant="tertiary"
                 size="md"
                 onClick={(e) => e.stopPropagation()}
                 aria-label={t("fileManager.moreOptions", "More options")}
-                leftSection={<MoreVertIcon style={{ fontSize: 20 }} />}
                 style={{
                   opacity: shouldShowHovered ? 1 : 0,
                   transform: shouldShowHovered ? "scale(1)" : "scale(0.8)",
                   transition: "opacity 0.3s ease, transform 0.3s ease",
                   pointerEvents: shouldShowHovered ? "auto" : "none",
                 }}
-              />
+              >
+                <MoreVertIcon style={{ fontSize: 20 }} />
+              </ActionIcon>
             </Menu.Target>
 
             <Menu.Dropdown>

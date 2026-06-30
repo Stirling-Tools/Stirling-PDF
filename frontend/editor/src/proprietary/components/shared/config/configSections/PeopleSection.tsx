@@ -18,6 +18,7 @@ import {
   type ComboboxItem,
 } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { alert } from "@app/components/toast";
 import {
@@ -781,35 +782,33 @@ export default function PeopleSection() {
                       withArrow
                       zIndex={Z_INDEX_OVER_CONFIG_MODAL + 10}
                     >
-                      <Button
+                      <ActionIcon
                         variant="tertiary"
                         size="sm"
-                        leftSection={
-                          <LocalIcon icon="info" width="1rem" height="1rem" />
-                        }
                         aria-label={t("workspace.people.userInfo", "User info")}
-                      />
+                      >
+                        <LocalIcon icon="info" width="1rem" height="1rem" />
+                      </ActionIcon>
                     </Tooltip>
 
                     {/* Actions menu */}
                     {!isCurrentUser(user) && (
                       <Menu position="bottom-end" withinPortal>
                         <Menu.Target>
-                          <Button
+                          <ActionIcon
                             variant="tertiary"
                             disabled={!loginEnabled}
-                            leftSection={
-                              <LocalIcon
-                                icon="more-vert"
-                                width="1rem"
-                                height="1rem"
-                              />
-                            }
                             aria-label={t(
                               "workspace.people.memberActions",
                               "Member actions",
                             )}
-                          />
+                          >
+                            <LocalIcon
+                              icon="more-vert"
+                              width="1rem"
+                              height="1rem"
+                            />
+                          </ActionIcon>
                         </Menu.Target>
                         <Menu.Dropdown
                           style={{ zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
@@ -1004,13 +1003,10 @@ export default function PeopleSection() {
         withCloseButton={false}
       >
         <Box pos="relative">
-          <Button
+          <ActionIcon
             onClick={closeEditModal}
             size="lg"
             variant="tertiary"
-            leftSection={
-              <LocalIcon icon="close" width="1.25rem" height="1.25rem" />
-            }
             aria-label={t("close", "Close")}
             style={{
               position: "absolute",
@@ -1018,7 +1014,9 @@ export default function PeopleSection() {
               right: -8,
               zIndex: 1,
             }}
-          />
+          >
+            <LocalIcon icon="close" width="1.25rem" height="1.25rem" />
+          </ActionIcon>
           <Stack gap="lg" pt="md">
             {/* Header with Icon */}
             <Stack gap="md" align="center">

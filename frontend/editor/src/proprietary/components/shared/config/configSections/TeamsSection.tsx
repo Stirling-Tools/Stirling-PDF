@@ -15,6 +15,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { alert } from "@app/components/toast";
 import { teamService, Team } from "@app/services/teamService";
@@ -377,21 +378,20 @@ export default function TeamsSection() {
                 <Table.Td onClick={(e) => e.stopPropagation()}>
                   <Menu position="bottom-end" withinPortal>
                     <Menu.Target>
-                      <Button
+                      <ActionIcon
                         variant="tertiary"
                         disabled={!loginEnabled}
-                        leftSection={
-                          <LocalIcon
-                            icon="more-vert"
-                            width="1rem"
-                            height="1rem"
-                          />
-                        }
                         aria-label={t(
                           "workspace.teams.teamActions",
                           "Team actions",
                         )}
-                      />
+                      >
+                        <LocalIcon
+                          icon="more-vert"
+                          width="1rem"
+                          height="1rem"
+                        />
+                      </ActionIcon>
                     </Menu.Target>
                     <Menu.Dropdown
                       style={{ zIndex: Z_INDEX_OVER_CONFIG_MODAL }}
@@ -458,13 +458,10 @@ export default function TeamsSection() {
         withCloseButton={false}
       >
         <div style={{ position: "relative" }}>
-          <Button
+          <ActionIcon
             onClick={() => setCreateModalOpened(false)}
             size="lg"
             variant="tertiary"
-            leftSection={
-              <LocalIcon icon="close" width="1.25rem" height="1.25rem" />
-            }
             aria-label={t("close", "Close")}
             style={{
               position: "absolute",
@@ -472,7 +469,9 @@ export default function TeamsSection() {
               right: -8,
               zIndex: 1,
             }}
-          />
+          >
+            <LocalIcon icon="close" width="1.25rem" height="1.25rem" />
+          </ActionIcon>
           <Stack gap="lg" pt="md">
             {/* Header with Icon */}
             <Stack gap="md" align="center">
@@ -519,13 +518,10 @@ export default function TeamsSection() {
         withCloseButton={false}
       >
         <div style={{ position: "relative" }}>
-          <Button
+          <ActionIcon
             onClick={() => setRenameModalOpened(false)}
             size="lg"
             variant="tertiary"
-            leftSection={
-              <LocalIcon icon="close" width="1.25rem" height="1.25rem" />
-            }
             aria-label={t("close", "Close")}
             style={{
               position: "absolute",
@@ -533,7 +529,9 @@ export default function TeamsSection() {
               right: -8,
               zIndex: 1,
             }}
-          />
+          >
+            <LocalIcon icon="close" width="1.25rem" height="1.25rem" />
+          </ActionIcon>
           <Stack gap="lg" pt="md">
             {/* Header with Icon */}
             <Stack gap="md" align="center">
@@ -586,13 +584,10 @@ export default function TeamsSection() {
         withCloseButton={false}
       >
         <div style={{ position: "relative" }}>
-          <Button
+          <ActionIcon
             onClick={() => setAddMemberModalOpened(false)}
             size="lg"
             variant="tertiary"
-            leftSection={
-              <LocalIcon icon="close" width="1.25rem" height="1.25rem" />
-            }
             aria-label={t("close", "Close")}
             style={{
               position: "absolute",
@@ -600,7 +595,9 @@ export default function TeamsSection() {
               right: -8,
               zIndex: 1,
             }}
-          />
+          >
+            <LocalIcon icon="close" width="1.25rem" height="1.25rem" />
+          </ActionIcon>
           <Stack gap="lg" pt="md">
             {/* Header with Icon */}
             <Stack gap="md" align="center">

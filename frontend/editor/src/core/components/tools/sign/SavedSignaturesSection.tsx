@@ -12,7 +12,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { LocalIcon } from "@app/components/shared/LocalIcon";
-import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import {
   SavedSignature,
   SavedSignatureType,
@@ -300,22 +300,21 @@ export const SavedSignaturesSection = ({
                   )}
                 </Text>
                 <Group gap={4}>
-                  <Button
+                  <ActionIcon
                     variant="secondary"
                     aria-label={translate("saved.prev", "Previous")}
                     onClick={() =>
                       setActivePersonalIndex((prev) => Math.max(0, prev - 1))
                     }
                     disabled={disabled || activePersonalIndex === 0}
-                    leftSection={
-                      <LocalIcon
-                        icon="chevron-left-rounded"
-                        width={18}
-                        height={18}
-                      />
-                    }
-                  />
-                  <Button
+                  >
+                    <LocalIcon
+                      icon="chevron-left-rounded"
+                      width={18}
+                      height={18}
+                    />
+                  </ActionIcon>
+                  <ActionIcon
                     variant="secondary"
                     aria-label={translate("saved.next", "Next")}
                     onClick={() =>
@@ -331,14 +330,13 @@ export const SavedSignaturesSection = ({
                       activePersonalIndex >=
                         groupedSignatures.personal.length - 1
                     }
-                    leftSection={
-                      <LocalIcon
-                        icon="chevron-right-rounded"
-                        width={18}
-                        height={18}
-                      />
-                    }
-                  />
+                  >
+                    <LocalIcon
+                      icon="chevron-right-rounded"
+                      width={18}
+                      height={18}
+                    />
+                  </ActionIcon>
                 </Group>
               </Group>
 
@@ -352,21 +350,20 @@ export const SavedSignaturesSection = ({
                       {typeLabel(activePersonalSignature.type)}
                     </Badge>
                     <Group gap="xs">
-                      <Button
+                      <ActionIcon
                         variant="tertiary"
                         aria-label={t("sign.saved.use", "Use signature")}
                         onClick={() => onUseSignature(activePersonalSignature)}
                         disabled={disabled}
-                        leftSection={
-                          <LocalIcon
-                            icon="check-circle-outline-rounded"
-                            width={18}
-                            height={18}
-                          />
-                        }
-                      />
+                      >
+                        <LocalIcon
+                          icon="check-circle-outline-rounded"
+                          width={18}
+                          height={18}
+                        />
+                      </ActionIcon>
                       <Tooltip label={translate("saved.delete", "Remove")}>
-                        <Button
+                        <ActionIcon
                           variant="tertiary"
                           accent="danger"
                           aria-label={translate("saved.delete", "Remove")}
@@ -374,14 +371,13 @@ export const SavedSignaturesSection = ({
                             onDeleteSignature(activePersonalSignature)
                           }
                           disabled={disabled}
-                          leftSection={
-                            <LocalIcon
-                              icon="delete-outline-rounded"
-                              width={18}
-                              height={18}
-                            />
-                          }
-                        />
+                        >
+                          <LocalIcon
+                            icon="delete-outline-rounded"
+                            width={18}
+                            height={18}
+                          />
+                        </ActionIcon>
                       </Tooltip>
                     </Group>
                   </Group>
@@ -434,22 +430,21 @@ export const SavedSignaturesSection = ({
                   )}
                 </Text>
                 <Group gap={4}>
-                  <Button
+                  <ActionIcon
                     variant="secondary"
                     aria-label={translate("saved.prev", "Previous")}
                     onClick={() =>
                       setActiveSharedIndex((prev) => Math.max(0, prev - 1))
                     }
                     disabled={disabled || activeSharedIndex === 0}
-                    leftSection={
-                      <LocalIcon
-                        icon="chevron-left-rounded"
-                        width={18}
-                        height={18}
-                      />
-                    }
-                  />
-                  <Button
+                  >
+                    <LocalIcon
+                      icon="chevron-left-rounded"
+                      width={18}
+                      height={18}
+                    />
+                  </ActionIcon>
+                  <ActionIcon
                     variant="secondary"
                     aria-label={translate("saved.next", "Next")}
                     onClick={() =>
@@ -461,14 +456,13 @@ export const SavedSignaturesSection = ({
                       disabled ||
                       activeSharedIndex >= groupedSignatures.shared.length - 1
                     }
-                    leftSection={
-                      <LocalIcon
-                        icon="chevron-right-rounded"
-                        width={18}
-                        height={18}
-                      />
-                    }
-                  />
+                  >
+                    <LocalIcon
+                      icon="chevron-right-rounded"
+                      width={18}
+                      height={18}
+                    />
+                  </ActionIcon>
                 </Group>
               </Group>
 
@@ -482,22 +476,21 @@ export const SavedSignaturesSection = ({
                       {typeLabel(activeSharedSignature.type)}
                     </Badge>
                     <Group gap="xs">
-                      <Button
+                      <ActionIcon
                         variant="tertiary"
                         aria-label={t("sign.saved.use", "Use signature")}
                         onClick={() => onUseSignature(activeSharedSignature)}
                         disabled={disabled}
-                        leftSection={
-                          <LocalIcon
-                            icon="check-circle-outline-rounded"
-                            width={18}
-                            height={18}
-                          />
-                        }
-                      />
+                      >
+                        <LocalIcon
+                          icon="check-circle-outline-rounded"
+                          width={18}
+                          height={18}
+                        />
+                      </ActionIcon>
                       {isAdmin && (
                         <Tooltip label={translate("saved.delete", "Remove")}>
-                          <Button
+                          <ActionIcon
                             variant="tertiary"
                             accent="danger"
                             aria-label={translate("saved.delete", "Remove")}
@@ -505,14 +498,13 @@ export const SavedSignaturesSection = ({
                               onDeleteSignature(activeSharedSignature)
                             }
                             disabled={disabled}
-                            leftSection={
-                              <LocalIcon
-                                icon="delete-outline-rounded"
-                                width={18}
-                                height={18}
-                              />
-                            }
-                          />
+                          >
+                            <LocalIcon
+                              icon="delete-outline-rounded"
+                              width={18}
+                              height={18}
+                            />
+                          </ActionIcon>
                         </Tooltip>
                       )}
                     </Group>
@@ -569,7 +561,7 @@ export const SavedSignaturesSection = ({
                     )}
                   </Text>
                   <Group gap={4}>
-                    <Button
+                    <ActionIcon
                       variant="secondary"
                       aria-label={translate("saved.prev", "Previous")}
                       onClick={() =>
@@ -578,15 +570,14 @@ export const SavedSignaturesSection = ({
                         )
                       }
                       disabled={disabled || activeLocalStorageIndex === 0}
-                      leftSection={
-                        <LocalIcon
-                          icon="chevron-left-rounded"
-                          width={18}
-                          height={18}
-                        />
-                      }
-                    />
-                    <Button
+                    >
+                      <LocalIcon
+                        icon="chevron-left-rounded"
+                        width={18}
+                        height={18}
+                      />
+                    </ActionIcon>
+                    <ActionIcon
                       variant="secondary"
                       aria-label={translate("saved.next", "Next")}
                       onClick={() =>
@@ -602,14 +593,13 @@ export const SavedSignaturesSection = ({
                         activeLocalStorageIndex >=
                           groupedSignatures.localStorage.length - 1
                       }
-                      leftSection={
-                        <LocalIcon
-                          icon="chevron-right-rounded"
-                          width={18}
-                          height={18}
-                        />
-                      }
-                    />
+                    >
+                      <LocalIcon
+                        icon="chevron-right-rounded"
+                        width={18}
+                        height={18}
+                      />
+                    </ActionIcon>
                   </Group>
                 </Group>
 
@@ -623,23 +613,22 @@ export const SavedSignaturesSection = ({
                         {typeLabel(activeLocalStorageSignature.type)}
                       </Badge>
                       <Group gap="xs">
-                        <Button
+                        <ActionIcon
                           variant="tertiary"
                           aria-label={t("sign.saved.use", "Use signature")}
                           onClick={() =>
                             onUseSignature(activeLocalStorageSignature)
                           }
                           disabled={disabled}
-                          leftSection={
-                            <LocalIcon
-                              icon="check-circle-outline-rounded"
-                              width={18}
-                              height={18}
-                            />
-                          }
-                        />
+                        >
+                          <LocalIcon
+                            icon="check-circle-outline-rounded"
+                            width={18}
+                            height={18}
+                          />
+                        </ActionIcon>
                         <Tooltip label={translate("saved.delete", "Remove")}>
-                          <Button
+                          <ActionIcon
                             variant="tertiary"
                             accent="danger"
                             aria-label={translate("saved.delete", "Remove")}
@@ -647,14 +636,13 @@ export const SavedSignaturesSection = ({
                               onDeleteSignature(activeLocalStorageSignature)
                             }
                             disabled={disabled}
-                            leftSection={
-                              <LocalIcon
-                                icon="delete-outline-rounded"
-                                width={18}
-                                height={18}
-                              />
-                            }
-                          />
+                          >
+                            <LocalIcon
+                              icon="delete-outline-rounded"
+                              width={18}
+                              height={18}
+                            />
+                          </ActionIcon>
                         </Tooltip>
                       </Group>
                     </Group>

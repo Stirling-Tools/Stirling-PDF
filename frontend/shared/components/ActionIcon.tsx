@@ -33,6 +33,8 @@ type ActionIconOwnProps = {
   /** Required — an icon-only control must have an accessible name. */
   "aria-label": string;
   loading?: boolean;
+  /** false = no hover background change. */
+  hover?: boolean;
   /** Polymorphic root element (e.g. `"a"` or a router Link). */
   as?: ElementType;
   style?: CSSProperties;
@@ -59,6 +61,7 @@ export function ActionIcon({
   size = "md",
   shape = "default",
   loading = false,
+  hover = true,
   as,
   disabled,
   className,
@@ -71,6 +74,7 @@ export function ActionIcon({
     `sui-acc-${accent}`,
     `sui-ai--${variant}`,
     shape !== "default" ? `sui-ai--${shape}` : "",
+    !hover ? "sui-ai--no-hover" : "",
     className ?? "",
   ]
     .filter(Boolean)

@@ -547,7 +547,7 @@ export const BookmarkSidebar = ({
             }
           >
             {hasChildren ? (
-              <Button
+              <ActionIcon
                 variant="tertiary"
                 size="sm"
                 className="bookmark-item__expand-icon"
@@ -556,18 +556,15 @@ export const BookmarkSidebar = ({
                   event.stopPropagation();
                   toggleNode(node.id);
                 }}
-                leftSection={
-                  <LocalIcon
-                    icon={
-                      isNodeExpanded
-                        ? "keyboard-arrow-up"
-                        : "keyboard-arrow-down"
-                    }
-                    width="1rem"
-                    height="1rem"
-                  />
-                }
-              />
+              >
+                <LocalIcon
+                  icon={
+                    isNodeExpanded ? "keyboard-arrow-up" : "keyboard-arrow-down"
+                  }
+                  width="1rem"
+                  height="1rem"
+                />
+              </ActionIcon>
             ) : (
               <span className="bookmark-item__dash">-</span>
             )}
@@ -637,35 +634,33 @@ export const BookmarkSidebar = ({
           {bookmarkSupport && bookmarksWithIds.length > 0 && (
             <>
               {Object.values(expanded).some((val) => val === false) ? (
-                <Button
+                <ActionIcon
                   variant="tertiary"
                   size="sm"
                   onClick={expandAll}
                   aria-label="Expand all bookmarks"
                   title="Expand all"
-                  leftSection={
-                    <LocalIcon
-                      icon="unfold-more"
-                      width="1.1rem"
-                      height="1.1rem"
-                    />
-                  }
-                />
+                >
+                  <LocalIcon
+                    icon="unfold-more"
+                    width="1.1rem"
+                    height="1.1rem"
+                  />
+                </ActionIcon>
               ) : (
-                <Button
+                <ActionIcon
                   variant="tertiary"
                   size="sm"
                   onClick={collapseAll}
                   aria-label="Collapse all bookmarks"
                   title="Collapse all"
-                  leftSection={
-                    <LocalIcon
-                      icon="unfold-less"
-                      width="1.1rem"
-                      height="1.1rem"
-                    />
-                  }
-                />
+                >
+                  <LocalIcon
+                    icon="unfold-less"
+                    width="1.1rem"
+                    height="1.1rem"
+                  />
+                </ActionIcon>
               )}
             </>
           )}

@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Paper, Group, Text, Popover, List, ScrollArea } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
@@ -267,16 +268,15 @@ export function SelfHostedOfflineBanner() {
             </Popover.Dropdown>
           </Popover>
         )}
-        <Button
+        <ActionIcon
           variant="tertiary"
           size="sm"
           onClick={() => setDismissed(true)}
           aria-label={t("close", "Close")}
-          leftSection={
-            <LocalIcon icon="close-rounded" width="0.8rem" height="0.8rem" />
-          }
           style={{ color: BANNER_TEXT }}
-        />
+        >
+          <LocalIcon icon="close-rounded" width="0.8rem" height="0.8rem" />
+        </ActionIcon>
       </Group>
     </Paper>
   );

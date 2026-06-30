@@ -2,6 +2,7 @@ import React, { useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Checkbox, Menu, Tooltip } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import FolderIcon from "@mui/icons-material/Folder";
@@ -512,13 +513,14 @@ function FolderCard({
       <div className="files-page-card-actions">
         <Menu shadow="md" position="bottom-end" withinPortal>
           <Menu.Target>
-            <Button
+            <ActionIcon
               ref={kebabRef}
               size="sm"
               onClick={(e) => e.stopPropagation()}
               aria-label={t("filesPage.folderMenu", "Folder actions")}
-              leftSection={<MoreVertIcon fontSize="small" />}
-            />
+            >
+              <MoreVertIcon fontSize="small" />
+            </ActionIcon>
           </Menu.Target>
           <Menu.Dropdown>
             <Menu.Item
@@ -745,14 +747,15 @@ function FileCard({
       <div className="files-page-card-actions">
         <Menu shadow="md" position="bottom-end" withinPortal>
           <Menu.Target>
-            <Button
+            <ActionIcon
               ref={kebabRef}
               size="sm"
               onClick={(e) => e.stopPropagation()}
               aria-label={t("filesPage.fileMenu", "File actions")}
               data-testid="file-card-actions"
-              leftSection={<MoreVertIcon fontSize="small" />}
-            />
+            >
+              <MoreVertIcon fontSize="small" />
+            </ActionIcon>
           </Menu.Target>
           <Menu.Dropdown>
             <Menu.Item
@@ -1115,14 +1118,15 @@ function FolderRow({
       <span>{getFileDate({ lastModified: folder.updatedAt })}</span>
       <Menu shadow="md" position="bottom-end" withinPortal>
         <Menu.Target>
-          <Button
+          <ActionIcon
             ref={kebabRef}
             variant="tertiary"
             size="sm"
             onClick={(e) => e.stopPropagation()}
             aria-label={t("filesPage.folderMenu", "Folder actions")}
-            leftSection={<MoreVertIcon fontSize="small" />}
-          />
+          >
+            <MoreVertIcon fontSize="small" />
+          </ActionIcon>
         </Menu.Target>
         <Menu.Dropdown>
           <Menu.Item
@@ -1331,15 +1335,16 @@ function FileRow({
       <span>{fileDate}</span>
       <Menu shadow="md" position="bottom-end" withinPortal>
         <Menu.Target>
-          <Button
+          <ActionIcon
             ref={kebabRef}
             variant="tertiary"
             size="sm"
             onClick={(e) => e.stopPropagation()}
             aria-label={t("filesPage.fileMenu", "File actions")}
             data-testid="file-card-actions"
-            leftSection={<MoreVertIcon fontSize="small" />}
-          />
+          >
+            <MoreVertIcon fontSize="small" />
+          </ActionIcon>
         </Menu.Target>
         <Menu.Dropdown>
           <Menu.Item

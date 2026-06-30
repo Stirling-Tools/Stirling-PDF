@@ -19,6 +19,7 @@
 import React, { Suspense, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import CloseIcon from "@mui/icons-material/CloseRounded";
 import ArrowBackIcon from "@mui/icons-material/ArrowBackRounded";
 import ShieldIcon from "@mui/icons-material/ShieldOutlined";
@@ -153,13 +154,14 @@ export default function UpgradeModal({
           <header className="upm-header">
             <div className="upm-header__left">
               {step === "checkout" && (
-                <Button
+                <ActionIcon
                   variant="tertiary"
                   aria-label={t("payg.upgrade.backAria", "Back")}
                   onClick={goBackToCap}
                   style={{ marginLeft: -6 }}
-                  leftSection={<ArrowBackIcon fontSize="small" />}
-                />
+                >
+                  <ArrowBackIcon fontSize="small" />
+                </ActionIcon>
               )}
               <h2 className="upm-header__title">
                 {step === "confirm"
@@ -170,12 +172,13 @@ export default function UpgradeModal({
                     )}
               </h2>
             </div>
-            <Button
+            <ActionIcon
               variant="tertiary"
               aria-label={t("payg.upgrade.closeAria", "Close")}
               onClick={closeAndReset}
-              leftSection={<CloseIcon fontSize="small" />}
-            />
+            >
+              <CloseIcon fontSize="small" />
+            </ActionIcon>
           </header>
 
           {/* Step indicator. Hidden on the confirmation panel since the

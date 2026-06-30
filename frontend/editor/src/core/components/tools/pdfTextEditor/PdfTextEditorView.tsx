@@ -23,6 +23,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { Dropzone } from "@mantine/dropzone";
 import { useTranslation } from "react-i18next";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
@@ -1551,7 +1552,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
       {content}
       {resizeHandle}
       {activeGroupId === groupId && (
-        <Button
+        <ActionIcon
           aria-label={t("pdfTextEditor.actions.clearText", "Clear text")}
           size="sm"
           variant="tertiary"
@@ -1564,7 +1565,6 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
             cursor: "pointer",
             pointerEvents: "auto",
           }}
-          leftSection={<CloseIcon style={{ fontSize: 12 }} />}
           onMouseDown={(event) => {
             console.log(`❌ MOUSEDOWN on X button for group ${groupId}`);
             event.stopPropagation();
@@ -1595,7 +1595,9 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
             event.stopPropagation();
             event.preventDefault();
           }}
-        />
+        >
+          <CloseIcon style={{ fontSize: 12 }} />
+        </ActionIcon>
       )}
     </Box>
   );
@@ -2122,7 +2124,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                               "Merge selected boxes",
                             )}
                           >
-                            <Button
+                            <ActionIcon
                               size="sm"
                               variant="secondary"
                               aria-label={t(
@@ -2130,8 +2132,9 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                                 "Merge selection",
                               )}
                               onClick={handleMergeSelection}
-                              leftSection={<MergeTypeIcon fontSize="small" />}
-                            />
+                            >
+                              <MergeTypeIcon fontSize="small" />
+                            </ActionIcon>
                           </Tooltip>
                         )}
                         {canUngroupSelection && (
@@ -2141,7 +2144,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                               "Split paragraph back into lines",
                             )}
                           >
-                            <Button
+                            <ActionIcon
                               size="sm"
                               variant="secondary"
                               aria-label={t(
@@ -2149,8 +2152,9 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                                 "Ungroup selection",
                               )}
                               onClick={handleUngroupSelection}
-                              leftSection={<CallSplitIcon fontSize="small" />}
-                            />
+                            >
+                              <CallSplitIcon fontSize="small" />
+                            </ActionIcon>
                           </Tooltip>
                         )}
                         <Menu
@@ -2160,7 +2164,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                           disabled={!hasSelection && !hasWidthOverrides}
                         >
                           <Menu.Target>
-                            <Button
+                            <ActionIcon
                               size="sm"
                               variant="secondary"
                               aria-label={t(
@@ -2169,8 +2173,9 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                               )}
                               onMouseDown={(event) => event.stopPropagation()}
                               onClick={(event) => event.stopPropagation()}
-                              leftSection={<MoreVertIcon fontSize="small" />}
-                            />
+                            >
+                              <MoreVertIcon fontSize="small" />
+                            </ActionIcon>
                           </Menu.Target>
                           <Menu.Dropdown>
                             <Menu.Item

@@ -9,7 +9,6 @@ import {
   Tooltip,
 } from "@mantine/core";
 import LayersIcon from "@mui/icons-material/Layers";
-import { Button } from "@shared/components/Button";
 import { ActionIcon } from "@shared/components/ActionIcon";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
@@ -310,24 +309,26 @@ export function LayerSidebar({
         <div className="layer-sidebar__header-actions">
           {status === "ready" && leafIds.length > 0 && (
             <>
-              <Button
+              <ActionIcon
                 variant="tertiary"
                 size="sm"
                 onClick={showAll}
                 disabled={allVisible || isApplying}
                 aria-label="Show all layers"
                 title="Show all"
-                leftSection={<VisibilityIcon sx={{ fontSize: "1rem" }} />}
-              />
-              <Button
+              >
+                <VisibilityIcon sx={{ fontSize: "1rem" }} />
+              </ActionIcon>
+              <ActionIcon
                 variant="tertiary"
                 size="sm"
                 onClick={hideAll}
                 disabled={allHidden || isApplying}
                 aria-label="Hide all layers"
                 title="Hide all"
-                leftSection={<VisibilityOffIcon sx={{ fontSize: "1rem" }} />}
-              />
+              >
+                <VisibilityOffIcon sx={{ fontSize: "1rem" }} />
+              </ActionIcon>
             </>
           )}
           <ActionIcon

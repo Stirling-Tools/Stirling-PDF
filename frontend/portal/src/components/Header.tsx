@@ -1,4 +1,4 @@
-import { Avatar, Button, Dropdown } from "@shared/components";
+import { ActionIcon, Avatar, Button, Dropdown } from "@shared/components";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@shared/auth";
 import { useTheme } from "@portal/contexts/ThemeContext";
@@ -19,7 +19,7 @@ function ThemeToggle() {
   const { theme, toggle } = useTheme();
   const { t } = useTranslation();
   return (
-    <Button
+    <ActionIcon
       variant="tertiary"
       className="portal-header__icon-btn"
       onClick={toggle}
@@ -33,10 +33,9 @@ function ThemeToggle() {
           ? t("shell.header.darkMode", "Dark mode")
           : t("shell.header.lightMode", "Light mode")
       }
-      leftSection={
-        theme === "light" ? <MoonIcon size={16} /> : <SunIcon size={16} />
-      }
-    />
+    >
+      {theme === "light" ? <MoonIcon size={16} /> : <SunIcon size={16} />}
+    </ActionIcon>
   );
 }
 

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Badge, Tooltip } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import CloseIcon from "@mui/icons-material/Close";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import DriveFileMoveIcon from "@mui/icons-material/DriveFileMove";
@@ -144,13 +145,14 @@ export function FileDetailsPanel({
           label={t("filesPage.closeDetails", "Close details")}
           withinPortal
         >
-          <Button
+          <ActionIcon
             variant="tertiary"
             size="sm"
             onClick={onClose}
             aria-label={t("filesPage.closeDetails", "Close details")}
-            leftSection={<CloseIcon fontSize="small" />}
-          />
+          >
+            <CloseIcon fontSize="small" />
+          </ActionIcon>
         </Tooltip>
       </div>
 

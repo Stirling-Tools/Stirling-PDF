@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useIsPhone } from "@app/hooks/useIsMobile";
 import { Tooltip } from "@app/components/shared/Tooltip";
-import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import FirstPageIcon from "@mui/icons-material/FirstPage";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
@@ -154,7 +154,7 @@ export function PdfViewerToolbar({
     >
       {/* First Page Button */}
       {!isPhone && (
-        <Button
+        <ActionIcon
           variant="tertiary"
           size={buttonSize}
           onClick={handleFirstPage}
@@ -162,12 +162,13 @@ export function PdfViewerToolbar({
           style={{ minWidth: buttonMinWidth }}
           title={t("viewer.firstPage", "First Page")}
           aria-label={t("viewer.firstPage", "First Page")}
-          leftSection={<FirstPageIcon fontSize="small" />}
-        />
+        >
+          <FirstPageIcon fontSize="small" />
+        </ActionIcon>
       )}
 
       {/* Previous Page Button */}
-      <Button
+      <ActionIcon
         variant="tertiary"
         size={buttonSize}
         onClick={handlePreviousPage}
@@ -175,8 +176,9 @@ export function PdfViewerToolbar({
         style={{ minWidth: buttonMinWidth }}
         title={t("viewer.previousPage", "Previous Page")}
         aria-label={t("viewer.previousPage", "Previous Page")}
-        leftSection={<ArrowBackIosIcon fontSize="small" />}
-      />
+      >
+        <ArrowBackIosIcon fontSize="small" />
+      </ActionIcon>
 
       {/* Page Input */}
       <NumberInput
@@ -206,7 +208,7 @@ export function PdfViewerToolbar({
       </span>
 
       {/* Next Page Button */}
-      <Button
+      <ActionIcon
         variant="tertiary"
         size={buttonSize}
         onClick={handleNextPage}
@@ -214,12 +216,13 @@ export function PdfViewerToolbar({
         style={{ minWidth: buttonMinWidth }}
         title={t("viewer.nextPage", "Next Page")}
         aria-label={t("viewer.nextPage", "Next Page")}
-        leftSection={<ArrowForwardIosIcon fontSize="small" />}
-      />
+      >
+        <ArrowForwardIosIcon fontSize="small" />
+      </ActionIcon>
 
       {/* Last Page Button */}
       {!isPhone && (
-        <Button
+        <ActionIcon
           variant="tertiary"
           size={buttonSize}
           onClick={handleLastPage}
@@ -227,8 +230,9 @@ export function PdfViewerToolbar({
           style={{ minWidth: buttonMinWidth }}
           title={t("viewer.lastPage", "Last Page")}
           aria-label={t("viewer.lastPage", "Last Page")}
-          leftSection={<LastPageIcon fontSize="small" />}
-        />
+        >
+          <LastPageIcon fontSize="small" />
+        </ActionIcon>
       )}
 
       {/* Dual Page Toggle */}
@@ -242,7 +246,7 @@ export function PdfViewerToolbar({
           position="top"
           arrow
         >
-          <Button
+          <ActionIcon
             variant={isDualPageActive ? "primary" : "secondary"}
             size={buttonSize}
             onClick={handleDualPageToggle}
@@ -253,14 +257,13 @@ export function PdfViewerToolbar({
                 ? t("viewer.singlePageView", "Single Page View")
                 : t("viewer.dualPageView", "Dual Page View")
             }
-            leftSection={
-              isDualPageActive ? (
-                <DescriptionIcon fontSize="small" />
-              ) : (
-                <ViewWeekIcon fontSize="small" />
-              )
-            }
-          />
+          >
+            {isDualPageActive ? (
+              <DescriptionIcon fontSize="small" />
+            ) : (
+              <ViewWeekIcon fontSize="small" />
+            )}
+          </ActionIcon>
         </Tooltip>
       )}
 
@@ -277,7 +280,7 @@ export function PdfViewerToolbar({
           position="top"
           arrow
         >
-          <Button
+          <ActionIcon
             variant={pdfRenderMode !== "normal" ? "primary" : "secondary"}
             size={buttonSize}
             onClick={cyclePdfRenderMode}
@@ -289,18 +292,11 @@ export function PdfViewerToolbar({
                   ? t("viewer.enableSepiaFilter", "Enable Sepia Filter")
                   : t("viewer.disableColorFilter", "Disable Color Filter")
             }
-            leftSection={
-              <>
-                {pdfRenderMode === "normal" && (
-                  <DarkModeIcon fontSize="small" />
-                )}
-                {pdfRenderMode === "dark" && (
-                  <WbTwilightIcon fontSize="small" />
-                )}
-                {pdfRenderMode === "sepia" && <WbSunnyIcon fontSize="small" />}
-              </>
-            }
-          />
+          >
+            {pdfRenderMode === "normal" && <DarkModeIcon fontSize="small" />}
+            {pdfRenderMode === "dark" && <WbTwilightIcon fontSize="small" />}
+            {pdfRenderMode === "sepia" && <WbSunnyIcon fontSize="small" />}
+          </ActionIcon>
         </Tooltip>
       )}
 
@@ -312,12 +308,13 @@ export function PdfViewerToolbar({
           wrap="nowrap"
           style={{ marginLeft: 16, flexShrink: 0 }}
         >
-          <Button
+          <ActionIcon
             variant="tertiary"
             onClick={handleZoomOut}
             aria-label={t("viewer.zoomOut", "Zoom out")}
-            leftSection={<ZoomOutIcon fontSize="small" />}
-          />
+          >
+            <ZoomOutIcon fontSize="small" />
+          </ActionIcon>
           <Slider
             value={Math.min(Math.max(displayZoomPercent, 20), 500)}
             min={20}
@@ -332,12 +329,13 @@ export function PdfViewerToolbar({
             }}
             label={null}
           />
-          <Button
+          <ActionIcon
             variant="tertiary"
             onClick={handleZoomIn}
             aria-label={t("viewer.zoomIn", "Zoom in")}
-            leftSection={<ZoomInIcon fontSize="small" />}
-          />
+          >
+            <ZoomInIcon fontSize="small" />
+          </ActionIcon>
           <span
             style={{
               minWidth: "2.5rem",
@@ -359,13 +357,14 @@ export function PdfViewerToolbar({
           closeOnItemClick={false}
         >
           <Menu.Target>
-            <Button
+            <ActionIcon
               variant="secondary"
               size="lg"
               aria-label={t("viewer.moreOptions", "More")}
               style={{ marginLeft: 4 }}
-              leftSection={<MoreVertIcon fontSize="small" />}
-            />
+            >
+              <MoreVertIcon fontSize="small" />
+            </ActionIcon>
           </Menu.Target>
           <Menu.Dropdown>
             <Menu.Label>

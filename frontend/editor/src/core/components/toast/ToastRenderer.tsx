@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useToast } from "@app/components/toast/ToastContext";
 import { ToastInstance, ToastLocation } from "@app/components/toast/types";
 import { LocalIcon } from "@app/components/shared/LocalIcon";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { Button } from "@shared/components/Button";
 import "@app/components/toast/ToastRenderer.css";
 
@@ -100,9 +101,8 @@ export default function ToastRenderer() {
                   {/* Controls */}
                   <div className="toast-controls">
                     {t.expandable && (
-                      <Button
+                      <ActionIcon
                         variant="tertiary"
-                        leftSection={<LocalIcon icon="expand-more-rounded" />}
                         aria-label={translate(
                           "toast.toggleDetails",
                           "Toggle details",
@@ -114,15 +114,18 @@ export default function ToastRenderer() {
                           window.dispatchEvent(evt);
                         }}
                         className={`toast-button toast-expand-button ${t.isExpanded ? "toast-expand-button--expanded" : ""}`}
-                      />
+                      >
+                        <LocalIcon icon="expand-more-rounded" />
+                      </ActionIcon>
                     )}
-                    <Button
+                    <ActionIcon
                       variant="tertiary"
-                      leftSection={<>&times;</>}
                       aria-label={translate("toast.dismiss", "Dismiss")}
                       onClick={() => dismiss(t.id)}
                       className="toast-button"
-                    />
+                    >
+                      &times;
+                    </ActionIcon>
                   </div>
                 </div>
                 {/* Progress bar - always show when present */}

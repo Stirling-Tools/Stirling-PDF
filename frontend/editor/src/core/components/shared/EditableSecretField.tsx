@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { PasswordInput, Group, Tooltip, TextInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import LocalIcon from "@app/components/shared/LocalIcon";
 
 interface EditableSecretFieldProps {
@@ -89,7 +89,7 @@ export default function EditableSecretField({
         <Group gap="xs" align="flex-end">
           <TextInput value="••••••••" disabled style={{ flex: 1 }} readOnly />
           <Tooltip label={t("editSecret")} withArrow>
-            <Button
+            <ActionIcon
               variant="secondary"
               onClick={handleEdit}
               disabled={disabled}
@@ -98,8 +98,9 @@ export default function EditableSecretField({
                 "editableSecretField.editSecretValue",
                 "Edit secret value",
               )}
-              leftSection={<LocalIcon icon="edit" width="1rem" height="1rem" />}
-            />
+            >
+              <LocalIcon icon="edit" width="1rem" height="1rem" />
+            </ActionIcon>
           </Tooltip>
         </Group>
       ) : isEditing ? (

@@ -1,5 +1,5 @@
 import { TextInput, Text, Flex, Switch } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
@@ -78,14 +78,15 @@ const PageSelectionInput = ({
         placeholder="1,3,5-10"
         rightSection={
           csvInput && (
-            <Button
+            <ActionIcon
               variant="tertiary"
               accent="neutral"
               size="sm"
               onClick={onClear}
               aria-label={t("clear", "Clear")}
-              leftSection={<>&times;</>}
-            />
+            >
+              &times;
+            </ActionIcon>
           )
         }
         onKeyDown={(e) => e.key === "Enter" && onUpdatePagesFromCSV()}

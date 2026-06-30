@@ -11,6 +11,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { alert } from "@app/components/toast";
 import {
@@ -223,9 +224,8 @@ export default function ChangeUserPasswordModal({
       withCloseButton={false}
     >
       <div style={{ position: "relative" }}>
-        <Button
+        <ActionIcon
           aria-label={t("common.close", "Close")}
-          leftSection={<LocalIcon icon="close-rounded" />}
           variant="tertiary"
           onClick={handleClose}
           size="lg"
@@ -236,7 +236,9 @@ export default function ChangeUserPasswordModal({
             right: -8,
             zIndex: 1,
           }}
-        />
+        >
+          <LocalIcon icon="close-rounded" />
+        </ActionIcon>
         <Stack gap="lg" pt="md">
           <Stack gap="md" align="center">
             <LocalIcon
@@ -338,23 +340,22 @@ export default function ChangeUserPasswordModal({
                       "Copy to clipboard",
                     )}
                   >
-                    <Button
+                    <ActionIcon
                       aria-label={t(
                         "workspace.people.changePassword.copyTooltip",
                         "Copy to clipboard",
                       )}
-                      leftSection={
-                        <LocalIcon
-                          icon="content-copy"
-                          width="0.9rem"
-                          height="0.9rem"
-                        />
-                      }
                       size="sm"
                       variant="tertiary"
                       onClick={handleCopyPassword}
                       disabled={processing}
-                    />
+                    >
+                      <LocalIcon
+                        icon="content-copy"
+                        width="0.9rem"
+                        height="0.9rem"
+                      />
+                    </ActionIcon>
                   </Tooltip>
                 </Group>
               )}

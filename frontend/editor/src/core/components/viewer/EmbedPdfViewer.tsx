@@ -8,6 +8,7 @@ import React, {
 import { useTranslation } from "react-i18next";
 import { Box, Center, Text, Stack } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import CloseIcon from "@mui/icons-material/Close";
 import LockIcon from "@mui/icons-material/Lock";
 
@@ -1206,7 +1207,7 @@ const EmbedPdfViewerContent = ({
     >
       {/* Close Button - Only show in preview mode */}
       {onClose && previewFile && (
-        <Button
+        <ActionIcon
           variant="secondary"
           size="lg"
           aria-label={t("common.close", "Close")}
@@ -1217,8 +1218,9 @@ const EmbedPdfViewerContent = ({
             zIndex: 1000,
           }}
           onClick={onClose}
-          leftSection={<CloseIcon />}
-        />
+        >
+          <CloseIcon />
+        </ActionIcon>
       )}
 
       {!effectiveFile ? (

@@ -18,6 +18,7 @@ import {
 } from "@embedpdf/models";
 import { Z_INDEX_VIEWER_FLOATING_MENU } from "@app/styles/zIndex";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 // ---------------------------------------------------------------------------
 // Inline SVG icons (thin-stroke, modern)
 // ---------------------------------------------------------------------------
@@ -186,7 +187,7 @@ const LinkToolbar: React.FC<LinkToolbarProps> = React.memo(
         onMouseLeave={onMouseLeave}
       >
         {/* Delete */}
-        <Button
+        <ActionIcon
           variant="tertiary"
           className="pdf-link-toolbar-btn pdf-link-toolbar-btn--delete"
           onClick={(e) => {
@@ -197,7 +198,7 @@ const LinkToolbar: React.FC<LinkToolbarProps> = React.memo(
           title={t("viewer.link.delete", "Delete link")}
         >
           <TrashIcon />
-        </Button>
+        </ActionIcon>
         <span className="pdf-link-toolbar-sep" />
         {/* Navigate / Open */}
         <Button

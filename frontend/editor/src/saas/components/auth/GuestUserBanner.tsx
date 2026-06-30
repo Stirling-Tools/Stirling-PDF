@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import CloseIcon from "@mui/icons-material/Close";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { useAuth } from "@app/auth/UseSession";
 import { isUserAnonymous } from "@app/auth/supabase";
 import { withBasePath } from "@app/constants/app";
@@ -82,12 +83,13 @@ export function GuestUserBanner({ className = "" }: GuestUserBannerProps) {
           </div>
         </div>
         <div className="guest-banner-actions">
-          <Button
+          <ActionIcon
             variant="tertiary"
             onClick={handleDismiss}
             aria-label={t("guestBanner.dismiss", "Dismiss banner")}
-            leftSection={<CloseIcon className="guest-banner-icon" />}
-          />
+          >
+            <CloseIcon className="guest-banner-icon" />
+          </ActionIcon>
           <Button
             size="sm"
             onClick={handleSignUp}

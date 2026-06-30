@@ -8,7 +8,7 @@ import {
   Alert,
   Checkbox,
 } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { useTranslation } from "react-i18next";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import { CropParametersHook } from "@app/hooks/tools/crop/useCropParameters";
@@ -192,14 +192,15 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
             <Text size="sm" fw={500}>
               {t("crop.preview.title", "Crop Area Selection")}
             </Text>
-            <Button
+            <ActionIcon
               variant="secondary"
               onClick={handleReset}
               disabled={disabled || isFullCrop}
               title={t("crop.reset", "Reset to full PDF")}
               aria-label={t("crop.reset", "Reset to full PDF")}
-              leftSection={<RestartAltIcon style={{ fontSize: "1rem" }} />}
-            />
+            >
+              <RestartAltIcon style={{ fontSize: "1rem" }} />
+            </ActionIcon>
           </Group>
 
           <Center>

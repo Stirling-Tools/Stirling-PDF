@@ -1,7 +1,7 @@
 import React, { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
-import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { ViewerContext } from "@app/contexts/ViewerContext";
 import { useSignature } from "@app/contexts/SignatureContext";
@@ -185,7 +185,7 @@ export default function ViewerAnnotationControls({
         arrow
         portalTarget={document.body}
       >
-        <Button
+        <ActionIcon
           variant={isRedactMode ? "primary" : "tertiary"}
           className="workbench-bar-action-icon"
           onClick={handleRedactionToggle}
@@ -195,14 +195,13 @@ export default function ViewerAnnotationControls({
               ? t("workbenchBar.exitRedaction", "Exit Redaction Mode")
               : t("workbenchBar.redact", "Redact")
           }
-          leftSection={
-            <LocalIcon
-              icon="scan-delete-rounded"
-              width="1.25rem"
-              height="1.25rem"
-            />
-          }
-        />
+        >
+          <LocalIcon
+            icon="scan-delete-rounded"
+            width="1.25rem"
+            height="1.25rem"
+          />
+        </ActionIcon>
       </Tooltip>
 
       <Tooltip
@@ -215,7 +214,7 @@ export default function ViewerAnnotationControls({
         arrow
         portalTarget={document.body}
       >
-        <Button
+        <ActionIcon
           variant={annotationsHidden ? "primary" : "tertiary"}
           className="workbench-bar-action-icon"
           onClick={handleToggleAnnotationsVisibility}
@@ -231,18 +230,17 @@ export default function ViewerAnnotationControls({
             "workbenchBar.toggleAnnotations",
             "Toggle Annotations Visibility",
           )}
-          leftSection={
-            <LocalIcon
-              icon={
-                viewerContext?.isAnnotationsVisible
-                  ? "visibility"
-                  : "preview-off-rounded"
-              }
-              width="1.25rem"
-              height="1.25rem"
-            />
-          }
-        />
+        >
+          <LocalIcon
+            icon={
+              viewerContext?.isAnnotationsVisible
+                ? "visibility"
+                : "preview-off-rounded"
+            }
+            width="1.25rem"
+            height="1.25rem"
+          />
+        </ActionIcon>
       </Tooltip>
     </>
   );

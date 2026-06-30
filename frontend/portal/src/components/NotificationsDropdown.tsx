@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { Button, Dropdown, EmptyState, Skeleton } from "@shared/components";
+import {
+  ActionIcon,
+  Button,
+  Dropdown,
+  EmptyState,
+  Skeleton,
+} from "@shared/components";
 import { useTranslation } from "react-i18next";
 import { BellIcon } from "@portal/components/icons";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
@@ -45,9 +51,8 @@ export function NotificationsDropdown() {
   return (
     <Dropdown.Root align="end">
       <Dropdown.Trigger>
-        <Button
+        <ActionIcon
           variant="tertiary"
-          leftSection={<BellIcon size={16} />}
           className="portal-header__icon-btn portal-header__icon-btn--badge"
           aria-label={
             hasUnread
@@ -57,10 +62,11 @@ export function NotificationsDropdown() {
               : t("notifications.ariaLabel.none")
           }
         >
+          <BellIcon size={16} />
           {hasUnread && (
             <span className="portal-header__bell-dot" aria-hidden />
           )}
-        </Button>
+        </ActionIcon>
       </Dropdown.Trigger>
       <Dropdown.Menu width="22.5rem" className="portal-notif__menu">
         <div className="portal-notif__header">

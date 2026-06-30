@@ -1,6 +1,7 @@
 import React from "react";
 import { Group, Tooltip } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
@@ -64,7 +65,7 @@ export function LandingActions({
         </Button>
         {config?.enableMobileScanner && !isMobile && (
           <Tooltip label={terminology.mobileUpload} position="bottom">
-            <Button
+            <ActionIcon
               size="lg"
               variant="secondary"
               aria-label={terminology.mobileUpload}
@@ -73,14 +74,13 @@ export function LandingActions({
                 e.stopPropagation();
                 onMobileUploadClick();
               }}
-              leftSection={
-                <LocalIcon
-                  icon="qr-code-rounded"
-                  width="1.25rem"
-                  height="1.25rem"
-                />
-              }
-            />
+            >
+              <LocalIcon
+                icon="qr-code-rounded"
+                width="1.25rem"
+                height="1.25rem"
+              />
+            </ActionIcon>
           </Tooltip>
         )}
       </Group>

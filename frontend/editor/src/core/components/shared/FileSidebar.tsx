@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import { Loader, Tooltip } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useFileState, useFileActions } from "@app/contexts/file/fileHooks";
@@ -903,7 +904,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                   <span className="file-sidebar-section-label">
                     {t("fileSidebar.files", "Files")}
                   </span>
-                  <Button
+                  <ActionIcon
                     variant="tertiary"
                     className="file-sidebar-section-btn file-sidebar-section-btn-external"
                     onClick={() => navigate("/files")}
@@ -916,16 +917,18 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                       "Browse all files & folders",
                     )}
                     data-testid="open-files-page"
-                    leftSection={<OpenInNewIcon sx={{ fontSize: "1rem" }} />}
-                  />
-                  <Button
+                  >
+                    <OpenInNewIcon sx={{ fontSize: "1rem" }} />
+                  </ActionIcon>
+                  <ActionIcon
                     variant="tertiary"
                     className="file-sidebar-section-btn file-sidebar-section-btn-add"
                     onClick={() => nativeFileInputRef.current?.click()}
                     title={t("fileSidebar.addFiles", "Add files")}
-                    leftSection={<AddIcon sx={{ fontSize: "1rem" }} />}
                     aria-label={t("fileSidebar.addFiles", "Add files")}
-                  />
+                  >
+                    <AddIcon sx={{ fontSize: "1rem" }} />
+                  </ActionIcon>
                 </div>
                 {!stubsLoaded ? (
                   <div className="file-sidebar-loading">

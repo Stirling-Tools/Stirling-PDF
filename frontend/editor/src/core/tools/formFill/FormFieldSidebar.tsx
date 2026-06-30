@@ -9,7 +9,7 @@
  */
 import React, { useCallback, useEffect, useRef } from "react";
 import { Box, Text, ScrollArea, Badge, Tooltip } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { useTranslation } from "react-i18next";
 import { useFormFill } from "@app/tools/formFill/FormFillContext";
 import { FieldInput } from "@app/tools/formFill/FieldInput";
@@ -109,13 +109,14 @@ export function FormFieldSidebar({ visible, onToggle }: FormFieldSidebarProps) {
             {fields.length}
           </Badge>
         </div>
-        <Button
+        <ActionIcon
           variant="tertiary"
           size="sm"
           onClick={onToggle}
           aria-label={t("formFill.sidebar.close", "Close sidebar")}
-          leftSection={<CloseIcon sx={{ fontSize: 16 }} />}
-        />
+        >
+          <CloseIcon sx={{ fontSize: 16 }} />
+        </ActionIcon>
       </div>
 
       {/* Content */}

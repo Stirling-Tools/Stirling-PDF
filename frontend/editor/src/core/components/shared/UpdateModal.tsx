@@ -15,6 +15,7 @@ import {
   Anchor,
 } from "@mantine/core";
 import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useTranslation } from "react-i18next";
 import {
@@ -271,15 +272,14 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
             </Box>
           </Group>
           {canClose && (
-            <Button
+            <ActionIcon
               onClick={onClose}
               size="lg"
               variant="tertiary"
               aria-label={t("update.closeModal", "Close update modal")}
-              leftSection={
-                <LocalIcon icon="close-rounded" width={20} height={20} />
-              }
-            />
+            >
+              <LocalIcon icon="close-rounded" width={20} height={20} />
+            </ActionIcon>
           )}
         </Group>
       </Box>
