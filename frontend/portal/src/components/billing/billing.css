@@ -1,0 +1,999 @@
+/* Portal billing page — paired with views/Usage.tsx (.portal-billing root). */
+
+.portal-billing__stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Spend this month | Spend limit — two separate cards, side by side. */
+.portal-billing__spend-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: 0.75rem;
+  align-items: stretch;
+}
+@media (max-width: 60rem) {
+  .portal-billing__spend-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Left card is a flex column so the Enterprise upsell pins to the foot and the
+   card matches the spend-limit card's height. */
+.portal-billing__spend-this-month {
+  display: flex;
+  flex-direction: column;
+}
+.portal-billing__spend-foot {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+}
+.portal-billing__spend-foot:not(:first-child) {
+  margin-top: 1.25rem;
+}
+
+/* Cap editor (in-place, replaces the spend-limit display). */
+.portal-billing__suggested {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 0.75rem;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-blue);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.portal-billing__suggested:hover {
+  border-color: var(--color-blue);
+}
+.portal-billing__guardrail {
+  margin-top: 0.85rem;
+  padding: 0.7rem 0.85rem;
+  font-size: 0.8125rem;
+  color: var(--color-text-3);
+  background: var(--color-bg-subtle);
+  border-radius: 0.6rem;
+}
+.portal-billing__guardrail strong {
+  color: var(--color-text-1);
+}
+.portal-billing__edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+/* Tighten the billing cards to the marketing rhythm — less empty top/bottom and
+   slightly snugger sides than the default loose profile. */
+.portal-billing__stack .sui-card--pad-loose {
+  padding: 0.95rem 1.5rem;
+}
+
+.portal-billing__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+@media (max-width: 900px) {
+  .portal-billing__row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.portal-billing__row-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.portal-billing__eyebrow {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-3);
+  margin-bottom: 0.25rem;
+}
+
+.portal-billing__section-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+  margin: 0 0 0.25rem;
+}
+
+.portal-billing__section-sub {
+  font-size: 0.875rem;
+  color: var(--color-text-3);
+  margin: 0 0 1rem;
+}
+
+.portal-billing__skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.portal-billing__error {
+  color: var(--color-red, #b91c1c);
+  font-size: 0.875rem;
+  margin: 0.5rem 0;
+}
+
+/* ── Meter card ─────────────────────────────────────────────────────────── */
+.portal-billing__meter-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.portal-billing__meter-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--color-text-1);
+}
+
+.portal-billing__meter-figures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.portal-billing__meter-figure {
+  display: flex;
+  flex-direction: column;
+}
+
+.portal-billing__meter-num {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+
+.portal-billing__meter-num--muted {
+  color: var(--color-text-3);
+}
+
+.portal-billing__meter-label {
+  font-size: 0.8125rem;
+  color: var(--color-text-3);
+}
+
+.portal-billing__meter-track {
+  height: 0.5rem;
+  background: var(--color-bg-subtle, #e5e7eb);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+
+.portal-billing__meter-fill {
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    var(--color-blue, #0a8bff),
+    var(--color-purple, #8b5cf6)
+  );
+  border-radius: 999px;
+  transition: width 200ms ease;
+}
+
+.portal-billing__meter-foot {
+  font-size: 0.8125rem;
+  color: var(--color-text-3);
+  margin: 0.75rem 0 0;
+}
+
+/* ── SaaS-shared meter primitives ───────────────────────────────────────────
+   Same class names + structure as
+   editor/src/cloud/components/shared/config/configSections/{Payg,PaygFree}.css
+   so the visual treatment matches the SaaS plan page. When the shared move
+   lands these can be deduped via a shared stylesheet. */
+/* Flat by default — the meter sits directly on its card, no inner panel box
+   (shared by the free trial meter and the subscribed spend meter). */
+.paygf-meter {
+  margin-top: 0.6rem;
+}
+.paygf-meter__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.paygf-meter__figure {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+}
+.paygf-meter__num {
+  font-size: 1.7rem;
+  font-weight: 750;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--color-text-1, #0f172a);
+  font-variant-numeric: tabular-nums;
+}
+.paygf-meter__cap {
+  font-size: 0.85rem;
+  color: var(--color-text-3, #64748b);
+  font-variant-numeric: tabular-nums;
+}
+.paygf-meter .payg-bar {
+  margin-top: 11px;
+}
+.paygf-meter__meta {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  font-size: 0.78rem;
+  color: var(--color-text-2, #475569);
+}
+
+/* Status chip (Healthy / Approaching / Cap reached). Solid hex colours
+   intentionally — the chip palette is semantic, not theme-bound. */
+.payg-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 13px;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.payg-status__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+}
+.payg-status[data-state="FULL"] {
+  background: #dcfce7;
+  color: #15803d;
+}
+.payg-status[data-state="FULL"] .payg-status__dot {
+  background: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.18);
+}
+.payg-status[data-state="WARNED"] {
+  background: #fef3c7;
+  color: #a16207;
+}
+.payg-status[data-state="WARNED"] .payg-status__dot {
+  background: #eab308;
+  box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.2);
+}
+.payg-status[data-state="DEGRADED"] {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+.payg-status[data-state="DEGRADED"] .payg-status__dot {
+  background: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+}
+
+/* Segmented usage bar */
+.payg-bar {
+  margin-top: 18px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--color-bg-subtle, #e5e7eb);
+  overflow: hidden;
+  position: relative;
+}
+.payg-bar__fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.payg-bar__fill[data-state="FULL"] {
+  background: linear-gradient(90deg, #0a8bff, #38bdf8);
+}
+.payg-bar__fill[data-state="WARNED"] {
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+.payg-bar__fill[data-state="DEGRADED"] {
+  background: linear-gradient(90deg, #dc2626, #f87171);
+}
+
+/* ── Plan card (free state) ─────────────────────────────────────────────── */
+.portal-billing__plan-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.portal-billing__plan-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--color-text-1);
+}
+
+.portal-billing__plan-sub {
+  font-size: 0.9375rem;
+  color: var(--color-text-2);
+  margin: 0 0 0.5rem;
+}
+
+.portal-billing__plan-features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.portal-billing__plan-features li {
+  font-size: 0.875rem;
+  color: var(--color-text-2);
+  padding-left: 1.25rem;
+  position: relative;
+}
+
+.portal-billing__plan-features li::before {
+  content: "✓";
+  color: var(--color-green, #10b981);
+  position: absolute;
+  left: 0;
+  font-weight: 600;
+}
+
+.portal-billing__plan-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.portal-billing__plan-reassure {
+  font-size: 0.75rem;
+  color: var(--color-text-3);
+}
+
+.portal-billing__plan-readonly {
+  font-size: 0.875rem;
+  color: var(--color-text-3);
+  font-style: italic;
+  margin: 0;
+}
+
+/* ── Category breakdown ─────────────────────────────────────────────────── */
+.portal-billing__breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.portal-billing__breakdown-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.portal-billing__breakdown-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8125rem;
+  color: var(--color-text-2);
+}
+
+.portal-billing__breakdown-value {
+  color: var(--color-text-3);
+}
+
+.portal-billing__breakdown-track {
+  height: 0.5rem;
+  background: var(--color-bg-subtle, #e5e7eb);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.portal-billing__breakdown-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 200ms ease;
+}
+
+.portal-billing__breakdown-fill--blue {
+  background: #0a8bff;
+}
+
+.portal-billing__breakdown-fill--purple {
+  background: #8b5cf6;
+}
+
+.portal-billing__breakdown-fill--teal {
+  background: #06b6d4;
+}
+
+/* ── Cap control ────────────────────────────────────────────────────────── */
+.portal-billing__cap-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.portal-billing__cap-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.8125rem;
+  color: var(--color-text-3);
+}
+
+.portal-billing__cap-input {
+  width: 8rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border, #d1d5db);
+  border-radius: 0.375rem;
+  font-size: 0.9375rem;
+  font-family: inherit;
+}
+
+.portal-billing__cap-nocap {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.875rem;
+  color: var(--color-text-2);
+  cursor: pointer;
+}
+
+.portal-billing__cap-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ── Members + invoices ─────────────────────────────────────────────────── */
+.portal-billing__member-stack {
+  display: flex;
+  flex-direction: column;
+}
+
+.portal-billing__member-name {
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+
+.portal-billing__member-email {
+  font-size: 0.8125rem;
+  color: var(--color-text-3);
+}
+
+.portal-billing__invoice-num {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.875rem;
+}
+
+.portal-billing__invoice-desc {
+  color: var(--color-text-1, #0f172a);
+  font-size: 0.9375rem;
+}
+
+/* Tables that sit flush inside an already-surfaced Card: drop the table's
+   own border + background + radius so only the row dividers (kept by sui-table
+   defaults) show. Column headers are hidden too — small self-evident tables
+   read better without them. Used by the Invoice history + Per-member usage
+   tables. */
+.portal-billing__flush-table {
+  border: none;
+  background: transparent;
+  border-radius: 0;
+}
+.portal-billing__flush-table thead {
+  display: none;
+}
+
+.portal-billing__subscription-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.portal-billing__subscription-head > div:first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.portal-billing__subscription-head
+  > div:first-child
+  .portal-billing__section-sub {
+  margin-bottom: 0;
+}
+
+/* ── Spend-cap control — ported from the SaaS cloud SpendCapControl.css.
+   Same class names + structure so the visual is identical to the SaaS Plan
+   page; when the shared-component move lands, these dedupe to one stylesheet. */
+.scc {
+  --scc-accent: #0a8bff;
+  --scc-accent-text: #0a8bff;
+  --scc-accent-soft: rgba(10, 139, 255, 0.12);
+  --scc-accent-border: rgba(10, 139, 255, 0.25);
+  --scc-chip-bg: var(--color-bg-muted, #f8fafc);
+  --scc-chip-border: var(--color-border, #e2e8f0);
+  --scc-text-primary: var(--color-text-1, #0f172a);
+  --scc-text-secondary: var(--color-text-2, #475569);
+  --scc-text-muted: var(--color-text-3, #64748b);
+  --scc-border-strong: var(--color-text-4, #94a3b8);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 0.75rem;
+}
+[data-mantine-color-scheme="dark"] .scc {
+  --scc-accent-text: #66b8ff;
+  --scc-accent-soft: rgba(10, 139, 255, 0.16);
+  --scc-chip-bg: #272d35;
+  --scc-chip-border: #3d444e;
+}
+
+.scc-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.scc-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid var(--scc-chip-border);
+  background: var(--scc-chip-bg);
+  color: var(--scc-text-secondary);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+  transition:
+    color 0.12s ease,
+    border-color 0.12s ease,
+    background 0.12s ease;
+}
+.scc-chip:hover:not(:disabled) {
+  color: var(--scc-text-primary);
+  border-color: var(--scc-border-strong);
+}
+.scc-chip[data-selected="true"] {
+  background: var(--scc-accent-soft);
+  border-color: var(--scc-accent);
+  color: var(--scc-accent-text);
+}
+.scc-chip:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.scc-custom {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px dashed var(--scc-chip-border);
+  background: transparent;
+  cursor: text;
+  transition:
+    border-color 0.12s ease,
+    background 0.12s ease;
+}
+.scc-custom:hover {
+  border-color: var(--scc-border-strong);
+}
+.scc-custom[data-active="true"] {
+  border-style: solid;
+  border-color: var(--scc-accent);
+  background: var(--scc-accent-soft);
+}
+.scc-custom__symbol {
+  color: var(--scc-text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.scc-custom[data-active="true"] .scc-custom__symbol,
+.scc-custom[data-active="true"] .scc-custom__input {
+  color: var(--scc-accent-text);
+}
+.scc-custom__input {
+  width: 70px;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--scc-text-primary);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.scc-custom__input::placeholder {
+  color: var(--scc-text-muted);
+  font-weight: 600;
+}
+
+.scc-row__spacer {
+  margin-left: auto;
+}
+
+.scc-estimate {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--scc-accent-soft);
+  border: 1px solid var(--scc-accent-border);
+}
+.scc-estimate__icon {
+  color: var(--scc-accent-text);
+  display: flex;
+}
+.scc-estimate__main {
+  font-size: 0.875rem;
+  font-weight: 550;
+  color: var(--scc-text-primary);
+}
+.scc-estimate__sub {
+  font-size: 0.75rem;
+  color: var(--scc-text-muted);
+  margin-top: 1px;
+}
+
+.scc-note {
+  font-size: 0.8125rem;
+  color: var(--scc-text-muted);
+  line-height: 1.45;
+}
+
+/* ── Plan header (free-vs-metered split) — ported from SaaS payg-planhead ── */
+.portal-billing__planhead-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.portal-billing__planhead-eyebrow {
+  font-size: 0.78rem;
+  color: var(--color-text-3);
+}
+.portal-billing__role-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.portal-billing__role-pill[data-leader="true"] {
+  background: rgba(10, 139, 255, 0.12);
+  color: #0a8bff;
+  border: 1px solid rgba(10, 139, 255, 0.25);
+}
+.portal-billing__role-pill[data-leader="false"] {
+  background: var(--color-bg-muted);
+  color: var(--color-text-3);
+  border: 1px solid var(--color-border);
+}
+.portal-billing__planhead-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+}
+.portal-billing__planhead-col {
+  padding-right: 22px;
+}
+.portal-billing__planhead-col--meter {
+  padding-right: 0;
+  padding-left: 22px;
+  border-left: 1px solid var(--color-border);
+}
+.portal-billing__planhead-lbl {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.portal-billing__planhead-lbl--free {
+  color: #10b981;
+}
+.portal-billing__planhead-lbl--meter {
+  color: #0a8bff;
+}
+.portal-billing__planhead-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-text-1);
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+.portal-billing__planhead-body {
+  margin: 5px 0 0;
+  font-size: 0.85rem;
+  color: var(--color-text-3);
+  line-height: 1.5;
+}
+/* The period meter merged into the plan-head card, divided from the split. */
+.portal-billing__planhead-meter {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--color-border);
+}
+@media (max-width: 640px) {
+  .portal-billing__planhead-split {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .portal-billing__planhead-col {
+    padding-right: 0;
+  }
+  .portal-billing__planhead-col--meter {
+    padding-left: 0;
+    padding-top: 16px;
+    border-left: none;
+    border-top: 1px solid var(--color-border);
+  }
+}
+
+.portal-billing__invoice-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.portal-billing__invoice-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text-1, #0f172a);
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease;
+}
+
+.portal-billing__invoice-link:hover {
+  background: var(--color-bg-muted, #f1f5f9);
+  border-color: var(--color-border, #e2e8f0);
+}
+
+.portal-billing__invoice-link:focus-visible {
+  outline: none;
+  border-color: var(--color-blue, #0a8bff);
+  background: var(--color-bg-muted, #f1f5f9);
+}
+
+.portal-billing__invoice-footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 0.75rem;
+}
+
+/* ── Current plan header ──────────────────────────────────────────────── */
+.portal-billing__current-plan {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.portal-billing__current-plan-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+.portal-billing__current-plan-name {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text-1);
+}
+
+/* ── Free PDF Editors (fleet) card ───────────────────────────────────── */
+.portal-billing__editors-id {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+.portal-billing__editors-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  line-height: 0;
+  border-radius: 0.65rem;
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
+  color: var(--color-blue);
+}
+/* Identity, stats, and the "Invite teammates" action all sit on one line; the
+   metric cells render flat (no per-stat box) and are divided by hairlines, so
+   the card reads as a single strip rather than a box-in-a-box. */
+.portal-billing__fleet-row {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+.portal-billing__fleet-row .portal-billing__editors-id {
+  align-items: center;
+  flex: 0 0 auto;
+}
+.portal-billing__fleet-metrics {
+  flex: 1;
+}
+.portal-billing__fleet-metrics .sui-metric {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  border-left: 1px solid var(--color-border);
+  padding: 0 0 0 1.5rem;
+  min-width: 0;
+  gap: 0.3rem;
+}
+/* Uppercase stat labels to match the marketing treatment. */
+.portal-billing__fleet-metrics .sui-metric__label {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+@media (max-width: 60rem) {
+  .portal-billing__fleet-row {
+    flex-wrap: wrap;
+    gap: 1.25rem;
+  }
+  .portal-billing__fleet-metrics {
+    flex: 1 1 100%;
+    order: 3;
+  }
+}
+
+/* "N left" reads as quiet gray text, like the "x of y" suffix — not a status pill. */
+.portal-billing__trial-meter .payg-status,
+.portal-billing__spend-meter .payg-status {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--color-text-3, #64748b);
+}
+.portal-billing__trial-meter .payg-status__dot,
+.portal-billing__spend-meter .payg-status__dot {
+  display: none;
+}
+/* Spend meter: anchor the "remaining" half of the meta line to the right edge. */
+.portal-billing__spend-meter .paygf-meter__meta {
+  justify-content: space-between;
+}
+
+/* ── Enterprise / volume-discount card ───────────────────────────────── */
+.portal-billing__enterprise-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+/* Bare variant — embeds in another card's column without its own surface. */
+.portal-billing__enterprise-bare {
+  display: block;
+}
+
+/* ── PDFs processed + category split (subscribed) ────────────────────── */
+.portal-billing__bignum-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin: 0.35rem 0 0.85rem;
+}
+.portal-billing__bignum {
+  font-size: 2rem;
+  font-weight: 750;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--color-text-1);
+  font-variant-numeric: tabular-nums;
+}
+.portal-billing__bignum-unit {
+  font-size: 0.85rem;
+  color: var(--color-text-3);
+}
+.portal-billing__segbar {
+  display: flex;
+  height: 0.55rem;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--color-bg-muted, #f1f5f9);
+}
+.portal-billing__segbar-seg {
+  height: 100%;
+}
+.portal-billing__segbar-seg--blue {
+  background: #0a8bff;
+}
+.portal-billing__segbar-seg--purple {
+  background: #8b5cf6;
+}
+.portal-billing__segbar-seg--teal {
+  background: #06b6d4;
+}
+.portal-billing__seglegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.75rem;
+  margin-top: 0.85rem;
+}
+.portal-billing__seglegend-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+.portal-billing__dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  align-self: center;
+  flex-shrink: 0;
+}
+.portal-billing__dot--blue {
+  background: #0a8bff;
+}
+.portal-billing__dot--purple {
+  background: #8b5cf6;
+}
+.portal-billing__dot--teal {
+  background: #06b6d4;
+}
+.portal-billing__seglegend-label {
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+.portal-billing__seglegend-val {
+  color: var(--color-text-2);
+  font-variant-numeric: tabular-nums;
+}
+.portal-billing__seglegend-desc {
+  color: var(--color-text-4);
+}
+
+/* ── Spend-limit projection line ─────────────────────────────────────── */
+.portal-billing__projection {
+  margin: 0.85rem 0 0;
+  font-size: 0.85rem;
+  color: var(--color-text-3);
+}
+.portal-billing__projection strong {
+  color: var(--color-amber, #d97706);
+}

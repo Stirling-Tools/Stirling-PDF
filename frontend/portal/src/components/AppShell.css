@@ -1,6 +1,14 @@
+/* Fixed-height shell so the MAIN COLUMN scrolls, not the document. With
+   min-height:100vh the shell grows with content and the document scrolls, which
+   means .portal-shell__view's overflow-y never engages and any `position:sticky`
+   inside it (e.g. a page header) rides away with the document. Pinning the shell
+   to the viewport (+ min-height:0 on the flex descendants so they can shrink
+   below content) makes .portal-shell__view the scroll container, so sticky
+   page headers stick under the global header. */
 .portal-shell {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   background: var(--color-bg);
   color: var(--color-text-2);
 }
@@ -10,10 +18,12 @@
   display: flex;
   flex-direction: column;
   min-width: 0; /* prevent grid blowout on narrow content */
+  min-height: 0; /* allow the column to bound its children */
 }
 
 .portal-shell__view {
   flex: 1 1 auto;
+  min-height: 0; /* scroll instead of growing past the viewport */
   overflow-y: auto;
   animation: fadeInUp var(--motion-enter) both;
 }

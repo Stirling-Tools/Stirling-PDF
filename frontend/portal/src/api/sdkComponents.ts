@@ -1,4 +1,4 @@
-import { httpJson } from "@portal/api/http";
+import { apiClient } from "@portal/api/http";
 import type { ComponentsResponse } from "@portal/mocks/sdkComponents";
 import type { Tier } from "@portal/contexts/TierContext";
 
@@ -22,7 +22,7 @@ export {
 
 /** GET /v1/components?tier=… — summary strip + the embeddable SDK catalogue. */
 export async function fetchComponents(tier: Tier): Promise<ComponentsResponse> {
-  return httpJson<ComponentsResponse>(
+  return apiClient.local.json<ComponentsResponse>(
     `/v1/components?tier=${encodeURIComponent(tier)}`,
   );
 }

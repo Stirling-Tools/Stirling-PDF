@@ -1,4 +1,4 @@
-import { httpJson } from "@portal/api/http";
+import { apiClient } from "@portal/api/http";
 import type { PoliciesResponse, Policy } from "@portal/mocks/policies";
 
 /**
@@ -45,12 +45,14 @@ export {
 
 /** GET /api/v1/policies — the catalogue + every configured policy. */
 export async function fetchPolicies(): Promise<PoliciesResponse> {
-  return httpJson<PoliciesResponse>("/api/v1/policies");
+  return apiClient.local.json<PoliciesResponse>("/api/v1/policies");
 }
 
 /** GET /api/v1/policies/{id} — one stored policy's raw record. */
 export async function fetchPolicy(id: string): Promise<Policy> {
-  return httpJson<Policy>(`/api/v1/policies/${encodeURIComponent(id)}`);
+  return apiClient.local.json<Policy>(
+    `/api/v1/policies/${encodeURIComponent(id)}`,
+  );
 }
 
 /**
@@ -58,14 +60,20 @@ export async function fetchPolicy(id: string): Promise<Policy> {
  * assigns owner + team server-side and returns the stored policy with its id.
  */
 export async function savePolicy(policy: Policy): Promise<Policy> {
-  return httpJson<Policy>("/api/v1/policies", { method: "POST", body: policy });
+  return apiClient.local.json<Policy>("/api/v1/policies", {
+    method: "POST",
+    body: policy,
+  });
 }
 
 /** DELETE /api/v1/policies/{id} — remove a stored policy. */
 export async function deletePolicy(id: string): Promise<void> {
-  await httpJson<void>(`/api/v1/policies/${encodeURIComponent(id)}`, {
-    method: "DELETE",
-  });
+  await apiClient.local.json<void>(
+    `/api/v1/policies/${encodeURIComponent(id)}`,
+    {
+      method: "DELETE",
+    },
+  );
 }
 
 /** The async run acknowledgement: a run id to poll for status. */
@@ -83,7 +91,7 @@ export interface PolicyRunResponse {
  * run id. Runs regardless of the policy's enabled flag.
  */
 export async function runPolicy(id: string): Promise<PolicyRunResponse> {
-  return httpJson<PolicyRunResponse>(
+  return apiClient.local.json<PolicyRunResponse>(
     `/api/v1/policies/${encodeURIComponent(id)}/run`,
     { method: "POST" },
   );
