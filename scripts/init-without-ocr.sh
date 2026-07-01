@@ -857,12 +857,6 @@ fi
 chmod 700 "${XDG_RUNTIME_DIR}" 2>/dev/null || true
 log "XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR}"
 
-# ---------- Optional ----------
-# Disable advanced HTML operations if required.
-if [[ "${INSTALL_BOOK_AND_ADVANCED_HTML_OPS:-false}" == "true" && "${FAT_DOCKER:-true}" != "true" ]]; then
-  log "issue with calibre in current version, feature currently disabled on Stirling-PDF"
-fi
-
 # Download security JAR in non-fat builds.
 if [[ "${FAT_DOCKER:-true}" != "true" && -x /scripts/download-security-jar.sh ]]; then
   /scripts/download-security-jar.sh || true

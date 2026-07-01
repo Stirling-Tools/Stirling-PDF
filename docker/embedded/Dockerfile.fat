@@ -106,7 +106,6 @@ ENV VERSION_TAG=$VERSION_TAG \
     PGID=1000 \
     UMASK=022 \
     FAT_DOCKER=true \
-    INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false \
     STIRLING_TEMPFILES_DIRECTORY=/tmp/stirling-pdf \
     TMPDIR=/tmp/stirling-pdf \
     TEMP=/tmp/stirling-pdf \

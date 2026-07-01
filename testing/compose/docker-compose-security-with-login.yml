@@ -34,7 +34,6 @@ services:
       METRICS_ENABLED: "true"
       SYSTEM_GOOGLEVISIBILITY: "true"
       SECURITY_CUSTOMGLOBALAPIKEY: "123456789"
-      SHOW_SURVEY: "true"
     networks:
       - stirling-network
 

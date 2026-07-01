@@ -238,13 +238,10 @@ services:
       PGID: 1002
       UMASK: "022"
       SYSTEM_DEFAULTLOCALE: en-US
-      UI_APPNAME: Stirling-PDF
-      UI_HOMEDESCRIPTION: Demo site for Stirling-PDF Latest with Security
       UI_APPNAMENAVBAR: Stirling-PDF Latest
       SYSTEM_MAXFILESIZE: "100"
       METRICS_ENABLED: "true"
       SYSTEM_GOOGLEVISIBILITY: "true"
-      SHOW_SURVEY: "true"
     restart: on-failure:5
 ```
 
@@ -425,7 +422,7 @@ When using Docker, pass environment variables using the `-e` flag or in your `do
 Example:
 
 ```bash
-docker run -p 8080:8080 -e APP_NAME="My PDF Tool" stirling-pdf:full
+docker run -p 8080:8080 -e UI_APPNAMENAVBAR="My PDF Tool" stirling-pdf:full
 ```
 
 Refer to the main README for a full list of customization options.

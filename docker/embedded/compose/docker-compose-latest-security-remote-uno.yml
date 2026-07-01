@@ -45,7 +45,6 @@ services:
       SYSTEM_MAXFILESIZE: "100"
       METRICS_ENABLED: "true"
       SYSTEM_GOOGLEVISIBILITY: "true"
-      SHOW_SURVEY: "true"
     depends_on:
       unoserver1:
         condition: service_healthy

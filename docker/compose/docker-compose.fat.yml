@@ -31,7 +31,6 @@ services:
       SYSTEM_MAXFILESIZE: "200"
       METRICS_ENABLED: "true"
       SYSTEM_GOOGLEVISIBILITY: "true"
-      SHOW_SURVEY: "true"
     networks:
       - stirling-network
 

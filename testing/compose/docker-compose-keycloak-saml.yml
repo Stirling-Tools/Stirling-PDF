@@ -147,7 +147,6 @@ services:
       DISABLE_ADDITIONAL_FEATURES: "false"
       METRICS_ENABLED: "true"
       SYSTEM_GOOGLEVISIBILITY: "false"
-      SHOW_SURVEY: "false"
 
     depends_on:
       keycloak-saml:
