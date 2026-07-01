@@ -6,17 +6,14 @@ import { defineConfig } from "eslint/config";
 import tseslint from "typescript-eslint";
 
 const srcGlobs = [
+  // The portal layer lives under editor/src/portal, so editor/src/** covers it.
   "editor/src/**/*.{js,mjs,jsx,ts,tsx}",
-  "portal/src/**/*.{js,mjs,jsx,ts,tsx}",
-  "portal/main.tsx",
-  "shared/**/*.{js,mjs,jsx,ts,tsx}",
 ];
 const nodeGlobs = [
   "scripts/**/*.{js,ts,mjs,mts}",
   "editor/scripts/**/*.{js,ts,mjs,mts}",
-  "portal/scripts/**/*.{js,ts,mjs,mts}",
+  // Covers editor/vite.config.ts and the transitional editor/vite.portal.config.ts.
   "editor/*.config.{js,ts,mjs}",
-  "portal/*.config.{js,ts,mjs}",
   "*.config.{js,ts,mjs}",
   ".storybook/*.{js,ts,mjs,mts,tsx}",
 ];
@@ -25,7 +22,7 @@ const baseRestrictedImportPatterns = [
   {
     regex: "^\\.",
     message:
-      "Use a workspace alias (@app/* for editor, @portal/* for portal, @shared/*) instead of relative imports.",
+      "Use a workspace alias (@app/* for editor, @portal/* for portal) instead of relative imports.",
   },
   {
     regex: "^src/",
@@ -38,7 +35,6 @@ export default defineConfig(
     // Everything that contains 3rd party code that we don't want to lint
     ignores: [
       "dist",
-      "dist-portal",
       "node_modules",
       "playwright-report",
       "storybook-static",
@@ -48,7 +44,6 @@ export default defineConfig(
       "editor/src-tauri",
       "editor/playwright-report",
       "editor/test-results",
-      "portal/public",
     ],
   },
   eslint.configs.recommended,
@@ -163,45 +158,6 @@ export default defineConfig(
             "MemberExpression[property.name='env'][object.type='MetaProperty'][object.meta.name='import'][object.property.name='meta']",
           message:
             "cloud/ must not read import.meta.env — use @app/constants/app / @app/platform seams so config is supplied per-platform.",
-        },
-      ],
-    },
-  },
-  // The shared/ layer is the seed of a future packages/shared-ui — it must
-  // only depend on third-party packages and on itself. If it ever imports
-  // from editor or portal layers, extraction to a standalone package later
-  // becomes a rewrite instead of a `git mv`.
-  {
-    files: ["shared/**/*.{js,mjs,jsx,ts,tsx}"],
-    rules: {
-      "no-restricted-imports": [
-        "error",
-        {
-          patterns: [
-            ...baseRestrictedImportPatterns,
-            {
-              regex: "^@app/",
-              message:
-                "shared/ must not depend on the editor layer (@app/* resolves into editor/src/).",
-            },
-            {
-              regex: "^@portal/",
-              message:
-                "shared/ must not depend on the portal layer. Use @shared/* or third-party imports only.",
-            },
-            {
-              regex: "^@core/",
-              message: "shared/ must not depend on editor/src/core/.",
-            },
-            {
-              regex: "^@proprietary/",
-              message: "shared/ must not depend on editor/src/proprietary/.",
-            },
-            {
-              regex: "^@tauri-apps/",
-              message: "shared/ must remain web-compatible (no Tauri APIs).",
-            },
-          ],
         },
       ],
     },

@@ -23,7 +23,15 @@ function collectSourceFiles(dir: string): string[] {
   for (const entry of readdirSync(dir)) {
     const fullPath = join(dir, entry);
     const stat = statSync(fullPath);
-    if (stat.isDirectory() && entry !== "node_modules" && entry !== "assets") {
+    // Skip the portal layer: it's a separate app with its own .env
+    // (editor/src/portal/.env), validated independently, not against the
+    // editor's .env* files.
+    if (
+      stat.isDirectory() &&
+      entry !== "node_modules" &&
+      entry !== "assets" &&
+      entry !== "portal"
+    ) {
       files.push(...collectSourceFiles(fullPath));
     } else if (
       stat.isFile() &&

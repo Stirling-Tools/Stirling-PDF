@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import "@shared/auth/ui/auth.css";
+import "@app/auth/ui/auth.css";
 import { useTranslation } from "react-i18next";
 import { Checkbox, TextInput, PasswordInput, Button } from "@mantine/core";
 import { SignupFieldErrors } from "@app/routes/signup/SignupFormValidation";
