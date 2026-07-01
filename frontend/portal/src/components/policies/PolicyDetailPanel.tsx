@@ -28,7 +28,13 @@ interface PolicyDetailPanelProps {
 
 function CheckIcon() {
   return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+    <svg
+      width="13"
+      height="13"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden
+    >
       <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
     </svg>
   );
@@ -36,7 +42,13 @@ function CheckIcon() {
 
 function WarnIcon() {
   return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+    <svg
+      width="13"
+      height="13"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden
+    >
       <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
     </svg>
   );
@@ -77,7 +89,9 @@ function ActivityError({ message }: { message: string }) {
         className="portal-policies__link portal-policies__activity-error-toggle"
         onClick={() => setExpanded((v) => !v)}
       >
-        {expanded ? t("policies.detail.showLess") : t("policies.detail.showMore")}
+        {expanded
+          ? t("policies.detail.showLess")
+          : t("policies.detail.showMore")}
       </button>
     </span>
   );
@@ -146,8 +160,15 @@ export function PolicyDetailPanel({
               {t("policies.detail.actions.runNow")}
             </Button>
           )}
-          <Button variant="outline" size="sm" onClick={onTogglePause} disabled={busy}>
-            {isPaused ? t("policies.detail.actions.resume") : t("policies.detail.actions.pause")}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onTogglePause}
+            disabled={busy}
+          >
+            {isPaused
+              ? t("policies.detail.actions.resume")
+              : t("policies.detail.actions.pause")}
           </Button>
           <Button size="sm" onClick={onEdit} disabled={busy}>
             {t("policies.detail.actions.editSettings")}
@@ -162,9 +183,13 @@ export function PolicyDetailPanel({
         </StatusBadge>
         {hasEditorSource && (
           <>
-            <span className="portal-policies__detail-sep" aria-hidden>·</span>
+            <span className="portal-policies__detail-sep" aria-hidden>
+              ·
+            </span>
             <span className="portal-policies__detail-meta">{trigger}</span>
-            <span className="portal-policies__detail-sep" aria-hidden>·</span>
+            <span className="portal-policies__detail-sep" aria-hidden>
+              ·
+            </span>
             <span className="portal-policies__detail-meta">{outputLabel}</span>
           </>
         )}
@@ -179,7 +204,15 @@ export function PolicyDetailPanel({
           {enforceItems
             ? enforceItems.map((op, i) => (
                 <span key={op}>
-                  {i > 0 && <span className="portal-policies__enforce-arrow" aria-hidden> → </span>}
+                  {i > 0 && (
+                    <span
+                      className="portal-policies__enforce-arrow"
+                      aria-hidden
+                    >
+                      {" "}
+                      →{" "}
+                    </span>
+                  )}
                   {humanizeEndpoint(op)}
                 </span>
               ))
@@ -206,7 +239,10 @@ export function PolicyDetailPanel({
       {activity.length > 0 ? (
         <Card padding="none">
           {activity.map((item, i) => (
-            <div key={`${item.doc}-${i}`} className="portal-policies__activity-row">
+            <div
+              key={`${item.doc}-${i}`}
+              className="portal-policies__activity-row"
+            >
               <span
                 className={`portal-policies__activity-icon portal-policies__activity-icon--${
                   item.status === "flagged"
@@ -225,7 +261,9 @@ export function PolicyDetailPanel({
                 )}
               </span>
               <span className="portal-policies__activity-text">
-                <span className="portal-policies__activity-doc">{item.doc}</span>
+                <span className="portal-policies__activity-doc">
+                  {item.doc}
+                </span>
                 <span className="portal-policies__activity-action">
                   {item.status === "flagged" ? (
                     <ActivityError message={item.action} />
@@ -234,7 +272,9 @@ export function PolicyDetailPanel({
                   )}
                 </span>
               </span>
-              <span className="portal-policies__activity-time">{item.time}</span>
+              <span className="portal-policies__activity-time">
+                {item.time}
+              </span>
               {item.status === "flagged" && onRetry && (
                 <button
                   type="button"

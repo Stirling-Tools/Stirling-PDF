@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { toWirePolicy, fromWirePolicy } from "./codec";
-import type { PolicyDecodedState } from "./types";
+import { toWirePolicy, fromWirePolicy } from "@shared/policies/codec";
+import type { PolicyDecodedState } from "@shared/policies/types";
 
 const FULL_STATE: PolicyDecodedState = {
   id: "pol_123",
@@ -17,7 +17,12 @@ const FULL_STATE: PolicyDecodedState = {
   outputNamePosition: "prefix",
   maxRetries: 3,
   retryDelayMinutes: 5,
-  steps: [{ operation: "/api/v1/security/auto-redact", parameters: { mode: "automatic" } }],
+  steps: [
+    {
+      operation: "/api/v1/security/auto-redact",
+      parameters: { mode: "automatic" },
+    },
+  ],
 };
 
 describe("toWirePolicy", () => {

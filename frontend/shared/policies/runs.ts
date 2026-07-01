@@ -4,7 +4,7 @@
  * (eventually) the editor read this same derivation rather than duplicating it.
  */
 
-import type { PolicyActivityItem, PolicyRunView, PolicyStats } from "./types";
+import type { PolicyActivityItem, PolicyRunView, PolicyStats } from "@shared/policies/types";
 
 function relativeTime(epochMs: number): string {
   if (!epochMs) return "Just now";

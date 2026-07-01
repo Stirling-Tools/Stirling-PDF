@@ -104,10 +104,15 @@ function decoratePolicy(
 export async function fetchPolicies(): Promise<PoliciesResponse> {
   const [wirePolicies, runs] = await Promise.all([
     apiClient.local.json<WirePolicy[]>("/api/v1/policies"),
-    apiClient.local.json<PolicyRunView[]>("/api/v1/policies/runs").catch(() => [] as PolicyRunView[]),
+    apiClient.local
+      .json<PolicyRunView[]>("/api/v1/policies/runs")
+      .catch(() => [] as PolicyRunView[]),
   ]);
 
-  const decodedByCategory = new Map<string, { decoded: PolicyDecodedState; isDefault: boolean }>();
+  const decodedByCategory = new Map<
+    string,
+    { decoded: PolicyDecodedState; isDefault: boolean }
+  >();
   for (const wire of wirePolicies) {
     const decoded = fromWirePolicy(wire);
     if (decoded.categoryId) {
@@ -125,7 +130,9 @@ export async function fetchPolicies(): Promise<PoliciesResponse> {
 
   const active = wirePolicies.filter((p) => p.enabled).length;
   const paused = wirePolicies.filter((p) => !p.enabled).length;
-  const enabledPolicyIds = new Set(wirePolicies.filter((p) => p.enabled).map((p) => p.id));
+  const enabledPolicyIds = new Set(
+    wirePolicies.filter((p) => p.enabled).map((p) => p.id),
+  );
   const docsEnforced = runs.filter(
     (r) => r.status === "COMPLETED" && enabledPolicyIds.has(r.policyId),
   ).length;

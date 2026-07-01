@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { runsToStats, runsToActivity } from "./runs";
-import type { PolicyRunView } from "./types";
+import { runsToStats, runsToActivity } from "@shared/policies/runs";
+import type { PolicyRunView } from "@shared/policies/types";
 
 const MIN = 60000;
 const HOUR = 3600000;
@@ -8,7 +8,11 @@ const DAY = 86400000;
 // Use the actual current time so relative-time formatting in runs.ts is correct.
 const NOW = Date.now();
 
-const completed = (id: string, ts: number, file = "doc.pdf"): PolicyRunView => ({
+const completed = (
+  id: string,
+  ts: number,
+  file = "doc.pdf",
+): PolicyRunView => ({
   runId: id,
   policyId: "pol_1",
   status: "COMPLETED",
@@ -19,7 +23,11 @@ const completed = (id: string, ts: number, file = "doc.pdf"): PolicyRunView => (
   createdAt: ts,
 });
 
-const failed = (id: string, ts: number, err = "Redaction failed"): PolicyRunView => ({
+const failed = (
+  id: string,
+  ts: number,
+  err = "Redaction failed",
+): PolicyRunView => ({
   runId: id,
   policyId: "pol_1",
   status: "FAILED",
@@ -61,17 +69,16 @@ describe("runsToStats", () => {
   });
 
   it("computes activeFor from the oldest run", () => {
-    const runs = [
-      completed("a", NOW - 2 * DAY),
-      completed("b", NOW - 5 * DAY),
-    ];
+    const runs = [completed("a", NOW - 2 * DAY), completed("b", NOW - 5 * DAY)];
     expect(runsToStats(runs).activeFor).toBe("5d");
   });
 });
 
 describe("runsToActivity", () => {
   it("maps COMPLETED to enforced status", () => {
-    const [row] = runsToActivity([completed("a", NOW - 10 * MIN, "invoice.pdf")]);
+    const [row] = runsToActivity([
+      completed("a", NOW - 10 * MIN, "invoice.pdf"),
+    ]);
     expect(row.status).toBe("enforced");
     expect(row.doc).toBe("invoice.pdf");
   });
@@ -88,17 +95,26 @@ describe("runsToActivity", () => {
   });
 
   it("maps CANCELLED to flagged status", () => {
-    const run: PolicyRunView = { ...failed("x", NOW - MIN, "Cancelled by user"), status: "CANCELLED" };
+    const run: PolicyRunView = {
+      ...failed("x", NOW - MIN, "Cancelled by user"),
+      status: "CANCELLED",
+    };
     expect(runsToActivity([run])[0].status).toBe("flagged");
   });
 
   it("maps PENDING to processing status", () => {
-    const run: PolicyRunView = { ...running("x", NOW - MIN), status: "PENDING" };
+    const run: PolicyRunView = {
+      ...running("x", NOW - MIN),
+      status: "PENDING",
+    };
     expect(runsToActivity([run])[0].status).toBe("processing");
   });
 
   it("maps WAITING_FOR_INPUT to processing status", () => {
-    const run: PolicyRunView = { ...running("x", NOW - MIN), status: "WAITING_FOR_INPUT" };
+    const run: PolicyRunView = {
+      ...running("x", NOW - MIN),
+      status: "WAITING_FOR_INPUT",
+    };
     expect(runsToActivity([run])[0].status).toBe("processing");
   });
 

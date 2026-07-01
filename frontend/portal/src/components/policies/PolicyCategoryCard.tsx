@@ -38,10 +38,7 @@ export function PolicyCategoryCard({ entry, onOpen }: PolicyCategoryCardProps) {
           : undefined
       }
     >
-      <span
-        className="portal-policies__cat-icon"
-        aria-hidden
-      >
+      <span className="portal-policies__cat-icon" aria-hidden>
         {policyIcon(category.icon)}
       </span>
 

@@ -11,7 +11,7 @@ import type {
   PolicyDecodedState,
   WireOutputOptions,
   WirePolicy,
-} from "./types";
+} from "@shared/policies/types";
 
 const DEFAULTS = {
   maxRetries: 3,

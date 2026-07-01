@@ -215,7 +215,9 @@ export function usePolicyAutoRun(): void {
         // Only enforce in the editor when the policy includes "editor" as a source.
         // runOn is an editor-specific parameter: "upload" fires here, "export" fires
         // at export time via policyExport. Non-editor sources have their own triggers.
-        (!s.sources || s.sources.length === 0 || s.sources.includes("editor")) &&
+        (!s.sources ||
+          s.sources.length === 0 ||
+          s.sources.includes("editor")) &&
         (s.runOn ?? "upload") === "upload",
     );
     for (const [categoryId, s] of active) {
@@ -426,7 +428,11 @@ async function importOutputs(
   // rule the backend's auto-suffixed name (e.g. "_watermarked_sanitized") would
   // otherwise rename every output.
   const targetName = ctx.outputName
-    ? applyOutputName(run.fileName, ctx.outputName, ctx.outputNamePosition ?? "suffix")
+    ? applyOutputName(
+        run.fileName,
+        ctx.outputName,
+        ctx.outputNamePosition ?? "suffix",
+      )
     : run.fileName;
   const settled = await Promise.allSettled(
     pending.map(async (out) => {

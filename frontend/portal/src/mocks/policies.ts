@@ -62,7 +62,6 @@ export interface PolicyConfigDef {
   defaultOperations: WirePipelineStep[];
 }
 
-
 export interface PolicyState {
   configured: boolean;
   status: PolicyStatus;
@@ -347,7 +346,6 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
     ],
   },
 };
-
 
 export const POLICY_DOC_TYPES: string[] = [
   "Contracts",

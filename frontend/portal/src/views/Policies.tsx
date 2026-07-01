@@ -36,19 +36,20 @@ export function Policies() {
   const catalogue = data?.catalogue ?? [];
   const refetch = useCallback(() => setVersion((v) => v + 1), []);
 
-  const displayCatalogue: CatalogueEntry[] = catalogue.length > 0
-    ? catalogue
-    : POLICY_CATEGORIES.map((cat) => ({
-        category: cat,
-        config: POLICY_CONFIG[cat.id] ?? {
-          summary: "",
-          rules: [],
-          scopeLabel: "",
-          fields: [],
-          defaultOperations: [],
-        },
-        policy: null,
-      }));
+  const displayCatalogue: CatalogueEntry[] =
+    catalogue.length > 0
+      ? catalogue
+      : POLICY_CATEGORIES.map((cat) => ({
+          category: cat,
+          config: POLICY_CONFIG[cat.id] ?? {
+            summary: "",
+            rules: [],
+            scopeLabel: "",
+            fields: [],
+            defaultOperations: [],
+          },
+          policy: null,
+        }));
 
   function openEntry(entry: CatalogueEntry) {
     if (entry.policy) setDetail(entry);

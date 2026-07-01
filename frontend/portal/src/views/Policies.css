@@ -187,7 +187,6 @@
   color: var(--color-text-1);
 }
 
-
 /* Sources picker */
 .portal-policies__sources {
   display: grid;
@@ -334,7 +333,6 @@
   color: var(--color-text-4);
 }
 
-
 .portal-policies__enforce-arrow {
   color: var(--color-text-5);
   font-size: 0.75rem;
@@ -362,7 +360,6 @@
   color: var(--color-text-2);
   line-height: 1.5;
 }
-
 
 /* Activity feed */
 .portal-policies__activity-row {
@@ -451,7 +448,6 @@
   margin-top: 0.125rem;
   font-size: 0.6875rem;
 }
-
 
 /* Detail stats footer */
 .portal-policies__detail-stats {

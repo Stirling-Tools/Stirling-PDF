@@ -236,10 +236,7 @@ function PolicySetupWizardBody({
       width="lg"
       title={
         <span className="portal-policies__wizard-title">
-          <span
-            className="portal-policies__cat-icon"
-            aria-hidden
-          >
+          <span className="portal-policies__cat-icon" aria-hidden>
             {policyIcon(category.icon)}
           </span>
           {isEdit
@@ -492,7 +489,9 @@ function PolicySetupWizardBody({
                     ]}
                   />
                 </FormField>
-                <FormField label={t("policies.wizard.output.filenameRule.label")}>
+                <FormField
+                  label={t("policies.wizard.output.filenameRule.label")}
+                >
                   <div className="portal-policies__name-row">
                     <Select
                       inputSize="sm"
@@ -505,11 +504,15 @@ function PolicySetupWizardBody({
                       options={[
                         {
                           value: "prefix",
-                          label: t("policies.wizard.output.filenameRule.prefix"),
+                          label: t(
+                            "policies.wizard.output.filenameRule.prefix",
+                          ),
                         },
                         {
                           value: "suffix",
-                          label: t("policies.wizard.output.filenameRule.suffix"),
+                          label: t(
+                            "policies.wizard.output.filenameRule.suffix",
+                          ),
                         },
                         ...(outputMode === "new_file"
                           ? [
@@ -557,9 +560,7 @@ function PolicySetupWizardBody({
                 type="number"
                 value={String(retryDelayMinutes)}
                 onChange={(e) =>
-                  setRetryDelayMinutes(
-                    Math.max(0, Number(e.target.value) || 0),
-                  )
+                  setRetryDelayMinutes(Math.max(0, Number(e.target.value) || 0))
                 }
               />
             </FormField>
