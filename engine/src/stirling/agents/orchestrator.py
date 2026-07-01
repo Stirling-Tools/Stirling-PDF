@@ -15,7 +15,6 @@ from stirling.agents.pdf_review import PdfReviewAgent
 from stirling.agents.user_spec import UserSpecAgent
 from stirling.contracts import (
     AgentDraftWorkflowResponse,
-    ConvertMarkdownResponse,
     ExtractedTextArtifact,
     OrchestratorRequest,
     OrchestratorResponse,
@@ -72,13 +71,6 @@ class OrchestratorAgent:
                     ),
                 ),
                 ToolOutput(
-                    self.delegate_pdf_ingest,
-                    name="delegate_pdf_ingest",
-                    description=(
-                        "Delegate requests to convert a PDF to Markdown or extract its content as readable text."
-                    ),
-                ),
-                ToolOutput(
                     self.delegate_pdf_create,
                     name="delegate_pdf_create",
                     description=(
@@ -106,8 +98,6 @@ class OrchestratorAgent:
                 " 'leave feedback on the PDF'. "
                 "Use delegate_pdf_create when the user wants to generate a new document from"
                 " scratch with no input file — invoices, reports, letters, contracts, etc. "
-                "Use delegate_pdf_ingest for any request to convert a PDF to Markdown "
-                "or extract its content as readable text. "
                 "Use unsupported_capability when the user asks about the assistant itself "
                 "or when none of the other outputs fit; supply a helpful message."
             ),
@@ -176,13 +166,6 @@ class OrchestratorAgent:
 
     async def _run_agent_draft(self, request: OrchestratorRequest) -> AgentDraftWorkflowResponse:
         return await UserSpecAgent(self.runtime).orchestrate(request)
-
-    async def delegate_pdf_ingest(self, ctx: RunContext[OrchestratorDeps]) -> ConvertMarkdownResponse:
-        request = ctx.deps.request
-        return ConvertMarkdownResponse(
-            reason="PDF to Markdown requested — Java converts deterministically.",
-            files_to_ingest=request.files,
-        )
 
     async def delegate_pdf_review(self, ctx: RunContext[OrchestratorDeps]) -> PdfReviewOrchestrateResponse:
         return await self._run_pdf_review(ctx.deps.request)

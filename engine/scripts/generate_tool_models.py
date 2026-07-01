@@ -59,6 +59,13 @@ class ToolDiscovery:
         "/api/v1/convert/",
     )
 
+    # Endpoints that take no parameters beyond the input file are skipped by default —
+    # most param-less endpoints in these namespaces are introspection utilities
+    # (get-info, verify-signature, show-javascript) that aren't useful as agent tools.
+    # Paths listed here are the exceptions: genuine operations we want the edit agent to
+    # be able to call, exposed with an empty parameter model.
+    PARAMLESS_TOOL_INCLUDE = frozenset({"/api/v1/convert/pdf/markdown"})
+
     def __init__(self, spec: dict[str, Any]):
         resource = Resource.from_contents(spec, default_specification=DRAFT202012)
         self.resolver = Registry().with_resource("", resource).resolver()
@@ -79,10 +86,10 @@ class ToolDiscovery:
             # Body properties win on name collision — body is the canonical param source
             # for the existing tools; query params are additive.
             properties = {**query_props, **body_props}
-            if not properties:
-                continue
             clean_props = self._filter_properties(properties)
-            if not clean_props:
+            # Skip param-less endpoints unless explicitly opted in (see
+            # PARAMLESS_TOOL_INCLUDE); opted-in tools are exposed with an empty model.
+            if not clean_props and path not in self.PARAMLESS_TOOL_INCLUDE:
                 continue
 
             enum_name = _deduplicate(_path_to_enum_name(path), used_enum)

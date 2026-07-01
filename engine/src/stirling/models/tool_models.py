@@ -877,6 +877,12 @@ class PdfToImgParams(ApiModel):
     )
 
 
+class PdfToMarkdownParams(ApiModel):
+    """
+    Either upload a file or provide a server-side file ID
+    """
+
+
 class OutputFormat1(StrEnum):
     """
     The output format type (PDF/A or PDF/X)
@@ -1469,6 +1475,7 @@ class Model(
         | PdfToCsvParams
         | PdfToEpubParams
         | PdfToImgParams
+        | PdfToMarkdownParams
         | PdfToPdfaParams
         | PdfToPresentationParams
         | PdfToTextParams
@@ -1539,6 +1546,7 @@ class Model(
         | PdfToCsvParams
         | PdfToEpubParams
         | PdfToImgParams
+        | PdfToMarkdownParams
         | PdfToPdfaParams
         | PdfToPresentationParams
         | PdfToTextParams
@@ -1610,6 +1618,7 @@ type ParamToolModel = (
     | PdfToCsvParams
     | PdfToEpubParams
     | PdfToImgParams
+    | PdfToMarkdownParams
     | PdfToPdfaParams
     | PdfToPresentationParams
     | PdfToTextParams
@@ -1682,6 +1691,7 @@ class ToolEndpoint(StrEnum):
     PDF_TO_CSV = "/api/v1/convert/pdf/csv"
     PDF_TO_EPUB = "/api/v1/convert/pdf/epub"
     PDF_TO_IMG = "/api/v1/convert/pdf/img"
+    PDF_TO_MARKDOWN = "/api/v1/convert/pdf/markdown"
     PDF_TO_PDFA = "/api/v1/convert/pdf/pdfa"
     PDF_TO_PRESENTATION = "/api/v1/convert/pdf/presentation"
     PDF_TO_TEXT = "/api/v1/convert/pdf/text"
@@ -1752,6 +1762,7 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.PDF_TO_CSV: PdfToCsvParams,
     ToolEndpoint.PDF_TO_EPUB: PdfToEpubParams,
     ToolEndpoint.PDF_TO_IMG: PdfToImgParams,
+    ToolEndpoint.PDF_TO_MARKDOWN: PdfToMarkdownParams,
     ToolEndpoint.PDF_TO_PDFA: PdfToPdfaParams,
     ToolEndpoint.PDF_TO_PRESENTATION: PdfToPresentationParams,
     ToolEndpoint.PDF_TO_TEXT: PdfToTextParams,
