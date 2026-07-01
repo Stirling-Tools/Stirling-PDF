@@ -213,7 +213,7 @@ export function usePolicyAutoRun(): void {
         // Only enforce in the editor when the policy includes "editor" as a source.
         // runOn is an editor-specific parameter: "upload" fires here, "export" fires
         // at export time via policyExport. Non-editor sources have their own triggers.
-        (s.sources.length === 0 || s.sources.includes("editor")) &&
+        (!s.sources || s.sources.length === 0 || s.sources.includes("editor")) &&
         (s.runOn ?? "upload") === "upload",
     );
     for (const [categoryId, s] of active) {

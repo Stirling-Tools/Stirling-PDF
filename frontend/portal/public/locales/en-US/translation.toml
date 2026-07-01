@@ -772,18 +772,14 @@ description = "Across active policies"
 [policies.card]
 comingSoon = "Coming soon"
 notSetUp = "Not set up"
-setUp = "Set up →"
 
 [policies.detail]
-title = "{{category}} policy"
-meta = "Runs on {{event}} · output {{output}}"
 outputAsNewFile = "as a new file"
 outputAsNewVersion = "as a new version"
 enforces = "Enforces"
 sources = "Sources"
 onEveryUpload = "On every upload"
 onEveryExport = "On every export"
-originalsNote = "Originals stay untouched • Enforced version saved alongside"
 showMore = "Show more"
 showLess = "Show less"
 retry = "Retry"
@@ -799,10 +795,6 @@ editSettings = "Edit settings"
 [policies.detail.emptyActivity]
 title = "No activity yet"
 description = "Documents will appear here once this policy runs."
-
-[policies.detail.scoped]
-title = "Scoped"
-description = "Limited to: {{types}}"
 
 [policies.wizard.title]
 edit = "Edit {{category}} policy"
@@ -865,10 +857,6 @@ prefix = "Prefix"
 suffix = "Suffix"
 autoNumber = "Auto-number"
 placeholder = "Text to add (optional)"
-
-[policies.wizard.output.reviewerEmail]
-label = "Reviewer email"
-helper = "Low-confidence enforcements are routed here for review."
 
 [policies.wizard.output.retries]
 heading = "Retries"
