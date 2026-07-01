@@ -525,6 +525,10 @@ class EmlToPdfParams(ApiModel):
     )
 
 
+class ExtractAttachmentsParams(ApiModel):
+    pass
+
+
 class ExtractImageScansParams(ApiModel):
     angle_threshold: int = Field(5, description="The angle threshold for the image scan extraction")
     border_size: int = Field(1, description="The border size for the image scan extraction")
@@ -545,6 +549,10 @@ class Format(StrEnum):
 
 class ExtractImagesParams(ApiModel):
     format: Format = Field(Format.png, description="The output image format e.g., 'png', 'jpeg', or 'gif'")
+
+
+class FileToPdfParams(ApiModel):
+    pass
 
 
 class FlattenParams(ApiModel):
@@ -600,6 +608,10 @@ class ImgToPdfParams(ApiModel):
     fit_option: FitOption = Field(
         FitOption.fill_page, description="Option to determine how the image will fit onto the page"
     )
+
+
+class MarkdownToPdfParams(ApiModel):
+    pass
 
 
 class SortType(StrEnum):
@@ -841,6 +853,12 @@ class PdfToEpubParams(ApiModel):
     )
 
 
+class PdfToHtmlParams(ApiModel):
+    """
+    Either upload a file or provide a server-side file ID
+    """
+
+
 class ImageFormat(StrEnum):
     """
     The output image format
@@ -918,12 +936,10 @@ class PdfToPresentationParams(ApiModel):
     output_format: OutputFormat2 = Field(..., description="The output Presentation format")
 
 
-class PdfToTextEditorParams(ApiModel):
+class PdfToSinglePageParams(ApiModel):
     """
     Either upload a file or provide a server-side file ID
     """
-
-    lightweight: bool = False
 
 
 class OutputFormat3(StrEnum):
@@ -985,10 +1001,10 @@ class PdfToXlsxParams(ApiModel):
     )
 
 
-class Pkcs11CertificatesParams(ApiModel):
-    library_path: str | None = None
-    pin: str | None = None
-    slot: int | None = None
+class PdfToXmlParams(ApiModel):
+    """
+    Either upload a file or provide a server-side file ID
+    """
 
 
 class CustomMode(StrEnum):
@@ -1067,6 +1083,18 @@ class RemoveBlanksParams(ApiModel):
     )
 
 
+class RemoveCertSignParams(ApiModel):
+    """
+    Either upload a file or provide a server-side file ID
+    """
+
+
+class RemoveImagePdfParams(ApiModel):
+    """
+    Either upload a file or provide a server-side file ID
+    """
+
+
 class RemovePagesParams(ApiModel):
     page_numbers: str = Field(
         "all",
@@ -1081,6 +1109,12 @@ class RemovePasswordParams(ApiModel):
 class RenameAttachmentParams(ApiModel):
     attachment_name: str = Field(..., description="The current name of the attachment to rename")
     new_name: str = Field(..., description="The new name for the attachment")
+
+
+class RepairParams(ApiModel):
+    """
+    Either upload a file or provide a server-side file ID
+    """
 
 
 class HighContrastColorCombination(StrEnum):
@@ -1243,27 +1277,6 @@ class ScannerEffectParams(ApiModel):
     yellowish: bool | None = Field(None, description="Simulate yellowed paper", examples=[False])
 
 
-class WorkflowType(StrEnum):
-    signing = "SIGNING"
-    review = "REVIEW"
-    approval = "APPROVAL"
-
-
-class Request(ApiModel):
-    document_name: str | None = None
-    due_date: str | None = None
-    message: str | None = None
-    owner_email: str | None = None
-    participant_emails: list[str] | None = None
-    participant_user_ids: list[int] | None = None
-    workflow_metadata: str | None = None
-    workflow_type: WorkflowType | None = None
-
-
-class SessionsParams(ApiModel):
-    request: Request | None = None
-
-
 class SplitBySizeOrCountParams(ApiModel):
     split_type: int = Field(
         0, description="Determines the type of split: 0 for size, 1 for page count, 2 for document count"
@@ -1364,6 +1377,12 @@ class TimestampPdfParams(ApiModel):
         "http://timestamp.digicert.com",
         description="URL of the RFC 3161 Time Stamp Authority (TSA) server. Must be one of the built-in presets (DigiCert, Sectigo, SSL.com, FreeTSA, MeSign) or an admin-configured URL in settings.yml (security.timestamp.customTsaUrls). If omitted, the server default is used.",
     )
+
+
+class UnlockPdfFormsParams(ApiModel):
+    """
+    Either upload a file or provide a server-side file ID
+    """
 
 
 class Trapped(StrEnum):
@@ -1468,21 +1487,24 @@ class Model(
         | CbzToPdfParams
         | EbookToPdfParams
         | EmlToPdfParams
+        | FileToPdfParams
         | HtmlToPdfParams
         | ImgToPdfParams
+        | MarkdownToPdfParams
         | PdfToCbrParams
         | PdfToCbzParams
         | PdfToCsvParams
         | PdfToEpubParams
+        | PdfToHtmlParams
         | PdfToImgParams
         | PdfToMarkdownParams
         | PdfToPdfaParams
         | PdfToPresentationParams
         | PdfToTextParams
-        | PdfToTextEditorParams
         | PdfToVectorParams
         | PdfToWordParams
         | PdfToXlsxParams
+        | PdfToXmlParams
         | SvgToPdfParams
         | UrlToPdfParams
         | VectorToPdfParams
@@ -1493,7 +1515,9 @@ class Model(
         | MergePdfsParams
         | MultiPageLayoutParams
         | OverlayPdfsParams
+        | PdfToSinglePageParams
         | RearrangePagesParams
+        | RemoveImagePdfParams
         | RemovePagesParams
         | RotatePdfParams
         | ScalePagesParams
@@ -1511,24 +1535,26 @@ class Model(
         | AutoSplitPdfParams
         | CompressPdfParams
         | DeleteAttachmentParams
+        | ExtractAttachmentsParams
         | ExtractImageScansParams
         | ExtractImagesParams
         | FlattenParams
         | OcrPdfParams
         | RemoveBlanksParams
         | RenameAttachmentParams
+        | RepairParams
         | ReplaceInvertPdfParams
         | ScannerEffectParams
+        | UnlockPdfFormsParams
         | UpdateMetadataParams
         | AddPasswordParams
         | AddWatermarkParams
         | AutoRedactParams
         | CertSignParams
-        | Pkcs11CertificatesParams
-        | SessionsParams
         | ValidateCertificateParams
         | RedactParams
         | RedactExecuteParams
+        | RemoveCertSignParams
         | RemovePasswordParams
         | SanitizePdfParams
         | TimestampPdfParams
@@ -1539,21 +1565,24 @@ class Model(
         | CbzToPdfParams
         | EbookToPdfParams
         | EmlToPdfParams
+        | FileToPdfParams
         | HtmlToPdfParams
         | ImgToPdfParams
+        | MarkdownToPdfParams
         | PdfToCbrParams
         | PdfToCbzParams
         | PdfToCsvParams
         | PdfToEpubParams
+        | PdfToHtmlParams
         | PdfToImgParams
         | PdfToMarkdownParams
         | PdfToPdfaParams
         | PdfToPresentationParams
         | PdfToTextParams
-        | PdfToTextEditorParams
         | PdfToVectorParams
         | PdfToWordParams
         | PdfToXlsxParams
+        | PdfToXmlParams
         | SvgToPdfParams
         | UrlToPdfParams
         | VectorToPdfParams
@@ -1564,7 +1593,9 @@ class Model(
         | MergePdfsParams
         | MultiPageLayoutParams
         | OverlayPdfsParams
+        | PdfToSinglePageParams
         | RearrangePagesParams
+        | RemoveImagePdfParams
         | RemovePagesParams
         | RotatePdfParams
         | ScalePagesParams
@@ -1582,24 +1613,26 @@ class Model(
         | AutoSplitPdfParams
         | CompressPdfParams
         | DeleteAttachmentParams
+        | ExtractAttachmentsParams
         | ExtractImageScansParams
         | ExtractImagesParams
         | FlattenParams
         | OcrPdfParams
         | RemoveBlanksParams
         | RenameAttachmentParams
+        | RepairParams
         | ReplaceInvertPdfParams
         | ScannerEffectParams
+        | UnlockPdfFormsParams
         | UpdateMetadataParams
         | AddPasswordParams
         | AddWatermarkParams
         | AutoRedactParams
         | CertSignParams
-        | Pkcs11CertificatesParams
-        | SessionsParams
         | ValidateCertificateParams
         | RedactParams
         | RedactExecuteParams
+        | RemoveCertSignParams
         | RemovePasswordParams
         | SanitizePdfParams
         | TimestampPdfParams
@@ -1611,21 +1644,24 @@ type ParamToolModel = (
     | CbzToPdfParams
     | EbookToPdfParams
     | EmlToPdfParams
+    | FileToPdfParams
     | HtmlToPdfParams
     | ImgToPdfParams
+    | MarkdownToPdfParams
     | PdfToCbrParams
     | PdfToCbzParams
     | PdfToCsvParams
     | PdfToEpubParams
+    | PdfToHtmlParams
     | PdfToImgParams
     | PdfToMarkdownParams
     | PdfToPdfaParams
     | PdfToPresentationParams
     | PdfToTextParams
-    | PdfToTextEditorParams
     | PdfToVectorParams
     | PdfToWordParams
     | PdfToXlsxParams
+    | PdfToXmlParams
     | SvgToPdfParams
     | UrlToPdfParams
     | VectorToPdfParams
@@ -1636,7 +1672,9 @@ type ParamToolModel = (
     | MergePdfsParams
     | MultiPageLayoutParams
     | OverlayPdfsParams
+    | PdfToSinglePageParams
     | RearrangePagesParams
+    | RemoveImagePdfParams
     | RemovePagesParams
     | RotatePdfParams
     | ScalePagesParams
@@ -1654,24 +1692,26 @@ type ParamToolModel = (
     | AutoSplitPdfParams
     | CompressPdfParams
     | DeleteAttachmentParams
+    | ExtractAttachmentsParams
     | ExtractImageScansParams
     | ExtractImagesParams
     | FlattenParams
     | OcrPdfParams
     | RemoveBlanksParams
     | RenameAttachmentParams
+    | RepairParams
     | ReplaceInvertPdfParams
     | ScannerEffectParams
+    | UnlockPdfFormsParams
     | UpdateMetadataParams
     | AddPasswordParams
     | AddWatermarkParams
     | AutoRedactParams
     | CertSignParams
-    | Pkcs11CertificatesParams
-    | SessionsParams
     | ValidateCertificateParams
     | RedactParams
     | RedactExecuteParams
+    | RemoveCertSignParams
     | RemovePasswordParams
     | SanitizePdfParams
     | TimestampPdfParams
@@ -1684,21 +1724,24 @@ class ToolEndpoint(StrEnum):
     CBZ_TO_PDF = "/api/v1/convert/cbz/pdf"
     EBOOK_TO_PDF = "/api/v1/convert/ebook/pdf"
     EML_TO_PDF = "/api/v1/convert/eml/pdf"
+    FILE_TO_PDF = "/api/v1/convert/file/pdf"
     HTML_TO_PDF = "/api/v1/convert/html/pdf"
     IMG_TO_PDF = "/api/v1/convert/img/pdf"
+    MARKDOWN_TO_PDF = "/api/v1/convert/markdown/pdf"
     PDF_TO_CBR = "/api/v1/convert/pdf/cbr"
     PDF_TO_CBZ = "/api/v1/convert/pdf/cbz"
     PDF_TO_CSV = "/api/v1/convert/pdf/csv"
     PDF_TO_EPUB = "/api/v1/convert/pdf/epub"
+    PDF_TO_HTML = "/api/v1/convert/pdf/html"
     PDF_TO_IMG = "/api/v1/convert/pdf/img"
     PDF_TO_MARKDOWN = "/api/v1/convert/pdf/markdown"
     PDF_TO_PDFA = "/api/v1/convert/pdf/pdfa"
     PDF_TO_PRESENTATION = "/api/v1/convert/pdf/presentation"
     PDF_TO_TEXT = "/api/v1/convert/pdf/text"
-    PDF_TO_TEXT_EDITOR = "/api/v1/convert/pdf/text-editor"
     PDF_TO_VECTOR = "/api/v1/convert/pdf/vector"
     PDF_TO_WORD = "/api/v1/convert/pdf/word"
     PDF_TO_XLSX = "/api/v1/convert/pdf/xlsx"
+    PDF_TO_XML = "/api/v1/convert/pdf/xml"
     SVG_TO_PDF = "/api/v1/convert/svg/pdf"
     URL_TO_PDF = "/api/v1/convert/url/pdf"
     VECTOR_TO_PDF = "/api/v1/convert/vector/pdf"
@@ -1709,7 +1752,9 @@ class ToolEndpoint(StrEnum):
     MERGE_PDFS = "/api/v1/general/merge-pdfs"
     MULTI_PAGE_LAYOUT = "/api/v1/general/multi-page-layout"
     OVERLAY_PDFS = "/api/v1/general/overlay-pdfs"
+    PDF_TO_SINGLE_PAGE = "/api/v1/general/pdf-to-single-page"
     REARRANGE_PAGES = "/api/v1/general/rearrange-pages"
+    REMOVE_IMAGE_PDF = "/api/v1/general/remove-image-pdf"
     REMOVE_PAGES = "/api/v1/general/remove-pages"
     ROTATE_PDF = "/api/v1/general/rotate-pdf"
     SCALE_PAGES = "/api/v1/general/scale-pages"
@@ -1727,24 +1772,26 @@ class ToolEndpoint(StrEnum):
     AUTO_SPLIT_PDF = "/api/v1/misc/auto-split-pdf"
     COMPRESS_PDF = "/api/v1/misc/compress-pdf"
     DELETE_ATTACHMENT = "/api/v1/misc/delete-attachment"
+    EXTRACT_ATTACHMENTS = "/api/v1/misc/extract-attachments"
     EXTRACT_IMAGE_SCANS = "/api/v1/misc/extract-image-scans"
     EXTRACT_IMAGES = "/api/v1/misc/extract-images"
     FLATTEN = "/api/v1/misc/flatten"
     OCR_PDF = "/api/v1/misc/ocr-pdf"
     REMOVE_BLANKS = "/api/v1/misc/remove-blanks"
     RENAME_ATTACHMENT = "/api/v1/misc/rename-attachment"
+    REPAIR = "/api/v1/misc/repair"
     REPLACE_INVERT_PDF = "/api/v1/misc/replace-invert-pdf"
     SCANNER_EFFECT = "/api/v1/misc/scanner-effect"
+    UNLOCK_PDF_FORMS = "/api/v1/misc/unlock-pdf-forms"
     UPDATE_METADATA = "/api/v1/misc/update-metadata"
     ADD_PASSWORD = "/api/v1/security/add-password"
     ADD_WATERMARK = "/api/v1/security/add-watermark"
     AUTO_REDACT = "/api/v1/security/auto-redact"
     CERT_SIGN = "/api/v1/security/cert-sign"
-    PKCS11_CERTIFICATES = "/api/v1/security/cert-sign/hardware/pkcs11-certificates"
-    SESSIONS = "/api/v1/security/cert-sign/sessions"
     VALIDATE_CERTIFICATE = "/api/v1/security/cert-sign/validate-certificate"
     REDACT = "/api/v1/security/redact"
     REDACT_EXECUTE = "/api/v1/security/redact-execute"
+    REMOVE_CERT_SIGN = "/api/v1/security/remove-cert-sign"
     REMOVE_PASSWORD = "/api/v1/security/remove-password"
     SANITIZE_PDF = "/api/v1/security/sanitize-pdf"
     TIMESTAMP_PDF = "/api/v1/security/timestamp-pdf"
@@ -1755,21 +1802,24 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.CBZ_TO_PDF: CbzToPdfParams,
     ToolEndpoint.EBOOK_TO_PDF: EbookToPdfParams,
     ToolEndpoint.EML_TO_PDF: EmlToPdfParams,
+    ToolEndpoint.FILE_TO_PDF: FileToPdfParams,
     ToolEndpoint.HTML_TO_PDF: HtmlToPdfParams,
     ToolEndpoint.IMG_TO_PDF: ImgToPdfParams,
+    ToolEndpoint.MARKDOWN_TO_PDF: MarkdownToPdfParams,
     ToolEndpoint.PDF_TO_CBR: PdfToCbrParams,
     ToolEndpoint.PDF_TO_CBZ: PdfToCbzParams,
     ToolEndpoint.PDF_TO_CSV: PdfToCsvParams,
     ToolEndpoint.PDF_TO_EPUB: PdfToEpubParams,
+    ToolEndpoint.PDF_TO_HTML: PdfToHtmlParams,
     ToolEndpoint.PDF_TO_IMG: PdfToImgParams,
     ToolEndpoint.PDF_TO_MARKDOWN: PdfToMarkdownParams,
     ToolEndpoint.PDF_TO_PDFA: PdfToPdfaParams,
     ToolEndpoint.PDF_TO_PRESENTATION: PdfToPresentationParams,
     ToolEndpoint.PDF_TO_TEXT: PdfToTextParams,
-    ToolEndpoint.PDF_TO_TEXT_EDITOR: PdfToTextEditorParams,
     ToolEndpoint.PDF_TO_VECTOR: PdfToVectorParams,
     ToolEndpoint.PDF_TO_WORD: PdfToWordParams,
     ToolEndpoint.PDF_TO_XLSX: PdfToXlsxParams,
+    ToolEndpoint.PDF_TO_XML: PdfToXmlParams,
     ToolEndpoint.SVG_TO_PDF: SvgToPdfParams,
     ToolEndpoint.URL_TO_PDF: UrlToPdfParams,
     ToolEndpoint.VECTOR_TO_PDF: VectorToPdfParams,
@@ -1780,7 +1830,9 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.MERGE_PDFS: MergePdfsParams,
     ToolEndpoint.MULTI_PAGE_LAYOUT: MultiPageLayoutParams,
     ToolEndpoint.OVERLAY_PDFS: OverlayPdfsParams,
+    ToolEndpoint.PDF_TO_SINGLE_PAGE: PdfToSinglePageParams,
     ToolEndpoint.REARRANGE_PAGES: RearrangePagesParams,
+    ToolEndpoint.REMOVE_IMAGE_PDF: RemoveImagePdfParams,
     ToolEndpoint.REMOVE_PAGES: RemovePagesParams,
     ToolEndpoint.ROTATE_PDF: RotatePdfParams,
     ToolEndpoint.SCALE_PAGES: ScalePagesParams,
@@ -1798,24 +1850,26 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.AUTO_SPLIT_PDF: AutoSplitPdfParams,
     ToolEndpoint.COMPRESS_PDF: CompressPdfParams,
     ToolEndpoint.DELETE_ATTACHMENT: DeleteAttachmentParams,
+    ToolEndpoint.EXTRACT_ATTACHMENTS: ExtractAttachmentsParams,
     ToolEndpoint.EXTRACT_IMAGE_SCANS: ExtractImageScansParams,
     ToolEndpoint.EXTRACT_IMAGES: ExtractImagesParams,
     ToolEndpoint.FLATTEN: FlattenParams,
     ToolEndpoint.OCR_PDF: OcrPdfParams,
     ToolEndpoint.REMOVE_BLANKS: RemoveBlanksParams,
     ToolEndpoint.RENAME_ATTACHMENT: RenameAttachmentParams,
+    ToolEndpoint.REPAIR: RepairParams,
     ToolEndpoint.REPLACE_INVERT_PDF: ReplaceInvertPdfParams,
     ToolEndpoint.SCANNER_EFFECT: ScannerEffectParams,
+    ToolEndpoint.UNLOCK_PDF_FORMS: UnlockPdfFormsParams,
     ToolEndpoint.UPDATE_METADATA: UpdateMetadataParams,
     ToolEndpoint.ADD_PASSWORD: AddPasswordParams,
     ToolEndpoint.ADD_WATERMARK: AddWatermarkParams,
     ToolEndpoint.AUTO_REDACT: AutoRedactParams,
     ToolEndpoint.CERT_SIGN: CertSignParams,
-    ToolEndpoint.PKCS11_CERTIFICATES: Pkcs11CertificatesParams,
-    ToolEndpoint.SESSIONS: SessionsParams,
     ToolEndpoint.VALIDATE_CERTIFICATE: ValidateCertificateParams,
     ToolEndpoint.REDACT: RedactParams,
     ToolEndpoint.REDACT_EXECUTE: RedactExecuteParams,
+    ToolEndpoint.REMOVE_CERT_SIGN: RemoveCertSignParams,
     ToolEndpoint.REMOVE_PASSWORD: RemovePasswordParams,
     ToolEndpoint.SANITIZE_PDF: SanitizePdfParams,
     ToolEndpoint.TIMESTAMP_PDF: TimestampPdfParams,

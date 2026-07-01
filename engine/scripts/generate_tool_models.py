@@ -59,12 +59,31 @@ class ToolDiscovery:
         "/api/v1/convert/",
     )
 
-    # Endpoints that take no parameters beyond the input file are skipped by default —
-    # most param-less endpoints in these namespaces are introspection utilities
-    # (get-info, verify-signature, show-javascript) that aren't useful as agent tools.
-    # Paths listed here are the exceptions: genuine operations we want the edit agent to
-    # be able to call, exposed with an empty parameter model.
-    PARAMLESS_TOOL_INCLUDE = frozenset({"/api/v1/convert/pdf/markdown"})
+    # Endpoints under the allowed prefixes that are NOT edit-agent operations. A listed
+    # path and everything nested under it is dropped. Two kinds live here:
+    EXCLUDED_PATHS = (
+        # 1. Interactive / feature-plumbing sub-APIs, not one-shot operations:
+        #    cert-signing sessions + hardware-token management, and the interactive
+        #    PDF text-editor endpoints.
+        "/api/v1/security/cert-sign/hardware",
+        "/api/v1/security/cert-sign/sessions",
+        "/api/v1/security/cert-sign/sign-requests",
+        "/api/v1/convert/pdf/text-editor",
+        "/api/v1/convert/text-editor/pdf",
+        # 2. Introspection / query endpoints that return metadata, a listing, or a
+        #    verification verdict rather than a transformed document, so they belong to
+        #    the question path, not the edit agent. (decompress is a dev-only stream op.)
+        "/api/v1/security/get-info-on-pdf",
+        "/api/v1/security/verify-pdf",
+        "/api/v1/security/validate-signature",
+        "/api/v1/misc/list-attachments",
+        "/api/v1/misc/show-javascript",
+        "/api/v1/misc/decompress-pdf",
+        "/api/v1/general/extract-bookmarks",
+    )
+
+    def _is_excluded(self, path: str) -> bool:
+        return any(path == p or path.startswith(p + "/") for p in self.EXCLUDED_PATHS)
 
     def __init__(self, spec: dict[str, Any]):
         resource = Resource.from_contents(spec, default_specification=DRAFT202012)
@@ -80,6 +99,8 @@ class ToolDiscovery:
         for path, path_item in sorted(self.spec.get("paths", {}).items()):
             if "{" in path or not any(path.startswith(p) for p in self.ALLOWED_PATH_PREFIXES):
                 continue
+            if self._is_excluded(path):
+                continue
             body_schema = self._get_request_body_schema(path_item) or {}
             query_props = self._get_query_parameters(path_item)
             body_props = body_schema.get("properties") or {}
@@ -87,10 +108,6 @@ class ToolDiscovery:
             # for the existing tools; query params are additive.
             properties = {**query_props, **body_props}
             clean_props = self._filter_properties(properties)
-            # Skip param-less endpoints unless explicitly opted in (see
-            # PARAMLESS_TOOL_INCLUDE); opted-in tools are exposed with an empty model.
-            if not clean_props and path not in self.PARAMLESS_TOOL_INCLUDE:
-                continue
 
             enum_name = _deduplicate(_path_to_enum_name(path), used_enum)
             class_name = _deduplicate(_path_to_class_name(path), used_class)
