@@ -24,27 +24,31 @@ export function Infrastructure() {
   const { setActiveView } = useView();
 
   const tabs: TabItem<InfraTab>[] = [
-    { key: "deployments", label: t("infrastructure.tabs.deployments") },
-    { key: "api-keys", label: t("infrastructure.tabs.apiKeys") },
-    { key: "security", label: t("infrastructure.tabs.security") },
-    { key: "models", label: t("infrastructure.tabs.models") },
-    { key: "storage", label: t("infrastructure.tabs.storage") },
-    { key: "audit", label: t("infrastructure.tabs.audit") },
+    { key: "deployments", label: t("portal.infrastructure.tabs.deployments") },
+    { key: "api-keys", label: t("portal.infrastructure.tabs.apiKeys") },
+    { key: "security", label: t("portal.infrastructure.tabs.security") },
+    { key: "models", label: t("portal.infrastructure.tabs.models") },
+    { key: "storage", label: t("portal.infrastructure.tabs.storage") },
+    { key: "audit", label: t("portal.infrastructure.tabs.audit") },
   ];
 
   return (
     <div className="portal-infra">
       <header className="portal-infra__head">
         <div className="portal-infra__head-text">
-          <h1 className="portal-infra__title">{t("infrastructure.title")}</h1>
-          <p className="portal-infra__sub">{t("infrastructure.subtitle")}</p>
+          <h1 className="portal-infra__title">
+            {t("portal.infrastructure.title")}
+          </h1>
+          <p className="portal-infra__sub">
+            {t("portal.infrastructure.subtitle")}
+          </p>
         </div>
         <Button
           variant="outline"
           size="sm"
           onClick={() => setActiveView("editor")}
         >
-          {t("infrastructure.manageEditorDeployment")}
+          {t("portal.infrastructure.manageEditorDeployment")}
         </Button>
       </header>
 
@@ -53,7 +57,7 @@ export function Infrastructure() {
         activeKey={tab}
         onChange={setTab}
         variant="underline"
-        ariaLabel={t("infrastructure.sectionsAriaLabel")}
+        ariaLabel={t("portal.infrastructure.sectionsAriaLabel")}
       />
 
       <div className="portal-infra__panel">

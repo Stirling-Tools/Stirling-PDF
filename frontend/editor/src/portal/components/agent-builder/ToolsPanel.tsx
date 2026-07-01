@@ -40,27 +40,27 @@ export function ToolsPanel({ agent, governanceUnlocked }: ToolsPanelProps) {
           checked={restricted}
           onChange={setRestricted}
           disabled={!governanceUnlocked}
-          label={t("agentBuilder.tools.restrictedAccess")}
+          label={t("portal.agentBuilder.tools.restrictedAccess")}
           description={
             governanceUnlocked
-              ? t("agentBuilder.tools.restrictedDescription")
-              : t("agentBuilder.tools.governanceGate")
+              ? t("portal.agentBuilder.tools.restrictedDescription")
+              : t("portal.agentBuilder.tools.governanceGate")
           }
         />
         <Chip tone={restricted ? "amber" : "green"} size="sm">
           {restricted
-            ? t("agentBuilder.tools.restricted")
-            : t("agentBuilder.tools.broadAccess")}
+            ? t("portal.agentBuilder.tools.restricted")
+            : t("portal.agentBuilder.tools.broadAccess")}
         </Chip>
       </div>
 
       {restricted && (
         <div className="portal-agents__detail-section">
           <span className="portal-agents__detail-heading">
-            {t("agentBuilder.tools.deniedTools")}
+            {t("portal.agentBuilder.tools.deniedTools")}
           </span>
           <p className="portal-agents__hint">
-            {t("agentBuilder.tools.deniedHint")}
+            {t("portal.agentBuilder.tools.deniedHint")}
           </p>
           <div className="portal-agents__chips">
             {TOOL_CATALOGUE.map((tool) => {

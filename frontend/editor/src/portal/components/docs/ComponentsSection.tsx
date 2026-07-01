@@ -12,9 +12,9 @@ export function ComponentsSection({
   return (
     <DocsSection
       id="component-library"
-      eyebrow={t("docs.components.eyebrow")}
-      title={t("docs.components.title")}
-      lead={t("docs.components.lead")}
+      eyebrow={t("portal.docs.components.eyebrow")}
+      title={t("portal.docs.components.title")}
+      lead={t("portal.docs.components.lead")}
     >
       <div className="portal-docs__component-grid">
         {components.map((c) => (
@@ -31,7 +31,7 @@ export function ComponentsSection({
       </div>
       <CodeBlock
         lang="typescript"
-        caption={t("docs.components.codeCaption")}
+        caption={t("portal.docs.components.codeCaption")}
         code={`import { DocumentViewer } from "@stirling/react";
 
 <DocumentViewer

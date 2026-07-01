@@ -27,12 +27,14 @@ export function RecentActivity() {
     <Card
       padding="none"
       className="portal-activity"
-      aria-label={t("recentActivity.title")}
+      aria-label={t("portal.recentActivity.title")}
     >
       <header className="portal-activity__head">
-        <h2 className="portal-activity__title">{t("recentActivity.title")}</h2>
+        <h2 className="portal-activity__title">
+          {t("portal.recentActivity.title")}
+        </h2>
         <button type="button" className="portal-activity__more">
-          {t("recentActivity.viewAll")} →
+          {t("portal.recentActivity.viewAll")} →
         </button>
       </header>
 
@@ -56,8 +58,8 @@ export function RecentActivity() {
       {isEmpty && (
         <EmptyState
           size="compact"
-          title={t("recentActivity.empty.title")}
-          description={t("recentActivity.empty.description")}
+          title={t("portal.recentActivity.empty.title")}
+          description={t("portal.recentActivity.empty.description")}
         />
       )}
 

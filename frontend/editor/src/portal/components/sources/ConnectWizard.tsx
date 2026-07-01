@@ -130,9 +130,9 @@ export function ConnectWizard({
   }
 
   const stepLabels: Record<StepId, string> = {
-    type: t("sources.wizard.steps.chooseType"),
-    configure: t("sources.wizard.steps.configure"),
-    review: t("sources.wizard.steps.review"),
+    type: t("portal.sources.wizard.steps.chooseType"),
+    configure: t("portal.sources.wizard.steps.configure"),
+    review: t("portal.sources.wizard.steps.review"),
   };
 
   return (
@@ -140,8 +140,12 @@ export function ConnectWizard({
       open={open}
       onClose={onClose}
       width="lg"
-      title={isEdit ? t("sources.wizard.editTitle") : t("sources.wizard.title")}
-      subtitle={t("sources.wizard.subtitle", {
+      title={
+        isEdit
+          ? t("portal.sources.wizard.editTitle")
+          : t("portal.sources.wizard.title")
+      }
+      subtitle={t("portal.sources.wizard.subtitle", {
         current: stepIndex + 1,
         total: steps.length,
         label: stepLabels[stepId],
@@ -157,8 +161,8 @@ export function ConnectWizard({
             }
           >
             {stepIndex === 0
-              ? t("sources.wizard.cancel")
-              : t("sources.wizard.back")}
+              ? t("portal.sources.wizard.cancel")
+              : t("portal.sources.wizard.back")}
           </Button>
           <Button
             size="sm"
@@ -168,10 +172,10 @@ export function ConnectWizard({
             trailingIcon={!isLast ? <span aria-hidden>→</span> : undefined}
           >
             {!isLast
-              ? t("sources.wizard.continue")
+              ? t("portal.sources.wizard.continue")
               : isEdit
-                ? t("sources.wizard.save")
-                : t("sources.actions.connectSource")}
+                ? t("portal.sources.wizard.save")
+                : t("portal.sources.actions.connectSource")}
           </Button>
         </div>
       }
@@ -218,10 +222,10 @@ export function ConnectWizard({
 
       {stepId === "configure" && (
         <div className="portal-sources__wizard-body">
-          <FormField label={t("sources.wizard.name")} required>
+          <FormField label={t("portal.sources.wizard.name")} required>
             <Input
               value={name}
-              placeholder={t("sources.wizard.namePlaceholder")}
+              placeholder={t("portal.sources.wizard.namePlaceholder")}
               onChange={(e) => setName(e.target.value)}
             />
           </FormField>
@@ -264,9 +268,12 @@ export function ConnectWizard({
       {stepId === "review" && (
         <div className="portal-sources__wizard-body">
           <div className="portal-sources__stat-grid">
-            <StatTile label={t("sources.wizard.name")} value={name || "—"} />
             <StatTile
-              label={t("sources.wizard.type")}
+              label={t("portal.sources.wizard.name")}
+              value={name || "—"}
+            />
+            <StatTile
+              label={t("portal.sources.wizard.type")}
               value={t(type.labelKey)}
             />
             {type.fields.map((field) => (

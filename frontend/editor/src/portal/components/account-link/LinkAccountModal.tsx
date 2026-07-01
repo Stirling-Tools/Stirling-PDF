@@ -66,17 +66,20 @@ export function LinkAccountModal({
       width="md"
       title={
         reauth
-          ? t("accountLink.modal.reauthTitle", "Sign in again")
-          : t("accountLink.modal.linkTitle", "Link your Stirling account")
+          ? t("portal.accountLink.modal.reauthTitle", "Sign in again")
+          : t(
+              "portal.accountLink.modal.linkTitle",
+              "Link your Stirling account",
+            )
       }
       subtitle={
         reauth
           ? t(
-              "accountLink.modal.reauthSubtitle",
+              "portal.accountLink.modal.reauthSubtitle",
               "Your session expired — sign back in to your Stirling account. Your instance stays linked.",
             )
           : t(
-              "accountLink.modal.linkSubtitle",
+              "portal.accountLink.modal.linkSubtitle",
               "Sign in to the account this server should bill against.",
             )
       }
@@ -88,16 +91,16 @@ export function LinkAccountModal({
           <Banner
             tone="neutral"
             title={t(
-              "accountLink.modal.loginNotConfigured.title",
+              "portal.accountLink.modal.loginNotConfigured.title",
               "SaaS login not configured",
             )}
           >
-            {t("accountLink.modal.loginNotConfigured.before", "Set")}{" "}
+            {t("portal.accountLink.modal.loginNotConfigured.before", "Set")}{" "}
             <code>VITE_SAAS_SUPABASE_URL</code>{" "}
-            {t("accountLink.modal.loginNotConfigured.and", "and")}{" "}
+            {t("portal.accountLink.modal.loginNotConfigured.and", "and")}{" "}
             <code>VITE_SAAS_SUPABASE_ANON_KEY</code>{" "}
             {t(
-              "accountLink.modal.loginNotConfigured.after",
+              "portal.accountLink.modal.loginNotConfigured.after",
               "to enable in-app linking against the hosted Stirling account.",
             )}
           </Banner>
@@ -109,7 +112,10 @@ export function LinkAccountModal({
                 onClose();
               }}
             >
-              {t("accountLink.modal.simulateSignIn", "Simulate sign-in (dev)")}
+              {t(
+                "portal.accountLink.modal.simulateSignIn",
+                "Simulate sign-in (dev)",
+              )}
             </Button>
           )}
         </div>

@@ -8,10 +8,10 @@ import type { ComponentsResponse } from "@portal/api/sdkComponents";
  * Only values flow from the API.
  */
 const KPI_LABEL_KEYS = [
-  "catalogue.summary.componentsGa",
-  "catalogue.summary.inBeta",
-  "catalogue.summary.embedsThisMonth",
-  "catalogue.summary.componentSpendMtd",
+  "portal.catalogue.summary.componentsGa",
+  "portal.catalogue.summary.inBeta",
+  "portal.catalogue.summary.embedsThisMonth",
+  "portal.catalogue.summary.componentSpendMtd",
 ] as const;
 
 interface ComponentsSummaryStripProps {

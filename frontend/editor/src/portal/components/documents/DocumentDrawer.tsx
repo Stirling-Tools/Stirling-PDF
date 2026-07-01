@@ -32,9 +32,12 @@ export function DocumentDrawer({ doc, onClose }: DocumentDrawerProps) {
   const fourEyes = tier === "enterprise";
 
   const subTabs: TabItem<SubTab>[] = [
-    { key: "overview", label: t("documents.drawer.tabs.overview") },
-    { key: "extractions", label: t("documents.drawer.tabs.extractions") },
-    { key: "audit", label: t("documents.drawer.tabs.audit") },
+    { key: "overview", label: t("portal.documents.drawer.tabs.overview") },
+    {
+      key: "extractions",
+      label: t("portal.documents.drawer.tabs.extractions"),
+    },
+    { key: "audit", label: t("portal.documents.drawer.tabs.audit") },
   ];
 
   const [tab, setTab] = useState<SubTab>("overview");
@@ -98,7 +101,7 @@ export function DocumentDrawer({ doc, onClose }: DocumentDrawerProps) {
           activeKey={tab}
           onChange={setTab}
           variant="underline"
-          ariaLabel={t("documents.drawer.sectionsAriaLabel")}
+          ariaLabel={t("portal.documents.drawer.sectionsAriaLabel")}
         />
 
         <div className="portal-documents__drawer-panel">

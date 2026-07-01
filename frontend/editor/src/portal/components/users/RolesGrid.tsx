@@ -14,9 +14,11 @@ export function RolesGrid({ roles }: RolesGridProps) {
     <section className="portal-users__roles">
       <header className="portal-users__section-head">
         <h2 className="portal-users__section-title">
-          {t("users.roles.title")}
+          {t("portal.users.roles.title")}
         </h2>
-        <p className="portal-users__section-sub">{t("users.roles.subtitle")}</p>
+        <p className="portal-users__section-sub">
+          {t("portal.users.roles.subtitle")}
+        </p>
       </header>
       <div className="portal-users__roles-grid">
         {roles.map((role) => (

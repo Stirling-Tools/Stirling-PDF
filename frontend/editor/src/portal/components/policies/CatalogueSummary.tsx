@@ -18,24 +18,24 @@ export function CatalogueSummary({ data, loading }: CatalogueSummaryProps) {
   return (
     <MetricStrip>
       <MetricCard
-        label={t("policies.summary.active.label")}
+        label={t("portal.policies.summary.active.label")}
         value={s ? s.active : "—"}
-        description={t("policies.summary.active.description")}
+        description={t("portal.policies.summary.active.description")}
       />
       <MetricCard
-        label={t("policies.summary.paused.label")}
+        label={t("portal.policies.summary.paused.label")}
         value={s ? s.paused : "—"}
-        description={t("policies.summary.paused.description")}
+        description={t("portal.policies.summary.paused.description")}
       />
       <MetricCard
-        label={t("policies.summary.categories.label")}
+        label={t("portal.policies.summary.categories.label")}
         value={s ? s.categories : "—"}
-        description={t("policies.summary.categories.description")}
+        description={t("portal.policies.summary.categories.description")}
       />
       <MetricCard
-        label={t("policies.summary.docsEnforced.label")}
+        label={t("portal.policies.summary.docsEnforced.label")}
         value={s ? s.docsEnforced.toLocaleString() : "—"}
-        description={t("policies.summary.docsEnforced.description")}
+        description={t("portal.policies.summary.docsEnforced.description")}
       />
     </MetricStrip>
   );

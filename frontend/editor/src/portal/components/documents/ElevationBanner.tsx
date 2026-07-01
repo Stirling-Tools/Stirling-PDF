@@ -27,13 +27,13 @@ export function ElevationBanner({
       <Banner
         tone="success"
         icon={<span aria-hidden>⏱</span>}
-        title={t("documents.elevation.active.title", {
+        title={t("portal.documents.elevation.active.title", {
           time: formatCountdown(secondsLeft),
         })}
         description={
           fourEyes
-            ? t("documents.elevation.active.descriptionFourEyes")
-            : t("documents.elevation.active.description")
+            ? t("portal.documents.elevation.active.descriptionFourEyes")
+            : t("portal.documents.elevation.active.description")
         }
       />
     );
@@ -43,15 +43,15 @@ export function ElevationBanner({
     <Banner
       tone="warning"
       icon={<span aria-hidden>🔒</span>}
-      title={t("documents.elevation.gated.title")}
+      title={t("portal.documents.elevation.gated.title")}
       description={
         fourEyes
-          ? t("documents.elevation.gated.descriptionFourEyes")
-          : t("documents.elevation.gated.description")
+          ? t("portal.documents.elevation.gated.descriptionFourEyes")
+          : t("portal.documents.elevation.gated.description")
       }
       action={
         <Button size="sm" onClick={onRequest}>
-          {t("documents.elevation.requestAccess")}
+          {t("portal.documents.elevation.requestAccess")}
         </Button>
       }
     />

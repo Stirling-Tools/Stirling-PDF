@@ -36,15 +36,18 @@ export function PopularUseCases() {
   const { t } = useTranslation();
   const { setActiveView } = useView();
   return (
-    <section className="portal-usecases" aria-label={t("useCases.title")}>
+    <section
+      className="portal-usecases"
+      aria-label={t("portal.useCases.title")}
+    >
       <header className="portal-usecases__head">
-        <h2 className="portal-usecases__title">{t("useCases.title")}</h2>
+        <h2 className="portal-usecases__title">{t("portal.useCases.title")}</h2>
         <button
           type="button"
           className="portal-usecases__viewall"
           onClick={() => setActiveView("pipelines")}
         >
-          {t("useCases.viewAll")} <span aria-hidden>→</span>
+          {t("portal.useCases.viewAll")} <span aria-hidden>→</span>
         </button>
       </header>
       <div className="portal-usecases__grid">
@@ -59,13 +62,13 @@ export function PopularUseCases() {
               className="portal-usecases__eyebrow"
               style={{ color: ACCENT_COLOR[uc.accent] }}
             >
-              {t(`useCases.items.${uc.key}.eyebrow`)}
+              {t(`portal.useCases.items.${uc.key}.eyebrow`)}
             </span>
             <h3 className="portal-usecases__card-title">
-              {t(`useCases.items.${uc.key}.title`)}
+              {t(`portal.useCases.items.${uc.key}.title`)}
             </h3>
             <p className="portal-usecases__blurb">
-              {t(`useCases.items.${uc.key}.blurb`)}
+              {t(`portal.useCases.items.${uc.key}.blurb`)}
             </p>
             <button
               type="button"
@@ -73,7 +76,8 @@ export function PopularUseCases() {
               style={{ color: ACCENT_COLOR[uc.accent] }}
               onClick={() => setActiveView("pipelines")}
             >
-              {t(`useCases.items.${uc.key}.cta`)} <span aria-hidden>→</span>
+              {t(`portal.useCases.items.${uc.key}.cta`)}{" "}
+              <span aria-hidden>→</span>
             </button>
           </Card>
         ))}

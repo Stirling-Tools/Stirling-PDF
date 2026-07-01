@@ -13,7 +13,7 @@ export function EndpointReferenceSection() {
   const tabItems: TabItem<VerticalFilter>[] = [
     {
       key: "all",
-      label: t("docs.endpoints.filterAll"),
+      label: t("portal.docs.endpoints.filterAll"),
       count: ALL_ENDPOINTS.length,
     },
     ...VERTICALS.map<TabItem<VerticalFilter>>((v) => ({
@@ -34,15 +34,15 @@ export function EndpointReferenceSection() {
   return (
     <DocsSection
       id="endpoints"
-      eyebrow={t("docs.endpoints.eyebrow")}
-      title={t("docs.endpoints.title")}
-      lead={t("docs.endpoints.lead")}
+      eyebrow={t("portal.docs.endpoints.eyebrow")}
+      title={t("portal.docs.endpoints.title")}
+      lead={t("portal.docs.endpoints.lead")}
     >
       <Tabs
         items={tabItems}
         activeKey={filter}
         onChange={setFilter}
-        ariaLabel={t("docs.endpoints.filterAriaLabel")}
+        ariaLabel={t("portal.docs.endpoints.filterAriaLabel")}
       />
       <div className="portal-docs__endpoints">
         {shown.map((v) => (
@@ -61,7 +61,7 @@ export function EndpointReferenceSection() {
                 <code className="portal-docs__endpoint-path">{e.endpoint}</code>
                 <span className="portal-docs__endpoint-name">{e.name}</span>
                 <span className="portal-docs__endpoint-fields">
-                  {t("docs.endpoints.fieldCount", {
+                  {t("portal.docs.endpoints.fieldCount", {
                     count: Object.keys(e.schema).length,
                   })}
                 </span>

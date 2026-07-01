@@ -42,23 +42,31 @@ export function StorageTab() {
   const RETENTION_OPTS = [
     {
       value: "30",
-      label: t("infrastructure.storage.retentionOption.days", { count: 30 }),
+      label: t("portal.infrastructure.storage.retentionOption.days", {
+        count: 30,
+      }),
     },
     {
       value: "60",
-      label: t("infrastructure.storage.retentionOption.days", { count: 60 }),
+      label: t("portal.infrastructure.storage.retentionOption.days", {
+        count: 60,
+      }),
     },
     {
       value: "90",
-      label: t("infrastructure.storage.retentionOption.days", { count: 90 }),
+      label: t("portal.infrastructure.storage.retentionOption.days", {
+        count: 90,
+      }),
     },
     {
       value: "180",
-      label: t("infrastructure.storage.retentionOption.days", { count: 180 }),
+      label: t("portal.infrastructure.storage.retentionOption.days", {
+        count: 180,
+      }),
     },
     {
       value: "never",
-      label: t("infrastructure.storage.retentionOption.never"),
+      label: t("portal.infrastructure.storage.retentionOption.never"),
     },
   ];
 
@@ -79,8 +87,8 @@ export function StorageTab() {
     return (
       <EmptyState
         size="compact"
-        title={t("infrastructure.storage.empty.title")}
-        description={t("infrastructure.storage.empty.description")}
+        title={t("portal.infrastructure.storage.empty.title")}
+        description={t("portal.infrastructure.storage.empty.description")}
       />
     );
   }
@@ -92,25 +100,25 @@ export function StorageTab() {
     <div className="portal-infra__stack">
       <section>
         <SectionHeader
-          title={t("infrastructure.storage.totalUsage.heading")}
-          sub={t("infrastructure.storage.totalUsage.subheading")}
+          title={t("portal.infrastructure.storage.totalUsage.heading")}
+          sub={t("portal.infrastructure.storage.totalUsage.subheading")}
         />
         <Card padding="loose">
           <div className="portal-infra__usage-head">
             <span className="portal-infra__usage-value">
-              {t("infrastructure.storage.gbValue", {
+              {t("portal.infrastructure.storage.gbValue", {
                 value: data.usedGb.toLocaleString(),
               })}
               <span className="portal-infra__muted">
                 {" "}
                 /{" "}
-                {t("infrastructure.storage.gbValue", {
+                {t("portal.infrastructure.storage.gbValue", {
                   value: data.quotaGb.toLocaleString(),
                 })}
               </span>
             </span>
             <StatusBadge tone={overThreshold ? "danger" : "success"} size="sm">
-              {t("infrastructure.storage.percentUsed", {
+              {t("portal.infrastructure.storage.percentUsed", {
                 value: pct(usedFrac),
               })}
             </StatusBadge>
@@ -123,7 +131,7 @@ export function StorageTab() {
                 ? "linear-gradient(90deg, var(--color-red), color-mix(in srgb, var(--color-red) 70%, white))"
                 : "linear-gradient(90deg, var(--color-green), color-mix(in srgb, var(--color-green) 70%, white))"
             }
-            label={t("infrastructure.storage.totalUsage.progressLabel")}
+            label={t("portal.infrastructure.storage.totalUsage.progressLabel")}
           />
         </Card>
       </section>
@@ -131,8 +139,8 @@ export function StorageTab() {
       <section className="portal-infra__split">
         <Card padding="loose">
           <SectionHeader
-            title={t("infrastructure.storage.providers.heading")}
-            sub={t("infrastructure.storage.providers.subheading")}
+            title={t("portal.infrastructure.storage.providers.heading")}
+            sub={t("portal.infrastructure.storage.providers.subheading")}
           />
           <ul className="portal-infra__providers">
             {data.providers.map((p) => (
@@ -147,17 +155,19 @@ export function StorageTab() {
                 {p.connected ? (
                   <span className="portal-infra__provider-meta">
                     <span className="portal-infra__mono">
-                      {t("infrastructure.storage.gbValue", { value: p.usedGb })}
+                      {t("portal.infrastructure.storage.gbValue", {
+                        value: p.usedGb,
+                      })}
                     </span>
                     <StatusBadge tone="success" size="sm">
-                      {t("infrastructure.storage.providers.connected")}
+                      {t("portal.infrastructure.storage.providers.connected")}
                     </StatusBadge>
                   </span>
                 ) : (
                   // TODO(backend): launch the provider OAuth/credential flow,
                   // then POST /v1/infrastructure/storage/providers/{id}/connect
                   <Button variant="outline" size="sm">
-                    {t("infrastructure.storage.providers.connect")}
+                    {t("portal.infrastructure.storage.providers.connect")}
                   </Button>
                 )}
               </li>
@@ -167,10 +177,12 @@ export function StorageTab() {
 
         <Card padding="loose">
           <SectionHeader
-            title={t("infrastructure.storage.retention.heading")}
-            sub={t("infrastructure.storage.retention.subheading")}
+            title={t("portal.infrastructure.storage.retention.heading")}
+            sub={t("portal.infrastructure.storage.retention.subheading")}
           />
-          <FormField label={t("infrastructure.storage.retention.windowLabel")}>
+          <FormField
+            label={t("portal.infrastructure.storage.retention.windowLabel")}
+          >
             <Select
               options={RETENTION_OPTS}
               value={retentionValue}
@@ -182,10 +194,10 @@ export function StorageTab() {
             <div className="portal-infra__lifecycle-stage is-active">
               <span className="portal-infra__lifecycle-dot" />
               <span className="portal-infra__lifecycle-label">
-                {t("infrastructure.storage.lifecycle.active")}
+                {t("portal.infrastructure.storage.lifecycle.active")}
               </span>
               <span className="portal-infra__muted">
-                {t("infrastructure.storage.lifecycle.activeRange", {
+                {t("portal.infrastructure.storage.lifecycle.activeRange", {
                   value: retentionValue === "never" ? "∞" : retentionValue,
                 })}
               </span>
@@ -196,10 +208,10 @@ export function StorageTab() {
             <div className="portal-infra__lifecycle-stage">
               <span className="portal-infra__lifecycle-dot" />
               <span className="portal-infra__lifecycle-label">
-                {t("infrastructure.storage.lifecycle.archived")}
+                {t("portal.infrastructure.storage.lifecycle.archived")}
               </span>
               <span className="portal-infra__muted">
-                {t("infrastructure.storage.lifecycle.coldStorage")}
+                {t("portal.infrastructure.storage.lifecycle.coldStorage")}
               </span>
             </div>
             <span className="portal-infra__lifecycle-arrow" aria-hidden>
@@ -208,12 +220,12 @@ export function StorageTab() {
             <div className="portal-infra__lifecycle-stage">
               <span className="portal-infra__lifecycle-dot" />
               <span className="portal-infra__lifecycle-label">
-                {t("infrastructure.storage.lifecycle.deleted")}
+                {t("portal.infrastructure.storage.lifecycle.deleted")}
               </span>
               <span className="portal-infra__muted">
                 {retentionValue === "never"
-                  ? t("infrastructure.storage.lifecycle.never")
-                  : t("infrastructure.storage.lifecycle.purged")}
+                  ? t("portal.infrastructure.storage.lifecycle.never")
+                  : t("portal.infrastructure.storage.lifecycle.purged")}
               </span>
             </div>
           </div>

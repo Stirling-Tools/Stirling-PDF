@@ -37,9 +37,9 @@ const STATE_BADGE: Record<
   RowState,
   { tone: "success" | "neutral" | "info"; labelKey: string }
 > = {
-  active: { tone: "success", labelKey: "policySummary.state.active" },
-  off: { tone: "neutral", labelKey: "policySummary.state.off" },
-  locked: { tone: "info", labelKey: "policySummary.state.soon" },
+  active: { tone: "success", labelKey: "portal.policySummary.state.active" },
+  off: { tone: "neutral", labelKey: "portal.policySummary.state.off" },
+  locked: { tone: "info", labelKey: "portal.policySummary.state.soon" },
 };
 
 function toRow(entry: CatalogueEntry): PolicyRow {
@@ -60,7 +60,7 @@ export function PolicySummary() {
   const columns: TableColumn<PolicyRow>[] = [
     {
       key: "category",
-      header: t("policySummary.column.policy"),
+      header: t("portal.policySummary.column.policy"),
       render: ({ entry }) => (
         <div className="portal-policysum__cat">
           <span className="portal-policysum__icon" aria-hidden>
@@ -75,7 +75,7 @@ export function PolicySummary() {
     },
     {
       key: "status",
-      header: t("policySummary.column.status"),
+      header: t("portal.policySummary.column.status"),
       width: "7rem",
       render: ({ state }) => {
         const badge = STATE_BADGE[state];
@@ -88,12 +88,12 @@ export function PolicySummary() {
     },
     {
       key: "rule",
-      header: t("policySummary.column.activeRule"),
+      header: t("portal.policySummary.column.activeRule"),
       render: ({ entry, state }) => (
         <span className="portal-policysum__rule">
           {state === "active"
             ? entry.config.summary
-            : t("policySummary.noRule")}
+            : t("portal.policySummary.noRule")}
         </span>
       ),
     },
@@ -106,7 +106,7 @@ export function PolicySummary() {
         if (state === "locked") {
           return (
             <Button size="sm" variant="ghost" onClick={goToPolicies}>
-              {t("policySummary.action.comingSoon")}
+              {t("portal.policySummary.action.comingSoon")}
             </Button>
           );
         }
@@ -117,8 +117,8 @@ export function PolicySummary() {
             onClick={goToPolicies}
           >
             {state === "active"
-              ? t("policySummary.action.configure")
-              : t("policySummary.action.setUp")}
+              ? t("portal.policySummary.action.configure")
+              : t("portal.policySummary.action.setUp")}
           </Button>
         );
       },
@@ -128,20 +128,23 @@ export function PolicySummary() {
   const rows: PolicyRow[] = data?.catalogue?.map(toRow) ?? [];
 
   return (
-    <section className="portal-policysum" aria-label={t("policySummary.title")}>
+    <section
+      className="portal-policysum"
+      aria-label={t("portal.policySummary.title")}
+    >
       <Card padding="none">
         <header className="portal-policysum__head">
           <div>
             <h2 className="portal-policysum__title">
-              {t("policySummary.title")}
+              {t("portal.policySummary.title")}
             </h2>
             <p className="portal-policysum__sub">
-              {t("policySummary.subtitle")}
+              {t("portal.policySummary.subtitle")}
             </p>
           </div>
           {data?.summary && (
             <StatusBadge tone="info" size="sm">
-              {t("policySummary.activeSummary", {
+              {t("portal.policySummary.activeSummary", {
                 active: data.summary.active,
                 total: data.summary.categories,
               })}
@@ -163,8 +166,8 @@ export function PolicySummary() {
         {isEmpty && (
           <EmptyState
             size="compact"
-            title={t("policySummary.empty.title")}
-            description={t("policySummary.empty.description")}
+            title={t("portal.policySummary.empty.title")}
+            description={t("portal.policySummary.empty.description")}
           />
         )}
 

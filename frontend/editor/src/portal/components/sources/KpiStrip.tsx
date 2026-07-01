@@ -9,9 +9,9 @@ import type { SourcesResponse } from "@portal/api/sources";
  * Order matches SourceOverviewService.buildKpis: total, in-use, unused.
  */
 const KPI_LABEL_KEYS = [
-  "sources.kpi.total",
-  "sources.kpi.inUse",
-  "sources.kpi.unused",
+  "portal.sources.kpi.total",
+  "portal.sources.kpi.inUse",
+  "portal.sources.kpi.unused",
 ] as const;
 
 interface KpiStripProps {

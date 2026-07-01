@@ -64,7 +64,7 @@ function LinkAccountFooterItem() {
   return (
     <NavItem
       id="account-link"
-      label={t("shell.sidebar.linkAccount", "Link Stirling account")}
+      label={t("portal.shell.sidebar.linkAccount", "Link Stirling account")}
       icon={<LinkIcon />}
       onClick={() => openLinkModal()}
     />
@@ -93,7 +93,7 @@ function UsageFooter() {
       <div className="portal-sidebar__usage portal-sidebar__usage--free">
         <div className="portal-sidebar__usage-line">
           <span className="portal-sidebar__usage-label">
-            {t("shell.sidebar.docsProcessed")}
+            {t("portal.shell.sidebar.docsProcessed")}
           </span>
           <span className="portal-sidebar__usage-value">{docs ?? "—"}</span>
         </div>
@@ -114,8 +114,8 @@ function UsageFooter() {
 
   const planLabel =
     tier === "pro"
-      ? t("shell.sidebar.planProcessor", "Processor plan")
-      : t("shell.sidebar.planEnterprise", "Enterprise plan");
+      ? t("portal.shell.sidebar.planProcessor", "Processor plan")
+      : t("portal.shell.sidebar.planEnterprise", "Enterprise plan");
 
   return (
     <div className="portal-sidebar__usage">
@@ -125,7 +125,7 @@ function UsageFooter() {
           {planLabel}
         </span>
         <span className="portal-sidebar__usage-value">
-          {docs != null ? t("shell.sidebar.docsCount", { docs }) : "—"}
+          {docs != null ? t("portal.shell.sidebar.docsCount", { docs }) : "—"}
         </span>
       </div>
     </div>
@@ -151,7 +151,7 @@ export function Sidebar() {
       <NavItem
         key={entry.id}
         id={entry.id}
-        label={t(`nav.${entry.id}`)}
+        label={t(`portal.nav.${entry.id}`)}
         icon={entry.icon}
         isActive={activeView === entry.id}
         onClick={(id) => setActiveView(id as ViewId)}
@@ -162,7 +162,7 @@ export function Sidebar() {
   return (
     <aside
       className="portal-sidebar"
-      aria-label={t("shell.sidebar.primaryNav")}
+      aria-label={t("portal.shell.sidebar.primaryNav")}
     >
       <div className="portal-sidebar__logo">
         <span className="portal-sidebar__brand">
@@ -172,7 +172,7 @@ export function Sidebar() {
             alt="Stirling"
           />
           <span className="portal-sidebar__logo-suffix">
-            {t("shell.sidebar.brandSuffix")}
+            {t("portal.shell.sidebar.brandSuffix")}
           </span>
         </span>
 
@@ -181,7 +181,7 @@ export function Sidebar() {
             <button
               type="button"
               className="portal-sidebar__app-switch-btn"
-              aria-label={t("shell.sidebar.switchApp")}
+              aria-label={t("portal.shell.sidebar.switchApp")}
             >
               <ChevronDownIcon size={14} />
             </button>
@@ -197,7 +197,7 @@ export function Sidebar() {
                 />
               }
             >
-              {t("shell.sidebar.appProcessor")}
+              {t("portal.shell.sidebar.appProcessor")}
             </Dropdown.Item>
             <Dropdown.Item
               onSelect={() => {
@@ -211,7 +211,7 @@ export function Sidebar() {
                 />
               }
             >
-              {t("shell.sidebar.appEditor")}
+              {t("portal.shell.sidebar.appEditor")}
             </Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown.Root>
@@ -235,7 +235,7 @@ export function Sidebar() {
         <LinkAccountFooterItem />
         <NavItem
           id="settings"
-          label={t("nav.settings")}
+          label={t("portal.nav.settings")}
           icon={<SettingsIcon />}
           onClick={() => openSettings()}
         />

@@ -14,7 +14,10 @@ export function DocsNav({
 }) {
   const { t } = useTranslation();
   return (
-    <nav className="portal-docs__nav" aria-label={t("docs.nav.ariaLabel")}>
+    <nav
+      className="portal-docs__nav"
+      aria-label={t("portal.docs.nav.ariaLabel")}
+    >
       {sections.map((section) => (
         <div key={section.id} className="portal-docs__nav-group">
           <div className="portal-docs__nav-head">

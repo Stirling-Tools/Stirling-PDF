@@ -9,9 +9,9 @@ import type { PipelinesOverviewResponse } from "@portal/api/pipelines";
  * PolicyOverviewService.buildKpis: total, active, paused.
  */
 const KPI_LABEL_KEYS = [
-  "pipelines.kpi.total",
-  "pipelines.kpi.active",
-  "pipelines.kpi.paused",
+  "portal.pipelines.kpi.total",
+  "portal.pipelines.kpi.active",
+  "portal.pipelines.kpi.paused",
 ] as const;
 
 interface KpiStripProps {

@@ -122,8 +122,8 @@ export function Sources() {
     <div className="portal-sources">
       <header className="portal-sources__head">
         <div>
-          <h1 className="portal-sources__title">{t("sources.title")}</h1>
-          <p className="portal-sources__sub">{t("sources.subtitle")}</p>
+          <h1 className="portal-sources__title">{t("portal.sources.title")}</h1>
+          <p className="portal-sources__sub">{t("portal.sources.subtitle")}</p>
         </div>
         <div className="portal-sources__actions">
           <Button
@@ -131,10 +131,10 @@ export function Sources() {
             onClick={() => setActiveView("agent-builder")}
             leadingIcon={<AgentBuilderIcon size={16} />}
           >
-            {t("sources.actions.agentBuilder")}
+            {t("portal.sources.actions.agentBuilder")}
           </Button>
           <Button onClick={openCreate} leadingIcon={<span aria-hidden>+</span>}>
-            {t("sources.actions.connectSource")}
+            {t("portal.sources.actions.connectSource")}
           </Button>
         </div>
       </header>
@@ -153,11 +153,11 @@ export function Sources() {
 
       {isEmpty && (
         <EmptyState
-          title={t("sources.empty.title")}
-          description={t("sources.empty.description")}
+          title={t("portal.sources.empty.title")}
+          description={t("portal.sources.empty.description")}
           actions={
             <Button onClick={openCreate}>
-              {t("sources.actions.connectSource")}
+              {t("portal.sources.actions.connectSource")}
             </Button>
           }
         />
@@ -196,7 +196,7 @@ export function Sources() {
         open={pendingDelete !== null}
         onClose={() => !deleting && setPendingDelete(null)}
         width="sm"
-        title={t("sources.delete.title")}
+        title={t("portal.sources.delete.title")}
         footer={
           <div className="portal-sources__wizard-footer">
             <Button
@@ -205,7 +205,7 @@ export function Sources() {
               disabled={deleting}
               onClick={() => setPendingDelete(null)}
             >
-              {t("sources.delete.cancel")}
+              {t("portal.sources.delete.cancel")}
             </Button>
             <Button
               size="sm"
@@ -213,12 +213,14 @@ export function Sources() {
               loading={deleting}
               onClick={confirmDelete}
             >
-              {t("sources.delete.confirm")}
+              {t("portal.sources.delete.confirm")}
             </Button>
           </div>
         }
       >
-        <p>{t("sources.delete.body", { name: pendingDelete?.name ?? "" })}</p>
+        <p>
+          {t("portal.sources.delete.body", { name: pendingDelete?.name ?? "" })}
+        </p>
         {deleteError && <Banner tone="danger" description={deleteError} />}
       </Modal>
     </div>

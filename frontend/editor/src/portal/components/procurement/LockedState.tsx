@@ -19,12 +19,12 @@ export function LockedState({
   return (
     <div className="portal-proc__locked">
       <EmptyState
-        eyebrow={t("procurement.locked.eyebrow")}
-        title={t("procurement.locked.title")}
-        description={t("procurement.locked.description")}
+        eyebrow={t("portal.procurement.locked.eyebrow")}
+        title={t("portal.procurement.locked.title")}
+        description={t("portal.procurement.locked.description")}
         actions={
           <Button variant="gradient" accent="purple" onClick={onTalkToSales}>
-            {t("procurement.locked.talkToSales")}
+            {t("portal.procurement.locked.talkToSales")}
           </Button>
         }
       />

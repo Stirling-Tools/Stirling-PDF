@@ -36,17 +36,17 @@ export interface LinkInfo {
 
 export const LINK_INFO: Record<LinkState, LinkInfo> = {
   unlinked: {
-    labelKey: "accountLink.state.unlinked",
+    labelKey: "portal.accountLink.state.unlinked",
     labelDefault: "Not linked",
     unlocked: false,
   },
   "linked-free": {
-    labelKey: "accountLink.state.free",
+    labelKey: "portal.accountLink.state.free",
     labelDefault: "Editor plan",
     unlocked: true,
   },
   "linked-subscribed": {
-    labelKey: "accountLink.state.subscribed",
+    labelKey: "portal.accountLink.state.subscribed",
     labelDefault: "Processor plan",
     unlocked: true,
   },

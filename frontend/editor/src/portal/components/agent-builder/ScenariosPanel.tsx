@@ -58,8 +58,8 @@ export function ScenariosPanel({ agent }: ScenariosPanelProps) {
                   showDot={false}
                 >
                   {s.enabled
-                    ? t("agentBuilder.scenarios.inEval")
-                    : t("agentBuilder.scenarios.muted")}
+                    ? t("portal.agentBuilder.scenarios.inEval")
+                    : t("portal.agentBuilder.scenarios.muted")}
                 </StatusBadge>
               </div>
               <span className="portal-agents__scenario-expect">
@@ -72,8 +72,8 @@ export function ScenariosPanel({ agent }: ScenariosPanelProps) {
               onClick={() => toggleEnabled(s.id)}
             >
               {s.enabled
-                ? t("agentBuilder.scenarios.mute")
-                : t("agentBuilder.scenarios.enable")}
+                ? t("portal.agentBuilder.scenarios.mute")
+                : t("portal.agentBuilder.scenarios.enable")}
             </Button>
           </li>
         ))}
@@ -81,25 +81,29 @@ export function ScenariosPanel({ agent }: ScenariosPanelProps) {
 
       <div className="portal-agents__scenario-add">
         <Chip tone="blue" size="sm">
-          {t("agentBuilder.scenarios.addScenario")}
+          {t("portal.agentBuilder.scenarios.addScenario")}
         </Chip>
         <div className="portal-agents__scenario-form">
-          <FormField label={t("agentBuilder.scenarios.nameLabel")}>
+          <FormField label={t("portal.agentBuilder.scenarios.nameLabel")}>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder={t("agentBuilder.scenarios.namePlaceholder")}
+              placeholder={t("portal.agentBuilder.scenarios.namePlaceholder")}
             />
           </FormField>
-          <FormField label={t("agentBuilder.scenarios.expectationLabel")}>
+          <FormField
+            label={t("portal.agentBuilder.scenarios.expectationLabel")}
+          >
             <Input
               value={expectation}
               onChange={(e) => setExpectation(e.target.value)}
-              placeholder={t("agentBuilder.scenarios.expectationPlaceholder")}
+              placeholder={t(
+                "portal.agentBuilder.scenarios.expectationPlaceholder",
+              )}
             />
           </FormField>
           <Button size="sm" onClick={addScenario} disabled={!canAdd}>
-            {t("agentBuilder.scenarios.add")}
+            {t("portal.agentBuilder.scenarios.add")}
           </Button>
         </div>
       </div>

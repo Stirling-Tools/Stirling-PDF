@@ -37,7 +37,7 @@ export function FreePlanView({ wallet, onSubscribed }: Props) {
     if (wallet.teamId == null) {
       setMissingTeam(
         t(
-          "billing.freePlan.noTeamResolved",
+          "portal.billing.freePlan.noTeamResolved",
           "No team is resolved on your wallet yet — refresh and try again.",
         ),
       );
@@ -53,7 +53,10 @@ export function FreePlanView({ wallet, onSubscribed }: Props) {
       onClick={openCheckout}
       disabled={wallet.teamId == null}
     >
-      {t("billing.freePlan.switchOnProcessor", "Switch on the Processor →")}
+      {t(
+        "portal.billing.freePlan.switchOnProcessor",
+        "Switch on the Processor →",
+      )}
     </Button>
   ) : null;
 
@@ -62,20 +65,20 @@ export function FreePlanView({ wallet, onSubscribed }: Props) {
       {/* Current plan */}
       <div className="portal-billing__current-plan">
         <span className="portal-billing__eyebrow">
-          {t("billing.freePlan.currentPlan", "Current plan")}
+          {t("portal.billing.freePlan.currentPlan", "Current plan")}
         </span>
         <div className="portal-billing__current-plan-row">
           <h2 className="portal-billing__current-plan-name">
-            {t("billing.freePlan.planName", "Editor")}
+            {t("portal.billing.freePlan.planName", "Editor")}
           </h2>
           <StatusBadge tone="success" size="sm" showDot={false}>
-            {t("billing.freePlan.freeForever", "Free forever")}
+            {t("portal.billing.freePlan.freeForever", "Free forever")}
           </StatusBadge>
           <StatusBadge tone="info" size="sm" showDot={false}>
-            {t("billing.freePlan.ssoIncluded", "SSO included")}
+            {t("portal.billing.freePlan.ssoIncluded", "SSO included")}
           </StatusBadge>
           <StatusBadge tone="purple" size="sm" showDot={false}>
-            {t("billing.freePlan.unlimitedUsers", "Unlimited users")}
+            {t("portal.billing.freePlan.unlimitedUsers", "Unlimited users")}
           </StatusBadge>
         </div>
       </div>
@@ -89,7 +92,7 @@ export function FreePlanView({ wallet, onSubscribed }: Props) {
         <Banner
           tone="warning"
           title={t(
-            "billing.freePlan.checkoutErrorTitle",
+            "portal.billing.freePlan.checkoutErrorTitle",
             "Couldn't start checkout",
           )}
         >
@@ -99,7 +102,7 @@ export function FreePlanView({ wallet, onSubscribed }: Props) {
       {!isLeader && (
         <p className="portal-billing__plan-readonly">
           {t(
-            "billing.freePlan.ownerOnly",
+            "portal.billing.freePlan.ownerOnly",
             "Only the team owner can switch on the Processor plan.",
           )}
         </p>

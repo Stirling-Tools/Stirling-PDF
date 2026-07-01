@@ -24,19 +24,19 @@ export function LinkAccountCard({ link }: Props) {
       <div className="portal-link__card-head">
         <div>
           <span className="portal-link__eyebrow">
-            {t("accountLink.card.eyebrow", "Account link")}
+            {t("portal.accountLink.card.eyebrow", "Account link")}
           </span>
           <h2 className="portal-link__title">
             {t(
-              "accountLink.card.title",
+              "portal.accountLink.card.title",
               "Link this org to its Stirling account",
             )}
           </h2>
         </div>
         <StatusBadge tone={linked ? "success" : "neutral"} size="sm">
           {linked
-            ? t("accountLink.card.linked", "Linked")
-            : t("accountLink.card.notLinked", "Not linked")}
+            ? t("portal.accountLink.card.linked", "Linked")
+            : t("portal.accountLink.card.notLinked", "Not linked")}
         </StatusBadge>
       </div>
 
@@ -44,14 +44,14 @@ export function LinkAccountCard({ link }: Props) {
         <Banner
           tone="neutral"
           title={t(
-            "accountLink.card.loginNotConfigured.title",
+            "portal.accountLink.card.loginNotConfigured.title",
             "SaaS login not configured",
           )}
         >
-          {t("accountLink.card.loginNotConfigured.before", "Set")}{" "}
+          {t("portal.accountLink.card.loginNotConfigured.before", "Set")}{" "}
           <code>VITE_SAAS_SUPABASE_URL</code>{" "}
           {t(
-            "accountLink.card.loginNotConfigured.after",
+            "portal.accountLink.card.loginNotConfigured.after",
             "to enable account linking against the hosted Stirling account. In dev you can simulate sign-in from the link dialog.",
           )}
         </Banner>
@@ -60,7 +60,7 @@ export function LinkAccountCard({ link }: Props) {
       {link.error && (
         <Banner
           tone="danger"
-          title={t("accountLink.card.error.title", "Couldn't link")}
+          title={t("portal.accountLink.card.error.title", "Couldn't link")}
         >
           {link.error}
         </Banner>
@@ -70,15 +70,15 @@ export function LinkAccountCard({ link }: Props) {
         <div className="portal-link__actions">
           <span className="portal-link__muted">
             {link.status?.name
-              ? t("accountLink.card.linkedAs", "Linked as {{name}}.", {
+              ? t("portal.accountLink.card.linkedAs", "Linked as {{name}}.", {
                   name: link.status.name,
                 })
               : t(
-                  "accountLink.card.linkedGeneric",
+                  "portal.accountLink.card.linkedGeneric",
                   "This instance is linked.",
                 )}{" "}
             {t(
-              "accountLink.card.billingNote",
+              "portal.accountLink.card.billingNote",
               "Unattended processing bills against your org wallet.",
             )}
           </span>
@@ -88,13 +88,16 @@ export function LinkAccountCard({ link }: Props) {
             loading={linking}
             onClick={link.unlink}
           >
-            {t("accountLink.card.unlink", "Unlink")}
+            {t("portal.accountLink.card.unlink", "Unlink")}
           </Button>
         </div>
       ) : (
         <div className="portal-link__actions">
           <Button loading={linking} onClick={() => openLinkModal()}>
-            {t("accountLink.card.linkButton", "Link your Stirling account")}
+            {t(
+              "portal.accountLink.card.linkButton",
+              "Link your Stirling account",
+            )}
           </Button>
         </div>
       )}

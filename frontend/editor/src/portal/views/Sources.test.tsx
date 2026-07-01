@@ -97,10 +97,10 @@ describe("Sources view", () => {
     fireEvent.click(row);
 
     // Detail card opens with its delete action.
-    fireEvent.click(await screen.findByText("sources.detail.delete"));
+    fireEvent.click(await screen.findByText("portal.sources.detail.delete"));
 
     // Confirm in the dialog.
-    fireEvent.click(await screen.findByText("sources.delete.confirm"));
+    fireEvent.click(await screen.findByText("portal.sources.delete.confirm"));
 
     await waitFor(() => {
       expect(deleteSource).toHaveBeenCalledWith("src-referenced");
@@ -125,7 +125,7 @@ describe("Sources view", () => {
     renderView();
 
     fireEvent.click(await screen.findByText("Claims intake"));
-    fireEvent.click(await screen.findByText("sources.detail.pause"));
+    fireEvent.click(await screen.findByText("portal.sources.detail.pause"));
 
     await waitFor(() => {
       expect(createSource).toHaveBeenCalledTimes(1);

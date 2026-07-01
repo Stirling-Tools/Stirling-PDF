@@ -20,8 +20,8 @@ export function ApiKeysTab() {
     <div className="portal-infra__stack">
       <div className="portal-infra__bar">
         <SectionHeader
-          title={t("infrastructure.apiKeys.heading")}
-          sub={t("infrastructure.apiKeys.subheading")}
+          title={t("portal.infrastructure.apiKeys.heading")}
+          sub={t("portal.infrastructure.apiKeys.subheading")}
         />
         <Button
           variant="gradient"
@@ -29,7 +29,7 @@ export function ApiKeysTab() {
           onClick={() => setModalOpen(true)}
           leadingIcon={<span aria-hidden>+</span>}
         >
-          {t("infrastructure.apiKeys.createKey")}
+          {t("portal.infrastructure.apiKeys.createKey")}
         </Button>
       </div>
 
@@ -44,8 +44,8 @@ export function ApiKeysTab() {
       {isEmpty && (
         <EmptyState
           size="compact"
-          title={t("infrastructure.apiKeys.empty.title")}
-          description={t("infrastructure.apiKeys.empty.description")}
+          title={t("portal.infrastructure.apiKeys.empty.title")}
+          description={t("portal.infrastructure.apiKeys.empty.description")}
         />
       )}
 

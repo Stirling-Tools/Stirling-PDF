@@ -11,9 +11,11 @@ export function AssistantButton() {
       type="button"
       className={"portal-assistant-btn" + (assistantOpen ? " is-active" : "")}
       onClick={toggleAssistant}
-      aria-label={assistantOpen ? t("assistant.close") : t("assistant.open")}
+      aria-label={
+        assistantOpen ? t("portal.assistant.close") : t("portal.assistant.open")
+      }
       aria-expanded={assistantOpen}
-      title={t("assistant.title")}
+      title={t("portal.assistant.title")}
     >
       {assistantOpen ? (
         <svg

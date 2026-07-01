@@ -133,8 +133,8 @@ describe("Pipelines view", () => {
     renderView();
 
     fireEvent.click(await screen.findByText("Redaction sweep"));
-    fireEvent.click(await screen.findByText("pipelines.detail.delete"));
-    fireEvent.click(await screen.findByText("pipelines.delete.confirm"));
+    fireEvent.click(await screen.findByText("portal.pipelines.detail.delete"));
+    fireEvent.click(await screen.findByText("portal.pipelines.delete.confirm"));
 
     await waitFor(() => {
       expect(deletePipeline).toHaveBeenCalledWith("plc-redaction");
@@ -152,7 +152,7 @@ describe("Pipelines view", () => {
     renderView();
 
     fireEvent.click(await screen.findByText("Redaction sweep"));
-    fireEvent.click(await screen.findByText("pipelines.detail.pause"));
+    fireEvent.click(await screen.findByText("portal.pipelines.detail.pause"));
 
     await waitFor(() => {
       expect(savePipeline).toHaveBeenCalledTimes(1);
@@ -180,13 +180,13 @@ describe("Pipelines view", () => {
     renderView();
 
     fireEvent.click(await screen.findByText("Redaction sweep"));
-    fireEvent.click(await screen.findByText("pipelines.detail.run"));
+    fireEvent.click(await screen.findByText("portal.pipelines.detail.run"));
 
     await waitFor(() => {
       expect(triggerPipeline).toHaveBeenCalledWith("plc-redaction");
     });
     expect(
-      await screen.findByText("pipelines.run.completed"),
+      await screen.findByText("portal.pipelines.run.completed"),
     ).toBeInTheDocument();
   });
 
@@ -207,9 +207,11 @@ describe("Pipelines view", () => {
     renderView();
 
     fireEvent.click(await screen.findByText("Redaction sweep"));
-    fireEvent.click(await screen.findByText("pipelines.detail.run"));
+    fireEvent.click(await screen.findByText("portal.pipelines.detail.run"));
 
-    expect(await screen.findByText("pipelines.run.failed")).toBeInTheDocument();
+    expect(
+      await screen.findByText("portal.pipelines.run.failed"),
+    ).toBeInTheDocument();
   });
 
   it("creates a pipeline with the chosen name and chained operation", async () => {
@@ -221,14 +223,14 @@ describe("Pipelines view", () => {
 
     // Wait for the table so the initial fetch has settled, then open the composer.
     await screen.findByText("Redaction sweep");
-    fireEvent.click(screen.getByText("pipelines.actions.newPipeline"));
+    fireEvent.click(screen.getByText("portal.pipelines.actions.newPipeline"));
 
     fireEvent.change(await screen.findByRole("textbox"), {
       target: { value: "Nightly compress" },
     });
     // Operation palette chip labels are derived from the endpoint path.
     fireEvent.click(await screen.findByText("+ Compress"));
-    fireEvent.click(screen.getByText("pipelines.composer.create"));
+    fireEvent.click(screen.getByText("portal.pipelines.composer.create"));
 
     await waitFor(() => {
       expect(savePipeline).toHaveBeenCalledTimes(1);

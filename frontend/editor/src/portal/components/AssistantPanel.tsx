@@ -71,8 +71,8 @@ export function AssistantPanel() {
         role: "assistant",
         text:
           err instanceof Error
-            ? t("assistant.errorWithDetail", { detail: err.message })
-            : t("assistant.error"),
+            ? t("portal.assistant.errorWithDetail", { detail: err.message })
+            : t("portal.assistant.error"),
       };
       setMessages((prev) => [...prev, failMsg]);
     } finally {
@@ -86,20 +86,20 @@ export function AssistantPanel() {
     <aside
       className="portal-assistant"
       role="dialog"
-      aria-label={t("assistant.title")}
+      aria-label={t("portal.assistant.title")}
     >
       <header className="portal-assistant__header">
         <div className="portal-assistant__header-left">
           <SparklesIcon size={16} />
           <span className="portal-assistant__title">
-            {t("assistant.title")}
+            {t("portal.assistant.title")}
           </span>
         </div>
         <button
           type="button"
           className="portal-assistant__close"
           onClick={closeAssistant}
-          aria-label={t("assistant.close")}
+          aria-label={t("portal.assistant.close")}
         >
           <CloseIcon size={16} />
         </button>
@@ -109,7 +109,7 @@ export function AssistantPanel() {
         {messages.length === 0 && suggestions && (
           <div className="portal-assistant__suggestions">
             <div className="portal-assistant__suggestions-eyebrow">
-              {t("assistant.tryAsking")}
+              {t("portal.assistant.tryAsking")}
             </div>
             <div className="portal-assistant__suggestions-list">
               {suggestions.map((s) => (
@@ -140,7 +140,7 @@ export function AssistantPanel() {
           <div className="portal-assistant__bubble portal-assistant__bubble--assistant">
             <span
               className="portal-assistant__typing"
-              aria-label={t("assistant.typing")}
+              aria-label={t("portal.assistant.typing")}
             >
               <span />
               <span />
@@ -161,8 +161,8 @@ export function AssistantPanel() {
           ref={inputRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder={t("assistant.inputPlaceholder")}
-          aria-label={t("assistant.inputAriaLabel")}
+          placeholder={t("portal.assistant.inputPlaceholder")}
+          aria-label={t("portal.assistant.inputAriaLabel")}
           className="portal-assistant__input"
           disabled={typing}
         />
@@ -170,7 +170,7 @@ export function AssistantPanel() {
           type="submit"
           className="portal-assistant__send"
           disabled={!input.trim() || typing}
-          aria-label={t("assistant.send")}
+          aria-label={t("portal.assistant.send")}
         >
           <SendIcon size={14} />
         </button>

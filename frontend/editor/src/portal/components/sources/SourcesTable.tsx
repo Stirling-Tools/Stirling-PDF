@@ -34,7 +34,7 @@ export function SourcesTable({
     () => [
       {
         key: "name",
-        header: t("sources.table.source"),
+        header: t("portal.sources.table.source"),
         render: (s) => {
           const meta = sourceTypeMeta(s.type);
           return (
@@ -57,20 +57,20 @@ export function SourcesTable({
       },
       {
         key: "status",
-        header: t("sources.table.status"),
+        header: t("portal.sources.table.status"),
         render: (s) => (
           <StatusBadge
             tone={STATUS_TONE[s.status]}
             size="sm"
             pulse={s.status === "active"}
           >
-            {t(`sources.status.${s.status}`)}
+            {t(`portal.sources.status.${s.status}`)}
           </StatusBadge>
         ),
       },
       {
         key: "referenceCount",
-        header: t("sources.table.usedBy"),
+        header: t("portal.sources.table.usedBy"),
         align: "right",
         render: (s) => (
           <span

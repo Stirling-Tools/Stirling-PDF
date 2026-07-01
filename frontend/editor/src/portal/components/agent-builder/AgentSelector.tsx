@@ -19,7 +19,7 @@ export function AgentSelector({
   return (
     <nav
       className="portal-agents__selector"
-      aria-label={t("agentBuilder.selectorAriaLabel")}
+      aria-label={t("portal.agentBuilder.selectorAriaLabel")}
     >
       {agents.map((a) => (
         <button

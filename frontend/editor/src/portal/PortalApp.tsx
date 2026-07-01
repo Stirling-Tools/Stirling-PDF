@@ -1,8 +1,6 @@
 import { useEffect, type ReactNode } from "react";
 import { useLocation } from "react-router-dom";
-import { I18nextProvider } from "react-i18next";
 import { MantineProvider } from "@mantine/core";
-import portalI18n from "@portal/i18n/config";
 import { AuthProvider } from "@app/auth";
 import { ErrorBoundary } from "@portal/components/ErrorBoundary";
 import { ThemeProvider, useTheme } from "@portal/contexts/ThemeContext";
@@ -128,34 +126,32 @@ function RoutedContent() {
  */
 export function PortalApp() {
   return (
-    <I18nextProvider i18n={portalI18n}>
-      <ThemeProvider>
-        <PortalMantineProvider>
-          <AuthProvider mode="spring">
-            <LinkProvider initialState="unlinked">
-              {/* TierProvider sits INSIDE LinkProvider so it can derive the tier
-                  from the real link/subscription state when MSW mocks are off. */}
-              <TierProvider initialTier="pro">
-                <UIProvider>
-                  <GlobalShortcuts />
-                  <AuthGate>
-                    <AccountLinkProvider>
-                      <AppShell>
-                        <RoutedContent />
-                      </AppShell>
-                      <AssistantButton />
-                      <AssistantPanel />
-                      <SearchModal />
-                      <SettingsHost />
-                      <LinkModalHost />
-                    </AccountLinkProvider>
-                  </AuthGate>
-                </UIProvider>
-              </TierProvider>
-            </LinkProvider>
-          </AuthProvider>
-        </PortalMantineProvider>
-      </ThemeProvider>
-    </I18nextProvider>
+    <ThemeProvider>
+      <PortalMantineProvider>
+        <AuthProvider mode="spring">
+          <LinkProvider initialState="unlinked">
+            {/* TierProvider sits INSIDE LinkProvider so it can derive the tier
+                from the real link/subscription state when MSW mocks are off. */}
+            <TierProvider initialTier="pro">
+              <UIProvider>
+                <GlobalShortcuts />
+                <AuthGate>
+                  <AccountLinkProvider>
+                    <AppShell>
+                      <RoutedContent />
+                    </AppShell>
+                    <AssistantButton />
+                    <AssistantPanel />
+                    <SearchModal />
+                    <SettingsHost />
+                    <LinkModalHost />
+                  </AccountLinkProvider>
+                </AuthGate>
+              </UIProvider>
+            </TierProvider>
+          </LinkProvider>
+        </AuthProvider>
+      </PortalMantineProvider>
+    </ThemeProvider>
   );
 }

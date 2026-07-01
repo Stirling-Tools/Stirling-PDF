@@ -58,22 +58,22 @@ export function ReviewQueue() {
   const filterItems: TabItem<QueueFilter>[] = [
     {
       key: "all",
-      label: t("documents.filters.all"),
+      label: t("portal.documents.filters.all"),
       count: countFor(documents, "all"),
     },
     {
       key: "needs-review",
-      label: t("documents.filters.needsReview"),
+      label: t("portal.documents.filters.needsReview"),
       count: countFor(documents, "needs-review"),
     },
     {
       key: "processed",
-      label: t("documents.filters.processed"),
+      label: t("portal.documents.filters.processed"),
       count: countFor(documents, "processed"),
     },
     {
       key: "archived",
-      label: t("documents.filters.archived"),
+      label: t("portal.documents.filters.archived"),
       count: countFor(documents, "archived"),
     },
   ];
@@ -90,7 +90,7 @@ export function ReviewQueue() {
         activeKey={filter}
         onChange={setFilter}
         variant="pill"
-        ariaLabel={t("documents.filters.ariaLabel")}
+        ariaLabel={t("portal.documents.filters.ariaLabel")}
       />
 
       {isLoading && (
@@ -103,8 +103,8 @@ export function ReviewQueue() {
 
       {isEmpty && (
         <EmptyState
-          title={t("documents.queue.empty.title")}
-          description={t("documents.queue.empty.description")}
+          title={t("portal.documents.queue.empty.title")}
+          description={t("portal.documents.queue.empty.description")}
         />
       )}
 

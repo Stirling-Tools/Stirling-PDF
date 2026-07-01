@@ -27,7 +27,7 @@ export function WalletMeter({ wallet, action }: Props) {
   const title =
     rate != null
       ? t(
-          "billing.walletMeter.titleWithRate",
+          "portal.billing.walletMeter.titleWithRate",
           "Process {{allowance}} PDFs free, then {{rate}}/PDF",
           {
             count: wallet.freeAllowance,
@@ -35,22 +35,26 @@ export function WalletMeter({ wallet, action }: Props) {
             rate: formatMinor(rate, wallet.currency),
           },
         )
-      : t("billing.walletMeter.title", "Process {{allowance}} PDFs free", {
-          count: wallet.freeAllowance,
-          allowance: wallet.freeAllowance.toLocaleString(),
-        });
+      : t(
+          "portal.billing.walletMeter.title",
+          "Process {{allowance}} PDFs free",
+          {
+            count: wallet.freeAllowance,
+            allowance: wallet.freeAllowance.toLocaleString(),
+          },
+        );
 
   return (
     <Card padding="loose">
       <div className="portal-billing__subscription-head">
         <div>
           <span className="portal-billing__eyebrow">
-            {t("billing.walletMeter.eyebrow", "Processor trial")}
+            {t("portal.billing.walletMeter.eyebrow", "Processor trial")}
           </span>
           <h2 className="portal-billing__meter-title">{title}</h2>
           <p className="portal-billing__section-sub">
             {t(
-              "billing.walletMeter.sub",
+              "portal.billing.walletMeter.sub",
               "Use the PDF Editor for free. Pay to process PDFs automatically.",
             )}
           </p>
@@ -63,7 +67,7 @@ export function WalletMeter({ wallet, action }: Props) {
           pct={pct}
           figure={wallet.billableUsed.toLocaleString()}
           capSuffix={t(
-            "billing.walletMeter.capSuffix",
+            "portal.billing.walletMeter.capSuffix",
             "of {{allowance}} free PDFs used",
             {
               count: wallet.freeAllowance,
@@ -71,7 +75,7 @@ export function WalletMeter({ wallet, action }: Props) {
             },
           )}
           statusLabel={t(
-            "billing.walletMeter.statusLabel",
+            "portal.billing.walletMeter.statusLabel",
             "{{remaining}} left",
             {
               count: wallet.freeRemaining,

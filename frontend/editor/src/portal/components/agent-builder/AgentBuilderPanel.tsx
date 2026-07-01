@@ -27,18 +27,18 @@ export function AgentBuilderPanel({
   const tabs: TabItem<BuilderTab>[] = [
     {
       key: "scenarios",
-      label: t("agentBuilder.tabs.scenarios"),
+      label: t("portal.agentBuilder.tabs.scenarios"),
       count: agent.scenarios.length,
     },
-    { key: "tools", label: t("agentBuilder.tabs.tools") },
+    { key: "tools", label: t("portal.agentBuilder.tabs.tools") },
     {
       key: "evals",
-      label: t("agentBuilder.tabs.evals"),
+      label: t("portal.agentBuilder.tabs.evals"),
       count: agent.evalsTotal > 0 ? agent.evalsTotal : undefined,
     },
     {
       key: "versions",
-      label: t("agentBuilder.tabs.versions"),
+      label: t("portal.agentBuilder.tabs.versions"),
       count: agent.versions.length,
     },
   ];
@@ -66,7 +66,7 @@ export function AgentBuilderPanel({
         activeKey={tab}
         onChange={setTab}
         variant="underline"
-        ariaLabel={t("agentBuilder.sectionsAriaLabel")}
+        ariaLabel={t("portal.agentBuilder.sectionsAriaLabel")}
       />
 
       {tab === "scenarios" && <ScenariosPanel agent={agent} />}

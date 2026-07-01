@@ -34,7 +34,7 @@ export function MembersTable({
     () => [
       {
         key: "name",
-        header: t("users.table.member"),
+        header: t("portal.users.table.member"),
         render: (m) => (
           <div className="portal-users__member-cell">
             <Avatar
@@ -55,7 +55,7 @@ export function MembersTable({
       },
       {
         key: "role",
-        header: t("users.table.role"),
+        header: t("portal.users.table.role"),
         render: (m) => (
           <Chip tone={ROLE_TONE[m.role]} size="sm">
             {ROLE_LABEL[m.role]}
@@ -64,7 +64,7 @@ export function MembersTable({
       },
       {
         key: "status",
-        header: t("users.table.status"),
+        header: t("portal.users.table.status"),
         render: (m) => (
           <StatusBadge
             tone={MEMBER_STATUS_TONE[m.status]}
@@ -77,7 +77,7 @@ export function MembersTable({
       },
       {
         key: "lastActive",
-        header: t("users.table.lastActive"),
+        header: t("portal.users.table.lastActive"),
         render: (m) => (
           <span className="portal-users__muted">{m.lastActive}</span>
         ),
@@ -95,14 +95,16 @@ export function MembersTable({
               <button
                 type="button"
                 className="portal-users__row-action"
-                aria-label={t("users.table.actionsFor", { name: m.name })}
+                aria-label={t("portal.users.table.actionsFor", {
+                  name: m.name,
+                })}
                 onClick={(e) => e.stopPropagation()}
               >
                 ⋯
               </button>
             </Menu.Target>
             <Menu.Dropdown>
-              <Menu.Label>{t("users.table.changeRole")}</Menu.Label>
+              <Menu.Label>{t("portal.users.table.changeRole")}</Menu.Label>
               {ROLE_OPTIONS.map((role) => (
                 <Menu.Item
                   key={role}
@@ -115,11 +117,11 @@ export function MembersTable({
               <Menu.Divider />
               {m.status !== "suspended" && (
                 <Menu.Item onClick={() => onSuspend(m)}>
-                  {t("users.table.suspend")}
+                  {t("portal.users.table.suspend")}
                 </Menu.Item>
               )}
               <Menu.Item color="red" onClick={() => onRemove(m)}>
-                {t("users.table.remove")}
+                {t("portal.users.table.remove")}
               </Menu.Item>
             </Menu.Dropdown>
           </Menu>

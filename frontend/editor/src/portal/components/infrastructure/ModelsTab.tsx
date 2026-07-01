@@ -42,7 +42,7 @@ export function ModelsTab() {
   const modelCols: TableColumn<ModelEntry>[] = [
     {
       key: "name",
-      header: t("infrastructure.models.columns.model"),
+      header: t("portal.infrastructure.models.columns.model"),
       render: (m) => (
         <div className="portal-infra__cell-stack">
           <span className="portal-infra__cell-strong">{m.name}</span>
@@ -54,7 +54,7 @@ export function ModelsTab() {
     },
     {
       key: "type",
-      header: t("infrastructure.models.columns.type"),
+      header: t("portal.infrastructure.models.columns.type"),
       render: (m) => (
         <Chip tone={MODEL_TYPE_TONE[m.type]} size="sm">
           {MODEL_TYPE_LABEL[m.type]}
@@ -63,7 +63,7 @@ export function ModelsTab() {
     },
     {
       key: "status",
-      header: t("infrastructure.models.columns.status"),
+      header: t("portal.infrastructure.models.columns.status"),
       render: (m) => (
         <StatusBadge
           tone={MODEL_TONE[m.status]}
@@ -76,7 +76,7 @@ export function ModelsTab() {
     },
     {
       key: "load",
-      header: t("infrastructure.models.columns.load"),
+      header: t("portal.infrastructure.models.columns.load"),
       width: "9rem",
       render: (m) => (
         <div className="portal-infra__load">
@@ -87,17 +87,17 @@ export function ModelsTab() {
     },
     {
       key: "latency",
-      header: t("infrastructure.models.columns.latency"),
+      header: t("portal.infrastructure.models.columns.latency"),
       align: "right",
       render: (m) => (
         <span className="portal-infra__mono">
-          {t("infrastructure.models.msValue", { value: m.latencyMs })}
+          {t("portal.infrastructure.models.msValue", { value: m.latencyMs })}
         </span>
       ),
     },
     {
       key: "cost",
-      header: t("infrastructure.models.columns.cost"),
+      header: t("portal.infrastructure.models.columns.cost"),
       align: "right",
       render: (m) => (
         <span className="portal-infra__mono">
@@ -107,7 +107,7 @@ export function ModelsTab() {
     },
     {
       key: "version",
-      header: t("infrastructure.models.columns.version"),
+      header: t("portal.infrastructure.models.columns.version"),
       render: (m) => (
         <code className="portal-infra__cell-code">{m.version}</code>
       ),
@@ -129,13 +129,13 @@ export function ModelsTab() {
   const routingCols: TableColumn<RoutingRule>[] = [
     {
       key: "operation",
-      header: t("infrastructure.models.routingColumns.operation"),
+      header: t("portal.infrastructure.models.routingColumns.operation"),
       render: (r) => (
         <div className="portal-infra__cell-stack">
           <span className="portal-infra__cell-strong">{r.operation}</span>
           {r.isDefault && (
             <Chip tone="blue" size="sm">
-              {t("infrastructure.models.routingColumns.default")}
+              {t("portal.infrastructure.models.routingColumns.default")}
             </Chip>
           )}
         </div>
@@ -143,21 +143,24 @@ export function ModelsTab() {
     },
     {
       key: "docType",
-      header: t("infrastructure.models.routingColumns.docType"),
+      header: t("portal.infrastructure.models.routingColumns.docType"),
       render: (r) => r.docType,
     },
     {
       key: "modelId",
-      header: t("infrastructure.models.routingColumns.routedTo"),
+      header: t("portal.infrastructure.models.routingColumns.routedTo"),
       width: "16rem",
       render: (r) => (
         <Select
           inputSize="sm"
           options={modelOptions}
           defaultValue={r.modelId}
-          aria-label={t("infrastructure.models.routingColumns.modelForAria", {
-            operation: r.operation,
-          })}
+          aria-label={t(
+            "portal.infrastructure.models.routingColumns.modelForAria",
+            {
+              operation: r.operation,
+            },
+          )}
         />
       ),
     },
@@ -166,28 +169,28 @@ export function ModelsTab() {
   return (
     <div className="portal-infra__stack">
       <SectionHeader
-        title={t("infrastructure.models.heading")}
-        sub={t("infrastructure.models.subheading")}
+        title={t("portal.infrastructure.models.heading")}
+        sub={t("portal.infrastructure.models.subheading")}
       />
 
       {data && (
         <section className="portal-infra__metrics">
           <MetricCard
-            label={t("infrastructure.models.metrics.activeModels")}
+            label={t("portal.infrastructure.models.metrics.activeModels")}
             value={data.summary.activeModels}
           />
           <MetricCard
-            label={t("infrastructure.models.metrics.avgLatency")}
-            value={t("infrastructure.models.msValue", {
+            label={t("portal.infrastructure.models.metrics.avgLatency")}
+            value={t("portal.infrastructure.models.msValue", {
               value: data.summary.avgLatencyMs,
             })}
           />
           <MetricCard
-            label={t("infrastructure.models.metrics.monthlySpend")}
+            label={t("portal.infrastructure.models.metrics.monthlySpend")}
             value={
               data.summary.monthlySpend > 0
                 ? `$${data.summary.monthlySpend.toLocaleString()}`
-                : t("infrastructure.models.metrics.included")
+                : t("portal.infrastructure.models.metrics.included")
             }
           />
         </section>
@@ -195,11 +198,11 @@ export function ModelsTab() {
 
       <section>
         <SectionHeader
-          title={t("infrastructure.models.catalogue.heading")}
+          title={t("portal.infrastructure.models.catalogue.heading")}
           sub={
             tier === "enterprise"
-              ? t("infrastructure.models.catalogue.subEnterprise")
-              : t("infrastructure.models.catalogue.sub")
+              ? t("portal.infrastructure.models.catalogue.subEnterprise")
+              : t("portal.infrastructure.models.catalogue.sub")
           }
         />
         <Card padding="none">
@@ -207,9 +210,9 @@ export function ModelsTab() {
           {isEmpty && (
             <EmptyState
               size="compact"
-              title={t("infrastructure.models.catalogue.empty.title")}
+              title={t("portal.infrastructure.models.catalogue.empty.title")}
               description={t(
-                "infrastructure.models.catalogue.empty.description",
+                "portal.infrastructure.models.catalogue.empty.description",
               )}
             />
           )}
@@ -226,18 +229,18 @@ export function ModelsTab() {
       {tier === "enterprise" && (
         <Banner
           tone="info"
-          title={t("infrastructure.models.byom.title")}
-          description={t("infrastructure.models.byom.description")}
+          title={t("portal.infrastructure.models.byom.title")}
+          description={t("portal.infrastructure.models.byom.description")}
         />
       )}
 
       <section>
         <SectionHeader
-          title={t("infrastructure.models.routing.heading")}
+          title={t("portal.infrastructure.models.routing.heading")}
           sub={
             canRoute
-              ? t("infrastructure.models.routing.sub")
-              : t("infrastructure.models.routing.subLocked")
+              ? t("portal.infrastructure.models.routing.sub")
+              : t("portal.infrastructure.models.routing.subLocked")
           }
         />
         {canRoute ? (
@@ -248,16 +251,16 @@ export function ModelsTab() {
                 columns={routingCols}
                 rows={data.routing}
                 rowKey={(r) => r.id}
-                empty={t("infrastructure.models.routing.empty")}
+                empty={t("portal.infrastructure.models.routing.empty")}
               />
             )}
           </Card>
         ) : (
           <Banner
             tone="info"
-            title={t("infrastructure.models.routing.lockedBanner.title")}
+            title={t("portal.infrastructure.models.routing.lockedBanner.title")}
             description={t(
-              "infrastructure.models.routing.lockedBanner.description",
+              "portal.infrastructure.models.routing.lockedBanner.description",
             )}
           />
         )}

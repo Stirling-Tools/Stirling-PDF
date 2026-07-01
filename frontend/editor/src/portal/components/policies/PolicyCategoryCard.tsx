@@ -51,7 +51,7 @@ export function PolicyCategoryCard({ entry, onOpen }: PolicyCategoryCardProps) {
 
       {comingSoon ? (
         <Chip tone="neutral" size="sm">
-          {t("policies.card.comingSoon")}
+          {t("portal.policies.card.comingSoon")}
         </Chip>
       ) : policy ? (
         <div className="portal-policies__card-meta">
@@ -60,7 +60,7 @@ export function PolicyCategoryCard({ entry, onOpen }: PolicyCategoryCardProps) {
               {policy.stats.enforced.toLocaleString()}
             </span>
             <span className="portal-policies__card-statlbl">
-              {t("policies.stats.docsEnforced")}
+              {t("portal.policies.stats.docsEnforced")}
             </span>
           </span>
           <span className="portal-policies__card-statpair">
@@ -68,7 +68,7 @@ export function PolicyCategoryCard({ entry, onOpen }: PolicyCategoryCardProps) {
               {policy.stats.dataProcessed}
             </span>
             <span className="portal-policies__card-statlbl">
-              {t("policies.stats.dataProcessed")}
+              {t("portal.policies.stats.dataProcessed")}
             </span>
           </span>
           <StatusBadge
@@ -77,13 +77,13 @@ export function PolicyCategoryCard({ entry, onOpen }: PolicyCategoryCardProps) {
             pulse={status !== "paused"}
           >
             {status === "paused"
-              ? t("policies.status.paused")
-              : t("policies.status.active")}
+              ? t("portal.policies.status.paused")
+              : t("portal.policies.status.active")}
           </StatusBadge>
         </div>
       ) : (
         <Chip tone="blue" size="sm">
-          {t("policies.card.notSetUp")}
+          {t("portal.policies.card.notSetUp")}
         </Chip>
       )}
     </Card>

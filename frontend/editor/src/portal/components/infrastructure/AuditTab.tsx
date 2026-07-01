@@ -35,23 +35,32 @@ export function AuditTab() {
   const [filter, setFilter] = useState<AuditFilter>("all");
 
   const auditFilters: TabItem<AuditFilter>[] = [
-    { key: "all", label: t("infrastructure.audit.filters.all") },
-    { key: "auth", label: t("infrastructure.audit.filters.auth") },
-    { key: "config", label: t("infrastructure.audit.filters.config") },
-    { key: "elevation", label: t("infrastructure.audit.filters.elevation") },
-    { key: "processing", label: t("infrastructure.audit.filters.processing") },
-    { key: "security", label: t("infrastructure.audit.filters.security") },
+    { key: "all", label: t("portal.infrastructure.audit.filters.all") },
+    { key: "auth", label: t("portal.infrastructure.audit.filters.auth") },
+    { key: "config", label: t("portal.infrastructure.audit.filters.config") },
+    {
+      key: "elevation",
+      label: t("portal.infrastructure.audit.filters.elevation"),
+    },
+    {
+      key: "processing",
+      label: t("portal.infrastructure.audit.filters.processing"),
+    },
+    {
+      key: "security",
+      label: t("portal.infrastructure.audit.filters.security"),
+    },
   ];
 
   const cols: TableColumn<AuditEvent>[] = [
     {
       key: "timestamp",
-      header: t("infrastructure.audit.columns.timestamp"),
+      header: t("portal.infrastructure.audit.columns.timestamp"),
       render: (e) => <span className="portal-infra__mono">{e.timestamp}</span>,
     },
     {
       key: "event",
-      header: t("infrastructure.audit.columns.event"),
+      header: t("portal.infrastructure.audit.columns.event"),
       render: (e) => (
         <div className="portal-infra__event">
           <StatusBadge tone={AUDIT_CAT_TONE[e.category]} size="sm">
@@ -63,17 +72,17 @@ export function AuditTab() {
     },
     {
       key: "actor",
-      header: t("infrastructure.audit.columns.actor"),
+      header: t("portal.infrastructure.audit.columns.actor"),
       render: (e) => <span className="portal-infra__mono">{e.actor}</span>,
     },
     {
       key: "target",
-      header: t("infrastructure.audit.columns.target"),
+      header: t("portal.infrastructure.audit.columns.target"),
       render: (e) => e.target,
     },
     {
       key: "status",
-      header: t("infrastructure.audit.columns.status"),
+      header: t("portal.infrastructure.audit.columns.status"),
       render: (e) => (
         <StatusBadge tone={AUDIT_TONE[e.status]} size="sm">
           {titleCase(e.status)}
@@ -82,11 +91,13 @@ export function AuditTab() {
     },
     {
       key: "latency",
-      header: t("infrastructure.audit.columns.latency"),
+      header: t("portal.infrastructure.audit.columns.latency"),
       align: "right",
       render: (e) => (
         <span className="portal-infra__mono">
-          {t("infrastructure.audit.latencyValue", { value: e.latencyMs })}
+          {t("portal.infrastructure.audit.latencyValue", {
+            value: e.latencyMs,
+          })}
         </span>
       ),
     },
@@ -105,26 +116,26 @@ export function AuditTab() {
   return (
     <div className="portal-infra__stack">
       <SectionHeader
-        title={t("infrastructure.audit.heading")}
-        sub={t("infrastructure.audit.subheading")}
+        title={t("portal.infrastructure.audit.heading")}
+        sub={t("portal.infrastructure.audit.subheading")}
       />
 
       {data && (
         <section className="portal-infra__metrics">
           <MetricCard
-            label={t("infrastructure.audit.metrics.totalEvents")}
+            label={t("portal.infrastructure.audit.metrics.totalEvents")}
             value={data.summary.totalEvents.toLocaleString()}
           />
           <MetricCard
-            label={t("infrastructure.audit.metrics.processing")}
+            label={t("portal.infrastructure.audit.metrics.processing")}
             value={data.summary.processing.toLocaleString()}
           />
           <MetricCard
-            label={t("infrastructure.audit.metrics.elevation")}
+            label={t("portal.infrastructure.audit.metrics.elevation")}
             value={data.summary.elevation.toLocaleString()}
           />
           <MetricCard
-            label={t("infrastructure.audit.metrics.config")}
+            label={t("portal.infrastructure.audit.metrics.config")}
             value={data.summary.config.toLocaleString()}
           />
         </section>
@@ -135,7 +146,7 @@ export function AuditTab() {
         activeKey={filter}
         onChange={setFilter}
         variant="pill"
-        ariaLabel={t("infrastructure.audit.filterAriaLabel")}
+        ariaLabel={t("portal.infrastructure.audit.filterAriaLabel")}
       />
 
       <Card padding="none">
@@ -143,8 +154,8 @@ export function AuditTab() {
         {isEmpty && (
           <EmptyState
             size="compact"
-            title={t("infrastructure.audit.empty.title")}
-            description={t("infrastructure.audit.empty.description")}
+            title={t("portal.infrastructure.audit.empty.title")}
+            description={t("portal.infrastructure.audit.empty.description")}
           />
         )}
         {!isEmpty && data && (
@@ -152,7 +163,7 @@ export function AuditTab() {
             columns={cols}
             rows={rows}
             rowKey={(e) => e.id}
-            empty={t("infrastructure.audit.noEventsInCategory")}
+            empty={t("portal.infrastructure.audit.noEventsInCategory")}
           />
         )}
       </Card>

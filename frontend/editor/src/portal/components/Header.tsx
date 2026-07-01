@@ -25,13 +25,13 @@ function ThemeToggle() {
       onClick={toggle}
       aria-label={
         theme === "light"
-          ? t("shell.header.switchToDark")
-          : t("shell.header.switchToLight")
+          ? t("portal.shell.header.switchToDark")
+          : t("portal.shell.header.switchToLight")
       }
       title={
         theme === "light"
-          ? t("shell.header.darkMode")
-          : t("shell.header.lightMode")
+          ? t("portal.shell.header.darkMode")
+          : t("portal.shell.header.lightMode")
       }
     >
       {theme === "light" ? <MoonIcon size={16} /> : <SunIcon size={16} />}
@@ -84,14 +84,15 @@ function TierSwitcher() {
 function UserMenu() {
   const { t } = useTranslation();
   const { displayName, signOut } = useAuth();
-  const name = displayName ?? t("shell.header.accountFallback", "Account");
+  const name =
+    displayName ?? t("portal.shell.header.accountFallback", "Account");
   return (
     <Dropdown.Root align="end">
       <Dropdown.Trigger>
         <button
           type="button"
           className="portal-header__user"
-          aria-label={t("shell.header.accountMenu", "Account menu")}
+          aria-label={t("portal.shell.header.accountMenu", "Account menu")}
           title={name}
         >
           <Avatar name={name} size="md" tone="blue" />
@@ -100,7 +101,7 @@ function UserMenu() {
       <Dropdown.Menu width="12rem">
         <Dropdown.Item disabled>{name}</Dropdown.Item>
         <Dropdown.Item onSelect={() => void signOut()}>
-          {t("shell.header.signOut", "Sign out")}
+          {t("portal.shell.header.signOut", "Sign out")}
         </Dropdown.Item>
       </Dropdown.Menu>
     </Dropdown.Root>
@@ -115,19 +116,19 @@ export function Header() {
     <header className="portal-header">
       <div className="portal-header__left">
         <span className="portal-header__breadcrumb">
-          {t(`nav.${activeView}`)}
+          {t(`portal.nav.${activeView}`)}
         </span>
       </div>
 
       <button
         type="button"
         className="portal-header__search"
-        aria-label={t("shell.header.search")}
+        aria-label={t("portal.shell.header.search")}
         onClick={openSearch}
       >
         <SearchIcon size={14} />
         <span className="portal-header__search-placeholder">
-          {t("shell.header.searchPlaceholder")}
+          {t("portal.shell.header.searchPlaceholder")}
         </span>
         <span className="portal-header__search-kbd" aria-hidden>
           ⌘K

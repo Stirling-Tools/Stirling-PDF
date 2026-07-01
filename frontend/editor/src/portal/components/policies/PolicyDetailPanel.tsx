@@ -90,8 +90,8 @@ function ActivityError({ message }: { message: string }) {
         onClick={() => setExpanded((v) => !v)}
       >
         {expanded
-          ? t("policies.detail.showLess")
-          : t("policies.detail.showMore")}
+          ? t("portal.policies.detail.showLess")
+          : t("portal.policies.detail.showMore")}
       </button>
     </span>
   );
@@ -117,15 +117,15 @@ export function PolicyDetailPanel({
   const hasEditorSource = state.sources.includes("editor");
   const trigger =
     state.runOn === "export"
-      ? t("policies.detail.onEveryExport")
-      : t("policies.detail.onEveryUpload");
+      ? t("portal.policies.detail.onEveryExport")
+      : t("portal.policies.detail.onEveryUpload");
   const outputLabel =
     state.outputMode === "new_file"
-      ? t("policies.detail.outputAsNewFile")
-      : t("policies.detail.outputAsNewVersion");
+      ? t("portal.policies.detail.outputAsNewFile")
+      : t("portal.policies.detail.outputAsNewVersion");
 
   function sourceLabel(id: string) {
-    if (id === "editor") return t("sources.types.editor.label");
+    if (id === "editor") return t("portal.sources.types.editor.label");
     return id;
   }
 
@@ -146,7 +146,7 @@ export function PolicyDetailPanel({
               disabled={busy}
               style={{ marginRight: "auto" }}
             >
-              {t("policies.detail.actions.delete")}
+              {t("portal.policies.detail.actions.delete")}
             </Button>
           )}
           {onRun && (
@@ -157,7 +157,7 @@ export function PolicyDetailPanel({
               disabled={busy}
               style={canDelete ? undefined : { marginRight: "auto" }}
             >
-              {t("policies.detail.actions.runNow")}
+              {t("portal.policies.detail.actions.runNow")}
             </Button>
           )}
           <Button
@@ -167,11 +167,11 @@ export function PolicyDetailPanel({
             disabled={busy}
           >
             {isPaused
-              ? t("policies.detail.actions.resume")
-              : t("policies.detail.actions.pause")}
+              ? t("portal.policies.detail.actions.resume")
+              : t("portal.policies.detail.actions.pause")}
           </Button>
           <Button size="sm" onClick={onEdit} disabled={busy}>
-            {t("policies.detail.actions.editSettings")}
+            {t("portal.policies.detail.actions.editSettings")}
           </Button>
         </div>
       }
@@ -179,7 +179,9 @@ export function PolicyDetailPanel({
       {/* Status + trigger strip */}
       <div className="portal-policies__detail-status">
         <StatusBadge tone={isPaused ? "warning" : "success"} pulse={!isPaused}>
-          {isPaused ? t("policies.status.paused") : t("policies.status.active")}
+          {isPaused
+            ? t("portal.policies.status.paused")
+            : t("portal.policies.status.active")}
         </StatusBadge>
         {hasEditorSource && (
           <>
@@ -198,7 +200,7 @@ export function PolicyDetailPanel({
       {/* Enforces — plain text, no pills */}
       <div className="portal-policies__detail-inline">
         <span className="portal-policies__detail-inline-label">
-          {t("policies.detail.enforces")}
+          {t("portal.policies.detail.enforces")}
         </span>
         <span className="portal-policies__detail-inline-value">
           {enforceItems
@@ -224,7 +226,7 @@ export function PolicyDetailPanel({
       {state.sources.length > 0 && (
         <div className="portal-policies__detail-inline">
           <span className="portal-policies__detail-inline-label">
-            {t("policies.detail.sources")}
+            {t("portal.policies.detail.sources")}
           </span>
           <span className="portal-policies__detail-inline-value">
             {state.sources.map(sourceLabel).join(" · ")}
@@ -233,7 +235,7 @@ export function PolicyDetailPanel({
       )}
 
       <h3 className="portal-policies__wizard-heading">
-        {t("policies.detail.recentActivity")}
+        {t("portal.policies.detail.recentActivity")}
       </h3>
 
       {activity.length > 0 ? (
@@ -281,7 +283,7 @@ export function PolicyDetailPanel({
                   className="portal-policies__link portal-policies__activity-retry"
                   onClick={() => onRetry(item)}
                 >
-                  {t("policies.detail.retry")}
+                  {t("portal.policies.detail.retry")}
                 </button>
               )}
             </div>
@@ -291,23 +293,23 @@ export function PolicyDetailPanel({
         <Card padding="default">
           <EmptyState
             size="compact"
-            title={t("policies.detail.emptyActivity.title")}
-            description={t("policies.detail.emptyActivity.description")}
+            title={t("portal.policies.detail.emptyActivity.title")}
+            description={t("portal.policies.detail.emptyActivity.description")}
           />
         </Card>
       )}
 
       <Card padding="none" className="portal-policies__detail-stats">
         <StatTile
-          label={t("policies.stats.docsEnforced")}
+          label={t("portal.policies.stats.docsEnforced")}
           value={stats.enforced.toLocaleString()}
         />
         <StatTile
-          label={t("policies.stats.dataProcessed")}
+          label={t("portal.policies.stats.dataProcessed")}
           value={stats.dataProcessed}
         />
         <StatTile
-          label={t("policies.stats.activeFor")}
+          label={t("portal.policies.stats.activeFor")}
           value={stats.activeFor}
         />
       </Card>

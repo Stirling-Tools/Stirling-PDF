@@ -31,7 +31,7 @@ export function PipelinesTable({
     () => [
       {
         key: "name",
-        header: t("pipelines.table.name"),
+        header: t("portal.pipelines.table.name"),
         render: (p) => (
           <div className="portal-pipelines__name-cell">
             <span className="portal-pipelines__pipe-dot" aria-hidden>
@@ -40,7 +40,7 @@ export function PipelinesTable({
             <div className="portal-pipelines__name-text">
               <strong>{p.name}</strong>
               <Chip tone="neutral" size="sm">
-                {t(`pipelines.trigger.${p.trigger}`, {
+                {t(`portal.pipelines.trigger.${p.trigger}`, {
                   defaultValue: p.trigger,
                 })}
               </Chip>
@@ -50,20 +50,20 @@ export function PipelinesTable({
       },
       {
         key: "status",
-        header: t("pipelines.table.status"),
+        header: t("portal.pipelines.table.status"),
         render: (p) => (
           <StatusBadge
             tone={STATUS_TONE[p.status]}
             size="sm"
             pulse={p.status === "active"}
           >
-            {t(`pipelines.status.${p.status}`)}
+            {t(`portal.pipelines.status.${p.status}`)}
           </StatusBadge>
         ),
       },
       {
         key: "steps",
-        header: t("pipelines.table.steps"),
+        header: t("portal.pipelines.table.steps"),
         align: "right",
         render: (p) => (
           <span
@@ -77,7 +77,7 @@ export function PipelinesTable({
       },
       {
         key: "sources",
-        header: t("pipelines.table.sources"),
+        header: t("portal.pipelines.table.sources"),
         align: "right",
         render: (p) => (
           <span

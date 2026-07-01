@@ -31,18 +31,18 @@ export function DealJourney({
       <div className="portal-proc__journey-head">
         <div>
           <span className="portal-proc__eyebrow">
-            {t("procurement.journey.eyebrow")}
+            {t("portal.procurement.journey.eyebrow")}
           </span>
           <h2 className="portal-proc__journey-title">
-            {t("procurement.journey.title")}
+            {t("portal.procurement.journey.title")}
           </h2>
           <p className="portal-proc__journey-sub">
-            {t("procurement.journey.subtitle")}
+            {t("portal.procurement.journey.subtitle")}
           </p>
         </div>
         <div className="portal-proc__se">
           <span className="portal-proc__eyebrow">
-            {t("procurement.journey.engineerLabel")}
+            {t("portal.procurement.journey.engineerLabel")}
           </span>
           <span className="portal-proc__se-name">{engineer.name}</span>
           <a
@@ -61,10 +61,12 @@ export function DealJourney({
       {currentStage === "trial" && (
         <div className="portal-proc__trial">
           <span className="portal-proc__trial-title">
-            {t("procurement.journey.trialTitle")}
+            {t("portal.procurement.journey.trialTitle")}
           </span>
           <span className="portal-proc__trial-dim">
-            {t("procurement.journey.daysLeft", { count: trial.daysLeft })}
+            {t("portal.procurement.journey.daysLeft", {
+              count: trial.daysLeft,
+            })}
           </span>
           <span className="portal-proc__trial-key">{trial.key}</span>
         </div>
@@ -75,8 +77,8 @@ export function DealJourney({
           <span className="portal-proc__next-dot" data-live={isTerminal} />
           <span>
             {isTerminal
-              ? t("procurement.journey.live")
-              : t("procurement.journey.nextStep", {
+              ? t("portal.procurement.journey.live")
+              : t("portal.procurement.journey.nextStep", {
                   action: currentStep?.gatingAction ?? "",
                 })}
           </span>

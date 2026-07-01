@@ -59,14 +59,14 @@ export function Users() {
     <div className="portal-users">
       <header className="portal-users__head">
         <div>
-          <h1 className="portal-users__title">{t("users.title")}</h1>
-          <p className="portal-users__sub">{t("users.subtitle")}</p>
+          <h1 className="portal-users__title">{t("portal.users.title")}</h1>
+          <p className="portal-users__sub">{t("portal.users.subtitle")}</p>
         </div>
         <Button
           onClick={() => setInviteOpen(true)}
           leadingIcon={<span aria-hidden>+</span>}
         >
-          {t("common.inviteMember")}
+          {t("portal.common.inviteMember")}
         </Button>
       </header>
 
@@ -82,11 +82,11 @@ export function Users() {
 
       {isEmpty && (
         <EmptyState
-          title={t("users.empty.title")}
-          description={t("users.empty.description")}
+          title={t("portal.users.empty.title")}
+          description={t("portal.users.empty.description")}
           actions={
             <Button onClick={() => setInviteOpen(true)}>
-              {t("common.inviteMember")}
+              {t("portal.common.inviteMember")}
             </Button>
           }
         />

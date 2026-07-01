@@ -7,13 +7,13 @@ export function WebhooksSection() {
   return (
     <DocsSection
       id="webhooks"
-      eyebrow={t("docs.webhooks.eyebrow")}
-      title={t("docs.webhooks.title")}
-      lead={t("docs.webhooks.lead")}
+      eyebrow={t("portal.docs.webhooks.eyebrow")}
+      title={t("portal.docs.webhooks.title")}
+      lead={t("portal.docs.webhooks.lead")}
     >
       <CodeBlock
         lang="json"
-        caption={t("docs.webhooks.codeCaption")}
+        caption={t("portal.docs.webhooks.codeCaption")}
         code={`{
   "event": "document.processed",
   "id": "evt_91ac3f",
@@ -26,10 +26,11 @@ export function WebhooksSection() {
 }`}
       />
       <Card className="portal-docs__callout" accent="amber" padding="loose">
-        {t("docs.webhooks.callout.beforeSignature")}{" "}
+        {t("portal.docs.webhooks.callout.beforeSignature")}{" "}
         <code>Stirling-Signature</code>{" "}
-        {t("docs.webhooks.callout.beforeHelper")} <code>verifyWebhook()</code>{" "}
-        {t("docs.webhooks.callout.afterHelper")}
+        {t("portal.docs.webhooks.callout.beforeHelper")}{" "}
+        <code>verifyWebhook()</code>{" "}
+        {t("portal.docs.webhooks.callout.afterHelper")}
       </Card>
     </DocsSection>
   );

@@ -29,8 +29,8 @@ export function DeploymentTargets({ targets, onUpgrade }: Props) {
 
   const lockCopy = (target: DeploymentTarget): string =>
     target.requiresTier === "enterprise"
-      ? t("editorAdmin.targets.lock.enterprise")
-      : t("editorAdmin.targets.lock.paid");
+      ? t("portal.editorAdmin.targets.lock.enterprise")
+      : t("portal.editorAdmin.targets.lock.paid");
 
   return (
     <div className="portal-editor__targets">
@@ -61,14 +61,14 @@ export function DeploymentTargets({ targets, onUpgrade }: Props) {
                 size="sm"
                 pulse={target.state === "running"}
               >
-                {t(`editorAdmin.targets.state.${target.state}`)}
+                {t(`portal.editorAdmin.targets.state.${target.state}`)}
               </StatusBadge>
             </div>
 
             {target.state === "running" && (
               <p className="portal-editor__target-meta">
                 v{target.runningVersion} ·{" "}
-                {t("editorAdmin.targets.instanceCount", {
+                {t("portal.editorAdmin.targets.instanceCount", {
                   count: target.instanceCount,
                 })}
               </p>
@@ -87,8 +87,8 @@ export function DeploymentTargets({ targets, onUpgrade }: Props) {
                   disabled={tier === "enterprise"}
                 >
                   {target.requiresTier === "enterprise"
-                    ? t("editorAdmin.targets.talkToSales")
-                    : t("editorAdmin.targets.upgradePlan")}
+                    ? t("portal.editorAdmin.targets.talkToSales")
+                    : t("portal.editorAdmin.targets.upgradePlan")}
                 </Button>
               </div>
             ) : (

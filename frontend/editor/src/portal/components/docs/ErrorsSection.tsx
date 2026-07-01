@@ -8,9 +8,9 @@ export function ErrorsSection({ errors }: { errors: ApiErrorRow[] }) {
   return (
     <DocsSection
       id="errors"
-      eyebrow={t("docs.errors.eyebrow")}
-      title={t("docs.errors.title")}
-      lead={t("docs.errors.lead")}
+      eyebrow={t("portal.docs.errors.eyebrow")}
+      title={t("portal.docs.errors.title")}
+      lead={t("portal.docs.errors.lead")}
     >
       <div className="portal-docs__errors">
         {errors.map((e) => (
@@ -27,7 +27,7 @@ export function ErrorsSection({ errors }: { errors: ApiErrorRow[] }) {
       </div>
       <CodeBlock
         lang="json"
-        caption={t("docs.errors.codeCaption")}
+        caption={t("portal.docs.errors.codeCaption")}
         code={`{
   "error": "schema_validation_failed",
   "message": "Field 'total' could not be located",

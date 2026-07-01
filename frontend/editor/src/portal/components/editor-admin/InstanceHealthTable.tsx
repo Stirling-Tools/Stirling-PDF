@@ -31,7 +31,7 @@ export function InstanceHealthTable({ instances }: Props) {
   const cols: TableColumn<EditorInstance>[] = [
     {
       key: "host",
-      header: t("editorAdmin.health.columns.host"),
+      header: t("portal.editorAdmin.health.columns.host"),
       render: (i) => (
         <div className="portal-editor__cell-stack">
           <span className="portal-editor__cell-strong">{i.host}</span>
@@ -45,17 +45,17 @@ export function InstanceHealthTable({ instances }: Props) {
     },
     {
       key: "version",
-      header: t("editorAdmin.health.columns.version"),
+      header: t("portal.editorAdmin.health.columns.version"),
       render: (i) => <code className="portal-editor__mono">{i.version}</code>,
     },
     {
       key: "region",
-      header: t("editorAdmin.health.columns.region"),
+      header: t("portal.editorAdmin.health.columns.region"),
       render: (i) => <span className="portal-editor__mono">{i.region}</span>,
     },
     {
       key: "status",
-      header: t("editorAdmin.health.columns.status"),
+      header: t("portal.editorAdmin.health.columns.status"),
       render: (i) => (
         <StatusBadge
           tone={INSTANCE_STATUS_TONE[i.status]}
@@ -68,12 +68,12 @@ export function InstanceHealthTable({ instances }: Props) {
     },
     {
       key: "lastSeen",
-      header: t("editorAdmin.health.columns.lastSeen"),
+      header: t("portal.editorAdmin.health.columns.lastSeen"),
       render: (i) => <span className="portal-editor__muted">{i.lastSeen}</span>,
     },
     {
       key: "activeUsers",
-      header: t("editorAdmin.health.columns.activeUsers"),
+      header: t("portal.editorAdmin.health.columns.activeUsers"),
       align: "right",
       render: (i) => (
         <span className="portal-editor__mono">{i.activeUsers}</span>
@@ -86,8 +86,8 @@ export function InstanceHealthTable({ instances }: Props) {
       {instances.length === 0 ? (
         <EmptyState
           size="compact"
-          title={t("editorAdmin.health.empty.title")}
-          description={t("editorAdmin.health.empty.description")}
+          title={t("portal.editorAdmin.health.empty.title")}
+          description={t("portal.editorAdmin.health.empty.description")}
         />
       ) : (
         <Table columns={cols} rows={instances} rowKey={(i) => i.id} />

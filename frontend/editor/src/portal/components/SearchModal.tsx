@@ -50,7 +50,7 @@ export function SearchModal() {
       open={searchOpen}
       onClose={closeSearch}
       width="lg"
-      ariaLabel={t("search.ariaLabel")}
+      ariaLabel={t("portal.search.ariaLabel")}
     >
       <div className="portal-search">
         <div className="portal-search__input-row">
@@ -59,8 +59,8 @@ export function SearchModal() {
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={t("search.placeholder")}
-            aria-label={t("search.ariaLabel")}
+            placeholder={t("portal.search.placeholder")}
+            aria-label={t("portal.search.ariaLabel")}
             className="portal-search__input"
             autoComplete="off"
             spellCheck={false}
@@ -84,13 +84,13 @@ export function SearchModal() {
               size="compact"
               title={
                 query.trim()
-                  ? t("search.empty.noMatches", { query: query.trim() })
-                  : t("search.empty.noActionsTitle")
+                  ? t("portal.search.empty.noMatches", { query: query.trim() })
+                  : t("portal.search.empty.noActionsTitle")
               }
               description={
                 query.trim()
-                  ? t("search.empty.noMatchesDescription")
-                  : t("search.empty.noActionsDescription")
+                  ? t("portal.search.empty.noMatchesDescription")
+                  : t("portal.search.empty.noActionsDescription")
               }
             />
           )}

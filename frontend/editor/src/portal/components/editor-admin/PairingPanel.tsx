@@ -55,7 +55,7 @@ export function PairingPanel({ pairings, onUpgrade }: Props) {
             {p.locked ? (
               <div className="portal-editor__lock">
                 <p className="portal-editor__lock-copy">
-                  {t("editorAdmin.pairing.lockCopy")}
+                  {t("portal.editorAdmin.pairing.lockCopy")}
                 </p>
                 <Button
                   size="sm"
@@ -63,7 +63,7 @@ export function PairingPanel({ pairings, onUpgrade }: Props) {
                   accent="purple"
                   onClick={onUpgrade}
                 >
-                  {t("editorAdmin.pairing.talkToSales")}
+                  {t("portal.editorAdmin.pairing.talkToSales")}
                 </Button>
               </div>
             ) : (
@@ -87,10 +87,10 @@ export function PairingPanel({ pairings, onUpgrade }: Props) {
                     onClick={() => rotate(p.method)}
                   >
                     {rotated === p.method
-                      ? t("editorAdmin.pairing.generated")
+                      ? t("portal.editorAdmin.pairing.generated")
                       : p.method === "shortcode"
-                        ? t("editorAdmin.pairing.generateNewCode")
-                        : t("editorAdmin.pairing.rotate")}
+                        ? t("portal.editorAdmin.pairing.generateNewCode")
+                        : t("portal.editorAdmin.pairing.rotate")}
                   </Button>
                 </div>
               </>

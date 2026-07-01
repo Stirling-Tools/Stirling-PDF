@@ -21,18 +21,18 @@ function EditorOrnament() {
   return (
     <div className="portal-carousel__doc">
       <StatusBadge tone="danger" size="sm" pulse>
-        {t("welcome.ornament.editor.critical")}
+        {t("portal.welcome.ornament.editor.critical")}
       </StatusBadge>
       <div className="portal-carousel__doc-title">
         Vulnerability Assessment Report
       </div>
       <div className="portal-carousel__doc-sub">CVE-2026-1847 · 12 pages</div>
       <div className="portal-carousel__doc-meta">
-        <span>{t("welcome.ornament.editor.signed")}</span>
+        <span>{t("portal.welcome.ornament.editor.signed")}</span>
         <span>·</span>
-        <span>{t("welcome.ornament.editor.ocrClean")}</span>
+        <span>{t("portal.welcome.ornament.editor.ocrClean")}</span>
         <span>·</span>
-        <span>{t("welcome.ornament.editor.schemaMatch")}</span>
+        <span>{t("portal.welcome.ornament.editor.schemaMatch")}</span>
       </div>
     </div>
   );
@@ -88,9 +88,12 @@ const SLIDES: Slide[] = [
   {
     id: "editor",
     durationMs: 12000,
-    primary: { labelKey: "welcome.slides.editor.primary", target: "editor" },
+    primary: {
+      labelKey: "portal.welcome.slides.editor.primary",
+      target: "editor",
+    },
     secondary: {
-      labelKey: "welcome.slides.editor.secondary",
+      labelKey: "portal.welcome.slides.editor.secondary",
       target: "editor",
     },
     ornament: <EditorOrnament />,
@@ -98,9 +101,12 @@ const SLIDES: Slide[] = [
   {
     id: "platform",
     durationMs: 8000,
-    primary: { labelKey: "welcome.slides.platform.primary", action: "try-op" },
+    primary: {
+      labelKey: "portal.welcome.slides.platform.primary",
+      action: "try-op",
+    },
     secondary: {
-      labelKey: "welcome.slides.platform.secondary",
+      labelKey: "portal.welcome.slides.platform.secondary",
       target: "infrastructure",
     },
     ornament: <PlatformOrnament />,
@@ -108,8 +114,14 @@ const SLIDES: Slide[] = [
   {
     id: "agents",
     durationMs: 8000,
-    primary: { labelKey: "welcome.slides.agents.primary", target: "sources" },
-    secondary: { labelKey: "welcome.slides.agents.secondary", target: "docs" },
+    primary: {
+      labelKey: "portal.welcome.slides.agents.primary",
+      target: "sources",
+    },
+    secondary: {
+      labelKey: "portal.welcome.slides.agents.secondary",
+      target: "docs",
+    },
     ornament: <AgentOrnament />,
   },
 ];
@@ -157,19 +169,19 @@ export function WelcomeCarousel({ onTryOp }: WelcomeCarouselProps) {
           setPaused(false);
         }
       }}
-      aria-label={t("welcome.ariaLabel")}
+      aria-label={t("portal.welcome.ariaLabel")}
       aria-roledescription="carousel"
     >
       <div className="portal-carousel__inner" key={slide.id}>
         <div className="portal-carousel__text">
           <div className="portal-carousel__eyebrow">
-            {t(`welcome.slides.${slide.id}.eyebrow`)}
+            {t(`portal.welcome.slides.${slide.id}.eyebrow`)}
           </div>
           <h1 className="portal-carousel__title">
-            {t(`welcome.slides.${slide.id}.title`)}
+            {t(`portal.welcome.slides.${slide.id}.title`)}
           </h1>
           <p className="portal-carousel__sub">
-            {t(`welcome.slides.${slide.id}.sub`)}
+            {t(`portal.welcome.slides.${slide.id}.sub`)}
           </p>
           <div className="portal-carousel__cta">
             <Button
@@ -198,16 +210,16 @@ export function WelcomeCarousel({ onTryOp }: WelcomeCarouselProps) {
       <div
         className="portal-carousel__dots"
         role="group"
-        aria-label={t("welcome.pagination")}
+        aria-label={t("portal.welcome.pagination")}
       >
         {SLIDES.map((s, i) => (
           <button
             key={s.id}
             type="button"
             aria-current={i === index ? "true" : undefined}
-            aria-label={t("welcome.slideLabel", {
+            aria-label={t("portal.welcome.slideLabel", {
               number: i + 1,
-              title: t(`welcome.slides.${s.id}.title`),
+              title: t(`portal.welcome.slides.${s.id}.title`),
             })}
             className={
               "portal-carousel__dot" + (i === index ? " is-active" : "")

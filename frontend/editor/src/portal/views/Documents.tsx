@@ -12,8 +12,12 @@ export function Documents() {
   return (
     <div className="portal-documents">
       <header className="portal-documents__head">
-        <h1 className="portal-documents__title">{t("documents.title")}</h1>
-        <p className="portal-documents__sub">{t("documents.subtitle")}</p>
+        <h1 className="portal-documents__title">
+          {t("portal.documents.title")}
+        </h1>
+        <p className="portal-documents__sub">
+          {t("portal.documents.subtitle")}
+        </p>
       </header>
 
       <ReviewQueue />

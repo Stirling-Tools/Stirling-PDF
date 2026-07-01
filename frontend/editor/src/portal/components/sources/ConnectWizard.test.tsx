@@ -21,14 +21,14 @@ vi.mock("@portal/api/sources", () => ({
 /** Step through the folder-source flow: choose type -> configure -> review. */
 function stepToReview() {
   // Step 0: folder is the default-selected type. Continue.
-  fireEvent.click(screen.getByText("sources.wizard.continue"));
+  fireEvent.click(screen.getByText("portal.sources.wizard.continue"));
 
   // Step 1: fill the required name + directory fields.
   const inputs = screen.getAllByRole("textbox");
   // First textbox is the name field, second is the folder's directory field.
   fireEvent.change(inputs[0], { target: { value: "Claims intake" } });
   fireEvent.change(inputs[1], { target: { value: "/data/incoming" } });
-  fireEvent.click(screen.getByText("sources.wizard.continue"));
+  fireEvent.click(screen.getByText("portal.sources.wizard.continue"));
 }
 
 describe("ConnectWizard", () => {
@@ -46,7 +46,7 @@ describe("ConnectWizard", () => {
     stepToReview();
 
     // Step 2: submit via the final "connect source" action.
-    fireEvent.click(screen.getByText("sources.actions.connectSource"));
+    fireEvent.click(screen.getByText("portal.sources.actions.connectSource"));
 
     await waitFor(() => {
       expect(createSource).toHaveBeenCalledTimes(1);
@@ -88,8 +88,8 @@ describe("ConnectWizard", () => {
 
     // Fix the stray quotes, continue to review, save.
     fireEvent.change(inputs[1], { target: { value: "/data/in" } });
-    fireEvent.click(screen.getByText("sources.wizard.continue"));
-    fireEvent.click(screen.getByText("sources.wizard.save"));
+    fireEvent.click(screen.getByText("portal.sources.wizard.continue"));
+    fireEvent.click(screen.getByText("portal.sources.wizard.save"));
 
     await waitFor(() => {
       expect(createSource).toHaveBeenCalledTimes(1);
@@ -116,7 +116,7 @@ describe("ConnectWizard", () => {
     render(<ConnectWizard open onClose={vi.fn()} onCreated={vi.fn()} />);
 
     stepToReview();
-    fireEvent.click(screen.getByText("sources.actions.connectSource"));
+    fireEvent.click(screen.getByText("portal.sources.actions.connectSource"));
 
     expect(
       await screen.findByText("Directory is not readable"),
