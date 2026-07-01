@@ -1,4 +1,5 @@
-import { Button, Stack, Text, Group, Divider, TextInput } from "@mantine/core";
+import { Stack, Text, Group, Divider, TextInput } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import PeopleIcon from "@mui/icons-material/People";
@@ -170,7 +171,7 @@ export const ReviewSessionStep: React.FC<ReviewSessionStepProps> = ({
 
       <Group gap="sm" mt="md">
         <Button
-          variant="default"
+          variant="secondary"
           onClick={onBack}
           leftSection={<ArrowBackIcon sx={{ fontSize: 16 }} />}
         >
@@ -179,18 +180,9 @@ export const ReviewSessionStep: React.FC<ReviewSessionStepProps> = ({
         <Button
           onClick={onSubmit}
           disabled={disabled}
-          h="auto"
           style={{ flex: 1 }}
           leftSection={<SendIcon sx={{ fontSize: 16 }} />}
-          color="green"
-          styles={{
-            root: { paddingTop: 6, paddingBottom: 6 },
-            label: {
-              whiteSpace: "normal",
-              textAlign: "center",
-              lineHeight: 1.2,
-            },
-          }}
+          accent="success"
         >
           {t("groupSigning.steps.review.send", "Send Signing Requests")}
         </Button>

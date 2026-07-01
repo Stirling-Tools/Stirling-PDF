@@ -1,19 +1,19 @@
 import React from "react";
-import { Button, Group, Tooltip, ActionIcon } from "@mantine/core";
+import { Group, Tooltip } from "@mantine/core";
+import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useIsMobile } from "@app/hooks/useIsMobile";
-
 type LandingActionsProps = {
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   onUploadClick: () => void;
   onMobileUploadClick: () => void;
   onFileSelect: (event: React.ChangeEvent<HTMLInputElement>) => void;
 };
-
 export function LandingActions({
   fileInputRef,
   onUploadClick,
@@ -25,12 +25,11 @@ export function LandingActions({
   const icons = useFileActionIcons();
   const { config } = useAppConfig();
   const isMobile = useIsMobile();
-
   return (
     <>
       <Group gap="sm" justify="center" wrap="wrap" mb="xs">
         <Button
-          classNames={{ root: "landing-btn-primary" }}
+          className="landing-btn-primary"
           leftSection={
             <LocalIcon
               icon={icons.uploadIconName}
@@ -46,10 +45,9 @@ export function LandingActions({
         >
           {terminology.uploadFromComputer}
         </Button>
-
         <Button
-          variant="default"
-          classNames={{ root: "landing-btn-secondary" }}
+          variant="secondary"
+          className="landing-btn-secondary"
           leftSection={
             <LocalIcon
               icon="add"
@@ -65,15 +63,13 @@ export function LandingActions({
         >
           {terminology.addFiles}
         </Button>
-
         {config?.enableMobileScanner && !isMobile && (
           <Tooltip label={terminology.mobileUpload} position="bottom">
             <ActionIcon
               size="lg"
-              variant="default"
-              radius="md"
+              variant="secondary"
               aria-label={terminology.mobileUpload}
-              classNames={{ root: "landing-btn-secondary landing-btn-icon" }}
+              className="landing-btn-secondary landing-btn-icon"
               onClick={(e) => {
                 e.stopPropagation();
                 onMobileUploadClick();

@@ -1,88 +1,91 @@
-import type { ReactNode } from "react";
+import { Pill as MantinePill } from "@mantine/core";
+import type { CSSProperties, ReactNode } from "react";
 import "@shared/components/Chip.css";
 
-export type ChipTone =
+/** Same accent dial as Button. */
+export type ChipAccent =
+  | "default"
   | "neutral"
-  | "blue"
-  | "purple"
-  | "green"
-  | "amber"
-  | "red";
-
-export type ChipSize = "sm" | "md";
+  | "brand"
+  | "ai"
+  | "premium"
+  | "danger"
+  | "success"
+  | "warning";
+export type ChipSize = "xs" | "sm" | "md" | "lg";
+/** primary = solid fill; secondary = soft tinted tag (the default tag look). */
+export type ChipVariant = "primary" | "secondary";
 
 export interface ChipProps {
-  tone?: ChipTone;
+  accent?: ChipAccent;
+  variant?: ChipVariant;
   size?: ChipSize;
   leadingIcon?: ReactNode;
   trailingIcon?: ReactNode;
-  /** Show a `×` button. Calls `onRemove` when clicked. */
+  /** Shows a spinner and dims the chip. */
+  loading?: boolean;
   onRemove?: () => void;
-  /** Renders as a button when set. */
   onClick?: () => void;
-  /** Show the leading dot affordance. Defaults to false (set true for status-style chips). */
+  /** Leading status dot. Use for status-style chips. */
   showDot?: boolean;
+  style?: CSSProperties;
   children?: ReactNode;
   className?: string;
+  "data-consolidate-as"?: string;
 }
 
-/**
- * Generic chip / tag — `StatusBadge` has a fixed taxonomy (success/warning/…),
- * `MethodBadge` is HTTP-method-only; this is the open-ended one for tag rows
- * (selected ops, document regions, kbd hints, sort chips, etc).
- */
+/** Open-ended chip/tag (Mantine Pill-backed). For semantic status use StatusBadge. */
 export function Chip({
-  tone = "neutral",
+  accent = "default",
+  variant = "secondary",
   size = "md",
   leadingIcon,
   trailingIcon,
+  loading = false,
   onRemove,
   onClick,
   showDot,
+  style,
   children,
   className,
+  ...rest
 }: ChipProps) {
-  const Tag = onClick ? "button" : "span";
   const classes = [
     "sui-chip",
-    `sui-chip--${tone}`,
-    `sui-chip--${size}`,
+    `sui-acc-${accent}`,
+    `sui-chip--${variant}`,
     onClick ? "sui-chip--interactive" : "",
+    loading ? "sui-chip--loading" : "",
     className ?? "",
   ]
     .filter(Boolean)
     .join(" ");
+
   return (
-    <Tag
+    <MantinePill
+      {...rest}
       className={classes}
-      onClick={onClick}
-      type={onClick ? "button" : undefined}
+      style={style}
+      size={size}
+      withRemoveButton={!!onRemove && !loading}
+      onRemove={onRemove}
+      onClick={loading ? undefined : onClick}
+      {...(onClick ? { role: "button", tabIndex: 0 } : {})}
     >
       {showDot && <span className="sui-chip__dot" aria-hidden />}
-      {leadingIcon && (
+      {loading ? (
+        <span className="sui-chip__spinner" aria-hidden />
+      ) : leadingIcon ? (
         <span className="sui-chip__icon" aria-hidden>
           {leadingIcon}
         </span>
-      )}
+      ) : null}
       <span className="sui-chip__label">{children}</span>
       {trailingIcon && !onRemove && (
         <span className="sui-chip__icon" aria-hidden>
           {trailingIcon}
         </span>
       )}
-      {onRemove && (
-        <button
-          type="button"
-          className="sui-chip__remove"
-          onClick={(e) => {
-            e.stopPropagation();
-            onRemove();
-          }}
-          aria-label="Remove"
-        >
-          ×
-        </button>
-      )}
-    </Tag>
+    </MantinePill>
   );
 }

@@ -5,18 +5,18 @@ import {
   Modal,
   Stack,
   Text,
-  Button,
   TextInput,
   Select,
   Paper,
   Checkbox,
   Textarea,
-  SegmentedControl,
   Tooltip,
-  CloseButton,
   Box,
   Group,
 } from "@mantine/core";
+import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
+import { SegmentedControl } from "@shared/components/SegmentedControl";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { alert } from "@app/components/toast";
 import { userManagementService } from "@app/services/userManagementService";
@@ -362,7 +362,9 @@ export default function InviteMembersModal({
       withCloseButton={false}
     >
       <Box pos="relative">
-        <CloseButton
+        <ActionIcon
+          aria-label={t("common.close", "Close")}
+          variant="tertiary"
           onClick={handleClose}
           size="lg"
           style={{
@@ -371,7 +373,9 @@ export default function InviteMembersModal({
             right: -8,
             zIndex: 1,
           }}
-        />
+        >
+          <LocalIcon icon="close-rounded" />
+        </ActionIcon>
         <Stack gap="lg" pt="md">
           {/* Header with Icon */}
           <Stack gap="md" align="center">
@@ -421,7 +425,11 @@ export default function InviteMembersModal({
                     </Text>
                   </Group>
                   {licenseInfo.availableSlots === 0 && (
-                    <Button size="xs" variant="light" onClick={handleGoToPlan}>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={handleGoToPlan}
+                    >
                       {t("workspace.people.actions.upgrade", "Upgrade")}
                     </Button>
                   )}
@@ -455,7 +463,7 @@ export default function InviteMembersModal({
                   setInviteMode(value as "email" | "direct" | "link");
                   setGeneratedInviteLink(null);
                 }}
-                data={[
+                options={[
                   {
                     label: t(
                       "workspace.people.inviteMode.username",
@@ -587,7 +595,7 @@ export default function InviteMembersModal({
                         style={{ flex: 1 }}
                       />
                       <Button
-                        variant="light"
+                        variant="secondary"
                         onClick={async () => {
                           try {
                             await navigator.clipboard.writeText(
@@ -850,7 +858,7 @@ export default function InviteMembersModal({
             loading={!hasNoSlots && processing}
             fullWidth
             size="md"
-            mt="md"
+            style={{ marginTop: "var(--mantine-spacing-md)" }}
           >
             {inviteMode === "email"
               ? t("workspace.people.emailInvite.submit", "Send Invites")

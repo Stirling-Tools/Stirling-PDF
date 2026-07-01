@@ -1,4 +1,5 @@
-import { Button, Stack, Text, Group, Divider, Paper } from "@mantine/core";
+import { Stack, Text, Group, Divider, Paper } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import DrawIcon from "@mui/icons-material/Draw";
@@ -167,15 +168,15 @@ export const ReviewSignatureStep: React.FC<ReviewSignatureStepProps> = ({
       {/* Action Buttons */}
       <Group gap="sm" mt="md">
         <Button
-          variant="default"
+          variant="secondary"
           onClick={onBack}
           leftSection={<ArrowBackIcon sx={{ fontSize: 16 }} />}
         >
           {t("certSign.collab.signRequest.steps.back", "Back")}
         </Button>
         <Button
-          variant="light"
-          color="red"
+          variant="secondary"
+          accent="danger"
           onClick={onDecline}
           disabled={disabled}
           leftSection={<CancelIcon sx={{ fontSize: 16 }} />}
@@ -183,10 +184,10 @@ export const ReviewSignatureStep: React.FC<ReviewSignatureStepProps> = ({
           {t("certSign.collab.signRequest.declineButton", "Decline")}
         </Button>
         <Button
+          accent="success"
           onClick={onSign}
           disabled={disabled}
           style={{ flex: 1 }}
-          color="green"
           leftSection={<CheckCircleIcon sx={{ fontSize: 16 }} />}
         >
           {t("certSign.collab.signRequest.signButton", "Sign Document")}

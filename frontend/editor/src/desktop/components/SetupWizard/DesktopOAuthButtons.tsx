@@ -4,6 +4,7 @@ import { authService, UserInfo } from "@app/services/authService";
 import { buildOAuthCallbackHtml } from "@app/utils/oauthCallbackHtml";
 import { oauthIconUrl } from "@shared/auth/ui/oauthIcons";
 import { STIRLING_SAAS_URL } from "@app/constants/connection";
+import { Button } from "@shared/components/Button";
 import "@app/components/SetupWizard/desktopOAuth.css";
 
 type KnownProviderId =
@@ -149,7 +150,8 @@ export const DesktopOAuthButtons: React.FC<DesktopOAuthButtonsProps> = ({
                 providerEntry.id.slice(1)
               : t("setup.login.sso", "Single Sign-On"));
           return (
-            <button
+            <Button
+              variant="secondary"
               key={providerEntry.id}
               onClick={() => handleOAuthLogin(providerEntry)}
               disabled={isDisabled || oauthLoading}
@@ -168,7 +170,7 @@ export const DesktopOAuthButtons: React.FC<DesktopOAuthButtonsProps> = ({
                 </span>
                 <span className="oauth-button-text-desktop">{label}</span>
               </span>
-            </button>
+            </Button>
           );
         })}
       {oauthLoading && (

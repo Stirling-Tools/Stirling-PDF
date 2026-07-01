@@ -102,11 +102,10 @@ export default function SpringLoginForm({
         <OAuthButtons
           onProviderClick={signInWithProvider}
           isSubmitting={isSubmitting}
-          layout="vertical"
+          layout="fullwidth"
           enabledProviders={providers}
-          ctaPrefix={oauthCtaPrefix}
+          ctaPrefix={oauthCtaPrefix ?? "Continue with"}
           useNewStyle={oauthUseNewStyle}
-          styleVariant="light"
         />
       )}
 

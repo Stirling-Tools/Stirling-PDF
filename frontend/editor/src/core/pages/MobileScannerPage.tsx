@@ -2,7 +2,6 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import {
   Box,
-  Button,
   Stack,
   Text,
   Group,
@@ -11,6 +10,7 @@ import {
   Switch,
   Card,
 } from "@mantine/core";
+import { Button as DSButton } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import { LogoIcon } from "@app/components/shared/LogoIcon";
 import { Wordmark } from "@app/components/shared/Wordmark";
@@ -26,10 +26,8 @@ import {
   type JscanifyScanner,
 } from "@app/utils/loadJscanify";
 import apiClient from "@app/services/apiClient";
-
 // Use the configured API base (e.g. api.stirling.com), not the page origin.
 const API_BASE = (apiClient.defaults.baseURL ?? "").replace(/\/+$/, "");
-
 // Experimental camera controls (W3C Image Capture / MediaStream extensions) that
 // are not yet part of the standard DOM lib typings but are widely shipped on
 // mobile browsers and required for document scanning.
@@ -45,7 +43,6 @@ declare global {
     torch?: ConstrainBoolean;
   }
 }
-
 /**
  * MobileScannerPage
  *
@@ -57,7 +54,6 @@ export default function MobileScannerPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const sessionId = searchParams.get("session");
-
   const [mode, setMode] = useState<"choice" | "camera" | "file" | null>(
     "choice",
   );
@@ -77,7 +73,6 @@ export default function MobileScannerPage() {
   const [sessionError, setSessionError] = useState<string | null>(null);
   const [loadingStatus, setLoadingStatus] = useState<string>("Initializing...");
   const [cameraReady, setCameraReady] = useState(false);
-
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const highlightCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -85,10 +80,8 @@ export default function MobileScannerPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scannerRef = useRef<JscanifyScanner | null>(null);
   const highlightIntervalRef = useRef<number | null>(null);
-
   // Detection resolution - extremely low for mobile performance
   const DETECTION_WIDTH = 160; // Ultra-low for real-time mobile detection
-
   // Validate session on page load
   useEffect(() => {
     const validateSession = async () => {
@@ -104,12 +97,10 @@ export default function MobileScannerPage() {
         setLoadingStatus("Session validation failed");
         return;
       }
-
       try {
         const response = await fetch(
           `${API_BASE}/api/v1/mobile-scanner/validate-session/${sessionId}`,
         );
-
         if (response.ok) {
           const data = await response.json();
           if (data.valid) {
@@ -149,13 +140,10 @@ export default function MobileScannerPage() {
         setLoadingStatus("Session validation error: " + (err as Error).message);
       }
     };
-
     validateSession();
   }, [sessionId, t]);
-
   useEffect(() => {
     let cancelled = false;
-
     loadJscanify({
       onStatus: (status) => {
         if (!cancelled) setLoadingStatus(status);
@@ -179,23 +167,19 @@ export default function MobileScannerPage() {
         );
         console.error("Failed to load jscanify:", err);
       });
-
     return () => {
       cancelled = true;
     };
   }, []);
-
   // Initialize camera
   useEffect(() => {
     console.log(
       `[Mobile Scanner] Camera effect triggered: mode=${mode}, cameraError=${cameraError}, currentPreview=${currentPreview}`,
     );
-
     if (mode === "camera" && !cameraError && !currentPreview) {
       console.log(
         "[Mobile Scanner] Camera effect: Starting camera initialization",
       );
-
       // Check if mediaDevices API is available (requires HTTPS or localhost)
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         const error =
@@ -211,9 +195,7 @@ export default function MobileScannerPage() {
         setMode("file");
         return;
       }
-
       setLoadingStatus("Initializing camera...");
-
       console.log("[Mobile Scanner] Requesting camera permission...");
       navigator.mediaDevices
         .getUserMedia({
@@ -233,7 +215,6 @@ export default function MobileScannerPage() {
           if (videoRef.current) {
             const video = videoRef.current;
             video.srcObject = stream;
-
             // Wait for video metadata to load before marking camera as ready
             const handleLoadedMetadata = () => {
               console.log(
@@ -245,12 +226,10 @@ export default function MobileScannerPage() {
               setLoadingStatus(
                 `Camera ready: ${video.videoWidth}x${video.videoHeight} ✓`,
               );
-
               // Signal that camera is ready - this will trigger detection effect
               console.log("[Mobile Scanner] Setting cameraReady = true");
               setCameraReady(true);
             };
-
             // Check if metadata is already loaded
             if (video.readyState >= 1) {
               // HAVE_METADATA or greater
@@ -261,7 +240,6 @@ export default function MobileScannerPage() {
                 once: true,
               });
             }
-
             // Log actual resolution we got from stream settings
             const videoTrack = stream.getVideoTracks()[0];
             const settings = videoTrack.getSettings();
@@ -271,12 +249,10 @@ export default function MobileScannerPage() {
               "x",
               settings.height,
             );
-
             // Configure camera capabilities for document scanning
             try {
               const capabilities = videoTrack.getCapabilities();
               const advanced: MediaTrackConstraintSet[] = [];
-
               // 1. Enable continuous autofocus
               if (
                 capabilities.focusMode &&
@@ -285,7 +261,6 @@ export default function MobileScannerPage() {
                 advanced.push({ focusMode: "continuous" });
                 console.log("✓ Continuous autofocus enabled");
               }
-
               // 2. Enable continuous auto-exposure for varying lighting
               if (
                 capabilities.exposureMode &&
@@ -294,13 +269,11 @@ export default function MobileScannerPage() {
                 advanced.push({ exposureMode: "continuous" });
                 console.log("✓ Auto-exposure enabled");
               }
-
               // 3. Check if torch/flashlight is supported
               if (capabilities.torch) {
                 setTorchSupported(true);
                 console.log("✓ Torch/flashlight available");
               }
-
               // Apply all constraints
               if (advanced.length > 0) {
                 await videoTrack.applyConstraints({ advanced });
@@ -323,7 +296,6 @@ export default function MobileScannerPage() {
           setMode("file");
         });
     }
-
     return () => {
       // Clean up stream when switching away from camera or showing preview
       if (streamRef.current) {
@@ -339,13 +311,11 @@ export default function MobileScannerPage() {
       setCameraReady(false);
     };
   }, [mode, cameraError, currentPreview, t]);
-
   // Real-time document highlighting on camera feed
   useEffect(() => {
     console.log(
       `[Mobile Scanner] Effect triggered: mode=${mode}, autoEnhance=${autoEnhance}, openCvReady=${openCvReady}, cameraReady=${cameraReady}, currentPreview=${currentPreview}`,
     );
-
     // Show helpful status if detection is enabled but waiting for dependencies
     if (mode === "camera" && autoEnhance && !currentPreview) {
       if (!openCvReady) {
@@ -354,7 +324,6 @@ export default function MobileScannerPage() {
         setLoadingStatus("Waiting for camera...");
       }
     }
-
     if (
       mode === "camera" &&
       autoEnhance &&
@@ -365,7 +334,6 @@ export default function MobileScannerPage() {
     ) {
       const startHighlighting = () => {
         console.log("[Mobile Scanner] startHighlighting() called");
-
         if (!videoRef.current || !highlightCanvasRef.current) {
           setLoadingStatus("Missing video/canvas refs ✗");
           console.error(
@@ -386,7 +354,6 @@ export default function MobileScannerPage() {
           );
           return;
         }
-
         const video = videoRef.current;
         const highlightCanvas = highlightCanvasRef.current;
         setLoadingStatus("Detection active ✓");
@@ -397,24 +364,20 @@ export default function MobileScannerPage() {
             video.videoHeight +
             " video",
         );
-
         // Create low-res detection canvas with optimized context for frequent pixel reading
         const detectionCanvas = document.createElement("canvas");
         const detectionCtx = detectionCanvas.getContext("2d", {
           willReadFrequently: true,
         });
         if (!detectionCtx) return;
-
         // Calculate scaled dimensions for detection (160px wide max)
         const scale = DETECTION_WIDTH / video.videoWidth;
         detectionCanvas.width = DETECTION_WIDTH;
         detectionCanvas.height = Math.round(video.videoHeight * scale);
-
         // CRITICAL FIX: Make highlight canvas ALSO low-res (CSS will scale it visually)
         // Drawing to a 4K canvas is what was causing the lag!
         highlightCanvas.width = DETECTION_WIDTH;
         highlightCanvas.height = Math.round(video.videoHeight * scale);
-
         console.log(
           `[Mobile Scanner] Video: ${video.videoWidth}x${video.videoHeight}`,
         );
@@ -425,7 +388,6 @@ export default function MobileScannerPage() {
           `[Mobile Scanner] Highlight canvas: ${highlightCanvas.width}x${highlightCanvas.height}`,
         );
         console.log(`[Mobile Scanner] Starting interval at 1 FPS`);
-
         // Set highlight canvas to match video for vector drawing
         highlightCanvas.width = video.videoWidth;
         highlightCanvas.height = video.videoHeight;
@@ -433,7 +395,6 @@ export default function MobileScannerPage() {
           willReadFrequently: true,
         });
         if (!highlightCtx) return;
-
         // Use requestAnimationFrame with adaptive throttle based on device performance
         let frameCount = 0;
         const frameTimes: number[] = [];
@@ -441,15 +402,12 @@ export default function MobileScannerPage() {
         let detectionInterval = 333; // Start at 3 FPS (333ms)
         const detectionTimings: number[] = []; // Track last 10 detection times
         const MAX_TIMINGS = 10;
-
         const runDetection = () => {
           const now = performance.now();
-
           // Only run detection every second
           if (now - lastDetectionTime >= detectionInterval) {
             lastDetectionTime = now;
             const startTime = performance.now();
-
             try {
               // Step 1: Copy video to low-res detection canvas
               const copyStart = performance.now();
@@ -461,11 +419,9 @@ export default function MobileScannerPage() {
                 detectionCanvas.height,
               );
               const copyTime = performance.now() - copyStart;
-
               // Step 2: Simple jscanify detection
               const detectionStart = performance.now();
               let corners: JscanifyCornerPoints | null = null;
-
               // Run jscanify detection directly - convert canvas to Mat first
               const cv = window.cv;
               const scanner = scannerRef.current;
@@ -473,14 +429,11 @@ export default function MobileScannerPage() {
                 const mat = cv.imread(detectionCanvas);
                 const contour = scanner.findPaperContour(mat);
                 mat.delete();
-
                 if (contour) {
                   corners = scanner.getCornerPoints(contour);
                 }
               }
-
               const detectionTime = performance.now() - detectionStart;
-
               // Step 3: Draw corner lines on full-res canvas
               const drawStart = performance.now();
               highlightCtx.clearRect(
@@ -489,7 +442,6 @@ export default function MobileScannerPage() {
                 highlightCanvas.width,
                 highlightCanvas.height,
               );
-
               // Draw lines if corners detected
               if (
                 corners &&
@@ -516,7 +468,6 @@ export default function MobileScannerPage() {
                   x: corners.bottomLeftCorner.x * scaleFactor,
                   y: corners.bottomLeftCorner.y * scaleFactor,
                 };
-
                 // Draw green lines connecting corners
                 highlightCtx.strokeStyle = "#00FF00";
                 highlightCtx.lineWidth = 4;
@@ -528,25 +479,20 @@ export default function MobileScannerPage() {
                 highlightCtx.lineTo(tl.x, tl.y);
                 highlightCtx.stroke();
               }
-
               const drawTime = performance.now() - drawStart;
-
               const totalTime = performance.now() - startTime;
               frameCount++;
               frameTimes.push(totalTime);
-
               // Track detection timings for adaptive performance
               detectionTimings.push(totalTime);
               if (detectionTimings.length > MAX_TIMINGS) {
                 detectionTimings.shift(); // Keep only last 10
               }
-
               // Adaptive performance adjustment (after warmup period)
               if (frameCount > 5 && detectionTimings.length >= 5) {
                 const avgTime =
                   detectionTimings.reduce((a, b) => a + b, 0) /
                   detectionTimings.length;
-
                 // Adjust detection interval based on average performance
                 if (avgTime < 20) {
                   // Very fast device: 5 FPS (200ms)
@@ -562,13 +508,11 @@ export default function MobileScannerPage() {
                   detectionInterval = 1000;
                 }
               }
-
               if (frameCount <= 10) {
                 console.log(
                   `[Mobile Scanner] Frame ${frameCount}: ${Math.round(totalTime)}ms total (copy: ${Math.round(copyTime)}ms, detect: ${Math.round(detectionTime)}ms, draw: ${Math.round(drawTime)}ms) - interval: ${detectionInterval}ms`,
                 );
               }
-
               if (frameCount === 10) {
                 const avg =
                   frameTimes.reduce((a, b) => a + b, 0) / frameTimes.length;
@@ -580,32 +524,25 @@ export default function MobileScannerPage() {
               console.error("[Mobile Scanner] Detection error:", err);
             }
           }
-
           // Continue animation loop
           highlightIntervalRef.current = requestAnimationFrame(runDetection);
         };
-
         // Start the animation loop
         highlightIntervalRef.current = requestAnimationFrame(runDetection);
       };
-
       // Wait for video to be ready with retry logic
       let retryCount = 0;
       let retryTimeout: number | null = null;
-
       const startWhenReady = () => {
         const video = videoRef.current;
-
         if (!video) {
           setLoadingStatus("No video element ✗");
           console.log("[Mobile Scanner] No video element");
           return;
         }
-
         console.log(
           `[Mobile Scanner] Video check: readyState=${video.readyState}, width=${video.videoWidth}, height=${video.videoHeight}`,
         );
-
         if (
           video.readyState >= 2 &&
           video.videoWidth > 0 &&
@@ -629,7 +566,6 @@ export default function MobileScannerPage() {
           );
         }
       };
-
       // Add event listener as fallback
       const videoElement = videoRef.current;
       if (videoElement) {
@@ -640,22 +576,18 @@ export default function MobileScannerPage() {
       } else {
         console.error("[Mobile Scanner] No video element available");
       }
-
       return () => {
         console.log("[Mobile Scanner] Cleanup: Stopping detection");
-
         // Clean up animation frame
         if (highlightIntervalRef.current) {
           cancelAnimationFrame(highlightIntervalRef.current);
           highlightIntervalRef.current = null;
         }
-
         // Clean up retry timeout
         if (retryTimeout !== null) {
           clearTimeout(retryTimeout);
           retryTimeout = null;
         }
-
         // Clean up event listener
         if (videoElement) {
           videoElement.removeEventListener("loadedmetadata", startWhenReady);
@@ -663,26 +595,19 @@ export default function MobileScannerPage() {
       };
     }
   }, [mode, autoEnhance, openCvReady, cameraReady, currentPreview]);
-
   const captureImage = useCallback(async () => {
     if (!videoRef.current || !canvasRef.current) return;
-
     setIsProcessing(true);
-
     try {
       const video = videoRef.current;
       const canvas = canvasRef.current;
       const context = canvas.getContext("2d");
-
       if (!context) return;
-
       // Capture raw image from video at full resolution
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
       let finalDataUrl: string;
-
       // Apply jscanify processing if enabled and available
       const cv = window.cv;
       const scanner = scannerRef.current;
@@ -694,11 +619,9 @@ export default function MobileScannerPage() {
             willReadFrequently: true,
           });
           if (!detectionCtx) throw new Error("Cannot create detection context");
-
           const scale = DETECTION_WIDTH / video.videoWidth;
           detectionCanvas.width = DETECTION_WIDTH;
           detectionCanvas.height = Math.round(video.videoHeight * scale);
-
           // Draw downscaled image for detection
           detectionCtx.drawImage(
             video,
@@ -707,14 +630,11 @@ export default function MobileScannerPage() {
             detectionCanvas.width,
             detectionCanvas.height,
           );
-
           // Run detection on low-res image
           const mat = cv.imread(detectionCanvas);
           const contour = scanner.findPaperContour(mat);
-
           if (contour) {
             const cornerPoints = scanner.getCornerPoints(contour);
-
             // Scale corner points back to full resolution
             if (cornerPoints) {
               const scaleFactor = 1 / scale;
@@ -736,7 +656,6 @@ export default function MobileScannerPage() {
                   y: cornerPoints.bottomRightCorner.y * scaleFactor,
                 },
               };
-
               // Use scaled corners for extraction
               const {
                 topLeftCorner,
@@ -744,11 +663,9 @@ export default function MobileScannerPage() {
                 bottomLeftCorner,
                 bottomRightCorner,
               } = scaledCorners;
-
               console.log("Document detected at full resolution:", {
                 corners: scaledCorners,
               });
-
               // Calculate width and height of the document
               const topWidth = Math.hypot(
                 topRightCorner.x - topLeftCorner.x,
@@ -766,11 +683,9 @@ export default function MobileScannerPage() {
                 bottomRightCorner.x - topRightCorner.x,
                 bottomRightCorner.y - topRightCorner.y,
               );
-
               // Use average dimensions to maintain proper aspect ratio
               const docWidth = Math.round((topWidth + bottomWidth) / 2);
               const docHeight = Math.round((leftHeight + rightHeight) / 2);
-
               // Extract paper from full-resolution canvas with scaled corner points
               const resultCanvas = scanner.extractPaper(
                 canvas,
@@ -778,10 +693,8 @@ export default function MobileScannerPage() {
                 docHeight,
                 scaledCorners,
               );
-
               // Clean up Mat
               mat.delete();
-
               // Use high quality JPEG compression to preserve image quality
               finalDataUrl = resultCanvas.toDataURL("image/jpeg", 0.95);
             } else {
@@ -805,51 +718,41 @@ export default function MobileScannerPage() {
         // Auto-enhance disabled or jscanify not available - use original at high quality
         finalDataUrl = canvas.toDataURL("image/jpeg", 0.95);
       }
-
       setCurrentPreview(finalDataUrl);
     } finally {
       setIsProcessing(false);
     }
   }, [autoEnhance, openCvReady]);
-
   const handleFileSelect = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = e.target.files;
       if (!files || files.length === 0) return;
-
       const file = files[0];
       const reader = new FileReader();
-
       reader.onload = (event) => {
         if (event.target?.result) {
           setCurrentPreview(event.target.result as string);
         }
       };
-
       reader.readAsDataURL(file);
     },
     [],
   );
-
   const addToBatch = useCallback(() => {
     if (currentPreview) {
       setCapturedImages((prev) => [...prev, currentPreview]);
       setCurrentPreview(null);
     }
   }, [currentPreview]);
-
   const uploadImages = useCallback(async () => {
     const imagesToUpload = currentPreview
       ? [currentPreview, ...capturedImages]
       : capturedImages;
-
     if (imagesToUpload.length === 0) return;
     if (!sessionId) return;
-
     setIsUploading(true);
     setUploadError(null);
     setUploadProgress(0);
-
     try {
       // Convert data URLs to File objects
       const files: File[] = [];
@@ -863,13 +766,11 @@ export default function MobileScannerPage() {
         files.push(file);
         setUploadProgress(((i + 1) / (imagesToUpload.length + 1)) * 50); // 0-50% for conversion
       }
-
       // Upload to backend
       const formData = new FormData();
       files.forEach((file) => {
         formData.append("files", file);
       });
-
       const uploadResponse = await fetch(
         `${API_BASE}/api/v1/mobile-scanner/upload/${sessionId}`,
         {
@@ -877,14 +778,11 @@ export default function MobileScannerPage() {
           body: formData,
         },
       );
-
       if (!uploadResponse.ok) {
         throw new Error("Upload failed");
       }
-
       setUploadProgress(100);
       setUploadSuccess(true);
-
       // Close the mobile tab after successful upload
       setTimeout(() => {
         window.close();
@@ -902,18 +800,14 @@ export default function MobileScannerPage() {
       setIsUploading(false);
     }
   }, [currentPreview, capturedImages, sessionId, navigate, t]);
-
   const retake = useCallback(() => {
     setCurrentPreview(null);
   }, []);
-
   const clearBatch = useCallback(() => {
     setCapturedImages([]);
   }, []);
-
   const toggleTorch = useCallback(async () => {
     if (!streamRef.current) return;
-
     try {
       const videoTrack = streamRef.current.getVideoTracks()[0];
       await videoTrack.applyConstraints({
@@ -925,7 +819,6 @@ export default function MobileScannerPage() {
       console.error("Failed to toggle torch:", err);
     }
   }, [torchEnabled]);
-
   // Show loading while validating
   if (sessionValid === null) {
     return (
@@ -944,7 +837,6 @@ export default function MobileScannerPage() {
       </Box>
     );
   }
-
   // Show error if session is invalid
   if (!sessionValid || !sessionId) {
     return (
@@ -962,7 +854,6 @@ export default function MobileScannerPage() {
       </Box>
     );
   }
-
   if (uploadSuccess) {
     return (
       <Box
@@ -990,7 +881,6 @@ export default function MobileScannerPage() {
       </Box>
     );
   }
-
   return (
     <Box
       style={{
@@ -1016,7 +906,6 @@ export default function MobileScannerPage() {
           <Wordmark alt="Stirling PDF" style={{ height: "24px" }} />
         </Group>
       </Box>
-
       {/* Status Banner - only show during camera loading or errors */}
       {loadingStatus && mode === "camera" && !loadingStatus.includes("✓") && (
         <Box
@@ -1034,7 +923,6 @@ export default function MobileScannerPage() {
           {loadingStatus}
         </Box>
       )}
-
       {uploadError && (
         <Box p="md">
           <Alert
@@ -1047,7 +935,6 @@ export default function MobileScannerPage() {
           </Alert>
         </Box>
       )}
-
       {isUploading && (
         <Box p="sm">
           <Text size="sm" mb="xs">
@@ -1056,7 +943,6 @@ export default function MobileScannerPage() {
           <Progress value={uploadProgress} animated />
         </Box>
       )}
-
       {cameraError && (
         <Box p="md">
           <Alert color="orange" icon={<InfoRoundedIcon />}>
@@ -1064,7 +950,6 @@ export default function MobileScannerPage() {
           </Alert>
         </Box>
       )}
-
       {/* Choice screen */}
       {mode === "choice" && !currentPreview && (
         <Stack
@@ -1084,7 +969,6 @@ export default function MobileScannerPage() {
               )}
             </Text>
           </Stack>
-
           <Stack gap="md" style={{ width: "100%" }}>
             <Card
               shadow="sm"
@@ -1121,7 +1005,6 @@ export default function MobileScannerPage() {
                 </Text>
               </Stack>
             </Card>
-
             <Card
               shadow="sm"
               padding="xl"
@@ -1160,7 +1043,6 @@ export default function MobileScannerPage() {
           </Stack>
         </Stack>
       )}
-
       {/* Camera interface */}
       {mode === "camera" && !currentPreview && (
         <Box
@@ -1172,9 +1054,9 @@ export default function MobileScannerPage() {
           }}
         >
           {/* Back button - floating top left */}
-          <Button
+          <DSButton
             onClick={() => setMode("choice")}
-            variant="filled"
+            variant="primary"
             size="sm"
             style={{
               position: "absolute",
@@ -1187,8 +1069,7 @@ export default function MobileScannerPage() {
             }}
           >
             ← {t("mobileScanner.back", "Back")}
-          </Button>
-
+          </DSButton>
           {/* Video feed - fills available space */}
           <Box
             style={{
@@ -1228,7 +1109,6 @@ export default function MobileScannerPage() {
               }}
             />
           </Box>
-
           {/* Controls bar - fixed at bottom */}
           <Box
             style={{
@@ -1264,25 +1144,22 @@ export default function MobileScannerPage() {
                   </Group>
                 )}
               </Group>
-
               {/* Capture button */}
-              <Button
+              <DSButton
                 fullWidth
-                size="lg"
+                size="md"
                 onClick={captureImage}
                 loading={isProcessing}
-                variant="filled"
-                radius="xl"
+                variant="primary"
               >
                 {isProcessing
                   ? t("mobileScanner.processing", "Processing...")
                   : t("mobileScanner.capture", "Capture")}
-              </Button>
+              </DSButton>
             </Stack>
           </Box>
         </Box>
       )}
-
       {/* File upload interface */}
       {mode === "file" && !currentPreview && (
         <Stack
@@ -1291,15 +1168,14 @@ export default function MobileScannerPage() {
           align="center"
           style={{ maxWidth: "500px", margin: "0 auto" }}
         >
-          <Button
+          <DSButton
             onClick={() => setMode("choice")}
-            variant="subtle"
+            variant="tertiary"
             size="sm"
             style={{ alignSelf: "flex-start" }}
           >
             ← {t("mobileScanner.back", "Back")}
-          </Button>
-
+          </DSButton>
           <Card
             shadow="sm"
             padding="xl"
@@ -1325,20 +1201,18 @@ export default function MobileScannerPage() {
                 style={{ display: "none" }}
                 onChange={handleFileSelect}
               />
-              <Button
+              <DSButton
                 size="lg"
-                variant="filled"
                 fullWidth
                 onClick={() => fileInputRef.current?.click()}
                 leftSection={<AddPhotoAlternateRoundedIcon />}
               >
                 {t("mobileScanner.selectImage", "Select Image")}
-              </Button>
+              </DSButton>
             </Stack>
           </Card>
         </Stack>
       )}
-
       {/* Preview interface */}
       {currentPreview && (
         <Box
@@ -1372,7 +1246,6 @@ export default function MobileScannerPage() {
               }}
             />
           </Box>
-
           {/* Controls bar - fixed at bottom */}
           <Box
             style={{
@@ -1383,28 +1256,26 @@ export default function MobileScannerPage() {
           >
             <Stack gap="sm">
               <Group grow>
-                <Button variant="default" onClick={retake} size="lg">
+                <DSButton variant="secondary" onClick={retake} size="md">
                   {t("mobileScanner.retake", "Retake")}
-                </Button>
-                <Button variant="filled" onClick={addToBatch} size="lg">
+                </DSButton>
+                <DSButton variant="primary" onClick={addToBatch} size="md">
                   {t("mobileScanner.addToBatch", "Add to Batch")}
-                </Button>
+                </DSButton>
               </Group>
-              <Button
+              <DSButton
                 fullWidth
-                variant="filled"
-                size="lg"
+                variant="primary"
+                size="md"
                 onClick={uploadImages}
                 loading={isUploading}
-                radius="xl"
               >
                 {t("mobileScanner.upload", "Upload")}
-              </Button>
+              </DSButton>
             </Stack>
           </Box>
         </Box>
       )}
-
       {capturedImages.length > 0 && (
         <Box p="sm" style={{ borderTop: "1px solid var(--border-subtle)" }}>
           <Group justify="space-between" mb="sm">
@@ -1413,17 +1284,22 @@ export default function MobileScannerPage() {
               )
             </Text>
             <Group gap="xs">
-              <Button
-                size="xs"
-                variant="outline"
+              <DSButton
+                size="sm"
+                variant="secondary"
+                accent="danger"
                 onClick={clearBatch}
-                color="red"
               >
                 {t("mobileScanner.clearBatch", "Clear")}
-              </Button>
-              <Button size="xs" onClick={uploadImages} loading={isUploading}>
+              </DSButton>
+              <DSButton
+                variant="primary"
+                size="sm"
+                onClick={uploadImages}
+                loading={isUploading}
+              >
                 {t("mobileScanner.uploadAll", "Upload All")}
-              </Button>
+              </DSButton>
             </Group>
           </Group>
           <Box

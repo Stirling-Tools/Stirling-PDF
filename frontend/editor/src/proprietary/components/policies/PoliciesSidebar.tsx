@@ -33,6 +33,8 @@ import type {
 import type { WatchedFolder } from "@app/types/watchedFolders";
 import { POLICIES_ENABLED } from "@app/constants/featureFlags";
 import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
+import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { IconBadge } from "@shared/components/IconBadge";
 import {
   deriveRowStatus,
@@ -167,8 +169,9 @@ export function PoliciesSection({
           sidebarTooltip
           pinOnClick
         >
-          <button
+          <ActionIcon
             type="button"
+            variant="tertiary"
             className="pol-info-btn"
             aria-label={t(
               "policies.sidebar.infoAriaLabel",
@@ -181,7 +184,7 @@ export function PoliciesSection({
               height="1.25rem"
               style={{ color: "var(--icon-files-color)" }}
             />
-          </button>
+          </ActionIcon>
         </AppTooltip>
       </div>
 
@@ -199,26 +202,30 @@ export function PoliciesSection({
                       {t(`policies.catalog.${cat.id}`, cat.label)}
                     </span>
                     <span className="pol-row-trail">
-                      <a
-                        className="pol-row-upgrade"
-                        href="https://stirling.com/contact"
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <Button
+                        variant="tertiary"
+                        size="sm"
+                        accent="neutral"
+                        onClick={() =>
+                          window.open("https://stirling.com/contact", "_blank")
+                        }
                       >
                         {t(
                           "policies.sidebar.upgradeToEnterprise",
                           "Upgrade to enterprise",
                         )}
-                      </a>
+                      </Button>
                     </span>
                   </div>
                 );
               }
               const status = deriveRowStatus(pol.policies[cat.id]);
               return (
-                <button
+                <Button
                   key={cat.id}
                   type="button"
+                  variant="tertiary"
+                  hover={false}
                   className="pol-row"
                   onClick={() =>
                     guestBlocked ? promptGuestSignup() : selectPolicy(cat.id)
@@ -248,7 +255,7 @@ export function PoliciesSection({
                       sx={{ fontSize: "1rem" }}
                     />
                   </span>
-                </button>
+                </Button>
               );
             })}
           </div>
@@ -508,8 +515,10 @@ export function PoliciesCollapsedButton({
               arrow
               delay={300}
             >
-              <button
+              <Button
                 type="button"
+                variant="tertiary"
+                hover={false}
                 className="pol-crail-btn"
                 data-status={status}
                 aria-label={t(
@@ -530,7 +539,7 @@ export function PoliciesCollapsedButton({
                 {(status === "active" || status === "paused") && (
                   <span className="pol-crail-dot" data-status={status} />
                 )}
-              </button>
+              </Button>
             </AppTooltip>
           );
         })}

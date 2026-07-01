@@ -167,28 +167,26 @@ export function SingleOpRunner({
               </StatusBadge>
             )}
           </div>
-          <Button variant="ghost" onClick={onClose}>
+          <Button variant="tertiary" onClick={onClose}>
             {t("opRunner.action.close")}
           </Button>
           {phase === "done" ? (
             <>
-              <Button variant="outline" onClick={reset}>
+              <Button variant="secondary" onClick={reset}>
                 {t("opRunner.action.runAgain")}
               </Button>
               <Button
-                variant="gradient"
                 onClick={buildPipelineWithOp}
-                trailingIcon={<span aria-hidden>→</span>}
+                rightSection={<span aria-hidden>→</span>}
               >
                 {t("opRunner.action.openBuilder")}
               </Button>
             </>
           ) : (
             <Button
-              variant="gradient"
               onClick={run}
               disabled={phase === "running" || !selectedOp}
-              trailingIcon={<span aria-hidden>→</span>}
+              rightSection={<span aria-hidden>→</span>}
             >
               {phase === "running"
                 ? t("opRunner.action.running")
@@ -239,15 +237,16 @@ export function SingleOpRunner({
                 </>
               )}
             </div>
-            <button
-              type="button"
+            <Button
+              variant="tertiary"
+              size="sm"
               className="portal-runner__sample-btn"
               onClick={pickSample}
             >
               {sample
                 ? t("opRunner.drop.pickAnother")
                 : t("opRunner.drop.useSample")}
-            </button>
+            </Button>
           </div>
 
           <div>
@@ -275,9 +274,9 @@ export function SingleOpRunner({
                 />
               )}
               {ops?.map((op) => (
-                <button
+                <Button
                   key={op.id}
-                  type="button"
+                  variant="tertiary"
                   className={
                     "portal-runner__op" +
                     (selectedOpId === op.id ? " is-selected" : "")
@@ -296,7 +295,7 @@ export function SingleOpRunner({
                     {op.endpoint}
                   </span>
                   <span className="portal-runner__op-blurb">{op.blurb}</span>
-                </button>
+                </Button>
               ))}
             </div>
           </div>

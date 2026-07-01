@@ -18,19 +18,17 @@ import LoginHeader from "@app/routes/login/LoginHeader";
 import ErrorMessage from "@shared/auth/ui/ErrorMessage";
 import { BASE_PATH } from "@app/constants/app";
 import apiClient from "@app/services/apiClient";
-
+import { Button } from "@shared/components/Button";
 interface InviteData {
   email: string | null;
   role: string;
   expiresAt: string;
   emailRequired: boolean;
 }
-
 export default function InviteAccept() {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
   const { t } = useTranslation();
-
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [inviteData, setInviteData] = useState<InviteData | null>(null);
@@ -38,9 +36,7 @@ export default function InviteAccept() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-
   const baseUrl = window.location.origin + BASE_PATH;
-
   // Set document meta
   useDocumentMeta({
     title: `${t("invite.welcome", "Welcome to Stirling PDF")} - Stirling PDF`,
@@ -56,17 +52,14 @@ export default function InviteAccept() {
     ogImage: `${baseUrl}/og_images/home.png`,
     ogUrl: `${window.location.origin}${window.location.pathname}`,
   });
-
   useEffect(() => {
     if (!token) {
       setError(t("invite.invalidToken", "Invalid invitation link"));
       setLoading(false);
       return;
     }
-
     validateToken();
   }, [token]);
-
   const validateToken = async () => {
     try {
       setLoading(true);
@@ -88,10 +81,8 @@ export default function InviteAccept() {
       setLoading(false);
     }
   };
-
   const handleAccept = async (e: React.FormEvent) => {
     e.preventDefault();
-
     // Validate email if required
     if (inviteData?.emailRequired) {
       if (!email || email.trim().length === 0) {
@@ -103,32 +94,26 @@ export default function InviteAccept() {
         return;
       }
     }
-
     // Validate passwords
     if (!password) {
       setError(t("invite.passwordRequired", "Password is required"));
       return;
     }
-
     if (password !== confirmPassword) {
       setError(t("invite.passwordMismatch", "Passwords do not match"));
       return;
     }
-
     try {
       setSubmitting(true);
       setError(null);
-
       const formData = new FormData();
       if (inviteData?.emailRequired) {
         formData.append("email", email.trim().toLowerCase());
       }
       formData.append("password", password);
-
       await apiClient.post(`/api/v1/invite/accept/${token}`, formData, {
         suppressErrorToast: true,
       });
-
       // Success - redirect to login
       navigate("/login?messageType=accountCreated");
     } catch (err: unknown) {
@@ -141,7 +126,6 @@ export default function InviteAccept() {
       setSubmitting(false);
     }
   };
-
   if (loading) {
     return (
       <AuthLayout>
@@ -154,7 +138,6 @@ export default function InviteAccept() {
       </AuthLayout>
     );
   }
-
   if (error && !inviteData) {
     return (
       <AuthLayout>
@@ -163,18 +146,17 @@ export default function InviteAccept() {
         />
         <ErrorMessage error={error} />
         <div className="auth-section">
-          <button
+          <Button
             type="button"
             onClick={() => navigate("/login")}
             className="w-full px-4 py-[0.75rem] rounded-[0.625rem] text-base font-semibold cursor-pointer border-0 auth-cta-button"
           >
             {t("invite.goToLogin", "Go to Login")}
-          </button>
+          </Button>
         </div>
       </AuthLayout>
     );
   }
-
   return (
     <AuthLayout>
       <LoginHeader
@@ -184,7 +166,6 @@ export default function InviteAccept() {
           "Complete your account setup to get started",
         )}
       />
-
       {inviteData && !inviteData.emailRequired && (
         <Paper
           withBorder
@@ -214,9 +195,7 @@ export default function InviteAccept() {
           </Stack>
         </Paper>
       )}
-
       <ErrorMessage error={error} />
-
       <form onSubmit={handleAccept}>
         <Stack gap="md">
           {inviteData?.emailRequired && (
@@ -234,7 +213,6 @@ export default function InviteAccept() {
               autoComplete="email"
             />
           )}
-
           <PasswordInput
             label={t("invite.choosePassword", "Choose a password")}
             value={password}
@@ -244,7 +222,6 @@ export default function InviteAccept() {
             required
             autoComplete="new-password"
           />
-
           <PasswordInput
             label={t("invite.confirmPassword", "Confirm password")}
             value={confirmPassword}
@@ -257,9 +234,8 @@ export default function InviteAccept() {
             required
             autoComplete="new-password"
           />
-
           <div className="auth-section">
-            <button
+            <Button
               type="submit"
               disabled={submitting}
               className="w-full px-4 py-[0.75rem] rounded-[0.625rem] text-base font-semibold cursor-pointer border-0 disabled:opacity-50 disabled:cursor-not-allowed auth-cta-button"
@@ -267,11 +243,10 @@ export default function InviteAccept() {
               {submitting
                 ? t("invite.creating", "Creating Account...")
                 : t("invite.createAccount", "Create Account")}
-            </button>
+            </Button>
           </div>
         </Stack>
       </form>
-
       <Center mt="md">
         <Text size="sm" c="dimmed">
           {t("invite.alreadyHaveAccount", "Already have an account?")}{" "}

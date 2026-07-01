@@ -1,5 +1,6 @@
 import React from "react";
-import { Box, ActionIcon } from "@mantine/core";
+import { Box } from "@mantine/core";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 
@@ -27,11 +28,11 @@ const NavigationArrows: React.FC<NavigationArrowsProps> = ({
     <Box style={{ position: "relative", width: "100%", height: "100%" }}>
       {/* Left Navigation Arrow */}
       <ActionIcon
-        variant="light"
+        variant="secondary"
         size="sm"
         onClick={onPrevious}
-        color="blue"
         disabled={disabled}
+        aria-label="Previous"
         style={{
           ...navigationArrowStyle,
           left: "0",
@@ -55,11 +56,11 @@ const NavigationArrows: React.FC<NavigationArrowsProps> = ({
 
       {/* Right Navigation Arrow */}
       <ActionIcon
-        variant="light"
+        variant="secondary"
         size="sm"
         onClick={onNext}
-        color="blue"
         disabled={disabled}
+        aria-label="Next"
         style={{
           ...navigationArrowStyle,
           right: "0",

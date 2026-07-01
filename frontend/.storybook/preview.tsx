@@ -15,7 +15,7 @@ void React;
 
 import { TierProvider, type Tier } from "@portal/contexts/TierContext";
 import { LinkProvider, type LinkState } from "@portal/contexts/LinkContext";
-import { ThemeProvider } from "@portal/contexts/ThemeContext";
+import { ThemeProvider, useTheme } from "@portal/contexts/ThemeContext";
 import { UIProvider } from "@portal/contexts/UIContext";
 import { mantineTheme } from "@portal/theme/mantineTheme";
 import { handlers } from "@portal/mocks/handlers";
@@ -79,13 +79,21 @@ function TierKey({
   );
 }
 
-/** Keeps useTheme() and the data-theme attribute in sync. */
-function ThemeWatcher() {
+/**
+ * Makes the Storybook toolbar the SINGLE source of truth for the theme.
+ */
+function ThemeBridge({
+  theme,
+  children,
+}: {
+  theme: "light" | "dark";
+  children: React.ReactNode;
+}) {
+  const { setTheme } = useTheme();
   useEffect(() => {
-    // The addon-themes decorator already sets data-theme on <html>.
-    // We just read it on mount so ThemeProvider picks it up.
-  }, []);
-  return null;
+    setTheme(theme);
+  }, [theme, setTheme]);
+  return <>{children}</>;
 }
 
 const withProviders: Decorator = (Story, context) => {
@@ -102,18 +110,19 @@ const withProviders: Decorator = (Story, context) => {
   return (
     <MemoryRouter initialEntries={["/"]}>
       <ThemeProvider>
-        <MantineProvider theme={mantineTheme} forceColorScheme={colorScheme}>
-          {/* LinkProvider must wrap TierProvider: TierContext derives its tier
-              from useLink() (matches App.tsx's nesting). */}
-          <LinkProvider key={linkState} initialState={linkState}>
-            <TierKey tier={tier}>
-              <UIProvider>
-                <ThemeWatcher />
-                <Story />
-              </UIProvider>
-            </TierKey>
-          </LinkProvider>
-        </MantineProvider>
+        <ThemeBridge theme={colorScheme}>
+          <MantineProvider theme={mantineTheme} forceColorScheme={colorScheme}>
+            {/* LinkProvider must wrap TierProvider: TierContext derives its tier
+                from useLink() (matches App.tsx's nesting). */}
+            <LinkProvider key={linkState} initialState={linkState}>
+              <TierKey tier={tier}>
+                <UIProvider>
+                  <Story />
+                </UIProvider>
+              </TierKey>
+            </LinkProvider>
+          </MantineProvider>
+        </ThemeBridge>
       </ThemeProvider>
     </MemoryRouter>
   );

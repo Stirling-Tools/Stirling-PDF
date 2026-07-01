@@ -1,4 +1,4 @@
-import type { ChipTone, StatusTone } from "@shared/components";
+import type { ChipAccent, StatusTone } from "@shared/components";
 import type {
   ApiKeyStatus,
   AttestationStatus,
@@ -135,11 +135,11 @@ export const MODEL_TYPE_LABEL: Record<ModelType, string> = {
   llm: "LLM",
 };
 
-export const MODEL_TYPE_TONE: Record<ModelType, ChipTone> = {
-  extraction: "blue",
-  classification: "purple",
-  ocr: "green",
-  llm: "amber",
+export const MODEL_TYPE_TONE: Record<ModelType, ChipAccent> = {
+  extraction: "default",
+  classification: "premium",
+  ocr: "success",
+  llm: "warning",
 };
 
 export const MODEL_PROVIDER_LABEL: Record<ModelProvider, string> = {

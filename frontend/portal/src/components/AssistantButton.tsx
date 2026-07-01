@@ -1,14 +1,15 @@
 import { useTranslation } from "react-i18next";
 import { useUI } from "@portal/contexts/UIContext";
 import { SparklesIcon } from "@portal/components/icons";
+import { Button } from "@shared/components/Button";
 import "@portal/components/AssistantButton.css";
 
 export function AssistantButton() {
   const { assistantOpen, toggleAssistant } = useUI();
   const { t } = useTranslation();
   return (
-    <button
-      type="button"
+    <Button
+      variant="tertiary"
       className={"portal-assistant-btn" + (assistantOpen ? " is-active" : "")}
       onClick={toggleAssistant}
       aria-label={assistantOpen ? t("assistant.close") : t("assistant.open")}
@@ -33,6 +34,6 @@ export function AssistantButton() {
       ) : (
         <SparklesIcon size={22} />
       )}
-    </button>
+    </Button>
   );
 }

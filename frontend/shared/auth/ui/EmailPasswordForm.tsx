@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
+import { Button } from "@shared/components/Button";
 import "@shared/auth/ui/auth.css";
-import { TextInput, PasswordInput, Button } from "@mantine/core";
+import { TextInput, PasswordInput } from "@mantine/core";
 
 // Force light mode styles for auth inputs
 const authInputStyles = {
@@ -128,18 +129,11 @@ export default function EmailPasswordForm({
           (showPasswordField && !password) ||
           (requiresMfa && !mfaCode.trim())
         }
-        className="auth-button"
         fullWidth
         loading={isSubmitting}
-        styles={{
-          // Own the brand colour inline so the host app's Mantine primaryColor
-          // can't win over .auth-button (editor vs portal Mantine themes
-          // differ). The fallback keeps it red even if auth-theme.css is absent.
-          root: {
-            backgroundColor: "var(--auth-button-bg-light-only, #af3434)",
-            color: "var(--auth-button-text-light-only, #ffffff)",
-          },
-        }}
+        // Stirling-red brand CTA; the brand accent sets the colour inline so the
+        // host app's Mantine primaryColor can't win (editor vs portal differ).
+        accent="brand"
       >
         {submitButtonText}
       </Button>

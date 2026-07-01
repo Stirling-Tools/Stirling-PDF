@@ -66,11 +66,10 @@ function ProductCard({
       </div>
       <p className="portal-home__product-blurb">{blurb}</p>
       <Button
-        variant="outline"
-        accent={accent}
+        variant="secondary"
         size="sm"
         onClick={() => setActiveView(target)}
-        trailingIcon={<span aria-hidden>→</span>}
+        rightSection={<span aria-hidden>→</span>}
       >
         {cta}
       </Button>
@@ -129,8 +128,10 @@ function QuickActions({ onTryOp }: { onTryOp: () => void }) {
         </span>
       </div>
       <div className="portal-home__quick-list">
-        <button
-          type="button"
+        <Button
+          variant="tertiary"
+          justify="start"
+          fullWidth
           className="portal-home__quick-row"
           onClick={onTryOp}
         >
@@ -151,9 +152,11 @@ function QuickActions({ onTryOp }: { onTryOp: () => void }) {
           <span className="portal-home__quick-arrow" aria-hidden>
             →
           </span>
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          variant="tertiary"
+          justify="start"
+          fullWidth
           className="portal-home__quick-row"
           onClick={() => setActiveView("pipelines")}
         >
@@ -174,9 +177,11 @@ function QuickActions({ onTryOp }: { onTryOp: () => void }) {
           <span className="portal-home__quick-arrow" aria-hidden>
             →
           </span>
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          variant="tertiary"
+          justify="start"
+          fullWidth
           className="portal-home__quick-row"
           onClick={() => setActiveView("sources")}
         >
@@ -197,9 +202,11 @@ function QuickActions({ onTryOp }: { onTryOp: () => void }) {
           <span className="portal-home__quick-arrow" aria-hidden>
             →
           </span>
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          variant="tertiary"
+          justify="start"
+          fullWidth
           className="portal-home__quick-row"
           onClick={() => setActiveView("infrastructure")}
         >
@@ -220,7 +227,7 @@ function QuickActions({ onTryOp }: { onTryOp: () => void }) {
           <span className="portal-home__quick-arrow" aria-hidden>
             →
           </span>
-        </button>
+        </Button>
       </div>
     </Card>
   );
@@ -242,7 +249,7 @@ function FreeOnboarding({ onTryOp }: { onTryOp: () => void }) {
   function renderCta(step: OnboardingStep) {
     if (step.done) {
       return (
-        <Button size="sm" variant="ghost" onClick={onTryOp}>
+        <Button size="sm" variant="tertiary" onClick={onTryOp}>
           {t("home.onboarding.runAgain")}
         </Button>
       );
@@ -250,8 +257,8 @@ function FreeOnboarding({ onTryOp }: { onTryOp: () => void }) {
     if (!step.cta) return null;
     if (step.cta.kind === "try-op") {
       return (
-        <Button size="sm" variant="outline" onClick={onTryOp}>
-          {t("home.onboarding.start")}
+        <Button size="sm" variant="secondary" onClick={onTryOp}>
+          {t("home.onboarding.start", "Start")}
         </Button>
       );
     }
@@ -259,7 +266,7 @@ function FreeOnboarding({ onTryOp }: { onTryOp: () => void }) {
     return (
       <Button
         size="sm"
-        variant="outline"
+        variant="secondary"
         onClick={() => setActiveView(target as ViewId)}
       >
         {t("home.onboarding.start")}

@@ -61,8 +61,8 @@ export const Default: Story = {
           onClose={() => {}}
           footer={
             <>
-              <Button variant="ghost">Cancel</Button>
-              <Button variant="gradient">Save changes</Button>
+              <Button variant="tertiary">Cancel</Button>
+              <Button>Save changes</Button>
             </>
           }
         >

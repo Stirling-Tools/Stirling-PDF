@@ -1,5 +1,5 @@
+import { Button, Card, type CardProps } from "@shared/components";
 import { useTranslation } from "react-i18next";
-import { Card, type CardProps } from "@shared/components";
 import { useView } from "@portal/contexts/ViewContext";
 import "@portal/components/PopularUseCases.css";
 
@@ -38,14 +38,18 @@ export function PopularUseCases() {
   return (
     <section className="portal-usecases" aria-label={t("useCases.title")}>
       <header className="portal-usecases__head">
-        <h2 className="portal-usecases__title">{t("useCases.title")}</h2>
-        <button
-          type="button"
+        <h2 className="portal-usecases__title">
+          {t("useCases.title", "Popular use cases")}
+        </h2>
+        <Button
+          variant="tertiary"
+          size="sm"
           className="portal-usecases__viewall"
           onClick={() => setActiveView("pipelines")}
+          rightSection={<span aria-hidden>→</span>}
         >
-          {t("useCases.viewAll")} <span aria-hidden>→</span>
-        </button>
+          {t("useCases.viewAll", "View all pipelines")}
+        </Button>
       </header>
       <div className="portal-usecases__grid">
         {USE_CASES.map((uc) => (
@@ -67,14 +71,14 @@ export function PopularUseCases() {
             <p className="portal-usecases__blurb">
               {t(`useCases.items.${uc.key}.blurb`)}
             </p>
-            <button
+            <Button
               type="button"
               className="portal-usecases__cta"
               style={{ color: ACCENT_COLOR[uc.accent] }}
               onClick={() => setActiveView("pipelines")}
             >
               {t(`useCases.items.${uc.key}.cta`)} <span aria-hidden>→</span>
-            </button>
+            </Button>
           </Card>
         ))}
       </div>

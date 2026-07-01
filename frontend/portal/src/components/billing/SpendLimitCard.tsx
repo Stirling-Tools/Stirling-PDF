@@ -145,7 +145,9 @@ export function SpendLimitCard({
         />
 
         {proj && draftCap !== proj.suggestedMajor && (
-          <button
+          <Button
+            variant="tertiary"
+            hover={false}
             type="button"
             className="portal-billing__suggested"
             onClick={() => setDraftCap(proj.suggestedMajor)}
@@ -157,7 +159,7 @@ export function SpendLimitCard({
                 amount: formatMoneyMajor(proj.suggestedMajor, wallet.currency),
               },
             )}
-          </button>
+          </Button>
         )}
 
         <div className="portal-billing__guardrail">
@@ -181,13 +183,13 @@ export function SpendLimitCard({
 
         <div className="portal-billing__edit-actions">
           <Button
-            variant="outline"
+            variant="secondary"
             size="sm"
             onClick={() => onAdjustingChange(false)}
           >
             {t("billing.spendLimit.cancel", "Cancel")}
           </Button>
-          <Button variant="gradient" size="sm" loading={saving} onClick={save}>
+          <Button variant="primary" size="sm" loading={saving} onClick={save}>
             {t("billing.spendLimit.save", "Save limit")}
           </Button>
         </div>
@@ -220,7 +222,7 @@ export function SpendLimitCard({
         </div>
         {isLeader && (
           <Button
-            variant="outline"
+            variant="secondary"
             size="sm"
             onClick={() => onAdjustingChange(true)}
           >

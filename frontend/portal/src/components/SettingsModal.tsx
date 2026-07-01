@@ -258,10 +258,10 @@ export function SettingsModal({
             <span className="portal-settings__footer-note">
               {t("settings.footerNote")}
             </span>
-            <Button variant="ghost" onClick={onClose}>
+            <Button variant="tertiary" onClick={onClose}>
               {t("settings.cancel")}
             </Button>
-            <Button variant="gradient" onClick={onClose}>
+            <Button accent="brand" onClick={onClose}>
               {t("settings.saveChanges")}
             </Button>
           </>
@@ -399,7 +399,7 @@ function ProfilePanel({
           </div>
           <span className="portal-settings__identity-email">{email}</span>
         </div>
-        <Button variant="outline" size="sm" disabled>
+        <Button variant="secondary" size="sm" disabled>
           {t("settings.profile.changePhoto")}
         </Button>
       </div>
@@ -456,9 +456,9 @@ function AppearancePanel({
           aria-label={t("settings.appearance.themeTitle")}
         >
           {THEME_OPTIONS.map((opt) => (
-            <button
+            <Button
+              variant="tertiary"
               key={opt.value}
-              type="button"
               role="radio"
               aria-checked={theme === opt.value}
               className={
@@ -478,7 +478,7 @@ function AppearancePanel({
                 <strong>{t(`settings.appearance.${opt.value}.label`)}</strong>
                 <span>{t(`settings.appearance.${opt.value}.hint`)}</span>
               </span>
-            </button>
+            </Button>
           ))}
         </div>
       </div>
@@ -631,7 +631,7 @@ function WorkspacePanel({
             </span>
           </div>
         )}
-        <Button variant="outline" size="sm" disabled>
+        <Button variant="secondary" size="sm" disabled>
           {t("settings.workspace.manageBilling")}
         </Button>
       </div>
@@ -799,7 +799,7 @@ function SessionsPanel({
                 </StatusBadge>
               ) : (
                 // TODO(backend): DELETE /v1/settings/sessions/{id}
-                <Button variant="ghost" size="sm">
+                <Button variant="tertiary" size="sm">
                   {t("settings.sessions.revoke")}
                 </Button>
               )}

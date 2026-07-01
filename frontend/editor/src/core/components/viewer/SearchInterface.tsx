@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Box, TextInput, ActionIcon, Text, Group } from "@mantine/core";
+import { Box, TextInput, Text, Group } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { LocalIcon } from "@app/components/shared/LocalIcon";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { ViewerContext } from "@app/contexts/ViewerContext";
 
 interface SearchInterfaceProps {
@@ -200,7 +201,7 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
           {t("search.title", "Search PDF")}
         </Text>
         <ActionIcon
-          variant="subtle"
+          variant="tertiary"
           size="sm"
           onClick={handleCloseClick}
           aria-label={t("viewer.search.close", "Close search")}
@@ -225,7 +226,7 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
           rightSection={
             searchQuery.trim() && (
               <ActionIcon
-                variant="subtle"
+                variant="tertiary"
                 onClick={handleClearSearch}
                 aria-label={t("viewer.search.clear", "Clear search")}
               >
@@ -275,7 +276,7 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
 
         <Group gap="xs">
           <ActionIcon
-            variant="subtle"
+            variant="tertiary"
             size="sm"
             onClick={handlePrevious}
             disabled={!resultInfo || resultInfo.currentIndex <= 1}
@@ -284,7 +285,7 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
             <LocalIcon icon="keyboard-arrow-up" width="1rem" height="1rem" />
           </ActionIcon>
           <ActionIcon
-            variant="subtle"
+            variant="tertiary"
             size="sm"
             onClick={handleNext}
             disabled={

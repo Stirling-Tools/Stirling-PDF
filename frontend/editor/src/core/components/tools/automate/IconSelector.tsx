@@ -1,14 +1,7 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Box,
-  Text,
-  Stack,
-  Button,
-  SimpleGrid,
-  Tooltip,
-  Popover,
-} from "@mantine/core";
+import { Box, Text, Stack, SimpleGrid, Tooltip, Popover } from "@mantine/core";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { iconMap, iconOptions } from "@app/components/tools/automate/iconMap";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
@@ -58,12 +51,13 @@ export default function IconSelector({
         zIndex={Z_INDEX_AUTOMATE_DROPDOWN}
       >
         <Popover.Target>
-          <Button
-            variant="outline"
+          <ActionIcon
+            variant="secondary"
             size={size}
+            aria-label={t("automate.creation.icon.label", "Icon")}
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             style={{
-              width: size === "sm" ? "3.75rem" : "4.375rem",
+              width: size === "sm" ? "2.5rem" : "3rem",
               position: "relative",
               display: "flex",
               justifyContent: "flex-start",
@@ -84,7 +78,7 @@ export default function IconSelector({
                 transform: "translateY(-50%)",
               }}
             />
-          </Button>
+          </ActionIcon>
         </Popover.Target>
 
         <Popover.Dropdown>

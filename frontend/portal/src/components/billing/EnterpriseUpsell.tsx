@@ -30,7 +30,7 @@ export function EnterpriseUpsell({ bare = false }: Props) {
           </p>
         </div>
         {/* Destination wired when the enterprise/sales URL is confirmed. */}
-        <Button variant="gradient" size="sm" disabled>
+        <Button variant="primary" accent="premium" size="sm" disabled>
           {t("billing.enterpriseUpsell.cta", "Build your Enterprise quote")}
         </Button>
       </div>

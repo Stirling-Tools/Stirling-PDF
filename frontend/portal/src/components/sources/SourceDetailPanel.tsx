@@ -41,7 +41,7 @@ export function SourceDetailPanel({
         ) : (
           <div className="portal-sources__chips">
             {source.referencingPolicies.map((policy) => (
-              <Chip key={policy.id} tone="blue" size="sm">
+              <Chip key={policy.id} size="sm">
                 {policy.name}
               </Chip>
             ))}

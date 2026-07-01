@@ -33,6 +33,34 @@ const baseRestrictedImportPatterns = [
   },
 ];
 
+// Button/SegmentedControl/Chip must come from shared/components, not Mantine or raw elements.
+// If no variant fits, extend shared/ — that layer is exempt below.
+const sharedComponentSyntaxRestrictions = [
+  {
+    selector:
+      "ImportDeclaration[source.value='@mantine/core'] > ImportSpecifier[imported.name=/^(Button|ActionIcon|UnstyledButton|CloseButton|FileButton)$/]",
+    message:
+      'Use the shared Button (@shared/components/Button) instead of the Mantine button family. variant=primary|secondary|tertiary, accent=default|neutral|brand|ai|premium|danger|success|warning; an icon-only button is `<Button leftSection={…} aria-label="…" />`. If no variant fits, extend the shared Button rather than importing Mantine.',
+  },
+  {
+    selector:
+      "ImportDeclaration[source.value='@mantine/core'] > ImportSpecifier[imported.name='SegmentedControl']",
+    message:
+      "Use the shared SegmentedControl (@shared/components/SegmentedControl) instead of Mantine's.",
+  },
+  {
+    selector:
+      "ImportDeclaration[source.value='@mantine/core'] > ImportSpecifier[imported.name=/^(Chip|Pill)$/]",
+    message:
+      "Use the shared Chip (@shared/components/Chip) instead of Mantine's Chip/Pill.",
+  },
+  {
+    selector: "JSXOpeningElement[name.name='button']",
+    message:
+      "Use the shared Button (@shared/components/Button) instead of a raw <button> element. If no variant fits, extend the shared Button.",
+  },
+];
+
 export default defineConfig(
   {
     // Everything that contains 3rd party code that we don't want to lint
@@ -152,6 +180,7 @@ export default defineConfig(
       ],
       "no-restricted-syntax": [
         "error",
+        ...sharedComponentSyntaxRestrictions,
         {
           selector:
             "MemberExpression[object.name='window'][property.name='location']",
@@ -204,6 +233,35 @@ export default defineConfig(
           ],
         },
       ],
+    },
+  },
+  // app code must use shared DS Button/SegmentedControl/Chip; cloud/ covered above, shared/ exempt.
+  {
+    files: [
+      "editor/src/**/*.{js,mjs,jsx,ts,tsx}",
+      "portal/src/**/*.{js,mjs,jsx,ts,tsx}",
+    ],
+    ignores: [
+      "editor/src/cloud/**/*.{js,mjs,jsx,ts,tsx}", // covered by cloud/ block above
+      "**/*.stories.{js,mjs,jsx,ts,tsx}", // stories may demo Mantine directly
+      "**/*.test.{js,mjs,jsx,ts,tsx}", // tests may use raw elements as fixtures
+      "editor/src/prototypes/**/*.{js,mjs,jsx,ts,tsx}", // not shipped
+    ],
+    rules: {
+      "no-restricted-syntax": ["error", ...sharedComponentSyntaxRestrictions],
+    },
+  },
+  // Intentional exceptions: ARIA tablist tabs and sub-26px segmented header —
+  // semantically not buttons; shared Button sizing can't represent them.
+  // Do NOT add ordinary buttons here.
+  {
+    files: [
+      "editor/src/core/components/shared/FileSelectorPicker.tsx",
+      "editor/src/core/components/filesPage/FileManagerView.tsx",
+      "editor/src/core/pages/HomePage.tsx",
+    ],
+    rules: {
+      "no-restricted-syntax": "off",
     },
   },
   // Stricter rules that not all sub-folders are conformant to yet.

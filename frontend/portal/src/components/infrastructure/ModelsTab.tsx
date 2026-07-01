@@ -46,9 +46,7 @@ export function ModelsTab() {
       render: (m) => (
         <div className="portal-infra__cell-stack">
           <span className="portal-infra__cell-strong">{m.name}</span>
-          <Chip tone="neutral" size="sm">
-            {MODEL_PROVIDER_LABEL[m.provider]}
-          </Chip>
+          <Chip size="sm">{MODEL_PROVIDER_LABEL[m.provider]}</Chip>
         </div>
       ),
     },
@@ -56,7 +54,7 @@ export function ModelsTab() {
       key: "type",
       header: t("infrastructure.models.columns.type"),
       render: (m) => (
-        <Chip tone={MODEL_TYPE_TONE[m.type]} size="sm">
+        <Chip accent={MODEL_TYPE_TONE[m.type]} size="sm">
           {MODEL_TYPE_LABEL[m.type]}
         </Chip>
       ),
@@ -134,7 +132,7 @@ export function ModelsTab() {
         <div className="portal-infra__cell-stack">
           <span className="portal-infra__cell-strong">{r.operation}</span>
           {r.isDefault && (
-            <Chip tone="blue" size="sm">
+            <Chip size="sm">
               {t("infrastructure.models.routingColumns.default")}
             </Chip>
           )}

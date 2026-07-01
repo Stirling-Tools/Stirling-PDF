@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { Modal, Stack, Text, Button, Group, Alert } from "@mantine/core";
+import { Modal, Stack, Text, Group, Alert } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { useTranslation } from "react-i18next";
 
@@ -120,7 +121,7 @@ const UploadToServerModal: React.FC<UploadToServerModalProps> = ({
         )}
 
         <Group justify="flex-end" gap="sm">
-          <Button variant="default" onClick={onClose} disabled={isUploading}>
+          <Button variant="secondary" onClick={onClose} disabled={isUploading}>
             {t("cancel", "Cancel")}
           </Button>
           <Button

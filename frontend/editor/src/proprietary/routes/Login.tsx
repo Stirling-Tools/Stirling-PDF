@@ -6,6 +6,7 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { Text, Stack, Alert } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { setPostLoginRedirectPath } from "@shared/auth/spring/springAuthClient";
 import { useAuth } from "@app/auth/UseSession";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
@@ -435,14 +436,14 @@ export default function Login() {
               "The application cannot currently connect to the backend. Verify the backend status and network connectivity, then try again.",
             )}
           </p>
-          <button
+          <Button
             type="button"
             onClick={handleRetry}
             className="auth-cta-button px-4 py-[0.75rem] rounded-[0.625rem] text-base font-semibold mt-5 border-0 cursor-pointer"
             style={{ width: "fit-content" }}
           >
             {t("backendStartup.retry", "Retry")}
-          </button>
+          </Button>
         </div>
       </AuthLayout>
     );
@@ -486,14 +487,16 @@ export default function Login() {
         beforeEmailForm={
           hasSSOProviders && !showEmailForm && isUserPassAllowed ? (
             <div className="auth-section">
-              <button
+              <Button
                 type="button"
+                variant="tertiary"
+                hover={false}
                 onClick={() => setShowEmailForm(true)}
                 disabled={login.isSubmitting}
                 className="w-full px-4 py-[0.75rem] rounded-[0.625rem] text-base font-semibold mb-2 cursor-pointer border-0 disabled:opacity-50 disabled:cursor-not-allowed auth-cta-button"
               >
                 {t("login.useEmailInstead", "Login with email")}
-              </button>
+              </Button>
             </div>
           ) : undefined
         }

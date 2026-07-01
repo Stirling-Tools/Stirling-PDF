@@ -1,5 +1,6 @@
 import { useRef, useEffect } from "react";
-import { Modal, Text, Button, Group, Stack } from "@mantine/core";
+import { Modal, Text, Group, Stack } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useNavigationGuard } from "@app/contexts/NavigationContext";
 import { useTranslation } from "react-i18next";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -103,10 +104,12 @@ const NavigationWarningModal = () => {
         <Group justify="space-between" gap="xl" visibleFrom="md">
           <Group gap="sm">
             <Button
-              variant="light"
-              color="var(--mantine-color-gray-8)"
+              variant="secondary"
+              accent="neutral"
               onClick={handleKeepWorking}
-              w={BUTTON_WIDTH}
+              style={{
+                width: BUTTON_WIDTH,
+              }}
               leftSection={<ArrowBackIcon fontSize="small" />}
             >
               {t("keepWorking", "Keep Working")}
@@ -114,19 +117,19 @@ const NavigationWarningModal = () => {
           </Group>
           <Group gap="sm">
             <Button
-              variant="filled"
-              color="var(--mantine-color-red-9)"
+              accent="danger"
               onClick={handleDiscardChanges}
-              w={BUTTON_WIDTH}
+              style={{
+                width: BUTTON_WIDTH,
+              }}
               leftSection={<DeleteOutlineIcon fontSize="small" />}
             >
               {t("discardChanges", "Discard Changes")}
             </Button>
             {hasApply && (
               <Button
-                variant="filled"
                 onClick={handleApplyAndContinue}
-                w={BUTTON_WIDTH}
+                style={{ width: BUTTON_WIDTH }}
                 leftSection={<CheckCircleOutlineIcon fontSize="small" />}
               >
                 {t("applyAndContinue", "Apply & Leave")}
@@ -134,9 +137,8 @@ const NavigationWarningModal = () => {
             )}
             {hasExport && (
               <Button
-                variant="filled"
                 onClick={handleExportAndContinue}
-                w={BUTTON_WIDTH}
+                style={{ width: BUTTON_WIDTH }}
                 leftSection={<CheckCircleOutlineIcon fontSize="small" />}
               >
                 {t("exportAndContinue", "Export & Leave")}
@@ -148,28 +150,28 @@ const NavigationWarningModal = () => {
         {/* Mobile layout: centered stack of 4 buttons */}
         <Stack align="center" gap="sm" hiddenFrom="md">
           <Button
-            variant="light"
-            color="var(--mantine-color-gray-8)"
+            variant="secondary"
+            accent="neutral"
             onClick={handleKeepWorking}
-            w={BUTTON_WIDTH}
+            style={{ width: BUTTON_WIDTH }}
             leftSection={<ArrowBackIcon fontSize="small" />}
           >
             {t("keepWorking", "Keep Working")}
           </Button>
           <Button
-            variant="filled"
-            color="var(--mantine-color-red-9)"
+            accent="danger"
             onClick={handleDiscardChanges}
-            w={BUTTON_WIDTH}
+            style={{
+              width: BUTTON_WIDTH,
+            }}
             leftSection={<DeleteOutlineIcon fontSize="small" />}
           >
             {t("discardChanges", "Discard Changes")}
           </Button>
           {hasApply && (
             <Button
-              variant="filled"
               onClick={handleApplyAndContinue}
-              w={BUTTON_WIDTH}
+              style={{ width: BUTTON_WIDTH }}
               leftSection={<CheckCircleOutlineIcon fontSize="small" />}
             >
               {t("applyAndContinue", "Apply & Leave")}
@@ -177,9 +179,8 @@ const NavigationWarningModal = () => {
           )}
           {hasExport && (
             <Button
-              variant="filled"
               onClick={handleExportAndContinue}
-              w={BUTTON_WIDTH}
+              style={{ width: BUTTON_WIDTH }}
               leftSection={<CheckCircleOutlineIcon fontSize="small" />}
             >
               {t("exportAndContinue", "Export & Leave")}

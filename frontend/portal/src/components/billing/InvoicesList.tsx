@@ -215,7 +215,7 @@ export function InvoicesList() {
           {hasMore && (
             <div className="portal-billing__invoice-footer">
               <Button
-                variant="ghost"
+                variant="tertiary"
                 size="sm"
                 onClick={() => setShowAll((v) => !v)}
               >

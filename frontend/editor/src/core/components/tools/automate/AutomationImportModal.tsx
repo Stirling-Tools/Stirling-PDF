@@ -3,13 +3,13 @@ import { useTranslation } from "react-i18next";
 import {
   Alert,
   Badge,
-  Button,
   Group,
   Modal,
   Stack,
   Text,
   Textarea,
 } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { Dropzone } from "@mantine/dropzone";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { Z_INDEX_AUTOMATE_MODAL } from "@app/styles/zIndex";
@@ -218,7 +218,7 @@ export default function AutomationImportModal({
         )}
 
         <Group gap="sm" justify="flex-end">
-          <Button variant="subtle" onClick={onCancel} disabled={submitting}>
+          <Button variant="tertiary" onClick={onCancel} disabled={submitting}>
             {t("automate.importModal.cancel", "Cancel")}
           </Button>
           <Button

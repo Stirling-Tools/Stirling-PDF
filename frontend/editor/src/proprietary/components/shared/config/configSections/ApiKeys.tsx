@@ -8,12 +8,10 @@ import RefreshModal from "./apiKeys/RefreshModal";
 import useApiKey from "./apiKeys/hooks/useApiKey";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
-
 export default function ApiKeys() {
   const [copied, setCopied] = useState<string | null>(null);
   const [showRefreshModal, setShowRefreshModal] = useState(false);
   const { t } = useTranslation();
-
   const {
     apiKey,
     isLoading: apiKeyLoading,
@@ -22,7 +20,6 @@ export default function ApiKeys() {
     error: apiKeyError,
     refetch,
   } = useApiKey();
-
   const copy = async (text: string, tag: string) => {
     try {
       // Try modern Clipboard API first (requires HTTPS)
@@ -38,19 +35,16 @@ export default function ApiKeys() {
         textarea.style.opacity = "0";
         document.body.appendChild(textarea);
         textarea.select();
-
         if (document.execCommand("copy")) {
           setCopied(tag);
           setTimeout(() => setCopied(null), 1600);
         }
-
         document.body.removeChild(textarea);
       }
     } catch (e) {
       console.error("Failed to copy:", e);
     }
   };
-
   const refreshKeys = async () => {
     try {
       await refresh();
@@ -58,7 +52,6 @@ export default function ApiKeys() {
       setShowRefreshModal(false);
     }
   };
-
   return (
     <Stack gap={20} p={0}>
       <Text size="sm" c="dimmed">
@@ -67,7 +60,6 @@ export default function ApiKeys() {
           "Use your API key to programmatically access Stirling PDF's processing capabilities.",
         )}
       </Text>
-
       <Paper
         p="md"
         radius="md"
@@ -136,7 +128,6 @@ export default function ApiKeys() {
           </Stack>
         </Group>
       </Paper>
-
       {apiKeyError && (
         <Text size="sm" c="red.5">
           {t(
@@ -153,7 +144,6 @@ export default function ApiKeys() {
           </Anchor>
         </Text>
       )}
-
       {apiKeyLoading ? (
         <div
           style={{
@@ -179,14 +169,12 @@ export default function ApiKeys() {
           disabled={isRefreshing}
         />
       )}
-
       <Text size="sm" c="dimmed" style={{ marginTop: -8 }}>
         {t(
           "config.apiKeys.usage",
           "Include this key in the X-API-KEY header with all API requests.",
         )}
       </Text>
-
       <RefreshModal
         opened={showRefreshModal}
         onClose={() => setShowRefreshModal(false)}

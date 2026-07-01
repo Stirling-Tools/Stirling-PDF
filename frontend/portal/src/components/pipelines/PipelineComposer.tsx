@@ -280,7 +280,7 @@ export function PipelineComposer({
       footer={
         <div className="portal-pipelines__composer-footer">
           <Button
-            variant="ghost"
+            variant="tertiary"
             size="sm"
             disabled={submitting}
             onClick={onClose}
@@ -395,29 +395,32 @@ export function PipelineComposer({
                     {humanizeOperation(step.operation)}
                   </span>
                   <div className="portal-pipelines__chain-actions">
-                    <button
-                      type="button"
+                    <Button
+                      variant="tertiary"
+                      size="sm"
                       aria-label={t("pipelines.composer.moveUp")}
                       disabled={i === 0}
                       onClick={() => moveStep(i, -1)}
                     >
                       ↑
-                    </button>
-                    <button
-                      type="button"
+                    </Button>
+                    <Button
+                      variant="tertiary"
+                      size="sm"
                       aria-label={t("pipelines.composer.moveDown")}
                       disabled={i === steps.length - 1}
                       onClick={() => moveStep(i, 1)}
                     >
                       ↓
-                    </button>
-                    <button
-                      type="button"
+                    </Button>
+                    <Button
+                      variant="tertiary"
+                      size="sm"
                       aria-label={t("pipelines.composer.removeStep")}
                       onClick={() => removeStep(i)}
                     >
                       ×
-                    </button>
+                    </Button>
                   </div>
                 </li>
               ))}
@@ -427,7 +430,6 @@ export function PipelineComposer({
             {PIPELINE_OPERATIONS.map((op) => (
               <Chip
                 key={op.operation}
-                tone="blue"
                 size="sm"
                 onClick={() => addStep(op.operation, op.parameters)}
               >

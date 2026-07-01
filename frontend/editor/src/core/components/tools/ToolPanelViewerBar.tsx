@@ -1,5 +1,5 @@
 import React, { useCallback } from "react";
-import { ActionIcon } from "@mantine/core";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { useWorkbenchBar } from "@app/contexts/WorkbenchBarContext";
 import { useNavigationState } from "@app/contexts/NavigationContext";
 import { Tooltip } from "@app/components/shared/Tooltip";
@@ -49,13 +49,11 @@ export function ToolPanelViewerBar() {
         (typeof btn.tooltip === "string" ? btn.tooltip : undefined);
       const buttonNode = (
         <ActionIcon
-          variant={isActive ? "filled" : "subtle"}
-          color={isActive ? "blue" : undefined}
-          radius="md"
+          variant={isActive ? "primary" : "tertiary"}
           className="workbench-bar-action-icon"
           onClick={triggerAction}
           disabled={disabled}
-          aria-label={ariaLabel}
+          aria-label={ariaLabel ?? ""}
           aria-pressed={isActive || undefined}
         >
           {btn.icon}

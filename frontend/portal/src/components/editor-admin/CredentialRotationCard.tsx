@@ -62,8 +62,8 @@ export function CredentialRotationCard({ serviceToken }: Props) {
 
       <div className="portal-editor__panel-actions">
         <Button
-          variant="outline"
-          accent="amber"
+          variant="secondary"
+          accent="warning"
           loading={rotating}
           onClick={rotate}
         >

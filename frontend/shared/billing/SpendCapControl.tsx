@@ -167,7 +167,7 @@ export function SpendCapControl({
         {onSave && (
           <div className="scc-row__spacer">
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               loading={saving}
               disabled={!dirty || busy}

@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import type { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { Button } from "@shared/components/Button";
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
   return (
-    <button
+    <Button
+      variant="tertiary"
       onClick={() =>
         navigator.clipboard.writeText(text).then(() => {
           setCopied(true);
@@ -31,7 +33,7 @@ function CopyButton({ text }: { text: string }) {
       }}
     >
       {copied ? "✓ Copied" : "Copy"}
-    </button>
+    </Button>
   );
 }
 

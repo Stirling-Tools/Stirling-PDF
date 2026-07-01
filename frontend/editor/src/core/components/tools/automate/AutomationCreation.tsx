@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Button,
   Text,
   Stack,
   Group,
@@ -10,6 +9,7 @@ import {
   Divider,
   Modal,
 } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { Z_INDEX_AUTOMATE_MODAL } from "@app/styles/zIndex";
 import CheckIcon from "@mui/icons-material/Check";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -302,16 +302,17 @@ export default function AutomationCreation({
 
               <Group gap="sm" grow>
                 <Button
+                  variant="secondary"
                   leftSection={<DownloadIcon />}
                   onClick={() => {
                     downloadAutomationConfig(buildExportableAutomation());
                   }}
                   disabled={!canSaveAutomation()}
-                  variant="light"
                 >
                   {t("automate.creation.export", "Export")}
                 </Button>
                 <Button
+                  variant="secondary"
                   leftSection={<DownloadIcon />}
                   onClick={() => {
                     downloadFolderScanningConfig(
@@ -320,7 +321,6 @@ export default function AutomationCreation({
                     );
                   }}
                   disabled={!canSaveAutomation()}
-                  variant="light"
                 >
                   {t(
                     "automate.creation.exportForFolderScanning",
@@ -360,10 +360,10 @@ export default function AutomationCreation({
             )}
           </Text>
           <Group gap="md" justify="flex-end">
-            <Button variant="outline" onClick={handleCancelBack}>
+            <Button variant="secondary" onClick={handleCancelBack}>
               {t("automate.creation.unsavedChanges.cancel", "Cancel")}
             </Button>
-            <Button color="red" onClick={handleConfirmBack}>
+            <Button accent="danger" onClick={handleConfirmBack}>
               {t("automate.creation.unsavedChanges.confirm", "Go Back")}
             </Button>
           </Group>

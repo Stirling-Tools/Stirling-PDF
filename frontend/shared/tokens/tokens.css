@@ -117,6 +117,11 @@
   --color-toggle-off: #cbd5e1;
   --color-badge-red: #ef4444;
 
+  /* Segmented control — semantic tokens so dark mode can decouple from blue surfaces */
+  --color-seg-track: var(--color-bg-hover);
+  --color-seg-indicator: var(--color-blue);
+  --color-seg-border: var(--color-border);
+
   /* Shadows */
   --shadow-sm: inset 0 0 0 1px #e3e8ee;
   --shadow-md: inset 0 0 0 1px #e3e8ee, 0 1px 2px rgba(15, 23, 42, 0.04);
@@ -240,6 +245,11 @@
   --color-usage-track: #1e2840;
 
   --color-toggle-off: #3d4f6a;
+
+  /* Segmented control — blue-toned dark to match app surface colors */
+  --color-seg-track: var(--color-bg-hover);
+  --color-seg-indicator: var(--color-bg-muted);
+  --color-seg-border: var(--color-border);
 
   --shadow-sm: inset 0 0 0 1px #283248;
   --shadow-md: inset 0 0 0 1px #283248, 0 1px 3px rgba(0, 0, 0, 0.3);
@@ -403,6 +413,15 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
+}
+
+/* Never transition text colour, looks ugly */
+*,
+*::before,
+*::after {
+  transition-property:
+    background, background-color, border, border-color, box-shadow, opacity,
+    transform, fill, stroke, outline-color !important;
 }
 
 /* Visually-hidden utility for content meant only for screen readers. */

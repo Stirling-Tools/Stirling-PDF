@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { Box, Button, Text, ActionIcon, Group, Loader } from "@mantine/core";
+import { Box, Text, Group, Loader } from "@mantine/core";
+import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { useTranslation } from "react-i18next";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -8,7 +10,6 @@ import PauseCircleOutlineIcon from "@mui/icons-material/PauseCircleOutlined";
 import { WatchedFolder } from "@app/types/watchedFolders";
 import { FolderRunStatus } from "@app/hooks/useFolderRunStatuses";
 import { iconMap } from "@app/components/tools/automate/iconMap";
-
 interface WatchedFolderCardProps {
   folder: WatchedFolder;
   isActive: boolean;
@@ -18,7 +19,6 @@ interface WatchedFolderCardProps {
   onDelete: (e: React.MouseEvent) => void;
   onFileDrop?: (fileIds: string[]) => void;
 }
-
 export function WatchedFolderCard({
   folder,
   isActive,
@@ -33,7 +33,6 @@ export function WatchedFolderCard({
   const [isDragOver, setIsDragOver] = useState(false);
   const IconComponent =
     iconMap[folder.icon as keyof typeof iconMap] || iconMap.FolderIcon;
-
   const handleDragOver = (e: React.DragEvent) => {
     const types = e.dataTransfer.types;
     if (
@@ -45,9 +44,7 @@ export function WatchedFolderCard({
     e.dataTransfer.dropEffect = "copy";
     setIsDragOver(true);
   };
-
   const handleDragLeave = () => setIsDragOver(false);
-
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
@@ -64,7 +61,6 @@ export function WatchedFolderCard({
     const fileId = e.dataTransfer.getData("watchedFolderFileId");
     if (fileId && onFileDrop) onFileDrop([fileId]);
   };
-
   return (
     <Box
       className="tool-button-container"
@@ -83,11 +79,17 @@ export function WatchedFolderCard({
       }
     >
       <Button
-        variant={isActive ? "light" : "subtle"}
+        variant="tertiary"
+        accent="neutral"
+        size="sm"
         className="tool-button"
         fullWidth
-        justify="flex-start"
-        px="sm"
+        justify="start"
+        style={
+          isActive
+            ? { backgroundColor: "var(--tool-button-selected-bg)" }
+            : undefined
+        }
         leftSection={
           <Box
             style={{
@@ -110,8 +112,9 @@ export function WatchedFolderCard({
           isHovered ? (
             <Group gap={2} onClick={(e) => e.stopPropagation()}>
               <ActionIcon
-                size="xs"
-                variant="subtle"
+                as="span"
+                size="sm"
+                variant="tertiary"
                 onClick={onEdit}
                 aria-label={t("watchedFolders.card.edit", "Edit folder")}
               >
@@ -119,9 +122,10 @@ export function WatchedFolderCard({
               </ActionIcon>
               {!folder.isDefault && (
                 <ActionIcon
-                  size="xs"
-                  variant="subtle"
-                  color="red"
+                  as="span"
+                  size="sm"
+                  variant="tertiary"
+                  accent="danger"
                   onClick={onDelete}
                   aria-label={t("watchedFolders.card.delete", "Delete folder")}
                 >

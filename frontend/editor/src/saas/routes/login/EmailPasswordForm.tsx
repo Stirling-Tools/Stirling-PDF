@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import "@shared/auth/ui/auth.css";
 import "@app/routes/authShared/saas-auth.css";
+import { Button } from "@shared/components/Button";
 
 interface EmailPasswordFormProps {
   email: string;
@@ -78,13 +79,14 @@ export default function EmailPasswordForm({
         )}
       </div>
 
-      <button
+      <Button
         type="submit"
         disabled={isSubmitting || !email || (showPasswordField && !password)}
-        className="auth-button"
+        accent="brand"
+        fullWidth
       >
         {submitButtonText}
-      </button>
+      </Button>
     </form>
   );
 }

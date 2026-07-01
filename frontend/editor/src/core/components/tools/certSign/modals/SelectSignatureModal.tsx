@@ -1,13 +1,6 @@
-import {
-  Modal,
-  Stack,
-  Button,
-  Text,
-  Group,
-  Box,
-  ActionIcon,
-  UnstyledButton,
-} from "@mantine/core";
+import { Modal, Stack, Text, Group, Box } from "@mantine/core";
+import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { useTranslation } from "react-i18next";
 import {
   useSavedSignatures,
@@ -17,14 +10,12 @@ import DrawIcon from "@mui/icons-material/Draw";
 import TextFieldsIcon from "@mui/icons-material/TextFields";
 import ImageIcon from "@mui/icons-material/Image";
 import CloseIcon from "@mui/icons-material/Close";
-
 interface SelectSignatureModalProps {
   opened: boolean;
   onClose: () => void;
   onSignatureSelected: (signature: SavedSignature) => void;
   onCreateNew: (type: "canvas" | "text" | "image") => void;
 }
-
 export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
   opened,
   onClose,
@@ -33,11 +24,9 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
 }) => {
   const { t } = useTranslation();
   const { savedSignatures, removeSignature } = useSavedSignatures();
-
   const sortedSavedSignatures = [...savedSignatures].sort(
     (a, b) => (b.updatedAt ?? b.createdAt) - (a.updatedAt ?? a.createdAt),
   );
-
   const renderSignaturePreview = (sig: SavedSignature) => {
     if (sig.type === "text") {
       return (
@@ -71,7 +60,6 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
         </Box>
       );
     }
-
     return (
       <Box
         style={{
@@ -103,7 +91,6 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
       </Box>
     );
   };
-
   return (
     <Modal
       opened={opened}
@@ -136,7 +123,9 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
                     overflow: "hidden",
                   }}
                 >
-                  <UnstyledButton
+                  <Button
+                    variant="tertiary"
+                    hover={false}
                     onClick={() => {
                       onSignatureSelected(sig);
                       onClose();
@@ -144,10 +133,10 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
                     style={{ flex: 1, padding: "12px" }}
                   >
                     {renderSignaturePreview(sig)}
-                  </UnstyledButton>
+                  </Button>
                   <ActionIcon
-                    color="red"
-                    variant="subtle"
+                    variant="tertiary"
+                    accent="danger"
                     size="sm"
                     onClick={() => removeSignature(sig.id)}
                     aria-label={t(
@@ -163,7 +152,6 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
             </Stack>
           </>
         )}
-
         <Text
           size="sm"
           fw={600}
@@ -174,10 +162,9 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
             "Create New Signature",
           )}
         </Text>
-
         <Group grow>
           <Button
-            variant="outline"
+            variant="secondary"
             leftSection={<DrawIcon />}
             onClick={() => {
               onCreateNew("canvas");
@@ -187,7 +174,7 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
             {t("certSign.collab.signRequest.modeTabs.draw", "Draw")}
           </Button>
           <Button
-            variant="outline"
+            variant="secondary"
             leftSection={<TextFieldsIcon />}
             onClick={() => {
               onCreateNew("text");
@@ -197,7 +184,7 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
             {t("certSign.collab.signRequest.modeTabs.text", "Type")}
           </Button>
           <Button
-            variant="outline"
+            variant="secondary"
             leftSection={<ImageIcon />}
             onClick={() => {
               onCreateNew("image");

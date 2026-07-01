@@ -1,4 +1,5 @@
-import { Modal, Text, Button, Group, Stack } from "@mantine/core";
+import { Modal, Text, Group, Stack } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutlined";
@@ -55,20 +56,22 @@ const ZipWarningModal = ({
       {/* Desktop layout: centered buttons */}
       <Group justify="center" gap="sm" visibleFrom="md">
         <Button
-          variant="light"
-          color="var(--mantine-color-gray-8)"
+          variant="secondary"
+          accent="neutral"
           onClick={onCancel}
           leftSection={<CancelIcon fontSize="small" />}
-          w="10rem"
+          style={{
+            width: "10rem",
+          }}
         >
           {t("zipWarning.cancel", "Cancel")}
         </Button>
         <Button
-          variant="filled"
-          color="var(--mantine-color-blue-9)"
           onClick={onConfirm}
           leftSection={<CheckCircleOutlineIcon fontSize="small" />}
-          w="10rem"
+          style={{
+            width: "10rem",
+          }}
         >
           {t("zipWarning.confirm", "Extract")}
         </Button>
@@ -77,20 +80,22 @@ const ZipWarningModal = ({
       {/* Mobile layout: vertical stack */}
       <Stack align="center" gap="sm" hiddenFrom="md">
         <Button
-          variant="light"
-          color="var(--mantine-color-gray-8)"
+          variant="secondary"
+          accent="neutral"
           onClick={onCancel}
           leftSection={<CancelIcon fontSize="small" />}
-          w="10rem"
+          style={{
+            width: "10rem",
+          }}
         >
           {t("zipWarning.cancel", "Cancel")}
         </Button>
         <Button
-          variant="filled"
-          color="var(--mantine-color-blue-9)"
           onClick={onConfirm}
           leftSection={<CheckCircleOutlineIcon fontSize="small" />}
-          w="10rem"
+          style={{
+            width: "10rem",
+          }}
         >
           {t("zipWarning.confirm", "Extract")}
         </Button>

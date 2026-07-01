@@ -6,15 +6,15 @@ import {
   Text,
   Tooltip,
   NumberInput,
-  SegmentedControl,
   Select,
   Code,
   Group,
   Anchor,
-  ActionIcon,
-  Button,
   Badge,
 } from "@mantine/core";
+import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
+import { SegmentedControl } from "@shared/components/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
@@ -193,8 +193,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
           }}
         >
           <ActionIcon
-            variant="subtle"
-            color="gray"
+            variant="tertiary"
             size="sm"
             style={{ position: "absolute", top: "0.5rem", right: "0.5rem" }}
             onClick={handleDismissBanner}
@@ -344,7 +343,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               <Group gap="sm">
                 <Button
                   size="sm"
-                  variant="default"
+                  variant="secondary"
                   onClick={checkForUpdate}
                   loading={checkingUpdate}
                   disabled={!currentVersion}
@@ -364,9 +363,6 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                 {updateSummary && (
                   <Button
                     size="sm"
-                    color={
-                      updateSummary.max_priority === "urgent" ? "red" : "blue"
-                    }
                     onClick={() => setUpdateModalOpened(true)}
                     leftSection={
                       <LocalIcon
@@ -486,7 +482,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
             <SegmentedControl
               value={themeMode}
               onChange={(val) => setTheme(val as ThemeMode)}
-              data={[
+              options={[
                 {
                   label: t("settings.general.themeLight", "Light"),
                   value: "light",
@@ -553,7 +549,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               onChange={(val: string) =>
                 updatePreference("defaultToolPanelMode", val as ToolPanelMode)
               }
-              data={[
+              options={[
                 {
                   label: t("settings.general.mode.sidebar", "Sidebar"),
                   value: "sidebar",
@@ -591,7 +587,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               onChange={(val: string) =>
                 updatePreference("defaultStartupView", val as StartupView)
               }
-              data={[
+              options={[
                 {
                   label: t("settings.general.startupView.tools", "Tools"),
                   value: "tools",

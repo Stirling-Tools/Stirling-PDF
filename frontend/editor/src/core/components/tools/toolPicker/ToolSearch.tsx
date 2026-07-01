@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from "react";
-import { Stack, Button, Text } from "@mantine/core";
+import { Stack, Text } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
@@ -7,7 +8,6 @@ import { TextInput } from "@app/components/shared/TextInput";
 import "@app/components/tools/toolPicker/ToolPicker.css";
 import { rankByFuzzy, idToWords } from "@app/utils/fuzzySearch";
 import { ToolId } from "@app/types/toolId";
-
 interface ToolSearchProps {
   value: string;
   onChange: (value: string) => void;
@@ -21,7 +21,6 @@ interface ToolSearchProps {
   onFocus?: () => void;
   autoFocus?: boolean;
 }
-
 const ToolSearch = ({
   value,
   onChange,
@@ -39,7 +38,6 @@ const ToolSearch = ({
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-
   const filteredTools = useMemo(() => {
     if (!value.trim()) return [];
     const entries = Object.entries(toolRegistry).filter(
@@ -53,7 +51,6 @@ const ToolSearch = ({
     ]).slice(0, 6);
     return ranked.map(({ item: [id, tool] }) => ({ id, tool }));
   }, [value, toolRegistry, mode, selectedToolKey]);
-
   const handleSearchChange = (searchValue: string) => {
     onChange(searchValue);
     if (mode === "dropdown") {
@@ -62,7 +59,6 @@ const ToolSearch = ({
       );
     }
   };
-
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -77,7 +73,6 @@ const ToolSearch = ({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
   // Auto-focus the input when requested
   useEffect(() => {
     if (autoFocus && searchRef.current) {
@@ -86,7 +81,6 @@ const ToolSearch = ({
       }, 10);
     }
   }, [autoFocus]);
-
   const searchInput = (
     <TextInput
       id="tool-search-input"
@@ -108,15 +102,12 @@ const ToolSearch = ({
       onFocus={onFocus}
     />
   );
-
   if (mode === "filter") {
     return <div className="search-input-container">{searchInput}</div>;
   }
-
   if (mode === "unstyled") {
     return searchInput;
   }
-
   return (
     <div ref={searchRef} style={{ position: "relative" }}>
       {searchInput}
@@ -141,7 +132,7 @@ const ToolSearch = ({
             {filteredTools.map(({ id, tool }) => (
               <Button
                 key={id}
-                variant="subtle"
+                variant="tertiary"
                 onClick={() => {
                   onToolSelect?.(id as ToolId);
                   setDropdownOpen(false);
@@ -152,7 +143,7 @@ const ToolSearch = ({
                   </div>
                 }
                 fullWidth
-                justify="flex-start"
+                justify="start"
                 style={{
                   borderRadius: "6px",
                   color: "var(--tools-text-and-icon-color)",
@@ -173,5 +164,4 @@ const ToolSearch = ({
     </div>
   );
 };
-
 export default ToolSearch;

@@ -64,6 +64,7 @@
  */
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Button } from "@shared/components/Button";
 import { useAuth } from "@app/auth/UseSession";
 import {
   createCheckoutSession,
@@ -267,17 +268,12 @@ const StripeCheckoutPanel: React.FC<StripeCheckoutPanelProps> = ({
               )}
         </div>
         <div style={{ marginTop: 12 }}>
-          <button
-            type="button"
-            className="upm-btn"
-            data-variant="primary"
-            onClick={onComplete}
-          >
+          <Button onClick={onComplete}>
             {t(
               "payg.checkout.mock.continue",
               "Continue with mock subscription",
             )}
-          </button>
+          </Button>
         </div>
       </div>
     );

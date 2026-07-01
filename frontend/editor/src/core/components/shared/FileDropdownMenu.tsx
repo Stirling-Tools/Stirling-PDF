@@ -1,5 +1,6 @@
 import React from "react";
-import { Menu, Loader, Group, Text, ActionIcon, Tooltip } from "@mantine/core";
+import { Menu, Loader, Group, Text, Tooltip } from "@mantine/core";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { useTranslation } from "react-i18next";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
@@ -8,7 +9,6 @@ import FitText from "@app/components/shared/FitText";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import { FileId } from "@app/types/file";
 import { truncateCenter } from "@app/utils/textUtils";
-
 interface FileDropdownMenuProps {
   displayName: string;
   activeFiles: Array<{ fileId: string; name: string; versionNumber?: number }>;
@@ -19,7 +19,6 @@ interface FileDropdownMenuProps {
   viewOptionStyle: React.CSSProperties;
   pillRef?: React.RefObject<HTMLDivElement>;
 }
-
 export const FileDropdownMenu: React.FC<FileDropdownMenuProps> = ({
   displayName,
   activeFiles,
@@ -102,10 +101,14 @@ export const FileDropdownMenu: React.FC<FileDropdownMenuProps> = ({
                       withArrow
                     >
                       <ActionIcon
-                        component="div"
-                        size="xs"
-                        variant="subtle"
-                        color="red"
+                        as="span"
+                        size="sm"
+                        variant="tertiary"
+                        accent="danger"
+                        aria-label={t(
+                          "fileDropdownMenu.closeFile",
+                          "Close file",
+                        )}
                         onClick={(e) => {
                           e.stopPropagation();
                           onFileRemove(file.fileId as FileId);

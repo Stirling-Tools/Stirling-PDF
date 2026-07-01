@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import {
-  Button,
   PasswordInput,
   Group,
   Alert,
@@ -8,6 +7,7 @@ import {
   Modal,
   Divider,
 } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@app/auth/UseSession";
 import { supabase } from "@app/auth/supabase";
@@ -116,7 +116,7 @@ const PasswordSecurity: React.FC = () => {
             )}
           </p>
         </div>
-        <Button type="button" onClick={() => setOpened(true)} variant="filled">
+        <Button type="button" onClick={() => setOpened(true)}>
           {t("config.account.security.changePassword", "Change password")}
         </Button>
       </div>
@@ -166,7 +166,7 @@ const PasswordSecurity: React.FC = () => {
             <Group justify="flex-end">
               <Button
                 type="button"
-                variant="default"
+                variant="secondary"
                 onClick={() => setOpened(false)}
               >
                 {t("common.cancel", "Cancel")}

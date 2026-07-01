@@ -10,20 +10,14 @@
  * save UX that users expect from browser PDF viewers.
  */
 import React, { useCallback, useState } from "react";
-import {
-  Stack,
-  Group,
-  Text,
-  Button,
-  Transition,
-  CloseButton,
-  Paper,
-  Badge,
-} from "@mantine/core";
+import { Stack, Group, Text, Transition, Paper, Badge } from "@mantine/core";
+import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { useTranslation } from "react-i18next";
 import DownloadIcon from "@mui/icons-material/Download";
 import SaveIcon from "@mui/icons-material/Save";
 import EditNoteIcon from "@mui/icons-material/EditNote";
+import CloseIcon from "@mui/icons-material/Close";
 import { useFormFill } from "@app/tools/formFill/FormFillContext";
 import { downloadFileWithPolicy } from "@app/services/exportWithPolicy";
 
@@ -160,37 +154,36 @@ export function FormSaveBar({
                     </Text>
                   </div>
                 </Group>
-                <CloseButton
+                <ActionIcon
                   size="sm"
-                  variant="subtle"
+                  variant="tertiary"
                   onClick={() => setDismissed(true)}
                   aria-label={t("viewer.formBar.dismiss", "Dismiss")}
-                />
+                >
+                  <CloseIcon sx={{ fontSize: 16 }} />
+                </ActionIcon>
               </Group>
 
               {isDirty && (
                 <Group gap="xs" mt="xs">
                   <Button
                     size="sm"
-                    variant="light"
-                    color="blue"
+                    variant="secondary"
                     leftSection={<SaveIcon sx={{ fontSize: 18 }} />}
                     loading={applying}
                     disabled={saving}
                     onClick={handleApply}
-                    flex={1}
+                    style={{ flex: 1 }}
                   >
                     {t("viewer.formBar.apply", "Apply Changes")}
                   </Button>
                   <Button
                     size="sm"
-                    variant="filled"
-                    color="blue"
                     leftSection={<DownloadIcon sx={{ fontSize: 18 }} />}
                     loading={saving}
                     disabled={applying}
                     onClick={handleDownload}
-                    flex={1}
+                    style={{ flex: 1 }}
                   >
                     {t("viewer.formBar.download", "Download PDF")}
                   </Button>

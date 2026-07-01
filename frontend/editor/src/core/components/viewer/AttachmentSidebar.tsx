@@ -1,15 +1,8 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import {
-  Box,
-  ScrollArea,
-  Text,
-  ActionIcon,
-  Button,
-  Loader,
-  Stack,
-  TextInput,
-} from "@mantine/core";
+import { Box, ScrollArea, Text, Loader, Stack, TextInput } from "@mantine/core";
 import LocalIcon from "@app/components/shared/LocalIcon";
+import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { PdfAttachmentObject } from "@embedpdf/models";
@@ -18,7 +11,6 @@ import DownloadIcon from "@mui/icons-material/DownloadRounded";
 import { useTranslation } from "react-i18next";
 import "@app/components/viewer/SidebarBase.css";
 import "@app/components/viewer/AttachmentSidebar.css";
-
 interface AttachmentSidebarProps {
   visible: boolean;
   thumbnailVisible: boolean;
@@ -26,16 +18,13 @@ interface AttachmentSidebarProps {
   documentCacheKey?: string;
   preloadCacheKeys?: string[];
 }
-
 const SIDEBAR_WIDTH = "15rem";
-
 interface AttachmentCacheEntry {
   status: "idle" | "loading" | "success" | "error";
   attachments: PdfAttachmentObject[] | null;
   error: string | null;
   lastFetched: number | null;
 }
-
 const createEntry = (
   overrides: Partial<AttachmentCacheEntry> = {},
 ): AttachmentCacheEntry => ({
@@ -45,7 +34,6 @@ const createEntry = (
   lastFetched: null,
   ...overrides,
 });
-
 export const AttachmentSidebar = ({
   visible,
   thumbnailVisible,
@@ -67,11 +55,9 @@ export const AttachmentSidebar = ({
   const cacheRef = useRef<Map<string, AttachmentCacheEntry>>(new Map());
   const [fetchNonce, setFetchNonce] = useState(0);
   const currentKeyRef = useRef<string | null>(documentCacheKey ?? null);
-
   useEffect(() => {
     currentKeyRef.current = documentCacheKey ?? null;
   }, [documentCacheKey]);
-
   // Poll once until the attachment bridge registers
   useEffect(() => {
     if (attachmentSupport) return;
@@ -82,23 +68,19 @@ export const AttachmentSidebar = ({
         clearInterval(id);
       }
     }, 250);
-
     return () => {
       cancelled = true;
       clearInterval(id);
     };
   }, [attachmentSupport, hasAttachmentSupport]);
-
   // Reset UI and load cached entry (if any) when switching documents
   useEffect(() => {
     setSearchTerm("");
-
     if (!documentCacheKey) {
       setActiveEntry(createEntry());
       attachmentActions.clearAttachments();
       return;
     }
-
     const cached = cacheRef.current.get(documentCacheKey);
     if (cached) {
       setActiveEntry(cached);
@@ -117,7 +99,6 @@ export const AttachmentSidebar = ({
       attachmentActions.clearAttachments();
     }
   }, [documentCacheKey, attachmentActions]);
-
   // Keep cache bounded to the currently relevant keys
   useEffect(() => {
     const allowed = new Set<string>();
@@ -129,18 +110,15 @@ export const AttachmentSidebar = ({
         allowed.add(key);
       }
     });
-
     cacheRef.current.forEach((_entry, key) => {
       if (!allowed.has(key)) {
         cacheRef.current.delete(key);
       }
     });
   }, [documentCacheKey, preloadCacheKeys]);
-
   // Fetch attachments for the active document when needed
   useEffect(() => {
     if (!attachmentSupport || !documentCacheKey) return;
-
     const key = documentCacheKey;
     const cached = cacheRef.current.get(key);
     // Only short-circuit on a finalised success cache. Skipping when
@@ -155,7 +133,6 @@ export const AttachmentSidebar = ({
     if (cached && cached.status === "success") {
       return;
     }
-
     let cancelled = false;
     // Don't write "loading" into the cache - keep the cache for
     // terminal states (success/error) only, so a cancelled run can
@@ -169,7 +146,6 @@ export const AttachmentSidebar = ({
         setActiveEntry(entry);
       }
     };
-
     updateEntry(
       createEntry({
         status: "loading",
@@ -177,7 +153,6 @@ export const AttachmentSidebar = ({
         lastFetched: cached?.lastFetched ?? null,
       }),
     );
-
     const fetchWithRetry = async () => {
       // See BookmarkSidebar - matching change. After a file swap the
       // attachment bridge briefly unregisters and the action returns
@@ -203,17 +178,14 @@ export const AttachmentSidebar = ({
             message.includes("document") &&
             message.includes("not") &&
             message.includes("open");
-
           if (!notReady || attempt === maxAttempts - 1) {
             throw error;
           }
-
           await new Promise((resolve) => setTimeout(resolve, 50));
         }
       }
       return [];
     };
-
     fetchWithRetry()
       .then((attachments) => {
         if (cancelled) return;
@@ -243,12 +215,10 @@ export const AttachmentSidebar = ({
           attachmentActions.setLocalAttachments(null, message);
         }
       });
-
     return () => {
       cancelled = true;
     };
   }, [attachmentSupport, documentCacheKey, fetchNonce, attachmentActions]);
-
   const requestReload = useCallback(() => {
     if (!documentCacheKey) return;
     cacheRef.current.delete(documentCacheKey);
@@ -256,7 +226,6 @@ export const AttachmentSidebar = ({
     attachmentActions.clearAttachments();
     setFetchNonce((value) => value + 1);
   }, [documentCacheKey, attachmentActions]);
-
   const handleDownload = (
     attachment: PdfAttachmentObject,
     event: React.MouseEvent,
@@ -281,7 +250,6 @@ export const AttachmentSidebar = ({
     const term = searchTerm.trim().toLowerCase();
     return attachments.filter((a) => a.name?.toLowerCase().includes(term));
   }, [activeEntry.attachments, searchTerm]);
-
   const formatFileSize = (bytes?: number) => {
     if (bytes === undefined) return "";
     if (bytes === 0) return "0 B";
@@ -290,7 +258,6 @@ export const AttachmentSidebar = ({
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
   };
-
   const renderAttachments = (attachments: PdfAttachmentObject[]) => {
     return attachments.map((attachment, index) => (
       <div
@@ -322,9 +289,10 @@ export const AttachmentSidebar = ({
             )}
           </div>
           <ActionIcon
-            variant="subtle"
+            variant="tertiary"
             size="sm"
             className="attachment-item__download-icon"
+            aria-label={t("viewer.attachments.download", "Download attachment")}
             onClick={(event) => handleDownload(attachment, event)}
           >
             <DownloadIcon sx={{ fontSize: "1.2rem" }} />
@@ -333,11 +301,9 @@ export const AttachmentSidebar = ({
       </div>
     ));
   };
-
   if (!visible) {
     return null;
   }
-
   const isSearchActive = searchTerm.trim().length > 0;
   const hasAttachments =
     Array.isArray(activeEntry.attachments) &&
@@ -347,7 +313,6 @@ export const AttachmentSidebar = ({
     attachmentSupport && activeEntry.status === "error"
       ? activeEntry.error
       : null;
-
   const showAttachmentList =
     attachmentSupport && documentCacheKey && filteredAttachments.length > 0;
   const showEmptyState =
@@ -364,7 +329,6 @@ export const AttachmentSidebar = ({
     hasAttachments &&
     filteredAttachments.length === 0;
   const showNoDocument = attachmentSupport && !documentCacheKey;
-
   return (
     <Box
       className="sidebar-base attachment-sidebar"
@@ -388,9 +352,9 @@ export const AttachmentSidebar = ({
         </div>
         <Box style={{ display: "flex", alignItems: "center", gap: 2 }}>
           <ActionIcon
-            variant="subtle"
+            variant="tertiary"
+            accent="neutral"
             size="sm"
-            color="gray"
             onClick={toggleAttachmentSidebar}
             aria-label="Close attachments sidebar"
             title={t("viewer.attachments.close", "Close attachments")}
@@ -399,7 +363,6 @@ export const AttachmentSidebar = ({
           </ActionIcon>
         </Box>
       </div>
-
       <Box
         px="sm"
         pb="sm"
@@ -418,7 +381,6 @@ export const AttachmentSidebar = ({
           size="xs"
         />
       </Box>
-
       <ScrollArea style={{ flex: 1 }}>
         <Box
           p="sm"
@@ -434,7 +396,6 @@ export const AttachmentSidebar = ({
               </Text>
             </div>
           )}
-
           {attachmentSupport && showNoDocument && (
             <div className="sidebar-base__empty-state">
               <Text size="sm" c="dimmed" ta="center">
@@ -445,18 +406,20 @@ export const AttachmentSidebar = ({
               </Text>
             </div>
           )}
-
           {attachmentSupport && documentCacheKey && currentError && (
             <Stack gap="xs" align="center" className="sidebar-base__error">
               <Text size="sm" c="red" ta="center">
                 {currentError}
               </Text>
-              <ActionIcon variant="light" onClick={requestReload}>
+              <ActionIcon
+                variant="secondary"
+                aria-label={t("viewer.attachments.retry", "Retry")}
+                onClick={requestReload}
+              >
                 <LocalIcon icon="refresh" />
               </ActionIcon>
             </Stack>
           )}
-
           {attachmentSupport && documentCacheKey && isLocalLoading && (
             <Stack
               gap="md"
@@ -471,7 +434,6 @@ export const AttachmentSidebar = ({
               </Text>
             </Stack>
           )}
-
           {showEmptyState && (
             <Stack align="center" gap="sm" py="lg">
               <LocalIcon
@@ -487,8 +449,8 @@ export const AttachmentSidebar = ({
                 )}
               </Text>
               <Button
-                variant="light"
-                size="xs"
+                variant="secondary"
+                size="sm"
                 onClick={handleAddAttachment}
                 leftSection={
                   <LocalIcon icon="add" width="1rem" height="1rem" />
@@ -498,24 +460,18 @@ export const AttachmentSidebar = ({
               </Button>
             </Stack>
           )}
-
           {showAttachmentList && (
             <>
               <Button
-                variant="subtle"
-                size="compact-xs"
+                variant="tertiary"
+                size="sm"
                 fullWidth
+                justify="start"
                 onClick={handleAddAttachment}
                 leftSection={
                   <LocalIcon icon="add" width="0.9rem" height="0.9rem" />
                 }
-                mb="xs"
-                styles={{
-                  root: {
-                    justifyContent: "flex-start",
-                    paddingInline: 6,
-                  },
-                }}
+                style={{ marginBottom: "var(--space-xs)" }}
               >
                 {t("viewer.attachments.addAttachment", "Add attachment")}
               </Button>
@@ -524,7 +480,6 @@ export const AttachmentSidebar = ({
               </div>
             </>
           )}
-
           {showSearchEmpty && (
             <div className="sidebar-base__empty-state">
               <Text size="sm" c="dimmed" ta="center">

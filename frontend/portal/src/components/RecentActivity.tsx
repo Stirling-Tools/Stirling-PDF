@@ -1,5 +1,11 @@
+import {
+  Button,
+  Card,
+  EmptyState,
+  Skeleton,
+  StatusBadge,
+} from "@shared/components";
 import { useTranslation } from "react-i18next";
-import { Card, EmptyState, Skeleton, StatusBadge } from "@shared/components";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import {
   fetchRecentActivity,
@@ -31,9 +37,9 @@ export function RecentActivity() {
     >
       <header className="portal-activity__head">
         <h2 className="portal-activity__title">{t("recentActivity.title")}</h2>
-        <button type="button" className="portal-activity__more">
+        <Button type="button" className="portal-activity__more">
           {t("recentActivity.viewAll")} →
-        </button>
+        </Button>
       </header>
 
       {isLoading && (

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Stack, Text, Button, Alert, Loader, Center } from "@mantine/core";
+import { Stack, Text, Alert, Loader, Center } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { DesktopAuthLayout } from "@app/components/SetupWizard/DesktopAuthLayout";
 import { SaaSLoginScreen } from "@app/components/SetupWizard/SaaSLoginScreen";
 import { SaaSSignupScreen } from "@app/components/SetupWizard/SaaSSignupScreen";
@@ -476,8 +477,6 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
               </Text>
             </Alert>
             <Button
-              variant="filled"
-              color="blue"
               fullWidth
               loading={loading}
               onClick={() => void loadLockedConfig()}
@@ -498,8 +497,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
               </DisabledButtonWithTooltip>
             ) : (
               <Button
-                variant="light"
-                color="blue"
+                variant="secondary"
                 fullWidth
                 loading={loading}
                 onClick={() => {
@@ -514,8 +512,8 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
               </Button>
             )}
             <Button
-              variant="subtle"
-              color="white"
+              variant="tertiary"
+              accent="neutral"
               fullWidth
               onClick={handleLocalMode}
             >
@@ -547,14 +545,14 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
               className="navigation-link-container"
               style={{ marginTop: "1.5rem" }}
             >
-              <button
-                type="button"
+              <Button
+                variant="tertiary"
                 onClick={handleLocalMode}
                 className="navigation-link-button"
                 disabled={loading}
               >
                 {t("setup.selfhosted.switchToLocal", "Use local tools instead")}
-              </button>
+              </Button>
             </div>
           </>
         )}
@@ -565,13 +563,13 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({
           className="navigation-link-container"
           style={{ marginTop: "1.5rem" }}
         >
-          <button
-            type="button"
+          <Button
+            variant="tertiary"
             onClick={handleBack}
             className="navigation-link-button"
           >
             {t("common.back", "Back")}
-          </button>
+          </Button>
         </div>
       )}
     </>

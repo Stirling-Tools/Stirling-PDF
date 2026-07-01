@@ -105,7 +105,7 @@ export function PolicySummary() {
       render: ({ state }) => {
         if (state === "locked") {
           return (
-            <Button size="sm" variant="ghost" onClick={goToPolicies}>
+            <Button size="sm" variant="tertiary" onClick={goToPolicies}>
               {t("policySummary.action.comingSoon")}
             </Button>
           );
@@ -113,7 +113,7 @@ export function PolicySummary() {
         return (
           <Button
             size="sm"
-            variant={state === "active" ? "ghost" : "outline"}
+            variant={state === "active" ? "tertiary" : "secondary"}
             onClick={goToPolicies}
           >
             {state === "active"

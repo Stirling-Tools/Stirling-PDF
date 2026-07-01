@@ -1,9 +1,7 @@
 import { Fragment, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  ActionIcon,
   Badge,
-  Button,
   Flex,
   Group,
   NumberInput,
@@ -13,6 +11,8 @@ import {
   TextInput,
   Tooltip,
 } from "@mantine/core";
+import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import {
   BookmarkNode,
@@ -227,8 +227,7 @@ export default function BookmarkEditor({
           <Flex align="flex-start" justify="space-between" gap="md">
             <Group gap="sm" align="flex-start">
               <ActionIcon
-                variant="subtle"
-                color="gray"
+                variant="tertiary"
                 onMouseDown={(e) => {
                   e.preventDefault();
                   if (hasChildren) handleToggle(bookmark.id);
@@ -272,13 +271,17 @@ export default function BookmarkEditor({
                 )}
               >
                 <ActionIcon
-                  variant="subtle"
-                  color="green"
+                  variant="tertiary"
+                  accent="success"
                   onMouseDown={(e) => {
                     e.preventDefault();
                     handleAddChild(bookmark.id);
                   }}
                   disabled={disabled}
+                  aria-label={t(
+                    "editTableOfContents.editor.actions.addChild",
+                    "Add child bookmark",
+                  )}
                 >
                   <LocalIcon icon="subdirectory-arrow-right-rounded" />
                 </ActionIcon>
@@ -290,13 +293,16 @@ export default function BookmarkEditor({
                 )}
               >
                 <ActionIcon
-                  variant="subtle"
-                  color="blue"
+                  variant="tertiary"
                   onMouseDown={(e) => {
                     e.preventDefault();
                     handleAddSibling(bookmark.id);
                   }}
                   disabled={disabled}
+                  aria-label={t(
+                    "editTableOfContents.editor.actions.addSibling",
+                    "Add sibling bookmark",
+                  )}
                 >
                   <LocalIcon icon="add-rounded" />
                 </ActionIcon>
@@ -308,13 +314,17 @@ export default function BookmarkEditor({
                 )}
               >
                 <ActionIcon
-                  variant="subtle"
-                  color="red"
+                  variant="tertiary"
+                  accent="danger"
                   onMouseDown={(e) => {
                     e.preventDefault();
                     handleRemove(bookmark.id);
                   }}
                   disabled={disabled}
+                  aria-label={t(
+                    "editTableOfContents.editor.actions.remove",
+                    "Remove bookmark",
+                  )}
                 >
                   <LocalIcon icon="delete-rounded" />
                 </ActionIcon>
@@ -399,8 +409,7 @@ export default function BookmarkEditor({
           </Text>
         </div>
         <Button
-          variant="default"
-          color="blue"
+          variant="secondary"
           leftSection={<LocalIcon icon="bookmark-add-rounded" />}
           onMouseDown={(e) => {
             e.preventDefault();
@@ -432,8 +441,7 @@ export default function BookmarkEditor({
               )}
             </Text>
             <Button
-              variant="subtle"
-              color="blue"
+              variant="tertiary"
               leftSection={<LocalIcon icon="add-rounded" />}
               onMouseDown={(e) => {
                 e.preventDefault();

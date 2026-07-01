@@ -1,9 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  ActionIcon,
   Alert,
-  Button,
   Group,
   Modal,
   Stack,
@@ -15,9 +13,10 @@ import HomeIcon from "@mui/icons-material/Home";
 import FolderIcon from "@mui/icons-material/Folder";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
-import CloseIcon from "@mui/icons-material/Close";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlined";
 
+import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { FolderId, FolderRecord, ROOT_FOLDER_ID } from "@app/types/folder";
 
 interface MoveToFolderDialogProps {
@@ -228,8 +227,7 @@ export function MoveToFolderDialog({
                   withinPortal
                 >
                   <ActionIcon
-                    variant="subtle"
-                    color="gray"
+                    variant="tertiary"
                     size="lg"
                     onClick={handleCancel}
                     disabled={creating}
@@ -238,20 +236,20 @@ export function MoveToFolderDialog({
                       "Discard",
                     )}
                   >
-                    <CloseIcon fontSize="small" />
+                    &times;
                   </ActionIcon>
                 </Tooltip>
               </Group>
             ) : (
               <Button
-                variant="subtle"
+                variant="tertiary"
                 size="sm"
                 leftSection={<CreateNewFolderIcon fontSize="small" />}
                 onClick={() => {
                   setCreatingFolder(true);
                   setNewFolderName("");
                 }}
-                styles={{ root: { alignSelf: "flex-start" } }}
+                style={{ alignSelf: "flex-start" }}
                 data-testid="move-dialog-create-folder-toggle"
               >
                 {t(
@@ -272,7 +270,7 @@ export function MoveToFolderDialog({
           </Alert>
         )}
         <Group justify="flex-end">
-          <Button variant="default" onClick={onClose} disabled={submitting}>
+          <Button variant="secondary" onClick={onClose} disabled={submitting}>
             {t("filesPage.moveDialog.cancel", "Cancel")}
           </Button>
           <Button
@@ -325,35 +323,35 @@ function FolderPick({
   onPick,
 }: FolderPickProps) {
   return (
-    <button
-      type="button"
+    <Button
+      variant="tertiary"
+      justify="start"
+      fullWidth
       onClick={onPick}
       disabled={disabled}
+      leftSection={
+        isRoot ? (
+          <HomeIcon fontSize="small" />
+        ) : isActive ? (
+          <FolderOpenIcon fontSize="small" style={{ color }} />
+        ) : (
+          <FolderIcon fontSize="small" style={{ color }} />
+        )
+      }
       style={{
-        all: "unset",
         cursor: disabled ? "not-allowed" : "pointer",
         opacity: disabled ? 0.45 : 1,
-        display: "flex",
-        alignItems: "center",
         gap: "0.5rem",
         padding: `0.4rem 0.75rem 0.4rem ${0.75 + depth * 0.85}rem`,
-        width: "100%",
         background: isActive ? "var(--hover-bg)" : "transparent",
         borderBottom: "1px solid var(--border-subtle)",
         boxSizing: "border-box",
         fontWeight: isActive ? 600 : 400,
       }}
     >
-      {isRoot ? (
-        <HomeIcon fontSize="small" />
-      ) : isActive ? (
-        <FolderOpenIcon fontSize="small" style={{ color }} />
-      ) : (
-        <FolderIcon fontSize="small" style={{ color }} />
-      )}
       <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
         {label}
       </span>
-    </button>
+    </Button>
   );
 }

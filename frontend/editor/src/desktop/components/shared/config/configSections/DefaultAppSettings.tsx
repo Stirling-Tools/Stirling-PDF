@@ -1,5 +1,6 @@
 import React from "react";
-import { Paper, Text, Button, Group } from "@mantine/core";
+import { Paper, Text, Group } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import { useDefaultApp } from "@app/hooks/useDefaultApp";
 
@@ -29,8 +30,7 @@ export const DefaultAppSettings: React.FC = () => {
           </Text>
         </div>
         <Button
-          variant={isDefault ? "light" : "filled"}
-          color="blue"
+          variant={isDefault ? "secondary" : "primary"}
           size="sm"
           onClick={handleSetDefault}
           loading={isLoading}

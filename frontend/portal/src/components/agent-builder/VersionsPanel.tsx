@@ -69,7 +69,7 @@ export function VersionsPanel({ agent, historyUnlocked }: VersionsPanelProps) {
                 {v.status === "draft" && (
                   <Button
                     size="sm"
-                    variant="outline"
+                    variant="secondary"
                     onClick={() => publish(v.version)}
                   >
                     {t("agentBuilder.versions.publish")}
@@ -78,7 +78,7 @@ export function VersionsPanel({ agent, historyUnlocked }: VersionsPanelProps) {
                 {v.status === "published" && !isCurrent && (
                   <Button
                     size="sm"
-                    variant="ghost"
+                    variant="tertiary"
                     onClick={() => rollback(v.version)}
                   >
                     {t("agentBuilder.versions.rollBack")}

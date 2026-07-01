@@ -1,5 +1,6 @@
 import React from "react";
-import { Modal, Stack, Text, Group, Button } from "@mantine/core";
+import { Modal, Stack, Text, Group } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 
@@ -44,10 +45,10 @@ export default function RefreshModal({
           )}
         </Text>
         <Group justify="flex-end" gap="sm">
-          <Button variant="default" onClick={onClose}>
+          <Button variant="secondary" onClick={onClose}>
             {t("common.cancel", "Cancel")}
           </Button>
-          <Button color="red" onClick={onConfirm}>
+          <Button accent="danger" onClick={onConfirm}>
             {t("config.apiKeys.refreshModal.confirmCta", "Refresh Keys")}
           </Button>
         </Group>

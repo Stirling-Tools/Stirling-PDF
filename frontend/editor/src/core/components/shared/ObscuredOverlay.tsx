@@ -1,4 +1,5 @@
 import React from "react";
+import { Button } from "@shared/components/Button";
 import styles from "@app/components/shared/ObscuredOverlay/ObscuredOverlay.module.css";
 
 type ObscuredOverlayProps = {
@@ -34,13 +35,13 @@ export default function ObscuredOverlay({
               <div className={styles.overlayMessage}>{overlayMessage}</div>
             )}
             {buttonText && onButtonClick && (
-              <button
-                type="button"
+              <Button
+                variant="tertiary"
                 onClick={onButtonClick}
                 className={styles.overlayButton}
               >
                 {buttonText}
-              </button>
+              </Button>
             )}
           </div>
         </div>

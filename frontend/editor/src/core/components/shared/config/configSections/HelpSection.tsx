@@ -1,5 +1,6 @@
 import React from "react";
-import { Button, Group, Paper, Stack, Text } from "@mantine/core";
+import { Group, Paper, Stack, Text } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { requestStartTour } from "@app/constants/events";
@@ -37,7 +38,7 @@ const HelpSection: React.FC<HelpSectionProps> = ({
               </Text>
             </div>
             <Button
-              variant="default"
+              variant="secondary"
               size="sm"
               leftSection={
                 <LocalIcon
@@ -66,7 +67,7 @@ const HelpSection: React.FC<HelpSectionProps> = ({
                 </Text>
               </div>
               <Button
-                variant="default"
+                variant="secondary"
                 size="sm"
                 leftSection={
                   <LocalIcon icon="person-rounded" width="1rem" height="1rem" />

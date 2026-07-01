@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
-import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
 import { PanelHeader } from "@shared/components/PanelHeader";
 import { StatusBadge } from "@shared/components/StatusBadge";
+import { Button } from "@shared/components/Button";
 
 const meta: Meta<typeof PanelHeader> = {
   title: "Primitives/PanelHeader",
@@ -31,16 +31,11 @@ export const Accented: Story = {
  *  the menu (e.g. the chat header's "Clear chat"). */
 export const WithMenu: Story = {
   args: {
-    title: "Stirling",
-    menuLabel: "Stirling agent options",
     menuItems: [
-      {
-        key: "clear",
-        icon: <DeleteSweepIcon sx={{ fontSize: 18 }} />,
-        label: "Clear chat",
-        onClick: () => {},
-      },
+      { label: "Clear chat", onClick: () => {} },
+      { label: "Export history", onClick: () => {} },
     ],
+    menuLabel: "Chat options",
   },
 };
 
@@ -54,9 +49,17 @@ export const WithActions: Story = {
   args: {
     accent: "purple",
     actions: (
-      <StatusBadge tone="success" showDot pulse>
-        Active
-      </StatusBadge>
+      <>
+        <StatusBadge tone="success" pulse>
+          Healthy
+        </StatusBadge>
+        <Button size="sm" variant="secondary">
+          Edit composition
+        </Button>
+        <Button size="sm" variant="primary">
+          View runs
+        </Button>
+      </>
     ),
   },
 };

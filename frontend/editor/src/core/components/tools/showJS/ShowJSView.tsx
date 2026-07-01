@@ -5,16 +5,9 @@ import React, {
   useRef,
   useState,
 } from "react";
-import {
-  ActionIcon,
-  Box,
-  Button,
-  Group,
-  Stack,
-  Text,
-  ScrollArea,
-  TextInput,
-} from "@mantine/core";
+import { Box, Group, Stack, Text, ScrollArea, TextInput } from "@mantine/core";
+import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import ArrowUpwardRoundedIcon from "@mui/icons-material/ArrowUpwardRounded";
 import ArrowDownwardRoundedIcon from "@mui/icons-material/ArrowDownwardRounded";
@@ -168,7 +161,7 @@ const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
             </Text>
             <ActionIcon
               size="sm"
-              variant="subtle"
+              variant="tertiary"
               onClick={() => {
                 if (matches.length)
                   setActive((p) => (p - 1 + matches.length) % matches.length);
@@ -179,7 +172,7 @@ const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
             </ActionIcon>
             <ActionIcon
               size="sm"
-              variant="subtle"
+              variant="tertiary"
               onClick={() => {
                 if (matches.length) setActive((p) => (p + 1) % matches.length);
               }}
@@ -190,8 +183,8 @@ const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
           </Group>
           <Group gap="xs" align="center" className="showjs-toolbar-controls">
             <Button
-              size="xs"
-              variant="subtle"
+              variant="tertiary"
+              size="sm"
               className="showjs-outline-button"
               onClick={handleDownload}
               disabled={!downloadUrl}
@@ -200,8 +193,8 @@ const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
               {terminology.download}
             </Button>
             <Button
-              size="xs"
-              variant="subtle"
+              variant="tertiary"
+              size="sm"
               className="showjs-outline-button"
               onClick={handleCopy}
               leftSection={<ContentCopyRoundedIcon fontSize="small" />}
@@ -321,7 +314,8 @@ const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
                   >
                     <div className="code-gutter">
                       {end != null ? (
-                        <button
+                        <Button
+                          variant="tertiary"
                           className={`fold-toggle ${folded ? "fold-collapsed" : ""}`}
                           onClick={() => toggleFold(ln)}
                           aria-label={
@@ -331,7 +325,7 @@ const ShowJSView: React.FC<ShowJSViewProps> = ({ data }) => {
                           }
                         >
                           {folded ? "▸" : "▾"}
-                        </button>
+                        </Button>
                       ) : (
                         <span className="fold-placeholder" />
                       )}

@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState } from "react";
-import { Stack, Button, Group, ColorPicker, Slider, Text } from "@mantine/core";
+import { Stack, Group, ColorPicker, Slider, Text } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import DeleteIcon from "@mui/icons-material/Delete";
 
@@ -153,8 +154,8 @@ export const DrawSignatureCanvas: React.FC<DrawSignatureCanvasProps> = ({
       </Group>
 
       <Button
-        variant="light"
-        color="red"
+        variant="secondary"
+        accent="danger"
         leftSection={<DeleteIcon sx={{ fontSize: 16 }} />}
         onClick={clearCanvas}
         disabled={disabled || !signature}

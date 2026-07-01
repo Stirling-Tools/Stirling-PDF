@@ -2,10 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { isAxiosError } from "axios";
 import { useTranslation } from "react-i18next";
 import {
-  ActionIcon,
-  Button,
   Checkbox,
-  CloseButton,
   Group,
   Modal,
   PasswordInput,
@@ -13,6 +10,8 @@ import {
   Text,
   Tooltip,
 } from "@mantine/core";
+import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { alert } from "@app/components/toast";
 import {
@@ -225,7 +224,9 @@ export default function ChangeUserPasswordModal({
       withCloseButton={false}
     >
       <div style={{ position: "relative" }}>
-        <CloseButton
+        <ActionIcon
+          aria-label={t("common.close", "Close")}
+          variant="tertiary"
           onClick={handleClose}
           size="lg"
           disabled={processing}
@@ -235,7 +236,9 @@ export default function ChangeUserPasswordModal({
             right: -8,
             zIndex: 1,
           }}
-        />
+        >
+          <LocalIcon icon="close-rounded" />
+        </ActionIcon>
         <Stack gap="lg" pt="md">
           <Stack gap="md" align="center">
             <LocalIcon
@@ -338,9 +341,12 @@ export default function ChangeUserPasswordModal({
                     )}
                   >
                     <ActionIcon
+                      aria-label={t(
+                        "workspace.people.changePassword.copyTooltip",
+                        "Copy to clipboard",
+                      )}
                       size="sm"
-                      variant="subtle"
-                      color="gray"
+                      variant="tertiary"
                       onClick={handleCopyPassword}
                       disabled={processing}
                     >
@@ -425,7 +431,7 @@ export default function ChangeUserPasswordModal({
             fullWidth
             size="md"
             disabled={disabled}
-            mt="md"
+            style={{ marginTop: "var(--mantine-spacing-md)" }}
           >
             {t("workspace.people.changePassword.submit", "Update password")}
           </Button>

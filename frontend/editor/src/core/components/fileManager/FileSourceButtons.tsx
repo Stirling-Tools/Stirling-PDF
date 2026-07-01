@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Stack, Text, Button, Group } from "@mantine/core";
+import { Stack, Text, Group } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import HistoryIcon from "@mui/icons-material/History";
 import PhonelinkIcon from "@mui/icons-material/Phonelink";
 import { useTranslation } from "react-i18next";
@@ -11,11 +12,9 @@ import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import MobileUploadModal from "@app/components/shared/MobileUploadModal";
 import { GoogleDriveIcon } from "@app/components/shared/CloudStorageIcons";
-
 interface FileSourceButtonsProps {
   horizontal?: boolean;
 }
-
 const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
   horizontal = false,
 }) => {
@@ -36,7 +35,6 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
   const { config } = useAppConfig();
   const isMobile = useIsMobile();
   const isMobileUploadEnabled = config?.enableMobileScanner && !isMobile;
-
   const handleGoogleDriveClick = async () => {
     try {
       const files = await openGoogleDrivePicker({ multiple: true });
@@ -47,104 +45,57 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
       console.error("Failed to pick files from Google Drive:", error);
     }
   };
-
   const handleMobileUploadClick = () => {
     setMobileUploadModalOpen(true);
   };
-
   const handleFilesReceivedFromMobile = (files: File[]) => {
     if (files.length > 0) {
       onNewFilesSelect(files);
     }
   };
-
   // Determine visibility of Google Drive button
   const shouldHideGoogleDrive =
     !isGoogleDriveEnabled && config?.hideDisabledToolsGoogleDrive;
-
   // Determine visibility of Mobile QR Scanner button
   const shouldHideMobileQR =
     !isMobileUploadEnabled && config?.hideDisabledToolsMobileQRScanner;
-
-  const buttonProps = {
-    variant: (source: string) =>
-      activeSource === source ? "filled" : "subtle",
-    getColor: (source: string) =>
-      activeSource === source ? "var(--mantine-color-gray-2)" : undefined,
-    getStyles: (source: string) => ({
-      root: {
-        backgroundColor: activeSource === source ? undefined : "transparent",
-        color:
-          activeSource === source
-            ? "var(--mantine-color-gray-9)"
-            : "var(--mantine-color-gray-6)",
-        border: "none",
-        "&:hover": {
-          backgroundColor:
-            activeSource === source ? undefined : "var(--mantine-color-gray-0)",
-        },
-      },
-    }),
-  };
-
+  // Shared Button has no `xs`; map the old horizontal `xs` to `sm`.
+  const buttonSize = "sm" as const;
+  const buttonJustify = horizontal ? "center" : "start";
   const buttons = (
     <>
       <Button
+        variant={activeSource === "recent" ? "primary" : "tertiary"}
+        accent="neutral"
         leftSection={<HistoryIcon />}
-        justify={horizontal ? "center" : "flex-start"}
+        justify={buttonJustify}
         onClick={() => onSourceChange("recent")}
         fullWidth={!horizontal}
-        size={horizontal ? "xs" : "sm"}
-        color={buttonProps.getColor("recent")}
-        styles={buttonProps.getStyles("recent")}
+        size={buttonSize}
       >
-        {horizontal
-          ? t("fileManager.recent", "Recent")
-          : t("fileManager.recent", "Recent")}
+        {t("fileManager.recent", "Recent")}
       </Button>
-
       <Button
-        variant="subtle"
-        color="var(--mantine-color-gray-6)"
+        variant="tertiary"
+        accent="neutral"
         leftSection={<UploadIcon />}
-        justify={horizontal ? "center" : "flex-start"}
+        justify={buttonJustify}
         onClick={onLocalFileClick}
         fullWidth={!horizontal}
-        size={horizontal ? "xs" : "sm"}
-        styles={{
-          root: {
-            backgroundColor: "transparent",
-            border: "none",
-            "&:hover": {
-              backgroundColor: "var(--mantine-color-gray-0)",
-            },
-          },
-        }}
+        size={buttonSize}
       >
         {horizontal ? terminology.upload : terminology.uploadFiles}
       </Button>
-
       {!shouldHideGoogleDrive && (
         <Button
-          variant="subtle"
-          color="var(--mantine-color-gray-6)"
+          variant="tertiary"
+          accent="neutral"
           leftSection={<GoogleDriveIcon colored={isGoogleDriveEnabled} />}
-          justify={horizontal ? "center" : "flex-start"}
+          justify={buttonJustify}
           onClick={handleGoogleDriveClick}
           fullWidth={!horizontal}
-          size={horizontal ? "xs" : "sm"}
+          size={buttonSize}
           disabled={!isGoogleDriveEnabled}
-          styles={{
-            root: {
-              backgroundColor: "transparent",
-              border: "none",
-              "&:hover": {
-                backgroundColor: isGoogleDriveEnabled
-                  ? "var(--mantine-color-gray-0)"
-                  : "transparent",
-              },
-            },
-          }}
           title={
             !isGoogleDriveEnabled
               ? t(
@@ -159,28 +110,16 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
             : t("fileManager.googleDrive", "Google Drive")}
         </Button>
       )}
-
       {!shouldHideMobileQR && (
         <Button
-          variant="subtle"
-          color="var(--mantine-color-gray-6)"
+          variant="tertiary"
+          accent="neutral"
           leftSection={<PhonelinkIcon />}
-          justify={horizontal ? "center" : "flex-start"}
+          justify={buttonJustify}
           onClick={handleMobileUploadClick}
           fullWidth={!horizontal}
-          size={horizontal ? "xs" : "sm"}
+          size={buttonSize}
           disabled={!isMobileUploadEnabled}
-          styles={{
-            root: {
-              backgroundColor: "transparent",
-              border: "none",
-              "&:hover": {
-                backgroundColor: isMobileUploadEnabled
-                  ? "var(--mantine-color-gray-0)"
-                  : "transparent",
-              },
-            },
-          }}
           title={
             !isMobileUploadEnabled
               ? t(
@@ -197,7 +136,6 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
       )}
     </>
   );
-
   if (horizontal) {
     return (
       <>
@@ -212,7 +150,6 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
       </>
     );
   }
-
   return (
     <>
       <Stack gap="xs" style={{ height: "100%" }}>
@@ -236,5 +173,4 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
     </>
   );
 };
-
 export default FileSourceButtons;

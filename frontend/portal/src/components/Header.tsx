@@ -1,5 +1,5 @@
+import { ActionIcon, Avatar, Button, Dropdown } from "@shared/components";
 import { useTranslation } from "react-i18next";
-import { Avatar, Dropdown } from "@shared/components";
 import { useAuth } from "@shared/auth";
 import { useTheme } from "@portal/contexts/ThemeContext";
 import { useTier, TIER_INFO, type Tier } from "@portal/contexts/TierContext";
@@ -19,8 +19,8 @@ function ThemeToggle() {
   const { theme, toggle } = useTheme();
   const { t } = useTranslation();
   return (
-    <button
-      type="button"
+    <ActionIcon
+      variant="tertiary"
       className="portal-header__icon-btn"
       onClick={toggle}
       aria-label={
@@ -30,12 +30,12 @@ function ThemeToggle() {
       }
       title={
         theme === "light"
-          ? t("shell.header.darkMode")
-          : t("shell.header.lightMode")
+          ? t("shell.header.darkMode", "Dark mode")
+          : t("shell.header.lightMode", "Light mode")
       }
     >
       {theme === "light" ? <MoonIcon size={16} /> : <SunIcon size={16} />}
-    </button>
+    </ActionIcon>
   );
 }
 
@@ -49,15 +49,21 @@ function TierSwitcher() {
   return (
     <Dropdown.Root align="end">
       <Dropdown.Trigger>
-        <button type="button" className="portal-header__tier-btn">
-          <span
-            className="portal-header__tier-dot"
-            style={{ background: info.dotColor }}
-            aria-hidden
-          />
+        <Button
+          variant="tertiary"
+          size="sm"
+          className="portal-header__tier-btn"
+          leftSection={
+            <span
+              className="portal-header__tier-dot"
+              style={{ background: info.dotColor }}
+              aria-hidden
+            />
+          }
+          rightSection={<ChevronDownIcon size={14} />}
+        >
           <span className="portal-header__tier-label">{info.label}</span>
-          <ChevronDownIcon size={14} />
-        </button>
+        </Button>
       </Dropdown.Trigger>
       <Dropdown.Menu width="12rem">
         {(Object.keys(TIER_INFO) as Tier[]).map((id) => (
@@ -88,14 +94,17 @@ function UserMenu() {
   return (
     <Dropdown.Root align="end">
       <Dropdown.Trigger>
-        <button
+        <Button
+          variant="tertiary"
+          hover={false}
           type="button"
           className="portal-header__user"
           aria-label={t("shell.header.accountMenu", "Account menu")}
           title={name}
+          style={{ padding: 0 }}
         >
           <Avatar name={name} size="md" tone="blue" />
-        </button>
+        </Button>
       </Dropdown.Trigger>
       <Dropdown.Menu width="12rem">
         <Dropdown.Item disabled>{name}</Dropdown.Item>
@@ -119,8 +128,8 @@ export function Header() {
         </span>
       </div>
 
-      <button
-        type="button"
+      <Button
+        variant="tertiary"
         className="portal-header__search"
         aria-label={t("shell.header.search")}
         onClick={openSearch}
@@ -132,7 +141,7 @@ export function Header() {
         <span className="portal-header__search-kbd" aria-hidden>
           ⌘K
         </span>
-      </button>
+      </Button>
 
       <div className="portal-header__right">
         <MocksToggle />

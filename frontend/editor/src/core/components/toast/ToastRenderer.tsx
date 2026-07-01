@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next";
 import { useToast } from "@app/components/toast/ToastContext";
 import { ToastInstance, ToastLocation } from "@app/components/toast/types";
 import { LocalIcon } from "@app/components/shared/LocalIcon";
+import { ActionIcon } from "@shared/components/ActionIcon";
+import { Button } from "@shared/components/Button";
 import "@app/components/toast/ToastRenderer.css";
 
 const locationToClass: Record<ToastLocation, string> = {
@@ -99,7 +101,8 @@ export default function ToastRenderer() {
                   {/* Controls */}
                   <div className="toast-controls">
                     {t.expandable && (
-                      <button
+                      <ActionIcon
+                        variant="tertiary"
                         aria-label={translate(
                           "toast.toggleDetails",
                           "Toggle details",
@@ -113,15 +116,16 @@ export default function ToastRenderer() {
                         className={`toast-button toast-expand-button ${t.isExpanded ? "toast-expand-button--expanded" : ""}`}
                       >
                         <LocalIcon icon="expand-more-rounded" />
-                      </button>
+                      </ActionIcon>
                     )}
-                    <button
+                    <ActionIcon
+                      variant="tertiary"
                       aria-label={translate("toast.dismiss", "Dismiss")}
                       onClick={() => dismiss(t.id)}
                       className="toast-button"
                     >
-                      <LocalIcon icon="close" width={20} height={20} />
-                    </button>
+                      &times;
+                    </ActionIcon>
                   </div>
                 </div>
                 {/* Progress bar - always show when present */}
@@ -142,12 +146,12 @@ export default function ToastRenderer() {
                 {/* Button - always show when present, positioned below body */}
                 {t.buttonText && t.buttonCallback && (
                   <div className="toast-action-container">
-                    <button
+                    <Button
                       onClick={t.buttonCallback}
                       className={getActionButtonClass(t)}
                     >
                       {t.buttonText}
-                    </button>
+                    </Button>
                   </div>
                 )}
               </div>

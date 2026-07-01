@@ -1,5 +1,7 @@
 import React from "react";
-import { Stack, Box, Text, Button, ActionIcon, Center } from "@mantine/core";
+import { Stack, Box, Text, Center } from "@mantine/core";
+import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
@@ -128,18 +130,20 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
         {hasMultipleFiles && (
           <Box style={{ display: "flex", gap: "0.25rem" }}>
             <ActionIcon
-              variant="subtle"
+              variant="tertiary"
               size="sm"
               onClick={onPrevious}
               disabled={isAnimating}
+              aria-label={t("fileManager.previousFile", "Previous file")}
             >
               <ChevronLeftIcon style={{ fontSize: 16 }} />
             </ActionIcon>
             <ActionIcon
-              variant="subtle"
+              variant="tertiary"
               size="sm"
               onClick={onNext}
               disabled={isAnimating}
+              aria-label={t("fileManager.nextFile", "Next file")}
             >
               <ChevronRightIcon style={{ fontSize: 16 }} />
             </ActionIcon>
@@ -150,16 +154,10 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
       {/* Action Button */}
       <Button
         size="sm"
+        accent="neutral"
         onClick={onOpenFiles}
         disabled={!hasSelection && !canCloseAll}
         fullWidth
-        style={{
-          backgroundColor:
-            hasSelection || canCloseAll
-              ? "var(--btn-open-file)"
-              : "var(--mantine-color-gray-4)",
-          color: "white",
-        }}
       >
         {canCloseAll
           ? t("fileManager.closeAllFiles", "Close all files")

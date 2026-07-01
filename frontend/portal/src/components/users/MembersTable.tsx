@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Menu } from "@mantine/core";
 import {
+  ActionIcon,
   Avatar,
   Chip,
   StatusBadge,
@@ -13,9 +14,11 @@ import {
   type RoleId,
   MEMBER_STATUS_TONE,
   ROLE_LABEL,
-  ROLE_TONE,
 } from "@portal/api/users";
-import { avatarToneForRole } from "@portal/components/users/format";
+import {
+  avatarToneForRole,
+  chipAccentForRole,
+} from "@portal/components/users/format";
 import "@portal/views/Users.css";
 
 interface MembersTableProps {
@@ -63,7 +66,7 @@ export function MembersTable({
         key: "role",
         header: t("users.table.role"),
         render: (m) => (
-          <Chip tone={ROLE_TONE[m.role]} size="sm">
+          <Chip accent={chipAccentForRole(m.role)} size="sm">
             {ROLE_LABEL[m.role]}
           </Chip>
         ),
@@ -98,14 +101,14 @@ export function MembersTable({
           // a row-action menu needs; SUI has no equivalent.
           <Menu position="bottom-end" withinPortal shadow="md" width={200}>
             <Menu.Target>
-              <button
-                type="button"
+              <ActionIcon
                 className="portal-users__row-action"
                 aria-label={t("users.table.actionsFor", { name: m.name })}
                 onClick={(e) => e.stopPropagation()}
+                variant="tertiary"
               >
                 ⋯
-              </button>
+              </ActionIcon>
             </Menu.Target>
             <Menu.Dropdown>
               <Menu.Label>{t("users.table.changeRole")}</Menu.Label>

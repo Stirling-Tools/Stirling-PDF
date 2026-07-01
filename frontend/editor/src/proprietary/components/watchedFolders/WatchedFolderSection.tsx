@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Box, Button, Text, Stack } from "@mantine/core";
+import { Box, Text, Stack } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import AddIcon from "@mui/icons-material/Add";
 import { useWatchedFolders } from "@app/hooks/useWatchedFolders";
@@ -16,7 +17,6 @@ import {
   WATCHED_FOLDER_VIEW_ID,
   WATCHED_FOLDER_WORKBENCH_ID,
 } from "@app/components/watchedFolders/WatchedFoldersRegistration";
-
 export function WatchedFolderSection() {
   const { t } = useTranslation();
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -26,20 +26,16 @@ export function WatchedFolderSection() {
   );
   const [deleteTarget, setDeleteTarget] = useState<WatchedFolder | null>(null);
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
-
   const { folders, loading, deleteFolder, refreshFolders } =
     useWatchedFolders();
   const statuses = useFolderRunStatuses(folders);
-
   const { setCustomWorkbenchViewData } = useToolWorkflow();
   const { actions } = useNavigationActions();
-
   const handleFolderClick = (folderId: string) => {
     setActiveFolderId(folderId);
     setCustomWorkbenchViewData(WATCHED_FOLDER_VIEW_ID, { folderId });
     actions.setWorkbench(WATCHED_FOLDER_WORKBENCH_ID);
   };
-
   const handleEditFolder = async (
     e: React.MouseEvent,
     folder: WatchedFolder,
@@ -52,12 +48,10 @@ export function WatchedFolderSection() {
     setEditAutomation(automation);
     setCreateModalOpen(true);
   };
-
   const handleDeleteClick = (e: React.MouseEvent, folder: WatchedFolder) => {
     e.stopPropagation();
     setDeleteTarget(folder);
   };
-
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return;
     if (activeFolderId === deleteTarget.id) {
@@ -67,13 +61,11 @@ export function WatchedFolderSection() {
     await deleteFolder(deleteTarget.id);
     setDeleteTarget(null);
   };
-
   const handleModalClose = () => {
     setCreateModalOpen(false);
     setEditFolder(null);
     setEditAutomation(null);
   };
-
   return (
     <Box
       style={{
@@ -102,7 +94,6 @@ export function WatchedFolderSection() {
           <Box className="tool-subcategory-row-rule" />
         </Box>
       </Box>
-
       <Box className="tool-picker-scrollable" style={{ flex: 1, minHeight: 0 }}>
         <Stack gap={0} pb="xs">
           {!loading && folders.length === 0 && (
@@ -110,7 +101,6 @@ export function WatchedFolderSection() {
               {t("watchedFolders.noFolders", "No watch folders yet")}
             </Text>
           )}
-
           {folders.map((folder) => (
             <WatchedFolderCard
               key={folder.id}
@@ -130,13 +120,13 @@ export function WatchedFolderSection() {
               }}
             />
           ))}
-
           <Button
-            variant="subtle"
+            variant="tertiary"
+            accent="neutral"
+            size="sm"
             className="tool-button"
             fullWidth
-            justify="flex-start"
-            px="sm"
+            justify="start"
             leftSection={
               <AddIcon
                 style={{ fontSize: 14, color: "var(--mantine-color-gray-5)" }}
@@ -150,7 +140,6 @@ export function WatchedFolderSection() {
           </Button>
         </Stack>
       </Box>
-
       <WatchedFolderManagementModal
         opened={createModalOpen}
         editFolder={editFolder}

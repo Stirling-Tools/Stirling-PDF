@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Anchor, Group, Stack, Text, Button, Paper } from "@mantine/core";
+import { Anchor, Group, Stack, Text, Paper } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import ApiKeySection from "@app/components/shared/config/configSections/apiKeys/ApiKeySection";
 import RefreshModal from "@app/components/shared/config/configSections/apiKeys/RefreshModal";
 import useApiKey from "@app/components/shared/config/configSections/apiKeys/hooks/useApiKey";
@@ -7,14 +8,12 @@ import SkeletonLoader from "@app/components/shared/SkeletonLoader";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@app/auth/UseSession";
 import { isUserAnonymous } from "@app/auth/supabase";
-
 export default function ApiKeys() {
   const [copied, setCopied] = useState<string | null>(null);
   const [showRefreshModal, setShowRefreshModal] = useState(false);
   const { t } = useTranslation();
   const { user } = useAuth();
   const isAnonymous = Boolean(user && isUserAnonymous(user));
-
   const {
     apiKey,
     isLoading: apiKeyLoading,
@@ -23,7 +22,6 @@ export default function ApiKeys() {
     error: apiKeyError,
     refetch,
   } = useApiKey();
-
   const copy = async (text: string, tag: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -34,7 +32,6 @@ export default function ApiKeys() {
       console.error(e);
     }
   };
-
   const refreshKeys = async () => {
     try {
       await refresh();
@@ -42,13 +39,11 @@ export default function ApiKeys() {
       setShowRefreshModal(false);
     }
   };
-
   const goToAccount = () => {
     window.dispatchEvent(
       new CustomEvent("appConfig:navigate", { detail: { key: "overview" } }),
     );
   };
-
   return (
     <Stack gap={20} p={0}>
       {!isAnonymous && apiKeyError && (
@@ -67,7 +62,6 @@ export default function ApiKeys() {
           </Anchor>
         </Text>
       )}
-
       {isAnonymous ? (
         <Paper
           radius="md"
@@ -131,7 +125,6 @@ export default function ApiKeys() {
           disabled={isRefreshing}
         />
       )}
-
       <RefreshModal
         opened={showRefreshModal}
         onClose={() => setShowRefreshModal(false)}

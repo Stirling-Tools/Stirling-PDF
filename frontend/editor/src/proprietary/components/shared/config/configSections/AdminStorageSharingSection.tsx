@@ -21,7 +21,6 @@ import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
 import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStickyFooter";
 import { useSettingsDirty } from "@app/hooks/useSettingsDirty";
-
 interface StorageSharingSettingsData {
   enabled?: boolean;
   sharing?: {
@@ -39,7 +38,6 @@ interface StorageSharingSettingsData {
     enabled?: boolean;
   };
 }
-
 export default function AdminStorageSharingSection() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -51,7 +49,6 @@ export default function AdminStorageSharingSection() {
     closeRestartModal,
     restartServer,
   } = useRestartServer();
-
   const {
     settings,
     setSettings,
@@ -70,11 +67,9 @@ export default function AdminStorageSharingSection() {
           apiClient.get("/api/v1/admin/settings/section/mail"),
         ],
       );
-
       const storageData = storageResponse.data || {};
       const systemData = systemResponse.data || {};
       const mailData = mailResponse.data || {};
-
       return {
         ...storageData,
         system: { frontendUrl: systemData.frontendUrl || "" },
@@ -95,27 +90,22 @@ export default function AdminStorageSharingSection() {
       },
     }),
   });
-
   useEffect(() => {
     if (loginEnabled) {
       fetchSettings();
     }
   }, [loginEnabled]);
-
   const storageEnabled = settings.enabled ?? false;
   const sharingEnabled = storageEnabled && (settings.sharing?.enabled ?? false);
   const frontendUrlConfigured = Boolean(settings.system?.frontendUrl?.trim());
   const mailEnabled = Boolean(settings.mail?.enabled);
-
   const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(
     settings,
     loading,
   );
-
   const handleDiscard = useCallback(() => {
     setSettings(resetToSnapshot());
   }, [resetToSnapshot, setSettings]);
-
   const handleSave = async () => {
     if (!validateLoginEnabled()) {
       return;
@@ -132,7 +122,6 @@ export default function AdminStorageSharingSection() {
       });
     }
   };
-
   if (loginEnabled && loading) {
     return (
       <Stack align="center" justify="center" h={200}>
@@ -140,7 +129,6 @@ export default function AdminStorageSharingSection() {
       </Stack>
     );
   }
-
   return (
     <div className="settings-section-container">
       <div className="settings-section-content">
@@ -162,7 +150,6 @@ export default function AdminStorageSharingSection() {
               )}
             </Text>
           </div>
-
           <Paper withBorder p="sm" radius="md">
             <Group justify="space-between" align="flex-start" wrap="nowrap">
               <div>
@@ -193,7 +180,6 @@ export default function AdminStorageSharingSection() {
               />
             </Group>
           </Paper>
-
           <Paper withBorder p="sm" radius="md">
             <Group justify="space-between" align="flex-start" wrap="nowrap">
               <div>
@@ -232,7 +218,6 @@ export default function AdminStorageSharingSection() {
               />
             </Group>
           </Paper>
-
           <Paper withBorder p="sm" radius="md">
             <Group justify="space-between" align="flex-start" wrap="nowrap">
               <div>
@@ -295,7 +280,6 @@ export default function AdminStorageSharingSection() {
               />
             </Group>
           </Paper>
-
           <Paper withBorder p="sm" radius="md">
             <Group justify="space-between" align="flex-start" wrap="nowrap">
               <div>
@@ -356,7 +340,6 @@ export default function AdminStorageSharingSection() {
               />
             </Group>
           </Paper>
-
           <Paper withBorder p="sm" radius="md">
             <Group justify="space-between" align="flex-start" wrap="nowrap">
               <div>
@@ -395,7 +378,6 @@ export default function AdminStorageSharingSection() {
               />
             </Group>
           </Paper>
-
           <RestartConfirmationModal
             opened={restartModalOpened}
             onClose={closeRestartModal}

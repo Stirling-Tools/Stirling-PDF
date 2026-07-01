@@ -142,7 +142,7 @@ export function AccessControls({ access }: AccessControlsProps) {
                 value={access.sso.domains.join(", ") || "—"}
               />
             </div>
-            <Button variant="ghost" size="sm">
+            <Button variant="tertiary" size="sm">
               {t("users.access.sso.manage")}
             </Button>
           </Card>
@@ -188,8 +188,8 @@ export function AccessControls({ access }: AccessControlsProps) {
           title={t("users.access.upgrade.title")}
           description={access.upgradeHint}
           action={
-            <Button size="sm" accent="purple">
-              {t("users.access.upgrade.action")}
+            <Button size="sm" accent="premium">
+              {t("users.access.upgrade.action", "Upgrade plan")}
             </Button>
           }
         />

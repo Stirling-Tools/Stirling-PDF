@@ -1,6 +1,8 @@
 import React, { useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { ActionIcon, Button, Checkbox, Menu, Tooltip } from "@mantine/core";
+import { Checkbox, Menu, Tooltip } from "@mantine/core";
+import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import FolderIcon from "@mui/icons-material/Folder";
@@ -14,7 +16,6 @@ import DriveFileRenameOutlineIcon from "@mui/icons-material/DriveFileRenameOutli
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
-
 import { FileId } from "@app/types/file";
 import { FolderId, FolderRecord, ROOT_FOLDER_ID } from "@app/types/folder";
 import { useFolders } from "@app/contexts/FolderContext";
@@ -35,9 +36,7 @@ import { FolderAppearancePicker } from "@app/components/filesPage/FolderAppearan
 import { useLazyThumbnail } from "@app/hooks/useLazyThumbnail";
 import type { FilesPageSortMode } from "@app/contexts/FilesPageContext";
 import { OpenInNewWindowMenuItem } from "@app/components/filesPage/OpenInNewWindowMenuItem";
-
 export type FilesPageViewMode = "grid" | "list";
-
 export interface FilesPageEntry {
   kind: "folder" | "file";
   folder?: FolderRecord;
@@ -47,7 +46,6 @@ export interface FilesPageEntry {
   /** Parent breadcrumb path for search results outside the current folder. */
   parentPath?: string;
 }
-
 interface FileGridProps {
   entries: FilesPageEntry[];
   selectedFileIds: Set<FileId>;
@@ -95,7 +93,6 @@ interface FileGridProps {
   /** Non-null disables the New folder CTA with this reason as tooltip. */
   newFolderDisabledReason?: string | null;
 }
-
 export function FileGrid(props: FileGridProps & { loading?: boolean }) {
   const {
     viewMode,
@@ -107,11 +104,9 @@ export function FileGrid(props: FileGridProps & { loading?: boolean }) {
     onEmptyCreateFolder,
     newFolderDisabledReason,
   } = props;
-
   if (loading && entries.length === 0) {
     return <SkeletonGrid viewMode={viewMode} />;
   }
-
   if (entries.length === 0) {
     return (
       <EmptyState
@@ -123,13 +118,11 @@ export function FileGrid(props: FileGridProps & { loading?: boolean }) {
       />
     );
   }
-
   if (viewMode === "list") {
     return <ListView {...props} />;
   }
   return <GridView {...props} />;
 }
-
 function SkeletonGrid({ viewMode }: { viewMode: FilesPageViewMode }) {
   // Six placeholders mirroring the card layout while IDB resolves.
   const placeholders = Array.from({ length: 6 });
@@ -181,7 +174,6 @@ function SkeletonGrid({ viewMode }: { viewMode: FilesPageViewMode }) {
     </div>
   );
 }
-
 interface EmptyStateProps {
   /** Drives copy + iconography. */
   tab?: "all" | "local" | "cloud" | "recent" | "shared" | "sharedByMe";
@@ -193,7 +185,6 @@ interface EmptyStateProps {
   /** Non-null disables New folder CTA with this reason. */
   newFolderDisabledReason?: string | null;
 }
-
 function EmptyState({
   tab = "all",
   serverReachable = true,
@@ -297,10 +288,10 @@ function EmptyState({
                 <span style={{ display: "inline-flex" }}>
                   <Button
                     size="md"
-                    variant="default"
+                    variant="secondary"
                     leftSection={<CreateNewFolderIcon fontSize="small" />}
                     disabled
-                    styles={{ root: { pointerEvents: "auto" } }}
+                    style={{ pointerEvents: "auto" }}
                   >
                     {t("filesPage.empty.newFolderCta", "Create folder")}
                   </Button>
@@ -309,7 +300,7 @@ function EmptyState({
             ) : (
               <Button
                 size="md"
-                variant="default"
+                variant="secondary"
                 leftSection={<CreateNewFolderIcon fontSize="small" />}
                 onClick={onCreateFolder}
               >
@@ -321,7 +312,6 @@ function EmptyState({
     </div>
   );
 }
-
 function GridView({
   entries,
   selectedFileIds,
@@ -404,7 +394,6 @@ function GridView({
     </div>
   );
 }
-
 interface FolderCardProps {
   folder: FolderRecord;
   fileCount: number;
@@ -421,7 +410,6 @@ interface FolderCardProps {
   onMoveFiles: (fileIds: FileId[]) => void | Promise<void>;
   onMoveFolder: (folderId: FolderId) => void | Promise<void>;
 }
-
 function FolderCard({
   folder,
   fileCount,
@@ -465,7 +453,6 @@ function FolderCard({
       }
     },
   });
-
   return (
     <div
       role="listitem"
@@ -528,8 +515,6 @@ function FolderCard({
           <Menu.Target>
             <ActionIcon
               ref={kebabRef}
-              variant="filled"
-              color="gray"
               size="sm"
               onClick={(e) => e.stopPropagation()}
               aria-label={t("filesPage.folderMenu", "Folder actions")}
@@ -577,7 +562,6 @@ function FolderCard({
     </div>
   );
 }
-
 /** Shield badges for the policies that have run on a file. */
 function PolicyBadges({ fileId }: { fileId: string }) {
   const badges = usePolicyFileBadges().get(fileId) ?? [];
@@ -602,7 +586,6 @@ function PolicyBadges({ fileId }: { fileId: string }) {
     </span>
   );
 }
-
 interface FileCardProps {
   file: StirlingFileStub;
   isSelected: boolean;
@@ -623,7 +606,6 @@ interface FileCardProps {
   /** When set, the kebab Save to server is disabled with this tooltip. */
   saveToServerDisabledReason?: string | null;
 }
-
 function FileCard({
   file,
   parentPath,
@@ -646,7 +628,6 @@ function FileCard({
     () => getFileDate({ lastModified: file.lastModified }),
     [file.lastModified],
   );
-
   const handleDragStart = useCallback(
     (e: React.DragEvent<HTMLDivElement>) => {
       const fileIds = isSelected ? Array.from(selectedFileIds) : [file.id];
@@ -658,7 +639,6 @@ function FileCard({
     },
     [file.id, isSelected, selectedFileIds],
   );
-
   const extension = file.name.split(".").pop()?.toUpperCase() ?? "";
   const isPdf = extension === "PDF";
   const resolvedThumbnail = useLazyThumbnail(
@@ -666,7 +646,6 @@ function FileCard({
     file.size,
     file.thumbnailUrl,
   );
-
   const kebabRef = useRef<HTMLButtonElement>(null);
   const handleContextMenu = useCallback(
     (e: React.MouseEvent) => {
@@ -677,7 +656,6 @@ function FileCard({
     },
     [isSelected, onClick],
   );
-
   return (
     <div
       ref={cardRef}
@@ -771,8 +749,6 @@ function FileCard({
           <Menu.Target>
             <ActionIcon
               ref={kebabRef}
-              variant="filled"
-              color="gray"
               size="sm"
               onClick={(e) => e.stopPropagation()}
               aria-label={t("filesPage.fileMenu", "File actions")}
@@ -858,7 +834,6 @@ function FileCard({
     </div>
   );
 }
-
 function ListView({
   entries,
   selectedFileIds,
@@ -884,7 +859,6 @@ function ListView({
   onChangeSortMode?: (next: FilesPageSortMode) => void;
 }) {
   const { t } = useTranslation();
-
   // Tri-state header checkbox state - computed from current entries.
   const visibleFileIds = useMemo(
     () =>
@@ -901,13 +875,11 @@ function ListView({
     visibleFileIds.every((id) => selectedFileIds.has(id));
   const someSelected =
     !allSelected && visibleFileIds.some((id) => selectedFileIds.has(id));
-
   const sortIndicator = (asc: FilesPageSortMode, desc: FilesPageSortMode) => {
     if (sortMode === asc) return " ↑";
     if (sortMode === desc) return " ↓";
     return "";
   };
-
   const headerProps = (asc: FilesPageSortMode, desc: FilesPageSortMode) => ({
     role: "button",
     tabIndex: onChangeSortMode ? 0 : undefined,
@@ -924,7 +896,6 @@ function ListView({
       }
     },
   });
-
   return (
     <div className="files-page-list" role="grid">
       <div className="files-page-list-row is-header" role="row">
@@ -1020,7 +991,6 @@ function ListView({
     </div>
   );
 }
-
 interface FolderRowProps {
   folder: FolderRecord;
   fileCount: number;
@@ -1035,7 +1005,6 @@ interface FolderRowProps {
   onDropFiles: (fileIds: FileId[]) => void | Promise<void>;
   onDropFolder: (folderId: FolderId) => void | Promise<void>;
 }
-
 function FolderRow({
   folder,
   fileCount,
@@ -1151,7 +1120,7 @@ function FolderRow({
         <Menu.Target>
           <ActionIcon
             ref={kebabRef}
-            variant="subtle"
+            variant="tertiary"
             size="sm"
             onClick={(e) => e.stopPropagation()}
             aria-label={t("filesPage.folderMenu", "Folder actions")}
@@ -1198,7 +1167,6 @@ function FolderRow({
     </div>
   );
 }
-
 interface FileRowProps {
   file: StirlingFileStub;
   isSelected: boolean;
@@ -1218,7 +1186,6 @@ interface FileRowProps {
   /** When set, the kebab Save to server is disabled with this tooltip. */
   saveToServerDisabledReason?: string | null;
 }
-
 function FileRow({
   file,
   isSelected,
@@ -1370,7 +1337,7 @@ function FileRow({
         <Menu.Target>
           <ActionIcon
             ref={kebabRef}
-            variant="subtle"
+            variant="tertiary"
             size="sm"
             onClick={(e) => e.stopPropagation()}
             aria-label={t("filesPage.fileMenu", "File actions")}
@@ -1454,6 +1421,5 @@ function FileRow({
     </div>
   );
 }
-
 // Re-export root constant for caller convenience
 export { ROOT_FOLDER_ID };

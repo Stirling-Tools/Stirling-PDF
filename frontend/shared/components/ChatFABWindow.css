@@ -15,7 +15,7 @@
 
   /* Closed state: collapsed toward bottom-right origin */
   opacity: 0;
-  transform: scale(0.9) translateY(14px);
+  transform: scale(0.9);
   pointer-events: none;
   transform-origin: bottom right;
   transition:
@@ -25,7 +25,7 @@
 
 .chat-fab-window--open {
   opacity: 1;
-  transform: scale(1) translateY(0);
+  transform: scale(1);
   pointer-events: auto;
 }
 

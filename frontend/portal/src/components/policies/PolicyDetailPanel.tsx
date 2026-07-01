@@ -139,8 +139,8 @@ export function PolicyDetailPanel({
         <div className="portal-policies__detail-foot">
           {canDelete && (
             <Button
-              variant="ghost"
-              accent="red"
+              variant="tertiary"
+              accent="danger"
               size="sm"
               onClick={onDelete}
               disabled={busy}
@@ -151,7 +151,7 @@ export function PolicyDetailPanel({
           )}
           {onRun && (
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               onClick={onRun}
               disabled={busy}
@@ -161,7 +161,7 @@ export function PolicyDetailPanel({
             </Button>
           )}
           <Button
-            variant="outline"
+            variant="secondary"
             size="sm"
             onClick={onTogglePause}
             disabled={busy}

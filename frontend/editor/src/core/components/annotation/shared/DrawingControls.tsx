@@ -1,7 +1,9 @@
 import React from "react";
-import { Group, Button, ActionIcon, Tooltip } from "@mantine/core";
+import { Group, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { LocalIcon } from "@app/components/shared/LocalIcon";
+import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 
 interface DrawingControlsProps {
   onUndo?: () => void;
@@ -37,12 +39,11 @@ export const DrawingControls: React.FC<DrawingControlsProps> = ({
       {onUndo && (
         <Tooltip label={t("sign.undo", "Undo")}>
           <ActionIcon
-            variant="subtle"
+            variant="tertiary"
             size="lg"
             aria-label={t("sign.undo", "Undo")}
             onClick={onUndo}
             disabled={undoDisabled}
-            color={undoDisabled ? "gray" : "blue"}
           >
             <LocalIcon
               icon="undo"
@@ -56,12 +57,11 @@ export const DrawingControls: React.FC<DrawingControlsProps> = ({
       {onRedo && (
         <Tooltip label={t("sign.redo", "Redo")}>
           <ActionIcon
-            variant="subtle"
+            variant="tertiary"
             size="lg"
             aria-label={t("sign.redo", "Redo")}
             onClick={onRedo}
             disabled={redoDisabled}
-            color={redoDisabled ? "gray" : "blue"}
           >
             <LocalIcon
               icon="redo"
@@ -78,11 +78,9 @@ export const DrawingControls: React.FC<DrawingControlsProps> = ({
       {/* Place Signature Button */}
       {showPlaceButton && onPlaceSignature && (
         <Button
-          variant="filled"
-          color="blue"
           onClick={onPlaceSignature}
           disabled={disabled || !hasSignatureData}
-          ml="auto"
+          style={{ marginLeft: "auto" }}
         >
           {placeButtonText}
         </Button>

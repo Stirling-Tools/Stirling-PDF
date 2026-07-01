@@ -1,11 +1,4 @@
-import {
-  ActionIcon,
-  Tooltip,
-  Popover,
-  TextInput,
-  Button,
-  Stack,
-} from "@mantine/core";
+import { Tooltip, Popover, TextInput, Stack } from "@mantine/core";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -14,41 +7,20 @@ import CommentIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import AddCommentIcon from "@mui/icons-material/AddCommentOutlined";
 import OpenInNewIcon from "@mui/icons-material/OpenInNewRounded";
 import LocalIcon from "@app/components/shared/LocalIcon";
+import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import type { FirstLinkTarget } from "@app/components/viewer/useAnnotationMenuHandlers";
-
-export const commonButtonStyles = {
-  root: {
-    flexShrink: 0,
-    backgroundColor: "var(--bg-raised)",
-    border: "1px solid var(--border-default)",
-    color: "var(--text-secondary)",
-    "&:hover": {
-      backgroundColor: "var(--hover-bg)",
-      borderColor: "var(--border-strong)",
-      color: "var(--text-primary)",
-    },
-  },
-};
 
 export function DeleteButton({ onDelete }: { onDelete: () => void }) {
   const { t } = useTranslation();
   return (
     <Tooltip label={t("annotation.delete", "Delete")}>
       <ActionIcon
-        variant="subtle"
-        color="red"
+        aria-label={t("annotation.delete", "Delete")}
+        variant="secondary"
+        accent="danger"
         size="md"
         onClick={onDelete}
-        styles={{
-          root: {
-            ...commonButtonStyles.root,
-            "&:hover": {
-              backgroundColor: "var(--mantine-color-red-1)",
-              borderColor: "var(--mantine-color-red-4)",
-              color: "var(--mantine-color-red-7)",
-            },
-          },
-        }}
       >
         <DeleteIcon style={{ fontSize: 18 }} />
       </ActionIcon>
@@ -61,11 +33,11 @@ export function EditTextButton({ onEdit }: { onEdit: () => void }) {
   return (
     <Tooltip label={t("annotation.editText", "Edit Text")}>
       <ActionIcon
-        variant="subtle"
-        color="gray"
+        aria-label={t("annotation.editText", "Edit Text")}
+        variant="secondary"
+        accent="neutral"
         size="md"
         onClick={onEdit}
-        styles={commonButtonStyles}
       >
         <EditIcon style={{ fontSize: 18 }} />
       </ActionIcon>
@@ -85,20 +57,17 @@ export function AttachCommentButton({
   onAdd,
 }: AttachCommentButtonProps) {
   const { t } = useTranslation();
+  const label = isInSidebar
+    ? t("viewer.comments.viewComment", "View comment")
+    : t("viewer.comments.addComment", "Add comment");
   return (
-    <Tooltip
-      label={
-        isInSidebar
-          ? t("viewer.comments.viewComment", "View comment")
-          : t("viewer.comments.addComment", "Add comment")
-      }
-    >
+    <Tooltip label={label}>
       <ActionIcon
-        variant={isInSidebar ? "filled" : "subtle"}
-        color={isInSidebar ? "blue" : "gray"}
+        aria-label={label}
+        variant={isInSidebar ? "primary" : "secondary"}
+        accent={isInSidebar ? undefined : "neutral"}
         size="md"
         onClick={isInSidebar ? onView : onAdd}
-        styles={isInSidebar ? undefined : commonButtonStyles}
       >
         <AddCommentIcon style={{ fontSize: 18 }} />
       </ActionIcon>
@@ -113,20 +82,17 @@ interface CommentButtonProps {
 
 export function CommentButton({ hasContent, onClick }: CommentButtonProps) {
   const { t } = useTranslation();
+  const label = hasContent
+    ? t("viewer.comments.viewComment", "View comment")
+    : t("viewer.comments.addComment", "Add comment");
   return (
-    <Tooltip
-      label={
-        hasContent
-          ? t("viewer.comments.viewComment", "View comment")
-          : t("viewer.comments.addComment", "Add comment")
-      }
-    >
+    <Tooltip label={label}>
       <ActionIcon
-        variant="subtle"
-        color="gray"
+        aria-label={label}
+        variant="secondary"
+        accent="neutral"
         size="md"
         onClick={onClick}
-        styles={commonButtonStyles}
       >
         <CommentIcon style={{ fontSize: 18 }} />
       </ActionIcon>
@@ -153,11 +119,11 @@ export function LinkButton({
     return (
       <Tooltip label={t("viewer.comments.goToLink", "Go to link")}>
         <ActionIcon
-          variant="subtle"
-          color="gray"
+          aria-label={t("viewer.comments.goToLink", "Go to link")}
+          variant="secondary"
+          accent="neutral"
           size="md"
           onClick={onGoToLink}
-          styles={commonButtonStyles}
         >
           <OpenInNewIcon style={{ fontSize: 18 }} />
         </ActionIcon>
@@ -170,11 +136,11 @@ export function LinkButton({
       <Popover.Target>
         <Tooltip label={t("viewer.comments.addLink", "Add link")}>
           <ActionIcon
-            variant="subtle"
-            color="gray"
+            aria-label={t("viewer.comments.addLink", "Add link")}
+            variant="secondary"
+            accent="neutral"
             size="md"
             onClick={() => setOpen((o) => !o)}
-            styles={commonButtonStyles}
           >
             <LocalIcon icon="link" width="1.25rem" height="1.25rem" />
           </ActionIcon>
@@ -190,7 +156,7 @@ export function LinkButton({
             style={{ minWidth: 220 }}
           />
           <Button
-            size="xs"
+            size="sm"
             disabled={!url.trim()}
             onClick={() => {
               onAddLink(url);

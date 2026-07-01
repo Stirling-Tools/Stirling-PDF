@@ -1,7 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render as baseRender,
+  screen,
+  waitFor,
+} from "@testing-library/react";
+import { MantineProvider } from "@mantine/core";
 import { HttpError } from "@portal/api/http";
 import { ConnectWizard } from "@portal/components/sources/ConnectWizard";
+
+const render = (
+  ui: Parameters<typeof baseRender>[0],
+  options?: Parameters<typeof baseRender>[1],
+) => baseRender(ui, { wrapper: MantineProvider, ...options });
 
 // Deterministic i18n: keys come back verbatim so the test never waits on the
 // async TOML backend.

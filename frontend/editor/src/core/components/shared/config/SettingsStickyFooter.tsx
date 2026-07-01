@@ -1,4 +1,5 @@
-import { Button, Group, Text } from "@mantine/core";
+import { Group, Text } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 
 interface SettingsStickyFooterProps {
@@ -29,7 +30,7 @@ export function SettingsStickyFooter({
           {t("admin.settings.unsavedChanges.hint", "You have unsaved changes")}
         </Text>
         <Group gap="sm">
-          <Button variant="default" onClick={onDiscard} size="sm">
+          <Button variant="secondary" onClick={onDiscard} size="sm">
             {t("admin.settings.discard", "Discard")}
           </Button>
           <Button onClick={onSave} loading={saving} size="sm">

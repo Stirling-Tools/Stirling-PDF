@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { Box, ScrollArea, Text, ActionIcon } from "@mantine/core";
+import { Box, ScrollArea, Text } from "@mantine/core";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import LocalIcon from "@app/components/shared/LocalIcon";
@@ -182,9 +183,9 @@ export function ThumbnailSidebar({
               </Text>
             </div>
             <ActionIcon
-              variant="subtle"
+              variant="tertiary"
+              accent="neutral"
               size="sm"
-              color="gray"
               onClick={onToggle}
               aria-label="Close thumbnails sidebar"
               title="Close thumbnails"

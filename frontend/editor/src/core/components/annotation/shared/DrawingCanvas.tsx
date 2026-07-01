@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Paper, Button, Modal, Stack, Text, Group } from "@mantine/core";
+import { Paper, Modal, Stack, Text, Group } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import { Button } from "@shared/components/Button";
 import { ColorSwatchButton } from "@app/components/annotation/shared/ColorPicker";
 import PenSizeSelector from "@app/components/tools/sign/PenSizeSelector";
 import SignaturePad from "signature_pad";
@@ -331,7 +332,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
           </PrivateContent>
 
           <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <Button variant="subtle" color="red" onClick={clear}>
+            <Button variant="tertiary" accent="danger" onClick={clear}>
               {t("sign.canvas.clear", "Clear canvas")}
             </Button>
             <Button onClick={closeModal}>{t("common.done", "Done")}</Button>

@@ -1,6 +1,7 @@
 import { useEffect, useId, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { FocusTrap } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import "@shared/components/Modal.css";
 
 export type ModalWidth = "sm" | "md" | "lg" | "xl";
@@ -8,31 +9,20 @@ export type ModalWidth = "sm" | "md" | "lg" | "xl";
 export interface ModalProps {
   open: boolean;
   onClose: () => void;
-  /** Optional heading slot rendered above the body. */
   title?: ReactNode;
-  /** Optional sub-heading rendered under the title. */
   subtitle?: ReactNode;
-  /** Optional footer slot rendered below the body. */
   footer?: ReactNode;
-  /** Width preset. sm=24rem, md=32rem, lg=48rem, xl=64rem. Defaults to md. */
+  /** sm=24rem, md=32rem, lg=48rem, xl=64rem. */
   width?: ModalWidth;
-  /** Disable click-on-backdrop dismissal. Defaults to false. */
   disableBackdropClose?: boolean;
-  /** Disable Escape-key dismissal. Defaults to false. */
   disableEscapeClose?: boolean;
-  /** Accessible name when no visible `title` is provided. */
+  /** Accessible name when no visible title is provided. */
   ariaLabel?: string;
   className?: string;
   children?: ReactNode;
 }
 
-/**
- * Portal-rendered modal with our own brand shell (header / body / footer,
- * width presets, backdrop). The hard part — trapping Tab focus inside the
- * dialog, initial focus, and restoring focus to the opener on close — is
- * delegated to Mantine's <FocusTrap> rather than hand-rolled. ESC and
- * backdrop click close by default; the caller owns the open state.
- */
+/** Tab focus trapping and restoration are delegated to Mantine's FocusTrap. */
 export function Modal({
   open,
   onClose,
@@ -102,27 +92,29 @@ export function Modal({
                 )}
                 {subtitle && <div className="sui-modal__sub">{subtitle}</div>}
               </div>
-              <button
-                type="button"
+              <Button
+                variant="tertiary"
+                shape="circle"
                 className="sui-modal__close"
                 onClick={onClose}
                 aria-label="Close"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  width="16"
-                  height="16"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={1.75}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden
-                >
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
+                leftSection={
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="16"
+                    height="16"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={1.75}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden
+                  >
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                }
+              />
             </header>
           )}
           <div className="sui-modal__body">{children}</div>

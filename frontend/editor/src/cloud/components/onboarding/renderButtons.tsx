@@ -1,5 +1,7 @@
 import React from "react";
-import { Button, Group, ActionIcon } from "@mantine/core";
+import { Group } from "@mantine/core";
+import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import { TFunction } from "i18next";
 import {
@@ -31,22 +33,6 @@ export function renderButtons({
     (btn) => btn.group === "right",
   );
 
-  const buttonStyles = (variant: ButtonDefinition["variant"]) =>
-    variant === "primary"
-      ? {
-          root: {
-            background: "var(--onboarding-primary-button-bg)",
-            color: "var(--onboarding-primary-button-text)",
-          },
-        }
-      : {
-          root: {
-            background: "var(--onboarding-secondary-button-bg)",
-            border: "1px solid var(--onboarding-secondary-button-border)",
-            color: "var(--onboarding-secondary-button-text)",
-          },
-        };
-
   const resolveButtonLabel = (button: ButtonDefinition) => {
     // Translate the label (it's a translation key)
     const label = button.label ?? "";
@@ -65,20 +51,15 @@ export function renderButtons({
         <ActionIcon
           key={button.key}
           onClick={() => onAction(button.action)}
-          radius="md"
-          size={40}
+          size="lg"
+          variant="secondary"
+          accent="neutral"
           disabled={disabled}
-          styles={{
-            root: {
-              background: "var(--onboarding-secondary-button-bg)",
-              border: "1px solid var(--onboarding-secondary-button-border)",
-              color: "var(--onboarding-secondary-button-text)",
-            },
-          }}
+          aria-label={t("onboarding.buttons.back", "Back")}
         >
-          {button.icon === "chevron-left" && (
+          {button.icon === "chevron-left" ? (
             <ChevronLeftIcon fontSize="small" />
-          )}
+          ) : null}
         </ActionIcon>
       );
     }
@@ -91,7 +72,8 @@ export function renderButtons({
         key={button.key}
         onClick={() => onAction(button.action)}
         disabled={disabled}
-        styles={buttonStyles(variant)}
+        variant={variant === "primary" ? "primary" : "secondary"}
+        accent="neutral"
       >
         {label}
       </Button>

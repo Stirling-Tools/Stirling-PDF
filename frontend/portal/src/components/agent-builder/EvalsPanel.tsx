@@ -86,8 +86,8 @@ export function EvalsPanel({ agent }: EvalsPanelProps) {
             value={`${agent.evalsPassing} / ${agent.evalsTotal}`}
           />
         </div>
-        <Button size="sm" variant="outline" onClick={runEvals}>
-          {t("agentBuilder.evals.runEvals")}
+        <Button size="sm" variant="secondary" onClick={runEvals}>
+          {t("agentBuilder.evals.runEvals", "Run evals")}
         </Button>
       </div>
 

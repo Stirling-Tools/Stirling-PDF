@@ -133,13 +133,13 @@ export function Sources() {
         </div>
         <div className="portal-sources__actions">
           <Button
-            variant="outline"
+            variant="secondary"
             onClick={() => setActiveView("agent-builder")}
-            leadingIcon={<AgentBuilderIcon size={16} />}
+            leftSection={<AgentBuilderIcon size={16} />}
           >
             {t("sources.actions.agentBuilder")}
           </Button>
-          <Button onClick={openCreate} leadingIcon={<span aria-hidden>+</span>}>
+          <Button onClick={openCreate} leftSection={<span aria-hidden>+</span>}>
             {t("sources.actions.connectSource")}
           </Button>
         </div>
@@ -206,7 +206,7 @@ export function Sources() {
         footer={
           <div className="portal-sources__wizard-footer">
             <Button
-              variant="ghost"
+              variant="tertiary"
               size="sm"
               disabled={deleting}
               onClick={() => setPendingDelete(null)}
@@ -215,7 +215,7 @@ export function Sources() {
             </Button>
             <Button
               size="sm"
-              accent="red"
+              accent="danger"
               loading={deleting}
               onClick={confirmDelete}
             >

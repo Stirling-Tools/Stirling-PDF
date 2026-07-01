@@ -1,6 +1,8 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Box, Group, Stack, Text, UnstyledButton } from "@mantine/core";
+import { Box, Group, Stack, Text } from "@mantine/core";
+import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import CloseIcon from "@mui/icons-material/Close";
 import CompressIcon from "@mui/icons-material/Compress";
 import ContentCutIcon from "@mui/icons-material/ContentCut";
@@ -13,9 +15,7 @@ import { useAllFiles, useFileActions } from "@app/contexts/FileContext";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import { detectFileExtension, isPdfFile } from "@app/utils/fileUtils";
 import type { StirlingFileStub } from "@app/types/fileContext";
-
 const MAX_FILE_PILLS = 3;
-
 interface QuickAction {
   key: string;
   icon: React.ReactNode;
@@ -23,10 +23,12 @@ interface QuickAction {
   subtitle?: string;
   onClick: () => void;
 }
-
 function QuickActionCard({ action }: { action: QuickAction }) {
   return (
-    <UnstyledButton
+    <Button
+      type="button"
+      variant="tertiary"
+      hover={false}
       className="chat-quick-action"
       onClick={action.onClick}
       aria-label={action.title}
@@ -51,10 +53,9 @@ function QuickActionCard({ action }: { action: QuickAction }) {
           }}
         />
       </Group>
-    </UnstyledButton>
+    </Button>
   );
 }
-
 function WorkbenchFilePills({
   stubs,
   onOpenFilesModal,
@@ -81,28 +82,31 @@ function WorkbenchFilePills({
           <span className="chat-file-pill__label" title={stub.name}>
             {stub.name}
           </span>
-          <button
+          <ActionIcon
             type="button"
+            variant="tertiary"
             className="chat-file-pill__remove"
             onClick={() => onRemove(stub.id)}
             aria-label={removeLabel(stub.name)}
           >
             <CloseIcon sx={{ fontSize: 12 }} />
-          </button>
+          </ActionIcon>
         </span>
       ))}
       {overflow > 0 && (
-        <UnstyledButton
+        <Button
+          type="button"
+          variant="tertiary"
+          hover={false}
           className="chat-file-pill chat-file-pill--more"
           onClick={onOpenFilesModal}
         >
           {moreLabel(overflow)}
-        </UnstyledButton>
+        </Button>
       )}
     </div>
   );
 }
-
 interface WorkbenchSummary {
   fileCount: number;
   pdfCount: number;
@@ -111,12 +115,10 @@ interface WorkbenchSummary {
   singleFilePageCount: number | null;
   typeBreakdown: { label: string; count: number }[];
 }
-
 function summariseWorkbench(stubs: StirlingFileStub[]): WorkbenchSummary {
   const counts = new Map<string, number>();
   let pdfCount = 0;
   let nonPdfCount = 0;
-
   for (const stub of stubs) {
     const ext = detectFileExtension(stub.name ?? "");
     const isPdf = isPdfFile({ name: stub.name, type: stub.type });
@@ -125,11 +127,9 @@ function summariseWorkbench(stubs: StirlingFileStub[]): WorkbenchSummary {
     const label = ext ? ext.toUpperCase() : "FILE";
     counts.set(label, (counts.get(label) ?? 0) + 1);
   }
-
   const typeBreakdown = Array.from(counts.entries())
     .sort((a, b) => b[1] - a[1])
     .map(([label, count]) => ({ label, count }));
-
   return {
     fileCount: stubs.length,
     pdfCount,
@@ -140,25 +140,20 @@ function summariseWorkbench(stubs: StirlingFileStub[]): WorkbenchSummary {
     typeBreakdown,
   };
 }
-
 export interface ChatQuickActionsProps {
   /** Heading text shown above the actions. */
   heading: string;
   /** Invoked when the user selects an action — sends the given text as a chat message. */
   onAction: (text: string) => void;
 }
-
 export function ChatQuickActions({ heading, onAction }: ChatQuickActionsProps) {
   const { t } = useTranslation();
   const { fileStubs } = useAllFiles();
   const { actions: fileActions } = useFileActions();
   const { openFilesModal } = useFilesModalContext();
-
   const summary = useMemo(() => summariseWorkbench(fileStubs), [fileStubs]);
-
   const actions = useMemo<QuickAction[]>(() => {
     const send = (text: string) => () => onAction(text);
-
     if (summary.fileCount === 0) {
       return [
         {
@@ -170,7 +165,6 @@ export function ChatQuickActions({ heading, onAction }: ChatQuickActionsProps) {
         },
       ];
     }
-
     if (summary.fileCount === 1) {
       // Non-PDF: only suggest converting to PDF.
       if (summary.hasNonPdf) {
@@ -187,7 +181,6 @@ export function ChatQuickActions({ heading, onAction }: ChatQuickActionsProps) {
           },
         ];
       }
-
       const result: QuickAction[] = [];
       const hasMultiplePages =
         summary.singleFilePageCount != null && summary.singleFilePageCount > 1;
@@ -212,7 +205,6 @@ export function ChatQuickActions({ heading, onAction }: ChatQuickActionsProps) {
       });
       return result;
     }
-
     // Multiple files.
     const result: QuickAction[] = [];
     if (summary.hasNonPdf) {
@@ -249,7 +241,6 @@ export function ChatQuickActions({ heading, onAction }: ChatQuickActionsProps) {
     });
     return result;
   }, [summary, t, onAction, openFilesModal]);
-
   return (
     <div className="chat-panel__quick-actions">
       {summary.fileCount > 0 && (

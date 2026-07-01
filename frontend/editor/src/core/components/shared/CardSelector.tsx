@@ -1,7 +1,6 @@
 import { Stack, Card, Text, Flex } from "@mantine/core";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { useTranslation } from "react-i18next";
-
 export interface CardOption<T = string> {
   value: T;
   prefixKey: string;
@@ -9,14 +8,12 @@ export interface CardOption<T = string> {
   tooltipKey?: string;
   tooltipContent?: any[];
 }
-
 export interface CardSelectorProps<T, K extends CardOption<T>> {
   options: K[];
   onSelect: (value: T) => void;
   disabled?: boolean;
   getTooltipContent?: (option: K) => any[];
 }
-
 const CardSelector = <T, K extends CardOption<T>>({
   options,
   onSelect,
@@ -24,13 +21,11 @@ const CardSelector = <T, K extends CardOption<T>>({
   getTooltipContent,
 }: CardSelectorProps<T, K>) => {
   const { t } = useTranslation();
-
   const handleOptionClick = (value: T) => {
     if (!disabled) {
       onSelect(value);
     }
   };
-
   const getTooltips = (option: K) => {
     if (getTooltipContent) {
       return getTooltipContent(option);
@@ -41,7 +36,6 @@ const CardSelector = <T, K extends CardOption<T>>({
     }
     return [];
   };
-
   return (
     <Stack gap="sm">
       {options.map((option) => {
@@ -106,5 +100,4 @@ const CardSelector = <T, K extends CardOption<T>>({
     </Stack>
   );
 };
-
 export default CardSelector;

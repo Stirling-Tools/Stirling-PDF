@@ -1,5 +1,6 @@
+import { Button } from "@shared/components/Button";
 import { useEffect } from "react";
-import { Stack, Button } from "@mantine/core";
+import { Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { CertSignParameters } from "@app/hooks/tools/certSign/useCertSignParameters";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
@@ -15,11 +16,6 @@ const sourceButtonStyle = {
   height: "auto",
   minHeight: "44px",
   fontSize: "11px",
-} as const;
-
-// Let labels wrap instead of clipping ("This device" was truncating to "This devi").
-const sourceButtonStyles = {
-  label: { whiteSpace: "normal" as const, lineHeight: 1.15 },
 } as const;
 
 const CertificateTypeSettings = ({
@@ -77,41 +73,36 @@ const CertificateTypeSettings = ({
     <Stack gap="md">
       <div style={{ display: "flex", gap: "4px" }}>
         <Button
-          variant={parameters.signMode === "MANUAL" ? "filled" : "outline"}
-          color={
-            parameters.signMode === "MANUAL" ? "blue" : "var(--text-muted)"
-          }
+          variant={parameters.signMode === "MANUAL" ? "primary" : "secondary"}
+          accent={parameters.signMode === "MANUAL" ? "success" : undefined}
           onClick={selectUpload}
           disabled={disabled}
           style={sourceButtonStyle}
-          styles={sourceButtonStyles}
         >
           {t("certSign.source.upload", "Upload")}
         </Button>
         {isServerCertificateEnabled && (
           <Button
-            variant={parameters.signMode === "AUTO" ? "filled" : "outline"}
-            color={
-              parameters.signMode === "AUTO" ? "green" : "var(--text-muted)"
+            variant={parameters.signMode === "AUTO" ? "primary" : "secondary"}
+            accent={
+              parameters.signMode === "AUTO" ? "success" : "default"
             }
             onClick={selectServer}
             disabled={disabled}
             style={sourceButtonStyle}
-            styles={sourceButtonStyles}
           >
             {t("certSign.source.server", "Server")}
           </Button>
         )}
         {isHardwareAvailable && (
           <Button
-            variant={parameters.signMode === "DEVICE" ? "filled" : "outline"}
-            color={
-              parameters.signMode === "DEVICE" ? "teal" : "var(--text-muted)"
+            variant={parameters.signMode === "DEVICE" ? "primary" : "secondary"}
+            accent={
+              parameters.signMode === "DEVICE" ? "success" : "default"
             }
             onClick={selectDevice}
             disabled={disabled}
             style={sourceButtonStyle}
-            styles={sourceButtonStyles}
           >
             {t("certSign.source.device", "This device")}
           </Button>

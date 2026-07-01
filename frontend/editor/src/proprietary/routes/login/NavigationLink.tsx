@@ -1,11 +1,9 @@
-import { Button } from "@mantine/core";
-
+import { Button } from "@shared/components/Button";
 interface NavigationLinkProps {
   onClick: () => void;
   text: string;
   isDisabled?: boolean;
 }
-
 export default function NavigationLink({
   onClick,
   text,
@@ -17,7 +15,7 @@ export default function NavigationLink({
         onClick={onClick}
         disabled={isDisabled}
         className="navigation-link-button"
-        variant="subtle"
+        variant="tertiary"
       >
         {text}
       </Button>

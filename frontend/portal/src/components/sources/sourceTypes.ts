@@ -1,4 +1,6 @@
-import type { ChipTone } from "@shared/components";
+/** Legacy palette category for a source type; mapped to a shared Chip `accent`
+ * at render time (see SOURCE_CHIP_ACCENT in SourcesTable). */
+type ChipTone = "neutral" | "blue" | "purple" | "green" | "amber" | "red";
 
 /**
  * Per-type presentation + create-form metadata. User-facing copy is stored as

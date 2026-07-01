@@ -4,10 +4,8 @@ import { Trans, useTranslation } from "react-i18next";
 import {
   Stack,
   Text,
-  Button,
   TextInput,
   Table,
-  ActionIcon,
   Menu,
   Badge,
   Loader,
@@ -15,11 +13,12 @@ import {
   Modal,
   Select,
   Tooltip,
-  CloseButton,
   Avatar,
   Box,
   type ComboboxItem,
 } from "@mantine/core";
+import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { alert } from "@app/components/toast";
 import {
@@ -507,8 +506,8 @@ export default function PeopleSection() {
                 )}
               </Badge>
               <Button
-                size="compact-sm"
-                variant="outline"
+                size="sm"
+                variant="secondary"
                 onClick={() => navigate("/settings/adminPlan")}
               >
                 {t("workspace.people.actions.upgrade", "Upgrade")}
@@ -550,7 +549,7 @@ export default function PeopleSection() {
               <Text size="sm" c="dimmed" span>
                 •
               </Text>
-              <UpdateSeatsButton size="xs" onSuccess={fetchData} />
+              <UpdateSeatsButton size="sm" onSuccess={fetchData} />
             </>
           )}
         </Group>
@@ -583,7 +582,7 @@ export default function PeopleSection() {
               (licenseInfo ? licenseInfo.availableSlots === 0 : false)
             }
           >
-            {t("workspace.people.addMembers")}
+            {t("workspace.people.addMembers", "Add Members")}
           </Button>
         </Tooltip>
       </Group>
@@ -783,7 +782,11 @@ export default function PeopleSection() {
                       withArrow
                       zIndex={Z_INDEX_OVER_CONFIG_MODAL + 10}
                     >
-                      <ActionIcon variant="subtle" size="sm">
+                      <ActionIcon
+                        variant="tertiary"
+                        size="sm"
+                        aria-label={t("workspace.people.userInfo", "User info")}
+                      >
                         <LocalIcon icon="info" width="1rem" height="1rem" />
                       </ActionIcon>
                     </Tooltip>
@@ -792,7 +795,14 @@ export default function PeopleSection() {
                     {!isCurrentUser(user) && (
                       <Menu position="bottom-end" withinPortal>
                         <Menu.Target>
-                          <ActionIcon variant="subtle" disabled={!loginEnabled}>
+                          <ActionIcon
+                            variant="tertiary"
+                            disabled={!loginEnabled}
+                            aria-label={t(
+                              "workspace.people.memberActions",
+                              "Member actions",
+                            )}
+                          >
                             <LocalIcon
                               icon="more-vert"
                               width="1rem"
@@ -993,16 +1003,20 @@ export default function PeopleSection() {
         withCloseButton={false}
       >
         <Box pos="relative">
-          <CloseButton
+          <ActionIcon
             onClick={closeEditModal}
             size="lg"
+            variant="tertiary"
+            aria-label={t("close", "Close")}
             style={{
               position: "absolute",
               top: -8,
               right: -8,
               zIndex: 1,
             }}
-          />
+          >
+            <LocalIcon icon="close" width="1.25rem" height="1.25rem" />
+          </ActionIcon>
           <Stack gap="lg" pt="md">
             {/* Header with Icon */}
             <Stack gap="md" align="center">
@@ -1077,7 +1091,7 @@ export default function PeopleSection() {
               loading={processing}
               fullWidth
               size="md"
-              mt="md"
+              style={{ marginTop: "var(--mantine-spacing-md)" }}
             >
               {t("workspace.people.editMember.submit")}
             </Button>

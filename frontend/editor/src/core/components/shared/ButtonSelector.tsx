@@ -1,5 +1,6 @@
-import { Button, Group, Stack, Text, Tooltip } from "@mantine/core";
+import { Stack, Text, Tooltip } from "@mantine/core";
 import FitText from "@app/components/shared/FitText";
+import { SegmentedControl } from "@shared/components/SegmentedControl";
 
 export interface ButtonOption<T> {
   value: T;
@@ -15,7 +16,6 @@ interface ButtonSelectorProps<T> {
   label?: string;
   disabled?: boolean;
   fullWidth?: boolean;
-  buttonClassName?: string;
   textClassName?: string;
 }
 
@@ -26,9 +26,43 @@ const ButtonSelector = <T extends string | number>({
   label = undefined,
   disabled = false,
   fullWidth = true,
-  buttonClassName,
   textClassName,
 }: ButtonSelectorProps<T>) => {
+  const selectedValue = value === undefined ? "" : String(value);
+
+  const segmentedOptions = options.map((option) => {
+    const isDisabled = disabled || option.disabled;
+    const fitText = (
+      <FitText
+        text={option.label}
+        lines={1}
+        minimumFontScale={0.5}
+        fontSize={10}
+        className={textClassName}
+      />
+    );
+
+    return {
+      value: String(option.value),
+      disabled: isDisabled,
+      label:
+        option.tooltip && isDisabled ? (
+          <Tooltip label={option.tooltip} position="top" withArrow>
+            <span>{fitText}</span>
+          </Tooltip>
+        ) : (
+          fitText
+        ),
+    };
+  });
+
+  const handleChange = (next: string) => {
+    const matched = options.find((option) => String(option.value) === next);
+    if (matched) {
+      onChange(matched.value);
+    }
+  };
+
   return (
     <Stack gap="var(--mantine-spacing-sm)">
       {/* Label (if it exists) */}
@@ -44,69 +78,12 @@ const ButtonSelector = <T extends string | number>({
         </Text>
       )}
 
-      {/* Buttons */}
-      <Group gap="4px">
-        {options.map((option) => {
-          const isDisabled = disabled || option.disabled;
-          const button = (
-            <Button
-              variant={value === option.value ? "filled" : "outline"}
-              color={
-                value === option.value
-                  ? "var(--color-primary-500)"
-                  : "var(--text-muted)"
-              }
-              onClick={() => onChange(option.value)}
-              disabled={isDisabled}
-              className={buttonClassName}
-              style={{
-                flex: fullWidth ? 1 : undefined,
-                height: "auto",
-                minHeight: "2.5rem",
-                fontSize: "var(--mantine-font-size-sm)",
-                lineHeight: "1.4",
-                paddingTop: "0.5rem",
-                paddingBottom: "0.5rem",
-              }}
-            >
-              <FitText
-                text={option.label}
-                lines={1}
-                minimumFontScale={0.5}
-                fontSize={10}
-                className={textClassName}
-              />
-            </Button>
-          );
-
-          // Wrap with tooltip if provided (useful for disabled state explanations)
-          if (option.tooltip && isDisabled) {
-            return (
-              <Tooltip
-                key={option.value}
-                label={option.tooltip}
-                position="top"
-                withArrow
-              >
-                <span
-                  style={{ flex: fullWidth ? 1 : undefined, display: "flex" }}
-                >
-                  {button}
-                </span>
-              </Tooltip>
-            );
-          }
-
-          return (
-            <span
-              key={option.value}
-              style={{ flex: fullWidth ? 1 : undefined, display: "flex" }}
-            >
-              {button}
-            </span>
-          );
-        })}
-      </Group>
+      <SegmentedControl
+        options={segmentedOptions}
+        value={selectedValue}
+        onChange={handleChange}
+        fullWidth={fullWidth}
+      />
     </Stack>
   );
 };

@@ -1,0 +1,13 @@
+/* Mantine-backed SegmentedControl. Maps the shared accent palette (accents.css)
+ * onto Mantine's --sc-color (active indicator) and --sc-label-color (active
+ * label), set inline in SegmentedControl.tsx.
+ *
+ *   variant = primary (accent-filled active pill) | secondary (subtle tint, no track chrome) */
+@import "./accents.css";
+
+/* secondary: strip the boxed track so only the tinted active pill shows. */
+.sui-seg--secondary.mantine-SegmentedControl-root {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}

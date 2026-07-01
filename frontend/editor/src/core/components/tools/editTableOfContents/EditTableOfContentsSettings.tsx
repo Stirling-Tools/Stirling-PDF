@@ -1,18 +1,10 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Alert,
-  Button,
-  Divider,
-  FileButton,
-  Stack,
-  Switch,
-  Text,
-  Tooltip,
-} from "@mantine/core";
+import { Alert, Divider, Stack, Switch, Text, Tooltip } from "@mantine/core";
+import { Button as DSButton } from "@shared/components/Button";
+import { FilePicker } from "@shared/components/FilePicker";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { BookmarkNode } from "@app/utils/editTableOfContents";
-
 interface EditTableOfContentsSettingsProps {
   bookmarks: BookmarkNode[];
   replaceExisting: boolean;
@@ -30,7 +22,6 @@ interface EditTableOfContentsSettingsProps {
   disabled?: boolean;
   selectedFileName?: string;
 }
-
 export default function EditTableOfContentsSettings({
   bookmarks,
   replaceExisting,
@@ -49,7 +40,6 @@ export default function EditTableOfContentsSettings({
   selectedFileName,
 }: EditTableOfContentsSettingsProps) {
   const { t } = useTranslation();
-
   const infoLines = useMemo(
     () => [
       t(
@@ -67,7 +57,6 @@ export default function EditTableOfContentsSettings({
     ],
     [t],
   );
-
   return (
     <Stack gap="md">
       <Stack gap="xs">
@@ -85,10 +74,9 @@ export default function EditTableOfContentsSettings({
               )}
         </Text>
       </Stack>
-
       <Stack gap="sm">
-        <Button
-          variant="light"
+        <DSButton
+          variant="secondary"
           leftSection={<LocalIcon icon="folder-rounded" />}
           onClick={onSelectFiles}
           fullWidth
@@ -96,8 +84,7 @@ export default function EditTableOfContentsSettings({
           {selectedFileName
             ? t("editTableOfContents.workbench.changeFile", "Change PDF")
             : t("editTableOfContents.workbench.selectFile", "Select PDF")}
-        </Button>
-
+        </DSButton>
         <Tooltip
           label={
             !selectedFileName
@@ -109,8 +96,8 @@ export default function EditTableOfContentsSettings({
           }
           disabled={Boolean(selectedFileName)}
         >
-          <Button
-            variant="default"
+          <DSButton
+            variant="secondary"
             leftSection={<LocalIcon icon="picture-as-pdf-rounded" />}
             onClick={onLoadFromPdf}
             loading={isLoading}
@@ -118,27 +105,18 @@ export default function EditTableOfContentsSettings({
             fullWidth
           >
             {t("editTableOfContents.actions.loadFromPdf", "Load from PDF")}
-          </Button>
+          </DSButton>
         </Tooltip>
-
-        <FileButton
+        <FilePicker
           onChange={(file) => file && onImportJson(file)}
           accept="application/json"
           disabled={disabled}
+          variant="secondary"
+          leftSection={<LocalIcon icon="upload-rounded" />}
+          fullWidth
         >
-          {(props) => (
-            <Button
-              {...props}
-              variant="default"
-              leftSection={<LocalIcon icon="upload-rounded" />}
-              disabled={disabled}
-              fullWidth
-            >
-              {t("editTableOfContents.actions.importJson", "Import JSON")}
-            </Button>
-          )}
-        </FileButton>
-
+          {t("editTableOfContents.actions.importJson", "Import JSON")}
+        </FilePicker>
         <Tooltip
           label={
             canReadClipboard
@@ -150,8 +128,8 @@ export default function EditTableOfContentsSettings({
           }
           disabled={canReadClipboard}
         >
-          <Button
-            variant="default"
+          <DSButton
+            variant="secondary"
             leftSection={<LocalIcon icon="content-paste-rounded" />}
             onClick={onImportClipboard}
             disabled={disabled || !canReadClipboard}
@@ -161,10 +139,9 @@ export default function EditTableOfContentsSettings({
               "editTableOfContents.actions.importClipboard",
               "Paste from clipboard",
             )}
-          </Button>
+          </DSButton>
         </Tooltip>
       </Stack>
-
       {loadError && (
         <Alert
           color="red"
@@ -174,26 +151,22 @@ export default function EditTableOfContentsSettings({
           {loadError}
         </Alert>
       )}
-
       <Divider />
-
       <Stack gap="xs">
         <Text size="sm" fw={500}>
           {t("editTableOfContents.actions.export", "Export bookmarks")}
         </Text>
       </Stack>
-
       <Stack gap="sm">
-        <Button
-          variant="default"
+        <DSButton
+          variant="secondary"
           leftSection={<LocalIcon icon="download-rounded" />}
           onClick={onExportJson}
           disabled={disabled || bookmarks.length === 0}
           fullWidth
         >
           {t("editTableOfContents.actions.exportJson", "Download JSON")}
-        </Button>
-
+        </DSButton>
         <Tooltip
           label={
             canWriteClipboard
@@ -205,8 +178,8 @@ export default function EditTableOfContentsSettings({
           }
           disabled={canWriteClipboard}
         >
-          <Button
-            variant="default"
+          <DSButton
+            variant="secondary"
             leftSection={<LocalIcon icon="content-copy-rounded" />}
             onClick={onExportClipboard}
             disabled={disabled || bookmarks.length === 0 || !canWriteClipboard}
@@ -216,12 +189,10 @@ export default function EditTableOfContentsSettings({
               "editTableOfContents.actions.exportClipboard",
               "Copy to clipboard",
             )}
-          </Button>
+          </DSButton>
         </Tooltip>
       </Stack>
-
       <Divider />
-
       <Switch
         checked={replaceExisting}
         onChange={(event) =>
@@ -237,7 +208,6 @@ export default function EditTableOfContentsSettings({
         )}
         disabled={disabled}
       />
-
       <Stack gap="xs">
         {infoLines.map((line, index) => (
           <Text key={index} size="sm" c="dimmed">

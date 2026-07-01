@@ -25,7 +25,6 @@ import { PolicyFieldRow } from "@portal/components/policies/PolicyFieldRow";
 import { policyIcon } from "@portal/components/policies/policyIcons";
 import { sourceTypeMeta } from "@portal/components/sources/sourceTypes";
 import "@portal/views/Policies.css";
-
 interface PolicySetupWizardProps {
   /** The category being configured, or null when closed. */
   entry: CatalogueEntry | null;
@@ -36,16 +35,13 @@ interface PolicySetupWizardProps {
    */
   onSubmit: (entry: CatalogueEntry, result: PolicySetupResult) => Promise<void>;
 }
-
 type Step = "workflow" | "settings";
-
 /** A configurable tool in the workflow step: whether it runs + its params. */
 interface ToolState {
   operation: string;
   enabled: boolean;
   parameters: Record<string, unknown>;
 }
-
 /** Resolve each field's effective value: saved override, else definition default. */
 function resolveFieldValues(
   entry: CatalogueEntry,
@@ -55,7 +51,6 @@ function resolveFieldValues(
   for (const f of entry.config.fields) out[f.key] = saved[f.key] ?? f.value;
   return out;
 }
-
 /**
  * Seed the workflow's tools. A configured policy's saved steps win (so editing
  * round-trips); otherwise the category preset's default chain. Each preset step
@@ -83,7 +78,6 @@ function seedTools(entry: CatalogueEntry): ToolState[] {
     };
   });
 }
-
 /**
  * The real "set up a policy" flow, mirroring the editor wizard: a Workflow step
  * (the tool chain — toggle which tools run) and a Settings step (policy fields,
@@ -106,7 +100,6 @@ export function PolicySetupWizard({
     />
   ) : null;
 }
-
 function PolicySetupWizardBody({
   entry,
   onClose,
@@ -119,7 +112,6 @@ function PolicySetupWizardBody({
   const { t } = useTranslation();
   const { category, config, policy } = entry;
   const isEdit = policy != null;
-
   const [step, setStep] = useState<Step>("workflow");
   const [tools, setTools] = useState<ToolState[]>(() => seedTools(entry));
   const [fieldValues, setFieldValues] = useState(() =>
@@ -173,27 +165,22 @@ function PolicySetupWizardBody({
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   const enabledTools = useMemo(() => tools.filter((tl) => tl.enabled), [tools]);
-
   function patchTool(operation: string, patch: Partial<ToolState>) {
     setTools((prev) =>
       prev.map((tl) => (tl.operation === operation ? { ...tl, ...patch } : tl)),
     );
   }
-
   function toggleSource(id: string) {
     setSources((prev) =>
       prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id],
     );
   }
-
   function toggleScopeType(dt: string) {
     setScopeTypes((prev) =>
       prev.includes(dt) ? prev.filter((d) => d !== dt) : [...prev, dt],
     );
   }
-
   async function submit() {
     if (submitting) return;
     if (enabledTools.length === 0) {
@@ -226,9 +213,7 @@ function PolicySetupWizardBody({
       setError(t("policies.wizard.errors.saveFailed"));
     }
   }
-
   const docTypesEnabled = category.providesClassification === true;
-
   return (
     <Modal
       open
@@ -247,7 +232,7 @@ function PolicySetupWizardBody({
       subtitle={config.summary}
       footer={
         <div className="portal-policies__wizard-foot">
-          <Button variant="ghost" size="sm" onClick={onClose}>
+          <Button variant="tertiary" size="sm" onClick={onClose}>
             {t("policies.wizard.actions.cancel")}
           </Button>
           {step === "workflow" ? (
@@ -261,7 +246,7 @@ function PolicySetupWizardBody({
           ) : (
             <>
               <Button
-                variant="outline"
+                variant="secondary"
                 size="sm"
                 style={{ marginLeft: "auto" }}
                 onClick={() => setStep("workflow")}
@@ -288,7 +273,6 @@ function PolicySetupWizardBody({
           { key: "settings", label: t("policies.wizard.tabs.settings") },
         ]}
       />
-
       {error && (
         <Banner
           tone="danger"
@@ -296,7 +280,6 @@ function PolicySetupWizardBody({
           className="portal-policies__wizard-banner"
         />
       )}
-
       {step === "workflow" && (
         <div className="portal-policies__wizard-section">
           <p className="portal-policies__wizard-desc">
@@ -322,7 +305,6 @@ function PolicySetupWizardBody({
           ))}
         </div>
       )}
-
       {step === "settings" && (
         <div className="portal-policies__wizard-section">
           {config.fields.length > 0 && (
@@ -346,7 +328,7 @@ function PolicySetupWizardBody({
           )}
 
           <h3 className="portal-policies__wizard-heading">
-            {t("policies.wizard.sources.heading")}
+            {t("policies.wizard.sources.heading", "Sources")}
           </h3>
           <div className="portal-policies__sources">
             {sourcesAsync.loading && !sourcesAsync.data ? (
@@ -361,7 +343,7 @@ function PolicySetupWizardBody({
               />
             ) : (
               availableSources.map((src) => (
-                <button
+                <Button
                   key={src.id}
                   type="button"
                   className={
@@ -383,13 +365,13 @@ function PolicySetupWizardBody({
                       {src.type}
                     </span>
                   </span>
-                </button>
+                </Button>
               ))
             )}
           </div>
 
           <h3 className="portal-policies__wizard-heading">
-            {t("policies.wizard.docTypes.heading")}
+            {t("policies.wizard.docTypes.heading", "Document types")}
           </h3>
           {!docTypesEnabled ? (
             <Banner
@@ -407,22 +389,22 @@ function PolicySetupWizardBody({
                         count: scopeTypes.length,
                       })}
                 </span>
-                <button
-                  type="button"
+                <Button
+                  variant="tertiary"
                   className="portal-policies__link"
                   onClick={() => setScopeNarrow((v) => !v)}
                 >
                   {scopeNarrow
-                    ? t("policies.wizard.docTypes.clear")
-                    : t("policies.wizard.docTypes.narrow")}
-                </button>
+                    ? t("policies.wizard.docTypes.clear", "Clear")
+                    : t("policies.wizard.docTypes.narrow", "Narrow")}
+                </Button>
               </div>
               {scopeNarrow && (
                 <div className="portal-policies__doctypes">
                   {POLICY_DOC_TYPES.map((dt) => (
                     <Chip
                       key={dt}
-                      tone={scopeTypes.includes(dt) ? "blue" : "neutral"}
+                      accent={scopeTypes.includes(dt) ? "default" : "neutral"}
                       size="sm"
                       onClick={() => toggleScopeType(dt)}
                     >
@@ -435,7 +417,7 @@ function PolicySetupWizardBody({
           )}
 
           <h3 className="portal-policies__wizard-heading">
-            {t("policies.wizard.output.heading")}
+            {t("policies.wizard.output.heading", "Output & run")}
           </h3>
           <div className="portal-policies__fields">
             {sources.includes("editor") && (

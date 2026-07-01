@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Chip,
+  type ChipAccent,
   StatusBadge,
   type StatusTone,
   Table,
@@ -10,6 +11,19 @@ import {
 import type { SourceStatus, SourceView } from "@portal/api/sources";
 import { sourceTypeMeta } from "@portal/components/sources/sourceTypes";
 import "@portal/views/Sources.css";
+
+/** Map the source-type palette tone onto the shared Chip accent set. */
+const SOURCE_CHIP_ACCENT: Record<
+  "neutral" | "blue" | "purple" | "green" | "amber" | "red",
+  ChipAccent
+> = {
+  neutral: "neutral",
+  blue: "default",
+  purple: "premium",
+  green: "success",
+  amber: "warning",
+  red: "danger",
+};
 
 const STATUS_TONE: Record<SourceStatus, StatusTone> = {
   active: "success",
@@ -47,7 +61,7 @@ export function SourcesTable({
               </span>
               <div className="portal-sources__name-text">
                 <strong>{s.name}</strong>
-                <Chip tone={meta.tone} size="sm">
+                <Chip accent={SOURCE_CHIP_ACCENT[meta.tone]} size="sm">
                   {t(meta.labelKey)}
                 </Chip>
               </div>

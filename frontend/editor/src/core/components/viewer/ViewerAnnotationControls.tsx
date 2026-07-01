@@ -1,7 +1,7 @@
 import React, { useCallback } from "react";
-import { ActionIcon } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { ViewerContext } from "@app/contexts/ViewerContext";
 import { useSignature } from "@app/contexts/SignatureContext";
@@ -186,12 +186,15 @@ export default function ViewerAnnotationControls({
         portalTarget={document.body}
       >
         <ActionIcon
-          variant={isRedactMode ? "filled" : "subtle"}
-          color={isRedactMode ? "blue" : undefined}
-          radius="md"
+          variant={isRedactMode ? "primary" : "tertiary"}
           className="workbench-bar-action-icon"
           onClick={handleRedactionToggle}
           disabled={disabled || currentView !== "viewer"}
+          aria-label={
+            isRedactMode
+              ? t("workbenchBar.exitRedaction", "Exit Redaction Mode")
+              : t("workbenchBar.redact", "Redact")
+          }
         >
           <LocalIcon
             icon="scan-delete-rounded"
@@ -212,9 +215,7 @@ export default function ViewerAnnotationControls({
         portalTarget={document.body}
       >
         <ActionIcon
-          variant={annotationsHidden ? "filled" : "subtle"}
-          color={annotationsHidden ? "blue" : undefined}
-          radius="md"
+          variant={annotationsHidden ? "primary" : "tertiary"}
           className="workbench-bar-action-icon"
           onClick={handleToggleAnnotationsVisibility}
           disabled={
@@ -225,6 +226,10 @@ export default function ViewerAnnotationControls({
           }
           data-active={annotationsHidden ? "true" : undefined}
           aria-pressed={annotationsHidden}
+          aria-label={t(
+            "workbenchBar.toggleAnnotations",
+            "Toggle Annotations Visibility",
+          )}
         >
           <LocalIcon
             icon={

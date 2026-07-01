@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Stack, Card, Badge, Button, Text, Group } from "@mantine/core";
+import { Stack, Card, Badge, Text, Group } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import {
   connectionModeService,
@@ -153,14 +154,14 @@ export const ConnectionSettings: React.FC = () => {
 
           <Group mt="md">
             {config.mode === "local" ? (
-              <Button onClick={handleSignIn} color="blue" variant="light">
+              <Button onClick={handleSignIn} variant="secondary">
                 {t("settings.connection.signIn", "Sign In")}
               </Button>
             ) : (
               <Button
                 onClick={handleLogout}
-                color="red"
-                variant="light"
+                accent="danger"
+                variant="secondary"
                 disabled={loading}
               >
                 {t("settings.connection.logout", "Log Out")}

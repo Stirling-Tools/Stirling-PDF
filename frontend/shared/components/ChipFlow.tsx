@@ -1,24 +1,18 @@
 import { Fragment } from "react";
 import type { ReactNode } from "react";
 import { Chip } from "@shared/components/Chip";
-import type { ChipTone, ChipSize } from "@shared/components/Chip";
+import type { ChipAccent, ChipSize } from "@shared/components/Chip";
 import "@shared/components/ChipFlow.css";
 
 export interface ChipFlowProps {
-  /** Items rendered as chips, in order. */
   items: ReactNode[];
-  /** `arrow` joins chips with a → connector (pipeline look); `none` just wraps. */
+  /** `arrow` joins chips with a → connector. */
   separator?: "arrow" | "none";
-  tone?: ChipTone;
+  tone?: ChipAccent;
   size?: ChipSize;
   className?: string;
 }
 
-/**
- * A sequence of {@link Chip}s, optionally joined by arrows to read as a
- * pipeline (A → B → C). Use `separator="arrow"` for flows, `none` for a plain
- * wrapped chip list.
- */
 export function ChipFlow({
   items,
   separator = "none",
@@ -37,7 +31,7 @@ export function ChipFlow({
               →
             </span>
           )}
-          <Chip tone={tone} size={size}>
+          <Chip accent={tone} size={size}>
             {item}
           </Chip>
         </Fragment>

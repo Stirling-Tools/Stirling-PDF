@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { Modal, Button, Stack, Slider, Alert, Text, Box } from "@mantine/core";
+import { Modal, Stack, Slider, Alert, Text, Box } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import Cropper from "react-easy-crop";
 import { getCroppedImage, type Area } from "@app/utils/cropImage";
@@ -182,7 +183,7 @@ export const ProfilePictureCropper: React.FC<ProfilePictureCropperProps> = ({
         <div
           style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}
         >
-          <Button variant="subtle" onClick={onClose} disabled={processing}>
+          <Button variant="tertiary" onClick={onClose} disabled={processing}>
             {t("common.cancel", "Cancel")}
           </Button>
           <Button onClick={handleSave} loading={processing}>

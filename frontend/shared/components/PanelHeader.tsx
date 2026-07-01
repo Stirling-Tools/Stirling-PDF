@@ -69,9 +69,6 @@ export function PanelHeader({
 }: PanelHeaderProps) {
   const hasMenu = menuItems != null && menuItems.length > 0;
 
-  // Tint the icon badge with the category colour when an accent is given. Inline
-  // so it wins over the default blue treatment in both light and dark mode; the
-  // --color-* tokens are theme-aware and match the badge tint used elsewhere.
   const iconStyle: CSSProperties | undefined = accent
     ? {
         color: `var(--color-${accent})`,

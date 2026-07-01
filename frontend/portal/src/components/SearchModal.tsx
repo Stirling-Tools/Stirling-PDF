@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Button, EmptyState, Modal, Skeleton } from "@shared/components";
 import { useTranslation } from "react-i18next";
-import { EmptyState, Modal, Skeleton } from "@shared/components";
 import { useUI } from "@portal/contexts/UIContext";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import { fetchQuickActions, type QuickAction } from "@portal/api/search";
@@ -100,9 +100,11 @@ export function SearchModal() {
               <div key={group} className="portal-search__group">
                 <div className="portal-search__group-label">{group}</div>
                 {items.map((item) => (
-                  <button
+                  <Button
                     key={item.label}
-                    type="button"
+                    variant="tertiary"
+                    justify="start"
+                    fullWidth
                     className="portal-search__item"
                     onClick={closeSearch}
                   >
@@ -112,7 +114,7 @@ export function SearchModal() {
                     <span className="portal-search__item-hint">
                       {item.hint}
                     </span>
-                  </button>
+                  </Button>
                 ))}
               </div>
             ))}

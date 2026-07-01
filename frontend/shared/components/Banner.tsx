@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import "@shared/components/Banner.css";
 
 export type BannerTone = "info" | "success" | "warning" | "danger" | "neutral";
@@ -7,21 +8,15 @@ export interface BannerProps {
   tone?: BannerTone;
   title?: ReactNode;
   description?: ReactNode;
-  /** Right-aligned action — typically a button. */
   action?: ReactNode;
-  /** When set, shows an × button that calls this handler. */
   onDismiss?: () => void;
-  /** Optional leading icon (caller supplies — keeps the primitive icon-set-agnostic). */
+  /** Caller-supplied icon keeps this component icon-set-agnostic. */
   icon?: ReactNode;
   className?: string;
   children?: ReactNode;
 }
 
-/**
- * Inline alert. Use `tone` to convey severity; pair with `action` for
- * "Approaching cap → Upgrade" style flows. Use `Toast` (separate primitive)
- * for transient/dismissible notifications layered over the UI.
- */
+/** Inline alert. Use Toast for transient overlay notifications instead. */
 export function Banner({
   tone = "info",
   title,
@@ -51,14 +46,17 @@ export function Banner({
       </div>
       {action && <div className="sui-banner__action">{action}</div>}
       {onDismiss && (
-        <button
-          type="button"
+        <ActionIcon
+          variant="tertiary"
+          accent="neutral"
+          size="sm"
+          shape="circle"
           className="sui-banner__close"
           onClick={onDismiss}
           aria-label="Dismiss"
         >
-          ×
-        </button>
+          <span aria-hidden>×</span>
+        </ActionIcon>
       )}
     </div>
   );

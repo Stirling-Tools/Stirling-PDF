@@ -116,8 +116,8 @@ export function Pipelines() {
           <h1 className="portal-pipelines__title">{t("pipelines.title")}</h1>
           <p className="portal-pipelines__sub">{t("pipelines.subtitle")}</p>
         </div>
-        <Button onClick={openCreate} leadingIcon={<span aria-hidden>+</span>}>
-          {t("pipelines.actions.newPipeline")}
+        <Button onClick={openCreate} leftSection={<span aria-hidden>+</span>}>
+          {t("pipelines.newPipeline")}
         </Button>
       </header>
 
@@ -138,7 +138,9 @@ export function Pipelines() {
           title={t("pipelines.empty.title")}
           description={t("pipelines.empty.description")}
           actions={
-            <Button onClick={openCreate}>{t("pipelines.empty.action")}</Button>
+            <Button onClick={openCreate}>
+              {t("pipelines.empty.action", "Build your first pipeline")}
+            </Button>
           }
         />
       )}
@@ -179,7 +181,7 @@ export function Pipelines() {
         footer={
           <div className="portal-pipelines__composer-footer">
             <Button
-              variant="ghost"
+              variant="tertiary"
               size="sm"
               disabled={deleting}
               onClick={() => setPendingDelete(null)}
@@ -188,7 +190,7 @@ export function Pipelines() {
             </Button>
             <Button
               size="sm"
-              accent="red"
+              accent="danger"
               loading={deleting}
               onClick={confirmDelete}
             >

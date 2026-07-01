@@ -1,14 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
-import {
-  Box,
-  Text,
-  Stack,
-  Group,
-  ActionIcon,
-  Button,
-  Loader,
-  ScrollArea,
-} from "@mantine/core";
+import { Box, Text, Stack, Group, Loader, ScrollArea } from "@mantine/core";
+import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { useTranslation } from "react-i18next";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
@@ -42,7 +35,6 @@ import {
 } from "@app/components/watchedFolders/WatchedFoldersRegistration";
 import { timeAgo } from "@app/components/watchedFolders/WatchedFolderWorkbenchView";
 import "@app/components/watchedFolders/WatchedFolders.css";
-
 export function humaniseOp(op: string): string {
   return op
     .replace(/-pdf$|-pages$|-documents?$/i, "")
@@ -51,7 +43,6 @@ export function humaniseOp(op: string): string {
     .replace(/\b\w/g, (c) => c.toUpperCase())
     .trim();
 }
-
 interface FolderCardProps {
   folder: WatchedFolder;
   status: "idle" | "processing" | "done";
@@ -63,7 +54,6 @@ interface FolderCardProps {
   onDropSidebarFile: (folder: WatchedFolder, fileIds: string[]) => void;
   onTogglePause: (folder: WatchedFolder) => void;
 }
-
 function FolderCard({
   folder,
   status,
@@ -85,10 +75,8 @@ function FolderCard({
   const [dragAlreadyPresent, setDragAlreadyPresent] = useState(false);
   // Ids of files currently in this folder, used for the live dragover check.
   const [memberIds, setMemberIds] = useState<Set<string>>(new Set());
-
   useEffect(() => {
     automationStorage.getAutomation(folder.automationId).then(setAutomation);
-
     const loadData = () =>
       watchedFolderFileStorage.getFolderData(folder.id).then((record) => {
         if (!record) {
@@ -110,17 +98,14 @@ function FolderCard({
         );
       });
     loadData();
-
     const unsub = watchedFolderFileStorage.onFolderChange((changedId) => {
       if (changedId === folder.id) loadData();
     });
     return unsub;
   }, [folder.id, folder.automationId]);
-
   const isPaused = folder.isPaused ?? false;
   const isActive = !isPaused && (isProcessing || status === "processing");
   const isDone = !isPaused && status === "done" && !isActive;
-
   const statusDotColor = isPaused
     ? "var(--mantine-color-dimmed)"
     : isActive
@@ -129,7 +114,6 @@ function FolderCard({
         ? "var(--color-green-500)"
         : "var(--text-muted)";
   const statusDotPulse = isActive;
-
   const statusLabel = isPaused
     ? t("watchedFolders.status.paused", "Paused")
     : isActive
@@ -137,7 +121,6 @@ function FolderCard({
       : isDone
         ? t("watchedFolders.status.done", "Done")
         : t("watchedFolders.status.active", "Active");
-
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(true);
@@ -176,11 +159,9 @@ function FolderCard({
       onDropFiles(folder, Array.from(e.dataTransfer.files));
     }
   };
-
   // `automation` is loaded by the per-card effect above; the steps it holds
   // are no longer rendered on the card but the load is preserved.
   void automation;
-
   return (
     <div
       className={`wf-card${isDragOver ? " is-drop-target" : ""}${
@@ -213,7 +194,6 @@ function FolderCard({
           size="thumb"
         />
       </div>
-
       <div className="wf-card-body">
         <div className="wf-card-name" title={folder.name}>
           {folder.name}
@@ -239,11 +219,10 @@ function FolderCard({
           <span style={{ fontSize: "0.7rem" }}>{statusLabel}</span>
         </div>
       </div>
-
       <div className="wf-card-actions" onClick={(e) => e.stopPropagation()}>
         <ActionIcon
           size="md"
-          variant="subtle"
+          variant="tertiary"
           onClick={() => onTogglePause(folder)}
           aria-label={
             isPaused
@@ -264,7 +243,7 @@ function FolderCard({
         </ActionIcon>
         <ActionIcon
           size="md"
-          variant="subtle"
+          variant="tertiary"
           onClick={() => onEdit(folder)}
           aria-label={t("watchedFolders.home.editFolder", "Edit folder")}
         >
@@ -272,8 +251,8 @@ function FolderCard({
         </ActionIcon>
         <ActionIcon
           size="md"
-          variant="subtle"
-          color="red"
+          variant="tertiary"
+          accent="danger"
           onClick={() => onDelete(folder)}
           aria-label={t("watchedFolders.home.deleteFolder", "Delete folder")}
         >
@@ -283,16 +262,12 @@ function FolderCard({
     </div>
   );
 }
-
 function HowItWorks() {
   const { t } = useTranslation();
-
   const [dismissed, setDismissed] = useState(
     () => sessionStorage.getItem("wf_howItWorks_dismissed") === "1",
   );
-
   if (dismissed) return null;
-
   const steps = [
     {
       n: "1",
@@ -319,7 +294,6 @@ function HowItWorks() {
       ),
     },
   ];
-
   return (
     <Box
       mt="lg"
@@ -343,9 +317,8 @@ function HowItWorks() {
           </Text>
         </Group>
         <ActionIcon
-          size="xs"
-          variant="subtle"
-          color="gray"
+          size="sm"
+          variant="tertiary"
           onClick={() => {
             sessionStorage.setItem("wf_howItWorks_dismissed", "1");
             setDismissed(true);
@@ -353,7 +326,10 @@ function HowItWorks() {
           aria-label={t("watchedFolders.actions.dismiss", "Dismiss")}
         >
           <CloseIcon
-            style={{ fontSize: "0.75rem", color: "var(--mantine-color-text)" }}
+            style={{
+              fontSize: "0.75rem",
+              color: "var(--mantine-color-text)",
+            }}
           />
         </ActionIcon>
       </Group>
@@ -397,10 +373,8 @@ function HowItWorks() {
     </Box>
   );
 }
-
 function EmptyState({ onCreate }: { onCreate: () => void }) {
   const { t } = useTranslation();
-
   return (
     <div className="wf-empty">
       <span className="wf-empty-icon">
@@ -415,21 +389,19 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
           "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does.",
         )}
       </div>
-
       <Button
         size="md"
+        variant="primary"
         leftSection={<AddIcon style={{ fontSize: "1.125rem" }} />}
         onClick={onCreate}
-        mt="sm"
+        style={{ marginTop: "var(--mantine-spacing-sm)" }}
       >
         {t("watchedFolders.home.create", "Create your first Watched Folder")}
       </Button>
-
       <HowItWorks />
     </div>
   );
 }
-
 export function WatchedFolderHomePage() {
   const { t } = useTranslation();
   const { folders, loading, deleteFolder, updateFolder, refreshFolders } =
@@ -438,7 +410,6 @@ export function WatchedFolderHomePage() {
   const { toolRegistry, setCustomWorkbenchViewData } = useToolWorkflow();
   const { actions } = useNavigationActions();
   const { processBatch } = useFolderAutomation(toolRegistry);
-
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [editFolder, setEditFolder] = useState<WatchedFolder | null>(null);
   const [editAutomation, setEditAutomation] = useState<AutomationConfig | null>(
@@ -448,7 +419,6 @@ export function WatchedFolderHomePage() {
     new Set(),
   );
   const [deleteTarget, setDeleteTarget] = useState<WatchedFolder | null>(null);
-
   const navigateToFolder = useCallback(
     (folderId: string) => {
       setCustomWorkbenchViewData(WATCHED_FOLDER_VIEW_ID, { folderId });
@@ -456,7 +426,6 @@ export function WatchedFolderHomePage() {
     },
     [setCustomWorkbenchViewData, actions],
   );
-
   const handleEdit = useCallback(async (folder: WatchedFolder) => {
     setEditFolder(folder);
     const automation = await automationStorage.getAutomation(
@@ -465,18 +434,15 @@ export function WatchedFolderHomePage() {
     setEditAutomation(automation);
     setCreateModalOpen(true);
   }, []);
-
   const handleModalClose = () => {
     setCreateModalOpen(false);
     setEditFolder(null);
     setEditAutomation(null);
   };
-
   const processFiles = useCallback(
     async (folder: WatchedFolder, files: File[]) => {
       const pdfs = files.filter((f) => f.name.toLowerCase().endsWith(".pdf"));
       if (pdfs.length === 0) return;
-
       // Load existing folder data once so we can skip files already in the folder.
       const existingData = await watchedFolderFileStorage.getFolderData(
         folder.id,
@@ -503,12 +469,9 @@ export function WatchedFolderHomePage() {
         });
         items.push({ file, inputFileId, ownedByFolder });
       }
-
       // Nothing new to process (every dropped file was already in the folder).
       if (items.length === 0) return;
-
       if (folder.isPaused) return;
-
       setProcessingFolderIds((prev) => new Set([...prev, folder.id]));
       try {
         await processBatch(folder, items);
@@ -522,14 +485,12 @@ export function WatchedFolderHomePage() {
     },
     [processBatch],
   );
-
   const handleTogglePause = useCallback(
     async (folder: WatchedFolder) => {
       const resuming = folder.isPaused;
       const updatedFolder = { ...folder, isPaused: !folder.isPaused };
       await updateFolder(updatedFolder);
       refreshFolders();
-
       if (resuming) {
         const record = await watchedFolderFileStorage.getFolderData(folder.id);
         if (record) {
@@ -561,7 +522,6 @@ export function WatchedFolderHomePage() {
     },
     [updateFolder, refreshFolders, processBatch],
   );
-
   const handleDropSidebarFile = useCallback(
     async (folder: WatchedFolder, fileIds: string[]) => {
       const results = await Promise.all(
@@ -572,13 +532,11 @@ export function WatchedFolderHomePage() {
     },
     [processFiles],
   );
-
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return;
     await deleteFolder(deleteTarget.id);
     setDeleteTarget(null);
   };
-
   return (
     <Box
       style={{
@@ -606,7 +564,6 @@ export function WatchedFolderHomePage() {
           ) : (
             <Stack gap="md">
               <HowItWorks />
-
               <div className="wf-grid" role="list">
                 {folders.map((folder) => {
                   const status = statuses[folder.id] ?? "idle";
@@ -628,7 +585,6 @@ export function WatchedFolderHomePage() {
                     />
                   );
                 })}
-
                 <div
                   className="wf-new-tile"
                   role="button"
@@ -660,7 +616,6 @@ export function WatchedFolderHomePage() {
           )}
         </Box>
       </ScrollArea>
-
       <WatchedFolderManagementModal
         opened={createModalOpen}
         editFolder={editFolder}

@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
-import { Button, Collapse, Select, Group } from "@mantine/core";
+import { Collapse, Select, Group } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import licenseService, {
   PlanTier,
@@ -128,7 +129,7 @@ const AvailablePlansSection: React.FC<AvailablePlansSectionProps> = ({
 
       <div style={{ textAlign: "center" }}>
         <Button
-          variant="subtle"
+          variant="tertiary"
           onClick={() => setShowComparison(!showComparison)}
         >
           {showComparison

@@ -1,6 +1,7 @@
-import { Stack, Group, ActionIcon, Text } from "@mantine/core";
+import { Stack, Group, Text } from "@mantine/core";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import { ActionIcon } from "@shared/components/ActionIcon";
 
 export interface NavigationControlsProps {
   currentIndex: number;
@@ -21,7 +22,8 @@ const NavigationControls = ({
     <Stack align="center" gap="xs" mt="xs">
       <Group justify="center" gap="xs">
         <ActionIcon
-          variant="light"
+          aria-label="Previous"
+          variant="secondary"
           size="sm"
           onClick={onPrevious}
           disabled={totalFiles <= 1}
@@ -34,7 +36,8 @@ const NavigationControls = ({
         </Text>
 
         <ActionIcon
-          variant="light"
+          aria-label="Next"
+          variant="secondary"
           size="sm"
           onClick={onNext}
           disabled={totalFiles <= 1}

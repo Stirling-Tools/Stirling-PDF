@@ -1,4 +1,5 @@
-import { ActionIcon, Tooltip } from "@mantine/core";
+import { Tooltip } from "@mantine/core";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -72,14 +73,12 @@ export function TextSelectionMenu({
       >
         <Tooltip label={t("viewer.copyText", "Copy")} withArrow>
           <ActionIcon
-            variant="filled"
+            variant="secondary"
+            accent="neutral"
             size="md"
             onClick={handleCopy}
             aria-label={t("viewer.copyText", "Copy")}
             style={{
-              backgroundColor: "var(--mantine-color-body)",
-              border: "1px solid var(--mantine-color-default-border)",
-              color: "var(--text-primary)",
               boxShadow: "0 2px 12px rgba(0, 0, 0, 0.25)",
             }}
           >

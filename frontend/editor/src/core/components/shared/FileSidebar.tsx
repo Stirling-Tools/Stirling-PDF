@@ -7,6 +7,8 @@ import React, {
   forwardRef,
 } from "react";
 import { Loader, Tooltip } from "@mantine/core";
+import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useFileState, useFileActions } from "@app/contexts/file/fileHooks";
@@ -59,14 +61,11 @@ import {
 import { WATCHED_FOLDERS_ENABLED } from "@app/constants/featureFlags";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import "@app/components/shared/FileSidebar.css";
-
 const COLLAPSED_WIDTH = "3.5rem";
 const EXPANDED_WIDTH = "16.25rem"; // ~260px
-
 // Inlined to avoid a circular import with WatchedFoldersRegistration.
 const WATCHED_FOLDER_VIEW_ID = "watchedFolder";
 const WATCHED_FOLDER_WORKBENCH_ID = "custom:watchedFolder";
-
 export interface FileSidebarProps {
   collapsed?: boolean;
   onToggleCollapse?: () => void;
@@ -91,7 +90,6 @@ export interface FileSidebarProps {
     testId?: string;
   };
 }
-
 const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
   function FileSidebar(
     {
@@ -116,7 +114,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const [pendingViewFileId, setPendingViewFileId] = useState<string | null>(
       null,
     );
-
     const navigate = useNavigate();
     const { config } = useAppConfig();
     const {
@@ -146,13 +143,11 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       () => new Map(allFolders.map((f) => [f.id, f])),
       [allFolders],
     );
-
     const openWatchedFolders = useCallback(() => {
       if (collapsed && onToggleCollapse) onToggleCollapse();
       setCustomWorkbenchViewData(WATCHED_FOLDER_VIEW_ID, { folderId: null });
       navActions.setWorkbench(WATCHED_FOLDER_WORKBENCH_ID as any);
     }, [collapsed, onToggleCollapse, setCustomWorkbenchViewData, navActions]);
-
     // Clicking a file's membership dot jumps straight into that folder.
     const openWatchedFolder = useCallback(
       (folderId: string) => {
@@ -162,7 +157,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       },
       [collapsed, onToggleCollapse, setCustomWorkbenchViewData, navActions],
     );
-
     // In Watched Folders view, sidebar files can be dragged onto a folder card / drop
     // zone (which read the watchedFolderFileId dataTransfer key).
     const handleWatchedFolderDragStart = useCallback(
@@ -187,7 +181,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const { activeFileId, setActiveFileId } = useViewer();
     const { addFiles } = useFileHandler();
     const indexedDB = useIndexedDB();
-
     // Each auth layer derives its own displayName from its native user shape.
     // Fall back to the proprietary REST endpoint only when the auth
     // context yields nothing - then to "User" as a generic last resort.
@@ -195,12 +188,10 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const [accountUsername, setAccountUsername] = useState<string | null>(null);
     const displayName =
       authDisplayName ?? accountUsername ?? t("auth.displayName.user", "User");
-
     const profilePictureUrl = useProfilePictureUrl();
     const [pictureFailed, setPictureFailed] = useState(false);
     useEffect(() => setPictureFailed(false), [profilePictureUrl]);
     const showProfilePicture = !!profilePictureUrl && !pictureFailed;
-
     useEffect(() => {
       if (!config?.enableLogin) {
         setAccountUsername(null);
@@ -225,7 +216,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           setAccountUsername(null);
         });
     }, [config?.enableLogin, authDisplayName]);
-
     // Leaf files = user-visible files (excludes intermediate tool outputs)
     const [allFileStubs, setAllFileStubs] = useState<StirlingFileStub[]>([]);
     const [stubsLoaded, setStubsLoaded] = useState(false);
@@ -244,12 +234,10 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     // Storage gate: only offer Save-to-cloud when the server allows it and
     // the user is signed in (guests have no cloud library).
     const storageEnabled = config?.storageEnabled === true && !isAnonymous;
-
     const refreshStubs = useCallback(async () => {
       // Leaf files from IDB - same source as the file selection modal.
       const stubs = await indexedDB.loadLeafMetadata();
       const idbIds = new Set(stubs.map((s) => s.id as string));
-
       // Also include workbench files not yet flushed to IDB.
       const pendingStubs = state.files.ids
         .map((id) => state.files.byId[id])
@@ -257,20 +245,17 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           (stub): stub is NonNullable<typeof stub> =>
             !!stub && stub.isLeaf !== false && !idbIds.has(stub.id as string),
         );
-
       const allStubs = [...stubs, ...pendingStubs];
       setAllFileStubs(
         allStubs.sort((a, b) => (b.lastModified ?? 0) - (a.lastModified ?? 0)),
       );
       setStubsLoaded(true);
     }, [indexedDB, state.files.ids, state.files.byId]);
-
     // Refresh on mount, workbench changes, or external IndexedDB writes
     const indexedDBRevision = useIndexedDBRevision();
     useEffect(() => {
       refreshStubs();
     }, [refreshStubs, indexedDBRevision]);
-
     // Kebab delete: local-only files go immediately (cheap, re-addable). When
     // the file is also on the cloud, open the choice dialog so the user picks
     // where to remove it from.
@@ -290,7 +275,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       },
       [allFileStubs, fileActions, refreshStubs],
     );
-
     const handleConfirmSidebarDelete = useCallback(
       async (scope: DeleteScope) => {
         const stub = deleteTarget;
@@ -322,7 +306,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       },
       [deleteTarget, fileActions, refreshStubs],
     );
-
     // Kebab: open the upload-to-server modal for this one file.
     const handleSaveToCloud = useCallback(
       (fileId: FileId) => {
@@ -331,7 +314,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       },
       [allFileStubs],
     );
-
     // Kebab: open the version-history modal for this one file.
     const handleVersionHistory = useCallback(
       (fileId: FileId) => {
@@ -340,7 +322,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       },
       [allFileStubs],
     );
-
     // Once a pending file lands in state, open it in the viewer.
     useEffect(() => {
       if (!pendingViewFileId) return;
@@ -353,13 +334,11 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         navActions.setWorkbench("viewer");
       }
     }, [pendingViewFileId, state.files.ids, setActiveFileId, navActions]);
-
     const filteredFileStubs = searchQuery.trim()
       ? allFileStubs.filter((stub) =>
           stub.name.toLowerCase().includes(searchQuery.toLowerCase()),
         )
       : allFileStubs;
-
     // Handle search activation
     const handleSearchClick = useCallback(() => {
       if (onSearchClick) {
@@ -371,18 +350,15 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       }
       setSearchActive(true);
     }, [collapsed, onToggleCollapse, onSearchClick]);
-
     const handleSearchClose = useCallback(() => {
       setSearchActive(false);
       setSearchQuery("");
     }, []);
-
     useEffect(() => {
       if (searchActive && searchInputRef.current) {
         searchInputRef.current.focus();
       }
     }, [searchActive]);
-
     // Handle Google Drive
     const handleGoogleDriveClick = useCallback(async () => {
       if (!isGoogleDriveEnabled) return;
@@ -404,13 +380,11 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       isMultiTool,
       onPickGoogleDriveFiles,
     ]);
-
     // Toggle file in/out of workbench
     const handleFileClick = useCallback(
       async (fileId: FileId) => {
         const stub = allFileStubs.find((s) => s.id === fileId);
         if (!stub) return;
-
         // In the Watched Folders view a click sends the file into the open folder
         // (mirrors how a click toggles a file into the active workbench elsewhere).
         // On the folder list (no folder open) it's a no-op so browsing isn't disrupted.
@@ -423,11 +397,9 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           }
           return;
         }
-
         const workbenchFileId = state.files.ids.find(
           (id) => (id as string) === (stub.id as string),
         );
-
         if (workbenchFileId) {
           // If this is the file currently open in the viewer, route through the
           // navigation guard so the save modal fires when there are unsaved changes.
@@ -442,13 +414,10 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         } else {
           // Re-add by stub to preserve its ID - addFiles() would create a new UUID + IDB entry.
           const workbenchCount = state.files.ids.length;
-
           if (workbenchCount > 0 && currentWorkbench === "viewer") {
             navActions.setWorkbench("fileEditor");
           }
-
           await fileActions.addStirlingFileStubs([stub]);
-
           if (isMultiTool) {
             fileActions.setSelectedFiles([
               ...state.ui.selectedFileIds,
@@ -478,33 +447,27 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         setCustomWorkbenchViewData,
       ],
     );
-
     // Which file is currently open in the viewer - stable ID, never index-derived.
     const viewedWorkbenchId =
       currentWorkbench === "viewer" ? activeFileId : null;
-
     const handleEyeClick = useCallback(
       async (fileId: FileId, _e: React.MouseEvent) => {
         const stub = allFileStubs.find((s) => s.id === fileId);
         if (!stub) return;
-
         const isCurrentlyViewed = !!(
           viewedWorkbenchId &&
           (viewedWorkbenchId as string) === (stub.id as string)
         );
-
         if (isCurrentlyViewed) {
           // Closing the currently-viewed file - guard against unsaved changes.
           navActions.setWorkbench("fileEditor");
           return;
         }
-
         // Switching to a different file while viewer is open - guard against unsaved changes.
         const performSwitch = async () => {
           const alreadyInWorkbench = state.files.ids.some(
             (id) => (id as string) === (stub.id as string),
           );
-
           if (!alreadyInWorkbench) {
             // Leave viewer before mutating workbench (prevents PSPDFKit crash).
             if (state.files.ids.length > 0 && currentWorkbench === "viewer") {
@@ -512,11 +475,9 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             }
             await fileActions.addStirlingFileStubs([stub]);
           }
-
           // Route through pendingViewFileId so both setActiveFileIndex + setWorkbench fire together.
           setPendingViewFileId(stub.id as string);
         };
-
         if (currentWorkbench === "viewer" && viewedWorkbenchId) {
           requestNavigation(() => {
             void performSwitch();
@@ -536,7 +497,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         requestNavigation,
       ],
     );
-
     // Shared ingest path for both the native picker and drag-and-drop.
     // Per-tool validation happens downstream.
     const ingestFiles = useCallback(
@@ -555,7 +515,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       },
       [addFiles, navActions, isMultiTool, onUploadFiles],
     );
-
     const handleNativeFilePick = useCallback(
       async (e: React.ChangeEvent<HTMLInputElement>) => {
         await ingestFiles(Array.from(e.target.files ?? []));
@@ -563,31 +522,26 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       },
       [ingestFiles],
     );
-
     // Native OS file drop onto the sidebar - mirrors the workbench drop zone.
     // Only react to OS file drags ("Files" type); internal element drags (e.g.
     // watched-folder file moves) set their own dataTransfer keys and must pass
     // through untouched.
     const [isFileDragOver, setIsFileDragOver] = useState(false);
     const dragDepth = useRef(0);
-
     const isNativeFileDrag = (e: React.DragEvent) =>
       Array.from(e.dataTransfer.types).includes("Files");
-
     const handleDragEnter = useCallback((e: React.DragEvent) => {
       if (!isNativeFileDrag(e)) return;
       e.preventDefault();
       dragDepth.current += 1;
       setIsFileDragOver(true);
     }, []);
-
     const handleDragOver = useCallback((e: React.DragEvent) => {
       if (!isNativeFileDrag(e)) return;
       // Required so the browser fires `drop` rather than opening the file.
       e.preventDefault();
       e.dataTransfer.dropEffect = "copy";
     }, []);
-
     const handleDragLeave = useCallback((e: React.DragEvent) => {
       if (!isNativeFileDrag(e)) return;
       // dragenter/leave fire per child element; the counter keeps the overlay
@@ -598,7 +552,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         setIsFileDragOver(false);
       }
     }, []);
-
     const handleDrop = useCallback(
       async (e: React.DragEvent) => {
         if (!isNativeFileDrag(e)) return;
@@ -609,12 +562,9 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       },
       [ingestFiles],
     );
-
     const shouldHideGoogleDrive =
       !isGoogleDriveEnabled && config?.hideDisabledToolsGoogleDrive;
-
     const width = collapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH;
-
     return (
       <div
         ref={ref}
@@ -680,7 +630,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
               )}
             </div>
           </Tooltip>
-
           {/* Search row */}
           <Tooltip
             label={t("fileSidebar.search", "Search")}
@@ -730,7 +679,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                 ))}
             </div>
           </Tooltip>
-
           {/* Scrollable content */}
           <div className="file-sidebar-scroll">
             {/* Hidden native file input - kept outside the !collapsed gate so
@@ -794,7 +742,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                 )}
               </div>
             </Tooltip>
-
             {extraAction && (
               <Tooltip
                 label={extraAction.disabledTooltip ?? extraAction.label}
@@ -845,7 +792,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                 </div>
               </Tooltip>
             )}
-
             <Tooltip
               label={t("fileSidebar.myFiles", "My Files")}
               position="right"
@@ -877,7 +823,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                 )}
               </div>
             </Tooltip>
-
             {!shouldHideGoogleDrive && (
               <Tooltip
                 label={
@@ -927,7 +872,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                 </div>
               </Tooltip>
             )}
-
             {/* Watched Folders entry */}
             {WATCHED_FOLDERS_ENABLED && (
               <div
@@ -953,7 +897,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                 )}
               </div>
             )}
-
             {/* Files section - always visible when expanded */}
             {!collapsed && (
               <div className="file-sidebar-files-section sidebar-content-fade">
@@ -961,38 +904,47 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                   <span className="file-sidebar-section-label">
                     {t("fileSidebar.files", "Files")}
                   </span>
-                  <button
+                  <ActionIcon
+                    variant="tertiary"
                     className="file-sidebar-section-btn file-sidebar-section-btn-external"
                     onClick={() => navigate("/files")}
                     title={t(
                       "fileSidebar.openFileManager",
                       "Browse all files & folders",
                     )}
-                    type="button"
+                    aria-label={t(
+                      "fileSidebar.openFileManager",
+                      "Browse all files & folders",
+                    )}
                     data-testid="open-files-page"
                   >
                     <OpenInNewIcon sx={{ fontSize: "1rem" }} />
-                  </button>
-                  <button
+                  </ActionIcon>
+                  <ActionIcon
+                    variant="tertiary"
                     className="file-sidebar-section-btn file-sidebar-section-btn-add"
                     onClick={() => nativeFileInputRef.current?.click()}
                     title={t("fileSidebar.addFiles", "Add files")}
-                    type="button"
+                    aria-label={t("fileSidebar.addFiles", "Add files")}
                   >
                     <AddIcon sx={{ fontSize: "1rem" }} />
-                  </button>
+                  </ActionIcon>
                 </div>
-
                 {!stubsLoaded ? (
                   <div className="file-sidebar-loading">
                     <Loader size="sm" color="var(--text-muted)" />
                   </div>
                 ) : filteredFileStubs.length > 0 ? (
                   <div className="file-sidebar-file-list">
-                    <button
+                    <Button
+                      variant="tertiary"
+                      hover={false}
+                      fullWidth
+                      justify="start"
                       type="button"
                       onClick={() => nativeFileInputRef.current?.click()}
                       data-testid="add-files-row"
+                      leftSection={<AddIcon sx={{ fontSize: "0.9rem" }} />}
                       style={{
                         background: "transparent",
                         border: "none",
@@ -1000,8 +952,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                         color: "var(--text-muted)",
                         padding: "4px 6px",
                         marginBottom: 4,
-                        display: "flex",
-                        alignItems: "center",
                         gap: 6,
                         fontSize: 12,
                         width: "100%",
@@ -1015,9 +965,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                         e.currentTarget.style.background = "transparent";
                       }}
                     >
-                      <AddIcon sx={{ fontSize: "0.9rem" }} />
                       {t("fileSidebar.addFiles", "Add files")}
-                    </button>
+                    </Button>
                     {filteredFileStubs.map((stub) => {
                       const workbenchFileId = state.files.ids.find(
                         (id) => (id as string) === (stub.id as string),
@@ -1130,7 +1079,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             )}
           </div>
         </div>
-
         {/* Kebab "Save to cloud" upload modal (one file at a time). */}
         <BulkUploadToServerModal
           opened={Boolean(saveToServerTarget && saveToServerTarget.length > 0)}
@@ -1138,7 +1086,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           files={saveToServerTarget ?? []}
           onUploaded={refreshStubs}
         />
-
         {/* Kebab "Version history" modal. */}
         <VersionHistoryModal
           opened={Boolean(versionHistoryTarget)}
@@ -1146,7 +1093,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           file={versionHistoryTarget}
           onChanged={refreshStubs}
         />
-
         {/* Cloud-aware delete choice (only opened for cloud-uploaded files). */}
         <DeleteFilesDialog
           opened={Boolean(deleteTarget)}
@@ -1154,7 +1100,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           onClose={() => setDeleteTarget(null)}
           onConfirm={handleConfirmSidebarDelete}
         />
-
         {/* Bottom bar: user name + settings */}
         <Tooltip
           label={
@@ -1218,5 +1163,4 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     );
   },
 );
-
 export default FileSidebar;

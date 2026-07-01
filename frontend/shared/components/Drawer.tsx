@@ -1,6 +1,7 @@
 import { useEffect, useId, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { FocusTrap } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import "@shared/components/Drawer.css";
 
 export type DrawerSide = "right" | "left";
@@ -10,11 +11,10 @@ export interface DrawerProps {
   open: boolean;
   onClose: () => void;
   side?: DrawerSide;
-  /** Width preset. sm=22rem, md=27.5rem, lg=36rem. */
+  /** sm=22rem, md=27.5rem, lg=36rem. */
   width?: DrawerWidth;
   title?: ReactNode;
   subtitle?: ReactNode;
-  /** Sticky footer slot below the body. */
   footer?: ReactNode;
   disableBackdropClose?: boolean;
   disableEscapeClose?: boolean;
@@ -23,12 +23,7 @@ export interface DrawerProps {
   children?: ReactNode;
 }
 
-/**
- * Side drawer — sibling to {@link Modal}, with our own brand shell. Tab focus
- * trapping, initial focus, and focus restoration on close are delegated to
- * Mantine's <FocusTrap>; we keep the slide-in chrome, scroll lock, and ESC /
- * backdrop dismissal.
- */
+/** Tab focus trapping and restoration are delegated to Mantine's FocusTrap. */
 export function Drawer({
   open,
   onClose,
@@ -104,27 +99,29 @@ export function Drawer({
                 )}
                 {subtitle && <div className="sui-drawer__sub">{subtitle}</div>}
               </div>
-              <button
-                type="button"
+              <Button
+                variant="tertiary"
+                shape="circle"
                 className="sui-drawer__close"
                 onClick={onClose}
                 aria-label="Close"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  width="16"
-                  height="16"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={1.75}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden
-                >
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
+                leftSection={
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="16"
+                    height="16"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={1.75}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden
+                  >
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                }
+              />
             </header>
           )}
           <div className="sui-drawer__body">{children}</div>

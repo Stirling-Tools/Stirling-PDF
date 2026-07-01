@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, Stack, Text } from "@mantine/core";
+import { Stack, Text } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 import MergeSettings from "@app/components/tools/merge/MergeSettings";
 import MergeFileSorter from "@app/components/tools/merge/MergeFileSorter";
@@ -181,8 +182,8 @@ const Merge = (props: BaseToolProps) => {
             )}
           </Text>
           <Button
-            variant="light"
-            size="xs"
+            variant="secondary"
+            size="sm"
             onClick={() => navActions.setWorkbench("fileEditor")}
           >
             {t("merge.goToFileEditor", "Go to file editor")}

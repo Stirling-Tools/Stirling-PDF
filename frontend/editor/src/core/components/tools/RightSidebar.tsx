@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { ActionIcon } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useSidebarContext } from "@app/contexts/SidebarContext";
@@ -21,6 +20,7 @@ import type { SubcategoryGroup } from "@app/hooks/useToolSections";
 import { ToolIcon } from "@app/components/shared/ToolIcon";
 import { PanelHeader } from "@shared/components/PanelHeader";
 import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { withViewTransition } from "@app/utils/viewTransition";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
@@ -224,13 +224,13 @@ export default function RightSidebar() {
         <div className="tool-panel__collapsed-strip">
           <div className="tool-panel__collapsed-top">
             <ActionIcon
-              variant="outline"
-              color="gray.4"
-              radius="xl"
+              aria-label={t("toolPanel.expand", "Expand panel")}
+              variant="secondary"
+              accent="neutral"
               size="md"
+              shape="circle"
               className="tool-panel__expand-btn tool-panel__toggle-vt"
               onClick={handleExpand}
-              aria-label={t("toolPanel.expand", "Expand panel")}
             >
               <ChevronLeftIcon sx={{ fontSize: "1.1rem" }} />
             </ActionIcon>
@@ -248,18 +248,18 @@ export default function RightSidebar() {
                 arrow
                 delay={300}
               >
-                <button
-                  type="button"
+                <ActionIcon
+                  aria-label={tool.name}
+                  variant="tertiary"
                   className="tool-panel__collapsed-tool-btn"
                   data-selected={selectedToolKey === id}
                   onClick={() => {
                     handleExpand();
                     handleToolSelectWithTransition(id);
                   }}
-                  aria-label={tool.name}
                 >
                   <ToolIcon icon={tool.icon} marginRight="0" />
-                </button>
+                </ActionIcon>
               </AppTooltip>
             ))}
           </div>
@@ -322,10 +322,9 @@ export default function RightSidebar() {
                     ) : null}
                     {showCloseButton ? (
                       <ActionIcon
-                        variant="subtle"
-                        color="gray"
-                        radius="xl"
+                        variant="tertiary"
                         size="md"
+                        shape="circle"
                         onClick={handleHeaderBack}
                         aria-label={
                           inToolView
@@ -338,9 +337,9 @@ export default function RightSidebar() {
                       </ActionIcon>
                     ) : (
                       <ActionIcon
-                        variant="outline"
-                        radius="xl"
+                        variant="secondary"
                         size="md"
+                        shape="circle"
                         onClick={handleCollapse}
                         aria-label={t("toolPanel.collapse", "Collapse panel")}
                         className="tool-panel__expand-btn tool-panel__toggle-vt"
@@ -355,11 +354,11 @@ export default function RightSidebar() {
                 <PoliciesSection
                   leadingControl={
                     <ActionIcon
-                      variant="outline"
-                      radius="xl"
-                      size="md"
-                      onClick={handleCollapse}
                       aria-label={t("toolPanel.collapse", "Collapse panel")}
+                      variant="secondary"
+                      size="md"
+                      shape="circle"
+                      onClick={handleCollapse}
                       className="tool-panel__expand-btn tool-panel__toggle-vt"
                     >
                       <ChevronRightIcon sx={{ fontSize: "1.1rem" }} />

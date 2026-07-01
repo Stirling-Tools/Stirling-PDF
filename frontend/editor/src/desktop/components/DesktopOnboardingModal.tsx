@@ -1,5 +1,7 @@
 import { useState, useMemo } from "react";
-import { Modal, Stack, Group, Button, ActionIcon } from "@mantine/core";
+import { Modal, Stack, Group } from "@mantine/core";
+import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@shared/components/ActionIcon";
 import { useTranslation } from "react-i18next";
 import CloseIcon from "@mui/icons-material/Close";
 import LocalIcon from "@app/components/shared/LocalIcon";
@@ -105,8 +107,9 @@ export function DesktopOnboardingModal() {
           />
           <ActionIcon
             onClick={handleClose}
-            radius="md"
-            size={36}
+            variant="tertiary"
+            size="md"
+            aria-label={t("close", "Close")}
             style={{
               position: "absolute",
               top: 16,
@@ -115,11 +118,6 @@ export function DesktopOnboardingModal() {
               color: "white",
               backdropFilter: "blur(4px)",
               zIndex: 10,
-            }}
-            styles={{
-              root: {
-                "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.3)" },
-              },
             }}
           >
             <CloseIcon fontSize="small" />
@@ -165,15 +163,7 @@ export function DesktopOnboardingModal() {
               <OnboardingStepper totalSteps={totalSteps} activeStep={step} />
               <div className={styles.buttonContainer}>
                 <Group justify="flex-end">
-                  <Button
-                    onClick={() => setStep(1)}
-                    styles={{
-                      root: {
-                        background: "var(--onboarding-primary-button-bg)",
-                        color: "var(--onboarding-primary-button-text)",
-                      },
-                    }}
-                  >
+                  <Button onClick={() => setStep(1)} accent="neutral">
                     {t("onboarding.buttons.next", "Next →")}
                   </Button>
                 </Group>

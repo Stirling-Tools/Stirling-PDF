@@ -1,4 +1,5 @@
-import { Button, Stack, Text, Group } from "@mantine/core";
+import { Stack, Text, Group } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import UserSelector from "@app/components/shared/UserSelector";
@@ -53,7 +54,7 @@ export const SelectParticipantsStep: React.FC<SelectParticipantsStepProps> = ({
 
       <Group gap="sm">
         <Button
-          variant="default"
+          variant="secondary"
           onClick={onBack}
           leftSection={<ArrowBackIcon sx={{ fontSize: 16 }} />}
         >
