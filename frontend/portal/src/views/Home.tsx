@@ -28,6 +28,7 @@ import { UsageAreaChart } from "@portal/components/UsageAreaChart";
 import { RecentActivity } from "@portal/components/RecentActivity";
 import { SingleOpRunner } from "@portal/components/SingleOpRunner";
 import { ProcessingStatusStrip } from "@portal/components/ProcessingStatusStrip";
+import { EnterpriseUpsellCard } from "@portal/components/procurement/EnterpriseUpsellCard";
 import { PolicySummary } from "@portal/components/PolicySummary";
 import { PipelineForkWizard } from "@portal/components/PipelineForkWizard";
 import "@portal/views/Home.css";
@@ -533,6 +534,8 @@ export function Home() {
     <div className="portal-home">
       <WelcomeCarousel onTryOp={() => setRunnerOpen(true)} />
       <ProcessingStatusStrip />
+
+      {tier !== "enterprise" && <EnterpriseUpsellCard variant="home" />}
 
       {tier === "free" && (
         <>

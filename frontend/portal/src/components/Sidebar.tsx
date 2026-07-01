@@ -136,15 +136,15 @@ export function Sidebar() {
   const { activeView, setActiveView } = useView();
   const { theme } = useTheme();
   const { openSettings } = useUI();
-  const { tier } = useTier();
+  const { isLinked } = useLink();
   const { t } = useTranslation();
 
-  // Procurement is the enterprise buyer's commercial journey — surfaced only to
-  // enterprise tenants (it has no free/pro equivalent).
-  const platformGroup: NavEntry[] =
-    tier === "enterprise"
-      ? [{ id: "procurement", icon: <ProcurementIcon /> }, ...GROUP_PLATFORM]
-      : GROUP_PLATFORM;
+  // Procurement is the enterprise buyer's commercial journey. It's gated on a linked account
+  // (the trial/quote/checkout all need one); an unlinked tenant sees the "link to begin" prompt
+  // in the view itself, so we only surface the nav entry once linked.
+  const platformGroup: NavEntry[] = isLinked
+    ? [{ id: "procurement", icon: <ProcurementIcon /> }, ...GROUP_PLATFORM]
+    : GROUP_PLATFORM;
 
   function renderGroup(entries: NavEntry[]) {
     return entries.map((entry) => (

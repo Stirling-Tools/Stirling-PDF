@@ -1,51 +1,90 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Card, Skeleton, StatusBadge } from "@shared/components";
-import { useTier } from "@portal/contexts/TierContext";
+import {
+  Button,
+  Card,
+  EmptyState,
+  Skeleton,
+  StatusBadge,
+} from "@shared/components";
+import { getSupabaseClient } from "@shared/auth/supabase/supabaseClient";
+import { useLink } from "@portal/contexts/LinkContext";
+import { useUI } from "@portal/contexts/UIContext";
 import { useAsync } from "@portal/hooks/useAsync";
 import {
-  advanceStage,
-  fetchProcurement,
-  type DealStage,
-  type LedgerDoc,
-  type ProcurementResponse,
+  acceptQuote,
+  fetchSnapshot,
+  JOURNEY,
+  startTrial,
+  type ProcurementSnapshot,
+  type QuoteResult,
 } from "@portal/api/procurement";
-import { DealJourney } from "@portal/components/procurement/DealJourney";
-import { DocumentLedger } from "@portal/components/procurement/DocumentLedger";
-import { ActionModal } from "@portal/components/procurement/ActionModal";
-import { LockedState } from "@portal/components/procurement/LockedState";
+import { StageStepper } from "@portal/components/procurement/StageStepper";
+import { QuoteBuilder } from "@portal/components/procurement/QuoteBuilder";
 import "@portal/views/Procurement.css";
 
 /**
- * Procurement: the enterprise commercial journey (trial to live) plus the
- * document ledger. Enterprise-only: free/pro buyers see a locked upgrade state.
+ * Procurement: the enterprise commercial journey, gated on a linked account. Unlinked buyers get a
+ * "link to begin" prompt; linked-but-not-started buyers get the trial start; from there the deal
+ * snapshot drives the stepper, the quote builder, and (on accept) the Stripe checkout handoff.
+ * Loading /procurement directly is the same entry point as the marketing CTAs.
  */
 export function Procurement() {
   const { t } = useTranslation();
-  const { tier } = useTier();
-  const [activeDoc, setActiveDoc] = useState<LedgerDoc | null>(null);
-  const [advancing, setAdvancing] = useState(false);
+  const { isLinked } = useLink();
+  const { openLinkModal } = useUI();
 
-  const state = useAsync<ProcurementResponse>(
-    () => fetchProcurement(tier),
-    [tier],
+  const state = useAsync<ProcurementSnapshot | null>(
+    () => (isLinked ? fetchSnapshot() : Promise.resolve(null)),
+    [isLinked],
   );
+  const [snap, setSnap] = useState<ProcurementSnapshot | null>(null);
+  const [busy, setBusy] = useState(false);
+  const data = snap ?? (state.loading ? null : state.data);
 
-  // Write actions return the new canonical state; we hold it here so the
-  // journey reflects every action immediately. Cleared when the tier (and so
-  // the deal) changes, falling back to whatever the GET loaded.
-  const [applied, setApplied] = useState<ProcurementResponse | null>(null);
-  useEffect(() => setApplied(null), [tier]);
-  const data = applied ?? (state.loading ? null : state.data);
+  // The Usage "Build your Enterprise quote" CTA deep-links here; jump straight to the builder
+  // (building a quote lazily creates the deal).
+  const startQuote =
+    new URLSearchParams(window.location.search).get("start") === "quote";
 
-  async function onAdvance(stage: DealStage) {
-    setAdvancing(true);
+  async function onStartTrial() {
+    setBusy(true);
     try {
-      setApplied(await advanceStage(stage));
+      setSnap(await startTrial());
     } finally {
-      setAdvancing(false);
+      setBusy(false);
     }
   }
+
+  async function onAcceptQuote(quote: QuoteResult) {
+    setBusy(true);
+    try {
+      await acceptQuote(quote.quoteId);
+      const supabase = getSupabaseClient();
+      if (supabase) {
+        const { data: res } = await supabase.functions.invoke(
+          quote.checkoutFunction,
+          { body: { quote_id: quote.quoteId } },
+        );
+        const url = (res as { url?: string } | null)?.url;
+        if (url) {
+          window.location.href = url;
+          return;
+        }
+      }
+      setSnap(await fetchSnapshot());
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const started = data?.dealId != null;
+  const accepted = data?.latestQuote?.status === "accepted";
+  const showBuilder =
+    (!started && startQuote) ||
+    (started &&
+      !accepted &&
+      (data?.stage === "trial" || data?.stage === "quote"));
 
   return (
     <div className="portal-proc">
@@ -59,49 +98,93 @@ export function Procurement() {
         </StatusBadge>
       </header>
 
-      {state.loading && (
+      {!isLinked && (
+        <EmptyState
+          eyebrow={t("procurement.link.eyebrow")}
+          title={t("procurement.link.title")}
+          description={t("procurement.link.description")}
+          actions={
+            <Button
+              variant="gradient"
+              accent="purple"
+              onClick={() => openLinkModal()}
+            >
+              {t("procurement.link.cta")}
+            </Button>
+          }
+        />
+      )}
+
+      {isLinked && state.loading && !data && (
         <Card padding="loose">
           <Skeleton width="12rem" height="1.25rem" />
           <Skeleton height="8rem" />
         </Card>
       )}
 
-      {data && !data.unlocked && (
-        <LockedState
-          journey={data.journey}
-          onTalkToSales={() => {
-            // TODO(backend): POST /v1/procurement/sales-contact, for now this
-            // is the sidebar's upgrade path; hand off to the account team.
-          }}
+      {isLinked && !state.loading && !started && !startQuote && (
+        <EmptyState
+          eyebrow={t("procurement.start.eyebrow")}
+          title={t("procurement.start.title")}
+          description={t("procurement.start.description")}
+          actions={
+            <Button
+              variant="gradient"
+              accent="purple"
+              loading={busy}
+              onClick={onStartTrial}
+            >
+              {t("procurement.start.cta")}
+            </Button>
+          }
         />
       )}
 
-      {data && data.unlocked && data.deal && (
-        <>
-          <DealJourney
-            deal={data.deal}
-            journey={data.journey}
-            onAdvance={onAdvance}
-            advancing={advancing}
-          />
-          <DocumentLedger
-            groups={data.ledger}
-            supporting={data.supporting}
-            journey={data.journey}
-            currentStage={data.deal.currentStage}
-            onAction={setActiveDoc}
-          />
-        </>
+      {isLinked && started && (
+        <Card padding="loose" className="portal-proc__journey-stepper">
+          <StageStepper journey={JOURNEY} currentStage={data!.stage!} />
+          {data!.stage === "trial" && data!.trialEndsAt && (
+            <div className="portal-proc__trial">
+              <span className="portal-proc__trial-title">
+                {t("procurement.journey.trialTitle")}
+              </span>
+              <span className="portal-proc__trial-dim">
+                {t("procurement.journey.daysLeft", {
+                  count: daysLeft(data!.trialEndsAt),
+                })}
+              </span>
+            </div>
+          )}
+        </Card>
       )}
 
-      <ActionModal
-        doc={activeDoc}
-        onClose={() => setActiveDoc(null)}
-        onDone={(next) => {
-          setApplied(next);
-          setActiveDoc(null);
-        }}
-      />
+      {isLinked && showBuilder && (
+        <QuoteBuilder deployment="cloud" onAccept={onAcceptQuote} />
+      )}
+
+      {isLinked && started && accepted && (
+        <Card padding="loose">
+          <h3 className="portal-proc__builder-title">
+            {t("procurement.payment.title")}
+          </h3>
+          <p className="portal-proc__subtitle">
+            {t("procurement.payment.description")}
+          </p>
+          <Button
+            variant="gradient"
+            accent="purple"
+            loading={busy}
+            onClick={() => data?.latestQuote && onAcceptQuote(data.latestQuote)}
+          >
+            {t("procurement.payment.cta")}
+          </Button>
+        </Card>
+      )}
     </div>
   );
+}
+
+function daysLeft(iso: string): number {
+  const end = new Date(iso).getTime();
+  return Math.max(0, Math.ceil((end - Date.now()) / 86_400_000));
 }

@@ -451,3 +451,137 @@
     overflow-x: auto;
   }
 }
+
+/* ── Enterprise upsell CTA (Home / Usage on-ramp) ─────────────────────────── */
+.portal-proc__upsell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.portal-proc__upsell-badge {
+  display: inline-block;
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-primary, #2383e2);
+  background: var(--color-primary-light, #eaf2fb);
+  padding: 0.15rem 0.5rem;
+  border-radius: 0.375rem;
+  margin-bottom: 0.4rem;
+}
+.portal-proc__upsell-copy {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--color-text-3);
+  max-width: 44rem;
+}
+.portal-proc__upsell-copy strong {
+  color: var(--color-text-1);
+}
+
+/* ── Quote builder ────────────────────────────────────────────────────────── */
+.portal-proc__builder-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.portal-proc__builder-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 650;
+  color: var(--color-text-1);
+}
+.portal-proc__builder-step {
+  font-size: 0.75rem;
+  color: var(--color-text-5);
+}
+.portal-proc__builder-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+.portal-proc__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.8125rem;
+  color: var(--color-text-3);
+}
+.portal-proc__field input,
+.portal-proc__field select {
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--color-border, #eae8e3);
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  background: var(--color-bg-elevated, #fff);
+  color: var(--color-text-1);
+}
+.portal-proc__builder-addons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.8125rem;
+  color: var(--color-text-2);
+}
+.portal-proc__builder-addons label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.portal-proc__builder-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+.portal-proc__quote-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--color-border, #eae8e3);
+  padding-bottom: 0.5rem;
+}
+.portal-proc__quote-number {
+  font-weight: 650;
+  color: var(--color-text-1);
+}
+.portal-proc__quote-valid {
+  font-size: 0.75rem;
+  color: var(--color-text-5);
+}
+.portal-proc__quote-lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.portal-proc__quote-lines li {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.4rem 0;
+  font-size: 0.8125rem;
+  color: var(--color-text-2);
+  border-bottom: 1px solid var(--color-border-light, #f0eee9);
+}
+.portal-proc__quote-lines li[data-kind="DISCOUNT"] {
+  color: var(--color-success, #0f7b6c);
+}
+.portal-proc__quote-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0.6rem 0 0.2rem;
+  font-size: 0.9375rem;
+}
+.portal-proc__quote-total strong {
+  font-size: 1.25rem;
+  color: var(--color-text-1);
+}
+.portal-proc__quote-tcv {
+  font-size: 0.75rem;
+  color: var(--color-text-5);
+}

@@ -114,17 +114,22 @@ public class ProcurementController {
 
     // ---- endpoints ----------------------------------------------------------
 
-    /** The team's deal snapshot, or 204 if they haven't started a procurement yet. */
+    /**
+     * The team's deal snapshot. Always 200 with a single shape; an unstarted procurement returns an
+     * empty snapshot ({@code dealId == null}) so the portal can render the "start" state without
+     * special-casing an empty body.
+     */
     @GetMapping
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<SnapshotResponse> snapshot(Authentication auth) {
         Long teamId = resolveTeam(auth);
         if (teamId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        return procurement
-                .getDeal(teamId)
-                .map(deal -> ResponseEntity.ok(toSnapshot(deal)))
-                .orElseGet(() -> ResponseEntity.noContent().build());
+        return ResponseEntity.ok(
+                procurement.getDeal(teamId).map(this::toSnapshot).orElse(EMPTY_SNAPSHOT));
     }
+
+    private static final SnapshotResponse EMPTY_SNAPSHOT =
+            new SnapshotResponse(null, null, null, null, 0, false, null);
 
     @GetMapping("/estimate")
     @PreAuthorize("isAuthenticated()")
