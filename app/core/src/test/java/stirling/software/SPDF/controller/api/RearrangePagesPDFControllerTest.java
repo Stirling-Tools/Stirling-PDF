@@ -329,4 +329,29 @@ class RearrangePagesPDFControllerTest {
             assertEquals(4, realDoc.getNumberOfPages());
         }
     }
+
+    @Test
+    void testRearrangePages_SideStitchBooklet_RepeatedPaddingPagesAreDistinctNodes()
+            throws IOException {
+        MockMultipartFile file = createMockPdf();
+        RearrangePagesRequest request = new RearrangePagesRequest();
+        request.setFileInput(file);
+        request.setPageNumbers("");
+        request.setCustomMode("SIDE_STITCH_BOOKLET_SORT");
+
+        // 6 pages is not a multiple of 4, so booklet padding repeats the last page index
+        // several times; each repeat must be a distinct page node, not one shared node.
+        try (PDDocument realDoc = buildRealPdf(6)) {
+            when(pdfDocumentFactory.load(file)).thenReturn(realDoc);
+
+            ResponseEntity<Resource> response = controller.rearrangePages(request);
+
+            assertNotNull(response);
+            assertEquals(200, response.getStatusCode().value());
+            assertEquals(8, realDoc.getNumberOfPages());
+            List<Object> savedPages = reloadAndSnapshot(response);
+            assertEquals(8, savedPages.size());
+            assertEquals(8, new HashSet<>(savedPages).size());
+        }
+    }
 }
