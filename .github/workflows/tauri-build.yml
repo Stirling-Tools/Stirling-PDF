@@ -61,7 +61,7 @@ jobs:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           PLATFORM: ${{ inputs.platform }}
         run: |
-          WINDOWS='{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64","jpdfium_platforms":"windows-x64"}'
+          WINDOWS='{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc --bundles msi,nsis","name":"windows-x86_64","jpdfium_platforms":"windows-x64"}'
           MACOS='{"platform":"macos-15","args":"--target universal-apple-darwin","name":"macos-universal","jpdfium_platforms":"darwin-arm64,darwin-x64"}'
           LINUX='{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64","jpdfium_platforms":"linux-x64"}'
 
@@ -471,6 +471,7 @@ jobs:
             # Only ship the MSI installer. The loose exe and WiX toolset exes
             # are not the user-facing installer - the MSI contains the signed inner exe.
             find . -name "*.msi" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.msi" \;
+            find . -path "*/bundle/nsis/*" -name "*.exe" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.nsis.exe" \;
           elif [ "${{ matrix.platform }}" = "macos-15" ]; then
             find . -name "*.dmg" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.dmg" \;
           else
@@ -628,7 +629,7 @@ jobs:
 
             // Map of expected artifact names to display info
             const artifactMap = {
-              'Stirling-PDF-windows-x86_64': { icon: '🪟', platform: 'Windows x64', files: '.exe, .msi' },
+              'Stirling-PDF-windows-x86_64': { icon: '🪟', platform: 'Windows x64', files: '.exe (NSIS), .msi' },
               'Stirling-PDF-macos-universal': { icon: '🍎', platform: 'macOS Universal', files: '.dmg' },
               'Stirling-PDF-linux-x86_64': { icon: '🐧', platform: 'Linux x64', files: '.deb, .rpm, .AppImage' }
             };

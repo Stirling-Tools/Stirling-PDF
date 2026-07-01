@@ -52,7 +52,7 @@ export function isFieldPending<T extends SettingsWithPending>(
   fieldPath: string,
 ): boolean {
   if (!settings?._pending) {
-    console.log(
+    console.debug(
       `[isFieldPending] No _pending block found for field: ${fieldPath}`,
     );
     return false;
@@ -63,7 +63,7 @@ export function isFieldPending<T extends SettingsWithPending>(
   const isPending = value !== undefined;
 
   if (isPending) {
-    console.log(
+    console.debug(
       `[isFieldPending] Field ${fieldPath} IS pending with value:`,
       value,
     );

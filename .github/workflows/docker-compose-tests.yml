@@ -170,7 +170,7 @@ jobs:
           if-no-files-found: warn
 
       - name: Upload Cucumber Report
-        if: always()
+        if: always() && hashFiles('testing/cucumber/report.html') != ''
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: cucumber-report
@@ -179,7 +179,7 @@ jobs:
           if-no-files-found: warn
 
       - name: Upload Test Reports
-        if: always()
+        if: always() && hashFiles('testing/reports/**') != ''
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: docker-compose-test-reports
@@ -188,7 +188,7 @@ jobs:
           if-no-files-found: warn
 
       - name: Cucumber Test Report
-        if: always()
+        if: always() && hashFiles('testing/cucumber/junit/*.xml') != ''
         uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
         with:
           name: Cucumber Tests
