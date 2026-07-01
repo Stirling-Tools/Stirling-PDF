@@ -12,6 +12,7 @@ import java.net.ConnectException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -188,5 +189,74 @@ class AccountLinkClientTest {
         when(httpClient.send(any(), any(HttpResponse.BodyHandler.class)))
                 .thenThrow(new ConnectException("refused"));
         assertEquals(false, client.revokeSelf("dev-1", "sec-1"));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void reportUsagePostsToSyncWithDeviceHeadersAndParsesFreshEntitlement() throws Exception {
+        HttpResponse<String> resp =
+                response(
+                        200,
+                        "{\"subscribed\":true,\"freeRemainingUnits\":0,\"periodSpendUnits\":42,\"periodCapUnits\":100,\"state\":\"OK\"}");
+        ArgumentCaptor<HttpRequest> captor = ArgumentCaptor.forClass(HttpRequest.class);
+        when(httpClient.send(captor.capture(), any(HttpResponse.BodyHandler.class)))
+                .thenReturn(resp);
+
+        InstanceEntitlement e =
+                client.reportUsage(
+                        "dev-1", "sec-1", 7L, LocalDateTime.of(2026, 6, 1, 0, 0), 12, 4, 8);
+
+        assertNotNull(e);
+        assertEquals(42, e.periodSpendUnits());
+        assertEquals(EntitlementState.OK, e.state());
+
+        HttpRequest sent = captor.getValue();
+        assertEquals("https://saas.example.com/api/v1/instance/sync", sent.uri().toString());
+        assertEquals("POST", sent.method());
+        assertEquals("dev-1", sent.headers().firstValue("X-Device-Id").orElse(null));
+        assertEquals("sec-1", sent.headers().firstValue("X-Device-Secret").orElse(null));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void reportUsageThrowsRevokedOnDeny() throws Exception {
+        for (int status : new int[] {401, 403}) {
+            HttpResponse<String> resp = response(status, "{}");
+            when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(resp);
+            AccountLinkClient.RevokedException ex =
+                    assertThrows(
+                            AccountLinkClient.RevokedException.class,
+                            () ->
+                                    client.reportUsage(
+                                            "dev-1",
+                                            "sec-1",
+                                            1L,
+                                            LocalDateTime.of(2026, 6, 1, 0, 0),
+                                            1,
+                                            0,
+                                            0));
+            assertEquals(status, ex.status());
+        }
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void reportUsageReturnsNullWhenUnreachable() throws Exception {
+        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class)))
+                .thenThrow(new ConnectException("refused"));
+        // Null = don't advance synced markers; the usage retries on the next sync.
+        assertNull(
+                client.reportUsage(
+                        "dev-1", "sec-1", 1L, LocalDateTime.of(2026, 6, 1, 0, 0), 1, 0, 0));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void reportUsageReturnsNullOnServerError() throws Exception {
+        HttpResponse<String> resp = response(503, "{}");
+        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(resp);
+        assertNull(
+                client.reportUsage(
+                        "dev-1", "sec-1", 1L, LocalDateTime.of(2026, 6, 1, 0, 0), 1, 0, 0));
     }
 }

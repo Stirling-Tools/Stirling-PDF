@@ -32,6 +32,7 @@ vi.stubEnv("VITE_SAAS_API_URL", "https://saas.test.local");
 
 import {
   fetchInstances,
+  fetchLocalUsage,
   fetchStatus,
   linkInstance,
   revokeInstance,
@@ -72,6 +73,16 @@ describe("api/link — local backend (this instance)", () => {
     // unlink returns 204 (no body); the status is read back separately.
     await unlinkInstance();
     expect((await fetchStatus()).linked).toBe(false);
+  });
+
+  it("reads instance-local unsynced usage via the local endpoint", async () => {
+    const usage = await fetchLocalUsage();
+    expect(usage.totalUnsyncedUnits).toBe(
+      usage.apiUnsyncedUnits +
+        usage.aiUnsyncedUnits +
+        usage.automationUnsyncedUnits,
+    );
+    expect(usage.totalUnsyncedUnits).toBeGreaterThanOrEqual(0);
   });
 
   it("forwards the SaaS JWT in the link body", async () => {

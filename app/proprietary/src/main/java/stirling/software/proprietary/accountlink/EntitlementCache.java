@@ -121,4 +121,14 @@ public class EntitlementCache {
     public void invalidate() {
         snapshot = new Snapshot(snapshot.entitlement(), Instant.EPOCH);
     }
+
+    /**
+     * Seeds the cache with an entitlement obtained out-of-band — the daily usage sync gets a fresh
+     * snapshot back in its reply, so adopting it here saves a redundant fetch. No-op on null.
+     */
+    public void accept(InstanceEntitlement fresh) {
+        if (fresh != null) {
+            snapshot = new Snapshot(fresh, Instant.now());
+        }
+    }
 }

@@ -4,6 +4,7 @@ import { Banner, Button, Skeleton } from "@shared/components";
 import { useLink } from "@portal/contexts/LinkContext";
 import { useUI } from "@portal/contexts/UIContext";
 import { fetchWallet, type Wallet } from "@portal/api/billing";
+import { fetchLocalUsage, type LocalUsage } from "@portal/api/link";
 import { useStripePortal } from "@portal/hooks/useStripePortal";
 import { LinkAccountPrompt } from "@portal/components/billing/LinkAccountPrompt";
 import { FreePlanView } from "@portal/components/billing/FreePlanView";
@@ -35,6 +36,9 @@ export function Usage() {
   const { isLinked, setLinkState, saasSessionNonce } = useLink();
   const { openLinkModal } = useUI();
   const [wallet, setWallet] = useState<Wallet | null>(null);
+  // Locally-accrued usage SaaS hasn't billed yet; added to the synced figure so
+  // "current usage" reflects work since the last daily sync. Best-effort.
+  const [localUsage, setLocalUsage] = useState<LocalUsage | null>(null);
   const [loading, setLoading] = useState<boolean>(isLinked);
   const [error, setError] = useState<string | null>(null);
   // The instance is linked but the browser's SaaS session has lapsed — needs a
@@ -60,6 +64,7 @@ export function Usage() {
     // link prompt; no SaaS call needed.
     if (!isLinked) {
       setWallet(null);
+      setLocalUsage(null);
       setLoading(false);
       setError(null);
       setNeedsReauth(false);
@@ -69,6 +74,15 @@ export function Usage() {
     setLoading(true);
     setError(null);
     setNeedsReauth(false);
+    // Independent of the wallet load — a local-usage failure must not break the
+    // page; it just means no unsynced delta is shown.
+    fetchLocalUsage()
+      .then((u) => {
+        if (!cancelled) setLocalUsage(u);
+      })
+      .catch(() => {
+        if (!cancelled) setLocalUsage(null);
+      });
     fetchWallet()
       .then((w) => {
         if (cancelled) return;
@@ -232,7 +246,11 @@ export function Usage() {
         )}
 
         {isLinked && wallet && wallet.status === "subscribed" && (
-          <SubscribedPlanView wallet={wallet} onWalletChange={refresh} />
+          <SubscribedPlanView
+            wallet={wallet}
+            unsynced={localUsage}
+            onWalletChange={refresh}
+          />
         )}
       </div>
     </div>
