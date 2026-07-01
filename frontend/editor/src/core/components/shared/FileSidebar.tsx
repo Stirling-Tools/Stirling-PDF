@@ -30,11 +30,9 @@ import { GoogleDriveIcon } from "@app/components/shared/CloudStorageIcons";
 import { Wordmark } from "@app/components/shared/Wordmark";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import MenuIcon from "@mui/icons-material/Menu";
-import SearchIcon from "@mui/icons-material/Search";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import FolderSpecialIcon from "@mui/icons-material/FolderSpecial";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
-import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import SettingsIcon from "@mui/icons-material/Settings";
@@ -79,8 +77,6 @@ export interface FileSidebarProps {
   onUploadFiles?: (files: File[]) => void | Promise<void>;
   /** Override the Google Drive handler. */
   onPickGoogleDriveFiles?: (files: File[]) => void | Promise<void>;
-  /** Override the Search row click (e.g. focus the /files search input). */
-  onSearchClick?: () => void;
   /** Extra action row inserted under Open-from-computer (e.g. New folder). */
   extraAction?: {
     icon: React.ReactNode;
@@ -102,15 +98,11 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       toggleIcon,
       onUploadFiles,
       onPickGoogleDriveFiles,
-      onSearchClick,
       extraAction,
     },
     ref,
   ) {
     const { t } = useTranslation();
-    const [searchActive, setSearchActive] = useState(false);
-    const [searchQuery, setSearchQuery] = useState("");
-    const searchInputRef = useRef<HTMLInputElement>(null);
     const nativeFileInputRef = useRef<HTMLInputElement>(null);
     // State (not ref) so setting it triggers a re-render - avoids racing addFiles state updates.
     const [pendingViewFileId, setPendingViewFileId] = useState<string | null>(
@@ -354,34 +346,9 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       }
     }, [pendingViewFileId, state.files.ids, setActiveFileId, navActions]);
 
-    const filteredFileStubs = searchQuery.trim()
-      ? allFileStubs.filter((stub) =>
-          stub.name.toLowerCase().includes(searchQuery.toLowerCase()),
-        )
-      : allFileStubs;
-
-    // Handle search activation
-    const handleSearchClick = useCallback(() => {
-      if (onSearchClick) {
-        onSearchClick();
-        return;
-      }
-      if (collapsed && onToggleCollapse) {
-        onToggleCollapse();
-      }
-      setSearchActive(true);
-    }, [collapsed, onToggleCollapse, onSearchClick]);
-
-    const handleSearchClose = useCallback(() => {
-      setSearchActive(false);
-      setSearchQuery("");
-    }, []);
-
-    useEffect(() => {
-      if (searchActive && searchInputRef.current) {
-        searchInputRef.current.focus();
-      }
-    }, [searchActive]);
+    // File filtering now lives in the global super search (top bar); the
+    // sidebar simply lists every stored file.
+    const filteredFileStubs = allFileStubs;
 
     // Handle Google Drive
     const handleGoogleDriveClick = useCallback(async () => {
@@ -678,56 +645,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                   className="file-sidebar-brand-text sidebar-content-fade"
                 />
               )}
-            </div>
-          </Tooltip>
-
-          {/* Search row */}
-          <Tooltip
-            label={t("fileSidebar.search", "Search")}
-            position="right"
-            withinPortal
-            disabled={!collapsed}
-          >
-            <div
-              className={`file-sidebar-search-row${searchActive && !collapsed ? " active" : ""}`}
-              onClick={!searchActive ? handleSearchClick : undefined}
-              role={!searchActive ? "button" : undefined}
-              tabIndex={!searchActive ? 0 : undefined}
-              onKeyDown={
-                !searchActive
-                  ? (e) => e.key === "Enter" && handleSearchClick()
-                  : undefined
-              }
-            >
-              {searchActive && !collapsed ? (
-                <CloseIcon
-                  className="file-sidebar-search-icon"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleSearchClose();
-                  }}
-                />
-              ) : (
-                <SearchIcon className="file-sidebar-search-icon" />
-              )}
-              {!collapsed &&
-                (searchActive ? (
-                  <input
-                    ref={searchInputRef}
-                    className="file-sidebar-search-input sidebar-content-fade"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder={t(
-                      "fileSidebar.searchPlaceholder",
-                      "Search files...",
-                    )}
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                ) : (
-                  <span className="file-sidebar-search-label sidebar-content-fade">
-                    {t("fileSidebar.search", "Search")}
-                  </span>
-                ))}
             </div>
           </Tooltip>
 
@@ -1115,16 +1032,14 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                     })}
                   </div>
                 ) : (
-                  !searchActive && (
-                    <div className="file-sidebar-empty">
-                      <p className="file-sidebar-empty-text">
-                        {t("fileSidebar.noFiles", "No files yet")}
-                      </p>
-                      <p className="file-sidebar-empty-hint">
-                        {t("fileSidebar.dropHint", "Open files to get started")}
-                      </p>
-                    </div>
-                  )
+                  <div className="file-sidebar-empty">
+                    <p className="file-sidebar-empty-text">
+                      {t("fileSidebar.noFiles", "No files yet")}
+                    </p>
+                    <p className="file-sidebar-empty-hint">
+                      {t("fileSidebar.dropHint", "Open files to get started")}
+                    </p>
+                  </div>
                 )}
               </div>
             )}

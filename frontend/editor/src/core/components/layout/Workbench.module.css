@@ -1,3 +1,40 @@
+/* Positioning context for the viewer toolbar's reopen tab, which hangs below
+   the bar and so must sit outside the overflow-clipped wrapper below. */
+.workbenchBarShell {
+  position: relative;
+  flex-shrink: 0;
+  z-index: 51;
+}
+
+/* Little pull-tab shown while the viewer tool row is retracted. Anchored to the
+   bar's bottom-right edge (where the retract handle sat). Small by design - it
+   just brings the row back. */
+.workbenchBarReopenTab {
+  position: absolute;
+  top: 100%;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 0.875rem;
+  border: 1px solid var(--border-subtle);
+  border-top: none;
+  border-radius: 0 0 7px 7px;
+  background: var(--bg-toolbar);
+  color: var(--text-muted);
+  cursor: pointer;
+  z-index: 52;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.workbenchBarReopenTab:hover {
+  color: var(--text-primary);
+  background: var(--hover-bg);
+}
+
 /* WorkbenchBar slide-in/out animation using CSS grid trick */
 .workbenchBarWrapper {
   display: grid;

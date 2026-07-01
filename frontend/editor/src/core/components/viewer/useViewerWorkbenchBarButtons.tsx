@@ -176,7 +176,11 @@ export function useViewerWorkbenchBarButtons(
                     aria-label={searchLabel}
                     onClick={viewer.searchInterfaceActions.toggle}
                   >
-                    <LocalIcon icon="search" width="1.25rem" height="1.25rem" />
+                    <LocalIcon
+                      icon="find-in-page-rounded"
+                      width="1.25rem"
+                      height="1.25rem"
+                    />
                   </ActionIcon>
                 </div>
               </Popover.Target>

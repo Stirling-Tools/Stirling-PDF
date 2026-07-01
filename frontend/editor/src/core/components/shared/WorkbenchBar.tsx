@@ -1,10 +1,4 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useSyncExternalStore,
-} from "react";
+import React, { useCallback, useMemo, useSyncExternalStore } from "react";
 import { ActionIcon } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -29,6 +23,7 @@ import { ViewerContext, useViewer } from "@app/contexts/ViewerContext";
 import { WorkbenchType, isBaseWorkbench } from "@app/types/workbench";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import LocalIcon from "@app/components/shared/LocalIcon";
+import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
 import ViewerShareButton from "@app/components/viewer/ViewerShareButton";
 import { useSharingEnabled } from "@app/hooks/useSharingEnabled";
 import { downloadFileWithPolicy as downloadFile } from "@app/services/exportWithPolicy";
@@ -44,6 +39,7 @@ import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import FolderIcon from "@mui/icons-material/Folder";
 import CloseIcon from "@mui/icons-material/Close";
 import PrintIcon from "@mui/icons-material/Print";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import "@app/components/shared/WorkbenchBar.css";
 
 const SECTION_ORDER: WorkbenchBarSection[] = ["top", "middle", "bottom"];
@@ -58,6 +54,10 @@ interface WorkbenchBarProps {
   currentView: WorkbenchType;
   setCurrentView: (view: WorkbenchType) => void;
   hasFiles: boolean;
+  /** Whether the viewer's tool row is currently retracted. */
+  viewerToolbarCollapsed?: boolean;
+  /** Setter for the viewer tool-row retract state (owned by Workbench). */
+  onCollapseViewerToolbar?: (collapsed: boolean) => void;
 }
 
 function renderWithTooltip(
@@ -82,6 +82,8 @@ export default function WorkbenchBar({
   currentView,
   setCurrentView,
   hasFiles,
+  viewerToolbarCollapsed = false,
+  onCollapseViewerToolbar,
 }: WorkbenchBarProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -105,6 +107,7 @@ export default function WorkbenchBar({
   } = useToolWorkflow();
   const { selectedTool } = useNavigationState();
   const isCustomView = !isBaseWorkbench(currentView);
+  const isViewer = currentView === "viewer";
   const disableForFullscreen =
     toolPanelMode === "fullscreen" && leftPanelView === "toolPicker";
   const terminology = useFileActionTerminology();
@@ -372,45 +375,8 @@ export default function WorkbenchBar({
       })),
   ];
 
-  const barRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const bar = barRef.current;
-    if (!bar) return;
-
-    const measure = () => {
-      const viewsEl = bar.querySelector<HTMLElement>(".workbench-bar-views");
-      const globalsEl = bar.querySelector<HTMLElement>(
-        ".workbench-bar-globals",
-      );
-      const centerEl = bar.querySelector<HTMLElement>(".workbench-bar-center");
-
-      const viewsWidth = viewsEl?.offsetWidth ?? 0;
-      const globalsWidth = globalsEl?.offsetWidth ?? 0;
-      const centerChildren = centerEl
-        ? (Array.from(centerEl.children) as HTMLElement[])
-        : [];
-      const centerWidth =
-        centerChildren.reduce((sum, el) => sum + el.offsetWidth, 0) +
-        Math.max(0, centerChildren.length - 1) * 2; // gap: 2px
-
-      const needed = viewsWidth + centerWidth + globalsWidth + 24; // 24px bar padding
-      bar.dataset.wrapped = String(needed > bar.clientWidth);
-    };
-
-    const ro = new ResizeObserver(measure);
-    ro.observe(bar);
-    measure();
-    return () => ro.disconnect();
-  }, []);
-
   return (
-    <div
-      ref={barRef}
-      className="workbench-bar"
-      data-wrapped="true"
-      data-tour="workbench-bar"
-    >
+    <div className="workbench-bar" data-tour="workbench-bar">
       {/* Left: optional "Back to My Files" + view switcher */}
       <div className="workbench-bar-views" data-tour="view-switcher">
         {returnRoute && hasFiles && (
@@ -456,27 +422,50 @@ export default function WorkbenchBar({
           ))}
       </div>
 
-      {/* Tool buttons - second row, only rendered when buttons exist */}
-      {sectionsWithButtons.length > 0 && (
-        <div className="workbench-bar-center">
-          {sectionsWithButtons.map(
-            ({ section, buttons: sectionButtons }, idx) => (
-              <React.Fragment key={section}>
-                {idx > 0 && <div className="workbench-bar-divider" />}
-                {sectionButtons.map((btn) => {
-                  const content = renderButton(btn);
-                  if (!content) return null;
-                  return (
-                    <div key={btn.id} className="workbench-bar-action-wrapper">
-                      {content}
-                    </div>
-                  );
-                })}
-              </React.Fragment>
-            ),
-          )}
-        </div>
-      )}
+      {/* Global super search - always present, even on the homepage */}
+      <div className="workbench-bar-search">
+        <SuperSearch />
+      </div>
+
+      {/* Tool buttons - second row, only rendered when buttons exist. In the
+          viewer the row is retractable: a handle on its right edge hides the
+          whole row; Workbench then shows a tab below the bar to bring it back. */}
+      {sectionsWithButtons.length > 0 &&
+        !(isViewer && viewerToolbarCollapsed) && (
+          <div className="workbench-bar-center">
+            {sectionsWithButtons.map(
+              ({ section, buttons: sectionButtons }, idx) => (
+                <React.Fragment key={section}>
+                  {idx > 0 && <div className="workbench-bar-divider" />}
+                  {sectionButtons.map((btn) => {
+                    const content = renderButton(btn);
+                    if (!content) return null;
+                    return (
+                      <div
+                        key={btn.id}
+                        className="workbench-bar-action-wrapper"
+                      >
+                        {content}
+                      </div>
+                    );
+                  })}
+                </React.Fragment>
+              ),
+            )}
+            {isViewer && onCollapseViewerToolbar && (
+              <button
+                type="button"
+                className="workbench-bar-toolbar-handle workbench-bar-toolbar-handle-retract"
+                onClick={() => onCollapseViewerToolbar(true)}
+                aria-expanded
+                aria-label={t("workbenchBar.hideToolbar", "Hide toolbar")}
+                title={t("workbenchBar.hideToolbar", "Hide toolbar")}
+              >
+                <KeyboardArrowUpIcon sx={{ fontSize: "1rem" }} />
+              </button>
+            )}
+          </div>
+        )}
 
       {/* Right: Global buttons - export group left, close anchored right */}
       <div className="workbench-bar-globals">

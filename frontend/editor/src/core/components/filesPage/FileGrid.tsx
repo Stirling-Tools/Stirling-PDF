@@ -14,6 +14,7 @@ import DriveFileRenameOutlineIcon from "@mui/icons-material/DriveFileRenameOutli
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
+import SearchIcon from "@mui/icons-material/Search";
 
 import { FileId } from "@app/types/file";
 import { FolderId, FolderRecord, ROOT_FOLDER_ID } from "@app/types/folder";
@@ -87,6 +88,8 @@ interface FileGridProps {
   onChangeSortMode?: (mode: FilesPageSortMode) => void;
   /** Drives the empty-state copy. */
   currentTab?: "all" | "local" | "cloud" | "recent" | "shared" | "sharedByMe";
+  /** A filter is applied; an empty result then means "no matches", not "no files". */
+  searchActive?: boolean;
   /** Cloud reachability; switches the cloud empty-state copy. */
   serverReachable?: boolean;
   /** Empty-state CTA handlers; if absent the matching button hides. */
@@ -102,6 +105,7 @@ export function FileGrid(props: FileGridProps & { loading?: boolean }) {
     entries,
     loading,
     currentTab,
+    searchActive,
     serverReachable,
     onEmptyUpload,
     onEmptyCreateFolder,
@@ -113,15 +117,28 @@ export function FileGrid(props: FileGridProps & { loading?: boolean }) {
   }
 
   if (entries.length === 0) {
-    return (
+    const emptyState = (
       <EmptyState
         tab={currentTab}
+        searchActive={searchActive}
         serverReachable={serverReachable}
         onUpload={onEmptyUpload}
         onCreateFolder={onEmptyCreateFolder}
         newFolderDisabledReason={newFolderDisabledReason}
       />
     );
+    // When a filter empties the list view, keep the column headers in place and
+    // show the no-results message beneath them, rather than replacing the whole
+    // table. Grid view (cards, no headers) just shows the empty state.
+    if (viewMode === "list" && searchActive) {
+      return (
+        <>
+          <ListView {...props} />
+          {emptyState}
+        </>
+      );
+    }
+    return emptyState;
   }
 
   if (viewMode === "list") {
@@ -185,6 +202,8 @@ function SkeletonGrid({ viewMode }: { viewMode: FilesPageViewMode }) {
 interface EmptyStateProps {
   /** Drives copy + iconography. */
   tab?: "all" | "local" | "cloud" | "recent" | "shared" | "sharedByMe";
+  /** When true the empty list is the result of a filter, not a bare folder. */
+  searchActive?: boolean;
   /** Switches the cloud empty-state copy. */
   serverReachable?: boolean;
   /** CTA handlers; absent => button hidden. */
@@ -196,12 +215,35 @@ interface EmptyStateProps {
 
 function EmptyState({
   tab = "all",
+  searchActive = false,
   serverReachable = true,
   onUpload,
   onCreateFolder,
   newFolderDisabledReason,
 }: EmptyStateProps) {
   const { t } = useTranslation();
+
+  // A filter with no matches isn't an empty folder - say so, and skip the
+  // upload / new-folder CTAs since clearing the filter is the way out.
+  if (searchActive) {
+    return (
+      <div className="files-page-empty">
+        <span className="files-page-empty-icon">
+          <SearchIcon style={{ fontSize: "2.5rem" }} />
+        </span>
+        <div className="files-page-empty-title">
+          {t("filesPage.empty.noResults.title", "No matching files")}
+        </div>
+        <div className="files-page-empty-hint">
+          {t(
+            "filesPage.empty.noResults.hint",
+            "No files in this folder match your filter. Try a different term or clear the filter.",
+          )}
+        </div>
+      </div>
+    );
+  }
+
   const { titleKey, titleFallback, hintKey, hintFallback } = (() => {
     switch (tab) {
       case "local":

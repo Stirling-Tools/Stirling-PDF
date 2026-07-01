@@ -579,11 +579,6 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
       <FileSidebar
         ref={ref}
         {...props}
-        onSearchClick={() => {
-          // Just focus the central search field; don't toggle collapse
-          // (which on /files navigates back home).
-          window.dispatchEvent(new Event("files-page:focus-search"));
-        }}
         onUploadFiles={handleUpload}
         onPickGoogleDriveFiles={handleUpload}
         extraAction={{

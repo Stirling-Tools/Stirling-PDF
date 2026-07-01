@@ -3693,8 +3693,6 @@ noFiles = "No files yet"
 openFileManager = "Browse all files & folders"
 openFromComputer = "Open from computer"
 openSettings = "Open settings"
-search = "Search"
-searchPlaceholder = "Search files..."
 
 [fileSidebar.fileItem]
 closeViewer = "Close viewer"
@@ -3715,7 +3713,6 @@ backToFolder = "Back to {{folder}}"
 backToMyFiles = "Back to My Files"
 breadcrumbs = "Folder path"
 cancel = "Cancel"
-clearSearch = "Clear search"
 clearSelection = "Clear selection"
 closeDetails = "Close details"
 create = "Create"
@@ -3779,8 +3776,6 @@ resizeFolderTree = "Resize folder tree (arrow keys, Shift for bigger steps; doub
 save = "Save"
 saveToServer = "Save to server"
 saveToServerDisabledHint = "Saving to the server isn't enabled on this server. Ask your admin to enable it."
-search = "Search"
-searchPlaceholder = "Search this folder & subfolders"
 selectAll = "Select all"
 selectAllHint = "Click to select all. Tip: hold Ctrl (or Cmd) to add files one at a time, Shift to select a range."
 selectedCount = "{{count}} selected"
@@ -3839,6 +3834,10 @@ title = "No cloud files yet"
 [filesPage.empty.local]
 hint = "Files saved without uploading stay here. Drop a file to add one."
 title = "No local-only files"
+
+[filesPage.empty.noResults]
+hint = "No files in this folder match your filter. Try a different term or clear the filter."
+title = "No matching files"
 
 [filesPage.empty.recent]
 hint = "Files you open or edit will appear here."
@@ -3910,6 +3909,11 @@ local = "Local"
 localHint = "Only stored in this browser"
 shared = "Shared"
 sharedHint = "Shared with you via link"
+
+[filesPage.search]
+clear = "Clear filter"
+label = "Filter files by name"
+placeholder = "Filter files…"
 
 [filesPage.sort]
 modifiedAsc = "Oldest first"
@@ -7654,6 +7658,16 @@ title = "Upload to Server"
 updateButton = "Update on Server"
 uploadButton = "Upload to Server"
 
+[superSearch]
+ariaLabel = "Super search"
+hint = "Type to search across your files, tools and settings"
+placeholder = "Search files, tools and settings…"
+
+[superSearch.group]
+files = "Files"
+settings = "Settings"
+tools = "Tools"
+
 [survey]
 title = "Stirling-PDF Survey"
 
@@ -8482,6 +8496,7 @@ exitRedaction = "Exit Redaction Mode"
 exportAll = "Export PDF"
 exportSelected = "Export Selected Pages"
 formFill = "Fill Form"
+hideToolbar = "Hide toolbar"
 multiTool = "Multi-Tool"
 panMode = "Pan Mode"
 print = "Print PDF"
@@ -8501,6 +8516,7 @@ selectAll = "Select All"
 selectByNumber = "Select by Page Numbers"
 selectLanguage = "Select language"
 share = "Share"
+showToolbar = "Show toolbar"
 toggleAnnotations = "Toggle Annotations Visibility"
 toggleAttachments = "Toggle Attachments"
 toggleBookmarks = "Toggle Bookmarks"
