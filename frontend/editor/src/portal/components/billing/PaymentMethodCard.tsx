@@ -46,18 +46,18 @@ export function PaymentMethodCard({ onManage, managing }: Props) {
       <div className="portal-billing__subscription-head">
         <div>
           <span className="portal-billing__eyebrow">
-            {t("billing.paymentMethod.eyebrow", "Payment method")}
+            {t("portal.billing.paymentMethod.eyebrow", "Payment method")}
           </span>
           {hasCard ? (
             <>
               <h3 className="portal-billing__section-title">
                 {t(
-                  "billing.paymentMethod.cardEnding",
+                  "portal.billing.paymentMethod.cardEnding",
                   "{{brand}} ending {{last4}}",
                   {
                     brand: titleCase(
                       pm.brand ??
-                        t("billing.paymentMethod.cardFallback", "Card"),
+                        t("portal.billing.paymentMethod.cardFallback", "Card"),
                     ),
                     last4: pm.last4,
                   },
@@ -66,23 +66,29 @@ export function PaymentMethodCard({ onManage, managing }: Props) {
               <p className="portal-billing__section-sub">
                 {pm.expMonth != null && pm.expYear != null
                   ? t(
-                      "billing.paymentMethod.expiresBilledMonthly",
+                      "portal.billing.paymentMethod.expiresBilledMonthly",
                       "Expires {{expiry}} · billed monthly",
                       {
                         expiry: `${String(pm.expMonth).padStart(2, "0")}/${pm.expYear}`,
                       },
                     )
-                  : t("billing.paymentMethod.billedMonthly", "Billed monthly")}
+                  : t(
+                      "portal.billing.paymentMethod.billedMonthly",
+                      "Billed monthly",
+                    )}
               </p>
             </>
           ) : (
             <>
               <h3 className="portal-billing__section-title">
-                {t("billing.paymentMethod.managedTitle", "Managed in Stripe")}
+                {t(
+                  "portal.billing.paymentMethod.managedTitle",
+                  "Managed in Stripe",
+                )}
               </h3>
               <p className="portal-billing__section-sub">
                 {t(
-                  "billing.paymentMethod.managedSub",
+                  "portal.billing.paymentMethod.managedSub",
                   "Your card and billing details are kept securely in Stripe's customer portal.",
                 )}
               </p>
@@ -95,7 +101,7 @@ export function PaymentMethodCard({ onManage, managing }: Props) {
           loading={managing}
           onClick={onManage}
         >
-          {t("billing.paymentMethod.update", "Update")}
+          {t("portal.billing.paymentMethod.update", "Update")}
         </Button>
       </div>
     </Card>

@@ -41,58 +41,62 @@ export function SecurityTab() {
   const ACCESS_OPTS: RadioOption<AccessPolicy>[] = [
     {
       value: "stirling",
-      label: t("infrastructure.security.access.stirling.label"),
-      description: t("infrastructure.security.access.stirling.description"),
+      label: t("portal.infrastructure.security.access.stirling.label"),
+      description: t(
+        "portal.infrastructure.security.access.stirling.description",
+      ),
     },
     {
       value: "byok",
-      label: t("infrastructure.security.access.byok.label"),
-      description: t("infrastructure.security.access.byok.description"),
+      label: t("portal.infrastructure.security.access.byok.label"),
+      description: t("portal.infrastructure.security.access.byok.description"),
     },
     {
       value: "hyok",
-      label: t("infrastructure.security.access.hyok.label"),
-      description: t("infrastructure.security.access.hyok.description"),
+      label: t("portal.infrastructure.security.access.hyok.label"),
+      description: t("portal.infrastructure.security.access.hyok.description"),
     },
   ];
 
   const RESIDENCY_OPTS: RadioOption<DataResidency>[] = [
     {
       value: "us",
-      label: t("infrastructure.security.residency.us.label"),
-      description: t("infrastructure.security.residency.us.description"),
+      label: t("portal.infrastructure.security.residency.us.label"),
+      description: t("portal.infrastructure.security.residency.us.description"),
     },
     {
       value: "eu",
-      label: t("infrastructure.security.residency.eu.label"),
-      description: t("infrastructure.security.residency.eu.description"),
+      label: t("portal.infrastructure.security.residency.eu.label"),
+      description: t("portal.infrastructure.security.residency.eu.description"),
     },
     {
       value: "apac",
-      label: t("infrastructure.security.residency.apac.label"),
-      description: t("infrastructure.security.residency.apac.description"),
+      label: t("portal.infrastructure.security.residency.apac.label"),
+      description: t(
+        "portal.infrastructure.security.residency.apac.description",
+      ),
     },
   ];
 
   const ipCols: TableColumn<SecurityConfig["ipAllowlist"][number]>[] = [
     {
       key: "label",
-      header: t("infrastructure.security.ipColumns.label"),
+      header: t("portal.infrastructure.security.ipColumns.label"),
       render: (e) => e.label,
     },
     {
       key: "cidr",
-      header: t("infrastructure.security.ipColumns.cidr"),
+      header: t("portal.infrastructure.security.ipColumns.cidr"),
       render: (e) => <code className="portal-infra__cell-code">{e.cidr}</code>,
     },
     {
       key: "addedBy",
-      header: t("infrastructure.security.ipColumns.addedBy"),
+      header: t("portal.infrastructure.security.ipColumns.addedBy"),
       render: (e) => <span className="portal-infra__mono">{e.addedBy}</span>,
     },
     {
       key: "added",
-      header: t("infrastructure.security.ipColumns.added"),
+      header: t("portal.infrastructure.security.ipColumns.added"),
       align: "right",
       render: (e) => <span className="portal-infra__muted">{e.added}</span>,
     },
@@ -120,8 +124,8 @@ export function SecurityTab() {
     return (
       <EmptyState
         size="compact"
-        title={t("infrastructure.security.empty.title")}
-        description={t("infrastructure.security.empty.description")}
+        title={t("portal.infrastructure.security.empty.title")}
+        description={t("portal.infrastructure.security.empty.description")}
       />
     );
   }
@@ -131,8 +135,8 @@ export function SecurityTab() {
       <section className="portal-infra__split">
         <Card padding="loose">
           <SectionHeader
-            title={t("infrastructure.security.accessPolicy.heading")}
-            sub={t("infrastructure.security.accessPolicy.subheading")}
+            title={t("portal.infrastructure.security.accessPolicy.heading")}
+            sub={t("portal.infrastructure.security.accessPolicy.subheading")}
           />
           <RadioGroup
             name="access-policy"
@@ -144,16 +148,18 @@ export function SecurityTab() {
             <Banner
               tone="success"
               className="portal-infra__banner"
-              title={t("infrastructure.security.hyokBanner.title")}
-              description={t("infrastructure.security.hyokBanner.description")}
+              title={t("portal.infrastructure.security.hyokBanner.title")}
+              description={t(
+                "portal.infrastructure.security.hyokBanner.description",
+              )}
             />
           )}
         </Card>
 
         <Card padding="loose">
           <SectionHeader
-            title={t("infrastructure.security.residencyHeader.heading")}
-            sub={t("infrastructure.security.residencyHeader.subheading")}
+            title={t("portal.infrastructure.security.residencyHeader.heading")}
+            sub={t("portal.infrastructure.security.residencyHeader.subheading")}
           />
           <RadioGroup
             name="data-residency"
@@ -166,8 +172,8 @@ export function SecurityTab() {
 
       <section>
         <SectionHeader
-          title={t("infrastructure.security.keyManagement.heading")}
-          sub={t("infrastructure.security.keyManagement.subheading")}
+          title={t("portal.infrastructure.security.keyManagement.heading")}
+          sub={t("portal.infrastructure.security.keyManagement.subheading")}
         />
         <Card padding="loose" className="portal-infra__keymgmt">
           <div className="portal-infra__keymgmt-head">
@@ -192,13 +198,13 @@ export function SecurityTab() {
                 // TODO(backend): POST /v1/infrastructure/security/keys/rotate
               }}
             >
-              {t("infrastructure.security.keyManagement.rotateKey")}
+              {t("portal.infrastructure.security.keyManagement.rotateKey")}
             </Button>
           </div>
 
           <dl className="portal-infra__kv">
             <div className="portal-infra__kv-wide">
-              <dt>{t("infrastructure.security.keyManagement.keyId")}</dt>
+              <dt>{t("portal.infrastructure.security.keyManagement.keyId")}</dt>
               <dd>
                 <code className="portal-infra__cell-code">
                   {data.keyManagement.keyId}
@@ -206,18 +212,24 @@ export function SecurityTab() {
               </dd>
             </div>
             <div>
-              <dt>{t("infrastructure.security.keyManagement.algorithm")}</dt>
+              <dt>
+                {t("portal.infrastructure.security.keyManagement.algorithm")}
+              </dt>
               <dd className="portal-infra__mono">
                 {data.keyManagement.algorithm}
               </dd>
             </div>
             <div>
-              <dt>{t("infrastructure.security.keyManagement.lastRotated")}</dt>
+              <dt>
+                {t("portal.infrastructure.security.keyManagement.lastRotated")}
+              </dt>
               <dd>{data.keyManagement.lastRotated}</dd>
             </div>
             <div>
               <dt>
-                {t("infrastructure.security.keyManagement.rotationPolicy")}
+                {t(
+                  "portal.infrastructure.security.keyManagement.rotationPolicy",
+                )}
               </dt>
               <dd>{data.keyManagement.rotationPolicy}</dd>
             </div>
@@ -227,9 +239,9 @@ export function SecurityTab() {
             <Banner
               tone="info"
               className="portal-infra__banner"
-              title={t("infrastructure.security.managedBanner.title")}
+              title={t("portal.infrastructure.security.managedBanner.title")}
               description={t(
-                "infrastructure.security.managedBanner.description",
+                "portal.infrastructure.security.managedBanner.description",
               )}
             />
           )}
@@ -238,8 +250,8 @@ export function SecurityTab() {
 
       <section>
         <SectionHeader
-          title={t("infrastructure.security.compliance.heading")}
-          sub={t("infrastructure.security.compliance.subheading")}
+          title={t("portal.infrastructure.security.compliance.heading")}
+          sub={t("portal.infrastructure.security.compliance.subheading")}
         />
         <div className="portal-infra__certs">
           {data.certs.map((c) => (
@@ -258,8 +270,8 @@ export function SecurityTab() {
 
       <section>
         <SectionHeader
-          title={t("infrastructure.security.attestations.heading")}
-          sub={t("infrastructure.security.attestations.subheading")}
+          title={t("portal.infrastructure.security.attestations.heading")}
+          sub={t("portal.infrastructure.security.attestations.subheading")}
         />
         <div className="portal-infra__attestations">
           {data.attestations.map((a) => (
@@ -285,11 +297,11 @@ export function SecurityTab() {
                   // TODO(backend): GET /v1/infrastructure/security/reports/:id
                   onClick={(e) => e.preventDefault()}
                 >
-                  {t("infrastructure.security.attestations.viewReport")}
+                  {t("portal.infrastructure.security.attestations.viewReport")}
                 </a>
               ) : (
                 <span className="portal-infra__muted">
-                  {t("infrastructure.security.attestations.noReport")}
+                  {t("portal.infrastructure.security.attestations.noReport")}
                 </span>
               )}
             </Card>
@@ -299,19 +311,21 @@ export function SecurityTab() {
 
       <section>
         <SectionHeader
-          title={t("infrastructure.security.ipAllowlist.heading")}
+          title={t("portal.infrastructure.security.ipAllowlist.heading")}
           sub={
             tier === "free"
-              ? t("infrastructure.security.ipAllowlist.subLocked")
-              : t("infrastructure.security.ipAllowlist.sub")
+              ? t("portal.infrastructure.security.ipAllowlist.subLocked")
+              : t("portal.infrastructure.security.ipAllowlist.sub")
           }
         />
         {tier === "free" ? (
           <Banner
             tone="info"
-            title={t("infrastructure.security.ipAllowlist.lockedBanner.title")}
+            title={t(
+              "portal.infrastructure.security.ipAllowlist.lockedBanner.title",
+            )}
             description={t(
-              "infrastructure.security.ipAllowlist.lockedBanner.description",
+              "portal.infrastructure.security.ipAllowlist.lockedBanner.description",
             )}
           />
         ) : (
@@ -320,7 +334,7 @@ export function SecurityTab() {
               columns={ipCols}
               rows={data.ipAllowlist}
               rowKey={(e) => e.id}
-              empty={t("infrastructure.security.ipAllowlist.empty")}
+              empty={t("portal.infrastructure.security.ipAllowlist.empty")}
             />
           </Card>
         )}

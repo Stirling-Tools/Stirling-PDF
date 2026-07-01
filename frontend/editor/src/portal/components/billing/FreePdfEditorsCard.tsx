@@ -30,14 +30,17 @@ export function FreePdfEditorsCard() {
           </span>
           <div>
             <h3 className="portal-billing__section-title">
-              {t("billing.freeEditors.title", "Free PDF Editors")}{" "}
+              {t("portal.billing.freeEditors.title", "Free PDF Editors")}{" "}
               <StatusBadge tone="warning" size="sm" showDot={false}>
-                {t("billing.freeEditors.previewBadge", "Preview · sample data")}
+                {t(
+                  "portal.billing.freeEditors.previewBadge",
+                  "Preview · sample data",
+                )}
               </StatusBadge>
             </h3>
             <p className="portal-billing__section-sub">
               {t(
-                "billing.freeEditors.subtitle",
+                "portal.billing.freeEditors.subtitle",
                 "Deploy anywhere, for your whole team.",
               )}
             </p>
@@ -45,22 +48,25 @@ export function FreePdfEditorsCard() {
         </div>
         <MetricStrip className="portal-billing__fleet-metrics">
           <MetricCard
-            label={t("billing.freeEditors.editorsDeployed", "Editors deployed")}
+            label={t(
+              "portal.billing.freeEditors.editorsDeployed",
+              "Editors deployed",
+            )}
             value={SAMPLE.editorsDeployed}
           />
           <MetricCard
             label={t(
-              "billing.freeEditors.activeThisMonth",
+              "portal.billing.freeEditors.activeThisMonth",
               "Active this month",
             )}
             value={SAMPLE.activeThisMonth}
           />
           <MetricCard
-            label={t("billing.freeEditors.pdfsEdited", "PDFs edited")}
+            label={t("portal.billing.freeEditors.pdfsEdited", "PDFs edited")}
             value={SAMPLE.pdfsEdited}
           />
           <MetricCard
-            label={t("billing.freeEditors.cost", "Cost")}
+            label={t("portal.billing.freeEditors.cost", "Cost")}
             value="$0"
           />
         </MetricStrip>
@@ -71,7 +77,7 @@ export function FreePdfEditorsCard() {
           leadingIcon={<PersonAddIcon sx={{ fontSize: 16 }} />}
           onClick={() => navigate("/users?invite=1")}
         >
-          {t("billing.freeEditors.inviteTeammates", "Invite teammates")}
+          {t("portal.billing.freeEditors.inviteTeammates", "Invite teammates")}
         </Button>
       </div>
     </Card>

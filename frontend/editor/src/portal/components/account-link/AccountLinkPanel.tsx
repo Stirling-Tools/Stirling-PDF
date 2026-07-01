@@ -58,7 +58,7 @@ export function AccountLinkPanel() {
         <div>
           <p className="portal-link__page-sub">
             {t(
-              "accountLink.panel.sub",
+              "portal.accountLink.panel.sub",
               "Link this self-hosted org to its Stirling account so unattended processing bills against your org wallet.",
             )}
           </p>
@@ -83,11 +83,11 @@ export function AccountLinkPanel() {
         <section className="portal-link__instances">
           <div className="portal-link__section-head">
             <h2 className="portal-link__section-title">
-              {t("accountLink.panel.instancesTitle", "Linked instances")}
+              {t("portal.accountLink.panel.instancesTitle", "Linked instances")}
             </h2>
             <p className="portal-link__section-sub">
               {t(
-                "accountLink.panel.instancesSub",
+                "portal.accountLink.panel.instancesSub",
                 "Every self-hosted instance registered to this org. Revoke a credential to immediately cut off its unattended access.",
               )}
             </p>
@@ -102,18 +102,18 @@ export function AccountLinkPanel() {
             <Banner
               tone="danger"
               title={t(
-                "accountLink.panel.loadError.title",
+                "portal.accountLink.panel.loadError.title",
                 "Couldn't load linked instances",
               )}
             >
               {instancesState.error instanceof HttpError &&
               instancesState.error.status === 403
                 ? t(
-                    "accountLink.panel.loadError.forbidden",
+                    "portal.accountLink.panel.loadError.forbidden",
                     "Only the team owner can view the org's linked instances.",
                   )
                 : t(
-                    "accountLink.panel.loadError.generic",
+                    "portal.accountLink.panel.loadError.generic",
                     "Couldn't load the team's linked instances. Try again in a moment.",
                   )}
             </Banner>
@@ -129,7 +129,7 @@ export function AccountLinkPanel() {
             <Banner
               tone="danger"
               title={t(
-                "accountLink.panel.revokeError",
+                "portal.accountLink.panel.revokeError",
                 "Couldn't revoke instance",
               )}
             >

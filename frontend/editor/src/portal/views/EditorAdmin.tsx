@@ -50,8 +50,12 @@ export function EditorAdmin() {
     <div className="portal-editor">
       <header className="portal-editor__head">
         <div>
-          <h1 className="portal-editor__title">{t("editorAdmin.title")}</h1>
-          <p className="portal-editor__sub">{t("editorAdmin.subtitle")}</p>
+          <h1 className="portal-editor__title">
+            {t("portal.editorAdmin.title")}
+          </h1>
+          <p className="portal-editor__sub">
+            {t("portal.editorAdmin.subtitle")}
+          </p>
         </div>
       </header>
 
@@ -59,8 +63,8 @@ export function EditorAdmin() {
 
       <section>
         <SectionHead
-          title={t("editorAdmin.sections.targets.title")}
-          sub={t("editorAdmin.sections.targets.sub")}
+          title={t("portal.editorAdmin.sections.targets.title")}
+          sub={t("portal.editorAdmin.sections.targets.sub")}
         />
         {isLoading || !data ? (
           <div className="portal-editor__targets">
@@ -75,8 +79,8 @@ export function EditorAdmin() {
 
       <section>
         <SectionHead
-          title={t("editorAdmin.sections.pairing.title")}
-          sub={t("editorAdmin.sections.pairing.sub")}
+          title={t("portal.editorAdmin.sections.pairing.title")}
+          sub={t("portal.editorAdmin.sections.pairing.sub")}
         />
         {data && (
           <PairingPanel pairings={data.pairings} onUpgrade={goUpgrade} />
@@ -85,8 +89,8 @@ export function EditorAdmin() {
 
       <section>
         <SectionHead
-          title={t("editorAdmin.sections.health.title")}
-          sub={t("editorAdmin.sections.health.sub")}
+          title={t("portal.editorAdmin.sections.health.title")}
+          sub={t("portal.editorAdmin.sections.health.sub")}
         />
         {data && <InstanceHealthTable instances={data.instances} />}
       </section>

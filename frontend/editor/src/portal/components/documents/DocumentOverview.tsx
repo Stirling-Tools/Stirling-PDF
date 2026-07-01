@@ -13,20 +13,29 @@ export function DocumentOverview({ doc }: { doc: ReviewDocument }) {
     <div className="portal-documents__overview">
       <div className="portal-documents__stat-grid">
         <StatTile
-          label={t("documents.overview.status")}
+          label={t("portal.documents.overview.status")}
           value={DOCUMENT_STATUS_LABEL[doc.status]}
         />
-        <StatTile label={t("documents.overview.type")} value={doc.type} />
         <StatTile
-          label={t("documents.overview.confidence")}
+          label={t("portal.documents.overview.type")}
+          value={doc.type}
+        />
+        <StatTile
+          label={t("portal.documents.overview.confidence")}
           value={confidencePct(doc.confidence)}
         />
         <StatTile
-          label={t("documents.overview.fieldsExtracted")}
+          label={t("portal.documents.overview.fieldsExtracted")}
           value={doc.fieldsExtracted}
         />
-        <StatTile label={t("documents.overview.source")} value={doc.source} />
-        <StatTile label={t("documents.overview.received")} value={doc.time} />
+        <StatTile
+          label={t("portal.documents.overview.source")}
+          value={doc.source}
+        />
+        <StatTile
+          label={t("portal.documents.overview.received")}
+          value={doc.time}
+        />
       </div>
     </div>
   );

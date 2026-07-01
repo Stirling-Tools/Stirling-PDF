@@ -32,14 +32,18 @@ export function AgentBuilder() {
     <div className="portal-agents">
       <header className="portal-agents__head">
         <div>
-          <h1 className="portal-agents__title">{t("agentBuilder.title")}</h1>
-          <p className="portal-agents__sub">{t("agentBuilder.subtitle")}</p>
+          <h1 className="portal-agents__title">
+            {t("portal.agentBuilder.title")}
+          </h1>
+          <p className="portal-agents__sub">
+            {t("portal.agentBuilder.subtitle")}
+          </p>
         </div>
         <Button
           onClick={() => setBootstrapOpen(true)}
           leadingIcon={<span aria-hidden>⇪</span>}
         >
-          {t("agentBuilder.bootstrapFromDocument")}
+          {t("portal.agentBuilder.bootstrapFromDocument")}
         </Button>
       </header>
 
@@ -60,11 +64,11 @@ export function AgentBuilder() {
 
       {isEmpty && (
         <EmptyState
-          title={t("agentBuilder.empty.title")}
-          description={t("agentBuilder.empty.description")}
+          title={t("portal.agentBuilder.empty.title")}
+          description={t("portal.agentBuilder.empty.description")}
           actions={
             <Button onClick={() => setBootstrapOpen(true)}>
-              {t("agentBuilder.bootstrapFromDocument")}
+              {t("portal.agentBuilder.bootstrapFromDocument")}
             </Button>
           }
         />

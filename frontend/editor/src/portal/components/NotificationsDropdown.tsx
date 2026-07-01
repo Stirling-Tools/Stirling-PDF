@@ -50,10 +50,10 @@ export function NotificationsDropdown() {
           className="portal-header__icon-btn portal-header__icon-btn--badge"
           aria-label={
             hasUnread
-              ? t("notifications.ariaLabel.unread", {
+              ? t("portal.notifications.ariaLabel.unread", {
                   count: visible.length,
                 })
-              : t("notifications.ariaLabel.none")
+              : t("portal.notifications.ariaLabel.none")
           }
         >
           <BellIcon size={16} />
@@ -65,19 +65,19 @@ export function NotificationsDropdown() {
       <Dropdown.Menu width="22.5rem" className="portal-notif__menu">
         <div className="portal-notif__header">
           <span className="portal-notif__title">
-            {t("notifications.title")}
+            {t("portal.notifications.title")}
           </span>
           {hasUnread ? (
             <span className="portal-notif__count">
-              {t("notifications.count.new", { count: visible.length })}
+              {t("portal.notifications.count.new", { count: visible.length })}
             </span>
           ) : isLoading ? (
             <span className="portal-notif__count portal-notif__count--quiet">
-              {t("notifications.count.loading")}
+              {t("portal.notifications.count.loading")}
             </span>
           ) : (
             <span className="portal-notif__count portal-notif__count--quiet">
-              {t("notifications.count.allRead")}
+              {t("portal.notifications.count.allRead")}
             </span>
           )}
         </div>
@@ -92,8 +92,8 @@ export function NotificationsDropdown() {
         {isEmpty && (
           <EmptyState
             size="compact"
-            title={t("notifications.empty.title")}
-            description={t("notifications.empty.description")}
+            title={t("portal.notifications.empty.title")}
+            description={t("portal.notifications.empty.description")}
           />
         )}
         {!isLoading && !isEmpty && (
@@ -121,10 +121,10 @@ export function NotificationsDropdown() {
             onClick={onMarkAllRead}
             disabled={!hasUnread}
           >
-            {t("notifications.markAllRead")}
+            {t("portal.notifications.markAllRead")}
           </button>
           <button type="button" className="portal-notif__action">
-            {t("notifications.viewAll")}
+            {t("portal.notifications.viewAll")}
           </button>
         </div>
       </Dropdown.Menu>

@@ -24,40 +24,40 @@ function actionCopy(doc: LedgerDoc, t: TFunction): ActionCopy {
   switch (doc.action) {
     case "sign":
       return {
-        title: t("procurement.modal.signTitle"),
+        title: t("portal.procurement.modal.signTitle"),
         subtitle: doc.name,
-        body: t("procurement.modal.signBody"),
-        cta: t("procurement.modal.signCta"),
+        body: t("portal.procurement.modal.signBody"),
+        cta: t("portal.procurement.modal.signCta"),
       };
     case "pay":
       return {
-        title: t("procurement.modal.payTitle"),
+        title: t("portal.procurement.modal.payTitle"),
         subtitle: doc.name,
-        body: t("procurement.modal.payBody"),
-        cta: t("procurement.modal.payCta"),
+        body: t("portal.procurement.modal.payBody"),
+        cta: t("portal.procurement.modal.payCta"),
       };
     case "upload":
       return {
-        title: t("procurement.modal.uploadTitle"),
+        title: t("portal.procurement.modal.uploadTitle"),
         subtitle: doc.name,
-        body: t("procurement.modal.uploadBody"),
-        cta: t("procurement.modal.uploadCta"),
+        body: t("portal.procurement.modal.uploadBody"),
+        cta: t("portal.procurement.modal.uploadCta"),
       };
     case "request":
       return {
-        title: t("procurement.modal.requestTitle"),
+        title: t("portal.procurement.modal.requestTitle"),
         subtitle: doc.name,
         body: doc.fee
-          ? t("procurement.modal.requestBodyPaid")
-          : t("procurement.modal.requestBodyFree"),
-        cta: `${t("procurement.modal.requestCta")}${fee}`,
+          ? t("portal.procurement.modal.requestBodyPaid")
+          : t("portal.procurement.modal.requestBodyFree"),
+        cta: `${t("portal.procurement.modal.requestCta")}${fee}`,
       };
     default:
       return {
-        title: t("procurement.modal.downloadTitle"),
+        title: t("portal.procurement.modal.downloadTitle"),
         subtitle: doc.name,
-        body: t("procurement.modal.downloadBody"),
-        cta: t("procurement.modal.downloadCta"),
+        body: t("portal.procurement.modal.downloadBody"),
+        cta: t("portal.procurement.modal.downloadCta"),
       };
   }
 }
@@ -125,7 +125,7 @@ export function ActionModal({
       footer={
         <div className="portal-proc__modal-actions">
           <Button variant="ghost" onClick={onClose}>
-            {t("procurement.modal.cancel")}
+            {t("portal.procurement.modal.cancel")}
           </Button>
           <Button
             variant="gradient"
@@ -154,10 +154,10 @@ export function ActionModal({
             size="sm"
             onClick={() => fileRef.current?.click()}
           >
-            {t("procurement.modal.chooseFile")}
+            {t("portal.procurement.modal.chooseFile")}
           </Button>
           <span className="portal-proc__upload-name">
-            {file ? file.name : t("procurement.modal.noFile")}
+            {file ? file.name : t("portal.procurement.modal.noFile")}
           </span>
         </div>
       )}

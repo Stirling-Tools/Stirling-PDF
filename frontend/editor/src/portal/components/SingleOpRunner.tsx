@@ -139,8 +139,8 @@ export function SingleOpRunner({
       open={open}
       onClose={onClose}
       width="xl"
-      title={t("opRunner.title")}
-      subtitle={t("opRunner.subtitle")}
+      title={t("portal.opRunner.title")}
+      subtitle={t("portal.opRunner.subtitle")}
       footer={
         <>
           <div className="portal-runner__footer-status">
@@ -157,24 +157,24 @@ export function SingleOpRunner({
             )}
             {phase === "error" && (
               <StatusBadge tone="danger" size="sm">
-                {errorMsg ?? t("opRunner.status.failed")}
+                {errorMsg ?? t("portal.opRunner.status.failed")}
               </StatusBadge>
             )}
           </div>
           <Button variant="ghost" onClick={onClose}>
-            {t("opRunner.action.close")}
+            {t("portal.opRunner.action.close")}
           </Button>
           {phase === "done" ? (
             <>
               <Button variant="outline" onClick={reset}>
-                {t("opRunner.action.runAgain")}
+                {t("portal.opRunner.action.runAgain")}
               </Button>
               <Button
                 variant="gradient"
                 onClick={buildPipelineWithOp}
                 trailingIcon={<span aria-hidden>→</span>}
               >
-                {t("opRunner.action.openBuilder")}
+                {t("portal.opRunner.action.openBuilder")}
               </Button>
             </>
           ) : (
@@ -185,8 +185,8 @@ export function SingleOpRunner({
               trailingIcon={<span aria-hidden>→</span>}
             >
               {phase === "running"
-                ? t("opRunner.action.running")
-                : t("opRunner.action.run")}
+                ? t("portal.opRunner.action.running")
+                : t("portal.opRunner.action.run")}
             </Button>
           )}
         </>
@@ -224,12 +224,12 @@ export function SingleOpRunner({
               {sample ? (
                 <>
                   <strong>{sample}</strong>
-                  <span>{t("opRunner.drop.replaceHint")}</span>
+                  <span>{t("portal.opRunner.drop.replaceHint")}</span>
                 </>
               ) : (
                 <>
-                  <strong>{t("opRunner.drop.title")}</strong>
-                  <span>{t("opRunner.drop.hint")}</span>
+                  <strong>{t("portal.opRunner.drop.title")}</strong>
+                  <span>{t("portal.opRunner.drop.hint")}</span>
                 </>
               )}
             </div>
@@ -239,14 +239,14 @@ export function SingleOpRunner({
               onClick={pickSample}
             >
               {sample
-                ? t("opRunner.drop.pickAnother")
-                : t("opRunner.drop.useSample")}
+                ? t("portal.opRunner.drop.pickAnother")
+                : t("portal.opRunner.drop.useSample")}
             </button>
           </div>
 
           <div>
             <div className="portal-runner__section-title">
-              {t("opRunner.featuredOps")}
+              {t("portal.opRunner.featuredOps")}
             </div>
             <div className="portal-runner__ops">
               {opsIsLoading &&
@@ -264,8 +264,8 @@ export function SingleOpRunner({
               {opsIsEmpty && (
                 <EmptyState
                   size="compact"
-                  title={t("opRunner.empty.title")}
-                  description={t("opRunner.empty.description")}
+                  title={t("portal.opRunner.empty.title")}
+                  description={t("portal.opRunner.empty.description")}
                 />
               )}
               {ops?.map((op) => (
@@ -301,18 +301,18 @@ export function SingleOpRunner({
           {phase === "idle" && selectedOp && (
             <div className="portal-runner__hint">
               <div className="portal-runner__hint-eyebrow">
-                {t("opRunner.hint.ready")}
+                {t("portal.opRunner.hint.ready")}
               </div>
               <h3>
-                {t("opRunner.hint.runOn.before")}{" "}
+                {t("portal.opRunner.hint.runOn.before")}{" "}
                 <code>{selectedOp.label}</code>{" "}
-                {t("opRunner.hint.runOn.middle")}{" "}
-                <code>{sample ?? t("opRunner.hint.aSample")}</code>
+                {t("portal.opRunner.hint.runOn.middle")}{" "}
+                <code>{sample ?? t("portal.opRunner.hint.aSample")}</code>
               </h3>
               <p>
-                {selectedOp.blurb}. {t("opRunner.hint.press")}{" "}
-                <kbd>{t("opRunner.action.run")}</kbd>{" "}
-                {t("opRunner.hint.toInvoke")}{" "}
+                {selectedOp.blurb}. {t("portal.opRunner.hint.press")}{" "}
+                <kbd>{t("portal.opRunner.action.run")}</kbd>{" "}
+                {t("portal.opRunner.hint.toInvoke")}{" "}
                 <code>POST {selectedOp.endpoint}</code>.
               </p>
             </div>
@@ -322,7 +322,9 @@ export function SingleOpRunner({
               <div className="portal-runner__spinner-lg" aria-hidden />
               <div className="portal-runner__running-text">
                 <div className="portal-runner__running-title">
-                  {t("opRunner.running.title", { label: selectedOp.label })}
+                  {t("portal.opRunner.running.title", {
+                    label: selectedOp.label,
+                  })}
                 </div>
                 <code>POST {selectedOp.endpoint}</code>
               </div>
@@ -332,11 +334,13 @@ export function SingleOpRunner({
             <div className="portal-runner__result">
               <header className="portal-runner__result-head">
                 <StatusBadge tone="success" size="sm">
-                  {t("opRunner.status.completed")}
+                  {t("portal.opRunner.status.completed")}
                 </StatusBadge>
                 <code>POST {selectedOp.endpoint}</code>
                 <span className="portal-runner__result-meta">
-                  {t("opRunner.durationMs", { ms: runResult.durationMs })}
+                  {t("portal.opRunner.durationMs", {
+                    ms: runResult.durationMs,
+                  })}
                 </span>
               </header>
               <pre className="portal-runner__result-code">
@@ -350,10 +354,10 @@ export function SingleOpRunner({
                 className="portal-runner__hint-eyebrow"
                 style={{ color: "var(--color-red)" }}
               >
-                {t("opRunner.status.failed")}
+                {t("portal.opRunner.status.failed")}
               </div>
-              <h3>{t("opRunner.error.title")}</h3>
-              <p>{errorMsg ?? t("opRunner.error.unknown")}</p>
+              <h3>{t("portal.opRunner.error.title")}</h3>
+              <p>{errorMsg ?? t("portal.opRunner.error.unknown")}</p>
             </div>
           )}
         </section>

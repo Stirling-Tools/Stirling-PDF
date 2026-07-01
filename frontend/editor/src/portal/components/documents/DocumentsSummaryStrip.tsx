@@ -28,19 +28,19 @@ export function DocumentsSummaryStrip({
   return (
     <MetricStrip>
       <MetricCard
-        label={t("documents.summary.inQueue")}
+        label={t("portal.documents.summary.inQueue")}
         value={summary.totalInQueue.toLocaleString()}
       />
       <MetricCard
-        label={t("documents.summary.needsReview")}
+        label={t("portal.documents.summary.needsReview")}
         value={summary.needsReview.toLocaleString()}
       />
       <MetricCard
-        label={t("documents.summary.avgConfidence")}
+        label={t("portal.documents.summary.avgConfidence")}
         value={confidencePct(summary.avgConfidence)}
       />
       <MetricCard
-        label={t("documents.summary.processedToday")}
+        label={t("portal.documents.summary.processedToday")}
         value={summary.processedToday.toLocaleString()}
       />
     </MetricStrip>

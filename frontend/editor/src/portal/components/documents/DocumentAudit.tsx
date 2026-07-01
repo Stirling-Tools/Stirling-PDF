@@ -11,7 +11,9 @@ export function DocumentAudit({ doc }: { doc: ReviewDocument }) {
   const { t } = useTranslation();
   if (doc.audit.length === 0) {
     return (
-      <p className="portal-documents__muted">{t("documents.audit.empty")}</p>
+      <p className="portal-documents__muted">
+        {t("portal.documents.audit.empty")}
+      </p>
     );
   }
   return (

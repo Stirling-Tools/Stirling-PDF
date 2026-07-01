@@ -90,7 +90,7 @@ export function Usage() {
         } else if (e instanceof HttpError) {
           setError(
             t(
-              "usage.error.walletUnavailable",
+              "portal.usage.error.walletUnavailable",
               "Wallet unavailable: {{status}} {{statusText}}",
               {
                 status: e.status,
@@ -145,11 +145,11 @@ export function Usage() {
         <div className="portal-usage__header-inner">
           <div>
             <h1 className="portal-usage__title">
-              {t("usage.title", "Usage & billing")}
+              {t("portal.usage.title", "Usage & billing")}
             </h1>
             <p className="portal-usage__subtitle">
               {t(
-                "usage.subtitle",
+                "portal.usage.subtitle",
                 "Consumption, invoices, and plan management for every PDF Stirling has billed, in one console.",
               )}
             </p>
@@ -161,7 +161,7 @@ export function Usage() {
               loading={portal.opening}
               onClick={portal.open}
             >
-              {t("usage.managePayment", "Manage Payment")}
+              {t("portal.usage.managePayment", "Manage Payment")}
             </Button>
           )}
         </div>
@@ -180,10 +180,13 @@ export function Usage() {
         {isLinked && finalizing && (
           <Banner
             tone="info"
-            title={t("usage.finalizing.title", "Finalizing your subscription…")}
+            title={t(
+              "portal.usage.finalizing.title",
+              "Finalizing your subscription…",
+            )}
           >
             {t(
-              "usage.finalizing.body",
+              "portal.usage.finalizing.body",
               "It can take a few seconds for your subscription to activate. This page updates automatically.",
             )}
           </Banner>
@@ -192,15 +195,15 @@ export function Usage() {
         {isLinked && needsReauth && (
           <Banner
             tone="warning"
-            title={t("usage.sessionExpired.title", "Session expired")}
+            title={t("portal.usage.sessionExpired.title", "Session expired")}
             action={
               <Button size="sm" onClick={() => openLinkModal("reauth")}>
-                {t("usage.sessionExpired.action", "Sign in again")}
+                {t("portal.usage.sessionExpired.action", "Sign in again")}
               </Button>
             }
           >
             {t(
-              "usage.sessionExpired.body",
+              "portal.usage.sessionExpired.body",
               "Your Stirling account session has expired. Sign in again to view billing — your instance stays linked.",
             )}
           </Banner>
@@ -209,7 +212,7 @@ export function Usage() {
         {isLinked && error && (
           <Banner
             tone="danger"
-            title={t("usage.error.loadWallet", "Couldn't load wallet")}
+            title={t("portal.usage.error.loadWallet", "Couldn't load wallet")}
           >
             {error}
           </Banner>
@@ -219,7 +222,7 @@ export function Usage() {
           <Banner
             tone="danger"
             title={t(
-              "usage.error.openStripePortal",
+              "portal.usage.error.openStripePortal",
               "Couldn't open Stripe portal",
             )}
           >

@@ -39,10 +39,10 @@ export function Components() {
       <header className="portal-components__head">
         <div>
           <h1 className="portal-components__title">
-            {t("componentsView.title")}
+            {t("portal.componentsView.title")}
           </h1>
           <p className="portal-components__sub">
-            {t("componentsView.subtitle")}
+            {t("portal.componentsView.subtitle")}
           </p>
         </div>
       </header>
@@ -52,8 +52,8 @@ export function Components() {
       {tier === "free" && hasLocked && (
         <Banner
           tone="info"
-          title={t("componentsView.lockedBanner.title")}
-          description={t("componentsView.lockedBanner.description")}
+          title={t("portal.componentsView.lockedBanner.title")}
+          description={t("portal.componentsView.lockedBanner.description")}
         />
       )}
 
@@ -67,8 +67,8 @@ export function Components() {
 
       {isEmpty && (
         <EmptyState
-          title={t("componentsView.empty.title")}
-          description={t("componentsView.empty.description")}
+          title={t("portal.componentsView.empty.title")}
+          description={t("portal.componentsView.empty.description")}
         />
       )}
 

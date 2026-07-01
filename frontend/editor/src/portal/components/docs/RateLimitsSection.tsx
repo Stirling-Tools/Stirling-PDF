@@ -8,26 +8,26 @@ export function RateLimitsSection({ rateLimit }: { rateLimit: RateLimit }) {
   return (
     <DocsSection
       id="rate-limits"
-      eyebrow={t("docs.rateLimits.eyebrow")}
-      title={t("docs.rateLimits.title")}
-      lead={t("docs.rateLimits.lead")}
+      eyebrow={t("portal.docs.rateLimits.eyebrow")}
+      title={t("portal.docs.rateLimits.title")}
+      lead={t("portal.docs.rateLimits.lead")}
     >
       <div className="portal-docs__limits">
         <Card padding="default">
           <div className="portal-docs__limit-label">
-            {t("docs.rateLimits.requestsPerMinute")}
+            {t("portal.docs.rateLimits.requestsPerMinute")}
           </div>
           <div className="portal-docs__limit-value">{rateLimit.rpm}</div>
         </Card>
         <Card padding="default">
           <div className="portal-docs__limit-label">
-            {t("docs.rateLimits.burst")}
+            {t("portal.docs.rateLimits.burst")}
           </div>
           <div className="portal-docs__limit-value">{rateLimit.burst}</div>
         </Card>
         <Card padding="default">
           <div className="portal-docs__limit-label">
-            {t("docs.rateLimits.concurrency")}
+            {t("portal.docs.rateLimits.concurrency")}
           </div>
           <div className="portal-docs__limit-value">
             {rateLimit.concurrency}
@@ -36,7 +36,7 @@ export function RateLimitsSection({ rateLimit }: { rateLimit: RateLimit }) {
       </div>
       <CodeBlock
         lang="http"
-        caption={t("docs.rateLimits.codeCaption")}
+        caption={t("portal.docs.rateLimits.codeCaption")}
         code={`HTTP/1.1 429 Too Many Requests
 Retry-After: 2
 X-RateLimit-Remaining: 0`}

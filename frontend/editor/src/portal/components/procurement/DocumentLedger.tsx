@@ -42,10 +42,10 @@ export function DocumentLedger({
     <Card padding="none" className="portal-proc__docs">
       <div className="portal-proc__docs-head">
         <h2 className="portal-proc__docs-title">
-          {t("procurement.docs.title")}
+          {t("portal.procurement.docs.title")}
         </h2>
         <p className="portal-proc__docs-sub">
-          {t("procurement.docs.subtitle")}
+          {t("portal.procurement.docs.subtitle")}
         </p>
       </div>
 
@@ -82,19 +82,19 @@ export function DocumentLedger({
                   )}
                   {cur && (
                     <Chip tone="purple" size="sm">
-                      {t("procurement.docs.here")}
+                      {t("portal.procurement.docs.here")}
                     </Chip>
                   )}
                   {done && (
                     <Chip tone="green" size="sm">
-                      {t("procurement.docs.done")}
+                      {t("portal.procurement.docs.done")}
                     </Chip>
                   )}
                 </>
               }
               aside={
                 <span className="portal-proc__stage-count">
-                  {t("procurement.docs.count", { count })}
+                  {t("portal.procurement.docs.count", { count })}
                 </span>
               }
             >
@@ -120,18 +120,18 @@ export function DocumentLedger({
             header={
               <span className="portal-proc__supporting-head">
                 <span className="portal-proc__stage-label">
-                  {t("procurement.docs.supportingTitle")}
+                  {t("portal.procurement.docs.supportingTitle")}
                 </span>
                 <span className="portal-proc__supporting-sub">
-                  {t("procurement.docs.supportingSubtitle")}
+                  {t("portal.procurement.docs.supportingSubtitle")}
                 </span>
               </span>
             }
             aside={
               <span className="portal-proc__acc-toggle-label">
                 {supportingOpen
-                  ? t("procurement.docs.hide")
-                  : t("procurement.docs.show")}
+                  ? t("portal.procurement.docs.hide")
+                  : t("portal.procurement.docs.show")}
               </span>
             }
           >

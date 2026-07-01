@@ -11,9 +11,11 @@ function DefaultErrorFallback({ onRetry }: { onRetry: () => void }) {
   const { t } = useTranslation();
   return (
     <EmptyState
-      title={t("errorBoundary.title")}
-      description={t("errorBoundary.description")}
-      actions={<Button onClick={onRetry}>{t("errorBoundary.retry")}</Button>}
+      title={t("portal.errorBoundary.title")}
+      description={t("portal.errorBoundary.description")}
+      actions={
+        <Button onClick={onRetry}>{t("portal.errorBoundary.retry")}</Button>
+      }
     />
   );
 }

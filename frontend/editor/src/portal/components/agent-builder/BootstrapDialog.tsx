@@ -33,22 +33,22 @@ export function BootstrapDialog({ open, onClose }: BootstrapDialogProps) {
       open={open}
       onClose={close}
       width="md"
-      title={t("agentBuilder.bootstrap.title")}
-      subtitle={t("agentBuilder.bootstrap.subtitle")}
+      title={t("portal.agentBuilder.bootstrap.title")}
+      subtitle={t("portal.agentBuilder.bootstrap.subtitle")}
       footer={
         <div className="portal-agents__dialog-footer">
           <Button variant="ghost" size="sm" onClick={close}>
-            {t("agentBuilder.bootstrap.cancel")}
+            {t("portal.agentBuilder.bootstrap.cancel")}
           </Button>
           <Button size="sm" onClick={bootstrap} disabled={!fileName}>
-            {t("agentBuilder.bootstrap.submit")}
+            {t("portal.agentBuilder.bootstrap.submit")}
           </Button>
         </div>
       }
     >
       <div className="portal-agents__bootstrap">
         <p className="portal-agents__bootstrap-lead">
-          {t("agentBuilder.bootstrap.lead")}
+          {t("portal.agentBuilder.bootstrap.lead")}
         </p>
         <label className="portal-agents__dropzone">
           <input
@@ -61,7 +61,7 @@ export function BootstrapDialog({ open, onClose }: BootstrapDialogProps) {
             ⇪
           </span>
           <span className="portal-agents__dropzone-text">
-            {fileName ?? t("agentBuilder.bootstrap.dropzoneText")}
+            {fileName ?? t("portal.agentBuilder.bootstrap.dropzoneText")}
           </span>
         </label>
       </div>

@@ -62,30 +62,30 @@ export function CreateKeyModal({
       width="md"
       title={
         created
-          ? t("infrastructure.createKey.titleCreated")
-          : t("infrastructure.createKey.title")
+          ? t("portal.infrastructure.createKey.titleCreated")
+          : t("portal.infrastructure.createKey.title")
       }
       subtitle={
         created
-          ? t("infrastructure.createKey.subtitleCreated")
-          : t("infrastructure.createKey.subtitle")
+          ? t("portal.infrastructure.createKey.subtitleCreated")
+          : t("portal.infrastructure.createKey.subtitle")
       }
       footer={
         created ? (
           <Button variant="gradient" onClick={close}>
-            {t("infrastructure.createKey.done")}
+            {t("portal.infrastructure.createKey.done")}
           </Button>
         ) : (
           <div className="portal-infra__modal-actions">
             <Button variant="ghost" onClick={close}>
-              {t("infrastructure.createKey.cancel")}
+              {t("portal.infrastructure.createKey.cancel")}
             </Button>
             <Button
               variant="gradient"
               disabled={name.trim() === "" || perms.length === 0}
               onClick={createKey}
             >
-              {t("infrastructure.createKey.createKey")}
+              {t("portal.infrastructure.createKey.createKey")}
             </Button>
           </div>
         )
@@ -96,27 +96,31 @@ export function CreateKeyModal({
           <CodeBlock
             code={DEMO_NEW_KEY_SECRET}
             lang="bash"
-            caption={t("infrastructure.createKey.secretKeyCaption")}
+            caption={t("portal.infrastructure.createKey.secretKeyCaption")}
           />
           <Banner
             tone="warning"
-            description={t("infrastructure.createKey.secretWarning")}
+            description={t("portal.infrastructure.createKey.secretWarning")}
           />
         </div>
       ) : (
         <div className="portal-infra__form">
           <FormField
-            label={t("infrastructure.createKey.keyNameLabel")}
+            label={t("portal.infrastructure.createKey.keyNameLabel")}
             required
           >
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder={t("infrastructure.createKey.keyNamePlaceholder")}
+              placeholder={t(
+                "portal.infrastructure.createKey.keyNamePlaceholder",
+              )}
             />
           </FormField>
 
-          <FormField label={t("infrastructure.createKey.permissionsLabel")}>
+          <FormField
+            label={t("portal.infrastructure.createKey.permissionsLabel")}
+          >
             <div className="portal-infra__perm-row">
               {PERMISSION_OPTS.map((p) => (
                 <Checkbox
@@ -130,8 +134,8 @@ export function CreateKeyModal({
           </FormField>
 
           <FormField
-            label={t("infrastructure.createKey.ipAllowlistLabel")}
-            helperText={t("infrastructure.createKey.ipAllowlistHelper")}
+            label={t("portal.infrastructure.createKey.ipAllowlistLabel")}
+            helperText={t("portal.infrastructure.createKey.ipAllowlistHelper")}
           >
             <Input
               value={ips}

@@ -83,28 +83,28 @@ function ProductGrid() {
   return (
     <section
       className="portal-home__product-grid"
-      aria-label={t("home.productGrid.ariaLabel")}
+      aria-label={t("portal.home.productGrid.ariaLabel")}
     >
       <ProductCard
         accent="purple"
-        title={t("home.productGrid.sources.title")}
-        blurb={t("home.productGrid.sources.blurb")}
-        cta={t("home.productGrid.sources.cta")}
+        title={t("portal.home.productGrid.sources.title")}
+        blurb={t("portal.home.productGrid.sources.blurb")}
+        cta={t("portal.home.productGrid.sources.cta")}
         target="sources"
       />
       <ProductCard
         accent="blue"
-        badge={t("home.productGrid.pipelines.badge")}
-        title={t("home.productGrid.pipelines.title")}
-        blurb={t("home.productGrid.pipelines.blurb")}
-        cta={t("home.productGrid.pipelines.cta")}
+        badge={t("portal.home.productGrid.pipelines.badge")}
+        title={t("portal.home.productGrid.pipelines.title")}
+        blurb={t("portal.home.productGrid.pipelines.blurb")}
+        cta={t("portal.home.productGrid.pipelines.cta")}
         target="pipelines"
       />
       <ProductCard
         accent="purple"
-        title={t("home.productGrid.agents.title")}
-        blurb={t("home.productGrid.agents.blurb")}
-        cta={t("home.productGrid.agents.cta")}
+        title={t("portal.home.productGrid.agents.title")}
+        blurb={t("portal.home.productGrid.agents.blurb")}
+        cta={t("portal.home.productGrid.agents.cta")}
         target="sources"
       />
     </section>
@@ -122,10 +122,10 @@ function QuickActions({ onTryOp }: { onTryOp: () => void }) {
     <Card padding="loose" className="portal-home__quick">
       <div className="portal-home__quick-head">
         <h2 className="portal-home__quick-title">
-          {t("home.quickActions.title")}
+          {t("portal.home.quickActions.title")}
         </h2>
         <span className="portal-home__quick-sub">
-          {t("home.quickActions.subtitle")}
+          {t("portal.home.quickActions.subtitle")}
         </span>
       </div>
       <div className="portal-home__quick-list">
@@ -145,8 +145,8 @@ function QuickActions({ onTryOp }: { onTryOp: () => void }) {
             ▶
           </span>
           <span className="portal-home__quick-text">
-            <strong>{t("home.quickActions.tryOp.title")}</strong>
-            <span>{t("home.quickActions.tryOp.blurb")}</span>
+            <strong>{t("portal.home.quickActions.tryOp.title")}</strong>
+            <span>{t("portal.home.quickActions.tryOp.blurb")}</span>
           </span>
           <span className="portal-home__quick-arrow" aria-hidden>
             →
@@ -168,8 +168,8 @@ function QuickActions({ onTryOp }: { onTryOp: () => void }) {
             ⌃
           </span>
           <span className="portal-home__quick-text">
-            <strong>{t("home.quickActions.buildPipeline.title")}</strong>
-            <span>{t("home.quickActions.buildPipeline.blurb")}</span>
+            <strong>{t("portal.home.quickActions.buildPipeline.title")}</strong>
+            <span>{t("portal.home.quickActions.buildPipeline.blurb")}</span>
           </span>
           <span className="portal-home__quick-arrow" aria-hidden>
             →
@@ -191,8 +191,8 @@ function QuickActions({ onTryOp }: { onTryOp: () => void }) {
             ⇢
           </span>
           <span className="portal-home__quick-text">
-            <strong>{t("home.quickActions.connectSource.title")}</strong>
-            <span>{t("home.quickActions.connectSource.blurb")}</span>
+            <strong>{t("portal.home.quickActions.connectSource.title")}</strong>
+            <span>{t("portal.home.quickActions.connectSource.blurb")}</span>
           </span>
           <span className="portal-home__quick-arrow" aria-hidden>
             →
@@ -214,8 +214,8 @@ function QuickActions({ onTryOp }: { onTryOp: () => void }) {
             ⚙
           </span>
           <span className="portal-home__quick-text">
-            <strong>{t("home.quickActions.issueApiKey.title")}</strong>
-            <span>{t("home.quickActions.issueApiKey.blurb")}</span>
+            <strong>{t("portal.home.quickActions.issueApiKey.title")}</strong>
+            <span>{t("portal.home.quickActions.issueApiKey.blurb")}</span>
           </span>
           <span className="portal-home__quick-arrow" aria-hidden>
             →
@@ -243,7 +243,7 @@ function FreeOnboarding({ onTryOp }: { onTryOp: () => void }) {
     if (step.done) {
       return (
         <Button size="sm" variant="ghost" onClick={onTryOp}>
-          {t("home.onboarding.runAgain")}
+          {t("portal.home.onboarding.runAgain")}
         </Button>
       );
     }
@@ -251,7 +251,7 @@ function FreeOnboarding({ onTryOp }: { onTryOp: () => void }) {
     if (step.cta.kind === "try-op") {
       return (
         <Button size="sm" variant="outline" onClick={onTryOp}>
-          {t("home.onboarding.start")}
+          {t("portal.home.onboarding.start")}
         </Button>
       );
     }
@@ -262,7 +262,7 @@ function FreeOnboarding({ onTryOp }: { onTryOp: () => void }) {
         variant="outline"
         onClick={() => setActiveView(target as ViewId)}
       >
-        {t("home.onboarding.start")}
+        {t("portal.home.onboarding.start")}
       </Button>
     );
   }
@@ -272,15 +272,15 @@ function FreeOnboarding({ onTryOp }: { onTryOp: () => void }) {
       <div className="portal-home__onboard-head">
         <div>
           <h2 className="portal-home__onboard-title">
-            {t("home.onboarding.title")}
+            {t("portal.home.onboarding.title")}
           </h2>
           <p className="portal-home__onboard-sub">
-            {t("home.onboarding.subtitle")}
+            {t("portal.home.onboarding.subtitle")}
           </p>
         </div>
         {steps && steps.length > 0 && (
           <StatusBadge tone="info" size="sm">
-            {t("home.onboarding.progress", {
+            {t("portal.home.onboarding.progress", {
               done: doneCount,
               total: steps.length,
             })}
@@ -307,8 +307,8 @@ function FreeOnboarding({ onTryOp }: { onTryOp: () => void }) {
       {isEmpty && (
         <EmptyState
           size="compact"
-          title={t("home.onboarding.empty.title")}
-          description={t("home.onboarding.empty.description")}
+          title={t("portal.home.onboarding.empty.title")}
+          description={t("portal.home.onboarding.empty.description")}
         />
       )}
 
@@ -355,24 +355,24 @@ interface KpiLabelSpec {
 const KPI_LABELS_BY_TIER: Record<Tier, KpiLabelSpec[]> = {
   free: [
     {
-      labelKey: "home.kpis.free.docsProcessed",
-      descriptionKey: "home.kpis.free.docsProcessedDescription",
+      labelKey: "portal.home.kpis.free.docsProcessed",
+      descriptionKey: "portal.home.kpis.free.docsProcessedDescription",
     },
-    { labelKey: "home.kpis.free.operations" },
-    { labelKey: "home.kpis.free.pipelines" },
-    { labelKey: "home.kpis.free.agents" },
+    { labelKey: "portal.home.kpis.free.operations" },
+    { labelKey: "portal.home.kpis.free.pipelines" },
+    { labelKey: "portal.home.kpis.free.agents" },
   ],
   pro: [
-    { labelKey: "home.kpis.pro.docs30d" },
-    { labelKey: "home.kpis.pro.pipelines" },
-    { labelKey: "home.kpis.pro.agentsActive" },
-    { labelKey: "home.kpis.pro.evalPassRate" },
+    { labelKey: "portal.home.kpis.pro.docs30d" },
+    { labelKey: "portal.home.kpis.pro.pipelines" },
+    { labelKey: "portal.home.kpis.pro.agentsActive" },
+    { labelKey: "portal.home.kpis.pro.evalPassRate" },
   ],
   enterprise: [
-    { labelKey: "home.kpis.enterprise.docs30d" },
-    { labelKey: "home.kpis.enterprise.p95Latency" },
-    { labelKey: "home.kpis.enterprise.evalPassRate" },
-    { labelKey: "home.kpis.enterprise.slaUptime" },
+    { labelKey: "portal.home.kpis.enterprise.docs30d" },
+    { labelKey: "portal.home.kpis.enterprise.p95Latency" },
+    { labelKey: "portal.home.kpis.enterprise.evalPassRate" },
+    { labelKey: "portal.home.kpis.enterprise.slaUptime" },
   ],
 };
 
@@ -429,8 +429,12 @@ function EnterpriseRegions() {
   return (
     <section className="portal-home__region-block">
       <header className="portal-home__region-header">
-        <h2 className="portal-home__region-title">{t("home.regions.title")}</h2>
-        <p className="portal-home__region-sub">{t("home.regions.subtitle")}</p>
+        <h2 className="portal-home__region-title">
+          {t("portal.home.regions.title")}
+        </h2>
+        <p className="portal-home__region-sub">
+          {t("portal.home.regions.subtitle")}
+        </p>
       </header>
 
       {isLoading && (
@@ -447,8 +451,8 @@ function EnterpriseRegions() {
       {isEmpty && (
         <EmptyState
           size="compact"
-          title={t("home.regions.empty.title")}
-          description={t("home.regions.empty.description")}
+          title={t("portal.home.regions.empty.title")}
+          description={t("portal.home.regions.empty.description")}
         />
       )}
 
@@ -506,8 +510,8 @@ function ChartSection() {
   if (!usage || usage.points.length === 0) {
     return (
       <EmptyState
-        title={t("home.chart.empty.title")}
-        description={t("home.chart.empty.description")}
+        title={t("portal.home.chart.empty.title")}
+        description={t("portal.home.chart.empty.description")}
       />
     );
   }

@@ -36,12 +36,12 @@ export function AuthGate({ children }: { children: ReactNode }) {
       onForbidden={redirectToEditor}
       loading={
         <FullScreenMessage>
-          <Spinner size="lg" label={t("auth.loading", "Loading")} />
+          <Spinner size="lg" label={t("portal.auth.loading", "Loading")} />
         </FullScreenMessage>
       }
       forbidden={
         <FullScreenMessage>
-          {t("auth.redirectingToEditor", "Redirecting to the editor...")}
+          {t("portal.auth.redirectingToEditor", "Redirecting to the editor...")}
         </FullScreenMessage>
       }
     >

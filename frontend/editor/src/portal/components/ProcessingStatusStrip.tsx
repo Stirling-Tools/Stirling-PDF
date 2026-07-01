@@ -60,7 +60,7 @@ export function ProcessingStatusStrip() {
               variant="outline"
               onClick={() => setActiveView("usage")}
             >
-              {t("processingStatus.upgrade")}
+              {t("portal.processingStatus.upgrade")}
             </Button>
           ) : undefined
         }
@@ -68,7 +68,7 @@ export function ProcessingStatusStrip() {
         <div className="portal-statusstrip__free-row">
           <span className="portal-statusstrip__free-label">
             <strong>{used.toLocaleString()}</strong> / {cap.toLocaleString()}{" "}
-            {t("processingStatus.pdfsThisMonth")}
+            {t("portal.processingStatus.pdfsThisMonth")}
           </span>
           <span className="portal-statusstrip__free-pct">
             {Math.round(ratio * 100)}%
@@ -77,7 +77,7 @@ export function ProcessingStatusStrip() {
         <ProgressBar
           value={ratio}
           thresholded
-          label={t("processingStatus.progressLabel", { used, cap })}
+          label={t("portal.processingStatus.progressLabel", { used, cap })}
         />
       </Banner>
     );
@@ -99,7 +99,8 @@ export function ProcessingStatusStrip() {
         ·
       </span>
       <span className="portal-statusstrip__volume">
-        <strong>{volume ?? "—"}</strong> {t("processingStatus.volumeSuffix")}
+        <strong>{volume ?? "—"}</strong>{" "}
+        {t("portal.processingStatus.volumeSuffix")}
       </span>
       <Button
         size="sm"
@@ -107,7 +108,7 @@ export function ProcessingStatusStrip() {
         className="portal-statusstrip__manage"
         onClick={() => setActiveView("usage")}
       >
-        {t("processingStatus.managePlan")}
+        {t("portal.processingStatus.managePlan")}
       </Button>
     </div>
   );

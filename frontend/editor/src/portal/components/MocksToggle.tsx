@@ -41,11 +41,13 @@ export function MocksToggle() {
       }
       onClick={toggle}
       aria-pressed={enabled}
-      title={enabled ? t("mocks.tooltip.on") : t("mocks.tooltip.off")}
+      title={
+        enabled ? t("portal.mocks.tooltip.on") : t("portal.mocks.tooltip.off")
+      }
     >
       <span className="portal-mocks-toggle__dot" aria-hidden />
       <span className="portal-mocks-toggle__label">
-        {enabled ? t("mocks.label.on") : t("mocks.label.off")}
+        {enabled ? t("portal.mocks.label.on") : t("portal.mocks.label.off")}
       </span>
     </button>
   );

@@ -8,9 +8,9 @@ export function SkillsSection({ skills }: { skills: AgentSkill[] }) {
   return (
     <DocsSection
       id="skill-catalog"
-      eyebrow={t("docs.skills.eyebrow")}
-      title={t("docs.skills.title")}
-      lead={t("docs.skills.lead")}
+      eyebrow={t("portal.docs.skills.eyebrow")}
+      title={t("portal.docs.skills.title")}
+      lead={t("portal.docs.skills.lead")}
     >
       <div className="portal-docs__skill-grid">
         {skills.map((s) => (

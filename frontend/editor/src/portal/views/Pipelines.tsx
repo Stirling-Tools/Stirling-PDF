@@ -107,11 +107,15 @@ export function Pipelines() {
     <div className="portal-pipelines">
       <header className="portal-pipelines__head">
         <div>
-          <h1 className="portal-pipelines__title">{t("pipelines.title")}</h1>
-          <p className="portal-pipelines__sub">{t("pipelines.subtitle")}</p>
+          <h1 className="portal-pipelines__title">
+            {t("portal.pipelines.title")}
+          </h1>
+          <p className="portal-pipelines__sub">
+            {t("portal.pipelines.subtitle")}
+          </p>
         </div>
         <Button onClick={openCreate} leadingIcon={<span aria-hidden>+</span>}>
-          {t("pipelines.actions.newPipeline")}
+          {t("portal.pipelines.actions.newPipeline")}
         </Button>
       </header>
 
@@ -129,10 +133,12 @@ export function Pipelines() {
 
       {isEmpty && (
         <EmptyState
-          title={t("pipelines.empty.title")}
-          description={t("pipelines.empty.description")}
+          title={t("portal.pipelines.empty.title")}
+          description={t("portal.pipelines.empty.description")}
           actions={
-            <Button onClick={openCreate}>{t("pipelines.empty.action")}</Button>
+            <Button onClick={openCreate}>
+              {t("portal.pipelines.empty.action")}
+            </Button>
           }
         />
       )}
@@ -169,7 +175,7 @@ export function Pipelines() {
         open={pendingDelete !== null}
         onClose={() => !deleting && setPendingDelete(null)}
         width="sm"
-        title={t("pipelines.delete.title")}
+        title={t("portal.pipelines.delete.title")}
         footer={
           <div className="portal-pipelines__composer-footer">
             <Button
@@ -178,7 +184,7 @@ export function Pipelines() {
               disabled={deleting}
               onClick={() => setPendingDelete(null)}
             >
-              {t("pipelines.delete.cancel")}
+              {t("portal.pipelines.delete.cancel")}
             </Button>
             <Button
               size="sm"
@@ -186,12 +192,16 @@ export function Pipelines() {
               loading={deleting}
               onClick={confirmDelete}
             >
-              {t("pipelines.delete.confirm")}
+              {t("portal.pipelines.delete.confirm")}
             </Button>
           </div>
         }
       >
-        <p>{t("pipelines.delete.body", { name: pendingDelete?.name ?? "" })}</p>
+        <p>
+          {t("portal.pipelines.delete.body", {
+            name: pendingDelete?.name ?? "",
+          })}
+        </p>
         {deleteError && <Banner tone="danger" description={deleteError} />}
       </Modal>
     </div>

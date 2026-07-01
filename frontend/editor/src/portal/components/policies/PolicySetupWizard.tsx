@@ -136,7 +136,7 @@ function PolicySetupWizardBody({
     );
     const editorSource = {
       id: "editor",
-      name: t("sources.types.editor.label"),
+      name: t("portal.sources.types.editor.label"),
       type: "editor",
       status: "active" as const,
       referenceCount: 0,
@@ -197,7 +197,7 @@ function PolicySetupWizardBody({
   async function submit() {
     if (submitting) return;
     if (enabledTools.length === 0) {
-      setError(t("policies.wizard.errors.noTools"));
+      setError(t("portal.policies.wizard.errors.noTools"));
       setStep("workflow");
       return;
     }
@@ -223,7 +223,7 @@ function PolicySetupWizardBody({
       });
     } catch {
       setSubmitting(false);
-      setError(t("policies.wizard.errors.saveFailed"));
+      setError(t("portal.policies.wizard.errors.saveFailed"));
     }
   }
 
@@ -240,15 +240,19 @@ function PolicySetupWizardBody({
             {policyIcon(category.icon)}
           </span>
           {isEdit
-            ? t("policies.wizard.title.edit", { category: category.label })
-            : t("policies.wizard.title.setUp", { category: category.label })}
+            ? t("portal.policies.wizard.title.edit", {
+                category: category.label,
+              })
+            : t("portal.policies.wizard.title.setUp", {
+                category: category.label,
+              })}
         </span>
       }
       subtitle={config.summary}
       footer={
         <div className="portal-policies__wizard-foot">
           <Button variant="ghost" size="sm" onClick={onClose}>
-            {t("policies.wizard.actions.cancel")}
+            {t("portal.policies.wizard.actions.cancel")}
           </Button>
           {step === "workflow" ? (
             <Button
@@ -256,7 +260,7 @@ function PolicySetupWizardBody({
               style={{ marginLeft: "auto" }}
               onClick={() => setStep("settings")}
             >
-              {t("policies.wizard.actions.continue")}
+              {t("portal.policies.wizard.actions.continue")}
             </Button>
           ) : (
             <>
@@ -266,12 +270,12 @@ function PolicySetupWizardBody({
                 style={{ marginLeft: "auto" }}
                 onClick={() => setStep("workflow")}
               >
-                {t("policies.wizard.actions.back")}
+                {t("portal.policies.wizard.actions.back")}
               </Button>
               <Button size="sm" onClick={submit} loading={submitting}>
                 {isEdit
-                  ? t("policies.wizard.actions.saveChanges")
-                  : t("policies.wizard.actions.enablePolicy")}
+                  ? t("portal.policies.wizard.actions.saveChanges")
+                  : t("portal.policies.wizard.actions.enablePolicy")}
               </Button>
             </>
           )}
@@ -280,12 +284,12 @@ function PolicySetupWizardBody({
     >
       <Tabs
         variant="underline"
-        ariaLabel={t("policies.wizard.tabs.ariaLabel")}
+        ariaLabel={t("portal.policies.wizard.tabs.ariaLabel")}
         activeKey={step}
         onChange={(k) => setStep(k as Step)}
         items={[
-          { key: "workflow", label: t("policies.wizard.tabs.workflow") },
-          { key: "settings", label: t("policies.wizard.tabs.settings") },
+          { key: "workflow", label: t("portal.policies.wizard.tabs.workflow") },
+          { key: "settings", label: t("portal.policies.wizard.tabs.settings") },
         ]}
       />
 
@@ -300,7 +304,7 @@ function PolicySetupWizardBody({
       {step === "workflow" && (
         <div className="portal-policies__wizard-section">
           <p className="portal-policies__wizard-desc">
-            {t("policies.wizard.workflow.description")}
+            {t("portal.policies.wizard.workflow.description")}
           </p>
           {tools.map((tl) => (
             <Card key={tl.operation} padding="tight">
@@ -328,7 +332,7 @@ function PolicySetupWizardBody({
           {config.fields.length > 0 && (
             <>
               <h3 className="portal-policies__wizard-heading">
-                {t("policies.wizard.settings.heading")}
+                {t("portal.policies.wizard.settings.heading")}
               </h3>
               <div className="portal-policies__fields">
                 {config.fields.map((field) => (
@@ -346,18 +350,20 @@ function PolicySetupWizardBody({
           )}
 
           <h3 className="portal-policies__wizard-heading">
-            {t("policies.wizard.sources.heading")}
+            {t("portal.policies.wizard.sources.heading")}
           </h3>
           <div className="portal-policies__sources">
             {sourcesAsync.loading && !sourcesAsync.data ? (
               <p className="portal-policies__sources-loading">
-                {t("policies.wizard.sources.loading")}
+                {t("portal.policies.wizard.sources.loading")}
               </p>
             ) : availableSources.length === 1 ? (
               <Banner
                 tone="neutral"
-                title={t("policies.wizard.sources.emptyTitle")}
-                description={t("policies.wizard.sources.emptyDescription")}
+                title={t("portal.policies.wizard.sources.emptyTitle")}
+                description={t(
+                  "portal.policies.wizard.sources.emptyDescription",
+                )}
               />
             ) : (
               availableSources.map((src) => (
@@ -389,21 +395,21 @@ function PolicySetupWizardBody({
           </div>
 
           <h3 className="portal-policies__wizard-heading">
-            {t("policies.wizard.docTypes.heading")}
+            {t("portal.policies.wizard.docTypes.heading")}
           </h3>
           {!docTypesEnabled ? (
             <Banner
               tone="neutral"
-              title={t("policies.wizard.docTypes.allTitle")}
-              description={t("policies.wizard.docTypes.allDescription")}
+              title={t("portal.policies.wizard.docTypes.allTitle")}
+              description={t("portal.policies.wizard.docTypes.allDescription")}
             />
           ) : (
             <Card padding="tight">
               <div className="portal-policies__doctypes-head">
                 <span>
                   {scopeTypes.length === 0
-                    ? t("policies.wizard.docTypes.allTitle")
-                    : t("policies.wizard.docTypes.selected", {
+                    ? t("portal.policies.wizard.docTypes.allTitle")
+                    : t("portal.policies.wizard.docTypes.selected", {
                         count: scopeTypes.length,
                       })}
                 </span>
@@ -413,8 +419,8 @@ function PolicySetupWizardBody({
                   onClick={() => setScopeNarrow((v) => !v)}
                 >
                   {scopeNarrow
-                    ? t("policies.wizard.docTypes.clear")
-                    : t("policies.wizard.docTypes.narrow")}
+                    ? t("portal.policies.wizard.docTypes.clear")
+                    : t("portal.policies.wizard.docTypes.narrow")}
                 </button>
               </div>
               {scopeNarrow && (
@@ -435,14 +441,14 @@ function PolicySetupWizardBody({
           )}
 
           <h3 className="portal-policies__wizard-heading">
-            {t("policies.wizard.output.heading")}
+            {t("portal.policies.wizard.output.heading")}
           </h3>
           <div className="portal-policies__fields">
             {sources.includes("editor") && (
               <>
                 <FormField
-                  label={t("policies.wizard.output.runOn.label")}
-                  helperText={t("policies.wizard.output.runOn.helper")}
+                  label={t("portal.policies.wizard.output.runOn.label")}
+                  helperText={t("portal.policies.wizard.output.runOn.helper")}
                 >
                   <Select
                     inputSize="sm"
@@ -453,16 +459,18 @@ function PolicySetupWizardBody({
                     options={[
                       {
                         value: "upload",
-                        label: t("policies.wizard.output.runOn.upload"),
+                        label: t("portal.policies.wizard.output.runOn.upload"),
                       },
                       {
                         value: "export",
-                        label: t("policies.wizard.output.runOn.export"),
+                        label: t("portal.policies.wizard.output.runOn.export"),
                       },
                     ]}
                   />
                 </FormField>
-                <FormField label={t("policies.wizard.output.outputAs.label")}>
+                <FormField
+                  label={t("portal.policies.wizard.output.outputAs.label")}
+                >
                   <Select
                     inputSize="sm"
                     value={outputMode}
@@ -480,17 +488,21 @@ function PolicySetupWizardBody({
                     options={[
                       {
                         value: "new_version",
-                        label: t("policies.wizard.output.outputAs.newVersion"),
+                        label: t(
+                          "portal.policies.wizard.output.outputAs.newVersion",
+                        ),
                       },
                       {
                         value: "new_file",
-                        label: t("policies.wizard.output.outputAs.newFile"),
+                        label: t(
+                          "portal.policies.wizard.output.outputAs.newFile",
+                        ),
                       },
                     ]}
                   />
                 </FormField>
                 <FormField
-                  label={t("policies.wizard.output.filenameRule.label")}
+                  label={t("portal.policies.wizard.output.filenameRule.label")}
                 >
                   <div className="portal-policies__name-row">
                     <Select
@@ -505,13 +517,13 @@ function PolicySetupWizardBody({
                         {
                           value: "prefix",
                           label: t(
-                            "policies.wizard.output.filenameRule.prefix",
+                            "portal.policies.wizard.output.filenameRule.prefix",
                           ),
                         },
                         {
                           value: "suffix",
                           label: t(
-                            "policies.wizard.output.filenameRule.suffix",
+                            "portal.policies.wizard.output.filenameRule.suffix",
                           ),
                         },
                         ...(outputMode === "new_file"
@@ -519,7 +531,7 @@ function PolicySetupWizardBody({
                               {
                                 value: "auto-number",
                                 label: t(
-                                  "policies.wizard.output.filenameRule.autoNumber",
+                                  "portal.policies.wizard.output.filenameRule.autoNumber",
                                 ),
                               },
                             ]
@@ -531,7 +543,7 @@ function PolicySetupWizardBody({
                         inputSize="sm"
                         value={outputName}
                         placeholder={t(
-                          "policies.wizard.output.filenameRule.placeholder",
+                          "portal.policies.wizard.output.filenameRule.placeholder",
                         )}
                         onChange={(e) => setOutputName(e.target.value)}
                       />
@@ -542,9 +554,11 @@ function PolicySetupWizardBody({
             )}
             {/* TODO: reviewer user-picker goes here */}
             <h4 className="portal-policies__wizard-subheading">
-              {t("policies.wizard.output.retries.heading")}
+              {t("portal.policies.wizard.output.retries.heading")}
             </h4>
-            <FormField label={t("policies.wizard.output.retries.maxLabel")}>
+            <FormField
+              label={t("portal.policies.wizard.output.retries.maxLabel")}
+            >
               <Input
                 inputSize="sm"
                 type="number"
@@ -554,7 +568,9 @@ function PolicySetupWizardBody({
                 }
               />
             </FormField>
-            <FormField label={t("policies.wizard.output.retries.delayLabel")}>
+            <FormField
+              label={t("portal.policies.wizard.output.retries.delayLabel")}
+            >
               <Input
                 inputSize="sm"
                 type="number"

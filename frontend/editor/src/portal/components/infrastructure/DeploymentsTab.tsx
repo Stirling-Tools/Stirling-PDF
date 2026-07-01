@@ -39,7 +39,7 @@ export function DeploymentsTab() {
   const regionCols: TableColumn<DeploymentRegion>[] = [
     {
       key: "name",
-      header: t("infrastructure.deployments.regionColumns.region"),
+      header: t("portal.infrastructure.deployments.regionColumns.region"),
       render: (r) => (
         <div className="portal-infra__cell-stack">
           <span className="portal-infra__cell-strong">{r.name}</span>
@@ -49,17 +49,19 @@ export function DeploymentsTab() {
     },
     {
       key: "latency",
-      header: t("infrastructure.deployments.regionColumns.latency"),
+      header: t("portal.infrastructure.deployments.regionColumns.latency"),
       align: "right",
       render: (r) => (
         <span className="portal-infra__mono">
-          {t("infrastructure.deployments.msValue", { value: r.latencyMs })}
+          {t("portal.infrastructure.deployments.msValue", {
+            value: r.latencyMs,
+          })}
         </span>
       ),
     },
     {
       key: "load",
-      header: t("infrastructure.deployments.regionColumns.load"),
+      header: t("portal.infrastructure.deployments.regionColumns.load"),
       width: "9rem",
       render: (r) => (
         <div className="portal-infra__load">
@@ -70,7 +72,7 @@ export function DeploymentsTab() {
     },
     {
       key: "status",
-      header: t("infrastructure.deployments.regionColumns.status"),
+      header: t("portal.infrastructure.deployments.regionColumns.status"),
       render: (r) => (
         <StatusBadge
           tone={REGION_TONE[r.status]}
@@ -83,14 +85,14 @@ export function DeploymentsTab() {
     },
     {
       key: "version",
-      header: t("infrastructure.deployments.regionColumns.version"),
+      header: t("portal.infrastructure.deployments.regionColumns.version"),
       render: (r) => (
         <code className="portal-infra__cell-code">{r.version}</code>
       ),
     },
     {
       key: "uptime",
-      header: t("infrastructure.deployments.regionColumns.uptime"),
+      header: t("portal.infrastructure.deployments.regionColumns.uptime"),
       align: "right",
       render: (r) => (
         <span className="portal-infra__mono">{pct(r.uptime, 3)}</span>
@@ -98,17 +100,17 @@ export function DeploymentsTab() {
     },
     {
       key: "instances",
-      header: t("infrastructure.deployments.regionColumns.instances"),
+      header: t("portal.infrastructure.deployments.regionColumns.instances"),
       align: "right",
       render: (r) => <span className="portal-infra__mono">{r.instances}</span>,
     },
     {
       key: "throughput",
-      header: t("infrastructure.deployments.regionColumns.throughput"),
+      header: t("portal.infrastructure.deployments.regionColumns.throughput"),
       align: "right",
       render: (r) => (
         <span className="portal-infra__mono">
-          {t("infrastructure.deployments.throughputValue", {
+          {t("portal.infrastructure.deployments.throughputValue", {
             value: r.throughput.toLocaleString(),
           })}
         </span>
@@ -116,11 +118,11 @@ export function DeploymentsTab() {
     },
     {
       key: "p99",
-      header: t("infrastructure.deployments.regionColumns.p99"),
+      header: t("portal.infrastructure.deployments.regionColumns.p99"),
       align: "right",
       render: (r) => (
         <span className="portal-infra__mono">
-          {t("infrastructure.deployments.msValue", { value: r.p99Ms })}
+          {t("portal.infrastructure.deployments.msValue", { value: r.p99Ms })}
         </span>
       ),
     },
@@ -129,14 +131,14 @@ export function DeploymentsTab() {
   const deployCols: TableColumn<RecentDeployment>[] = [
     {
       key: "version",
-      header: t("infrastructure.deployments.deployColumns.version"),
+      header: t("portal.infrastructure.deployments.deployColumns.version"),
       render: (d) => (
         <code className="portal-infra__cell-code">{d.version}</code>
       ),
     },
     {
       key: "environment",
-      header: t("infrastructure.deployments.deployColumns.environment"),
+      header: t("portal.infrastructure.deployments.deployColumns.environment"),
       render: (d) => (
         <Chip
           tone={
@@ -154,12 +156,12 @@ export function DeploymentsTab() {
     },
     {
       key: "product",
-      header: t("infrastructure.deployments.deployColumns.product"),
+      header: t("portal.infrastructure.deployments.deployColumns.product"),
       render: (d) => d.product,
     },
     {
       key: "status",
-      header: t("infrastructure.deployments.deployColumns.status"),
+      header: t("portal.infrastructure.deployments.deployColumns.status"),
       render: (d) => (
         <StatusBadge tone={DEPLOY_TONE[d.status]} size="sm">
           {DEPLOY_LABEL[d.status]}
@@ -168,12 +170,12 @@ export function DeploymentsTab() {
     },
     {
       key: "deployedBy",
-      header: t("infrastructure.deployments.deployColumns.deployedBy"),
+      header: t("portal.infrastructure.deployments.deployColumns.deployedBy"),
       render: (d) => <span className="portal-infra__mono">{d.deployedBy}</span>,
     },
     {
       key: "timestamp",
-      header: t("infrastructure.deployments.deployColumns.when"),
+      header: t("portal.infrastructure.deployments.deployColumns.when"),
       align: "right",
       render: (d) => <span className="portal-infra__muted">{d.timestamp}</span>,
     },
@@ -183,17 +185,17 @@ export function DeploymentsTab() {
     <div className="portal-infra__stack">
       <section>
         <SectionHeader
-          title={t("infrastructure.deployments.regions.heading")}
-          sub={t("infrastructure.deployments.regions.subheading")}
+          title={t("portal.infrastructure.deployments.regions.heading")}
+          sub={t("portal.infrastructure.deployments.regions.subheading")}
         />
         <Card padding="none">
           {isLoading && <TableSkeleton rows={3} cols={9} />}
           {isEmpty && (
             <EmptyState
               size="compact"
-              title={t("infrastructure.deployments.regions.empty.title")}
+              title={t("portal.infrastructure.deployments.regions.empty.title")}
               description={t(
-                "infrastructure.deployments.regions.empty.description",
+                "portal.infrastructure.deployments.regions.empty.description",
               )}
             />
           )}
@@ -209,8 +211,8 @@ export function DeploymentsTab() {
 
       <section>
         <SectionHeader
-          title={t("infrastructure.deployments.recent.heading")}
-          sub={t("infrastructure.deployments.recent.subheading")}
+          title={t("portal.infrastructure.deployments.recent.heading")}
+          sub={t("portal.infrastructure.deployments.recent.subheading")}
         />
         <Card padding="none">
           {isLoading && <TableSkeleton rows={4} cols={6} />}

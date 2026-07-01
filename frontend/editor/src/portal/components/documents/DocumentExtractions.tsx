@@ -26,17 +26,17 @@ export function DocumentExtractions({
   const cols: TableColumn<Extraction>[] = [
     {
       key: "field",
-      header: t("documents.extractions.columns.field"),
+      header: t("portal.documents.extractions.columns.field"),
       render: (e) => <span className="portal-documents__field">{e.field}</span>,
     },
     {
       key: "value",
-      header: t("documents.extractions.columns.value"),
+      header: t("portal.documents.extractions.columns.value"),
       render: (e) => <span className="portal-documents__mono">{e.value}</span>,
     },
     {
       key: "confidence",
-      header: t("documents.extractions.columns.confidence"),
+      header: t("portal.documents.extractions.columns.confidence"),
       align: "right",
       width: "7rem",
       render: (e) => (
@@ -58,7 +58,7 @@ export function DocumentExtractions({
           🔒
         </span>
         <p className="portal-documents__masked-text">
-          {t("documents.extractions.masked")}
+          {t("portal.documents.extractions.masked")}
         </p>
       </div>
     );
@@ -69,7 +69,7 @@ export function DocumentExtractions({
       columns={cols}
       rows={doc.extractions}
       rowKey={(e) => e.field}
-      empty={t("documents.extractions.empty")}
+      empty={t("portal.documents.extractions.empty")}
     />
   );
 }

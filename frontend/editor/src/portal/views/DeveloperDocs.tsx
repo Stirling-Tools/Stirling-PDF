@@ -80,8 +80,8 @@ export function DeveloperDocs() {
         {isEmpty && (
           <EmptyState
             size="compact"
-            title={t("docs.nav.empty.title")}
-            description={t("docs.nav.empty.description")}
+            title={t("portal.docs.nav.empty.title")}
+            description={t("portal.docs.nav.empty.description")}
           />
         )}
         {nav && nav.length > 0 && (

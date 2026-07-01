@@ -35,7 +35,7 @@ export function UsageAreaChart({
   deltaPct,
 }: UsageAreaChartProps) {
   const { t } = useTranslation();
-  const totalLabel = totalLabelProp ?? t("usageChart.defaultLabel");
+  const totalLabel = totalLabelProp ?? t("portal.usageChart.defaultLabel");
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
 
@@ -153,7 +153,7 @@ export function UsageAreaChart({
             }
           >
             <span aria-hidden>{deltaPct >= 0 ? "↑" : "↓"}</span>
-            {t("usageChart.delta", {
+            {t("portal.usageChart.delta", {
               pct: Math.abs(Math.round(deltaPct * 100)),
             })}
           </div>
@@ -265,7 +265,7 @@ export function UsageAreaChart({
             })}
           </div>
           <div className="portal-chart__tooltip-value">
-            {t("usageChart.docsValue", {
+            {t("portal.usageChart.docsValue", {
               value: hovered.raw.value.toLocaleString(),
             })}
           </div>
@@ -273,7 +273,7 @@ export function UsageAreaChart({
       )}
       <div className="sr-only" aria-live="polite" aria-atomic="true">
         {hovered
-          ? t("usageChart.srAnnounce", {
+          ? t("portal.usageChart.srAnnounce", {
               date: new Date(hovered.raw.date).toLocaleDateString(undefined, {
                 weekday: "short",
                 month: "short",

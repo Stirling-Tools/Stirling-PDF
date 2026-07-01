@@ -211,10 +211,10 @@ export function PipelineComposer({
     name.trim() !== "" && scheduleCountValid && outputValid && !submitting;
 
   const triggerOptions = [
-    { value: MANUAL, label: t("pipelines.composer.triggerManual") },
+    { value: MANUAL, label: t("portal.pipelines.composer.triggerManual") },
     ...triggers.map((trigger) => ({
       value: trigger.type,
-      label: t(`pipelines.trigger.${trigger.type}`, {
+      label: t(`portal.pipelines.trigger.${trigger.type}`, {
         defaultValue: trigger.type,
       }),
       disabled: !triggerAvailable(trigger),
@@ -273,10 +273,10 @@ export function PipelineComposer({
       width="lg"
       title={
         isEdit
-          ? t("pipelines.composer.editTitle")
-          : t("pipelines.composer.title")
+          ? t("portal.pipelines.composer.editTitle")
+          : t("portal.pipelines.composer.title")
       }
-      subtitle={t("pipelines.composer.subtitle")}
+      subtitle={t("portal.pipelines.composer.subtitle")}
       footer={
         <div className="portal-pipelines__composer-footer">
           <Button
@@ -285,7 +285,7 @@ export function PipelineComposer({
             disabled={submitting}
             onClick={onClose}
           >
-            {t("pipelines.composer.cancel")}
+            {t("portal.pipelines.composer.cancel")}
           </Button>
           <Button
             size="sm"
@@ -294,17 +294,17 @@ export function PipelineComposer({
             disabled={!canSave}
           >
             {isEdit
-              ? t("pipelines.composer.save")
-              : t("pipelines.composer.create")}
+              ? t("portal.pipelines.composer.save")
+              : t("portal.pipelines.composer.create")}
           </Button>
         </div>
       }
     >
       <div className="portal-pipelines__composer">
-        <FormField label={t("pipelines.composer.name")} required>
+        <FormField label={t("portal.pipelines.composer.name")} required>
           <Input
             value={name}
-            placeholder={t("pipelines.composer.namePlaceholder")}
+            placeholder={t("portal.pipelines.composer.namePlaceholder")}
             onChange={(e) => setName(e.target.value)}
           />
         </FormField>
@@ -312,15 +312,15 @@ export function PipelineComposer({
         {/* Sources */}
         <div className="portal-pipelines__composer-section">
           <span className="portal-pipelines__detail-heading">
-            {t("pipelines.composer.sources")}
+            {t("portal.pipelines.composer.sources")}
           </span>
           {sourcesState.loading ? (
             <p className="portal-pipelines__muted">
-              {t("pipelines.composer.sourcesLoading")}
+              {t("portal.pipelines.composer.sourcesLoading")}
             </p>
           ) : availableSources.length === 0 ? (
             <p className="portal-pipelines__muted">
-              {t("pipelines.composer.noSources")}
+              {t("portal.pipelines.composer.noSources")}
             </p>
           ) : (
             <div className="portal-pipelines__source-list">
@@ -336,7 +336,7 @@ export function PipelineComposer({
           )}
 
           <span className="portal-pipelines__detail-heading">
-            {t("pipelines.composer.trigger")}
+            {t("portal.pipelines.composer.trigger")}
           </span>
           <RadioGroup<string>
             name="pipeline-trigger"
@@ -348,7 +348,7 @@ export function PipelineComposer({
           {triggerType === "schedule" && (
             <div className="portal-pipelines__schedule">
               <span className="portal-pipelines__muted">
-                {t("pipelines.composer.scheduleEvery")}
+                {t("portal.pipelines.composer.scheduleEvery")}
               </span>
               <Input
                 inputSize="sm"
@@ -367,7 +367,9 @@ export function PipelineComposer({
                 }
                 options={SCHEDULE_UNITS.map((unit) => ({
                   value: unit,
-                  label: t(`pipelines.composer.unit.${unit.toLowerCase()}`),
+                  label: t(
+                    `portal.pipelines.composer.unit.${unit.toLowerCase()}`,
+                  ),
                 }))}
               />
             </div>
@@ -377,11 +379,11 @@ export function PipelineComposer({
         {/* Operations */}
         <div className="portal-pipelines__composer-section">
           <span className="portal-pipelines__detail-heading">
-            {t("pipelines.composer.operations", { count: steps.length })}
+            {t("portal.pipelines.composer.operations", { count: steps.length })}
           </span>
           {steps.length === 0 ? (
             <p className="portal-pipelines__muted">
-              {t("pipelines.composer.chainEmpty")}
+              {t("portal.pipelines.composer.chainEmpty")}
             </p>
           ) : (
             <ol className="portal-pipelines__chain">
@@ -397,7 +399,7 @@ export function PipelineComposer({
                   <div className="portal-pipelines__chain-actions">
                     <button
                       type="button"
-                      aria-label={t("pipelines.composer.moveUp")}
+                      aria-label={t("portal.pipelines.composer.moveUp")}
                       disabled={i === 0}
                       onClick={() => moveStep(i, -1)}
                     >
@@ -405,7 +407,7 @@ export function PipelineComposer({
                     </button>
                     <button
                       type="button"
-                      aria-label={t("pipelines.composer.moveDown")}
+                      aria-label={t("portal.pipelines.composer.moveDown")}
                       disabled={i === steps.length - 1}
                       onClick={() => moveStep(i, 1)}
                     >
@@ -413,7 +415,7 @@ export function PipelineComposer({
                     </button>
                     <button
                       type="button"
-                      aria-label={t("pipelines.composer.removeStep")}
+                      aria-label={t("portal.pipelines.composer.removeStep")}
                       onClick={() => removeStep(i)}
                     >
                       ×
@@ -440,7 +442,7 @@ export function PipelineComposer({
         {/* Output */}
         <div className="portal-pipelines__composer-section">
           <span className="portal-pipelines__detail-heading">
-            {t("pipelines.composer.output")}
+            {t("portal.pipelines.composer.output")}
           </span>
           <RadioGroup<OutputMode>
             name="pipeline-output"
@@ -448,14 +450,14 @@ export function PipelineComposer({
             onChange={setOutputMode}
             direction="horizontal"
             options={[
-              { value: "inline", label: t("pipelines.output.inline") },
-              { value: "folder", label: t("pipelines.output.folder") },
+              { value: "inline", label: t("portal.pipelines.output.inline") },
+              { value: "folder", label: t("portal.pipelines.output.folder") },
             ]}
           />
           {outputMode === "folder" && (
             <FormField
-              label={t("pipelines.composer.directory")}
-              helperText={t("pipelines.composer.directoryHelp")}
+              label={t("portal.pipelines.composer.directory")}
+              helperText={t("portal.pipelines.composer.directoryHelp")}
               required
             >
               <Input

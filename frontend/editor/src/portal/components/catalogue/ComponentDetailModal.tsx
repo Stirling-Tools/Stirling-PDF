@@ -49,14 +49,14 @@ export function ComponentDetailModal({
       <Modal
         open={false}
         onClose={onClose}
-        ariaLabel={t("catalogue.detail.ariaLabel")}
+        ariaLabel={t("portal.catalogue.detail.ariaLabel")}
       />
     );
   }
 
   const tabs = TAB_KEYS.map((key) => ({
     key,
-    label: t(`catalogue.detail.tabs.${key}`),
+    label: t(`portal.catalogue.detail.tabs.${key}`),
   }));
 
   const maturity = MATURITY_META[component.maturity];
@@ -92,7 +92,7 @@ export function ComponentDetailModal({
               // publishable key scoped to this component.
               onClick={() => onClose()}
             >
-              {t("catalogue.detail.addToProject")}
+              {t("portal.catalogue.detail.addToProject")}
             </Button>
           </div>
         ) : (
@@ -102,7 +102,7 @@ export function ComponentDetailModal({
             // TODO(backend): route to the upgrade / contact-sales flow.
             onClick={() => onClose()}
           >
-            {t("catalogue.detail.upgradeToUnlock")}
+            {t("portal.catalogue.detail.upgradeToUnlock")}
           </Button>
         )
       }
@@ -110,8 +110,8 @@ export function ComponentDetailModal({
       {!unlocked && (
         <Banner
           tone="warning"
-          title={t("catalogue.detail.locked.title")}
-          description={t("catalogue.detail.locked.description", {
+          title={t("portal.catalogue.detail.locked.title")}
+          description={t("portal.catalogue.detail.locked.description", {
             name: component.name,
             tier: component.minTier,
           })}
@@ -123,10 +123,10 @@ export function ComponentDetailModal({
         {/* TODO(backend)/host: mount the live <Sandbox> here, booting the
             component against a demo document and the dev's publishable key. */}
         <span className="portal-components__preview-badge">
-          {t("catalogue.detail.preview.badge")}
+          {t("portal.catalogue.detail.preview.badge")}
         </span>
         <span className="portal-components__preview-note">
-          {t("catalogue.detail.preview.note")}
+          {t("portal.catalogue.detail.preview.note")}
         </span>
       </div>
 
@@ -136,7 +136,7 @@ export function ComponentDetailModal({
         activeKey={tab}
         onChange={setTab}
         variant="underline"
-        ariaLabel={t("catalogue.detail.tabsAriaLabel")}
+        ariaLabel={t("portal.catalogue.detail.tabsAriaLabel")}
       />
 
       <div className="portal-components__tab-body">
@@ -154,25 +154,25 @@ export function ComponentDetailModal({
             </div>
             <div className="portal-components__stat-grid">
               <StatTile
-                label={t("catalogue.detail.stats.maturity")}
+                label={t("portal.catalogue.detail.stats.maturity")}
                 value={maturity.label}
               />
               <StatTile
-                label={t("catalogue.detail.stats.price")}
+                label={t("portal.catalogue.detail.stats.price")}
                 value={formatPrice(component.pricing)}
               />
               <StatTile
-                label={t("catalogue.detail.stats.freeQuota")}
+                label={t("portal.catalogue.detail.stats.freeQuota")}
                 value={
                   component.pricing.freeQuota > 0
-                    ? t("catalogue.detail.stats.freeQuotaValue", {
+                    ? t("portal.catalogue.detail.stats.freeQuotaValue", {
                         amount: component.pricing.freeQuota.toLocaleString(),
                       })
-                    : t("catalogue.detail.stats.none")
+                    : t("portal.catalogue.detail.stats.none")
                 }
               />
               <StatTile
-                label={t("catalogue.detail.stats.embeds30d")}
+                label={t("portal.catalogue.detail.stats.embeds30d")}
                 value={component.embeds30d.toLocaleString()}
               />
             </div>
@@ -184,12 +184,12 @@ export function ComponentDetailModal({
             <CodeBlock
               code={component.install}
               lang="bash"
-              caption={t("catalogue.detail.code.install")}
+              caption={t("portal.catalogue.detail.code.install")}
             />
             <CodeBlock
               code={component.usage}
               lang="typescript"
-              caption={t("catalogue.detail.code.usage")}
+              caption={t("portal.catalogue.detail.code.usage")}
             />
           </div>
         )}
@@ -200,26 +200,26 @@ export function ComponentDetailModal({
           <div className="portal-components__pricing">
             <div className="portal-components__stat-grid">
               <StatTile
-                label={t("catalogue.detail.stats.perAction")}
+                label={t("portal.catalogue.detail.stats.perAction")}
                 value={formatPrice(component.pricing)}
               />
               <StatTile
-                label={t("catalogue.detail.stats.billedOn")}
+                label={t("portal.catalogue.detail.stats.billedOn")}
                 value={component.pricing.unit}
               />
               <StatTile
-                label={t("catalogue.detail.stats.freeQuota")}
+                label={t("portal.catalogue.detail.stats.freeQuota")}
                 value={
                   component.pricing.freeQuota > 0
-                    ? t("catalogue.detail.stats.freeQuotaValue", {
+                    ? t("portal.catalogue.detail.stats.freeQuotaValue", {
                         amount: component.pricing.freeQuota.toLocaleString(),
                       })
-                    : t("catalogue.detail.stats.none")
+                    : t("portal.catalogue.detail.stats.none")
                 }
               />
             </div>
             <p className="portal-components__pricing-note">
-              {t("catalogue.detail.pricing.note", {
+              {t("portal.catalogue.detail.pricing.note", {
                 unit: component.pricing.unit,
               })}
             </p>

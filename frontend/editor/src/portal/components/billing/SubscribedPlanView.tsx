@@ -57,11 +57,11 @@ export function SubscribedPlanView({ wallet, onWalletChange }: Props) {
           title={
             state === "DEGRADED"
               ? t(
-                  "billing.subscribedPlan.capWarn.reachedTitle",
+                  "portal.billing.subscribedPlan.capWarn.reachedTitle",
                   "Monthly spend limit reached",
                 )
               : t(
-                  "billing.subscribedPlan.capWarn.approachingTitle",
+                  "portal.billing.subscribedPlan.capWarn.approachingTitle",
                   "You're at {{pct}}% of your monthly spend limit",
                   {
                     pct: Math.round(pct),
@@ -71,18 +71,21 @@ export function SubscribedPlanView({ wallet, onWalletChange }: Props) {
           action={
             isLeader ? (
               <Button size="sm" onClick={raiseLimit}>
-                {t("billing.subscribedPlan.capWarn.raiseLimit", "Raise limit")}
+                {t(
+                  "portal.billing.subscribedPlan.capWarn.raiseLimit",
+                  "Raise limit",
+                )}
               </Button>
             ) : undefined
           }
         >
           {state === "DEGRADED"
             ? t(
-                "billing.subscribedPlan.capWarn.reachedBody",
+                "portal.billing.subscribedPlan.capWarn.reachedBody",
                 "Metered processing is paused until you raise the limit or the cycle resets. Unlimited PDF editing keeps working.",
               )
             : t(
-                "billing.subscribedPlan.capWarn.approachingBody",
+                "portal.billing.subscribedPlan.capWarn.approachingBody",
                 "Raise it now so automated processing never pauses.",
               )}
         </Banner>
@@ -110,7 +113,7 @@ export function SubscribedPlanView({ wallet, onWalletChange }: Props) {
         <Banner
           tone="danger"
           title={t(
-            "billing.subscribedPlan.portalError.title",
+            "portal.billing.subscribedPlan.portalError.title",
             "Couldn't open Stripe portal",
           )}
         >

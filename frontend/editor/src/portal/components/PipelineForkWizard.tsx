@@ -70,14 +70,14 @@ export function PipelineForkWizard() {
     <Card padding="loose" className="portal-fork">
       <header className="portal-fork__head">
         <div>
-          <h2 className="portal-fork__title">{t("forkWizard.title")}</h2>
-          <p className="portal-fork__sub">{t("forkWizard.subtitle")}</p>
+          <h2 className="portal-fork__title">{t("portal.forkWizard.title")}</h2>
+          <p className="portal-fork__sub">{t("portal.forkWizard.subtitle")}</p>
         </div>
         {phase !== "pick" && template && (
           <StatusBadge tone={phase === "ready" ? "success" : "info"} size="sm">
             {phase === "ready"
-              ? t("forkWizard.status.ready")
-              : t("forkWizard.status.building")}
+              ? t("portal.forkWizard.status.ready")
+              : t("portal.forkWizard.status.building")}
           </StatusBadge>
         )}
       </header>
@@ -141,8 +141,8 @@ export function PipelineForkWizard() {
           <div className="portal-fork__build-actions">
             <Button variant="ghost" size="sm" onClick={reset}>
               {phase === "ready"
-                ? t("forkWizard.action.pickAnother")
-                : t("forkWizard.action.cancel")}
+                ? t("portal.forkWizard.action.pickAnother")
+                : t("portal.forkWizard.action.cancel")}
             </Button>
             <Button
               variant="gradient"
@@ -152,8 +152,8 @@ export function PipelineForkWizard() {
               trailingIcon={<span aria-hidden>→</span>}
             >
               {phase === "ready"
-                ? t("forkWizard.action.deploy")
-                : t("forkWizard.status.building")}
+                ? t("portal.forkWizard.action.deploy")
+                : t("portal.forkWizard.status.building")}
             </Button>
           </div>
         </div>

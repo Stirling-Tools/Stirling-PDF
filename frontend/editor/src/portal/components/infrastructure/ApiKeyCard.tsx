@@ -40,35 +40,35 @@ export function ApiKeyCard({ apiKey }: { apiKey: ApiKey }) {
         <div className="portal-infra__key-body">
           <dl className="portal-infra__kv">
             <div>
-              <dt>{t("infrastructure.apiKeys.card.created")}</dt>
+              <dt>{t("portal.infrastructure.apiKeys.card.created")}</dt>
               <dd>{apiKey.created}</dd>
             </div>
             <div>
-              <dt>{t("infrastructure.apiKeys.card.lastUsed")}</dt>
+              <dt>{t("portal.infrastructure.apiKeys.card.lastUsed")}</dt>
               <dd>{apiKey.lastUsed}</dd>
             </div>
             <div>
-              <dt>{t("infrastructure.apiKeys.card.rateLimit")}</dt>
+              <dt>{t("portal.infrastructure.apiKeys.card.rateLimit")}</dt>
               <dd className="portal-infra__mono">
-                {t("infrastructure.apiKeys.card.rateLimitValue", {
+                {t("portal.infrastructure.apiKeys.card.rateLimitValue", {
                   value: apiKey.rateLimit.toLocaleString(),
                 })}
               </dd>
             </div>
             <div>
-              <dt>{t("infrastructure.apiKeys.card.usageToday")}</dt>
+              <dt>{t("portal.infrastructure.apiKeys.card.usageToday")}</dt>
               <dd className="portal-infra__mono">
                 {apiKey.usageToday.toLocaleString()}
               </dd>
             </div>
             <div>
-              <dt>{t("infrastructure.apiKeys.card.usageMonth")}</dt>
+              <dt>{t("portal.infrastructure.apiKeys.card.usageMonth")}</dt>
               <dd className="portal-infra__mono">
                 {apiKey.usageMonth.toLocaleString()}
               </dd>
             </div>
             <div>
-              <dt>{t("infrastructure.apiKeys.card.permissions")}</dt>
+              <dt>{t("portal.infrastructure.apiKeys.card.permissions")}</dt>
               <dd className="portal-infra__chips">
                 {apiKey.permissions.map((p) => (
                   <Chip key={p} tone="blue" size="sm">
@@ -78,11 +78,11 @@ export function ApiKeyCard({ apiKey }: { apiKey: ApiKey }) {
               </dd>
             </div>
             <div className="portal-infra__kv-wide">
-              <dt>{t("infrastructure.apiKeys.card.allowedIps")}</dt>
+              <dt>{t("portal.infrastructure.apiKeys.card.allowedIps")}</dt>
               <dd className="portal-infra__chips">
                 {apiKey.allowedIps.length === 0 ? (
                   <span className="portal-infra__muted">
-                    {t("infrastructure.apiKeys.card.anyIp")}
+                    {t("portal.infrastructure.apiKeys.card.anyIp")}
                   </span>
                 ) : (
                   apiKey.allowedIps.map((ip) => (

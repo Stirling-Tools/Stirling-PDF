@@ -81,9 +81,11 @@ const front = (rel: string): string => path.join(FRONTEND_ROOT, rel);
 export const I18N_PROJECTS: TranslationProject[] = [
   {
     name: "editor",
+    // One project over the whole editor tree, including the portal layer. Portal
+    // strings live under portal.* in the shared locale and are referenced with
+    // that prefix in source (t("portal.users.title")), so they validate here
+    // like any other key.
     srcRoot: front("editor/src"),
-    // The portal layer lives under editor/src but has its own project + locale.
-    excludeGlobs: ["**/portal/**"],
     localeFile: front("editor/public/locales/en-US/translation.toml"),
     ignoredKeyPatterns: [
       // SignSettings / SavedSignaturesSection resolve every key as
@@ -95,22 +97,13 @@ export const I18N_PROJECTS: TranslationProject[] = [
       /^account\./,
       // [language] direction is read by the i18n layer, never as a UI string.
       /^language\.direction$/,
+      // Portal source-type copy is referenced via metadata keys in
+      // components/sources/sourceTypes.ts (t(field.labelKey)), invisible to the
+      // static scan.
+      /^portal\.sources\.types\./,
     ],
     minUsedKeys: 100,
     minLocaleKeys: 100,
-  },
-  {
-    name: "portal",
-    srcRoot: front("editor/src/portal"),
-    localeFile: front("editor/public/locales/en-US/portal.toml"),
-    ignoredKeyPatterns: [
-      // Source-type copy is referenced via metadata keys in
-      // components/sources/sourceTypes.ts (t(field.labelKey)), so the static
-      // scan can't see these as used.
-      /^sources\.types\./,
-    ],
-    minUsedKeys: 20,
-    minLocaleKeys: 20,
   },
 ];
 

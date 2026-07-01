@@ -30,7 +30,7 @@ export function UsersSummaryStrip({ data, loading }: UsersSummaryStripProps) {
       {KPI_KEYS.map((key) => (
         <MetricCard
           key={key}
-          label={t(`users.summary.${key}`)}
+          label={t(`portal.users.summary.${key}`)}
           value={values[key]}
         />
       ))}

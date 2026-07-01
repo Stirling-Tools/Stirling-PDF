@@ -8,9 +8,9 @@ export function PlaybooksSection({ playbooks }: { playbooks: Playbook[] }) {
   return (
     <DocsSection
       id="recipes"
-      eyebrow={t("docs.recipes.eyebrow")}
-      title={t("docs.recipes.title")}
-      lead={t("docs.recipes.lead")}
+      eyebrow={t("portal.docs.recipes.eyebrow")}
+      title={t("portal.docs.recipes.title")}
+      lead={t("portal.docs.recipes.lead")}
     >
       <div className="portal-docs__playbook-grid">
         {playbooks.map((p) => (
@@ -34,7 +34,7 @@ export function PlaybooksSection({ playbooks }: { playbooks: Playbook[] }) {
             {/* TODO(backend): POST /v1/pipelines/clone-from-playbook to seed a
                 draft pipeline from this recipe, then route to the composer. */}
             <Button variant="outline" accent={p.accent} size="sm">
-              {t("docs.recipes.cloneButton")}
+              {t("portal.docs.recipes.cloneButton")}
             </Button>
           </Card>
         ))}

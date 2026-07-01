@@ -30,7 +30,9 @@ export function ComponentCard({
       className={"portal-components__card" + (unlocked ? "" : " is-locked")}
       role="button"
       tabIndex={0}
-      aria-label={t("catalogue.card.openAriaLabel", { name: component.name })}
+      aria-label={t("portal.catalogue.card.openAriaLabel", {
+        name: component.name,
+      })}
       onClick={() => onOpen(component)}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
@@ -47,7 +49,7 @@ export function ComponentCard({
         {!unlocked && (
           <span
             className="portal-components__lock"
-            aria-label={t("catalogue.card.lockedAriaLabel")}
+            aria-label={t("portal.catalogue.card.lockedAriaLabel")}
           >
             🔒
           </span>

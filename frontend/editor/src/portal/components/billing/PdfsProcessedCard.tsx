@@ -19,25 +19,25 @@ const SEGMENTS: ReadonlyArray<{
 }> = [
   {
     key: "api",
-    labelKey: "billing.pdfsProcessed.segmentApiLabel",
+    labelKey: "portal.billing.pdfsProcessed.segmentApiLabel",
     labelDefault: "API",
-    descKey: "billing.pdfsProcessed.segmentApiDesc",
+    descKey: "portal.billing.pdfsProcessed.segmentApiDesc",
     descDefault: "Direct API requests",
     cls: "blue",
   },
   {
     key: "ai",
-    labelKey: "billing.pdfsProcessed.segmentAgentsLabel",
+    labelKey: "portal.billing.pdfsProcessed.segmentAgentsLabel",
     labelDefault: "Agents",
-    descKey: "billing.pdfsProcessed.segmentAgentsDesc",
+    descKey: "portal.billing.pdfsProcessed.segmentAgentsDesc",
     descDefault: "AI agent actions",
     cls: "purple",
   },
   {
     key: "automation",
-    labelKey: "billing.pdfsProcessed.segmentAutomationLabel",
+    labelKey: "portal.billing.pdfsProcessed.segmentAutomationLabel",
     labelDefault: "Automation",
-    descKey: "billing.pdfsProcessed.segmentAutomationDesc",
+    descKey: "portal.billing.pdfsProcessed.segmentAutomationDesc",
     descDefault: "Automations & pipelines",
     cls: "teal",
   },
@@ -51,14 +51,17 @@ export function PdfsProcessedCard({ wallet }: { wallet: Wallet }) {
   return (
     <Card padding="loose">
       <span className="portal-billing__eyebrow">
-        {t("billing.pdfsProcessed.eyebrow", "PDFs processed this period")}
+        {t(
+          "portal.billing.pdfsProcessed.eyebrow",
+          "PDFs processed this period",
+        )}
       </span>
       <div className="portal-billing__bignum-row">
         <span className="portal-billing__bignum">
           {wallet.billableUsed.toLocaleString()}
         </span>
         <span className="portal-billing__bignum-unit">
-          {t("billing.pdfsProcessed.unit", "metered PDFs")}
+          {t("portal.billing.pdfsProcessed.unit", "metered PDFs")}
         </span>
       </div>
 
@@ -68,7 +71,7 @@ export function PdfsProcessedCard({ wallet }: { wallet: Wallet }) {
             className="portal-billing__segbar"
             role="img"
             aria-label={t(
-              "billing.pdfsProcessed.segbarAriaLabel",
+              "portal.billing.pdfsProcessed.segbarAriaLabel",
               "Metered PDFs split by category",
             )}
           >
@@ -94,7 +97,7 @@ export function PdfsProcessedCard({ wallet }: { wallet: Wallet }) {
                 </span>
                 <span className="portal-billing__seglegend-val">
                   {t(
-                    "billing.pdfsProcessed.legendValue",
+                    "portal.billing.pdfsProcessed.legendValue",
                     "{{formatted}} PDFs",
                     {
                       count: b[s.key],
@@ -112,7 +115,7 @@ export function PdfsProcessedCard({ wallet }: { wallet: Wallet }) {
       ) : (
         <p className="portal-billing__section-sub">
           {t(
-            "billing.pdfsProcessed.emptyPeriod",
+            "portal.billing.pdfsProcessed.emptyPeriod",
             "No metered processing yet this period.",
           )}
         </p>

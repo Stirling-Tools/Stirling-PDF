@@ -31,7 +31,7 @@ export function InviteMemberModal({ open, onClose }: InviteMemberModalProps) {
 
   const emailValid = EMAIL_RE.test(email.trim());
   const error =
-    touched && !emailValid ? t("users.invite.emailError") : undefined;
+    touched && !emailValid ? t("portal.users.invite.emailError") : undefined;
 
   function close() {
     onClose();
@@ -56,24 +56,28 @@ export function InviteMemberModal({ open, onClose }: InviteMemberModalProps) {
       open={open}
       onClose={close}
       width="sm"
-      title={t("common.inviteMember")}
-      subtitle={t("users.invite.subtitle")}
+      title={t("portal.common.inviteMember")}
+      subtitle={t("portal.users.invite.subtitle")}
       footer={
         <div className="portal-users__modal-footer">
           <Button variant="ghost" size="sm" onClick={close}>
-            {t("users.invite.cancel")}
+            {t("portal.users.invite.cancel")}
           </Button>
           <Button size="sm" onClick={submit} disabled={touched && !emailValid}>
-            {t("users.invite.send")}
+            {t("portal.users.invite.send")}
           </Button>
         </div>
       }
     >
       <div className="portal-users__invite-body">
-        <FormField label={t("users.invite.email")} error={error} required>
+        <FormField
+          label={t("portal.users.invite.email")}
+          error={error}
+          required
+        >
           <Input
             type="email"
-            placeholder={t("users.invite.emailPlaceholder")}
+            placeholder={t("portal.users.invite.emailPlaceholder")}
             value={email}
             invalid={!!error}
             onChange={(e) => setEmail(e.target.value)}
@@ -81,8 +85,8 @@ export function InviteMemberModal({ open, onClose }: InviteMemberModalProps) {
           />
         </FormField>
         <FormField
-          label={t("users.invite.role")}
-          helperText={t("users.invite.roleHelper")}
+          label={t("portal.users.invite.role")}
+          helperText={t("portal.users.invite.roleHelper")}
         >
           <Select
             options={ROLE_SELECT_OPTIONS}

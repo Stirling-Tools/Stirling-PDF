@@ -19,20 +19,21 @@ interface Props {
 }
 
 function relativeTime(iso: string | null, t: TFunction): string {
-  if (!iso) return t("accountLink.instances.time.never", "never");
+  if (!iso) return t("portal.accountLink.instances.time.never", "never");
   const diffMs = Date.now() - new Date(iso).getTime();
   const mins = Math.round(diffMs / 60_000);
-  if (mins < 1) return t("accountLink.instances.time.justNow", "just now");
+  if (mins < 1)
+    return t("portal.accountLink.instances.time.justNow", "just now");
   if (mins < 60)
-    return t("accountLink.instances.time.minutesAgo", "{{count}}m ago", {
+    return t("portal.accountLink.instances.time.minutesAgo", "{{count}}m ago", {
       count: mins,
     });
   const hrs = Math.round(mins / 60);
   if (hrs < 24)
-    return t("accountLink.instances.time.hoursAgo", "{{count}}h ago", {
+    return t("portal.accountLink.instances.time.hoursAgo", "{{count}}h ago", {
       count: hrs,
     });
-  return t("accountLink.instances.time.daysAgo", "{{count}}d ago", {
+  return t("portal.accountLink.instances.time.daysAgo", "{{count}}d ago", {
     count: Math.round(hrs / 24),
   });
 }
@@ -47,11 +48,12 @@ export function LinkedInstancesTable({
   const cols: TableColumn<LinkedInstanceRow>[] = [
     {
       key: "name",
-      header: t("accountLink.instances.columns.instance", "Instance"),
+      header: t("portal.accountLink.instances.columns.instance", "Instance"),
       render: (i) => (
         <div className="portal-link__cell-stack">
           <span className="portal-link__cell-strong">
-            {i.name ?? t("accountLink.instances.unnamed", "Unnamed instance")}
+            {i.name ??
+              t("portal.accountLink.instances.unnamed", "Unnamed instance")}
           </span>
           <code className="portal-link__device-id">{i.deviceId}</code>
         </div>
@@ -59,21 +61,21 @@ export function LinkedInstancesTable({
     },
     {
       key: "status",
-      header: t("accountLink.instances.columns.status", "Status"),
+      header: t("portal.accountLink.instances.columns.status", "Status"),
       render: (i) =>
         i.revoked ? (
           <StatusBadge tone="danger" size="sm">
-            {t("accountLink.instances.revoked", "Revoked")}
+            {t("portal.accountLink.instances.revoked", "Revoked")}
           </StatusBadge>
         ) : (
           <StatusBadge tone="success" size="sm" pulse>
-            {t("accountLink.instances.active", "Active")}
+            {t("portal.accountLink.instances.active", "Active")}
           </StatusBadge>
         ),
     },
     {
       key: "lastSeen",
-      header: t("accountLink.instances.columns.lastSeen", "Last seen"),
+      header: t("portal.accountLink.instances.columns.lastSeen", "Last seen"),
       render: (i) => (
         <span className="portal-link__muted">
           {relativeTime(i.lastSeenAt, t)}
@@ -82,7 +84,7 @@ export function LinkedInstancesTable({
     },
     {
       key: "created",
-      header: t("accountLink.instances.columns.linked", "Linked"),
+      header: t("portal.accountLink.instances.columns.linked", "Linked"),
       render: (i) => (
         <span className="portal-link__muted">
           {relativeTime(i.createdAt, t)}
@@ -102,7 +104,7 @@ export function LinkedInstancesTable({
             loading={revokingId === i.instanceId}
             onClick={() => onRevoke(i)}
           >
-            {t("accountLink.instances.revoke", "Revoke")}
+            {t("portal.accountLink.instances.revoke", "Revoke")}
           </Button>
         ),
     },
@@ -113,9 +115,12 @@ export function LinkedInstancesTable({
       {instances.length === 0 ? (
         <EmptyState
           size="compact"
-          title={t("accountLink.instances.empty.title", "No linked instances")}
+          title={t(
+            "portal.accountLink.instances.empty.title",
+            "No linked instances",
+          )}
           description={t(
-            "accountLink.instances.empty.description",
+            "portal.accountLink.instances.empty.description",
             "Link this org's account, then register your self-hosted instances to see them here.",
           )}
         />

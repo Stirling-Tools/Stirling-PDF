@@ -26,15 +26,15 @@ export function ReviewQueueTable({
     () => [
       {
         key: "name",
-        header: t("documents.table.columns.name"),
+        header: t("portal.documents.table.columns.name"),
         render: (d) => (
           <div className="portal-documents__name-cell">
             <span className="portal-documents__name">{d.name}</span>
             {d.sensitive && (
               <span
                 className="portal-documents__lock"
-                title={t("documents.table.sensitiveTitle")}
-                aria-label={t("documents.table.sensitiveLabel")}
+                title={t("portal.documents.table.sensitiveTitle")}
+                aria-label={t("portal.documents.table.sensitiveLabel")}
               >
                 🔒
               </span>
@@ -44,12 +44,12 @@ export function ReviewQueueTable({
       },
       {
         key: "type",
-        header: t("documents.table.columns.type"),
+        header: t("portal.documents.table.columns.type"),
         render: (d) => d.type,
       },
       {
         key: "status",
-        header: t("documents.table.columns.status"),
+        header: t("portal.documents.table.columns.status"),
         render: (d) => (
           <StatusBadge tone={DOCUMENT_STATUS_TONE[d.status]} size="sm">
             {DOCUMENT_STATUS_LABEL[d.status]}
@@ -58,14 +58,14 @@ export function ReviewQueueTable({
       },
       {
         key: "source",
-        header: t("documents.table.columns.source"),
+        header: t("portal.documents.table.columns.source"),
         render: (d) => (
           <span className="portal-documents__muted">{d.source}</span>
         ),
       },
       {
         key: "confidence",
-        header: t("documents.table.columns.confidence"),
+        header: t("portal.documents.table.columns.confidence"),
         width: "9rem",
         render: (d) => (
           <div className="portal-documents__confidence">
@@ -82,7 +82,7 @@ export function ReviewQueueTable({
       },
       {
         key: "fields",
-        header: t("documents.table.columns.fields"),
+        header: t("portal.documents.table.columns.fields"),
         align: "right",
         render: (d) => (
           <span className="portal-documents__mono">{d.fieldsExtracted}</span>
@@ -90,7 +90,7 @@ export function ReviewQueueTable({
       },
       {
         key: "time",
-        header: t("documents.table.columns.time"),
+        header: t("portal.documents.table.columns.time"),
         align: "right",
         render: (d) => (
           <span className="portal-documents__muted">{d.time}</span>
@@ -107,7 +107,7 @@ export function ReviewQueueTable({
       rows={documents}
       rowKey={(d) => d.id}
       onRowClick={onRowClick}
-      empty={t("documents.table.empty")}
+      empty={t("portal.documents.table.empty")}
     />
   );
 }

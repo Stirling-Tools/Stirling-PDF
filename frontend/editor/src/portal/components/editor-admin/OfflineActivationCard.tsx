@@ -34,13 +34,13 @@ export function OfflineActivationCard({ available, onUpgrade }: Props) {
       <div className="portal-editor__panel-head">
         <div>
           <h3 className="portal-editor__panel-title">
-            {t("editorAdmin.offlineActivation.title")}
+            {t("portal.editorAdmin.offlineActivation.title")}
             <span className="portal-editor__enterprise-tag">
-              {t("editorAdmin.offlineActivation.enterpriseTag")}
+              {t("portal.editorAdmin.offlineActivation.enterpriseTag")}
             </span>
           </h3>
           <p className="portal-editor__panel-sub">
-            {t("editorAdmin.offlineActivation.subtitle")}
+            {t("portal.editorAdmin.offlineActivation.subtitle")}
           </p>
         </div>
       </div>
@@ -48,7 +48,7 @@ export function OfflineActivationCard({ available, onUpgrade }: Props) {
       {!available ? (
         <div className="portal-editor__lock">
           <p className="portal-editor__lock-copy">
-            {t("editorAdmin.offlineActivation.lockCopy")}
+            {t("portal.editorAdmin.offlineActivation.lockCopy")}
           </p>
           <Button
             variant="outline"
@@ -56,7 +56,7 @@ export function OfflineActivationCard({ available, onUpgrade }: Props) {
             size="sm"
             onClick={onUpgrade}
           >
-            {t("editorAdmin.offlineActivation.talkToSales")}
+            {t("portal.editorAdmin.offlineActivation.talkToSales")}
           </Button>
         </div>
       ) : (
@@ -64,9 +64,11 @@ export function OfflineActivationCard({ available, onUpgrade }: Props) {
           {generated && (
             <Banner
               tone="success"
-              title={t("editorAdmin.offlineActivation.readyBanner.title")}
+              title={t(
+                "portal.editorAdmin.offlineActivation.readyBanner.title",
+              )}
               description={t(
-                "editorAdmin.offlineActivation.readyBanner.description",
+                "portal.editorAdmin.offlineActivation.readyBanner.description",
                 { file: "activation-acme-3.2.1.stirlingpkg" },
               )}
             />
@@ -78,7 +80,7 @@ export function OfflineActivationCard({ available, onUpgrade }: Props) {
               loading={generating}
               onClick={generate}
             >
-              {t("editorAdmin.offlineActivation.generateButton")}
+              {t("portal.editorAdmin.offlineActivation.generateButton")}
             </Button>
           </div>
         </>

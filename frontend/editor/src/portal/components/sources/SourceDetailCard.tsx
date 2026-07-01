@@ -41,9 +41,9 @@ export function SourceDetailCard({
         <div>
           <h2 className="portal-sources__expanded-title">{source.name}</h2>
           <span className="portal-sources__expanded-sub">
-            {t("sources.detail.subtitle", {
+            {t("portal.sources.detail.subtitle", {
               type: t(meta.labelKey),
-              status: t(`sources.status.${source.status}`),
+              status: t(`portal.sources.status.${source.status}`),
             })}
           </span>
         </div>
@@ -51,7 +51,7 @@ export function SourceDetailCard({
           type="button"
           className="portal-sources__expanded-close"
           onClick={onClose}
-          aria-label={t("sources.detail.closeAriaLabel")}
+          aria-label={t("portal.sources.detail.closeAriaLabel")}
         >
           ×
         </button>
@@ -65,14 +65,16 @@ export function SourceDetailCard({
           disabled={busy}
           onClick={() => onEdit(source)}
         >
-          {t("sources.detail.edit")}
+          {t("portal.sources.detail.edit")}
         </Button>
         <Button
           variant="outline"
           disabled={busy}
           onClick={() => onTogglePause(source)}
         >
-          {paused ? t("sources.detail.resume") : t("sources.detail.pause")}
+          {paused
+            ? t("portal.sources.detail.resume")
+            : t("portal.sources.detail.pause")}
         </Button>
         <Button
           accent="red"
@@ -80,7 +82,7 @@ export function SourceDetailCard({
           disabled={busy}
           onClick={() => onDelete(source)}
         >
-          {t("sources.detail.delete")}
+          {t("portal.sources.detail.delete")}
         </Button>
       </div>
     </section>

@@ -25,8 +25,10 @@ describe("ErrorBoundary", () => {
         <Boom />
       </ErrorBoundary>,
     );
-    expect(screen.getByText("errorBoundary.title")).toBeInTheDocument();
-    expect(screen.getByText("errorBoundary.description")).toBeInTheDocument();
+    expect(screen.getByText("portal.errorBoundary.title")).toBeInTheDocument();
+    expect(
+      screen.getByText("portal.errorBoundary.description"),
+    ).toBeInTheDocument();
     spy.mockRestore();
   });
 
@@ -51,14 +53,16 @@ describe("ErrorBoundary", () => {
     );
 
     // Fallback is shown.
-    expect(screen.getByText("errorBoundary.title")).toBeInTheDocument();
+    expect(screen.getByText("portal.errorBoundary.title")).toBeInTheDocument();
 
     // Stop throwing, then click retry to clear the boundary's error state.
     shouldThrow = false;
-    fireEvent.click(screen.getByText("errorBoundary.retry"));
+    fireEvent.click(screen.getByText("portal.errorBoundary.retry"));
 
     expect(screen.getByText("recovered content")).toBeInTheDocument();
-    expect(screen.queryByText("errorBoundary.title")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("portal.errorBoundary.title"),
+    ).not.toBeInTheDocument();
     spy.mockRestore();
   });
 });

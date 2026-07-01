@@ -51,11 +51,15 @@ export function Procurement() {
     <div className="portal-proc">
       <header className="portal-proc__header">
         <div>
-          <h1 className="portal-proc__title">{t("procurement.title")}</h1>
-          <p className="portal-proc__subtitle">{t("procurement.subtitle")}</p>
+          <h1 className="portal-proc__title">
+            {t("portal.procurement.title")}
+          </h1>
+          <p className="portal-proc__subtitle">
+            {t("portal.procurement.subtitle")}
+          </p>
         </div>
         <StatusBadge tone="purple" size="md">
-          {t("procurement.enterpriseBadge")}
+          {t("portal.procurement.enterpriseBadge")}
         </StatusBadge>
       </header>
 

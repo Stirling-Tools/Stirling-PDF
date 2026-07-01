@@ -71,7 +71,7 @@ export function PipelineDetailCard({
       const runIds = await triggerPipeline(pipeline.id);
       if (runIds.length === 0) {
         if (mounted.current)
-          setRunResult({ tone: "info", text: t("pipelines.run.empty") });
+          setRunResult({ tone: "info", text: t("portal.pipelines.run.empty") });
         return;
       }
       const finals = await Promise.all(runIds.map((id) => awaitRun(id)));
@@ -80,16 +80,16 @@ export function PipelineDetailCard({
       if (failed) {
         setRunResult({
           tone: "danger",
-          text: t("pipelines.run.failed", { error: failed.error ?? "" }),
+          text: t("portal.pipelines.run.failed", { error: failed.error ?? "" }),
         });
       } else if (finals.every((r) => r?.status === "COMPLETED")) {
         setRunResult({
           tone: "success",
-          text: t("pipelines.run.completed", { count: finals.length }),
+          text: t("portal.pipelines.run.completed", { count: finals.length }),
         });
       } else {
         // Still running when we stopped polling, or cancelled.
-        setRunResult({ tone: "info", text: t("pipelines.run.running") });
+        setRunResult({ tone: "info", text: t("portal.pipelines.run.running") });
       }
     } catch (e) {
       if (mounted.current)
@@ -108,11 +108,11 @@ export function PipelineDetailCard({
         <div>
           <h2 className="portal-pipelines__expanded-title">{pipeline.name}</h2>
           <span className="portal-pipelines__expanded-sub">
-            {t("pipelines.detail.subtitle", {
-              trigger: t(`pipelines.trigger.${pipeline.trigger}`, {
+            {t("portal.pipelines.detail.subtitle", {
+              trigger: t(`portal.pipelines.trigger.${pipeline.trigger}`, {
                 defaultValue: pipeline.trigger,
               }),
-              status: t(`pipelines.status.${pipeline.status}`),
+              status: t(`portal.pipelines.status.${pipeline.status}`),
             })}
           </span>
         </div>
@@ -120,7 +120,7 @@ export function PipelineDetailCard({
           type="button"
           className="portal-pipelines__expanded-close"
           onClick={onClose}
-          aria-label={t("pipelines.detail.closeAriaLabel")}
+          aria-label={t("portal.pipelines.detail.closeAriaLabel")}
         >
           ×
         </button>
@@ -129,11 +129,11 @@ export function PipelineDetailCard({
       <div className="portal-pipelines__detail">
         <div className="portal-pipelines__detail-section">
           <span className="portal-pipelines__detail-heading">
-            {t("pipelines.detail.steps")}
+            {t("portal.pipelines.detail.steps")}
           </span>
           {pipeline.steps.length === 0 ? (
             <p className="portal-pipelines__muted">
-              {t("pipelines.detail.noSteps")}
+              {t("portal.pipelines.detail.noSteps")}
             </p>
           ) : (
             <div className="portal-pipelines__chips">
@@ -148,11 +148,11 @@ export function PipelineDetailCard({
 
         <div className="portal-pipelines__detail-section">
           <span className="portal-pipelines__detail-heading">
-            {t("pipelines.detail.sources")}
+            {t("portal.pipelines.detail.sources")}
           </span>
           {pipeline.sources.length === 0 ? (
             <p className="portal-pipelines__muted">
-              {t("pipelines.detail.noSources")}
+              {t("portal.pipelines.detail.noSources")}
             </p>
           ) : (
             <div className="portal-pipelines__chips">
@@ -167,10 +167,10 @@ export function PipelineDetailCard({
 
         <div className="portal-pipelines__detail-section">
           <span className="portal-pipelines__detail-heading">
-            {t("pipelines.detail.output")}
+            {t("portal.pipelines.detail.output")}
           </span>
           <Chip tone="purple" size="sm">
-            {t(`pipelines.output.${pipeline.output}`, {
+            {t(`portal.pipelines.output.${pipeline.output}`, {
               defaultValue: pipeline.output,
             })}
           </Chip>
@@ -183,21 +183,23 @@ export function PipelineDetailCard({
 
       <div className="portal-pipelines__detail-actions">
         <Button loading={running} disabled={busy} onClick={handleRun}>
-          {t("pipelines.detail.run")}
+          {t("portal.pipelines.detail.run")}
         </Button>
         <Button
           variant="outline"
           disabled={busy || running}
           onClick={() => onEdit(pipeline)}
         >
-          {t("pipelines.detail.edit")}
+          {t("portal.pipelines.detail.edit")}
         </Button>
         <Button
           variant="outline"
           disabled={busy || running}
           onClick={() => onTogglePause(pipeline)}
         >
-          {paused ? t("pipelines.detail.resume") : t("pipelines.detail.pause")}
+          {paused
+            ? t("portal.pipelines.detail.resume")
+            : t("portal.pipelines.detail.pause")}
         </Button>
         <Button
           accent="red"
@@ -205,7 +207,7 @@ export function PipelineDetailCard({
           disabled={busy || running}
           onClick={() => onDelete(pipeline)}
         >
-          {t("pipelines.detail.delete")}
+          {t("portal.pipelines.detail.delete")}
         </Button>
       </div>
     </section>

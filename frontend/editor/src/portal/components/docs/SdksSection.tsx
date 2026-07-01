@@ -7,8 +7,11 @@ import { DocsSection } from "@portal/components/docs/DocsSection";
 const STATUS_BADGE: Partial<
   Record<SdkStatus, { labelKey: string; tone: "info" | "warning" }>
 > = {
-  beta: { labelKey: "docs.sdks.status.beta", tone: "info" },
-  deprecated: { labelKey: "docs.sdks.status.deprecated", tone: "warning" },
+  beta: { labelKey: "portal.docs.sdks.status.beta", tone: "info" },
+  deprecated: {
+    labelKey: "portal.docs.sdks.status.deprecated",
+    tone: "warning",
+  },
 };
 
 export function SdksSection({ sdks }: { sdks: Sdk[] }) {
@@ -16,9 +19,9 @@ export function SdksSection({ sdks }: { sdks: Sdk[] }) {
   return (
     <DocsSection
       id="sdk-overview"
-      eyebrow={t("docs.sdks.eyebrow")}
-      title={t("docs.sdks.title")}
-      lead={t("docs.sdks.lead")}
+      eyebrow={t("portal.docs.sdks.eyebrow")}
+      title={t("portal.docs.sdks.title")}
+      lead={t("portal.docs.sdks.lead")}
     >
       <div className="portal-docs__sdk-grid">
         {sdks.map((sdk) => {

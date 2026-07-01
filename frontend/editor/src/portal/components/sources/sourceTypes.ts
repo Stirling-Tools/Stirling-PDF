@@ -16,12 +16,20 @@ export interface SourceTypeMeta {
 }
 
 const SOURCE_TYPE_META: Record<string, SourceTypeMeta> = {
-  folder: { labelKey: "sources.types.folder.label", icon: "⛁", tone: "blue" },
-  editor: { labelKey: "sources.types.editor.label", icon: "✏", tone: "green" },
+  folder: {
+    labelKey: "portal.sources.types.folder.label",
+    icon: "⛁",
+    tone: "blue",
+  },
+  editor: {
+    labelKey: "portal.sources.types.editor.label",
+    icon: "✏",
+    tone: "green",
+  },
 };
 
 const UNKNOWN_TYPE_META: SourceTypeMeta = {
-  labelKey: "sources.types.unknown.label",
+  labelKey: "portal.sources.types.unknown.label",
   icon: "◇",
   tone: "neutral",
 };
@@ -53,30 +61,33 @@ export interface CreatableSourceType {
 export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
   {
     type: "folder",
-    labelKey: "sources.types.folder.label",
-    descriptionKey: "sources.types.folder.description",
+    labelKey: "portal.sources.types.folder.label",
+    descriptionKey: "portal.sources.types.folder.description",
     fields: [
       {
         key: "directory",
-        labelKey: "sources.types.folder.fields.directory.label",
+        labelKey: "portal.sources.types.folder.fields.directory.label",
         control: "text",
         required: true,
-        placeholderKey: "sources.types.folder.fields.directory.placeholder",
-        helperTextKey: "sources.types.folder.fields.directory.helperText",
+        placeholderKey:
+          "portal.sources.types.folder.fields.directory.placeholder",
+        helperTextKey:
+          "portal.sources.types.folder.fields.directory.helperText",
       },
       {
         key: "mode",
-        labelKey: "sources.types.folder.fields.mode.label",
+        labelKey: "portal.sources.types.folder.fields.mode.label",
         control: "select",
         defaultValue: "consume",
         options: [
           {
             value: "consume",
-            labelKey: "sources.types.folder.fields.mode.options.consume",
+            labelKey: "portal.sources.types.folder.fields.mode.options.consume",
           },
           {
             value: "snapshot",
-            labelKey: "sources.types.folder.fields.mode.options.snapshot",
+            labelKey:
+              "portal.sources.types.folder.fields.mode.options.snapshot",
           },
         ],
       },

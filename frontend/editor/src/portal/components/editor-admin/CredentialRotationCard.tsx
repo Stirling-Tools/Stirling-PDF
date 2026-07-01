@@ -33,21 +33,21 @@ export function CredentialRotationCard({ serviceToken }: Props) {
       <div className="portal-editor__panel-head">
         <div>
           <h3 className="portal-editor__panel-title">
-            {t("editorAdmin.serviceToken.title")}
+            {t("portal.editorAdmin.serviceToken.title")}
           </h3>
           <p className="portal-editor__panel-sub">
-            {t("editorAdmin.serviceToken.subtitle")}
+            {t("portal.editorAdmin.serviceToken.subtitle")}
           </p>
         </div>
       </div>
 
       <div className="portal-editor__token-row">
         <StatTile
-          label={t("editorAdmin.serviceToken.currentToken")}
+          label={t("portal.editorAdmin.serviceToken.currentToken")}
           value={serviceToken.masked}
         />
         <StatTile
-          label={t("editorAdmin.serviceToken.lastRotated")}
+          label={t("portal.editorAdmin.serviceToken.lastRotated")}
           value={serviceToken.lastRotated}
         />
       </div>
@@ -55,8 +55,10 @@ export function CredentialRotationCard({ serviceToken }: Props) {
       {rotated && (
         <Banner
           tone="warning"
-          title={t("editorAdmin.serviceToken.rotatedBanner.title")}
-          description={t("editorAdmin.serviceToken.rotatedBanner.description")}
+          title={t("portal.editorAdmin.serviceToken.rotatedBanner.title")}
+          description={t(
+            "portal.editorAdmin.serviceToken.rotatedBanner.description",
+          )}
         />
       )}
 
@@ -67,7 +69,7 @@ export function CredentialRotationCard({ serviceToken }: Props) {
           loading={rotating}
           onClick={rotate}
         >
-          {t("editorAdmin.serviceToken.rotateButton")}
+          {t("portal.editorAdmin.serviceToken.rotateButton")}
         </Button>
       </div>
     </Card>

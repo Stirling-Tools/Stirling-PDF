@@ -32,11 +32,11 @@ export function SourceDetailPanel({
 
       <div className="portal-sources__detail-section">
         <span className="portal-sources__detail-heading">
-          {t("sources.detail.usedBy")}
+          {t("portal.sources.detail.usedBy")}
         </span>
         {source.referencingPolicies.length === 0 ? (
           <p className="portal-sources__muted">
-            {t("sources.detail.notReferenced")}
+            {t("portal.sources.detail.notReferenced")}
           </p>
         ) : (
           <div className="portal-sources__chips">
@@ -51,26 +51,26 @@ export function SourceDetailPanel({
 
       <div className="portal-sources__detail-section">
         <span className="portal-sources__detail-heading">
-          {t("sources.detail.documents")}
+          {t("portal.sources.detail.documents")}
         </span>
         <div className="portal-sources__stat-grid">
           <StatTile
-            label={t("sources.detail.docsTotal")}
+            label={t("portal.sources.detail.docsTotal")}
             value={source.docsTotal.toLocaleString()}
           />
           <StatTile
-            label={t("sources.detail.docs24h")}
+            label={t("portal.sources.detail.docs24h")}
             value={source.docs24h.toLocaleString()}
           />
           <StatTile
-            label={t("sources.detail.docs30d")}
+            label={t("portal.sources.detail.docs30d")}
             value={source.docs30d.toLocaleString()}
           />
         </div>
         {docSeries.length > 0 && (
           <Sparkline
             data={docSeries}
-            ariaLabel={t("sources.detail.docsTrend")}
+            ariaLabel={t("portal.sources.detail.docsTrend")}
           />
         )}
       </div>

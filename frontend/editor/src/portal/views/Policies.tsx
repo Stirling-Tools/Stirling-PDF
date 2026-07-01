@@ -111,8 +111,8 @@ export function Policies() {
   return (
     <div className="portal-policies">
       <header className="portal-policies__head">
-        <h1 className="portal-policies__title">{t("policies.title")}</h1>
-        <p className="portal-policies__sub">{t("policies.subtitle")}</p>
+        <h1 className="portal-policies__title">{t("portal.policies.title")}</h1>
+        <p className="portal-policies__sub">{t("portal.policies.subtitle")}</p>
       </header>
 
       {pageError && <Banner tone="danger" description={pageError} />}
@@ -130,11 +130,11 @@ export function Policies() {
       {!isLoading && fetchError && (
         <Banner
           tone="warning"
-          title={t("policies.offline.title")}
-          description={t("policies.offline.description")}
+          title={t("portal.policies.offline.title")}
+          description={t("portal.policies.offline.description")}
           action={
             <Button variant="outline" size="sm" onClick={refetch}>
-              {t("policies.offline.retry")}
+              {t("portal.policies.offline.retry")}
             </Button>
           }
         />

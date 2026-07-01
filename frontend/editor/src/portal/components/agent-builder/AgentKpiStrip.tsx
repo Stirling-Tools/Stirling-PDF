@@ -16,10 +16,10 @@ export function AgentKpiStrip({ summary, loading }: AgentKpiStripProps) {
    * states; only values flow from the API.
    */
   const kpiLabels = [
-    t("agentBuilder.kpi.activeAgents"),
-    t("agentBuilder.kpi.avgPassRate"),
-    t("agentBuilder.kpi.scenarios"),
-    t("agentBuilder.kpi.latestPublished"),
+    t("portal.agentBuilder.kpi.activeAgents"),
+    t("portal.agentBuilder.kpi.avgPassRate"),
+    t("portal.agentBuilder.kpi.scenarios"),
+    t("portal.agentBuilder.kpi.latestPublished"),
   ] as const;
 
   const values: (string | number)[] = summary
@@ -33,10 +33,12 @@ export function AgentKpiStrip({ summary, loading }: AgentKpiStripProps) {
 
   const descriptions: (string | undefined)[] = summary
     ? [
-        t("agentBuilder.kpi.totalDescription", { count: summary.totalAgents }),
-        t("agentBuilder.kpi.acrossGoldenSets"),
-        t("agentBuilder.kpi.testCases"),
-        t("agentBuilder.kpi.fleetWide"),
+        t("portal.agentBuilder.kpi.totalDescription", {
+          count: summary.totalAgents,
+        }),
+        t("portal.agentBuilder.kpi.acrossGoldenSets"),
+        t("portal.agentBuilder.kpi.testCases"),
+        t("portal.agentBuilder.kpi.fleetWide"),
       ]
     : [];
 

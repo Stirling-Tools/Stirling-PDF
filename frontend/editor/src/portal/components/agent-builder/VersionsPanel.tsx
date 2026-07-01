@@ -56,7 +56,7 @@ export function VersionsPanel({ agent, historyUnlocked }: VersionsPanelProps) {
                   </StatusBadge>
                   {isCurrent && (
                     <StatusBadge tone="info" size="sm" showDot={false}>
-                      {t("agentBuilder.versions.current")}
+                      {t("portal.agentBuilder.versions.current")}
                     </StatusBadge>
                   )}
                 </div>
@@ -72,7 +72,7 @@ export function VersionsPanel({ agent, historyUnlocked }: VersionsPanelProps) {
                     variant="outline"
                     onClick={() => publish(v.version)}
                   >
-                    {t("agentBuilder.versions.publish")}
+                    {t("portal.agentBuilder.versions.publish")}
                   </Button>
                 )}
                 {v.status === "published" && !isCurrent && (
@@ -81,7 +81,7 @@ export function VersionsPanel({ agent, historyUnlocked }: VersionsPanelProps) {
                     variant="ghost"
                     onClick={() => rollback(v.version)}
                   >
-                    {t("agentBuilder.versions.rollBack")}
+                    {t("portal.agentBuilder.versions.rollBack")}
                   </Button>
                 )}
               </div>
@@ -92,7 +92,7 @@ export function VersionsPanel({ agent, historyUnlocked }: VersionsPanelProps) {
 
       {!historyUnlocked && publishedExists && (
         <p className="portal-agents__hint">
-          {t("agentBuilder.versions.historyGate")}
+          {t("portal.agentBuilder.versions.historyGate")}
         </p>
       )}
     </div>

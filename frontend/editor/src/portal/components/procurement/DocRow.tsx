@@ -53,12 +53,12 @@ export function DocRow({
           <span className="portal-proc__doc-name">{doc.name}</span>
           {doc.optional && (
             <Chip tone="neutral" size="sm">
-              {t("procurement.docs.optional")}
+              {t("portal.procurement.docs.optional")}
             </Chip>
           )}
           {doc.fee !== undefined && (
             <Chip tone="amber" size="sm">
-              {t("procurement.docs.paidAddon")}
+              {t("portal.procurement.docs.paidAddon")}
             </Chip>
           )}
         </div>
@@ -70,7 +70,7 @@ export function DocRow({
           size="sm"
         >
           {locked
-            ? t("procurement.docs.upcoming")
+            ? t("portal.procurement.docs.upcoming")
             : t(STATUS_LABEL_KEY[doc.status])}
         </StatusBadge>
         {actionable && (

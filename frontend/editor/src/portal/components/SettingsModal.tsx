@@ -118,56 +118,56 @@ export function SettingsModal({
   const navSections = useMemo<SettingsNavSection[]>(
     () => [
       {
-        title: t("settings.groups.account"),
+        title: t("portal.settings.groups.account"),
         items: [
           {
             key: "profile",
-            label: t("settings.sections.profile"),
+            label: t("portal.settings.sections.profile"),
             icon: <UsersIcon size={16} />,
           },
           {
             key: "appearance",
-            label: t("settings.sections.appearance"),
+            label: t("portal.settings.sections.appearance"),
             icon: <SunIcon size={16} />,
           },
           {
             key: "notifications",
-            label: t("settings.sections.notifications"),
+            label: t("portal.settings.sections.notifications"),
             icon: <BellIcon size={16} />,
           },
         ],
       },
       {
-        title: t("settings.groups.workspace"),
+        title: t("portal.settings.groups.workspace"),
         items: [
           {
             key: "general",
-            label: t("settings.sections.general"),
+            label: t("portal.settings.sections.general"),
             icon: <SettingsIcon size={16} />,
           },
         ],
       },
       {
-        title: t("settings.groups.admin"),
+        title: t("portal.settings.groups.admin"),
         items: [
           {
             key: "account-link",
-            label: t("settings.sections.account-link"),
+            label: t("portal.settings.sections.account-link"),
             icon: <LinkIcon size={16} />,
           },
           {
             key: "authentication",
-            label: t("settings.sections.authentication"),
+            label: t("portal.settings.sections.authentication"),
             icon: <PoliciesIcon size={16} />,
           },
           {
             key: "sessions",
-            label: t("settings.sections.sessions"),
+            label: t("portal.settings.sections.sessions"),
             icon: <InfrastructureIcon size={16} />,
           },
           {
             key: "early-access",
-            label: t("settings.sections.early-access"),
+            label: t("portal.settings.sections.early-access"),
             icon: <SparklesIcon size={16} />,
           },
         ],
@@ -231,7 +231,9 @@ export function SettingsModal({
       value: r.value,
       label:
         r.enterpriseOnly && tier !== "enterprise"
-          ? t("settings.workspace.regionEnterpriseSuffix", { region: r.label })
+          ? t("portal.settings.workspace.regionEnterpriseSuffix", {
+              region: r.label,
+            })
           : r.label,
       disabled: r.enterpriseOnly && tier !== "enterprise",
     }));
@@ -244,25 +246,25 @@ export function SettingsModal({
       open={open}
       onClose={onClose}
       width="xl"
-      ariaLabel={t("settings.ariaLabel")}
+      ariaLabel={t("portal.settings.ariaLabel")}
       className="portal-settings"
     >
       <SettingsShell
         sections={navSections}
         activeKey={section}
         onSelect={(k) => setSection(k as SettingsSection)}
-        title={t(`settings.sections.${section}`)}
+        title={t(`portal.settings.sections.${section}`)}
         onClose={onClose}
         footer={
           <>
             <span className="portal-settings__footer-note">
-              {t("settings.footerNote")}
+              {t("portal.settings.footerNote")}
             </span>
             <Button variant="ghost" onClick={onClose}>
-              {t("settings.cancel")}
+              {t("portal.settings.cancel")}
             </Button>
             <Button variant="gradient" onClick={onClose}>
-              {t("settings.saveChanges")}
+              {t("portal.settings.saveChanges")}
             </Button>
           </>
         }
@@ -384,13 +386,13 @@ function ProfilePanel({
       <div className="portal-settings__identity">
         <Avatar
           src={avatarUrl}
-          name={name || t("settings.profile.accountFallback")}
+          name={name || t("portal.settings.profile.accountFallback")}
           size="lg"
           tone="blue"
         />
         <div className="portal-settings__identity-meta">
           <div className="portal-settings__identity-name">
-            {name || t("settings.profile.accountFallback")}
+            {name || t("portal.settings.profile.accountFallback")}
             {role && (
               <StatusBadge tone="info" size="sm" showDot={false}>
                 {role}
@@ -400,27 +402,27 @@ function ProfilePanel({
           <span className="portal-settings__identity-email">{email}</span>
         </div>
         <Button variant="outline" size="sm" disabled>
-          {t("settings.profile.changePhoto")}
+          {t("portal.settings.profile.changePhoto")}
         </Button>
       </div>
 
-      <FormField label={t("settings.profile.fullName")}>
+      <FormField label={t("portal.settings.profile.fullName")}>
         <Input
           value={name}
           onChange={(e) => onName(e.target.value)}
-          placeholder={t("settings.profile.namePlaceholder")}
+          placeholder={t("portal.settings.profile.namePlaceholder")}
         />
       </FormField>
 
       <FormField
-        label={t("settings.profile.email")}
-        helperText={t("settings.profile.emailHelper")}
+        label={t("portal.settings.profile.email")}
+        helperText={t("portal.settings.profile.emailHelper")}
       >
         <Input
           type="email"
           value={email}
           onChange={(e) => onEmail(e.target.value)}
-          placeholder={t("settings.profile.emailPlaceholder")}
+          placeholder={t("portal.settings.profile.emailPlaceholder")}
         />
       </FormField>
     </div>
@@ -444,16 +446,16 @@ function AppearancePanel({
       <div className="portal-settings__group">
         <div className="portal-settings__group-head">
           <h3 className="portal-settings__group-title">
-            {t("settings.appearance.themeTitle")}
+            {t("portal.settings.appearance.themeTitle")}
           </h3>
           <p className="portal-settings__group-sub">
-            {t("settings.appearance.themeSub")}
+            {t("portal.settings.appearance.themeSub")}
           </p>
         </div>
         <div
           className="portal-settings__theme"
           role="radiogroup"
-          aria-label={t("settings.appearance.themeTitle")}
+          aria-label={t("portal.settings.appearance.themeTitle")}
         >
           {THEME_OPTIONS.map((opt) => (
             <button
@@ -475,8 +477,10 @@ function AppearancePanel({
                 <span />
               </span>
               <span className="portal-settings__theme-text">
-                <strong>{t(`settings.appearance.${opt.value}.label`)}</strong>
-                <span>{t(`settings.appearance.${opt.value}.hint`)}</span>
+                <strong>
+                  {t(`portal.settings.appearance.${opt.value}.label`)}
+                </strong>
+                <span>{t(`portal.settings.appearance.${opt.value}.hint`)}</span>
               </span>
             </button>
           ))}
@@ -507,10 +511,10 @@ function NotificationsPanel({
       <div className="portal-settings__group">
         <div className="portal-settings__group-head">
           <h3 className="portal-settings__group-title">
-            {t("settings.notifications.title")}
+            {t("portal.settings.notifications.title")}
           </h3>
           <p className="portal-settings__group-sub">
-            {t("settings.notifications.sub")}
+            {t("portal.settings.notifications.sub")}
           </p>
         </div>
 
@@ -537,8 +541,12 @@ function NotificationsPanel({
               return (
                 <div key={id} className="portal-settings__notif-row">
                   <div className="portal-settings__notif-text">
-                    <strong>{t(`settings.notifications.${id}.label`)}</strong>
-                    <span>{t(`settings.notifications.${id}.description`)}</span>
+                    <strong>
+                      {t(`portal.settings.notifications.${id}.label`)}
+                    </strong>
+                    <span>
+                      {t(`portal.settings.notifications.${id}.description`)}
+                    </span>
                   </div>
                   <ToggleSwitch
                     checked={notifications[id] ?? false}
@@ -590,17 +598,17 @@ function WorkspacePanel({
 
   return (
     <div className="portal-settings__section">
-      <FormField label={t("settings.workspace.nameLabel")}>
+      <FormField label={t("portal.settings.workspace.nameLabel")}>
         <Input
           value={workspaceName}
           onChange={(e) => onWorkspaceName(e.target.value)}
-          placeholder={t("settings.workspace.namePlaceholder")}
+          placeholder={t("portal.settings.workspace.namePlaceholder")}
         />
       </FormField>
 
       <FormField
-        label={t("settings.workspace.regionLabel")}
-        helperText={t("settings.workspace.regionHelper")}
+        label={t("portal.settings.workspace.regionLabel")}
+        helperText={t("portal.settings.workspace.regionHelper")}
       >
         <Select
           value={region}
@@ -612,7 +620,7 @@ function WorkspacePanel({
       <div className="portal-settings__plan">
         <div className="portal-settings__plan-row">
           <span className="portal-settings__plan-label">
-            {t("settings.workspace.plan")}
+            {t("portal.settings.workspace.plan")}
           </span>
           <StatusBadge tone="purple" size="sm">
             {planLabel ?? "—"}
@@ -621,10 +629,10 @@ function WorkspacePanel({
         {seats && (
           <div className="portal-settings__plan-row">
             <span className="portal-settings__plan-label">
-              {t("settings.workspace.seats")}
+              {t("portal.settings.workspace.seats")}
             </span>
             <span className="portal-settings__plan-value">
-              {t("settings.workspace.seatsUsed", {
+              {t("portal.settings.workspace.seatsUsed", {
                 used: seats.used,
                 total: seats.total,
               })}
@@ -632,7 +640,7 @@ function WorkspacePanel({
           </div>
         )}
         <Button variant="outline" size="sm" disabled>
-          {t("settings.workspace.manageBilling")}
+          {t("portal.settings.workspace.manageBilling")}
         </Button>
       </div>
     </div>
@@ -674,18 +682,18 @@ function AuthenticationPanel({
       <div className="portal-settings__group">
         <div className="portal-settings__group-head">
           <h3 className="portal-settings__group-title">
-            {t("settings.authentication.title")}
+            {t("portal.settings.authentication.title")}
           </h3>
           <p className="portal-settings__group-sub">
-            {t("settings.authentication.sub")}
+            {t("portal.settings.authentication.sub")}
           </p>
         </div>
 
         <div className="portal-settings__notifs">
           <div className="portal-settings__notif-row">
             <div className="portal-settings__notif-text">
-              <strong>{t("settings.authentication.mfa.label")}</strong>
-              <span>{t("settings.authentication.mfa.description")}</span>
+              <strong>{t("portal.settings.authentication.mfa.label")}</strong>
+              <span>{t("portal.settings.authentication.mfa.description")}</span>
             </div>
             <ToggleSwitch
               checked={security.mfaEnforced}
@@ -696,14 +704,14 @@ function AuthenticationPanel({
           <div className="portal-settings__notif-row">
             <div className="portal-settings__notif-text">
               <span className="portal-settings__row-label">
-                <strong>{t("settings.authentication.sso.label")}</strong>
+                <strong>{t("portal.settings.authentication.sso.label")}</strong>
                 {!isEnterprise && (
                   <StatusBadge tone="info" size="sm" showDot={false}>
-                    {t("settings.enterpriseBadge")}
+                    {t("portal.settings.enterpriseBadge")}
                   </StatusBadge>
                 )}
               </span>
-              <span>{t("settings.authentication.sso.description")}</span>
+              <span>{t("portal.settings.authentication.sso.description")}</span>
             </div>
             <ToggleSwitch
               checked={isEnterprise && security.ssoEnabled}
@@ -715,14 +723,18 @@ function AuthenticationPanel({
           <div className="portal-settings__notif-row">
             <div className="portal-settings__notif-text">
               <span className="portal-settings__row-label">
-                <strong>{t("settings.authentication.scim.label")}</strong>
+                <strong>
+                  {t("portal.settings.authentication.scim.label")}
+                </strong>
                 {!isEnterprise && (
                   <StatusBadge tone="info" size="sm" showDot={false}>
-                    {t("settings.enterpriseBadge")}
+                    {t("portal.settings.enterpriseBadge")}
                   </StatusBadge>
                 )}
               </span>
-              <span>{t("settings.authentication.scim.description")}</span>
+              <span>
+                {t("portal.settings.authentication.scim.description")}
+              </span>
             </div>
             <ToggleSwitch
               checked={isEnterprise && security.scimEnabled}
@@ -733,8 +745,8 @@ function AuthenticationPanel({
         </div>
 
         <FormField
-          label={t("settings.authentication.sessionTimeout")}
-          helperText={t("settings.authentication.sessionTimeoutHelper")}
+          label={t("portal.settings.authentication.sessionTimeout")}
+          helperText={t("portal.settings.authentication.sessionTimeoutHelper")}
         >
           <Select
             value={String(security.sessionTimeoutMins)}
@@ -743,7 +755,7 @@ function AuthenticationPanel({
             }
             options={SESSION_TIMEOUT_VALUES.map((value) => ({
               value,
-              label: t(`settings.authentication.timeout.${value}`),
+              label: t(`portal.settings.authentication.timeout.${value}`),
             }))}
           />
         </FormField>
@@ -778,10 +790,10 @@ function SessionsPanel({
       <div className="portal-settings__group">
         <div className="portal-settings__group-head">
           <h3 className="portal-settings__group-title">
-            {t("settings.sessions.title")}
+            {t("portal.settings.sessions.title")}
           </h3>
           <p className="portal-settings__group-sub">
-            {t("settings.sessions.sub")}
+            {t("portal.settings.sessions.sub")}
           </p>
         </div>
         <div className="portal-settings__notifs">
@@ -795,12 +807,12 @@ function SessionsPanel({
               </div>
               {s.current ? (
                 <StatusBadge tone="success" size="sm">
-                  {t("settings.sessions.thisDevice")}
+                  {t("portal.settings.sessions.thisDevice")}
                 </StatusBadge>
               ) : (
                 // TODO(backend): DELETE /v1/settings/sessions/{id}
                 <Button variant="ghost" size="sm">
-                  {t("settings.sessions.revoke")}
+                  {t("portal.settings.sessions.revoke")}
                 </Button>
               )}
             </div>
@@ -845,10 +857,10 @@ function EarlyAccessPanel({
       <div className="portal-settings__group">
         <div className="portal-settings__group-head">
           <h3 className="portal-settings__group-title">
-            {t("settings.earlyAccess.title")}
+            {t("portal.settings.earlyAccess.title")}
           </h3>
           <p className="portal-settings__group-sub">
-            {t("settings.earlyAccess.sub")}
+            {t("portal.settings.earlyAccess.sub")}
           </p>
         </div>
         <div className="portal-settings__notifs">
@@ -861,7 +873,7 @@ function EarlyAccessPanel({
                     <strong>{f.label}</strong>
                     {locked && (
                       <StatusBadge tone="info" size="sm" showDot={false}>
-                        {t("settings.enterpriseBadge")}
+                        {t("portal.settings.enterpriseBadge")}
                       </StatusBadge>
                     )}
                   </span>

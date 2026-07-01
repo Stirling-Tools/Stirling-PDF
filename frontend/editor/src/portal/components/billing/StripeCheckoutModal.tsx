@@ -91,7 +91,7 @@ export function StripeCheckoutModal({
         if (!session.clientSecret) {
           setError(
             t(
-              "billing.checkout.noClientSecret",
+              "portal.billing.checkout.noClientSecret",
               "Edge function returned no client_secret.",
             ),
           );
@@ -120,9 +120,9 @@ export function StripeCheckoutModal({
       open={open}
       onClose={onClose}
       width="lg"
-      title={t("billing.checkout.title", "Turn on the Processor plan")}
+      title={t("portal.billing.checkout.title", "Turn on the Processor plan")}
       subtitle={t(
-        "billing.checkout.subtitle",
+        "portal.billing.checkout.subtitle",
         "Add a card to keep going past your free Editor-plan grant. Stripe handles the rest.",
       )}
     >
@@ -130,14 +130,14 @@ export function StripeCheckoutModal({
         <Banner
           tone="neutral"
           title={t(
-            "billing.checkout.notConfigured.title",
+            "portal.billing.checkout.notConfigured.title",
             "Stripe not configured",
           )}
         >
-          {t("billing.checkout.notConfigured.bodyBefore", "Set")}{" "}
+          {t("portal.billing.checkout.notConfigured.bodyBefore", "Set")}{" "}
           <code>VITE_STRIPE_PUBLISHABLE_KEY</code>{" "}
           {t(
-            "billing.checkout.notConfigured.bodyAfter",
+            "portal.billing.checkout.notConfigured.bodyAfter",
             "in the portal env to enable in-app checkout.",
           )}
         </Banner>
@@ -145,7 +145,10 @@ export function StripeCheckoutModal({
       {publishableKey && error && (
         <Banner
           tone="danger"
-          title={t("billing.checkout.error.title", "Couldn't start checkout")}
+          title={t(
+            "portal.billing.checkout.error.title",
+            "Couldn't start checkout",
+          )}
         >
           {error}
         </Banner>
