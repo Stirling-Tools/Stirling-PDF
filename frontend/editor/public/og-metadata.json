@@ -7,12 +7,12 @@
   "byTool": {
     "certSign": {
       "image": "/og_images/certSign.png",
-      "title": "Certificate Sign - Stirling PDF",
+      "title": "Sign PDF with a Certificate - Stirling PDF",
       "description": "Sign PDF documents using digital certificates"
     },
     "sign": {
       "image": "/og_images/sign.png",
-      "title": "Sign - Stirling PDF",
+      "title": "Sign PDF - Stirling PDF",
       "description": "Adds signature to PDF by drawing, text or image"
     },
     "sharedSign": {
@@ -22,122 +22,122 @@
     },
     "addText": {
       "image": "/og_images/add-text.png",
-      "title": "Add Text - Stirling PDF",
+      "title": "Add Text to PDF - Stirling PDF",
       "description": "Add custom text anywhere in your PDF"
     },
     "addPassword": {
       "image": "/og_images/add-password.png",
-      "title": "Add Password - Stirling PDF",
+      "title": "Password Protect PDF - Stirling PDF",
       "description": "Add password protection and restrictions to PDF files"
     },
     "removePassword": {
       "image": "/og_images/remove-password.png",
-      "title": "Remove Password - Stirling PDF",
+      "title": "Remove PDF Password - Stirling PDF",
       "description": "Remove password protection from PDF documents"
     },
     "removePages": {
       "image": "/og_images/remove.png",
-      "title": "Remove Pages - Stirling PDF",
+      "title": "Delete Pages from PDF - Stirling PDF",
       "description": "Remove specific pages from a PDF document"
     },
     "removeBlanks": {
       "image": "/og_images/remove-blank-pages.png",
-      "title": "Remove Blank Pages - Stirling PDF",
+      "title": "Remove Blank Pages from PDF - Stirling PDF",
       "description": "Remove blank pages from PDF documents"
     },
     "removeAnnotations": {
       "image": "/og_images/remove-annotations.png",
-      "title": "Remove Annotations - Stirling PDF",
+      "title": "Remove Annotations from PDF - Stirling PDF",
       "description": "Remove annotations and comments from PDF documents"
     },
     "removeImage": {
       "image": "/og_images/remove-image.png",
-      "title": "Remove Images - Stirling PDF",
+      "title": "Remove Images from PDF - Stirling PDF",
       "description": "Remove all images from a PDF document"
     },
     "changePermissions": {
       "image": "/og_images/change-permissions.png",
-      "title": "Change Permissions - Stirling PDF",
+      "title": "Change PDF Permissions - Stirling PDF",
       "description": "Change document restrictions and permissions"
     },
     "watermark": {
       "image": "/og_images/add-watermark.png",
-      "title": "Add Watermark - Stirling PDF",
+      "title": "Add Watermark to PDF - Stirling PDF",
       "description": "Add a custom watermark to your PDF document."
     },
     "sanitize": {
       "image": "/og_images/sanitize.png",
-      "title": "Sanitize - Stirling PDF",
+      "title": "Sanitize PDF - Stirling PDF",
       "description": "Remove potentially harmful elements from PDF files"
     },
     "split": {
       "image": "/og_images/split.png",
-      "title": "Split - Stirling PDF",
+      "title": "Split PDF - Stirling PDF",
       "description": "Split PDFs into multiple documents"
     },
     "merge": {
       "image": "/og_images/mergePdfs.png",
-      "title": "Merge - Stirling PDF",
+      "title": "Merge PDF - Stirling PDF",
       "description": "Merge multiple PDFs into a single document"
     },
     "convert": {
       "image": "/og_images/convert.png",
-      "title": "Convert - Stirling PDF",
+      "title": "PDF Converter - Stirling PDF",
       "description": "Convert files to and from PDF format"
     },
     "ocr": {
       "image": "/og_images/ocr.png",
-      "title": "OCR - Stirling PDF",
+      "title": "OCR PDF - Stirling PDF",
       "description": "Extract text from scanned PDFs using Optical Character Recognition"
     },
     "addImage": {
       "image": "/og_images/add-image.png",
-      "title": "Add Image - Stirling PDF",
+      "title": "Add Image to PDF - Stirling PDF",
       "description": "Add images anywhere in your PDF"
     },
     "rotate": {
       "image": "/og_images/rotate.png",
-      "title": "Rotate - Stirling PDF",
+      "title": "Rotate PDF - Stirling PDF",
       "description": "Easily rotate your PDFs."
     },
     "annotate": {
       "image": "/og_images/annotate.png",
-      "title": "Annotate - Stirling PDF",
+      "title": "Annotate PDF - Stirling PDF",
       "description": "Highlight, draw, add notes, and shapes directly in the viewer"
     },
     "scannerImageSplit": {
       "image": "/og_images/detect-split-scanned-photos.png",
-      "title": "Detect & Split Scanned Photos - Stirling PDF",
+      "title": "Split Scanned Photos - Stirling PDF",
       "description": "Detect and split scanned photos into separate pages"
     },
     "editTableOfContents": {
       "image": "/og_images/edit-table-of-contents.png",
-      "title": "Edit Table of Contents - Stirling PDF",
+      "title": "Edit PDF Bookmarks - Stirling PDF",
       "description": "Add or edit bookmarks and table of contents in PDF documents"
     },
     "scannerEffect": {
       "image": "/og_images/scanner-effect.png",
-      "title": "Scanner Effect - Stirling PDF",
+      "title": "Make a PDF Look Scanned - Stirling PDF",
       "description": "Create a PDF that looks like it was scanned"
     },
     "autoRename": {
       "image": "/og_images/auto-rename-pdf-file.png",
-      "title": "Auto Rename PDF File - Stirling PDF",
+      "title": "Auto Rename PDF Files - Stirling PDF",
       "description": "Automatically rename PDF files based on their content"
     },
     "pageLayout": {
       "image": "/og_images/multi-page-layout.png",
-      "title": "Multi-Page Layout - Stirling PDF",
+      "title": "PDF Multi-Page Layout - Stirling PDF",
       "description": "Merge multiple pages of a PDF document into a single page"
     },
     "scalePages": {
       "image": "/og_images/adjust-page-size-scale.png",
-      "title": "Adjust page size/scale - Stirling PDF",
+      "title": "Resize PDF Pages - Stirling PDF",
       "description": "Change the size/scale of a page and/or its contents."
     },
     "adjustContrast": {
       "image": "/og_images/adjust-colors-contrast.png",
-      "title": "Adjust Colors/Contrast - Stirling PDF",
+      "title": "Adjust PDF Colors and Contrast - Stirling PDF",
       "description": "Adjust colors and contrast of PDF documents"
     },
     "crop": {
@@ -147,37 +147,37 @@
     },
     "pdfToSinglePage": {
       "image": "/og_images/single-large-page.png",
-      "title": "PDF to Single Large Page - Stirling PDF",
+      "title": "Combine PDF into a Single Page - Stirling PDF",
       "description": "Merges all PDF pages into one large single page"
     },
     "repair": {
       "image": "/og_images/repair.png",
-      "title": "Repair - Stirling PDF",
+      "title": "Repair PDF - Stirling PDF",
       "description": "Repair corrupted or damaged PDF files"
     },
     "compare": {
       "image": "/og_images/compare.png",
-      "title": "Compare - Stirling PDF",
+      "title": "Compare PDF Files - Stirling PDF",
       "description": "Compare two PDF documents and highlight differences"
     },
     "addPageNumbers": {
       "image": "/og_images/add-page-numbers.png",
-      "title": "Add Page Numbers - Stirling PDF",
+      "title": "Add Page Numbers to PDF - Stirling PDF",
       "description": "Add Page numbers throughout a document in a set location"
     },
     "redact": {
       "image": "/og_images/redact.png",
-      "title": "Redact - Stirling PDF",
+      "title": "Redact PDF - Stirling PDF",
       "description": "Permanently remove sensitive information from PDF documents"
     },
     "flatten": {
       "image": "/og_images/flatten.png",
-      "title": "Flatten - Stirling PDF",
+      "title": "Flatten PDF - Stirling PDF",
       "description": "Remove all interactive elements and forms from a PDF"
     },
     "removeCertSign": {
       "image": "/og_images/remove-certificate-sign.png",
-      "title": "Remove Certificate Sign - Stirling PDF",
+      "title": "Remove PDF Certificate Signature - Stirling PDF",
       "description": "Remove digital signature from PDF documents"
     },
     "unlockPDFForms": {
@@ -187,22 +187,22 @@
     },
     "compress": {
       "image": "/og_images/compress.png",
-      "title": "Compress - Stirling PDF",
+      "title": "Compress PDF - Stirling PDF",
       "description": "Compress PDFs to reduce their file size."
     },
     "extractPages": {
       "image": "/og_images/extract-pages.png",
-      "title": "Extract Pages - Stirling PDF",
+      "title": "Extract PDF Pages - Stirling PDF",
       "description": "Extract specific pages from a PDF document"
     },
     "reorganizePages": {
       "image": "/og_images/reorganize-pages.png",
-      "title": "Reorganize Pages - Stirling PDF",
+      "title": "Organize PDF Pages - Stirling PDF",
       "description": "Rearrange, duplicate, or delete PDF pages with visual drag-and-drop control."
     },
     "extractImages": {
       "image": "/og_images/extract-images.png",
-      "title": "Extract Images - Stirling PDF",
+      "title": "Extract Images from PDF - Stirling PDF",
       "description": "Extract images from PDF documents"
     },
     "addStamp": {
@@ -212,22 +212,22 @@
     },
     "addAttachments": {
       "image": "/og_images/add-attachments.png",
-      "title": "Add Attachments - Stirling PDF",
+      "title": "Add Attachments to PDF - Stirling PDF",
       "description": "Add or remove embedded files (attachments) to/from a PDF"
     },
     "changeMetadata": {
       "image": "/og_images/change-metadata.png",
-      "title": "Change Metadata - Stirling PDF",
+      "title": "Edit PDF Metadata - Stirling PDF",
       "description": "Change/Remove/Add metadata from a PDF document"
     },
     "overlayPdfs": {
       "image": "/og_images/overlay-pdfs.png",
-      "title": "Overlay Pdfs - Stirling PDF",
+      "title": "Overlay PDFs - Stirling PDF",
       "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
     },
     "getPdfInfo": {
       "image": "/og_images/get-all-info-on-pdf.png",
-      "title": "Get ALL Info on PDF - Stirling PDF",
+      "title": "PDF Info and Metadata Viewer - Stirling PDF",
       "description": "Grabs any and all information possible on PDFs"
     },
     "validateSignature": {
@@ -242,42 +242,42 @@
     },
     "replaceColor": {
       "image": "/og_images/replace-and-invert-color.png",
-      "title": "Replace & Invert Color - Stirling PDF",
+      "title": "Replace and Invert PDF Colors - Stirling PDF",
       "description": "Replace or invert colors in PDF documents"
     },
     "showJS": {
       "image": "/og_images/show-javascript.png",
-      "title": "Show JavaScript - Stirling PDF",
+      "title": "Show JavaScript in PDF - Stirling PDF",
       "description": "Extract and display JavaScript code from PDF documents"
     },
     "bookletImposition": {
       "image": "/og_images/booklet-imposition.png",
-      "title": "Booklet Imposition - Stirling PDF",
+      "title": "Create a PDF Booklet - Stirling PDF",
       "description": "Create booklets with proper page ordering and multi-page layout for printing and binding"
     },
     "pdfTextEditor": {
       "image": "/og_images/pdf-text-editor.png",
-      "title": "PDF Text Editor - Stirling PDF",
+      "title": "Edit PDF Text - Stirling PDF",
       "description": "Review and edit text and images in PDFs with grouped text editing and PDF regeneration"
     },
     "formFill": {
       "image": "/og_images/form-fill.png",
-      "title": "Fill Form - Stirling PDF",
+      "title": "Fill PDF Forms - Stirling PDF",
       "description": "Fill PDF form fields interactively with a visual editor"
     },
     "multiTool": {
       "image": "/og_images/multi-tool.png",
-      "title": "Multi-Tool - Stirling PDF",
+      "title": "PDF Page Editor - Stirling PDF",
       "description": "Use multiple tools on a single PDF document"
     },
     "read": {
       "image": "/og_images/read.png",
-      "title": "Read - Stirling PDF",
+      "title": "PDF Viewer - Stirling PDF",
       "description": "View and annotate PDFs. Highlight text, draw, or insert comments for review and collaboration."
     },
     "automate": {
       "image": "/og_images/automate.png",
-      "title": "Automate - Stirling PDF",
+      "title": "PDF Workflow Automation - Stirling PDF",
       "description": "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."
     },
     "devApi": {
@@ -775,5 +775,303 @@
     "/settings/help": "/settings/help",
     "/settings/legal": "/settings/legal",
     "/settings/payg": "/settings/payg"
-  }
+  },
+  "navLinks": [
+    {
+      "path": "/add-attachments",
+      "label": "Add Attachments to PDF"
+    },
+    {
+      "path": "/add-image",
+      "label": "Add Image to PDF"
+    },
+    {
+      "path": "/add-page-numbers",
+      "label": "Add Page Numbers to PDF"
+    },
+    {
+      "path": "/add-stamp",
+      "label": "Add Stamp to PDF"
+    },
+    {
+      "path": "/add-text",
+      "label": "Add Text to PDF"
+    },
+    {
+      "path": "/watermark",
+      "label": "Add Watermark to PDF"
+    },
+    {
+      "path": "/adjust-contrast",
+      "label": "Adjust PDF Colors and Contrast"
+    },
+    {
+      "path": "/annotations",
+      "label": "Annotate PDF"
+    },
+    {
+      "path": "/auto-rename",
+      "label": "Auto Rename PDF Files"
+    },
+    {
+      "path": "/cbr-to-pdf",
+      "label": "CBR to PDF Converter"
+    },
+    {
+      "path": "/cbz-to-pdf",
+      "label": "CBZ to PDF Converter"
+    },
+    {
+      "path": "/change-permissions",
+      "label": "Change PDF Permissions"
+    },
+    {
+      "path": "/single-large-page",
+      "label": "Combine PDF into a Single Page"
+    },
+    {
+      "path": "/compare",
+      "label": "Compare PDF Files"
+    },
+    {
+      "path": "/compress",
+      "label": "Compress PDF"
+    },
+    {
+      "path": "/booklet-imposition",
+      "label": "Create a PDF Booklet"
+    },
+    {
+      "path": "/crop",
+      "label": "Crop PDF"
+    },
+    {
+      "path": "/remove-pages",
+      "label": "Delete Pages from PDF"
+    },
+    {
+      "path": "/edit-table-of-contents",
+      "label": "Edit PDF Bookmarks"
+    },
+    {
+      "path": "/change-metadata",
+      "label": "Edit PDF Metadata"
+    },
+    {
+      "path": "/pdf-text-editor",
+      "label": "Edit PDF Text"
+    },
+    {
+      "path": "/eml-to-pdf",
+      "label": "Email (EML) to PDF Converter"
+    },
+    {
+      "path": "/extract-images",
+      "label": "Extract Images from PDF"
+    },
+    {
+      "path": "/extract-pages",
+      "label": "Extract PDF Pages"
+    },
+    {
+      "path": "/file-to-pdf",
+      "label": "File to PDF Converter"
+    },
+    {
+      "path": "/form-fill",
+      "label": "Fill PDF Forms"
+    },
+    {
+      "path": "/flatten",
+      "label": "Flatten PDF"
+    },
+    {
+      "path": "/html-to-pdf",
+      "label": "HTML to PDF Converter"
+    },
+    {
+      "path": "/img-to-pdf",
+      "label": "Image to PDF Converter"
+    },
+    {
+      "path": "/fake-scan",
+      "label": "Make a PDF Look Scanned"
+    },
+    {
+      "path": "/markdown-to-pdf",
+      "label": "Markdown to PDF Converter"
+    },
+    {
+      "path": "/merge",
+      "label": "Merge PDF"
+    },
+    {
+      "path": "/ocr",
+      "label": "OCR PDF"
+    },
+    {
+      "path": "/reorganize-pages",
+      "label": "Organize PDF Pages"
+    },
+    {
+      "path": "/overlay-pdfs",
+      "label": "Overlay PDFs"
+    },
+    {
+      "path": "/add-password",
+      "label": "Password Protect PDF"
+    },
+    {
+      "path": "/convert",
+      "label": "PDF Converter"
+    },
+    {
+      "path": "/get-pdf-info",
+      "label": "PDF Info and Metadata Viewer"
+    },
+    {
+      "path": "/page-layout",
+      "label": "PDF Multi-Page Layout"
+    },
+    {
+      "path": "/multi-tool",
+      "label": "PDF Page Editor"
+    },
+    {
+      "path": "/pdf-to-cbr",
+      "label": "PDF to CBR Converter"
+    },
+    {
+      "path": "/pdf-to-cbz",
+      "label": "PDF to CBZ Converter"
+    },
+    {
+      "path": "/pdf-to-csv",
+      "label": "PDF to CSV Converter"
+    },
+    {
+      "path": "/pdf-to-xlsx",
+      "label": "PDF to Excel Converter"
+    },
+    {
+      "path": "/pdf-to-html",
+      "label": "PDF to HTML Converter"
+    },
+    {
+      "path": "/pdf-to-img",
+      "label": "PDF to Image Converter"
+    },
+    {
+      "path": "/pdf-to-markdown",
+      "label": "PDF to Markdown Converter"
+    },
+    {
+      "path": "/pdf-to-pdfa",
+      "label": "PDF to PDF/A Converter"
+    },
+    {
+      "path": "/pdf-to-presentation",
+      "label": "PDF to PowerPoint Converter"
+    },
+    {
+      "path": "/pdf-to-text",
+      "label": "PDF to Text Converter"
+    },
+    {
+      "path": "/pdf-to-word",
+      "label": "PDF to Word Converter"
+    },
+    {
+      "path": "/pdf-to-xml",
+      "label": "PDF to XML Converter"
+    },
+    {
+      "path": "/read",
+      "label": "PDF Viewer"
+    },
+    {
+      "path": "/automate",
+      "label": "PDF Workflow Automation"
+    },
+    {
+      "path": "/redact",
+      "label": "Redact PDF"
+    },
+    {
+      "path": "/remove-annotations",
+      "label": "Remove Annotations from PDF"
+    },
+    {
+      "path": "/remove-blanks",
+      "label": "Remove Blank Pages from PDF"
+    },
+    {
+      "path": "/remove-image",
+      "label": "Remove Images from PDF"
+    },
+    {
+      "path": "/remove-certificate-sign",
+      "label": "Remove PDF Certificate Signature"
+    },
+    {
+      "path": "/remove-password",
+      "label": "Remove PDF Password"
+    },
+    {
+      "path": "/repair",
+      "label": "Repair PDF"
+    },
+    {
+      "path": "/replace-color-pdf",
+      "label": "Replace and Invert PDF Colors"
+    },
+    {
+      "path": "/scale-pages",
+      "label": "Resize PDF Pages"
+    },
+    {
+      "path": "/rotate",
+      "label": "Rotate PDF"
+    },
+    {
+      "path": "/sanitize",
+      "label": "Sanitize PDF"
+    },
+    {
+      "path": "/shared-sign",
+      "label": "Shared Signing"
+    },
+    {
+      "path": "/show-js",
+      "label": "Show JavaScript in PDF"
+    },
+    {
+      "path": "/sign",
+      "label": "Sign PDF"
+    },
+    {
+      "path": "/cert-sign",
+      "label": "Sign PDF with a Certificate"
+    },
+    {
+      "path": "/split",
+      "label": "Split PDF"
+    },
+    {
+      "path": "/scanner-image-split",
+      "label": "Split Scanned Photos"
+    },
+    {
+      "path": "/timestamp-pdf",
+      "label": "Timestamp PDF"
+    },
+    {
+      "path": "/unlock-pdf-forms",
+      "label": "Unlock PDF Forms"
+    },
+    {
+      "path": "/validate-signature",
+      "label": "Validate PDF Signature"
+    }
+  ]
 }

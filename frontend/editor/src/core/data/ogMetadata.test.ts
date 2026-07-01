@@ -6,8 +6,10 @@ import { getToolOgImage } from "@app/data/ogImage";
 // Build tooling (plain ESM, node:fs only) - import the helpers for coverage.
 // eslint-disable-next-line no-restricted-imports -- build script lives outside the @app alias root
 import {
+  buildBodyContent,
   buildOgTags,
   buildSitemap,
+  injectBody,
   injectOg,
   prerenderOg,
 } from "../../../scripts/og-prerender.mjs";
@@ -102,6 +104,21 @@ describe("injectOg (build-time prerender)", () => {
       {},
     );
     expect(tags).toContain("A &quot;B&quot; &amp; &lt;C&gt;");
+  });
+
+  it("weaves the sub-path prefix into the absolute image URL", () => {
+    const tags = buildOgTags(entry, {
+      ogBase: "https://stirling.com",
+      pageUrlPath: "/app/compress",
+      pathPrefix: "/app",
+    });
+    // image lives under the sub-path too, like canonical/og:url/logo
+    expect(tags).toContain(
+      '<meta property="og:image" content="https://stirling.com/app/og_images/compress.png" />',
+    );
+    expect(tags).toContain(
+      '<meta name="twitter:image" content="https://stirling.com/app/og_images/compress.png" />',
+    );
   });
 });
 
@@ -213,6 +230,103 @@ describe("buildSitemap", () => {
     });
     expect(xml).toContain("<loc>https://stirling.com/app/</loc>");
     expect(xml).toContain("<loc>https://stirling.com/app/compress</loc>");
+  });
+});
+
+describe("buildBodyContent + injectBody (crawlable landing content)", () => {
+  const entry = {
+    image: "/og_images/compress.png",
+    title: "PDF to Word Converter - Stirling PDF",
+    description: "Convert PDF files into editable Word documents.",
+  };
+  const navLinks = [
+    { path: "/compress", label: "Compress" },
+    { path: "/merge", label: "Merge" },
+  ];
+
+  it("emits an H1 (keyword, suffix stripped), the description, and relative tool links", () => {
+    const body = buildBodyContent(entry, { navLinks });
+    expect(body).toContain("<h1>PDF to Word Converter</h1>");
+    expect(body).toContain(
+      "<p>Convert PDF files into editable Word documents.</p>",
+    );
+    // links are relative (no leading slash) so they resolve against <base href>
+    expect(body).toContain('<a href="compress">Compress</a>');
+    expect(body).toContain('<a href="merge">Merge</a>');
+    expect(body).not.toContain('href="/compress"');
+  });
+
+  it("uses an explicit heading override for the H1 when given", () => {
+    const body = buildBodyContent(entry, {
+      navLinks,
+      heading: "Free Online PDF Tools",
+    });
+    expect(body).toContain("<h1>Free Online PDF Tools</h1>");
+    expect(body).not.toContain("<h1>PDF to Word Converter</h1>");
+  });
+
+  it("escapes HTML in the H1/description", () => {
+    const body = buildBodyContent(
+      { ...entry, title: "A & <B>", description: 'x "y"' },
+      { navLinks: [] },
+    );
+    expect(body).toContain("<h1>A &amp; &lt;B&gt;</h1>");
+    expect(body).toContain("x &quot;y&quot;");
+  });
+
+  it("injectBody fills the empty React mount point", () => {
+    const out = injectBody(
+      '<body><div id="root"></div><script></script></body>',
+      "<h1>hi</h1>",
+    );
+    expect(out).toContain('<div id="root"><h1>hi</h1></div>');
+  });
+
+  it("prerenderOg injects landing content on indexable pages but not noindex ones", async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "og-body-"));
+    await fs.writeFile(path.join(dir, "index.html"), TEMPLATE);
+    const manifest = {
+      default: {
+        image: "/og_images/home.png",
+        title: "Stirling PDF",
+        description: "home",
+      },
+      byTool: {
+        compress: {
+          image: "/og_images/compress.png",
+          title: "Compress - Stirling PDF",
+          description: "c",
+        },
+        "/settings/people": {
+          image: "/og_images/home.png",
+          title: "People Settings - Stirling PDF",
+          description: "p",
+          noindex: true,
+        },
+      },
+      byPath: {
+        "/compress": "compress",
+        "/settings/people": "/settings/people",
+      },
+      navLinks: [{ path: "/compress", label: "Compress" }],
+    };
+
+    await prerenderOg({ distDir: dir, manifest, ogBase: "", baseHref: "/" });
+
+    const compress = await fs.readFile(path.join(dir, "compress.html"), "utf8");
+    expect(compress).toContain('<div id="root"><div class="spdf-seo">');
+    expect(compress).toContain("<h1>Compress</h1>");
+
+    const settings = await fs.readFile(
+      path.join(dir, "settings", "people.html"),
+      "utf8",
+    );
+    expect(settings).toContain('<div id="root"></div>'); // noindex: bare shell
+
+    const home = await fs.readFile(path.join(dir, "index.html"), "utf8");
+    expect(home).toContain("spdf-seo");
+
+    await fs.rm(dir, { recursive: true, force: true });
   });
 });
 

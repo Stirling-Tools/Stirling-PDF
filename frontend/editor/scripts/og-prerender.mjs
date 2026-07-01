@@ -25,12 +25,17 @@ const absolute = (urlPath, ogBase) => (ogBase ? ogBase + urlPath : urlPath);
 /**
  * Build the OG/Twitter <meta> block for one route.
  * @param {{image:string,title:string,description:string}} entry
- * @param {{ogBase?:string, pageUrlPath?:string|null}} opts
+ * @param {{ogBase?:string, pageUrlPath?:string|null, pathPrefix?:string}} opts
  */
-export function buildOgTags(entry, { ogBase = "", pageUrlPath = null } = {}) {
+export function buildOgTags(
+  entry,
+  { ogBase = "", pageUrlPath = null, pathPrefix = "" } = {},
+) {
   const title = escapeHtml(entry.title);
   const description = escapeHtml(entry.description);
-  const imageUrl = absolute(entry.image, ogBase);
+  // entry.image is root-relative (/og_images/x.png); the assets deploy under the
+  // sub-path too, so the absolute form must carry pathPrefix like canonical/logo.
+  const imageUrl = ogBase ? ogBase + pathPrefix + entry.image : entry.image;
   const image = escapeHtml(imageUrl);
   const pageUrl = pageUrlPath
     ? escapeHtml(absolute(pageUrlPath, ogBase))
@@ -135,7 +140,7 @@ export function buildJsonLd(entry, { siteRoot, pageUrl, isHome }) {
  * link plus JSON-LD structured data.
  * @param {object} entry
  * @param {{ogBase?:string, pageUrlPath?:string|null, canonicalPath?:string|null,
- *   noindex?:boolean, siteRoot?:string|null, isHome?:boolean}} opts
+ *   noindex?:boolean, siteRoot?:string|null, isHome?:boolean, pathPrefix?:string}} opts
  */
 export function injectOg(html, entry, opts = {}) {
   const {
@@ -145,13 +150,14 @@ export function injectOg(html, entry, opts = {}) {
     noindex = false,
     siteRoot = null,
     isHome = false,
+    pathPrefix = "",
   } = opts;
   const canonicalUrl = ogBase
     ? absolute(canonicalPath ?? pageUrlPath ?? "/", ogBase)
     : null;
   const resolvedSiteRoot = siteRoot ?? (ogBase ? `${ogBase}/` : "/");
   const blocks = [
-    buildOgTags(entry, { ogBase, pageUrlPath }),
+    buildOgTags(entry, { ogBase, pageUrlPath, pathPrefix }),
     buildRobotsTag(noindex),
     buildCanonicalTag(canonicalUrl),
     ogBase
@@ -174,6 +180,62 @@ export function injectOg(html, entry, opts = {}) {
         `<meta name="description" content="${escapeHtml(entry.description)}" />`,
     )
     .replace("</head>", `  ${head}</head>`);
+}
+
+// Scoped styling for the prerendered body content so the pre-hydration paint
+// (what crawlers see and the first visible paint for users) looks intentional.
+// It lives inside #root and is wiped when React mounts.
+const SEO_STYLE =
+  "<style>.spdf-seo{max-width:760px;margin:0 auto;padding:56px 24px;" +
+  "font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#1a1a1a}" +
+  ".spdf-seo h1{font-size:2rem;line-height:1.2;margin:0 0 .75rem}" +
+  ".spdf-seo p{font-size:1.05rem;line-height:1.6;color:#444;margin:0 0 1rem}" +
+  ".spdf-seo nav{margin-top:2.5rem}.spdf-seo nav h2{font-size:.95rem;" +
+  "text-transform:uppercase;letter-spacing:.04em;color:#666;margin:0 0 .5rem}" +
+  ".spdf-seo nav a{display:inline-block;margin:0 .75rem .35rem 0;" +
+  "color:#0a58ca;text-decoration:none;font-size:.92rem}" +
+  "@media(prefers-color-scheme:dark){.spdf-seo{color:#e8e8e8}" +
+  ".spdf-seo p{color:#b8b8b8}.spdf-seo nav a{color:#6ea8fe}}</style>";
+
+/**
+ * Build the crawlable body content injected into #root: an H1, the page
+ * description, and a hub of real <a href> links to every tool. React (createRoot)
+ * replaces it on mount, so it only ever shows on a full page load - i.e. to
+ * crawlers and as the first paint (which also helps LCP). Links are relative so
+ * they resolve against <base href> under any deploy (root, /app, context path).
+ * @param {{title:string,description:string}} entry
+ * @param {{navLinks?:{path:string,label:string}[], heading?:string|null}} opts
+ */
+export function buildBodyContent(
+  entry,
+  { navLinks = [], heading = null } = {},
+) {
+  const name =
+    heading ||
+    (entry.title.endsWith(APP_SUFFIX)
+      ? entry.title.slice(0, -APP_SUFFIX.length)
+      : entry.title);
+  const links = navLinks
+    .map(
+      (l) =>
+        `<a href="${escapeHtml(l.path.replace(/^\//, ""))}">${escapeHtml(l.label)}</a>`,
+    )
+    .join("\n        ");
+  const nav = links
+    ? `\n      <nav aria-label="All PDF tools">\n        <h2>All PDF tools</h2>\n        ${links}\n      </nav>`
+    : "";
+  return (
+    `<div class="spdf-seo">${SEO_STYLE}\n      ` +
+    `<h1>${escapeHtml(name)}</h1>\n      ` +
+    `<p>${escapeHtml(entry.description)}</p>${nav}\n    </div>`
+  );
+}
+
+const ROOT_RE = /<div id="root">\s*<\/div>/;
+
+/** Inject crawlable content into the (otherwise empty) React mount point. */
+export function injectBody(html, content) {
+  return html.replace(ROOT_RE, `<div id="root">${content}</div>`);
 }
 
 const BASE_HREF_RE = /<base\s+href="[^"]*"\s*\/?>/i;
@@ -210,17 +272,25 @@ export async function prerenderOg({
   const pathPrefix = baseHref.replace(/\/+$/, ""); // "" or "/app"
   const siteRoot = ogBase ? `${ogBase}${pathPrefix}/` : "/";
   const homePath = `${pathPrefix}/`;
+  const navLinks = manifest.navLinks || [];
 
-  await fs.writeFile(
-    path.join(distDir, "index.html"),
-    injectOg(template, manifest.default, {
-      ogBase,
-      pageUrlPath: ogBase ? homePath : null,
-      canonicalPath: homePath,
-      siteRoot,
-      isHome: true,
+  let home = injectOg(template, manifest.default, {
+    ogBase,
+    pageUrlPath: ogBase ? homePath : null,
+    canonicalPath: homePath,
+    siteRoot,
+    isHome: true,
+    pathPrefix,
+  });
+  // Home <title> stays the brand ("Stirling PDF"); the H1 targets the keyword.
+  home = injectBody(
+    home,
+    buildBodyContent(manifest.default, {
+      navLinks,
+      heading: "Free Online PDF Tools",
     }),
   );
+  await fs.writeFile(path.join(distDir, "index.html"), home);
 
   let count = 0;
   for (const [routePath, id] of Object.entries(manifest.byPath || {})) {
@@ -235,7 +305,11 @@ export async function prerenderOg({
       noindex: !!entry.noindex,
       siteRoot,
       isHome: false,
+      pathPrefix,
     });
+    // App/auth pages (noindex) stay the bare shell - no crawlable landing copy.
+    if (!entry.noindex)
+      html = injectBody(html, buildBodyContent(entry, { navLinks }));
     const nested = segments.length > 1;
     if (nested)
       html = html.replace(BASE_HREF_RE, `<base href="${baseHref}" />`);

@@ -3,8 +3,9 @@
 // strings) plus the actual images in public/og_images.
 //
 // Outputs:
-//   src/core/data/ogImageMap.json  - { toolId: imageBasename }  (imported by the client)
-//   public/og-metadata.json        - { default, byTool, byPath } (read by the backend at startup)
+//   src/core/data/ogImageMap.json     - { toolId: imageBasename }  (imported by the client)
+//   src/core/data/urlSeoOverrides.json - { path: { title, description } } (client per-URL meta)
+//   public/og-metadata.json           - { default, byTool, byPath, navLinks } (read by the build-time OG prerender)
 //
 // Run: `node scripts/generate-og-metadata.mjs`        (writes files)
 //      `node scripts/generate-og-metadata.mjs --check` (CI drift guard: fails if stale)
@@ -131,6 +132,69 @@ const CONVERT_SEO_PAGES = {
   },
 };
 
+// Keyword titles for base tools. The in-app label ("Compress") is the UI name,
+// not the phrase people search ("Compress PDF"). Keyed by tool id; overrides the
+// prerendered <title>, the crawlable H1, and the nav-hub label, and is fed to the
+// running SPA (per alias) so the hydrated title matches. The in-app UI name is
+// unaffected - it comes from the translation registry, not this file. The tool's
+// own description is kept. Convert aliases are handled by CONVERT_SEO_PAGES.
+const TOOL_SEO_TITLES = {
+  compress: "Compress PDF",
+  merge: "Merge PDF",
+  split: "Split PDF",
+  rotate: "Rotate PDF",
+  convert: "PDF Converter",
+  ocr: "OCR PDF",
+  watermark: "Add Watermark to PDF",
+  sign: "Sign PDF",
+  certSign: "Sign PDF with a Certificate",
+  redact: "Redact PDF",
+  crop: "Crop PDF",
+  flatten: "Flatten PDF",
+  repair: "Repair PDF",
+  compare: "Compare PDF Files",
+  sanitize: "Sanitize PDF",
+  addPassword: "Password Protect PDF",
+  removePassword: "Remove PDF Password",
+  changePermissions: "Change PDF Permissions",
+  addPageNumbers: "Add Page Numbers to PDF",
+  addText: "Add Text to PDF",
+  addImage: "Add Image to PDF",
+  addStamp: "Add Stamp to PDF",
+  addAttachments: "Add Attachments to PDF",
+  extractPages: "Extract PDF Pages",
+  removePages: "Delete Pages from PDF",
+  removeBlanks: "Remove Blank Pages from PDF",
+  removeImage: "Remove Images from PDF",
+  removeAnnotations: "Remove Annotations from PDF",
+  reorganizePages: "Organize PDF Pages",
+  extractImages: "Extract Images from PDF",
+  pageLayout: "PDF Multi-Page Layout",
+  scalePages: "Resize PDF Pages",
+  pdfToSinglePage: "Combine PDF into a Single Page",
+  adjustContrast: "Adjust PDF Colors and Contrast",
+  replaceColor: "Replace and Invert PDF Colors",
+  changeMetadata: "Edit PDF Metadata",
+  getPdfInfo: "PDF Info and Metadata Viewer",
+  overlayPdfs: "Overlay PDFs",
+  editTableOfContents: "Edit PDF Bookmarks",
+  pdfTextEditor: "Edit PDF Text",
+  formFill: "Fill PDF Forms",
+  multiTool: "PDF Page Editor",
+  read: "PDF Viewer",
+  annotate: "Annotate PDF",
+  automate: "PDF Workflow Automation",
+  scannerEffect: "Make a PDF Look Scanned",
+  scannerImageSplit: "Split Scanned Photos",
+  autoRename: "Auto Rename PDF Files",
+  bookletImposition: "Create a PDF Booklet",
+  unlockPDFForms: "Unlock PDF Forms",
+  removeCertSign: "Remove PDF Certificate Signature",
+  validateSignature: "Validate PDF Signature",
+  timestampPdf: "Timestamp PDF",
+  showJS: "Show JavaScript in PDF",
+};
+
 // Tools whose art exists under a legacy v1 filename that does not match the
 // tool id or any current URL slug. Verified against public/og_images contents.
 const LEGACY_IMAGE_OVERRIDES = {
@@ -230,6 +294,15 @@ for (const id of allIds) {
   };
 }
 
+// Upgrade base-tool titles to their search phrases (see TOOL_SEO_TITLES).
+for (const id of Object.keys(TOOL_SEO_TITLES)) {
+  if (!byTool[id]) {
+    console.warn(`[og] TOOL_SEO_TITLES: unknown tool id "${id}" - skipped`);
+    continue;
+  }
+  byTool[id].title = `${TOOL_SEO_TITLES[id]} - ${SITE_NAME}`;
+}
+
 // path -> toolId for every canonical path and every alias
 const byPath = {};
 for (const id of allIds) byPath[canonicalPath(id)] = id;
@@ -297,6 +370,47 @@ for (const [routePath, seo] of Object.entries(CONVERT_SEO_PAGES)) {
   };
 }
 
+// Base-tool keyword copy for the running SPA, on every alias of the tool, so the
+// hydrated <title> matches the prerendered one. Convert pages set above win (they
+// have more specific per-alias keywords), hence the guard.
+for (const [id, name] of Object.entries(TOOL_SEO_TITLES)) {
+  if (!byTool[id]) continue;
+  for (const p of [canonicalPath(id), ...(aliasesByTool[id] || [])])
+    if (!(p in urlSeoOverrides))
+      urlSeoOverrides[p] = { title: name, description: descFor(id) };
+}
+
+// --- crawlable internal-link hub --------------------------------------------
+// One routable link per tool + each convert SEO landing page. The in-app
+// toolbar uses onClick buttons (not <a href>), and the prerendered body is
+// otherwise empty, so these baked links are the only tool links a crawler can
+// follow - they spread link equity and help discovery. Paths are the first
+// alias for each tool (guaranteed routable by parseToolRoute). Dev/link tools
+// are external redirects, not landing pages, so they are excluded.
+const stripSuffix = (t) =>
+  t.endsWith(` - ${SITE_NAME}`) ? t.slice(0, -` - ${SITE_NAME}`.length) : t;
+const primaryPathByTool = {};
+for (const [p, id] of Object.entries(urlToTool))
+  if (!(id in primaryPathByTool)) primaryPathByTool[id] = p;
+
+const navLinks = [];
+const seenNav = new Set();
+const pushNav = (p, label) => {
+  if (p && !seenNav.has(p)) {
+    seenNav.add(p);
+    navLinks.push({ path: p, label });
+  }
+};
+for (const id of allIds) {
+  if (linkIds.includes(id)) continue;
+  pushNav(
+    primaryPathByTool[id] || canonicalPath(id),
+    stripSuffix(byTool[id].title),
+  );
+}
+for (const [p, seo] of Object.entries(CONVERT_SEO_PAGES)) pushNav(p, seo.name);
+navLinks.sort((a, b) => a.label.localeCompare(b.label));
+
 const manifest = {
   default: {
     image: `/og_images/${DEFAULT_IMAGE_BASENAME}.png`,
@@ -305,6 +419,7 @@ const manifest = {
   },
   byTool,
   byPath,
+  navLinks,
 };
 
 const mapJson = JSON.stringify(ogImageMap, null, 2) + "\n";
