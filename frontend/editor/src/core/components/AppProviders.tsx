@@ -20,6 +20,7 @@ import {
 import { WorkbenchBarProvider } from "@app/contexts/WorkbenchBarContext";
 import { ViewerProvider } from "@app/contexts/ViewerContext";
 import { SignatureProvider } from "@app/contexts/SignatureContext";
+import { SigningOverlayProvider } from "@app/contexts/SigningOverlayContext";
 import { AnnotationProvider } from "@app/contexts/AnnotationContext";
 import { TourOrchestrationProvider } from "@app/contexts/TourOrchestrationContext";
 import { AdminTourOrchestrationProvider } from "@app/contexts/AdminTourOrchestrationContext";
@@ -143,21 +144,23 @@ export function AppProviders({
                               <ViewerProvider>
                                 <PageEditorProvider>
                                   <SignatureProvider>
-                                    <RedactionProvider>
-                                      <FormFillProvider>
-                                        <AnnotationProvider>
-                                          <WorkbenchBarProvider>
-                                            <TourOrchestrationProvider>
-                                              <AdminTourOrchestrationProvider>
-                                                <FolderFileContextProvider>
-                                                  {children}
-                                                </FolderFileContextProvider>
-                                              </AdminTourOrchestrationProvider>
-                                            </TourOrchestrationProvider>
-                                          </WorkbenchBarProvider>
-                                        </AnnotationProvider>
-                                      </FormFillProvider>
-                                    </RedactionProvider>
+                                    <SigningOverlayProvider>
+                                      <RedactionProvider>
+                                        <FormFillProvider>
+                                          <AnnotationProvider>
+                                            <WorkbenchBarProvider>
+                                              <TourOrchestrationProvider>
+                                                <AdminTourOrchestrationProvider>
+                                                  <FolderFileContextProvider>
+                                                    {children}
+                                                  </FolderFileContextProvider>
+                                                </AdminTourOrchestrationProvider>
+                                              </TourOrchestrationProvider>
+                                            </WorkbenchBarProvider>
+                                          </AnnotationProvider>
+                                        </FormFillProvider>
+                                      </RedactionProvider>
+                                    </SigningOverlayProvider>
                                   </SignatureProvider>
                                 </PageEditorProvider>
                               </ViewerProvider>
