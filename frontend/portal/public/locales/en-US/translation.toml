@@ -419,6 +419,9 @@ label = "Read mode"
 consume = "Consume: process each file once"
 snapshot = "Snapshot: re-read the folder every run"
 
+[sources.types.editor]
+label = "Editor"
+
 [sources.types.unknown]
 label = "Source"
 
@@ -736,6 +739,11 @@ description = "{{file}} is signed and ready to transfer. It activates one instan
 title = "Policies"
 subtitle = "Standing automations that enforce a tool pipeline on every document. Each policy fires on upload or export, runs its tool chain, and saves the enforced version alongside the original."
 
+[policies.offline]
+title = "Backend unavailable"
+description = "Your policies are saved and will appear once the connection is restored."
+retry = "Retry"
+
 [policies.status]
 active = "Active"
 paused = "Paused"
@@ -772,6 +780,7 @@ meta = "Runs on {{event}} · output {{output}}"
 outputAsNewFile = "as a new file"
 outputAsNewVersion = "as a new version"
 enforces = "Enforces"
+sources = "Sources"
 onEveryUpload = "On every upload"
 onEveryExport = "On every export"
 originalsNote = "Originals stay untouched • Enforced version saved alongside"

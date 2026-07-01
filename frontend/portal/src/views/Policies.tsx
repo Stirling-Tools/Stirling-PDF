@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Banner, Skeleton } from "@shared/components";
+import { Banner, Button, Skeleton } from "@shared/components";
 import { errorMessage } from "@portal/api/http";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import {
@@ -25,7 +25,7 @@ export function Policies() {
   const { t } = useTranslation();
   const [version, setVersion] = useState(0);
   const state = useAsync<PoliciesResponse>(() => fetchPolicies(), [version]);
-  const { data, loading } = state;
+  const { data, loading, error: fetchError } = state;
   const { isLoading } = useSectionFlags(state);
 
   const [detail, setDetail] = useState<CatalogueEntry | null>(null);
@@ -36,22 +36,19 @@ export function Policies() {
   const catalogue = data?.catalogue ?? [];
   const refetch = useCallback(() => setVersion((v) => v + 1), []);
 
-  // When the API hasn't returned data (backend unreachable or mocks off), fall
-  // back to the static category list so the page stays actionable.
-  const displayCatalogue: CatalogueEntry[] =
-    catalogue.length > 0
-      ? catalogue
-      : POLICY_CATEGORIES.map((cat) => ({
-          category: cat,
-          config: POLICY_CONFIG[cat.id] ?? {
-            summary: "",
-            rules: [],
-            scopeLabel: "",
-            fields: [],
-            defaultOperations: [],
-          },
-          policy: null,
-        }));
+  const displayCatalogue: CatalogueEntry[] = catalogue.length > 0
+    ? catalogue
+    : POLICY_CATEGORIES.map((cat) => ({
+        category: cat,
+        config: POLICY_CONFIG[cat.id] ?? {
+          summary: "",
+          rules: [],
+          scopeLabel: "",
+          fields: [],
+          defaultOperations: [],
+        },
+        policy: null,
+      }));
 
   function openEntry(entry: CatalogueEntry) {
     if (entry.policy) setDetail(entry);
@@ -124,12 +121,25 @@ export function Policies() {
       {isLoading && (
         <div className="portal-policies__grid" aria-hidden>
           {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} height="11rem" />
+            <Skeleton key={i} height="3.5rem" />
           ))}
         </div>
       )}
 
-      {!isLoading && (
+      {!isLoading && fetchError && (
+        <Banner
+          tone="warning"
+          title={t("policies.offline.title")}
+          description={t("policies.offline.description")}
+          action={
+            <Button variant="outline" size="sm" onClick={refetch}>
+              {t("policies.offline.retry")}
+            </Button>
+          }
+        />
+      )}
+
+      {!isLoading && !fetchError && (
         <div className="portal-policies__grid">
           {displayCatalogue.map((entry) => (
             <PolicyCategoryCard

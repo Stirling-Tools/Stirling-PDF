@@ -234,7 +234,7 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
   security: {
     summary:
       "Detects and redacts PII, strips active content (JavaScript), and watermarks documents.",
-    rules: ["Redact PII", "Remove JavaScript"],
+    rules: ["Redact PII", "Remove JavaScript", "Watermark"],
     scopeLabel: "All documents",
     defaultOperations: [
       {
@@ -254,6 +254,13 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
           removeMetadata: false,
           removeLinks: false,
           removeFonts: false,
+        },
+      },
+      {
+        operation: TOOL_ENDPOINTS.watermark,
+        // convertPDFToImage bakes the watermark in so it can't be stripped
+        parameters: {
+          convertPDFToImage: true,
         },
       },
     ],

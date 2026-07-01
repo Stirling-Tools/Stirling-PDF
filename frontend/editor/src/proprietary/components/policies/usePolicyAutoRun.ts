@@ -275,6 +275,7 @@ export function usePolicyAutoRun(): void {
       // input file it ran on (needs that input's stub, still in the workspace).
       const outputMode = policies[run.categoryId]?.outputMode ?? "new_version";
       const outputName = policies[run.categoryId]?.outputName ?? "";
+      const outputNamePosition = policies[run.categoryId]?.outputNamePosition;
       const parentStub = fileStubs.find((s) => (s.id as string) === run.fileId);
       void importOutputs(run, {
         addFiles,
@@ -282,6 +283,7 @@ export function usePolicyAutoRun(): void {
         bumpRevision,
         outputMode,
         outputName,
+        outputNamePosition,
         parentStub,
       }).finally(() => importing.current.delete(run.runId));
     }
@@ -314,9 +316,11 @@ interface ImportContext {
   bumpRevision: () => void;
   /** "new_file" adds the output as a separate file; "new_version" versions the input. */
   outputMode: "new_file" | "new_version";
-  /** Rename rule. Empty → keep the input's filename; set → use the policy's
-   *  renamed output (applied server-side per the name-position setting). */
+  /** Rename rule. Empty → keep the input's filename. */
   outputName: string;
+  /** Where the rename is applied: before ("prefix") or after ("suffix") the
+   *  base filename. Defaults to "suffix" when absent. */
+  outputNamePosition?: "prefix" | "suffix" | "auto-number";
   /** The input file's stub — required to version it; absent if it's been removed. */
   parentStub: StirlingFileStub | undefined;
 }
@@ -327,6 +331,18 @@ interface ImportContext {
  * don't, adopt it so the poll/import effects pick it up. Server-excluded ad-hoc runs and runs we
  * can't map to a configured category are skipped.
  */
+function applyOutputName(
+  inputFileName: string,
+  outputName: string,
+  position: "prefix" | "suffix" | "auto-number",
+): string {
+  const dot = inputFileName.lastIndexOf(".");
+  const base = dot > 0 ? inputFileName.slice(0, dot) : inputFileName;
+  const ext = dot > 0 ? inputFileName.slice(dot) : "";
+  if (position === "suffix") return `${base}_${outputName}${ext}`;
+  return `${outputName}_${base}${ext}`;
+}
+
 async function reconcileServerRuns(
   policies: PoliciesByCategory,
 ): Promise<void> {
@@ -403,7 +419,7 @@ async function importOutputs(
   // rule the backend's auto-suffixed name (e.g. "_watermarked_sanitized") would
   // otherwise rename every output.
   const targetName = ctx.outputName
-    ? undefined // use the run's per-output (renamed) name below
+    ? applyOutputName(run.fileName, ctx.outputName, ctx.outputNamePosition ?? "suffix")
     : run.fileName;
   const results = await Promise.allSettled(
     pending.map(async (out) => {
