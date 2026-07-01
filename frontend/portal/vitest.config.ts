@@ -23,6 +23,13 @@ export default defineConfig({
       "@shared": sharedDir,
     },
   },
+  server: {
+    fs: {
+      // Allow Vite to serve files from the shared/ sibling directory when
+      // running tests with --root portal (which would otherwise block them).
+      allow: [".."],
+    },
+  },
   test: {
     globals: true,
     environment: "jsdom",
