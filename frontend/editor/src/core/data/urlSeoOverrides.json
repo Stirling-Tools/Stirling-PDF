@@ -1,0 +1,78 @@
+{
+  "/pdf-to-word": {
+    "title": "PDF to Word Converter",
+    "description": "Convert PDF files into editable Microsoft Word (DOCX) documents. Free, fast, and private - no signup or email required."
+  },
+  "/pdf-to-xlsx": {
+    "title": "PDF to Excel Converter",
+    "description": "Convert PDF tables into editable Microsoft Excel (XLSX) spreadsheets. Free, fast, and private."
+  },
+  "/pdf-to-csv": {
+    "title": "PDF to CSV Converter",
+    "description": "Extract tables from PDF files into CSV data. Free, fast, and private - no signup required."
+  },
+  "/pdf-to-img": {
+    "title": "PDF to Image Converter",
+    "description": "Convert PDF pages into high-quality JPG or PNG images. Free and private, right in your browser."
+  },
+  "/pdf-to-presentation": {
+    "title": "PDF to PowerPoint Converter",
+    "description": "Convert PDF files into editable PowerPoint (PPTX) presentations. Free, fast, and private."
+  },
+  "/pdf-to-text": {
+    "title": "PDF to Text Converter",
+    "description": "Extract plain text from PDF documents. Free, fast, and private - no signup or email required."
+  },
+  "/pdf-to-markdown": {
+    "title": "PDF to Markdown Converter",
+    "description": "Convert PDF documents into clean Markdown text. Free and private, right in your browser."
+  },
+  "/pdf-to-html": {
+    "title": "PDF to HTML Converter",
+    "description": "Convert PDF documents into HTML web pages. Free and private, right in your browser."
+  },
+  "/pdf-to-xml": {
+    "title": "PDF to XML Converter",
+    "description": "Convert PDF documents into structured XML. Free, fast, and private."
+  },
+  "/pdf-to-pdfa": {
+    "title": "PDF to PDF/A Converter",
+    "description": "Convert PDFs to the PDF/A archival standard for long-term preservation. Free and private."
+  },
+  "/img-to-pdf": {
+    "title": "Image to PDF Converter",
+    "description": "Convert JPG, PNG, and other images into a single PDF document. Free, fast, and private."
+  },
+  "/html-to-pdf": {
+    "title": "HTML to PDF Converter",
+    "description": "Convert HTML files and web pages into PDF documents. Free, fast, and private."
+  },
+  "/markdown-to-pdf": {
+    "title": "Markdown to PDF Converter",
+    "description": "Convert Markdown files into polished PDF documents. Free and private, right in your browser."
+  },
+  "/eml-to-pdf": {
+    "title": "Email (EML) to PDF Converter",
+    "description": "Convert email (EML) files into PDF documents. Free, fast, and private - no signup required."
+  },
+  "/file-to-pdf": {
+    "title": "File to PDF Converter",
+    "description": "Convert Word, Excel, PowerPoint, and more into PDF documents. Free, fast, and private."
+  },
+  "/cbr-to-pdf": {
+    "title": "CBR to PDF Converter",
+    "description": "Convert CBR comic book archives into PDF documents. Free and private, right in your browser."
+  },
+  "/pdf-to-cbr": {
+    "title": "PDF to CBR Converter",
+    "description": "Convert PDF documents into CBR comic book archives. Free and private."
+  },
+  "/cbz-to-pdf": {
+    "title": "CBZ to PDF Converter",
+    "description": "Convert CBZ comic book archives into PDF documents. Free and private."
+  },
+  "/pdf-to-cbz": {
+    "title": "PDF to CBZ Converter",
+    "description": "Convert PDF documents into CBZ comic book archives. Free and private."
+  }
+}

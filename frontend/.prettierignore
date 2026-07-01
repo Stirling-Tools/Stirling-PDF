@@ -13,6 +13,7 @@ portal/public/mockServiceWorker.js
 # Auto-generated OG/social-preview metadata (scripts/generate-og-metadata.mjs); regenerated verbatim.
 editor/public/og-metadata.json
 editor/src/core/data/ogImageMap.json
+editor/src/core/data/urlSeoOverrides.json
 editor/public/pdfjs*/
 editor/public/js/thirdParty/
 editor/public/css/cookieconsent.css

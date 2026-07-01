@@ -4,11 +4,16 @@ export interface OgEntry {
   image: string;
   title: string;
   description: string;
+  noindex?: boolean;
 }
 
 export interface OgInjectOptions {
   ogBase?: string;
   pageUrlPath?: string | null;
+  canonicalPath?: string | null;
+  noindex?: boolean;
+  siteRoot?: string | null;
+  isHome?: boolean;
 }
 
 export interface OgManifest {
@@ -18,7 +23,16 @@ export interface OgManifest {
 }
 
 export function escapeHtml(value: string): string;
-export function buildOgTags(entry: OgEntry, opts?: OgInjectOptions): string;
+export function buildOgTags(
+  entry: OgEntry,
+  opts?: { ogBase?: string; pageUrlPath?: string | null },
+): string;
+export function buildRobotsTag(noindex: boolean): string;
+export function buildCanonicalTag(canonicalUrl: string | null): string | null;
+export function buildJsonLd(
+  entry: OgEntry,
+  opts: { siteRoot: string; pageUrl: string; isHome: boolean },
+): string;
 export function injectOg(
   html: string,
   entry: OgEntry,
@@ -30,3 +44,7 @@ export function prerenderOg(args: {
   ogBase?: string;
   baseHref?: string;
 }): Promise<number>;
+export function buildSitemap(
+  manifest: OgManifest,
+  opts: { ogBase: string; pathPrefix?: string },
+): string | null;

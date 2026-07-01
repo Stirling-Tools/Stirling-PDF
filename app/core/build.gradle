@@ -335,6 +335,8 @@ tasks.register('cleanFrontendAssets', Delete) {
     delete fileTree(dir: resourcesStaticDir, includes: ['*.html'], excludes: ['api-landing.html', 'mobile-upload.html'])
     // Nested prerendered route pages (e.g. settings/people.html)
     delete new File(resourcesStaticDir, 'settings')
+    // Generated SEO sitemap (only emitted when a canonical domain is set at build).
+    delete new File(resourcesStaticDir, 'sitemap.xml')
 }
 
 tasks.register('copyApiLandingPage', Copy) {

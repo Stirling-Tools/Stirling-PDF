@@ -26,6 +26,111 @@ const SITE_TITLE = "Stirling PDF";
 const SITE_DESC = "The Free Adobe Acrobat alternative (10M+ Downloads)";
 const DEFAULT_IMAGE_BASENAME = "home";
 
+// Keyword-targeted landing copy for the convert tool's URL aliases. Every
+// /pdf-to-x and /x-to-pdf path routes to the single `convert` tool, so without
+// this they would all share the generic "Convert - Stirling PDF" title and
+// description - duplicate content that ranks for nothing. Each entry gets its
+// own crawlable title/description (prerendered) and a client-side override so
+// the SPA keeps the same title after hydration. `name` is the keyword phrase;
+// the app suffix (" - Stirling PDF" / the instance name) is added per surface.
+const CONVERT_SEO_PAGES = {
+  "/pdf-to-word": {
+    name: "PDF to Word Converter",
+    description:
+      "Convert PDF files into editable Microsoft Word (DOCX) documents. Free, fast, and private - no signup or email required.",
+  },
+  "/pdf-to-xlsx": {
+    name: "PDF to Excel Converter",
+    description:
+      "Convert PDF tables into editable Microsoft Excel (XLSX) spreadsheets. Free, fast, and private.",
+  },
+  "/pdf-to-csv": {
+    name: "PDF to CSV Converter",
+    description:
+      "Extract tables from PDF files into CSV data. Free, fast, and private - no signup required.",
+  },
+  "/pdf-to-img": {
+    name: "PDF to Image Converter",
+    description:
+      "Convert PDF pages into high-quality JPG or PNG images. Free and private, right in your browser.",
+  },
+  "/pdf-to-presentation": {
+    name: "PDF to PowerPoint Converter",
+    description:
+      "Convert PDF files into editable PowerPoint (PPTX) presentations. Free, fast, and private.",
+  },
+  "/pdf-to-text": {
+    name: "PDF to Text Converter",
+    description:
+      "Extract plain text from PDF documents. Free, fast, and private - no signup or email required.",
+  },
+  "/pdf-to-markdown": {
+    name: "PDF to Markdown Converter",
+    description:
+      "Convert PDF documents into clean Markdown text. Free and private, right in your browser.",
+  },
+  "/pdf-to-html": {
+    name: "PDF to HTML Converter",
+    description:
+      "Convert PDF documents into HTML web pages. Free and private, right in your browser.",
+  },
+  "/pdf-to-xml": {
+    name: "PDF to XML Converter",
+    description:
+      "Convert PDF documents into structured XML. Free, fast, and private.",
+  },
+  "/pdf-to-pdfa": {
+    name: "PDF to PDF/A Converter",
+    description:
+      "Convert PDFs to the PDF/A archival standard for long-term preservation. Free and private.",
+  },
+  "/img-to-pdf": {
+    name: "Image to PDF Converter",
+    description:
+      "Convert JPG, PNG, and other images into a single PDF document. Free, fast, and private.",
+  },
+  "/html-to-pdf": {
+    name: "HTML to PDF Converter",
+    description:
+      "Convert HTML files and web pages into PDF documents. Free, fast, and private.",
+  },
+  "/markdown-to-pdf": {
+    name: "Markdown to PDF Converter",
+    description:
+      "Convert Markdown files into polished PDF documents. Free and private, right in your browser.",
+  },
+  "/eml-to-pdf": {
+    name: "Email (EML) to PDF Converter",
+    description:
+      "Convert email (EML) files into PDF documents. Free, fast, and private - no signup required.",
+  },
+  "/file-to-pdf": {
+    name: "File to PDF Converter",
+    description:
+      "Convert Word, Excel, PowerPoint, and more into PDF documents. Free, fast, and private.",
+  },
+  "/cbr-to-pdf": {
+    name: "CBR to PDF Converter",
+    description:
+      "Convert CBR comic book archives into PDF documents. Free and private, right in your browser.",
+  },
+  "/pdf-to-cbr": {
+    name: "PDF to CBR Converter",
+    description:
+      "Convert PDF documents into CBR comic book archives. Free and private.",
+  },
+  "/cbz-to-pdf": {
+    name: "CBZ to PDF Converter",
+    description:
+      "Convert CBZ comic book archives into PDF documents. Free and private.",
+  },
+  "/pdf-to-cbz": {
+    name: "PDF to CBZ Converter",
+    description:
+      "Convert PDF documents into CBZ comic book archives. Free and private.",
+  },
+};
+
 // Tools whose art exists under a legacy v1 filename that does not match the
 // tool id or any current URL slug. Verified against public/og_images contents.
 const LEGACY_IMAGE_OVERRIDES = {
@@ -159,13 +264,37 @@ const pageTitles = {
 for (const key of navKeys)
   pageTitles[`/settings/${key}`] = `${humanizeLabel(key)} Settings`;
 
+// Auth, file manager, scanner and settings are app surfaces, not landing pages:
+// mark them noindex so crawlers keep them out of the index (and the sitemap).
 for (const [routePath, label] of Object.entries(pageTitles)) {
   byTool[routePath] = {
     image: `/og_images/${DEFAULT_IMAGE_BASENAME}.png`,
     title: `${label} - ${SITE_NAME}`,
     description: SITE_DESC,
+    noindex: true,
   };
   byPath[routePath] = routePath;
+}
+
+// --- convert-alias SEO landing pages -----------------------------------------
+// Give each convert alias its own keyword title/description instead of the
+// generic "Convert" entry. Self-key in byPath so the prerender treats it as a
+// distinct (self-canonical) page. `urlSeoOverrides` feeds the same copy to the
+// running SPA so the hydrated title matches what crawlers first see.
+const convertImage =
+  byTool.convert?.image ?? `/og_images/${DEFAULT_IMAGE_BASENAME}.png`;
+const urlSeoOverrides = {};
+for (const [routePath, seo] of Object.entries(CONVERT_SEO_PAGES)) {
+  byTool[routePath] = {
+    image: convertImage,
+    title: `${seo.name} - ${SITE_NAME}`,
+    description: seo.description,
+  };
+  byPath[routePath] = routePath;
+  urlSeoOverrides[routePath] = {
+    title: seo.name,
+    description: seo.description,
+  };
 }
 
 const manifest = {
@@ -180,19 +309,25 @@ const manifest = {
 
 const mapJson = JSON.stringify(ogImageMap, null, 2) + "\n";
 const manifestJson = JSON.stringify(manifest, null, 2) + "\n";
+const seoOverridesJson = JSON.stringify(urlSeoOverrides, null, 2) + "\n";
 const mapPath = "src/core/data/ogImageMap.json";
 const manifestPath = "public/og-metadata.json";
+const seoOverridesPath = "src/core/data/urlSeoOverrides.json";
+
+const outputs = [
+  [mapPath, mapJson],
+  [manifestPath, manifestJson],
+  [seoOverridesPath, seoOverridesJson],
+];
 
 const check = process.argv.includes("--check");
 if (check) {
-  const stale = [];
-  if (!fs.existsSync(path.join(ROOT, mapPath)) || read(mapPath) !== mapJson)
-    stale.push(mapPath);
-  if (
-    !fs.existsSync(path.join(ROOT, manifestPath)) ||
-    read(manifestPath) !== manifestJson
-  )
-    stale.push(manifestPath);
+  const stale = outputs
+    .filter(
+      ([p, content]) =>
+        !fs.existsSync(path.join(ROOT, p)) || read(p) !== content,
+    )
+    .map(([p]) => p);
   if (stale.length) {
     console.error(
       "OG metadata is stale. Run `node scripts/generate-og-metadata.mjs`:\n  " +
@@ -202,12 +337,15 @@ if (check) {
   }
   console.log("OG metadata is up to date.");
 } else {
-  fs.writeFileSync(path.join(ROOT, mapPath), mapJson);
-  fs.writeFileSync(path.join(ROOT, manifestPath), manifestJson);
+  for (const [p, content] of outputs)
+    fs.writeFileSync(path.join(ROOT, p), content);
   console.log(
     `Wrote ${mapPath} (${Object.keys(ogImageMap).length} tools with art)`,
   );
   console.log(`Wrote ${manifestPath} (${Object.keys(byPath).length} paths)`);
+  console.log(
+    `Wrote ${seoOverridesPath} (${Object.keys(urlSeoOverrides).length} SEO landing pages)`,
+  );
 }
 
 // --- report -----------------------------------------------------------------

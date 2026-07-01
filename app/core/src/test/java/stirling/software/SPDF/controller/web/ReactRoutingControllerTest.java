@@ -156,10 +156,23 @@ class ReactRoutingControllerTest {
     // --- forwarding routes ---
 
     @Test
-    void forwardRootPaths_servesIndexHtml() throws Exception {
+    void forwardRootPaths_noPrerenderedFile_fallsBackToIndexHtml() throws Exception {
         controller.init();
 
-        ResponseEntity<String> response = controller.forwardRootPaths(request);
+        // No prerendered compress.html on the test classpath -> generic shell.
+        ResponseEntity<String> response = controller.forwardRootPaths(request, "compress");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertTrue(response.getBody().contains("Stirling PDF"));
+    }
+
+    @Test
+    void forwardRootPaths_unsafeSegment_fallsBackToIndexHtml() throws Exception {
+        controller.init();
+
+        // A dotted segment must never be turned into a file lookup.
+        ResponseEntity<String> response = controller.forwardRootPaths(request, "e.tag");
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -169,7 +182,8 @@ class ReactRoutingControllerTest {
     void forwardNestedPaths_servesIndexHtml() throws Exception {
         controller.init();
 
-        ResponseEntity<String> response = controller.forwardNestedPaths(request);
+        ResponseEntity<String> response =
+                controller.forwardNestedPaths(request, "settings", "people");
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
