@@ -45,9 +45,7 @@ were **built up in SUI** as part of this work — each has a Storybook story.
 
 Bootstrapping: the editor loads `@app/tokens/tokens.css` globally via
 `ThemeProvider`, which also mirrors the Mantine colour scheme onto
-`<html data-theme>` (SUI's dark palette keys on `data-theme`). A global
-`@shared` alias in `editor/vite.config.ts` + `vitest.config.ts` resolves the
-shared components' own `@shared/*.css` self-imports.
+`<html data-theme>` (SUI's dark palette keys on `data-theme`).
 
 The bespoke `.pol-*` CSS in `Policies.css` is now only thin layout scaffolding
 (detail/scroll/footer wrappers, the collapsed rail, row insets that match SUI

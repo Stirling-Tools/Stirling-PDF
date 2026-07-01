@@ -10,7 +10,6 @@ import tsconfigPaths from "vite-tsconfig-paths";
 // Layout:
 //   frontend/editor/vite.portal.config.ts   <-- this config
 //   frontend/editor/src/portal/             <-- root (index.html, main.tsx, public/, source)
-//   frontend/shared/                         <-- imported via @shared/*
 //   frontend/node_modules/                   <-- hoisted workspace deps
 //
 // The build emits to frontend/dist-portal/ (parallel to the editor's dist/), so
@@ -54,19 +53,16 @@ export default defineConfig(async ({ mode }) => {
         projects: [resolve(import.meta.dirname, "tsconfig.portal.vite.json")],
       }),
     ],
-    // Explicit aliases — tsconfigPaths only resolves imports inside files
-    // covered by the portal tsconfig's `include`. shared/components/index.ts
-    // re-exports via `@shared/*` from inside shared/ itself, so we need
-    // resolve.alias for vite to handle those too.
+    // Explicit @portal alias as a belt-and-braces fallback alongside
+    // tsconfigPaths (which handles @app/@portal for files in the tsconfig).
     resolve: {
       alias: {
         "@portal": PORTAL_ROOT,
-        "@shared": resolve(FRONTEND_ROOT, "shared"),
       },
     },
-    // The portal's @shared/* alias resolves to frontend/shared/, and the hoisted
-    // node_modules live at the frontend root. Vite refuses to serve files
-    // outside its root by default; whitelisting the frontend root opens both.
+    // The hoisted node_modules live at the frontend root, above this config's
+    // root. Vite refuses to serve files outside its root by default;
+    // whitelisting the frontend root opens them.
     server: {
       host: true,
       port: 5173,

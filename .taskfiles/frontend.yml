@@ -263,8 +263,8 @@ tasks:
     deps: [install]
     cmds:
       # Globs so dpdm walks the whole tree. dpdm expands the braces itself, so this is
-      # shell-agnostic. Covers the editor (incl. the portal layer) and the shared design system.
-      - npx dpdm "editor/src/**/*.{ts,tsx}" "shared/**/*.{ts,tsx}" --circular --no-warning --no-tree --exit-code circular:1
+      # shell-agnostic. Covers the whole editor tree, including the portal layer.
+      - npx dpdm "editor/src/**/*.{ts,tsx}" --circular --no-warning --no-tree --exit-code circular:1
 
   lint:fix:
     desc: "Auto-fix lint issues"
@@ -364,13 +364,6 @@ tasks:
       - task: typecheck:_run
         vars: { PROJECT: editor/src/portal/tsconfig.json }
 
-  typecheck:shared:
-    desc: "Typecheck the shared design system"
-    deps: [install]
-    cmds:
-      - task: typecheck:_run
-        vars: { PROJECT: shared/tsconfig.json }
-
   typecheck:all:
     desc: "Typecheck all build variants"
     cmds:
@@ -382,7 +375,6 @@ tasks:
       - task: typecheck:scripts
       - task: typecheck:prototypes
       - task: typecheck:portal
-      - task: typecheck:shared
 
   # ============================================================
   # Quality Gate

@@ -74,11 +74,6 @@ const PLURAL_SUFFIX_RE = /_(zero|one|two|few|many|other)$/;
 
 const front = (rel: string): string => path.join(FRONTEND_ROOT, rel);
 
-// The shared layer is rendered by both apps, so its translation usage counts
-// toward each project (or keys used only from shared look unused, and a shared
-// component's keys go unvalidated against an app's locale).
-const SHARED_SRC = front("shared");
-
 /**
  * The projects the i18n suites guard. Each carries its own ignore lists: the
  * editor exempts a few runtime-assembled key families; the portal starts clean.
@@ -87,7 +82,6 @@ export const I18N_PROJECTS: TranslationProject[] = [
   {
     name: "editor",
     srcRoot: front("editor/src"),
-    extraRoots: [SHARED_SRC],
     // The portal layer lives under editor/src but has its own project + locale.
     excludeGlobs: ["**/portal/**"],
     localeFile: front("editor/public/locales/en-US/translation.toml"),
@@ -108,7 +102,6 @@ export const I18N_PROJECTS: TranslationProject[] = [
   {
     name: "portal",
     srcRoot: front("editor/src/portal"),
-    extraRoots: [SHARED_SRC],
     localeFile: front("editor/portal-public/locales/en-US/translation.toml"),
     ignoredKeyPatterns: [
       // Source-type copy is referenced via metadata keys in

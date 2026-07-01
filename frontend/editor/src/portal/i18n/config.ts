@@ -1,5 +1,5 @@
 /**
- * Portal i18n setup. Shares the editor's system via @shared/i18n: the same
+ * Portal i18n setup. Shares the editor's system via @app/i18n: the same
  * TOML backend, the same language list, and the same Crowdin-managed
  * `public/locales/{lng}/translation.toml` layout. US English is the source.
  *
