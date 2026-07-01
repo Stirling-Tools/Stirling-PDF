@@ -510,6 +510,7 @@ jobs:
       # cargo output unsigned, so checking it produces false negatives.
       - name: Verify Windows Code Signature
         if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/V2-master') }}
+        timeout-minutes: 15
         shell: pwsh
         run: |
           $allSigned = $true
@@ -531,11 +532,26 @@ jobs:
 
           # Extract MSI and verify the inner exe (the file that actually gets installed).
           # This is the critical check - AV flags the installed exe at runtime.
+          # Use lessmsi, not `msiexec /a`: msiexec serializes on the global
+          # _MSIExecute mutex and hangs forever on hosted runners when another
+          # installer is busy. lessmsi reads MSI tables directly - no mutex, no service.
           $msi = $msiFiles[0].FullName
           $extractDir = Join-Path $env:RUNNER_TEMP "msi-verify"
           if (Test-Path $extractDir) { Remove-Item $extractDir -Recurse -Force }
-          $proc = Start-Process msiexec.exe -ArgumentList '/a', $msi, '/qn', "TARGETDIR=$extractDir" -Wait -PassThru -NoNewWindow
-          if ($proc.ExitCode -eq 0) {
+          New-Item -ItemType Directory -Force -Path $extractDir | Out-Null
+
+          choco install lessmsi -y --no-progress --limit-output | Out-Null
+
+          # Bound the extraction and kill on hang (defence in depth over timeout-minutes).
+          $proc = Start-Process lessmsi -ArgumentList 'x', "`"$msi`"", "`"$extractDir\`"" -PassThru -NoNewWindow
+          if (-not $proc.WaitForExit(120000)) {
+            try { $proc.Kill() } catch {}
+            Write-Host "[ERROR] MSI extraction timed out after 120s"
+            $allSigned = $false
+          } elseif ($proc.ExitCode -ne 0) {
+            Write-Host "[ERROR] Failed to extract MSI for verification (exit code: $($proc.ExitCode))"
+            $allSigned = $false
+          } else {
             $innerExe = Get-ChildItem -Path $extractDir -Filter "stirling-pdf.exe" -Recurse -File | Select-Object -First 1
             if ($innerExe) {
               $sig = Get-AuthenticodeSignature -FilePath $innerExe.FullName
@@ -548,9 +564,6 @@ jobs:
               Write-Host "[ERROR] Could not find stirling-pdf.exe inside MSI"
               $allSigned = $false
             }
-          } else {
-            Write-Host "[ERROR] Failed to extract MSI for verification (exit code: $($proc.ExitCode))"
-            $allSigned = $false
           }
 
           if (-not $allSigned) {
@@ -800,7 +813,11 @@ jobs:
         uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
         with:
           tag_name: v${{ needs.determine-matrix.outputs.version }}
-          generate_release_notes: true
+          # Don't regenerate/append notes on re-runs, and don't force this into the
+          # "Latest" slot - leave the release body and latest marker as they are.
+          generate_release_notes: false
+          append_body: false
+          make_latest: false
           fail_on_unmatched_files: true
           # Installers + updater payloads + manifest. .sig contents are embedded
           # in latest.json so the .sig files themselves are not uploaded.
