@@ -24,6 +24,32 @@ import WbTwilightIcon from "@mui/icons-material/WbTwilight";
 import ZoomInIcon from "@mui/icons-material/ZoomIn";
 import ZoomOutIcon from "@mui/icons-material/ZoomOut";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+
+const VIEWER_TOOLBAR_MINIMIZED_STORAGE_KEY = "stirling.viewerToolbarMinimized";
+
+function readPersistedToolbarMinimized(): boolean {
+  try {
+    const stored = window.localStorage.getItem(
+      VIEWER_TOOLBAR_MINIMIZED_STORAGE_KEY,
+    );
+    return stored === null ? true : stored === "true";
+  } catch {
+    return true;
+  }
+}
+
+function writePersistedToolbarMinimized(minimized: boolean): void {
+  try {
+    window.localStorage.setItem(
+      VIEWER_TOOLBAR_MINIMIZED_STORAGE_KEY,
+      String(minimized),
+    );
+  } catch {
+    // private mode / quota: silently no-op
+  }
+}
 
 interface PdfViewerToolbarProps {
   // Page navigation props (placeholders for now)
@@ -66,6 +92,9 @@ export function PdfViewerToolbar({
   );
   const [isDualPageActive, setIsDualPageActive] = useState(
     spreadState.isDualPage,
+  );
+  const [isToolbarMinimized, setIsToolbarMinimized] = useState(
+    readPersistedToolbarMinimized,
   );
 
   // Register for immediate scroll updates and sync with actual scroll state
@@ -138,6 +167,47 @@ export function PdfViewerToolbar({
     scrollActions.scrollToLastPage();
   };
 
+  const setToolbarMinimized = (minimized: boolean) => {
+    setIsToolbarMinimized(minimized);
+    writePersistedToolbarMinimized(minimized);
+  };
+
+  if (!isPhone && isToolbarMinimized) {
+    return (
+      <Paper
+        radius="xl xl 0 0"
+        shadow="sm"
+        px={16}
+        py={10}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          justifyContent: "center",
+          borderTopLeftRadius: 16,
+          borderTopRightRadius: 16,
+          borderBottomLeftRadius: 0,
+          borderBottomRightRadius: 0,
+          boxShadow: "0 -2px 8px rgba(0,0,0,0.04)",
+          pointerEvents: "auto",
+        }}
+      >
+        <span style={{ fontWeight: 500, fontSize: 16 }}>
+          {scrollState.currentPage} / {scrollState.totalPages}
+        </span>
+        <ActionIcon
+          variant="light"
+          color="blue"
+          radius="xl"
+          onClick={() => setToolbarMinimized(false)}
+          aria-label={t("viewer.expandToolbar", "Expand viewer controls")}
+        >
+          <KeyboardArrowUpIcon fontSize="small" />
+        </ActionIcon>
+      </Paper>
+    );
+  }
+
   return (
     <Paper
       radius="xl xl 0 0"
@@ -159,6 +229,18 @@ export function PdfViewerToolbar({
         pointerEvents: "auto",
       }}
     >
+      {!isPhone && (
+        <ActionIcon
+          variant="light"
+          color="blue"
+          radius="xl"
+          onClick={() => setToolbarMinimized(true)}
+          aria-label={t("viewer.minimizeToolbar", "Minimize viewer controls")}
+        >
+          <KeyboardArrowDownIcon fontSize="small" />
+        </ActionIcon>
+      )}
+
       {/* First Page Button */}
       {!isPhone && (
         <Button

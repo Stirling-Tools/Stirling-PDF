@@ -8032,6 +8032,8 @@ valid = "Valid"
 validUntrusted = "Valid, signer not verified"
 
 [viewer]
+expandToolbar = "Expand viewer controls"
+minimizeToolbar = "Minimize viewer controls"
 cannotPreviewFile = "Cannot Preview File"
 copyText = "Copy"
 disableColorFilter = "Disable Color Filter"
