@@ -9,8 +9,8 @@ import "@portal/i18n/config";
 // Mantine's prebuilt styles load first so SUI tokens/base can override on
 // conflicts — SUI is the primary design language, Mantine the escape hatch.
 import "@mantine/core/styles.css";
-import "@shared/tokens/tokens.css";
-import "@shared/tokens/base.css";
+import "@app/tokens/tokens.css";
+import "@app/tokens/base.css";
 
 const root = document.getElementById("root");
 if (!root) throw new Error("No #root element");

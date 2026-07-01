@@ -2,16 +2,16 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 
 // Visual catalogue of the shared brand assets (shared/assets/brand) — the single
 // source of truth for the Stirling logos used across the apps.
-import modernMarkDark from "@shared/assets/brand/modern-logo/StirlingPDFLogoNoTextDark.svg";
-import modernMarkLight from "@shared/assets/brand/modern-logo/StirlingPDFLogoNoTextLight.svg";
-import modernBlack from "@shared/assets/brand/modern-logo/StirlingPDFLogoBlackText.svg";
-import modernWhite from "@shared/assets/brand/modern-logo/StirlingPDFLogoWhiteText.svg";
-import modernGrey from "@shared/assets/brand/modern-logo/StirlingPDFLogoGreyText.svg";
-import classicMarkDark from "@shared/assets/brand/classic-logo/StirlingPDFLogoNoTextDark.svg";
-import classicMarkLight from "@shared/assets/brand/classic-logo/StirlingPDFLogoNoTextLight.svg";
-import classicBlack from "@shared/assets/brand/classic-logo/StirlingPDFLogoBlackText.svg";
-import classicWhite from "@shared/assets/brand/classic-logo/StirlingPDFLogoWhiteText.svg";
-import classicGrey from "@shared/assets/brand/classic-logo/StirlingPDFLogoGreyText.svg";
+import modernMarkDark from "@app/assets/brand/modern-logo/StirlingPDFLogoNoTextDark.svg";
+import modernMarkLight from "@app/assets/brand/modern-logo/StirlingPDFLogoNoTextLight.svg";
+import modernBlack from "@app/assets/brand/modern-logo/StirlingPDFLogoBlackText.svg";
+import modernWhite from "@app/assets/brand/modern-logo/StirlingPDFLogoWhiteText.svg";
+import modernGrey from "@app/assets/brand/modern-logo/StirlingPDFLogoGreyText.svg";
+import classicMarkDark from "@app/assets/brand/classic-logo/StirlingPDFLogoNoTextDark.svg";
+import classicMarkLight from "@app/assets/brand/classic-logo/StirlingPDFLogoNoTextLight.svg";
+import classicBlack from "@app/assets/brand/classic-logo/StirlingPDFLogoBlackText.svg";
+import classicWhite from "@app/assets/brand/classic-logo/StirlingPDFLogoWhiteText.svg";
+import classicGrey from "@app/assets/brand/classic-logo/StirlingPDFLogoGreyText.svg";
 
 type Asset = { label: string; src: string; onDark?: boolean };
 type VariantSet = { variant: string; mark: Asset[]; wordmark: Asset[] };

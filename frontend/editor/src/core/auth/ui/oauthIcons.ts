@@ -6,14 +6,14 @@
  * editor's saas/desktop login buttons, and the config provider list) share one
  * copy that works in both the editor and the portal bundles.
  */
-import googleIcon from "@shared/assets/login/google.svg";
-import githubIcon from "@shared/assets/login/github.svg";
-import appleIcon from "@shared/assets/login/apple.svg";
-import microsoftIcon from "@shared/assets/login/microsoft.svg";
-import keycloakIcon from "@shared/assets/login/keycloak.svg";
-import cloudronIcon from "@shared/assets/login/cloudron.svg";
-import authentikIcon from "@shared/assets/login/authentik.svg";
-import oidcIcon from "@shared/assets/login/oidc.svg";
+import googleIcon from "@app/assets/login/google.svg";
+import githubIcon from "@app/assets/login/github.svg";
+import appleIcon from "@app/assets/login/apple.svg";
+import microsoftIcon from "@app/assets/login/microsoft.svg";
+import keycloakIcon from "@app/assets/login/keycloak.svg";
+import cloudronIcon from "@app/assets/login/cloudron.svg";
+import authentikIcon from "@app/assets/login/authentik.svg";
+import oidcIcon from "@app/assets/login/oidc.svg";
 
 /** Generic fallback icon (filename) for unknown providers. */
 export const GENERIC_PROVIDER_ICON = "oidc.svg";

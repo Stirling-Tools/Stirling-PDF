@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { runsToStats, runsToActivity } from "@shared/policies/runs";
-import type { PolicyRunView } from "@shared/policies/types";
+import { runsToStats, runsToActivity } from "@app/policies/runs";
+import type { PolicyRunView } from "@app/policies/types";
 
 const MIN = 60000;
 const HOUR = 3600000;

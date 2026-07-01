@@ -10,7 +10,7 @@ import {
   normalizeLanguageCode,
   toUnderscoreFormat,
   toUnderscoreLanguages,
-} from "@shared/i18n/languages";
+} from "@app/i18n/languages";
 
 // Language metadata and code helpers are shared with the portal via
 // @shared/i18n. Re-export them so existing `@app/i18n` consumers are unchanged.

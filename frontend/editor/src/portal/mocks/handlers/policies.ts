@@ -4,7 +4,7 @@ import {
   seedPolicyRuns,
   type WirePolicy,
 } from "@portal/mocks/policies";
-import type { PolicyRunView } from "@shared/policies/types";
+import type { PolicyRunView } from "@app/policies/types";
 
 /**
  * The portal exercises the REAL policy API base — `/api/v1/policies`, NOT the

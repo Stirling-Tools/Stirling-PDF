@@ -8,8 +8,8 @@ import { useLink } from "@portal/contexts/LinkContext";
 import { useAsync } from "@portal/hooks/useAsync";
 import { fetchHomeKpis, type KpiEntry } from "@portal/api/home";
 import { EDITOR_URL } from "@portal/auth/editorUrl";
-import markLight from "@shared/assets/brand/modern-logo/StirlingPDFLogoNoTextLight.svg";
-import markDark from "@shared/assets/brand/modern-logo/StirlingPDFLogoNoTextDark.svg";
+import markLight from "@app/assets/brand/modern-logo/StirlingPDFLogoNoTextLight.svg";
+import markDark from "@app/assets/brand/modern-logo/StirlingPDFLogoNoTextDark.svg";
 import {
   HomeIcon,
   UsersIcon,

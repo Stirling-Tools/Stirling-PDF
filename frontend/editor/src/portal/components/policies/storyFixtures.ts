@@ -3,8 +3,8 @@
  * policy built straight from the catalogue + seed data, so stories render the
  * same shapes the MSW handlers serve without standing up the whole API.
  */
-import { fromWirePolicy } from "@shared/policies/codec";
-import { runsToActivity, runsToStats } from "@shared/policies/runs";
+import { fromWirePolicy } from "@app/policies/codec";
+import { runsToActivity, runsToStats } from "@app/policies/runs";
 import {
   POLICY_CATEGORIES,
   POLICY_CONFIG,

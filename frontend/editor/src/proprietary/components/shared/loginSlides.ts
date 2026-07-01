@@ -4,8 +4,8 @@ import type { LogoVariant } from "@app/services/preferencesService";
 import type { TFunction } from "i18next";
 import { loginSlideText } from "@app/auth/ui/loginSlideText";
 import type { ImageSlide } from "@app/auth/ui/LoginRightCarousel";
-import addToPdf from "@shared/assets/login/AddToPDF.png";
-import securePdf from "@shared/assets/login/SecurePDF.png";
+import addToPdf from "@app/assets/login/AddToPDF.png";
+import securePdf from "@app/assets/login/SecurePDF.png";
 
 const SLIDE_TILT = { followMouseTilt: true, tiltMaxDeg: 5 } as const;
 

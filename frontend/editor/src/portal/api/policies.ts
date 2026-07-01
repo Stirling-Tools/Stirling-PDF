@@ -11,9 +11,9 @@
  */
 
 import { apiClient } from "@portal/api/http";
-import { fromWirePolicy, toWirePolicy } from "@shared/policies/codec";
-import { runsToActivity, runsToStats } from "@shared/policies/runs";
-import type { PolicyDecodedState, WirePolicy } from "@shared/policies/types";
+import { fromWirePolicy, toWirePolicy } from "@app/policies/codec";
+import { runsToActivity, runsToStats } from "@app/policies/runs";
+import type { PolicyDecodedState, WirePolicy } from "@app/policies/types";
 import {
   POLICY_CATEGORIES,
   POLICY_CONFIG,
@@ -25,7 +25,7 @@ import {
   type PolicyState,
   type PolicyStatus,
 } from "@portal/mocks/policies";
-import type { PolicyRunView } from "@shared/policies/types";
+import type { PolicyRunView } from "@app/policies/types";
 
 export type {
   CatalogueEntry,
@@ -58,7 +58,7 @@ export {
 } from "@portal/mocks/policies";
 
 // Re-export the wire step type under the legacy name components depend on.
-export type { WirePipelineStep as PipelineStep } from "@shared/policies/types";
+export type { WirePipelineStep as PipelineStep } from "@app/policies/types";
 
 // ── Client-side catalogue assembly ───────────────────────────────────────────
 

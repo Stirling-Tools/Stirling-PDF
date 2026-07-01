@@ -275,11 +275,11 @@ export default defineConfig(async ({ mode }) => {
             // Brand assets live in the shared design system; the editor serves
             // them by URL per variant, so copy each set to the /{variant}-logo
             // path its manifests, index.html and useLogoAssets resolve against.
-            src: "../shared/assets/brand/classic-logo/*",
+            src: "src/core/assets/brand/classic-logo/*",
             dest: "classic-logo",
           },
           {
-            src: "../shared/assets/brand/modern-logo/*",
+            src: "src/core/assets/brand/modern-logo/*",
             dest: "modern-logo",
           },
         ],

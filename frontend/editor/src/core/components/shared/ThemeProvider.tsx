@@ -19,7 +19,7 @@ import {
   resolveColorScheme,
 } from "@app/constants/theme";
 // SUI shared design-system tokens (used by @app/ui); key on `data-theme`.
-import "@shared/tokens/tokens.css";
+import "@app/tokens/tokens.css";
 
 interface ThemeContextType {
   themeMode: ThemeMode;

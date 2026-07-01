@@ -11,8 +11,8 @@
  * api/policies.ts re-exports everything; components never reach in here.
  */
 
-import type { WirePipelineStep, WirePolicy } from "@shared/policies/types";
-import type { PolicyRunView } from "@shared/policies/types";
+import type { WirePipelineStep, WirePolicy } from "@app/policies/types";
+import type { PolicyRunView } from "@app/policies/types";
 
 export type {
   PolicyActivityItem,
@@ -24,7 +24,7 @@ export type {
   WireOutputSpec,
   WirePipelineStep,
   WirePolicy,
-} from "@shared/policies/types";
+} from "@app/policies/types";
 
 /* ──────────────────────────────────────────────────────────────────────── */
 /*  Catalogue model — portal-specific (lifted from editor types/policies.ts) */
@@ -98,8 +98,8 @@ export interface DecoratedPolicy {
   config: PolicyConfigDef;
   state: PolicyState;
   steps: WirePipelineStep[];
-  stats: import("@shared/policies/types").PolicyStats;
-  activity: import("@shared/policies/types").PolicyActivityItem[];
+  stats: import("@app/policies/types").PolicyStats;
+  activity: import("@app/policies/types").PolicyActivityItem[];
 }
 
 export interface PoliciesSummary {

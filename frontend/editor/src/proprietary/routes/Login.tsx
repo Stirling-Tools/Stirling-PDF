@@ -22,7 +22,7 @@ import {
 import SpringLoginForm from "@app/auth/ui/SpringLoginForm";
 import { useSpringLogin } from "@app/auth/ui/useSpringLogin";
 import LoggedInState from "@app/routes/login/LoggedInState";
-import loginHeader from "@shared/assets/brand/modern-logo/LoginLightModeHeader.svg";
+import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
 
 export default function Login() {
   const navigate = useNavigate();

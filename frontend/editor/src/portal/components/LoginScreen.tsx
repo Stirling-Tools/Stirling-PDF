@@ -7,7 +7,7 @@ import SpringLoginForm from "@app/auth/ui/SpringLoginForm";
 import { useSpringLogin } from "@app/auth/ui/useSpringLogin";
 import "@app/auth/ui/auth-theme.css";
 import "@app/auth/ui/auth.css";
-import loginHeader from "@shared/assets/brand/modern-logo/LoginLightModeHeader.svg";
+import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
 
 /**
  * Full-screen login shown by the portal's auth gate. Renders the same screen as

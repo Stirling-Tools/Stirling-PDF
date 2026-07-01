@@ -1,5 +1,5 @@
 import { memo, useEffect, useMemo, useRef, useState } from "react";
-import bgDefault from "@shared/assets/login/LoginBackgroundPanel.png";
+import bgDefault from "@app/assets/login/LoginBackgroundPanel.png";
 
 export type ImageSlide = {
   src: string;

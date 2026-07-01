@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { toWirePolicy, fromWirePolicy } from "@shared/policies/codec";
-import type { PolicyDecodedState } from "@shared/policies/types";
+import { toWirePolicy, fromWirePolicy } from "@app/policies/codec";
+import type { PolicyDecodedState } from "@app/policies/types";
 
 const FULL_STATE: PolicyDecodedState = {
   id: "pol_123",

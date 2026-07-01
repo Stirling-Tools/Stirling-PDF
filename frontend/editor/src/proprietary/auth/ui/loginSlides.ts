@@ -1,9 +1,9 @@
 import { defaultTranslate, type AuthTranslate } from "@app/auth/types";
 import type { ImageSlide } from "@app/auth/ui/LoginRightCarousel";
 import { loginSlideText } from "@app/auth/ui/loginSlideText";
-import firstPage from "@shared/assets/login/Firstpage.png";
-import addToPdf from "@shared/assets/login/AddToPDF.png";
-import securePdf from "@shared/assets/login/SecurePDF.png";
+import firstPage from "@app/assets/login/Firstpage.png";
+import addToPdf from "@app/assets/login/AddToPDF.png";
+import securePdf from "@app/assets/login/SecurePDF.png";
 
 const SLIDE_TILT = { followMouseTilt: true, tiltMaxDeg: 5 } as const;
 
