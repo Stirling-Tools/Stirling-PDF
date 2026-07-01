@@ -21,6 +21,7 @@ import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.PolicyRunStatus;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
 import stirling.software.proprietary.policy.source.Source;
+import stirling.software.proprietary.policy.source.SourceDocCounter;
 import stirling.software.proprietary.policy.source.SourceStore;
 
 /**
@@ -37,6 +38,7 @@ public class PolicyRunner {
     private final PolicyEngine policyEngine;
     private final List<InputSource> inputSources;
     private final SourceStore sourceStore;
+    private final SourceDocCounter docCounter;
 
     /**
      * Trigger entry point. Pulls every referenced source; each yielded unit becomes its own run so
@@ -65,7 +67,7 @@ public class PolicyRunner {
                         policy.id());
                 continue;
             }
-            runIds.addAll(pullAndRun(policy, source.toInputSpec()));
+            runIds.addAll(pullAndRun(policy, sourceId, source.toInputSpec()));
         }
         return runIds;
     }
@@ -82,7 +84,11 @@ public class PolicyRunner {
         return policyEngine.submit(definition, inputs, listener);
     }
 
-    private List<String> pullAndRun(Policy policy, InputSpec spec) {
+    /**
+     * Resolves the source and starts a run per unit; records how many documents the source fed and
+     * returns the ids of the runs started.
+     */
+    private List<String> pullAndRun(Policy policy, String sourceId, InputSpec spec) {
         InputSource source = sourceFor(spec);
         if (source == null) {
             log.warn(
@@ -103,9 +109,12 @@ public class PolicyRunner {
             return List.of();
         }
         List<String> runIds = new ArrayList<>();
+        long docsFed = 0;
         for (ResolvedInput unit : work) {
             runIds.add(startRun(policy, unit.inputs(), unit.onComplete()));
+            docsFed += unit.inputs().primary().size();
         }
+        docCounter.record(sourceId, docsFed);
         return runIds;
     }
 
