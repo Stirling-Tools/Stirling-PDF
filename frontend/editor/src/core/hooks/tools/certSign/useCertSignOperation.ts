@@ -45,6 +45,22 @@ export const buildCertSignFormData = (
           formData.append("jksFile", parameters.jksFile);
         }
         break;
+      case "WINDOWS_STORE":
+        if (parameters.alias) {
+          formData.append("alias", parameters.alias);
+        }
+        break;
+      case "PKCS11":
+        if (parameters.pkcs11LibraryPath) {
+          formData.append("pkcs11LibraryPath", parameters.pkcs11LibraryPath);
+        }
+        if (parameters.pkcs11Slot != null) {
+          formData.append("pkcs11Slot", parameters.pkcs11Slot.toString());
+        }
+        if (parameters.alias) {
+          formData.append("alias", parameters.alias);
+        }
+        break;
     }
   }
 
