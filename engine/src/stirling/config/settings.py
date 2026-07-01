@@ -186,7 +186,7 @@ def _enable_http_debug(formatter: logging.Formatter) -> None:
         lg.setLevel(level)
         # Idempotent: avoid stacking handlers on settings reload.
         if not any(getattr(h, "_stirling_http_debug", False) for h in lg.handlers):
-            handler._stirling_http_debug = True  # type: ignore[attr-defined]
+            handler._stirling_http_debug = True  # pyrefly: ignore [missing-attribute]
             lg.addHandler(handler)
         lg.propagate = False
 

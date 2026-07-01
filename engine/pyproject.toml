@@ -24,7 +24,7 @@ dev = [
     "anyio>=4.0.0",
     "datamodel-code-generator[ruff]>=0.26.0",
     "pytest>=8.0.0",
-    "pyright>=1.1.408",
+    "pyrefly==1.0.0",
     "referencing>=0.35.0",
     "ruff>=0.14.10",
 ]
@@ -52,20 +52,10 @@ select = [
     "W",
     "RUF100",
     "UP",
-    "PYI",    # flake8-pyi: flags deprecated typing constructs
-    "FA",     # flake8-future-annotations: flags missing future annotations imports
-    "BLE",    # flake8-blind-except: flags bare `except Exception`
+    "PYI", # flake8-pyi: flags deprecated typing constructs
+    "FA", # flake8-future-annotations: flags missing future annotations imports
+    "BLE", # flake8-blind-except: flags bare `except Exception`
 ]
-
-[tool.pyright]
-pythonVersion = "3.13"
-
-reportImportCycles = "warning"
-reportUnnecessaryCast = "warning"
-reportUnnecessaryTypeIgnoreComment = "warning"
-reportUnusedImport = "warning"
-reportUnknownParameterType = "warning"
-reportDeprecated = "warning"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -75,3 +65,23 @@ pythonpath = ["src", "tests"]
 # Use importlib import mode so test directories don't need __init__.py files
 # and duplicate basenames (e.g. multiple test_routes.py) collect cleanly.
 addopts = "--import-mode=importlib"
+
+[tool.pyrefly]
+python-version = "3.13.0"
+search-path = [
+    "src",
+    "tests",
+]
+# Disallow `type: ignore` comments to encourage accurate error codes to be used in ignore comments
+# Pyrefly won't flag `type: ignore [wrong-code]`, but it will flag `pyrefly: ignore [wrong-code]`
+enabled-ignores = ["pyrefly"]
+min-severity = "warn"  # TODO: Change settings below to `warn` - https://github.com/facebook/pyrefly/issues/3370
+
+[tool.pyrefly.errors]
+deprecated = "error"
+implicit-any = "error"
+redundant-cast = "error"
+unused-ignore = "error"
+# TODO: Add equivalents to:
+#  - reportImportCycles
+#  - reportUnusedImport
