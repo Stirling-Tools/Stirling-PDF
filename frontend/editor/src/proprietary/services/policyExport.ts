@@ -16,7 +16,9 @@ import {
   runStoredPolicy,
   getPolicyRun,
   downloadPolicyOutput,
+  resolvePolicyRunTarget,
 } from "@app/services/policyApi";
+import type { PolicyExecutionTarget } from "@app/services/policyPipeline";
 import {
   recordRunStart,
   isDispatched,
@@ -52,6 +54,7 @@ interface ExportPolicy {
 interface PolicyRunResult {
   file: File;
   runId: string;
+  target: PolicyExecutionTarget;
   outputs: { fileId: string; fileName: string }[];
 }
 
@@ -85,6 +88,7 @@ async function runToCompletion(
   backendId: string,
   file: File,
 ): Promise<PolicyRunResult> {
+  const target = resolvePolicyRunTarget();
   const runId = await runStoredPolicy(backendId, [file]);
   for (let i = 0; i < MAX_POLLS; i++) {
     await delay(POLL_MS);
@@ -97,12 +101,12 @@ async function runToCompletion(
     if (view.status === "COMPLETED") {
       const out = view.outputs?.[0];
       if (!out) throw new Error("policy produced no output");
-      const blob = await downloadPolicyOutput(out.fileId);
+      const blob = await downloadPolicyOutput(out.fileId, target);
       // Keep the export's filename; only the bytes are the enforced result.
       const enforced = new File([blob], file.name, {
         type: blob.type || file.type || "application/pdf",
       });
-      return { file: enforced, runId, outputs: view.outputs ?? [] };
+      return { file: enforced, runId, target, outputs: view.outputs ?? [] };
     }
     if (view.status === "FAILED" || view.status === "CANCELLED") {
       throw new Error(view.error || `policy run ${view.status.toLowerCase()}`);
@@ -220,6 +224,7 @@ export async function enforceExportPolicies(
             fileId,
             fileName: file.name,
             fileSize: file.size,
+            target: versionRun!.target,
             status: "COMPLETED",
             outputs: versionRun.outputs,
             error: null,

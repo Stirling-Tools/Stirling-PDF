@@ -64,10 +64,7 @@ export const SelectParticipantsStep: React.FC<SelectParticipantsStepProps> = ({
           disabled={!hasParticipants || disabled}
           style={{ flex: 1 }}
         >
-          {t(
-            "groupSigning.steps.selectParticipants.continue",
-            "Continue to Signature Settings",
-          )}
+          {t("groupSigning.steps.selectParticipants.continue", "Continue")}
         </Button>
       </Group>
     </Stack>

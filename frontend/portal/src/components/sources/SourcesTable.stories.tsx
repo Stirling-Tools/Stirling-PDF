@@ -17,7 +17,9 @@ const SOURCES: SourceView[] = [
       { label: "Directory", value: "/data/claims-intake" },
       { label: "Mode", value: "consume" },
     ],
-    docsTotal: null,
+    docsTotal: 45230,
+    docs24h: 312,
+    docs30d: 9870,
   },
   {
     id: "src-archive",
@@ -27,7 +29,9 @@ const SOURCES: SourceView[] = [
     referenceCount: 0,
     referencingPolicies: [],
     config: [{ label: "Directory", value: "/data/archive" }],
-    docsTotal: null,
+    docsTotal: 1180,
+    docs24h: 0,
+    docs30d: 0,
   },
   {
     id: "src-legacy",
@@ -37,7 +41,9 @@ const SOURCES: SourceView[] = [
     referenceCount: 0,
     referencingPolicies: [],
     config: [{ label: "Directory", value: "/mnt/legacy" }],
-    docsTotal: null,
+    docsTotal: 48600,
+    docs24h: 0,
+    docs30d: 0,
   },
 ];
 

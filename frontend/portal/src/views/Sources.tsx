@@ -14,6 +14,7 @@ import {
   createSource,
   deleteSource,
   fetchSource,
+  fetchSourceDocCounts,
   fetchSources,
   type Source,
   type SourcesResponse,
@@ -48,6 +49,21 @@ export function Sources() {
 
   const sources = data?.sources ?? [];
   const expanded = sources.find((s) => s.id === expandedId) ?? null;
+
+  // The 30-day sparkline series lives off the list endpoint; fetch it for the one
+  // expanded row only (empty while collapsed, so no request fires).
+  const docSeriesState = useAsync<{ id: string; series: number[] }>(
+    () =>
+      expandedId
+        ? fetchSourceDocCounts(expandedId).then((series) => ({
+            id: expandedId,
+            series,
+          }))
+        : Promise.resolve({ id: "", series: [] }),
+    [expandedId],
+  );
+  const docSeries =
+    docSeriesState.data?.id === expandedId ? docSeriesState.data.series : [];
 
   function openCreate() {
     setEditingSource(null);
@@ -166,6 +182,7 @@ export function Sources() {
       {expanded && (
         <SourceDetailCard
           source={expanded}
+          docSeries={docSeries}
           onClose={() => setExpandedId(null)}
           onEdit={openEdit}
           onTogglePause={togglePause}
