@@ -31,13 +31,10 @@ export function EnforcementQueueStatus() {
     >
       <Loader size="xs" />
       <Text size="xs" c="dimmed" truncate>
-        {t(`policies.enforcement.triggerVerb.${lead.trigger}`, {
-          defaultValue: t("policies.enforcement.triggerVerb.default"),
-        })}
-        : {lead.label}
+        {t("policies.enforcement.enforcing", "Enforcing policy")} — {lead.label}
         {queued > 0
           ? ` · ${t("policies.enforcement.queued", { count: queued })}`
-          : "…"}
+          : ""}
       </Text>
     </Group>
   );
