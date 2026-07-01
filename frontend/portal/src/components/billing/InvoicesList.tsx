@@ -83,13 +83,13 @@ export function InvoicesList() {
   const columns: TableColumn<Invoice>[] = [
     {
       key: "date",
-      header: t("billing.invoices.columnDate"),
+      header: t("billing.invoices.columnDate", "Date"),
       render: (inv) =>
         inv.createdAt ? formatPeriodDate(inv.createdAt, { year: true }) : "—",
     },
     {
       key: "pdfs",
-      header: t("billing.invoices.columnPdfsProcessed"),
+      header: t("billing.invoices.columnPdfsProcessed", "PDFs processed"),
       align: "right",
       // Billed units on the invoice's metered line item; "—" when the
       // line-item table isn't synced into the Stripe mirror.
@@ -98,7 +98,7 @@ export function InvoicesList() {
     },
     {
       key: "amount",
-      header: t("billing.invoices.columnAmount"),
+      header: t("billing.invoices.columnAmount", "Amount"),
       align: "right",
       render: (inv) =>
         inv.totalMinor == null
@@ -107,7 +107,7 @@ export function InvoicesList() {
     },
     {
       key: "status",
-      header: t("billing.invoices.columnStatus"),
+      header: t("billing.invoices.columnStatus", "Status"),
       render: (inv) => (
         <StatusBadge tone={statusTone(inv.status)} size="sm">
           {inv.status}
@@ -116,10 +116,11 @@ export function InvoicesList() {
     },
     {
       key: "description",
-      header: t("billing.invoices.columnDescription"),
+      header: t("billing.invoices.columnDescription", "Description"),
       render: (inv) => (
         <span className="portal-billing__invoice-desc">
-          {inv.description ?? t("billing.invoices.descriptionFallback")}
+          {inv.description ??
+            t("billing.invoices.descriptionFallback", "Invoice")}
         </span>
       ),
     },
@@ -135,11 +136,15 @@ export function InvoicesList() {
               href={inv.hostedInvoiceUrl}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label={t("billing.invoices.viewAriaLabel", {
-                number: inv.number ?? inv.id,
-              })}
+              aria-label={t(
+                "billing.invoices.viewAriaLabel",
+                "View invoice {{number}} in Stripe",
+                {
+                  number: inv.number ?? inv.id,
+                },
+              )}
             >
-              {t("billing.invoices.viewLink")}
+              {t("billing.invoices.viewLink", "View ↗")}
             </a>
           )}
           {inv.invoicePdf && (
@@ -148,11 +153,15 @@ export function InvoicesList() {
               href={inv.invoicePdf}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label={t("billing.invoices.downloadAriaLabel", {
-                number: inv.number ?? inv.id,
-              })}
+              aria-label={t(
+                "billing.invoices.downloadAriaLabel",
+                "Download invoice {{number}} as PDF",
+                {
+                  number: inv.number ?? inv.id,
+                },
+              )}
             >
-              {t("billing.invoices.pdfLink")}
+              {t("billing.invoices.pdfLink", "PDF ↓")}
             </a>
           )}
         </div>
@@ -163,7 +172,7 @@ export function InvoicesList() {
   return (
     <Card padding="loose">
       <h3 className="portal-billing__section-title">
-        {t("billing.invoices.title")}
+        {t("billing.invoices.title", "Invoice history")}
       </h3>
 
       {invoices === null && !error && (
@@ -176,15 +185,22 @@ export function InvoicesList() {
 
       {error && (
         <p className="portal-billing__error" role="alert">
-          {t("billing.invoices.loadError", { error })}
+          {t(
+            "billing.invoices.loadError",
+            "Couldn't load invoices: {{error}}",
+            { error },
+          )}
         </p>
       )}
 
       {invoices !== null && invoices.length === 0 && !error && (
         <EmptyState
           size="compact"
-          title={t("billing.invoices.emptyTitle")}
-          description={t("billing.invoices.emptyDescription")}
+          title={t("billing.invoices.emptyTitle", "No invoices yet")}
+          description={t(
+            "billing.invoices.emptyDescription",
+            "Once your team subscribes and the first cycle closes, your invoices appear here.",
+          )}
         />
       )}
 
@@ -204,14 +220,28 @@ export function InvoicesList() {
                 onClick={() => setShowAll((v) => !v)}
               >
                 {showAll
-                  ? t("billing.invoices.showFewer", { count: DEFAULT_VISIBLE })
+                  ? t(
+                      "billing.invoices.showFewer",
+                      "Show fewer (top {{count}})",
+                      { count: DEFAULT_VISIBLE },
+                    )
                   : atFetchLimit
-                    ? t("billing.invoices.showMostRecent", { count: total })
-                    : t("billing.invoices.showAll", { count: total })}
+                    ? t(
+                        "billing.invoices.showMostRecent",
+                        "Show {{count}} most recent",
+                        { count: total },
+                      )
+                    : t("billing.invoices.showAll", "Show all {{count}}", {
+                        count: total,
+                      })}
               </Button>
               {showAll && atFetchLimit && (
                 <span className="portal-billing__invoice-note">
-                  {t("billing.invoices.fetchLimitNote", { count: FETCH_LIMIT })}
+                  {t(
+                    "billing.invoices.fetchLimitNote",
+                    "Showing your {{count}} most recent invoices. Older invoices are in the Stripe portal.",
+                    { count: FETCH_LIMIT },
+                  )}
                 </span>
               )}
             </div>
