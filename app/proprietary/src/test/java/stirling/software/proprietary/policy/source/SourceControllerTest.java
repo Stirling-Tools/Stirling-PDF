@@ -50,7 +50,12 @@ class SourceControllerTest {
         SourceAccessGuard sourceGuard = new SourceAccessGuard(userService, properties, authority);
         PolicyAccessGuard policyGuard = new PolicyAccessGuard(userService, properties, authority);
         SourceOverviewService overviewService =
-                new SourceOverviewService(sourceStore, policyStore, sourceGuard, policyGuard);
+                new SourceOverviewService(
+                        sourceStore,
+                        policyStore,
+                        sourceGuard,
+                        policyGuard,
+                        new InProcessSourceDocCounter());
         triggerManager = mock(PolicyTriggerManager.class);
         // A permissive input source so config validation passes and save can be exercised.
         InputSource folderInput = mock(InputSource.class);
