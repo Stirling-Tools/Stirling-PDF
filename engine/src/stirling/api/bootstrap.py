@@ -12,6 +12,7 @@ from stirling.agents import (
     DocumentClassifierAgent,
     ExecutionPlanningAgent,
     OrchestratorAgent,
+    PdfCreateAgent,
     PdfEditAgent,
     PdfQuestionAgent,
     PdfReviewAgent,
@@ -62,6 +63,7 @@ def build_app_state(
     pdf_question_agent = PdfQuestionAgent(runtime)
     user_spec_agent = UserSpecAgent(runtime)
     pdf_review_agent = PdfReviewAgent(runtime)
+    pdf_create_agent = PdfCreateAgent(runtime)
     execution_planning_agent = ExecutionPlanningAgent(runtime)
     math_auditor_agent = MathAuditorAgent(runtime)
     pdf_comment_agent = PdfCommentAgent(runtime)
@@ -71,6 +73,7 @@ def build_app_state(
             pdf_question_agent,
             user_spec_agent,
             pdf_review_agent,
+            pdf_create_agent,
             pdf_comment_agent,
             math_auditor_agent,
             execution_planning_agent,

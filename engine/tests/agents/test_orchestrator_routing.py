@@ -69,6 +69,7 @@ def _spies() -> list[RegisterableAgent]:
             PdfQuestionNotFoundResponse(reason="spy"),
         ),
         _SpyAgent(SupportedCapability.PDF_REVIEW, "delegate_pdf_review", EditPlanResponse(summary="", steps=[])),
+        _SpyAgent(SupportedCapability.PDF_CREATE, "delegate_pdf_create", EditPlanResponse(summary="", steps=[])),
     ]
 
 
@@ -104,6 +105,13 @@ async def test_delegate_pdf_question_reaches_question_delegate(runtime: AppRunti
 async def test_delegate_pdf_review_reaches_review_delegate(runtime: AppRuntime) -> None:
     response = await _route(runtime, "delegate_pdf_review")
     assert _REACHED == [SupportedCapability.PDF_REVIEW]
+    assert isinstance(response, EditPlanResponse)
+
+
+@pytest.mark.anyio
+async def test_delegate_pdf_create_reaches_create_delegate(runtime: AppRuntime) -> None:
+    response = await _route(runtime, "delegate_pdf_create")
+    assert _REACHED == [SupportedCapability.PDF_CREATE]
     assert isinstance(response, EditPlanResponse)
 
 
