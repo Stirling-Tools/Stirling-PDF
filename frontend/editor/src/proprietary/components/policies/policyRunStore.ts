@@ -92,6 +92,10 @@ function read(): RunState {
 let state: RunState = read();
 const listeners = new Set<() => void>();
 
+function notifyListeners() {
+  for (const l of listeners) l();
+}
+
 function emit() {
   try {
     if (typeof localStorage !== "undefined") {
@@ -100,7 +104,18 @@ function emit() {
   } catch {
     // Best-effort persistence.
   }
-  for (const l of listeners) l();
+  notifyListeners();
+}
+
+// Sync in-memory state when another tab (or a test via page.evaluate + dispatchEvent)
+// writes to the same localStorage key.
+if (typeof window !== "undefined") {
+  window.addEventListener("storage", (e) => {
+    if (e.key === STORAGE_KEY) {
+      state = read();
+      notifyListeners();
+    }
+  });
 }
 
 function subscribe(listener: () => void) {

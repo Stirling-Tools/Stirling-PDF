@@ -45,6 +45,8 @@ const Viewer = (props: ViewerProps & SignatureOverlayPassThrough) => {
     // sits above EmbedPdfViewer's internal toolbar/sidebars regardless of
     // their own z-index values.
     <Box
+      data-testid="viewer-root"
+      data-file-id={activeFileId ?? ""}
       style={{
         position: "relative",
         height: "100%",
