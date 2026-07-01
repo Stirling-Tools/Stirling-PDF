@@ -56,22 +56,35 @@ export function SubscribedPlanView({ wallet, onWalletChange }: Props) {
           tone={state === "DEGRADED" ? "danger" : "warning"}
           title={
             state === "DEGRADED"
-              ? t("billing.subscribedPlan.capWarn.reachedTitle")
-              : t("billing.subscribedPlan.capWarn.approachingTitle", {
-                  pct: Math.round(pct),
-                })
+              ? t(
+                  "billing.subscribedPlan.capWarn.reachedTitle",
+                  "Monthly spend limit reached",
+                )
+              : t(
+                  "billing.subscribedPlan.capWarn.approachingTitle",
+                  "You're at {{pct}}% of your monthly spend limit",
+                  {
+                    pct: Math.round(pct),
+                  },
+                )
           }
           action={
             isLeader ? (
               <Button size="sm" onClick={raiseLimit}>
-                {t("billing.subscribedPlan.capWarn.raiseLimit")}
+                {t("billing.subscribedPlan.capWarn.raiseLimit", "Raise limit")}
               </Button>
             ) : undefined
           }
         >
           {state === "DEGRADED"
-            ? t("billing.subscribedPlan.capWarn.reachedBody")
-            : t("billing.subscribedPlan.capWarn.approachingBody")}
+            ? t(
+                "billing.subscribedPlan.capWarn.reachedBody",
+                "Metered processing is paused until you raise the limit or the cycle resets. Unlimited PDF editing keeps working.",
+              )
+            : t(
+                "billing.subscribedPlan.capWarn.approachingBody",
+                "Raise it now so automated processing never pauses.",
+              )}
         </Banner>
       )}
 
@@ -96,7 +109,10 @@ export function SubscribedPlanView({ wallet, onWalletChange }: Props) {
       {portal.error && (
         <Banner
           tone="danger"
-          title={t("billing.subscribedPlan.portalError.title")}
+          title={t(
+            "billing.subscribedPlan.portalError.title",
+            "Couldn't open Stripe portal",
+          )}
         >
           {portal.error}
         </Banner>

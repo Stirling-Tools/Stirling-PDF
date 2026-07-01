@@ -35,6 +35,7 @@ interface ToolButtonProps {
   showDescription?: boolean;
   /** Called when an unavailable tool is clicked; if provided, overrides the default no-op */
   onUnavailableClick?: () => void;
+  badgeCount?: number;
 }
 
 const ToolButton: React.FC<ToolButtonProps> = ({
@@ -47,6 +48,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
   hasStars = false,
   showDescription = false,
   onUnavailableClick,
+  badgeCount,
 }) => {
   const { t } = useTranslation();
   const { config } = useAppConfig();
@@ -181,6 +183,16 @@ const ToolButton: React.FC<ToolButtonProps> = ({
               style={{ flexShrink: 0, opacity: visuallyUnavailable ? 0.25 : 1 }}
             >
               {t("toolPanel.alpha", "Alpha")}
+            </Badge>
+          )}
+          {typeof badgeCount === "number" && badgeCount > 0 && (
+            <Badge
+              size="sm"
+              variant="filled"
+              color="red"
+              style={{ flexShrink: 0 }}
+            >
+              {badgeCount}
             </Badge>
           )}
           {usesCloud && !visuallyUnavailable && <CloudBadge />}

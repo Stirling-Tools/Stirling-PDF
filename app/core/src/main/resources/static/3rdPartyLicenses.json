@@ -180,9 +180,23 @@
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
+            "moduleName": "com.google.code.gson:gson",
+            "moduleUrl": "https://github.com/google/gson",
+            "moduleVersion": "2.14.0",
+            "moduleLicense": "Apache-2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
             "moduleName": "com.google.errorprone:error_prone_annotations",
             "moduleUrl": "https://errorprone.info/error_prone_annotations",
             "moduleVersion": "2.47.0",
+            "moduleLicense": "Apache 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "com.google.errorprone:error_prone_annotations",
+            "moduleUrl": "https://errorprone.info/error_prone_annotations",
+            "moduleVersion": "2.48.0",
             "moduleLicense": "Apache 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -628,13 +642,6 @@
             "moduleVersion": "3.2.2",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
-        },
-        {
-            "moduleName": "commons-io:commons-io",
-            "moduleUrl": "https://commons.apache.org/proper/commons-io/",
-            "moduleVersion": "2.21.0",
-            "moduleLicense": "Apache-2.0",
-            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "commons-io:commons-io",
