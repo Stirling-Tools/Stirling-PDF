@@ -13,6 +13,17 @@ name: Aggregate backend coverage
 #     producers themselves
 on:
   workflow_call:
+    inputs:
+      download_vitest_coverage:
+        description: Download the frontend-validation coverage artifact when available.
+        required: false
+        type: boolean
+        default: true
+      download_playwright_coverage:
+        description: Download the e2e-live Playwright coverage artifact when available.
+        required: false
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -198,7 +209,7 @@ jobs:
         # frontend-validation uploads as `frontend-coverage`. Tolerate
         # absence so a backend-only PR still produces the matrix with
         # just backend rows populated.
-        if: always()
+        if: always() && inputs.download_vitest_coverage
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v6.0.0
         with:
           name: frontend-coverage
@@ -206,12 +217,12 @@ jobs:
         continue-on-error: true
 
       - name: Download Playwright frontend coverage artifact
-        # e2e-live uploads as `playwright-frontend-coverage-<run_id>`.
+        # e2e-live uploads the artifact with a stable name.
         # Same tolerance as vitest - matrix script handles missing inputs.
-        if: always()
+        if: always() && inputs.download_playwright_coverage
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v6.0.0
         with:
-          name: playwright-frontend-coverage-${{ github.run_id }}
+          name: playwright-frontend-coverage
           path: matrix-inputs/playwright/
         continue-on-error: true
 

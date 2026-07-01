@@ -201,6 +201,9 @@ jobs:
     permissions:
       contents: read
     uses: ./.github/workflows/coverage-aggregate.yml
+    with:
+      download_vitest_coverage: ${{ needs.frontend-validation.result == 'success' }}
+      download_playwright_coverage: ${{ needs.playwright-e2e-live.result == 'success' }}
     secrets: inherit
 
   # Single status check that branch protection should mark as required.
