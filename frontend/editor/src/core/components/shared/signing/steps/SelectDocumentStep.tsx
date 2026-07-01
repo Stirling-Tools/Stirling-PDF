@@ -49,8 +49,8 @@ export const SelectDocumentStep: React.FC<SelectDocumentStepProps> = ({
               <PictureAsPdfIcon
                 sx={{ fontSize: 32, color: "var(--mantine-color-red-6)" }}
               />
-              <div style={{ flex: 1 }}>
-                <Text size="sm" fw={600}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <Text size="sm" fw={600} truncate>
                   {selectedFile?.name}
                 </Text>
                 {selectedFile?.size && (
@@ -63,10 +63,7 @@ export const SelectDocumentStep: React.FC<SelectDocumentStepProps> = ({
           </div>
 
           <Button onClick={onNext} fullWidth>
-            {t(
-              "groupSigning.steps.selectDocument.continue",
-              "Continue to Participant Selection",
-            )}
+            {t("groupSigning.steps.selectDocument.continue", "Continue")}
           </Button>
         </>
       )}

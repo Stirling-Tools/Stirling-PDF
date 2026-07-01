@@ -102,8 +102,27 @@ public class ValidateSignatureController {
         try (PDDocument document = pdfDocumentFactory.load(file.getInputStream())) {
             List<PDSignature> signatures = document.getSignatureDictionaries();
 
+            // Detect content appended outside every signature's ByteRange (added after signing). A
+            // properly signed document has its last signature cover all the way to EOF; if the
+            // furthest any signature reaches stops short of the file length, the tail is unsigned.
+            // Taking the max across all signatures avoids false positives on legitimately
+            // multi-signed PDFs, where an earlier signature intentionally omits later revisions.
+            long fileLength = file.getSize();
+            long maxCovered = 0;
+            for (PDSignature sig : signatures) {
+                int[] byteRange = sig.getByteRange();
+                if (byteRange != null && byteRange.length == 4) {
+                    long end = (long) byteRange[2] + byteRange[3];
+                    if (end > maxCovered) {
+                        maxCovered = end;
+                    }
+                }
+            }
+            boolean documentCovered = maxCovered <= 0 || maxCovered >= fileLength;
+
             for (PDSignature sig : signatures) {
                 SignatureValidationResult result = new SignatureValidationResult();
+                result.setCoversEntireDocument(documentCovered);
 
                 try {
                     byte[] signedContent = sig.getSignedContent(file.getInputStream());
