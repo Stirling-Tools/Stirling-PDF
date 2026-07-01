@@ -15,6 +15,11 @@
       "title": "Sign - Stirling PDF",
       "description": "Adds signature to PDF by drawing, text or image"
     },
+    "sharedSign": {
+      "image": "/og_images/home.png",
+      "title": "Shared Signing - Stirling PDF",
+      "description": "Request signatures from others and track signing sessions"
+    },
     "addText": {
       "image": "/og_images/add-text.png",
       "title": "Add Text - Stirling PDF",
@@ -494,6 +499,7 @@
   "byPath": {
     "/cert-sign": "certSign",
     "/sign": "sign",
+    "/shared-sign": "sharedSign",
     "/add-text": "addText",
     "/add-password": "addPassword",
     "/remove-password": "removePassword",

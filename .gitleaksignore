@@ -19,3 +19,11 @@ frontend/shared/components/CodeBlock.stories.tsx:curl-auth-header:4
 
 # Truncated placeholder API key in portal docs example (sk_live_8f2c...e10) - not a real secret.
 frontend/portal/src/components/docs/GettingStartedSection.tsx:generic-api-key:31
+
+# False positive: generic-api-key matches the Java type name "X509Certificate"
+# in a method signature (CreateSignatureBase.resolveSignatureAlgorithm) - not a secret.
+app/core/src/main/java/org/apache/pdfbox/examples/signature/CreateSignatureBase.java:generic-api-key:224
+
+# Supabase publishable key (public by design, RLS-protected) used as a CI fallback
+# default in the tauri-build workflow when the GitHub secret is unset - not a real secret.
+.github/workflows/tauri-build.yml:generic-api-key:402

@@ -14,6 +14,7 @@ export type ToolKind = "regular" | "super" | "link";
 export const CORE_REGULAR_TOOL_IDS = [
   "certSign",
   "sign",
+  "sharedSign",
   "addText",
   "addPassword",
   "removePassword",

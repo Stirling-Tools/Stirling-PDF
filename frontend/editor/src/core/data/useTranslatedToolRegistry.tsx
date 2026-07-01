@@ -1,5 +1,6 @@
 import { lazy, useMemo } from "react";
 import LocalIcon from "@app/components/shared/LocalIcon";
+import GroupAddOutlinedIcon from "@mui/icons-material/GroupAddOutlined";
 import { useTranslation } from "react-i18next";
 import { devApiLink } from "@app/constants/links";
 import { reorganizePagesOperationConfig } from "@app/hooks/tools/reorganizePages/useReorganizePagesOperation";
@@ -221,6 +222,20 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         ), // TODO:: not all settings shown, suggested next tools shown
         synonyms: getSynonyms(t, "sign"),
         supportsAutomate: false, //TODO make support Sign
+      },
+      sharedSign: {
+        icon: <GroupAddOutlinedIcon sx={{ fontSize: "1.5rem" }} />,
+        name: t("home.sharedSign.title", "Shared Signing"),
+        component: lazy(() => import("@app/tools/SharedSign")),
+        description: t(
+          "home.sharedSign.desc",
+          "Request signatures from others and track signing sessions",
+        ),
+        categoryId: ToolCategoryId.STANDARD_TOOLS,
+        subcategoryId: SubcategoryId.SIGNING,
+        automationSettings: null,
+        supportsAutomate: false,
+        synonyms: getSynonyms(t, "sharedSign"),
       },
       addText: {
         icon: (

@@ -278,6 +278,17 @@ export default defineConfig(async ({ mode }) => {
             src: "../node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.{wasm,mjs}",
             dest: "ort",
           },
+          {
+            // Brand assets live in the shared design system; the editor serves
+            // them by URL per variant, so copy each set to the /{variant}-logo
+            // path its manifests, index.html and useLogoAssets resolve against.
+            src: "../shared/assets/brand/classic-logo/*",
+            dest: "classic-logo",
+          },
+          {
+            src: "../shared/assets/brand/modern-logo/*",
+            dest: "modern-logo",
+          },
         ],
       }),
       compressStaticCopyPlugin(),

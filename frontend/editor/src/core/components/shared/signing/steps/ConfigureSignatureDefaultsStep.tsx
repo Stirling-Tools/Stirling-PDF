@@ -79,10 +79,7 @@ export const ConfigureSignatureDefaultsStep: React.FC<
           {t("groupSigning.steps.back", "Back")}
         </Button>
         <Button onClick={onNext} disabled={disabled} style={{ flex: 1 }}>
-          {t(
-            "groupSigning.steps.configureDefaults.continue",
-            "Continue to Review",
-          )}
+          {t("groupSigning.steps.configureDefaults.continue", "Continue")}
         </Button>
       </Group>
     </Stack>
