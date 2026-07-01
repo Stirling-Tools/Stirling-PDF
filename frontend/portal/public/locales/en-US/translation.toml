@@ -28,6 +28,7 @@ components = "Components"
 infrastructure = "Infrastructure"
 usage = "Usage & Billing"
 docs = "Developer Docs"
+procurement = "Procurement"
 settings = "Settings"
 
 [shell.header]
@@ -1806,3 +1807,75 @@ body = "Your Stirling account session has expired. Sign in again to view billing
 loadWallet = "Couldn't load wallet"
 openStripePortal = "Couldn't open Stripe portal"
 walletUnavailable = "Wallet unavailable: {{status}} {{statusText}}"
+
+[procurement]
+title = "Procurement"
+subtitle = "Get your team evaluated, contracted, and onboarded. Every document in one place."
+enterpriseBadge = "Enterprise"
+
+[procurement.journey]
+eyebrow = "Your rollout"
+title = "From trial to live, one guided path"
+subtitle = "Your solutions engineer is on every step. One next action at a time; the full checklist is below."
+engineerLabel = "Your solutions engineer"
+trialTitle = "Enterprise trial"
+daysLeft_one = "{{count}} day left"
+daysLeft_other = "{{count}} days left"
+live = "You're live on Stirling Enterprise"
+nextStep = "Next step: {{action}}"
+
+[procurement.docs]
+title = "Documents"
+subtitle = "Everything you need at each step of the journey, surfaced as the deal moves through it."
+here = "You're here"
+done = "Done"
+count_one = "{{count}} doc"
+count_other = "{{count}} docs"
+supportingTitle = "Supporting your evaluation"
+supportingSubtitle = "SOC 2, security reviews, tax forms and more, ready when your security or procurement team asks. Some carry a one-time fee."
+show = "Show"
+hide = "Hide"
+optional = "Optional"
+paidAddon = "Paid add-on"
+upcoming = "Upcoming"
+
+[procurement.status]
+available = "Available"
+action = "Action needed"
+pending = "Pending"
+request = "On request"
+complete = "Complete"
+
+[procurement.action]
+download = "Download"
+sign = "Review & sign"
+pay = "Pay now"
+upload = "Upload"
+request = "Request"
+
+[procurement.modal]
+cancel = "Cancel"
+chooseFile = "Choose file"
+noFile = "No file selected"
+signTitle = "Review and sign your agreement"
+signBody = "Opens the Stirling Enterprise Agreement for e-signature: one signature covers the MSA, order form, EULA and DPA. We countersign automatically and you advance to payment."
+signCta = "Open for signature"
+payTitle = "Confirm payment"
+payBody = "Pay your committed contract by card or bank transfer through Stripe. Your workspace provisions as soon as payment clears."
+payCta = "Continue to Stripe"
+uploadTitle = "Upload your purchase order"
+uploadBody = "Send us your PO and we invoice against it on your terms. Drag in the PDF or pick a file below."
+uploadCta = "Upload purchase order"
+requestTitle = "Request this document"
+requestBodyPaid = "This is a paid add-on. Confirm and your solutions engineer will scope it and send the paperwork."
+requestBodyFree = "We generate this on demand. Confirm and your solutions engineer will send it across shortly."
+requestCta = "Request"
+downloadTitle = "Download"
+downloadBody = "Your download will begin shortly."
+downloadCta = "Download"
+
+[procurement.locked]
+eyebrow = "Enterprise only"
+title = "The procurement track opens with Enterprise"
+description = "Trial keys, committed-volume quotes, the one-signature agreement, payment, and your document ledger all live here once you start an enterprise evaluation."
+talkToSales = "Talk to sales"
