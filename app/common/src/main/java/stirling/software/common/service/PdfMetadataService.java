@@ -7,6 +7,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,11 @@ import stirling.software.common.model.PdfMetadata;
 
 @Service
 public class PdfMetadataService {
+
+    /**
+     * ({@code {category, docType, typeConfidence, tags}}). Written by the classify-and-tag tool.
+     */
+    public static final String CLASSIFICATION_KEY = "StirlingPDFClassification";
 
     private final ApplicationProperties applicationProperties;
     private final String stirlingPDFLabel;
@@ -176,5 +182,15 @@ public class PdfMetadataService {
             }
         }
         pdf.getDocumentInformation().setAuthor(author);
+    }
+
+    /**
+     * Write the document classifier's JSON result into the custom Info-dictionary field {@link
+     * #CLASSIFICATION_KEY}, leaving all other metadata untouched.
+     */
+    public void setClassificationMetadata(PDDocument pdf, String classificationJson) {
+        PDDocumentInformation info = pdf.getDocumentInformation();
+        info.setCustomMetadataValue(CLASSIFICATION_KEY, classificationJson);
+        pdf.setDocumentInformation(info);
     }
 }

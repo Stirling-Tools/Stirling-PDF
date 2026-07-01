@@ -51,6 +51,11 @@ export interface PolicyCategory {
    * or configured. Only Security is live today.
    */
   comingSoon?: boolean;
+  /**
+   * Requires the AI engine to be enabled. Hidden from the catalog when the
+   * engine is off, so the policy only appears where it can actually run.
+   */
+  requiresAiEngine?: boolean;
 }
 
 /**

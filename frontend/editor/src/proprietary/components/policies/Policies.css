@@ -273,6 +273,36 @@
   margin: 0 0 var(--space-2);
 }
 
+/* A section label rendered as a collapse toggle (Recent Activity): strip the
+   button chrome but keep the .pol-section-label typography, chevron pushed right. */
+.pol-section-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+}
+.pol-section-chevron {
+  margin-left: auto;
+  color: var(--color-text-4);
+  transition: transform 0.15s ease;
+}
+.pol-section-chevron.is-open {
+  transform: rotate(180deg);
+}
+
+/* Recent-activity feed: cap to ~4.5 rows (and never more than ~45% of the
+   viewport) then scroll, so a long history doesn't push the stats footer away. */
+.pol-activity-list {
+  max-height: min(22rem, 45vh);
+  overflow-y: auto;
+}
+
 /* Sub-section header inside a settings card (e.g. "Output filename"). The field
    directly below it carries data-first so the borders don't double up. */
 .pol-subhead {

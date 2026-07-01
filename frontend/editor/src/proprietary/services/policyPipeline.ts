@@ -101,6 +101,16 @@ export interface PolicyRunView {
   createdAt: number;
 }
 
+/**
+ * Operations that run as policy pipeline steps but are NOT user-facing tools, so
+ * they have no tool-registry entry and never appear in the tool picker. Maps the
+ * operation id straight to its backend endpoint.
+ */
+const POLICY_OPERATION_ENDPOINTS: Record<string, string> = {
+  // Document classification — dispatched only by the Classification policy.
+  classify: "/api/v1/ai/tools/classify-and-tag",
+};
+
 /** Resolve a frontend operation id to its backend tool endpoint path. */
 function resolveEndpoint(
   operation: string,
@@ -109,10 +119,13 @@ function resolveEndpoint(
 ): string | null {
   const config = toolRegistry[operation as keyof ToolRegistry]?.operationConfig;
   const endpoint = config?.endpoint;
-  if (!endpoint) return null;
-  const resolved =
-    typeof endpoint === "function" ? endpoint(parameters) : endpoint;
-  return resolved ?? null;
+  if (endpoint) {
+    const resolved =
+      typeof endpoint === "function" ? endpoint(parameters) : endpoint;
+    if (resolved) return resolved;
+  }
+  // Policy-only operations have no registry entry; resolve them directly.
+  return POLICY_OPERATION_ENDPOINTS[operation] ?? null;
 }
 
 /**

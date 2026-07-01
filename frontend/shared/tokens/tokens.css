@@ -52,6 +52,10 @@
   --color-amber-light: #fef3c7;
   --color-amber-border: #fde68a;
   --color-amber-dark: #92400e;
+  --color-orange: #f97316;
+  --color-orange-light: #fff7ed;
+  --color-orange-border: #fed7aa;
+  --color-orange-dark: #9a3412;
 
   /* Category accents (theme-stable) */
   --color-cat-insurance: #0ea5e9;
@@ -195,6 +199,10 @@
      #fbbf24 — identical to the base — which left Mantine's amber hover a
      no-op in dark mode. */
   --color-amber-dark: #f59e0b;
+  --color-orange: #fb923c;
+  --color-orange-light: #2a1408;
+  --color-orange-border: #7c2d12;
+  --color-orange-dark: #fdba74;
 
   --color-bg: #090c14;
   --color-bg-alt: #0d1120;

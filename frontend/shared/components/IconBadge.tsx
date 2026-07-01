@@ -1,7 +1,13 @@
 import type { ReactNode } from "react";
 import "@shared/components/IconBadge.css";
 
-export type IconBadgeAccent = "blue" | "purple" | "green" | "amber" | "red";
+export type IconBadgeAccent =
+  | "blue"
+  | "purple"
+  | "green"
+  | "amber"
+  | "red"
+  | "orange";
 
 export interface IconBadgeProps {
   children: ReactNode;
