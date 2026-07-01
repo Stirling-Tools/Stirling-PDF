@@ -438,6 +438,62 @@ def step_generate_eml(context, param):
     context.file_name = file_name
 
 
+@given('I generate a {format_type} image file as "{param}"')
+def step_generate_image_via_api(context, format_type, param):
+    """Generate an image of the specified format using the backend's PDF-to-image API,
+    and register it under the given parameter name.
+    """
+    if format_type.upper() in ["PNG", "JPG", "JPEG", "GIF", "BMP"]:
+        # Fall back to PIL if it's a simple standard format
+        file_name = f"genericNonCustomisableName_{param}.{format_type.lower()}"
+        img = Image.new("RGB", (200, 200), color=(73, 109, 137))
+        draw = ImageDraw.Draw(img)
+        draw.rectangle([50, 50, 150, 150], fill=(255, 165, 0))
+        img.save(file_name, format=format_type.upper())
+        if not hasattr(context, "files"):
+            context.files = {}
+        context.files[param] = open(file_name, "rb")
+        context.param_name = param
+        context.file_name = file_name
+        return
+
+    # 1. Generate a temporary PDF
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+    c.drawString(100, height - 100, f"Temporary PDF for {format_type} generation")
+    c.showPage()
+    c.save()
+    pdf_bytes = buffer.getvalue()
+
+    # 2. Call backend /api/v1/convert/pdf/img to convert the PDF to the target image format
+    url = "http://localhost:8080/api/v1/convert/pdf/img"
+    form_data = {
+        "imageFormat": format_type,
+        "singleOrMultiple": "single",
+        "colorType": "color",
+        "dpi": "150"
+    }
+    files = {
+        "fileInput": ("temp.pdf", pdf_bytes, "application/pdf")
+    }
+
+    response = requests.post(url, data=form_data, files=files, headers=API_HEADERS, timeout=60)
+    if response.status_code != 200:
+        raise AssertionError(f"Failed to generate {format_type} image via API. Status code: {response.status_code}, Response: {response.text}")
+
+    # 3. Save the response content to a file
+    file_name = f"genericNonCustomisableName_{param}.{format_type.lower()}"
+    with open(file_name, "wb") as f:
+        f.write(response.content)
+
+    if not hasattr(context, "files"):
+        context.files = {}
+    context.files[param] = open(file_name, "rb")
+    context.param_name = param
+    context.file_name = file_name
+
+
 @given('I generate a CBZ comic archive file as "{param}"')
 def step_generate_cbz(context, param):
     """Generate a CBZ file (ZIP of PNG images) and register it under the given parameter name."""

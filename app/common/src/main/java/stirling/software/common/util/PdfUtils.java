@@ -1,337 +1,153 @@
 package stirling.software.common.util;
 
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.lang.foreign.Arena;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import javax.imageio.*;
-import javax.imageio.stream.ImageOutputStream;
-
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.apache.pdfbox.pdmodel.graphics.PDXObject;
-import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
-import org.apache.pdfbox.pdmodel.graphics.image.JPEGFactory;
-import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.rendering.ImageType;
-import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFTextStripper;
-import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
-
-import io.github.pixee.security.Filenames;
 
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.jpdfium.PdfDocument;
+import stirling.software.jpdfium.transform.PageOps;
+
+import app.photofox.vipsffm.VImage;
+import app.photofox.vipsffm.VipsOption;
+import app.photofox.vipsffm.enums.VipsBandFormat;
+import app.photofox.vipsffm.enums.VipsDirection;
+import app.photofox.vipsffm.enums.VipsInterpretation;
+import app.photofox.vipsffm.enums.VipsOperationRelational;
 
 @Slf4j
 @UtilityClass
 public class PdfUtils {
 
-    private final RegexPatternUtils patternCache = RegexPatternUtils.getInstance();
-
-    public PDRectangle textToPageSize(String size) {
-
-        return switch (size.toUpperCase(Locale.ROOT)) {
-            case "A0" -> PDRectangle.A0;
-            case "A1" -> PDRectangle.A1;
-            case "A2" -> PDRectangle.A2;
-            case "A3" -> PDRectangle.A3;
-            case "A4" -> PDRectangle.A4;
-            case "A5" -> PDRectangle.A5;
-            case "A6" -> PDRectangle.A6;
-            case "LETTER" -> PDRectangle.LETTER;
-            case "LEGAL" -> PDRectangle.LEGAL;
-            default -> throw ExceptionUtils.createInvalidPageSizeException(size);
-        };
-    }
-
-    public List<RenderedImage> getAllImages(PDResources resources) throws IOException {
-        List<RenderedImage> images = new ArrayList<>();
-
-        for (COSName name : resources.getXObjectNames()) {
-            PDXObject object = resources.getXObject(name);
-
-            if (object instanceof PDImageXObject) {
-                images.add(((PDImageXObject) object).getImage());
-
-            } else if (object instanceof PDFormXObject) {
-                images.addAll(getAllImages(((PDFormXObject) object).getResources()));
-            }
-        }
-
-        return images;
-    }
-
-    public boolean hasImages(PDDocument document, String pagesToCheck) throws IOException {
-        String[] pageOrderArr = pagesToCheck.split(",");
-        List<Integer> pageList =
-                GeneralUtils.parsePageList(pageOrderArr, document.getNumberOfPages());
-
-        for (int pageNumber : pageList) {
-            PDPage page = document.getPage(pageNumber);
-            if (hasImagesOnPage(page)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public boolean hasText(PDDocument document, String pageNumbersToCheck, String phrase)
-            throws IOException {
-        String[] pageOrderArr = pageNumbersToCheck.split(",");
-        List<Integer> pageList =
-                GeneralUtils.parsePageList(pageOrderArr, document.getNumberOfPages());
-
-        for (int pageNumber : pageList) {
-            PDPage page = document.getPage(pageNumber);
-            if (hasTextOnPage(page, phrase)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public boolean hasImagesOnPage(PDPage page) throws IOException {
-        return !getAllImages(page.getResources()).isEmpty();
-    }
-
-    public boolean hasTextOnPage(PDPage page, String phrase) throws IOException {
-        PDFTextStripper textStripper = new PDFTextStripper();
-        try (PDDocument tempDoc = new PDDocument()) {
-            tempDoc.addPage(page);
-            String pageText = textStripper.getText(tempDoc);
-            return pageText.contains(phrase);
-        }
-    }
-
     public byte[] convertFromPdf(
-            CustomPDFDocumentFactory pdfDocumentFactory,
-            byte[] inputStream,
+            Path pdfPath,
             String imageType,
             ImageType colorType,
             boolean singleImage,
             int DPI,
             String filename,
             boolean includeAnnotations)
-            throws IOException, Exception {
+            throws IOException {
 
-        // Validate and limit DPI to prevent excessive memory usage
-        int maxSafeDpi = 500; // Default maximum safe DPI
+        int maxSafeDpi = 600;
         ApplicationProperties properties =
                 ApplicationContextProvider.getBean(ApplicationProperties.class);
         if (properties != null && properties.getSystem() != null) {
             maxSafeDpi = properties.getSystem().getMaxDPI();
         }
+
         if (DPI > maxSafeDpi) {
             throw ExceptionUtils.createIllegalArgumentException(
-                    "error.dpiExceedsLimit",
-                    "DPI value {0} exceeds maximum safe limit of {1}. High DPI values can cause"
-                            + " memory issues and crashes. Please use a lower DPI value.",
-                    DPI,
-                    maxSafeDpi);
+                    "error.dpiTooHigh", "DPI value {0} is too high.", DPI, maxSafeDpi);
         }
 
-        try (PDDocument document = pdfDocumentFactory.load(inputStream);
-                ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-            PDFRenderer pdfRenderer = new PDFRenderer(document);
-            pdfRenderer.setSubsamplingAllowed(true);
+        Path actualPdfPath = pdfPath;
+        TempFile tempPdfFile = null;
+        try {
             if (!includeAnnotations) {
-                pdfRenderer.setAnnotationsFilter(annotation -> false);
+                CustomPDFDocumentFactory pdfDocumentFactory =
+                        ApplicationContextProvider.getBean(CustomPDFDocumentFactory.class);
+                if (pdfDocumentFactory != null) {
+                    try (PDDocument document = pdfDocumentFactory.load(pdfPath)) {
+                        for (PDPage page : document.getPages()) {
+                            page.getAnnotations().clear();
+                        }
+                        TempFileManager tempFileManager =
+                                ApplicationContextProvider.getBean(TempFileManager.class);
+                        if (tempFileManager != null) {
+                            tempPdfFile = new TempFile(tempFileManager, ".pdf");
+                            document.save(tempPdfFile.getFile());
+                            actualPdfPath = tempPdfFile.getPath();
+                        }
+                    }
+                }
             }
-            int pageCount = document.getNumberOfPages();
 
             if (singleImage) {
-                if ("tiff".equals(imageType.toLowerCase(Locale.ROOT))
-                        || "tif".equals(imageType.toLowerCase(Locale.ROOT))) {
-                    // Write the images to the output stream as a TIFF with multiple frames
-                    ImageWriter writer = ImageIO.getImageWritersByFormatName("tiff").next();
-                    ImageWriteParam param = writer.getDefaultWriteParam();
-                    param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-                    param.setCompressionType("ZLib");
-                    param.setCompressionQuality(1.0f);
+                try (Arena arena = Arena.ofConfined()) {
+                    VImage combined;
+                    try {
+                        String pathStr = actualPdfPath.toAbsolutePath().toString();
+                        if ("tiff".equalsIgnoreCase(imageType)
+                                || "tif".equalsIgnoreCase(imageType)) {
+                            combined =
+                                    VImage.pdfload(
+                                            arena,
+                                            pathStr,
+                                            VipsOption.Int("n", -1),
+                                            VipsOption.Int("dpi", DPI),
+                                            VipsOption.Double("background", 0.0));
+                        } else {
+                            combined = null;
+                            int pageCount;
+                            try (PdfDocument document = PdfDocument.open(actualPdfPath)) {
+                                pageCount = document.pageCount();
+                            }
 
-                    try (ImageOutputStream ios = ImageIO.createImageOutputStream(baos)) {
-                        writer.setOutput(ios);
-                        writer.prepareWriteSequence(null);
-
-                        for (int i = 0; i < pageCount; ++i) {
-                            final int pageIndex = i;
-                            BufferedImage image;
-                            try {
-                                // Validate dimensions before rendering
-                                ExceptionUtils.validateRenderingDimensions(
-                                        document.getPage(pageIndex), pageIndex + 1, DPI);
-
-                                image =
-                                        ExceptionUtils.handleOomRendering(
-                                                pageIndex + 1,
-                                                DPI,
-                                                () ->
-                                                        pdfRenderer.renderImageWithDPI(
-                                                                pageIndex, DPI, colorType));
-                            } catch (IllegalArgumentException e) {
-                                if (e.getMessage() != null
-                                        && e.getMessage()
-                                                .contains("Maximum size of image exceeded")) {
-                                    throw ExceptionUtils.createIllegalArgumentException(
-                                            "error.pageTooBigForDpi",
-                                            "PDF page {0} is too large to render at {1} DPI. Please"
-                                                    + " try a lower DPI value (recommended: 150 or"
-                                                    + " less).",
-                                            i + 1,
-                                            DPI);
+                            for (int i = 0; i < pageCount; ++i) {
+                                VImage pageVips =
+                                        VImage.pdfload(
+                                                arena,
+                                                pathStr,
+                                                VipsOption.Int("page", i),
+                                                VipsOption.Int("dpi", DPI),
+                                                VipsOption.Double("background", 0.0));
+                                if (combined == null) {
+                                    combined = pageVips;
+                                } else {
+                                    combined =
+                                            combined.join(
+                                                    pageVips, VipsDirection.DIRECTION_VERTICAL);
                                 }
-                                throw e;
-                            }
-                            writer.writeToSequence(new IIOImage(image, null, null), param);
-                        }
-
-                        writer.endWriteSequence();
-                    }
-
-                    writer.dispose();
-                } else {
-                    // Combine all images into a single big image
-
-                    // Calculate the combined image dimensions
-                    int maxWidth = 0;
-                    int totalHeight = 0;
-
-                    // Using a map to store the calculated dimensions of each page size
-                    HashMap<PdfRenderSettingsKey, PdfImageDimensionValue> pageSizes =
-                            new HashMap<>();
-                    for (int i = 0; i < pageCount; ++i) {
-                        PDPage page = document.getPage(i);
-                        PDRectangle cropBox = page.getCropBox();
-                        int rotation = page.getRotation();
-                        PdfRenderSettingsKey settings =
-                                new PdfRenderSettingsKey(
-                                        cropBox.getWidth(), cropBox.getHeight(), rotation);
-                        PdfImageDimensionValue dimension = pageSizes.get(settings);
-                        if (dimension == null) {
-                            float scale = DPI / 72f;
-                            int widthPx = (int) Math.max(Math.floor(cropBox.getWidth() * scale), 1);
-                            int heightPx =
-                                    (int) Math.max(Math.floor(cropBox.getHeight() * scale), 1);
-                            if (rotation == 90 || rotation == 270) {
-                                int tmp = widthPx;
-                                widthPx = heightPx;
-                                heightPx = tmp;
-                            }
-                            dimension = new PdfImageDimensionValue(widthPx, heightPx);
-                            pageSizes.put(settings, dimension);
-                            if (widthPx > maxWidth) {
-                                maxWidth = widthPx;
                             }
                         }
-                        totalHeight += dimension.height();
-                    }
-
-                    // Create a new BufferedImage to store the combined images
-                    BufferedImage combined =
-                            prepareImageForPdfToImage(maxWidth, totalHeight, imageType);
-                    Graphics g = combined.getGraphics();
-
-                    int currentHeight = 0;
-                    BufferedImage pageImage;
-
-                    for (int i = 0; i < pageCount; ++i) {
-                        final int pageIndex = i;
-                        try {
-                            // Validate dimensions before rendering
-                            ExceptionUtils.validateRenderingDimensions(
-                                    document.getPage(pageIndex), pageIndex + 1, DPI);
-
-                            pageImage =
-                                    ExceptionUtils.handleOomRendering(
-                                            pageIndex + 1,
-                                            DPI,
-                                            () ->
-                                                    pdfRenderer.renderImageWithDPI(
-                                                            pageIndex, DPI, colorType));
-                        } catch (IllegalArgumentException e) {
-                            if (e.getMessage() != null
-                                    && e.getMessage().contains("Maximum size of image exceeded")) {
-                                throw ExceptionUtils.createIllegalArgumentException(
-                                        "error.pageTooBigForDpi",
-                                        "PDF page {0} is too large to render at {1} DPI. Please"
-                                                + " try a lower DPI value (recommended: 150 or"
-                                                + " less).",
-                                        i + 1,
-                                        DPI);
-                            }
-                            throw e;
+                        return RenderingUtils.vImageToBytes(combined, imageType);
+                    } catch (Exception e) {
+                        log.warn(
+                                "Native libvips path-based pdfload failed, falling back to JPDFium",
+                                e);
+                        byte[] pdfBytes = Files.readAllBytes(actualPdfPath);
+                        try (PdfDocument document = PdfDocument.open(pdfBytes)) {
+                            return renderMultiPageWithJPDFium(
+                                    document, document.pageCount(), DPI, imageType);
                         }
-
-                        // Calculate the x-coordinate to center the image
-                        int x = (maxWidth - pageImage.getWidth()) / 2;
-
-                        g.drawImage(pageImage, x, currentHeight, null);
-                        currentHeight += pageImage.getHeight();
                     }
-
-                    // Write the image to the output stream
-                    ImageIO.write(combined, imageType, baos);
                 }
-
-                // Log that the image was successfully written to the byte array
-                log.info("Image successfully written to byte array");
             } else {
-                // Zip the images and return as byte array
-                try (ZipOutputStream zos = new ZipOutputStream(baos)) {
-                    for (int i = 0; i < pageCount; ++i) {
-                        final int pageIndex = i;
-                        BufferedImage image;
-                        try {
-                            // Validate dimensions before rendering
-                            ExceptionUtils.validateRenderingDimensions(
-                                    document.getPage(pageIndex), pageIndex + 1, DPI);
+                try (PdfDocument document = PdfDocument.open(actualPdfPath);
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+                    int pageCount = document.pageCount();
+                    try (ZipOutputStream zos = new ZipOutputStream(baos)) {
+                        for (int i = 0; i < pageCount; ++i) {
+                            byte[] imageBytes =
+                                    RenderingUtils.renderPageToBytes(document, i, DPI, imageType);
 
-                            image =
-                                    ExceptionUtils.handleOomRendering(
-                                            pageIndex + 1,
-                                            DPI,
-                                            () ->
-                                                    pdfRenderer.renderImageWithDPI(
-                                                            pageIndex, DPI, colorType));
-                        } catch (IllegalArgumentException e) {
-                            if (e.getMessage() != null
-                                    && e.getMessage().contains("Maximum size of image exceeded")) {
-                                throw ExceptionUtils.createIllegalArgumentException(
-                                        "error.pageTooBigForDpi",
-                                        "PDF page {0} is too large to render at {1} DPI. Please try"
-                                                + " a lower DPI value (recommended: 150 or less).",
-                                        i + 1,
-                                        DPI);
-                            }
-                            throw e;
-                        }
-                        try (ByteArrayOutputStream baosImage = new ByteArrayOutputStream()) {
-                            ImageIO.write(image, imageType, baosImage);
-
-                            // Add the image to the zip file
                             zos.putNextEntry(
                                     new ZipEntry(
                                             String.format(
@@ -339,101 +155,104 @@ public class PdfUtils {
                                                     filename + "_%d.%s",
                                                     i + 1,
                                                     imageType.toLowerCase(Locale.ROOT))));
-                            zos.write(baosImage.toByteArray());
+                            zos.write(imageBytes);
                         }
                     }
-                    // Log that the images were successfully written to the byte array
-                    log.info("Images successfully written to byte array as a zip");
+                    return baos.toByteArray();
                 }
             }
-            return baos.toByteArray();
-        } catch (IOException e) {
-            // Log an error message if there is an issue converting the PDF to an image
-            log.error("Error converting PDF to image", e);
-            throw e;
+        } finally {
+            if (tempPdfFile != null) {
+                tempPdfFile.close();
+            }
         }
     }
 
-    /**
-     * Converts a given Pdf file to PDF-Image.
-     *
-     * @param document to be converted. Note: the caller is responsible for closing the document
-     * @return converted document to PDF-Image
-     * @throws IOException if conversion fails
-     */
+    private byte[] renderMultiPageWithJPDFium(
+            PdfDocument document, int pageCount, int DPI, String imageType) throws IOException {
+        try (Arena arena = Arena.ofConfined()) {
+            VImage combined = null;
+            int firstPageHeight = 0;
+            for (int i = 0; i < pageCount; ++i) {
+                BufferedImage pageBi = PageOps.renderPage(document, i, DPI);
+                if (i == 0) {
+                    firstPageHeight = pageBi.getHeight();
+                }
+                VImage pageVips = RenderingUtils.bufferedImageToVImage(arena, pageBi);
+                if (combined == null) {
+                    combined = pageVips;
+                } else {
+                    combined = combined.join(pageVips, VipsDirection.DIRECTION_VERTICAL);
+                }
+            }
+
+            if ("tiff".equalsIgnoreCase(imageType) || "tif".equalsIgnoreCase(imageType)) {
+                return RenderingUtils.vImageToBytes(
+                        combined, imageType, VipsOption.Int("page_height", firstPageHeight));
+            }
+            return RenderingUtils.vImageToBytes(combined, imageType);
+        }
+    }
+
     public PDDocument convertPdfToPdfImage(PDDocument document) throws IOException {
         PDDocument imageDocument = new PDDocument();
+        TempFileManager tempFileManager = ApplicationContextProvider.getBean(TempFileManager.class);
+        TempFile pdfTempFile = new TempFile(tempFileManager, ".pdf");
+        document.save(pdfTempFile.getFile());
+
+        int renderDpi = 300;
+        ApplicationProperties properties =
+                ApplicationContextProvider.getBean(ApplicationProperties.class);
+        if (properties != null && properties.getSystem() != null) {
+            renderDpi = properties.getSystem().getMaxDPI();
+        }
+        final int dpi = renderDpi;
+
         try {
-            PDFRenderer pdfRenderer = new PDFRenderer(document);
-            pdfRenderer.setSubsamplingAllowed(true);
-            for (int page = 0; page < document.getNumberOfPages(); ++page) {
+            int pageCount = document.getNumberOfPages();
+            for (int page = 0; page < pageCount; ++page) {
                 final int pageIndex = page;
-                BufferedImage bim;
 
-                // Use global maximum DPI setting, fallback to 300 if not set
-                int renderDpi = 300; // Default fallback
-                ApplicationProperties properties =
-                        ApplicationContextProvider.getBean(ApplicationProperties.class);
-                if (properties != null && properties.getSystem() != null) {
-                    renderDpi = properties.getSystem().getMaxDPI();
+                // Native rendering from disk to PNG bytes then to PDF object
+                byte[] pngBytes;
+                try (Arena arena = Arena.ofConfined()) {
+                    VImage vimg =
+                            RenderingUtils.renderPageToVImage(
+                                    arena, pdfTempFile.getPath(), pageIndex, dpi);
+                    pngBytes = RenderingUtils.vImageToBytes(vimg, "png");
                 }
-                final int dpi = renderDpi;
 
-                try {
-                    bim =
-                            ExceptionUtils.handleOomRendering(
-                                    pageIndex + 1,
-                                    dpi,
-                                    () ->
-                                            pdfRenderer.renderImageWithDPI(
-                                                    pageIndex, dpi, ImageType.RGB));
-                } catch (IllegalArgumentException e) {
-                    if (e.getMessage() != null
-                            && e.getMessage().contains("Maximum size of image exceeded")) {
-                        throw ExceptionUtils.createIllegalArgumentException(
-                                "error.pageTooBigFor300Dpi",
-                                "PDF page {0} is too large to render at 300 DPI. The resulting image"
-                                        + " would exceed Java's maximum array size. Please use a lower DPI"
-                                        + " value for PDF-to-image conversion.",
-                                pageIndex + 1);
-                    }
-                    throw e;
-                }
-                PDPage originalPage = document.getPage(page);
+                PDImageXObject pdImage =
+                        PDImageXObject.createFromByteArray(imageDocument, pngBytes, "img");
+                PDPage pdPage =
+                        new PDPage(new PDRectangle(pdImage.getWidth(), pdImage.getHeight()));
+                imageDocument.addPage(pdPage);
 
-                float width = originalPage.getMediaBox().getWidth();
-                float height = originalPage.getMediaBox().getHeight();
-
-                PDPage newPage = new PDPage(new PDRectangle(width, height));
-                imageDocument.addPage(newPage);
-                PDImageXObject pdImage = LosslessFactory.createFromImage(imageDocument, bim);
                 try (PDPageContentStream contentStream =
                         new PDPageContentStream(
-                                imageDocument, newPage, AppendMode.APPEND, true, true)) {
-                    contentStream.drawImage(pdImage, 0, 0, width, height);
+                                imageDocument,
+                                pdPage,
+                                PDPageContentStream.AppendMode.APPEND,
+                                true,
+                                true)) {
+                    contentStream.drawImage(pdImage, 0, 0, pdImage.getWidth(), pdImage.getHeight());
                 }
-                bim.flush();
             }
-            return imageDocument;
+            PDDocument result = imageDocument;
+            imageDocument = null;
+            return result;
         } catch (Exception e) {
-            throw e;
+            throw new IOException("Error converting PDF to PDF-Image", e);
+        } finally {
+            if (imageDocument != null) {
+                try {
+                    imageDocument.close();
+                } catch (Exception e) {
+                    log.error("Error closing image document", e);
+                }
+            }
+            pdfTempFile.close();
         }
-    }
-
-    private BufferedImage prepareImageForPdfToImage(int maxWidth, int height, String imageType) {
-        BufferedImage combined;
-        if ("png".equalsIgnoreCase(imageType)) {
-            combined = new BufferedImage(maxWidth, height, BufferedImage.TYPE_INT_ARGB);
-        } else {
-            combined = new BufferedImage(maxWidth, height, BufferedImage.TYPE_INT_RGB);
-        }
-        if (!"png".equalsIgnoreCase(imageType)) {
-            Graphics g = combined.getGraphics();
-            g.setColor(Color.WHITE);
-            g.fillRect(0, 0, combined.getWidth(), combined.getHeight());
-            g.dispose();
-        }
-        return combined;
     }
 
     public byte[] imageToPdf(
@@ -443,40 +262,36 @@ public class PdfUtils {
             String colorType,
             CustomPDFDocumentFactory pdfDocumentFactory)
             throws IOException {
-        try (PDDocument doc = pdfDocumentFactory.createNewDocument()) {
+        try (PDDocument doc = new PDDocument()) {
             for (MultipartFile file : files) {
-                String contentType = file.getContentType();
-                String originalFilename = Filenames.toSimpleFileName(file.getOriginalFilename());
-                if (originalFilename != null
-                        && (originalFilename.toLowerCase(Locale.ROOT).endsWith(".tiff")
-                                || originalFilename.toLowerCase(Locale.ROOT).endsWith(".tif"))) {
-                    ImageReader reader = ImageIO.getImageReadersByFormatName("tiff").next();
-                    reader.setInput(ImageIO.createImageInputStream(file.getInputStream()));
-                    int numPages = reader.getNumImages(true);
-                    for (int i = 0; i < numPages; i++) {
-                        BufferedImage pageImage = reader.read(i);
-                        BufferedImage convertedImage =
-                                ImageProcessingUtils.convertColorType(pageImage, colorType);
-                        PDImageXObject pdImage =
-                                LosslessFactory.createFromImage(doc, convertedImage);
-                        addImageToDocument(doc, pdImage, fitOption, autoRotate);
+                try (InputStream inputStream = file.getInputStream();
+                        Arena arena = Arena.ofConfined()) {
+                    // High-fidelity load via libvips/ImageMagick
+                    VImage vimg = RenderingUtils.loadAnyImage(arena, inputStream);
+
+                    if (!"fullcolor".equalsIgnoreCase(colorType)) {
+                        if ("greyscale".equalsIgnoreCase(colorType)) {
+                            vimg = vimg.colourspace(VipsInterpretation.INTERPRETATION_B_W);
+                        } else if ("blackwhite".equalsIgnoreCase(colorType)) {
+                            vimg =
+                                    vimg.colourspace(VipsInterpretation.INTERPRETATION_B_W)
+                                            .relationalConst(
+                                                    VipsOperationRelational
+                                                            .OPERATION_RELATIONAL_MORE,
+                                                    List.of(128.0))
+                                            .cast(VipsBandFormat.FORMAT_UCHAR);
+                        }
                     }
-                } else {
-                    BufferedImage image = ImageProcessingUtils.loadImageWithExifOrientation(file);
-                    BufferedImage convertedImage =
-                            ImageProcessingUtils.convertColorType(image, colorType);
-                    // Use JPEGFactory if it's JPEG since JPEG is lossy
+
+                    byte[] pngBytes = RenderingUtils.vImageToBytes(vimg, "png");
                     PDImageXObject pdImage =
-                            (contentType != null && MediaType.IMAGE_JPEG_VALUE.equals(contentType))
-                                    ? JPEGFactory.createFromImage(doc, convertedImage)
-                                    : LosslessFactory.createFromImage(doc, convertedImage);
+                            PDImageXObject.createFromByteArray(doc, pngBytes, "img");
                     addImageToDocument(doc, pdImage, fitOption, autoRotate);
                 }
             }
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            doc.save(byteArrayOutputStream);
-            log.debug("PDF successfully saved to byte array");
-            return byteArrayOutputStream.toByteArray();
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            doc.save(baos);
+            return baos.toByteArray();
         }
     }
 
@@ -490,7 +305,7 @@ public class PdfUtils {
             pageSize = new PDRectangle(pageSize.getHeight(), pageSize.getWidth());
         }
 
-        if ("fitDocumentToImage".equals(fitOption)) {
+        if ("fitDocumentToImage".equalsIgnoreCase(fitOption)) {
             pageSize = new PDRectangle(image.getWidth(), image.getHeight());
         }
 
@@ -501,14 +316,16 @@ public class PdfUtils {
         float pageHeight = page.getMediaBox().getHeight();
 
         try (PDPageContentStream contentStream =
-                new PDPageContentStream(doc, page, AppendMode.APPEND, true, true)) {
-            if ("fillPage".equals(fitOption) || "fitDocumentToImage".equals(fitOption)) {
+                new PDPageContentStream(
+                        doc, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
+            if ("fillPage".equalsIgnoreCase(fitOption)
+                    || "fitDocumentToImage".equalsIgnoreCase(fitOption)) {
                 contentStream.drawImage(image, 0, 0, pageWidth, pageHeight);
-            } else if ("maintainAspectRatio".equals(fitOption)) {
+            } else if ("maintainAspectRatio".equalsIgnoreCase(fitOption)) {
                 float imageAspectRatio = (float) image.getWidth() / (float) image.getHeight();
                 float pageAspectRatio = pageWidth / pageHeight;
 
-                float scaleFactor = 1.0f;
+                float scaleFactor;
                 if (imageAspectRatio > pageAspectRatio) {
                     scaleFactor = pageWidth / image.getWidth();
                 } else {
@@ -523,26 +340,30 @@ public class PdfUtils {
                         yPos,
                         image.getWidth() * scaleFactor,
                         image.getHeight() * scaleFactor);
+            } else {
+                contentStream.drawImage(image, 0, 0, image.getWidth(), image.getHeight());
             }
-        } catch (IOException e) {
-            log.error("Error adding image to PDF", e);
-            throw e;
         }
     }
 
     public byte[] overlayImage(
-            CustomPDFDocumentFactory pdfDocumentFactory,
-            byte[] pdfBytes,
-            byte[] imageBytes,
-            float x,
-            float y,
-            boolean everyPage)
+            Path pdfPath, InputStream imageStream, float x, float y, boolean everyPage)
             throws IOException {
+        try (PDDocument document = Loader.loadPDF(pdfPath.toFile())) {
+            byte[] pngBytes;
+            try (Arena arena = Arena.ofConfined()) {
+                // High-fidelity load
+                VImage vimg = RenderingUtils.loadAnyImage(arena, imageStream);
+                pngBytes = RenderingUtils.vImageToBytes(vimg, "png");
+            }
 
-        try (PDDocument document = pdfDocumentFactory.load(pdfBytes)) {
-            // Get the first page of the PDF
-            int pages = document.getNumberOfPages();
-            for (int i = 0; i < pages; i++) {
+            PDImageXObject pdImage =
+                    PDImageXObject.createFromByteArray(document, pngBytes, "overlay");
+
+            int pageCount = document.getNumberOfPages();
+            for (int i = 0; i < pageCount; i++) {
+                if (!everyPage && i > 0) break;
+
                 PDPage page = document.getPage(i);
                 try (PDPageContentStream contentStream =
                         new PDPageContentStream(
@@ -551,107 +372,103 @@ public class PdfUtils {
                                 PDPageContentStream.AppendMode.APPEND,
                                 true,
                                 true)) {
-                    // Create an image object from the image bytes
-                    PDImageXObject image =
-                            PDImageXObject.createFromByteArray(document, imageBytes, "");
-                    // Draw the image onto the page at the specified x and y coordinates
-                    contentStream.drawImage(image, x, y);
-                    log.info("Image successfully overlaid onto PDF");
-                    if (!everyPage && i == 0) {
-                        break;
-                    }
-                } catch (IOException e) {
-                    // Log an error message if there is an issue overlaying the image onto the PDF
-                    log.error("Error overlaying image onto PDF", e);
-                    throw e;
+                    contentStream.drawImage(pdImage, x, y);
                 }
             }
-            // Create a ByteArrayOutputStream to save the PDF to
+
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             document.save(baos);
-            log.info("PDF successfully saved to byte array");
             return baos.toByteArray();
         }
     }
 
-    public boolean containsTextInFile(PDDocument pdfDocument, String text, String pagesToCheck)
-            throws IOException {
-        PDFTextStripper textStripper = new PDFTextStripper();
-        StringBuilder pdfText = new StringBuilder();
-
-        if (pagesToCheck == null || "all".equals(pagesToCheck)) {
-            pdfText = new StringBuilder(textStripper.getText(pdfDocument));
-        } else {
-            // remove whitespaces using cached pattern
-            Pattern whitespacePattern =
-                    patternCache.getPattern(RegexPatternUtils.getWhitespaceRegex());
-            Matcher whitespaceMatcher = whitespacePattern.matcher(pagesToCheck);
-            pagesToCheck = whitespaceMatcher.replaceAll("");
-
-            String[] splitPoints = pagesToCheck.split(",");
-            for (String splitPoint : splitPoints) {
-                if (splitPoint.contains("-")) {
-                    // Handle page ranges
-                    String[] range = splitPoint.split("-");
-                    int startPage = Integer.parseInt(range[0]);
-                    int endPage = Integer.parseInt(range[1]);
-
-                    for (int i = startPage; i <= endPage; i++) {
-                        textStripper.setStartPage(i);
-                        textStripper.setEndPage(i);
-                        pdfText.append(textStripper.getText(pdfDocument));
-                    }
-                } else {
-                    // Handle individual page
-                    int page = Integer.parseInt(splitPoint);
-                    textStripper.setStartPage(page);
-                    textStripper.setEndPage(page);
-                    pdfText.append(textStripper.getText(pdfDocument));
-                }
-            }
+    public static PDRectangle textToPageSize(String pageSize) {
+        if (pageSize.contains("x")) {
+            String[] parts = pageSize.split("x");
+            return new PDRectangle(Float.parseFloat(parts[0]), Float.parseFloat(parts[1]));
         }
-
-        pdfDocument.close();
-
-        return pdfText.toString().contains(text);
-    }
-
-    public boolean pageCount(PDDocument pdfDocument, int pageCount, String comparator)
-            throws IOException {
-        int actualPageCount = pdfDocument.getNumberOfPages();
-        pdfDocument.close();
-
-        return switch (comparator.toLowerCase(Locale.ROOT)) {
-            case "greater" -> actualPageCount > pageCount;
-            case "equal" -> actualPageCount == pageCount;
-            case "less" -> actualPageCount < pageCount;
-            default ->
-                    throw ExceptionUtils.createInvalidArgumentException("comparator", comparator);
+        return switch (pageSize.toUpperCase(Locale.ROOT)) {
+            case "A0" -> PDRectangle.A0;
+            case "A1" -> PDRectangle.A1;
+            case "A2" -> PDRectangle.A2;
+            case "A3" -> PDRectangle.A3;
+            case "A4" -> PDRectangle.A4;
+            case "A5" -> PDRectangle.A5;
+            case "A6" -> PDRectangle.A6;
+            case "LETTER" -> PDRectangle.LETTER;
+            case "LEGAL" -> PDRectangle.LEGAL;
+            default -> throw new IllegalArgumentException("Unsupported page size: " + pageSize);
         };
     }
 
-    public boolean pageSize(PDDocument pdfDocument, String expectedPageSize) throws IOException {
-        PDPage firstPage = pdfDocument.getPage(0);
-        PDRectangle mediaBox = firstPage.getMediaBox();
-
-        float actualPageWidth = mediaBox.getWidth();
-        float actualPageHeight = mediaBox.getHeight();
-
-        pdfDocument.close();
-
-        // Assumes the expectedPageSize is in the format "widthxheight", e.g. "595x842"
-        // for A4
-        String[] dimensions = expectedPageSize.split("x");
-        float expectedPageWidth = Float.parseFloat(dimensions[0]);
-        float expectedPageHeight = Float.parseFloat(dimensions[1]);
-
-        // Checks if the actual page size matches the expected page size
-        return actualPageWidth == expectedPageWidth && actualPageHeight == expectedPageHeight;
+    public static boolean pageCount(PDDocument document, int count, String comparator) {
+        int pages = document.getNumberOfPages();
+        return switch (comparator.toLowerCase(Locale.ROOT)) {
+            case "greater" -> pages > count;
+            case "equal" -> pages == count;
+            case "less" -> pages < count;
+            default -> throw new IllegalArgumentException("Unsupported comparator: " + comparator);
+        };
     }
 
-    /** Key for storing the dimensions of a rendered image in a map. */
-    private record PdfRenderSettingsKey(float mediaBoxWidth, float mediaBoxHeight, int rotation) {}
+    public static boolean pageSize(PDDocument document, String pageSize) {
+        PDRectangle targetSize = textToPageSize(pageSize);
+        for (PDPage page : document.getPages()) {
+            PDRectangle size = page.getMediaBox();
+            if (Math.abs(size.getWidth() - targetSize.getWidth()) > 1
+                    || Math.abs(size.getHeight() - targetSize.getHeight()) > 1) {
+                return false;
+            }
+        }
+        return true;
+    }
 
-    /** Value for storing the dimensions of a rendered image in a map. */
-    private record PdfImageDimensionValue(int width, int height) {}
+    public static boolean hasImages(PDDocument document, String pagesToCheck) throws IOException {
+        int pageCount = document.getNumberOfPages();
+        if ("all".equalsIgnoreCase(pagesToCheck)) {
+            for (int i = 0; i < pageCount; i++) {
+                if (hasImagesOnPage(document.getPage(i))) return true;
+            }
+        } else {
+            if (hasImagesOnPage(document.getPage(0))) return true;
+        }
+        return false;
+    }
+
+    public static boolean hasText(PDDocument document, String pagesToCheck, String text)
+            throws IOException {
+        PDFTextStripper stripper = new PDFTextStripper();
+        return stripper.getText(document).contains(text);
+    }
+
+    public static boolean hasImagesOnPage(PDPage page) throws IOException {
+        PDResources resources = page.getResources();
+        if (resources == null) return false;
+        for (COSName name : resources.getXObjectNames()) {
+            if (resources.isImageXObject(name)) return true;
+        }
+        return false;
+    }
+
+    public static boolean hasTextOnPage(PDPage page, String text) throws IOException {
+        try (PDDocument tempDoc = new PDDocument()) {
+            tempDoc.addPage(page);
+            PDFTextStripper stripper = new PDFTextStripper();
+            return stripper.getText(tempDoc).contains(text);
+        }
+    }
+
+    public static List<RenderedImage> getAllImages(PDResources resources) throws IOException {
+        List<RenderedImage> images = new ArrayList<>();
+        if (resources == null) return images;
+        for (COSName name : resources.getXObjectNames()) {
+            if (resources.isImageXObject(name)) {
+                images.add(
+                        ((org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject)
+                                        resources.getXObject(name))
+                                .getImage());
+            }
+        }
+        return images;
+    }
 }

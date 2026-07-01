@@ -277,6 +277,8 @@ subprojects {
 
     tasks.withType(Test).configureEach {
         useJUnitPlatform()
+        jvmArgs += ["--enable-native-access=ALL-UNNAMED"]
+        maxParallelForks = Math.max(1, (Runtime.runtime.availableProcessors().intdiv(2)) as int)
         finalizedBy(jacocoReport)
     }
 
@@ -684,6 +686,7 @@ tasks.register('buildRestartHelper', Jar) {
 }
 
 tasks.withType(Test).configureEach {
+    jvmArgs += ["--enable-native-access=ALL-UNNAMED"]
     // maxParallelForks: parallelise JUnit across cores
     // Half of available CPUs is a safe default; bump if your tests are I/O-bound.
     maxParallelForks = Math.max(1, (Runtime.runtime.availableProcessors().intdiv(2)) as int)

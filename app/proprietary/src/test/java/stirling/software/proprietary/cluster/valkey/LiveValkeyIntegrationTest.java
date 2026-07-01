@@ -300,11 +300,25 @@ class LiveValkeyIntegrationTest {
         long capacity = 5;
         Duration window = Duration.ofMillis(500);
 
+        long startInit = System.currentTimeMillis();
         int firstAllowed = 0;
         for (int i = 0; i < 10; i++) {
             if (store.tryConsume(key, capacity, window).allowed()) firstAllowed++;
         }
-        assertEquals(capacity, firstAllowed, "must allow exactly capacity tokens initially");
+        long elapsedInit = System.currentTimeMillis() - startInit;
+        long refillIntervalMs = window.toMillis() / capacity;
+        long maxExpected = capacity + (elapsedInit / refillIntervalMs);
+        assertTrue(
+                firstAllowed >= capacity && firstAllowed <= maxExpected,
+                "must allow between "
+                        + capacity
+                        + " and "
+                        + maxExpected
+                        + " tokens initially (elapsed "
+                        + elapsedInit
+                        + "ms, got "
+                        + firstAllowed
+                        + ")");
 
         Thread.sleep(window.toMillis() + 50);
         int secondAllowed = 0;
