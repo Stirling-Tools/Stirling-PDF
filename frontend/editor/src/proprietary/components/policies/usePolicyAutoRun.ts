@@ -303,7 +303,7 @@ export function usePolicyAutoRun(): void {
 interface ImportContext {
   addFiles: (
     files: File[],
-    options?: { skipUploadTracking?: boolean },
+    options?: { skipUploadTracking?: boolean; derivedFromTool?: boolean },
   ) => Promise<StirlingFile[]>;
   consumeFiles: (
     inputFileIds: FileId[],
@@ -490,9 +490,13 @@ async function importOutputs(
       ctx.bumpRevision();
     }
   } else {
-    const added = await ctx.addFiles(files, { skipUploadTracking: true });
-    // Same loop-guard for new-file output: the produced file is a new workspace
-    // file the auto-run would otherwise re-enforce indefinitely.
+    // derivedFromTool prevents the auto-run from ever re-enforcing this output,
+    // even if the dispatched list is cleared (localStorage wipe / different device).
+    const added = await ctx.addFiles(files, {
+      skipUploadTracking: true,
+      derivedFromTool: true,
+    });
+    // Belt-and-suspenders session guard on top of derivedFromTool.
     for (const f of added) markDispatched(run.categoryId, f.fileId);
     deliveredIds = added.map((f) => f.fileId as string);
   }
