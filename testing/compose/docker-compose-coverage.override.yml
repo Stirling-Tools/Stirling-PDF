@@ -14,6 +14,7 @@
 # `jacocoReportFromExec` task converts into HTML+XML.
 services:
   stirling-pdf:
+    stop_grace_period: 1m
     # docker-compose-security-with-login.yml renames the service container,
     # so the volume mounts intentionally land on whichever service uses the
     # key "stirling-pdf" in the base file.

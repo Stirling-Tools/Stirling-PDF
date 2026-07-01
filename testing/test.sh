@@ -882,12 +882,17 @@ main() {
     COVERAGE_COMPOSE_FILE=""
     if [ -n "${STIRLING_PDF_TEST_COVERAGE:-}" ]; then
         if [ ! -f "$PROJECT_ROOT/build/jacoco/jacocoagent.jar" ]; then
-            echo "::warning::STIRLING_PDF_TEST_COVERAGE=1 but build/jacoco/jacocoagent.jar is missing - run ./gradlew copyJacocoAgent first"
-        else
+            echo "::warning::STIRLING_PDF_TEST_COVERAGE=1 but build/jacoco/jacocoagent.jar is missing - trying to restore it"
+            "$PROJECT_ROOT/gradlew" copyJacocoAgent -PnoSpotless
+        fi
+
+        if [ -f "$PROJECT_ROOT/build/jacoco/jacocoagent.jar" ]; then
             mkdir -p "$PROJECT_ROOT/testing/cucumber-coverage"
             rm -f "$PROJECT_ROOT/testing/cucumber-coverage/cucumber.exec"
             COVERAGE_COMPOSE_FILE="$PROJECT_ROOT/testing/compose/docker-compose-coverage.override.yml"
             echo "Cucumber JaCoCo coverage enabled - exec will land at testing/cucumber-coverage/cucumber.exec"
+        else
+            echo "::warning::Unable to enable Cucumber coverage because build/jacoco/jacocoagent.jar is still missing"
         fi
     fi
 
