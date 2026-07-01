@@ -41,19 +41,16 @@ class OrchestratorDeps:
 
 @dataclass(frozen=True)
 class OrchestratorRoute:
-    """How a capability is exposed to the top-level orchestrator LLM and resume path.
+    """How an agent is exposed to the top-level orchestrator LLM and resume path.
 
-    ``resumable`` marks delegates the orchestrator can re-enter directly via
-    ``resume_with`` (the re-entrant reasoning agents). Canned delegates that only
-    emit a one-shot response — e.g. PDF→Markdown ingest — set it False and are
-    routable but never resumed.
+    ``capability`` keys the resume dispatch: the orchestrator re-enters this
+    delegate when a ``resume_with`` of the same value arrives.
     """
 
     capability: SupportedCapability
     tool_name: str
     tool_description: str
     orchestrate: OrchestrateFn
-    resumable: bool = True
 
     async def _invoke(self, ctx: RunContext[OrchestratorDeps]) -> OrchestratorResponse:
         return await self.orchestrate(ctx.deps.request)

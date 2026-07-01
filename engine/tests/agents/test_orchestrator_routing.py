@@ -70,6 +70,7 @@ def _spies() -> list[RegisterableAgent]:
             PdfQuestionNotFoundResponse(reason="spy"),
         ),
         _SpyAgent(SupportedCapability.PDF_REVIEW, "delegate_pdf_review", EditPlanResponse(summary="", steps=[])),
+        _SpyAgent(SupportedCapability.PDF_CREATE, "delegate_pdf_create", EditPlanResponse(summary="", steps=[])),
     ]
 
 
@@ -109,8 +110,15 @@ async def test_delegate_pdf_review_reaches_review_delegate(runtime: AppRuntime) 
 
 
 @pytest.mark.anyio
+async def test_delegate_pdf_create_reaches_create_delegate(runtime: AppRuntime) -> None:
+    response = await _route(runtime, "delegate_pdf_create")
+    assert _REACHED == [SupportedCapability.PDF_CREATE]
+    assert isinstance(response, EditPlanResponse)
+
+
+@pytest.mark.anyio
 async def test_delegate_pdf_ingest_returns_convert_markdown(runtime: AppRuntime) -> None:
-    # pdf_ingest is the canned descriptor appended by build_descriptors — no agent,
+    # pdf_ingest is a canned inline orchestrator tool (no agent, never resumed) —
     # no reach recorded, just a deterministic convert response.
     response = await _route(runtime, "delegate_pdf_ingest")
     assert _REACHED == []
@@ -126,9 +134,11 @@ async def test_resume_dispatches_to_matching_delegate(runtime: AppRuntime) -> No
 
 
 @pytest.mark.anyio
-async def test_resume_with_non_resumable_capability_raises(runtime: AppRuntime) -> None:
+async def test_resume_with_unroutable_capability_raises(runtime: AppRuntime) -> None:
+    # MATH_AUDITOR_AGENT is MCP-only — not an orchestrator delegate, so it has no
+    # resumable route and resuming into it must raise.
     orchestrator = OrchestratorAgent(runtime, build_descriptors(_spies()))
     with pytest.raises(ValueError, match="Cannot resume"):
         await orchestrator.handle(
-            OrchestratorRequest(user_message="x", resume_with=SupportedCapability.PDF_TO_MARKDOWN)
+            OrchestratorRequest(user_message="x", resume_with=SupportedCapability.MATH_AUDITOR_AGENT)
         )

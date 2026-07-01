@@ -6,9 +6,9 @@ from pydantic_ai import Agent
 from pydantic_ai.output import ToolOutput
 from pydantic_ai.tools import RunContext
 
-from stirling.agents.pdf_create import PdfCreateAgent
 from stirling.agents._registry import AgentDescriptor, OrchestratorDeps, OrchestratorRoute
 from stirling.contracts import (
+    ConvertMarkdownResponse,
     ExtractedTextArtifact,
     OrchestratorRequest,
     OrchestratorResponse,
@@ -17,7 +17,6 @@ from stirling.contracts import (
     format_conversation_history,
     format_file_names,
 )
-from stirling.contracts.pdf_create import PdfCreateOrchestrateResponse
 from stirling.services import AppRuntime
 
 logger = logging.getLogger(__name__)
@@ -27,23 +26,20 @@ class OrchestratorAgent:
     def __init__(self, runtime: AppRuntime, descriptors: list[AgentDescriptor]) -> None:
         self.runtime = runtime
         routes = [d.orchestrator for d in descriptors if d.orchestrator is not None]
-        # Only re-entrant delegates can be resumed; canned ones (e.g. PDF ingest)
-        # are routable but never resumed, matching the previous explicit guard.
-        self._resumable_by_capability: dict[SupportedCapability, OrchestratorRoute] = {
-            route.capability: route for route in routes if route.resumable
+        self._delegates_by_capability: dict[SupportedCapability, OrchestratorRoute] = {
+            route.capability: route for route in routes
         }
         self.agent = Agent(
             model=runtime.fast_model,
             output_type=[
                 *(route.tool_output() for route in routes),
+                # PDF ingest is a canned one-shot (no agent, never resumed), so like
+                # unsupported_capability it lives inline rather than in the registry.
                 ToolOutput(
-                    self.delegate_pdf_create,
-                    name="delegate_pdf_create",
+                    self.delegate_pdf_ingest,
+                    name="delegate_pdf_ingest",
                     description=(
-                        "Delegate requests to create a new PDF document from scratch based on a"
-                        " description. Use this when the user wants to generate a new document"
-                        " (e.g. 'create an invoice', 'write a report', 'make a contract',"
-                        " 'draft a letter'). No input file is required."
+                        "Delegate any request to convert a PDF to Markdown or extract its content as readable text."
                     ),
                 ),
                 ToolOutput(
@@ -87,16 +83,16 @@ class OrchestratorAgent:
         ``resume_with`` set — Java runs the plan, captures any tool reports as artifacts, and
         re-enters here so the delegate can digest the reports.
         """
-        route = self._resumable_by_capability.get(capability)
+        route = self._delegates_by_capability.get(capability)
         if route is None:
             raise ValueError(f"Cannot resume orchestrator with capability: {capability}")
         return await route.orchestrate(request)
 
-    async def delegate_pdf_create(self, ctx: RunContext[OrchestratorDeps]) -> PdfCreateOrchestrateResponse:
-        return await self._run_pdf_create(ctx.deps.request)
-
-    async def _run_pdf_create(self, request: OrchestratorRequest) -> PdfCreateOrchestrateResponse:
-        return await PdfCreateAgent(self.runtime).orchestrate(request)
+    async def delegate_pdf_ingest(self, ctx: RunContext[OrchestratorDeps]) -> ConvertMarkdownResponse:
+        return ConvertMarkdownResponse(
+            reason="PDF to Markdown requested — Java converts deterministically.",
+            files_to_ingest=ctx.deps.request.files,
+        )
 
     async def unsupported_capability(
         self,

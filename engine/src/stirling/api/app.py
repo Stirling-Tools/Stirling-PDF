@@ -12,6 +12,7 @@ from pydantic_ai.models.instrumented import InstrumentationSettings
 from stirling.agents import (
     ExecutionPlanningAgent,
     OrchestratorAgent,
+    PdfCreateAgent,
     PdfEditAgent,
     PdfQuestionAgent,
     PdfReviewAgent,
@@ -93,6 +94,7 @@ async def lifespan(fast_api: FastAPI):
     fast_api.state.pdf_edit_agent = PdfEditAgent(runtime)
     fast_api.state.pdf_question_agent = PdfQuestionAgent(runtime)
     fast_api.state.pdf_review_agent = PdfReviewAgent(runtime)
+    fast_api.state.pdf_create_agent = PdfCreateAgent(runtime)
     fast_api.state.user_spec_agent = UserSpecAgent(runtime)
     fast_api.state.execution_planning_agent = ExecutionPlanningAgent(runtime)
     fast_api.state.math_auditor_agent = MathAuditorAgent(runtime)
@@ -104,6 +106,7 @@ async def lifespan(fast_api: FastAPI):
             fast_api.state.pdf_question_agent,
             fast_api.state.user_spec_agent,
             fast_api.state.pdf_review_agent,
+            fast_api.state.pdf_create_agent,
             fast_api.state.pdf_comment_agent,
             fast_api.state.math_auditor_agent,
             fast_api.state.execution_planning_agent,
