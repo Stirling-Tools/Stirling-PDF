@@ -46,17 +46,17 @@ const done: LedgerDoc = {
   action: "download",
 };
 
-// Deal-advancing action — filled purple CTA.
+// Deal-advancing action, filled purple CTA.
 export const SignAction: Story = { args: { doc: sign } };
 
 // Quiet outline action for a ready download.
 export const Download: Story = { args: { doc: download } };
 
-// Optional paid add-on — chips flag it and the fee folds into the CTA.
+// Optional paid add-on, chips flag it and the fee folds into the CTA.
 export const PaidAddon: Story = { args: { doc: paidAddon } };
 
 // Completed paperwork keeps a record but offers no further action.
 export const Complete: Story = { args: { doc: done } };
 
-// A row in a future, not-yet-reached stage — dimmed, marked "Upcoming", inert.
+// A row in a future, not-yet-reached stage, dimmed, marked "Upcoming", inert.
 export const Locked: Story = { args: { doc: sign, locked: true } };

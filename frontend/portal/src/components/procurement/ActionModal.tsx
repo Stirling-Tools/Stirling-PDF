@@ -1,4 +1,6 @@
 import { useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { Button, Modal } from "@shared/components";
 import type { LedgerDoc, ProcurementResponse } from "@portal/api/procurement";
 import {
@@ -17,45 +19,45 @@ interface ActionCopy {
 }
 
 /** Per-action confirmation copy, with the fee folded into the CTA when present. */
-function actionCopy(doc: LedgerDoc): ActionCopy {
+function actionCopy(doc: LedgerDoc, t: TFunction): ActionCopy {
   const fee = doc.fee !== undefined ? ` · ${USD.format(doc.fee)}` : "";
   switch (doc.action) {
     case "sign":
       return {
-        title: "Review and sign your agreement",
+        title: t("procurement.modal.signTitle"),
         subtitle: doc.name,
-        body: "Opens the Stirling Enterprise Agreement for e-signature — one signature covers the MSA, order form, EULA and DPA. We countersign automatically and you advance to payment.",
-        cta: "Open for signature",
+        body: t("procurement.modal.signBody"),
+        cta: t("procurement.modal.signCta"),
       };
     case "pay":
       return {
-        title: "Confirm payment",
+        title: t("procurement.modal.payTitle"),
         subtitle: doc.name,
-        body: "Pay your committed contract by card or bank transfer through Stripe. Your workspace provisions as soon as payment clears.",
-        cta: "Continue to Stripe",
+        body: t("procurement.modal.payBody"),
+        cta: t("procurement.modal.payCta"),
       };
     case "upload":
       return {
-        title: "Upload your purchase order",
+        title: t("procurement.modal.uploadTitle"),
         subtitle: doc.name,
-        body: "Send us your PO and we invoice against it on your terms. Drag in the PDF or pick a file below.",
-        cta: "Upload purchase order",
+        body: t("procurement.modal.uploadBody"),
+        cta: t("procurement.modal.uploadCta"),
       };
     case "request":
       return {
-        title: "Request this document",
+        title: t("procurement.modal.requestTitle"),
         subtitle: doc.name,
         body: doc.fee
-          ? "This is a paid add-on. Confirm and your solutions engineer will scope it and send the paperwork."
-          : "We generate this on demand. Confirm and your solutions engineer will send it across shortly.",
-        cta: `Request${fee}`,
+          ? t("procurement.modal.requestBodyPaid")
+          : t("procurement.modal.requestBodyFree"),
+        cta: `${t("procurement.modal.requestCta")}${fee}`,
       };
     default:
       return {
-        title: "Download",
+        title: t("procurement.modal.downloadTitle"),
         subtitle: doc.name,
-        body: "Your download will begin shortly.",
-        cta: "Download",
+        body: t("procurement.modal.downloadBody"),
+        cta: t("procurement.modal.downloadCta"),
       };
   }
 }
@@ -74,12 +76,13 @@ export function ActionModal({
   onClose: () => void;
   onDone: (next: ProcurementResponse) => void;
 }) {
+  const { t } = useTranslation();
   const [submitting, setSubmitting] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
 
   if (!doc) return null;
-  const copy = actionCopy(doc);
+  const copy = actionCopy(doc, t);
   const needsFile = doc.action === "upload";
 
   async function submit() {
@@ -101,7 +104,7 @@ export function ActionModal({
           next = await requestDocument(doc.id, doc.action);
           break;
         default:
-          // download is client-side — no state change.
+          // download is client-side; no state change.
           break;
       }
       setFile(null);
@@ -122,7 +125,7 @@ export function ActionModal({
       footer={
         <div className="portal-proc__modal-actions">
           <Button variant="ghost" onClick={onClose}>
-            Cancel
+            {t("procurement.modal.cancel")}
           </Button>
           <Button
             variant="gradient"
@@ -151,10 +154,10 @@ export function ActionModal({
             size="sm"
             onClick={() => fileRef.current?.click()}
           >
-            Choose file
+            {t("procurement.modal.chooseFile")}
           </Button>
           <span className="portal-proc__upload-name">
-            {file ? file.name : "No file selected"}
+            {file ? file.name : t("procurement.modal.noFile")}
           </span>
         </div>
       )}

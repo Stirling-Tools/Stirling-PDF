@@ -16,7 +16,7 @@ const meta: Meta<typeof DealJourney> = {
 export default meta;
 type Story = StoryObj<typeof DealJourney>;
 
-// Mid-journey at the Agreement stage — the seeded deal state.
+// Mid-journey at the Agreement stage, the seeded deal state.
 export const Default: Story = {};
 
 // Evaluating: the trial strip shows runway + key; next step builds the quote.
@@ -24,7 +24,7 @@ export const AtTrial: Story = {
   args: { deal: { ...deal, currentStage: "trial" } },
 };
 
-// Terminal stage — provisioning, no further CTA.
+// Terminal stage, provisioning, no further CTA.
 export const Live: Story = {
   args: { deal: { ...deal, currentStage: "active" } },
 };

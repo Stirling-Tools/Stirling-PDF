@@ -6,7 +6,7 @@ type StepState = "complete" | "current" | "upcoming";
 
 /**
  * The five-stage commercial journey as a horizontal band of labelled dots with
- * connectors between them. Purely presentational — the gating action lives in
+ * connectors between them. Purely presentational, the gating action lives in
  * the journey card's next-step row, not on the dots. `locked` greys the whole
  * band for the free/pro upgrade preview, where no stage is current.
  */

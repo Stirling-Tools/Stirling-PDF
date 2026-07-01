@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, Skeleton, StatusBadge } from "@shared/components";
 import { useTier } from "@portal/contexts/TierContext";
 import { useAsync } from "@portal/hooks/useAsync";
@@ -16,10 +17,11 @@ import { LockedState } from "@portal/components/procurement/LockedState";
 import "@portal/views/Procurement.css";
 
 /**
- * Procurement — the enterprise commercial journey (trial → live) plus the
+ * Procurement: the enterprise commercial journey (trial to live) plus the
  * document ledger. Enterprise-only: free/pro buyers see a locked upgrade state.
  */
 export function Procurement() {
+  const { t } = useTranslation();
   const { tier } = useTier();
   const [activeDoc, setActiveDoc] = useState<LedgerDoc | null>(null);
   const [advancing, setAdvancing] = useState(false);
@@ -49,14 +51,11 @@ export function Procurement() {
     <div className="portal-proc">
       <header className="portal-proc__header">
         <div>
-          <h1 className="portal-proc__title">Procurement</h1>
-          <p className="portal-proc__subtitle">
-            Get your team evaluated, contracted, and onboarded — every document
-            in one place.
-          </p>
+          <h1 className="portal-proc__title">{t("procurement.title")}</h1>
+          <p className="portal-proc__subtitle">{t("procurement.subtitle")}</p>
         </div>
         <StatusBadge tone="purple" size="md">
-          Enterprise
+          {t("procurement.enterpriseBadge")}
         </StatusBadge>
       </header>
 
@@ -71,7 +70,7 @@ export function Procurement() {
         <LockedState
           journey={data.journey}
           onTalkToSales={() => {
-            // TODO(backend): POST /v1/procurement/sales-contact — for now this
+            // TODO(backend): POST /v1/procurement/sales-contact, for now this
             // is the sidebar's upgrade path; hand off to the account team.
           }}
         />

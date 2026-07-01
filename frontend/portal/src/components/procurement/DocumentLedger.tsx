@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, Chip, Collapsible } from "@shared/components";
 import type {
   DealStage,
@@ -28,6 +29,7 @@ export function DocumentLedger({
   currentStage: DealStage;
   onAction: (doc: LedgerDoc) => void;
 }) {
+  const { t } = useTranslation();
   const order = journey.map((s) => s.stage);
   const curIdx = order.indexOf(currentStage);
   // Follow the deal: the stage you're in opens first; any other stage can be
@@ -39,10 +41,11 @@ export function DocumentLedger({
   return (
     <Card padding="none" className="portal-proc__docs">
       <div className="portal-proc__docs-head">
-        <h2 className="portal-proc__docs-title">Documents</h2>
+        <h2 className="portal-proc__docs-title">
+          {t("procurement.docs.title")}
+        </h2>
         <p className="portal-proc__docs-sub">
-          Everything you need at each step of the journey, surfaced as the deal
-          moves through it.
+          {t("procurement.docs.subtitle")}
         </p>
       </div>
 
@@ -79,19 +82,19 @@ export function DocumentLedger({
                   )}
                   {cur && (
                     <Chip tone="purple" size="sm">
-                      You&apos;re here
+                      {t("procurement.docs.here")}
                     </Chip>
                   )}
                   {done && (
                     <Chip tone="green" size="sm">
-                      Done
+                      {t("procurement.docs.done")}
                     </Chip>
                   )}
                 </>
               }
               aside={
                 <span className="portal-proc__stage-count">
-                  {count} doc{count === 1 ? "" : "s"}
+                  {t("procurement.docs.count", { count })}
                 </span>
               }
             >
@@ -117,17 +120,18 @@ export function DocumentLedger({
             header={
               <span className="portal-proc__supporting-head">
                 <span className="portal-proc__stage-label">
-                  Supporting your evaluation
+                  {t("procurement.docs.supportingTitle")}
                 </span>
                 <span className="portal-proc__supporting-sub">
-                  SOC 2, security reviews, tax forms and more — ready when your
-                  security or procurement team asks. Some carry a one-time fee.
+                  {t("procurement.docs.supportingSubtitle")}
                 </span>
               </span>
             }
             aside={
               <span className="portal-proc__acc-toggle-label">
-                {supportingOpen ? "Hide" : "Show"}
+                {supportingOpen
+                  ? t("procurement.docs.hide")
+                  : t("procurement.docs.show")}
               </span>
             }
           >

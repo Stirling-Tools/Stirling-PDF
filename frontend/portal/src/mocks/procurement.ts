@@ -4,8 +4,8 @@
  * mocks/handlers/procurement.ts serve this fixture data over the intercepted
  * httpJson() calls. Components never reach into this module directly.
  *
- * Procurement models the enterprise commercial journey — trial → quote →
- * agreement → payment → implementation — plus the paperwork ledger that rides
+ * Procurement models the enterprise commercial journey, trial → quote →
+ * agreement → payment → implementation, plus the paperwork ledger that rides
  * alongside it. The journey is enterprise-only; free/pro tiers receive a
  * minimal locked payload the view renders as an upgrade prompt.
  *
@@ -44,7 +44,7 @@ export interface JourneyStep {
   gatingAction: string;
 }
 
-/** Ordered journey definition — the stepper renders this verbatim. */
+/** Ordered journey definition, the stepper renders this verbatim. */
 export const JOURNEY: JourneyStep[] = [
   {
     stage: "trial",
@@ -125,11 +125,11 @@ export interface Deal {
 
 /**
  * Lifecycle of a single document.
- *   available — ready to grab now (download/sign/pay/upload as the action says)
- *   action    — waiting on the buyer to act (the gating paperwork of a stage)
- *   pending   — issued, awaiting the other side / a system step
- *   request   — not generated yet; the buyer asks for it (some carry a fee)
- *   complete  — done, kept for the record
+ *   available: ready to grab now (download/sign/pay/upload as the action says)
+ *   action:   waiting on the buyer to act (the gating paperwork of a stage)
+ *   pending:  issued, awaiting the other side / a system step
+ *   request:  not generated yet; the buyer asks for it (some carry a fee)
+ *   complete: done, kept for the record
  */
 export type DocStatus =
   | "available"
@@ -181,7 +181,7 @@ export interface SupportingGroup {
 
 export interface ProcurementResponse {
   tier: Tier;
-  /** True only for enterprise — gates the whole journey + ledger. */
+  /** True only for enterprise, gates the whole journey + ledger. */
   unlocked: boolean;
   /** Present only when unlocked. */
   deal: Deal | null;
@@ -196,7 +196,7 @@ export interface ProcurementResponse {
 
 const ENTERPRISE_DEAL: Deal = {
   company: "Northwind Logistics",
-  // The buyer has accepted the quote and is at the agreement signature — the
+  // The buyer has accepted the quote and is at the agreement signature, the
   // mid-journey state shows the most surface area (completed + active + ahead).
   currentStage: "security",
   engineer: {
@@ -249,7 +249,7 @@ const ENTERPRISE_LEDGER: LedgerGroup[] = [
       {
         id: "doc-quote-formal",
         name: "Formal quote",
-        sub: "Committed-volume pricing, term and line items — Q-2026-0488.",
+        sub: "Committed-volume pricing, term and line items, Q-2026-0488.",
         status: "complete",
         action: "download",
       },
@@ -426,7 +426,7 @@ function clone<T>(value: T): T {
 }
 
 /**
- * A fresh, mutable copy of the live enterprise deal — deal header, stage ledger
+ * A fresh, mutable copy of the live enterprise deal, deal header, stage ledger
  * and supporting pool. The MSW layer seeds its in-memory store from this so the
  * write handlers can advance the journey within a session without mutating the
  * shared fixtures. The journey definition (JOURNEY) is immutable and shared.

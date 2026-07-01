@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Button, Card } from "@shared/components";
 import type { Deal, DealStage, JourneyStep } from "@portal/api/procurement";
 import { StageStepper } from "@portal/components/procurement/StageStepper";
@@ -6,7 +7,7 @@ import { StageStepper } from "@portal/components/procurement/StageStepper";
  * The deal's commercial journey in one card: who's guiding it (the solutions
  * engineer), where it sits (the stage stepper), trial runway while evaluating,
  * and the single next action that advances the deal. Mirrors "one next action
- * at a time" — the full per-stage checklist lives in the Documents card.
+ * at a time"; the full per-stage checklist lives in the Documents card.
  */
 export function DealJourney({
   deal,
@@ -19,6 +20,7 @@ export function DealJourney({
   onAdvance: (stage: DealStage) => void;
   advancing?: boolean;
 }) {
+  const { t } = useTranslation();
   const { engineer, trial, currentStage } = deal;
   const currentStep = journey.find((s) => s.stage === currentStage);
   const isTerminal =
@@ -28,17 +30,20 @@ export function DealJourney({
     <Card padding="none" className="portal-proc__journey">
       <div className="portal-proc__journey-head">
         <div>
-          <span className="portal-proc__eyebrow">Your rollout</span>
+          <span className="portal-proc__eyebrow">
+            {t("procurement.journey.eyebrow")}
+          </span>
           <h2 className="portal-proc__journey-title">
-            From trial to live, one guided path
+            {t("procurement.journey.title")}
           </h2>
           <p className="portal-proc__journey-sub">
-            Your solutions engineer is on every step. One next action at a time
-            — the full checklist is below.
+            {t("procurement.journey.subtitle")}
           </p>
         </div>
         <div className="portal-proc__se">
-          <span className="portal-proc__eyebrow">Your solutions engineer</span>
+          <span className="portal-proc__eyebrow">
+            {t("procurement.journey.engineerLabel")}
+          </span>
           <span className="portal-proc__se-name">{engineer.name}</span>
           <a
             className="portal-proc__se-email"
@@ -55,9 +60,11 @@ export function DealJourney({
 
       {currentStage === "trial" && (
         <div className="portal-proc__trial">
-          <span className="portal-proc__trial-title">Enterprise trial</span>
+          <span className="portal-proc__trial-title">
+            {t("procurement.journey.trialTitle")}
+          </span>
           <span className="portal-proc__trial-dim">
-            {trial.daysLeft} days left
+            {t("procurement.journey.daysLeft", { count: trial.daysLeft })}
           </span>
           <span className="portal-proc__trial-key">{trial.key}</span>
         </div>
@@ -68,8 +75,10 @@ export function DealJourney({
           <span className="portal-proc__next-dot" data-live={isTerminal} />
           <span>
             {isTerminal
-              ? "You're live on Stirling Enterprise"
-              : `Next step: ${currentStep?.gatingAction ?? ""}`}
+              ? t("procurement.journey.live")
+              : t("procurement.journey.nextStep", {
+                  action: currentStep?.gatingAction ?? "",
+                })}
           </span>
         </div>
         {!isTerminal && currentStep && (

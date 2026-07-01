@@ -1,11 +1,11 @@
 /**
- * The procurement deal's state machine — the exact server-side semantics the
+ * The procurement deal's state machine, the exact server-side semantics the
  * mock backend enforces, as pure functions over a {@link ProcurementStore}.
  *
  * Kept separate from the MSW handler (which just owns one in-memory store and
  * wires these to endpoints) so the rules are unit-testable without a network,
  * and so a real backend has a precise spec to mirror. Every function mutates
- * the store in place — there's a single instance per session.
+ * the store in place, there's a single instance per session.
  */
 
 import {
@@ -25,7 +25,7 @@ export interface ProcurementStore {
   supporting: SupportingGroup[];
 }
 
-/** Document actions that gate a stage — completing them moves the deal forward. */
+/** Document actions that gate a stage, completing them moves the deal forward. */
 const GATING: DocAction[] = ["sign", "pay", "upload"];
 
 function nextStage(stage: DealStage): DealStage | null {
@@ -108,7 +108,7 @@ export function uploadPurchaseOrder(store: ProcurementStore) {
   completeAndAdvance(store, "upload");
 }
 
-/** Queue an on-demand document — it moves to "pending" until generated. */
+/** Queue an on-demand document, it moves to "pending" until generated. */
 export function requestDoc(store: ProcurementStore, docId: string) {
   setDocStatus(store, docId, "pending");
 }

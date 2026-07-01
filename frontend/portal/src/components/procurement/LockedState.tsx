@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Button, Card, EmptyState } from "@shared/components";
 import type { JourneyStep } from "@portal/api/procurement";
 import { StageStepper } from "@portal/components/procurement/StageStepper";
@@ -14,15 +15,16 @@ export function LockedState({
   journey: JourneyStep[];
   onTalkToSales: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="portal-proc__locked">
       <EmptyState
-        eyebrow="Enterprise only"
-        title="The procurement track opens with Enterprise"
-        description="Trial keys, committed-volume quotes, the one-signature agreement, payment, and your document ledger all live here once you start an enterprise evaluation."
+        eyebrow={t("procurement.locked.eyebrow")}
+        title={t("procurement.locked.title")}
+        description={t("procurement.locked.description")}
         actions={
           <Button variant="gradient" accent="purple" onClick={onTalkToSales}>
-            Talk to sales
+            {t("procurement.locked.talkToSales")}
           </Button>
         }
       />

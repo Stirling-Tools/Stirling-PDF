@@ -23,7 +23,7 @@ export type {
 } from "@portal/mocks/procurement";
 export { JOURNEY } from "@portal/mocks/procurement";
 
-/** GET /v1/procurement?tier=… — the deal, journey, ledger and supporting pool. */
+/** GET /v1/procurement?tier=…, the deal, journey, ledger and supporting pool. */
 export async function fetchProcurement(
   tier: Tier,
 ): Promise<ProcurementResponse> {
@@ -34,7 +34,7 @@ export async function fetchProcurement(
 
 /*
  * Commercial actions. Each mutates the deal server-side and returns the updated
- * ProcurementResponse — the new canonical state — which the view applies so the
+ * ProcurementResponse, the new canonical state, which the view applies so the
  * journey progresses. The MSW layer answers these today; a real backend honours
  * the same contracts unchanged.
  */

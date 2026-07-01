@@ -12,7 +12,7 @@ const meta: Meta<typeof LockedState> = {
 export default meta;
 type Story = StoryObj<typeof LockedState>;
 
-// Shown to free/pro buyers — the journey preview behind the upgrade prompt.
+// Shown to free/pro buyers, the journey preview behind the upgrade prompt.
 export const Default: Story = {
   args: { journey: JOURNEY },
 };

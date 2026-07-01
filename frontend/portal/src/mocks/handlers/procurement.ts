@@ -18,14 +18,14 @@ import {
 /**
  * Stateful mock of the commercial backend. The write endpoints drive the
  * procurement state machine over one in-memory enterprise deal, so the journey
- * genuinely progresses within a session — advancing a stage flips the gating
+ * genuinely progresses within a session, advancing a stage flips the gating
  * paperwork, unlocks the next stage's documents, and the GET reflects every
  * prior write. Swapping in the real backend is just deleting these handlers;
  * the api/ contracts and the state-machine semantics stay.
  */
 let store = seedEnterpriseDeal();
 
-/** Reseed the deal to its starting (mid-journey) state — used by tests + replay. */
+/** Reseed the deal to its starting (mid-journey) state, used by tests + replay. */
 export function resetProcurementStore() {
   store = seedEnterpriseDeal();
 }
@@ -51,7 +51,7 @@ export const procurementHandlers = [
     return HttpResponse.json(snapshot());
   }),
 
-  // POST /v1/procurement/advance — the journey's primary "next step".
+  // POST /v1/procurement/advance, the journey's primary "next step".
   http.post("/v1/procurement/advance", async ({ request }) => {
     await delay(140);
     const { fromStage } = (await request.json()) as { fromStage: DealStage };
@@ -59,7 +59,7 @@ export const procurementHandlers = [
     return HttpResponse.json(snapshot());
   }),
 
-  // POST /v1/procurement/sign — e-sign the agreement, then advance.
+  // POST /v1/procurement/sign, e-sign the agreement, then advance.
   http.post("/v1/procurement/sign", async ({ request }) => {
     await delay(160);
     const { docId } = (await request.json()) as { docId: string };
@@ -67,21 +67,21 @@ export const procurementHandlers = [
     return HttpResponse.json(snapshot());
   }),
 
-  // POST /v1/procurement/pay — confirm online payment, then advance.
+  // POST /v1/procurement/pay, confirm online payment, then advance.
   http.post("/v1/procurement/pay", async () => {
     await delay(160);
     payDeal(store);
     return HttpResponse.json(snapshot());
   }),
 
-  // POST /v1/procurement/purchase-order — upload a PO (an alternate pay path).
+  // POST /v1/procurement/purchase-order, upload a PO (an alternate pay path).
   http.post("/v1/procurement/purchase-order", async () => {
     await delay(160);
     uploadPurchaseOrder(store);
     return HttpResponse.json(snapshot());
   }),
 
-  // POST /v1/procurement/documents/:docId/request — queue an on-demand doc.
+  // POST /v1/procurement/documents/:docId/request, queue an on-demand doc.
   http.post("/v1/procurement/documents/:docId/request", async ({ params }) => {
     await delay(140);
     requestDoc(store, String(params.docId));

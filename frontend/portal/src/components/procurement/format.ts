@@ -18,20 +18,20 @@ export const STATUS_TONE: Record<DocStatus, StatusTone> = {
   complete: "neutral",
 };
 
-/** Document status → short badge label. */
-export const STATUS_LABEL: Record<DocStatus, string> = {
-  available: "Available",
-  action: "Action needed",
-  pending: "Pending",
-  request: "On request",
-  complete: "Complete",
+/** Document status → translation key for the short badge label. */
+export const STATUS_LABEL_KEY: Record<DocStatus, string> = {
+  available: "procurement.status.available",
+  action: "procurement.status.action",
+  pending: "procurement.status.pending",
+  request: "procurement.status.request",
+  complete: "procurement.status.complete",
 };
 
-/** Action → button label (the fee, when present, is appended by the caller). */
-export const ACTION_LABEL: Record<DocAction, string> = {
-  download: "Download",
-  sign: "Review & sign",
-  pay: "Pay now",
-  upload: "Upload",
-  request: "Request",
+/** Action → translation key for the button label (the fee, when present, is appended by the caller). */
+export const ACTION_LABEL_KEY: Record<DocAction, string> = {
+  download: "procurement.action.download",
+  sign: "procurement.action.sign",
+  pay: "procurement.action.pay",
+  upload: "procurement.action.upload",
+  request: "procurement.action.request",
 };
