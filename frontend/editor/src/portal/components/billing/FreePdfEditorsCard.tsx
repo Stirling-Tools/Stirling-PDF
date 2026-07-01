@@ -1,12 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import {
-  Button,
-  Card,
-  MetricCard,
-  MetricStrip,
-  StatusBadge,
-} from "@shared/components";
+import { Button, Card, MetricCard, MetricStrip, StatusBadge } from "@app/ui";
 import GroupsIcon from "@mui/icons-material/GroupsRounded";
 import PersonAddIcon from "@mui/icons-material/PersonAddAltRounded";
 

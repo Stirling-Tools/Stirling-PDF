@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Button } from "@shared/components";
+import { Button } from "@app/ui";
 import type { SourceView } from "@portal/api/sources";
 import { SourceDetailPanel } from "@portal/components/sources/SourceDetailPanel";
 import { sourceTypeMeta } from "@portal/components/sources/sourceTypes";

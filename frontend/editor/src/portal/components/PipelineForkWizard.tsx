@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, Card, Chip, StatusBadge } from "@shared/components";
+import { Button, Card, Chip, StatusBadge } from "@app/ui";
 import { useView } from "@portal/contexts/ViewContext";
 import {
   PIPELINE_STAGES,

@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Chip, StatTile } from "@shared/components";
+import { Chip, StatTile } from "@app/ui";
 import type { SourceView } from "@portal/api/sources";
 import { Sparkline } from "@portal/components/sources/Sparkline";
 import "@portal/views/Sources.css";

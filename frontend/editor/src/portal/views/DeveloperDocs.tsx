@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { EmptyState } from "@shared/components";
+import { EmptyState } from "@app/ui";
 import { useTier } from "@portal/contexts/TierContext";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import {

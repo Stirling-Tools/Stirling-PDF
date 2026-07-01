@@ -20,7 +20,9 @@ export default defineConfig({
   plugins: [
     react(),
     tsconfigPaths({
-      projects: [resolve(portalDir, "tsconfig.json")],
+      // Broad project so @app/* resolves in every editor file the portal tests
+      // pull in (proprietary/ui, core, ...), matching vite.portal.config.ts.
+      projects: [resolve(__dirname, "tsconfig.portal.vite.json")],
     }),
   ],
   resolve: {

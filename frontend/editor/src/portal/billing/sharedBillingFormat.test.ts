@@ -5,10 +5,10 @@ import {
   formatMinor,
   formatPeriodDate,
   meterState,
-} from "@shared/billing";
+} from "@app/billing";
 
 /**
- * Unit tests for the @shared/billing money/meter helpers the portal billing
+ * Unit tests for the @app/billing money/meter helpers the portal billing
  * surface (and the editor cloud surface) depend on. docCapForMoney mirrors the
  * backend's cap→PDF conversion and meterState mirrors the BE warn/degrade bands,
  * so these invariants matter beyond cosmetics.

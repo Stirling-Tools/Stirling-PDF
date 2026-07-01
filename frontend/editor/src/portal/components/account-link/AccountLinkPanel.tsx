@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Banner, Skeleton, StatusBadge } from "@shared/components";
+import { Banner, Skeleton, StatusBadge } from "@app/ui";
 import { useAsync } from "@portal/hooks/useAsync";
 import { useAccountLinkContext } from "@portal/contexts/AccountLinkContext";
 import { useLink, LINK_INFO } from "@portal/contexts/LinkContext";

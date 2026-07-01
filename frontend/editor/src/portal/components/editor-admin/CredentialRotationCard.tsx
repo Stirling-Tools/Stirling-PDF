@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Banner, Button, Card, StatTile } from "@shared/components";
+import { Banner, Button, Card, StatTile } from "@app/ui";
 import type { DeploymentSummary } from "@portal/api/editorDeploy";
 
 interface Props {

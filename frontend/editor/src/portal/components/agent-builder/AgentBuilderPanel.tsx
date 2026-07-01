@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { StatusBadge, Tabs, type TabItem } from "@shared/components";
+import { StatusBadge, Tabs, type TabItem } from "@app/ui";
 import { type Agent, AGENT_STATUS_TONE } from "@portal/api/agents";
 import { ScenariosPanel } from "@portal/components/agent-builder/ScenariosPanel";
 import { ToolsPanel } from "@portal/components/agent-builder/ToolsPanel";

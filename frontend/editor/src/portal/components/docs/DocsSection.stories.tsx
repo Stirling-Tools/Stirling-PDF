@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Card } from "@shared/components";
+import { Card } from "@app/ui";
 import { DocsSection } from "@portal/components/docs/DocsSection";
 import "@portal/views/DeveloperDocs.css";
 

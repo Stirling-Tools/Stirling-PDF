@@ -1,12 +1,7 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  MethodBadge,
-  Tabs,
-  type HttpMethod,
-  type TabItem,
-} from "@shared/components";
-import { VERTICALS, ALL_ENDPOINTS } from "@shared/data/endpoints";
+import { MethodBadge, Tabs, type HttpMethod, type TabItem } from "@app/ui";
+import { VERTICALS, ALL_ENDPOINTS } from "@portal/data/endpoints";
 import { DocsSection } from "@portal/components/docs/DocsSection";
 
 type VerticalFilter = "all" | (typeof VERTICALS)[number]["key"];

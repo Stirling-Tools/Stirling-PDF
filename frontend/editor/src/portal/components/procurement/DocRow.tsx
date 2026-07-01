@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Button, Chip, StatusBadge } from "@shared/components";
+import { Button, Chip, StatusBadge } from "@app/ui";
 import type { LedgerDoc } from "@portal/api/procurement";
 import {
   ACTION_LABEL_KEY,

@@ -10,7 +10,7 @@ import {
   Modal,
   RadioGroup,
   Select,
-} from "@shared/components";
+} from "@app/ui";
 import { errorMessage } from "@portal/api/http";
 import {
   fetchTriggers,

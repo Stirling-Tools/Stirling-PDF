@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Dropdown, NavItem } from "@shared/components";
+import { Dropdown, NavItem } from "@app/ui";
 import { useView, type ViewId } from "@portal/contexts/ViewContext";
 import { useTier } from "@portal/contexts/TierContext";
 import { useTheme } from "@portal/contexts/ThemeContext";

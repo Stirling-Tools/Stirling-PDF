@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Card, Chip, Collapsible } from "@shared/components";
+import { Card, Chip, Collapsible } from "@app/ui";
 import type {
   DealStage,
   JourneyStep,

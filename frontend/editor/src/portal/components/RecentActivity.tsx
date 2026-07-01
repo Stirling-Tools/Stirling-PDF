@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Card, EmptyState, Skeleton, StatusBadge } from "@shared/components";
+import { Card, EmptyState, Skeleton, StatusBadge } from "@app/ui";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import {
   fetchRecentActivity,

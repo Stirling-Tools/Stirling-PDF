@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Skeleton, StatusBadge } from "@shared/components";
+import { Skeleton, StatusBadge } from "@app/ui";
 import type { DocsNavSection } from "@portal/api/docs";
 
 /** Left-hand documentation nav tree; each leaf selects an in-page section. */

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { EmptyState, Skeleton, Tabs, type TabItem } from "@shared/components";
+import { EmptyState, Skeleton, Tabs, type TabItem } from "@app/ui";
 import { useTier } from "@portal/contexts/TierContext";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import {

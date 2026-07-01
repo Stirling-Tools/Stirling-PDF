@@ -1,4 +1,4 @@
-import type { ChipTone } from "@shared/components";
+import type { ChipTone } from "@app/ui";
 
 /**
  * Per-type presentation + create-form metadata. User-facing copy is stored as

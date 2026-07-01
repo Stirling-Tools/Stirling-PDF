@@ -1,12 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Button,
-  Chip,
-  FormField,
-  Input,
-  StatusBadge,
-} from "@shared/components";
+import { Button, Chip, FormField, Input, StatusBadge } from "@app/ui";
 import type { Agent, Scenario } from "@portal/api/agents";
 import "@portal/views/AgentBuilder.css";
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Button, EmptyState, Skeleton } from "@shared/components";
+import { Button, EmptyState, Skeleton } from "@app/ui";
 import { useTier } from "@portal/contexts/TierContext";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import {

@@ -3,7 +3,7 @@
 The portal has two component sources. The rule:
 
 > **Simple, presentational, brand-defining UI → our SUI design system
-> (`@shared/components`). Complex, stateful, or accessibility-hard widgets →
+> (`@app/ui`). Complex, stateful, or accessibility-hard widgets →
 > Mantine.** Don't reinvent what Mantine already does well; do own the look of
 > the simple, high-frequency pieces.
 
@@ -13,7 +13,7 @@ follow the same light/dark switch and brand colours as SUI. **The provider is
 intentional** — it exists precisely so we can drop Mantine widgets in where they
 earn their keep.
 
-## Use SUI (`@shared/components`) — our own style
+## Use SUI (`@app/ui`) — our own style
 Layout and presentational primitives we want full brand control over and that
 are cheap to own:
 

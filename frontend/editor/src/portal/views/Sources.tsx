@@ -1,12 +1,6 @@
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Banner,
-  Button,
-  EmptyState,
-  Modal,
-  Skeleton,
-} from "@shared/components";
+import { Banner, Button, EmptyState, Modal, Skeleton } from "@app/ui";
 import { useView } from "@portal/contexts/ViewContext";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import { errorMessage } from "@portal/api/http";

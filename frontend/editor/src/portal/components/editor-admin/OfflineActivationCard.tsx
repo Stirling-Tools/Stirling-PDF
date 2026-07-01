@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Banner, Button, Card } from "@shared/components";
+import { Banner, Button, Card } from "@app/ui";
 
 interface Props {
   /** Enterprise-only. When false the card renders an upgrade nudge. */

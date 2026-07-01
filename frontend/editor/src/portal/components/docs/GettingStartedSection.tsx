@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Card, CodeBlock } from "@shared/components";
+import { Card, CodeBlock } from "@app/ui";
 import type { CodeSample } from "@portal/api/docs";
 import { DocsSection } from "@portal/components/docs/DocsSection";
 import { LangSnippet } from "@portal/components/docs/LangSnippet";

@@ -33,7 +33,7 @@ proprietary builds.
 ## Design system (SUI + Mantine)
 
 The surface is composed almost entirely from the shared SUI design system
-(`@shared/components`), mixed with Mantine only where SUI has no equivalent.
+(`@app/ui`), mixed with Mantine only where SUI has no equivalent.
 SUI components used here: `PanelHeader` (+ leading `IconBadge`), `Card`,
 `Button`, `Chip`, `ChipFlow`, `StatusBadge`, `Banner`, `EmptyState`,
 `MetricCard`, `Input`, `Select`, `ToggleSwitch`, `Checkbox`, `FormField`,

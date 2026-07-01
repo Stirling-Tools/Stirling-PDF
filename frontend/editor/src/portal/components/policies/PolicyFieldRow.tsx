@@ -1,10 +1,4 @@
-import {
-  Chip,
-  FormField,
-  Input,
-  Select,
-  ToggleSwitch,
-} from "@shared/components";
+import { Chip, FormField, Input, Select, ToggleSwitch } from "@app/ui";
 import type { PolicyField } from "@portal/api/policies";
 import "@portal/views/Policies.css";
 

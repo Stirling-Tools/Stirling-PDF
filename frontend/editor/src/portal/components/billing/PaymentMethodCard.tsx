@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, Card } from "@shared/components";
+import { Button, Card } from "@app/ui";
 import { fetchPaymentMethod, type PaymentMethod } from "@portal/api/billing";
 
 interface Props {

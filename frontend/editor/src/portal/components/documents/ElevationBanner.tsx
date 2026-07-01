@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Banner, Button } from "@shared/components";
+import { Banner, Button } from "@app/ui";
 import { formatCountdown } from "@portal/components/documents/format";
 
 interface ElevationBannerProps {

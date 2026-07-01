@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, StatusBadge } from "@shared/components";
+import { Button, StatusBadge } from "@app/ui";
 import { useView, type ViewId } from "@portal/contexts/ViewContext";
 import "@portal/components/WelcomeCarousel.css";
 

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Banner, EmptyState, Skeleton } from "@shared/components";
+import { Banner, EmptyState, Skeleton } from "@app/ui";
 import { useTier } from "@portal/contexts/TierContext";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import {

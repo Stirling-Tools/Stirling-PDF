@@ -8,7 +8,7 @@ import {
   MetricStrip,
   Skeleton,
   StatusBadge,
-} from "@shared/components";
+} from "@app/ui";
 import { useTier, type Tier } from "@portal/contexts/TierContext";
 import { useView, type ViewId } from "@portal/contexts/ViewContext";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";

@@ -1,11 +1,6 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  ProgressBar,
-  StatusBadge,
-  Table,
-  type TableColumn,
-} from "@shared/components";
+import { ProgressBar, StatusBadge, Table, type TableColumn } from "@app/ui";
 import {
   DOCUMENT_STATUS_LABEL,
   DOCUMENT_STATUS_TONE,

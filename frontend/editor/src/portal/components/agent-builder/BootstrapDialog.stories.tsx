@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Button } from "@shared/components";
+import { Button } from "@app/ui";
 import { BootstrapDialog } from "@portal/components/agent-builder/BootstrapDialog";
 
 const meta: Meta<typeof BootstrapDialog> = {

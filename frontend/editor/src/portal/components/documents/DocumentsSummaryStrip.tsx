@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { MetricCard, MetricStrip, Skeleton } from "@shared/components";
+import { MetricCard, MetricStrip, Skeleton } from "@app/ui";
 import type { DocumentsSummary } from "@portal/api/documents";
 import { confidencePct } from "@portal/components/documents/format";
 

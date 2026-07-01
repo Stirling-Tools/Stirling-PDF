@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Banner, Button, Modal } from "@shared/components";
+import { Banner, Button, Modal } from "@app/ui";
 import SupabaseLoginForm from "@shared/auth/ui/SupabaseLoginForm";
 import {
   useSupabaseLogin,

@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
-import { Button, Modal } from "@shared/components";
+import { Button, Modal } from "@app/ui";
 import type { LedgerDoc, ProcurementResponse } from "@portal/api/procurement";
 import {
   payOnline,

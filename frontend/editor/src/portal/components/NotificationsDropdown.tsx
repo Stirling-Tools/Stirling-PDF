@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Dropdown, EmptyState, Skeleton } from "@shared/components";
+import { Dropdown, EmptyState, Skeleton } from "@app/ui";
 import { BellIcon } from "@portal/components/icons";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import {

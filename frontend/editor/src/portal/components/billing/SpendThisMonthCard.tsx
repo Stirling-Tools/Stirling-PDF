@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { Card } from "@shared/components";
-import { formatMinor } from "@shared/billing";
+import { Card } from "@app/ui";
+import { formatMinor } from "@app/billing";
 import type { Wallet } from "@portal/api/billing";
 import { EnterpriseUpsell } from "@portal/components/billing/EnterpriseUpsell";
 

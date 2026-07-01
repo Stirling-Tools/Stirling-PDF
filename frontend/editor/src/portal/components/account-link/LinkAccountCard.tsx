@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Banner, Button, Card, StatusBadge } from "@shared/components";
+import { Banner, Button, Card, StatusBadge } from "@app/ui";
 import type { UseAccountLink } from "@portal/hooks/useAccountLink";
 import { useUI } from "@portal/contexts/UIContext";
 

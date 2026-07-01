@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.json",
+  "comment": "Path resolution for the transitional standalone portal build (vite.portal.config.ts). Broad include ('src', via the base) so vite-tsconfig-paths rewrites @app/* in every editor/src file the portal build pulls in (e.g. proprietary/ui), not just the portal layer. Deleted when the portal becomes an in-app route.",
+  "compilerOptions": {
+    "paths": {
+      "@app/*": [
+        "./src/portal/*",
+        "./src/cloud/*",
+        "./src/proprietary/*",
+        "./src/core/*"
+      ],
+      "@portal/*": ["./src/portal/*"],
+      "@cloud/*": ["./src/cloud/*"],
+      "@proprietary/*": ["./src/proprietary/*"],
+      "@core/*": ["./src/core/*"],
+      "@shared/*": ["../shared/*"]
+    }
+  }
+}

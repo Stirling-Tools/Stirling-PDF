@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, Card, Chip, CodeBlock } from "@shared/components";
+import { Button, Card, Chip, CodeBlock } from "@app/ui";
 import type { PairingMethod, PairingOption } from "@portal/api/editorDeploy";
 
 const METHOD_ICON: Record<PairingMethod, string> = {

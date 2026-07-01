@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Chip, Table, type TableColumn } from "@shared/components";
+import { Chip, Table, type TableColumn } from "@app/ui";
 import type { ComponentProp } from "@portal/api/sdkComponents";
 import "@portal/views/Components.css";
 

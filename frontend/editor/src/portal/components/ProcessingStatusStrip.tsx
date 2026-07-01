@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Banner, Button, ProgressBar, Skeleton } from "@shared/components";
+import { Banner, Button, ProgressBar, Skeleton } from "@app/ui";
 import { TIER_INFO, useTier } from "@portal/contexts/TierContext";
 import { useView } from "@portal/contexts/ViewContext";
 import { useAsync } from "@portal/hooks/useAsync";

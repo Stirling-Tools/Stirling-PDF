@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Button, Card, CodeBlock, StatusBadge } from "@shared/components";
+import { Button, Card, CodeBlock, StatusBadge } from "@app/ui";
 import { TARGET_META, type DeploymentTarget } from "@portal/api/editorDeploy";
 import { useTier } from "@portal/contexts/TierContext";
 

@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Button, Card, EmptyState } from "@shared/components";
+import { Button, Card, EmptyState } from "@app/ui";
 import type { JourneyStep } from "@portal/api/procurement";
 import { StageStepper } from "@portal/components/procurement/StageStepper";
 

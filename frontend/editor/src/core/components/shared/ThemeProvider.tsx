@@ -18,7 +18,7 @@ import {
   getSystemTheme,
   resolveColorScheme,
 } from "@app/constants/theme";
-// SUI shared design-system tokens (used by @shared/components); key on `data-theme`.
+// SUI shared design-system tokens (used by @app/ui); key on `data-theme`.
 import "@shared/tokens/tokens.css";
 
 interface ThemeContextType {

@@ -5,7 +5,7 @@ import {
   Stack,
   TextInput,
 } from "@mantine/core";
-import { Button as SuiButton } from "@shared/components";
+import { Button as SuiButton } from "@app/ui";
 
 /**
  * Proof that Mantine components render with the SUI-bound theme — a Mantine

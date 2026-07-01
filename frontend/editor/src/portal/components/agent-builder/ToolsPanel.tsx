@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Chip, ToggleSwitch } from "@shared/components";
+import { Chip, ToggleSwitch } from "@app/ui";
 import { type Agent, type ToolMode, TOOL_CATALOGUE } from "@portal/api/agents";
 import "@portal/views/AgentBuilder.css";
 

@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Card, Chip, StatusBadge } from "@shared/components";
+import { Card, Chip, StatusBadge } from "@app/ui";
 import type { CatalogueEntry } from "@portal/api/policies";
 import { policyIcon } from "@portal/components/policies/policyIcons";
 import "@portal/views/Policies.css";

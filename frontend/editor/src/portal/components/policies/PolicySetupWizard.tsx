@@ -11,7 +11,7 @@ import {
   Select,
   Tabs,
   ToggleSwitch,
-} from "@shared/components";
+} from "@app/ui";
 import {
   POLICY_DOC_TYPES,
   humanizeEndpoint,

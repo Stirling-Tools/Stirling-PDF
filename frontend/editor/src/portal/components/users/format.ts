@@ -1,4 +1,4 @@
-import type { AvatarTone } from "@shared/components";
+import type { AvatarTone } from "@app/ui";
 import type { RoleId } from "@portal/api/users";
 import { ROLE_TONE } from "@portal/api/users";
 

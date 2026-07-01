@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, Modal } from "@shared/components";
+import { Button, Modal } from "@app/ui";
 import "@portal/views/AgentBuilder.css";
 
 interface BootstrapDialogProps {

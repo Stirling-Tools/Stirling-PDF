@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Banner, Button, StatusBadge } from "@shared/components";
+import { Banner, Button, StatusBadge } from "@app/ui";
 import type { Wallet } from "@portal/api/billing";
 import type { SaasCurrency } from "@portal/billing/stripe";
 import { WalletMeter } from "@portal/components/billing/WalletMeter";

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Banner, Button } from "@shared/components";
-import { meterState } from "@shared/billing";
+import { Banner, Button } from "@app/ui";
+import { meterState } from "@app/billing";
 import type { Wallet } from "@portal/api/billing";
 import { useStripePortal } from "@portal/hooks/useStripePortal";
 import { FreePdfEditorsCard } from "@portal/components/billing/FreePdfEditorsCard";

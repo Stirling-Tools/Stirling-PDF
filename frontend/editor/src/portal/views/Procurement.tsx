@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Card, Skeleton, StatusBadge } from "@shared/components";
+import { Card, Skeleton, StatusBadge } from "@app/ui";
 import { useTier } from "@portal/contexts/TierContext";
 import { useAsync } from "@portal/hooks/useAsync";
 import {

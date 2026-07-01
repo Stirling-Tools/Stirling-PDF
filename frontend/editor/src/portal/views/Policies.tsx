@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Banner, Button, Skeleton } from "@shared/components";
+import { Banner, Button, Skeleton } from "@app/ui";
 import { errorMessage } from "@portal/api/http";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import {

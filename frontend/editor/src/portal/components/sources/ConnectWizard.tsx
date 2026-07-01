@@ -8,7 +8,7 @@ import {
   Modal,
   Select,
   StatTile,
-} from "@shared/components";
+} from "@app/ui";
 import { errorMessage } from "@portal/api/http";
 import { createSource, type Source } from "@portal/api/sources";
 import {

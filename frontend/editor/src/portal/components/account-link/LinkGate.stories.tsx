@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Card } from "@shared/components";
+import { Card } from "@app/ui";
 import { LinkGate } from "@portal/components/account-link/LinkGate";
 
 const meta: Meta<typeof LinkGate> = {

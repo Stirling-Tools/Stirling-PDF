@@ -1,13 +1,7 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Menu } from "@mantine/core";
-import {
-  Avatar,
-  Chip,
-  StatusBadge,
-  Table,
-  type TableColumn,
-} from "@shared/components";
+import { Avatar, Chip, StatusBadge, Table, type TableColumn } from "@app/ui";
 import {
   type Member,
   type RoleId,

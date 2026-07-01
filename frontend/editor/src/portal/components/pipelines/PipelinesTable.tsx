@@ -6,7 +6,7 @@ import {
   type StatusTone,
   Table,
   type TableColumn,
-} from "@shared/components";
+} from "@app/ui";
 import type { PipelineStatus, PipelineView } from "@portal/api/pipelines";
 
 const STATUS_TONE: Record<PipelineStatus, StatusTone> = {

@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Button, StatusBadge } from "@shared/components";
+import { Button, StatusBadge } from "@app/ui";
 import { type Agent, AGENT_STATUS_TONE } from "@portal/api/agents";
 import "@portal/views/AgentBuilder.css";
 

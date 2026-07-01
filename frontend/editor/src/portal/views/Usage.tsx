@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Banner, Button, Skeleton } from "@shared/components";
+import { Banner, Button, Skeleton } from "@app/ui";
 import { useLink } from "@portal/contexts/LinkContext";
 import { useUI } from "@portal/contexts/UIContext";
 import { fetchWallet, type Wallet } from "@portal/api/billing";

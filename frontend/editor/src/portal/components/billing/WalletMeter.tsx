@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Card } from "@shared/components";
-import { formatMinor, MeterBar, meterState } from "@shared/billing";
+import { Card } from "@app/ui";
+import { formatMinor, MeterBar, meterState } from "@app/billing";
 import type { Wallet } from "@portal/api/billing";
 
 interface Props {

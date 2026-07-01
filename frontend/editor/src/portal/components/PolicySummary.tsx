@@ -7,7 +7,7 @@ import {
   StatusBadge,
   Table,
   type TableColumn,
-} from "@shared/components";
+} from "@app/ui";
 import { useView } from "@portal/contexts/ViewContext";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import {

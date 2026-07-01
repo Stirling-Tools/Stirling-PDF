@@ -7,7 +7,7 @@ import {
   StatusBadge,
   Table,
   type TableColumn,
-} from "@shared/components";
+} from "@app/ui";
 import type { LinkedInstanceRow } from "@portal/api/link";
 
 interface Props {

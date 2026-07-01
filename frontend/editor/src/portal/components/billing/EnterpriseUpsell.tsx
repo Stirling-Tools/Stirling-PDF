@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Button, Card } from "@shared/components";
+import { Button, Card } from "@app/ui";
 
 interface Props {
   /** Render without the Card wrapper, to embed inside another card's column. */

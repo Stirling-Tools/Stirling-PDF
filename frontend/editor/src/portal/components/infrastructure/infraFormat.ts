@@ -1,4 +1,4 @@
-import type { ChipTone, StatusTone } from "@shared/components";
+import type { ChipTone, StatusTone } from "@app/ui";
 import type {
   ApiKeyStatus,
   AttestationStatus,

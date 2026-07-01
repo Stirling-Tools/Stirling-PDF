@@ -6,7 +6,7 @@ import {
   StatusBadge,
   Table,
   type TableColumn,
-} from "@shared/components";
+} from "@app/ui";
 import {
   INSTANCE_STATUS_LABEL,
   INSTANCE_STATUS_TONE,

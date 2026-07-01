@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Banner, Button } from "@shared/components";
+import { Banner, Button } from "@app/ui";
 import { useLink } from "@portal/contexts/LinkContext";
 import { useUI } from "@portal/contexts/UIContext";
 

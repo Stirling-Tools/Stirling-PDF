@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Card, type CardProps } from "@shared/components";
+import { Card, type CardProps } from "@app/ui";
 import { useView } from "@portal/contexts/ViewContext";
 import "@portal/components/PopularUseCases.css";
 

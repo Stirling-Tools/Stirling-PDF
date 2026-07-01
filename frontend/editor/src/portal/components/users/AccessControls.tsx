@@ -8,7 +8,7 @@ import {
   StatTile,
   StatusBadge,
   ToggleSwitch,
-} from "@shared/components";
+} from "@app/ui";
 import type { AccessControls as Access } from "@portal/api/users";
 import { seatsLabel } from "@portal/components/users/format";
 import "@portal/views/Users.css";

@@ -8,8 +8,8 @@ import {
   StatusBadge,
   Table,
   type TableColumn,
-} from "@shared/components";
-import { formatMinor, formatPeriodDate } from "@shared/billing";
+} from "@app/ui";
+import { formatMinor, formatPeriodDate } from "@app/billing";
 import { fetchInvoices, type Invoice } from "@portal/api/billing";
 
 const DEFAULT_VISIBLE = 5;

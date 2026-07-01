@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { StatTile } from "@shared/components";
+import { StatTile } from "@app/ui";
 import {
   DOCUMENT_STATUS_LABEL,
   type ReviewDocument,

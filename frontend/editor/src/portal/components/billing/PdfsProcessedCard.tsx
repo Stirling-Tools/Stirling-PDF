@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Card } from "@shared/components";
+import { Card } from "@app/ui";
 import type { Wallet, WalletCategoryBreakdown } from "@portal/api/billing";
 
 /**

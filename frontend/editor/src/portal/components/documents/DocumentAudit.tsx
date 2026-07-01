@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { StatusBadge } from "@shared/components";
+import { StatusBadge } from "@app/ui";
 import {
   DOC_AUDIT_LABEL,
   DOC_AUDIT_TONE,

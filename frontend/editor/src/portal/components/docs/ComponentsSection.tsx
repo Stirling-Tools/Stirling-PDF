@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Card, Chip, CodeBlock } from "@shared/components";
+import { Card, Chip, CodeBlock } from "@app/ui";
 import type { EmbedComponent } from "@portal/api/docs";
 import { DocsSection } from "@portal/components/docs/DocsSection";
 

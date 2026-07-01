@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Card, Chip } from "@shared/components";
+import { Card, Chip } from "@app/ui";
 import type { Role } from "@portal/api/users";
 import "@portal/views/Users.css";
 

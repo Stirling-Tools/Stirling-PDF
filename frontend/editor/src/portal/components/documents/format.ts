@@ -1,4 +1,4 @@
-import type { StatusTone } from "@shared/components";
+import type { StatusTone } from "@app/ui";
 
 /** Format a 0–1 confidence fraction as a whole-percent string. */
 export function confidencePct(n: number): string {

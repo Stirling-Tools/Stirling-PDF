@@ -48,7 +48,10 @@ export default defineConfig(async ({ mode }) => {
     plugins: [
       react(),
       tsconfigPaths({
-        projects: [resolve(PORTAL_ROOT, "tsconfig.json")],
+        // Broad project (include 'src') so @app/* is rewritten in every editor
+        // file the portal build pulls in (proprietary/ui, core, ...), not just
+        // the portal layer's own files.
+        projects: [resolve(import.meta.dirname, "tsconfig.portal.vite.json")],
       }),
     ],
     // Explicit aliases — tsconfigPaths only resolves imports inside files

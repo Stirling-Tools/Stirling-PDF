@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Card, Chip, StatusBadge } from "@shared/components";
+import { Card, Chip, StatusBadge } from "@app/ui";
 import type { ApiKey } from "@portal/api/infrastructure";
 import {
   KEY_LABEL,

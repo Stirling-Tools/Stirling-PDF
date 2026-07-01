@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Button, Card, EmptyState } from "@shared/components";
+import { Button, Card, EmptyState } from "@app/ui";
 import { useUI } from "@portal/contexts/UIContext";
 
 /**

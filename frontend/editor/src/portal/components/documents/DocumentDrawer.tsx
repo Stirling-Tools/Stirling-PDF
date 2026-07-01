@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Drawer, StatusBadge, Tabs, type TabItem } from "@shared/components";
+import { Drawer, StatusBadge, Tabs, type TabItem } from "@app/ui";
 import {
   DOCUMENT_STATUS_LABEL,
   DOCUMENT_STATUS_TONE,

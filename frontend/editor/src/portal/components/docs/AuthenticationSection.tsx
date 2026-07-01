@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Chip, CodeBlock } from "@shared/components";
+import { Chip, CodeBlock } from "@app/ui";
 import { DocsSection } from "@portal/components/docs/DocsSection";
 
 export function AuthenticationSection() {

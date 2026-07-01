@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { MetricCard, MetricStrip } from "@shared/components";
+import { MetricCard, MetricStrip } from "@app/ui";
 import type { PoliciesResponse } from "@portal/api/policies";
 
 interface CatalogueSummaryProps {

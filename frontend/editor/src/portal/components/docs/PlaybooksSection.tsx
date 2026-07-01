@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Button, Card, Chip } from "@shared/components";
+import { Button, Card, Chip } from "@app/ui";
 import type { Playbook } from "@portal/api/docs";
 import { DocsSection } from "@portal/components/docs/DocsSection";
 

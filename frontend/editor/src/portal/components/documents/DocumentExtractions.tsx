@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { StatusBadge, Table, type TableColumn } from "@shared/components";
+import { StatusBadge, Table, type TableColumn } from "@app/ui";
 import { type Extraction, type ReviewDocument } from "@portal/api/documents";
 import {
   confidencePct,

@@ -1,4 +1,4 @@
-import { MetricCard, MetricStrip, Skeleton } from "@shared/components";
+import { MetricCard, MetricStrip, Skeleton } from "@app/ui";
 import type { DeploymentSummary } from "@portal/api/editorDeploy";
 
 interface Props {

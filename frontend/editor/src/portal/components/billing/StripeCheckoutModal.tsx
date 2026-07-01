@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Banner, Modal, Skeleton } from "@shared/components";
+import { Banner, Modal, Skeleton } from "@app/ui";
 import {
   EmbeddedCheckout,
   EmbeddedCheckoutProvider,

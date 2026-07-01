@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Banner, Button, Chip } from "@shared/components";
+import { Banner, Button, Chip } from "@app/ui";
 import { errorMessage } from "@portal/api/http";
 import {
   fetchRun,

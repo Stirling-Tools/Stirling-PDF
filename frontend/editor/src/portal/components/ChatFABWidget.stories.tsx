@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useRef, useState } from "react";
-import { ChatFABButton } from "@shared/components/ChatFABButton";
-import { ChatFABWindow } from "@shared/components/ChatFABWindow";
+import { ChatFABButton } from "@app/ui/ChatFABButton";
+import { ChatFABWindow } from "@app/ui/ChatFABWindow";
 
 /**
  * Full ChatFAB widget demo — composed from ChatFABButton + ChatFABWindow.

@@ -1,4 +1,4 @@
-import { Skeleton } from "@shared/components";
+import { Skeleton } from "@app/ui";
 
 /** Placeholder grid shown inside a table card while rows are loading. */
 export function TableSkeleton({ rows, cols }: { rows: number; cols: number }) {

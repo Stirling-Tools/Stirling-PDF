@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Card, CodeBlock, StatusBadge } from "@shared/components";
+import { Card, CodeBlock, StatusBadge } from "@app/ui";
 import type { Sdk, SdkStatus } from "@portal/api/docs";
 import { DocsSection } from "@portal/components/docs/DocsSection";
 

@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Skeleton } from "@shared/components";
+import { Skeleton } from "@app/ui";
 import { useTier } from "@portal/contexts/TierContext";
 import { useView } from "@portal/contexts/ViewContext";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";

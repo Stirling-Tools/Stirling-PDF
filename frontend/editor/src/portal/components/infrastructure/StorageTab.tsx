@@ -9,7 +9,7 @@ import {
   Select,
   Skeleton,
   StatusBadge,
-} from "@shared/components";
+} from "@app/ui";
 import { useTier } from "@portal/contexts/TierContext";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import {

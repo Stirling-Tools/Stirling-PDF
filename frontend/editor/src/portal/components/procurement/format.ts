@@ -1,6 +1,6 @@
 /** Shared formatting + status/action mappings for the Procurement surface. */
 
-import type { StatusTone } from "@shared/components";
+import type { StatusTone } from "@app/ui";
 import type { DocAction, DocStatus } from "@portal/api/procurement";
 
 export const USD = new Intl.NumberFormat(undefined, {

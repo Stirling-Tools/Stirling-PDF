@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, FormField, Input, Modal, Select } from "@shared/components";
+import { Button, FormField, Input, Modal, Select } from "@app/ui";
 import { type RoleId, ROLES } from "@portal/api/users";
 import "@portal/views/Users.css";
 

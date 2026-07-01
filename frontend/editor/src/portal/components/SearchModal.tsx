@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { EmptyState, Modal, Skeleton } from "@shared/components";
+import { EmptyState, Modal, Skeleton } from "@app/ui";
 import { useUI } from "@portal/contexts/UIContext";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import { fetchQuickActions, type QuickAction } from "@portal/api/search";

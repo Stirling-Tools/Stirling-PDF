@@ -6,7 +6,7 @@ import {
   type StatusTone,
   Table,
   type TableColumn,
-} from "@shared/components";
+} from "@app/ui";
 import type { SourceStatus, SourceView } from "@portal/api/sources";
 import { sourceTypeMeta } from "@portal/components/sources/sourceTypes";
 import "@portal/views/Sources.css";

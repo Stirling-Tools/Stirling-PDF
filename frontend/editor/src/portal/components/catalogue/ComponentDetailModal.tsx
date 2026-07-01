@@ -9,7 +9,7 @@ import {
   StatTile,
   StatusBadge,
   Tabs,
-} from "@shared/components";
+} from "@app/ui";
 import {
   type SdkComponent,
   MATURITY_META,

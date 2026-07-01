@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, Tabs, type TabItem } from "@shared/components";
+import { Button, Tabs, type TabItem } from "@app/ui";
 import { useView } from "@portal/contexts/ViewContext";
 import { DeploymentsTab } from "@portal/components/infrastructure/DeploymentsTab";
 import { ApiKeysTab } from "@portal/components/infrastructure/ApiKeysTab";

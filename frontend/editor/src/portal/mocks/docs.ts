@@ -18,7 +18,7 @@
  */
 
 import type { Tier } from "@portal/contexts/TierContext";
-import type { CodeLang } from "@shared/components";
+import type { CodeLang } from "@app/ui";
 
 /* ──────────────────────────────────────────────────────────────────────── */
 /*  Navigation                                                               */

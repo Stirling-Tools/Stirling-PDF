@@ -7,7 +7,7 @@ import {
   StatusBadge,
   Table,
   type TableColumn,
-} from "@shared/components";
+} from "@app/ui";
 import type { Agent, EvalCase } from "@portal/api/agents";
 import "@portal/views/AgentBuilder.css";
 

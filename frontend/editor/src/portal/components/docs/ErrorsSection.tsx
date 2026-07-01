@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { CodeBlock, StatusBadge } from "@shared/components";
+import { CodeBlock, StatusBadge } from "@app/ui";
 import type { ApiErrorRow } from "@portal/api/docs";
 import { DocsSection } from "@portal/components/docs/DocsSection";
 

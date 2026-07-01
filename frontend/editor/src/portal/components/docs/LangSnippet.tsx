@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CodeBlock, Tabs, type TabItem } from "@shared/components";
+import { CodeBlock, Tabs, type TabItem } from "@app/ui";
 import type { CodeSample } from "@portal/api/docs";
 
 /** Tabbed multi-language snippet; CodeBlock owns per-language copy. */

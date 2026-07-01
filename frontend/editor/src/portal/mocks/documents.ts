@@ -13,7 +13,7 @@
  */
 
 import type { Tier } from "@portal/contexts/TierContext";
-import type { StatusTone } from "@shared/components";
+import type { StatusTone } from "@app/ui";
 
 /* ──────────────────────────────────────────────────────────────────────── */
 /*  Domain types                                                             */

@@ -13,7 +13,7 @@ import {
   ToggleSwitch,
   type SelectOption,
   type SettingsNavSection,
-} from "@shared/components";
+} from "@app/ui";
 import { useTier, type Tier } from "@portal/contexts/TierContext";
 import { useTheme, type Theme } from "@portal/contexts/ThemeContext";
 import { useAsync } from "@portal/hooks/useAsync";

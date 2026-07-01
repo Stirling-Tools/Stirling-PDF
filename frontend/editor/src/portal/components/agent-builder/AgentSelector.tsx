@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { type Agent, AGENT_STATUS_TONE } from "@portal/api/agents";
-import { StatusBadge } from "@shared/components";
+import { StatusBadge } from "@app/ui";
 import "@portal/views/AgentBuilder.css";
 
 interface AgentSelectorProps {

@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Button, Card } from "@shared/components";
+import { Button, Card } from "@app/ui";
 import type { Deal, DealStage, JourneyStep } from "@portal/api/procurement";
 import { StageStepper } from "@portal/components/procurement/StageStepper";
 

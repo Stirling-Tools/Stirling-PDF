@@ -8,7 +8,7 @@ import {
   FormField,
   Input,
   Modal,
-} from "@shared/components";
+} from "@app/ui";
 import type { ApiKeyPermission } from "@portal/api/infrastructure";
 
 const PERMISSION_OPTS: ApiKeyPermission[] = ["Read", "Write", "Admin"];

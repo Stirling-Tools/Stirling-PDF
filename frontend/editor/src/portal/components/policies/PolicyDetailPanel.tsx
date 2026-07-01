@@ -7,7 +7,7 @@ import {
   Modal,
   StatTile,
   StatusBadge,
-} from "@shared/components";
+} from "@app/ui";
 import {
   humanizeEndpoint,
   type DecoratedPolicy,
