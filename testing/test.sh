@@ -874,19 +874,29 @@ main() {
     # 3. Regression test with login (test_cicd.yml)
     # ==================================================================
     # STIRLING_PDF_TEST_COVERAGE=1 layers the JaCoCo agent override over
-    # the cucumber container ONLY. The agent jar is bind-mounted from
-    # build/jacoco/jacocoagent.jar so the published image never carries
-    # it. After behave finishes, we trigger `docker compose down` (further
-    # down) which sends SIGTERM and lets dumponexit=true flush the .exec
-    # to testing/cucumber-coverage/cucumber.exec on the host.
+    # the cucumber container ONLY. We stage the agent jar under
+    # testing/cucumber-coverage/ so it survives the clean build steps
+    # above; the published image never carries it. After behave finishes,
+    # we trigger `docker compose down` (further down) which sends SIGTERM
+    # and lets dumponexit=true flush the .exec to
+    # testing/cucumber-coverage/cucumber.exec on the host.
     COVERAGE_COMPOSE_FILE=""
+    COVERAGE_AGENT_SOURCE="$PROJECT_ROOT/build/jacoco/jacocoagent.jar"
+    COVERAGE_AGENT_TARGET="$PROJECT_ROOT/testing/cucumber-coverage/jacocoagent.jar"
     if [ -n "${STIRLING_PDF_TEST_COVERAGE:-}" ]; then
-        if [ ! -f "$PROJECT_ROOT/build/jacoco/jacocoagent.jar" ]; then
-            echo "::warning::STIRLING_PDF_TEST_COVERAGE=1 but build/jacoco/jacocoagent.jar is missing - trying to restore it"
-            "$PROJECT_ROOT/gradlew" copyJacocoAgent -PnoSpotless
+        if [ ! -f "$COVERAGE_AGENT_TARGET" ]; then
+            if [ ! -f "$COVERAGE_AGENT_SOURCE" ]; then
+                echo "::warning::STIRLING_PDF_TEST_COVERAGE=1 but build/jacoco/jacocoagent.jar is missing - trying to restore it"
+                "$PROJECT_ROOT/gradlew" copyJacocoAgent -PnoSpotless
+            fi
+
+            if [ -f "$COVERAGE_AGENT_SOURCE" ]; then
+                mkdir -p "$PROJECT_ROOT/testing/cucumber-coverage"
+                cp "$COVERAGE_AGENT_SOURCE" "$COVERAGE_AGENT_TARGET"
+            fi
         fi
 
-        if [ -f "$PROJECT_ROOT/build/jacoco/jacocoagent.jar" ]; then
+        if [ -f "$COVERAGE_AGENT_TARGET" ]; then
             mkdir -p "$PROJECT_ROOT/testing/cucumber-coverage"
             rm -f "$PROJECT_ROOT/testing/cucumber-coverage/cucumber.exec"
             COVERAGE_COMPOSE_FILE="$PROJECT_ROOT/testing/compose/docker-compose-coverage.override.yml"
