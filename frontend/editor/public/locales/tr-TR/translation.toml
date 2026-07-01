@@ -2463,8 +2463,38 @@ noTeam = "Ekip Yok"
 noUsers = "Başka kullanıcı bulunamadı."
 placeholder = "Kullanıcı seçin..."
 
+[certSign.device]
+stepTitle = "Bu cihaz"
+
 [certSign.error]
 failed = "İmzalar işlenirken bir hata oluştu."
+
+[certSign.format]
+pkcs11 = "USB Token"
+windowsStore = "Windows sertifika deposu"
+
+[certSign.hardware]
+certificate = "Sertifika"
+customLibrary = "Özel sürücü yolu…"
+driver = "PKCS#11 sürücüsü"
+driverPath = "Sürücü kitaplığı yolu"
+driverPathPlaceholder = "PKCS#11 sürücünüzün tam yolu (.dll, .so veya .dylib)"
+expired = "süresi dolmuş"
+expires = "sona eriyor"
+listCerts = "Sertifikaları listele"
+loading = "Sertifikalar okunuyor…"
+noCerts = "İmzalama sertifikası bulunamadı"
+noDriver = "Herhangi bir PKCS#11 sürücüsü tespit edilmedi. Token sürücünüzü (örn. OpenSC) yükleyin, ardından bunu yeniden açın - veya aşağıya sürücü yolunu elle girin."
+notYetValid = "henüz geçerli değil"
+pin = "Token PIN'i"
+pkcs11Hint = "Token'ınızın PKCS#11 sürücüsünü seçin, PIN'i girin, sonra token üzerindeki sertifikaları listeleyin."
+pkcs11LoadError = "Sertifikalar token'dan okunamadı. PIN'i ve sürücüyü kontrol edin."
+refresh = "Yenile"
+selectCert = "Sertifika seçin"
+selectDriver = "Sürücü seçin"
+slot = "Slot (isteğe bağlı)"
+windowsHint = "Windows sertifika deponuzdan bir sertifika seçin. İmzalama, kartınızdaki/token'ınızdaki anahtarı kullanır - Windows PIN'i isteyecektir."
+windowsLoadError = "Windows sertifika deposu okunamadı"
 
 [certSign.sessions]
 deleted = "Oturum silindi"
@@ -2477,9 +2507,6 @@ pdfNotReadyDesc = "İmzalı PDF oluşturuluyor. Lütfen kısa süre sonra tekrar
 [certSign.sign]
 results = "İmzalanmış PDF"
 submit = "PDF'yi İmzala"
-
-[certSign.signMode]
-stepTitle = "İmzalama Modu"
 
 [certSign.signMode.tooltip.auto]
 text = "Sunucu <b>self-signed</b> sertifika ile imzalar. Aynı <b>kurcalama kanıtlı mühür</b> ve <b>denetim izi</b>; genellikle görüntüleyicilerde <b>Doğrulanmadı</b> gösterir."
@@ -2501,6 +2528,12 @@ title = "İmzalar nasıl çalışır"
 [certSign.signMode.tooltip.rule]
 text = "Alıcıda <b>Güvenilir</b> durumu mu gerekli? <b>Manuel</b>. Kurulum olmadan hızlı, kurcalama kanıtlı mühür ve denetim izi mi lazım? <b>Otomatik</b>."
 title = "Genel kural"
+
+[certSign.source]
+device = "Bu cihaz"
+server = "Sunucu"
+stepTitle = "Sertifika kaynağı"
+upload = "Yükle"
 
 [certSign.tooltip.header]
 title = "İmzaları Yönetme Hakkında"
@@ -7951,6 +7984,9 @@ certExpired = "Sertifikanın süresi doldu"
 certRevocationUnknown = "Sertifika iptal durumu bilinmiyor"
 certRevoked = "Sertifika iptal edildi"
 chainInvalid = "Sertifika zinciri geçersiz"
+documentModified = "İmzalamadan sonra belge değiştirildi - imzalı alanın dışında içerik eklendi"
+revocationNotChecked = "İptal kontrolü yapılmadı"
+selfSigned = "Kendinden imzalı - imzalayanın kimliği doğrulanmadı"
 signatureInvalid = "İmzanın kriptografik denetimi başarısız oldu"
 trustInvalid = "Sertifika güvenilir değil"
 
@@ -7958,7 +7994,8 @@ trustInvalid = "Sertifika güvenilir değil"
 continued = "Devamı"
 downloads = "İndirmeler"
 entryLabel = "İmza Özeti"
-filesEvaluated = "{{count}} dosya değerlendirildi"
+filesEvaluated_one = "{{count}} dosya değerlendirildi"
+filesEvaluated_other = "{{count}} dosya değerlendirildi"
 footer = "Stirling PDF ile doğrulandı"
 generatedAt = "Oluşturuldu"
 noPdf = "PDF raporu başarılı bir doğrulamadan sonra kullanılabilir olacaktır."
@@ -7968,6 +8005,9 @@ signatureCountLabel_one = "{{count}} signature"
 signatureCountLabel_other = "{{count}} signatures"
 signaturesFound_one = "{{count}} signature detected"
 signaturesFound_other = "{{count}} signatures detected"
+signaturesInvalid = "{{count}} geçersiz"
+signaturesUnverified_one = "{{count}} inceleme gerekiyor"
+signaturesUnverified_other = "{{count}} inceleme gerekiyor"
 signaturesValid = "{{count}} tamamen geçerli"
 title = "İmza Doğrulama Raporu"
 
@@ -7987,7 +8027,9 @@ _value = "İmza"
 [validateSignature.status]
 complete = "Doğrulama tamamlandı"
 invalid = "Geçersiz"
+untrustedShort = "Doğrulanmadı"
 valid = "Geçerli"
+validUntrusted = "Geçerli, imzalayan doğrulanmadı"
 
 [viewer]
 cannotPreviewFile = "Dosya önizlenemiyor"

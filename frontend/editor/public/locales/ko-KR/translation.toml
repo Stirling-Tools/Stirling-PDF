@@ -2463,8 +2463,38 @@ noTeam = "팀 없음"
 noUsers = "다른 사용자를 찾을 수 없습니다."
 placeholder = "사용자 선택..."
 
+[certSign.device]
+stepTitle = "이 장치"
+
 [certSign.error]
 failed = "서명 처리 중 오류가 발생했습니다."
+
+[certSign.format]
+pkcs11 = "USB 토큰"
+windowsStore = "Windows 인증서 저장소"
+
+[certSign.hardware]
+certificate = "인증서"
+customLibrary = "사용자 지정 드라이버 경로…"
+driver = "PKCS#11 드라이버"
+driverPath = "드라이버 라이브러리 경로"
+driverPathPlaceholder = "PKCS#11 드라이버의 전체 경로(.dll, .so 또는 .dylib)"
+expired = "만료됨"
+expires = "만료일"
+listCerts = "인증서 목록 보기"
+loading = "인증서를 읽는 중…"
+noCerts = "서명용 인증서를 찾을 수 없습니다"
+noDriver = "PKCS#11 드라이버가 감지되지 않았습니다. 토큰의 드라이버(예: OpenSC)를 설치한 후 이 창을 다시 열거나, 아래에 드라이버 경로를 수동으로 입력하세요."
+notYetValid = "아직 유효하지 않음"
+pin = "토큰 PIN"
+pkcs11Hint = "토큰의 PKCS#11 드라이버를 선택하고 PIN을 입력한 다음, 토큰의 인증서를 목록으로 표시하세요."
+pkcs11LoadError = "토큰에서 인증서를 읽을 수 없습니다. PIN과 드라이버를 확인하세요."
+refresh = "새로 고침"
+selectCert = "인증서 선택"
+selectDriver = "드라이버 선택"
+slot = "슬롯(선택 사항)"
+windowsHint = "Windows 인증서 저장소에서 인증서를 선택하세요. 서명에는 카드/토큰의 키가 사용되며, Windows에서 PIN을 요청합니다."
+windowsLoadError = "Windows 인증서 저장소를 읽을 수 없습니다"
 
 [certSign.sessions]
 deleted = "세션이 삭제되었습니다"
@@ -2477,9 +2507,6 @@ pdfNotReadyDesc = "서명된 PDF를 생성하는 중입니다. 잠시 후 다시
 [certSign.sign]
 results = "서명된 PDF"
 submit = "PDF 서명"
-
-[certSign.signMode]
-stepTitle = "서명 모드"
 
 [certSign.signMode.tooltip.auto]
 text = "서버의 <b>자체 서명</b> 인증서로 서명합니다. 동일한 <b>변조 감지 봉인</b>과 <b>감사 추적</b>을 제공하며, 보통 뷰어에서는 <b>Unverified</b>로 표시됩니다."
@@ -2501,6 +2528,12 @@ title = "서명이 작동하는 방식"
 [certSign.signMode.tooltip.rule]
 text = "수신자에게 <b>Trusted</b> 상태가 필요합니까? <b>수동</b>. 설정 없이 빠른 변조 감지 봉인과 감사 추적이 필요합니까? <b>자동</b>."
 title = "선택 기준"
+
+[certSign.source]
+device = "이 장치"
+server = "서버"
+stepTitle = "인증서 원본"
+upload = "업로드"
 
 [certSign.tooltip.header]
 title = "서명 관리 안내"
@@ -7951,6 +7984,9 @@ certExpired = "인증서 만료"
 certRevocationUnknown = "인증서 폐기 상태 알 수 없음"
 certRevoked = "인증서 폐기됨"
 chainInvalid = "인증서 체인 유효하지 않음"
+documentModified = "서명 후 문서가 수정됨 - 서명된 영역 외부에 내용이 추가되었습니다"
+revocationNotChecked = "폐기 여부가 확인되지 않았습니다"
+selfSigned = "자체 서명 - 서명자 신원이 확인되지 않음"
 signatureInvalid = "서명 암호 검증 실패"
 trustInvalid = "인증서 신뢰되지 않음"
 
@@ -7958,7 +7994,8 @@ trustInvalid = "인증서 신뢰되지 않음"
 continued = "계속"
 downloads = "다운로드"
 entryLabel = "서명 요약"
-filesEvaluated = "{{count}}개 파일 평가됨"
+filesEvaluated_one = "{{count}}개 파일 평가됨"
+filesEvaluated_other = "{{count}}개 파일 평가됨"
 footer = "Stirling PDF로 검증됨"
 generatedAt = "생성 시각"
 noPdf = "검증이 성공하면 PDF 보고서를 사용할 수 있습니다."
@@ -7968,6 +8005,9 @@ signatureCountLabel_one = "{{count}} signature"
 signatureCountLabel_other = "{{count}} signatures"
 signaturesFound_one = "{{count}} signature detected"
 signaturesFound_other = "{{count}} signatures detected"
+signaturesInvalid = "{{count}}개 유효하지 않음"
+signaturesUnverified_one = "{{count}}개 검토 필요"
+signaturesUnverified_other = "{{count}}개 검토 필요"
 signaturesValid = "{{count}}개 완전 유효"
 title = "서명 검증 보고서"
 
@@ -7987,7 +8027,9 @@ _value = "서명"
 [validateSignature.status]
 complete = "검증 완료"
 invalid = "유효하지 않음"
+untrustedShort = "검증되지 않음"
 valid = "유효함"
+validUntrusted = "유효함, 서명자 확인되지 않음"
 
 [viewer]
 cannotPreviewFile = "파일을 미리보기할 수 없습니다"

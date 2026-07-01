@@ -2463,8 +2463,38 @@ noTeam = "Nessun team"
 noUsers = "Nessun altro utente trovato."
 placeholder = "Seleziona utenti..."
 
+[certSign.device]
+stepTitle = "Questo dispositivo"
+
 [certSign.error]
 failed = "Si è verificato un errore durante l’elaborazione delle firme."
+
+[certSign.format]
+pkcs11 = "Token USB"
+windowsStore = "Archivio certificati di Windows"
+
+[certSign.hardware]
+certificate = "Certificato"
+customLibrary = "Percorso driver personalizzato…"
+driver = "Driver PKCS#11"
+driverPath = "Percorso della libreria del driver"
+driverPathPlaceholder = "Percorso completo del driver PKCS#11 (.dll, .so o .dylib)"
+expired = "scaduto"
+expires = "scade"
+listCerts = "Elenca certificati"
+loading = "Lettura dei certificati…"
+noCerts = "Nessun certificato di firma trovato"
+noDriver = "Nessun driver PKCS#11 rilevato. Installa il driver del tuo token (es. OpenSC), poi riapri questa finestra - oppure inserisci manualmente qui sotto il percorso del driver."
+notYetValid = "non ancora valido"
+pin = "PIN del token"
+pkcs11Hint = "Seleziona il driver PKCS#11 del tuo token, inserisci il PIN, quindi elenca i certificati presenti sul token."
+pkcs11LoadError = "Impossibile leggere i certificati dal token. Verifica PIN e driver."
+refresh = "Aggiorna"
+selectCert = "Seleziona certificato"
+selectDriver = "Seleziona driver"
+slot = "Slot (opzionale)"
+windowsHint = "Scegli un certificato dall'archivio certificati di Windows. La firma usa la chiave sulla tua carta/sul tuo token - Windows richiederà il PIN."
+windowsLoadError = "Impossibile leggere l'archivio certificati di Windows"
 
 [certSign.sessions]
 deleted = "Sessione eliminata"
@@ -2477,9 +2507,6 @@ pdfNotReadyDesc = "Il PDF firmato è in fase di generazione. Riprova tra un mome
 [certSign.sign]
 results = "PDF firmato"
 submit = "Firma PDF"
-
-[certSign.signMode]
-stepTitle = "Modalità firma"
 
 [certSign.signMode.tooltip.auto]
 text = "Firma con un certificato <b>auto‑firmato</b> del server. Stessa <b>sigillatura anti‑manomissione</b> e <b>audit trail</b>; in genere mostra <b>Non verificato</b> nei visualizzatori."
@@ -2501,6 +2528,12 @@ title = "Come funzionano le firme"
 [certSign.signMode.tooltip.rule]
 text = "Serve stato <b>Attendibile</b> per il destinatario? <b>Manuale</b>. Serve un sigillo anti‑manomissione rapido e audit trail senza setup? <b>Automatico</b>."
 title = "Regola pratica"
+
+[certSign.source]
+device = "Questo dispositivo"
+server = "Server"
+stepTitle = "Origine certificato"
+upload = "Carica"
 
 [certSign.tooltip.header]
 title = "Gestione firme: informazioni"
@@ -7951,6 +7984,9 @@ certExpired = "Certificato scaduto"
 certRevocationUnknown = "Stato di revoca del certificato sconosciuto"
 certRevoked = "Certificato revocato"
 chainInvalid = "Catena di certificazione non valida"
+documentModified = "Documento modificato dopo la firma - contenuto aggiunto al di fuori dell'area firmata"
+revocationNotChecked = "Revoca non verificata"
+selfSigned = "Autofirmato - identità del firmatario non verificata"
 signatureInvalid = "Verifica crittografica della firma non riuscita"
 trustInvalid = "Certificato non attendibile"
 
@@ -7958,7 +7994,8 @@ trustInvalid = "Certificato non attendibile"
 continued = "Continua"
 downloads = "Download"
 entryLabel = "Riepilogo firma"
-filesEvaluated = "{{count}} file valutati"
+filesEvaluated_one = "{{count}} file valutato"
+filesEvaluated_other = "{{count}} file valutati"
 footer = "Validato tramite Stirling PDF"
 generatedAt = "Generato"
 noPdf = "Il report PDF sarà disponibile dopo una validazione riuscita."
@@ -7968,6 +8005,9 @@ signatureCountLabel_one = "{{count}} signature"
 signatureCountLabel_other = "{{count}} signatures"
 signaturesFound_one = "{{count}} signature detected"
 signaturesFound_other = "{{count}} signatures detected"
+signaturesInvalid = "{{count}} non valide"
+signaturesUnverified_one = "{{count}} necessita verifica"
+signaturesUnverified_other = "{{count}} necessitano verifica"
 signaturesValid = "{{count}} completamente valide"
 title = "Report di validazione firme"
 
@@ -7987,7 +8027,9 @@ _value = "Firma"
 [validateSignature.status]
 complete = "Validazione completata"
 invalid = "Invalida"
+untrustedShort = "Non verificata"
 valid = "Valida"
+validUntrusted = "Valida, firmatario non verificato"
 
 [viewer]
 cannotPreviewFile = "Impossibile visualizzare l'anteprima del file"

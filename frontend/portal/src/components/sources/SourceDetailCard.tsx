@@ -8,6 +8,7 @@ import CloseIcon from "@mui/icons-material/Close";
 
 interface SourceDetailCardProps {
   source: SourceView;
+  docSeries: number[];
   onClose: () => void;
   onEdit: (source: SourceView) => void;
   onTogglePause: (source: SourceView) => void;
@@ -19,6 +20,7 @@ interface SourceDetailCardProps {
 /** Expanded detail for the selected source row, with edit/pause/delete actions. */
 export function SourceDetailCard({
   source,
+  docSeries,
   onClose,
   onEdit,
   onTogglePause,
@@ -56,7 +58,7 @@ export function SourceDetailCard({
         </ActionIcon>
       </header>
 
-      <SourceDetailPanel source={source} />
+      <SourceDetailPanel source={source} docSeries={docSeries} />
 
       <div className="portal-sources__detail-actions">
         <Button

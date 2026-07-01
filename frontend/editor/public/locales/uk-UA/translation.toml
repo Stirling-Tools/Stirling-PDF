@@ -2463,8 +2463,38 @@ noTeam = "Без команди"
 noUsers = "Інших користувачів не знайдено."
 placeholder = "Виберіть користувачів..."
 
+[certSign.device]
+stepTitle = "Цей пристрій"
+
 [certSign.error]
 failed = "Під час обробки підписів сталася помилка."
+
+[certSign.format]
+pkcs11 = "USB-токен"
+windowsStore = "Сховище сертифікатів Windows"
+
+[certSign.hardware]
+certificate = "Сертифікат"
+customLibrary = "Власний шлях до драйвера…"
+driver = "Драйвер PKCS#11"
+driverPath = "Шлях до бібліотеки драйвера"
+driverPathPlaceholder = "Повний шлях до вашого драйвера PKCS#11 (.dll, .so або .dylib)"
+expired = "термін дії минув"
+expires = "спливає"
+listCerts = "Показати сертифікати"
+loading = "Зчитування сертифікатів…"
+noCerts = "Сертифікатів для підпису не знайдено"
+noDriver = "Драйвер PKCS#11 не виявлено. Встановіть драйвер вашого токена (наприклад, OpenSC), потім відкрийте це вікно знову - або введіть шлях до драйвера вручну нижче."
+notYetValid = "ще не дійсний"
+pin = "PIN токена"
+pkcs11Hint = "Виберіть драйвер PKCS#11 вашого токена, введіть PIN, а потім перегляньте сертифікати на токені."
+pkcs11LoadError = "Не вдалося зчитати сертифікати з токена. Перевірте PIN і драйвер."
+refresh = "Оновити"
+selectCert = "Виберіть сертифікат"
+selectDriver = "Виберіть драйвер"
+slot = "Слот (необов’язково)"
+windowsHint = "Виберіть сертифікат із вашого сховища сертифікатів Windows. Підписування використовує ключ на вашій картці/токені — Windows попросить ввести PIN."
+windowsLoadError = "Не вдалося прочитати сховище сертифікатів Windows"
 
 [certSign.sessions]
 deleted = "Сеанс видалено"
@@ -2477,9 +2507,6 @@ pdfNotReadyDesc = "Генерується підписаний PDF. Повтор
 [certSign.sign]
 results = "Підписаний PDF"
 submit = "Підписати PDF"
-
-[certSign.signMode]
-stepTitle = "Режим підписання"
 
 [certSign.signMode.tooltip.auto]
 text = "Підписує серверним <b>самопідписаним</b> сертифікатом. Такий самий <b>захист від підробки</b> та <b>аудит-трейл</b>; зазвичай відображається як <b>Неперевірено</b> у переглядачах."
@@ -2501,6 +2528,12 @@ title = "Як працюють підписи"
 [certSign.signMode.tooltip.rule]
 text = "Потрібен статус отримувача <b>Довірено</b>? <b>Вручну</b>. Потрібна швидка пломба від підробок і аудит без налаштувань? <b>Авто</b>."
 title = "Загальне правило"
+
+[certSign.source]
+device = "Цей пристрій"
+server = "Сервер"
+stepTitle = "Джерело сертифіката"
+upload = "Завантажити"
 
 [certSign.tooltip.header]
 title = "Про керування підписами"
@@ -7951,6 +7984,9 @@ certExpired = "Сертифікат прострочено"
 certRevocationUnknown = "Статус відкликання сертифіката невідомий"
 certRevoked = "Сертифікат відкликано"
 chainInvalid = "Недійсний ланцюг сертифікатів"
+documentModified = "Документ змінено після підписання — вміст додано поза підписаною областю"
+revocationNotChecked = "Статус відкликання не перевірено"
+selfSigned = "Самопідписаний — особу підписувача не підтверджено"
 signatureInvalid = "Збій криптографічної перевірки підпису"
 trustInvalid = "Сертифікат не є довіреним"
 
@@ -7958,7 +7994,8 @@ trustInvalid = "Сертифікат не є довіреним"
 continued = "Продовження"
 downloads = "Завантаження"
 entryLabel = "Зведення за підписом"
-filesEvaluated = "Оцінено файлів: {{count}}"
+filesEvaluated_one = "Перевірено {{count}} файл"
+filesEvaluated_other = "Перевірено {{count}} файлів"
 footer = "Перевірено через Stirling PDF"
 generatedAt = "Згенеровано"
 noPdf = "Звіт PDF буде доступний після успішної перевірки."
@@ -7968,6 +8005,9 @@ signatureCountLabel_one = "{{count}} signature"
 signatureCountLabel_other = "{{count}} signatures"
 signaturesFound_one = "{{count}} signature detected"
 signaturesFound_other = "{{count}} signatures detected"
+signaturesInvalid = "{{count}} недійсних"
+signaturesUnverified_one = "{{count}} потребує перевірки"
+signaturesUnverified_other = "{{count}} потребують перевірки"
 signaturesValid = "Повністю дійсних: {{count}}"
 title = "Звіт про перевірку підписів"
 
@@ -7987,7 +8027,9 @@ _value = "Подпись"
 [validateSignature.status]
 complete = "Перевірку завершено"
 invalid = "Недійсна"
+untrustedShort = "Неперевірено"
 valid = "Дійна"
+validUntrusted = "Дійсний, підписувача не підтверджено"
 
 [viewer]
 cannotPreviewFile = "Не вдається переглянути файл"

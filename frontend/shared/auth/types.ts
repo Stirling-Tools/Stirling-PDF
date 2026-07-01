@@ -16,6 +16,8 @@ export interface AuthUser {
   is_anonymous?: boolean;
   isFirstLogin?: boolean;
   authenticationType?: string;
+  /** Whether the backend grants this user portal/processor access. */
+  portalAccess?: boolean;
   app_metadata?: Record<string, unknown>;
 }
 
@@ -58,6 +60,8 @@ export interface AuthContextValue {
   isAnonymous: boolean;
   /** True when the current user holds an admin role. */
   isAdmin: boolean;
+  /** True when the user may access the portal/processor (admins + ACL grants). */
+  portalAccess: boolean;
   /** Raw backend role string, or null when signed out. */
   role: string | null;
   loading: boolean;

@@ -2463,8 +2463,38 @@ noTeam = "Bez tímu"
 noUsers = "Nenašli sa žiadni ďalší používatelia."
 placeholder = "Vybrať používateľov..."
 
+[certSign.device]
+stepTitle = "Toto zariadenie"
+
 [certSign.error]
 failed = "Počas spracovania podpisov došlo k chybe."
+
+[certSign.format]
+pkcs11 = "USB token"
+windowsStore = "Úložisko certifikátov Windows"
+
+[certSign.hardware]
+certificate = "Certifikát"
+customLibrary = "Vlastná cesta ovládača…"
+driver = "Ovládač PKCS#11"
+driverPath = "Cesta ku knižnici ovládača"
+driverPathPlaceholder = "Úplná cesta k vášmu ovládaču PKCS#11 (.dll, .so alebo .dylib)"
+expired = "platnosť uplynula"
+expires = "vyprší"
+listCerts = "Zobraziť certifikáty"
+loading = "Načítavajú sa certifikáty…"
+noCerts = "Nenašli sa žiadne podpisové certifikáty"
+noDriver = "Nebol zistený žiadny ovládač PKCS#11. Nainštalujte ovládač pre váš token (napr. OpenSC), potom to znova otvorte – alebo nižšie zadajte cestu k ovládaču manuálne."
+notYetValid = "ešte neplatný"
+pin = "PIN tokenu"
+pkcs11Hint = "Vyberte ovládač PKCS#11 pre váš token, zadajte PIN a potom zobrazte certifikáty na tokene."
+pkcs11LoadError = "Nepodarilo sa prečítať certifikáty z tokenu. Skontrolujte PIN a ovládač."
+refresh = "Obnoviť"
+selectCert = "Vybrať certifikát"
+selectDriver = "Vybrať ovládač"
+slot = "Slot (voliteľné)"
+windowsHint = "Vyberte certifikát z vášho úložiska certifikátov Windows. Podpisovanie používa kľúč na vašej karte/tokene – Windows vyzve na zadanie PIN-u."
+windowsLoadError = "Nepodarilo sa prečítať úložisko certifikátov Windows"
 
 [certSign.sessions]
 deleted = "Relácia bola odstránená"
@@ -2477,9 +2507,6 @@ pdfNotReadyDesc = "Podpísané PDF sa generuje. Skúste to znova o chvíľu."
 [certSign.sign]
 results = "Podpísané PDF"
 submit = "Podpísať PDF"
-
-[certSign.signMode]
-stepTitle = "Režim podpisu"
 
 [certSign.signMode.tooltip.auto]
 text = "Podpisuje serverovým <b>samopodpísaným</b> certifikátom. Rovnaká <b>pečať odhaľujúca zásahy</b> a <b>auditná stopa</b>; v prehliadačoch sa zvyčajne zobrazuje <b>Unverified</b>."
@@ -2501,6 +2528,12 @@ title = "Ako fungujú podpisy"
 [certSign.signMode.tooltip.rule]
 text = "Potrebujete u príjemcu stav <b>Trusted</b>? <b>Manuálne</b>. Potrebujete rýchlu pečať odhaľujúcu zásahy a auditnú stopu bez nastavenia? <b>Automaticky</b>."
 title = "Všeobecné pravidlo"
+
+[certSign.source]
+device = "Toto zariadenie"
+server = "Server"
+stepTitle = "Zdroj certifikátu"
+upload = "Nahrať"
 
 [certSign.tooltip.header]
 title = "O správe podpisov"
@@ -7951,6 +7984,9 @@ certExpired = "Platnosť certifikátu vypršala"
 certRevocationUnknown = "Stav odvolania certifikátu neznámy"
 certRevoked = "Certifikát odvolaný"
 chainInvalid = "Certifikačný reťazec neplatný"
+documentModified = "Dokument bol po podpísaní upravený – obsah bol pridaný mimo podpísanej oblasti"
+revocationNotChecked = "Kontrola odvolania nebola vykonaná"
+selfSigned = "Samopodpísaný – identita podpisujúceho nebola overená"
 signatureInvalid = "Zlyhala kryptografická kontrola podpisu"
 trustInvalid = "Certifikát nie je dôveryhodný"
 
@@ -7958,7 +7994,8 @@ trustInvalid = "Certifikát nie je dôveryhodný"
 continued = "Pokračovanie"
 downloads = "Sťahovania"
 entryLabel = "Súhrn podpisu"
-filesEvaluated = "Vyhodnotených súborov: {{count}}"
+filesEvaluated_one = "{{count}} súbor vyhodnotený"
+filesEvaluated_other = "{{count}} súborov vyhodnotených"
 footer = "Overené cez Stirling PDF"
 generatedAt = "Vygenerované"
 noPdf = "PDF správa bude dostupná po úspešnom overení."
@@ -7968,6 +8005,9 @@ signatureCountLabel_one = "{{count}} signature"
 signatureCountLabel_other = "{{count}} signatures"
 signaturesFound_one = "{{count}} signature detected"
 signaturesFound_other = "{{count}} signatures detected"
+signaturesInvalid = "{{count}} neplatné"
+signaturesUnverified_one = "{{count}} vyžaduje kontrolu"
+signaturesUnverified_other = "{{count}} vyžadujú kontrolu"
 signaturesValid = "{{count}} úplne platných"
 title = "Správa o overení podpisov"
 
@@ -7987,7 +8027,9 @@ _value = "Podpis"
 [validateSignature.status]
 complete = "Overenie dokončené"
 invalid = "Neplatný"
+untrustedShort = "Neoverené"
 valid = "Platný"
+validUntrusted = "Platný, podpisujúci neoverený"
 
 [viewer]
 cannotPreviewFile = "Nedá sa zobraziť náhľad súboru"

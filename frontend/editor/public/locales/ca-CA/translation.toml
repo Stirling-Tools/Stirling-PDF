@@ -2463,8 +2463,38 @@ noTeam = "Sense equip"
 noUsers = "No s'han trobat altres usuaris."
 placeholder = "Selecciona usuaris..."
 
+[certSign.device]
+stepTitle = "Aquest dispositiu"
+
 [certSign.error]
 failed = "S'ha produït un error en processar les signatures."
+
+[certSign.format]
+pkcs11 = "Token USB"
+windowsStore = "Magatzem de certificats de Windows"
+
+[certSign.hardware]
+certificate = "Certificat"
+customLibrary = "Camí personalitzat del controlador…"
+driver = "Controlador PKCS#11"
+driverPath = "Camí de la biblioteca del controlador"
+driverPathPlaceholder = "Camí complet al vostre controlador PKCS#11 (.dll, .so o .dylib)"
+expired = "caducat"
+expires = "caduca"
+listCerts = "Llista els certificats"
+loading = "S'estan llegint els certificats…"
+noCerts = "No s'han trobat certificats de signatura"
+noDriver = "No s'ha detectat cap controlador PKCS#11. Instal·leu el controlador del vostre token (p. ex., OpenSC), després torneu a obrir això - o introduïu manualment el camí del controlador a continuació."
+notYetValid = "encara no vàlid"
+pin = "PIN del token"
+pkcs11Hint = "Seleccioneu el controlador PKCS#11 del vostre token, introduïu el PIN i, a continuació, llisteu els certificats del token."
+pkcs11LoadError = "No s'han pogut llegir els certificats del token. Comproveu el PIN i el controlador."
+refresh = "Actualitza"
+selectCert = "Seleccioneu el certificat"
+selectDriver = "Seleccioneu el controlador"
+slot = "Ranura (opcional)"
+windowsHint = "Trieu un certificat del vostre magatzem de certificats de Windows. La signatura utilitza la clau de la vostra targeta/token - Windows us demanarà el PIN."
+windowsLoadError = "No s'ha pogut llegir el magatzem de certificats de Windows"
 
 [certSign.sessions]
 deleted = "Sessió eliminada"
@@ -2477,9 +2507,6 @@ pdfNotReadyDesc = "S'està generant el PDF signat. Torna-ho a provar d'aquí a u
 [certSign.sign]
 results = "PDF signat"
 submit = "Signa el PDF"
-
-[certSign.signMode]
-stepTitle = "Mode de signatura"
 
 [certSign.signMode.tooltip.auto]
 text = "Signa amb un certificat del servidor <b>self-signed</b>. Mateix <b>tamper-evident seal</b> i <b>audit trail</b>; normalment mostra <b>Unverified</b> als visors."
@@ -2501,6 +2528,12 @@ title = "Com funcionen les signatures"
 [certSign.signMode.tooltip.rule]
 text = "Necessites l'estat <b>Trusted</b> al destinatari? <b>Manual</b>. Necessites un segell ràpid, evident a manipulacions i un rastre d'auditoria sense configuració? <b>Automàtic</b>."
 title = "Regla general"
+
+[certSign.source]
+device = "Aquest dispositiu"
+server = "Servidor"
+stepTitle = "Origen del certificat"
+upload = "Puja"
 
 [certSign.tooltip.header]
 title = "Sobre la gestió de signatures"
@@ -7951,6 +7984,9 @@ certExpired = "Certificat caducat"
 certRevocationUnknown = "Estat de revocació del certificat desconegut"
 certRevoked = "Certificat revocat"
 chainInvalid = "Cadena de certificats no vàlida"
+documentModified = "Document modificat després de la signatura - s'ha afegit contingut fora de l'àrea signada"
+revocationNotChecked = "No s'ha verificat la revocació"
+selfSigned = "Autofirmat - la identitat del signant no s'ha verificat"
 signatureInvalid = "La comprovació criptogràfica de la signatura ha fallat"
 trustInvalid = "Certificat no de confiança"
 
@@ -7958,7 +7994,8 @@ trustInvalid = "Certificat no de confiança"
 continued = "Continua"
 downloads = "Descàrregues"
 entryLabel = "Resum de la signatura"
-filesEvaluated = "{{count}} fitxers avaluats"
+filesEvaluated_one = "{{count}} fitxer avaluat"
+filesEvaluated_other = "{{count}} fitxers avaluats"
 footer = "Validat amb Stirling PDF"
 generatedAt = "Generat"
 noPdf = "L'informe PDF estarà disponible després d'una validació correcta."
@@ -7968,6 +8005,9 @@ signatureCountLabel_one = "{{count}} signature"
 signatureCountLabel_other = "{{count}} signatures"
 signaturesFound_one = "{{count}} signature detected"
 signaturesFound_other = "{{count}} signatures detected"
+signaturesInvalid = "{{count}} invàlides"
+signaturesUnverified_one = "{{count}} necessita revisió"
+signaturesUnverified_other = "{{count}} necessiten revisió"
 signaturesValid = "{{count}} totalment vàlides"
 title = "Informe de validació de signatures"
 
@@ -7987,7 +8027,9 @@ _value = "Signatura"
 [validateSignature.status]
 complete = "Validació completada"
 invalid = "Invàlid"
+untrustedShort = "No verificat"
 valid = "Vàlid"
+validUntrusted = "Vàlida, signant no verificat"
 
 [viewer]
 cannotPreviewFile = "No es pot previsualitzar el fitxer"

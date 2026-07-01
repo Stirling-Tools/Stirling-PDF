@@ -2463,8 +2463,38 @@ noTeam = "Bez tima"
 noUsers = "Nisu pronađeni drugi korisnici."
 placeholder = "Odaberite korisnike..."
 
+[certSign.device]
+stepTitle = "Ovaj uređaj"
+
 [certSign.error]
 failed = "Došlo je do pogreške pri obradi potpisa."
+
+[certSign.format]
+pkcs11 = "USB token"
+windowsStore = "Spremište certifikata sustava Windows"
+
+[certSign.hardware]
+certificate = "Certifikat"
+customLibrary = "Prilagođena putanja upravljačkog programa…"
+driver = "PKCS#11 upravljački program"
+driverPath = "Putanja biblioteke upravljačkog programa"
+driverPathPlaceholder = "Puna putanja do vašeg PKCS#11 upravljačkog programa (.dll, .so ili .dylib)"
+expired = "istekao"
+expires = "ističe"
+listCerts = "Prikaži certifikate"
+loading = "Učitavanje certifikata…"
+noCerts = "Nisu pronađeni certifikati za potpisivanje"
+noDriver = "Nije otkriven nijedan PKCS#11 upravljački program. Instalirajte upravljački program svojeg tokena (npr. OpenSC), zatim ovo ponovno otvorite - ili dolje ručno unesite putanju upravljačkog programa."
+notYetValid = "još nije valjan"
+pin = "PIN tokena"
+pkcs11Hint = "Odaberite PKCS#11 upravljački program za svoj token, unesite PIN, zatim prikažite certifikate na tokenu."
+pkcs11LoadError = "Nije moguće pročitati certifikate s tokena. Provjerite PIN i upravljački program."
+refresh = "Osvježi"
+selectCert = "Odaberite certifikat"
+selectDriver = "Odaberite upravljački program"
+slot = "Utor (neobavezno)"
+windowsHint = "Odaberite certifikat iz spremišta certifikata sustava Windows. Potpisivanje koristi ključ na vašoj kartici/tokenu - Windows će zatražiti PIN."
+windowsLoadError = "Nije moguće pročitati spremište certifikata sustava Windows"
 
 [certSign.sessions]
 deleted = "Sesija izbrisana"
@@ -2477,9 +2507,6 @@ pdfNotReadyDesc = "Potpisani PDF se generira. Pokušajte ponovno za trenutak."
 [certSign.sign]
 results = "Potpisani PDF"
 submit = "Potpiši PDF"
-
-[certSign.signMode]
-stepTitle = "Način potpisivanja"
 
 [certSign.signMode.tooltip.auto]
 text = "Potpisuje poslužiteljskim <b>samopotpisanim</b> certifikatom. Isti <b>pečat koji otkriva izmjene</b> i <b>revizijski trag</b>; u preglednicima se obično prikazuje kao <b>Nepotvrđeno</b>."
@@ -2501,6 +2528,12 @@ title = "Kako potpisi rade"
 [certSign.signMode.tooltip.rule]
 text = "Trebate da primatelj ima status <b>Pouzdano</b>? <b>Ručno</b>. Trebate brz pečat koji otkriva izmjene i revizijski trag bez postavljanja? <b>Auto</b>."
 title = "Pravilo"
+
+[certSign.source]
+device = "Ovaj uređaj"
+server = "Poslužitelj"
+stepTitle = "Izvor certifikata"
+upload = "Učitaj"
 
 [certSign.tooltip.header]
 title = "O upravljanju potpisima"
@@ -7951,6 +7984,9 @@ certExpired = "Certifikat istekao"
 certRevocationUnknown = "Status opoziva certifikata nepoznat"
 certRevoked = "Certifikat opozvan"
 chainInvalid = "Lanac certifikata nevaljan"
+documentModified = "Dokument je izmijenjen nakon potpisivanja - sadržaj je dodan izvan potpisanog područja"
+revocationNotChecked = "Opoziv nije provjeren"
+selfSigned = "Samopotpisano - identitet potpisnika nije potvrđen"
 signatureInvalid = "Kriptografska provjera potpisa nije uspjela"
 trustInvalid = "Certifikat nije pouzdan"
 
@@ -7958,7 +7994,8 @@ trustInvalid = "Certifikat nije pouzdan"
 continued = "Nastavak"
 downloads = "Preuzimanja"
 entryLabel = "Sažetak potpisa"
-filesEvaluated = "{{count}} datoteka obrađeno"
+filesEvaluated_one = "{{count}} datoteka je analizirana"
+filesEvaluated_other = "{{count}} datoteka je analizirano"
 footer = "Provjereno putem Stirling PDF"
 generatedAt = "Generirano"
 noPdf = "PDF izvješće bit će dostupno nakon uspješne provjere."
@@ -7968,6 +8005,9 @@ signatureCountLabel_one = "{{count}} signature"
 signatureCountLabel_other = "{{count}} signatures"
 signaturesFound_one = "{{count}} signature detected"
 signaturesFound_other = "{{count}} signatures detected"
+signaturesInvalid = "{{count}} nevaljanih"
+signaturesUnverified_one = "{{count}} zahtijeva provjeru"
+signaturesUnverified_other = "{{count}} zahtijevaju provjeru"
 signaturesValid = "{{count}} potpuno valjano"
 title = "Izvješće o provjeri potpisa"
 
@@ -7987,7 +8027,9 @@ _value = "Potpis"
 [validateSignature.status]
 complete = "Provjera dovršena"
 invalid = "Nevaljano"
+untrustedShort = "Neprovjereno"
 valid = "Valjano"
+validUntrusted = "Valjano, potpisnik nije provjeren"
 
 [viewer]
 cannotPreviewFile = "Nije moguće pregledati datoteku"

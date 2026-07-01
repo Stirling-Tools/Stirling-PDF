@@ -2463,8 +2463,38 @@ noTeam = "Không có Nhóm"
 noUsers = "Không tìm thấy người dùng nào khác."
 placeholder = "Chọn người dùng..."
 
+[certSign.device]
+stepTitle = "Thiết bị này"
+
 [certSign.error]
 failed = "Đã xảy ra lỗi khi xử lý chữ ký."
+
+[certSign.format]
+pkcs11 = "USB Token"
+windowsStore = "Kho chứng chỉ Windows"
+
+[certSign.hardware]
+certificate = "Chứng chỉ"
+customLibrary = "Đường dẫn trình điều khiển tùy chỉnh…"
+driver = "Trình điều khiển PKCS#11"
+driverPath = "Đường dẫn thư viện trình điều khiển"
+driverPathPlaceholder = "Đường dẫn đầy đủ tới trình điều khiển PKCS#11 của bạn (.dll, .so hoặc .dylib)"
+expired = "đã hết hạn"
+expires = "hết hạn vào"
+listCerts = "Liệt kê chứng chỉ"
+loading = "Đang đọc chứng chỉ…"
+noCerts = "Không tìm thấy chứng chỉ ký"
+noDriver = "Không phát hiện trình điều khiển PKCS#11. Hãy cài đặt trình điều khiển cho token của bạn (ví dụ: OpenSC), sau đó mở lại phần này - hoặc nhập thủ công đường dẫn trình điều khiển bên dưới."
+notYetValid = "chưa có hiệu lực"
+pin = "PIN của token"
+pkcs11Hint = "Chọn trình điều khiển PKCS#11 của token, nhập PIN, rồi liệt kê các chứng chỉ trên token."
+pkcs11LoadError = "Không thể đọc chứng chỉ từ token. Hãy kiểm tra PIN và trình điều khiển."
+refresh = "Làm mới"
+selectCert = "Chọn chứng chỉ"
+selectDriver = "Chọn trình điều khiển"
+slot = "Khe (tùy chọn)"
+windowsHint = "Chọn một chứng chỉ từ kho chứng chỉ Windows của bạn. Việc ký sử dụng khóa trên thẻ/token của bạn - Windows sẽ yêu cầu nhập PIN."
+windowsLoadError = "Không thể đọc kho chứng chỉ Windows"
 
 [certSign.sessions]
 deleted = "Đã xóa phiên"
@@ -2477,9 +2507,6 @@ pdfNotReadyDesc = "PDF đã ký đang được tạo. Vui lòng thử lại sau.
 [certSign.sign]
 results = "PDF đã ký"
 submit = "Ký PDF"
-
-[certSign.signMode]
-stepTitle = "Chế độ ký"
 
 [certSign.signMode.tooltip.auto]
 text = "Ký bằng chứng chỉ <b>tự ký</b> của máy chủ. Cùng <b>niêm phong phát hiện can thiệp</b> và <b>bản ghi kiểm toán</b>; thường hiển thị <b>Chưa xác minh</b> trong trình xem."
@@ -2501,6 +2528,12 @@ title = "Cách chữ ký hoạt động"
 [certSign.signMode.tooltip.rule]
 text = "Cần trạng thái <b>Đã tin cậy</b> ở phía người nhận? <b>Thủ công</b>. Cần niêm phong phát hiện can thiệp và kiểm toán nhanh, không cần thiết lập? <b>Tự động</b>."
 title = "Nguyên tắc chung"
+
+[certSign.source]
+device = "Thiết bị này"
+server = "Máy chủ"
+stepTitle = "Nguồn chứng chỉ"
+upload = "Tải lên"
 
 [certSign.tooltip.header]
 title = "Giới thiệu về quản lý chữ ký"
@@ -7951,6 +7984,9 @@ certExpired = "Chứng chỉ hết hạn"
 certRevocationUnknown = "Không rõ trạng thái thu hồi chứng chỉ"
 certRevoked = "Chứng chỉ bị thu hồi"
 chainInvalid = "Chuỗi chứng chỉ không hợp lệ"
+documentModified = "Tài liệu đã bị sửa đổi sau khi ký - nội dung đã được thêm ngoài vùng đã ký"
+revocationNotChecked = "Chưa kiểm tra trạng thái thu hồi"
+selfSigned = "Tự ký - danh tính người ký chưa được xác minh"
 signatureInvalid = "Kiểm tra mật mã chữ ký thất bại"
 trustInvalid = "Chứng chỉ không được tin cậy"
 
@@ -7958,7 +7994,8 @@ trustInvalid = "Chứng chỉ không được tin cậy"
 continued = "Còn tiếp"
 downloads = "Tải xuống"
 entryLabel = "Tóm tắt chữ ký"
-filesEvaluated = "Đã đánh giá {{count}} tệp"
+filesEvaluated_one = "{{count}} tệp đã được đánh giá"
+filesEvaluated_other = "{{count}} tệp đã được đánh giá"
 footer = "Xác thực qua Stirling PDF"
 generatedAt = "Đã tạo"
 noPdf = "Báo cáo PDF sẽ khả dụng sau khi xác thực thành công."
@@ -7968,6 +8005,9 @@ signatureCountLabel_one = "{{count}} signature"
 signatureCountLabel_other = "{{count}} signatures"
 signaturesFound_one = "{{count}} signature detected"
 signaturesFound_other = "{{count}} signatures detected"
+signaturesInvalid = "{{count}} không hợp lệ"
+signaturesUnverified_one = "{{count}} cần xem xét"
+signaturesUnverified_other = "{{count}} cần xem xét"
 signaturesValid = "{{count}} hợp lệ hoàn toàn"
 title = "Báo cáo xác thực chữ ký"
 
@@ -7987,7 +8027,9 @@ _value = "Chữ ký"
 [validateSignature.status]
 complete = "Hoàn tất xác thực"
 invalid = "Không hợp lệ"
+untrustedShort = "Chưa xác minh"
 valid = "Hợp lệ"
+validUntrusted = "Hợp lệ, người ký chưa được xác minh"
 
 [viewer]
 cannotPreviewFile = "Không thể xem trước tệp"

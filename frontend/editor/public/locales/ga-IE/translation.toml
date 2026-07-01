@@ -2463,8 +2463,38 @@ noTeam = "Gan Foireann"
 noUsers = "Níor aimsíodh aon úsáideoirí eile."
 placeholder = "Roghnaigh úsáideoirí..."
 
+[certSign.device]
+stepTitle = "An gléas seo"
+
 [certSign.error]
 failed = "Tharla earráid agus sínithe á bpróiseáil."
+
+[certSign.format]
+pkcs11 = "Tócan USB"
+windowsStore = "Stór teastas Windows"
+
+[certSign.hardware]
+certificate = "Teastas"
+customLibrary = "Conair shaincheaptha an tiománaí…"
+driver = "Tiománaí PKCS#11"
+driverPath = "Conair leabharlainne an tiománaí"
+driverPathPlaceholder = "An chonair iomlán chuig do thiománaí PKCS#11 (.dll, .so nó .dylib)"
+expired = "imithe in éag"
+expires = "téann in éag"
+listCerts = "Liostaigh teastais"
+loading = "Teastais á léamh…"
+noCerts = "Níor aimsíodh teastais sínithe"
+noDriver = "Níor braitheadh aon tiománaí PKCS#11. Suiteáil tiománaí do thócain (m.sh. OpenSC), ansin oscail é seo arís – nó cuir isteach conair an tiománaí de láimh thíos."
+notYetValid = "ní bailí fós"
+pin = "PIN an tócan"
+pkcs11Hint = "Roghnaigh tiománaí PKCS#11 don tócan, cuir isteach an PIN, ansin liostaigh na teastais ar an tócan."
+pkcs11LoadError = "Níorbh fhéidir teastais a léamh ón tócan. Seiceáil an PIN agus an tiománaí."
+refresh = "Athnuaigh"
+selectCert = "Roghnaigh teastas"
+selectDriver = "Roghnaigh tiománaí"
+slot = "Sliotán (roghnach)"
+windowsHint = "Roghnaigh teastas ó do stór teastas Windows. Úsáideann an síniú an eochair ar do chárta/tócan – iarrfaidh Windows an PIN."
+windowsLoadError = "Níorbh fhéidir stór teastas Windows a léamh"
 
 [certSign.sessions]
 deleted = "Scriosadh an seisiún"
@@ -2477,9 +2507,6 @@ pdfNotReadyDesc = "Tá an PDF sínithe á ghiniúint. Bain triail eile as ar bal
 [certSign.sign]
 results = "PDF Sínithe"
 submit = "Sínigh PDF"
-
-[certSign.signMode]
-stepTitle = "Mód Sínithe"
 
 [certSign.signMode.tooltip.auto]
 text = "Síníonn sé le teastas <b>féin-shínithe</b> freastalaí. An <b>séala fianaiseach i gcoinne cur isteach</b> agus an <b>rian iniúchta</b> céanna; de ghnáth taispeántar <b>Neamhfhíoraithe</b> i dtaispeánaithe."
@@ -2501,6 +2528,12 @@ title = "Conas a oibríonn sínithe"
 [certSign.signMode.tooltip.rule]
 text = "Teastaíonn stádas <b>Trusted</b> ón bhfaighteoir? <b>De láimh</b>. Teastaíonn séala tapa, fianaiseach i gcoinne cur isteach agus rian iniúchta gan socrú? <b>Uathoibríoch</b>."
 title = "Riail ghinearálta"
+
+[certSign.source]
+device = "An gléas seo"
+server = "Freastalaí"
+stepTitle = "Foinse an teastais"
+upload = "Uaslódáil"
 
 [certSign.tooltip.header]
 title = "Maidir le Bainistiú Sínithe"
@@ -7951,6 +7984,9 @@ certExpired = "Tá an teastas imithe in éag"
 certRevocationUnknown = "Tá stádas cúlghairme an teastais anaithnid"
 certRevoked = "Cúlghaireadh an teastas"
 chainInvalid = "Slabhra teastais neamhbhailí"
+documentModified = "Modhníodh an cháipéis tar éis an tsínithe – cuireadh ábhar leis lasmuigh den limistéar sínithe"
+revocationNotChecked = "Níor seiceáladh stádas cúlghairme"
+selfSigned = "Féinsínithe – níor fíoraíodh aitheantas an tsínitheora"
 signatureInvalid = "Theip ar sheiceáil chriptigrafach an tsínithe"
 trustInvalid = "Níl muinín sa teastas"
 
@@ -7958,7 +7994,8 @@ trustInvalid = "Níl muinín sa teastas"
 continued = "Ar lean"
 downloads = "Íoslódálacha"
 entryLabel = "Achoimre ar Shínithe"
-filesEvaluated = "Measúnaíodh {{count}} comhad"
+filesEvaluated_one = "Measadh {{count}} comhad"
+filesEvaluated_other = "Measadh {{count}} comhad"
 footer = "Bailíochtaithe trí Stirling PDF"
 generatedAt = "Ginte"
 noPdf = "Beidh tuarascáil PDF ar fáil tar éis bailíochtaithe rathúla."
@@ -7968,6 +8005,9 @@ signatureCountLabel_one = "{{count}} signature"
 signatureCountLabel_other = "{{count}} signatures"
 signaturesFound_one = "{{count}} signature detected"
 signaturesFound_other = "{{count}} signatures detected"
+signaturesInvalid = "{{count}} neamhbhailí"
+signaturesUnverified_one = "{{count}} le hathbhreithniú"
+signaturesUnverified_other = "{{count}} le hathbhreithniú"
 signaturesValid = "{{count}} go hiomlán bailí"
 title = "Tuarascáil Bhailíochtaithe Sínithe"
 
@@ -7987,7 +8027,9 @@ _value = "Síniú"
 [validateSignature.status]
 complete = "Bailíochtú críochnaithe"
 invalid = "Neamhbhailí"
+untrustedShort = "Neamhfíoraithe"
 valid = "Bailí"
+validUntrusted = "Bailí, níor fíoraíodh aitheantas an tsínitheora"
 
 [viewer]
 cannotPreviewFile = "Ní féidir an comhad a réamhamharc."

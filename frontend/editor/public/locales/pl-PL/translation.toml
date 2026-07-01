@@ -2463,8 +2463,38 @@ noTeam = "Brak zespołu"
 noUsers = "Nie znaleziono innych użytkowników."
 placeholder = "Wybierz użytkowników..."
 
+[certSign.device]
+stepTitle = "To urządzenie"
+
 [certSign.error]
 failed = "Wystąpił błąd podczas przetwarzania podpisów."
+
+[certSign.format]
+pkcs11 = "Token USB"
+windowsStore = "Magazyn certyfikatów Windows"
+
+[certSign.hardware]
+certificate = "Certyfikat"
+customLibrary = "Niestandardowa ścieżka sterownika…"
+driver = "Sterownik PKCS#11"
+driverPath = "Ścieżka do biblioteki sterownika"
+driverPathPlaceholder = "Pełna ścieżka do sterownika PKCS#11 (.dll, .so lub .dylib)"
+expired = "wygasł"
+expires = "wygasa"
+listCerts = "Wyświetl certyfikaty"
+loading = "Odczytywanie certyfikatów…"
+noCerts = "Nie znaleziono certyfikatów do podpisywania"
+noDriver = "Nie wykryto sterownika PKCS#11. Zainstaluj sterownik tokena (np. OpenSC), następnie otwórz to ponownie - lub wprowadź poniżej ścieżkę do sterownika ręcznie."
+notYetValid = "jeszcze nieważny"
+pin = "PIN tokena"
+pkcs11Hint = "Wybierz sterownik PKCS#11 dla tokena, wprowadź PIN, a następnie wyświetl certyfikaty z tokena."
+pkcs11LoadError = "Nie można odczytać certyfikatów z tokena. Sprawdź PIN i sterownik."
+refresh = "Odśwież"
+selectCert = "Wybierz certyfikat"
+selectDriver = "Wybierz sterownik"
+slot = "Slot (opcjonalnie)"
+windowsHint = "Wybierz certyfikat z magazynu certyfikatów Windows. Podpisywanie użyje klucza na karcie/tokenie - Windows poprosi o PIN."
+windowsLoadError = "Nie można odczytać magazynu certyfikatów Windows"
 
 [certSign.sessions]
 deleted = "Sesję usunięto"
@@ -2477,9 +2507,6 @@ pdfNotReadyDesc = "Podpisany PDF jest generowany. Spróbuj ponownie za chwilę."
 [certSign.sign]
 results = "Podpisany PDF"
 submit = "Podpisz PDF"
-
-[certSign.signMode]
-stepTitle = "Tryb podpisu"
 
 [certSign.signMode.tooltip.auto]
 text = "Podpisuje serwerowym certyfikatem <b>samopodpisanym</b>. Ta sama <b>pieczęć wykrywająca naruszenia</b> i <b>ślad audytowy</b>; zazwyczaj status <b>Niezweryfikowany</b> w przeglądarkach PDF."
@@ -2501,6 +2528,12 @@ title = "Jak działają podpisy"
 [certSign.signMode.tooltip.rule]
 text = "Potrzebny status <b>Zaufany</b> u odbiorcy? <b>Ręczny</b>. Potrzebna szybka pieczęć wykrywająca naruszenia i ślad audytowy bez konfiguracji? <b>Auto</b>."
 title = "Zasada ogólna"
+
+[certSign.source]
+device = "To urządzenie"
+server = "Serwer"
+stepTitle = "Źródło certyfikatu"
+upload = "Prześlij"
 
 [certSign.tooltip.header]
 title = "O zarządzaniu podpisami"
@@ -7951,6 +7984,9 @@ certExpired = "Certyfikat wygasł"
 certRevocationUnknown = "Status odwołania certyfikatu nieznany"
 certRevoked = "Certyfikat odwołany"
 chainInvalid = "Nieprawidłowy łańcuch certyfikatów"
+documentModified = "Dokument zmodyfikowany po podpisaniu - treść została dodana poza obszarem objętym podpisem"
+revocationNotChecked = "Nie sprawdzono statusu unieważnienia"
+selfSigned = "Samopodpisany - tożsamość podpisującego niezweryfikowana"
 signatureInvalid = "Niepowodzenie kryptograficznego sprawdzenia podpisu"
 trustInvalid = "Certyfikat nie jest zaufany"
 
@@ -7958,7 +7994,8 @@ trustInvalid = "Certyfikat nie jest zaufany"
 continued = "Ciąg dalszy"
 downloads = "Pobrania"
 entryLabel = "Podsumowanie podpisu"
-filesEvaluated = "Przeanalizowano {{count}} plików"
+filesEvaluated_one = "{{count}} plik sprawdzony"
+filesEvaluated_other = "{{count}} pliki sprawdzone"
 footer = "Zweryfikowano za pomocą Stirling PDF"
 generatedAt = "Wygenerowano"
 noPdf = "Raport PDF będzie dostępny po pomyślnej weryfikacji."
@@ -7968,6 +8005,9 @@ signatureCountLabel_one = "{{count}} signature"
 signatureCountLabel_other = "{{count}} signatures"
 signaturesFound_one = "{{count}} signature detected"
 signaturesFound_other = "{{count}} signatures detected"
+signaturesInvalid = "{{count}} nieważne"
+signaturesUnverified_one = "{{count}} wymaga sprawdzenia"
+signaturesUnverified_other = "{{count}} wymagają sprawdzenia"
 signaturesValid = "{{count}} w pełni prawidłowych"
 title = "Raport weryfikacji podpisów"
 
@@ -7987,7 +8027,9 @@ _value = "Podpis"
 [validateSignature.status]
 complete = "Weryfikacja zakończona"
 invalid = "Niepoprawny"
+untrustedShort = "Niezweryfikowany"
 valid = "Poprawny"
+validUntrusted = "Ważny, podpisujący niezweryfikowany"
 
 [viewer]
 cannotPreviewFile = "Nie można wyświetlić podglądu pliku"
