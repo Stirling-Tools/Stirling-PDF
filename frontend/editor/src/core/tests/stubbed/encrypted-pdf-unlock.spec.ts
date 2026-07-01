@@ -22,7 +22,7 @@ import path from "path";
 import fs from "fs";
 import { mockAppApis } from "@app/tests/helpers/api-stubs";
 
-const FIXTURES_DIR = path.join(__dirname, "../test-fixtures");
+const FIXTURES_DIR = path.join(import.meta.dirname, "../test-fixtures");
 const ENCRYPTED_PDF = path.join(FIXTURES_DIR, "encrypted.pdf");
 
 const FAKE_UNLOCKED_PDF = Buffer.from(
