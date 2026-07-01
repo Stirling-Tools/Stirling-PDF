@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import org.apache.pdfbox.Loader;
@@ -302,6 +303,11 @@ class RearrangePagesPDFControllerTest {
             assertNotNull(response);
             // 2 pages * 3 duplicates = 6 final pages
             assertEquals(6, realDoc.getNumberOfPages());
+            // Each duplicate must be a distinct page node in the saved output; a shared
+            // node under multiple /Kids is an invalid tree readers reject as cyclic.
+            List<Object> savedPages = reloadAndSnapshot(response);
+            assertEquals(6, savedPages.size());
+            assertEquals(6, new HashSet<>(savedPages).size());
         }
     }
 
