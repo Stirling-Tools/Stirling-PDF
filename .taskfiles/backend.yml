@@ -26,9 +26,14 @@ tasks:
           AIENGINE_ENABLED: '{{.AIENGINE_ENABLED}}'
           AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS}}'
           SECURITY_ENABLELOGIN: '{{.SECURITY_ENABLELOGIN}}'
+          POLICIES_ENABLED: '{{.POLICIES_ENABLED}}'
 
   dev:proprietary:
     desc: "Start backend dev server in proprietary mode"
+    # `dotenv:` reads from the root Taskfile's directory (".") because this
+    # subtaskfile is included with `dir: .`. Local overrides in
+    # .env.proprietary.local win over the committed .env.proprietary defaults.
+    dotenv: ['app/.env.proprietary.local', 'app/.env.proprietary']
     ignore_error: true
     vars:
       PORT: '{{.PORT | default "8080"}}'
@@ -36,12 +41,13 @@ tasks:
       AIENGINE_ENABLED: '{{.AIENGINE_ENABLED | default "false"}}'
       AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS | default "120"}}'
       SECURITY_ENABLELOGIN: '{{.SECURITY_ENABLELOGIN | default ""}}'
+      POLICIES_ENABLED: '{{.POLICIES_ENABLED | default ""}}'
     env:
       SERVER_PORT: '{{.PORT}}'
     cmds:
-      - cmd: '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED={{.AIENGINE_ENABLED}} AIENGINE_TIMEOUTSECONDS={{.AIENGINE_TIMEOUTSECONDS}} {{end}}{{if .SECURITY_ENABLELOGIN}}SECURITY_ENABLELOGIN={{.SECURITY_ENABLELOGIN}} {{end}}cmd /c ".\gradlew.bat :stirling-pdf:bootRun"'
+      - cmd: '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED={{.AIENGINE_ENABLED}} AIENGINE_TIMEOUTSECONDS={{.AIENGINE_TIMEOUTSECONDS}} {{end}}{{if .SECURITY_ENABLELOGIN}}SECURITY_ENABLELOGIN={{.SECURITY_ENABLELOGIN}} {{end}}{{if .POLICIES_ENABLED}}POLICIES_ENABLED={{.POLICIES_ENABLED}} {{end}}cmd /c ".\gradlew.bat :stirling-pdf:bootRun"'
         platforms: [windows]
-      - cmd: '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED={{.AIENGINE_ENABLED}} AIENGINE_TIMEOUTSECONDS={{.AIENGINE_TIMEOUTSECONDS}} {{end}}{{if .SECURITY_ENABLELOGIN}}SECURITY_ENABLELOGIN={{.SECURITY_ENABLELOGIN}} {{end}}./gradlew :stirling-pdf:bootRun'
+      - cmd: '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED={{.AIENGINE_ENABLED}} AIENGINE_TIMEOUTSECONDS={{.AIENGINE_TIMEOUTSECONDS}} {{end}}{{if .SECURITY_ENABLELOGIN}}SECURITY_ENABLELOGIN={{.SECURITY_ENABLELOGIN}} {{end}}{{if .POLICIES_ENABLED}}POLICIES_ENABLED={{.POLICIES_ENABLED}} {{end}}./gradlew :stirling-pdf:bootRun'
         platforms: [linux, darwin]
 
   dev:bundled:

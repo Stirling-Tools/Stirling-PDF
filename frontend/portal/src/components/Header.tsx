@@ -40,8 +40,12 @@ function ThemeToggle() {
 }
 
 function TierSwitcher() {
-  const { tier, setTier } = useTier();
+  const { tier, setTier, isDerived } = useTier();
   const info = TIER_INFO[tier];
+  // When mocks are off, the tier is derived from the real link/wallet state —
+  // pair the dropdown with the mocks toggle (hidden in prod) so testing real
+  // billing flows can't be perturbed by accidentally flipping the mock tier.
+  if (isDerived) return null;
   return (
     <Dropdown.Root align="end">
       <Dropdown.Trigger>

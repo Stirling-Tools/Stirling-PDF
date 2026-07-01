@@ -7,7 +7,7 @@ import { searchHandlers } from "@portal/mocks/handlers/search";
 import { pipelinesHandlers } from "@portal/mocks/handlers/pipelines";
 import { sourcesHandlers } from "@portal/mocks/handlers/sources";
 import { infrastructureHandlers } from "@portal/mocks/handlers/infrastructure";
-import { usageHandlers } from "@portal/mocks/handlers/usage";
+import { procurementHandlers } from "@portal/mocks/handlers/procurement";
 import { docsHandlers } from "@portal/mocks/handlers/docs";
 import { settingsHandlers } from "@portal/mocks/handlers/settings";
 import { usersHandlers } from "@portal/mocks/handlers/users";
@@ -16,6 +16,7 @@ import { policiesHandlers } from "@portal/mocks/handlers/policies";
 import { documentsHandlers } from "@portal/mocks/handlers/documents";
 import { sdkComponentsHandlers } from "@portal/mocks/handlers/sdkComponents";
 import { editorDeployHandlers } from "@portal/mocks/handlers/editorDeploy";
+import { linkHandlers } from "@portal/mocks/handlers/link";
 
 export const handlers = [
   ...authHandlers,
@@ -27,8 +28,8 @@ export const handlers = [
   ...pipelinesHandlers,
   ...sourcesHandlers,
   ...infrastructureHandlers,
-  ...usageHandlers,
   ...docsHandlers,
+  ...procurementHandlers,
   ...settingsHandlers,
   ...usersHandlers,
   ...agentsHandlers,
@@ -36,6 +37,8 @@ export const handlers = [
   ...documentsHandlers,
   ...sdkComponentsHandlers,
   ...editorDeployHandlers,
+  ...linkHandlers,
 ];
 
 export { resetNotificationsStore } from "@portal/mocks/handlers/notifications";
+export { resetProcurementStore } from "@portal/mocks/handlers/procurement";

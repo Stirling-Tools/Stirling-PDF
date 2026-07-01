@@ -29,7 +29,12 @@ import { ViewerContext, useViewer } from "@app/contexts/ViewerContext";
 import { WorkbenchType, isBaseWorkbench } from "@app/types/workbench";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import LocalIcon from "@app/components/shared/LocalIcon";
+import ViewerShareButton from "@app/components/viewer/ViewerShareButton";
+import { useSharingEnabled } from "@app/hooks/useSharingEnabled";
 import { downloadFileWithPolicy as downloadFile } from "@app/services/exportWithPolicy";
+import { enforceExportPolicies } from "@app/services/policyExport";
+import { downloadFile as downloadRaw } from "@app/services/downloadService";
+import { alert as showAlert } from "@app/components/toast";
 import {
   WorkbenchBarButtonConfig,
   WorkbenchBarRenderContext,
@@ -104,6 +109,7 @@ export default function WorkbenchBar({
     toolPanelMode === "fullscreen" && leftPanelView === "toolPicker";
   const terminology = useFileActionTerminology();
   const icons = useFileActionIcons();
+  const { sharingEnabled } = useSharingEnabled();
   const viewerContext = React.useContext(ViewerContext);
 
   const { selectors } = useFileState();
@@ -171,13 +177,35 @@ export default function WorkbenchBar({
 
       const filesToExport =
         selectedFiles.length > 0 ? selectedFiles : activeFiles;
-      for (const file of filesToExport) {
-        const stub = isStirlingFile(file)
+      const stubs = filesToExport.map((file) =>
+        isStirlingFile(file)
           ? selectors.getStirlingFileStub(file.fileId)
-          : undefined;
+          : undefined,
+      );
+
+      // Enforce all files in one batch so the toast shows progress across the
+      // whole set (e.g. "report.pdf (2 of 5)") rather than N invisible solo runs.
+      let enforced: File[];
+      try {
+        enforced = await enforceExportPolicies(
+          filesToExport as File[],
+          stubs.map((s) => s?.id),
+        );
+      } catch {
+        enforced = filesToExport as File[];
+        showAlert({
+          alertType: "warning",
+          title: t("policies.enforcement.exportFailureTitle"),
+          body: t("policies.enforcement.exportFailureBody"),
+        });
+      }
+
+      for (let idx = 0; idx < filesToExport.length; idx++) {
+        const file = filesToExport[idx];
+        const stub = stubs[idx];
         try {
-          const result = await downloadFile({
-            data: file,
+          const result = await downloadRaw({
+            data: enforced[idx],
             filename: file.name,
             localPath: forceNewFile ? undefined : stub?.localFilePath,
             fileId: stub?.id,
@@ -452,6 +480,15 @@ export default function WorkbenchBar({
 
       {/* Right: Global buttons - export group left, close anchored right */}
       <div className="workbench-bar-globals">
+        {/* Share (viewer only; opens the same modal as My Files "Manage sharing") */}
+        {currentView === "viewer" && sharingEnabled && (
+          <ViewerShareButton
+            disabled={
+              totalItems === 0 || allButtonsDisabled || disableForFullscreen
+            }
+          />
+        )}
+
         {/* Print */}
         {currentView === "viewer" &&
           renderWithTooltip(

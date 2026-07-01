@@ -4,11 +4,12 @@ import { useView, type ViewId } from "@portal/contexts/ViewContext";
 import { useTier } from "@portal/contexts/TierContext";
 import { useTheme } from "@portal/contexts/ThemeContext";
 import { useUI } from "@portal/contexts/UIContext";
+import { useLink } from "@portal/contexts/LinkContext";
 import { useAsync } from "@portal/hooks/useAsync";
 import { fetchHomeKpis, type KpiEntry } from "@portal/api/home";
 import { EDITOR_URL } from "@portal/auth/editorUrl";
-import markLight from "@shared/assets/stirling-mark-light.svg";
-import markDark from "@shared/assets/stirling-mark-dark.svg";
+import markLight from "@shared/assets/brand/modern-logo/StirlingPDFLogoNoTextLight.svg";
+import markDark from "@shared/assets/brand/modern-logo/StirlingPDFLogoNoTextDark.svg";
 import {
   HomeIcon,
   UsersIcon,
@@ -19,7 +20,9 @@ import {
   ComponentsIcon,
   InfrastructureIcon,
   UsageIcon,
+  LinkIcon,
   DocsIcon,
+  ProcurementIcon,
   SettingsIcon,
   ChevronDownIcon,
 } from "@portal/components/icons";
@@ -46,6 +49,27 @@ const GROUP_PLATFORM: NavEntry[] = [
   { id: "usage", icon: <UsageIcon /> },
   { id: "docs", icon: <DocsIcon /> },
 ];
+
+/**
+ * Sidebar-footer link-account CTA. Only visible when the org is unlinked — once
+ * linked, the linked-instances row + plan badge already communicate the state,
+ * so a permanent footer button would be noise. Click → opens the login modal
+ * directly.
+ */
+function LinkAccountFooterItem() {
+  const { t } = useTranslation();
+  const { openLinkModal } = useUI();
+  const { linkState } = useLink();
+  if (linkState !== "unlinked") return null;
+  return (
+    <NavItem
+      id="account-link"
+      label={t("shell.sidebar.linkAccount", "Link Stirling account")}
+      icon={<LinkIcon />}
+      onClick={() => openLinkModal()}
+    />
+  );
+}
 
 function UsageFooter() {
   const { tier } = useTier();
@@ -90,8 +114,8 @@ function UsageFooter() {
 
   const planLabel =
     tier === "pro"
-      ? t("shell.sidebar.planPayAsYouGo")
-      : t("shell.sidebar.planEnterprise");
+      ? t("shell.sidebar.planProcessor", "Processor plan")
+      : t("shell.sidebar.planEnterprise", "Enterprise plan");
 
   return (
     <div className="portal-sidebar__usage">
@@ -112,7 +136,15 @@ export function Sidebar() {
   const { activeView, setActiveView } = useView();
   const { theme } = useTheme();
   const { openSettings } = useUI();
+  const { tier } = useTier();
   const { t } = useTranslation();
+
+  // Procurement is the enterprise buyer's commercial journey — surfaced only to
+  // enterprise tenants (it has no free/pro equivalent).
+  const platformGroup: NavEntry[] =
+    tier === "enterprise"
+      ? [{ id: "procurement", icon: <ProcurementIcon /> }, ...GROUP_PLATFORM]
+      : GROUP_PLATFORM;
 
   function renderGroup(entries: NavEntry[]) {
     return entries.map((entry) => (
@@ -195,11 +227,12 @@ export function Sidebar() {
         </div>
         <div className="portal-sidebar__divider" aria-hidden />
         <div className="portal-sidebar__group">
-          {renderGroup(GROUP_PLATFORM)}
+          {renderGroup(platformGroup)}
         </div>
       </nav>
 
       <div className="portal-sidebar__footer">
+        <LinkAccountFooterItem />
         <NavItem
           id="settings"
           label={t("nav.settings")}

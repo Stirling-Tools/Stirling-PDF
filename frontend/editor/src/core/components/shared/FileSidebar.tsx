@@ -989,6 +989,35 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                   </div>
                 ) : filteredFileStubs.length > 0 ? (
                   <div className="file-sidebar-file-list">
+                    <button
+                      type="button"
+                      onClick={() => nativeFileInputRef.current?.click()}
+                      data-testid="add-files-row"
+                      style={{
+                        background: "transparent",
+                        border: "none",
+                        cursor: "pointer",
+                        color: "var(--text-muted)",
+                        padding: "4px 6px",
+                        marginBottom: 4,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                        fontSize: 12,
+                        width: "100%",
+                        textAlign: "left",
+                        borderRadius: 4,
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "var(--hover-bg)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "transparent";
+                      }}
+                    >
+                      <AddIcon sx={{ fontSize: "0.9rem" }} />
+                      {t("fileSidebar.addFiles", "Add files")}
+                    </button>
                     {filteredFileStubs.map((stub) => {
                       const workbenchFileId = state.files.ids.find(
                         (id) => (id as string) === (stub.id as string),
