@@ -238,6 +238,13 @@
   font-weight: 600;
 }
 
+.portal-sparkline {
+  display: block;
+  width: 100%;
+  margin-top: 0.5rem;
+  color: var(--color-blue);
+}
+
 .portal-sources__chips {
   display: flex;
   flex-wrap: wrap;

@@ -79,6 +79,15 @@ class SigningFinalizationServiceMoreTest {
                         metadataEncryptionService,
                         serverCertificateService,
                         userServerCertificateService);
+        // Keystores are stored encrypted at rest; these fixtures store them as plain Base64 (the
+        // legacy form), which decryptBytes decodes unchanged.
+        lenient()
+                .when(metadataEncryptionService.decryptBytes(any()))
+                .thenAnswer(
+                        inv -> {
+                            String stored = inv.getArgument(0, String.class);
+                            return stored == null ? null : Base64.getDecoder().decode(stored);
+                        });
     }
 
     // -------------------------------------------------------------------------
