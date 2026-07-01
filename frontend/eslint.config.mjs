@@ -6,17 +6,15 @@ import { defineConfig } from "eslint/config";
 import tseslint from "typescript-eslint";
 
 const srcGlobs = [
+  // The portal layer lives under editor/src/portal, so editor/src/** covers it.
   "editor/src/**/*.{js,mjs,jsx,ts,tsx}",
-  "portal/src/**/*.{js,mjs,jsx,ts,tsx}",
-  "portal/main.tsx",
   "shared/**/*.{js,mjs,jsx,ts,tsx}",
 ];
 const nodeGlobs = [
   "scripts/**/*.{js,ts,mjs,mts}",
   "editor/scripts/**/*.{js,ts,mjs,mts}",
-  "portal/scripts/**/*.{js,ts,mjs,mts}",
+  // Covers editor/vite.config.ts and the transitional editor/vite.portal.config.ts.
   "editor/*.config.{js,ts,mjs}",
-  "portal/*.config.{js,ts,mjs}",
   "*.config.{js,ts,mjs}",
   ".storybook/*.{js,ts,mjs,mts,tsx}",
 ];
@@ -48,7 +46,7 @@ export default defineConfig(
       "editor/src-tauri",
       "editor/playwright-report",
       "editor/test-results",
-      "portal/public",
+      "editor/portal-public",
     ],
   },
   eslint.configs.recommended,

@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "jsx": "react-jsx",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "paths": {
+      "@app/*": [
+        "../../src/portal/*",
+        "../../src/cloud/*",
+        "../../src/proprietary/*",
+        "../../src/core/*"
+      ],
+      "@portal/*": ["../../src/portal/*"],
+      "@cloud/*": ["../../src/cloud/*"],
+      "@proprietary/*": ["../../src/proprietary/*"],
+      "@core/*": ["../../src/core/*"],
+      "@shared/*": ["../../../shared/*"]
+    },
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true
+  },
+  "include": ["../global.d.ts", "."]
+}

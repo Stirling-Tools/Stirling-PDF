@@ -142,7 +142,7 @@ tasks:
     env:
       BACKEND_URL: '{{.BACKEND_URL}}'
     cmds:
-      - '{{if .SUBPATH}}RUN_SUBPATH={{.SUBPATH}} {{end}}{{if .MOCKS}}VITE_PORTAL_MOCKS={{.MOCKS}} {{end}}{{if .EDITOR_URL}}VITE_EDITOR_URL={{.EDITOR_URL}} {{end}}npx vite portal --port {{.PORT}}{{if .OPEN}} --open{{end}}'
+      - '{{if .SUBPATH}}RUN_SUBPATH={{.SUBPATH}} {{end}}{{if .MOCKS}}VITE_PORTAL_MOCKS={{.MOCKS}} {{end}}{{if .EDITOR_URL}}VITE_EDITOR_URL={{.EDITOR_URL}} {{end}}npx vite --config editor/vite.portal.config.ts --port {{.PORT}}{{if .OPEN}} --open{{end}}'
 
   dev:portal:proxy:serve:
     internal: true
@@ -211,7 +211,7 @@ tasks:
     vars:
       SUBPATH: '{{.SUBPATH | default ""}}'
     cmds:
-      - '{{if .SUBPATH}}RUN_SUBPATH={{.SUBPATH}} {{end}}npx vite build portal'
+      - '{{if .SUBPATH}}RUN_SUBPATH={{.SUBPATH}} {{end}}npx vite build --config editor/vite.portal.config.ts'
 
   preview:portal:proxy:
     desc: "Build + serve editor + portal behind one origin (prod-like auth testing)"
@@ -263,8 +263,8 @@ tasks:
     deps: [install]
     cmds:
       # Globs so dpdm walks the whole tree. dpdm expands the braces itself, so this is
-      # shell-agnostic. Covers editor, portal, and the shared design system.
-      - npx dpdm "editor/src/**/*.{ts,tsx}" "portal/src/**/*.{ts,tsx}" "shared/**/*.{ts,tsx}" --circular --no-warning --no-tree --exit-code circular:1
+      # shell-agnostic. Covers the editor (incl. the portal layer) and the shared design system.
+      - npx dpdm "editor/src/**/*.{ts,tsx}" "shared/**/*.{ts,tsx}" --circular --no-warning --no-tree --exit-code circular:1
 
   lint:fix:
     desc: "Auto-fix lint issues"
@@ -362,7 +362,7 @@ tasks:
     deps: [install]
     cmds:
       - task: typecheck:_run
-        vars: { PROJECT: portal/tsconfig.json }
+        vars: { PROJECT: editor/src/portal/tsconfig.json }
 
   typecheck:shared:
     desc: "Typecheck the shared design system"
@@ -435,7 +435,7 @@ tasks:
     desc: "Run portal tests"
     deps: [prepare]
     cmds:
-      - npx vitest run --root portal
+      - npx vitest run --config editor/vitest.portal.config.ts
 
   test:watch:
     desc: "Run tests in watch mode"

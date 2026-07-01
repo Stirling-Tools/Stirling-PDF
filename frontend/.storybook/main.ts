@@ -6,14 +6,14 @@ import tsconfigPaths from "vite-tsconfig-paths";
  * Storybook 9 ships essentials, interactions, and docs as built-ins, so the
  * addon list is just the extras we want: theme switching + a11y auditing.
  *
- * Story files live next to their components in shared/, portal/src/, and
- * editor/src/ — the design system is shared by BOTH apps, so both surface
- * their stories here. MDX docs pages live in portal/src/docs/.
+ * Story files live next to their components in shared/ and editor/src/ (which
+ * now includes the portal layer at editor/src/portal/) — the design system is
+ * shared by BOTH apps, so both surface their stories here. MDX docs pages live
+ * in editor/src/portal/docs/.
  */
 const config: StorybookConfig = {
   stories: [
-    "../portal/src/**/*.mdx",
-    "../portal/src/**/*.stories.@(ts|tsx)",
+    "../editor/src/portal/**/*.mdx",
     "../shared/**/*.mdx",
     "../shared/**/*.stories.@(ts|tsx)",
     "../editor/src/**/*.stories.@(ts|tsx)",
@@ -26,16 +26,16 @@ const config: StorybookConfig = {
   typescript: {
     reactDocgen: "react-docgen-typescript",
   },
-  // Serve the MSW worker file from portal/public so Storybook can intercept
-  // network calls the same way the dev portal does.
-  staticDirs: ["../portal/public"],
+  // Serve the MSW worker file from the portal's public dir so Storybook can
+  // intercept network calls the same way the dev portal does.
+  staticDirs: ["../editor/portal-public"],
   viteFinal: async (config) => {
     // Wire @portal/* and @shared/* aliases directly on the Storybook bundler so
     // portal story imports resolve without needing the portal's vite config.
     config.resolve = config.resolve ?? {};
     config.resolve.alias = {
       ...(config.resolve.alias ?? {}),
-      "@portal": resolve(__dirname, "../portal/src"),
+      "@portal": resolve(__dirname, "../editor/src/portal"),
       "@shared": resolve(__dirname, "../shared"),
     };
     // Editor stories import via @app/* (proprietary→core fallback), @core/* and
