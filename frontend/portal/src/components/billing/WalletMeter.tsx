@@ -26,12 +26,16 @@ export function WalletMeter({ wallet, action }: Props) {
       : null;
   const title =
     rate != null
-      ? t("billing.walletMeter.titleWithRate", {
-          count: wallet.freeAllowance,
-          allowance: wallet.freeAllowance.toLocaleString(),
-          rate: formatMinor(rate, wallet.currency),
-        })
-      : t("billing.walletMeter.title", {
+      ? t(
+          "billing.walletMeter.titleWithRate",
+          "Process {{allowance}} PDFs free, then {{rate}}/PDF",
+          {
+            count: wallet.freeAllowance,
+            allowance: wallet.freeAllowance.toLocaleString(),
+            rate: formatMinor(rate, wallet.currency),
+          },
+        )
+      : t("billing.walletMeter.title", "Process {{allowance}} PDFs free", {
           count: wallet.freeAllowance,
           allowance: wallet.freeAllowance.toLocaleString(),
         });
@@ -41,11 +45,14 @@ export function WalletMeter({ wallet, action }: Props) {
       <div className="portal-billing__subscription-head">
         <div>
           <span className="portal-billing__eyebrow">
-            {t("billing.walletMeter.eyebrow")}
+            {t("billing.walletMeter.eyebrow", "Processor trial")}
           </span>
           <h2 className="portal-billing__meter-title">{title}</h2>
           <p className="portal-billing__section-sub">
-            {t("billing.walletMeter.sub")}
+            {t(
+              "billing.walletMeter.sub",
+              "Use the PDF Editor for free. Pay to process PDFs automatically.",
+            )}
           </p>
         </div>
         {action}
@@ -55,14 +62,22 @@ export function WalletMeter({ wallet, action }: Props) {
           state={state}
           pct={pct}
           figure={wallet.billableUsed.toLocaleString()}
-          capSuffix={t("billing.walletMeter.capSuffix", {
-            count: wallet.freeAllowance,
-            allowance: wallet.freeAllowance.toLocaleString(),
-          })}
-          statusLabel={t("billing.walletMeter.statusLabel", {
-            count: wallet.freeRemaining,
-            remaining: wallet.freeRemaining.toLocaleString(),
-          })}
+          capSuffix={t(
+            "billing.walletMeter.capSuffix",
+            "of {{allowance}} free PDFs used",
+            {
+              count: wallet.freeAllowance,
+              allowance: wallet.freeAllowance.toLocaleString(),
+            },
+          )}
+          statusLabel={t(
+            "billing.walletMeter.statusLabel",
+            "{{remaining}} left",
+            {
+              count: wallet.freeRemaining,
+              remaining: wallet.freeRemaining.toLocaleString(),
+            },
+          )}
         />
       </div>
     </Card>

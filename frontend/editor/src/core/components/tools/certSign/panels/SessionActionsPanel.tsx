@@ -72,7 +72,7 @@ export const SessionActionsPanel: React.FC<SessionActionsPanelProps> = ({
 
           <Button
             leftSection={<CheckCircleIcon />}
-            color={allSigned ? "green" : "orange"}
+            color={allSigned ? "green.6" : "orange"}
             fullWidth
             onClick={onFinalize}
             loading={finalizing}
