@@ -5,6 +5,7 @@ import { Group } from "@mantine/core";
 import { useSidebarContext } from "@app/contexts/SidebarContext";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
 import { getToolOgImage } from "@app/data/ogImage";
+import urlSeoOverrides from "@app/data/urlSeoOverrides.json";
 import { useBaseUrl } from "@app/hooks/useBaseUrl";
 import { useIsMobile, useIsTouch } from "@app/hooks/useIsMobile";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
@@ -278,25 +279,35 @@ export default function HomePage() {
 
   const baseUrl = useBaseUrl();
 
-  // Update document meta when tool changes
+  // Update document meta when tool changes. Convert aliases (e.g. /pdf-to-word)
+  // all share the one `convert` tool, so prefer a per-URL SEO override when the
+  // path has one - this keeps the hydrated title/description matching the
+  // keyword-targeted copy that crawlers see in the prerendered HTML.
   const appName = config?.appNameNavbar || "Stirling PDF";
+  const seoOverride = (
+    urlSeoOverrides as Record<string, { title: string; description: string }>
+  )[location.pathname];
+  const defaultDescription = t(
+    "app.description",
+    "The Free Adobe Acrobat alternative (10M+ Downloads)",
+  );
+  const metaTitle = seoOverride
+    ? `${seoOverride.title} - ${appName}`
+    : selectedTool
+      ? `${selectedTool.name} - ${appName}`
+      : appName;
+  const metaDescription =
+    seoOverride?.description || selectedTool?.description || defaultDescription;
   useDocumentMeta({
-    title: selectedTool ? `${selectedTool.name} - ${appName}` : appName,
-    description:
-      selectedTool?.description ||
-      t(
-        "app.description",
-        "The Free Adobe Acrobat alternative (10M+ Downloads)",
-      ),
-    ogTitle: selectedTool ? `${selectedTool.name} - ${appName}` : appName,
-    ogDescription:
-      selectedTool?.description ||
-      t(
-        "app.description",
-        "The Free Adobe Acrobat alternative (10M+ Downloads)",
-      ),
+    title: metaTitle,
+    description: metaDescription,
+    ogTitle: metaTitle,
+    ogDescription: metaDescription,
     ogImage: getToolOgImage(baseUrl, selectedToolKey),
-    ogUrl: selectedTool ? `${baseUrl}${window.location.pathname}` : baseUrl,
+    ogUrl:
+      seoOverride || selectedTool
+        ? `${baseUrl}${window.location.pathname}`
+        : baseUrl,
   });
 
   // Note: File selection limits are now handled directly by individual tools

@@ -5,6 +5,8 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -16,6 +18,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.util.HtmlUtils;
 import org.springframework.web.util.JavaScriptUtils;
 
@@ -31,6 +34,14 @@ public class ReactRoutingController {
             org.slf4j.LoggerFactory.getLogger(ReactRoutingController.class);
     private static final Pattern BASE_HREF_PATTERN =
             Pattern.compile("<base href=\\\"[^\\\"]*\\\"\\s*/?>");
+    // Clean URL segment: no dots, slashes or traversal - matches the prerendered
+    // file naming (e.g. compress -> compress.html, settings/people).
+    private static final Pattern SAFE_SEGMENT = Pattern.compile("[A-Za-z0-9_-]+");
+    // Sentinel cached for routes with no prerendered file, so misses don't re-hit disk.
+    private static final String NO_PRERENDER = "no-prerendered-page";
+    // Clean-URL path -> processed prerendered HTML (or NO_PRERENDER). Bounded by the
+    // finite set of SPA routes; populated lazily on first request.
+    private final Map<String, String> prerenderedCache = new ConcurrentHashMap<>();
 
     @Value("${server.servlet.context-path:/}")
     private String contextPath;
@@ -115,22 +126,7 @@ public class ReactRoutingController {
 
             try (InputStream inputStream = resource.getInputStream()) {
                 String html = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-
-                // Replace %BASE_URL% with the actual context path for base href
-                String baseUrl = contextPath.endsWith("/") ? contextPath : contextPath + "/";
-                html = html.replace("%BASE_URL%", baseUrl);
-                // Also rewrite any existing <base> tag (Vite may have baked one in)
-                html =
-                        BASE_HREF_PATTERN
-                                .matcher(html)
-                                .replaceFirst("<base href=\\\"" + baseUrl + "\\\" />");
-
-                // Inject context path as a global variable for API calls
-                String contextPathScript =
-                        "<script>window.STIRLING_PDF_API_BASE_URL = '" + baseUrl + "';</script>";
-                html = html.replace("</head>", contextPathScript + "</head>");
-
-                return html;
+                return applyContextPath(html);
             }
         } catch (Exception ex) {
             if (!loggedMissingIndex) {
@@ -139,6 +135,59 @@ public class ReactRoutingController {
             }
             return buildFallbackHtml();
         }
+    }
+
+    // Apply the deploy's context path to a built HTML shell: fill %BASE_URL%,
+    // rewrite the baked <base href>, and expose the API base to the SPA.
+    private String applyContextPath(String html) {
+        String baseUrl = contextPath.endsWith("/") ? contextPath : contextPath + "/";
+        html = html.replace("%BASE_URL%", baseUrl);
+        html =
+                BASE_HREF_PATTERN
+                        .matcher(html)
+                        .replaceFirst("<base href=\\\"" + baseUrl + "\\\" />");
+        String contextPathScript =
+                "<script>window.STIRLING_PDF_API_BASE_URL = '" + baseUrl + "';</script>";
+        return html.replace("</head>", contextPathScript + "</head>");
+    }
+
+    // Serve the prerendered per-route HTML (e.g. compress.html) for a clean URL so
+    // crawlers and link unfurlers get the route's title/OG/canonical/JSON-LD. Falls
+    // back to the generic index.html shell when no prerendered page exists.
+    private ResponseEntity<String> servePrerenderedOrIndex(
+            HttpServletRequest request, String... segments) {
+        String html = lookupPrerendered(segments);
+        if (html != null) {
+            return ResponseEntity.ok()
+                    .cacheControl(CacheControl.noCache().mustRevalidate())
+                    .contentType(MediaType.TEXT_HTML)
+                    .body(html);
+        }
+        return serveIndexHtml(request);
+    }
+
+    private String lookupPrerendered(String... segments) {
+        if (segments == null || segments.length == 0) {
+            return null;
+        }
+        for (String segment : segments) {
+            if (segment == null || !SAFE_SEGMENT.matcher(segment).matches()) {
+                return null;
+            }
+        }
+        String key = String.join("/", segments);
+        String cached = prerenderedCache.get(key);
+        if (cached != null) {
+            return NO_PRERENDER.equals(cached) ? null : cached;
+        }
+        String html = readStaticHtml(key + ".html");
+        if (html == null) {
+            prerenderedCache.put(key, NO_PRERENDER);
+            return null;
+        }
+        String processed = applyContextPath(html);
+        prerenderedCache.put(key, processed);
+        return processed;
     }
 
     private Resource getIndexHtmlResource() {
@@ -245,15 +294,19 @@ public class ReactRoutingController {
     // excluded by the leading `api` token in the same regex.)
     @GetMapping(
             "/{path:^(?!api|static|robots\\.txt|favicon\\.ico|manifest.*\\.json|pipeline|pdfjs|pdfjs-legacy|pdfium|vendor|fonts|images|css|js|assets|locales|modern-logo|classic-logo|Login|og_images|samples)[^\\.]*$}")
-    public ResponseEntity<String> forwardRootPaths(HttpServletRequest request) throws IOException {
-        return serveIndexHtml(request);
+    public ResponseEntity<String> forwardRootPaths(
+            HttpServletRequest request, @PathVariable("path") String path) throws IOException {
+        return servePrerenderedOrIndex(request, path);
     }
 
     @GetMapping(
             "/{path:^(?!api|static|pipeline|pdfjs|pdfjs-legacy|pdfium|vendor|fonts|images|css|js|assets|locales|modern-logo|classic-logo|Login|og_images|samples)[^\\.]*}/{subpath:^(?!.*\\.).*$}")
-    public ResponseEntity<String> forwardNestedPaths(HttpServletRequest request)
+    public ResponseEntity<String> forwardNestedPaths(
+            HttpServletRequest request,
+            @PathVariable("path") String path,
+            @PathVariable("subpath") String subpath)
             throws IOException {
-        return serveIndexHtml(request);
+        return servePrerenderedOrIndex(request, path, subpath);
     }
 
     private String buildFallbackHtml() {

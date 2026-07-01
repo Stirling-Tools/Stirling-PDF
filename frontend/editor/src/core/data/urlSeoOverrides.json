@@ -1,0 +1,430 @@
+{
+  "/pdf-to-word": {
+    "title": "PDF to Word Converter",
+    "description": "Convert PDF files into editable Microsoft Word (DOCX) documents. Free, fast, and private - no signup or email required."
+  },
+  "/pdf-to-xlsx": {
+    "title": "PDF to Excel Converter",
+    "description": "Convert PDF tables into editable Microsoft Excel (XLSX) spreadsheets. Free, fast, and private."
+  },
+  "/pdf-to-csv": {
+    "title": "PDF to CSV Converter",
+    "description": "Extract tables from PDF files into CSV data. Free, fast, and private - no signup required."
+  },
+  "/pdf-to-img": {
+    "title": "PDF to Image Converter",
+    "description": "Convert PDF pages into high-quality JPG or PNG images. Free and private, right in your browser."
+  },
+  "/pdf-to-presentation": {
+    "title": "PDF to PowerPoint Converter",
+    "description": "Convert PDF files into editable PowerPoint (PPTX) presentations. Free, fast, and private."
+  },
+  "/pdf-to-text": {
+    "title": "PDF to Text Converter",
+    "description": "Extract plain text from PDF documents. Free, fast, and private - no signup or email required."
+  },
+  "/pdf-to-markdown": {
+    "title": "PDF to Markdown Converter",
+    "description": "Convert PDF documents into clean Markdown text. Free and private, right in your browser."
+  },
+  "/pdf-to-html": {
+    "title": "PDF to HTML Converter",
+    "description": "Convert PDF documents into HTML web pages. Free and private, right in your browser."
+  },
+  "/pdf-to-xml": {
+    "title": "PDF to XML Converter",
+    "description": "Convert PDF documents into structured XML. Free, fast, and private."
+  },
+  "/pdf-to-pdfa": {
+    "title": "PDF to PDF/A Converter",
+    "description": "Convert PDFs to the PDF/A archival standard for long-term preservation. Free and private."
+  },
+  "/img-to-pdf": {
+    "title": "Image to PDF Converter",
+    "description": "Convert JPG, PNG, and other images into a single PDF document. Free, fast, and private."
+  },
+  "/html-to-pdf": {
+    "title": "HTML to PDF Converter",
+    "description": "Convert HTML files and web pages into PDF documents. Free, fast, and private."
+  },
+  "/markdown-to-pdf": {
+    "title": "Markdown to PDF Converter",
+    "description": "Convert Markdown files into polished PDF documents. Free and private, right in your browser."
+  },
+  "/eml-to-pdf": {
+    "title": "Email (EML) to PDF Converter",
+    "description": "Convert email (EML) files into PDF documents. Free, fast, and private - no signup required."
+  },
+  "/file-to-pdf": {
+    "title": "File to PDF Converter",
+    "description": "Convert Word, Excel, PowerPoint, and more into PDF documents. Free, fast, and private."
+  },
+  "/cbr-to-pdf": {
+    "title": "CBR to PDF Converter",
+    "description": "Convert CBR comic book archives into PDF documents. Free and private, right in your browser."
+  },
+  "/pdf-to-cbr": {
+    "title": "PDF to CBR Converter",
+    "description": "Convert PDF documents into CBR comic book archives. Free and private."
+  },
+  "/cbz-to-pdf": {
+    "title": "CBZ to PDF Converter",
+    "description": "Convert CBZ comic book archives into PDF documents. Free and private."
+  },
+  "/pdf-to-cbz": {
+    "title": "PDF to CBZ Converter",
+    "description": "Convert PDF documents into CBZ comic book archives. Free and private."
+  },
+  "/compress": {
+    "title": "Compress PDF",
+    "description": "Compress PDFs to reduce their file size."
+  },
+  "/compress-pdf": {
+    "title": "Compress PDF",
+    "description": "Compress PDFs to reduce their file size."
+  },
+  "/merge": {
+    "title": "Merge PDF",
+    "description": "Merge multiple PDFs into a single document"
+  },
+  "/merge-pdfs": {
+    "title": "Merge PDF",
+    "description": "Merge multiple PDFs into a single document"
+  },
+  "/split": {
+    "title": "Split PDF",
+    "description": "Split PDFs into multiple documents"
+  },
+  "/split-pdfs": {
+    "title": "Split PDF",
+    "description": "Split PDFs into multiple documents"
+  },
+  "/auto-split-pdf": {
+    "title": "Split PDF",
+    "description": "Split PDFs into multiple documents"
+  },
+  "/auto-size-split-pdf": {
+    "title": "Split PDF",
+    "description": "Split PDFs into multiple documents"
+  },
+  "/split-by-size-or-count": {
+    "title": "Split PDF",
+    "description": "Split PDFs into multiple documents"
+  },
+  "/split-pdf-by-sections": {
+    "title": "Split PDF",
+    "description": "Split PDFs into multiple documents"
+  },
+  "/split-pdf-by-chapters": {
+    "title": "Split PDF",
+    "description": "Split PDFs into multiple documents"
+  },
+  "/rotate": {
+    "title": "Rotate PDF",
+    "description": "Easily rotate your PDFs."
+  },
+  "/rotate-pdf": {
+    "title": "Rotate PDF",
+    "description": "Easily rotate your PDFs."
+  },
+  "/convert": {
+    "title": "PDF Converter",
+    "description": "Convert files to and from PDF format"
+  },
+  "/convert-pdf": {
+    "title": "PDF Converter",
+    "description": "Convert files to and from PDF format"
+  },
+  "/ocr": {
+    "title": "OCR PDF",
+    "description": "Extract text from scanned PDFs using Optical Character Recognition"
+  },
+  "/ocr-pdf": {
+    "title": "OCR PDF",
+    "description": "Extract text from scanned PDFs using Optical Character Recognition"
+  },
+  "/watermark": {
+    "title": "Add Watermark to PDF",
+    "description": "Add a custom watermark to your PDF document."
+  },
+  "/add-watermark": {
+    "title": "Add Watermark to PDF",
+    "description": "Add a custom watermark to your PDF document."
+  },
+  "/sign": {
+    "title": "Sign PDF",
+    "description": "Adds signature to PDF by drawing, text or image"
+  },
+  "/cert-sign": {
+    "title": "Sign PDF with a Certificate",
+    "description": "Sign PDF documents using digital certificates"
+  },
+  "/manage-signatures": {
+    "title": "Sign PDF with a Certificate",
+    "description": "Sign PDF documents using digital certificates"
+  },
+  "/redact": {
+    "title": "Redact PDF",
+    "description": "Permanently remove sensitive information from PDF documents"
+  },
+  "/auto-redact": {
+    "title": "Redact PDF",
+    "description": "Permanently remove sensitive information from PDF documents"
+  },
+  "/crop": {
+    "title": "Crop PDF",
+    "description": "Crop a PDF to reduce its size (maintains text!)"
+  },
+  "/flatten": {
+    "title": "Flatten PDF",
+    "description": "Remove all interactive elements and forms from a PDF"
+  },
+  "/repair": {
+    "title": "Repair PDF",
+    "description": "Repair corrupted or damaged PDF files"
+  },
+  "/compare": {
+    "title": "Compare PDF Files",
+    "description": "Compare two PDF documents and highlight differences"
+  },
+  "/sanitize": {
+    "title": "Sanitize PDF",
+    "description": "Remove potentially harmful elements from PDF files"
+  },
+  "/sanitize-pdf": {
+    "title": "Sanitize PDF",
+    "description": "Remove potentially harmful elements from PDF files"
+  },
+  "/add-password": {
+    "title": "Password Protect PDF",
+    "description": "Add password protection and restrictions to PDF files"
+  },
+  "/remove-password": {
+    "title": "Remove PDF Password",
+    "description": "Remove password protection from PDF documents"
+  },
+  "/change-permissions": {
+    "title": "Change PDF Permissions",
+    "description": "Change document restrictions and permissions"
+  },
+  "/add-page-numbers": {
+    "title": "Add Page Numbers to PDF",
+    "description": "Add Page numbers throughout a document in a set location"
+  },
+  "/add-text": {
+    "title": "Add Text to PDF",
+    "description": "Add custom text anywhere in your PDF"
+  },
+  "/add-image": {
+    "title": "Add Image to PDF",
+    "description": "Add images anywhere in your PDF"
+  },
+  "/add-stamp": {
+    "title": "Add Stamp to PDF",
+    "description": "Add text or add image stamps at set locations"
+  },
+  "/stamp": {
+    "title": "Add Stamp to PDF",
+    "description": "Add text or add image stamps at set locations"
+  },
+  "/add-attachments": {
+    "title": "Add Attachments to PDF",
+    "description": "Add or remove embedded files (attachments) to/from a PDF"
+  },
+  "/extract-pages": {
+    "title": "Extract PDF Pages",
+    "description": "Extract specific pages from a PDF document"
+  },
+  "/extract-page": {
+    "title": "Extract PDF Pages",
+    "description": "Extract specific pages from a PDF document"
+  },
+  "/remove-pages": {
+    "title": "Delete Pages from PDF",
+    "description": "Remove specific pages from a PDF document"
+  },
+  "/remove-blanks": {
+    "title": "Remove Blank Pages from PDF",
+    "description": "Remove blank pages from PDF documents"
+  },
+  "/remove-image": {
+    "title": "Remove Images from PDF",
+    "description": "Remove all images from a PDF document"
+  },
+  "/remove-image-pdf": {
+    "title": "Remove Images from PDF",
+    "description": "Remove all images from a PDF document"
+  },
+  "/remove-annotations": {
+    "title": "Remove Annotations from PDF",
+    "description": "Remove annotations and comments from PDF documents"
+  },
+  "/reorganize-pages": {
+    "title": "Organize PDF Pages",
+    "description": "Rearrange, duplicate, or delete PDF pages with visual drag-and-drop control."
+  },
+  "/pdf-organizer": {
+    "title": "Organize PDF Pages",
+    "description": "Rearrange, duplicate, or delete PDF pages with visual drag-and-drop control."
+  },
+  "/extract-images": {
+    "title": "Extract Images from PDF",
+    "description": "Extract images from PDF documents"
+  },
+  "/page-layout": {
+    "title": "PDF Multi-Page Layout",
+    "description": "Merge multiple pages of a PDF document into a single page"
+  },
+  "/multi-page-layout": {
+    "title": "PDF Multi-Page Layout",
+    "description": "Merge multiple pages of a PDF document into a single page"
+  },
+  "/scale-pages": {
+    "title": "Resize PDF Pages",
+    "description": "Change the size/scale of a page and/or its contents."
+  },
+  "/pdf-to-single-page": {
+    "title": "Combine PDF into a Single Page",
+    "description": "Merges all PDF pages into one large single page"
+  },
+  "/single-large-page": {
+    "title": "Combine PDF into a Single Page",
+    "description": "Merges all PDF pages into one large single page"
+  },
+  "/adjust-contrast": {
+    "title": "Adjust PDF Colors and Contrast",
+    "description": "Adjust colors and contrast of PDF documents"
+  },
+  "/replace-color": {
+    "title": "Replace and Invert PDF Colors",
+    "description": "Replace or invert colors in PDF documents"
+  },
+  "/replace-color-pdf": {
+    "title": "Replace and Invert PDF Colors",
+    "description": "Replace or invert colors in PDF documents"
+  },
+  "/replace-and-invert-color-pdf": {
+    "title": "Replace and Invert PDF Colors",
+    "description": "Replace or invert colors in PDF documents"
+  },
+  "/change-metadata": {
+    "title": "Edit PDF Metadata",
+    "description": "Change/Remove/Add metadata from a PDF document"
+  },
+  "/get-pdf-info": {
+    "title": "PDF Info and Metadata Viewer",
+    "description": "Grabs any and all information possible on PDFs"
+  },
+  "/get-info-on-pdf": {
+    "title": "PDF Info and Metadata Viewer",
+    "description": "Grabs any and all information possible on PDFs"
+  },
+  "/overlay-pdfs": {
+    "title": "Overlay PDFs",
+    "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+  },
+  "/overlay-pdf": {
+    "title": "Overlay PDFs",
+    "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+  },
+  "/edit-table-of-contents": {
+    "title": "Edit PDF Bookmarks",
+    "description": "Add or edit bookmarks and table of contents in PDF documents"
+  },
+  "/pdf-text-editor": {
+    "title": "Edit PDF Text",
+    "description": "Review and edit text and images in PDFs with grouped text editing and PDF regeneration"
+  },
+  "/form-fill": {
+    "title": "Fill PDF Forms",
+    "description": "Fill PDF form fields interactively with a visual editor"
+  },
+  "/multi-tool": {
+    "title": "PDF Page Editor",
+    "description": "Use multiple tools on a single PDF document"
+  },
+  "/read": {
+    "title": "PDF Viewer",
+    "description": "View and annotate PDFs. Highlight text, draw, or insert comments for review and collaboration."
+  },
+  "/view-pdf": {
+    "title": "PDF Viewer",
+    "description": "View and annotate PDFs. Highlight text, draw, or insert comments for review and collaboration."
+  },
+  "/annotate": {
+    "title": "Annotate PDF",
+    "description": "Highlight, draw, add notes, and shapes directly in the viewer"
+  },
+  "/annotations": {
+    "title": "Annotate PDF",
+    "description": "Highlight, draw, add notes, and shapes directly in the viewer"
+  },
+  "/automate": {
+    "title": "PDF Workflow Automation",
+    "description": "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."
+  },
+  "/pipeline": {
+    "title": "PDF Workflow Automation",
+    "description": "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."
+  },
+  "/scanner-effect": {
+    "title": "Make a PDF Look Scanned",
+    "description": "Create a PDF that looks like it was scanned"
+  },
+  "/fake-scan": {
+    "title": "Make a PDF Look Scanned",
+    "description": "Create a PDF that looks like it was scanned"
+  },
+  "/scanner-image-split": {
+    "title": "Split Scanned Photos",
+    "description": "Detect and split scanned photos into separate pages"
+  },
+  "/extract-image-scans": {
+    "title": "Split Scanned Photos",
+    "description": "Detect and split scanned photos into separate pages"
+  },
+  "/auto-rename": {
+    "title": "Auto Rename PDF Files",
+    "description": "Automatically rename PDF files based on their content"
+  },
+  "/booklet-imposition": {
+    "title": "Create a PDF Booklet",
+    "description": "Create booklets with proper page ordering and multi-page layout for printing and binding"
+  },
+  "/unlock-p-d-f-forms": {
+    "title": "Unlock PDF Forms",
+    "description": "Remove read-only property of form fields in a PDF document."
+  },
+  "/unlock-pdf-forms": {
+    "title": "Unlock PDF Forms",
+    "description": "Remove read-only property of form fields in a PDF document."
+  },
+  "/remove-cert-sign": {
+    "title": "Remove PDF Certificate Signature",
+    "description": "Remove digital signature from PDF documents"
+  },
+  "/remove-certificate-sign": {
+    "title": "Remove PDF Certificate Signature",
+    "description": "Remove digital signature from PDF documents"
+  },
+  "/validate-signature": {
+    "title": "Validate PDF Signature",
+    "description": "Verify digital signatures and certificates in PDF documents"
+  },
+  "/timestamp-pdf": {
+    "title": "Timestamp PDF",
+    "description": "Add an RFC 3161 document timestamp to prove when your PDF existed"
+  },
+  "/show-j-s": {
+    "title": "Show JavaScript in PDF",
+    "description": "Extract and display JavaScript code from PDF documents"
+  },
+  "/show-js": {
+    "title": "Show JavaScript in PDF",
+    "description": "Extract and display JavaScript code from PDF documents"
+  },
+  "/show-javascript": {
+    "title": "Show JavaScript in PDF",
+    "description": "Extract and display JavaScript code from PDF documents"
+  }
+}
