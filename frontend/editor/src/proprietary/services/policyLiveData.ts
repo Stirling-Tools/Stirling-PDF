@@ -67,12 +67,7 @@ function activityAction(run: PolicyRunRecord): string {
     default: {
       if (run.retrying)
         return i18n.t("policies.activity.retrying", "Busy, retrying...");
-      const enforcing = i18n.t("policies.activity.enforcing", "Enforcing...");
-      // Show pipeline progress while running, once the status endpoint reports it
-      const { currentStep, stepCount } = run;
-      return currentStep && stepCount
-        ? `${enforcing} · ${i18n.t("policies.activity.step", "step {{current}}/{{total}}", { current: currentStep, total: stepCount })}`
-        : enforcing;
+      return i18n.t("policies.activity.enforcing", "Enforcing...");
     }
   }
 }

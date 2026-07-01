@@ -62,13 +62,12 @@ describe("runsToActivity", () => {
     });
   });
 
-  it("shows pipeline progress on a running run once the step is known", () => {
+  it("shows Enforcing... for all running runs regardless of step progress", () => {
     const [withStep, noStep] = runsToActivity([
       run({ runId: "a", status: "RUNNING", currentStep: 1, stepCount: 2 }),
       run({ runId: "b", status: "RUNNING" }),
     ]);
-    expect(withStep.action).toBe("Enforcing... · step 1/2");
-    // Before the first status report (no step yet) it stays the plain label.
+    expect(withStep.action).toBe("Enforcing...");
     expect(noStep.action).toBe("Enforcing...");
   });
 
