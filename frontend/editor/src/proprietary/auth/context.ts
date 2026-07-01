@@ -4,7 +4,7 @@
  * regardless of which backend authenticated the user.
  */
 import { createContext, useContext } from "react";
-import type { AuthContextValue } from "@shared/auth/types";
+import type { AuthContextValue } from "@app/auth/types";
 
 export const AuthContext = createContext<AuthContextValue>({
   session: null,

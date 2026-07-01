@@ -1,12 +1,12 @@
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Provider } from "@supabase/supabase-js";
-import { getSupabaseClient } from "@shared/auth/supabase/supabaseClient";
+import { getSupabaseClient } from "@app/auth/supabase/supabaseClient";
 
 /**
  * Supabase counterpart to {@link useSpringLogin}: owns a login form's state and
  * sign-in handlers, wired to the shared Supabase client ({@link configureSupabase}).
- * Kept out of the `@shared/auth` barrel (like the rest of the Supabase path) so
+ * Kept out of the `@app/auth` barrel (like the rest of the Supabase path) so
  * Spring-only consumers don't pull in `@supabase/supabase-js`; import via the
  * subpath.
  *

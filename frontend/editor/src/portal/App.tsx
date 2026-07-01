@@ -1,12 +1,12 @@
 import { useEffect, type ReactNode } from "react";
 import { BrowserRouter, useLocation } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
-import { AuthProvider } from "@shared/auth";
+import { AuthProvider } from "@app/auth";
 import { ErrorBoundary } from "@portal/components/ErrorBoundary";
 import { ThemeProvider, useTheme } from "@portal/contexts/ThemeContext";
 import { TierProvider } from "@portal/contexts/TierContext";
 import { LinkProvider, useLink } from "@portal/contexts/LinkContext";
-import type { SupabaseLoginSession } from "@shared/auth/ui/useSupabaseLogin";
+import type { SupabaseLoginSession } from "@app/auth/ui/useSupabaseLogin";
 import { UIProvider, useUI } from "@portal/contexts/UIContext";
 import { mantineTheme } from "@portal/theme/mantineTheme";
 import { AppShell } from "@portal/components/AppShell";

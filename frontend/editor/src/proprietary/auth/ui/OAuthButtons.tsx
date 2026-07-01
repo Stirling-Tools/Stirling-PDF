@@ -1,10 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { type OAuthProvider } from "@shared/auth/spring/oauthTypes";
+import { type OAuthProvider } from "@app/auth/spring/oauthTypes";
 import { Button } from "@mantine/core";
-import {
-  oauthIconUrl,
-  GENERIC_PROVIDER_ICON,
-} from "@shared/auth/ui/oauthIcons";
+import { oauthIconUrl, GENERIC_PROVIDER_ICON } from "@app/auth/ui/oauthIcons";
 
 // Debug flag to show all providers for UI testing
 // Set to true to see all SSO options regardless of backend configuration

@@ -1,6 +1,6 @@
-import { defaultTranslate, type AuthTranslate } from "@shared/auth/types";
-import type { ImageSlide } from "@shared/auth/ui/LoginRightCarousel";
-import { loginSlideText } from "@shared/auth/ui/loginSlideText";
+import { defaultTranslate, type AuthTranslate } from "@app/auth/types";
+import type { ImageSlide } from "@app/auth/ui/LoginRightCarousel";
+import { loginSlideText } from "@app/auth/ui/loginSlideText";
 import firstPage from "@shared/assets/login/Firstpage.png";
 import addToPdf from "@shared/assets/login/AddToPDF.png";
 import securePdf from "@shared/assets/login/SecurePDF.png";

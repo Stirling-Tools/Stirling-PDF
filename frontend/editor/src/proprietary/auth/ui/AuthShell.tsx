@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import styles from "@shared/auth/ui/AuthShell.module.css";
+import styles from "@app/auth/ui/AuthShell.module.css";
 
 export interface AuthShellProps {
   children: ReactNode;

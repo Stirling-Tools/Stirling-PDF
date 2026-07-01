@@ -12,11 +12,11 @@
  *   platform bridge).
  */
 import type { AxiosInstance } from "axios";
-import { createDefaultHttpClient } from "@shared/auth/httpClient";
+import { createDefaultHttpClient } from "@app/auth/httpClient";
 import {
   defaultPlatformBridge,
   type PlatformBridge,
-} from "@shared/auth/spring/platformBridge";
+} from "@app/auth/spring/platformBridge";
 
 export interface SpringAuthConfig {
   /** Axios instance used for all /api/v1/auth + /api/v1/user calls. */

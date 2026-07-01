@@ -21,7 +21,7 @@ import {
   linkOAuthIdentity,
   supabase,
 } from "@app/auth/supabase";
-import { oauthIconUrl } from "@shared/auth/ui/oauthIcons";
+import { oauthIconUrl } from "@app/auth/ui/oauthIcons";
 import { oauthProviders } from "@app/constants/authProviders";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { absoluteWithBasePath } from "@app/constants/app";

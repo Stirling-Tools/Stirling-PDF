@@ -37,6 +37,11 @@ const config: StorybookConfig = {
       ...(config.resolve.alias ?? {}),
       "@portal": resolve(__dirname, "../editor/src/portal"),
       "@shared": resolve(__dirname, "../shared"),
+      // Direct layer aliases so .storybook config files (preview.tsx), which sit
+      // outside src/ and so aren't covered by tsconfigPaths, can import layer
+      // modules (e.g. the auth supabase client that moved into proprietary).
+      "@proprietary": resolve(__dirname, "../editor/src/proprietary"),
+      "@core": resolve(__dirname, "../editor/src/core"),
     };
     // Editor stories import via @app/* (proprietary→core fallback), @core/* and
     // @proprietary/*. Resolve them exactly the way the editor's own build does —

@@ -1,7 +1,7 @@
 import {
   configureSupabase,
   getSupabaseClient,
-} from "@shared/auth/supabase/supabaseClient";
+} from "@app/auth/supabase/supabaseClient";
 
 /**
  * Configures the shared Supabase client against the hosted SaaS project so the

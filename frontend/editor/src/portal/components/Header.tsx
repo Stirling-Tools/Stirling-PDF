@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Avatar, Dropdown } from "@app/ui";
-import { useAuth } from "@shared/auth";
+import { useAuth } from "@app/auth";
 import { useTheme } from "@portal/contexts/ThemeContext";
 import { useTier, TIER_INFO, type Tier } from "@portal/contexts/TierContext";
 import { useView } from "@portal/contexts/ViewContext";

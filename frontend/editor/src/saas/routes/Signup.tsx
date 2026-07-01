@@ -6,12 +6,12 @@ import { useTranslation } from "@app/hooks/useTranslation";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
 import { getBaseUrl, withBasePath } from "@app/constants/app";
 import AuthLayout from "@app/routes/authShared/AuthLayout";
-import "@shared/auth/ui/auth.css";
+import "@app/auth/ui/auth.css";
 import "@app/routes/authShared/saas-auth.css";
 import { alert } from "@app/components/toast";
 
 // Import signup components
-import ErrorMessage from "@shared/auth/ui/ErrorMessage";
+import ErrorMessage from "@app/auth/ui/ErrorMessage";
 import OAuthButtons from "@app/routes/login/OAuthButtons";
 import SignupForm from "@app/routes/signup/SignupForm";
 import {

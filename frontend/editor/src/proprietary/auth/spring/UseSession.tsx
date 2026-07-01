@@ -1,8 +1,8 @@
 import { useEffect, useState, useCallback, type ReactNode } from "react";
-import { springAuth } from "@shared/auth/spring/springAuthClient";
-import { getSpringAuthConfig } from "@shared/auth/config";
-import { isAdminRole } from "@shared/auth/roles";
-import { AuthContext } from "@shared/auth/context";
+import { springAuth } from "@app/auth/spring/springAuthClient";
+import { getSpringAuthConfig } from "@app/auth/config";
+import { isAdminRole } from "@app/auth/roles";
+import { AuthContext } from "@app/auth/context";
 import {
   defaultTranslate,
   type AuthContextValue,
@@ -11,7 +11,7 @@ import {
   type AuthSession,
   type AuthUser,
   type AuthTranslate,
-} from "@shared/auth/types";
+} from "@app/auth/types";
 
 /**
  * Strip the configured base path so route comparisons work under subpath

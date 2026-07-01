@@ -7,22 +7,22 @@
  * - No email confirmation flow (auto-confirmed on registration)
  *
  * This is the platform-agnostic engine. The HTTP transport, base path and
- * platform-specific behaviour are injected via `@shared/auth/config` so the
+ * platform-specific behaviour are injected via `@app/auth/config` so the
  * same code backs the editor (which injects its apiClient + desktop bridge)
  * and the portal (web defaults).
  */
 
 import { AxiosError, type AxiosRequestConfig } from "axios";
-import { getSpringAuthConfig } from "@shared/auth/config";
-import { type OAuthProvider } from "@shared/auth/spring/oauthTypes";
-import { resetOAuthState } from "@shared/auth/spring/oauthStorage";
+import { getSpringAuthConfig } from "@app/auth/config";
+import { type OAuthProvider } from "@app/auth/spring/oauthTypes";
+import { resetOAuthState } from "@app/auth/spring/oauthStorage";
 import type {
   AuthUser as User,
   AuthSession as Session,
   AuthError,
   AuthResponse,
   AuthChangeEvent,
-} from "@shared/auth/types";
+} from "@app/auth/types";
 
 export type { User, Session, AuthError, AuthResponse, AuthChangeEvent };
 

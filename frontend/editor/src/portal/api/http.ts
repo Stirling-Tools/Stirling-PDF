@@ -5,7 +5,7 @@
  *
  *   apiClient.local           Same-origin (vite proxy → this instance's local
  *                             Stirling backend on :8080). Spring admin bearer
- *                             (`stirling_jwt` from @shared/auth) auto-attached.
+ *                             (`stirling_jwt` from @app/auth) auto-attached.
  *                             USE FOR: actions on this instance —
  *                             /api/v1/account-link/{status,link,unlink}, etc.
  *
@@ -39,8 +39,8 @@
  * entitlement calls. It never enters the portal — the browser is the human
  * admin and uses the Supabase JWT for SaaS reads. Don't add it here.
  */
-import { clearStoredToken, getStoredToken } from "@shared/auth";
-import { getSupabaseClient } from "@shared/auth/supabase/supabaseClient";
+import { clearStoredToken, getStoredToken } from "@app/auth";
+import { getSupabaseClient } from "@app/auth/supabase/supabaseClient";
 import { ensureSaasSupabase } from "@portal/auth/saasSupabase";
 
 /** Read the SaaS base URL at call time so tests can stub it via vi.stubEnv. */

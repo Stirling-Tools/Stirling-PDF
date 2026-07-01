@@ -7,7 +7,7 @@
  *   editor) and renders `forbidden` in the meantime
  */
 import { useEffect, type ReactNode } from "react";
-import { useAuth } from "@shared/auth/context";
+import { useAuth } from "@app/auth/context";
 
 export interface RequireAdminProps {
   children: ReactNode;

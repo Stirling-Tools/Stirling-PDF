@@ -13,9 +13,9 @@ import type {
   Session as SbSession,
   User as SbUser,
 } from "@supabase/supabase-js";
-import { getSupabaseClient } from "@shared/auth/supabase/supabaseClient";
-import { AuthContext } from "@shared/auth/context";
-import { isAdminRole } from "@shared/auth/roles";
+import { getSupabaseClient } from "@app/auth/supabase/supabaseClient";
+import { AuthContext } from "@app/auth/context";
+import { isAdminRole } from "@app/auth/roles";
 import {
   defaultTranslate,
   type AuthContextValue,
@@ -23,7 +23,7 @@ import {
   type AuthSession,
   type AuthUser,
   type AuthTranslate,
-} from "@shared/auth/types";
+} from "@app/auth/types";
 
 function readRole(user: SbUser): string {
   const appRole = (user.app_metadata as { role?: unknown } | undefined)?.role;

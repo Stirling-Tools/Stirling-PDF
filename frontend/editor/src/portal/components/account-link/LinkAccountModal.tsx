@@ -1,12 +1,12 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Banner, Button, Modal } from "@app/ui";
-import SupabaseLoginForm from "@shared/auth/ui/SupabaseLoginForm";
+import SupabaseLoginForm from "@app/auth/ui/SupabaseLoginForm";
 import {
   useSupabaseLogin,
   type SupabaseLoginSession,
-} from "@shared/auth/ui/useSupabaseLogin";
-import "@shared/auth/ui/auth-theme.css";
+} from "@app/auth/ui/useSupabaseLogin";
+import "@app/auth/ui/auth-theme.css";
 import {
   ensureSaasSupabase,
   isSaasSupabaseConfigured,

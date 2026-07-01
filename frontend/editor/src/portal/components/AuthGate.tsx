@@ -1,6 +1,6 @@
 import { type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { RequirePortalAccess } from "@shared/auth";
+import { RequirePortalAccess } from "@app/auth";
 import { Spinner } from "@app/ui";
 import { LoginScreen } from "@portal/components/LoginScreen";
 import { EDITOR_URL } from "@portal/auth/editorUrl";

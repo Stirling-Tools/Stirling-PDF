@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import type { SupabaseLoginSession } from "@shared/auth/ui/useSupabaseLogin";
+import type { SupabaseLoginSession } from "@app/auth/ui/useSupabaseLogin";
 import {
   ensureSaasSupabase,
   isSaasSupabaseConfigured,

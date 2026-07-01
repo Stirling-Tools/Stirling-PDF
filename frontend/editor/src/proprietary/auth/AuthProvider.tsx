@@ -4,13 +4,13 @@
  * consumers read `useAuth()` identically either way.
  */
 import { lazy, Suspense, type ReactNode } from "react";
-import { SpringAuthProvider } from "@shared/auth/spring/UseSession";
-import { type AuthMode, type AuthTranslate } from "@shared/auth/types";
+import { SpringAuthProvider } from "@app/auth/spring/UseSession";
+import { type AuthMode, type AuthTranslate } from "@app/auth/types";
 
 // Lazy so Spring-mode hosts (e.g. the portal) don't bundle @supabase/supabase-js
 // they never use; only loaded when mode="supabase".
 const SupabaseAuthProvider = lazy(() =>
-  import("@shared/auth/supabase/UseSession").then((m) => ({
+  import("@app/auth/supabase/UseSession").then((m) => ({
     default: m.SupabaseAuthProvider,
   })),
 );

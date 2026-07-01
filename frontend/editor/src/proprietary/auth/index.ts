@@ -11,50 +11,47 @@
  */
 
 // Contract + helpers
-export * from "@shared/auth/types";
-export { isAdminRole } from "@shared/auth/roles";
-export { AuthContext, useAuth } from "@shared/auth/context";
+export * from "@app/auth/types";
+export { isAdminRole } from "@app/auth/roles";
+export { AuthContext, useAuth } from "@app/auth/context";
 
 // Unified provider + guards
-export {
-  AuthProvider,
-  type AuthProviderProps,
-} from "@shared/auth/AuthProvider";
+export { AuthProvider, type AuthProviderProps } from "@app/auth/AuthProvider";
 export {
   RequireAuth,
   type RequireAuthProps,
-} from "@shared/auth/guards/RequireAuth";
+} from "@app/auth/guards/RequireAuth";
 export {
   RequireAdmin,
   type RequireAdminProps,
-} from "@shared/auth/guards/RequireAdmin";
+} from "@app/auth/guards/RequireAdmin";
 export {
   RequirePortalAccess,
   type RequirePortalAccessProps,
-} from "@shared/auth/guards/RequirePortalAccess";
+} from "@app/auth/guards/RequirePortalAccess";
 
 // Spring backend
 export {
   configureSpringAuth,
   getSpringAuthConfig,
   type SpringAuthConfig,
-} from "@shared/auth/config";
+} from "@app/auth/config";
 export {
   type PlatformBridge,
   type PlatformSessionUser,
   defaultPlatformBridge,
-} from "@shared/auth/spring/platformBridge";
+} from "@app/auth/spring/platformBridge";
 export {
   createDefaultHttpClient,
   getStoredToken,
   setStoredToken,
   clearStoredToken,
   JWT_STORAGE_KEY,
-} from "@shared/auth/httpClient";
+} from "@app/auth/httpClient";
 export {
   SpringAuthProvider,
   deriveDisplayName,
-} from "@shared/auth/spring/UseSession";
+} from "@app/auth/spring/UseSession";
 export {
   springAuth,
   setPostLoginRedirectPath,
@@ -65,15 +62,15 @@ export {
   isUserAnonymous,
   createAnonymousUser,
   createAnonymousSession,
-} from "@shared/auth/spring/springAuthClient";
-export type { OAuthProvider } from "@shared/auth/spring/oauthTypes";
+} from "@app/auth/spring/springAuthClient";
+export type { OAuthProvider } from "@app/auth/spring/oauthTypes";
 
 // Supabase backend is intentionally NOT re-exported here: doing so would pull
 // @supabase/supabase-js into every barrel consumer (e.g. the portal in Spring
 // mode). Supabase-mode hosts import directly from the subpath:
-//   import { configureSupabase } from "@shared/auth/supabase/supabaseClient";
+//   import { configureSupabase } from "@app/auth/supabase/supabaseClient";
 // The unified <AuthProvider mode="supabase"> lazy-loads the provider on demand.
 
-// Login UI components live under @shared/auth/ui/* and are imported directly
-// (default exports), e.g. `import OAuthButtons from "@shared/auth/ui/OAuthButtons"`.
+// Login UI components live under @app/auth/ui/* and are imported directly
+// (default exports), e.g. `import OAuthButtons from "@app/auth/ui/OAuthButtons"`.
 // They use react-i18next, so hosts must initialise i18next.

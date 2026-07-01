@@ -1,4 +1,4 @@
-import { getSupabaseClient } from "@shared/auth/supabase/supabaseClient";
+import { getSupabaseClient } from "@app/auth/supabase/supabaseClient";
 import { ensureSaasSupabase } from "@portal/auth/saasSupabase";
 
 /**

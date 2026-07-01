@@ -1,5 +1,5 @@
 import { setupWorker } from "msw/browser";
-import { JWT_STORAGE_KEY } from "@shared/auth";
+import { JWT_STORAGE_KEY } from "@app/auth";
 import { handlers } from "@portal/mocks/handlers";
 import { MOCK_TOKEN } from "@portal/mocks/auth";
 

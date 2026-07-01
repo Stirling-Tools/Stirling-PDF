@@ -1,4 +1,4 @@
-import { defaultTranslate, type AuthTranslate } from "@shared/auth/types";
+import { defaultTranslate, type AuthTranslate } from "@app/auth/types";
 
 export type LoginSlideText = {
   alt: string;

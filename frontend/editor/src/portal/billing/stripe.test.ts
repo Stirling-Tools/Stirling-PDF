@@ -11,7 +11,7 @@ const { getClient, invoke } = vi.hoisted(() => ({
 }));
 
 vi.mock("@portal/auth/saasSupabase", () => ({ ensureSaasSupabase: vi.fn() }));
-vi.mock("@shared/auth/supabase/supabaseClient", () => ({
+vi.mock("@app/auth/supabase/supabaseClient", () => ({
   getSupabaseClient: () => getClient(),
   configureSupabase: vi.fn(),
 }));

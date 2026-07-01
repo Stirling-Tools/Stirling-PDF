@@ -12,8 +12,8 @@ const { getSession, getStoredTokenMock } = vi.hoisted(() => ({
   getStoredTokenMock: vi.fn(),
 }));
 
-vi.mock("@shared/auth", () => ({ getStoredToken: getStoredTokenMock }));
-vi.mock("@shared/auth/supabase/supabaseClient", () => ({
+vi.mock("@app/auth", () => ({ getStoredToken: getStoredTokenMock }));
+vi.mock("@app/auth/supabase/supabaseClient", () => ({
   getSupabaseClient: () => ({ auth: { getSession } }),
   configureSupabase: vi.fn(),
 }));

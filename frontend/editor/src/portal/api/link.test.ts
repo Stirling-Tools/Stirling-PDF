@@ -20,7 +20,7 @@ const { getSession } = vi.hoisted(() => ({
     data: { session: { access_token: "supabase_jwt_test" } },
   }),
 }));
-vi.mock("@shared/auth/supabase/supabaseClient", () => ({
+vi.mock("@app/auth/supabase/supabaseClient", () => ({
   getSupabaseClient: () => ({ auth: { getSession } }),
   configureSupabase: vi.fn(),
 }));

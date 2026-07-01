@@ -1,18 +1,18 @@
 import { useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { AuthShell } from "@shared/auth/ui/AuthShell";
-import LoginRightCarousel from "@shared/auth/ui/LoginRightCarousel";
-import { buildDefaultLoginSlides } from "@shared/auth/ui/loginSlides";
-import SpringLoginForm from "@shared/auth/ui/SpringLoginForm";
-import { useSpringLogin } from "@shared/auth/ui/useSpringLogin";
-import "@shared/auth/ui/auth-theme.css";
-import "@shared/auth/ui/auth.css";
+import { AuthShell } from "@app/auth/ui/AuthShell";
+import LoginRightCarousel from "@app/auth/ui/LoginRightCarousel";
+import { buildDefaultLoginSlides } from "@app/auth/ui/loginSlides";
+import SpringLoginForm from "@app/auth/ui/SpringLoginForm";
+import { useSpringLogin } from "@app/auth/ui/useSpringLogin";
+import "@app/auth/ui/auth-theme.css";
+import "@app/auth/ui/auth.css";
 import loginHeader from "@shared/assets/brand/modern-logo/LoginLightModeHeader.svg";
 
 /**
  * Full-screen login shown by the portal's auth gate. Renders the same screen as
  * the editor: the shared AuthShell + carousel, with the form body and Spring
- * auth wiring from @shared/auth/ui (SpringLoginForm + useSpringLogin). The gate
+ * auth wiring from @app/auth/ui (SpringLoginForm + useSpringLogin). The gate
  * handles "already logged in", so this only needs to collect credentials.
  */
 export function LoginScreen() {

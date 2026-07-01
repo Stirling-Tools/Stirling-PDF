@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import "@shared/auth/ui/auth.css";
+import "@app/auth/ui/auth.css";
 import { TextInput, PasswordInput, Button } from "@mantine/core";
 
 // Force light mode styles for auth inputs
