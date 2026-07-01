@@ -19,8 +19,8 @@ import { fileURLToPath } from "url";
 import ts from "typescript";
 import { parse } from "smol-toml";
 
-const HERE = path.dirname(fileURLToPath(import.meta.url)); // frontend/shared/i18n
-const FRONTEND_ROOT = path.resolve(HERE, "../.."); // frontend
+const HERE = path.dirname(fileURLToPath(import.meta.url)); // frontend/editor/src/core/i18n
+const FRONTEND_ROOT = path.resolve(HERE, "../../../.."); // frontend
 /** Repo root, for rendering source paths relative in CI annotations. */
 export const REPO_ROOT = path.resolve(FRONTEND_ROOT, "..");
 
