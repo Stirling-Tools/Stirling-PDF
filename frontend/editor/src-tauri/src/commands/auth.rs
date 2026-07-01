@@ -400,6 +400,7 @@ struct SupabaseUser {
 #[derive(Debug, Deserialize)]
 struct SupabaseLoginResponse {
     access_token: String,
+    refresh_token: Option<String>,
     user: SupabaseUser,
 }
 
@@ -408,6 +409,7 @@ pub struct LoginResponse {
     pub token: String,
     pub username: String,
     pub email: Option<String>,
+    pub refresh_token: Option<String>,
 }
 
 /// Login command - makes HTTP request from Rust to bypass CORS
@@ -513,6 +515,7 @@ pub async fn login(
             token: login_response.access_token,
             username,
             email,
+            refresh_token: login_response.refresh_token,
         })
     } else {
         // Spring Boot authentication flow
@@ -615,6 +618,7 @@ pub async fn login(
             token: login_response.session.access_token,
             username: login_response.user.username,
             email: login_response.user.email,
+            refresh_token: None,
         })
     }
 }

@@ -57,11 +57,22 @@ class PolicyControllerTest {
     @Mock private PolicyAccessGuard policyAccessGuard;
     @Mock private PolicyManagementAuthority policyManagementAuthority;
     @Mock private PolicyTriggerManager policyTriggerManager;
+
+    @Mock
+    private stirling.software.proprietary.policy.overview.PolicyOverviewService
+            policyOverviewService;
+
     @Mock private TempFileManager tempFileManager;
     @Mock private JobOwnershipService jobOwnershipService;
 
     private ApplicationProperties applicationProperties;
     private PolicyController controller;
+
+    private final java.util.List<stirling.software.proprietary.policy.trigger.PolicyTrigger>
+            policyTriggers =
+                    java.util.List.of(
+                            trigger("schedule", false, java.util.Set.of()),
+                            trigger("folder-watch", true, java.util.Set.of("folder")));
 
     @BeforeEach
     void setUp() {
@@ -77,9 +88,31 @@ class PolicyControllerTest {
                         policyAccessGuard,
                         policyManagementAuthority,
                         policyTriggerManager,
+                        policyOverviewService,
+                        policyTriggers,
                         applicationProperties,
                         tempFileManager,
                         jobOwnershipService);
+    }
+
+    private static stirling.software.proprietary.policy.trigger.PolicyTrigger trigger(
+            String type, boolean requiresSource, java.util.Set<String> sourceTypes) {
+        return new stirling.software.proprietary.policy.trigger.PolicyTrigger() {
+            @Override
+            public String type() {
+                return type;
+            }
+
+            @Override
+            public boolean requiresSource() {
+                return requiresSource;
+            }
+
+            @Override
+            public java.util.Set<String> supportedSourceTypes() {
+                return sourceTypes;
+            }
+        };
     }
 
     private static PipelineDefinition definitionWithStep() {
@@ -424,6 +457,52 @@ class PolicyControllerTest {
             when(policyStore.get("a")).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> controller.runStoredPolicy("a", new PolicyRunFiles()))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .satisfies(
+                            e ->
+                                    assertThat(((ResponseStatusException) e).getStatusCode())
+                                            .isEqualTo(HttpStatus.NOT_FOUND));
+        }
+    }
+
+    @Nested
+    @DisplayName("triggers / trigger")
+    class Triggers {
+
+        @Test
+        @DisplayName("lists triggers sorted, with source compatibility")
+        void listsTriggers() {
+            List<stirling.software.proprietary.policy.trigger.TriggerInfo> infos =
+                    controller.triggers();
+
+            assertThat(infos).extracting(t -> t.type()).containsExactly("folder-watch", "schedule");
+            stirling.software.proprietary.policy.trigger.TriggerInfo folderWatch = infos.get(0);
+            assertThat(folderWatch.requiresSource()).isTrue();
+            assertThat(folderWatch.supportedSourceTypes()).containsExactly("folder");
+            assertThat(infos.get(1).requiresSource()).isFalse();
+            assertThat(infos.get(1).supportedSourceTypes()).isEmpty();
+        }
+
+        @Test
+        @DisplayName("trigger runs an accessible policy against its sources and returns run ids")
+        void triggersRun() {
+            Policy p = policy("a", 1L);
+            when(policyStore.get("a")).thenReturn(Optional.of(p));
+            when(policyAccessGuard.canAccess(p)).thenReturn(true);
+            when(policyRunner.run(p)).thenReturn(List.of("run-a", "run-b"));
+
+            ResponseEntity<List<String>> response = controller.trigger("a");
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
+            assertThat(response.getBody()).containsExactly("run-a", "run-b");
+        }
+
+        @Test
+        @DisplayName("trigger is 404 when the policy is inaccessible")
+        void triggerNotFound() {
+            when(policyStore.get("z")).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> controller.trigger("z"))
                     .isInstanceOf(ResponseStatusException.class)
                     .satisfies(
                             e ->

@@ -14,7 +14,6 @@ import {
   Checkbox,
 } from "@mantine/core";
 import { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
-import { SuggestedToolsSection } from "@app/components/tools/shared/SuggestedToolsSection";
 import { useSignature } from "@app/contexts/SignatureContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import {
@@ -1283,8 +1282,6 @@ const SignSettings = ({
           {translate("applySignatures", "Apply Signatures")}
         </Button>
       )}
-
-      <SuggestedToolsSection />
     </Stack>
   );
 };

@@ -19,7 +19,7 @@ export function SpendThisMonthCard({ wallet }: { wallet: Wallet }) {
   return (
     <Card padding="loose" className="portal-billing__spend-this-month">
       <span className="portal-billing__eyebrow">
-        {t("billing.spendThisMonth.eyebrow")}
+        {t("billing.spendThisMonth.eyebrow", "Spend this month")}
       </span>
       <div className="portal-billing__bignum-row">
         <span className="portal-billing__bignum">
@@ -28,15 +28,23 @@ export function SpendThisMonthCard({ wallet }: { wallet: Wallet }) {
       </div>
       <p className="portal-billing__section-sub">
         {rateLabel
-          ? t("billing.spendThisMonth.processedWithRate", {
-              count: wallet.billableUsed,
-              formattedCount: wallet.billableUsed.toLocaleString(),
-              rate: rateLabel,
-            })
-          : t("billing.spendThisMonth.processed", {
-              count: wallet.billableUsed,
-              formattedCount: wallet.billableUsed.toLocaleString(),
-            })}
+          ? t(
+              "billing.spendThisMonth.processedWithRate",
+              "{{formattedCount}} PDFs processed, at {{rate}} each.",
+              {
+                count: wallet.billableUsed,
+                formattedCount: wallet.billableUsed.toLocaleString(),
+                rate: rateLabel,
+              },
+            )
+          : t(
+              "billing.spendThisMonth.processed",
+              "{{formattedCount}} PDFs processed.",
+              {
+                count: wallet.billableUsed,
+                formattedCount: wallet.billableUsed.toLocaleString(),
+              },
+            )}
       </p>
 
       <div className="portal-billing__spend-foot">
