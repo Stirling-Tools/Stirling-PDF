@@ -29,6 +29,8 @@ import { ViewerContext, useViewer } from "@app/contexts/ViewerContext";
 import { WorkbenchType, isBaseWorkbench } from "@app/types/workbench";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import LocalIcon from "@app/components/shared/LocalIcon";
+import ViewerShareButton from "@app/components/viewer/ViewerShareButton";
+import { useSharingEnabled } from "@app/hooks/useSharingEnabled";
 import { downloadFileWithPolicy as downloadFile } from "@app/services/exportWithPolicy";
 import { enforceExportPolicies } from "@app/services/policyExport";
 import { downloadFile as downloadRaw } from "@app/services/downloadService";
@@ -107,6 +109,7 @@ export default function WorkbenchBar({
     toolPanelMode === "fullscreen" && leftPanelView === "toolPicker";
   const terminology = useFileActionTerminology();
   const icons = useFileActionIcons();
+  const { sharingEnabled } = useSharingEnabled();
   const viewerContext = React.useContext(ViewerContext);
 
   const { selectors } = useFileState();
@@ -477,6 +480,15 @@ export default function WorkbenchBar({
 
       {/* Right: Global buttons - export group left, close anchored right */}
       <div className="workbench-bar-globals">
+        {/* Share (viewer only; opens the same modal as My Files "Manage sharing") */}
+        {currentView === "viewer" && sharingEnabled && (
+          <ViewerShareButton
+            disabled={
+              totalItems === 0 || allButtonsDisabled || disableForFullscreen
+            }
+          />
+        )}
+
         {/* Print */}
         {currentView === "viewer" &&
           renderWithTooltip(

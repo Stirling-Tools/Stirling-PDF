@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useState,
+} from "react";
 import { createPluginRegistration } from "@embedpdf/core";
 import type { PluginRegistry } from "@embedpdf/core";
 import { EmbedPDF } from "@embedpdf/core/react";
@@ -70,7 +76,10 @@ import type {
   SignatureAPI,
   AnnotationAPI,
   HistoryAPI,
+  SignaturePreview,
+  SignatureOverlayAPI,
 } from "@app/components/viewer/viewerTypes";
+import { SignaturePreviewLayer } from "@app/components/viewer/SignaturePreviewLayer";
 import { ExportAPIBridge } from "@app/components/viewer/ExportAPIBridge";
 import { BookmarkAPIBridge } from "@app/components/viewer/BookmarkAPIBridge";
 import { AttachmentAPIBridge } from "@app/components/viewer/AttachmentAPIBridge";
@@ -121,6 +130,21 @@ interface LocalEmbedPDFProps {
   isSignMode?: boolean;
   /** Controls CSS filter applied only to rendered PDF canvas tiles */
   pdfRenderMode?: "normal" | "dark" | "sepia";
+  // ── Signature overlay (opt-in; all default off) ──────────────────────────
+  /** Read-only / interactive signature preview overlays to render per page. */
+  signaturePreviews?: SignaturePreview[];
+  /** If true, previews are display-only (cannot be moved, resized, or deleted). */
+  signaturePreviewsReadOnly?: boolean;
+  /** When true (and not read-only), clicking a page places a new preview. */
+  signaturePlacementMode?: boolean;
+  /** Base64 PNG used for placement and the cursor ghost preview. */
+  signaturePlacementData?: string;
+  /** Signature type assigned to newly placed previews. */
+  signaturePlacementType?: "canvas" | "image" | "text";
+  /** Emits the full updated preview array whenever overlays change. */
+  onSignaturePreviewsChange?: (previews: SignaturePreview[]) => void;
+  /** Imperative handle for reading/clearing/deleting signature previews. */
+  signatureOverlayApiRef?: React.RefObject<SignatureOverlayAPI | null>;
 }
 
 export function LocalEmbedPDF({
@@ -142,6 +166,13 @@ export function LocalEmbedPDF({
   commentsSidebarRightOffset = "0rem",
   isSignMode = false,
   pdfRenderMode = "normal",
+  signaturePreviews,
+  signaturePreviewsReadOnly = false,
+  signaturePlacementMode = false,
+  signaturePlacementData,
+  signaturePlacementType,
+  onSignaturePreviewsChange,
+  signatureOverlayApiRef,
 }: LocalEmbedPDFProps) {
   const { t } = useTranslation();
   const { config } = useAppConfig();
@@ -150,6 +181,58 @@ export function LocalEmbedPDF({
     Array<{ id: string; pageIndex: number; rect: Rect }>
   >([]);
   const [commentAuthorName, setCommentAuthorName] = useState<string>("Guest");
+
+  const [localSignaturePreviews, setLocalSignaturePreviews] = useState<
+    SignaturePreview[]
+  >(signaturePreviews ?? []);
+
+  // Mount the overlay for controlled previews, placement mode, or once any
+  // signature is placed — so leaving placement mode doesn't hide placements.
+  const signatureOverlayEnabled =
+    signaturePreviews !== undefined ||
+    signaturePlacementMode ||
+    localSignaturePreviews.length > 0;
+  const [selectedSignatureId, setSelectedSignatureId] = useState<string | null>(
+    null,
+  );
+
+  // Keep internal state in sync when the caller supplies controlled previews.
+  useEffect(() => {
+    if (signaturePreviews !== undefined) {
+      setLocalSignaturePreviews(signaturePreviews);
+    }
+  }, [signaturePreviews]);
+
+  const handleSignaturePreviewsChange = useCallback(
+    (next: SignaturePreview[]) => {
+      setLocalSignaturePreviews(next);
+      onSignaturePreviewsChange?.(next);
+    },
+    [onSignaturePreviewsChange],
+  );
+
+  useImperativeHandle(
+    signatureOverlayApiRef,
+    () => ({
+      getSignaturePreviews: () => localSignaturePreviews,
+      clearPreviews: () => {
+        setLocalSignaturePreviews([]);
+        setSelectedSignatureId(null);
+        onSignaturePreviewsChange?.([]);
+      },
+      deleteSelected: () => {
+        if (!selectedSignatureId) return;
+        const next = localSignaturePreviews.filter(
+          (p) => p.id !== selectedSignatureId,
+        );
+        setSelectedSignatureId(null);
+        setLocalSignaturePreviews(next);
+        onSignaturePreviewsChange?.(next);
+      },
+      hasSelected: () => selectedSignatureId !== null,
+    }),
+    [localSignaturePreviews, selectedSignatureId, onSignaturePreviewsChange],
+  );
 
   useEffect(() => {
     if (!config?.enableLogin) return;
@@ -1073,6 +1156,23 @@ export function LocalEmbedPDF({
                                     documentId={documentId}
                                     pageIndex={pageIndex}
                                   />
+
+                                  {/* Signature preview overlay (opt-in; off by default) */}
+                                  {signatureOverlayEnabled && (
+                                    <SignaturePreviewLayer
+                                      pageIndex={pageIndex}
+                                      pageWidth={width}
+                                      pageHeight={height}
+                                      previews={localSignaturePreviews}
+                                      readOnly={signaturePreviewsReadOnly}
+                                      placementMode={signaturePlacementMode}
+                                      placementData={signaturePlacementData}
+                                      placementType={signaturePlacementType}
+                                      onChange={handleSignaturePreviewsChange}
+                                      selectedId={selectedSignatureId}
+                                      onSelect={setSelectedSignatureId}
+                                    />
+                                  )}
                                 </div>
                               </PagePointerProvider>
                             </Rotate>
