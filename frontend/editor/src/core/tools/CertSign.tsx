@@ -3,6 +3,7 @@ import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 import CertificateTypeSettings from "@app/components/tools/certSign/CertificateTypeSettings";
 import CertificateFormatSettings from "@app/components/tools/certSign/CertificateFormatSettings";
 import CertificateFilesSettings from "@app/components/tools/certSign/CertificateFilesSettings";
+import HardwareCertificateSettings from "@app/components/tools/certSign/HardwareCertificateSettings";
 import SignatureAppearanceSettings from "@app/components/tools/certSign/SignatureAppearanceSettings";
 import { useCertSignParameters } from "@app/hooks/tools/certSign/useCertSignParameters";
 import { useCertSignOperation } from "@app/hooks/tools/certSign/useCertSignOperation";
@@ -44,6 +45,10 @@ const CertSign = (props: BaseToolProps) => {
         return !!params.p12File;
       case "JKS":
         return !!params.jksFile;
+      case "WINDOWS_STORE":
+        return !!params.alias;
+      case "PKCS11":
+        return !!(params.pkcs11LibraryPath && params.alias);
       default:
         return false;
     }
@@ -57,7 +62,7 @@ const CertSign = (props: BaseToolProps) => {
     },
     steps: [
       {
-        title: t("certSign.signMode.stepTitle", "Sign Mode"),
+        title: t("certSign.source.stepTitle", "Certificate source"),
         isCollapsed: base.settingsCollapsed,
         onCollapsedClick: base.settingsCollapsed
           ? base.handleSettingsReset
@@ -100,6 +105,24 @@ const CertSign = (props: BaseToolProps) => {
                 : undefined,
               content: (
                 <CertificateFilesSettings
+                  parameters={base.params.parameters}
+                  onParameterChange={base.params.updateParameter}
+                  disabled={base.endpointLoading}
+                />
+              ),
+            },
+          ]
+        : []),
+      ...(base.params.parameters.signMode === "DEVICE"
+        ? [
+            {
+              title: t("certSign.device.stepTitle", "This device"),
+              isCollapsed: base.settingsCollapsed,
+              onCollapsedClick: base.settingsCollapsed
+                ? base.handleSettingsReset
+                : undefined,
+              content: (
+                <HardwareCertificateSettings
                   parameters={base.params.parameters}
                   onParameterChange={base.params.updateParameter}
                   disabled={base.endpointLoading}

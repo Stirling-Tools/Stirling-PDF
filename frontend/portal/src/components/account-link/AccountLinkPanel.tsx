@@ -56,7 +56,12 @@ export function AccountLinkPanel() {
     <div className="portal-link portal-link--in-settings">
       <header className="portal-link__header">
         <div>
-          <p className="portal-link__page-sub">{t("accountLink.panel.sub")}</p>
+          <p className="portal-link__page-sub">
+            {t(
+              "accountLink.panel.sub",
+              "Link this self-hosted org to its Stirling account so unattended processing bills against your org wallet.",
+            )}
+          </p>
         </div>
         <StatusBadge
           tone={
@@ -68,7 +73,7 @@ export function AccountLinkPanel() {
           }
           size="md"
         >
-          {t(LINK_INFO[linkState].labelKey)}
+          {t(LINK_INFO[linkState].labelKey, LINK_INFO[linkState].labelDefault)}
         </StatusBadge>
       </header>
 
@@ -78,10 +83,13 @@ export function AccountLinkPanel() {
         <section className="portal-link__instances">
           <div className="portal-link__section-head">
             <h2 className="portal-link__section-title">
-              {t("accountLink.panel.instancesTitle")}
+              {t("accountLink.panel.instancesTitle", "Linked instances")}
             </h2>
             <p className="portal-link__section-sub">
-              {t("accountLink.panel.instancesSub")}
+              {t(
+                "accountLink.panel.instancesSub",
+                "Every self-hosted instance registered to this org. Revoke a credential to immediately cut off its unattended access.",
+              )}
             </p>
           </div>
           {instancesState.loading ? (
@@ -93,12 +101,21 @@ export function AccountLinkPanel() {
           ) : instancesState.error ? (
             <Banner
               tone="danger"
-              title={t("accountLink.panel.loadError.title")}
+              title={t(
+                "accountLink.panel.loadError.title",
+                "Couldn't load linked instances",
+              )}
             >
               {instancesState.error instanceof HttpError &&
               instancesState.error.status === 403
-                ? t("accountLink.panel.loadError.forbidden")
-                : t("accountLink.panel.loadError.generic")}
+                ? t(
+                    "accountLink.panel.loadError.forbidden",
+                    "Only the team owner can view the org's linked instances.",
+                  )
+                : t(
+                    "accountLink.panel.loadError.generic",
+                    "Couldn't load the team's linked instances. Try again in a moment.",
+                  )}
             </Banner>
           ) : (
             <LinkedInstancesTable
@@ -109,7 +126,13 @@ export function AccountLinkPanel() {
           )}
 
           {revokeError && (
-            <Banner tone="danger" title={t("accountLink.panel.revokeError")}>
+            <Banner
+              tone="danger"
+              title={t(
+                "accountLink.panel.revokeError",
+                "Couldn't revoke instance",
+              )}
+            >
               {revokeError}
             </Banner>
           )}
