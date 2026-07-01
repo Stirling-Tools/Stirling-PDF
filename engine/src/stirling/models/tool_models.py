@@ -11,13 +11,6 @@ from pydantic import Field, RootModel, SecretStr
 from stirling.models.base import ApiModel
 
 
-class AddAttachmentsParams(ApiModel):
-    attachments: list[bytes] = Field(..., description="The image file to be overlaid onto the PDF.")
-    convert_to_pdf_a3b: bool = Field(
-        False, description="Convert the resulting PDF to PDF/A-3b format after adding attachments"
-    )
-
-
 class AddCommentsParams(ApiModel):
     comments: str = Field(
         ...,
@@ -26,12 +19,6 @@ class AddCommentsParams(ApiModel):
             '[{"pageIndex":0,"x":72,"y":720,"width":20,"height":20,"text":"Check this paragraph","author":"Reviewer","subject":"Unclear wording"}]'
         ],
     )
-
-
-class AddImageParams(ApiModel):
-    every_page: bool = Field(False, description="Whether to overlay the image onto every page of the PDF.")
-    x: float = Field(0, description="The x-coordinate at which to place the top-left corner of the image.")
-    y: float = Field(0, description="The y-coordinate at which to place the top-left corner of the image.")
 
 
 class CustomMargin(StrEnum):
@@ -310,50 +297,6 @@ class CbrToPdfParams(ApiModel):
 
 class CbzToPdfParams(ApiModel):
     optimize_for_ebook: bool = Field(False, description="Optimize the output PDF for ebook reading using Ghostscript")
-
-
-class CertType(StrEnum):
-    """
-    The type of the digital certificate. WINDOWS_STORE and PKCS11 are hardware-backed and only available in the desktop app.
-    """
-
-    pem = "PEM"
-    pkcs12 = "PKCS12"
-    pfx = "PFX"
-    jks = "JKS"
-    server = "SERVER"
-    windows_store = "WINDOWS_STORE"
-    pkcs11 = "PKCS11"
-
-
-class CertSignParams(ApiModel):
-    alias: str | None = Field(
-        None,
-        description="The alias of the certificate to sign with. Required for WINDOWS_STORE and recommended for PKCS11 tokens holding multiple certificates.",
-    )
-    cert_type: CertType = Field(
-        ...,
-        description="The type of the digital certificate. WINDOWS_STORE and PKCS11 are hardware-backed and only available in the desktop app.",
-    )
-    location: str = Field("SPDF", description="The location where the PDF is signed")
-    name: str = Field("SPDF", description="The name of the signer")
-    page_number: int = Field(
-        1,
-        description="The page number where the signature should be visible. This is required if showSignature is set to true",
-    )
-    password: SecretStr | None = Field(
-        None, description="The password for the keystore / private key, or the token PIN for PKCS11"
-    )
-    pkcs11_library_path: str | None = Field(
-        None,
-        description="Absolute path to the PKCS#11 driver library (required for PKCS11 type). Must be an allowed driver - a detected one or configured via STIRLING_PKCS11_LIBRARIES.",
-    )
-    pkcs11_slot: int | None = Field(
-        None, description="Optional PKCS#11 slot index. When omitted the first slot with a token is used."
-    )
-    reason: str = Field("Signed by SPDF", description="The reason for signing the PDF")
-    show_logo: bool = Field(True, description="Whether to visually show a signature logo along with the signature")
-    show_signature: bool = Field(False, description="Whether to visually show the signature in the PDF file")
 
 
 class LineArtEdgeLevel(IntEnum):
@@ -760,41 +703,6 @@ class OcrPdfParams(ApiModel):
     ocr_type: OcrType = Field(..., description="Specify the OCR type, e.g., 'skip-text', 'force-ocr', or 'Normal'")
     remove_images_after: bool | None = Field(None, description="Remove images from the output PDF if set to true")
     sidecar: bool | None = Field(None, description="Include OCR text in a sidecar text file if set to true")
-
-
-class OverlayMode(StrEnum):
-    """
-    The mode of overlaying: 'SequentialOverlay' for sequential application, 'InterleavedOverlay' for round-robin application, 'FixedRepeatOverlay' for fixed repetition based on provided counts
-    """
-
-    sequential_overlay = "SequentialOverlay"
-    interleaved_overlay = "InterleavedOverlay"
-    fixed_repeat_overlay = "FixedRepeatOverlay"
-
-
-class OverlayPosition(Enum):
-    """
-    Overlay position 0 is Foregound, 1 is Background
-    """
-
-    number_0 = 0
-    number_1 = 1
-
-
-class OverlayPdfsParams(ApiModel):
-    counts: list[int] | None = Field(
-        None,
-        description="An array of integers specifying the number of times each corresponding overlay file should be applied in the 'FixedRepeatOverlay' mode. This should match the length of the overlayFiles array.",
-    )
-    overlay_files: list[bytes] = Field(
-        ...,
-        description="An array of PDF files to be used as overlays on the base PDF. The order in these files is applied based on the selected mode.",
-    )
-    overlay_mode: OverlayMode = Field(
-        ...,
-        description="The mode of overlaying: 'SequentialOverlay' for sequential application, 'InterleavedOverlay' for round-robin application, 'FixedRepeatOverlay' for fixed repetition based on provided counts",
-    )
-    overlay_position: OverlayPosition = Field(..., description="Overlay position 0 is Foregound, 1 is Background")
 
 
 class PdfToCbrParams(ApiModel):
@@ -1424,11 +1332,6 @@ class UrlToPdfParams(ApiModel):
     url_input: str = Field(..., description="The input URL to be converted to a PDF file")
 
 
-class ValidateCertificateParams(ApiModel):
-    cert_type: str | None = None
-    password: str | None = None
-
-
 class OutputFormat6(StrEnum):
     """
     Target vector format extension
@@ -1514,7 +1417,6 @@ class Model(
         | EditTextParams
         | MergePdfsParams
         | MultiPageLayoutParams
-        | OverlayPdfsParams
         | PdfToSinglePageParams
         | RearrangePagesParams
         | RemoveImagePdfParams
@@ -1526,9 +1428,7 @@ class Model(
         | SplitPagesParams
         | SplitPdfByChaptersParams
         | SplitPdfBySectionsParams
-        | AddAttachmentsParams
         | AddCommentsParams
-        | AddImageParams
         | AddPageNumbersParams
         | AddStampParams
         | AutoRenameParams
@@ -1550,8 +1450,6 @@ class Model(
         | AddPasswordParams
         | AddWatermarkParams
         | AutoRedactParams
-        | CertSignParams
-        | ValidateCertificateParams
         | RedactParams
         | RedactExecuteParams
         | RemoveCertSignParams
@@ -1592,7 +1490,6 @@ class Model(
         | EditTextParams
         | MergePdfsParams
         | MultiPageLayoutParams
-        | OverlayPdfsParams
         | PdfToSinglePageParams
         | RearrangePagesParams
         | RemoveImagePdfParams
@@ -1604,9 +1501,7 @@ class Model(
         | SplitPagesParams
         | SplitPdfByChaptersParams
         | SplitPdfBySectionsParams
-        | AddAttachmentsParams
         | AddCommentsParams
-        | AddImageParams
         | AddPageNumbersParams
         | AddStampParams
         | AutoRenameParams
@@ -1628,8 +1523,6 @@ class Model(
         | AddPasswordParams
         | AddWatermarkParams
         | AutoRedactParams
-        | CertSignParams
-        | ValidateCertificateParams
         | RedactParams
         | RedactExecuteParams
         | RemoveCertSignParams
@@ -1671,7 +1564,6 @@ type ParamToolModel = (
     | EditTextParams
     | MergePdfsParams
     | MultiPageLayoutParams
-    | OverlayPdfsParams
     | PdfToSinglePageParams
     | RearrangePagesParams
     | RemoveImagePdfParams
@@ -1683,9 +1575,7 @@ type ParamToolModel = (
     | SplitPagesParams
     | SplitPdfByChaptersParams
     | SplitPdfBySectionsParams
-    | AddAttachmentsParams
     | AddCommentsParams
-    | AddImageParams
     | AddPageNumbersParams
     | AddStampParams
     | AutoRenameParams
@@ -1707,8 +1597,6 @@ type ParamToolModel = (
     | AddPasswordParams
     | AddWatermarkParams
     | AutoRedactParams
-    | CertSignParams
-    | ValidateCertificateParams
     | RedactParams
     | RedactExecuteParams
     | RemoveCertSignParams
@@ -1751,7 +1639,6 @@ class ToolEndpoint(StrEnum):
     EDIT_TEXT = "/api/v1/general/edit-text"
     MERGE_PDFS = "/api/v1/general/merge-pdfs"
     MULTI_PAGE_LAYOUT = "/api/v1/general/multi-page-layout"
-    OVERLAY_PDFS = "/api/v1/general/overlay-pdfs"
     PDF_TO_SINGLE_PAGE = "/api/v1/general/pdf-to-single-page"
     REARRANGE_PAGES = "/api/v1/general/rearrange-pages"
     REMOVE_IMAGE_PDF = "/api/v1/general/remove-image-pdf"
@@ -1763,9 +1650,7 @@ class ToolEndpoint(StrEnum):
     SPLIT_PAGES = "/api/v1/general/split-pages"
     SPLIT_PDF_BY_CHAPTERS = "/api/v1/general/split-pdf-by-chapters"
     SPLIT_PDF_BY_SECTIONS = "/api/v1/general/split-pdf-by-sections"
-    ADD_ATTACHMENTS = "/api/v1/misc/add-attachments"
     ADD_COMMENTS = "/api/v1/misc/add-comments"
-    ADD_IMAGE = "/api/v1/misc/add-image"
     ADD_PAGE_NUMBERS = "/api/v1/misc/add-page-numbers"
     ADD_STAMP = "/api/v1/misc/add-stamp"
     AUTO_RENAME = "/api/v1/misc/auto-rename"
@@ -1787,8 +1672,6 @@ class ToolEndpoint(StrEnum):
     ADD_PASSWORD = "/api/v1/security/add-password"
     ADD_WATERMARK = "/api/v1/security/add-watermark"
     AUTO_REDACT = "/api/v1/security/auto-redact"
-    CERT_SIGN = "/api/v1/security/cert-sign"
-    VALIDATE_CERTIFICATE = "/api/v1/security/cert-sign/validate-certificate"
     REDACT = "/api/v1/security/redact"
     REDACT_EXECUTE = "/api/v1/security/redact-execute"
     REMOVE_CERT_SIGN = "/api/v1/security/remove-cert-sign"
@@ -1829,7 +1712,6 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.EDIT_TEXT: EditTextParams,
     ToolEndpoint.MERGE_PDFS: MergePdfsParams,
     ToolEndpoint.MULTI_PAGE_LAYOUT: MultiPageLayoutParams,
-    ToolEndpoint.OVERLAY_PDFS: OverlayPdfsParams,
     ToolEndpoint.PDF_TO_SINGLE_PAGE: PdfToSinglePageParams,
     ToolEndpoint.REARRANGE_PAGES: RearrangePagesParams,
     ToolEndpoint.REMOVE_IMAGE_PDF: RemoveImagePdfParams,
@@ -1841,9 +1723,7 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.SPLIT_PAGES: SplitPagesParams,
     ToolEndpoint.SPLIT_PDF_BY_CHAPTERS: SplitPdfByChaptersParams,
     ToolEndpoint.SPLIT_PDF_BY_SECTIONS: SplitPdfBySectionsParams,
-    ToolEndpoint.ADD_ATTACHMENTS: AddAttachmentsParams,
     ToolEndpoint.ADD_COMMENTS: AddCommentsParams,
-    ToolEndpoint.ADD_IMAGE: AddImageParams,
     ToolEndpoint.ADD_PAGE_NUMBERS: AddPageNumbersParams,
     ToolEndpoint.ADD_STAMP: AddStampParams,
     ToolEndpoint.AUTO_RENAME: AutoRenameParams,
@@ -1865,8 +1745,6 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.ADD_PASSWORD: AddPasswordParams,
     ToolEndpoint.ADD_WATERMARK: AddWatermarkParams,
     ToolEndpoint.AUTO_REDACT: AutoRedactParams,
-    ToolEndpoint.CERT_SIGN: CertSignParams,
-    ToolEndpoint.VALIDATE_CERTIFICATE: ValidateCertificateParams,
     ToolEndpoint.REDACT: RedactParams,
     ToolEndpoint.REDACT_EXECUTE: RedactExecuteParams,
     ToolEndpoint.REMOVE_CERT_SIGN: RemoveCertSignParams,

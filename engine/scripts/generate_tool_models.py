@@ -60,17 +60,15 @@ class ToolDiscovery:
     )
 
     # Endpoints under the allowed prefixes that are NOT edit-agent operations. A listed
-    # path and everything nested under it is dropped. Two kinds live here:
+    # path and everything nested under it is dropped. Several kinds live here:
     EXCLUDED_PATHS = (
-        # 1. Interactive / feature-plumbing sub-APIs, not one-shot operations:
-        #    cert-signing sessions + hardware-token management, and the interactive
-        #    PDF text-editor endpoints.
-        "/api/v1/security/cert-sign/hardware",
-        "/api/v1/security/cert-sign/sessions",
-        "/api/v1/security/cert-sign/sign-requests",
+        # 1. Cert-signing family: needs certificate/key files the agent can't supply, plus
+        #    interactive session and hardware-token management. The whole subtree is dropped.
+        "/api/v1/security/cert-sign",
+        # 2. Interactive PDF text-editor endpoints, not one-shot operations.
         "/api/v1/convert/pdf/text-editor",
         "/api/v1/convert/text-editor/pdf",
-        # 2. Introspection / query endpoints that return metadata, a listing, or a
+        # 3. Introspection / query endpoints that return metadata, a listing, or a
         #    verification verdict rather than a transformed document, so they belong to
         #    the question path, not the edit agent. (decompress is a dev-only stream op.)
         "/api/v1/security/get-info-on-pdf",
@@ -80,6 +78,12 @@ class ToolDiscovery:
         "/api/v1/misc/show-javascript",
         "/api/v1/misc/decompress-pdf",
         "/api/v1/general/extract-bookmarks",
+        # 4. Require a secondary file (image, overlay PDF, attachments) on top of the input
+        #    PDF. The agent only ever supplies the input PDF(s), so these can never run.
+        #    (add-stamp / add-watermark stay: their text mode needs no extra file.)
+        "/api/v1/misc/add-image",
+        "/api/v1/misc/add-attachments",
+        "/api/v1/general/overlay-pdfs",
     )
 
     def _is_excluded(self, path: str) -> bool:
