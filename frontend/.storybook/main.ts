@@ -25,7 +25,7 @@ const config: StorybookConfig = {
   },
   // Serve the MSW worker file from the portal's public dir so Storybook can
   // intercept network calls the same way the dev portal does.
-  staticDirs: ["../editor/portal-public"],
+  staticDirs: ["../editor/public"],
   viteFinal: async (config) => {
     // Wire the @portal/* alias directly on the Storybook bundler so portal
     // story imports resolve without needing the portal's vite config.

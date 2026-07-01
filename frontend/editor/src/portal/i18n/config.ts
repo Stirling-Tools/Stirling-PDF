@@ -1,19 +1,23 @@
 /**
- * Portal i18n setup. Shares the editor's system via @app/i18n: the same
- * TOML backend, the same language list, and the same Crowdin-managed
- * `public/locales/{lng}/translation.toml` layout. US English is the source.
+ * Portal i18n setup. Shares the editor's system via @app/i18n: the same TOML
+ * backend and language list. Keys live in the `portal` namespace
+ * (`public/locales/{lng}/portal.toml`), separate from the editor's default
+ * `translation` namespace. US English is the source.
  *
- * Imported once for its side effect (see portal/main.tsx) before the app
- * renders. The portal is a separate bundle, so it configures its own i18next
- * default instance.
+ * The portal now runs inside the editor app as a route-set, so it uses its OWN
+ * i18next instance (not the default one, which the editor owns) — wired to the
+ * portal subtree via <I18nextProvider> in PortalApp. Imported for its init side
+ * effect.
  */
-import i18n from "i18next";
+import { createInstance } from "i18next";
 import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 import TomlBackend from "@app/i18n/tomlBackend";
 import { supportedLanguages, rtlLanguages } from "@app/i18n/languages";
 
-void i18n
+const portalI18n = createInstance();
+
+void portalI18n
   .use(TomlBackend)
   .use(LanguageDetector)
   .use(initReactI18next)
@@ -22,6 +26,10 @@ void i18n
     supportedLngs: Object.keys(supportedLanguages),
     load: "currentOnly",
     nonExplicitSupportedLngs: false,
+    // Portal strings live in their own namespace so they don't collide with the
+    // editor's default `translation` namespace served from the same origin.
+    ns: ["portal"],
+    defaultNS: "portal",
     interpolation: {
       // React already escapes values, so i18next must not double-escape.
       escapeValue: false,
@@ -46,9 +54,9 @@ void i18n
   });
 
 // Mirror the document direction/lang to the active language.
-i18n.on("languageChanged", (lng) => {
+portalI18n.on("languageChanged", (lng) => {
   document.documentElement.dir = rtlLanguages.includes(lng) ? "rtl" : "ltr";
   document.documentElement.lang = lng;
 });
 
-export default i18n;
+export default portalI18n;

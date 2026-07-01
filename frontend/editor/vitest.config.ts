@@ -47,6 +47,26 @@ export default defineConfig({
       },
       {
         test: {
+          name: "portal",
+          include: ["src/portal/**/*.test.{ts,tsx}"],
+          environment: "jsdom",
+          globals: true,
+          setupFiles: ["./src/portal/setupTests.ts"],
+        },
+        plugins: [
+          react(),
+          tsconfigPaths({
+            // Broad project so @app/@portal resolve in every editor file the
+            // portal tests pull in (proprietary/ui, core, ...).
+            projects: ["./tsconfig.portal.vite.json"],
+          }),
+        ],
+        esbuild: {
+          target: "es2020",
+        },
+      },
+      {
+        test: {
           name: "proprietary",
           include: ["src/proprietary/**/*.test.{ts,tsx}"],
           environment: "jsdom",

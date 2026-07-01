@@ -173,7 +173,7 @@
   },
   "msw": {
     "workerDirectory": [
-      "editor/portal-public"
+      "editor/public"
     ]
   }
 }

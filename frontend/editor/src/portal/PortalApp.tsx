@@ -1,6 +1,8 @@
 import { useEffect, type ReactNode } from "react";
-import { BrowserRouter, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import { I18nextProvider } from "react-i18next";
 import { MantineProvider } from "@mantine/core";
+import portalI18n from "@portal/i18n/config";
 import { AuthProvider } from "@app/auth";
 import { ErrorBoundary } from "@portal/components/ErrorBoundary";
 import { ThemeProvider, useTheme } from "@portal/contexts/ThemeContext";
@@ -117,22 +119,23 @@ function RoutedContent() {
   );
 }
 
-export function App() {
-  // Honour the Vite base path so the portal routes correctly when served under a
-  // subpath (e.g. "/portal" behind the single-origin proxy). BASE_URL is "./"
-  // for a standalone build, which isn't a valid router basename, so only pass it
-  // when it's an absolute subpath.
-  const baseUrl = import.meta.env.BASE_URL;
-  const basename = baseUrl.startsWith("/") ? baseUrl : undefined;
+/**
+ * The portal, mounted as a route-set under /portal/* inside the editor app (via
+ * the admin-route seam). It supplies its own providers and its own i18next
+ * instance (the `portal` namespace), but NOT a router — the editor's
+ * <BrowserRouter> is the one and only router; the portal's routes are relative
+ * to the /portal mount (see ViewRouter).
+ */
+export function PortalApp() {
   return (
-    <ThemeProvider>
-      <PortalMantineProvider>
-        <AuthProvider mode="spring">
-          <LinkProvider initialState="unlinked">
-            {/* TierProvider sits INSIDE LinkProvider so it can derive the tier
-                from the real link/subscription state when MSW mocks are off. */}
-            <TierProvider initialTier="pro">
-              <BrowserRouter basename={basename}>
+    <I18nextProvider i18n={portalI18n}>
+      <ThemeProvider>
+        <PortalMantineProvider>
+          <AuthProvider mode="spring">
+            <LinkProvider initialState="unlinked">
+              {/* TierProvider sits INSIDE LinkProvider so it can derive the tier
+                  from the real link/subscription state when MSW mocks are off. */}
+              <TierProvider initialTier="pro">
                 <UIProvider>
                   <GlobalShortcuts />
                   <AuthGate>
@@ -148,11 +151,11 @@ export function App() {
                     </AccountLinkProvider>
                   </AuthGate>
                 </UIProvider>
-              </BrowserRouter>
-            </TierProvider>
-          </LinkProvider>
-        </AuthProvider>
-      </PortalMantineProvider>
-    </ThemeProvider>
+              </TierProvider>
+            </LinkProvider>
+          </AuthProvider>
+        </PortalMantineProvider>
+      </ThemeProvider>
+    </I18nextProvider>
   );
 }

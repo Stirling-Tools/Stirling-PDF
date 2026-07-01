@@ -51,6 +51,19 @@ export const VIEW_PATHS: Record<ViewId, string> = {
   settings: "/settings",
 };
 
+/**
+ * The portal is mounted as a route-set under this base path inside the editor
+ * app (see the admin-route seam). VIEW_PATHS stay expressed as logical portal
+ * paths; this facade adds/strips the base so components keep navigating by
+ * ViewId without knowing where the portal is mounted.
+ */
+export const PORTAL_BASENAME = "/portal";
+
+/** Logical view path -> full app path (e.g. "/users" -> "/portal/users"). */
+export function toPortalPath(viewPath: string): string {
+  return `${PORTAL_BASENAME}${viewPath === "/" ? "" : viewPath}`;
+}
+
 const PATH_TO_VIEW: Record<string, ViewId> = Object.fromEntries(
   (Object.entries(VIEW_PATHS) as Array<[ViewId, string]>).map(
     ([view, path]) => [path, view],
@@ -58,9 +71,14 @@ const PATH_TO_VIEW: Record<string, ViewId> = Object.fromEntries(
 );
 
 function deriveActiveView(pathname: string): ViewId {
+  // Strip the portal base, then match against the logical VIEW_PATHS.
+  let inner = pathname.startsWith(PORTAL_BASENAME)
+    ? pathname.slice(PORTAL_BASENAME.length)
+    : pathname;
+  if (inner === "") inner = "/";
   // Exact match first; otherwise treat the first segment as the view.
-  if (PATH_TO_VIEW[pathname]) return PATH_TO_VIEW[pathname];
-  const firstSegment = "/" + pathname.split("/").filter(Boolean)[0];
+  if (PATH_TO_VIEW[inner]) return PATH_TO_VIEW[inner];
+  const firstSegment = "/" + inner.split("/").filter(Boolean)[0];
   return PATH_TO_VIEW[firstSegment] ?? "home";
 }
 
@@ -79,7 +97,7 @@ export function useView(): ViewContextValue {
   const navigate = useNavigate();
   const activeView = useMemo(() => deriveActiveView(pathname), [pathname]);
   const setActiveView = useCallback(
-    (view: ViewId) => navigate(VIEW_PATHS[view]),
+    (view: ViewId) => navigate(toPortalPath(VIEW_PATHS[view])),
     [navigate],
   );
   return { activeView, setActiveView };

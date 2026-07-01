@@ -102,7 +102,7 @@ export const I18N_PROJECTS: TranslationProject[] = [
   {
     name: "portal",
     srcRoot: front("editor/src/portal"),
-    localeFile: front("editor/portal-public/locales/en-US/translation.toml"),
+    localeFile: front("editor/public/locales/en-US/portal.toml"),
     ignoredKeyPatterns: [
       // Source-type copy is referenced via metadata keys in
       // components/sources/sourceTypes.ts (t(field.labelKey)), so the static

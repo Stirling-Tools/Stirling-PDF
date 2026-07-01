@@ -35,7 +35,6 @@ export default defineConfig(
     // Everything that contains 3rd party code that we don't want to lint
     ignores: [
       "dist",
-      "dist-portal",
       "node_modules",
       "playwright-report",
       "storybook-static",
@@ -45,7 +44,6 @@ export default defineConfig(
       "editor/src-tauri",
       "editor/playwright-report",
       "editor/test-results",
-      "editor/portal-public",
     ],
   },
   eslint.configs.recommended,
