@@ -125,8 +125,9 @@ export async function fetchPolicies(): Promise<PoliciesResponse> {
 
   const active = wirePolicies.filter((p) => p.enabled).length;
   const paused = wirePolicies.filter((p) => !p.enabled).length;
+  const enabledPolicyIds = new Set(wirePolicies.filter((p) => p.enabled).map((p) => p.id));
   const docsEnforced = runs.filter(
-    (r) => r.status === "COMPLETED" && wirePolicies.some((p) => p.id === r.policyId && p.enabled),
+    (r) => r.status === "COMPLETED" && enabledPolicyIds.has(r.policyId),
   ).length;
   const summary: PoliciesSummary = {
     active,

@@ -352,11 +352,11 @@ function PolicySetupWizardBody({
             {t("policies.wizard.sources.heading")}
           </h3>
           <div className="portal-policies__sources">
-            {sourcesAsync.loading && availableSources.length === 0 ? (
+            {sourcesAsync.loading && !sourcesAsync.data ? (
               <p className="portal-policies__sources-loading">
                 {t("policies.wizard.sources.loading")}
               </p>
-            ) : availableSources.length === 0 ? (
+            ) : availableSources.length === 1 ? (
               <Banner
                 tone="neutral"
                 title={t("policies.wizard.sources.emptyTitle")}

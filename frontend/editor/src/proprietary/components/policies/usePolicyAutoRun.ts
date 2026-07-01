@@ -342,7 +342,9 @@ function applyOutputName(
   const base = dot > 0 ? inputFileName.slice(0, dot) : inputFileName;
   const ext = dot > 0 ? inputFileName.slice(dot) : "";
   if (position === "suffix") return `${base}_${outputName}${ext}`;
-  return `${outputName}_${base}${ext}`;
+  if (position === "prefix") return `${outputName}_${base}${ext}`;
+  // auto-number requires dedup state not available here — fall back to suffix.
+  return `${base}_${outputName}${ext}`;
 }
 
 async function reconcileServerRuns(
