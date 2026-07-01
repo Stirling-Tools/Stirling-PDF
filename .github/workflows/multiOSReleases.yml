@@ -94,7 +94,7 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             case "${{ github.event.inputs.platform }}" in
               "windows")
-                echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64","jpdfium_platforms":"windows-x64"}]}' >> $GITHUB_OUTPUT
+                echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc --bundles msi,nsis","name":"windows-x86_64","jpdfium_platforms":"windows-x64"}]}' >> $GITHUB_OUTPUT
                 ;;
               "macos")
                 echo 'matrix={"include":[{"platform":"macos-15","args":"--target universal-apple-darwin","name":"macos-universal","jpdfium_platforms":"darwin-arm64,darwin-x64"}]}' >> $GITHUB_OUTPUT
@@ -103,12 +103,12 @@ jobs:
                 echo 'matrix={"include":[{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64","jpdfium_platforms":"linux-x64"}]}' >> $GITHUB_OUTPUT
                 ;;
               *)
-                echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64","jpdfium_platforms":"windows-x64"},{"platform":"macos-15","args":"--target universal-apple-darwin","name":"macos-universal","jpdfium_platforms":"darwin-arm64,darwin-x64"},{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64","jpdfium_platforms":"linux-x64"}]}' >> $GITHUB_OUTPUT
+                echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc --bundles msi,nsis","name":"windows-x86_64","jpdfium_platforms":"windows-x64"},{"platform":"macos-15","args":"--target universal-apple-darwin","name":"macos-universal","jpdfium_platforms":"darwin-arm64,darwin-x64"},{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64","jpdfium_platforms":"linux-x64"}]}' >> $GITHUB_OUTPUT
                 ;;
             esac
           else
             # For push/release events, build all platforms
-            echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc","name":"windows-x86_64","jpdfium_platforms":"windows-x64"},{"platform":"macos-15","args":"--target universal-apple-darwin","name":"macos-universal","jpdfium_platforms":"darwin-arm64,darwin-x64"},{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64","jpdfium_platforms":"linux-x64"}]}' >> $GITHUB_OUTPUT
+            echo 'matrix={"include":[{"platform":"windows-latest","args":"--target x86_64-pc-windows-msvc --bundles msi,nsis","name":"windows-x86_64","jpdfium_platforms":"windows-x64"},{"platform":"macos-15","args":"--target universal-apple-darwin","name":"macos-universal","jpdfium_platforms":"darwin-arm64,darwin-x64"},{"platform":"ubuntu-22.04","args":"","name":"linux-x86_64","jpdfium_platforms":"linux-x64"}]}' >> $GITHUB_OUTPUT
           fi
 
   build-jars:
@@ -553,11 +553,24 @@ jobs:
             $allSigned = $false
           }
 
+          $nsisPath = "./dist/Stirling-PDF-${{ matrix.name }}.nsis.exe"
+          if (Test-Path $nsisPath) {
+            $sig = Get-AuthenticodeSignature -FilePath $nsisPath
+            Write-Host "NSIS: Status=$($sig.Status), Signer=$($sig.SignerCertificate.Subject)"
+            if ($sig.Status -ne "Valid") {
+              Write-Host "[ERROR] NSIS installer is not signed"
+              $allSigned = $false
+            }
+          } else {
+            Write-Host "[ERROR] NSIS installer not found at $nsisPath"
+            $allSigned = $false
+          }
+
           if (-not $allSigned) {
             Write-Host "[ERROR] Signature verification failed"
             exit 1
           }
-          Write-Host "[SUCCESS] MSI and installed exe are properly signed"
+          Write-Host "[SUCCESS] MSI, NSIS installer, and installed exe are properly signed"
 
       # Dump smctl log files on failure. Tauri's signCommand captures smctl output
       # but drops stderr when the command exits non-zero, making failures opaque.
@@ -598,7 +611,9 @@ jobs:
           # each <bundle> ships with a sibling <bundle>.sig consumed by latest.json.
           if [ "${{ matrix.platform }}" = "windows-latest" ]; then
             find . -name "*.msi" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.msi" \;
+            find . -path "*/bundle/nsis/*" -name "*.exe" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.nsis.exe" \;
             find . -name "*.msi.sig" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.msi.sig" \;
+            find . -path "*/bundle/nsis/*" -name "*.exe.sig" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.nsis.exe.sig" \;
           elif [ "${{ matrix.platform }}" = "macos-15" ]; then
             # DMG = manual install; .app.tar.gz (+ .sig) = updater payload.
             # Raw .app is intentionally not shipped (hundreds of MB of uncompressed input).
@@ -714,6 +729,10 @@ jobs:
                   'targets': ['windows-x86_64-msi', 'windows-x86_64'],
               },
               {
+                  'bundles': ['Stirling-PDF-windows-x86_64.nsis.exe'],
+                  'targets': ['windows-x86_64-nsis'],
+              },
+              {
                   'bundles': ['Stirling-PDF-macos-universal.app.tar.gz'],
                   'targets': ['darwin-x86_64', 'darwin-aarch64'],
               },
@@ -807,6 +826,7 @@ jobs:
           files: |
             ./artifacts/**/*.jar
             ./artifacts/**/*.msi
+            ./artifacts/**/*.nsis.exe
             ./artifacts/**/*.dmg
             ./artifacts/**/*.app.tar.gz
             ./artifacts/**/*.deb
