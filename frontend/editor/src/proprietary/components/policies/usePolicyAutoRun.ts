@@ -148,7 +148,8 @@ export function usePolicyAutoRun(): void {
   // Active upload policies in execution order. When several enforce on upload they
   // run as a chain — the first fires on the upload, each subsequent one on the
   // previous policy's output — so their effects accumulate in a defined order
-  // instead of racing to fork the same version.
+  // instead of racing to fork the same version. Mirrors the dispatch filter
+  // (incl. the editor-source gate) so the chain honours the same eligibility.
   const orderedUploadCategories = useMemo(
     () =>
       Object.entries(policies)
@@ -157,6 +158,9 @@ export function usePolicyAutoRun(): void {
             s.configured &&
             s.status === "active" &&
             s.backendId &&
+            (!s.sources ||
+              s.sources.length === 0 ||
+              s.sources.includes("editor")) &&
             (s.runOn ?? "upload") === "upload",
         )
         .sort(([, a], [, b]) => (a.order ?? 0) - (b.order ?? 0))
@@ -327,6 +331,7 @@ export function usePolicyAutoRun(): void {
       // input file it ran on (needs that input's stub, still in the workspace).
       const outputMode = policies[run.categoryId]?.outputMode ?? "new_version";
       const outputName = policies[run.categoryId]?.outputName ?? "";
+      const outputNamePosition = policies[run.categoryId]?.outputNamePosition;
       const parentStub = fileStubs.find((s) => (s.id as string) === run.fileId);
       void importOutputs(run, {
         addFiles,
@@ -334,6 +339,7 @@ export function usePolicyAutoRun(): void {
         bumpRevision,
         outputMode,
         outputName,
+        outputNamePosition,
         parentStub,
       }).finally(() => importing.current.delete(run.runId));
     }
@@ -366,9 +372,11 @@ interface ImportContext {
   bumpRevision: () => void;
   /** "new_file" adds the output as a separate file; "new_version" versions the input. */
   outputMode: "new_file" | "new_version";
-  /** Rename rule. Empty → keep the input's filename; set → use the policy's
-   *  renamed output (applied server-side per the name-position setting). */
+  /** Rename rule. Empty → keep the input's filename. */
   outputName: string;
+  /** Where the rename is applied: before ("prefix") or after ("suffix") the
+   *  base filename. Defaults to "suffix" when absent. */
+  outputNamePosition?: "prefix" | "suffix" | "auto-number";
   /** The input file's stub — required to version it; absent if it's been removed. */
   parentStub: StirlingFileStub | undefined;
 }
@@ -379,6 +387,31 @@ interface ImportContext {
  * don't, adopt it so the poll/import effects pick it up. Server-excluded ad-hoc runs and runs we
  * can't map to a configured category are skipped.
  */
+function applyOutputName(
+  inputFileName: string,
+  outputName: string,
+  position: "prefix" | "suffix" | "auto-number",
+): string {
+  const dot = inputFileName.lastIndexOf(".");
+  const base = dot > 0 ? inputFileName.slice(0, dot) : inputFileName;
+  const ext = dot > 0 ? inputFileName.slice(dot) : "";
+  if (position === "suffix") return `${base}_${outputName}${ext}`;
+  if (position === "prefix") return `${outputName}_${base}${ext}`;
+  // auto-number requires dedup state not available here — fall back to suffix.
+  return `${base}_${outputName}${ext}`;
+}
+
+/** The next upload policy after {@code categoryId} in the chain, or undefined if
+ *  it's last or no longer in the ordered set (e.g. paused since it ran). */
+function nextUploadCategory(
+  orderedUploadCategories: string[],
+  categoryId: string,
+): string | undefined {
+  const index = orderedUploadCategories.indexOf(categoryId);
+  if (index < 0) return undefined;
+  return orderedUploadCategories[index + 1];
+}
+
 async function reconcileServerRuns(
   policies: PoliciesByCategory,
 ): Promise<void> {
@@ -420,17 +453,6 @@ async function reconcileServerRuns(
   }
 }
 
-/** The next upload policy after {@code categoryId} in the chain, or undefined if
- *  it's last or no longer in the ordered set (e.g. paused since it ran). */
-function nextUploadCategory(
-  orderedUploadCategories: string[],
-  categoryId: string,
-): string | undefined {
-  const index = orderedUploadCategories.indexOf(categoryId);
-  if (index < 0) return undefined;
-  return orderedUploadCategories[index + 1];
-}
-
 /** The category whose configured policy produced this run, if any. */
 function categoryForPolicy(
   policyId: string | null,
@@ -469,7 +491,11 @@ async function importOutputs(
   // rule the backend's auto-suffixed name (e.g. "_watermarked_sanitized") would
   // otherwise rename every output.
   const targetName = ctx.outputName
-    ? undefined // use the run's per-output (renamed) name below
+    ? applyOutputName(
+        run.fileName,
+        ctx.outputName,
+        ctx.outputNamePosition ?? "suffix",
+      )
     : run.fileName;
   const settled = await Promise.allSettled(
     pending.map(async (out) => {

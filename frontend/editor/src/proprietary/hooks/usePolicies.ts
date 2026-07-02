@@ -140,6 +140,7 @@ export function usePolicies() {
         reviewerEmail: result.reviewerEmail,
         outputMode: result.folder.outputMode,
         outputName: result.folder.outputName,
+        outputNamePosition: result.folder.outputNamePosition,
         runOn: result.folder.runOn,
       });
     },
@@ -176,6 +177,7 @@ export function usePolicies() {
         reviewerEmail: result.reviewerEmail,
         outputMode: result.folder.outputMode,
         outputName: result.folder.outputName,
+        outputNamePosition: result.folder.outputNamePosition,
         runOn: result.folder.runOn,
       });
     },
@@ -240,6 +242,7 @@ export function usePolicies() {
         reviewerEmail: result.reviewerEmail,
         outputMode: result.folder.outputMode,
         outputName: result.folder.outputName,
+        outputNamePosition: result.folder.outputNamePosition,
         runOn: result.folder.runOn,
       });
     },
