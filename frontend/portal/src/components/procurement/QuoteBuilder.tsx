@@ -214,7 +214,7 @@ export function QuoteBuilder({
           >
             <Field label={t("procurement.builder.businessName")}>
               <input
-                placeholder="Acme Corp"
+                placeholder={t("procurement.builder.businessNamePlaceholder")}
                 value={businessName}
                 onChange={(e) => setBusinessName(e.target.value)}
               />

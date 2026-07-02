@@ -181,6 +181,22 @@ public class ProcurementService {
     }
 
     /**
+     * Advance the deal to the agreement (security) stage: the buyer has an issued quote and is
+     * reviewing the enterprise agreement before it's accepted into a subscription. Requires an
+     * issued quote on the deal.
+     */
+    @Transactional
+    public ProcurementDeal startAgreement(Long teamId) {
+        ProcurementDeal deal =
+                dealRepo.findByTeamId(teamId)
+                        .orElseThrow(() -> new IllegalStateException("No deal for team " + teamId));
+        deal.setStage(ProcurementDeal.STAGE_AGREEMENT);
+        deal = dealRepo.save(deal);
+        log.info("[procurement] agreement stage team={} deal={}", teamId, deal.getDealId());
+        return deal;
+    }
+
+    /**
      * Reset a team's procurement: delete the deal (quotes + activity cascade). For
      * re-demos/testing.
      */

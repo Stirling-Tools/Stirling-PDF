@@ -1140,6 +1140,45 @@
   font-size: 0.8125rem;
   color: var(--color-text-3);
 }
+
+/* Hero next-step action row (primary CTA + optional extend-trial). */
+.portal-hero__next-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* ── Agreement (security) step ────────────────────────────────────────────── */
+.portal-agreement__doc {
+  margin: 1rem 0;
+  max-height: 22rem;
+  overflow-y: auto;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-bg-subtle, var(--color-bg));
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--color-text-3);
+}
+.portal-agreement__doc h4 {
+  margin: 1rem 0 0.35rem;
+  font-size: 0.8125rem;
+  font-weight: 650;
+  color: var(--color-text-1);
+}
+.portal-agreement__doc h4:first-child {
+  margin-top: 0;
+}
+.portal-agreement__doc p {
+  margin: 0 0 0.5rem;
+}
+.portal-agreement__doc strong {
+  color: var(--color-text-1);
+}
+.portal-agreement__accept {
+  margin-top: 0.25rem;
+}
 .portal-proc__reset {
   display: flex;
   justify-content: center;

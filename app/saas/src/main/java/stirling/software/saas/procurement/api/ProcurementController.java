@@ -188,6 +188,21 @@ public class ProcurementController {
     // draft into a finalized Stripe Quote; accept-procurement-quote accepts it into a subscription.
     // Both persist their results via SECURITY DEFINER RPCs; the snapshot above reflects them.
 
+    /**
+     * Advance an issued quote to the agreement (security) stage, where the buyer reviews + agrees.
+     */
+    @PostMapping("/agreement")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<SnapshotResponse> startAgreement(Authentication auth) {
+        Long teamId = requireLeader(auth);
+        if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        try {
+            return ResponseEntity.ok(toSnapshot(procurement.startAgreement(teamId)));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+    }
+
     /** Reset the team's procurement (delete the deal + quotes); returns the empty snapshot. */
     @PostMapping("/reset")
     @PreAuthorize("isAuthenticated()")

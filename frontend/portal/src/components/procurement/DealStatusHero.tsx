@@ -12,10 +12,14 @@ import "@portal/views/Procurement.css";
  */
 export function DealStatusHero({
   snapshot,
+  busy = false,
   onExpand,
+  onExtendTrial,
 }: {
   snapshot: ProcurementSnapshot;
+  busy?: boolean;
   onExpand: () => void;
+  onExtendTrial?: () => void;
 }) {
   const { t } = useTranslation();
   const stage = snapshot.stage ?? "trial";
@@ -24,9 +28,11 @@ export function DealStatusHero({
       ? t("procurement.hero.ctaTrial")
       : stage === "quote"
         ? t("procurement.hero.ctaQuote")
-        : stage === "procurement"
-          ? t("procurement.hero.ctaPayment")
-          : t("procurement.hero.ctaLive");
+        : stage === "security"
+          ? t("procurement.hero.ctaAgreement")
+          : stage === "procurement"
+            ? t("procurement.hero.ctaPayment")
+            : t("procurement.hero.ctaLive");
 
   return (
     <div className="portal-hero">
@@ -62,9 +68,21 @@ export function DealStatusHero({
           <span className="portal-hero__next-dot" />
           {t("procurement.hero.nextStep", { action: cta })}
         </span>
-        <Button variant="gradient" accent="purple" onClick={onExpand}>
-          {stage === "active" ? t("procurement.hero.open") : cta}
-        </Button>
+        <div className="portal-hero__next-actions">
+          {stage === "trial" && onExtendTrial && (
+            <Button
+              variant="outline"
+              accent="blue"
+              loading={busy}
+              onClick={onExtendTrial}
+            >
+              {t("procurement.hero.extendTrial")}
+            </Button>
+          )}
+          <Button variant="gradient" accent="purple" onClick={onExpand}>
+            {stage === "active" ? t("procurement.hero.open") : cta}
+          </Button>
+        </div>
       </div>
     </div>
   );

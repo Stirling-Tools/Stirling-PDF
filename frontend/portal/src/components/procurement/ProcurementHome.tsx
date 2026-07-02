@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, Card, EmptyState, Skeleton } from "@shared/components";
 import { useLink } from "@portal/contexts/LinkContext";
@@ -6,16 +6,19 @@ import { useUI } from "@portal/contexts/UIContext";
 import { useAsync } from "@portal/hooks/useAsync";
 import {
   acceptQuote,
+  extendTrial,
   fetchQuotePdf,
   fetchSnapshot,
   issueQuote,
   JOURNEY,
   resetProcurement,
+  startAgreement,
   startTrial,
   type ProcurementSnapshot,
   type QuoteResult,
 } from "@portal/api/procurement";
 import { DealStatusHero } from "@portal/components/procurement/DealStatusHero";
+import { ProcurementAgreement } from "@portal/components/procurement/ProcurementAgreement";
 import { ProcurementModal } from "@portal/components/procurement/ProcurementModal";
 import { QuoteBuilder } from "@portal/components/procurement/QuoteBuilder";
 import { StageStepper } from "@portal/components/procurement/StageStepper";
@@ -30,11 +33,12 @@ function money(minor: number, currency: string): string {
 }
 
 /**
- * The procurement experience on Home: a compact deal-status hero (active) or the enterprise
- * upsell (not started), both expanding into the full-screen takeover modal that holds the whole
- * journey — start trial, build + issue a quote (a Stripe Quote with a real PDF, the milestone the
- * buyer can share and return to), then accept it into a committed subscription. Rendered on Home
- * and at /procurement (autoOpen). Gated on a linked account.
+ * The procurement experience on Home: a compact deal-status hero once a trial is running (or the
+ * enterprise upsell on-ramp before it), both expanding into the full-screen takeover modal that
+ * holds the journey — build + issue a quote (a Stripe Quote with a real PDF, the milestone the buyer
+ * can share and return to), review + agree to the enterprise agreement, then accept into a committed
+ * subscription. Starting a trial is a single click (no "start a trial" prompt); the deadline + next
+ * steps then show on the hero. Rendered on Home and at /procurement (autoOpen). Gated on a link.
  */
 export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
   const { t } = useTranslation();
@@ -49,6 +53,7 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
   const [open, setOpen] = useState(autoOpen);
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState(false);
+  const autoStarted = useRef(false);
 
   const data = snap ?? (state.loading ? null : state.data);
   const started = data?.dealId != null;
@@ -56,14 +61,6 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
   const latest = data?.latestQuote ?? null;
   const isDraft = !latest || latest.status === "draft";
   const isIssued = latest?.status === "sent" || latest?.status === "open";
-  const isAccepted = latest?.status === "accepted";
-  // Builder shows for a brand-new/draft quote, or when the buyer chooses to edit an existing one.
-  const showBuilder =
-    editing || (isDraft && (stage === "trial" || stage === "quote"));
-
-  useEffect(() => {
-    if (autoOpen) setOpen(true);
-  }, [autoOpen]);
 
   async function run(fn: () => Promise<unknown>) {
     setBusy(true);
@@ -75,7 +72,8 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
     }
   }
 
-  const onStartTrial = () => run(() => startTrial());
+  const onStartTrial = () => run(startTrial);
+  const onExtendTrial = () => run(extendTrial);
   const onReset = () =>
     run(async () => {
       await resetProcurement();
@@ -86,7 +84,9 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
       await issueQuote(draft.quoteId);
       setEditing(false);
     });
-  const onAccept = () =>
+  // Milestone → agreement (security) stage; then agreeing accepts into a subscription.
+  const onAcceptQuote = () => run(startAgreement);
+  const onAgree = () =>
     run(() => (latest ? acceptQuote(latest.quoteId) : Promise.resolve()));
 
   async function onDownloadPdf() {
@@ -97,9 +97,28 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
     setTimeout(() => URL.revokeObjectURL(url), 60_000);
   }
 
+  useEffect(() => {
+    if (autoOpen) setOpen(true);
+  }, [autoOpen]);
+
+  // Deep-linking to /procurement should start the journey, not present a "start a trial" prompt:
+  // if we land here linked but with no deal, kick the trial off once.
+  useEffect(() => {
+    if (autoOpen && isLinked && !state.loading && !started && !autoStarted.current) {
+      autoStarted.current = true;
+      onStartTrial();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoOpen, isLinked, state.loading, started]);
+
   const banner =
     isLinked && started && data ? (
-      <DealStatusHero snapshot={data} onExpand={() => setOpen(true)} />
+      <DealStatusHero
+        snapshot={data}
+        busy={busy}
+        onExpand={() => setOpen(true)}
+        onExtendTrial={onExtendTrial}
+      />
     ) : (
       <Card className="portal-proc__upsell">
         <div className="portal-proc__upsell-text">
@@ -111,7 +130,13 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
             {t("procurement.upsell.homeBody")}
           </p>
         </div>
-        <Button variant="outline" accent="blue" onClick={() => setOpen(true)}>
+        <Button
+          variant="outline"
+          accent="blue"
+          loading={busy}
+          disabled={!isLinked}
+          onClick={onStartTrial}
+        >
           {t("procurement.upsell.homeCta")}
         </Button>
       </Card>
@@ -143,25 +168,7 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
           />
         )}
 
-        {isLinked && state.loading && !data && <Skeleton height="10rem" />}
-
-        {isLinked && !state.loading && !started && (
-          <EmptyState
-            eyebrow={t("procurement.start.eyebrow")}
-            title={t("procurement.start.title")}
-            description={t("procurement.start.description")}
-            actions={
-              <Button
-                variant="gradient"
-                accent="purple"
-                loading={busy}
-                onClick={onStartTrial}
-              >
-                {t("procurement.start.cta")}
-              </Button>
-            }
-          />
-        )}
+        {isLinked && (state.loading || !started) && <Skeleton height="10rem" />}
 
         {isLinked && started && (
           <>
@@ -169,7 +176,7 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
               <StageStepper journey={JOURNEY} currentStage={stage!} />
             </div>
 
-            {showBuilder && (
+            {(editing || (isDraft && (stage === "trial" || stage === "quote"))) && (
               <QuoteBuilder
                 deployment="cloud"
                 initial={latest?.config}
@@ -177,7 +184,7 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
               />
             )}
 
-            {!editing && isIssued && latest && (
+            {!editing && isIssued && stage === "quote" && latest && (
               <Card padding="loose">
                 <span className="portal-proc__eyebrow">
                   {t("procurement.milestone.eyebrow", {
@@ -206,7 +213,7 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
                     variant="gradient"
                     accent="purple"
                     loading={busy}
-                    onClick={onAccept}
+                    onClick={onAcceptQuote}
                   >
                     {t("procurement.milestone.accept")}
                   </Button>
@@ -220,33 +227,39 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
               </Card>
             )}
 
-            {!editing && isAccepted && latest && (
-              <Card padding="loose">
-                <h3 className="portal-proc__builder-title">
-                  {t("procurement.payment.title")}
-                </h3>
-                <p className="portal-proc__subtitle">
-                  {t("procurement.payment.description")}
-                </p>
-                {latest.invoiceUrl && (
-                  <div className="portal-proc__payment-actions">
-                    <Button
-                      variant="gradient"
-                      accent="purple"
-                      onClick={() =>
-                        window.open(
-                          latest.invoiceUrl!,
-                          "_blank",
-                          "noopener",
-                        )
-                      }
-                    >
-                      {t("procurement.payment.viewInvoice")}
-                    </Button>
-                  </div>
-                )}
-              </Card>
+            {!editing && stage === "security" && latest && (
+              <ProcurementAgreement
+                quote={latest}
+                busy={busy}
+                onAgree={onAgree}
+              />
             )}
+
+            {!editing &&
+              (stage === "procurement" || stage === "active") &&
+              latest && (
+                <Card padding="loose">
+                  <h3 className="portal-proc__builder-title">
+                    {t("procurement.payment.title")}
+                  </h3>
+                  <p className="portal-proc__subtitle">
+                    {t("procurement.payment.description")}
+                  </p>
+                  {latest.invoiceUrl && (
+                    <div className="portal-proc__payment-actions">
+                      <Button
+                        variant="gradient"
+                        accent="purple"
+                        onClick={() =>
+                          window.open(latest.invoiceUrl!, "_blank", "noopener")
+                        }
+                      >
+                        {t("procurement.payment.viewInvoice")}
+                      </Button>
+                    </div>
+                  )}
+                </Card>
+              )}
 
             <div className="portal-proc__reset">
               <button type="button" onClick={onReset} disabled={busy}>

@@ -176,6 +176,19 @@ export const procurementSaasHandlers = [
     } as never;
     return HttpResponse.json(quote);
   }),
+  http.post(`${SAAS}/api/v1/procurement/trial/extend`, () => {
+    const d = deal as Record<string, unknown>;
+    if (d.dealId) {
+      const base = d.trialEndsAt ? Date.parse(d.trialEndsAt as string) : Date.now();
+      d.trialEndsAt = new Date(base + 7 * 86_400_000).toISOString();
+      d.trialExtensionsUsed = ((d.trialExtensionsUsed as number) ?? 0) + 1;
+    }
+    return HttpResponse.json(deal);
+  }),
+  http.post(`${SAAS}/api/v1/procurement/agreement`, () => {
+    (deal as Record<string, unknown>).stage = "security";
+    return HttpResponse.json(deal);
+  }),
   http.post(`${SAAS}/api/v1/procurement/reset`, () => {
     resetProcurementSaasStore();
     return HttpResponse.json(EMPTY);

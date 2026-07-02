@@ -189,6 +189,13 @@ export function extendTrial(): Promise<ProcurementSnapshot> {
   });
 }
 
+/** Advance an issued quote to the agreement (security) stage for review + agree. */
+export function startAgreement(): Promise<ProcurementSnapshot> {
+  return apiClient.saas.json<ProcurementSnapshot>(`${BASE}/agreement`, {
+    method: "POST",
+  });
+}
+
 /** Price a config server-side and persist it as a local DRAFT (no Stripe object yet). */
 export function buildQuote(cfg: QuoteConfigInput): Promise<QuoteResult> {
   return apiClient.saas.json<QuoteResult>(`${BASE}/quote`, {
