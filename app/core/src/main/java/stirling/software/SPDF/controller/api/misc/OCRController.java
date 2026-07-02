@@ -46,6 +46,7 @@ import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
+import stirling.software.common.util.RenderGate;
 import stirling.software.common.util.TempDirectory;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -383,10 +384,14 @@ public class OCRController {
                         final int currentPageNum = pageNum;
 
                         image =
-                                ExceptionUtils.handleOomRendering(
-                                        currentPageNum + 1,
-                                        dpi,
-                                        () -> pdfRenderer.renderImageWithDPI(currentPageNum, dpi));
+                                RenderGate.acquireAnd(
+                                        () ->
+                                                ExceptionUtils.handleOomRendering(
+                                                        currentPageNum + 1,
+                                                        dpi,
+                                                        () ->
+                                                                pdfRenderer.renderImageWithDPI(
+                                                                        currentPageNum, dpi)));
                         File imagePath =
                                 new File(
                                         tempImagesDir,

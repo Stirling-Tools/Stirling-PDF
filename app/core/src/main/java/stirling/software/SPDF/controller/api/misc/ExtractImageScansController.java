@@ -41,6 +41,7 @@ import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
+import stirling.software.common.util.RenderGate;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
@@ -120,10 +121,14 @@ public class ExtractImageScansController {
                         final int pageIndex = i;
 
                         image =
-                                ExceptionUtils.handleOomRendering(
-                                        pageIndex + 1,
-                                        dpi,
-                                        () -> pdfRenderer.renderImageWithDPI(pageIndex, dpi));
+                                RenderGate.acquireAnd(
+                                        () ->
+                                                ExceptionUtils.handleOomRendering(
+                                                        pageIndex + 1,
+                                                        dpi,
+                                                        () ->
+                                                                pdfRenderer.renderImageWithDPI(
+                                                                        pageIndex, dpi)));
                         ImageIO.write(image, "png", tempImage.getFile());
 
                         // Add temp file path to images list
