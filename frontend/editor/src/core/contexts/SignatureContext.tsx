@@ -23,6 +23,10 @@ interface SignatureState {
   signaturesApplied: boolean;
   // Size (in screen units) we want newly placed signatures to use
   placementPreviewSize: { width: number; height: number } | null;
+  // When false (default), placement mode auto-exits after a single stamp is
+  // dropped so users don't accidentally place duplicates. When true, the user
+  // opted into staying in placement mode and can drop multiple stamps in a row.
+  placeMultiple: boolean;
 }
 
 // Signature actions interface
@@ -42,6 +46,7 @@ interface SignatureActions {
   setPlacementPreviewSize: (
     size: { width: number; height: number } | null,
   ) => void;
+  setPlaceMultiple: (enabled: boolean) => void;
 }
 
 // Combined context interface
@@ -62,6 +67,7 @@ const initialState: SignatureState = {
   isPlacementMode: false,
   signaturesApplied: true, // Start as true (no signatures placed yet)
   placementPreviewSize: null,
+  placeMultiple: false,
 };
 
 // Provider component
@@ -174,6 +180,13 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({
     [],
   );
 
+  const setPlaceMultiple = useCallback((enabled: boolean) => {
+    setState((prev) => ({
+      ...prev,
+      placeMultiple: enabled,
+    }));
+  }, []);
+
   // No auto-activation - all modes use manual buttons
 
   const contextValue: SignatureContextValue = {
@@ -194,6 +207,7 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({
     getImageData,
     setSignaturesApplied,
     setPlacementPreviewSize,
+    setPlaceMultiple,
   };
 
   return (
