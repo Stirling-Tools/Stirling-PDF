@@ -95,6 +95,7 @@ tasks:
         vars:
           PORT: '{{.PORTAL_PORT}}'
           BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
+          MOCKS: 'false'
           OPEN: "true"
 
   dev:portal:all:
@@ -117,6 +118,32 @@ tasks:
           BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
           # Point the portal's "Editor" app switcher at the editor we spawn here.
           EDITOR_URL: 'http://localhost:{{.EDITOR_PORT}}/'
+          MOCKS: 'false'
+          OPEN: "true"
+      - task: frontend:dev
+        vars:
+          PORT: '{{.EDITOR_PORT}}'
+          BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
+
+  dev:portal:all:saas:
+    desc: "Start SaaS backend + developer portal + editor concurrently on free ports"
+    vars:
+      PORTS:
+        sh: '{{if eq OS "windows"}}{{.FIND_FREE_PORT_PS}} 8080 5173 5174{{else}}{{.FIND_FREE_PORT_SH}} 8080 5173 5174{{end}}'
+      BACKEND_PORT: '{{index (splitList "\n" .PORTS) 0}}'
+      PORTAL_PORT: '{{index (splitList "\n" .PORTS) 1}}'
+      EDITOR_PORT: '{{index (splitList "\n" .PORTS) 2}}'
+    deps:
+      - task: backend:dev:saas
+        vars:
+          PORT: '{{.BACKEND_PORT}}'
+          POLICIES_ENABLED: "true"
+      - task: frontend:dev:portal
+        vars:
+          PORT: '{{.PORTAL_PORT}}'
+          BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
+          EDITOR_URL: 'http://localhost:{{.EDITOR_PORT}}/'
+          MOCKS: 'false'
           OPEN: "true"
       - task: frontend:dev
         vars:

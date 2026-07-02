@@ -93,7 +93,9 @@ const SOURCES: SourcesResponse = {
       referenceCount: 1,
       referencingPolicies: [],
       config: [],
-      docsTotal: null,
+      docsTotal: 0,
+      docs24h: 0,
+      docs30d: 0,
     },
   ],
 };

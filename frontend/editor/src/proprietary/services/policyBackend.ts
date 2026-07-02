@@ -53,6 +53,7 @@ export function decodedToState(
     fieldValues: decoded.fieldValues,
     outputMode: decoded.folder.outputMode,
     outputName: decoded.folder.outputName,
+    outputNamePosition: decoded.folder.outputNamePosition,
     runOn: decoded.folder.runOn,
     folderId: localFolderId,
     backendId: decoded.id,

@@ -1,0 +1,63 @@
+.sui-collapsible {
+  border: 1px solid var(--color-border-light);
+  border-radius: 0.5625rem;
+  overflow: hidden;
+}
+
+.sui-collapsible__head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 0.875rem;
+  background: var(--color-surface);
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.15s ease;
+}
+
+.sui-collapsible__head:hover {
+  background: var(--color-bg-hover);
+}
+
+.sui-collapsible__head-main {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.sui-collapsible__head-end {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.sui-collapsible__chevron {
+  color: var(--color-text-5);
+  transition: transform 0.2s ease;
+}
+
+.sui-collapsible__chevron[data-open="true"] {
+  transform: rotate(180deg);
+}
+
+/* Grid-rows disclosure: 0fr → 1fr, no magic max-height */
+.sui-collapsible__body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sui-collapsible__body[data-open="true"] {
+  grid-template-rows: 1fr;
+}
+
+.sui-collapsible__body-inner {
+  overflow: hidden;
+}

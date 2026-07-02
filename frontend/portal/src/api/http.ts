@@ -39,7 +39,7 @@
  * entitlement calls. It never enters the portal — the browser is the human
  * admin and uses the Supabase JWT for SaaS reads. Don't add it here.
  */
-import { getStoredToken } from "@shared/auth";
+import { clearStoredToken, getStoredToken } from "@shared/auth";
 import { getSupabaseClient } from "@shared/auth/supabase/supabaseClient";
 import { ensureSaasSupabase } from "@portal/auth/saasSupabase";
 
@@ -156,6 +156,12 @@ async function localJson<T>(
     body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
     signal: options.signal,
   });
+  if (res.status === 401) {
+    // Stale or invalid JWT — clear it so the auth provider re-initialises and
+    // shows the login screen rather than leaving the user stuck with a banner.
+    clearStoredToken();
+    window.dispatchEvent(new CustomEvent("jwt-available"));
+  }
   return unwrap<T>(res);
 }
 

@@ -28,6 +28,7 @@ export * from "@shared/components/Banner";
 export * from "@shared/components/Toast";
 
 // Compound
+export * from "@shared/components/Collapsible";
 export * from "@shared/components/Tabs";
 export * from "@shared/components/Dropdown";
 export * from "@shared/components/Drawer";
