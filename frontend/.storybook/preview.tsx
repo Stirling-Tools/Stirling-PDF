@@ -2,7 +2,7 @@
 // the decorators below transpiles to React.createElement and needs React in
 // scope. (The app + story files use the automatic runtime via the portal vite
 // config; this import is specifically for the preview config file.)
-import React, { useEffect } from "react";
+import React, { Suspense, useEffect } from "react";
 import type { Decorator, Preview } from "@storybook/react-vite";
 import { initialize, mswLoader } from "msw-storybook-addon";
 import { MemoryRouter } from "react-router-dom";
@@ -20,6 +20,10 @@ import { UIProvider } from "@portal/contexts/UIContext";
 import { mantineTheme } from "@portal/theme/mantineTheme";
 import { handlers } from "@portal/mocks/handlers";
 import { configureSupabase } from "@shared/auth/supabase/supabaseClient";
+// Initialise i18n (side effect) so t()-based copy resolves in stories. Storybook serves the TOML
+// from portal/public via staticDirs; the config fetches it (useSuspense) — hence the Suspense
+// boundary around the story below.
+import "@portal/i18n/config";
 
 import "@mantine/core/styles.css";
 import "@shared/tokens/tokens.css";
@@ -109,7 +113,9 @@ const withProviders: Decorator = (Story, context) => {
             <TierKey tier={tier}>
               <UIProvider>
                 <ThemeWatcher />
-                <Story />
+                <Suspense fallback={null}>
+                  <Story />
+                </Suspense>
               </UIProvider>
             </TierKey>
           </LinkProvider>

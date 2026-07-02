@@ -585,3 +585,372 @@
   font-size: 0.75rem;
   color: var(--color-text-5);
 }
+
+/* ══ Quote builder — copied from the marketing prototype (tight density) ═════ */
+.portal-qb {
+  background: #ffffff;
+  border: 1px solid #e3e1dc;
+  border-radius: 14px;
+  box-shadow: inset 0 0 0 1px #eae8e3;
+  overflow: hidden;
+}
+.portal-qb__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px 14px;
+  border-bottom: 1px solid #f0eee9;
+  background: linear-gradient(
+    180deg,
+    rgba(35, 131, 226, 0.055) 0%,
+    transparent 100%
+  );
+}
+.portal-qb__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #37352f;
+}
+.portal-qb__stepchip {
+  font-size: 11px;
+  font-weight: 700;
+  color: #9b9a97;
+  background: #f5f4f1;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+.portal-qb__progress {
+  display: flex;
+  gap: 6px;
+  padding: 12px 24px 0;
+}
+.portal-qb__progress span {
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  background: #f0eee9;
+  transition: background 0.3s;
+}
+.portal-qb__progress span[data-on] {
+  background: #2383e2;
+}
+.portal-qb__body {
+  padding: 20px 24px;
+  max-height: 56vh;
+  overflow-y: auto;
+}
+.portal-qb__intro {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.portal-qb__intro-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #eaf2fb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.portal-qb__intro-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #37352f;
+}
+.portal-qb__intro-sub {
+  font-size: 12.5px;
+  color: #9b9a97;
+  margin-top: 1px;
+}
+.portal-qb__field {
+  display: block;
+  margin-bottom: 18px;
+}
+.portal-qb__field-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #787774;
+  margin-bottom: 6px;
+}
+.portal-qb__field input,
+.portal-qb__field select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 9px 11px;
+  font-size: 13.5px;
+  border-radius: 8px;
+  border: 1px solid #e3e1dc;
+  font-family: inherit;
+  outline: none;
+  background: #fff;
+  color: #37352f;
+}
+.portal-qb__row {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.portal-qb__row .portal-qb__field {
+  flex: 1;
+  min-width: 190px;
+}
+.portal-qb__hint {
+  margin: 7px 0 0;
+  font-size: 11.5px;
+  color: #9b9a97;
+  line-height: 1.4;
+}
+.portal-qb__pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.portal-qb__pills button {
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid #e3e1dc;
+  background: #fff;
+  color: #37352f;
+  cursor: pointer;
+}
+.portal-qb__pills button[data-on] {
+  background: #2383e2;
+  border-color: #2383e2;
+  color: #fff;
+}
+.portal-qb__discount {
+  margin: 6px 0 0;
+  font-size: 11.5px;
+  color: #0f7b6c;
+}
+.portal-qb__opts {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.portal-qb__opt {
+  text-align: left;
+  flex: 1;
+  min-width: 150px;
+  padding: 12px 14px;
+  border-radius: 9px;
+  border: 1px solid #e3e1dc;
+  background: #fff;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.portal-qb__opt[data-on] {
+  border-color: #2383e2;
+  background: #eaf2fb;
+}
+.portal-qb__opt-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #37352f;
+}
+.portal-qb__opt[data-on] .portal-qb__opt-title {
+  color: #1b6ec2;
+}
+.portal-qb__opt-sub {
+  font-size: 11.5px;
+  color: #9b9a97;
+  line-height: 1.4;
+}
+.portal-qb__addons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.portal-qb__addon {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 11px 13px;
+  border-radius: 9px;
+  border: 1px solid #e3e1dc;
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+}
+.portal-qb__addon[data-on] {
+  border-color: #2383e2;
+  background: #eaf2fb;
+}
+.portal-qb__addon-box {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border-radius: 5px;
+  border: 1px solid #d3d1cb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: transparent;
+  background: #fff;
+}
+.portal-qb__addon[data-on] .portal-qb__addon-box {
+  background: #2383e2;
+  border-color: #2383e2;
+  color: #fff;
+}
+.portal-qb__addon-title {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #37352f;
+}
+.portal-qb__addon-sub {
+  display: block;
+  font-size: 11.5px;
+  color: #9b9a97;
+  margin-top: 1px;
+}
+.portal-qb__eula {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 9px;
+  border: 1px solid #f0eee9;
+  background: #f5f4f1;
+  font-size: 12.5px;
+  color: #37352f;
+  line-height: 1.5;
+  cursor: pointer;
+}
+.portal-qb__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 24px;
+  border-top: 1px solid #f0eee9;
+  flex-wrap: wrap;
+}
+.portal-qb__running {
+  font-size: 11.5px;
+  color: #9b9a97;
+}
+.portal-qb__foot-btns {
+  display: flex;
+  gap: 10px;
+}
+/* Step 4 — the itemised quote paper */
+.portal-qb__papertray {
+  background: #f5f4f1;
+  padding: 18px;
+  max-height: 56vh;
+  overflow-y: auto;
+  margin: -20px -24px;
+}
+.portal-qb__paper {
+  background: #fff;
+  border: 1px solid #f0eee9;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+.portal-qb__paper-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid #f0eee9;
+}
+.portal-qb__paper-brand {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #37352f;
+}
+.portal-qb__paper-eyebrow {
+  font-size: 11px;
+  color: #9b9a97;
+}
+.portal-qb__paper-meta {
+  text-align: right;
+}
+.portal-qb__quote-number {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #37352f;
+}
+.portal-qb__paper-meta div:not(.portal-qb__quote-number) {
+  font-size: 11px;
+  color: #9b9a97;
+}
+.portal-qb__paper-for {
+  padding: 18px 24px 0;
+}
+.portal-qb__paper-company {
+  font-size: 14px;
+  font-weight: 700;
+  color: #37352f;
+}
+.portal-qb__lines {
+  list-style: none;
+  margin: 0;
+  padding: 12px 24px 0;
+}
+.portal-qb__lines li {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0eee9;
+  font-size: 13px;
+  font-weight: 600;
+  color: #37352f;
+}
+.portal-qb__lines li[data-kind="DISCOUNT"] {
+  color: #0f7b6c;
+}
+.portal-qb__lines li[data-kind="INCLUDED"] span:last-child {
+  color: #9b9a97;
+  font-weight: 500;
+}
+.portal-qb__total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 16px 24px 24px;
+  padding: 16px 18px;
+  border-radius: 10px;
+  background: #eaf2fb;
+  border: 1px solid #b8d5f2;
+}
+.portal-qb__total-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #37352f;
+}
+.portal-qb__total-tcv {
+  font-size: 11.5px;
+  color: #787774;
+  margin-top: 2px;
+}
+.portal-qb__total-num {
+  text-align: right;
+}
+.portal-qb__total-num strong {
+  display: block;
+  font-size: 23px;
+  font-weight: 800;
+  color: #37352f;
+  line-height: 1;
+}
+.portal-qb__total-num span {
+  font-size: 11px;
+  color: #9b9a97;
+  margin-top: 3px;
+}
