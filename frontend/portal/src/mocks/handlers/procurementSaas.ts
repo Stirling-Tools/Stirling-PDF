@@ -164,6 +164,10 @@ export const procurementSaasHandlers = [
     } as never;
     return HttpResponse.json(quote);
   }),
+  http.post(`${SAAS}/api/v1/procurement/reset`, () => {
+    resetProcurementSaasStore();
+    return HttpResponse.json(EMPTY);
+  }),
   http.post(`${SAAS}/api/v1/procurement/quote/:id/accept`, () => {
     const q = (deal as { latestQuote: { status?: string } | null }).latestQuote;
     if (q) {

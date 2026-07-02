@@ -182,6 +182,16 @@ public class ProcurementController {
         }
     }
 
+    /** Reset the team's procurement (delete the deal + quotes); returns the empty snapshot. */
+    @PostMapping("/reset")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<SnapshotResponse> reset(Authentication auth) {
+        Long teamId = requireLeader(auth);
+        if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        procurement.resetDeal(teamId);
+        return ResponseEntity.ok(EMPTY_SNAPSHOT);
+    }
+
     // ---- helpers ------------------------------------------------------------
 
     /**

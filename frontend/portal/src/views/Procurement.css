@@ -954,3 +954,182 @@
   color: #9b9a97;
   margin-top: 3px;
 }
+
+/* ── Enterprise upsell text wrapper (Home on-ramp) ────────────────────────── */
+.portal-proc__upsell-text {
+  flex: 1 1 20rem;
+}
+
+/* ── Deal-status hero (Home, active deal) ─────────────────────────────────── */
+.portal-hero {
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 1.1rem 1.25rem;
+  background:
+    radial-gradient(
+        120% 140% at 100% 0%,
+        rgba(124, 58, 237, 0.08),
+        transparent 55%
+      ),
+    var(--color-bg-elevated);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.portal-hero__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.portal-hero__eyebrow {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-primary, #2383e2);
+}
+.portal-hero__company {
+  display: block;
+  font-size: 1.0625rem;
+  font-weight: 650;
+  color: var(--color-text-1);
+  margin-top: 0.2rem;
+}
+.portal-hero__chips {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+.portal-hero__chip {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--color-text-3);
+  background: var(--color-border-light);
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+}
+.portal-hero__stepper {
+  overflow-x: auto;
+}
+.portal-hero__next {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--color-border-light);
+}
+.portal-hero__next-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-2);
+}
+.portal-hero__next-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--color-primary, #2383e2);
+  box-shadow: 0 0 0 3px rgba(35, 131, 226, 0.18);
+}
+
+/* ── Full-screen takeover modal (procurement flow) ────────────────────────── */
+.portal-procmodal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: clamp(0.5rem, 4vh, 3rem) 1rem;
+  overflow-y: auto;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(6px) saturate(160%);
+  -webkit-backdrop-filter: blur(6px) saturate(160%);
+  animation: portal-procmodal-fade 0.15s ease-out;
+}
+@keyframes portal-procmodal-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.portal-procmodal__panel {
+  position: relative;
+  width: 100%;
+  max-width: 62rem;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.28);
+  padding: 1.5rem 1.5rem 1.75rem;
+}
+.portal-procmodal__close {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.85rem;
+  border: none;
+  background: var(--color-border-light);
+  color: var(--color-text-3);
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.portal-procmodal__close:hover {
+  background: var(--color-border);
+  color: var(--color-text-1);
+}
+.portal-procmodal__header {
+  margin-bottom: 1.25rem;
+  padding-right: 2.5rem;
+}
+.portal-procmodal__title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--color-text-1);
+}
+.portal-procmodal__sub {
+  margin: 0.3rem 0 0;
+  font-size: 0.875rem;
+  color: var(--color-text-3);
+}
+.portal-procmodal__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.portal-proc__modal-stepper {
+  overflow-x: auto;
+}
+.portal-proc__reset {
+  display: flex;
+  justify-content: center;
+  padding-top: 0.5rem;
+}
+.portal-proc__reset button {
+  border: none;
+  background: none;
+  font-size: 0.75rem;
+  color: var(--color-text-5);
+  cursor: pointer;
+  text-decoration: underline;
+}
+.portal-proc__reset button:hover:not(:disabled) {
+  color: var(--color-text-3);
+}
+.portal-proc__reset button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

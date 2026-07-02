@@ -1826,6 +1826,7 @@ walletUnavailable = "Wallet unavailable: {{status}} {{statusText}}"
 title = "Procurement"
 subtitle = "Get your team evaluated, contracted, and onboarded. Every document in one place."
 enterpriseBadge = "Enterprise"
+reset = "Reset procurement (demo)"
 
 [procurement.journey]
 eyebrow = "Your rollout"
@@ -1972,3 +1973,14 @@ usageBadge = "Standardize · 1M+ PDFs"
 usageHeadline = "Standardize org-wide."
 usageBody = "SSO, SCIM, audit, air-gap and an SLA on a committed-volume plan."
 usageCta = "Build your Enterprise quote →"
+
+[procurement.hero]
+eyebrow = "Enterprise procurement"
+company = "Your enterprise deal"
+keyDocs = "Docs in one place"
+nextStep = "Next step: {{action}}"
+ctaTrial = "Build your quote"
+ctaQuote = "Review your quote"
+ctaPayment = "Continue to checkout"
+ctaLive = "You're live"
+open = "Open procurement"

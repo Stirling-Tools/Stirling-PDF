@@ -11,4 +11,7 @@ public interface ProcurementDealRepository extends JpaRepository<ProcurementDeal
     Optional<ProcurementDeal> findByTeamId(Long teamId);
 
     boolean existsByTeamId(Long teamId);
+
+    /** Reset: drop the team's deal (quotes + activity cascade via FK). */
+    void deleteByTeamId(Long teamId);
 }

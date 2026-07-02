@@ -179,6 +179,16 @@ public class ProcurementService {
         return quote;
     }
 
+    /**
+     * Reset a team's procurement: delete the deal (quotes + activity cascade). For
+     * re-demos/testing.
+     */
+    @Transactional
+    public void resetDeal(Long teamId) {
+        dealRepo.deleteByTeamId(teamId);
+        log.info("[procurement] deal reset team={}", teamId);
+    }
+
     public long estimateAnnualVolume(int users) {
         return pricing.estimateAnnualVolume(users);
     }

@@ -189,3 +189,10 @@ export function acceptQuote(quoteId: number): Promise<QuoteResult> {
     { method: "POST" },
   );
 }
+
+/** Reset the team's procurement (delete the deal) and get the fresh empty snapshot. */
+export function resetProcurement(): Promise<ProcurementSnapshot> {
+  return apiClient.saas.json<ProcurementSnapshot>(`${BASE}/reset`, {
+    method: "POST",
+  });
+}
