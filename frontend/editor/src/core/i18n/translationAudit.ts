@@ -29,18 +29,6 @@ export interface TranslationProject {
   name: string;
   /** Absolute path to the source tree to scan. */
   srcRoot: string;
-  /**
-   * Extra source trees that also contribute used keys (e.g. the shared layer
-   * (frontend/shared), whose components (login UI, etc.) are rendered by both
-   * apps and reference each app's locale keys).
-   */
-  extraRoots?: string[];
-  /**
-   * Glob patterns (relative to each scanned root) to exclude from the scan.
-   * Used so the editor project skips the portal layer that now lives inside
-   * editor/src but is validated by its own project against its own locale.
-   */
-  excludeGlobs?: string[];
   /** Absolute path to the en-US source locale. */
   localeFile: string;
   /** Static keys flagged as missing that are genuinely fine (false positives). */
@@ -170,10 +158,10 @@ const getScriptKind = (file: string): ts.ScriptKind => {
   return ts.ScriptKind.JS;
 };
 
-const listSourceFiles = (roots: string[], excludeGlobs?: string[]): string[] =>
+const listSourceFiles = (roots: string[]): string[] =>
   roots
     .flatMap((root) =>
-      ts.sys.readDirectory(root, [".ts", ".tsx", ".js", ".jsx"], excludeGlobs, [
+      ts.sys.readDirectory(root, [".ts", ".tsx", ".js", ".jsx"], undefined, [
         "**/*",
       ]),
     )
@@ -182,11 +170,6 @@ const listSourceFiles = (roots: string[], excludeGlobs?: string[]): string[] =>
         !file.split(path.sep).some((segment) => IGNORED_DIRS.has(segment)),
     )
     .filter((file) => !IGNORED_FILE_PATTERNS.some((re) => re.test(file)));
-
-const projectRoots = (project: TranslationProject): string[] => [
-  project.srcRoot,
-  ...(project.extraRoots ?? []),
-];
 
 const hasPluralCoverage = (key: string, available: Set<string>): boolean =>
   [...available].some(
@@ -341,7 +324,7 @@ export function findMissingKeys(project: TranslationProject): {
     return false;
   };
 
-  const used = listSourceFiles(projectRoots(project), project.excludeGlobs)
+  const used = listSourceFiles([project.srcRoot])
     .flatMap(extractStaticKeys)
     .filter(({ key }) => !ignored.has(key));
   const missing = used.filter(({ key }) => !resolves(key));
@@ -354,7 +337,7 @@ export function findUnusedKeys(project: TranslationProject): {
   localeCount: number;
 } {
   const localeKeys = Array.from(collectLocaleKeys(project.localeFile));
-  const files = listSourceFiles(projectRoots(project), project.excludeGlobs);
+  const files = listSourceFiles([project.srcRoot]);
   const source = files.map((file) => fs.readFileSync(file, "utf8")).join("\n");
 
   const shapes = new Set<string>();
