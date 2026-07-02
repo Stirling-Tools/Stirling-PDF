@@ -60,6 +60,7 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
   const [open, setOpen] = useState(autoOpen);
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [extra, setExtra] = useState<null | "docs" | "schedule" | "trial">(null);
   const autoStarted = useRef(false);
 
@@ -99,10 +100,15 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
 
   async function onDownloadPdf() {
     if (!latest) return;
-    const blob = await fetchQuotePdf(latest.quoteId);
-    const url = URL.createObjectURL(blob);
-    window.open(url, "_blank", "noopener");
-    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    setDownloading(true);
+    try {
+      const blob = await fetchQuotePdf(latest.quoteId);
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank", "noopener");
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } finally {
+      setDownloading(false);
+    }
   }
 
   useEffect(() => {
@@ -241,7 +247,11 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
                   >
                     {t("procurement.milestone.accept")}
                   </Button>
-                  <Button variant="outline" onClick={onDownloadPdf}>
+                  <Button
+                    variant="outline"
+                    loading={downloading}
+                    onClick={onDownloadPdf}
+                  >
                     {t("procurement.milestone.download")}
                   </Button>
                   <Button variant="ghost" onClick={() => setEditing(true)}>
