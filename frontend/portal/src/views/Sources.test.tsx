@@ -16,11 +16,13 @@ vi.mock("react-i18next", () => ({
 
 const fetchSources = vi.fn();
 const fetchSource = vi.fn();
+const fetchSourceDocCounts = vi.fn();
 const createSource = vi.fn();
 const deleteSource = vi.fn();
 vi.mock("@portal/api/sources", () => ({
   fetchSources: () => fetchSources(),
   fetchSource: (id: string) => fetchSource(id),
+  fetchSourceDocCounts: (id: string) => fetchSourceDocCounts(id),
   createSource: (source: unknown) => createSource(source),
   deleteSource: (id: string) => deleteSource(id),
 }));
@@ -43,7 +45,9 @@ const RESPONSE: SourcesResponse = {
         { id: "pol-2", name: "Classification" },
       ],
       config: [{ label: "Directory", value: "/data/incoming" }],
-      docsTotal: null,
+      docsTotal: 1240,
+      docs24h: 18,
+      docs30d: 540,
     },
     {
       id: "src-orphan",
@@ -53,7 +57,9 @@ const RESPONSE: SourcesResponse = {
       referenceCount: 0,
       referencingPolicies: [],
       config: [{ label: "Directory", value: "/tmp/scratch" }],
-      docsTotal: null,
+      docsTotal: 1240,
+      docs24h: 18,
+      docs30d: 540,
     },
   ],
 };
@@ -70,6 +76,8 @@ describe("Sources view", () => {
   beforeEach(() => {
     fetchSources.mockReset();
     fetchSource.mockReset();
+    fetchSourceDocCounts.mockReset();
+    fetchSourceDocCounts.mockResolvedValue([]);
     createSource.mockReset();
     deleteSource.mockReset();
   });

@@ -28,6 +28,10 @@ export {
   RequireAdmin,
   type RequireAdminProps,
 } from "@shared/auth/guards/RequireAdmin";
+export {
+  RequirePortalAccess,
+  type RequirePortalAccessProps,
+} from "@shared/auth/guards/RequirePortalAccess";
 
 // Spring backend
 export {
