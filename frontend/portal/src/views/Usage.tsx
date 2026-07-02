@@ -8,7 +8,6 @@ import { useStripePortal } from "@portal/hooks/useStripePortal";
 import { LinkAccountPrompt } from "@portal/components/billing/LinkAccountPrompt";
 import { FreePlanView } from "@portal/components/billing/FreePlanView";
 import { SubscribedPlanView } from "@portal/components/billing/SubscribedPlanView";
-import { EnterpriseUpsellCard } from "@portal/components/procurement/EnterpriseUpsellCard";
 import {
   HttpError,
   SaasNotLinkedError,
@@ -170,10 +169,6 @@ export function Usage() {
 
       <div className="portal-usage__body">
         {!isLinked && <LinkAccountPrompt />}
-
-        {isLinked && !loading && !needsReauth && (
-          <EnterpriseUpsellCard variant="usage" />
-        )}
 
         {isLinked && loading && (
           <div className="portal-billing__skeleton" aria-hidden>

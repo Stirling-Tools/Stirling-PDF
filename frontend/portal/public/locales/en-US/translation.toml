@@ -1970,10 +1970,6 @@ homeBadge = "Enterprise"
 homeHeadline = "Process millions of PDFs."
 homeBody = "Committed volume pricing, org-wide SSO + SCIM + RBAC, 90-day immutable audit, and a dedicated SE."
 homeCta = "Start Trial →"
-usageBadge = "Standardize · 1M+ PDFs"
-usageHeadline = "Standardize org-wide."
-usageBody = "SSO, SCIM, audit, air-gap and an SLA on a committed-volume plan."
-usageCta = "Build your Enterprise quote →"
 
 [procurement.hero]
 eyebrow = "Enterprise procurement"
