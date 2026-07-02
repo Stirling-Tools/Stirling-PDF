@@ -40,7 +40,9 @@ const MAX_CLASSIFICATION_READ_BYTES = 25 * 1024 * 1024;
 
 interface DocumentClassification {
   category: string;
+  categoryLabel: string;
   docType: string;
+  docTypeLabel: string;
   typeConfidence?: number;
   tags: string[];
 }
@@ -52,9 +54,21 @@ function parseClassification(value: string): DocumentClassification | null {
     const category = typeof raw.category === "string" ? raw.category : "";
     const docType = typeof raw.docType === "string" ? raw.docType : "";
     if (!category && !docType) return null;
+    // The classifier stores the human label alongside the id; older files
+    // predate it, so fall back to prettifying the id.
+    const categoryLabel =
+      typeof raw.categoryLabel === "string" && raw.categoryLabel
+        ? raw.categoryLabel
+        : prettyLabel(category);
+    const docTypeLabel =
+      typeof raw.docTypeLabel === "string" && raw.docTypeLabel
+        ? raw.docTypeLabel
+        : prettyLabel(docType);
     return {
       category,
+      categoryLabel,
       docType,
+      docTypeLabel,
       typeConfidence:
         typeof raw.typeConfidence === "number" ? raw.typeConfidence : undefined,
       tags: Array.isArray(raw.tags)
@@ -66,10 +80,10 @@ function parseClassification(value: string): DocumentClassification | null {
   }
 }
 
-/** "lab_result" → "Lab result" for display. */
+/** "lab_result" / "lab-result" → "Lab result" — fallback for pre-label files. */
 function prettyLabel(id: string): string {
   return id
-    .split(/[_\s]+/)
+    .split(/[_\-\s]+/)
     .filter(Boolean)
     .map((word) => word[0].toUpperCase() + word.slice(1))
     .join(" ");
@@ -334,13 +348,13 @@ export function FileDetailsPanel({
                     {classification.category && (
                       <DetailField
                         label={t("filesPage.field.category", "Category")}
-                        value={prettyLabel(classification.category)}
+                        value={classification.categoryLabel}
                       />
                     )}
                     {classification.docType && (
                       <DetailField
                         label={t("filesPage.field.type", "Type")}
-                        value={prettyLabel(classification.docType)}
+                        value={classification.docTypeLabel}
                       />
                     )}
                     {classification.typeConfidence != null && (

@@ -128,6 +128,81 @@
   flex-shrink: 0;
 }
 
+/* ── Policy settings: per-trigger run-order lists ── */
+.pol-reorder-section {
+  margin-top: var(--space-3);
+}
+.pol-reorder-list {
+  display: flex;
+  flex-direction: column;
+  margin-top: var(--space-1);
+}
+/* A reorder row: leading grip + tinted icon + label. Square (no radius) so the
+   drop line reads as one straight rule across the list. */
+.pol-reorder-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1_5) var(--space-2);
+}
+.pol-reorder-row[data-dragging] {
+  opacity: 0.4;
+}
+/* Straight, full-width blue insertion line at the drop position (no curves). */
+.pol-reorder-row[data-drop="above"]::before,
+.pol-reorder-row[data-drop="below"]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--color-blue);
+  pointer-events: none;
+}
+.pol-reorder-row[data-drop="above"]::before {
+  top: -1px;
+}
+.pol-reorder-row[data-drop="below"]::after {
+  bottom: -1px;
+}
+.pol-reorder-grip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.25rem;
+  color: var(--color-text-4);
+  cursor: grab;
+}
+.pol-reorder-grip:active {
+  cursor: grabbing;
+}
+.pol-reorder-label {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text-1);
+}
+/* The drag ghost (a cloned row): the whole row with a full blue outline, kept
+   translucent so the list shows through as it moves. */
+.pol-reorder-row--ghost {
+  border-radius: var(--radius-lg);
+  outline: 2px solid var(--color-blue);
+  outline-offset: -2px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
+  opacity: 0.55;
+}
+/* Empty-state line for a trigger with no policies. */
+.pol-reorder-empty {
+  margin: var(--space-1) 0 0;
+  padding: var(--space-1_5) var(--space-2);
+  font-size: 0.8125rem;
+  color: var(--color-text-3);
+}
+
 /* Retry button on a failed activity row. */
 /* Expandable error text in the activity feed — long backend errors are clamped
    and collapsed by default so they don't blow up the row. */

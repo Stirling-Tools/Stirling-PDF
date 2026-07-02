@@ -20,8 +20,10 @@ from stirling.services import AppRuntime
 
 logger = logging.getLogger(__name__)
 
-# Sentinel for a label that fell outside the supplied vocabulary.
+# Sentinel id for an answer that fell outside the supplied vocabulary.
 UNKNOWN_LABEL = "unknown"
+# Human-readable label shown for the off-list sentinel.
+UNKNOWN_DISPLAY_LABEL = "Unknown"
 # An off-list answer can never be reported as more confident than this, so a
 # confident-but-wrong model answer can't clear an organisation's accept
 # threshold downstream. See the design doc's "Validate" step.
@@ -36,7 +38,7 @@ WINDOW_PAGES = 2
 # (frontend/editor/src/proprietary/data/classificationTaxonomy.ts) via
 # `task frontend:classifier-categories` — edit that file, not this JSON. Validated into the
 # typed contract on import, so a malformed entry fails fast.
-_DEFAULT_TAXONOMY_PATH = Path(__file__).with_name("default_taxonomy.generated.json")
+_DEFAULT_TAXONOMY_PATH = Path(__file__).with_name("default_classification_taxonomy.generated.json")
 # The file carries an underscore-prefixed "_generated" notice (JSON has no
 # comments); drop meta keys before validating against the strict contract.
 _raw_taxonomy = json.loads(_DEFAULT_TAXONOMY_PATH.read_text(encoding="utf-8"))
@@ -126,7 +128,9 @@ def validate_against_taxonomy(
     if category is None:
         return DocumentClassificationResponse(
             category=UNKNOWN_LABEL,
+            category_label=UNKNOWN_DISPLAY_LABEL,
             doc_type=UNKNOWN_LABEL,
+            doc_type_label=UNKNOWN_DISPLAY_LABEL,
             type_confidence=min(output.type_confidence, UNKNOWN_MAX_CONFIDENCE),
             tags=kept_tags,
         )
@@ -136,14 +140,18 @@ def validate_against_taxonomy(
     if doc_type is None:
         return DocumentClassificationResponse(
             category=category.id,
+            category_label=category.label,
             doc_type=UNKNOWN_LABEL,
+            doc_type_label=UNKNOWN_DISPLAY_LABEL,
             type_confidence=min(output.type_confidence, UNKNOWN_MAX_CONFIDENCE),
             tags=kept_tags,
         )
 
     return DocumentClassificationResponse(
         category=category.id,
+        category_label=category.label,
         doc_type=doc_type.id,
+        doc_type_label=doc_type.label,
         type_confidence=output.type_confidence,
         tags=kept_tags,
     )

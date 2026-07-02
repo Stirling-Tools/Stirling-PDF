@@ -139,6 +139,13 @@ export interface PolicyState {
   /** When the policy runs: on "upload" or before "export". Defaults to "upload". */
   runOn?: "upload" | "export";
   /**
+   * Execution order among policies that share a trigger. When several policies run
+   * on the same event they fire in ascending `order`, each on the previous one's
+   * output (a cumulative chain). Defaults to the policy's position in the catalog
+   * until an admin reorders them, which persists an explicit value for every policy.
+   */
+  order?: number;
+  /**
    * The backing folder-trigger record (a Watched Folders `WatchedFolder`) that
    * holds this policy's editable steps (its automation), output config and run
    * state. Present once the policy is configured. The folder trigger reuses the

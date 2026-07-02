@@ -34,7 +34,8 @@ import stirling.software.common.model.exception.UnsupportedProviderException;
             "stirling.software.proprietary.workflow.repository",
             "stirling.software.proprietary.policy.store",
             "stirling.software.proprietary.accountlink",
-            "stirling.software.proprietary.policy.source"
+            "stirling.software.proprietary.policy.source",
+            "stirling.software.proprietary.classification.store"
         })
 @EntityScan({
     "stirling.software.proprietary.security.model",
@@ -43,7 +44,8 @@ import stirling.software.common.model.exception.UnsupportedProviderException;
     "stirling.software.proprietary.workflow.model",
     "stirling.software.proprietary.policy.store",
     "stirling.software.proprietary.accountlink",
-    "stirling.software.proprietary.policy.source"
+    "stirling.software.proprietary.policy.source",
+    "stirling.software.proprietary.classification.store"
 })
 public class DatabaseConfig {
 

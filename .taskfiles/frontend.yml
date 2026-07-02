@@ -60,7 +60,7 @@ tasks:
     run: when_changed
     desc: "Regenerate the engine classifier categories JSON from the TS source of truth"
     cmds:
-      - npx tsx editor/scripts/generate-taxonomy.mts
+      - npx tsx editor/scripts/generate-classification-taxonomy.mts
     sources:
       - editor/src/proprietary/data/classificationTaxonomy.ts
 
@@ -414,12 +414,12 @@ tasks:
   classifier-categories:
     desc: "Regenerate the engine classifier categories JSON from the TS source"
     cmds:
-      - npx tsx editor/scripts/generate-taxonomy.mts
+      - npx tsx editor/scripts/generate-classification-taxonomy.mts
 
   classifier-categories:check:
     desc: "Fail if the committed classifier categories JSON is out of date"
     cmds:
-      - npx tsx editor/scripts/generate-taxonomy.mts --check
+      - npx tsx editor/scripts/generate-classification-taxonomy.mts --check
 
   check:all:
     desc: "Full CI quality gate"

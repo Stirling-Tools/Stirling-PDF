@@ -31,7 +31,9 @@ import stirling.software.common.service.PdfMetadataService;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.proprietary.classification.store.TaxonomyStore;
 import stirling.software.proprietary.model.api.ai.AiPageText;
+import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.service.AiEngineClient;
 import stirling.software.proprietary.service.PdfContentExtractor;
 
@@ -68,6 +70,15 @@ public class ClassifyTagController {
     private final ObjectMapper objectMapper;
     private final UserServiceInterface userService;
 
+    /**
+     * Present only when the policy subsystem is enabled ({@code policies.enabled}); the store and
+     * team authority are gated on it. Null otherwise, in which case classification falls back to
+     * the engine's built-in default taxonomy.
+     */
+    private final TaxonomyStore taxonomyStore;
+
+    private final PolicyManagementAuthority policyManagementAuthority;
+
     public ClassifyTagController(
             CustomPDFDocumentFactory pdfDocumentFactory,
             TempFileManager tempFileManager,
@@ -75,7 +86,9 @@ public class ClassifyTagController {
             PdfMetadataService pdfMetadataService,
             AiEngineClient aiEngineClient,
             ObjectMapper objectMapper,
-            @Autowired(required = false) UserServiceInterface userService) {
+            @Autowired(required = false) UserServiceInterface userService,
+            @Autowired(required = false) TaxonomyStore taxonomyStore,
+            @Autowired(required = false) PolicyManagementAuthority policyManagementAuthority) {
         this.pdfDocumentFactory = pdfDocumentFactory;
         this.tempFileManager = tempFileManager;
         this.pdfContentExtractor = pdfContentExtractor;
@@ -83,6 +96,8 @@ public class ClassifyTagController {
         this.aiEngineClient = aiEngineClient;
         this.objectMapper = objectMapper;
         this.userService = userService;
+        this.taxonomyStore = taxonomyStore;
+        this.policyManagementAuthority = policyManagementAuthority;
     }
 
     @PostMapping(value = "/classify-and-tag", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -151,12 +166,24 @@ public class ClassifyTagController {
     }
 
     /**
-     * Override point for a future per-org / DB-configured taxonomy: resolve the caller's taxonomy
-     * here and return it (engine shape) to classify against; {@code null} falls back to the
-     * engine's generated default. Always null today.
+     * Resolve the caller's team taxonomy and return it in the engine's shape to classify against;
+     * {@code null} falls back to the engine's generated default. The stored taxonomy is already in
+     * the engine's camelCase shape ({@code categories}/{@code docTypes}/{@code tags}), so it is
+     * passed through verbatim. Returns null when the policy subsystem is disabled (no store), when
+     * the team has no stored taxonomy, or when the team can't be resolved.
      */
     private JsonNode resolveTaxonomyOverride() {
-        return null;
+        if (taxonomyStore == null) {
+            return null;
+        }
+        Long teamId =
+                policyManagementAuthority == null
+                        ? null
+                        : policyManagementAuthority.currentUserTeamId();
+        return taxonomyStore
+                .findByTeam(teamId)
+                .map(taxonomy -> (JsonNode) objectMapper.valueToTree(taxonomy))
+                .orElse(null);
     }
 
     /** Request body for the engine's {@code /api/v1/documents/classify} endpoint. */

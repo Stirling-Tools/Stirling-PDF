@@ -14,6 +14,7 @@ import {
   onPoliciesChange,
   updatePolicy,
   resetPolicy,
+  reorderPolicies as persistPolicyOrder,
 } from "@app/services/policyStorage";
 import { loadPolicyCatalog } from "@app/services/policyCatalog";
 import {
@@ -90,7 +91,12 @@ export function usePolicies() {
         const decoded = byCategory.get(cat.id);
         reconciled[cat.id] = decoded
           ? decodedToState(decoded, local[cat.id]?.folderId)
-          : { ...local[cat.id], configured: false, status: "default" };
+          : {
+              ...local[cat.id],
+              configured: false,
+              status: "default",
+              backendId: undefined,
+            };
       }
       for (const [id, state] of Object.entries(reconciled)) {
         updatePolicy(id, state);
@@ -242,14 +248,42 @@ export function usePolicies() {
 
   const pausePolicy = useCallback(async (id: string) => {
     const current = loadPolicies()[id];
-    if (current?.backendId) await setPolicyEnabled(current.backendId, false);
+    if (current?.backendId) {
+      await setPolicyEnabled(current.backendId, false).catch((err: unknown) => {
+        if (
+          (err as { response?: { status?: number } })?.response?.status === 404
+        ) {
+          updatePolicy(id, {
+            backendId: undefined,
+            configured: false,
+            status: "default",
+          });
+          return;
+        }
+        throw err;
+      });
+    }
     if (current?.folderId) await setPolicyFolderPaused(current.folderId, true);
     updatePolicy(id, { status: "paused" });
   }, []);
 
   const resumePolicy = useCallback(async (id: string) => {
     const current = loadPolicies()[id];
-    if (current?.backendId) await setPolicyEnabled(current.backendId, true);
+    if (current?.backendId) {
+      await setPolicyEnabled(current.backendId, true).catch((err: unknown) => {
+        if (
+          (err as { response?: { status?: number } })?.response?.status === 404
+        ) {
+          updatePolicy(id, {
+            backendId: undefined,
+            configured: false,
+            status: "default",
+          });
+          return;
+        }
+        throw err;
+      });
+    }
     if (current?.folderId) await setPolicyFolderPaused(current.folderId, false);
     updatePolicy(id, { status: "active" });
   }, []);
@@ -259,6 +293,15 @@ export function usePolicies() {
     if (current?.backendId) await removePolicy(current.backendId);
     if (current?.folderId) await deletePolicyFolder(current.folderId);
     resetPolicy(id);
+  }, []);
+
+  /**
+   * Persist a new execution order for the given categories (in the sequence
+   * provided). Local-only: order drives client-side chained dispatch, so there's
+   * no backend round-trip. The change event re-renders every policies consumer.
+   */
+  const reorderPolicies = useCallback((orderedCategoryIds: string[]) => {
+    persistPolicyOrder(orderedCategoryIds);
   }, []);
 
   /**
@@ -312,6 +355,7 @@ export function usePolicies() {
     pausePolicy,
     resumePolicy,
     deletePolicy,
+    reorderPolicies,
     ensurePolicyFolder,
   };
 }

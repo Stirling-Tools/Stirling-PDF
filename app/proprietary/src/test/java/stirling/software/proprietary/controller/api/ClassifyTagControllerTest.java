@@ -56,6 +56,8 @@ class ClassifyTagControllerTest {
                         pdfMetadataService,
                         aiEngineClient,
                         objectMapper,
+                        null,
+                        null,
                         null);
     }
 

@@ -6,8 +6,8 @@
  * startup. Editing the .ts and regenerating keeps the two in lockstep — the .ts
  * is type-checked, so a malformed entry fails the build rather than shipping.
  *
- * Run: `npx tsx editor/scripts/generate-taxonomy.mts`         (writes the JSON)
- *      `npx tsx editor/scripts/generate-taxonomy.mts --check` (CI drift guard)
+ * Run: `npx tsx editor/scripts/generate-classification-taxonomy.mts`         (writes the JSON)
+ *      `npx tsx editor/scripts/generate-classification-taxonomy.mts --check` (CI drift guard)
  *
  * .mts (not .ts) so `import.meta.url` resolves paths relative to this script —
  * Task invokes it from the workspace root (frontend/), same as setup-env.mts.
@@ -31,12 +31,12 @@ const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, "../../..");
 const outPath = resolve(
   repoRoot,
-  "engine/src/stirling/agents/default_taxonomy.generated.json",
+  "engine/src/stirling/agents/default_classification_taxonomy.generated.json",
 );
 
 const NOTICE =
   "AUTO-GENERATED from frontend/editor/src/proprietary/data/classificationTaxonomy.ts " +
-  "by editor/scripts/generate-taxonomy.mts — do NOT edit by hand; run `task frontend:classifier-categories`.";
+  "by editor/scripts/generate-classification-taxonomy.mts — do NOT edit by hand; run `task frontend:classifier-categories`.";
 const json =
   JSON.stringify(
     { _generated: NOTICE, ...DEFAULT_CLASSIFICATION_TAXONOMY },
@@ -48,12 +48,12 @@ if (process.argv.includes("--check")) {
   const current = existsSync(outPath) ? readFileSync(outPath, "utf8") : "";
   if (current !== json) {
     console.error(
-      "default_taxonomy.generated.json is stale. Run `task frontend:classifier-categories` " +
-        "(npx tsx editor/scripts/generate-taxonomy.mts).",
+      "default_classification_taxonomy.generated.json is stale. Run `task frontend:classifier-categories` " +
+        "(npx tsx editor/scripts/generate-classification-taxonomy.mts).",
     );
     process.exit(1);
   }
-  console.log("default_taxonomy.generated.json is up to date.");
+  console.log("default_classification_taxonomy.generated.json is up to date.");
 } else {
   writeFileSync(outPath, json);
   const categories = DEFAULT_CLASSIFICATION_TAXONOMY.categories.length;

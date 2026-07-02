@@ -50,15 +50,20 @@ class ClassifyDocumentRequest(ApiModel):
 class DocumentClassificationResponse(ApiModel):
     """Terminal classification result.
 
-    ``category`` and ``doc_type`` are ids drawn from the taxonomy, or the
-    sentinel ``"unknown"`` when the model's answer fell outside it. ``tags`` are
-    the subset of the model's tags that exist in the taxonomy. This is a plain
-    answer from a dedicated endpoint — it carries no ``outcome`` discriminator
-    (it isn't one of the orchestrator's WorkflowOutcome-routed union responses).
+    ``category`` and ``doc_type`` are ids drawn from the taxonomy (the internal
+    matching keys), or the sentinel ``"unknown"`` when the model's answer fell
+    outside it. ``category_label`` and ``doc_type_label`` are the human-readable
+    labels for those ids (what the UI shows); Python derives them from the
+    matched taxonomy entry so the two never drift. ``tags`` are the subset of the
+    model's tags that exist in the taxonomy. This is a plain answer from a
+    dedicated endpoint — it carries no ``outcome`` discriminator (it isn't one of
+    the orchestrator's WorkflowOutcome-routed union responses).
     """
 
     category: str
+    category_label: str
     doc_type: str
+    doc_type_label: str
     type_confidence: float = Field(ge=0.0, le=1.0)
     tags: list[str] = Field(default_factory=list)
 

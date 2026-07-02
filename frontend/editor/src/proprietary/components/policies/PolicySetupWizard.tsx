@@ -36,6 +36,7 @@ import {
 } from "@app/components/policies/PolicyWorkflowStep";
 import { PolicyToolConfigStep } from "@app/components/policies/PolicyToolConfigStep";
 import { getPolicyToolChain } from "@app/components/policies/policyToolChains";
+import { ClassificationTaxonomySection } from "@app/components/policies/ClassificationTaxonomySection";
 
 // Sources are always "editor" for this release, so the Sources step is dropped
 // from the flow (its panel code is kept below for when other sources return).
@@ -103,6 +104,9 @@ export function PolicySetupWizard({
   // Preset (tool-chain) policies render the locked tool config as their Workflow
   // step instead of the add/remove builder.
   const toolChain = getPolicyToolChain(category.id);
+  // A single-tool chain has nothing to toggle/configure, so its config UI is
+  // hidden (kept mounted so the submit trigger still emits that one tool).
+  const singleToolChain = toolChain != null && toolChain.length === 1;
   const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [fieldValues, setFieldValues] = useState(() =>
@@ -337,22 +341,29 @@ export function PolicySetupWizard({
         <div style={{ display: step === 1 ? undefined : "none" }}>
           {toolChain ? (
             <>
-              <p className="pol-desc">
-                {t(
-                  "policies.wizard.toolChainDesc",
-                  "Configure the tools this policy runs on each document.",
-                )}
-              </p>
-              <PolicyToolConfigStep
-                chainIds={toolChain}
-                initialOperations={
-                  existingAutomation?.operations ?? config.defaultOperations
-                }
-                presetOperations={config.defaultOperations}
-                categoryLabel={category.label}
-                saveTriggerRef={workflowSave}
-                onComplete={handleToolConfigSaved}
-              />
+              {/* Single-tool chains have nothing to configure — hide the prompt
+                  and the toggle, but keep the step mounted (display:none) so the
+                  final submit still emits that one tool. */}
+              {!singleToolChain && (
+                <p className="pol-desc">
+                  {t(
+                    "policies.wizard.toolChainDesc",
+                    "Configure the tools this policy runs on each document.",
+                  )}
+                </p>
+              )}
+              <div style={{ display: singleToolChain ? "none" : undefined }}>
+                <PolicyToolConfigStep
+                  chainIds={toolChain}
+                  initialOperations={
+                    existingAutomation?.operations ?? config.defaultOperations
+                  }
+                  presetOperations={config.defaultOperations}
+                  categoryLabel={category.label}
+                  saveTriggerRef={workflowSave}
+                  onComplete={handleToolConfigSaved}
+                />
+              </div>
             </>
           ) : (
             <>
@@ -370,6 +381,12 @@ export function PolicySetupWizard({
                 onSaveFailed={handleSaveFailed}
               />
             </>
+          )}
+          {/* The Classification policy owns the editable, team-shared taxonomy
+              (categories → sub-categories → tags) the classifier runs against.
+              Kept on the first step alongside the tool so it's not buried. */}
+          {category.id === "classification" && (
+            <ClassificationTaxonomySection canConfigure={canConfigure} />
           )}
         </div>
 

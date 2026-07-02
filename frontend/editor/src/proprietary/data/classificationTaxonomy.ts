@@ -2,10 +2,11 @@
  * Document-classification vocabulary — the single, type-safe source of truth.
  *
  * The Python engine can't import TypeScript, so this is GENERATED into
- * `engine/src/stirling/agents/default_taxonomy.generated.json` by
- * `editor/scripts/generate-taxonomy.mts` (`task frontend:classifier-categories`,
- * drift-guarded by `task frontend:classifier-categories:check`). Edit THIS file,
- * never the generated JSON.
+ * `engine/src/stirling/agents/default_classification_taxonomy.generated.json` by
+ * `editor/scripts/generate-classification-taxonomy.mts`
+ * (`task frontend:classifier-categories`, drift-guarded by
+ * `task frontend:classifier-categories:check`). Edit THIS file, never the
+ * generated JSON.
  *
  * Shape mirrors the engine's `ClassificationTaxonomy` contract; the camelCase
  * keys here map onto that model's aliases.

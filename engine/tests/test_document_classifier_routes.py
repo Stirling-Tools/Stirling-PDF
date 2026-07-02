@@ -28,7 +28,12 @@ class StubClassifierAgent:
 def classification_client() -> Iterator[TestClient]:
     app.dependency_overrides[get_document_classifier_agent] = lambda: StubClassifierAgent(
         DocumentClassificationResponse(
-            category="contract", doc_type="nda", type_confidence=0.96, tags=["legal", "signed"]
+            category="contract",
+            category_label="Contract",
+            doc_type="nda",
+            doc_type_label="Non-disclosure agreement",
+            type_confidence=0.96,
+            tags=["legal", "signed"],
         )
     )
     try:
@@ -45,7 +50,9 @@ def test_classify_returns_camel_cased_result(classification_client: TestClient) 
     assert response.status_code == 200
     body = response.json()
     assert body["category"] == "contract"
+    assert body["categoryLabel"] == "Contract"
     assert body["docType"] == "nda"
+    assert body["docTypeLabel"] == "Non-disclosure agreement"
     assert body["typeConfidence"] == 0.96
     assert body["tags"] == ["legal", "signed"]
 

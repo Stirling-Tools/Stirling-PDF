@@ -1,9 +1,13 @@
 /**
- * Auto-run controller: every enabled policy enforces on every uploaded
- * file. Watches the session's files and, for each (active policy × not-yet-run
- * file), fires a real backend run (`POST /api/v1/policies/{id}/run`) and polls it
- * to completion, recording progress in {@link policyRunStore} for the activity
- * feed.
+ * Auto-run controller: every enabled policy enforces on every uploaded file.
+ * Watches the session's files and fires a real backend run
+ * (`POST /api/v1/policies/{id}/run`) per file, polling it to completion and
+ * recording progress in {@link policyRunStore} for the activity feed.
+ *
+ * When several policies enforce on the same trigger they run as an ordered chain:
+ * the first fires on the upload, and each subsequent policy fires on the previous
+ * one's output once it lands — so their effects accumulate in the admin-defined
+ * order rather than racing to fork the same version.
  *
  * Headless — call it from {@link PolicyAutoRunController}, which is mounted once
  * wherever the editor is open so enforcement happens regardless of whether the
@@ -11,7 +15,7 @@
  * in the run store), so re-renders and remounts don't re-fire.
  */
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import {
   useAllFiles,
   useFileManagement,
@@ -141,6 +145,29 @@ export function usePolicyAutoRun(): void {
   // run so a folder-watch burst opens the modal once, not once per file.
   const firedLimitModal = useRef<Set<string>>(new Set());
 
+  // Active upload policies in execution order. When several enforce on upload they
+  // run as a chain — the first fires on the upload, each subsequent one on the
+  // previous policy's output — so their effects accumulate in a defined order
+  // instead of racing to fork the same version.
+  const orderedUploadCategories = useMemo(
+    () =>
+      Object.entries(policies)
+        .filter(
+          ([, s]) =>
+            s.configured &&
+            s.status === "active" &&
+            s.backendId &&
+            (s.runOn ?? "upload") === "upload",
+        )
+        .sort(([, a], [, b]) => (a.order ?? 0) - (b.order ?? 0))
+        .map(([id]) => id),
+    [policies],
+  );
+
+  // Runs whose chain-continuation we've already handled this session, so the next
+  // policy is dispatched exactly once per completed run.
+  const chained = useRef<Set<string>>(new Set());
+
   // Latest policies, read from inside the stable retry callback (which has no deps).
   const policiesRef = useRef(policies);
   policiesRef.current = policies;
@@ -204,46 +231,71 @@ export function usePolicyAutoRun(): void {
     [scheduleQueueRetry],
   );
 
-  // Dispatch: for each active policy × each session file not yet run, fire a run.
+  // Dispatch: fire only the FIRST upload policy on each not-yet-run file. The rest
+  // of the chain is dispatched by the chaining effect below, each on the previous
+  // policy's output, so the policies apply cumulatively in order.
   useEffect(() => {
     if (!POLICIES_ENABLED) return;
-    const active = Object.entries(policies).filter(
-      ([, s]) =>
-        s.configured &&
-        s.status === "active" &&
-        s.backendId &&
-        // Only auto-run on upload when the policy is set to run on upload
-        // (export-triggered policies enforce at export time instead).
-        (s.runOn ?? "upload") === "upload",
-    );
-    for (const [categoryId, s] of active) {
-      for (const stub of fileStubs) {
-        // Input-mode policies enforce only on files that actually entered the
-        // system as an upload — not on files a tool/automation produced in-app
-        // (versioned edits or independent artifacts like convert/split/merge).
-        // Those are enforced only by export-mode policies, at export time.
-        if (stub.derivedFromTool) continue;
-        const key = dispatchKey(categoryId, stub.id);
-        // Skip if already run (persisted) or a dispatch is in flight — the
-        // in-memory guard prevents double-firing during the async wait.
-        if (isDispatched(categoryId, stub.id) || dispatching.current.has(key)) {
-          continue;
-        }
-        dispatching.current.add(key);
-        void runPolicyOnFile(
-          categoryId,
-          s.backendId as string,
-          stub.id,
-          stub.name,
-        )
-          .catch(() => {
-            // runPolicyOnFile handles its own failures; this is just a backstop
-            // so an unexpected rejection never becomes an unhandled rejection.
-          })
-          .finally(() => dispatching.current.delete(key));
+    const firstCategory = orderedUploadCategories[0];
+    if (!firstCategory) return;
+    const backendId = policies[firstCategory]?.backendId;
+    if (!backendId) return;
+    for (const stub of fileStubs) {
+      // Input-mode policies enforce only on files that actually entered the
+      // system as an upload — not on files a tool/automation produced in-app
+      // (versioned edits or independent artifacts like convert/split/merge).
+      // Those are enforced only by export-mode policies, at export time.
+      if (stub.derivedFromTool) continue;
+      const key = dispatchKey(firstCategory, stub.id);
+      // Skip if already run (persisted) or a dispatch is in flight — the
+      // in-memory guard prevents double-firing during the async wait.
+      if (
+        isDispatched(firstCategory, stub.id) ||
+        dispatching.current.has(key)
+      ) {
+        continue;
       }
+      dispatching.current.add(key);
+      void runPolicyOnFile(firstCategory, backendId, stub.id, stub.name)
+        .catch(() => {
+          // runPolicyOnFile handles its own failures; this is just a backstop
+          // so an unexpected rejection never becomes an unhandled rejection.
+        })
+        .finally(() => dispatching.current.delete(key));
     }
-  }, [fileStubs, policies]);
+  }, [fileStubs, policies, orderedUploadCategories]);
+
+  // Chain: once a run has completed AND its output landed in the workspace, fire the
+  // next upload policy on that output. Only chains on success (a failed run has no
+  // output), and only once per run. isDispatched guards re-dispatch across reloads.
+  useEffect(() => {
+    if (!POLICIES_ENABLED) return;
+    for (const run of runs) {
+      if (run.status !== "COMPLETED" || !run.imported) continue;
+      if (chained.current.has(run.runId)) continue;
+      const nextCategory = nextUploadCategory(
+        orderedUploadCategories,
+        run.categoryId,
+      );
+      const outputId = run.outputFileIds?.[0];
+      if (!nextCategory || !outputId) {
+        // End of the chain (or nothing to chain onto): don't revisit this run.
+        chained.current.add(run.runId);
+        continue;
+      }
+      const backendId = policies[nextCategory]?.backendId;
+      // Next policy not ready yet (still reconciling) — retry when policies change.
+      if (!backendId) continue;
+      chained.current.add(run.runId);
+      if (isDispatched(nextCategory, outputId as FileId)) continue;
+      void runPolicyOnFile(
+        nextCategory,
+        backendId,
+        outputId as FileId,
+        run.fileName,
+      ).catch(() => {});
+    }
+  }, [runs, policies, orderedUploadCategories]);
 
   // Poll each in-flight run to a terminal state.
   useEffect(() => {
@@ -366,6 +418,17 @@ async function reconcileServerRuns(
       startedAt: view.createdAt,
     });
   }
+}
+
+/** The next upload policy after {@code categoryId} in the chain, or undefined if
+ *  it's last or no longer in the ordered set (e.g. paused since it ran). */
+function nextUploadCategory(
+  orderedUploadCategories: string[],
+  categoryId: string,
+): string | undefined {
+  const index = orderedUploadCategories.indexOf(categoryId);
+  if (index < 0) return undefined;
+  return orderedUploadCategories[index + 1];
 }
 
 /** The category whose configured policy produced this run, if any. */
