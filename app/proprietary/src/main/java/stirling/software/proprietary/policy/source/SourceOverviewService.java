@@ -30,12 +30,15 @@ public class SourceOverviewService {
     private final PolicyStore policyStore;
     private final SourceAccessGuard sourceAccessGuard;
     private final PolicyAccessGuard policyAccessGuard;
+    private final SourceDocCounter docCounter;
 
     public SourcesResponse overview() {
         List<Source> sources = sourceAccessGuard.visibleFrom(sourceStore);
         List<Policy> policies = policyAccessGuard.visibleFrom(policyStore);
 
         Map<String, List<Policy>> referencesBySource = referencesBySource(policies);
+        Map<String, DocStats> docStats =
+                docCounter.statsFor(sources.stream().map(Source::id).toList());
 
         List<SourceView> views =
                 sources.stream()
@@ -44,7 +47,8 @@ public class SourceOverviewService {
                                         toView(
                                                 source,
                                                 referencesBySource.getOrDefault(
-                                                        source.id(), List.of())))
+                                                        source.id(), List.of()),
+                                                docStats.getOrDefault(source.id(), DocStats.ZERO)))
                         .sorted(
                                 Comparator.comparingInt(SourceView::referenceCount)
                                         .reversed()
@@ -52,6 +56,14 @@ public class SourceOverviewService {
                         .toList();
 
         return new SourcesResponse(buildKpis(views), views);
+    }
+
+    /**
+     * The 30-day daily document series for one source (oldest first), for the expanded row's
+     * sparkline.
+     */
+    public List<Long> dailySeries(String sourceId) {
+        return docCounter.dailySeriesFor(sourceId);
     }
 
     /** Policies referencing each source id, across the caller's visible policies. */
@@ -65,7 +77,8 @@ public class SourceOverviewService {
         return bySource;
     }
 
-    private static SourceView toView(Source source, List<Policy> referencingPolicies) {
+    private static SourceView toView(
+            Source source, List<Policy> referencingPolicies, DocStats docs) {
         List<SourceView.PolicyRef> refs =
                 referencingPolicies.stream()
                         .map(policy -> new SourceView.PolicyRef(policy.id(), policy.name()))
@@ -78,7 +91,9 @@ public class SourceOverviewService {
                 refs.size(),
                 refs,
                 configRows(source),
-                null);
+                docs.total(),
+                docs.last24h(),
+                docs.last30d());
     }
 
     /** A disabled (paused) source reads as "disabled"; an unreferenced one reads as "unused". */
