@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -61,6 +62,8 @@ public class PdfCommentAgentOrchestrator {
 
     /** Filename used when the uploaded PDF has no usable original filename. */
     private static final String FALLBACK_OUTPUT_NAME = "document-commented.pdf";
+
+    private static final Pattern NEWLINE_PATTERN = Pattern.compile("[\\r\\n]");
 
     /**
      * Small value record returned to the controller: the annotated PDF bytes, the suggested
@@ -263,7 +266,7 @@ public class PdfCommentAgentOrchestrator {
 
     private static String safeName(String originalFilename) {
         return originalFilename != null
-                ? originalFilename.replaceAll("[\\r\\n]", "_")
+                ? NEWLINE_PATTERN.matcher(originalFilename).replaceAll("_")
                 : "<unnamed>";
     }
 }
