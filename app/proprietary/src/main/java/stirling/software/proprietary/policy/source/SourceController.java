@@ -74,6 +74,20 @@ public class SourceController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/{sourceId}/document-counts")
+    @Operation(
+            summary = "Daily document counts for a source",
+            description =
+                    "The trailing 30-day per-day document series (oldest first) for the source's"
+                            + " sparkline.")
+    public ResponseEntity<List<Long>> documentCounts(@PathVariable String sourceId) {
+        return sourceStore
+                .get(sourceId)
+                .filter(sourceAccessGuard::canAccess)
+                .map(source -> ResponseEntity.ok(overviewService.dailySeries(source.id())))
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(
             summary = "Create or update a source",

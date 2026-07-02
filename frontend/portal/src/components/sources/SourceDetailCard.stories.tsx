@@ -1,6 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { SourceView } from "@portal/api/sources";
 import { SourceDetailCard } from "@portal/components/sources/SourceDetailCard";
+import { sampleDailySeries } from "@portal/mocks/sampleDailySeries";
+
+const SAMPLE_SERIES = sampleDailySeries(330);
 
 const IN_USE: SourceView = {
   id: "src-claims",
@@ -16,7 +19,9 @@ const IN_USE: SourceView = {
     { label: "Directory", value: "/data/claims-intake" },
     { label: "Mode", value: "consume" },
   ],
-  docsTotal: null,
+  docsTotal: 45230,
+  docs24h: 312,
+  docs30d: 9870,
 };
 
 const ORPHANED: SourceView = {
@@ -27,7 +32,9 @@ const ORPHANED: SourceView = {
   referenceCount: 0,
   referencingPolicies: [],
   config: [{ label: "Directory", value: "/data/archive" }],
-  docsTotal: null,
+  docsTotal: 45230,
+  docs24h: 312,
+  docs30d: 9870,
 };
 
 const meta: Meta<typeof SourceDetailCard> = {
@@ -35,6 +42,7 @@ const meta: Meta<typeof SourceDetailCard> = {
   component: SourceDetailCard,
   parameters: { layout: "padded" },
   args: {
+    docSeries: SAMPLE_SERIES,
     onClose: () => {},
     onEdit: () => {},
     onTogglePause: () => {},

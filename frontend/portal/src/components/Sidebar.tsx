@@ -22,6 +22,7 @@ import {
   UsageIcon,
   LinkIcon,
   DocsIcon,
+  ProcurementIcon,
   SettingsIcon,
   ChevronDownIcon,
 } from "@portal/components/icons";
@@ -135,7 +136,15 @@ export function Sidebar() {
   const { activeView, setActiveView } = useView();
   const { theme } = useTheme();
   const { openSettings } = useUI();
+  const { tier } = useTier();
   const { t } = useTranslation();
+
+  // Procurement is the enterprise buyer's commercial journey — surfaced only to
+  // enterprise tenants (it has no free/pro equivalent).
+  const platformGroup: NavEntry[] =
+    tier === "enterprise"
+      ? [{ id: "procurement", icon: <ProcurementIcon /> }, ...GROUP_PLATFORM]
+      : GROUP_PLATFORM;
 
   function renderGroup(entries: NavEntry[]) {
     return entries.map((entry) => (
@@ -218,7 +227,7 @@ export function Sidebar() {
         </div>
         <div className="portal-sidebar__divider" aria-hidden />
         <div className="portal-sidebar__group">
-          {renderGroup(GROUP_PLATFORM)}
+          {renderGroup(platformGroup)}
         </div>
       </nav>
 
