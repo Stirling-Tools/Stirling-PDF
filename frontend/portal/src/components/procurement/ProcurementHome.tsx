@@ -103,9 +103,19 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
     setDownloading(true);
     try {
       const blob = await fetchQuotePdf(latest.quoteId);
+      // A same-gesture <a download> click is reliable; window.open after an await is often
+      // popup-blocked (which is what made this take "a few goes").
       const url = URL.createObjectURL(blob);
-      window.open(url, "_blank", "noopener");
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${latest.quoteNumber || "quote"}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (e) {
+      console.error("[procurement] quote PDF download failed", e);
+      window.alert(t("procurement.milestone.downloadError"));
     } finally {
       setDownloading(false);
     }

@@ -25,6 +25,7 @@ interface Cfg {
   training: boolean;
   qbr: boolean;
   currency: string;
+  businessName?: string;
 }
 
 let deal: typeof EMPTY | (Record<string, unknown> & { latestQuote: unknown }) =
@@ -132,6 +133,7 @@ function priceQuote(cfg: Cfg) {
       training: cfg.training,
       qbr: cfg.qbr,
       currency: cfg.currency || "USD",
+      businessName: cfg.businessName ?? "",
     },
   };
 }

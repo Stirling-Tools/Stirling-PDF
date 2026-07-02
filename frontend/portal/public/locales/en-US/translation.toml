@@ -1921,6 +1921,7 @@ perYear = " / yr"
 tcv = "{{value}} total contract value"
 accept = "Accept & continue"
 download = "Download PDF"
+downloadError = "Could not download the quote PDF just yet — please try again in a moment."
 edit = "Edit quote"
 
 [procurement.builder]

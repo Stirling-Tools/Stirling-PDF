@@ -1429,6 +1429,9 @@
 .portal-agreement__accept {
   margin-top: 0.25rem;
 }
+.portal-agreement__lines {
+  margin: 0.4rem 0 0.6rem;
+}
 .portal-proc__reset {
   display: flex;
   justify-content: center;

@@ -46,12 +46,12 @@ export function QuoteBuilder({
       training: false,
       qbr: false,
       currency: "USD",
+      businessName: "",
     },
   );
   // A seeded quote carries a volume but no user count, so treat it as manually set.
   const [manualVolume, setManualVolume] = useState(initial != null);
   const [eula, setEula] = useState(false);
-  const [businessName, setBusinessName] = useState("");
   const [quote, setQuote] = useState<QuoteResult | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -223,8 +223,8 @@ export function QuoteBuilder({
             <Field label={t("procurement.builder.businessName")}>
               <input
                 placeholder={t("procurement.builder.businessNamePlaceholder")}
-                value={businessName}
-                onChange={(e) => setBusinessName(e.target.value)}
+                value={cfg.businessName}
+                onChange={(e) => set("businessName", e.target.value)}
               />
             </Field>
             <div className="portal-qb__row">
@@ -252,7 +252,7 @@ export function QuoteBuilder({
         )}
 
         {step === 3 && quote && (
-          <QuotePaper quote={quote} businessName={businessName} t={t} />
+          <QuotePaper quote={quote} businessName={cfg.businessName} t={t} />
         )}
       </div>
 

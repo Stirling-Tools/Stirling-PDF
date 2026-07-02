@@ -63,10 +63,22 @@ export function ProcurementAgreement({
           Quote <strong>{quote.quoteNumber}</strong> forms the Order Form for
           this Agreement. Customer commits to a {years}-year term at{" "}
           <strong>{annual}</strong> per year (total contract value{" "}
-          <strong>{tcv}</strong>), billed annually in advance by invoice.
-          Committed volume, service level, and any add-ons are as itemised on
-          the quote. Fees are exclusive of taxes.
+          <strong>{tcv}</strong>), billed annually in advance by invoice. Fees
+          are exclusive of taxes. The committed volume, service level, and
+          add-ons are itemised below:
         </p>
+        <ul className="portal-qb__lines portal-agreement__lines">
+          {quote.lineItems.map((li) => (
+            <li key={li.key} data-kind={li.kind}>
+              <span>{li.label}</span>
+              <span>
+                {li.kind === "INCLUDED"
+                  ? t("procurement.builder.included")
+                  : money(li.amountMinor, quote.currency)}
+              </span>
+            </li>
+          ))}
+        </ul>
 
         <h4>3. End-User License Agreement</h4>
         <p>

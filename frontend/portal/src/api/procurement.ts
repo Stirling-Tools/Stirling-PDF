@@ -161,6 +161,8 @@ export interface QuoteConfigInput {
   training: boolean;
   qbr: boolean;
   currency: string;
+  /** Buyer's company name — shown on the quote/agreement and remembered when re-editing. */
+  businessName: string;
 }
 
 const BASE = "/api/v1/procurement";

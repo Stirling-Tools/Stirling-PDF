@@ -75,7 +75,8 @@ public class ProcurementController {
             boolean indemnification,
             boolean training,
             boolean qbr,
-            String currency) {
+            String currency,
+            String businessName) {
         QuoteConfig toConfig() {
             return new QuoteConfig(
                     volume,
@@ -117,7 +118,8 @@ public class ProcurementController {
             boolean indemnification,
             boolean training,
             boolean qbr,
-            String currency) {}
+            String currency,
+            String businessName) {}
 
     public record SnapshotResponse(
             Long dealId,
@@ -181,7 +183,10 @@ public class ProcurementController {
             @RequestBody QuoteRequest request, Authentication auth) {
         Long teamId = requireLeader(auth);
         if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        return ResponseEntity.ok(toQuote(procurement.buildQuote(teamId, request.toConfig())));
+        return ResponseEntity.ok(
+                toQuote(
+                        procurement.buildQuote(
+                                teamId, request.toConfig(), request.businessName())));
     }
 
     // Issue + accept are Supabase edge functions (they own Stripe): issue-procurement-quote turns a
@@ -279,7 +284,8 @@ public class ProcurementController {
                         q.isIndemnification(),
                         q.isTraining(),
                         q.isQbr(),
-                        q.getCurrency()));
+                        q.getCurrency(),
+                        q.getBusinessName()));
     }
 
     private List<QuoteLineItem> parseLineItems(String json) {

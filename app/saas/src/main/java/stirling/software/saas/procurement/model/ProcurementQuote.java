@@ -107,6 +107,10 @@ public class ProcurementQuote implements Serializable {
     @Column(name = "stripe_invoice_url", columnDefinition = "text")
     private String stripeInvoiceUrl;
 
+    // Buyer's company name (shown on the quote/agreement); echoed back so an edit remembers it.
+    @Column(name = "business_name", length = 255)
+    private String businessName;
+
     @Column(name = "valid_until")
     private LocalDate validUntil;
 

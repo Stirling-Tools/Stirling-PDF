@@ -117,7 +117,7 @@ public class ProcurementService {
 
     /** Price a quote config server-side and persist it as a draft against the team's deal. */
     @Transactional
-    public ProcurementQuote buildQuote(Long teamId, QuoteConfig cfg) {
+    public ProcurementQuote buildQuote(Long teamId, QuoteConfig cfg, String businessName) {
         ProcurementDeal deal =
                 dealRepo.findByTeamId(teamId).orElseGet(() -> new ProcurementDeal(teamId));
         if (ProcurementDeal.STAGE_TRIAL.equals(deal.getStage())) {
@@ -141,6 +141,7 @@ public class ProcurementService {
         quote.setIndemnification(cfg.indemnification());
         quote.setTraining(cfg.training());
         quote.setQbr(cfg.qbr());
+        quote.setBusinessName(businessName);
         quote.setAnnualNetMinor(breakdown.annualNetMinor());
         quote.setTcvMinor(breakdown.tcvMinor());
         quote.setLineItemsJson(writeLineItems(breakdown));
