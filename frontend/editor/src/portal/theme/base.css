@@ -1,0 +1,35 @@
+/* Base reset + typography for the portal, scoped to .portal-scope so it doesn't
+   leak into the editor that hosts the /portal route (the editor owns <body> and
+   uses a different body font). SUI Modal renders outside this subtree but styles
+   itself, so it doesn't need the reset. */
+
+.portal-scope {
+  color: var(--color-text-2);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.portal-scope *,
+.portal-scope *::before,
+.portal-scope *::after {
+  box-sizing: border-box;
+}
+
+.portal-scope button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.portal-scope a {
+  color: var(--color-blue);
+  text-decoration: none;
+}
+
+.portal-scope a:hover {
+  text-decoration: underline;
+}

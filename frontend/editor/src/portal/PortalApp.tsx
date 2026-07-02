@@ -21,6 +21,8 @@ import {
   useAccountLinkContext,
 } from "@portal/contexts/AccountLinkContext";
 import { ViewRouter } from "@portal/ViewRouter";
+// Reset + typography, scoped to .portal-scope below.
+import "@portal/theme/base.css";
 
 /**
  * Binds Mantine's colour scheme to the portal's own ThemeProvider so Mantine
@@ -128,29 +130,32 @@ export function PortalApp() {
   return (
     <ThemeProvider>
       <PortalMantineProvider>
-        <AuthProvider mode="spring">
-          <LinkProvider initialState="unlinked">
-            {/* TierProvider sits INSIDE LinkProvider so it can derive the tier
+        {/* Scopes base.css to the portal so it doesn't restyle the host editor. */}
+        <div className="portal-scope">
+          <AuthProvider mode="spring">
+            <LinkProvider initialState="unlinked">
+              {/* TierProvider sits INSIDE LinkProvider so it can derive the tier
                 from the real link/subscription state when MSW mocks are off. */}
-            <TierProvider initialTier="pro">
-              <UIProvider>
-                <GlobalShortcuts />
-                <AuthGate>
-                  <AccountLinkProvider>
-                    <AppShell>
-                      <RoutedContent />
-                    </AppShell>
-                    <AssistantButton />
-                    <AssistantPanel />
-                    <SearchModal />
-                    <SettingsHost />
-                    <LinkModalHost />
-                  </AccountLinkProvider>
-                </AuthGate>
-              </UIProvider>
-            </TierProvider>
-          </LinkProvider>
-        </AuthProvider>
+              <TierProvider initialTier="pro">
+                <UIProvider>
+                  <GlobalShortcuts />
+                  <AuthGate>
+                    <AccountLinkProvider>
+                      <AppShell>
+                        <RoutedContent />
+                      </AppShell>
+                      <AssistantButton />
+                      <AssistantPanel />
+                      <SearchModal />
+                      <SettingsHost />
+                      <LinkModalHost />
+                    </AccountLinkProvider>
+                  </AuthGate>
+                </UIProvider>
+              </TierProvider>
+            </LinkProvider>
+          </AuthProvider>
+        </div>
       </PortalMantineProvider>
     </ThemeProvider>
   );
