@@ -18,8 +18,6 @@ if (typeof globalThis.crypto?.randomUUID !== "function") {
 const api = vi.hoisted(() => ({
   store: new Map<string, { id: string }>(),
   seq: 0,
-}));
-vi.mock("@app/services/policyApi", () => ({
   listPolicies: vi.fn(async () => [...api.store.values()]),
   savePolicy: vi.fn(async (p: { id?: string }) => {
     const id = p.id && p.id.length > 0 ? p.id : `be-${++api.seq}`;
@@ -34,6 +32,15 @@ vi.mock("@app/services/policyApi", () => ({
   runStoredPolicy: vi.fn(),
   runPolicyPipeline: vi.fn(),
   getPolicyRun: vi.fn(),
+}));
+vi.mock("@app/services/policyApi", () => ({
+  listPolicies: api.listPolicies,
+  savePolicy: api.savePolicy,
+  getPolicy: api.getPolicy,
+  deletePolicy: api.deletePolicy,
+  runStoredPolicy: api.runStoredPolicy,
+  runPolicyPipeline: api.runPolicyPipeline,
+  getPolicyRun: api.getPolicyRun,
 }));
 
 import { usePolicies } from "@app/hooks/usePolicies";
@@ -65,6 +72,7 @@ const wizardResult = {
 
 describe("usePolicies", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     localStorage.clear();
     api.store.clear();
     api.seq = 0;
@@ -76,6 +84,12 @@ describe("usePolicies", () => {
     await act(async () => {});
     expect(result.current.policies.ingestion.configured).toBe(false);
     expect(result.current.policies.security.configured).toBe(false);
+  });
+
+  it("skips the backend reconcile when disabled", async () => {
+    renderHook(() => usePolicies(false));
+    await act(async () => {});
+    expect(api.listPolicies).not.toHaveBeenCalled();
   });
 
   it("enabling a policy persists it to the backend + marks it configured", async () => {
