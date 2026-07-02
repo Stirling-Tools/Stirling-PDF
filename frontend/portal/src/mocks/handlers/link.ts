@@ -50,6 +50,14 @@ export const linkHandlers = [
     return new HttpResponse(null, { status: 204 });
   }),
 
+  // Manual sync trigger — the real backend runs a sync + entitlement refresh and
+  // returns 204 (or 409 when metering is off). The portal fires it best-effort
+  // after a checkout completes; the mock just acknowledges.
+  http.post("/api/v1/account-link/sync-now", async () => {
+    await delay(120);
+    return new HttpResponse(null, { status: 204 });
+  }),
+
   // Team-wide list/revoke are SaaS-direct now (apiClient.saas calls the
   // absolute VITE_SAAS_API_URL). Wildcard so the same handlers intercept both
   // the relative pattern (legacy / direct-MSW usage) and any absolute SaaS

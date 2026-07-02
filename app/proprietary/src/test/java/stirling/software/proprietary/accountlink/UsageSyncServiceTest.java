@@ -89,15 +89,20 @@ class UsageSyncServiceTest {
     }
 
     @Test
-    void nothingPendingDoesNotReport() {
+    void nothingPendingStillForcesEntitlementRefresh() {
         when(credentialStore.get()).thenReturn(Optional.of(credential()));
         when(counters.findPeriodsWithUnsyncedUsage()).thenReturn(List.of());
 
         service.syncNow();
 
+        // No usage to report, so nothing is sent and no markers advance — but the sync still forces
+        // an entitlement refresh so an out-of-band plan change (e.g. a just-completed subscription)
+        // surfaces on the gate immediately instead of waiting out the entitlement-cache TTL.
         verifyNoInteractions(client);
         verify(syncState, never()).save(any());
         verify(entitlementCache, never()).accept(any());
+        verify(entitlementCache).invalidate();
+        verify(entitlementCache).current();
     }
 
     @Test

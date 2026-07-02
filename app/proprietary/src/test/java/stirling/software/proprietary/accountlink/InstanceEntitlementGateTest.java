@@ -27,6 +27,7 @@ class InstanceEntitlementGateTest {
     @Mock private DeviceCredentialStore credentialStore;
     @Mock private EntitlementCache entitlementCache;
     @Mock private AccountLinkSyncStateRepository syncStateRepository;
+    @Mock private LocalUsageService localUsageService;
 
     private static InstanceEntitlement free() {
         return new InstanceEntitlement(false, 100, 0, null, EntitlementState.OK);
@@ -47,7 +48,7 @@ class InstanceEntitlementGateTest {
     @Test
     void flagOff_allowsEverything_evenBillableUnlinked() {
         GateDecision d =
-                InstanceEntitlementGate.decide(false, true, false, Optional.empty(), false);
+                InstanceEntitlementGate.decide(false, true, false, Optional.empty(), false, 0L);
         assertTrue(d.allowed());
         assertEquals(Reason.FLAG_OFF, d.reason());
     }
@@ -55,28 +56,31 @@ class InstanceEntitlementGateTest {
     @Test
     void manualTool_alwaysFree_evenUnlinked() {
         GateDecision d =
-                InstanceEntitlementGate.decide(true, false, false, Optional.empty(), false);
+                InstanceEntitlementGate.decide(true, false, false, Optional.empty(), false, 0L);
         assertTrue(d.allowed());
         assertEquals(Reason.MANUAL_FREE, d.reason());
     }
 
     @Test
     void billable_notLinked_blocksWithLinkSignal() {
-        GateDecision d = InstanceEntitlementGate.decide(true, true, false, Optional.empty(), false);
+        GateDecision d =
+                InstanceEntitlementGate.decide(true, true, false, Optional.empty(), false, 0L);
         assertFalse(d.allowed());
         assertEquals(Reason.NOT_LINKED, d.reason());
     }
 
     @Test
     void billable_linked_entitlementUnreachable_withinGrace_failsOpen() {
-        GateDecision d = InstanceEntitlementGate.decide(true, true, true, Optional.empty(), false);
+        GateDecision d =
+                InstanceEntitlementGate.decide(true, true, true, Optional.empty(), false, 0L);
         assertTrue(d.allowed());
         assertEquals(Reason.FAIL_OPEN, d.reason());
     }
 
     @Test
     void billable_linked_entitlementUnreachable_graceExpired_blocks() {
-        GateDecision d = InstanceEntitlementGate.decide(true, true, true, Optional.empty(), true);
+        GateDecision d =
+                InstanceEntitlementGate.decide(true, true, true, Optional.empty(), true, 0L);
         assertFalse(d.allowed());
         assertEquals(Reason.GRACE_EXPIRED, d.reason());
     }
@@ -84,7 +88,26 @@ class InstanceEntitlementGateTest {
     @Test
     void billable_linked_freePoolAvailable_allows() {
         GateDecision d =
-                InstanceEntitlementGate.decide(true, true, true, Optional.of(free()), false);
+                InstanceEntitlementGate.decide(true, true, true, Optional.of(free()), false, 0L);
+        assertTrue(d.allowed());
+        assertEquals(Reason.ENTITLED, d.reason());
+    }
+
+    @Test
+    void billable_linked_unsubscribed_pendingLocalUsageDepletesGrant_blocks() {
+        // free() has 100 free units left per the last sync; 100 accrued locally since would exhaust
+        // it once charged, so the gate stops here in real time rather than waiting for the sync.
+        GateDecision d =
+                InstanceEntitlementGate.decide(true, true, true, Optional.of(free()), false, 100L);
+        assertFalse(d.allowed());
+        assertEquals(Reason.OVER_LIMIT, d.reason());
+    }
+
+    @Test
+    void billable_linked_unsubscribed_pendingLocalUsageLeavesRoom_allows() {
+        // 99 pending against 100 remaining → one unit of grant still projected free → allow.
+        GateDecision d =
+                InstanceEntitlementGate.decide(true, true, true, Optional.of(free()), false, 99L);
         assertTrue(d.allowed());
         assertEquals(Reason.ENTITLED, d.reason());
     }
@@ -93,7 +116,7 @@ class InstanceEntitlementGateTest {
     void billable_linked_unsubscribedAndExhausted_blocksOverLimit() {
         GateDecision d =
                 InstanceEntitlementGate.decide(
-                        true, true, true, Optional.of(exhaustedUnsubscribed()), false);
+                        true, true, true, Optional.of(exhaustedUnsubscribed()), false, 0L);
         assertFalse(d.allowed());
         assertEquals(Reason.OVER_LIMIT, d.reason());
     }
@@ -102,7 +125,7 @@ class InstanceEntitlementGateTest {
     void billable_linked_subscribedWithinCap_allows() {
         GateDecision d =
                 InstanceEntitlementGate.decide(
-                        true, true, true, Optional.of(subscribedWithinCap()), false);
+                        true, true, true, Optional.of(subscribedWithinCap()), false, 0L);
         assertTrue(d.allowed());
         assertEquals(Reason.ENTITLED, d.reason());
     }
@@ -111,7 +134,7 @@ class InstanceEntitlementGateTest {
     void billable_linked_subscribedOverCap_blocks() {
         GateDecision d =
                 InstanceEntitlementGate.decide(
-                        true, true, true, Optional.of(subscribedOverCap()), false);
+                        true, true, true, Optional.of(subscribedOverCap()), false, 0L);
         assertFalse(d.allowed());
         assertEquals(Reason.OVER_LIMIT, d.reason());
     }
@@ -123,7 +146,7 @@ class InstanceEntitlementGateTest {
         InstanceEntitlement revoked =
                 new InstanceEntitlement(false, 0, 0, null, EntitlementState.REVOKED);
         GateDecision d =
-                InstanceEntitlementGate.decide(true, true, true, Optional.of(revoked), false);
+                InstanceEntitlementGate.decide(true, true, true, Optional.of(revoked), false, 0L);
         assertFalse(d.allowed());
         assertEquals(Reason.REVOKED, d.reason());
     }
@@ -134,7 +157,8 @@ class InstanceEntitlementGateTest {
         InstanceEntitlement conflicting =
                 new InstanceEntitlement(false, 5, 0, null, EntitlementState.OVER_LIMIT);
         GateDecision d =
-                InstanceEntitlementGate.decide(true, true, true, Optional.of(conflicting), false);
+                InstanceEntitlementGate.decide(
+                        true, true, true, Optional.of(conflicting), false, 0L);
         assertFalse(d.allowed());
         assertEquals(Reason.OVER_LIMIT, d.reason());
     }
@@ -143,7 +167,7 @@ class InstanceEntitlementGateTest {
 
     private InstanceEntitlementGate gate(AccountLinkProperties props) {
         return new InstanceEntitlementGate(
-                props, credentialStore, entitlementCache, syncStateRepository);
+                props, credentialStore, entitlementCache, syncStateRepository, localUsageService);
     }
 
     private static AccountLinkProperties props(boolean meteringEnabled, int graceDays) {
@@ -195,5 +219,20 @@ class InstanceEntitlementGateTest {
 
         assertTrue(d.allowed());
         assertEquals(Reason.FAIL_OPEN, d.reason());
+    }
+
+    @Test
+    void evaluate_unsubscribed_localUsageWouldExceedGrant_blocksInRealTime() {
+        // 100 free units remaining per the last sync, but 100 already accrued locally since — the
+        // gate subtracts the pending delta and blocks now, not after the next sync reconciles.
+        when(credentialStore.isLinked()).thenReturn(true);
+        when(entitlementCache.current()).thenReturn(Optional.of(free()));
+        when(localUsageService.currentPeriodUnsynced())
+                .thenReturn(new LocalUsageService.LocalUsage(LocalDateTime.now(), 100, 0, 0, 100));
+
+        GateDecision d = gate(props(true, 3)).evaluate(true);
+
+        assertFalse(d.allowed());
+        assertEquals(Reason.OVER_LIMIT, d.reason());
     }
 }

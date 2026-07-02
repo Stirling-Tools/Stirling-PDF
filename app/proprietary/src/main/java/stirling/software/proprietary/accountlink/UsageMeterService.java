@@ -70,12 +70,8 @@ public class UsageMeterService {
         try {
             signatureRepo.saveAndFlush(
                     new MeteredInputSignature(periodStart, opSignature, LocalDateTime.now()));
-            log.debug("Account-link dedup: claimed new signature {}", opSignature);
             return true;
         } catch (DataIntegrityViolationException alreadyMetered) {
-            log.debug(
-                    "Account-link dedup: signature {} already metered this period — skipping charge",
-                    opSignature);
             return false; // same input set already billed this period
         } catch (RuntimeException e) {
             // Never let a dedup-store hiccup drop a charge; treat as "not a duplicate" and accrue.

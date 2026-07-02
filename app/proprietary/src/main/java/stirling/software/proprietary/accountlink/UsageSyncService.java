@@ -94,7 +94,14 @@ public class UsageSyncService implements SchedulingConfigurer {
         }
         List<LocalDateTime> periods = counters.findPeriodsWithUnsyncedUsage();
         if (periods.isEmpty()) {
-            return; // nothing accrued since the last successful sync
+            // Nothing accrued to report — but a sync is also our cue to pick up an out-of-band
+            // entitlement change (e.g. the admin just subscribed), which otherwise wouldn't surface
+            // until the entitlement-cache TTL lapses. Force an immediate refresh so the gate
+            // reflects the new plan now. invalidate() marks the snapshot stale; current() then does
+            // the blocking re-fetch and re-populates the cache for the next billable request.
+            entitlementCache.invalidate();
+            entitlementCache.current();
+            return;
         }
         InstanceEntitlement latest = null;
         try {

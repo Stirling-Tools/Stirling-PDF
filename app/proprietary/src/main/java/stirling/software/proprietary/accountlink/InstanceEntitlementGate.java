@@ -37,16 +37,19 @@ public class InstanceEntitlementGate {
     private final DeviceCredentialStore credentialStore;
     private final EntitlementCache entitlementCache;
     private final AccountLinkSyncStateRepository syncStateRepository;
+    private final LocalUsageService localUsageService;
 
     public InstanceEntitlementGate(
             AccountLinkProperties properties,
             DeviceCredentialStore credentialStore,
             EntitlementCache entitlementCache,
-            AccountLinkSyncStateRepository syncStateRepository) {
+            AccountLinkSyncStateRepository syncStateRepository,
+            LocalUsageService localUsageService) {
         this.properties = properties;
         this.credentialStore = credentialStore;
         this.entitlementCache = entitlementCache;
         this.syncStateRepository = syncStateRepository;
+        this.localUsageService = localUsageService;
     }
 
     /** Evaluates the gate for a request, resolving live state from the store + cache. */
@@ -61,20 +64,35 @@ public class InstanceEntitlementGate {
         Optional<InstanceEntitlement> entitlement =
                 linked ? entitlementCache.current() : Optional.empty();
         boolean graceExpired = linked && entitlement.isEmpty() && isGraceExpired();
-        return decide(true, true, linked, entitlement, graceExpired);
+        // For an unsubscribed team the one-time free grant is the ceiling, and it depletes in real
+        // time as billable work accrues locally between daily syncs. Subtract the not-yet-synced
+        // local usage from the last-synced free balance so the gate stops AT the grant, rather than
+        // running until the next sync charges the backlog and only then flips. Subscribed teams
+        // bill
+        // past the grant (their gate is the money cap), so this doesn't apply to them — pass 0.
+        long pendingUnsynced =
+                entitlement.map(e -> !e.subscribed()).orElse(false)
+                        ? localUsageService.currentPeriodUnsynced().totalUnsyncedUnits()
+                        : 0L;
+        return decide(true, true, linked, entitlement, graceExpired, pendingUnsynced);
     }
 
     /**
      * Pure decision function — no Spring, no I/O. {@code entitlement} empty means "unknown"
      * (unreachable): when linked, that fails open unless {@code graceExpired} (the metering grace
      * window elapsed with no authoritative contact), in which case it blocks.
+     *
+     * @param pendingUnsyncedUnits billable units accrued locally since the last sync — subtracted
+     *     from an unsubscribed team's free balance so the grant depletes in real time (0 for
+     *     subscribed / unknown-entitlement cases, where it has no effect).
      */
     public static GateDecision decide(
             boolean flagEnabled,
             boolean billable,
             boolean linked,
             Optional<InstanceEntitlement> entitlement,
-            boolean graceExpired) {
+            boolean graceExpired,
+            long pendingUnsyncedUnits) {
         if (!flagEnabled) {
             return GateDecision.allow(GateDecision.Reason.FLAG_OFF);
         }
@@ -98,7 +116,7 @@ public class InstanceEntitlementGate {
             // Credential revoked/invalid (authoritative deny) — block, distinct from over-limit.
             return GateDecision.block(GateDecision.Reason.REVOKED);
         }
-        return entitled(e)
+        return entitled(e, pendingUnsyncedUnits)
                 ? GateDecision.allow(GateDecision.Reason.ENTITLED)
                 : GateDecision.block(GateDecision.Reason.OVER_LIMIT);
     }
@@ -135,7 +153,7 @@ public class InstanceEntitlementGate {
     }
 
     /** True when the snapshot permits billable work (subscribed, free pool left, or within cap). */
-    private static boolean entitled(InstanceEntitlement e) {
+    private static boolean entitled(InstanceEntitlement e, long pendingUnsyncedUnits) {
         if (e.state() == EntitlementState.OVER_LIMIT || e.state() == EntitlementState.REVOKED) {
             return false;
         }
@@ -143,7 +161,10 @@ public class InstanceEntitlementGate {
             // Subscribed: allowed unless a period cap is set and exceeded.
             return e.periodCapUnits() == null || e.periodSpendUnits() < e.periodCapUnits();
         }
-        // Unsubscribed: only the free pool covers billable work.
-        return e.freeRemainingUnits() > 0;
+        // Unsubscribed: the free pool must cover both what SaaS has already charged (already netted
+        // out of freeRemainingUnits) and the local usage accrued since the last sync but not yet
+        // reported. Depleting by the pending delta stops the (grant+1)-th unit here in real time,
+        // instead of allowing it until a sync reconciles and the gate belatedly flips.
+        return e.freeRemainingUnits() - pendingUnsyncedUnits > 0;
     }
 }

@@ -89,6 +89,9 @@ class InstanceControllerTest {
         assertThat(body.unitCalcPolicy()).isEqualTo(new UnitCalcPolicy(1, 1_048_576L, 1, 1000));
         assertThat(body.periodStart()).isNotNull();
         assertThat(body.periodEnd()).isNotNull();
+        // The instance-facing read drops the cached snapshot first so a just-subscribed team's
+        // plan surfaces on the next poll instead of waiting out the cache TTL.
+        verify(entitlementService).invalidate(42L);
     }
 
     @Test
@@ -168,6 +171,9 @@ class InstanceControllerTest {
                 .containsEntry(BillingCategory.API, 12L)
                 .containsEntry(BillingCategory.AI, 4L)
                 .containsEntry(BillingCategory.AUTOMATION, 8L);
+        // The sync drops the team's cached snapshot so the just-charged delta (and the free-grant
+        // balance it moved) show on the next wallet read instead of lagging out the 30s TTL.
+        verify(entitlementService).invalidate(99L);
     }
 
     @Test

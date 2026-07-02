@@ -3,8 +3,12 @@ import { useTranslation } from "react-i18next";
 import { Banner, Button, Skeleton } from "@shared/components";
 import { useLink } from "@portal/contexts/LinkContext";
 import { useUI } from "@portal/contexts/UIContext";
-import { fetchWallet, type Wallet } from "@portal/api/billing";
-import { fetchLocalUsage, type LocalUsage } from "@portal/api/link";
+import { fetchWallet, refreshWalletCache, type Wallet } from "@portal/api/billing";
+import {
+  fetchLocalUsage,
+  triggerLocalSync,
+  type LocalUsage,
+} from "@portal/api/link";
 import { useStripePortal } from "@portal/hooks/useStripePortal";
 import { LinkAccountPrompt } from "@portal/components/billing/LinkAccountPrompt";
 import { FreePlanView } from "@portal/components/billing/FreePlanView";
@@ -44,9 +48,6 @@ export function Usage() {
   // The instance is linked but the browser's SaaS session has lapsed — needs a
   // re-sign-in, NOT a re-link.
   const [needsReauth, setNeedsReauth] = useState(false);
-  // Briefly polling the wallet after a successful checkout until the webhook flips
-  // it to subscribed.
-  const [finalizing, setFinalizing] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   // Stripe customer portal — the subscribed header's "Manage Payment" action.
   const portal = useStripePortal(wallet);
@@ -122,31 +123,37 @@ export function Usage() {
 
   const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
 
-  const confirmSubscription = useCallback(async () => {
+  const confirmSubscription = useCallback(async (): Promise<boolean> => {
     // Stripe's onComplete fires before the subscription webhook lands, so poll the
-    // wallet briefly until it flips to subscribed rather than dropping the
-    // just-paid admin back on the free CTA.
-    setFinalizing(true);
-    for (let i = 0; i < 10; i++) {
+    // wallet until it flips to subscribed. Drop the server cache before each read
+    // so we see the webhook the moment it lands rather than after the ~30s TTL.
+    // ~60s of attempts — longer than the observed webhook + sync-engine latency —
+    // so a slightly slow activation still completes inside the (open) checkout
+    // modal instead of falling back to a manual refresh. Resolves true once
+    // subscribed so the modal can close itself in.
+    for (let i = 0; i < 30; i++) {
       try {
+        await refreshWalletCache().catch(() => {});
         const w = await fetchWallet();
-        if (!mounted.current) return;
+        if (!mounted.current) return false;
         if (w.status === "subscribed") {
           setWallet(w);
           setLinkState("linked-subscribed");
-          setFinalizing(false);
-          return;
+          // Nudge the local instance to refresh its gate now so billable work
+          // unblocks immediately rather than on its next poll. Fire-and-forget.
+          triggerLocalSync().catch(() => {});
+          return true;
         }
       } catch {
         // Transient read failure — keep polling.
       }
       await new Promise((r) => setTimeout(r, 2000));
-      if (!mounted.current) return;
+      if (!mounted.current) return false;
     }
-    // Webhook still hasn't landed after ~20s: stop blocking and refresh. The page
-    // self-heals on the next load once provisioning completes.
-    setFinalizing(false);
+    // Webhook still hasn't landed: re-fetch once more and report back so the modal
+    // shows its "almost there" notice rather than the page silently self-healing.
     setRefreshKey((k) => k + 1);
+    return false;
   }, [setLinkState]);
 
   return (
@@ -180,12 +187,6 @@ export function Usage() {
           </div>
         )}
 
-        {isLinked && finalizing && (
-          <Banner tone="info" title={t("usage.finalizing.title")}>
-            {t("usage.finalizing.body")}
-          </Banner>
-        )}
-
         {isLinked && needsReauth && (
           <Banner
             tone="warning"
@@ -212,8 +213,12 @@ export function Usage() {
           </Banner>
         )}
 
-        {isLinked && !finalizing && wallet && wallet.status === "free" && (
-          <FreePlanView wallet={wallet} onSubscribed={confirmSubscription} />
+        {isLinked && wallet && wallet.status === "free" && (
+          <FreePlanView
+            wallet={wallet}
+            unsynced={localUsage}
+            onSubscribed={confirmSubscription}
+          />
         )}
 
         {isLinked && wallet && wallet.status === "subscribed" && (

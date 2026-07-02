@@ -78,6 +78,17 @@ export async function unlinkInstance(): Promise<void> {
 }
 
 /**
+ * Nudge the local backend to sync + refresh its cached entitlement now. Called
+ * right after a checkout completes so the instance's request-time gate reflects
+ * the new subscription immediately instead of waiting out its entitlement-cache
+ * TTL. Best-effort — the caller swallows failures (metering off → 409, or the
+ * local backend unreachable); the scheduled sync / TTL refresh is the backstop.
+ */
+export async function triggerLocalSync(): Promise<void> {
+  await apiClient.local.json<void>(`${BASE}/sync-now`, { method: "POST" });
+}
+
+/**
  * Every linked instance for the team — SaaS-direct call with the admin's
  * Supabase JWT (no longer takes an accessToken parameter; the saas client
  * resolves the live session itself).
