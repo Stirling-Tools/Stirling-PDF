@@ -1,9 +1,6 @@
 {
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "target": "es2022",
-    "jsx": "react-jsx",
-    "module": "esnext",
-    "moduleResolution": "bundler",
     "paths": {
       "@app/*": [
         "../../src/portal/*",
@@ -15,12 +12,7 @@
       "@cloud/*": ["../../src/cloud/*"],
       "@proprietary/*": ["../../src/proprietary/*"],
       "@core/*": ["../../src/core/*"]
-    },
-    "resolveJsonModule": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "skipLibCheck": true
+    }
   },
   "include": ["../global.d.ts", "."]
 }
