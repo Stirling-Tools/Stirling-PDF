@@ -44,6 +44,7 @@ import type { PDFDict, PDFNumber } from "@cantoo/pdf-lib";
 import { useWheelZoom } from "@app/hooks/useWheelZoom";
 import { useFormFill } from "@app/tools/formFill/FormFillContext";
 import { FormSaveBar } from "@app/tools/formFill/FormSaveBar";
+import { FORM_APPLY_EVENT } from "@app/tools/formFill/formFillEvents";
 import { useViewerKeyCommand } from "@app/hooks/useViewerKeyCommand";
 import { alert } from "@app/components/toast";
 
@@ -854,8 +855,8 @@ const EmbedPdfViewerContent = ({
         handleFormApply(blob);
       }
     };
-    window.addEventListener("formfill:apply", handler);
-    return () => window.removeEventListener("formfill:apply", handler);
+    window.addEventListener(FORM_APPLY_EVENT, handler);
+    return () => window.removeEventListener(FORM_APPLY_EVENT, handler);
   }, [handleFormApply]);
 
   // Apply layer visibility changes - reload the modified PDF into the viewer

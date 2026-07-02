@@ -4039,9 +4039,59 @@ issues = "GitHub"
 
 [formFill]
 flattenAfterFilling = "Flatten after filling"
+page = "Page"
 rescanFields = "Re-scan fields"
 rescanFormFields = "Re-scan form fields"
 save = "Save"
+
+[formFill.create]
+commit = "Add {{count}} field(s) to PDF"
+editField = "Edit field"
+empty = "No fields drawn yet."
+failed = "Failed to add fields"
+hint = "Pick a field type, then draw it on the page."
+placing = "Draw a {{type}} field on the page. Press Esc to stop."
+removeField = "Remove field"
+
+[formFill.editor]
+action = "Button action"
+actionNone = "None"
+actionPrint = "Print"
+actionReset = "Reset form"
+actionSubmit = "Submit to URL"
+actionUri = "Open URL"
+actionUrl = "URL"
+addOption = "Add option"
+caption = "Button caption"
+defaultValue = "Default value"
+fontSize = "Font size"
+label = "Label"
+maxLength = "Max length (comb)"
+multiline = "Multi-line"
+multiSelect = "Allow multiple selection"
+name = "Field name"
+optionPlaceholder = "Option {{n}}"
+options = "Options"
+optionsEmpty = "Add at least one option."
+readOnly = "Read-only"
+removeOption = "Remove option"
+required = "Required"
+signatureNote = "Placeholder only - you don't sign here. It marks where a signature belongs so a PDF signer (Adobe Acrobat, a signing service, etc.) places the signature in this spot when the document is signed."
+tooltip = "Tooltip"
+type = "Type"
+
+[formFill.mode]
+create = "Create"
+fill = "Fill"
+modify = "Modify"
+
+[formFill.modify]
+commit = "Save {{count}} change(s)"
+delete = "Delete"
+empty = "This PDF has no form fields yet."
+failed = "Failed to save changes"
+hint = "Select a field to edit its properties, drag it on the page, or delete it."
+restore = "Restore"
 
 [formFill.sidebar]
 close = "Close sidebar"
@@ -4364,8 +4414,8 @@ tags = "simplify,remove,interactive,flatten,flatten form,remove form fields,make
 title = "Flatten"
 
 [home.formFill]
-desc = "Fill PDF form fields interactively with a visual editor"
-title = "Fill Form"
+desc = "Fill, create, edit, and delete PDF form fields with a visual editor"
+title = "Form Editor"
 
 [home.getPdfInfo]
 desc = "Grabs any and all information possible on PDFs"
@@ -8481,7 +8531,7 @@ downloadAll = "Download All"
 exitRedaction = "Exit Redaction Mode"
 exportAll = "Export PDF"
 exportSelected = "Export Selected Pages"
-formFill = "Fill Form"
+formFill = "Form Editor"
 multiTool = "Multi-Tool"
 panMode = "Pan Mode"
 print = "Print PDF"

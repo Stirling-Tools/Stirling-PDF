@@ -257,6 +257,87 @@ public class FormFillController {
         }
     }
 
+    @PostMapping(value = "/add-fields", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(
+            summary = "Add new form fields",
+            description =
+                    "Creates new form fields in the provided PDF and returns the updated file")
+    public ResponseEntity<Resource> addFields(
+            @Parameter(
+                            description = "The input PDF file",
+                            required = true,
+                            content =
+                                    @Content(
+                                            mediaType = MediaType.APPLICATION_PDF_VALUE,
+                                            schema = @Schema(type = "string", format = "binary")))
+                    @RequestParam("file")
+                    MultipartFile file,
+            @Parameter(
+                            description = "JSON array of new field definitions",
+                            example =
+                                    "[{\"name\":\"NewField\",\"type\":\"text\",\"pageIndex\":0,"
+                                            + "\"x\":50,\"y\":700,\"width\":200,\"height\":20}]")
+                    @RequestPart(value = "fields", required = false)
+                    byte[] fieldsPayload)
+            throws IOException {
+
+        String rawFields = decodePart(fieldsPayload);
+        List<FormUtils.NewFormFieldDefinition> definitions =
+                FormPayloadParser.parseNewFieldDefinitions(objectMapper, rawFields);
+        if (definitions.isEmpty()) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.dataRequired",
+                    "{0} must contain at least one definition",
+                    "fields payload");
+        }
+
+        return processSingleFile(
+                file, "updated", document -> FormUtils.addNewFields(document, definitions));
+    }
+
+    @PostMapping(value = "/edit-fields", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(
+            summary = "Apply a batch of form field edits",
+            description =
+                    "Adds, modifies, and deletes form fields in a single request (one document"
+                            + " load/save) and returns the updated file")
+    public ResponseEntity<Resource> editFields(
+            @Parameter(
+                            description = "The input PDF file",
+                            required = true,
+                            content =
+                                    @Content(
+                                            mediaType = MediaType.APPLICATION_PDF_VALUE,
+                                            schema = @Schema(type = "string", format = "binary")))
+                    @RequestParam("file")
+                    MultipartFile file,
+            @Parameter(
+                            description =
+                                    "JSON object with optional 'add', 'modify' and 'delete'"
+                                            + " sections",
+                            example =
+                                    "{\"add\":[{\"name\":\"f\",\"type\":\"text\",\"pageIndex\":0,"
+                                            + "\"x\":50,\"y\":700,\"width\":200,\"height\":20}],"
+                                            + "\"modify\":[],\"delete\":[]}")
+                    @RequestPart(value = "edits", required = false)
+                    byte[] editsPayload)
+            throws IOException {
+
+        String rawEdits = decodePart(editsPayload);
+        FormUtils.FieldEditBatch batch = FormPayloadParser.parseFieldEdits(objectMapper, rawEdits);
+        if (batch.add().isEmpty() && batch.modify().isEmpty() && batch.delete().isEmpty()) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.dataRequired", "{0} must contain at least one edit", "edits payload");
+        }
+
+        return processSingleFile(
+                file,
+                "updated",
+                document ->
+                        FormUtils.applyFieldEdits(
+                                document, batch.add(), batch.modify(), batch.delete()));
+    }
+
     @PostMapping(value = "/modify-fields", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "Modify existing form fields",

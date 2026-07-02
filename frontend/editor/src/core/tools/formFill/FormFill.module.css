@@ -49,10 +49,21 @@
   line-height: 1;
 }
 
+/* Selected tab: the indicator is a saturated blue in both colour schemes, so the
+   label and its icon must flip to white for legible contrast. Without this the
+   muted-grey text sat on the blue and read poorly, especially in dark mode. */
+.segmentedInnerLabel[data-active] {
+  color: var(--mantine-color-white);
+}
+
 .modeTabIcon {
   font-size: 1rem !important;
   margin-bottom: 0.125rem;
   opacity: 0.8;
+}
+
+.segmentedInnerLabel[data-active] .modeTabIcon {
+  opacity: 1;
 }
 
 .header {
