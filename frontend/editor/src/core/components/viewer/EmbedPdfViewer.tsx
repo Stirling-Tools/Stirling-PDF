@@ -26,6 +26,10 @@ import {
 import { useSignature } from "@app/contexts/SignatureContext";
 import { useRedaction } from "@app/contexts/RedactionContext";
 import type { RedactionPendingTrackerAPI } from "@app/components/viewer/RedactionPendingTracker";
+import type {
+  SignaturePreview,
+  SignatureOverlayAPI,
+} from "@app/components/viewer/viewerTypes";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
 import { isStirlingFile, getFormFillFileId } from "@app/types/fileContext";
 import { useViewerWorkbenchBarButtons } from "@app/components/viewer/useViewerWorkbenchBarButtons";
@@ -141,6 +145,14 @@ export interface EmbedPdfViewerProps {
   setSidebarsVisible: (v: boolean) => void;
   onClose?: () => void;
   previewFile?: File | null;
+  // ── Signature overlay pass-through (opt-in; all default off) ──────────────
+  signaturePreviews?: SignaturePreview[];
+  signaturePreviewsReadOnly?: boolean;
+  signaturePlacementMode?: boolean;
+  signaturePlacementData?: string;
+  signaturePlacementType?: "canvas" | "image" | "text";
+  onSignaturePreviewsChange?: (previews: SignaturePreview[]) => void;
+  signatureOverlayApiRef?: React.RefObject<SignatureOverlayAPI | null>;
 }
 
 const EmbedPdfViewerContent = ({
@@ -148,6 +160,13 @@ const EmbedPdfViewerContent = ({
   setSidebarsVisible: _setSidebarsVisible,
   onClose,
   previewFile,
+  signaturePreviews,
+  signaturePreviewsReadOnly,
+  signaturePlacementMode,
+  signaturePlacementData,
+  signaturePlacementType,
+  onSignaturePreviewsChange,
+  signatureOverlayApiRef,
 }: EmbedPdfViewerProps) => {
   const { t } = useTranslation();
   const viewerRef = React.useRef<HTMLDivElement>(null);
@@ -1301,6 +1320,13 @@ const EmbedPdfViewerContent = ({
                 // Handle signature added - for debugging, enable console logs as needed
                 // Future: Handle signature completion
               }}
+              signaturePreviews={signaturePreviews}
+              signaturePreviewsReadOnly={signaturePreviewsReadOnly}
+              signaturePlacementMode={signaturePlacementMode}
+              signaturePlacementData={signaturePlacementData}
+              signaturePlacementType={signaturePlacementType}
+              onSignaturePreviewsChange={onSignaturePreviewsChange}
+              signatureOverlayApiRef={signatureOverlayApiRef}
             />
             {/* Floating save bar for form-filled PDFs (like Chrome/Firefox PDF viewers) */}
             <FormSaveBar

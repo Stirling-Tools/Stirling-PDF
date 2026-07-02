@@ -42,7 +42,12 @@ export function FreePlanView({ wallet, unsynced, onSubscribed }: Props) {
 
   function openCheckout() {
     if (wallet.teamId == null) {
-      setMissingTeam(t("billing.freePlan.noTeamResolved"));
+      setMissingTeam(
+        t(
+          "billing.freePlan.noTeamResolved",
+          "No team is resolved on your wallet yet — refresh and try again.",
+        ),
+      );
       return;
     }
     setMissingTeam(null);
@@ -55,7 +60,7 @@ export function FreePlanView({ wallet, unsynced, onSubscribed }: Props) {
       onClick={openCheckout}
       disabled={wallet.teamId == null}
     >
-      {t("billing.freePlan.switchOnProcessor")}
+      {t("billing.freePlan.switchOnProcessor", "Switch on the Processor →")}
     </Button>
   ) : null;
 
@@ -64,20 +69,20 @@ export function FreePlanView({ wallet, unsynced, onSubscribed }: Props) {
       {/* Current plan */}
       <div className="portal-billing__current-plan">
         <span className="portal-billing__eyebrow">
-          {t("billing.freePlan.currentPlan")}
+          {t("billing.freePlan.currentPlan", "Current plan")}
         </span>
         <div className="portal-billing__current-plan-row">
           <h2 className="portal-billing__current-plan-name">
-            {t("billing.freePlan.planName")}
+            {t("billing.freePlan.planName", "Editor")}
           </h2>
           <StatusBadge tone="success" size="sm" showDot={false}>
-            {t("billing.freePlan.freeForever")}
+            {t("billing.freePlan.freeForever", "Free forever")}
           </StatusBadge>
           <StatusBadge tone="info" size="sm" showDot={false}>
-            {t("billing.freePlan.ssoIncluded")}
+            {t("billing.freePlan.ssoIncluded", "SSO included")}
           </StatusBadge>
           <StatusBadge tone="purple" size="sm" showDot={false}>
-            {t("billing.freePlan.unlimitedUsers")}
+            {t("billing.freePlan.unlimitedUsers", "Unlimited users")}
           </StatusBadge>
         </div>
       </div>
@@ -88,13 +93,22 @@ export function FreePlanView({ wallet, unsynced, onSubscribed }: Props) {
       <WalletMeter wallet={wallet} unsynced={unsynced} action={switchOnAction} />
 
       {missingTeam && (
-        <Banner tone="warning" title={t("billing.freePlan.checkoutErrorTitle")}>
+        <Banner
+          tone="warning"
+          title={t(
+            "billing.freePlan.checkoutErrorTitle",
+            "Couldn't start checkout",
+          )}
+        >
           {missingTeam}
         </Banner>
       )}
       {!isLeader && (
         <p className="portal-billing__plan-readonly">
-          {t("billing.freePlan.ownerOnly")}
+          {t(
+            "billing.freePlan.ownerOnly",
+            "Only the team owner can switch on the Processor plan.",
+          )}
         </p>
       )}
 

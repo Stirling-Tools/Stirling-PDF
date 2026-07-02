@@ -8,7 +8,7 @@ import "@shared/auth/ui/auth.css";
 import "@app/routes/authShared/saas-auth.css";
 import { withBasePath } from "@app/constants/app";
 import ErrorMessage from "@shared/auth/ui/ErrorMessage";
-import loginHeader from "@shared/assets/login/LoginLightModeHeader.svg";
+import loginHeader from "@shared/assets/brand/modern-logo/LoginLightModeHeader.svg";
 
 /**
  * OAuth 2.1 consent screen for the Supabase OAuth server (used by MCP clients

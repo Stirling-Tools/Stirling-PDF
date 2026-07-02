@@ -106,7 +106,12 @@ export function StripeCheckoutModal({
           return;
         }
         if (!session.clientSecret) {
-          setError(t("billing.checkout.noClientSecret"));
+          setError(
+            t(
+              "billing.checkout.noClientSecret",
+              "Edge function returned no client_secret.",
+            ),
+          );
           return;
         }
         setClientSecret(session.clientSecret);
@@ -156,20 +161,32 @@ export function StripeCheckoutModal({
       className="portal-billing__checkout-modal"
       disableBackdropClose={!dismissable}
       disableEscapeClose={!dismissable}
-      title={t("billing.checkout.title")}
-      subtitle={t("billing.checkout.subtitle")}
+      title={t("billing.checkout.title", "Turn on the Processor plan")}
+      subtitle={t(
+        "billing.checkout.subtitle",
+        "Add a card to keep going past your free Editor-plan grant. Stripe handles the rest.",
+      )}
     >
       {phase === "finalizing" && (
         <div className="portal-billing__checkout-finalizing" role="status">
           <Spinner size="lg" />
           <h3 className="portal-billing__checkout-status-title">
-            {t("billing.checkout.finalizing.title")}
+            {t(
+              "billing.checkout.finalizing.title",
+              "Activating your Processor plan…",
+            )}
           </h3>
           <p className="portal-billing__checkout-status-body">
-            {t("billing.checkout.finalizing.body")}
+            {t(
+              "billing.checkout.finalizing.body",
+              "Your payment went through. We're switching on metered processing across your linked instances — this usually takes a few seconds.",
+            )}
           </p>
           <p className="portal-billing__checkout-status-hint">
-            {t("billing.checkout.finalizing.hint")}
+            {t(
+              "billing.checkout.finalizing.hint",
+              "Please keep this window open.",
+            )}
           </p>
         </div>
       )}
@@ -177,13 +194,16 @@ export function StripeCheckoutModal({
       {phase === "activationSlow" && (
         <div className="portal-billing__checkout-finalizing" role="status">
           <h3 className="portal-billing__checkout-status-title">
-            {t("billing.checkout.activationSlow.title")}
+            {t("billing.checkout.activationSlow.title", "Almost there")}
           </h3>
           <p className="portal-billing__checkout-status-body">
-            {t("billing.checkout.activationSlow.body")}
+            {t(
+              "billing.checkout.activationSlow.body",
+              "Your payment succeeded, but activation is taking a little longer than usual. It'll switch on automatically — close this and it'll appear here shortly.",
+            )}
           </p>
           <Button variant="outline" onClick={onClose}>
-            {t("billing.checkout.activationSlow.close")}
+            {t("billing.checkout.activationSlow.close", "Close")}
           </Button>
         </div>
       )}
@@ -193,15 +213,24 @@ export function StripeCheckoutModal({
           {!publishableKey && (
             <Banner
               tone="neutral"
-              title={t("billing.checkout.notConfigured.title")}
+              title={t(
+                "billing.checkout.notConfigured.title",
+                "Stripe not configured",
+              )}
             >
-              {t("billing.checkout.notConfigured.bodyBefore")}{" "}
+              {t("billing.checkout.notConfigured.bodyBefore", "Set")}{" "}
               <code>VITE_STRIPE_PUBLISHABLE_KEY</code>{" "}
-              {t("billing.checkout.notConfigured.bodyAfter")}
+              {t(
+                "billing.checkout.notConfigured.bodyAfter",
+                "in the portal env to enable in-app checkout.",
+              )}
             </Banner>
           )}
           {publishableKey && error && (
-            <Banner tone="danger" title={t("billing.checkout.error.title")}>
+            <Banner
+              tone="danger"
+              title={t("billing.checkout.error.title", "Couldn't start checkout")}
+            >
               {error}
             </Banner>
           )}

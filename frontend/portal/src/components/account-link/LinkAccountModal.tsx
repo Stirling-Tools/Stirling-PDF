@@ -66,13 +66,19 @@ export function LinkAccountModal({
       width="md"
       title={
         reauth
-          ? t("accountLink.modal.reauthTitle")
-          : t("accountLink.modal.linkTitle")
+          ? t("accountLink.modal.reauthTitle", "Sign in again")
+          : t("accountLink.modal.linkTitle", "Link your Stirling account")
       }
       subtitle={
         reauth
-          ? t("accountLink.modal.reauthSubtitle")
-          : t("accountLink.modal.linkSubtitle")
+          ? t(
+              "accountLink.modal.reauthSubtitle",
+              "Your session expired — sign back in to your Stirling account. Your instance stays linked.",
+            )
+          : t(
+              "accountLink.modal.linkSubtitle",
+              "Sign in to the account this server should bill against.",
+            )
       }
     >
       {isSaasSupabaseConfigured ? (
@@ -81,13 +87,19 @@ export function LinkAccountModal({
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           <Banner
             tone="neutral"
-            title={t("accountLink.modal.loginNotConfigured.title")}
+            title={t(
+              "accountLink.modal.loginNotConfigured.title",
+              "SaaS login not configured",
+            )}
           >
-            {t("accountLink.modal.loginNotConfigured.before")}{" "}
+            {t("accountLink.modal.loginNotConfigured.before", "Set")}{" "}
             <code>VITE_SAAS_SUPABASE_URL</code>{" "}
-            {t("accountLink.modal.loginNotConfigured.and")}{" "}
+            {t("accountLink.modal.loginNotConfigured.and", "and")}{" "}
             <code>VITE_SAAS_SUPABASE_ANON_KEY</code>{" "}
-            {t("accountLink.modal.loginNotConfigured.after")}
+            {t(
+              "accountLink.modal.loginNotConfigured.after",
+              "to enable in-app linking against the hosted Stirling account.",
+            )}
           </Banner>
           {import.meta.env.DEV && (
             <Button
@@ -97,7 +109,7 @@ export function LinkAccountModal({
                 onClose();
               }}
             >
-              {t("accountLink.modal.simulateSignIn")}
+              {t("accountLink.modal.simulateSignIn", "Simulate sign-in (dev)")}
             </Button>
           )}
         </div>

@@ -104,10 +104,14 @@ export function Usage() {
           setError(e.message);
         } else if (e instanceof HttpError) {
           setError(
-            t("usage.error.walletUnavailable", {
-              status: e.status,
-              statusText: e.statusText,
-            }),
+            t(
+              "usage.error.walletUnavailable",
+              "Wallet unavailable: {{status}} {{statusText}}",
+              {
+                status: e.status,
+                statusText: e.statusText,
+              },
+            ),
           );
         } else {
           setError(e instanceof Error ? e.message : String(e));
@@ -161,8 +165,15 @@ export function Usage() {
       <header className="portal-usage__header">
         <div className="portal-usage__header-inner">
           <div>
-            <h1 className="portal-usage__title">{t("usage.title")}</h1>
-            <p className="portal-usage__subtitle">{t("usage.subtitle")}</p>
+            <h1 className="portal-usage__title">
+              {t("usage.title", "Usage & billing")}
+            </h1>
+            <p className="portal-usage__subtitle">
+              {t(
+                "usage.subtitle",
+                "Consumption, invoices, and plan management for every PDF Stirling has billed, in one console.",
+              )}
+            </p>
           </div>
           {wallet?.status === "subscribed" && (
             <Button
@@ -171,7 +182,7 @@ export function Usage() {
               loading={portal.opening}
               onClick={portal.open}
             >
-              {t("usage.managePayment")}
+              {t("usage.managePayment", "Manage Payment")}
             </Button>
           )}
         </div>
@@ -190,25 +201,37 @@ export function Usage() {
         {isLinked && needsReauth && (
           <Banner
             tone="warning"
-            title={t("usage.sessionExpired.title")}
+            title={t("usage.sessionExpired.title", "Session expired")}
             action={
               <Button size="sm" onClick={() => openLinkModal("reauth")}>
-                {t("usage.sessionExpired.action")}
+                {t("usage.sessionExpired.action", "Sign in again")}
               </Button>
             }
           >
-            {t("usage.sessionExpired.body")}
+            {t(
+              "usage.sessionExpired.body",
+              "Your Stirling account session has expired. Sign in again to view billing — your instance stays linked.",
+            )}
           </Banner>
         )}
 
         {isLinked && error && (
-          <Banner tone="danger" title={t("usage.error.loadWallet")}>
+          <Banner
+            tone="danger"
+            title={t("usage.error.loadWallet", "Couldn't load wallet")}
+          >
             {error}
           </Banner>
         )}
 
         {isLinked && portal.error && (
-          <Banner tone="danger" title={t("usage.error.openStripePortal")}>
+          <Banner
+            tone="danger"
+            title={t(
+              "usage.error.openStripePortal",
+              "Couldn't open Stripe portal",
+            )}
+          >
             {portal.error}
           </Banner>
         )}

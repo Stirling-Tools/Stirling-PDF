@@ -28,8 +28,10 @@ export interface SourceView {
   referenceCount: number;
   referencingPolicies: SourcePolicyRef[];
   config: SourceDetailRow[];
-  /** Per-source document volume: not tracked yet (always null for now). */
-  docsTotal: number | null;
+  /** Documents this source has fed into runs: lifetime, plus trailing 24h / 30d windows. */
+  docsTotal: number;
+  docs24h: number;
+  docs30d: number;
 }
 
 export interface SourceKpi {
@@ -66,6 +68,17 @@ export async function fetchSources(): Promise<SourcesResponse> {
 export async function fetchSource(id: string): Promise<Source> {
   return apiClient.local.json<Source>(
     `/api/v1/sources/${encodeURIComponent(id)}`,
+  );
+}
+
+/**
+ * GET /api/v1/sources/{id}/document-counts: the trailing 30-day daily document
+ * series (oldest first) for the source's sparkline. Fetched only for the expanded
+ * row, so the overview list stays lightweight.
+ */
+export async function fetchSourceDocCounts(id: string): Promise<number[]> {
+  return apiClient.local.json<number[]>(
+    `/api/v1/sources/${encodeURIComponent(id)}/document-counts`,
   );
 }
 

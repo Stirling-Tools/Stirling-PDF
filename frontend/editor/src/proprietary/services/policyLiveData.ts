@@ -5,6 +5,7 @@
  * policy's actual enforcement history — not a cosmetic file listing.
  */
 
+import i18n from "@app/i18n";
 import type { PolicyActivityItem, PolicyStats } from "@app/types/policies";
 import type { PolicyRunRecord } from "@app/components/policies/policyRunStore";
 
@@ -58,17 +59,20 @@ function activityStatus(run: PolicyRunRecord): PolicyActivityItem["status"] {
 function activityAction(run: PolicyRunRecord): string {
   switch (activityStatus(run)) {
     case "enforced":
-      return `${formatBytes(run.fileSize)} • enforced`;
+      return `${formatBytes(run.fileSize)} • ${i18n.t("policies.activity.enforced", "enforced")}`;
     case "flagged":
-      return run.error ?? "Enforcement failed";
+      return (
+        run.error ?? i18n.t("policies.activity.failed", "Enforcement failed")
+      );
     default: {
-      if (run.retrying) return "Busy — retrying…";
-      // Show pipeline progress while running, once the status endpoint reports
-      // it — turns a static "Enforcing…" into visible movement on slow steps.
+      if (run.retrying)
+        return i18n.t("policies.activity.retrying", "Busy, retrying...");
+      const enforcing = i18n.t("policies.activity.enforcing", "Enforcing...");
+      // Show pipeline progress while running, once the status endpoint reports it
       const { currentStep, stepCount } = run;
       return currentStep && stepCount
-        ? `Enforcing… · step ${currentStep}/${stepCount}`
-        : "Enforcing…";
+        ? `${enforcing} · ${i18n.t("policies.activity.step", "step {{current}}/{{total}}", { current: currentStep, total: stepCount })}`
+        : enforcing;
     }
   }
 }
