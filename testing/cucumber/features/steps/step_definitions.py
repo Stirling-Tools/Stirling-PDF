@@ -17,8 +17,7 @@ from PIL import Image, ImageDraw
 
 API_HEADERS = {"X-API-KEY": "123456789"}
 
-# Base URL of the backend under test. Defaults to the CI value; override with
-# STIRLING_BASE_URL to point at a backend on another port (e.g. a local sidecar run).
+# Backend under test; override STIRLING_BASE_URL to target another port.
 BASE_URL = os.environ.get("STIRLING_BASE_URL", "http://localhost:8080")
 
 #########

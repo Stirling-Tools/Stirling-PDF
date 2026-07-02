@@ -108,15 +108,14 @@ public class RedactController {
         try (PDDocument document = pdfDocumentFactory.load(file)) {
             PDPageTree allPages = document.getDocumentCatalog().getPages();
 
-            // Whole-page wipes drop content outright (guaranteed clean); area redactions drop
-            // intersecting glyphs, draw an overlay, and are verified per-rectangle at finalize.
+            // Whole-page wipes drop content; areas drop glyphs + overlay, verified later.
             manualRedactionService.redactPages(request, document, allPages);
             ManualRedactionService.AreaRedactionResult areaResult =
                     manualRedactionService.redactAreas(request.getRedactions(), document, allPages);
 
             TempFile out =
                     manualRedactionService.finalizeManual(
-                            document, areaResult.rectsByPage, request.getConvertPDFToImage());
+                            document, areaResult, request.getConvertPDFToImage());
             return WebResponseUtils.pdfFileToWebResponse(out, filename);
         }
     }
@@ -180,16 +179,6 @@ public class RedactController {
                                                     request.getFileInput().getOriginalFilename())))
                             + "_redacted.pdf";
 
-            if (allFoundTextsByPage.isEmpty()) {
-                log.info("No text found matching redaction patterns");
-                // Still finalize so metadata is scrubbed and the document is rewritten
-                // consistently.
-                TempFile finalized =
-                        manualRedactionService.finalizeManual(
-                                document, Collections.emptyMap(), request.getConvertPDFToImage());
-                return WebResponseUtils.pdfFileToWebResponse(finalized, filename);
-            }
-
             Set<String> literalTargets =
                     Arrays.stream(listOfText)
                             .map(String::trim)
@@ -197,11 +186,26 @@ public class RedactController {
                             .collect(Collectors.toCollection(LinkedHashSet::new));
             List<Pattern> compiledPatterns =
                     RedactionPipeline.buildPatterns(listOfText, useRegex, wholeWordSearchBool);
-            // Bare literal targets match substrings, so they are only safe when the search is a
-            // plain literal. In regex or whole-word mode the boundary/regex semantics live entirely
-            // in the compiled patterns, so pass no literal targets to avoid stripping substrings.
+            // Bare literals match substrings; regex/whole-word rely on compiled patterns.
             Set<String> verificationTargets =
                     (useRegex || wholeWordSearchBool) ? Collections.emptySet() : literalTargets;
+
+            if (allFoundTextsByPage.isEmpty()) {
+                // No page hit, but the target may live in a bookmark/annotation/form/JS carrier, so
+                // still run the scrub + verify path rather than just wiping metadata (F5).
+                log.info("No page text matched; scrubbing catalog carriers and verifying");
+                TempFile finalized =
+                        manualRedactionService.finalizeRedaction(
+                                document,
+                                Collections.emptyMap(),
+                                request.getRedactColor(),
+                                request.getCustomPadding(),
+                                request.getConvertPDFToImage(),
+                                true,
+                                verificationTargets,
+                                compiledPatterns);
+                return WebResponseUtils.pdfFileToWebResponse(finalized, filename);
+            }
 
             boolean fallbackToBoxOnlyMode;
             try {

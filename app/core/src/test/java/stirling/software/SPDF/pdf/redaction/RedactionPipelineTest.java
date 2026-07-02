@@ -2,11 +2,13 @@ package stirling.software.SPDF.pdf.redaction;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.awt.Color;
 import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -17,15 +19,24 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.cos.COSStream;
 import org.apache.pdfbox.cos.COSString;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.common.PDStream;
+import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDTrueTypeFont;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.apache.pdfbox.pdmodel.font.encoding.WinAnsiEncoding;
+import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationHighlight;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDDocumentOutline;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineItem;
@@ -54,7 +65,7 @@ class RedactionPipelineTest {
             }
 
             Map<Integer, List<PDRectangle>> rects = new HashMap<>();
-            // The text above sits around y=700 with height ~12. Cover it fully.
+            // The text above sits around y=700 with height ~12.
             rects.put(0, List.of(new PDRectangle(90, 695, 260, 25)));
 
             RedactionPipeline.redactAreas(doc, rects, Color.BLACK);
@@ -131,9 +142,7 @@ class RedactionPipelineTest {
             item.setTitle("See page on Smith case");
             outline.addLast(item);
 
-            // AcroForm field carrying the redacted string. We set the V entry directly on the
-            // COS dictionary to avoid triggering AppearanceGeneratorHelper which requires a full
-            // /DA + /DR resource graph - CatalogScrubber is supposed to rewrite V regardless.
+            // AcroForm field carrying the redacted string.
             PDAcroForm form = new PDAcroForm(doc);
             doc.getDocumentCatalog().setAcroForm(form);
             PDTextField field = new PDTextField(form);
@@ -197,8 +206,7 @@ class RedactionPipelineTest {
             Set<String> targets = new LinkedHashSet<>();
             targets.add("Smith");
 
-            // No content-stream rewriting was done. The primary verification must trip and the
-            // rasterisation fallback must kick in so the final bytes still have no target.
+            // No content-stream rewriting was done.
             bytes = RedactionPipeline.finalize(doc, targets, Collections.emptyList());
         }
         try (PDDocument reopened = Loader.loadPDF(bytes)) {
@@ -213,10 +221,7 @@ class RedactionPipelineTest {
     @DisplayName(
             "Manual rect redaction feeds captured text into scoped verification - raster fallback kicks in when text survives")
     void manualRectVerificationUsesCapturedStrings() throws Exception {
-        // Simulate the failure mode: a rect is drawn over "LEAKED" but the content-stream rewrite
-        // is intentionally bypassed by only calling the CatalogScrubber path (finalize with
-        // targets=["LEAKED"] and affectedPages=[0]). Verification must see the surviving text and
-        // trigger rasterisation of page 0. Page 1 must remain text-searchable.
+        // Simulate the failure mode: a rect is drawn over "LEAKED"
         byte[] bytes;
         try (PDDocument doc = new PDDocument()) {
             PDPage p0 = new PDPage(PDRectangle.A4);
@@ -316,17 +321,7 @@ class RedactionPipelineTest {
     @DisplayName(
             "Pathological verification regex triggers verification FAIL (not silent pass) and engages fallback")
     void pathologicalVerificationRegexFailsClosed() throws Exception {
-        // A regex that throws on .matcher(...).find() - build a pattern that causes a runtime
-        // exception by constructing a matcher over a degenerate character sequence. We simulate
-        // the pathological case by supplying a pattern whose matcher throws StackOverflowError via
-        // deep alternation. Because JVM reliably triggering SOE is tricky, we instead construct
-        // a pattern where .find() throws an unchecked exception using a custom Pattern subclass
-        // is not possible (Pattern is final). The realistic pathological case is catastrophic
-        // backtracking, but we cannot rely on timeouts in a unit test. Instead we verify the
-        // IMPORTANT invariant indirectly: when finalize is called with no content rewrite and a
-        // surviving target, verification must FAIL and the raster fallback must engage - this
-        // proves the verify path is not silently swallowing exceptions (which would return the
-        // unrasterised bytes).
+        // A regex that throws on .matcher(...).find() - build a pattern that causes
         byte[] bytes;
         try (PDDocument doc = new PDDocument()) {
             PDPage page = new PDPage(PDRectangle.A4);
@@ -338,15 +333,13 @@ class RedactionPipelineTest {
                 cs.showText("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!");
                 cs.endText();
             }
-            // Pattern that matches the content - if regex exceptions were swallowed, verification
-            // would return unrasterised bytes with the match still present.
+            // Pattern that matches the content - if regex exceptions were swallowed
             List<Pattern> patterns = List.of(Pattern.compile("a{5,}"));
             bytes = RedactionPipeline.finalize(doc, Collections.emptySet(), patterns);
         }
         try (PDDocument reopened = Loader.loadPDF(bytes)) {
             String text = new PDFTextStripper().getText(reopened);
-            // Rasterisation should have eliminated text extractability entirely on the affected
-            // page (no affectedPages passed means whole-document rasterisation fallback).
+            // Rasterisation should have eliminated text extractability entirely
             assertFalse(
                     Pattern.compile("a{5,}").matcher(text).find(),
                     "Regex match must not survive verification fallback");
@@ -525,5 +518,289 @@ class RedactionPipelineTest {
 
         List<Pattern> regex = RedactionPipeline.buildPatterns(new String[] {"\\d{3}"}, true, false);
         assertTrue(regex.get(0).matcher("ID 123 issued").find());
+    }
+
+    @Test
+    @DisplayName(
+            "whole-word single-char non-word target (&) matches; finder and pipeline agree (F2)")
+    void wholeWordSingleCharNonWordTarget() {
+        List<Pattern> pipeline = RedactionPipeline.buildPatterns(new String[] {"&"}, false, true);
+        assertEquals(1, pipeline.size());
+        assertTrue(
+                pipeline.get(0).matcher("a & b").find(),
+                "\\b&\\b no-ops on '&'; the shared lookaround wrapper must match");
+        List<Pattern> finder =
+                stirling.software.SPDF.utils.text.TextFinderUtils.createOptimizedSearchPatterns(
+                        Set.of("&"), false, true);
+        assertTrue(finder.get(0).matcher("a & b").find(), "finder and pipeline must agree");
+    }
+
+    @Test
+    @DisplayName("form XObject text is physically removed, not left for rasterisation (F3)")
+    void formXObjectTextPhysicallyRemoved() throws Exception {
+        byte[] bytes;
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage(PDRectangle.A4);
+            doc.addPage(page);
+            PDFormXObject form = new PDFormXObject(doc);
+            form.setResources(new PDResources());
+            form.getResources()
+                    .put(
+                            COSName.getPDFName("F1"),
+                            new PDType1Font(Standard14Fonts.FontName.HELVETICA));
+            form.setBBox(new PDRectangle(0, 0, 300, 50));
+            try (var out = form.getStream().createOutputStream()) {
+                out.write(
+                        "BT /F1 12 Tf 0 10 Td (SECRET payload) Tj ET"
+                                .getBytes(StandardCharsets.ISO_8859_1));
+            }
+            PDResources pageRes = new PDResources();
+            COSName fn = pageRes.add(form);
+            page.setResources(pageRes);
+            PDStream ps = new PDStream(doc);
+            try (var out = ps.createOutputStream()) {
+                out.write(
+                        ("q 1 0 0 1 100 700 cm /" + fn.getName() + " Do Q")
+                                .getBytes(StandardCharsets.ISO_8859_1));
+            }
+            page.setContents(ps);
+
+            Set<String> targets = new LinkedHashSet<>(Set.of("SECRET"));
+            List<Pattern> pats =
+                    RedactionPipeline.buildPatterns(new String[] {"SECRET"}, false, false);
+            RedactionPipeline.redactLiteralTerms(doc, targets, pats);
+            bytes = RedactionPipeline.finalize(doc, targets, pats);
+        }
+        try (PDDocument reopened = Loader.loadPDF(bytes)) {
+            assertFalse(
+                    new PDFTextStripper().getText(reopened).contains("SECRET"),
+                    "form XObject text must not be extractable");
+            assertFalse(
+                    pageHasImage(reopened.getPage(0)),
+                    "removal should be surgical (form rewritten), not full rasterisation");
+        }
+    }
+
+    @Test
+    @DisplayName(
+            "verify() sees glyphs masked by /ActualText and rasterises the survivor (discovery)")
+    void actualTextMaskedSurvivorIsCaught() throws Exception {
+        byte[] bytes;
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage(PDRectangle.A4);
+            doc.addPage(page);
+            PDResources res = new PDResources();
+            COSName f = res.add(new PDType1Font(Standard14Fonts.FontName.HELVETICA));
+            page.setResources(res);
+            // Real glyphs paint SECRET but /ActualText claims the run is SAFE.
+            String content =
+                    "/Span <</ActualText (SAFE)>> BDC BT /"
+                            + f.getName()
+                            + " 12 Tf 100 700 Td (SECRET) Tj ET EMC";
+            PDStream ps = new PDStream(doc);
+            try (var out = ps.createOutputStream()) {
+                out.write(content.getBytes(StandardCharsets.ISO_8859_1));
+            }
+            page.setContents(ps);
+
+            // No removal pass: rely on finalize's verify to catch the masked survivor.
+            bytes =
+                    RedactionPipeline.finalize(
+                            doc, new LinkedHashSet<>(Set.of("SECRET")), List.of());
+        }
+        try (PDDocument reopened = Loader.loadPDF(bytes)) {
+            // A default stripper would read 'SAFE' and pass; the glyph-blind verify caught 'SECRET'
+            // and rasterised, so the page is now an image and nothing extractable survives.
+            assertTrue(
+                    pageHasImage(reopened.getPage(0)),
+                    "ActualText-masked survivor must be detected and rasterised");
+            assertFalse(new PDFTextStripper().getText(reopened).contains("SECRET"));
+        }
+    }
+
+    @Test
+    @DisplayName("scrub keeps /AP on form fields that do not contain the target (F7a)")
+    void untouchedFormFieldKeepsAppearance() throws Exception {
+        try (PDDocument doc = new PDDocument()) {
+            doc.addPage(new PDPage(PDRectangle.A4));
+            PDAcroForm form = new PDAcroForm(doc);
+            doc.getDocumentCatalog().setAcroForm(form);
+
+            PDTextField hit = new PDTextField(form);
+            hit.setPartialName("hit");
+            hit.getCOSObject().setString(COSName.V, "paid by Smith");
+            hit.getCOSObject().setItem(COSName.AP, new COSDictionary());
+            form.getFields().add(hit);
+
+            PDTextField clean = new PDTextField(form);
+            clean.setPartialName("clean");
+            clean.getCOSObject().setString(COSName.V, "nothing sensitive");
+            clean.getCOSObject().setItem(COSName.AP, new COSDictionary());
+            form.getFields().add(clean);
+
+            CatalogScrubber.scrub(
+                    doc, new LinkedHashSet<>(Set.of("Smith")), Collections.emptyList());
+
+            assertNull(
+                    hit.getCOSObject().getDictionaryObject(COSName.AP),
+                    "matched field /AP should be dropped for regeneration");
+            assertNotNull(
+                    clean.getCOSObject().getDictionaryObject(COSName.AP),
+                    "untouched field must keep its /AP (F7a)");
+        }
+    }
+
+    private static final String LIBERATION =
+            "/org/apache/pdfbox/resources/ttf/LiberationSans-Regular.ttf";
+
+    @Test
+    @DisplayName("verify gate skips the native pass when all fonts are Standard-14")
+    void gateSkipsForStandard14() throws Exception {
+        byte[] bytes;
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage(PDRectangle.A4);
+            doc.addPage(page);
+            try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
+                cs.beginText();
+                cs.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
+                cs.newLineAtOffset(72, 700);
+                cs.showText("plain Helvetica text");
+                cs.endText();
+            }
+            ByteArrayOutputStream b = new ByteArrayOutputStream();
+            doc.save(b);
+            bytes = b.toByteArray();
+        }
+        try (PDDocument reopened = Loader.loadPDF(bytes)) {
+            assertFalse(
+                    RedactionPipeline.documentHasUnreliableFont(reopened),
+                    "Standard-14 fonts extract reliably in PDFBox; native pass is redundant");
+        }
+    }
+
+    @Test
+    @DisplayName("verify gate runs the native pass for an embedded font without /ToUnicode")
+    void gateRunsForNonStandardFontWithoutToUnicode() throws Exception {
+        byte[] bytes;
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage(PDRectangle.A4);
+            doc.addPage(page);
+            PDFont font;
+            try (var ttf = PDDocument.class.getResourceAsStream(LIBERATION)) {
+                font = PDTrueTypeFont.load(doc, ttf, WinAnsiEncoding.INSTANCE);
+            }
+            try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
+                cs.beginText();
+                cs.setFont(font, 12);
+                cs.newLineAtOffset(72, 700);
+                cs.showText("embedded TrueType no ToUnicode");
+                cs.endText();
+            }
+            ByteArrayOutputStream b = new ByteArrayOutputStream();
+            doc.save(b);
+            bytes = b.toByteArray();
+        }
+        try (PDDocument reopened = Loader.loadPDF(bytes)) {
+            assertFalse(
+                    reopened.getPage(0)
+                            .getResources()
+                            .getFontNames()
+                            .iterator()
+                            .next()
+                            .getName()
+                            .isEmpty());
+            assertTrue(
+                    RedactionPipeline.documentHasUnreliableFont(reopened),
+                    "embedded non-Standard-14 font without /ToUnicode needs the native pass");
+        }
+    }
+
+    @Test
+    @DisplayName("verify gate skips the native pass when a Type0 font carries /ToUnicode")
+    void gateSkipsForType0WithToUnicode() throws Exception {
+        byte[] bytes;
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage(PDRectangle.A4);
+            doc.addPage(page);
+            PDFont font;
+            try (var ttf = PDDocument.class.getResourceAsStream(LIBERATION)) {
+                font = PDType0Font.load(doc, ttf, false);
+            }
+            try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
+                cs.beginText();
+                cs.setFont(font, 12);
+                cs.newLineAtOffset(72, 700);
+                cs.showText("full Type0 with ToUnicode");
+                cs.endText();
+            }
+            ByteArrayOutputStream b = new ByteArrayOutputStream();
+            doc.save(b);
+            bytes = b.toByteArray();
+        }
+        try (PDDocument reopened = Loader.loadPDF(bytes)) {
+            assertFalse(
+                    RedactionPipeline.documentHasUnreliableFont(reopened),
+                    "a /ToUnicode map makes PDFBox extraction authoritative; native pass redundant");
+        }
+    }
+
+    @Test
+    @DisplayName("verify gate recurses into form XObjects to find an unreliable font")
+    void gateDetectsUnreliableFontInsideXObject() throws Exception {
+        byte[] bytes;
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage(PDRectangle.A4);
+            doc.addPage(page);
+            // Page-level font is reliable (Standard-14); the risky font hides in a form XObject.
+            PDResources pageRes = new PDResources();
+            pageRes.put(
+                    COSName.getPDFName("PF"),
+                    new PDType1Font(Standard14Fonts.FontName.HELVETICA));
+
+            PDFormXObject form = new PDFormXObject(doc);
+            PDResources formRes = new PDResources();
+            PDFont embedded;
+            try (var ttf = PDDocument.class.getResourceAsStream(LIBERATION)) {
+                embedded = PDTrueTypeFont.load(doc, ttf, WinAnsiEncoding.INSTANCE);
+            }
+            formRes.put(COSName.getPDFName("F1"), embedded);
+            form.setResources(formRes);
+            form.setBBox(new PDRectangle(0, 0, 200, 50));
+            try (var out = form.getStream().createOutputStream()) {
+                out.write(
+                        "BT /F1 12 Tf 0 10 Td (hidden) Tj ET"
+                                .getBytes(StandardCharsets.ISO_8859_1));
+            }
+            COSName formName = pageRes.add(form);
+            page.setResources(pageRes);
+            PDStream ps = new PDStream(doc);
+            try (var out = ps.createOutputStream()) {
+                out.write(
+                        ("q 1 0 0 1 50 700 cm /" + formName.getName() + " Do Q")
+                                .getBytes(StandardCharsets.ISO_8859_1));
+            }
+            page.setContents(ps);
+            ByteArrayOutputStream b = new ByteArrayOutputStream();
+            doc.save(b);
+            bytes = b.toByteArray();
+        }
+        try (PDDocument reopened = Loader.loadPDF(bytes)) {
+            assertTrue(
+                    RedactionPipeline.documentHasUnreliableFont(reopened),
+                    "an unreliable font inside a form XObject must be detected by recursion");
+        }
+    }
+
+    private static boolean pageHasImage(PDPage page) throws Exception {
+        PDResources res = page.getResources();
+        if (res == null) {
+            return false;
+        }
+        for (COSName n : res.getXObjectNames()) {
+            if (res.getXObject(n) instanceof PDImageXObject) {
+                return true;
+            }
+        }
+        return false;
     }
 }

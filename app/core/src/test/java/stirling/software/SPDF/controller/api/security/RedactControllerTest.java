@@ -192,22 +192,23 @@ class RedactControllerTest {
         when(mockCOSStream.createOutputStream()).thenReturn(mockOutputStream);
         when(mockCOSStream.createOutputStream(any())).thenReturn(mockOutputStream);
 
+        // The pipeline saves then reloads the bytes to verify, so the mock must emit a real,
+        // reloadable PDF (not a placeholder) or verification throws on reopen.
+        byte[] realPdfBytes = createSimplePdfContent();
         lenient()
                 .doAnswer(
                         inv -> {
                             File f = inv.getArgument(0);
-                            java.nio.file.Files.write(f.toPath(), "mock pdf".getBytes());
+                            java.nio.file.Files.write(f.toPath(), realPdfBytes);
                             return null;
                         })
                 .when(mockDocument)
                 .save(any(File.class));
-        // RedactionPipeline serialises via OutputStream before handing the bytes to TempFile, so
-        // the mock must emit a non-empty payload on that code path too.
         lenient()
                 .doAnswer(
                         inv -> {
                             java.io.OutputStream os = inv.getArgument(0);
-                            os.write("mock pdf".getBytes());
+                            os.write(realPdfBytes);
                             return null;
                         })
                 .when(mockDocument)

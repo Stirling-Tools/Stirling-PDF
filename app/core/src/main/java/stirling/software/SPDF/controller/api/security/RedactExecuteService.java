@@ -143,9 +143,7 @@ class RedactExecuteService {
                 applyAllImagesRedaction(document, request.getRedactImagePages(), style);
             }
 
-            // Explicit overlay-only requests must not rewrite content or verify. When overlay-only
-            // was forced by a font fallback (not user choice) we still pass the targets so the
-            // pipeline's true-removal + verification + page-scoped raster fallback run.
+            // Overlay-only skips removal/verify; font-fallback overlays still pass targets.
             Set<String> literalTargets = new LinkedHashSet<>();
             for (String value : textValues) {
                 String trimmed = value == null ? "" : value.trim();

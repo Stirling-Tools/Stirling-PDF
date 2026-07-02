@@ -23,15 +23,7 @@ import org.apache.pdfbox.text.PDFTextStripper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/**
- * Integration tests that exercise the real redaction pipeline against PDFs with characteristics
- * that have tripped up the implementation on real user files: page rotation (/Rotate 90), entire
- * phrases packed into one Tj operator, and standard Type1 fonts with WinAnsiEncoding.
- *
- * <p>The critical assertion for every test is that a fresh {@link PDFTextStripper} with default
- * configuration run over the saved bytes does not contain the target search term
- * (case-insensitive).
- */
+/** Integration tests that exercise the real redaction pipeline against PDFs */
 class RedactionPipelineIntegrationTest {
 
     private static byte[] loadFixture() throws Exception {
@@ -52,10 +44,7 @@ class RedactionPipelineIntegrationTest {
         try (PDDocument doc = Loader.loadPDF(fixtureBytes)) {
             Set<String> literalTargets = new LinkedHashSet<>();
             literalTargets.add("Test");
-            // No content-stream rewriting performed. The primary verification pass inside
-            // finalize must see the surviving target, switch to the rasterisation fallback,
-            // and return bytes that no longer extract as text. This proves the safety net is
-            // wired - without it the output would still contain the target.
+            // No content-stream rewriting performed.
             outputBytes = RedactionPipeline.finalize(doc, literalTargets, Collections.emptyList());
         }
         try (PDDocument reopened = Loader.loadPDF(outputBytes)) {
@@ -73,9 +62,7 @@ class RedactionPipelineIntegrationTest {
     @DisplayName(
             "finalize with zero rewrite + synthetic upright PDF triggers RedactionVerificationFailedException only when fallback disabled")
     void verificationExceptionWiringSanityCheck() throws Exception {
-        // This test proves the verification hook itself still throws - when finalize cannot
-        // rasterise (we pass an already-closed document by letting finalize re-save an empty
-        // fresh document that still has the target text baked in).
+        // This test proves the verification hook itself still throws -
         try (PDDocument doc = new PDDocument()) {
             PDPage page = new PDPage(PDRectangle.A4);
             doc.addPage(page);
@@ -88,8 +75,7 @@ class RedactionPipelineIntegrationTest {
             }
             Set<String> literalTargets = new LinkedHashSet<>();
             literalTargets.add("Smith");
-            // Even with the rasterisation fallback active, the output must not contain the
-            // target. Either the primary pass or the fallback must succeed; both is a bug.
+            // Even with the rasterisation fallback active, the output must not contain
             byte[] outBytes =
                     RedactionPipeline.finalize(doc, literalTargets, Collections.emptyList());
             try (PDDocument reopened = Loader.loadPDF(outBytes)) {
@@ -153,8 +139,7 @@ class RedactionPipelineIntegrationTest {
             }
             ByteArrayOutputStream tmp = new ByteArrayOutputStream();
             doc.save(tmp);
-            // reload from bytes so we are processing an already-saved PDF similar to the
-            // real upload flow.
+            // reload from bytes so we are processing an already-saved PDF similar
             try (PDDocument reloaded = Loader.loadPDF(tmp.toByteArray())) {
                 RedactionPipeline.redactLiteralTerms(reloaded, literalTargets, patterns);
                 outputBytes = RedactionPipeline.finalize(reloaded, literalTargets, patterns);

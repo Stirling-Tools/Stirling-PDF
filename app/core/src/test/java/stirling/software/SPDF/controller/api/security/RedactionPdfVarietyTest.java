@@ -48,13 +48,7 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
-/**
- * Security matrix for redaction across PDF shapes: standard and embedded (subset and full) fonts,
- * rotated pages, TJ splits, cross-operator splits, Form XObjects, CropBox offsets, multi-page and
- * case variants. Every case asserts the target is unrecoverable from the output text layer, and
- * (where removal should be surgical) that neighbouring text survives. Uses the LiberationSans TTF
- * bundled inside the PDFBox jar so the embedded-font cases run on any CI platform.
- */
+/** Security matrix for redaction across PDF shapes: standard and embedded */
 @DisplayName("Redaction PDF-variety security matrix")
 class RedactionPdfVarietyTest {
 
@@ -108,9 +102,7 @@ class RedactionPdfVarietyTest {
         }
     }
 
-    // -----------------------------------------------------------------------
     // Matrix cases (all through the real /auto-redact controller path)
-    // -----------------------------------------------------------------------
 
     @Test
     @DisplayName("standard Helvetica: target gone, neighbours survive")
@@ -161,9 +153,7 @@ class RedactionPdfVarietyTest {
     @Test
     @DisplayName("real Type3 font (glyphs as content streams, no ToUnicode): target gone")
     void type3GlyphProcs() throws IOException {
-        // crop_test.pdf uses DejaVuSans embedded as a subset Type3 font with no ToUnicode map.
-        // Redacting it must not throw (Type3 font.encode() throws UnsupportedOperationException)
-        // and must remove the target from the extractable text layer.
+        // crop_test.pdf uses DejaVuSans embedded as a subset Type3 font with no
         byte[] input;
         try (InputStream in = getClass().getResourceAsStream("/redaction/type3_dejavu.pdf")) {
             input = in.readAllBytes();
@@ -220,7 +210,7 @@ class RedactionPdfVarietyTest {
     void crossOperatorSplit() throws IOException {
         byte[] out = autoRedact(crossOperatorPdf(), "SECRET");
         assertGone(out, "SECRET");
-        // Page 2 was never touched; whatever path handled page 1, page 2 text must survive.
+        // Page 2 was never touched; whatever path handled page 1, page 2 text must
         assertThat(pdfText(out)).contains("PUBLIC PAGE TWO");
     }
 
@@ -272,15 +262,12 @@ class RedactionPdfVarietyTest {
         assertThat(text).doesNotContainPattern("(?i)\\bcat\\b");
     }
 
-    // -----------------------------------------------------------------------
     // Page-scoped rasterisation (pipeline-level, deterministic)
-    // -----------------------------------------------------------------------
 
     @Test
     @DisplayName("verification leak rasterises only the leaking page, others keep text")
     void leakRasterisesOnlyLeakingPage() throws IOException {
-        // Cross-operator split defeats the per-operand literal rewriter, so verification must
-        // catch the leak and rasterise page 1 only, leaving page 2 searchable.
+        // Cross-operator split defeats the per-operand literal rewriter
         byte[] input = crossOperatorPdf();
         byte[] out;
         try (PDDocument doc = Loader.loadPDF(input)) {
@@ -305,9 +292,7 @@ class RedactionPdfVarietyTest {
         }
     }
 
-    // -----------------------------------------------------------------------
     // Drivers and assertions
-    // -----------------------------------------------------------------------
 
     private byte[] autoRedact(byte[] pdfBytes, String target) throws IOException {
         factoryReturns(pdfBytes);
@@ -356,9 +341,7 @@ class RedactionPdfVarietyTest {
         }
     }
 
-    // -----------------------------------------------------------------------
     // PDF builders
-    // -----------------------------------------------------------------------
 
     private static PDFont helvetica() {
         return new PDType1Font(Standard14Fonts.FontName.HELVETICA);
@@ -464,7 +447,7 @@ class RedactionPdfVarietyTest {
         }
     }
 
-    /** One page whose text is emitted as a TJ array: ["public ", "SEC", -20, "RET", " end"]. */
+    /** One page whose text is emitted as a TJ array: ["public ", "SEC", -20 */
     private byte[] tjSplitPdf() throws IOException {
         try (PDDocument doc = new PDDocument()) {
             PDPage page = new PDPage(PDRectangle.LETTER);
@@ -481,7 +464,7 @@ class RedactionPdfVarietyTest {
         }
     }
 
-    /** Page 1 shows "SEC" and "RET" as separate adjacent Tj operators; page 2 is clean. */
+    /** Page 1 shows "SEC" and "RET" as separate adjacent Tj operators; page 2 */
     private byte[] crossOperatorPdf() throws IOException {
         try (PDDocument doc = new PDDocument()) {
             PDPage page = new PDPage(PDRectangle.LETTER);
@@ -546,8 +529,7 @@ class RedactionPdfVarietyTest {
             cs.beginText();
             cs.setFont(font, FONT_SIZE);
             if (rotation != 0) {
-                // Real generators compensate the text matrix so text reads upright on rotated
-                // pages; anchor at page centre so every rotation keeps the line on-page.
+                // Real generators compensate the text matrix so text reads upright
                 cs.setTextMatrix(
                         Matrix.getRotateInstance(
                                 Math.toRadians(rotation),

@@ -706,16 +706,13 @@ class TextRedactionService {
     private void writeRedactedContentToXObject(
             PDDocument document, PDFormXObject formXObject, List<Object> redactedTokens)
             throws IOException {
-
-        PDStream newStream = new PDStream(document);
-
-        try (var out = newStream.createOutputStream()) {
+        // A form XObject's content IS its own stream body; overwrite it in place. Attaching a
+        // /Contents key would be a no-op (its content is not read from /Contents).
+        PDStream formStream = new PDStream(formXObject.getCOSObject());
+        try (var out = formStream.createOutputStream(COSName.FLATE_DECODE)) {
             ContentStreamWriter writer = new ContentStreamWriter(out);
             writer.writeTokens(redactedTokens);
         }
-
-        formXObject.getCOSObject().removeItem(COSName.CONTENTS);
-        formXObject.getCOSObject().setItem(COSName.CONTENTS, newStream.getCOSObject());
     }
 
     private List<TextSegment> extractTextSegments(PDPage page, List<Object> tokens) {

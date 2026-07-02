@@ -8,6 +8,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -24,6 +25,7 @@ import javax.imageio.ImageIO;
 import org.apache.pdfbox.contentstream.operator.Operator;
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSBase;
+import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.cos.COSString;
 import org.apache.pdfbox.pdfparser.PDFStreamParser;
@@ -47,33 +49,27 @@ import org.apache.pdfbox.text.TextPosition;
 
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Shared plumbing for the three redaction paths (manual areas, whole pages, auto-word).
- *
- * <p>Every path funnels through this class so that the following guarantees hold uniformly:
- *
- * <ol>
- *   <li>Text tokens that fall inside a target rect are physically dropped from the content stream.
- *   <li>Catalog-level carriers (outline, AcroForm, annotations, struct tree, names tree) are
- *       scrubbed so redacted strings cannot survive outside the page content.
- *   <li>Info dict + XMP metadata is wiped.
- *   <li>The document is rewritten with a fresh xref (no incremental save) and then verified with a
- *       fresh {@link PDFTextStripper} pass; surviving target text throws {@link
- *       RedactionVerificationFailedException}. The literal/pattern path verifies the whole (or
- *       affected) page text; the manual-area path verifies each redaction rectangle is empty.
- * </ol>
- */
+import stirling.software.SPDF.pdf.parser.PageImageLocator;
+import stirling.software.SPDF.utils.text.TextFinderUtils;
+
+/** Shared plumbing for the manual-area, whole-page and auto-word redaction paths. */
 @Slf4j
 public final class RedactionPipeline {
 
     private static final Set<String> TEXT_SHOWING_OPERATORS = Set.of("Tj", "TJ", "'", "\"");
+    private static final int MAX_XOBJECT_DEPTH = 10;
+
+    // Latched false if the native PDFium binding can't load, so a host without it (musl/exotic)
+    // logs once and falls back to the PDFBox pass instead of retrying the native open every redaction.
+    private static volatile boolean jpdfiumAvailable = true;
+
+    // Skip the additive native pass above this size to bound off-heap copy + native runtime on
+    // adversarial inputs; the PDFBox glyph-blind pass still verifies. 100 MB.
+    private static final long MAX_JPDFIUM_VERIFY_BYTES = 100L * 1024 * 1024;
 
     private RedactionPipeline() {}
 
-    /**
-     * Apply a list of page-local redaction rects (coordinates in PDF user space) against the
-     * supplied document.
-     */
+    /** Redact page-local rects (PDF user-space), dropping intersecting glyphs + overlay. */
     public static RedactionResult redactAreas(
             PDDocument document,
             Map<Integer, List<PDRectangle>> rectsByPageIndex,
@@ -81,6 +77,7 @@ public final class RedactionPipeline {
             throws IOException {
 
         Set<String> capturedStrings = new LinkedHashSet<>();
+        Set<Integer> forceRasterPages = new LinkedHashSet<>();
 
         for (Map.Entry<Integer, List<PDRectangle>> entry : rectsByPageIndex.entrySet()) {
             int pageIndex = entry.getKey();
@@ -89,21 +86,69 @@ public final class RedactionPipeline {
                 continue;
             }
             PDPage page = document.getPage(pageIndex);
-            List<String> captured = captureTextInRects(page, rects);
-            capturedStrings.addAll(captured);
+            capturedStrings.addAll(captureTextInRects(page, rects));
 
-            removeTokensIntersectingRects(document, page, rects);
+            // Rotation / non-zero CropBox origin break the coordinate flip, and text-bearing forms
+            // or in-rect images defeat page-stream ordinal removal. Draw the overlay but force the
+            // coordinate-independent rasterisation fallback for such pages (F1/F4/F12a).
+            boolean surgical =
+                    isSurgicallySafe(page) && removeTokensIntersectingRects(document, page, rects);
+            if (!surgical) {
+                forceRasterPages.add(pageIndex);
+            }
+            removeOverlappingAnnotations(page, rects);
             drawOverlay(document, page, rects, overlayColor);
         }
 
-        return new RedactionResult(capturedStrings);
+        return new RedactionResult(capturedStrings, forceRasterPages);
     }
 
-    /**
-     * Replace the entire contents of the listed pages with a single filled rectangle in the page
-     * media box. All underlying text and images are dropped from the content stream and from the
-     * page resources.
-     */
+    /** True only for upright pages whose CropBox origin is (0,0), where the rect flip is exact. */
+    private static boolean isSurgicallySafe(PDPage page) {
+        if (page.getRotation() != 0) {
+            return false;
+        }
+        PDRectangle crop = page.getCropBox();
+        return crop.getLowerLeftX() == 0f && crop.getLowerLeftY() == 0f;
+    }
+
+    /** Drop annotations whose rectangle overlaps any redaction rect (F6a). */
+    private static void removeOverlappingAnnotations(PDPage page, List<PDRectangle> rects) {
+        try {
+            List<org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation> kept =
+                    new ArrayList<>();
+            for (var ann : page.getAnnotations()) {
+                PDRectangle ar = ann.getRectangle();
+                boolean overlaps = false;
+                if (ar != null) {
+                    Rectangle2D.Float a =
+                            new Rectangle2D.Float(
+                                    ar.getLowerLeftX(),
+                                    ar.getLowerLeftY(),
+                                    ar.getWidth(),
+                                    ar.getHeight());
+                    for (PDRectangle rect : rects) {
+                        if (a.intersects(
+                                rect.getLowerLeftX(),
+                                rect.getLowerLeftY(),
+                                rect.getWidth(),
+                                rect.getHeight())) {
+                            overlaps = true;
+                            break;
+                        }
+                    }
+                }
+                if (!overlaps) {
+                    kept.add(ann);
+                }
+            }
+            page.setAnnotations(kept);
+        } catch (Exception e) {
+            log.debug("Could not strip overlapping annotations: {}", e.getMessage());
+        }
+    }
+
+    /** Wipe whole pages: drop all content/resources, fill with a rectangle. */
     public static void redactWholePages(
             PDDocument document, List<Integer> pageIndexes, Color overlayColor) throws IOException {
         for (Integer pageIndex : pageIndexes) {
@@ -132,24 +177,7 @@ public final class RedactionPipeline {
         }
     }
 
-    /**
-     * Rewrites every content stream on every page so that any occurrence of any literal target or
-     * regex pattern is physically removed from the glyph bytes. Handles:
-     *
-     * <ul>
-     *   <li>simple Type1 fonts with WinAnsiEncoding (e.g. ReportLab {@code (Test PDF #1) Tj}),
-     *   <li>Type0/CID fonts with multi-byte codes,
-     *   <li>pages with {@code /Rotate 90} or other rotations,
-     *   <li>text split across multiple operands inside a single {@code TJ} array.
-     * </ul>
-     *
-     * <p>The approach decodes each {@link COSString} operand byte-by-byte using the font that is
-     * current at that point in the content stream, reconstructs the Unicode text, runs the target
-     * patterns against that text, and rebuilds the byte operand omitting the matched character
-     * codes. Width adjustment ({@code TJ} numeric kerning) is reinserted so downstream layout is
-     * preserved even when the operand shrinks. The page layout may look sparse but the glyphs for
-     * the target term are guaranteed to be gone.
-     */
+    /** Physically remove every literal/regex match from all page content streams. */
     public static void redactLiteralTerms(
             PDDocument document, Set<String> literalTargets, List<Pattern> patterns)
             throws IOException {
@@ -162,8 +190,7 @@ public final class RedactionPipeline {
             try {
                 rewritePageContent(document, page, effectivePatterns);
             } catch (IOException | RuntimeException e) {
-                // Never let one page's font quirk (e.g. Type3 encode, damaged program) abort the
-                // whole document. Leave this page for the verify+rasterise safety net to catch.
+                // Never let one page's font quirk (e.g. Type3 encode, damaged program)
                 log.warn(
                         "Content-stream rewrite failed on page {} ({}); leaving it for the "
                                 + "verification/rasterisation pass.",
@@ -174,32 +201,14 @@ public final class RedactionPipeline {
         }
     }
 
-    /**
-     * Finalize the document with document-wide verification: scrub catalog carriers, wipe metadata,
-     * subset embedded fonts, save with a fresh xref and verify that no literal target survives
-     * anywhere in the saved PDF.
-     *
-     * <p>Use this overload for auto-word redaction where every occurrence of a literal target is a
-     * deliberate removal target. For manual rect redaction use {@link #finalize(PDDocument, Set,
-     * List, Set)} so verification is scoped to the affected pages (since the same word can
-     * legitimately remain on non-targeted pages).
-     */
+    /** Finalize with document-wide verification: scrub, wipe metadata, save, verify. */
     public static byte[] finalize(
             PDDocument document, Set<String> literalTargets, List<Pattern> patterns)
             throws IOException {
         return finalize(document, literalTargets, patterns, null);
     }
 
-    /**
-     * Finalize with verification scoped to a specific set of page indexes. When {@code
-     * affectedPages} is null the verification runs over the whole document. When non-null, only the
-     * listed pages are checked for surviving literal targets; the rasterisation fallback (if
-     * triggered) also rasterises only those pages, preserving every other page verbatim so
-     * unrelated content remains text-searchable.
-     *
-     * <p>Pass an empty set together with empty targets/patterns to skip verification entirely (for
-     * manual redactions that captured no text and drew no image boxes).
-     */
+    /** Finalize with verification scoped to a specific set of page indexes. */
     public static byte[] finalize(
             PDDocument document,
             Set<String> literalTargets,
@@ -219,18 +228,12 @@ public final class RedactionPipeline {
             verify(bytes, literalTargets, patterns, affectedPages);
             return bytes;
         } catch (RedactionVerificationFailedException primaryFailure) {
-            // Last-resort: if the content-stream rewriter could not guarantee removal (unusual
-            // fonts, encrypted streams, non-text glyph carriers), rasterise only the affected
-            // pages so the target is physically gone without destroying the text layer on pages
-            // that were never touched. This is logged loudly so operators know redaction fell
-            // back to the image path.
+            // Rewriter could not guarantee removal; rasterise as a last resort.
             log.warn(
                     "Primary redaction verification failed ({}); falling back to page-scoped "
                             + "rasterisation to guarantee removal.",
                     primaryFailure.getMessage());
-            // When the caller gave no page scope (auto-word mode), locate the leaking pages so
-            // only those are rasterised; clean pages keep their searchable text layer. If leak
-            // detection itself fails, fall back to rasterising everything (null).
+            // With no page scope (auto-word), rasterise only the pages that still leak.
             Set<Integer> pagesToRaster =
                     (affectedPages == null || affectedPages.isEmpty())
                             ? findLeakingPages(bytes, literalTargets, patterns)
@@ -250,16 +253,12 @@ public final class RedactionPipeline {
         }
     }
 
-    /**
-     * Finalize a manual area redaction. Unlike the literal/pattern path, verification here is
-     * region-based: after saving, each redaction rectangle is re-scanned and must contain no text.
-     * This avoids the substring false positives that whole-page string verification hits when a box
-     * clips a word into a common fragment (for example a clipped "HEADER" becoming "HE", which
-     * would otherwise match "here" elsewhere on the page). On a real leak the affected pages are
-     * rasterised so untouched pages keep their text layer.
-     */
+    /** Finalize a manual area redaction; rasterises forced + verified-leaking pages. */
     public static byte[] finalizeAreas(
-            PDDocument document, Map<Integer, List<PDRectangle>> rectsByPage) throws IOException {
+            PDDocument document,
+            Map<Integer, List<PDRectangle>> rectsByPage,
+            Set<Integer> forceRasterPages)
+            throws IOException {
 
         CatalogScrubber.wipeMetadata(document);
         warnAboutEmbeddedFontGlyphs(document);
@@ -268,31 +267,30 @@ public final class RedactionPipeline {
         document.save(baos);
         byte[] bytes = baos.toByteArray();
 
-        try {
-            verifyRectsEmpty(bytes, rectsByPage);
+        Set<Integer> toRaster =
+                new HashSet<>(forceRasterPages == null ? Set.of() : forceRasterPages);
+        toRaster.addAll(findLeakingRectPages(bytes, rectsByPage));
+        if (toRaster.isEmpty()) {
             return bytes;
-        } catch (RedactionVerificationFailedException primaryFailure) {
-            log.warn(
-                    "Manual-area redaction verification failed ({}); rasterising affected pages to "
-                            + "guarantee removal.",
-                    primaryFailure.getMessage());
-            Set<Integer> pagesToRaster = new HashSet<>(rectsByPage.keySet());
-            try (PDDocument rasterised = rasterisePages(bytes, pagesToRaster)) {
-                CatalogScrubber.wipeMetadata(rasterised);
-                ByteArrayOutputStream rasterOut = new ByteArrayOutputStream();
-                rasterised.save(rasterOut);
-                return rasterOut.toByteArray();
-            } catch (IOException e) {
-                throw new RedactionVerificationFailedException(
-                        "Rasterisation fallback failed after manual redaction leak", e);
-            }
+        }
+        log.warn("Manual redaction rasterising page(s) {} to guarantee removal", toRaster);
+        try (PDDocument rasterised = rasterisePages(bytes, toRaster)) {
+            CatalogScrubber.wipeMetadata(rasterised);
+            ByteArrayOutputStream rasterOut = new ByteArrayOutputStream();
+            rasterised.save(rasterOut);
+            return rasterOut.toByteArray();
+        } catch (IOException e) {
+            throw new RedactionVerificationFailedException(
+                    "Rasterisation fallback failed after manual redaction leak", e);
         }
     }
 
-    private static void verifyRectsEmpty(
+    /** Redacted pages that still show text inside a rect or carry an overlapping annotation. */
+    private static Set<Integer> findLeakingRectPages(
             byte[] bytes, Map<Integer, List<PDRectangle>> rectsByPage) {
+        Set<Integer> leaking = new HashSet<>();
         if (rectsByPage == null || rectsByPage.isEmpty()) {
-            return;
+            return leaking;
         }
         try (PDDocument reopened = org.apache.pdfbox.Loader.loadPDF(bytes)) {
             for (Map.Entry<Integer, List<PDRectangle>> entry : rectsByPage.entrySet()) {
@@ -300,23 +298,48 @@ public final class RedactionPipeline {
                 if (pageIndex < 0 || pageIndex >= reopened.getNumberOfPages()) {
                     continue;
                 }
-                List<String> remaining =
-                        captureTextInRects(reopened.getPage(pageIndex), entry.getValue());
-                for (String fragment : remaining) {
-                    if (fragment != null && !fragment.isBlank()) {
-                        throw new RedactionVerificationFailedException(
-                                "Text still present inside redaction area on page "
-                                        + (pageIndex + 1)
-                                        + ": '"
-                                        + fragment
-                                        + "'");
-                    }
+                PDPage page = reopened.getPage(pageIndex);
+                boolean textLeft =
+                        captureTextInRects(page, entry.getValue()).stream()
+                                .anyMatch(s -> s != null && !s.isBlank());
+                if (textLeft || annotationOverlapsRect(page, entry.getValue())) {
+                    leaking.add(pageIndex);
                 }
             }
         } catch (IOException e) {
-            throw new RedactionVerificationFailedException(
-                    "Failed to reopen redacted PDF for area verification", e);
+            // Cannot verify - rasterise every redacted page to be safe.
+            return new HashSet<>(rectsByPage.keySet());
         }
+        return leaking;
+    }
+
+    private static boolean annotationOverlapsRect(PDPage page, List<PDRectangle> rects) {
+        try {
+            for (var ann : page.getAnnotations()) {
+                PDRectangle ar = ann.getRectangle();
+                if (ar == null) {
+                    continue;
+                }
+                Rectangle2D.Float a =
+                        new Rectangle2D.Float(
+                                ar.getLowerLeftX(),
+                                ar.getLowerLeftY(),
+                                ar.getWidth(),
+                                ar.getHeight());
+                for (PDRectangle rect : rects) {
+                    if (a.intersects(
+                            rect.getLowerLeftX(),
+                            rect.getLowerLeftY(),
+                            rect.getWidth(),
+                            rect.getHeight())) {
+                        return true;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            return true;
+        }
+        return false;
     }
 
     private static List<Pattern> effectivePatterns(
@@ -327,8 +350,7 @@ public final class RedactionPipeline {
                 if (target == null || target.isEmpty()) {
                     continue;
                 }
-                // Case-insensitive to match TextFinderUtils' search semantics; removal must never
-                // be narrower than what the finder matched (or verification would raster pages).
+                // Case-insensitive to match TextFinderUtils; removal must not miss finder hits.
                 result.add(
                         Pattern.compile(
                                 Pattern.quote(target),
@@ -341,9 +363,7 @@ public final class RedactionPipeline {
         return result;
     }
 
-    // ---------------------------------------------------------------------
     // Per-page content-stream rewrite (literal/regex based)
-    // ---------------------------------------------------------------------
 
     private static void rewritePageContent(PDDocument document, PDPage page, List<Pattern> patterns)
             throws IOException {
@@ -356,16 +376,21 @@ public final class RedactionPipeline {
         if (modified) {
             writePageTokens(document, page, tokens);
         }
-        // Recurse into form XObjects referenced by this page.
-        rewriteFormXObjects(document, resources, patterns, new HashSet<>());
+        // Recurse into form XObjects referenced by this page (shared visited set + depth cap).
+        rewriteFormXObjects(resources, resources, patterns, new HashSet<>(), 0);
     }
 
     private static void rewriteFormXObjects(
-            PDDocument document,
             PDResources resources,
+            PDResources parentResources,
             List<Pattern> patterns,
-            Set<COSBase> visited)
+            Set<COSBase> visited,
+            int depth)
             throws IOException {
+        if (depth > MAX_XOBJECT_DEPTH) {
+            log.warn("XObject nesting exceeded {}; stopping recursion", MAX_XOBJECT_DEPTH);
+            return;
+        }
         for (COSName name : resources.getXObjectNames()) {
             try {
                 var xobj = resources.getXObject(name);
@@ -376,20 +401,19 @@ public final class RedactionPipeline {
                     continue;
                 }
                 List<Object> tokens = parseTokens(new PDFStreamParser(form));
-                PDResources formResources = form.getResources();
-                if (formResources == null) {
-                    continue;
-                }
+                // Forms may inherit fonts from the parent when they carry no own /Resources.
+                PDResources formResources =
+                        form.getResources() != null ? form.getResources() : parentResources;
                 boolean modified = rewriteTokens(tokens, formResources, patterns);
                 if (modified) {
-                    PDStream stream = new PDStream(document);
-                    try (var out = stream.createOutputStream(COSName.FLATE_DECODE)) {
+                    // A form XObject's content IS its own stream body; overwrite it in place.
+                    // Writing a /Contents key would be a no-op (F3).
+                    PDStream formStream = new PDStream(form.getCOSObject());
+                    try (var out = formStream.createOutputStream(COSName.FLATE_DECODE)) {
                         new ContentStreamWriter(out).writeTokens(tokens);
                     }
-                    form.getCOSObject().removeItem(COSName.CONTENTS);
-                    form.getCOSObject().setItem(COSName.CONTENTS, stream.getCOSObject());
                 }
-                rewriteFormXObjects(document, formResources, patterns, visited);
+                rewriteFormXObjects(formResources, formResources, patterns, visited, depth + 1);
             } catch (IOException e) {
                 log.debug("Failed to rewrite XObject {}: {}", name.getName(), e.getMessage());
             }
@@ -405,13 +429,7 @@ public final class RedactionPipeline {
         return tokens;
     }
 
-    /**
-     * Walk tokens keeping a tiny text state (current font). When a text-showing operator is
-     * encountered its string operand(s) are decoded via the current font, run against every
-     * pattern, and rewritten with matching character codes removed.
-     *
-     * @return true if any operand was modified.
-     */
+    /** Walk tokens keeping a tiny text state (current font). */
     private static boolean rewriteTokens(
             List<Object> tokens, PDResources resources, List<Pattern> patterns) {
         boolean modified = false;
@@ -459,7 +477,7 @@ public final class RedactionPipeline {
     private static COSString rewriteCosString(
             COSString cosString, PDFont font, List<Pattern> patterns) {
         if (font == null) {
-            // Without a font we cannot decode safely. Try a best-effort latin-1 interpretation.
+            // Without a font we cannot decode safely.
             return rewriteRawLatin(cosString, patterns);
         }
         DecodeResult decoded = decodeCosString(cosString, font);
@@ -474,9 +492,7 @@ public final class RedactionPipeline {
     }
 
     private static COSArray rewriteCosArray(COSArray arr, PDFont font, List<Pattern> patterns) {
-        // Build a concatenated decode across all COSString elements so that matches spanning
-        // multiple operands are found. Non-string elements are kerning adjustments; keep them
-        // in place and re-emit them between the rewritten strings.
+        // Build a concatenated decode across all COSString elements so that matches
         List<DecodeResult> parts = new ArrayList<>();
         StringBuilder concat = new StringBuilder();
         for (int i = 0; i < arr.size(); i++) {
@@ -508,7 +524,7 @@ public final class RedactionPipeline {
                 cursor += partLen;
                 COSString rebuilt =
                         buildFilteredCosStringRaw(decoded, partDrop, font, cs.getBytes());
-                // A zero-length COSString is valid; PDFBox emits it as () producing no glyphs.
+                // A zero-length COSString is valid; PDFBox emits it as () producing no
                 out.add(rebuilt);
             } else {
                 out.add(elem);
@@ -545,10 +561,7 @@ public final class RedactionPipeline {
         return new DecodeResult(sb.toString(), bytes, codeStart, codeLen);
     }
 
-    /**
-     * Decode a {@link COSString} into Unicode characters using the supplied font. Returns null if
-     * decoding fails at any point (e.g. malformed byte sequence).
-     */
+    /** Decode a COSString to Unicode via the font; null if decoding fails. */
     private static DecodeResult decodeCosString(COSString cosString, PDFont font) {
         byte[] bytes = cosString.getBytes();
         StringBuilder text = new StringBuilder();
@@ -576,14 +589,11 @@ public final class RedactionPipeline {
                     unicode = null;
                 }
                 if (unicode == null) {
-                    // If the font has no ToUnicode mapping we cannot match reliably - return null
-                    // and let the caller either fall back to latin-1 (rare) or rasterisation via
-                    // the final verification pass.
+                    // If the font has no ToUnicode mapping we cannot match reliably - return
                     return null;
                 }
                 text.append(unicode);
-                // Associate every Unicode character produced with the same code byte range so
-                // that dropping any one of them drops the whole code.
+                // Associate every Unicode character produced with the same code byte range
                 for (int c = 0; c < unicode.length(); c++) {
                     starts.add(pos);
                     lens.add(consumed);
@@ -602,10 +612,7 @@ public final class RedactionPipeline {
         return new DecodeResult(text.toString(), bytes, startArr, lenArr);
     }
 
-    /**
-     * Returns null if none of the patterns match; otherwise a boolean mask the same length as
-     * {@code text} where {@code true} means "this character belongs to a matched range".
-     */
+    /** Null if no pattern matches; else a per-char drop mask over the text. */
     private static boolean[] findDroppedCharsMask(String text, List<Pattern> patterns) {
         boolean any = false;
         boolean[] mask = new boolean[text.length()];
@@ -636,19 +643,23 @@ public final class RedactionPipeline {
 
     private static COSString buildFilteredCosStringRaw(
             DecodeResult decoded, boolean[] drop, PDFont font, byte[] originalBytes) {
-        // Collect code byte-ranges to drop. Because one code can produce multiple chars, we drop
-        // the code if ANY of its chars is flagged.
+        // Collect code byte-ranges to drop.
         Set<Integer> dropStarts = new HashSet<>();
         for (int i = 0; i < drop.length; i++) {
             if (drop[i]) {
                 dropStarts.add(decoded.codeStarts[i]);
             }
         }
+        // Map byte-start -> code length once (O(n)); findCodeLenAt was an O(n^2) linear scan (F10).
+        Map<Integer, Integer> lenByStart = new HashMap<>();
+        for (int j = 0; j < decoded.codeStarts.length; j++) {
+            lenByStart.putIfAbsent(decoded.codeStarts[j], decoded.codeLens[j]);
+        }
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         int i = 0;
         while (i < originalBytes.length) {
             int start = i;
-            int len = findCodeLenAt(decoded, start);
+            int len = lenByStart.getOrDefault(start, -1);
             if (len <= 0) {
                 // Unknown - keep the byte verbatim.
                 out.write(originalBytes[i] & 0xFF);
@@ -656,8 +667,7 @@ public final class RedactionPipeline {
                 continue;
             }
             if (dropStarts.contains(start)) {
-                // Replace dropped code with encoded space if possible. This preserves rough
-                // layout; if encoding a space fails we simply drop the bytes.
+                // Replace dropped code with encoded space if possible.
                 byte[] spaceBytes = tryEncodeSpace(font);
                 if (spaceBytes != null) {
                     out.write(spaceBytes, 0, spaceBytes.length);
@@ -670,15 +680,6 @@ public final class RedactionPipeline {
         return new COSString(out.toByteArray());
     }
 
-    private static int findCodeLenAt(DecodeResult decoded, int byteStart) {
-        for (int j = 0; j < decoded.codeStarts.length; j++) {
-            if (decoded.codeStarts[j] == byteStart) {
-                return decoded.codeLens[j];
-            }
-        }
-        return -1;
-    }
-
     private static byte[] tryEncodeSpace(PDFont font) {
         if (font == null) {
             return new byte[] {0x20};
@@ -687,9 +688,6 @@ public final class RedactionPipeline {
             return font.encode(" ");
         } catch (Exception e) {
             // Some fonts cannot encode a space at all (e.g. Type3 throws
-            // UnsupportedOperationException
-            // from encode()). Returning null drops the code with no placeholder - the target glyph
-            // is still physically removed, which is what matters for redaction.
             return null;
         }
     }
@@ -708,20 +706,12 @@ public final class RedactionPipeline {
         }
     }
 
-    // ---------------------------------------------------------------------
     // Rasterisation fallback
-    // ---------------------------------------------------------------------
 
-    /**
-     * Rasterise only the pages listed in {@code pagesToRaster} (all pages when null) at 150 DPI and
-     * replace those pages' content streams with the rendered image. Pages not in the set keep their
-     * original content streams verbatim so unrelated text remains searchable after the fallback.
-     */
+    /** Rasterise the listed pages (all when null) at 150 DPI, replacing their content. */
     private static PDDocument rasterisePages(byte[] sourceBytes, Set<Integer> pagesToRaster)
             throws IOException {
-        // Load the document directly and mutate in place: rewriting only the affected pages'
-        // content streams is cheaper and guarantees untouched pages' xref entries survive
-        // byte-for-byte.
+        // Load the document directly and mutate in place: rewriting
         PDDocument source = org.apache.pdfbox.Loader.loadPDF(sourceBytes);
         try {
             PDFRenderer renderer = new PDFRenderer(source);
@@ -740,7 +730,7 @@ public final class RedactionPipeline {
                         PDImageXObject.createFromByteArray(
                                 source, imgOut.toByteArray(), "redacted-page-" + i);
 
-                // Drop all prior content / resources / annotations; the raster is the page now.
+                // Drop all prior content / resources / annotations; the raster is the page
                 page.getCOSObject().removeItem(COSName.CONTENTS);
                 page.setResources(new PDResources());
                 page.getCOSObject().removeItem(COSName.ANNOTS);
@@ -754,8 +744,7 @@ public final class RedactionPipeline {
                                 PDPageContentStream.AppendMode.OVERWRITE,
                                 false,
                                 true)) {
-                    // The rendered image already has the rotation baked in visually, so the
-                    // resulting page is placed un-rotated against the media box.
+                    // The rendered image already has the rotation baked in visually
                     cs.drawImage(
                             imageXObject,
                             media.getLowerLeftX(),
@@ -771,14 +760,9 @@ public final class RedactionPipeline {
         }
     }
 
-    // ---------------------------------------------------------------------
     // Pattern construction
-    // ---------------------------------------------------------------------
 
-    /**
-     * Build a set of regex patterns from user input. Returns an empty list if none of the entries
-     * produce a valid pattern.
-     */
+    /** Build case-insensitive regex patterns from user input. */
     public static List<Pattern> buildPatterns(
             String[] rawEntries, boolean useRegex, boolean wholeWordSearch) {
         List<Pattern> patterns = new ArrayList<>();
@@ -796,10 +780,9 @@ public final class RedactionPipeline {
             try {
                 String core = useRegex ? trimmed : Pattern.quote(trimmed);
                 if (wholeWordSearch) {
-                    core = "\\b" + core + "\\b";
+                    // Shared with the finder so removal + verification use identical boundaries.
+                    core = TextFinderUtils.applyWordBoundaries(trimmed, core);
                 }
-                // Case-insensitive to mirror TextFinderUtils.createOptimizedSearchPatterns: what
-                // the finder matches, removal and verification must match too.
                 patterns.add(
                         Pattern.compile(core, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE));
             } catch (PatternSyntaxException e) {
@@ -809,9 +792,7 @@ public final class RedactionPipeline {
         return patterns;
     }
 
-    // ---------------------------------------------------------------------
     // Area capture
-    // ---------------------------------------------------------------------
 
     private static List<String> captureTextInRects(PDPage page, List<PDRectangle> rects)
             throws IOException {
@@ -819,8 +800,7 @@ public final class RedactionPipeline {
         stripper.setSortByPosition(true);
         for (int i = 0; i < rects.size(); i++) {
             PDRectangle rect = rects.get(i);
-            // PDFTextStripperByArea uses a Java2D rectangle in the same coordinate space that
-            // TextPosition reports, i.e. top-left origin with Y flipped relative to PDF user space.
+            // PDFTextStripperByArea uses a Java2D rectangle in the same coordinate
             float pdfY = page.getBBox().getHeight() - rect.getUpperRightY();
             Rectangle2D.Float region =
                     new Rectangle2D.Float(
@@ -849,78 +829,16 @@ public final class RedactionPipeline {
         return new ArrayList<>(captured);
     }
 
-    // ---------------------------------------------------------------------
     // Content-stream rewriting (rect-driven glyph removal)
-    // ---------------------------------------------------------------------
 
-    private static void removeTokensIntersectingRects(
+    /**
+     * Blanks show-text operands whose glyphs fall in a rect. Returns false (surgical removal is
+     * unreliable, caller must rasterise) when text-bearing form XObjects skew the operator ordinals
+     * or an image sits under a rect - leaving the page stream untouched so the raster is correct.
+     */
+    private static boolean removeTokensIntersectingRects(
             PDDocument document, PDPage page, List<PDRectangle> rects) throws IOException {
 
-        // Identify which show-text operators should be wiped by running a tiny engine that tracks
-        // each operator's rendered bounding box.
-        List<Integer> dropTokenIndexes = identifyShowTextOperatorsInRects(document, page, rects);
-
-        PDFStreamParser parser = new PDFStreamParser(page);
-        List<Object> tokens = new ArrayList<>();
-        Object token;
-        while ((token = parser.parseNextToken()) != null) {
-            tokens.add(token);
-        }
-
-        // Build set of token indexes to blank (the argument immediately preceding a flagged
-        // text-showing operator).
-        Set<Integer> blankArgIndexes = new HashSet<>();
-        int textOpCount = 0;
-        for (int i = 0; i < tokens.size(); i++) {
-            Object t = tokens.get(i);
-            if (t instanceof Operator op && TEXT_SHOWING_OPERATORS.contains(op.getName())) {
-                if (dropTokenIndexes.contains(textOpCount) && i > 0) {
-                    blankArgIndexes.add(i - 1);
-                }
-                textOpCount++;
-            }
-        }
-
-        for (Integer idx : blankArgIndexes) {
-            Object arg = tokens.get(idx);
-            if (arg instanceof COSString) {
-                tokens.set(idx, new COSString(""));
-            } else if (arg instanceof COSArray arr) {
-                COSArray empty = new COSArray();
-                // Preserve numeric kerning entries so page layout doesn't shift wildly but drop
-                // every COSString.
-                for (COSBase element : arr) {
-                    if (!(element instanceof COSString)) {
-                        empty.add(element);
-                    }
-                }
-                tokens.set(idx, empty);
-            }
-        }
-
-        // Additionally wipe Do-drawn images whose bounding box intersects a rect. This needs a
-        // coordinate scan - for safety we drop every Do whose CTM origin sits inside a rect.
-        List<Integer> doImageIndexes = identifyDoImagesInRects(page, rects);
-        int doCount = 0;
-        for (int i = tokens.size() - 1; i >= 0; i--) {
-            Object t = tokens.get(i);
-            if (t instanceof Operator op && "Do".equals(op.getName())) {
-                if (doImageIndexes.contains(doCount)) {
-                    // Remove both the name argument and the operator.
-                    if (i > 0) {
-                        tokens.remove(i);
-                        tokens.remove(i - 1);
-                    }
-                }
-                doCount++;
-            }
-        }
-
-        writePageTokens(document, page, tokens);
-    }
-
-    private static List<Integer> identifyShowTextOperatorsInRects(
-            PDDocument document, PDPage page, List<PDRectangle> rects) throws IOException {
         List<Rectangle2D.Float> areaRects = new ArrayList<>();
         for (PDRectangle rect : rects) {
             float pdfY = page.getBBox().getHeight() - rect.getUpperRightY();
@@ -934,15 +852,75 @@ public final class RedactionPipeline {
         collector.setStartPage(pageIndex + 1);
         collector.setEndPage(pageIndex + 1);
         collector.getText(document);
-        return new ArrayList<>(collector.tokenIndexesToDrop);
+        Set<Integer> dropTokenIndexes = collector.tokenIndexesToDrop;
+        int collectorTextOps = collector.totalTextOps();
+
+        List<Object> tokens = parseTokens(new PDFStreamParser(page));
+        Set<Integer> blankArgIndexes = new HashSet<>();
+        int pageTextOps = 0;
+        for (int i = 0; i < tokens.size(); i++) {
+            Object t = tokens.get(i);
+            if (t instanceof Operator op && TEXT_SHOWING_OPERATORS.contains(op.getName())) {
+                if (dropTokenIndexes.contains(pageTextOps) && i > 0) {
+                    blankArgIndexes.add(i - 1);
+                }
+                pageTextOps++;
+            }
+        }
+
+        // Collector ordinals span form XObjects; if a form contributed text ops the page-stream
+        // ordinals no longer line up, so blanking would hit the wrong operator.
+        if (collectorTextOps != pageTextOps || imageIntersectsAnyRect(page, pageIndex, rects)) {
+            return false;
+        }
+
+        for (Integer idx : blankArgIndexes) {
+            Object arg = tokens.get(idx);
+            if (arg instanceof COSString) {
+                tokens.set(idx, new COSString(""));
+            } else if (arg instanceof COSArray arr) {
+                COSArray empty = new COSArray();
+                // Preserve numeric kerning entries so page layout doesn't shift wildly.
+                for (COSBase element : arr) {
+                    if (!(element instanceof COSString)) {
+                        empty.add(element);
+                    }
+                }
+                tokens.set(idx, empty);
+            }
+        }
+
+        writePageTokens(document, page, tokens);
+        return true;
     }
 
-    private static List<Integer> identifyDoImagesInRects(PDPage page, List<PDRectangle> rects) {
-        // Conservative: we do not attempt to decode CTMs here; the overlay rectangle + Do removal
-        // is handled only via the rectangle overlay. Returning an empty list means Do operators
-        // are left alone. The overlay draw + image opaque box above the layer still hides image
-        // pixels in the rect. Full image physical removal is covered by convert-to-image mode.
-        return Collections.emptyList();
+    /**
+     * True if any image on the page overlaps a redaction rect (would survive under the overlay).
+     */
+    private static boolean imageIntersectsAnyRect(
+            PDPage page, int pageIndex, List<PDRectangle> rects) {
+        try {
+            PageImageLocator locator = new PageImageLocator(page, pageIndex);
+            locator.processPage(page);
+            for (PageImageLocator.ImageBox ib : locator.getImageBoxes()) {
+                Rectangle2D.Float img =
+                        new Rectangle2D.Float(
+                                ib.x1(), ib.y1(), ib.x2() - ib.x1(), ib.y2() - ib.y1());
+                for (PDRectangle rect : rects) {
+                    if (img.intersects(
+                            rect.getLowerLeftX(),
+                            rect.getLowerLeftY(),
+                            rect.getWidth(),
+                            rect.getHeight())) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        } catch (Exception e) {
+            // Cannot prove no image sits under a box - treat as unsafe (force raster).
+            return true;
+        }
     }
 
     private static void writePageTokens(PDDocument document, PDPage page, List<Object> tokens)
@@ -975,21 +953,9 @@ public final class RedactionPipeline {
         }
     }
 
-    // ---------------------------------------------------------------------
     // Font subsetting
-    // ---------------------------------------------------------------------
 
-    /**
-     * Warns when the document still carries embedded Type0/TrueType font programs after a
-     * redaction. PDFBox 3.0 has no stable API to surgically drop specific glyph ids from an
-     * already-loaded {@link PDType0Font} / {@link PDTrueTypeFont}, so we do not claim to subset
-     * them.
-     *
-     * <p>This is defence-in-depth only: the content-stream rewrite drops the byte codes that
-     * reference those glyphs, so the text is not extractable via a text stripper. Raw font-program
-     * inspection could still recover glyph outlines, so we log the limitation rather than pretend
-     * it is handled. The convert-to-image path removes this residue entirely.
-     */
+    /** Warns when the document still carries embedded Type0/TrueType font */
     private static void warnAboutEmbeddedFontGlyphs(PDDocument document) {
         boolean anyEmbedded = false;
         Set<PDFont> visited = new HashSet<>();
@@ -1023,9 +989,7 @@ public final class RedactionPipeline {
         }
     }
 
-    // ---------------------------------------------------------------------
     // Verification
-    // ---------------------------------------------------------------------
 
     private static void verify(
             byte[] bytes,
@@ -1036,68 +1000,130 @@ public final class RedactionPipeline {
                 && (patterns == null || patterns.isEmpty())) {
             return;
         }
+        Set<Integer> pageSet =
+                (affectedPages == null || affectedPages.isEmpty())
+                        ? null
+                        : new TreeSet<>(affectedPages);
+        // PDFBox pass, blind to /ActualText so a benign override can't mask real glyphs.
+        boolean needNativePass;
         try (PDDocument reopened = org.apache.pdfbox.Loader.loadPDF(bytes)) {
-            Set<Integer> pageSet =
-                    (affectedPages == null || affectedPages.isEmpty())
-                            ? null
-                            : new TreeSet<>(affectedPages);
-            String extracted = extractText(reopened, pageSet);
-            if (extracted == null) {
-                return;
-            }
-            String normalised = extracted.toLowerCase(Locale.ROOT);
-            if (literalTargets != null) {
-                for (String target : literalTargets) {
-                    if (target == null || target.isEmpty()) {
-                        continue;
-                    }
-                    if (normalised.contains(target.toLowerCase(Locale.ROOT))) {
-                        throw new RedactionVerificationFailedException(
-                                "Redacted text still extractable: '" + target + "'");
-                    }
-                }
-            }
-            if (patterns != null) {
-                for (Pattern pattern : patterns) {
-                    // Regex verification is security-critical: a pathological regex (stack
-                    // overflow,
-                    // catastrophic backtracking, illegal state) must NOT be treated as "no match".
-                    // Treat any failure as a verification FAIL so the fallback path runs instead
-                    // of silently returning clean bytes.
-                    try {
-                        if (pattern.matcher(extracted).find()) {
-                            throw new RedactionVerificationFailedException(
-                                    "Redacted pattern still extractable: " + pattern.pattern());
-                        }
-                    } catch (RedactionVerificationFailedException rvf) {
-                        throw rvf;
-                    } catch (RuntimeException | StackOverflowError e) {
-                        log.warn(
-                                "Verification regex '{}' threw {}; treating as verification FAIL",
-                                pattern.pattern(),
-                                e.toString());
-                        throw new RedactionVerificationFailedException(
-                                "Verification regex failed ("
-                                        + pattern.pattern()
-                                        + "): "
-                                        + e.getMessage(),
-                                e instanceof Exception ? (Exception) e : new Exception(e));
-                    }
-                }
-            }
+            assertNoTarget(extractText(reopened, pageSet), literalTargets, patterns);
+            needNativePass = documentHasUnreliableFont(reopened);
         } catch (IOException e) {
             throw new RedactionVerificationFailedException(
                     "Failed to reopen redacted PDF for verification", e);
         }
+        // Additive producer-independent pass: native PDFium sees glyphs PDFBox may miss (fonts with
+        // no ToUnicode). Skipped when every font is Standard-14 or has /ToUnicode - there PDFBox
+        // extraction is authoritative, so the pass above already catches any leak and the (~10x
+        // slower) native extraction would be pure redundant cost. Never weakens the verdict.
+        if (needNativePass) {
+            assertNoTarget(extractTextJPDFium(bytes, pageSet), literalTargets, patterns);
+        }
     }
 
     /**
-     * Extract text from {@code pageIndexes} (1-based converted internally), or the whole document
-     * when {@code pageIndexes} is null.
+     * True if any font (on any page or nested form XObject) is not provably reliable for PDFBox
+     * glyph extraction - i.e. it is neither a built-in Standard-14 font nor carries a /ToUnicode
+     * map. These are exactly the fonts (CID/Type3/symbolic without ToUnicode) where the PDFBox pass
+     * can go blind, so the independent native pass earns its cost. Biased to {@code true} on any
+     * inspection failure so the native pass runs whenever reliability is uncertain.
      */
+    static boolean documentHasUnreliableFont(PDDocument document) {
+        try {
+            Set<COSBase> visited = new HashSet<>();
+            for (PDPage page : document.getPages()) {
+                if (resourcesHaveUnreliableFont(page.getResources(), visited, 0)) {
+                    return true;
+                }
+            }
+            return false;
+        } catch (RuntimeException e) {
+            return true;
+        }
+    }
+
+    private static boolean resourcesHaveUnreliableFont(
+            PDResources res, Set<COSBase> visited, int depth) {
+        if (res == null) {
+            return false;
+        }
+        if (depth > MAX_XOBJECT_DEPTH) {
+            return true; // too deeply nested to fully verify - run the native pass to be safe
+        }
+        if (!visited.add(res.getCOSObject())) {
+            return false; // already inspected this resource dictionary
+        }
+        for (COSName name : res.getFontNames()) {
+            PDFont font;
+            try {
+                font = res.getFont(name);
+            } catch (Exception e) {
+                return true; // font won't load for inspection - assume unreliable
+            }
+            if (font != null
+                    && !font.isStandard14()
+                    && !font.getCOSObject().containsKey(COSName.TO_UNICODE)) {
+                return true;
+            }
+        }
+        for (COSName name : res.getXObjectNames()) {
+            try {
+                if (res.getXObject(name) instanceof PDFormXObject form
+                        && resourcesHaveUnreliableFont(form.getResources(), visited, depth + 1)) {
+                    return true;
+                }
+            } catch (Exception e) {
+                return true; // can't inspect the XObject - assume unreliable
+            }
+        }
+        return false;
+    }
+
+    /** Fail-closed match check with whitespace-normalised literals (F6b) and X2 regex semantics. */
+    private static void assertNoTarget(
+            String extracted, Set<String> literalTargets, List<Pattern> patterns) {
+        if (extracted == null) {
+            return;
+        }
+        String normalised = extracted.toLowerCase(Locale.ROOT).replaceAll("\\s+", " ");
+        if (literalTargets != null) {
+            for (String target : literalTargets) {
+                if (target == null || target.isEmpty()) {
+                    continue;
+                }
+                String needle = target.toLowerCase(Locale.ROOT).replaceAll("\\s+", " ");
+                if (normalised.contains(needle)) {
+                    throw new RedactionVerificationFailedException(
+                            "Redacted text still extractable: '" + target + "'");
+                }
+            }
+        }
+        if (patterns != null) {
+            for (Pattern pattern : patterns) {
+                try {
+                    if (pattern.matcher(extracted).find()) {
+                        throw new RedactionVerificationFailedException(
+                                "Redacted pattern still extractable: " + pattern.pattern());
+                    }
+                } catch (RedactionVerificationFailedException rvf) {
+                    throw rvf;
+                } catch (RuntimeException | StackOverflowError e) {
+                    throw new RedactionVerificationFailedException(
+                            "Verification regex failed ("
+                                    + pattern.pattern()
+                                    + "): "
+                                    + e.getMessage(),
+                            e instanceof Exception ? (Exception) e : new Exception(e));
+                }
+            }
+        }
+    }
+
+    /** Extract text from pageIndexes (0-based) using an /ActualText-blind stripper. */
     private static String extractText(PDDocument document, Set<Integer> pageIndexes)
             throws IOException {
-        PDFTextStripper stripper = new PDFTextStripper();
+        PDFTextStripper stripper = new GlyphOnlyTextStripper();
         if (pageIndexes == null) {
             return stripper.getText(document);
         }
@@ -1117,24 +1143,97 @@ public final class RedactionPipeline {
     }
 
     /**
-     * Scans each page of the saved bytes for surviving targets and returns the 0-based indexes of
-     * pages that still leak. Returns {@code null} (meaning "rasterise everything") when detection
-     * fails or finds nothing per-page despite the document-wide verification failure (e.g. a match
-     * spanning a page boundary in the concatenated extraction).
+     * Independent native (PDFium) extraction; null if the binding is unavailable (additive only).
      */
+    private static String extractTextJPDFium(byte[] bytes, Set<Integer> pageIndexes) {
+        if (!jpdfiumAvailable || bytes.length > MAX_JPDFIUM_VERIFY_BYTES) {
+            return null;
+        }
+        try (stirling.software.jpdfium.PdfDocument doc =
+                stirling.software.jpdfium.PdfDocument.open(bytes)) {
+            StringBuilder sb = new StringBuilder();
+            int n = doc.pageCount();
+            if (pageIndexes == null) {
+                for (int i = 0; i < n; i++) {
+                    sb.append(jpdfiumPlainText(doc, i)).append('\n');
+                }
+            } else {
+                for (Integer p : pageIndexes) {
+                    if (p != null && p >= 0 && p < n) {
+                        sb.append(jpdfiumPlainText(doc, p)).append('\n');
+                    }
+                }
+            }
+            return sb.toString();
+        } catch (RuntimeException | Error e) {
+            onJpdfiumFailure(e);
+            return null;
+        }
+    }
+
+    private static String jpdfiumPlainText(stirling.software.jpdfium.PdfDocument doc, int i) {
+        try {
+            return stirling.software.jpdfium.text.PdfTextExtractor.extractPage(doc, i).plainText();
+        } catch (RuntimeException | Error e) {
+            return "";
+        }
+    }
+
+    /** One native open, all pages' plain text; null if the binding is unavailable. */
+    private static List<String> extractPagesJPDFium(byte[] bytes) {
+        if (!jpdfiumAvailable || bytes.length > MAX_JPDFIUM_VERIFY_BYTES) {
+            return null;
+        }
+        try (stirling.software.jpdfium.PdfDocument doc =
+                stirling.software.jpdfium.PdfDocument.open(bytes)) {
+            List<String> pages = new ArrayList<>();
+            int n = doc.pageCount();
+            for (int i = 0; i < n; i++) {
+                pages.add(jpdfiumPlainText(doc, i));
+            }
+            return pages;
+        } catch (RuntimeException | Error e) {
+            onJpdfiumFailure(e);
+            return null;
+        }
+    }
+
+    /**
+     * A native-binding load error latches the pass off process-wide (warn once) so a host without
+     * the native stops retrying; a per-document error only skips this one document (debug).
+     */
+    private static void onJpdfiumFailure(Throwable e) {
+        boolean nativeUnavailable =
+                e instanceof UnsatisfiedLinkError
+                        || e instanceof NoClassDefFoundError
+                        || e instanceof ExceptionInInitializerError
+                        || e.getClass().getSimpleName().contains("NativeLoad");
+        if (nativeUnavailable) {
+            jpdfiumAvailable = false;
+            log.warn(
+                    "JPDFium native unavailable; redaction verification will use the PDFBox pass "
+                            + "only: {}",
+                    e.toString());
+        } else {
+            log.debug("JPDFium verification skipped for this document: {}", e.toString());
+        }
+    }
+
+    /** Pages whose surviving text (PDFBox glyph-blind OR native PDFium) still matches a target. */
     private static Set<Integer> findLeakingPages(
             byte[] bytes, Set<String> literalTargets, List<Pattern> patterns) {
+        List<String> jpdfiumPages = extractPagesJPDFium(bytes);
         try (PDDocument reopened = org.apache.pdfbox.Loader.loadPDF(bytes)) {
             Set<Integer> leaking = new TreeSet<>();
-            PDFTextStripper stripper = new PDFTextStripper();
+            GlyphOnlyTextStripper stripper = new GlyphOnlyTextStripper();
             for (int i = 0; i < reopened.getNumberOfPages(); i++) {
                 stripper.setStartPage(i + 1);
                 stripper.setEndPage(i + 1);
-                String pageText = stripper.getText(reopened);
-                if (pageText == null || pageText.isEmpty()) {
-                    continue;
-                }
-                if (pageLeaks(pageText, literalTargets, patterns)) {
+                String pdfboxText = stripper.getText(reopened);
+                String jpdfiumText =
+                        jpdfiumPages != null && i < jpdfiumPages.size() ? jpdfiumPages.get(i) : "";
+                String combined = (pdfboxText == null ? "" : pdfboxText) + "\n" + jpdfiumText;
+                if (pageLeaks(combined, literalTargets, patterns)) {
                     leaking.add(i);
                 }
             }
@@ -1154,53 +1253,53 @@ public final class RedactionPipeline {
 
     private static boolean pageLeaks(
             String pageText, Set<String> literalTargets, List<Pattern> patterns) {
-        String normalised = pageText.toLowerCase(Locale.ROOT);
-        if (literalTargets != null) {
-            for (String target : literalTargets) {
-                if (target != null
-                        && !target.isEmpty()
-                        && normalised.contains(target.toLowerCase(Locale.ROOT))) {
-                    return true;
-                }
-            }
+        try {
+            assertNoTarget(pageText, literalTargets, patterns);
+            return false;
+        } catch (RedactionVerificationFailedException e) {
+            return true;
         }
-        if (patterns != null) {
-            for (Pattern pattern : patterns) {
-                // Mirror verify(): a throwing pattern counts as a leak so we fail closed.
-                try {
-                    if (pattern.matcher(pageText).find()) {
-                        return true;
-                    }
-                } catch (RuntimeException | StackOverflowError e) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
-    // ---------------------------------------------------------------------
-    // Helper types
-    // ---------------------------------------------------------------------
+    /** PDFTextStripper that strips /ActualText so verification sees the real glyph stream. */
+    private static final class GlyphOnlyTextStripper extends PDFTextStripper {
+        private static final COSName ACTUAL_TEXT = COSName.getPDFName("ActualText");
 
-    /** Result of a rect-driven redaction pass - text strings captured from within the rects. */
+        GlyphOnlyTextStripper() throws IOException {}
+
+        @Override
+        public void beginMarkedContentSequence(COSName tag, COSDictionary properties) {
+            COSDictionary safe = properties;
+            if (properties != null && properties.containsKey(ACTUAL_TEXT)) {
+                safe = new COSDictionary(properties);
+                safe.removeItem(ACTUAL_TEXT);
+            }
+            super.beginMarkedContentSequence(tag, safe);
+        }
+    }
+
+    // Helper types
+
+    /** Captured strings plus pages that must be rasterised (surgical removal was unreliable). */
     public static final class RedactionResult {
         private final Set<String> capturedStrings;
+        private final Set<Integer> forceRasterPages;
 
-        public RedactionResult(Set<String> capturedStrings) {
+        public RedactionResult(Set<String> capturedStrings, Set<Integer> forceRasterPages) {
             this.capturedStrings = capturedStrings == null ? Set.of() : capturedStrings;
+            this.forceRasterPages = forceRasterPages == null ? Set.of() : forceRasterPages;
         }
 
         public Set<String> getCapturedStrings() {
             return capturedStrings;
         }
+
+        public Set<Integer> getForceRasterPages() {
+            return forceRasterPages;
+        }
     }
 
-    /**
-     * A {@link PDFTextStripper} subclass that records the ordinal index of every show-text operator
-     * whose glyphs intersect one of the target rects. The resulting indexes line up with the order
-     * in which {@link PDFStreamParser} emits text-showing operators from the same page.
-     */
+    /** A PDFTextStripper subclass that records the ordinal index of every */
     private static final class TokenIndexCollector extends PDFTextStripper {
         private final List<Rectangle2D.Float> rects;
         private final Set<Integer> tokenIndexesToDrop = new HashSet<>();
@@ -1210,6 +1309,10 @@ public final class RedactionPipeline {
         TokenIndexCollector(List<Rectangle2D.Float> rects) throws IOException {
             this.rects = rects;
             setSortByPosition(false);
+        }
+
+        int totalTextOps() {
+            return showTextOpCounter + 1;
         }
 
         @Override

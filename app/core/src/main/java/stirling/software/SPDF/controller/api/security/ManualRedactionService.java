@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -52,9 +53,10 @@ class ManualRedactionService {
 
         Set<String> capturedStrings = new LinkedHashSet<>();
         Map<Integer, List<PDRectangle>> rectsByPage = new HashMap<>();
+        Set<Integer> forceRasterPages = new LinkedHashSet<>();
 
         if (redactionAreas == null || redactionAreas.isEmpty()) {
-            return new AreaRedactionResult(rectsByPage);
+            return new AreaRedactionResult(rectsByPage, forceRasterPages);
         }
 
         Map<Integer, List<RedactionArea>> redactionsByPage = new HashMap<>();
@@ -86,8 +88,9 @@ class ManualRedactionService {
             PDPage page = allPages.get(pageIndex);
             float pageHeight = page.getBBox().getHeight();
 
-            List<PDRectangle> rects = new ArrayList<>();
-            Color overlayColor = Color.BLACK;
+            // Group rects by their decoded colour so each area keeps its own overlay tint (F9a).
+            Map<Color, List<PDRectangle>> byColor = new LinkedHashMap<>();
+            List<PDRectangle> allRects = new ArrayList<>();
             for (RedactionArea area : areasForPage) {
                 float x = area.getX().floatValue();
                 float y = area.getY().floatValue();
@@ -95,24 +98,28 @@ class ManualRedactionService {
                 float height = area.getHeight().floatValue();
                 // Request coords are top-left origin; convert to PDF user space (bottom-left).
                 float pdfY = pageHeight - y - height;
-                rects.add(new PDRectangle(x, pdfY, width, height));
-                overlayColor = decodeOrDefault(area.getColor());
+                PDRectangle rect = new PDRectangle(x, pdfY, width, height);
+                allRects.add(rect);
+                byColor.computeIfAbsent(decodeOrDefault(area.getColor()), k -> new ArrayList<>())
+                        .add(rect);
             }
 
-            // Physically drop intersecting glyphs and draw the overlay rectangle over the area.
-            Map<Integer, List<PDRectangle>> singlePage = new HashMap<>();
-            singlePage.put(pageIndex, rects);
-            RedactionPipeline.RedactionResult result =
-                    RedactionPipeline.redactAreas(document, singlePage, overlayColor);
-            capturedStrings.addAll(result.getCapturedStrings());
-            rectsByPage.put(pageIndex, rects);
+            for (Map.Entry<Color, List<PDRectangle>> colorEntry : byColor.entrySet()) {
+                Map<Integer, List<PDRectangle>> singlePage = new HashMap<>();
+                singlePage.put(pageIndex, colorEntry.getValue());
+                RedactionPipeline.RedactionResult result =
+                        RedactionPipeline.redactAreas(document, singlePage, colorEntry.getKey());
+                capturedStrings.addAll(result.getCapturedStrings());
+                forceRasterPages.addAll(result.getForceRasterPages());
+            }
+            rectsByPage.put(pageIndex, allRects);
         }
 
         log.debug(
                 "Manual area redaction captured {} text run(s) across {} page(s)",
                 capturedStrings.size(),
                 rectsByPage.size());
-        return new AreaRedactionResult(rectsByPage);
+        return new AreaRedactionResult(rectsByPage, forceRasterPages);
     }
 
     List<Integer> redactPages(
@@ -327,8 +334,7 @@ class ManualRedactionService {
                                 convertedPdf, Collections.emptySet(), Collections.emptyList());
             }
         } else {
-            // True-removal pass: physically strip matched glyph bytes from every content stream,
-            // then scrub catalog carriers, verify, and rasterise affected pages on any leak.
+            // Strip matched glyphs, then scrub/verify/rasterise via finalize.
             RedactionPipeline.redactLiteralTerms(document, literalTargets, patterns);
             outputBytes = RedactionPipeline.finalize(document, literalTargets, patterns);
         }
@@ -336,15 +342,9 @@ class ManualRedactionService {
         return writeBytes(outputBytes, document.getNumberOfPages());
     }
 
-    /**
-     * Finalize a manual area/page redaction. The overlay rectangles are already drawn and the
-     * intersecting glyphs already dropped. Verification is region-based: each redaction rectangle
-     * is re-scanned and must be empty (whole-page wipes carry no rects and are guaranteed clean).
-     */
+    /** Finalize a manual redaction; forced + verified-leaking pages are rasterised. */
     TempFile finalizeManual(
-            PDDocument document,
-            Map<Integer, List<PDRectangle>> rectsByPage,
-            Boolean convertToImage)
+            PDDocument document, AreaRedactionResult areaResult, Boolean convertToImage)
             throws IOException {
 
         byte[] outputBytes;
@@ -355,7 +355,9 @@ class ManualRedactionService {
                                 convertedPdf, Collections.emptySet(), Collections.emptyList());
             }
         } else {
-            outputBytes = RedactionPipeline.finalizeAreas(document, rectsByPage);
+            outputBytes =
+                    RedactionPipeline.finalizeAreas(
+                            document, areaResult.rectsByPage, areaResult.forceRasterPages);
         }
 
         return writeBytes(outputBytes, document.getNumberOfPages());
@@ -378,12 +380,15 @@ class ManualRedactionService {
     // Utilities
     // -----------------------------------------------------------------------
 
-    /** Redaction rectangles (per 0-based page index) applied by a manual area pass. */
+    /** Redaction rectangles + pages to force-rasterise, per 0-based page index. */
     static final class AreaRedactionResult {
         final Map<Integer, List<PDRectangle>> rectsByPage;
+        final Set<Integer> forceRasterPages;
 
-        AreaRedactionResult(Map<Integer, List<PDRectangle>> rectsByPage) {
+        AreaRedactionResult(
+                Map<Integer, List<PDRectangle>> rectsByPage, Set<Integer> forceRasterPages) {
             this.rectsByPage = rectsByPage;
+            this.forceRasterPages = forceRasterPages;
         }
     }
 

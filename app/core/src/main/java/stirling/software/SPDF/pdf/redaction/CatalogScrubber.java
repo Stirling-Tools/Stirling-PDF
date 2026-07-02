@@ -29,35 +29,13 @@ import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Walks a {@link PDDocument} and physically removes or rewrites every carrier that a PDF can use to
- * leak text which the user asked to redact.
- *
- * <p>Covers:
- *
- * <ul>
- *   <li>{@link PDDocumentInformation} (Info dict) + XMP metadata stream
- *   <li>{@link PDDocumentOutline} bookmark titles
- *   <li>{@link PDAcroForm} field values (V, DV) and rich text (RV)
- *   <li>Every {@link PDAnnotation} Contents and RC
- *   <li>Structure tree ActualText, Alt, T, E, Lang entries
- *   <li>Names tree: JavaScript entries and embedded files (dropped entirely when matching)
- * </ul>
- *
- * <p>When applied after the content-stream rewrite it closes the secondary leak paths flagged in
- * the redaction security audit.
- */
+/** Removes/rewrites every catalog carrier that could leak redacted text. */
 @Slf4j
 public final class CatalogScrubber {
 
     private CatalogScrubber() {}
 
-    /**
-     * Remove occurrences of every {@code target} string (and any regex/whole-word pattern form
-     * produced by {@link RedactionPipeline#buildPatterns}) from all catalog-level carriers of the
-     * document. When {@code wipeAllMetadata} is {@code true} the document Info dict entries and XMP
-     * metadata stream are wiped wholesale; this is the safe default after a redaction operation.
-     */
+    /** Scrub all catalog-level carriers of the given literal/regex targets. */
     public static void scrub(
             PDDocument document, Set<String> literalTargets, List<Pattern> patterns) {
         if (document == null) {
@@ -77,9 +55,7 @@ public final class CatalogScrubber {
         scrubCatalogActions(catalog, literalTargets, patterns);
     }
 
-    // ---------------------------------------------------------------------
-    // Catalog actions: OpenAction, AA, and any JavaScript / URI payloads on the catalog
-    // ---------------------------------------------------------------------
+    // Catalog actions: OpenAction, AA, and any JavaScript / URI payloads
 
     private static void scrubCatalogActions(
             PDDocumentCatalog catalog, Set<String> targets, List<Pattern> patterns) {
@@ -87,16 +63,12 @@ public final class CatalogScrubber {
         if (root == null) {
             return;
         }
-        // OpenAction may be either an action dict (with /URI or /JS) or an explicit destination
-        // (array). We scrub strings in both cases; if the OpenAction matches a target we clear it.
+        // OpenAction may be either an action dict (with /URI or /JS) or an explicit
         scrubActionIfMatching(root, COSName.getPDFName("OpenAction"), targets, patterns);
         scrubActionIfMatching(root, COSName.getPDFName("AA"), targets, patterns);
     }
 
-    /**
-     * If the action dictionary at {@code key} contains any target literal in a URI or JS payload,
-     * wipe the key entirely. Otherwise recursively scrub string fields inside it.
-     */
+    /** Drop the action at key if any target appears in its URI/JS payload. */
     private static void scrubActionIfMatching(
             COSDictionary parent, COSName key, Set<String> targets, List<Pattern> patterns) {
         if (parent == null || key == null) {
@@ -125,9 +97,7 @@ public final class CatalogScrubber {
             return matches(cs.getString(), targets, patterns);
         }
         if (resolved instanceof COSStream stream) {
-            // Streams in XFA / OpenAction contexts are text (XML, JavaScript). Read the bytes as
-            // UTF-8 and test for target literals. We cap read length to avoid pathological memory
-            // use; 2 MiB is plenty for XFA packets and far beyond any realistic JS action.
+            // Streams in XFA / OpenAction contexts are text (XML, JavaScript).
             try (java.io.InputStream is = stream.createInputStream()) {
                 byte[] buf = new byte[2 * 1024 * 1024];
                 int total = 0;
@@ -139,11 +109,14 @@ public final class CatalogScrubber {
                     }
                 }
                 String text = new String(buf, 0, total, java.nio.charset.StandardCharsets.UTF_8);
-                return matches(text, targets, patterns);
+                if (matches(text, targets, patterns)) {
+                    return true;
+                }
+                // Fail closed: content past the 2 MiB cap is unproven, so treat as a match (F7c).
+                return total >= buf.length && is.read() >= 0;
             } catch (Exception e) {
                 log.debug("Failed to scan stream for targets: {}", e.getMessage());
-                // Fail closed: if we cannot read it we cannot prove it is clean, so treat as a
-                // match so the caller drops the stream. This is conservative by design.
+                // Fail closed: if we cannot read it we cannot prove it is clean, so treat
                 return true;
             }
         }
@@ -166,10 +139,7 @@ public final class CatalogScrubber {
         return false;
     }
 
-    /**
-     * Clean potentially sensitive metadata carriers. Called after {@link #scrub} so that surviving
-     * references to author/subject/keywords/XMP descriptors do not leak redacted values.
-     */
+    /** Wipe Info-dict entries and the XMP metadata stream. */
     public static void wipeMetadata(PDDocument document) {
         if (document == null) {
             return;
@@ -194,9 +164,7 @@ public final class CatalogScrubber {
         }
     }
 
-    // ---------------------------------------------------------------------
     // Outline
-    // ---------------------------------------------------------------------
 
     private static void scrubOutline(
             PDDocumentOutline outline, Set<String> targets, List<Pattern> patterns) {
@@ -220,9 +188,7 @@ public final class CatalogScrubber {
                         item.setTitle(stripped);
                     }
                 }
-                // Bookmark actions: /A is an action dict which may carry a /URI or /JS payload.
-                // If any target literal appears anywhere inside the action subtree, drop the
-                // action entirely so the URI / script cannot leak the target.
+                // Bookmark actions: /A is an action dict which may carry a /URI or /JS
                 COSDictionary itemDict = item.getCOSObject();
                 if (itemDict != null) {
                     scrubActionIfMatching(itemDict, COSName.A, targets, patterns);
@@ -235,18 +201,14 @@ public final class CatalogScrubber {
         }
     }
 
-    // ---------------------------------------------------------------------
     // AcroForm
-    // ---------------------------------------------------------------------
 
     private static void scrubAcroForm(
             PDAcroForm form, Set<String> targets, List<Pattern> patterns) {
         if (form == null) {
             return;
         }
-        // XFA forms: scrubbed separately because the XFA XML packet carries the "real" field
-        // values for XFA-enabled PDFs. Handle XFA before walking the field tree so we fail closed
-        // if XFA scrubbing throws.
+        // XFA forms: scrubbed separately because the XFA XML packet carries
         scrubXfa(form, targets, patterns);
 
         try {
@@ -257,10 +219,7 @@ public final class CatalogScrubber {
             log.debug("Failed to walk AcroForm field tree: {}", e.getMessage());
         }
 
-        // Force viewers to regenerate appearance streams from the (scrubbed) /V values rather
-        // than reusing any cached /AP /N that still contains the target text. Belt-and-braces:
-        // scrubField has also cleared per-widget /AP dicts, but /NeedAppearances ensures any
-        // future change still triggers regeneration.
+        // Force viewers to regenerate appearance streams from the (scrubbed) /V
         try {
             form.setNeedAppearances(true);
         } catch (Exception e) {
@@ -276,10 +235,7 @@ public final class CatalogScrubber {
             }
             boolean hit = containsTarget(xfaBase, targets, patterns, new HashSet<>());
             if (hit) {
-                // Simplest safe move: strip the XFA entry entirely. Viewers fall back to the
-                // AcroForm widgets which we have already scrubbed. Leaving a "partially scrubbed"
-                // XFA packet risks regex failures on partial XML and re-encoded entities leaking
-                // the target.
+                // Simplest safe move: strip the XFA entry entirely.
                 log.warn(
                         "Removing XFA form packet from AcroForm - XFA XML contained a redaction "
                                 + "target and has been dropped so viewers render AcroForm widgets "
@@ -297,9 +253,21 @@ public final class CatalogScrubber {
         }
         try {
             COSDictionary dict = field.getCOSObject();
+            // Only touch fields whose own values actually contain a target (F7a): clearing /AP
+            // document-wide blanks unrelated fields in viewers that ignore /NeedAppearances.
+            boolean matched =
+                    dictValueMatches(dict, COSName.V, targets, patterns)
+                            || dictValueMatches(dict, COSName.DV, targets, patterns)
+                            || dictValueMatches(dict, COSName.getPDFName("RV"), targets, patterns)
+                            || dictValueMatches(dict, COSName.getPDFName("TU"), targets, patterns)
+                            || fieldValueMatches(field, targets, patterns);
+            if (!matched) {
+                return;
+            }
             scrubDictStrings(dict, COSName.V, targets, patterns);
             scrubDictStrings(dict, COSName.DV, targets, patterns);
             scrubDictStrings(dict, COSName.getPDFName("RV"), targets, patterns);
+            scrubDictStrings(dict, COSName.getPDFName("TU"), targets, patterns);
             // Keep field appearance streams in sync with value where possible.
             try {
                 if (field.getValueAsString() != null) {
@@ -311,13 +279,51 @@ public final class CatalogScrubber {
             } catch (Exception e) {
                 log.debug("Failed to rewrite field value via setValue: {}", e.getMessage());
             }
-            // Drop per-widget appearance streams (/AP dict) for every widget kid of this field.
-            // The cached appearance stream contains the pre-redaction value baked in as glyph
-            // data; simply rewriting /V leaves it visually unchanged in many viewers. Removing /AP
-            // plus /NeedAppearances at the form level forces regeneration.
-            clearWidgetAppearances(dict);
+            // Button on-states (/Btn) cannot be rebuilt from /V by /NeedAppearances, so leave their
+            // /AP intact and rely on value scrubbing; drop /AP only for matched text fields.
+            if (!isButtonField(dict)) {
+                clearWidgetAppearances(dict);
+            }
         } catch (Exception e) {
             log.debug("Failed to scrub field: {}", e.getMessage());
+        }
+    }
+
+    private static boolean isButtonField(COSDictionary dict) {
+        COSName ft = (COSName) dict.getDictionaryObject(COSName.FT);
+        if (ft == null) {
+            COSBase parent = dict.getDictionaryObject(COSName.PARENT);
+            if (parent instanceof COSDictionary p) {
+                ft = (COSName) p.getDictionaryObject(COSName.FT);
+            }
+        }
+        return COSName.getPDFName("Btn").equals(ft);
+    }
+
+    private static boolean dictValueMatches(
+            COSDictionary dict, COSName key, Set<String> targets, List<Pattern> patterns) {
+        COSBase value = dict.getDictionaryObject(key);
+        if (value instanceof COSString cs) {
+            return matches(cs.getString(), targets, patterns);
+        }
+        if (value instanceof COSArray array) {
+            for (int i = 0; i < array.size(); i++) {
+                if (array.getObject(i) instanceof COSString element
+                        && matches(element.getString(), targets, patterns)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean fieldValueMatches(
+            PDField field, Set<String> targets, List<Pattern> patterns) {
+        try {
+            String value = field.getValueAsString();
+            return value != null && matches(value, targets, patterns);
+        } catch (Exception e) {
+            return false;
         }
     }
 
@@ -338,9 +344,7 @@ public final class CatalogScrubber {
         }
     }
 
-    // ---------------------------------------------------------------------
     // Annotations
-    // ---------------------------------------------------------------------
 
     private static void scrubAnnotations(
             PDDocument document, Set<String> targets, List<Pattern> patterns) {
@@ -388,9 +392,7 @@ public final class CatalogScrubber {
         }
     }
 
-    // ---------------------------------------------------------------------
     // Structure tree
-    // ---------------------------------------------------------------------
 
     private static void scrubStructTree(
             PDStructureTreeRoot root, Set<String> targets, List<Pattern> patterns) {
@@ -414,7 +416,7 @@ public final class CatalogScrubber {
             return;
         }
         if (resolved instanceof COSDictionary dict) {
-            // Do not walk into content streams - those are handled by content-stream rewrite.
+            // Do not walk into content streams - those are handled by content-stream
             if (resolved instanceof COSStream) {
                 return;
             }
@@ -438,9 +440,7 @@ public final class CatalogScrubber {
         }
     }
 
-    // ---------------------------------------------------------------------
     // Names tree (JavaScript + embedded files)
-    // ---------------------------------------------------------------------
 
     private static void scrubNames(
             PDDocumentNameDictionary names, Set<String> targets, List<Pattern> patterns) {
@@ -481,7 +481,17 @@ public final class CatalogScrubber {
             for (int i = namesArray.size() - 2; i >= 0; i -= 2) {
                 COSBase keyBase = namesArray.getObject(i);
                 String key = keyBase instanceof COSString s ? s.getString() : null;
-                if (key != null && matches(key, targets, patterns)) {
+                // Drop the pair when the KEY or the VALUE (JS /JS stream, embedded-file bytes)
+                // contains a target - not just the key (F7b).
+                boolean keyHit = key != null && matches(key, targets, patterns);
+                boolean valueHit =
+                        i + 1 < namesArray.size()
+                                && containsTarget(
+                                        namesArray.getObject(i + 1),
+                                        targets,
+                                        patterns,
+                                        new HashSet<>());
+                if (keyHit || valueHit) {
                     namesArray.remove(i + 1);
                     namesArray.remove(i);
                 }
@@ -498,9 +508,7 @@ public final class CatalogScrubber {
         }
     }
 
-    // ---------------------------------------------------------------------
     // Helpers
-    // ---------------------------------------------------------------------
 
     private static void scrubDictStrings(
             COSDictionary dict, COSName key, Set<String> targets, List<Pattern> patterns) {
@@ -536,24 +544,21 @@ public final class CatalogScrubber {
                 if (target == null || target.isEmpty()) {
                     continue;
                 }
-                // Case-insensitive literal removal. Verification is case-insensitive, so scrubbing
-                // MUST be too or mixed-case ("SMITH" in a catalog string vs "Smith" in the target
-                // list) will fail verification and trip the rasterisation fallback - or worse, on
-                // carriers that are not verified, leak the string untouched.
+                // Case-insensitive literal removal. Verification is case-insensitive
                 result = caseInsensitiveReplaceAll(result, target);
             }
         }
         if (patterns != null) {
             for (Pattern pattern : patterns) {
                 try {
-                    // Force case-insensitive matching for catalog carriers regardless of the flags
-                    // the pattern was compiled with. User-supplied redaction targets should not
-                    // silently miss because the author typed the name in different case.
+                    // Force case-insensitive matching for catalog carriers regardless
                     Pattern ci = withCaseInsensitive(pattern);
                     result = ci.matcher(result).replaceAll("");
-                } catch (Exception e) {
-                    log.debug(
-                            "Pattern replace failed for {}: {}", pattern.pattern(), e.getMessage());
+                } catch (RuntimeException | StackOverflowError e) {
+                    // Fail closed (X2): a throwing regex means we cannot prove the carrier clean,
+                    // so drop the whole string rather than leaving it intact.
+                    log.warn("Pattern replace failed for {}; dropping carrier text", pattern);
+                    return "";
                 }
             }
         }
@@ -580,8 +585,11 @@ public final class CatalogScrubber {
                     if (withCaseInsensitive(pattern).matcher(source).find()) {
                         return true;
                     }
-                } catch (Exception e) {
-                    log.debug("Pattern match failed for {}: {}", pattern.pattern(), e.getMessage());
+                } catch (RuntimeException | StackOverflowError e) {
+                    // Fail closed (X2): a throwing regex counts as a match so the carrier is
+                    // scrubbed.
+                    log.warn("Pattern match failed for {}; treating carrier as a match", pattern);
+                    return true;
                 }
             }
         }

@@ -1,9 +1,6 @@
 @security @redact
 Feature: PDF redaction physically removes text
-  Redaction must destroy the underlying text, not merely cover it with a box.
-  These scenarios push known text through the redaction endpoints and assert the
-  target is gone from the extracted text layer (and catalog carriers) while other
-  text survives.
+  Target text must be gone from the extracted text layer, not just covered by a box.
 
   Scenario: Auto-redact physically removes the target word
     Given I generate a PDF file as "fileInput"
