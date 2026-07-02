@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 import { ActionIcon } from "@mantine/core";
 import CloseIcon from "@mui/icons-material/Close";
-import "@app/components/shared/PanelHeader.css";
+import "@app/components/shared/ToolPanelHeader.css";
 
-export interface PanelHeaderProps {
+export interface ToolPanelHeaderProps {
   /** Glyph rendered in the tinted circular badge at the header's leading edge. */
   icon: ReactNode;
   /** Header title. */
@@ -23,12 +23,12 @@ export interface PanelHeaderProps {
  * needs; the richer variant (dropdown menu, accents, loading dot) lives in the
  * design system for the AI chat and Policies surfaces.
  */
-export function PanelHeader({
+export function ToolPanelHeader({
   icon,
   title,
   onClose,
   closeLabel,
-}: PanelHeaderProps) {
+}: ToolPanelHeaderProps) {
   return (
     <div className="sui-panelhdr">
       <div className="sui-panelhdr__bar">
