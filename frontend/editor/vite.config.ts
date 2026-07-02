@@ -272,6 +272,13 @@ export default defineConfig(async ({ mode }) => {
             dest: "pdfjs/standard_fonts",
           },
           {
+            // onnxruntime-web CPU SIMD runtime + loader for the in-browser Auto Form
+            // Detection engine. Single-thread (the app sets no COOP/COEP); the heavier
+            // WebGPU/JSEP and asyncify variants are intentionally not copied.
+            src: "../node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.{wasm,mjs}",
+            dest: "ort",
+          },
+          {
             // Brand assets live in the shared design system; the editor serves
             // them by URL per variant, so copy each set to the /{variant}-logo
             // path its manifests, index.html and useLogoAssets resolve against.

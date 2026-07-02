@@ -944,6 +944,81 @@ public class FormUtils {
         }
     }
 
+    /**
+     * Create new AcroForm fields from a list of definitions (used by Auto Form Detection). Reuses
+     * the same field-creation and appearance logic as the rest of this class, and creates the
+     * AcroForm (with a Helvetica default resource) when the document has none. Field names are made
+     * unique against any existing fields.
+     */
+    public void addFields(PDDocument document, List<NewFormFieldDefinition> definitions)
+            throws IOException {
+        if (document == null || definitions == null || definitions.isEmpty()) {
+            return;
+        }
+        PDDocumentCatalog documentCatalog = document.getDocumentCatalog();
+        PDAcroForm acroForm = documentCatalog.getAcroForm();
+        if (acroForm == null) {
+            acroForm = new PDAcroForm(document);
+            PDResources dr = new PDResources();
+            dr.put(COSName.getPDFName("Helv"), new PDType1Font(Standard14Fonts.FontName.HELVETICA));
+            acroForm.setDefaultResources(dr);
+            acroForm.setNeedAppearances(true);
+            documentCatalog.setAcroForm(acroForm);
+        }
+
+        Set<String> existingNames = new java.util.HashSet<>();
+        for (PDField field : acroForm.getFieldTree()) {
+            if (field.getPartialName() != null) {
+                existingNames.add(field.getPartialName());
+            }
+        }
+
+        int pageCount = document.getNumberOfPages();
+        for (NewFormFieldDefinition definition : definitions) {
+            Integer pageIndex = definition.pageIndex();
+            if (pageIndex == null
+                    || pageIndex < 0
+                    || pageIndex >= pageCount
+                    || definition.x() == null
+                    || definition.y() == null
+                    || definition.width() == null
+                    || definition.height() == null) {
+                continue;
+            }
+            PDPage page = document.getPage(pageIndex);
+            PDRectangle rectangle =
+                    new PDRectangle(
+                            definition.x(),
+                            definition.y(),
+                            definition.width(),
+                            definition.height());
+            FormFieldTypeSupport handler = FormFieldTypeSupport.forTypeName(definition.type());
+            if (handler == null || handler.doesNotsupportsDefinitionCreation()) {
+                handler = FormFieldTypeSupport.TEXT;
+            }
+            String baseName =
+                    (definition.name() != null && !definition.name().isBlank())
+                            ? definition.name()
+                            : handler.typeName() + "_" + (pageIndex + 1);
+            String uniqueName = generateUniqueFieldName(baseName, existingNames);
+            existingNames.add(uniqueName);
+            try {
+                createNewField(
+                        handler,
+                        acroForm,
+                        page,
+                        rectangle,
+                        uniqueName,
+                        definition,
+                        definition.options());
+            } catch (Exception e) {
+                log.warn("Failed to create detected field '{}': {}", uniqueName, e.getMessage());
+            }
+        }
+
+        ensureAppearances(acroForm);
+    }
+
     public String filterSingleChoiceSelection(
             String selection, List<String> allowedOptions, String fieldName) {
         if (selection == null || selection.trim().isEmpty()) return null;

@@ -77,6 +77,7 @@ public class ApplicationProperties {
     private ProcessExecutor processExecutor = new ProcessExecutor();
     private PdfEditor pdfEditor = new PdfEditor();
     private AiEngine aiEngine = new AiEngine();
+    private FormDetection formDetection = new FormDetection();
     private Mcp mcp = new Mcp();
     private InternalApi internalApi = new InternalApi();
     private Cluster cluster = new Cluster();
@@ -300,6 +301,37 @@ public class ApplicationProperties {
          * explicitly requests it via {@code AiEngineClient.postWithTimeout}.
          */
         private int longRunningTimeoutSeconds = 600;
+    }
+
+    /**
+     * Auto Form Detection settings. The model itself is downloaded on demand by an admin (see
+     * {@code /api/v1/ai/form-detection-model/*}); only lightweight pointers are persisted here.
+     */
+    @Data
+    public static class FormDetection {
+        /** Master on/off switch for the whole feature (admin-controlled). */
+        private boolean enabled = true;
+
+        /**
+         * Where detection runs: {@code auto} (browser first, server fallback), {@code browser}
+         * (in-browser WASM only - the PDF never leaves the device), or {@code server} (backend
+         * inference). Read by the frontend tool to choose its pipeline.
+         */
+        private String executionMode = "auto";
+
+        /** Id of the installed model; blank means none installed. */
+        private String activeModelId = "";
+
+        /** Optional override dir; blank uses {@code <configs>/models/form-detection}. */
+        private String modelDir = "";
+
+        /**
+         * Read-only dir of models baked into the image (e.g. the Docker server image pre-downloads
+         * FFDNet-S here). On startup any {@code <catalogId>.onnx} found here is copied into the
+         * writable model dir if not already present, and activated if no model is active - so the
+         * feature works out-of-the-box. Blank (default) disables seeding.
+         */
+        private String preinstalledModelDir = "";
     }
 
     /**

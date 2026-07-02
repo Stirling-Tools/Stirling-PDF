@@ -3,6 +3,14 @@ repositories {
     maven { url = "https://build.shibboleth.net/maven/releases" }
 }
 
+ext {
+    // CPU build; self-extracting natives for linux/win/mac x64+arm64. Keep major.minor aligned
+    // with the frontend onnxruntime-web pin so the same .onnx runs identically on both paths.
+    // Must be >=1.21 to load opset-22 models: the FFDNet exports are stamped ai.onnx opset 22,
+    // which 1.19/1.20 hard-reject (ORT_FAIL "support is till opset 21"). 1.26.0 matches the
+    // onnxruntime build the upstream CommonForms inference reference runs on.
+    onnxruntimeVersion = '1.26.0'
+}
 bootRun {
     enabled = false
 }
@@ -65,6 +73,18 @@ dependencies {
     implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
 
     implementation "com.google.code.gson:gson:${gsonVersion}"
+
+    // ONNX Runtime (Java) for SERVER-SIDE Auto Form Detection inference.
+    // Compiled against everywhere so the module always builds, but the multi-platform native
+    // (~42MB) is only BUNDLED when explicitly requested via -PbundleOnnxRuntime=true - i.e. the
+    // Docker server image (which then slims it to one Linux arch, ~8MB). Desktop/local/core builds
+    // ship WITHOUT it: server-side detection cleanly reports "unavailable" and the in-browser
+    // (onnxruntime-web) engine handles detection instead. Tests always get it.
+    compileOnly "com.microsoft.onnxruntime:onnxruntime:$onnxruntimeVersion"
+    testImplementation "com.microsoft.onnxruntime:onnxruntime:$onnxruntimeVersion"
+    if ((project.findProperty('bundleOnnxRuntime') ?: 'false').toString().toBoolean()) {
+        runtimeOnly "com.microsoft.onnxruntime:onnxruntime:$onnxruntimeVersion"
+    }
 
     api 'io.micrometer:micrometer-registry-prometheus'
 

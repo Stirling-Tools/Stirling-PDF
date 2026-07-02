@@ -559,6 +559,39 @@ close = "Close"
 error = "Error"
 expand = "Expand"
 
+[admin.formDetection]
+active = "Active"
+description = "Install the AI model used to auto-detect form fields. The selected model is downloaded on demand (about 40-100MB) into the configs volume and is not bundled with Stirling-PDF."
+enableFeature = "Enable feature"
+engineDescription = "Browser keeps the PDF on the device (downloads a ~12MB runtime once, then cached); Server runs it on the backend; Auto prefers the browser and falls back to the server."
+engineLabel = "Where detection runs"
+install = "Install"
+license = "License"
+notAvailable = "This catalog entry has no download URL/checksum configured yet, so it cannot be installed."
+notWritable = "The model directory is not writable; check the configs volume mount."
+selectModel = "Model"
+selectPlaceholder = "Select a model"
+status = "Status"
+switch = "Switch to this model"
+title = "AI Form Detection"
+uninstall = "Uninstall"
+
+[admin.formDetection.airgap]
+hide = "Hide offline install instructions"
+intro = "No internet on the server? Install the model manually:"
+noSha = "(checksum not set)"
+show = "Air-gapped / offline install instructions"
+step1 = "1. On a machine with internet, download the model file:"
+step2 = "2. Verify its SHA-256 checksum matches:"
+step3 = "3. Copy it onto the Stirling-PDF server into the model directory:"
+step4 = "4. Set formDetection.activeModelId to this model's id in settings.yml, then restart (an installed model is auto-detected on boot). <configs> is the configs volume (e.g. /configs in Docker). The Docker image also pre-bundles this model, so it is ready with no download."
+
+[admin.formDetection.engine]
+auto = "Auto"
+browser = "Browser"
+server = "Server"
+serverUnavailable = "The server engine is not bundled in this build, so detection runs in the browser. Use Auto or Browser."
+
 [admin.settings]
 discard = "Discard"
 error = "Failed to save settings"
@@ -1866,6 +1899,16 @@ bullet1 = "Looks for text that appears to be a title or heading"
 bullet2 = "Creates a clean, valid filename from the detected title"
 bullet3 = "Keeps the original name if no suitable title is found"
 title = "Smart Renaming"
+
+[autoFormDetection]
+loading = "Detecting form fields..."
+submit = "Detect & make fillable"
+
+[autoFormDetection.error]
+failed = "An error occurred while detecting form fields."
+
+[autoFormDetection.results]
+title = "Detected Form Fields"
 
 [automate]
 copyToSaved = "Copy to Saved"
@@ -4264,6 +4307,11 @@ title = "Adjust Colors/Contrast"
 desc = "Highlight, draw, add notes and shapes in the viewer"
 tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
 title = "Annotate"
+
+[home.autoFormDetection]
+desc = "Automatically detect form fields with AI and make your PDF fillable."
+tags = "form,detect,fillable,acroform,auto detect,ai,fields,make fillable,form detection"
+title = "Auto Form Detection"
 
 [home.automate]
 desc = "Build multi-step workflows by chaining together PDF actions. Ideal for recurring tasks."
