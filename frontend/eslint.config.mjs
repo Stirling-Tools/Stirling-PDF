@@ -12,7 +12,7 @@ const srcGlobs = [
 const nodeGlobs = [
   "scripts/**/*.{js,ts,mjs,mts}",
   "editor/scripts/**/*.{js,ts,mjs,mts}",
-  // Covers editor/vite.config.ts and the transitional editor/vite.portal.config.ts.
+  // Covers editor/vite.config.ts and editor/vitest.config.ts.
   "editor/*.config.{js,ts,mjs}",
   "*.config.{js,ts,mjs}",
   ".storybook/*.{js,ts,mjs,mts,tsx}",
