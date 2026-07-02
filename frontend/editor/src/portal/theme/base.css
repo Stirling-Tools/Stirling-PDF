@@ -1,7 +1,12 @@
 /* Base reset + typography for the portal, scoped to .portal-scope so it doesn't
    leak into the editor that hosts the /portal route (the editor owns <body> and
    uses a different body font). SUI Modal renders outside this subtree but styles
-   itself, so it doesn't need the reset. */
+   itself, so it doesn't need the reset.
+
+   The element resets use :where(.portal-scope) so the scoping adds no
+   specificity — the selectors stay at bare-element weight (as they were when
+   this reset was global), letting component classes like .sui-btn win. Without
+   :where, `.portal-scope button` would outweigh `.sui-btn` and strip its fill. */
 
 .portal-scope {
   color: var(--color-text-2);
@@ -10,13 +15,13 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-.portal-scope *,
-.portal-scope *::before,
-.portal-scope *::after {
+:where(.portal-scope) *,
+:where(.portal-scope) *::before,
+:where(.portal-scope) *::after {
   box-sizing: border-box;
 }
 
-.portal-scope button {
+:where(.portal-scope) button {
   font: inherit;
   color: inherit;
   background: none;
@@ -25,11 +30,11 @@
   cursor: pointer;
 }
 
-.portal-scope a {
+:where(.portal-scope) a {
   color: var(--color-blue);
   text-decoration: none;
 }
 
-.portal-scope a:hover {
+:where(.portal-scope) a:hover {
   text-decoration: underline;
 }
