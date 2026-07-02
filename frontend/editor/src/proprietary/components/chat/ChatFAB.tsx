@@ -49,6 +49,7 @@ export function ChatFAB() {
   // Scope the panel's nested MantineProvider to this ref; unscoped it writes
   // its color scheme onto <html> and overrides the whole app's theme.
   const panelThemeRootRef = useRef<HTMLDivElement>(null);
+  const triggerButtonRef = useRef<HTMLButtonElement>(null);
   const { colorScheme } = useMantineColorScheme();
   const panelColorScheme = colorScheme === "dark" ? "dark" : "light";
 
@@ -92,6 +93,22 @@ export function ChatFAB() {
     const el = overlayRef.current;
     if (!el) return null;
     return defaultPanelPos(el.offsetWidth, el.offsetHeight);
+  };
+
+  const closePanel = () => {
+    const activeElement = document.activeElement;
+    if (
+      activeElement instanceof HTMLElement &&
+      activeElement !== document.body
+    ) {
+      activeElement.blur();
+    }
+
+    setIsOpen(false);
+
+    requestAnimationFrame(() => {
+      triggerButtonRef.current?.focus();
+    });
   };
 
   useLayoutEffect(() => {
@@ -172,6 +189,7 @@ export function ChatFAB() {
     >
       {/* Trigger button — fades out while panel is open */}
       <ChatFABButton
+        ref={triggerButtonRef}
         className={`chat-fab-trigger${isOpen ? " chat-fab-trigger--hidden" : ""}`}
         onClick={() => {
           // Fallback: ensure a position exists before opening, in case the
@@ -232,18 +250,20 @@ export function ChatFAB() {
           }}
         >
           <ChatFABWindow open={isOpen} onDoubleClick={handleHeaderDoubleClick}>
-            <MantineProvider
-              theme={FAB_PANEL_THEME}
-              getRootElement={() => panelThemeRootRef.current ?? undefined}
-              forceColorScheme={panelColorScheme}
-            >
-              <div ref={panelThemeRootRef} style={{ display: "contents" }}>
-                <ChatPanel
-                  onBack={() => setIsOpen(false)}
-                  backLabel={t("chat.fab.close", "Close chat")}
-                />
-              </div>
-            </MantineProvider>
+            {isOpen && (
+              <MantineProvider
+                theme={FAB_PANEL_THEME}
+                getRootElement={() => panelThemeRootRef.current ?? undefined}
+                forceColorScheme={panelColorScheme}
+              >
+                <div ref={panelThemeRootRef} style={{ display: "contents" }}>
+                  <ChatPanel
+                    onBack={closePanel}
+                    backLabel={t("chat.fab.close", "Close chat")}
+                  />
+                </div>
+              </MantineProvider>
+            )}
           </ChatFABWindow>
         </Rnd>
       )}
