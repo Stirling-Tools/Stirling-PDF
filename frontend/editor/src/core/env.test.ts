@@ -23,15 +23,7 @@ function collectSourceFiles(dir: string): string[] {
   for (const entry of readdirSync(dir)) {
     const fullPath = join(dir, entry);
     const stat = statSync(fullPath);
-    // Skip the portal layer: it's a separate app with its own .env
-    // (editor/src/portal/.env), validated independently, not against the
-    // editor's .env* files.
-    if (
-      stat.isDirectory() &&
-      entry !== "node_modules" &&
-      entry !== "assets" &&
-      entry !== "portal"
-    ) {
+    if (stat.isDirectory() && entry !== "node_modules" && entry !== "assets") {
       files.push(...collectSourceFiles(fullPath));
     } else if (
       stat.isFile() &&
@@ -58,6 +50,10 @@ function findViteEnvVars(srcDir: string): Set<string> {
 describe("env vars", () => {
   it("every VITE_ var used in source is present in an example env file", () => {
     const baseEnv = readFileSync(join(frontendRoot, ".env"), "utf-8");
+    const proprietaryEnv = readFileSync(
+      join(frontendRoot, ".env.proprietary"),
+      "utf-8",
+    );
     const desktopEnv = readFileSync(
       join(frontendRoot, ".env.desktop"),
       "utf-8",
@@ -66,6 +62,7 @@ describe("env vars", () => {
 
     const declaredKeys = new Set([
       ...parseEnvKeys(baseEnv),
+      ...parseEnvKeys(proprietaryEnv),
       ...parseEnvKeys(desktopEnv),
       ...parseEnvKeys(saasEnv),
     ]);
