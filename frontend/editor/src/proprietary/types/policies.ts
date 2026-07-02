@@ -131,6 +131,9 @@ export interface PolicyState {
    *  input's filename; when set, it's applied as a prefix/suffix per the policy's
    *  name-position setting. */
   outputName?: string;
+  /** Whether the rename rule is applied before ("prefix") or after ("suffix")
+   *  the base filename, or as an auto-incrementing number. */
+  outputNamePosition?: "prefix" | "suffix" | "auto-number";
   /** When the policy runs: on "upload" or before "export". Defaults to "upload". */
   runOn?: "upload" | "export";
   /**

@@ -7,6 +7,7 @@ import { searchHandlers } from "@portal/mocks/handlers/search";
 import { pipelinesHandlers } from "@portal/mocks/handlers/pipelines";
 import { sourcesHandlers } from "@portal/mocks/handlers/sources";
 import { infrastructureHandlers } from "@portal/mocks/handlers/infrastructure";
+import { procurementHandlers } from "@portal/mocks/handlers/procurement";
 import { docsHandlers } from "@portal/mocks/handlers/docs";
 import { settingsHandlers } from "@portal/mocks/handlers/settings";
 import { usersHandlers } from "@portal/mocks/handlers/users";
@@ -28,6 +29,7 @@ export const handlers = [
   ...sourcesHandlers,
   ...infrastructureHandlers,
   ...docsHandlers,
+  ...procurementHandlers,
   ...settingsHandlers,
   ...usersHandlers,
   ...agentsHandlers,
@@ -39,3 +41,4 @@ export const handlers = [
 ];
 
 export { resetNotificationsStore } from "@portal/mocks/handlers/notifications";
+export { resetProcurementStore } from "@portal/mocks/handlers/procurement";
