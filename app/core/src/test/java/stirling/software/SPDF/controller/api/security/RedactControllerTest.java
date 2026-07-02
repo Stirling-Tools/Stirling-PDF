@@ -201,6 +201,17 @@ class RedactControllerTest {
                         })
                 .when(mockDocument)
                 .save(any(File.class));
+        // RedactionPipeline serialises via OutputStream before handing the bytes to TempFile, so
+        // the mock must emit a non-empty payload on that code path too.
+        lenient()
+                .doAnswer(
+                        inv -> {
+                            java.io.OutputStream os = inv.getArgument(0);
+                            os.write("mock pdf".getBytes());
+                            return null;
+                        })
+                .when(mockDocument)
+                .save(any(java.io.OutputStream.class));
         doNothing().when(mockDocument).close();
 
         // Build real service instances so tests exercise actual logic
@@ -347,7 +358,7 @@ class RedactControllerTest {
             assertNotNull(response);
             assertEquals(200, response.getStatusCode().value());
 
-            verify(mockDocument).save(any(File.class));
+            verify(mockDocument).save(any(java.io.OutputStream.class));
             verify(mockDocument).close();
         }
     }
@@ -753,7 +764,7 @@ class RedactControllerTest {
                 assertEquals(200, response.getStatusCode().value());
                 assertNotNull(response.getBody());
                 assertTrue(drainBody(response).length > 0);
-                verify(mockDocument, times(1)).save(any(File.class));
+                verify(mockDocument, times(1)).save(any(java.io.OutputStream.class));
                 verify(mockDocument, times(1)).close();
             }
         } catch (Exception e) {
@@ -776,7 +787,7 @@ class RedactControllerTest {
             if (response != null) {
                 assertNotNull(response);
                 assertEquals(200, response.getStatusCode().value());
-                verify(mockDocument, times(1)).save(any(File.class));
+                verify(mockDocument, times(1)).save(any(java.io.OutputStream.class));
             }
         } catch (Exception e) {
             log.info("Manual redaction test completed with graceful handling: {}", e.getMessage());

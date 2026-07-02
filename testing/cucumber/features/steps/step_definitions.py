@@ -17,6 +17,10 @@ from PIL import Image, ImageDraw
 
 API_HEADERS = {"X-API-KEY": "123456789"}
 
+# Base URL of the backend under test. Defaults to the CI value; override with
+# STIRLING_BASE_URL to point at a backend on another port (e.g. a local sidecar run).
+BASE_URL = os.environ.get("STIRLING_BASE_URL", "http://localhost:8080")
+
 #########
 # GIVEN #
 #########
@@ -581,7 +585,7 @@ def step_request_json_part(context, part_name, json_content):
 
 @when('I send a GET request to "{endpoint}"')
 def step_send_get_request(context, endpoint):
-    base_url = "http://localhost:8080"
+    base_url = BASE_URL
     full_url = f"{base_url}{endpoint}"
     response = requests.get(full_url, headers=API_HEADERS, timeout=60)
     context.response = response
@@ -589,7 +593,7 @@ def step_send_get_request(context, endpoint):
 
 @when('I send a GET request to "{endpoint}" with parameters')
 def step_send_get_request_with_params(context, endpoint):
-    base_url = "http://localhost:8080"
+    base_url = BASE_URL
     params = {row["parameter"]: row["value"] for row in context.table}
     full_url = f"{base_url}{endpoint}"
     response = requests.get(full_url, params=params, headers=API_HEADERS, timeout=60)
@@ -598,7 +602,7 @@ def step_send_get_request_with_params(context, endpoint):
 
 @when('I send the API request to the endpoint "{endpoint}"')
 def step_send_api_request(context, endpoint):
-    url = f"http://localhost:8080{endpoint}"
+    url = f"{BASE_URL}{endpoint}"
     files = context.files if hasattr(context, "files") else {}
 
     if not hasattr(context, "request_data") or context.request_data is None:
@@ -803,3 +807,69 @@ def step_response_matches_regex(context, pattern):
     assert re.match(
         pattern, response_text
     ), f"Response '{response_text}' does not match the expected pattern '{pattern}'"
+
+
+# ---------------------------------------------------------------------------
+# Redaction: text-layer and catalog assertions
+# ---------------------------------------------------------------------------
+
+
+def _extract_response_pdf_text(context):
+    reader = PdfReader(io.BytesIO(context.response.content))
+    return "\n".join((page.extract_text() or "") for page in reader.pages)
+
+
+@then('the response PDF should contain the text "{text}"')
+def step_response_pdf_contains_text(context, text):
+    extracted = _extract_response_pdf_text(context)
+    assert text in extracted, (
+        f"Expected redacted PDF to still contain '{text}', but it was missing. "
+        f"Extracted text: {extracted!r}"
+    )
+
+
+@then('the response PDF should not contain the text "{text}"')
+def step_response_pdf_not_contains_text(context, text):
+    extracted = _extract_response_pdf_text(context)
+    assert text not in extracted, (
+        f"Redacted PDF still contains '{text}' - redaction did not remove it. "
+        f"Extracted text: {extracted!r}"
+    )
+
+
+def _collect_outline_titles(outline, titles):
+    for item in outline:
+        if isinstance(item, list):
+            _collect_outline_titles(item, titles)
+        else:
+            title = getattr(item, "title", None)
+            if title:
+                titles.append(title)
+
+
+@then('the response PDF bookmarks should not contain "{text}"')
+def step_response_pdf_bookmarks_not_contain(context, text):
+    reader = PdfReader(io.BytesIO(context.response.content))
+    titles = []
+    try:
+        _collect_outline_titles(reader.outline, titles)
+    except Exception:
+        titles = []
+    joined = " ".join(titles)
+    assert text not in joined, (
+        f"Redacted PDF bookmark titles still contain '{text}': {titles!r}"
+    )
+
+
+@given('the pdf has a bookmark titled "{title}"')
+def step_pdf_has_bookmark_titled(context, title):
+    """Add a single top-level outline entry with an explicit title."""
+    reader = PdfReader(context.file_name)
+    writer = PdfWriter()
+    for page in reader.pages:
+        writer.add_page(page)
+    writer.add_outline_item(title, 0)
+    with open(context.file_name, "wb") as f:
+        writer.write(f)
+    context.files[context.param_name].close()
+    context.files[context.param_name] = open(context.file_name, "rb")

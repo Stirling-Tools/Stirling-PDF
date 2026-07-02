@@ -7,8 +7,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.apache.pdfbox.cos.COSName;
@@ -30,6 +32,7 @@ import stirling.software.SPDF.model.api.security.RedactExecuteRequest.RedactStyl
 import stirling.software.SPDF.model.api.security.RedactExecuteRequest.TextRange;
 import stirling.software.SPDF.pdf.parser.PageColumnLayout;
 import stirling.software.SPDF.pdf.parser.PageImageLocator;
+import stirling.software.SPDF.pdf.redaction.RedactionPipeline;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.TempFile;
@@ -140,13 +143,32 @@ class RedactExecuteService {
                 applyAllImagesRedaction(document, request.getRedactImagePages(), style);
             }
 
+            // Explicit overlay-only requests must not rewrite content or verify. When overlay-only
+            // was forced by a font fallback (not user choice) we still pass the targets so the
+            // pipeline's true-removal + verification + page-scoped raster fallback run.
+            Set<String> literalTargets = new LinkedHashSet<>();
+            for (String value : textValues) {
+                String trimmed = value == null ? "" : value.trim();
+                if (!trimmed.isEmpty()) {
+                    literalTargets.add(trimmed);
+                }
+            }
+            List<Pattern> verificationPatterns =
+                    RedactionPipeline.buildPatterns(
+                            regexPatterns.toArray(new String[0]), true, false);
+            Set<String> finalizeTargets = overlayOnly ? Collections.emptySet() : literalTargets;
+            List<Pattern> finalizePatterns =
+                    overlayOnly ? Collections.emptyList() : verificationPatterns;
+
             return manualRedactionService.finalizeRedaction(
                     document,
                     foundTexts,
                     style.getColor(),
                     style.getPadding(),
                     convertToImage,
-                    !needsOverlayOnly);
+                    !needsOverlayOnly,
+                    finalizeTargets,
+                    finalizePatterns);
 
         } catch (Exception e) {
             log.error("Execute redaction failed: {}", e.getMessage(), e);

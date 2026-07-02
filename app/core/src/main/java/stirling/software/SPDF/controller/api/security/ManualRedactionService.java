@@ -5,8 +5,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -22,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.PDFText;
 import stirling.software.SPDF.model.api.security.ManualRedactPdfRequest;
 import stirling.software.SPDF.pdf.parser.PageImageLocator;
+import stirling.software.SPDF.pdf.redaction.RedactionPipeline;
 import stirling.software.common.model.api.security.RedactionArea;
 import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.PdfUtils;
@@ -42,11 +46,15 @@ class ManualRedactionService {
     // Area and page redaction
     // -----------------------------------------------------------------------
 
-    void redactAreas(List<RedactionArea> redactionAreas, PDDocument document, PDPageTree allPages)
+    AreaRedactionResult redactAreas(
+            List<RedactionArea> redactionAreas, PDDocument document, PDPageTree allPages)
             throws IOException {
 
+        Set<String> capturedStrings = new LinkedHashSet<>();
+        Map<Integer, List<PDRectangle>> rectsByPage = new HashMap<>();
+
         if (redactionAreas == null || redactionAreas.isEmpty()) {
-            return;
+            return new AreaRedactionResult(rectsByPage);
         }
 
         Map<Integer, List<RedactionArea>> redactionsByPage = new HashMap<>();
@@ -74,52 +82,49 @@ class ManualRedactionService {
                 continue;
             }
 
-            PDPage page = allPages.get(pageNumber - 1);
+            int pageIndex = pageNumber - 1;
+            PDPage page = allPages.get(pageIndex);
+            float pageHeight = page.getBBox().getHeight();
 
-            try (PDPageContentStream contentStream =
-                    new PDPageContentStream(
-                            document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
-
-                contentStream.saveGraphicsState();
-                for (RedactionArea redactionArea : areasForPage) {
-                    Color redactColor = decodeOrDefault(redactionArea.getColor());
-
-                    contentStream.setNonStrokingColor(redactColor);
-
-                    float x = redactionArea.getX().floatValue();
-                    float y = redactionArea.getY().floatValue();
-                    float width = redactionArea.getWidth().floatValue();
-                    float height = redactionArea.getHeight().floatValue();
-
-                    float pdfY = page.getBBox().getHeight() - y - height;
-
-                    contentStream.addRect(x, pdfY, width, height);
-                    contentStream.fill();
-                }
-                contentStream.restoreGraphicsState();
+            List<PDRectangle> rects = new ArrayList<>();
+            Color overlayColor = Color.BLACK;
+            for (RedactionArea area : areasForPage) {
+                float x = area.getX().floatValue();
+                float y = area.getY().floatValue();
+                float width = area.getWidth().floatValue();
+                float height = area.getHeight().floatValue();
+                // Request coords are top-left origin; convert to PDF user space (bottom-left).
+                float pdfY = pageHeight - y - height;
+                rects.add(new PDRectangle(x, pdfY, width, height));
+                overlayColor = decodeOrDefault(area.getColor());
             }
+
+            // Physically drop intersecting glyphs and draw the overlay rectangle over the area.
+            Map<Integer, List<PDRectangle>> singlePage = new HashMap<>();
+            singlePage.put(pageIndex, rects);
+            RedactionPipeline.RedactionResult result =
+                    RedactionPipeline.redactAreas(document, singlePage, overlayColor);
+            capturedStrings.addAll(result.getCapturedStrings());
+            rectsByPage.put(pageIndex, rects);
         }
+
+        log.debug(
+                "Manual area redaction captured {} text run(s) across {} page(s)",
+                capturedStrings.size(),
+                rectsByPage.size());
+        return new AreaRedactionResult(rectsByPage);
     }
 
-    void redactPages(ManualRedactPdfRequest request, PDDocument document, PDPageTree allPages)
+    List<Integer> redactPages(
+            ManualRedactPdfRequest request, PDDocument document, PDPageTree allPages)
             throws IOException {
 
         Color redactColor = decodeOrDefault(request.getPageRedactionColor());
-        List<Integer> pageNumbers = getPageNumbers(request, allPages.getCount());
+        List<Integer> pageIndexes = getPageNumbers(request, allPages.getCount());
 
-        for (Integer pageNumber : pageNumbers) {
-            PDPage page = allPages.get(pageNumber);
-
-            try (PDPageContentStream contentStream =
-                    new PDPageContentStream(
-                            document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
-                contentStream.setNonStrokingColor(redactColor);
-
-                PDRectangle box = page.getBBox();
-                contentStream.addRect(0, 0, box.getWidth(), box.getHeight());
-                contentStream.fill();
-            }
-        }
+        // Whole-page wipe: drop the content stream, resources and annotations, then fill.
+        RedactionPipeline.redactWholePages(document, pageIndexes, redactColor);
+        return new ArrayList<>(pageIndexes);
     }
 
     // -----------------------------------------------------------------------
@@ -298,7 +303,9 @@ class ManualRedactionService {
             String colorString,
             float customPadding,
             Boolean convertToImage,
-            boolean isTextRemovalMode)
+            boolean isTextRemovalMode,
+            Set<String> literalTargets,
+            List<Pattern> patterns)
             throws IOException {
 
         List<PDFText> allFoundTexts = new ArrayList<>();
@@ -309,73 +316,76 @@ class ManualRedactionService {
         if (!allFoundTexts.isEmpty()) {
             Color redactColor = decodeOrDefault(colorString);
             redactFoundText(document, allFoundTexts, customPadding, redactColor, isTextRemovalMode);
-            cleanDocumentMetadata(document);
         }
 
+        byte[] outputBytes;
         if (Boolean.TRUE.equals(convertToImage)) {
             try (PDDocument convertedPdf = PdfUtils.convertPdfToPdfImage(document)) {
-                cleanDocumentMetadata(convertedPdf);
-
-                TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
-                try {
-                    convertedPdf.save(tempOut.getFile());
-                } catch (IOException e) {
-                    tempOut.close();
-                    throw e;
-                }
-
-                log.info(
-                        "Redaction finalized (image mode): {} pages ➜ {} KB",
-                        convertedPdf.getNumberOfPages(),
-                        tempOut.getFile().length() / 1024);
-
-                return tempOut;
+                // Convert-to-image physically removes all text, so verification is a plain save.
+                outputBytes =
+                        RedactionPipeline.finalize(
+                                convertedPdf, Collections.emptySet(), Collections.emptyList());
             }
+        } else {
+            // True-removal pass: physically strip matched glyph bytes from every content stream,
+            // then scrub catalog carriers, verify, and rasterise affected pages on any leak.
+            RedactionPipeline.redactLiteralTerms(document, literalTargets, patterns);
+            outputBytes = RedactionPipeline.finalize(document, literalTargets, patterns);
         }
 
+        return writeBytes(outputBytes, document.getNumberOfPages());
+    }
+
+    /**
+     * Finalize a manual area/page redaction. The overlay rectangles are already drawn and the
+     * intersecting glyphs already dropped. Verification is region-based: each redaction rectangle
+     * is re-scanned and must be empty (whole-page wipes carry no rects and are guaranteed clean).
+     */
+    TempFile finalizeManual(
+            PDDocument document,
+            Map<Integer, List<PDRectangle>> rectsByPage,
+            Boolean convertToImage)
+            throws IOException {
+
+        byte[] outputBytes;
+        if (Boolean.TRUE.equals(convertToImage)) {
+            try (PDDocument convertedPdf = PdfUtils.convertPdfToPdfImage(document)) {
+                outputBytes =
+                        RedactionPipeline.finalize(
+                                convertedPdf, Collections.emptySet(), Collections.emptyList());
+            }
+        } else {
+            outputBytes = RedactionPipeline.finalizeAreas(document, rectsByPage);
+        }
+
+        return writeBytes(outputBytes, document.getNumberOfPages());
+    }
+
+    private TempFile writeBytes(byte[] outputBytes, int pageCount) throws IOException {
         TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
         try {
-            document.save(tempOut.getFile());
+            java.nio.file.Files.write(tempOut.getFile().toPath(), outputBytes);
         } catch (IOException e) {
             tempOut.close();
             throw e;
         }
 
-        log.info(
-                "Redaction finalized: {} pages ➜ {} KB",
-                document.getNumberOfPages(),
-                tempOut.getFile().length() / 1024);
-
+        log.info("Redaction finalized: {} pages -> {} KB", pageCount, outputBytes.length / 1024);
         return tempOut;
-    }
-
-    private void cleanDocumentMetadata(PDDocument document) {
-        try {
-            var documentInfo = document.getDocumentInformation();
-            if (documentInfo != null) {
-                documentInfo.setAuthor(null);
-                documentInfo.setSubject(null);
-                documentInfo.setKeywords(null);
-                documentInfo.setModificationDate(java.util.Calendar.getInstance());
-                log.debug("Cleaned document metadata for security");
-            }
-
-            if (document.getDocumentCatalog() != null) {
-                try {
-                    document.getDocumentCatalog().setMetadata(null);
-                } catch (Exception e) {
-                    log.debug("Could not clear XMP metadata: {}", e.getMessage());
-                }
-            }
-
-        } catch (Exception e) {
-            log.warn("Failed to clean document metadata: {}", e.getMessage());
-        }
     }
 
     // -----------------------------------------------------------------------
     // Utilities
     // -----------------------------------------------------------------------
+
+    /** Redaction rectangles (per 0-based page index) applied by a manual area pass. */
+    static final class AreaRedactionResult {
+        final Map<Integer, List<PDRectangle>> rectsByPage;
+
+        AreaRedactionResult(Map<Integer, List<PDRectangle>> rectsByPage) {
+            this.rectsByPage = rectsByPage;
+        }
+    }
 
     static Color decodeOrDefault(String hex) {
         if (hex == null) {
