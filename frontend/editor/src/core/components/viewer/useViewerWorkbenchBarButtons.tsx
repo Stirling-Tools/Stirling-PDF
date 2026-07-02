@@ -211,12 +211,10 @@ export function useViewerWorkbenchBarButtons(
         disabled:
           !isPanning && pendingCount > 0 && redactionActiveType !== null,
         onClick: () => {
+          // Don't optimistically flip isPanning - it must reflect the real EmbedPDF
+          // mode so the button can't show "off" while still stuck in pan (#5175).
           viewer.panActions.togglePan();
-          setIsPanning((prev) => {
-            const next = !prev;
-            if (next && isRulerActive) setIsRulerActive?.(false);
-            return next;
-          });
+          if (!isPanning && isRulerActive) setIsRulerActive?.(false);
         },
       },
       {
