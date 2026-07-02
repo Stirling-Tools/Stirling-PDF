@@ -971,7 +971,7 @@
         rgba(124, 58, 237, 0.08),
         transparent 55%
       ),
-    var(--color-bg-elevated);
+    var(--color-surface);
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -1066,7 +1066,7 @@
   position: relative;
   width: 100%;
   max-width: 62rem;
-  background: var(--color-bg-elevated);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 14px;
   box-shadow: 0 24px 64px rgba(15, 23, 42, 0.28);
