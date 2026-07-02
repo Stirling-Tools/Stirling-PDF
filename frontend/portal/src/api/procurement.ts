@@ -1,4 +1,5 @@
 import { apiClient } from "@portal/api/http";
+import { getSupabaseClient } from "@shared/auth/supabase/supabaseClient";
 import type { Tier } from "@portal/contexts/TierContext";
 import type {
   DealStage,
@@ -117,16 +118,26 @@ export interface QuoteLineItem {
 export interface QuoteResult {
   quoteId: number;
   quoteNumber: string;
+  /** draft (priced, editable) | sent (issued Stripe quote — PDF + shareable) | accepted | expired. */
   status: string;
   currency: string;
   annualNetMinor: number;
   tcvMinor: number;
   lineItems: QuoteLineItem[];
   validUntil: string | null;
-  /** Supabase edge function the portal calls to create the checkout for an accepted quote. */
-  checkoutFunction: string;
+  /** The Stripe Quote id once issued; null while still a local draft. */
+  stripeQuoteId: string | null;
+  /** Hosted Stripe invoice URL, present once the quote is accepted and the subscription invoice exists. */
+  invoiceUrl: string | null;
   /** The inputs this quote was priced from, so the builder can seed itself on re-edit. */
   config: QuoteConfigInput;
+}
+
+/** Outcome of accepting an issued quote: Stripe creates the subscription + first invoice. */
+export interface AcceptResult {
+  status: string;
+  subscriptionId: string | null;
+  invoiceUrl: string | null;
 }
 
 /** One shape for every state; an unstarted procurement has {@link ProcurementSnapshot.dealId} null. */
@@ -178,6 +189,7 @@ export function extendTrial(): Promise<ProcurementSnapshot> {
   });
 }
 
+/** Price a config server-side and persist it as a local DRAFT (no Stripe object yet). */
 export function buildQuote(cfg: QuoteConfigInput): Promise<QuoteResult> {
   return apiClient.saas.json<QuoteResult>(`${BASE}/quote`, {
     method: "POST",
@@ -185,11 +197,43 @@ export function buildQuote(cfg: QuoteConfigInput): Promise<QuoteResult> {
   });
 }
 
-export function acceptQuote(quoteId: number): Promise<QuoteResult> {
-  return apiClient.saas.json<QuoteResult>(
-    `${BASE}/quote/${encodeURIComponent(quoteId)}/accept`,
-    { method: "POST" },
+// ---- Stripe Quote operations (Supabase edge functions) ---------------------
+// Java has no Stripe SDK, so issuing/accepting the quote and fetching its PDF run in edge functions
+// that own Stripe; they persist results back through SECURITY DEFINER RPCs. The portal invokes them
+// directly (same pattern the PAYG checkout uses).
+
+async function invokeEdge<T>(fn: string, quoteId: number): Promise<T> {
+  const supabase = getSupabaseClient();
+  if (!supabase) throw new Error("No SaaS session");
+  const { data, error } = await supabase.functions.invoke<T>(fn, {
+    body: { quote_id: quoteId },
+  });
+  if (error) throw error;
+  if (data == null) throw new Error(`${fn} returned no data`);
+  return data;
+}
+
+/** Turn a draft into an issued Stripe Quote (finalized → gets a number + PDF, shareable). */
+export function issueQuote(quoteId: number): Promise<QuoteResult> {
+  return invokeEdge<QuoteResult>("issue-procurement-quote", quoteId);
+}
+
+/** Accept an issued quote → Stripe creates the committed subscription + first invoice. */
+export function acceptQuote(quoteId: number): Promise<AcceptResult> {
+  return invokeEdge<AcceptResult>("accept-procurement-quote", quoteId);
+}
+
+/** Fetch the Stripe-generated quote PDF as a blob (for download / share). */
+export async function fetchQuotePdf(quoteId: number): Promise<Blob> {
+  const supabase = getSupabaseClient();
+  if (!supabase) throw new Error("No SaaS session");
+  const { data, error } = await supabase.functions.invoke<Blob>(
+    "get-procurement-quote-pdf",
+    { body: { quote_id: quoteId } },
   );
+  if (error) throw error;
+  if (!data) throw new Error("No PDF returned");
+  return data;
 }
 
 /** Reset the team's procurement (delete the deal) and get the fresh empty snapshot. */

@@ -130,7 +130,8 @@ public class ProcurementService {
         ProcurementQuote quote = new ProcurementQuote();
         quote.setDealId(deal.getDealId());
         quote.setQuoteNumber(nextQuoteNumber(deal.getDealId()));
-        quote.setStatus(ProcurementQuote.STATUS_SENT);
+        // Priced but not yet issued: the edge fn creates the Stripe Quote and flips this to SENT.
+        quote.setStatus(ProcurementQuote.STATUS_DRAFT);
         quote.setCurrency(cfg.currency());
         quote.setVolume(cfg.volume());
         quote.setSeats(cfg.users() > 0 ? cfg.users() : null);

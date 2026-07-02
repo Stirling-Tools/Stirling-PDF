@@ -9,7 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -100,7 +99,8 @@ public class ProcurementController {
             long tcvMinor,
             List<QuoteLineItem> lineItems,
             String validUntil,
-            String checkoutFunction,
+            String stripeQuoteId,
+            String invoiceUrl,
             QuoteConfigEcho config) {}
 
     /**
@@ -184,20 +184,9 @@ public class ProcurementController {
         return ResponseEntity.ok(toQuote(procurement.buildQuote(teamId, request.toConfig())));
     }
 
-    @PostMapping("/quote/{quoteId}/accept")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<QuoteResponse> acceptQuote(
-            @PathVariable Long quoteId, Authentication auth) {
-        Long teamId = requireLeader(auth);
-        if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        try {
-            return ResponseEntity.ok(toQuote(procurement.acceptQuote(teamId, quoteId)));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        } catch (IllegalStateException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
-        }
-    }
+    // Issue + accept are Supabase edge functions (they own Stripe): issue-procurement-quote turns a
+    // draft into a finalized Stripe Quote; accept-procurement-quote accepts it into a subscription.
+    // Both persist their results via SECURITY DEFINER RPCs; the snapshot above reflects them.
 
     /** Reset the team's procurement (delete the deal + quotes); returns the empty snapshot. */
     @PostMapping("/reset")
@@ -264,7 +253,8 @@ public class ProcurementController {
                 q.getTcvMinor(),
                 parseLineItems(q.getLineItemsJson()),
                 q.getValidUntil() == null ? null : q.getValidUntil().toString(),
-                procurement.checkoutFunctionName(),
+                q.getStripeQuoteId(),
+                q.getStripeInvoiceUrl(),
                 new QuoteConfigEcho(
                         q.getVolume(),
                         0,

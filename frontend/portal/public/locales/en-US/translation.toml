@@ -1908,9 +1908,18 @@ description = "Process millions of PDFs. Committed volume pricing, org-wide SSO 
 cta = "Start trial"
 
 [procurement.payment]
-title = "Ready for payment"
-description = "Your quote is accepted. Continue to checkout to pay your committed contract and go live."
-cta = "Continue to checkout"
+title = "Subscription created"
+description = "Your quote is accepted and a committed annual subscription has been created. Pay the first invoice to go live."
+viewInvoice = "View invoice"
+
+[procurement.milestone]
+eyebrow = "Quote {{number}}"
+title = "Your quote is ready"
+description = "Download the PDF to share it with your team, come back to accept when you're ready, or make changes."
+perYear = " / yr"
+tcv = "{{value}} total contract value"
+accept = "Accept & subscribe"
+download = "Download PDF"
 edit = "Edit quote"
 
 [procurement.builder]
@@ -1919,7 +1928,7 @@ stepOf = "Step {{n}} of {{total}}"
 back = "Back"
 continue = "Continue"
 review = "Review quote"
-accept = "Accept & continue to payment"
+generate = "Generate quote"
 running = "{{annual}} / yr · {{years}}-yr {{tcv}}"
 years_one = "{{count}} year"
 years_other = "{{count}} years"

@@ -1119,6 +1119,27 @@
   flex-wrap: wrap;
   margin-top: 1rem;
 }
+.portal-proc__milestone-totals {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin: 0.75rem 0 0.25rem;
+}
+.portal-proc__milestone-annual {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--color-text-1);
+}
+.portal-proc__milestone-annual small {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text-4);
+}
+.portal-proc__milestone-tcv {
+  font-size: 0.8125rem;
+  color: var(--color-text-3);
+}
 .portal-proc__reset {
   display: flex;
   justify-content: center;

@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, Card, EmptyState, Skeleton } from "@shared/components";
-import { getSupabaseClient } from "@shared/auth/supabase/supabaseClient";
 import { useLink } from "@portal/contexts/LinkContext";
 import { useUI } from "@portal/contexts/UIContext";
 import { useAsync } from "@portal/hooks/useAsync";
 import {
   acceptQuote,
+  fetchQuotePdf,
   fetchSnapshot,
+  issueQuote,
   JOURNEY,
   resetProcurement,
   startTrial,
@@ -20,11 +21,20 @@ import { QuoteBuilder } from "@portal/components/procurement/QuoteBuilder";
 import { StageStepper } from "@portal/components/procurement/StageStepper";
 import "@portal/views/Procurement.css";
 
+function money(minor: number, currency: string): string {
+  return new Intl.NumberFormat(undefined, {
+    style: "currency",
+    currency: currency || "USD",
+    maximumFractionDigits: 0,
+  }).format(minor / 100);
+}
+
 /**
  * The procurement experience on Home: a compact deal-status hero (active) or the enterprise
  * upsell (not started), both expanding into the full-screen takeover modal that holds the whole
- * journey. Rendered on Home and at /procurement (autoOpen → opens the modal on load, so a direct
- * link starts the journey). Gated on a linked account.
+ * journey — start trial, build + issue a quote (a Stripe Quote with a real PDF, the milestone the
+ * buyer can share and return to), then accept it into a committed subscription. Rendered on Home
+ * and at /procurement (autoOpen). Gated on a linked account.
  */
 export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
   const { t } = useTranslation();
@@ -39,61 +49,54 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
   const [open, setOpen] = useState(autoOpen);
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState(false);
+
   const data = snap ?? (state.loading ? null : state.data);
   const started = data?.dealId != null;
   const stage = data?.stage;
-  const accepted = data?.latestQuote?.status === "accepted";
-  // Show the builder while still quoting, or when the buyer chooses to re-edit an accepted quote.
+  const latest = data?.latestQuote ?? null;
+  const isDraft = !latest || latest.status === "draft";
+  const isIssued = latest?.status === "sent" || latest?.status === "open";
+  const isAccepted = latest?.status === "accepted";
+  // Builder shows for a brand-new/draft quote, or when the buyer chooses to edit an existing one.
   const showBuilder =
-    editing || (!accepted && (stage === "trial" || stage === "quote"));
+    editing || (isDraft && (stage === "trial" || stage === "quote"));
 
   useEffect(() => {
     if (autoOpen) setOpen(true);
   }, [autoOpen]);
 
-  async function onStartTrial() {
+  async function run(fn: () => Promise<unknown>) {
     setBusy(true);
     try {
-      setSnap(await startTrial());
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function onReset() {
-    setBusy(true);
-    try {
-      setSnap(await resetProcurement());
-      setEditing(false);
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function onAcceptQuote(quote: QuoteResult) {
-    setBusy(true);
-    try {
-      await acceptQuote(quote.quoteId);
-      const supabase = getSupabaseClient();
-      if (supabase) {
-        const { data: res } = await supabase.functions.invoke(
-          quote.checkoutFunction,
-          { body: { quote_id: quote.quoteId } },
-        );
-        const url = (res as { url?: string } | null)?.url;
-        if (url) {
-          window.location.href = url;
-          return;
-        }
-      }
-      setEditing(false);
+      await fn();
       setSnap(await fetchSnapshot());
     } finally {
       setBusy(false);
     }
   }
 
-  // ---- compact Home surface ------------------------------------------------
+  const onStartTrial = () => run(() => startTrial());
+  const onReset = () =>
+    run(async () => {
+      await resetProcurement();
+      setEditing(false);
+    });
+  const onGenerate = (draft: QuoteResult) =>
+    run(async () => {
+      await issueQuote(draft.quoteId);
+      setEditing(false);
+    });
+  const onAccept = () =>
+    run(() => (latest ? acceptQuote(latest.quoteId) : Promise.resolve()));
+
+  async function onDownloadPdf() {
+    if (!latest) return;
+    const blob = await fetchQuotePdf(latest.quoteId);
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank", "noopener");
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  }
+
   const banner =
     isLinked && started && data ? (
       <DealStatusHero snapshot={data} onExpand={() => setOpen(true)} />
@@ -140,9 +143,7 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
           />
         )}
 
-        {isLinked && state.loading && !data && (
-          <Skeleton height="10rem" />
-        )}
+        {isLinked && state.loading && !data && <Skeleton height="10rem" />}
 
         {isLinked && !state.loading && !started && (
           <EmptyState
@@ -165,18 +166,61 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
         {isLinked && started && (
           <>
             <div className="portal-proc__modal-stepper">
-              <StageStepper journey={JOURNEY} currentStage={data!.stage!} />
+              <StageStepper journey={JOURNEY} currentStage={stage!} />
             </div>
 
             {showBuilder && (
               <QuoteBuilder
                 deployment="cloud"
-                initial={editing ? data!.latestQuote?.config : undefined}
-                onAccept={onAcceptQuote}
+                initial={latest?.config}
+                onGenerate={onGenerate}
               />
             )}
 
-            {accepted && !editing && (
+            {!editing && isIssued && latest && (
+              <Card padding="loose">
+                <span className="portal-proc__eyebrow">
+                  {t("procurement.milestone.eyebrow", {
+                    number: latest.quoteNumber,
+                  })}
+                </span>
+                <h3 className="portal-proc__builder-title">
+                  {t("procurement.milestone.title")}
+                </h3>
+                <p className="portal-proc__subtitle">
+                  {t("procurement.milestone.description")}
+                </p>
+                <div className="portal-proc__milestone-totals">
+                  <span className="portal-proc__milestone-annual">
+                    {money(latest.annualNetMinor, latest.currency)}
+                    <small>{t("procurement.milestone.perYear")}</small>
+                  </span>
+                  <span className="portal-proc__milestone-tcv">
+                    {t("procurement.milestone.tcv", {
+                      value: money(latest.tcvMinor, latest.currency),
+                    })}
+                  </span>
+                </div>
+                <div className="portal-proc__payment-actions">
+                  <Button
+                    variant="gradient"
+                    accent="purple"
+                    loading={busy}
+                    onClick={onAccept}
+                  >
+                    {t("procurement.milestone.accept")}
+                  </Button>
+                  <Button variant="outline" onClick={onDownloadPdf}>
+                    {t("procurement.milestone.download")}
+                  </Button>
+                  <Button variant="ghost" onClick={() => setEditing(true)}>
+                    {t("procurement.milestone.edit")}
+                  </Button>
+                </div>
+              </Card>
+            )}
+
+            {!editing && isAccepted && latest && (
               <Card padding="loose">
                 <h3 className="portal-proc__builder-title">
                   {t("procurement.payment.title")}
@@ -184,21 +228,23 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
                 <p className="portal-proc__subtitle">
                   {t("procurement.payment.description")}
                 </p>
-                <div className="portal-proc__payment-actions">
-                  <Button
-                    variant="gradient"
-                    accent="purple"
-                    loading={busy}
-                    onClick={() =>
-                      data?.latestQuote && onAcceptQuote(data.latestQuote)
-                    }
-                  >
-                    {t("procurement.payment.cta")}
-                  </Button>
-                  <Button variant="outline" onClick={() => setEditing(true)}>
-                    {t("procurement.payment.edit")}
-                  </Button>
-                </div>
+                {latest.invoiceUrl && (
+                  <div className="portal-proc__payment-actions">
+                    <Button
+                      variant="gradient"
+                      accent="purple"
+                      onClick={() =>
+                        window.open(
+                          latest.invoiceUrl!,
+                          "_blank",
+                          "noopener",
+                        )
+                      }
+                    >
+                      {t("procurement.payment.viewInvoice")}
+                    </Button>
+                  </div>
+                )}
               </Card>
             )}
 

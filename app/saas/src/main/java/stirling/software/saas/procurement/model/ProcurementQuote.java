@@ -98,6 +98,15 @@ public class ProcurementQuote implements Serializable {
     @Column(name = "checkout_url", columnDefinition = "text")
     private String checkoutUrl;
 
+    // The Stripe Quote this was issued as (finalized → has a number + PDF). Set by the edge fn.
+    @Column(name = "stripe_quote_id", length = 128)
+    private String stripeQuoteId;
+
+    // Hosted Stripe invoice URL for the subscription's first invoice, set once the quote is
+    // accepted.
+    @Column(name = "stripe_invoice_url", columnDefinition = "text")
+    private String stripeInvoiceUrl;
+
     @Column(name = "valid_until")
     private LocalDate validUntil;
 

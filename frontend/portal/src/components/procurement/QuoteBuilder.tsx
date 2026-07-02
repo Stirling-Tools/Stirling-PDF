@@ -25,12 +25,13 @@ const SLA_UPLIFT: Record<string, number> = {
 export function QuoteBuilder({
   deployment,
   initial,
-  onAccept,
+  onGenerate,
 }: {
   deployment: string;
-  /** Seed the builder from an existing quote's config (re-editing an accepted quote). */
+  /** Seed the builder from an existing quote's config (re-editing a quote). */
   initial?: QuoteConfigInput;
-  onAccept: (quote: QuoteResult) => void;
+  /** Called with the priced DRAFT quote; the parent issues it as a Stripe Quote. */
+  onGenerate: (quote: QuoteResult) => void;
 }) {
   const { t } = useTranslation();
   const [step, setStep] = useState(0);
@@ -296,9 +297,9 @@ export function QuoteBuilder({
               variant="gradient"
               accent="purple"
               loading={busy}
-              onClick={() => onAccept(quote)}
+              onClick={() => onGenerate(quote)}
             >
-              {t("procurement.builder.accept")}
+              {t("procurement.builder.generate")}
             </Button>
           )}
         </div>

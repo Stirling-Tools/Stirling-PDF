@@ -11,7 +11,7 @@ const meta: Meta<typeof QuoteBuilder> = {
   title: "Portal/Procurement/QuoteBuilder",
   component: QuoteBuilder,
   parameters: { layout: "padded" },
-  args: { deployment: "cloud", onAccept: () => {} },
+  args: { deployment: "cloud", onGenerate: () => {} },
 };
 export default meta;
 

@@ -114,13 +114,14 @@ function priceQuote(cfg: Cfg) {
   return {
     quoteId: seq,
     quoteNumber: `QT-DEMO-${String(seq).padStart(4, "0")}`,
-    status: "sent",
+    status: "draft",
     currency: cfg.currency || "USD",
     annualNetMinor,
     tcvMinor,
     lineItems: lines,
     validUntil: "2026-07-31",
-    checkoutFunction: "create-procurement-checkout",
+    stripeQuoteId: null,
+    invoiceUrl: null,
     config: {
       volume: cfg.volume,
       users: 0,
@@ -179,12 +180,42 @@ export const procurementSaasHandlers = [
     resetProcurementSaasStore();
     return HttpResponse.json(EMPTY);
   }),
-  http.post(`${SAAS}/api/v1/procurement/quote/:id/accept`, () => {
-    const q = (deal as { latestQuote: { status?: string } | null }).latestQuote;
+
+  // Stripe Quote edge functions (supabase.functions.invoke → ${url}/functions/v1/{name}).
+  http.post(`${SAAS}/functions/v1/issue-procurement-quote`, () => {
+    const q = (deal as { latestQuote: Record<string, unknown> | null })
+      .latestQuote;
     if (q) {
-      q.status = "accepted";
-      (deal as Record<string, unknown>).stage = "procurement";
+      q.status = "sent";
+      q.stripeQuoteId = `qt_mock_${q.quoteId}`;
     }
     return HttpResponse.json(q);
+  }),
+  http.post(`${SAAS}/functions/v1/accept-procurement-quote`, () => {
+    const q = (deal as { latestQuote: Record<string, unknown> | null })
+      .latestQuote;
+    const invoiceUrl = "https://invoice.stripe.com/i/mock_procurement";
+    if (q) {
+      q.status = "accepted";
+      q.invoiceUrl = invoiceUrl;
+      (deal as Record<string, unknown>).stage = "procurement";
+    }
+    return HttpResponse.json({
+      status: "accepted",
+      subscriptionId: "sub_mock_procurement",
+      invoiceUrl,
+    });
+  }),
+  http.post(`${SAAS}/functions/v1/get-procurement-quote-pdf`, () => {
+    // A minimal valid PDF so the download opens something in Storybook / mock dev.
+    const pdf = `%PDF-1.1
+1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj
+2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj
+3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 300 200]>>endobj
+trailer<</Root 1 0 R>>
+%%EOF`;
+    return new HttpResponse(pdf, {
+      headers: { "Content-Type": "application/pdf" },
+    });
   }),
 ];
