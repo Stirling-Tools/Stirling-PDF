@@ -24,25 +24,31 @@ const SLA_UPLIFT: Record<string, number> = {
  */
 export function QuoteBuilder({
   deployment,
+  initial,
   onAccept,
 }: {
   deployment: string;
+  /** Seed the builder from an existing quote's config (re-editing an accepted quote). */
+  initial?: QuoteConfigInput;
   onAccept: (quote: QuoteResult) => void;
 }) {
   const { t } = useTranslation();
   const [step, setStep] = useState(0);
-  const [cfg, setCfg] = useState<QuoteConfigInput>({
-    volume: 1_000_000,
-    users: 0,
-    deployment,
-    termYears: 3,
-    serviceLevel: "priority",
-    indemnification: false,
-    training: false,
-    qbr: false,
-    currency: "USD",
-  });
-  const [manualVolume, setManualVolume] = useState(false);
+  const [cfg, setCfg] = useState<QuoteConfigInput>(
+    initial ?? {
+      volume: 1_000_000,
+      users: 0,
+      deployment,
+      termYears: 3,
+      serviceLevel: "priority",
+      indemnification: false,
+      training: false,
+      qbr: false,
+      currency: "USD",
+    },
+  );
+  // A seeded quote carries a volume but no user count, so treat it as manually set.
+  const [manualVolume, setManualVolume] = useState(initial != null);
   const [eula, setEula] = useState(false);
   const [businessName, setBusinessName] = useState("");
   const [quote, setQuote] = useState<QuoteResult | null>(null);

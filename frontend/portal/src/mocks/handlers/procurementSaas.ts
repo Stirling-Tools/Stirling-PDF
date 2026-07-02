@@ -121,6 +121,17 @@ function priceQuote(cfg: Cfg) {
     lineItems: lines,
     validUntil: "2026-07-31",
     checkoutFunction: "create-procurement-checkout",
+    config: {
+      volume: cfg.volume,
+      users: 0,
+      deployment: "cloud",
+      termYears: cfg.termYears,
+      serviceLevel: cfg.serviceLevel,
+      indemnification: cfg.indemnification,
+      training: cfg.training,
+      qbr: cfg.qbr,
+      currency: cfg.currency || "USD",
+    },
   };
 }
 

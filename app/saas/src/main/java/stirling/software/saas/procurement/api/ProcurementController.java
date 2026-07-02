@@ -100,7 +100,24 @@ public class ProcurementController {
             long tcvMinor,
             List<QuoteLineItem> lineItems,
             String validUntil,
-            String checkoutFunction) {}
+            String checkoutFunction,
+            QuoteConfigEcho config) {}
+
+    /**
+     * The inputs the quote was priced from, echoed back so the builder can seed itself when the
+     * buyer re-edits an existing quote. {@code users} is not persisted (only the resulting volume
+     * is), so it is always 0 here; the builder treats the seeded volume as manually set.
+     */
+    public record QuoteConfigEcho(
+            long volume,
+            int users,
+            String deployment,
+            int termYears,
+            String serviceLevel,
+            boolean indemnification,
+            boolean training,
+            boolean qbr,
+            String currency) {}
 
     public record SnapshotResponse(
             Long dealId,
@@ -247,7 +264,17 @@ public class ProcurementController {
                 q.getTcvMinor(),
                 parseLineItems(q.getLineItemsJson()),
                 q.getValidUntil() == null ? null : q.getValidUntil().toString(),
-                procurement.checkoutFunctionName());
+                procurement.checkoutFunctionName(),
+                new QuoteConfigEcho(
+                        q.getVolume(),
+                        0,
+                        q.getDeployment(),
+                        q.getTermYears(),
+                        q.getServiceLevel(),
+                        q.isIndemnification(),
+                        q.isTraining(),
+                        q.isQbr(),
+                        q.getCurrency()));
     }
 
     private List<QuoteLineItem> parseLineItems(String json) {

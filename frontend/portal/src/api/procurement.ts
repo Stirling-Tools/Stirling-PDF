@@ -125,6 +125,8 @@ export interface QuoteResult {
   validUntil: string | null;
   /** Supabase edge function the portal calls to create the checkout for an accepted quote. */
   checkoutFunction: string;
+  /** The inputs this quote was priced from, so the builder can seed itself on re-edit. */
+  config: QuoteConfigInput;
 }
 
 /** One shape for every state; an unstarted procurement has {@link ProcurementSnapshot.dealId} null. */

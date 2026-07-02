@@ -1911,6 +1911,7 @@ cta = "Start trial"
 title = "Ready for payment"
 description = "Your quote is accepted. Continue to checkout to pay your committed contract and go live."
 cta = "Continue to checkout"
+edit = "Edit quote"
 
 [procurement.builder]
 title = "Build your quote"

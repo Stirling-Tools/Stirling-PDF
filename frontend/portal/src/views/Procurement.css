@@ -1113,6 +1113,12 @@
 .portal-proc__modal-stepper {
   overflow-x: auto;
 }
+.portal-proc__payment-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
 .portal-proc__reset {
   display: flex;
   justify-content: center;

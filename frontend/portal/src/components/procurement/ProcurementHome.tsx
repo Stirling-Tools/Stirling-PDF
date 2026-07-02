@@ -38,9 +38,14 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
   const [snap, setSnap] = useState<ProcurementSnapshot | null>(null);
   const [open, setOpen] = useState(autoOpen);
   const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState(false);
   const data = snap ?? (state.loading ? null : state.data);
   const started = data?.dealId != null;
+  const stage = data?.stage;
   const accepted = data?.latestQuote?.status === "accepted";
+  // Show the builder while still quoting, or when the buyer chooses to re-edit an accepted quote.
+  const showBuilder =
+    editing || (!accepted && (stage === "trial" || stage === "quote"));
 
   useEffect(() => {
     if (autoOpen) setOpen(true);
@@ -59,6 +64,7 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
     setBusy(true);
     try {
       setSnap(await resetProcurement());
+      setEditing(false);
     } finally {
       setBusy(false);
     }
@@ -80,6 +86,7 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
           return;
         }
       }
+      setEditing(false);
       setSnap(await fetchSnapshot());
     } finally {
       setBusy(false);
@@ -161,12 +168,15 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
               <StageStepper journey={JOURNEY} currentStage={data!.stage!} />
             </div>
 
-            {!accepted &&
-              (data!.stage === "trial" || data!.stage === "quote") && (
-                <QuoteBuilder deployment="cloud" onAccept={onAcceptQuote} />
-              )}
+            {showBuilder && (
+              <QuoteBuilder
+                deployment="cloud"
+                initial={editing ? data!.latestQuote?.config : undefined}
+                onAccept={onAcceptQuote}
+              />
+            )}
 
-            {accepted && (
+            {accepted && !editing && (
               <Card padding="loose">
                 <h3 className="portal-proc__builder-title">
                   {t("procurement.payment.title")}
@@ -174,16 +184,21 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
                 <p className="portal-proc__subtitle">
                   {t("procurement.payment.description")}
                 </p>
-                <Button
-                  variant="gradient"
-                  accent="purple"
-                  loading={busy}
-                  onClick={() =>
-                    data?.latestQuote && onAcceptQuote(data.latestQuote)
-                  }
-                >
-                  {t("procurement.payment.cta")}
-                </Button>
+                <div className="portal-proc__payment-actions">
+                  <Button
+                    variant="gradient"
+                    accent="purple"
+                    loading={busy}
+                    onClick={() =>
+                      data?.latestQuote && onAcceptQuote(data.latestQuote)
+                    }
+                  >
+                    {t("procurement.payment.cta")}
+                  </Button>
+                  <Button variant="outline" onClick={() => setEditing(true)}>
+                    {t("procurement.payment.edit")}
+                  </Button>
+                </div>
               </Card>
             )}
 
