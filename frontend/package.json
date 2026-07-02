@@ -65,7 +65,7 @@
     "pdfjs-dist": "^5.4.149",
     "peerjs": "^1.5.5",
     "pixelmatch": "^7.1.0",
-    "posthog-js": "^1.268.0",
+    "posthog-js": "^1.393.4",
     "qrcode.react": "^4.2.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
@@ -131,7 +131,7 @@
     "@typescript-eslint/parser": "^8.61.1",
     "@typescript/native-preview": "7.0.0-dev.20260624.1",
     "@vitejs/plugin-react-swc": "^4.1.0",
-    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/coverage-v8": "^3.2.6",
     "dotenv": "^16.4.7",
     "dpdm": "^3.14.0",
     "eslint": "^10.0.2",
@@ -155,7 +155,7 @@
     "vite-plugin-compression2": "^2.5.3",
     "vite-plugin-static-copy": "^3.1.4",
     "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.6"
   },
   "depcheck": {
     "ignoreMatches": [
@@ -169,7 +169,11 @@
     "devalue": "^5.8.1",
     "tsconfck": {
       "typescript": "$typescript"
-    }
+    },
+    "form-data": "^4.0.6",
+    "protobufjs": "^7.6.3",
+    "esbuild": "^0.28.1",
+    "@babel/core": "^7.29.6"
   },
   "msw": {
     "workerDirectory": [
