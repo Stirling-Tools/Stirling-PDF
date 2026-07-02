@@ -1,6 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { SourceView } from "@portal/api/sources";
 import { SourceDetailPanel } from "@portal/components/sources/SourceDetailPanel";
+import { sampleDailySeries } from "@portal/mocks/sampleDailySeries";
+
+const SAMPLE_SERIES = sampleDailySeries(330);
 
 const IN_USE: SourceView = {
   id: "src-claims",
@@ -16,7 +19,9 @@ const IN_USE: SourceView = {
     { label: "Directory", value: "/data/claims-intake" },
     { label: "Mode", value: "consume" },
   ],
-  docsTotal: null,
+  docsTotal: 45230,
+  docs24h: 312,
+  docs30d: 9870,
 };
 
 const ORPHANED: SourceView = {
@@ -27,7 +32,9 @@ const ORPHANED: SourceView = {
   referenceCount: 0,
   referencingPolicies: [],
   config: [{ label: "Directory", value: "/data/archive" }],
-  docsTotal: null,
+  docsTotal: 1180,
+  docs24h: 0,
+  docs30d: 0,
 };
 
 const meta: Meta<typeof SourceDetailPanel> = {
@@ -45,6 +52,8 @@ const meta: Meta<typeof SourceDetailPanel> = {
 export default meta;
 type Story = StoryObj<typeof SourceDetailPanel>;
 
-export const InUse: Story = { args: { source: IN_USE } };
+export const InUse: Story = {
+  args: { source: IN_USE, docSeries: SAMPLE_SERIES },
+};
 /** A source no policy references is called out as safe to delete. */
-export const Orphaned: Story = { args: { source: ORPHANED } };
+export const Orphaned: Story = { args: { source: ORPHANED, docSeries: [] } };

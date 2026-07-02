@@ -17,6 +17,7 @@ export interface SourceTypeMeta {
 
 const SOURCE_TYPE_META: Record<string, SourceTypeMeta> = {
   folder: { labelKey: "sources.types.folder.label", icon: "⛁", tone: "blue" },
+  editor: { labelKey: "sources.types.editor.label", icon: "✏", tone: "green" },
 };
 
 const UNKNOWN_TYPE_META: SourceTypeMeta = {
