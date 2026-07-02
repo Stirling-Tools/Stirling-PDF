@@ -14,14 +14,16 @@ import {
 } from "@shared/components";
 import {
   POLICY_DOC_TYPES,
-  POLICY_SOURCES,
   humanizeEndpoint,
   type CatalogueEntry,
   type PipelineStep,
   type PolicySetupResult,
 } from "@portal/api/policies";
+import { fetchSources } from "@portal/api/sources";
+import { useAsync } from "@portal/hooks/useAsync";
 import { PolicyFieldRow } from "@portal/components/policies/PolicyFieldRow";
 import { policyIcon } from "@portal/components/policies/policyIcons";
+import { sourceTypeMeta } from "@portal/components/sources/sourceTypes";
 import "@portal/views/Policies.css";
 
 interface PolicySetupWizardProps {
@@ -59,15 +61,27 @@ function resolveFieldValues(
  * round-trips); otherwise the category preset's default chain. Each preset step
  * starts enabled — the user toggles tools off in the workflow.
  */
+// Temporary: tracks which tools start disabled until the tool registry lands in
+// the portal and can drive this via registry metadata or a defaultEnabled flag.
+const DISABLED_BY_DEFAULT = new Set(["/api/v1/security/add-watermark"]);
+
 function seedTools(entry: CatalogueEntry): ToolState[] {
-  const source = entry.policy?.steps?.length
-    ? entry.policy.steps
-    : entry.config.defaultOperations;
-  return source.map((s) => ({
-    operation: s.operation,
-    enabled: true,
-    parameters: s.parameters,
-  }));
+  const savedSteps = entry.policy?.steps ?? [];
+  const savedByOp = new Map(savedSteps.map((s) => [s.operation, s]));
+  // Always use defaultOperations as the canonical list so tools added after a
+  // policy was first saved still appear when editing.
+  return entry.config.defaultOperations.map((s) => {
+    const saved = savedByOp.get(s.operation);
+    return {
+      operation: s.operation,
+      enabled: saved
+        ? true
+        : savedSteps.length > 0
+          ? false
+          : !DISABLED_BY_DEFAULT.has(s.operation),
+      parameters: saved?.parameters ?? s.parameters,
+    };
+  });
 }
 
 /**
@@ -112,26 +126,49 @@ function PolicySetupWizardBody({
     resolveFieldValues(entry),
   );
   const [sources, setSources] = useState<string[]>(
-    policy?.state.sources.length ? policy.state.sources : ["editor"],
+    policy?.state.sources ?? ["editor"],
   );
+
+  const sourcesAsync = useAsync(() => fetchSources(), []);
+  const availableSources = useMemo(() => {
+    const backendSources = (sourcesAsync.data?.sources ?? []).filter(
+      (s) => s.status !== "disabled",
+    );
+    const editorSource = {
+      id: "editor",
+      name: t("sources.types.editor.label"),
+      type: "editor",
+      status: "active" as const,
+      referenceCount: 0,
+      referencingPolicies: [],
+      config: [],
+      docsTotal: null,
+    };
+    return [editorSource, ...backendSources];
+  }, [sourcesAsync.data, t]);
   const [scopeNarrow, setScopeNarrow] = useState(
     (policy?.state.scopeTypes.length ?? 0) > 0,
   );
   const [scopeTypes, setScopeTypes] = useState<string[]>(
     policy?.state.scopeTypes ?? [],
   );
-  const [reviewerEmail, setReviewerEmail] = useState(
-    policy?.state.reviewerEmail ?? "you@acme.com",
-  );
+  // TODO: replace with user-picker backed by GET /api/v1/user/users (UserSummary[]).
+  // Store username (which is the email in Spring Security) as reviewerEmail.
+  // See UserSelector.tsx in the editor for the grouping/display pattern.
+  const [reviewerEmail] = useState(policy?.state.reviewerEmail ?? "");
   const [outputMode, setOutputMode] = useState<"new_file" | "new_version">(
     policy?.state.outputMode ?? "new_version",
   );
   const [outputName, setOutputName] = useState(policy?.state.outputName ?? "");
   const [outputNamePosition, setOutputNamePosition] = useState<
     "prefix" | "suffix" | "auto-number"
-  >("suffix");
+  >(policy?.state.outputNamePosition ?? "suffix");
   const [runOn, setRunOn] = useState<"upload" | "export">(
     policy?.state.runOn ?? "upload",
+  );
+  const [maxRetries, setMaxRetries] = useState(policy?.state.maxRetries ?? 3);
+  const [retryDelayMinutes, setRetryDelayMinutes] = useState(
+    policy?.state.retryDelayMinutes ?? 5,
   );
 
   const [submitting, setSubmitting] = useState(false);
@@ -180,6 +217,8 @@ function PolicySetupWizardBody({
         outputName: outputName.trim(),
         outputNamePosition,
         runOn,
+        maxRetries,
+        retryDelayMinutes,
         steps,
       });
     } catch {
@@ -197,10 +236,7 @@ function PolicySetupWizardBody({
       width="lg"
       title={
         <span className="portal-policies__wizard-title">
-          <span
-            className={`portal-policies__cat-icon portal-policies__cat-icon--${category.tone}`}
-            aria-hidden
-          >
+          <span className="portal-policies__cat-icon" aria-hidden>
             {policyIcon(category.icon)}
           </span>
           {isEdit
@@ -272,9 +308,7 @@ function PolicySetupWizardBody({
                 <span className="portal-policies__tool-name">
                   {humanizeEndpoint(tl.operation)}
                 </span>
-                <code className="portal-policies__tool-endpoint">
-                  {tl.operation}
-                </code>
+                <span style={{ flex: 1 }} />
                 <ToggleSwitch
                   size="sm"
                   checked={tl.enabled}
@@ -315,31 +349,43 @@ function PolicySetupWizardBody({
             {t("policies.wizard.sources.heading")}
           </h3>
           <div className="portal-policies__sources">
-            {POLICY_SOURCES.map((src) => (
-              <button
-                key={src.id}
-                type="button"
-                className={
-                  "portal-policies__source" +
-                  (sources.includes(src.id)
-                    ? " portal-policies__source--on"
-                    : "")
-                }
-                onClick={() => toggleSource(src.id)}
-              >
-                <span className="portal-policies__source-icon" aria-hidden>
-                  {policyIcon(src.icon)}
-                </span>
-                <span className="portal-policies__source-text">
-                  <span className="portal-policies__source-label">
-                    {src.label}
+            {sourcesAsync.loading && !sourcesAsync.data ? (
+              <p className="portal-policies__sources-loading">
+                {t("policies.wizard.sources.loading")}
+              </p>
+            ) : availableSources.length === 1 ? (
+              <Banner
+                tone="neutral"
+                title={t("policies.wizard.sources.emptyTitle")}
+                description={t("policies.wizard.sources.emptyDescription")}
+              />
+            ) : (
+              availableSources.map((src) => (
+                <button
+                  key={src.id}
+                  type="button"
+                  className={
+                    "portal-policies__source" +
+                    (sources.includes(src.id)
+                      ? " portal-policies__source--on"
+                      : "")
+                  }
+                  onClick={() => toggleSource(src.id)}
+                >
+                  <span className="portal-policies__source-icon" aria-hidden>
+                    {sourceTypeMeta(src.type).icon}
                   </span>
-                  <span className="portal-policies__source-desc">
-                    {src.desc}
+                  <span className="portal-policies__source-text">
+                    <span className="portal-policies__source-label">
+                      {src.name}
+                    </span>
+                    <span className="portal-policies__source-desc">
+                      {src.type}
+                    </span>
                   </span>
-                </span>
-              </button>
-            ))}
+                </button>
+              ))
+            )}
           </div>
 
           <h3 className="portal-policies__wizard-heading">
@@ -392,107 +438,130 @@ function PolicySetupWizardBody({
             {t("policies.wizard.output.heading")}
           </h3>
           <div className="portal-policies__fields">
-            <FormField
-              label={t("policies.wizard.output.runOn.label")}
-              helperText={t("policies.wizard.output.runOn.helper")}
-            >
-              <Select
-                inputSize="sm"
-                value={runOn}
-                onChange={(e) =>
-                  setRunOn(e.target.value as "upload" | "export")
-                }
-                options={[
-                  {
-                    value: "upload",
-                    label: t("policies.wizard.output.runOn.upload"),
-                  },
-                  {
-                    value: "export",
-                    label: t("policies.wizard.output.runOn.export"),
-                  },
-                ]}
-              />
-            </FormField>
-            <FormField label={t("policies.wizard.output.outputAs.label")}>
-              <Select
-                inputSize="sm"
-                value={outputMode}
-                onChange={(e) => {
-                  const mode = e.target.value as "new_file" | "new_version";
-                  setOutputMode(mode);
-                  // Auto-number only applies to separate new files.
-                  if (
-                    mode === "new_version" &&
-                    outputNamePosition === "auto-number"
-                  ) {
-                    setOutputNamePosition("suffix");
-                  }
-                }}
-                options={[
-                  {
-                    value: "new_version",
-                    label: t("policies.wizard.output.outputAs.newVersion"),
-                  },
-                  {
-                    value: "new_file",
-                    label: t("policies.wizard.output.outputAs.newFile"),
-                  },
-                ]}
-              />
-            </FormField>
-            <FormField label={t("policies.wizard.output.filenameRule.label")}>
-              <div className="portal-policies__name-row">
-                <Select
-                  inputSize="sm"
-                  value={outputNamePosition}
-                  onChange={(e) =>
-                    setOutputNamePosition(
-                      e.target.value as "prefix" | "suffix" | "auto-number",
-                    )
-                  }
-                  options={[
-                    {
-                      value: "prefix",
-                      label: t("policies.wizard.output.filenameRule.prefix"),
-                    },
-                    {
-                      value: "suffix",
-                      label: t("policies.wizard.output.filenameRule.suffix"),
-                    },
-                    ...(outputMode === "new_file"
-                      ? [
-                          {
-                            value: "auto-number",
-                            label: t(
-                              "policies.wizard.output.filenameRule.autoNumber",
-                            ),
-                          },
-                        ]
-                      : []),
-                  ]}
-                />
-                {outputNamePosition !== "auto-number" && (
-                  <Input
+            {sources.includes("editor") && (
+              <>
+                <FormField
+                  label={t("policies.wizard.output.runOn.label")}
+                  helperText={t("policies.wizard.output.runOn.helper")}
+                >
+                  <Select
                     inputSize="sm"
-                    value={outputName}
-                    placeholder={t(
-                      "policies.wizard.output.filenameRule.placeholder",
-                    )}
-                    onChange={(e) => setOutputName(e.target.value)}
+                    value={runOn}
+                    onChange={(e) =>
+                      setRunOn(e.target.value as "upload" | "export")
+                    }
+                    options={[
+                      {
+                        value: "upload",
+                        label: t("policies.wizard.output.runOn.upload"),
+                      },
+                      {
+                        value: "export",
+                        label: t("policies.wizard.output.runOn.export"),
+                      },
+                    ]}
                   />
-                )}
-              </div>
-            </FormField>
-            <FormField
-              label={t("policies.wizard.output.reviewerEmail.label")}
-              helperText={t("policies.wizard.output.reviewerEmail.helper")}
-            >
+                </FormField>
+                <FormField label={t("policies.wizard.output.outputAs.label")}>
+                  <Select
+                    inputSize="sm"
+                    value={outputMode}
+                    onChange={(e) => {
+                      const mode = e.target.value as "new_file" | "new_version";
+                      setOutputMode(mode);
+                      // Auto-number only applies to separate new files.
+                      if (
+                        mode === "new_version" &&
+                        outputNamePosition === "auto-number"
+                      ) {
+                        setOutputNamePosition("suffix");
+                      }
+                    }}
+                    options={[
+                      {
+                        value: "new_version",
+                        label: t("policies.wizard.output.outputAs.newVersion"),
+                      },
+                      {
+                        value: "new_file",
+                        label: t("policies.wizard.output.outputAs.newFile"),
+                      },
+                    ]}
+                  />
+                </FormField>
+                <FormField
+                  label={t("policies.wizard.output.filenameRule.label")}
+                >
+                  <div className="portal-policies__name-row">
+                    <Select
+                      inputSize="sm"
+                      value={outputNamePosition}
+                      onChange={(e) =>
+                        setOutputNamePosition(
+                          e.target.value as "prefix" | "suffix" | "auto-number",
+                        )
+                      }
+                      options={[
+                        {
+                          value: "prefix",
+                          label: t(
+                            "policies.wizard.output.filenameRule.prefix",
+                          ),
+                        },
+                        {
+                          value: "suffix",
+                          label: t(
+                            "policies.wizard.output.filenameRule.suffix",
+                          ),
+                        },
+                        ...(outputMode === "new_file"
+                          ? [
+                              {
+                                value: "auto-number",
+                                label: t(
+                                  "policies.wizard.output.filenameRule.autoNumber",
+                                ),
+                              },
+                            ]
+                          : []),
+                      ]}
+                    />
+                    {outputNamePosition !== "auto-number" && (
+                      <Input
+                        inputSize="sm"
+                        value={outputName}
+                        placeholder={t(
+                          "policies.wizard.output.filenameRule.placeholder",
+                        )}
+                        onChange={(e) => setOutputName(e.target.value)}
+                      />
+                    )}
+                  </div>
+                </FormField>
+              </>
+            )}
+            {/* TODO: reviewer user-picker goes here */}
+            <h4 className="portal-policies__wizard-subheading">
+              {t("policies.wizard.output.retries.heading")}
+            </h4>
+            <FormField label={t("policies.wizard.output.retries.maxLabel")}>
               <Input
                 inputSize="sm"
-                type="email"
-                value={reviewerEmail}
-                onChange={(e) => setReviewerEmail(e.target.value)}
+                type="number"
+                value={String(maxRetries)}
+                onChange={(e) =>
+                  setMaxRetries(Math.max(0, Number(e.target.value) || 0))
+                }
+              />
+            </FormField>
+            <FormField label={t("policies.wizard.output.retries.delayLabel")}>
+              <Input
+                inputSize="sm"
+                type="number"
+                value={String(retryDelayMinutes)}
+                onChange={(e) =>
+                  setRetryDelayMinutes(Math.max(0, Number(e.target.value) || 0))
+                }
               />
             </FormField>
           </div>

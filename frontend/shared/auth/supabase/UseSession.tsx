@@ -148,6 +148,7 @@ export function SupabaseAuthProvider({
     displayName: deriveDisplayName(user, translate),
     isAnonymous: user?.is_anonymous === true,
     isAdmin: isAdminRole(user?.role),
+    portalAccess: user?.portalAccess ?? isAdminRole(user?.role),
     role: user?.role ?? null,
     loading,
     error,

@@ -33,6 +33,7 @@ import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.PolicyRunStatus;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
+import stirling.software.proprietary.policy.source.InProcessSourceDocCounter;
 import stirling.software.proprietary.policy.source.InProcessSourceStore;
 import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.policy.source.SourceStore;
@@ -53,7 +54,12 @@ class PolicyRunnerTest {
 
     @BeforeEach
     void setUp() {
-        runner = new PolicyRunner(policyEngine, List.of(folderSource), sourceStore);
+        runner =
+                new PolicyRunner(
+                        policyEngine,
+                        List.of(folderSource),
+                        sourceStore,
+                        new InProcessSourceDocCounter());
     }
 
     @Test

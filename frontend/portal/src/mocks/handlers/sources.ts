@@ -7,6 +7,7 @@ import type {
   SourceView,
   SourcesResponse,
 } from "@portal/api/sources";
+import { sampleDailySeries } from "@portal/mocks/sampleDailySeries";
 
 /**
  * Stateful mock for the Sources surface so the portal works fully offline with
@@ -66,6 +67,27 @@ const references: Record<string, SourcePolicyRef[]> = {
   "src-contracts": [{ id: "pol_contract", name: "Contract Review" }],
 };
 
+/** Per-source document throughput, mirroring the backend's docsTotal / 24h / 30d. */
+const docCounts: Record<
+  string,
+  { total: number; last24h: number; last30d: number }
+> = {
+  "src-claims": { total: 45230, last24h: 312, last30d: 9870 },
+  "src-contracts": { total: 12840, last24h: 96, last30d: 2310 },
+  "src-archive": { total: 1180, last24h: 0, last30d: 0 },
+  "src-legacy": { total: 48600, last24h: 0, last30d: 0 },
+};
+
+function docsFor(id: string): {
+  total: number;
+  last24h: number;
+  last30d: number;
+  daily: number[];
+} {
+  const counts = docCounts[id] ?? { total: 0, last24h: 0, last30d: 0 };
+  return { ...counts, daily: sampleDailySeries(counts.last30d / 30) };
+}
+
 let store: StoredSource[] = seedSources();
 
 let idCounter = 0;
@@ -97,6 +119,7 @@ function toSourceView(
   source: StoredSource,
   refs: SourcePolicyRef[],
 ): SourceView {
+  const docs = docsFor(source.id);
   return {
     id: source.id,
     name: source.name,
@@ -105,7 +128,9 @@ function toSourceView(
     referenceCount: refs.length,
     referencingPolicies: refs,
     config: configRows(source.options),
-    docsTotal: null,
+    docsTotal: docs.total,
+    docs24h: docs.last24h,
+    docs30d: docs.last30d,
   };
 }
 
@@ -140,6 +165,13 @@ export const sourcesHandlers = [
     const source = store.find((s) => s.id === params.id);
     if (!source) return new HttpResponse(null, { status: 404 });
     return HttpResponse.json(source);
+  }),
+
+  http.get("/api/v1/sources/:id/document-counts", async ({ params }) => {
+    await delay(120);
+    const source = store.find((s) => s.id === params.id);
+    if (!source) return new HttpResponse(null, { status: 404 });
+    return HttpResponse.json(docsFor(source.id).daily);
   }),
 
   http.post("/api/v1/sources", async ({ request }) => {

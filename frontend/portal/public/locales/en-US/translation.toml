@@ -28,6 +28,7 @@ components = "Components"
 infrastructure = "Infrastructure"
 usage = "Usage & Billing"
 docs = "Developer Docs"
+procurement = "Procurement"
 settings = "Settings"
 
 [shell.header]
@@ -329,7 +330,11 @@ subtitle = "{{type}} · {{status}}"
 closeAriaLabel = "Close detail"
 usedBy = "Used by"
 notReferenced = "Not referenced by any policy, so it's safe to delete."
-docsUntracked = "Per-source document volume isn't tracked yet."
+documents = "Documents"
+docsTotal = "Total seen"
+docs24h = "Last 24h"
+docs30d = "Last 30 days"
+docsTrend = "Documents over the last 30 days"
 edit = "Edit"
 pause = "Pause"
 resume = "Resume"
@@ -373,6 +378,9 @@ label = "Read mode"
 [sources.types.folder.fields.mode.options]
 consume = "Consume: process each file once"
 snapshot = "Snapshot: re-read the folder every run"
+
+[sources.types.editor]
+label = "Editor"
 
 [sources.types.unknown]
 label = "Source"
@@ -691,6 +699,11 @@ description = "{{file}} is signed and ready to transfer. It activates one instan
 title = "Policies"
 subtitle = "Standing automations that enforce a tool pipeline on every document. Each policy fires on upload or export, runs its tool chain, and saves the enforced version alongside the original."
 
+[policies.offline]
+title = "Backend unavailable"
+description = "Your policies are saved and will appear once the connection is restored."
+retry = "Retry"
+
 [policies.status]
 active = "Active"
 paused = "Paused"
@@ -719,15 +732,17 @@ description = "Across active policies"
 [policies.card]
 comingSoon = "Coming soon"
 notSetUp = "Not set up"
-setUp = "Set up →"
 
 [policies.detail]
-title = "{{category}} policy"
-meta = "Runs on {{event}} · output {{output}}"
 outputAsNewFile = "as a new file"
 outputAsNewVersion = "as a new version"
 enforces = "Enforces"
-enforceNote = "{{scope}} · originals stay untouched, the enforced version is saved alongside."
+sources = "Sources"
+onEveryUpload = "On every upload"
+onEveryExport = "On every export"
+showMore = "Show more"
+showLess = "Show less"
+retry = "Retry"
 recentActivity = "Recent activity"
 
 [policies.detail.actions]
@@ -740,10 +755,6 @@ editSettings = "Edit settings"
 [policies.detail.emptyActivity]
 title = "No activity yet"
 description = "Documents will appear here once this policy runs."
-
-[policies.detail.scoped]
-title = "Scoped"
-description = "Limited to: {{types}}"
 
 [policies.wizard.title]
 edit = "Edit {{category}} policy"
@@ -773,6 +784,9 @@ heading = "Settings"
 
 [policies.wizard.sources]
 heading = "Sources"
+loading = "Loading sources…"
+emptyTitle = "No sources available"
+emptyDescription = "Connect a source on the Sources page first, then attach it to a policy here."
 
 [policies.wizard.docTypes]
 heading = "Document types"
@@ -804,9 +818,10 @@ suffix = "Suffix"
 autoNumber = "Auto-number"
 placeholder = "Text to add (optional)"
 
-[policies.wizard.output.reviewerEmail]
-label = "Reviewer email"
-helper = "Low-confidence enforcements are routed here for review."
+[policies.wizard.output.retries]
+heading = "Retries"
+maxLabel = "Max retries"
+delayLabel = "Retry delay (min)"
 
 [users.summary]
 members = "Members"
@@ -1806,3 +1821,75 @@ body = "Your Stirling account session has expired. Sign in again to view billing
 loadWallet = "Couldn't load wallet"
 openStripePortal = "Couldn't open Stripe portal"
 walletUnavailable = "Wallet unavailable: {{status}} {{statusText}}"
+
+[procurement]
+title = "Procurement"
+subtitle = "Get your team evaluated, contracted, and onboarded. Every document in one place."
+enterpriseBadge = "Enterprise"
+
+[procurement.journey]
+eyebrow = "Your rollout"
+title = "From trial to live, one guided path"
+subtitle = "Your solutions engineer is on every step. One next action at a time; the full checklist is below."
+engineerLabel = "Your solutions engineer"
+trialTitle = "Enterprise trial"
+daysLeft_one = "{{count}} day left"
+daysLeft_other = "{{count}} days left"
+live = "You're live on Stirling Enterprise"
+nextStep = "Next step: {{action}}"
+
+[procurement.docs]
+title = "Documents"
+subtitle = "Everything you need at each step of the journey, surfaced as the deal moves through it."
+here = "You're here"
+done = "Done"
+count_one = "{{count}} doc"
+count_other = "{{count}} docs"
+supportingTitle = "Supporting your evaluation"
+supportingSubtitle = "SOC 2, security reviews, tax forms and more, ready when your security or procurement team asks. Some carry a one-time fee."
+show = "Show"
+hide = "Hide"
+optional = "Optional"
+paidAddon = "Paid add-on"
+upcoming = "Upcoming"
+
+[procurement.status]
+available = "Available"
+action = "Action needed"
+pending = "Pending"
+request = "On request"
+complete = "Complete"
+
+[procurement.action]
+download = "Download"
+sign = "Review & sign"
+pay = "Pay now"
+upload = "Upload"
+request = "Request"
+
+[procurement.modal]
+cancel = "Cancel"
+chooseFile = "Choose file"
+noFile = "No file selected"
+signTitle = "Review and sign your agreement"
+signBody = "Opens the Stirling Enterprise Agreement for e-signature: one signature covers the MSA, order form, EULA and DPA. We countersign automatically and you advance to payment."
+signCta = "Open for signature"
+payTitle = "Confirm payment"
+payBody = "Pay your committed contract by card or bank transfer through Stripe. Your workspace provisions as soon as payment clears."
+payCta = "Continue to Stripe"
+uploadTitle = "Upload your purchase order"
+uploadBody = "Send us your PO and we invoice against it on your terms. Drag in the PDF or pick a file below."
+uploadCta = "Upload purchase order"
+requestTitle = "Request this document"
+requestBodyPaid = "This is a paid add-on. Confirm and your solutions engineer will scope it and send the paperwork."
+requestBodyFree = "We generate this on demand. Confirm and your solutions engineer will send it across shortly."
+requestCta = "Request"
+downloadTitle = "Download"
+downloadBody = "Your download will begin shortly."
+downloadCta = "Download"
+
+[procurement.locked]
+eyebrow = "Enterprise only"
+title = "The procurement track opens with Enterprise"
+description = "Trial keys, committed-volume quotes, the one-signature agreement, payment, and your document ledger all live here once you start an enterprise evaluation."
+talkToSales = "Talk to sales"
