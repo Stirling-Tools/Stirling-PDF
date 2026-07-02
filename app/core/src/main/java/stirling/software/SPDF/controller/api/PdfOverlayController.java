@@ -183,10 +183,11 @@ public class PdfOverlayController {
         for (int basePageIndex = 1; basePageIndex <= basePageCount; basePageIndex++) {
             File overlayFile = overlayFiles[(basePageIndex - 1) % overlayFiles.length];
 
-            // Load the overlay document to check its page count
+            // Load the overlay document to check its page count. Skip zero-page overlays to
+            // avoid a divide-by-zero; any non-empty overlay maps onto this base page.
             try (PDDocument overlayPdf = Loader.loadPDF(overlayFile)) {
                 int overlayPageCount = overlayPdf.getNumberOfPages();
-                if ((basePageIndex - 1) % overlayPageCount < overlayPageCount) {
+                if (overlayPageCount > 0) {
                     overlayGuide.put(basePageIndex, overlayFile.getAbsolutePath());
                 }
             }

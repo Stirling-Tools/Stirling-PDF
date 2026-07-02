@@ -125,15 +125,21 @@ public class YamlHelper {
                 Tag tag = valueNode.getTag();
                 Node newValueNode = null;
 
-                if (isAnyInteger(newValue)) {
+                // Preserve the original scalar's string type so numeric-looking strings (e.g. a
+                // password "007", or a high-precision value) are not silently retyped to
+                // INT/FLOAT/BOOL, which loses leading zeros and float precision on reload.
+                boolean originalIsString = valueNode instanceof ScalarNode && Tag.STR.equals(tag);
+
+                if (!originalIsString && isAnyInteger(newValue)) {
                     newValueNode =
                             new ScalarNode(Tag.INT, String.valueOf(newValue), ScalarStyle.PLAIN);
-                } else if (isFloat(newValue)) {
+                } else if (!originalIsString && isFloat(newValue)) {
                     Object floatValue = Float.valueOf(String.valueOf(newValue));
                     newValueNode =
                             new ScalarNode(
                                     Tag.FLOAT, String.valueOf(floatValue), ScalarStyle.PLAIN);
-                } else if ("true".equals(newValue) || "false".equals(newValue)) {
+                } else if (!originalIsString
+                        && ("true".equals(newValue) || "false".equals(newValue))) {
                     newValueNode =
                             new ScalarNode(Tag.BOOL, String.valueOf(newValue), ScalarStyle.PLAIN);
                 } else if (newValue instanceof Map<?, ?> map) {
@@ -175,7 +181,17 @@ public class YamlHelper {
                     }
                     newValueNode = new ScalarNode(tag, String.valueOf(newValue), ScalarStyle.PLAIN);
                 } else {
-                    newValueNode = new ScalarNode(tag, String.valueOf(newValue), ScalarStyle.PLAIN);
+                    // Preserve the string. If the value would be misread as a number/bool in
+                    // plain style, force single-quoting so it round-trips as a string on reload.
+                    ScalarStyle style =
+                            originalIsString
+                                            && (isAnyInteger(newValue)
+                                                    || isFloat(newValue)
+                                                    || "true".equals(newValue)
+                                                    || "false".equals(newValue))
+                                    ? ScalarStyle.SINGLE_QUOTED
+                                    : ScalarStyle.PLAIN;
+                    newValueNode = new ScalarNode(tag, String.valueOf(newValue), style);
                 }
                 copyComments(valueNode, newValueNode);
 

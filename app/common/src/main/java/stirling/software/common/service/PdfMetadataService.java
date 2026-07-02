@@ -168,7 +168,7 @@ public class PdfMetadataService {
                             .getCustomMetadata()
                             .getAuthor();
 
-            if (userService != null) {
+            if (userService != null && author != null) {
                 String username = userService.getCurrentUsername();
                 if (username != null) {
                     author = author.replace("username", username);

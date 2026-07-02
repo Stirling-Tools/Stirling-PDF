@@ -1,5 +1,6 @@
 package stirling.software.common.service;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -344,6 +345,23 @@ class PdfMetadataServiceTest {
                 service.setMetadataToPdf(doc, md, true);
 
                 assertEquals("Report by alice", doc.getDocumentInformation().getAuthor());
+            }
+        }
+
+        @Test
+        @DisplayName("null custom author with auto-update enabled does not NPE")
+        void nullCustomAuthorDoesNotNpe() throws Exception {
+            // autoUpdate + pro + a blank configured author previously NPE'd on author.replace(...).
+            ApplicationProperties props = propsWithCustomMetadata(true, null, "Creator");
+            UserServiceInterface userService = mock(UserServiceInterface.class);
+            lenient().when(userService.getCurrentUsername()).thenReturn("alice");
+
+            PdfMetadataService service = new PdfMetadataService(props, LABEL, true, userService);
+            PdfMetadata md = PdfMetadata.builder().title("T").build();
+
+            try (PDDocument doc = new PDDocument()) {
+                assertDoesNotThrow(() -> service.setMetadataToPdf(doc, md, true));
+                assertNull(doc.getDocumentInformation().getAuthor());
             }
         }
 

@@ -4,6 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
@@ -13,6 +16,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,6 +35,7 @@ import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.security.model.User;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -153,6 +158,34 @@ class CustomOAuth2UserServiceDebugLoggingTest {
         assertThat(appender.list)
                 .as("no claim dump when useAsUsername itself is invalid")
                 .noneMatch(e -> e.getFormattedMessage().contains("[OAUTH2 DEBUG]"));
+    }
+
+    @Test
+    void ssoLoginBlockedWhenLocalPasswordAccountExists() throws Exception {
+        // Regression for the dead-guard account-takeover bug: the guard must look up the RESOLVED
+        // internal username, not the fixed claim key ("email"). An SSO login whose email matches an
+        // existing local password account must be rejected, never auto-linked onto that account.
+        ApplicationProperties.Security.OAUTH2 props = oauthProps("email", false);
+        CustomOAuth2UserService service =
+                new CustomOAuth2UserService(props, userService, loginAttemptService);
+
+        Map<String, Object> claims = baseClaims();
+        claims.put("email", "admin@example.com");
+        replaceDelegateWithStub(service, claims);
+        lenient().when(userRequest.getClientRegistration()).thenReturn(stubRegistration());
+
+        User existing = mock(User.class);
+        lenient().when(existing.getUsername()).thenReturn("admin");
+        when(userService.findByUsernameIgnoreCase("admin@example.com"))
+                .thenReturn(Optional.of(existing));
+        when(loginAttemptService.isBlocked("admin")).thenReturn(false);
+        when(userService.hasPassword("admin")).thenReturn(true);
+
+        assertThrows(OAuth2AuthenticationException.class, () -> service.loadUser(userRequest));
+
+        // The guard must query the resolved username, never the fixed claim key.
+        verify(userService).hasPassword("admin");
+        verify(userService, never()).hasPassword("email");
     }
 
     // ---------- helpers ----------

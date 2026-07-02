@@ -2,6 +2,9 @@ package stirling.software.SPDF.model.api.general;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -23,6 +26,8 @@ public class PosterPdfRequest extends PDFFile {
             defaultValue = "2",
             minimum = "1",
             maximum = "10")
+    @Min(value = 1, message = "xFactor must be at least 1")
+    @Max(value = 10, message = "xFactor must not exceed 10")
     private int xFactor = 2;
 
     @Schema(
@@ -31,6 +36,8 @@ public class PosterPdfRequest extends PDFFile {
             defaultValue = "2",
             minimum = "1",
             maximum = "10")
+    @Min(value = 1, message = "yFactor must be at least 1")
+    @Max(value = 10, message = "yFactor must not exceed 10")
     private int yFactor = 2;
 
     @Schema(

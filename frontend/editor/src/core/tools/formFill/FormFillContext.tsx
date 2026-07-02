@@ -40,77 +40,10 @@ import type { IFormDataProvider } from "@app/tools/formFill/providers/types";
 import { PdfBoxFormProvider } from "@app/tools/formFill/providers/PdfBoxFormProvider";
 import { PdfiumFormProvider } from "@app/tools/formFill/providers/PdfiumFormProvider";
 import { fetchSignatureFieldsWithAppearances } from "@app/services/pdfiumService";
+import { FormValuesStore } from "@app/tools/formFill/FormValuesStore";
 
-// ---------------------------------------------------------------------------
-// FormValuesStore — external store for field values (outside React state)
-// ---------------------------------------------------------------------------
-
-type Listener = () => void;
-
-/**
- * External store that holds form values outside of React state.
- *
- * This avoids triggering full context re-renders on every keystroke.
- * Components subscribe per-field via useSyncExternalStore, so only
- * the widget being edited re-renders.
- */
-class FormValuesStore {
-  private _fieldListeners = new Map<string, Set<Listener>>();
-  private _globalListeners = new Set<Listener>();
-
-  private _values: Record<string, string> = {};
-
-  get values(): Record<string, string> {
-    return this._values;
-  }
-
-  private _version = 0;
-
-  get version(): number {
-    return this._version;
-  }
-
-  getValue(fieldName: string): string {
-    return this._values[fieldName] ?? "";
-  }
-
-  setValue(fieldName: string, value: string): void {
-    if (this._values[fieldName] === value) return;
-    this._values[fieldName] = value;
-    this._version++;
-    this._fieldListeners.get(fieldName)?.forEach((l) => l());
-    this._globalListeners.forEach((l) => l());
-  }
-
-  /** Replace all values (e.g., on fetch or reset) */
-  reset(values: Record<string, string> = {}): void {
-    this._values = values;
-    this._version++;
-    for (const listeners of this._fieldListeners.values()) {
-      listeners.forEach((l) => l());
-    }
-    this._globalListeners.forEach((l) => l());
-  }
-
-  /** Subscribe to a single field's value changes */
-  subscribeField(fieldName: string, listener: Listener): () => void {
-    if (!this._fieldListeners.has(fieldName)) {
-      this._fieldListeners.set(fieldName, new Set());
-    }
-    this._fieldListeners.get(fieldName)!.add(listener);
-    return () => {
-      this._fieldListeners.get(fieldName)?.delete(listener);
-    };
-  }
-
-  /** Subscribe to any value change */
-  subscribeGlobal(listener: Listener): () => void {
-    this._globalListeners.add(listener);
-    return () => {
-      this._globalListeners.delete(listener);
-    };
-  }
-}
+// FormValuesStore lives in its own dependency-free module so it can be unit-tested
+// in isolation (see FormValuesStore.test.ts).
 
 // ---------------------------------------------------------------------------
 // Reducer — handles everything EXCEPT values (which live in FormValuesStore)

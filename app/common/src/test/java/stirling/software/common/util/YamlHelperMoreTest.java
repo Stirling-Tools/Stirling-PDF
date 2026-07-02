@@ -109,6 +109,16 @@ class YamlHelperMoreTest {
         }
 
         @Test
+        @DisplayName("preserves a quoted numeric-looking string (no INT retype)")
+        void numericStringNotRetyped() {
+            YamlHelper h = helper("db:\n  password: \"007\"\n");
+            assertThat(h.updateValue(List.of("db", "password"), "007")).isTrue();
+            String out = h.convertNodeToYaml(h.getUpdatedRootNode());
+            // Must stay a quoted string; a bare `007` int literal would reload as 7 (octal).
+            assertThat(out).containsPattern("password:\\s*['\"]007['\"]");
+        }
+
+        @Test
         @DisplayName("returns false when intermediate key path is not a mapping")
         void nonMappingPathReturnsFalse() {
             YamlHelper h = helper("server:\n  port: 80\n");

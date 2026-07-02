@@ -312,6 +312,21 @@ class RearrangePagesPDFControllerTest {
     }
 
     @Test
+    void testRearrangePages_UnknownCustomModeRejected() throws IOException {
+        MockMultipartFile file = createMockPdf();
+        RearrangePagesRequest request = new RearrangePagesRequest();
+        request.setFileInput(file);
+        request.setPageNumbers("");
+        request.setCustomMode("NOT_A_REAL_MODE");
+
+        try (PDDocument realDoc = buildRealPdf(3)) {
+            when(pdfDocumentFactory.load(file)).thenReturn(realDoc);
+            // Unknown mode must surface a 400-mapped IllegalArgumentException, not an NPE/500.
+            assertThrows(IllegalArgumentException.class, () -> controller.rearrangePages(request));
+        }
+    }
+
+    @Test
     void testRearrangePages_SideStitchBooklet() throws IOException {
         MockMultipartFile file = createMockPdf();
         RearrangePagesRequest request = new RearrangePagesRequest();

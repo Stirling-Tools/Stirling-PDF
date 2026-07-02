@@ -21,6 +21,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,6 +46,8 @@ public class PosterPdfController {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final TempFileManager tempFileManager;
 
+    private static final long MAX_OUTPUT_PAGES = 10_000L;
+
     @AutoJobPostMapping(
             value = "/split-for-poster-print",
             consumes = "multipart/form-data",
@@ -56,7 +60,7 @@ public class PosterPdfController {
                             + "suitable for printing on standard paper sizes (e.g., A4, Letter). "
                             + "Divides each page into a grid of smaller pages using Apache PDFBox. "
                             + "Input: PDF Output: ZIP-PDF Type: SISO")
-    public ResponseEntity<Resource> posterPdf(@ModelAttribute PosterPdfRequest request)
+    public ResponseEntity<Resource> posterPdf(@Valid @ModelAttribute PosterPdfRequest request)
             throws Exception {
 
         log.debug("Starting PDF poster split process with request: {}", request);
@@ -87,6 +91,19 @@ public class PosterPdfController {
                 int xFactor = request.getXFactor();
                 int yFactor = request.getYFactor();
                 boolean rightToLeft = request.isRightToLeft();
+
+                // Defense-in-depth cap: bean-validation bounds each factor to 1-10, but also
+                // reject grids that would allocate an excessive number of output pages.
+                long outputPages = (long) totalPages * xFactor * yFactor;
+                if (outputPages > MAX_OUTPUT_PAGES) {
+                    throw ExceptionUtils.createIllegalArgumentException(
+                            "error.invalidFormat",
+                            "Invalid {0} format: {1}",
+                            "poster grid",
+                            "requested grid would produce too many pages (max "
+                                    + MAX_OUTPUT_PAGES
+                                    + ")");
+                }
 
                 log.debug(
                         "Processing {} pages with grid {}x{}, RTL={}",

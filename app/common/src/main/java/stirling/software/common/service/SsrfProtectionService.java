@@ -23,6 +23,9 @@ public class SsrfProtectionService {
 
     private final ApplicationProperties applicationProperties;
 
+    // Cap on how many resolved addresses we inspect per host, to bound work on pathological DNS.
+    private static final int MAX_RESOLVED_ADDRESSES = 32;
+
     private static final Pattern DATA_URL_PATTERN =
             RegexPatternUtils.getInstance().getPattern("^data:.*", Pattern.CASE_INSENSITIVE);
     private static final Pattern FRAGMENT_PATTERN =
@@ -136,42 +139,51 @@ public class SsrfProtectionService {
                 }
             }
 
-            // Resolve hostname to IP address for network-based checks
+            // Resolve hostname to IP addresses for network-based checks.
             try {
-                InetAddress address = InetAddress.getByName(host);
-
-                if (config.isBlockPrivateNetworks() && isPrivateAddress(address)) {
-                    log.debug("URL blocked - private network address: {}", url);
-                    return false;
-                }
-
-                if (config.isBlockLocalhost() && address.isLoopbackAddress()) {
-                    log.debug("URL blocked - localhost address: {}", url);
-                    return false;
-                }
-
-                if (config.isBlockLinkLocal() && address.isLinkLocalAddress()) {
-                    log.debug("URL blocked - link-local address: {}", url);
-                    return false;
-                }
-
-                if (config.isBlockCloudMetadata()
-                        && isCloudMetadataAddress(address.getHostAddress())) {
-                    log.debug("URL blocked - cloud metadata endpoint: {}", url);
-                    return false;
-                }
-
+                return isResolvedAddressSetAllowed(InetAddress.getAllByName(host), config);
             } catch (UnknownHostException e) {
                 log.debug("Failed to resolve hostname for SSRF check: {}", host, e);
                 return false;
             }
 
-            return true;
-
         } catch (Exception e) {
             log.debug("Failed to parse URL for MEDIUM security check: {}", url, e);
             return false;
         }
+    }
+
+    /**
+     * Returns false if ANY resolved address is sensitive (private, loopback, link-local, or cloud
+     * metadata) per the configured block flags. Inspecting every address - not just the first -
+     * defeats multi-A-record and DNS-rebinding bypasses. Package-private for testing.
+     */
+    boolean isResolvedAddressSetAllowed(
+            InetAddress[] addresses, ApplicationProperties.Html.UrlSecurity config) {
+        int checked = 0;
+        for (InetAddress address : addresses) {
+            if (checked++ >= MAX_RESOLVED_ADDRESSES) {
+                log.debug("URL blocked - too many resolved addresses");
+                return false;
+            }
+            if (config.isBlockPrivateNetworks() && isPrivateAddress(address)) {
+                log.debug("URL blocked - private network address: {}", address.getHostAddress());
+                return false;
+            }
+            if (config.isBlockLocalhost() && address.isLoopbackAddress()) {
+                log.debug("URL blocked - localhost address: {}", address.getHostAddress());
+                return false;
+            }
+            if (config.isBlockLinkLocal() && address.isLinkLocalAddress()) {
+                log.debug("URL blocked - link-local address: {}", address.getHostAddress());
+                return false;
+            }
+            if (config.isBlockCloudMetadata() && isCloudMetadataAddress(address.getHostAddress())) {
+                log.debug("URL blocked - cloud metadata endpoint: {}", address.getHostAddress());
+                return false;
+            }
+        }
+        return true;
     }
 
     private boolean isPrivateAddress(InetAddress address) {

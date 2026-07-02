@@ -80,8 +80,16 @@ public class SplitPDFController {
                     pageNumbers = request.getPageNumbersList(document, false);
                     hasForm = document.getDocumentCatalog().getAcroForm(null) != null;
                 }
-                if (!pageNumbers.contains(totalPages - 1)) {
-                    pageNumbers = new ArrayList<>(pageNumbers);
+                // Dedup + sort so split points are monotonically increasing: the split loops
+                // advance previousPageNumber past each point, so out-of-order or duplicate points
+                // would otherwise produce overlapping or empty output documents.
+                pageNumbers =
+                        pageNumbers.stream()
+                                .distinct()
+                                .sorted()
+                                .collect(Collectors.toCollection(ArrayList::new));
+                if (pageNumbers.isEmpty()
+                        || pageNumbers.get(pageNumbers.size() - 1) != totalPages - 1) {
                     pageNumbers.add(totalPages - 1);
                 }
 

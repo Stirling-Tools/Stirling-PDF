@@ -89,7 +89,9 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
                                     + internalUsername
                                     + " has been locked due to too many failed login attempts.");
                 }
-                if (userService.hasPassword(usernameAttributeKey)) {
+                // Block SSO from binding onto an existing local password account. Must look up
+                // the resolved internal username, not the fixed claim key (e.g. "email").
+                if (userService.hasPassword(internalUsername)) {
                     throw new IllegalArgumentException("Password must not be null");
                 }
             }

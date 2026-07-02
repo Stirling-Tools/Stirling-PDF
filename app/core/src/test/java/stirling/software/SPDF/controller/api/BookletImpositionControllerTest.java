@@ -244,6 +244,19 @@ class BookletImpositionControllerTest {
     }
 
     @Test
+    void createBookletImposition_zeroPageSourceRejected() throws IOException {
+        MockMultipartFile file = createRealPdf(1); // real bytes; loader is mocked below
+        BookletImpositionRequest request = createRequest(file);
+
+        // A 0-page document must be rejected up front, not throw IndexOutOfBounds on getPage(0).
+        when(pdfDocumentFactory.load(file)).thenReturn(new PDDocument());
+
+        assertThatThrownBy(() -> controller.createBookletImposition(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("no pages");
+    }
+
+    @Test
     void createBookletImposition_negativeGutterClamped() throws IOException {
         MockMultipartFile file = createRealPdf(4);
         BookletImpositionRequest request = createRequest(file);

@@ -8,6 +8,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
+
 @DisplayName("PosterPdfRequest")
 class PosterPdfRequestTest {
 
@@ -85,6 +89,38 @@ class PosterPdfRequestTest {
             PosterPdfRequest req = new PosterPdfRequest();
 
             assertThat(req.toString()).isNotNull().contains("pageSize=A4");
+        }
+    }
+
+    @Nested
+    @DisplayName("bean validation")
+    class BeanValidation {
+
+        private final ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+        private final Validator validator = factory.getValidator();
+
+        @Test
+        @DisplayName("rejects xFactor/yFactor above the 1..10 range (DoS guard)")
+        void rejectsOutOfRange() {
+            PosterPdfRequest req = new PosterPdfRequest();
+            req.setXFactor(3000);
+            req.setYFactor(3000);
+
+            assertThat(validator.validate(req))
+                    .anyMatch(v -> v.getPropertyPath().toString().equals("xFactor"))
+                    .anyMatch(v -> v.getPropertyPath().toString().equals("yFactor"));
+        }
+
+        @Test
+        @DisplayName("accepts in-range factors")
+        void acceptsInRange() {
+            PosterPdfRequest req = new PosterPdfRequest();
+            req.setXFactor(10);
+            req.setYFactor(1);
+
+            assertThat(validator.validate(req))
+                    .noneMatch(v -> v.getPropertyPath().toString().equals("xFactor"))
+                    .noneMatch(v -> v.getPropertyPath().toString().equals("yFactor"));
         }
     }
 }

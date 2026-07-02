@@ -296,6 +296,27 @@ class SplitPDFControllerTest {
     }
 
     @Test
+    @DisplayName("Should normalise out-of-order split points into contiguous parts")
+    void shouldHandleUnorderedSplitPoints() throws Exception {
+        byte[] pdfBytes = createPdf(10);
+        MockMultipartFile file =
+                new MockMultipartFile(
+                        "fileInput", "input.pdf", MediaType.APPLICATION_PDF_VALUE, pdfBytes);
+
+        SplitPagesRequest request = new SplitPagesRequest();
+        request.setFileInput(file);
+        request.setPageNumbers("7,3"); // deliberately out of order
+
+        ResponseEntity<Resource> response = controller.splitPdf(request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        List<byte[]> outputs = unzip(response.getBody());
+        // Sorted split points [2,6] + last(9) → 3 contiguous parts, no overlaps or empties.
+        assertThat(outputs).hasSize(3);
+        assertThat(pageCountsOf(outputs)).containsExactly(3, 4, 3);
+    }
+
+    @Test
     @DisplayName("Should preserve AcroForm and per-page widgets when splitting form PDF")
     void shouldSplitFormPdf() throws Exception {
         byte[] pdfBytes = createPdfWithForm(4);

@@ -204,29 +204,29 @@ public class RearrangePagesPDFController {
     }
 
     private List<Integer> processSortTypes(String sortTypes, int totalPages, String pageOrder) {
+        SortTypes mode;
         try {
-            SortTypes mode = SortTypes.valueOf(sortTypes.toUpperCase(Locale.ROOT));
-            return switch (mode) {
-                case REVERSE_ORDER -> reverseOrder(totalPages);
-                case DUPLEX_SORT -> duplexSort(totalPages);
-                case BOOKLET_SORT -> bookletSort(totalPages);
-                case SIDE_STITCH_BOOKLET_SORT -> sideStitchBooklet(totalPages);
-                case ODD_EVEN_SPLIT -> oddEvenSplit(totalPages);
-                case REMOVE_FIRST -> removeFirst(totalPages);
-                case REMOVE_LAST -> removeLast(totalPages);
-                case REMOVE_FIRST_AND_LAST -> removeFirstAndLast(totalPages);
-                case DUPLICATE -> duplicate(totalPages, pageOrder);
-                default ->
-                        throw ExceptionUtils.createIllegalArgumentException(
-                                "error.invalidFormat",
-                                "Invalid {0} format: {1}",
-                                "custom mode",
-                                "unsupported");
-            };
+            mode = SortTypes.valueOf(sortTypes.toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException e) {
-            log.error("Unsupported custom mode", e);
-            return null;
+            // Unknown customMode: surface a clean 400 rather than returning null (which would
+            // NPE downstream and become a 500).
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidFormat", "Invalid {0} format: {1}", "custom mode", sortTypes);
         }
+        return switch (mode) {
+            case REVERSE_ORDER -> reverseOrder(totalPages);
+            case DUPLEX_SORT -> duplexSort(totalPages);
+            case BOOKLET_SORT -> bookletSort(totalPages);
+            case SIDE_STITCH_BOOKLET_SORT -> sideStitchBooklet(totalPages);
+            case ODD_EVEN_SPLIT -> oddEvenSplit(totalPages);
+            case REMOVE_FIRST -> removeFirst(totalPages);
+            case REMOVE_LAST -> removeLast(totalPages);
+            case REMOVE_FIRST_AND_LAST -> removeFirstAndLast(totalPages);
+            case DUPLICATE -> duplicate(totalPages, pageOrder);
+            case CUSTOM ->
+                    throw ExceptionUtils.createIllegalArgumentException(
+                            "error.invalidFormat", "Invalid {0} format: {1}", "custom mode", mode);
+        };
     }
 
     @AutoJobPostMapping(

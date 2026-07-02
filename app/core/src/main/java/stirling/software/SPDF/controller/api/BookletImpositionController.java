@@ -76,6 +76,13 @@ public class BookletImpositionController {
         try (PDDocument sourceDocument = pdfDocumentFactory.load(file)) {
             int totalPages = sourceDocument.getNumberOfPages();
 
+            // A booklet derives its paper size from the first page; reject empty documents up
+            // front rather than throwing IndexOutOfBounds on getPage(0) downstream.
+            if (totalPages == 0) {
+                throw new IllegalArgumentException(
+                        "Cannot create a booklet from a PDF with no pages.");
+            }
+
             // Create proper booklet with signature-based page ordering
             try (PDDocument newDocument =
                     createSaddleBooklet(

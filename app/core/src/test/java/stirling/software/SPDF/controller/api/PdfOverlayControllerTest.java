@@ -213,6 +213,38 @@ class PdfOverlayControllerTest {
     }
 
     @Test
+    @DisplayName("InterleavedOverlay tolerates a zero-page overlay (no divide-by-zero)")
+    void testInterleavedOverlay_zeroPageOverlay() throws Exception {
+        byte[] baseBytes = createPdf(2);
+        byte[] emptyOverlayBytes = createPdf(0); // zero-page overlay
+
+        MockMultipartFile baseFile =
+                new MockMultipartFile(
+                        "fileInput", "base.pdf", MediaType.APPLICATION_PDF_VALUE, baseBytes);
+        MockMultipartFile overlayFile =
+                new MockMultipartFile(
+                        "overlayFile",
+                        "empty.pdf",
+                        MediaType.APPLICATION_PDF_VALUE,
+                        emptyOverlayBytes);
+
+        OverlayPdfsRequest request = new OverlayPdfsRequest();
+        request.setFileInput(baseFile);
+        request.setOverlayFiles(new MultipartFile[] {overlayFile});
+        request.setOverlayMode("InterleavedOverlay");
+        request.setOverlayPosition(0);
+
+        when(pdfDocumentFactory.load(any(MultipartFile.class)))
+                .thenAnswer(inv -> Loader.loadPDF(((MultipartFile) inv.getArgument(0)).getBytes()));
+
+        // Old code did (basePageIndex - 1) % 0 → ArithmeticException. Must now succeed.
+        ResponseEntity<Resource> response = controller.overlayPdfs(request);
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+    }
+
+    @Test
     @DisplayName("Should throw exception for invalid overlay mode")
     void testInvalidOverlayMode() throws Exception {
         byte[] baseBytes = createPdf(1);

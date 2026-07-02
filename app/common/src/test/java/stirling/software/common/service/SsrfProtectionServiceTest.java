@@ -2,6 +2,7 @@ package stirling.software.common.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.net.InetAddress;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -267,6 +268,30 @@ class SsrfProtectionServiceTest {
         void blocksUnresolvableHost() {
             assertThat(service.isUrlAllowed("http://nonexistent-host-stirling-test.invalid/page"))
                     .isFalse();
+        }
+
+        @Test
+        @DisplayName("blocks when ANY resolved address is internal (multi-A-record / rebinding)")
+        void blocksWhenAnyResolvedAddressIsInternal() throws Exception {
+            // Literal IPs → no DNS. First address is public; a single-IP check (old behaviour)
+            // would inspect only that one and wrongly allow the host.
+            InetAddress publicAddr = InetAddress.getByName("93.184.216.34");
+            InetAddress internalAddr = InetAddress.getByName("169.254.169.254");
+
+            assertThat(
+                            service.isResolvedAddressSetAllowed(
+                                    new InetAddress[] {publicAddr, internalAddr}, config))
+                    .isFalse();
+        }
+
+        @Test
+        @DisplayName("allows when every resolved address is public")
+        void allowsWhenAllResolvedAddressesPublic() throws Exception {
+            InetAddress a = InetAddress.getByName("93.184.216.34");
+            InetAddress b = InetAddress.getByName("8.8.8.8");
+
+            assertThat(service.isResolvedAddressSetAllowed(new InetAddress[] {a, b}, config))
+                    .isTrue();
         }
     }
 
