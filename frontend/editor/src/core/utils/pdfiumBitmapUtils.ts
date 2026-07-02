@@ -86,7 +86,9 @@ export interface DecodedImage {
  * Create a PDFium bitmap from decoded RGBA pixels, attach it to a new image
  * page object, position it via an affine matrix, and insert it into the page.
  *
- * Returns `true` if the image was successfully inserted, `false` otherwise.
+ * Returns the new image object pointer on success, or 0 on failure. The
+ * caller can use the pointer directly instead of re-looking it up by index
+ * (FPDFPage_GetObject returns null until GenerateContent runs).
  * All intermediate WASM resources are cleaned up on failure.
  */
 export function embedBitmapImageOnPage(
@@ -98,9 +100,9 @@ export function embedBitmapImageOnPage(
   pdfY: number,
   drawWidth: number,
   drawHeight: number,
-): boolean {
+): number {
   const bitmapPtr = m.FPDFBitmap_Create(image.width, image.height, 1);
-  if (!bitmapPtr) return false;
+  if (!bitmapPtr) return 0;
 
   try {
     const bufferPtr = m.FPDFBitmap_GetBuffer(bitmapPtr);
@@ -116,7 +118,7 @@ export function embedBitmapImageOnPage(
     );
 
     const imageObjPtr = m.FPDFPageObj_NewImageObj(docPtr);
-    if (!imageObjPtr) return false;
+    if (!imageObjPtr) return 0;
 
     const setBitmapOk = m.FPDFImageObj_SetBitmap(
       pagePtr,
@@ -126,7 +128,7 @@ export function embedBitmapImageOnPage(
     );
     if (!setBitmapOk) {
       m.FPDFPageObj_Destroy(imageObjPtr);
-      return false;
+      return 0;
     }
 
     // -- early-destroy the bitmap; PDFium has copied the pixel data internally
@@ -144,14 +146,14 @@ export function embedBitmapImageOnPage(
 
       if (!m.FPDFPageObj_SetMatrix(imageObjPtr, matrixPtr)) {
         m.FPDFPageObj_Destroy(imageObjPtr);
-        return false;
+        return 0;
       }
     } finally {
       m.pdfium.wasmExports.free(matrixPtr);
     }
 
     m.FPDFPage_InsertObject(pagePtr, imageObjPtr);
-    return true;
+    return imageObjPtr;
   } finally {
     // Safety net: FPDFBitmap_Destroy is a no-op if ptr is 0 in most PDFium
     // builds but guard anyway.  If already destroyed above, the second call
@@ -164,6 +166,103 @@ export function embedBitmapImageOnPage(
     }
   }
 }
+interface JpegRuntime {
+  addFunction: (fn: (...args: number[]) => number, sig: string) => number;
+  removeFunction: (ptr: number) => void;
+  HEAPU8: Uint8Array;
+}
+
+interface JpegImageModule {
+  FPDFImageObj_LoadJpegFileInline?: (
+    pages: number,
+    count: number,
+    imageObject: number,
+    fileAccess: number,
+  ) => boolean;
+}
+
+/**
+ * Embed `jpegBytes` as an image object WITHOUT re-encoding - the original JPEG
+ * stream is stored directly (DCTDecode), so the output stays small. Contrast
+ * `embedBitmapImageOnPage`, which uploads decoded RGBA (Flate-compressed pixels,
+ * typically several times larger for a photo).
+ *
+ * Returns the new object pointer, or 0 if the JPEG API is unavailable or the
+ * load failed (caller falls back to the bitmap path). Uses an FPDF_FILEACCESS
+ * shim backed by an emscripten function pointer over the JS byte array.
+ */
+export function embedJpegImageOnPage(
+  m: WrappedPdfiumModule,
+  docPtr: number,
+  pagePtr: number,
+  jpegBytes: Uint8Array,
+  pdfX: number,
+  pdfY: number,
+  drawWidth: number,
+  drawHeight: number,
+): number {
+  const rt = m.pdfium as unknown as JpegRuntime;
+  const loadJpeg = (m as unknown as JpegImageModule)
+    .FPDFImageObj_LoadJpegFileInline;
+  if (!loadJpeg || typeof rt.addFunction !== "function") return 0;
+
+  const imageObjPtr = m.FPDFPageObj_NewImageObj(docPtr);
+  if (!imageObjPtr) return 0;
+
+  const len = jpegBytes.length;
+  // m_GetBlock(param, position, pBuf, size): copy the requested slice into the
+  // WASM heap. PDFium guarantees the range stays within [0, len). Returns a
+  // non-zero byte count on success, 0 on an out-of-range request (error).
+  const getBlock = (
+    _param: number,
+    position: number,
+    pBuf: number,
+    size: number,
+  ): number => {
+    if (position < 0 || position + size > len) return 0;
+    rt.HEAPU8.set(jpegBytes.subarray(position, position + size), pBuf);
+    return size;
+  };
+  const fnPtr = rt.addFunction(getBlock, "iiiii");
+  // FPDF_FILEACCESS = { unsigned long m_FileLen; GetBlock* m_GetBlock; void* m_Param } (12 bytes, wasm32).
+  const faPtr = m.pdfium.wasmExports.malloc(12);
+  m.pdfium.setValue(faPtr, len, "i32");
+  m.pdfium.setValue(faPtr + 4, fnPtr, "i32");
+  m.pdfium.setValue(faPtr + 8, 0, "i32");
+  // cwrapped boolean call - returns false on error rather than throwing, so no
+  // try/finally is needed around it; free the shim + struct right after.
+  const loaded = !!loadJpeg(0, 0, imageObjPtr, faPtr);
+  m.pdfium.wasmExports.free(faPtr);
+  try {
+    rt.removeFunction(fnPtr);
+  } catch {
+    /* best-effort */
+  }
+  if (!loaded) {
+    m.FPDFPageObj_Destroy(imageObjPtr);
+    return 0;
+  }
+
+  const matrixPtr = m.pdfium.wasmExports.malloc(6 * 4);
+  try {
+    m.pdfium.setValue(matrixPtr, drawWidth, "float");
+    m.pdfium.setValue(matrixPtr + 4, 0, "float");
+    m.pdfium.setValue(matrixPtr + 8, 0, "float");
+    m.pdfium.setValue(matrixPtr + 12, drawHeight, "float");
+    m.pdfium.setValue(matrixPtr + 16, pdfX, "float");
+    m.pdfium.setValue(matrixPtr + 20, pdfY, "float");
+    if (!m.FPDFPageObj_SetMatrix(imageObjPtr, matrixPtr)) {
+      m.FPDFPageObj_Destroy(imageObjPtr);
+      return 0;
+    }
+  } finally {
+    m.pdfium.wasmExports.free(matrixPtr);
+  }
+
+  m.FPDFPage_InsertObject(pagePtr, imageObjPtr);
+  return imageObjPtr;
+}
+
 /**
  * Draw a simple light-grey rectangle as a placeholder for annotations
  * that could not be rendered.

@@ -525,6 +525,16 @@ class EmlToPdfParams(ApiModel):
     )
 
 
+class EncodeCharcodesParams(ApiModel):
+    font_name: str | None = None
+    locator_char: str | None = None
+    locator_x: float | None = None
+    locator_y: float | None = None
+    page_index: int | None = None
+    pdf_base64: str | None = None
+    text: str | None = None
+
+
 class ExtractImageScansParams(ApiModel):
     angle_threshold: int = Field(5, description="The angle threshold for the image scan extraction")
     border_size: int = Field(1, description="The border size for the image scan extraction")
@@ -1486,6 +1496,7 @@ class Model(
         | MergePdfsParams
         | MultiPageLayoutParams
         | OverlayPdfsParams
+        | EncodeCharcodesParams
         | RearrangePagesParams
         | RemovePagesParams
         | RotatePdfParams
@@ -1556,6 +1567,7 @@ class Model(
         | MergePdfsParams
         | MultiPageLayoutParams
         | OverlayPdfsParams
+        | EncodeCharcodesParams
         | RearrangePagesParams
         | RemovePagesParams
         | RotatePdfParams
@@ -1627,6 +1639,7 @@ type ParamToolModel = (
     | MergePdfsParams
     | MultiPageLayoutParams
     | OverlayPdfsParams
+    | EncodeCharcodesParams
     | RearrangePagesParams
     | RemovePagesParams
     | RotatePdfParams
@@ -1699,6 +1712,7 @@ class ToolEndpoint(StrEnum):
     MERGE_PDFS = "/api/v1/general/merge-pdfs"
     MULTI_PAGE_LAYOUT = "/api/v1/general/multi-page-layout"
     OVERLAY_PDFS = "/api/v1/general/overlay-pdfs"
+    ENCODE_CHARCODES = "/api/v1/general/pdf-text-editor-v2/encode-charcodes"
     REARRANGE_PAGES = "/api/v1/general/rearrange-pages"
     REMOVE_PAGES = "/api/v1/general/remove-pages"
     ROTATE_PDF = "/api/v1/general/rotate-pdf"
@@ -1769,6 +1783,7 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.MERGE_PDFS: MergePdfsParams,
     ToolEndpoint.MULTI_PAGE_LAYOUT: MultiPageLayoutParams,
     ToolEndpoint.OVERLAY_PDFS: OverlayPdfsParams,
+    ToolEndpoint.ENCODE_CHARCODES: EncodeCharcodesParams,
     ToolEndpoint.REARRANGE_PAGES: RearrangePagesParams,
     ToolEndpoint.REMOVE_PAGES: RemovePagesParams,
     ToolEndpoint.ROTATE_PDF: RotatePdfParams,
