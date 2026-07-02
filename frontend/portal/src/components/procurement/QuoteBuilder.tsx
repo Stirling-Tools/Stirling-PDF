@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@shared/components";
 import {
@@ -58,6 +58,14 @@ export function QuoteBuilder({
   function set<K extends keyof QuoteConfigInput>(k: K, v: QuoteConfigInput[K]) {
     setCfg((c) => ({ ...c, [k]: v }));
   }
+
+  // Re-editing an existing quote: the config is seeded above, so jump straight to the filled review
+  // (the buyer sees everything preserved and can step Back to change a field) rather than walking
+  // the wizard again from step 1.
+  useEffect(() => {
+    if (initial) void reviewQuote();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const preview = previewAnnualMinor(cfg);
   const tcvPreview = preview * cfg.termYears + (cfg.training ? 750_000 : 0);

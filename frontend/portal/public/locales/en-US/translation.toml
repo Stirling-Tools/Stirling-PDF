@@ -1910,8 +1910,8 @@ agreeCta = "Agree & subscribe"
 
 [procurement.payment]
 title = "Subscription created"
-description = "Your quote is accepted and a committed annual subscription has been created. Pay the first invoice to go live."
-viewInvoice = "View invoice"
+description = "Your quote is accepted and a committed annual subscription has been created. Pay the first invoice to go live — you can pay or download it right here, no email needed."
+viewInvoice = "View & pay invoice"
 
 [procurement.milestone]
 eyebrow = "Quote {{number}}"

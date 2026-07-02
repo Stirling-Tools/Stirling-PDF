@@ -1119,6 +1119,9 @@
   flex-wrap: wrap;
   margin-top: 1rem;
 }
+.portal-proc__milestone-lines {
+  margin: 0.85rem 0 0.5rem;
+}
 .portal-proc__milestone-totals {
   display: flex;
   align-items: baseline;

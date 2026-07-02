@@ -197,6 +197,18 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
                 <p className="portal-proc__subtitle">
                   {t("procurement.milestone.description")}
                 </p>
+                <ul className="portal-qb__lines portal-proc__milestone-lines">
+                  {latest.lineItems.map((li) => (
+                    <li key={li.key} data-kind={li.kind}>
+                      <span>{li.label}</span>
+                      <span>
+                        {li.kind === "INCLUDED"
+                          ? t("procurement.builder.included")
+                          : money(li.amountMinor, latest.currency)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
                 <div className="portal-proc__milestone-totals">
                   <span className="portal-proc__milestone-annual">
                     {money(latest.annualNetMinor, latest.currency)}
