@@ -1818,10 +1818,6 @@ title = "Usage & billing"
 subtitle = "Consumption, invoices, and plan management for every PDF Stirling has billed, in one console."
 managePayment = "Manage Payment"
 
-[usage.finalizing]
-title = "Finalizing your subscription…"
-body = "It can take a few seconds for your subscription to activate. This page updates automatically."
-
 [usage.sessionExpired]
 title = "Session expired"
 action = "Sign in again"
