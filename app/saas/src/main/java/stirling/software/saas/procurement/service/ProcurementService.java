@@ -37,26 +37,27 @@ import stirling.software.saas.procurement.repository.ProcurementQuoteRepository;
 @Profile("saas")
 public class ProcurementService {
 
+    // Local mapper for the line-items JSON snapshot; the saas context exposes no injectable
+    // ObjectMapper bean, and this (de)serialisation doesn't need Spring's configured one.
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
     private final ProcurementDealRepository dealRepo;
     private final ProcurementQuoteRepository quoteRepo;
     private final ProcurementPricingService pricing;
     private final EnterpriseLicenseService licenses;
     private final ProcurementConfigurationProperties config;
-    private final ObjectMapper objectMapper;
 
     public ProcurementService(
             ProcurementDealRepository dealRepo,
             ProcurementQuoteRepository quoteRepo,
             ProcurementPricingService pricing,
             EnterpriseLicenseService licenses,
-            ProcurementConfigurationProperties config,
-            ObjectMapper objectMapper) {
+            ProcurementConfigurationProperties config) {
         this.dealRepo = dealRepo;
         this.quoteRepo = quoteRepo;
         this.pricing = pricing;
         this.licenses = licenses;
         this.config = config;
-        this.objectMapper = objectMapper;
     }
 
     @Transactional(readOnly = true)
@@ -198,7 +199,7 @@ public class ProcurementService {
 
     private String writeLineItems(QuoteBreakdown breakdown) {
         try {
-            return objectMapper.writeValueAsString(breakdown.lineItems());
+            return OBJECT_MAPPER.writeValueAsString(breakdown.lineItems());
         } catch (JsonProcessingException e) {
             log.warn("[procurement] failed to serialise line items", e);
             return "[]";

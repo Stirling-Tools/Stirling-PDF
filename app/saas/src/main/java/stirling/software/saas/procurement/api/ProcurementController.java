@@ -48,20 +48,21 @@ import stirling.software.saas.util.AuthenticationUtils;
 @Profile("saas")
 public class ProcurementController {
 
+    // Local mapper to parse the stored line-items JSON; the saas context exposes no injectable
+    // ObjectMapper bean.
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
     private final ProcurementService procurement;
     private final TeamMembershipRepository memberRepo;
     private final UserRepository userRepository;
-    private final ObjectMapper objectMapper;
 
     public ProcurementController(
             ProcurementService procurement,
             TeamMembershipRepository memberRepo,
-            UserRepository userRepository,
-            ObjectMapper objectMapper) {
+            UserRepository userRepository) {
         this.procurement = Objects.requireNonNull(procurement);
         this.memberRepo = Objects.requireNonNull(memberRepo);
         this.userRepository = Objects.requireNonNull(userRepository);
-        this.objectMapper = Objects.requireNonNull(objectMapper);
     }
 
     // ---- request / response DTOs -------------------------------------------
@@ -242,9 +243,9 @@ public class ProcurementController {
     private List<QuoteLineItem> parseLineItems(String json) {
         if (json == null || json.isBlank()) return List.of();
         try {
-            return objectMapper.readValue(
+            return OBJECT_MAPPER.readValue(
                     json,
-                    objectMapper
+                    OBJECT_MAPPER
                             .getTypeFactory()
                             .constructCollectionType(List.class, QuoteLineItem.class));
         } catch (Exception e) {
