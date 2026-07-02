@@ -79,7 +79,7 @@ dependencies {
     implementation "org.apache.pdfbox:preflight:$pdfboxVersion"
     implementation "org.apache.pdfbox:xmpbox:$pdfboxVersion"
 
-    implementation 'org.verapdf:validation-model:1.28.2'
+    implementation 'org.verapdf:validation-model:1.30.2'
     // CVE-2025-66453: Explicit rhino 1.7.15 to override verapdf's 1.7.13
     implementation "org.mozilla:rhino:${rhinoVersion}"
 
