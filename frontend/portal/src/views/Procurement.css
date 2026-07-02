@@ -1151,6 +1151,253 @@
   flex-wrap: wrap;
 }
 
+/* Hero quick-action chips (clickable pills next to the company name). */
+.portal-hero__chip--action {
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  transition:
+    background 0.12s,
+    box-shadow 0.12s,
+    transform 0.12s;
+}
+.portal-hero__chip--action:hover {
+  background: var(--color-surface);
+  box-shadow: 0 2px 5px rgba(15, 23, 42, 0.1);
+  transform: translateY(-1px);
+}
+
+/* Hero rollout checklist (trial): the "do this now" setup steps. */
+.portal-hero__checklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--color-border-light);
+}
+.portal-hero__checklist li {
+  border-bottom: 1px solid var(--color-border-light);
+}
+.portal-hero__checklist button {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  width: 100%;
+  padding: 0.7rem 0.25rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+.portal-hero__checklist button:hover {
+  background: var(--color-bg-hover, var(--color-border-light));
+}
+.portal-hero__check-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--color-border);
+  flex-shrink: 0;
+}
+.portal-hero__check-text {
+  flex: 1;
+  min-width: 0;
+}
+.portal-hero__check-title {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+.portal-hero__check-sub {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--color-text-4);
+  margin-top: 0.05rem;
+}
+.portal-hero__check-pill {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--color-text-5);
+  background: var(--color-border-light);
+  border-radius: 999px;
+  padding: 0.15rem 0.55rem;
+  flex-shrink: 0;
+}
+
+/* ── Side dialogs (Key documents / Schedule a call / Trial) ───────────────── */
+.portal-sidemodal {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  overflow-y: auto;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  animation: portal-procmodal-fade 0.15s ease-out;
+}
+.portal-sidemodal__panel {
+  position: relative;
+  width: 100%;
+  max-width: 30rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.28);
+  padding: 1.35rem 1.4rem 1.4rem;
+  max-height: 86vh;
+  overflow-y: auto;
+}
+.portal-sidemodal__header {
+  margin-bottom: 1rem;
+  padding-right: 2rem;
+}
+.portal-sidemodal__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-text-1);
+}
+.portal-sidemodal__sub {
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--color-text-4);
+  line-height: 1.5;
+}
+.portal-sidemodal__text {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-text-3);
+  line-height: 1.55;
+}
+.portal-sidemodal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 1.1rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--color-border-light);
+}
+.portal-sidemodal__ghost {
+  border: none;
+  background: none;
+  font-size: 0.8125rem;
+  color: var(--color-text-4);
+  cursor: pointer;
+}
+.portal-sidemodal__ghost:hover:not(:disabled) {
+  color: var(--color-text-2);
+}
+
+/* Key documents ledger. */
+.portal-docs__group + .portal-docs__group {
+  margin-top: 1rem;
+}
+.portal-docs__group-title {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-5);
+  margin-bottom: 0.4rem;
+}
+.portal-docs__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.portal-docs__row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.55rem 0;
+  border-top: 1px solid var(--color-border-light);
+}
+.portal-docs__row-text {
+  flex: 1;
+  min-width: 0;
+}
+.portal-docs__row-name {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+.portal-docs__row-sub {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--color-text-4);
+  margin-top: 0.05rem;
+}
+.portal-docs__row-action {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  flex-shrink: 0;
+  color: var(--color-text-3);
+  background: var(--color-border-light);
+}
+.portal-docs__row-action[data-status="action"] {
+  color: var(--color-primary, #2383e2);
+  background: var(--color-primary-light, #eaf2fb);
+}
+.portal-docs__row-action[data-status="request"] {
+  color: var(--color-text-5);
+}
+
+/* Solutions-engineer + time slots (Schedule a call). */
+.portal-se {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.portal-se__avatar {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-primary, #2383e2);
+  background: var(--color-primary-light, #eaf2fb);
+  flex-shrink: 0;
+}
+.portal-se__name {
+  font-size: 0.875rem;
+  font-weight: 650;
+  color: var(--color-text-1);
+}
+.portal-se__role {
+  font-size: 0.75rem;
+  color: var(--color-text-4);
+}
+.portal-slots {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+.portal-slots__slot {
+  padding: 0.6rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-2);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  cursor: pointer;
+}
+.portal-slots__slot:hover {
+  border-color: var(--color-primary, #2383e2);
+  color: var(--color-primary, #2383e2);
+}
+
 /* ── Agreement (security) step ────────────────────────────────────────────── */
 .portal-agreement__doc {
   margin: 1rem 0;

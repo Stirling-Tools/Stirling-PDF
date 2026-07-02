@@ -17,7 +17,14 @@ const meta: Meta<typeof DealStatusHero> = {
   title: "Portal/Procurement/DealStatusHero",
   component: DealStatusHero,
   parameters: { layout: "padded" },
-  args: { onExpand: () => {} },
+  args: {
+    onExpand: () => {},
+    onKeyDocs: () => {},
+    onInvite: () => {},
+    onSchedule: () => {},
+    onManageTrial: () => {},
+    onNavigate: () => {},
+  },
 };
 export default meta;
 
@@ -26,6 +33,9 @@ type Story = StoryObj<typeof DealStatusHero>;
 export const Trial: Story = { args: { snapshot: base } };
 export const Quote: Story = {
   args: { snapshot: { ...base, stage: "quote", trialEndsAt: null } },
+};
+export const Agreement: Story = {
+  args: { snapshot: { ...base, stage: "security", trialEndsAt: null } },
 };
 export const Payment: Story = {
   args: { snapshot: { ...base, stage: "procurement", trialEndsAt: null } },

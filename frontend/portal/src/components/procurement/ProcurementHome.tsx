@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Button, Card, EmptyState, Skeleton } from "@shared/components";
 import { useLink } from "@portal/contexts/LinkContext";
 import { useUI } from "@portal/contexts/UIContext";
+import { useView } from "@portal/contexts/ViewContext";
 import { useAsync } from "@portal/hooks/useAsync";
 import {
   acceptQuote,
@@ -19,6 +20,11 @@ import {
 } from "@portal/api/procurement";
 import { DealStatusHero } from "@portal/components/procurement/DealStatusHero";
 import { ProcurementAgreement } from "@portal/components/procurement/ProcurementAgreement";
+import {
+  KeyDocumentsModal,
+  ScheduleCallModal,
+  TrialManageModal,
+} from "@portal/components/procurement/ProcurementExtras";
 import { ProcurementModal } from "@portal/components/procurement/ProcurementModal";
 import { QuoteBuilder } from "@portal/components/procurement/QuoteBuilder";
 import { StageStepper } from "@portal/components/procurement/StageStepper";
@@ -44,6 +50,7 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
   const { t } = useTranslation();
   const { isLinked } = useLink();
   const { openLinkModal } = useUI();
+  const { setActiveView } = useView();
 
   const state = useAsync<ProcurementSnapshot | null>(
     () => (isLinked ? fetchSnapshot() : Promise.resolve(null)),
@@ -53,6 +60,7 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
   const [open, setOpen] = useState(autoOpen);
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [extra, setExtra] = useState<null | "docs" | "schedule" | "trial">(null);
   const autoStarted = useRef(false);
 
   const data = snap ?? (state.loading ? null : state.data);
@@ -117,7 +125,11 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
         snapshot={data}
         busy={busy}
         onExpand={() => setOpen(true)}
-        onExtendTrial={onExtendTrial}
+        onKeyDocs={() => setExtra("docs")}
+        onInvite={() => setActiveView("users")}
+        onSchedule={() => setExtra("schedule")}
+        onManageTrial={() => setExtra("trial")}
+        onNavigate={setActiveView}
       />
     ) : (
       <Card className="portal-proc__upsell">
@@ -281,6 +293,31 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
           </>
         )}
       </ProcurementModal>
+
+      <KeyDocumentsModal
+        open={extra === "docs"}
+        onClose={() => setExtra(null)}
+      />
+      <ScheduleCallModal
+        open={extra === "schedule"}
+        onClose={() => setExtra(null)}
+      />
+      {data && (
+        <TrialManageModal
+          open={extra === "trial"}
+          onClose={() => setExtra(null)}
+          snapshot={data}
+          busy={busy}
+          onExtend={async () => {
+            await onExtendTrial();
+            setExtra(null);
+          }}
+          onCancel={async () => {
+            await onReset();
+            setExtra(null);
+          }}
+        />
+      )}
     </>
   );
 }
