@@ -90,7 +90,11 @@ export function FreePlanView({ wallet, unsynced, onSubscribed }: Props) {
       <FreePdfEditorsCard />
 
       {/* Processor trial — meter with the inline upgrade CTA */}
-      <WalletMeter wallet={wallet} unsynced={unsynced} action={switchOnAction} />
+      <WalletMeter
+        wallet={wallet}
+        unsynced={unsynced}
+        action={switchOnAction}
+      />
 
       {missingTeam && (
         <Banner

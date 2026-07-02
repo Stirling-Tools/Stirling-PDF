@@ -3,7 +3,11 @@ import { useTranslation } from "react-i18next";
 import { Banner, Button, Skeleton } from "@shared/components";
 import { useLink } from "@portal/contexts/LinkContext";
 import { useUI } from "@portal/contexts/UIContext";
-import { fetchWallet, refreshWalletCache, type Wallet } from "@portal/api/billing";
+import {
+  fetchWallet,
+  refreshWalletCache,
+  type Wallet,
+} from "@portal/api/billing";
 import {
   fetchLocalUsage,
   triggerLocalSync,

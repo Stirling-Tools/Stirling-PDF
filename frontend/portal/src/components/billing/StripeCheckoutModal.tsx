@@ -229,7 +229,10 @@ export function StripeCheckoutModal({
           {publishableKey && error && (
             <Banner
               tone="danger"
-              title={t("billing.checkout.error.title", "Couldn't start checkout")}
+              title={t(
+                "billing.checkout.error.title",
+                "Couldn't start checkout",
+              )}
             >
               {error}
             </Banner>
