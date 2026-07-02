@@ -409,7 +409,7 @@ tasks:
   clean:
     desc: "Clean build artifacts and caches"
     cmds:
-      - cmd: powershell rm -Recurse -Force -ErrorAction SilentlyContinue node_modules/.vite, editor/dist, dist, dist-portal
+      - cmd: powershell rm -Recurse -Force -ErrorAction SilentlyContinue node_modules/.vite, editor/dist, dist
         platforms: [windows]
-      - cmd: rm -rf node_modules/.vite editor/dist dist dist-portal
+      - cmd: rm -rf node_modules/.vite editor/dist dist
         platforms: [linux, darwin]
