@@ -1,39 +1,35 @@
 import { http, HttpResponse, delay } from "msw";
 import {
-  POLICY_CATEGORIES,
-  POLICY_CONFIG,
   seedPolicies,
-  seedRuntime,
-  emptyRuntime,
-  type CatalogueEntry,
-  type DecoratedPolicy,
-  type PoliciesResponse,
-  type PoliciesSummary,
-  type Policy,
-  type PolicyRowStatus,
-  type PolicyRuntime,
-  type PolicyState,
+  seedPolicyRuns,
+  type WirePolicy,
 } from "@portal/mocks/policies";
+import type { PolicyRunView } from "@shared/policies/types";
 
 /**
  * The portal exercises the REAL policy API base — `/api/v1/policies`, NOT the
  * portal's usual `/v1/...` — so this surface is plug-and-play against the live
- * backend (drop MSW and the same calls hit Stirling). These handlers mutate an
- * in-memory store, so create/delete/run behave like a real backend within a
- * session (see the notifications handler for the same stateful pattern).
+ * backend (drop MSW and the same calls hit Stirling).
+ *
+ * These handlers speak the backend's actual wire contract:
+ * - GET /api/v1/policies        → WirePolicy[]
+ * - GET /api/v1/policies/runs   → PolicyRunView[]
+ * - POST /api/v1/policies       → WirePolicy (create / update)
+ * - DELETE /api/v1/policies/:id → 204
+ *
+ * The decorated catalogue (summary, category grouping, stats) is assembled
+ * client-side in api/policies.ts#fetchPolicies(), mirroring the real backend.
  */
 
-/** Configured policies, keyed by backend id (the source of truth). */
-let store: Policy[] = seedPolicies();
-/** Runtime extras the wire record doesn't carry (scope, stats, activity). */
-let runtime: Record<string, PolicyRuntime> = seedRuntime();
+let store: WirePolicy[] = seedPolicies();
+let runs: PolicyRunView[] = seedPolicyRuns();
 
 export function resetPoliciesStore(
-  seed?: Policy[],
-  seedRt?: Record<string, PolicyRuntime>,
+  seed?: WirePolicy[],
+  seedRuns?: PolicyRunView[],
 ): void {
   store = seed ? [...seed] : seedPolicies();
-  runtime = seedRt ? { ...seedRt } : seedRuntime();
+  runs = seedRuns ? [...seedRuns] : seedPolicyRuns();
 }
 
 let idCounter = 0;
@@ -42,78 +38,21 @@ function nextId(categoryId: string): string {
   return `pol_${categoryId}_${Date.now().toString(36)}_${idCounter}`;
 }
 
-/** Derive the display status from the wire `enabled` flag. */
-function rowStatus(policy: Policy): PolicyRowStatus {
-  return policy.enabled ? "active" : "paused";
-}
-
-/** Build the decorated runtime view the catalogue/detail consumes. */
-function decorate(policy: Policy): DecoratedPolicy | null {
-  const category = POLICY_CATEGORIES.find((c) => c.id === policy.categoryId);
-  const config = POLICY_CONFIG[policy.categoryId];
-  if (!category || !config) return null;
-  const rt = runtime[policy.id] ?? emptyRuntime();
-  const status = rowStatus(policy);
-  const state: PolicyState = {
-    configured: true,
-    status: status === "paused" ? "paused" : "active",
-    sources: policy.sources.map((s) => s.source),
-    scopeTypes: rt.scopeTypes,
-    reviewerEmail: rt.reviewerEmail,
-    fieldValues: rt.fieldValues,
-    outputMode: policy.output.mode,
-    outputName: policy.output.name,
-    runOn: policy.trigger?.event ?? "upload",
-    backendId: policy.id,
-    isDefault: rt.isDefault,
-  };
-  return {
-    category,
-    config,
-    state,
-    steps: policy.steps,
-    stats: rt.stats,
-    activity: rt.activity,
-  };
-}
-
-/** The full catalogue response: every category, each with its policy (or null). */
-function buildResponse(): PoliciesResponse {
-  const byCategory = new Map<string, Policy>();
-  for (const p of store) byCategory.set(p.categoryId, p);
-
-  const catalogue: CatalogueEntry[] = POLICY_CATEGORIES.map((category) => {
-    const policy = byCategory.get(category.id);
-    return {
-      category,
-      config: POLICY_CONFIG[category.id],
-      policy: policy ? decorate(policy) : null,
-    };
-  });
-
-  const active = store.filter((p) => p.enabled).length;
-  const paused = store.filter((p) => !p.enabled).length;
-  const docsEnforced = store
-    .filter((p) => p.enabled)
-    .reduce((sum, p) => sum + (runtime[p.id]?.stats.enforced ?? 0), 0);
-  const summary: PoliciesSummary = {
-    active,
-    paused,
-    categories: POLICY_CATEGORIES.length,
-    docsEnforced,
-  };
-
-  return { summary, catalogue };
+function categoryId(wire: WirePolicy): string {
+  return (wire.output?.options?.categoryId as string | undefined) ?? "";
 }
 
 export const policiesHandlers = [
-  // List — the catalogue (categories + configs + configured policies).
   http.get("/api/v1/policies", async () => {
     await delay(120);
-    return HttpResponse.json(buildResponse());
+    return HttpResponse.json(store);
   }),
 
-  // Get one stored policy by id (the raw wire record).
+  http.get("/api/v1/policies/runs", async () => {
+    await delay(120);
+    return HttpResponse.json(runs);
+  }),
+
   http.get("/api/v1/policies/:id", async ({ params }) => {
     await delay(120);
     const policy = store.find((p) => p.id === params.id);
@@ -121,17 +60,17 @@ export const policiesHandlers = [
     return HttpResponse.json(policy);
   }),
 
-  // Create or update — a blank id is assigned (create) or matched (update).
-  // One policy per category: a create for a category that already has one
-  // replaces it, matching the editor's "one policy per category, ever".
+  // Create or update — one policy per category: a create for a category that
+  // already has one replaces it, matching the editor's contract.
   http.post("/api/v1/policies", async ({ request }) => {
     await delay(120);
-    const incoming = (await request.json()) as Policy;
+    const incoming = (await request.json()) as WirePolicy;
+    const catId = categoryId(incoming);
     const existing = incoming.id
       ? store.find((p) => p.id === incoming.id)
-      : store.find((p) => p.categoryId === incoming.categoryId);
-    const id = existing?.id ?? nextId(incoming.categoryId);
-    const saved: Policy = {
+      : store.find((p) => categoryId(p) === catId);
+    const id = existing?.id ?? nextId(catId);
+    const saved: WirePolicy = {
       ...incoming,
       id,
       owner: existing?.owner ?? "you@acme.com",
@@ -139,45 +78,16 @@ export const policiesHandlers = [
     store = existing
       ? store.map((p) => (p.id === id ? saved : p))
       : [...store, saved];
-    // Seed runtime for a brand-new policy so the detail panel has somewhere to
-    // read from; an update keeps whatever runtime it already had.
-    if (!runtime[id]) runtime[id] = emptyRuntime();
     return HttpResponse.json(saved);
   }),
 
-  // Delete a stored policy by id.
   http.delete("/api/v1/policies/:id", async ({ params }) => {
     await delay(120);
     const id = String(params.id);
-    const existed = store.some((p) => p.id === id);
-    if (!existed) return new HttpResponse(null, { status: 404 });
+    if (!store.some((p) => p.id === id))
+      return new HttpResponse(null, { status: 404 });
     store = store.filter((p) => p.id !== id);
-    delete runtime[id];
+    runs = runs.filter((r) => r.policyId !== id);
     return new HttpResponse(null, { status: 204 });
-  }),
-
-  // Run a stored policy now. The real endpoint is multipart (files) and returns
-  // a run id; the portal has no files, so the mock just acknowledges with a run
-  // id and nudges the activity feed so the run is visible.
-  http.post("/api/v1/policies/:id/run", async ({ params }) => {
-    await delay(120);
-    const id = String(params.id);
-    const policy = store.find((p) => p.id === id);
-    if (!policy) return new HttpResponse(null, { status: 404 });
-    const rt = runtime[id] ?? emptyRuntime();
-    runtime[id] = {
-      ...rt,
-      activity: [
-        {
-          doc: "manual-run.pdf",
-          action: "Enforcing…",
-          time: "just now",
-          status: "processing",
-        },
-        ...rt.activity,
-      ],
-    };
-    const runId = `run_${Date.now().toString(36)}`;
-    return HttpResponse.json({ status: true, fileId: runId, message: null });
   }),
 ];

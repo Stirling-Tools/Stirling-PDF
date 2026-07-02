@@ -23,12 +23,19 @@ export default defineConfig({
       "@shared": sharedDir,
     },
   },
+  server: {
+    fs: {
+      // Allow Vite to serve files from the shared/ sibling directory when
+      // running tests with --root portal (which would otherwise block them).
+      allow: [".."],
+    },
+  },
   test: {
     globals: true,
     environment: "jsdom",
     setupFiles: ["./src/setupTests.ts"],
     css: false,
-    include: ["src/**/*.test.{ts,tsx}"],
+    include: ["src/**/*.test.{ts,tsx}", "../shared/**/*.test.ts"],
     testTimeout: 10000,
     hookTimeout: 10000,
   },

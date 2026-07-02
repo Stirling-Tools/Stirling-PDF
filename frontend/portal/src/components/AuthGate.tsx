@@ -1,15 +1,11 @@
 import { type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { RequireAdmin } from "@shared/auth";
+import { RequirePortalAccess } from "@shared/auth";
 import { Spinner } from "@shared/components";
 import { LoginScreen } from "@portal/components/LoginScreen";
 import { EDITOR_URL } from "@portal/auth/editorUrl";
 
-/**
- * Module-level so the reference is stable across renders (RequireAdmin runs it
- * from an effect). The portal is admin-only today; authenticated non-admins are
- * bounced to the editor rather than shown an access-denied page.
- */
+// Stable module-level ref; RequirePortalAccess calls it from an effect.
 function redirectToEditor(): void {
   window.location.href = EDITOR_URL;
 }
@@ -31,17 +27,11 @@ function FullScreenMessage({ children }: { children: ReactNode }) {
   );
 }
 
-/**
- * Gates the whole portal behind an authenticated admin session:
- * - loading -> spinner
- * - signed out -> login screen
- * - signed in, not admin -> redirect to the editor
- * - signed in admin -> the portal
- */
+/** Gates the portal: login when signed out, redirect to the editor without portal access. */
 export function AuthGate({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
   return (
-    <RequireAdmin
+    <RequirePortalAccess
       fallback={<LoginScreen />}
       onForbidden={redirectToEditor}
       loading={
@@ -56,6 +46,6 @@ export function AuthGate({ children }: { children: ReactNode }) {
       }
     >
       {children}
-    </RequireAdmin>
+    </RequirePortalAccess>
   );
 }
