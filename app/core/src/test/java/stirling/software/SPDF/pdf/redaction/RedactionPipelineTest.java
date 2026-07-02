@@ -609,8 +609,7 @@ class RedactionPipelineTest {
                             doc, new LinkedHashSet<>(Set.of("SECRET")), List.of());
         }
         try (PDDocument reopened = Loader.loadPDF(bytes)) {
-            // A default stripper would read 'SAFE' and pass; the glyph-blind verify caught 'SECRET'
-            // and rasterised, so the page is now an image and nothing extractable survives.
+            // A default stripper would read 'SAFE' and pass.
             assertTrue(
                     pageHasImage(reopened.getPage(0)),
                     "ActualText-masked survivor must be detected and rasterised");
@@ -788,6 +787,108 @@ class RedactionPipelineTest {
             assertTrue(
                     RedactionPipeline.documentHasUnreliableFont(reopened),
                     "an unreliable font inside a form XObject must be detected by recursion");
+        }
+    }
+
+    @Test
+    @DisplayName("finalizeAreas scrubs catalog carriers of the captured in-rect text (must-fix-1)")
+    void finalizeAreasScrubsCarriers() throws Exception {
+        byte[] out;
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage(PDRectangle.A4);
+            doc.addPage(page);
+            try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
+                cs.beginText();
+                cs.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
+                cs.newLineAtOffset(72, 700);
+                cs.showText("Paid by Smith");
+                cs.endText();
+            }
+            PDDocumentOutline outline = new PDDocumentOutline();
+            doc.getDocumentCatalog().setDocumentOutline(outline);
+            PDOutlineItem item = new PDOutlineItem();
+            item.setTitle("Smith case notes");
+            outline.addLast(item);
+
+            Map<Integer, List<PDRectangle>> rects = new HashMap<>();
+            rects.put(0, List.of(new PDRectangle(72, 695, 120, 15)));
+            out =
+                    RedactionPipeline.finalizeAreas(
+                            doc, rects, new HashSet<>(), new LinkedHashSet<>(Set.of("Smith")));
+        }
+        try (PDDocument reopened = Loader.loadPDF(out)) {
+            PDDocumentOutline outline = reopened.getDocumentCatalog().getDocumentOutline();
+            assertFalse(
+                    outline.getFirstChild().getTitle().contains("Smith"),
+                    "manual-area finalize must scrub the bookmark carrier (must-fix-1)");
+        }
+    }
+
+    @Test
+    @DisplayName("verify fails closed and rasterises when a required native pass can't run (must-fix-3)")
+    void failsClosedWhenNativeUnavailableForUnreliableFont() throws Exception {
+        RedactionPipeline.setJpdfiumAvailableForTest(false);
+        try {
+            byte[] out;
+            try (PDDocument doc = new PDDocument()) {
+                PDPage page = new PDPage(PDRectangle.A4);
+                doc.addPage(page);
+                PDFont font;
+                try (var ttf = PDDocument.class.getResourceAsStream(LIBERATION)) {
+                    // embedded TrueType, no /ToUnicode -> PDFBox-unreliable -> native pass required
+                    font = PDTrueTypeFont.load(doc, ttf, WinAnsiEncoding.INSTANCE);
+                }
+                try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
+                    cs.beginText();
+                    cs.setFont(font, 12);
+                    cs.newLineAtOffset(72, 700);
+                    cs.showText("keep me");
+                    cs.endText();
+                }
+                out = RedactionPipeline.finalize(doc, new LinkedHashSet<>(Set.of("SECRET")), List.of());
+            }
+            try (PDDocument reopened = Loader.loadPDF(out)) {
+                assertTrue(
+                        pageHasImage(reopened.getPage(0)),
+                        "native unavailable on an unreliable-font doc must fail closed -> rasterise");
+            }
+        } finally {
+            RedactionPipeline.setJpdfiumAvailableForTest(true);
+        }
+    }
+
+    @Test
+    @DisplayName("verify gate distrusts a subset-embedded font's /ToUnicode (must-fix-4)")
+    void gateRunsForSubsetFontEvenWithToUnicode() throws Exception {
+        byte[] bytes;
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage(PDRectangle.A4);
+            doc.addPage(page);
+            PDFont font;
+            try (var ttf = PDDocument.class.getResourceAsStream(LIBERATION)) {
+                font = PDType0Font.load(doc, ttf, true); // Type0 -> /ToUnicode present
+            }
+            try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
+                cs.beginText();
+                cs.setFont(font, 12);
+                cs.newLineAtOffset(72, 700);
+                cs.showText("subset text");
+                cs.endText();
+            }
+            // Force the subset tag so the test is deterministic regardless of save-time subsetting.
+            String tagged = "ABCDEF+" + font.getName();
+            font.getCOSObject().setName(COSName.BASE_FONT, tagged);
+            if (font.getFontDescriptor() != null) {
+                font.getFontDescriptor().getCOSObject().setName(COSName.FONT_NAME, tagged);
+            }
+            ByteArrayOutputStream b = new ByteArrayOutputStream();
+            doc.save(b);
+            bytes = b.toByteArray();
+        }
+        try (PDDocument reopened = Loader.loadPDF(bytes)) {
+            assertTrue(
+                    RedactionPipeline.documentHasUnreliableFont(reopened),
+                    "a subset-embedded font's /ToUnicode must not be trusted (must-fix-4)");
         }
     }
 

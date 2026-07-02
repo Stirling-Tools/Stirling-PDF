@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -93,8 +94,7 @@ class RedactExecuteService {
         try {
             document = pdfDocumentFactory.load(request.getFileInput());
 
-            // Single-pass text scan: collect all text-based targets so we run the PDF
-            // stripper only once across the entire execute() call rather than once per target.
+            // Single-pass text scan: collect all text-based targets so we run the PDF stripper only once across the entire execute() call rather than once per target.
             Map<Integer, List<PDFText>> foundTexts =
                     hasTextOps ? collectTextMatches(document, request) : new HashMap<>();
 
@@ -104,13 +104,13 @@ class RedactExecuteService {
                     totalMatches,
                     foundTexts.size());
 
-            // Text removal (content-stream rewriting) — skipped in overlay-only mode.
+            // Text removal (content-stream rewriting) - skipped in overlay-only mode.
             boolean needsOverlayOnly = overlayOnly;
             if (hasTextOps && !foundTexts.isEmpty() && !overlayOnly) {
                 needsOverlayOnly = applyTextRemoval(document, request);
             } else if (overlayOnly) {
                 log.info(
-                        "[redact/execute] overlay-only mode requested — skipping content-stream rewriting");
+                        "[redact/execute] overlay-only mode requested - skipping content-stream rewriting");
             }
 
             // Reload fresh document on fallback so we overlay onto clean content.
@@ -131,12 +131,14 @@ class RedactExecuteService {
                 applyPageWipe(document, wipePages, style);
             }
 
+            // Range + image-box redactions are geometric overlays.
+            Set<Integer> geometricRasterPages = new HashSet<>();
             for (TextRange range : ranges) {
-                applyRangeRedaction(document, range, style, layoutCache);
+                geometricRasterPages.addAll(applyRangeRedaction(document, range, style, layoutCache));
             }
 
             for (ImageBox box : imageBoxes) {
-                applyImageBoxRedaction(document, box, style);
+                geometricRasterPages.addAll(applyImageBoxRedaction(document, box, style));
             }
 
             if (request.getRedactImagePages() != null) {
@@ -166,7 +168,8 @@ class RedactExecuteService {
                     convertToImage,
                     !needsOverlayOnly,
                     finalizeTargets,
-                    finalizePatterns);
+                    finalizePatterns,
+                    geometricRasterPages);
 
         } catch (Exception e) {
             log.error("Execute redaction failed: {}", e.getMessage(), e);
@@ -182,14 +185,9 @@ class RedactExecuteService {
         }
     }
 
-    // -----------------------------------------------------------------------
     // Single-pass text scan (one stripper pass per execute() call)
-    // -----------------------------------------------------------------------
 
-    /**
-     * Runs a single PDF text-stripper pass over all text-based targets and returns the merged hit
-     * map.
-     */
+    /** Runs a single PDF text-stripper pass over all text-based targets and returns the merged hit map. */
     private Map<Integer, List<PDFText>> collectTextMatches(
             PDDocument document, RedactExecuteRequest request) {
         Map<Integer, List<PDFText>> found = new HashMap<>();
@@ -217,14 +215,9 @@ class RedactExecuteService {
         return found;
     }
 
-    // -----------------------------------------------------------------------
     // Text removal (content-stream rewriting)
-    // -----------------------------------------------------------------------
 
-    /**
-     * Attempts content-stream text removal for all text/regex targets. Returns {@code true} if the
-     * document fell back to overlay-only mode.
-     */
+    /** Attempts content-stream text removal for all text/regex targets. Returns {@code true} if the document fell back to overlay-only mode. */
     private boolean applyTextRemoval(PDDocument document, RedactExecuteRequest request) {
         try {
             boolean fallback = false;
@@ -253,7 +246,7 @@ class RedactExecuteService {
 
             if (fallback) {
                 log.warn(
-                        "[redact/execute] font compatibility issue — falling back to overlay-only");
+                        "[redact/execute] font compatibility issue - falling back to overlay-only");
             } else {
                 log.info("[redact/execute] content-stream text removal applied successfully");
             }
@@ -266,9 +259,7 @@ class RedactExecuteService {
         }
     }
 
-    // -----------------------------------------------------------------------
     // Per-operation dispatch methods
-    // -----------------------------------------------------------------------
 
     private void applyPageWipe(PDDocument document, List<Integer> pageNumbers, RedactStyle style)
             throws IOException {
@@ -324,7 +315,8 @@ class RedactExecuteService {
         }
     }
 
-    private void applyRangeRedaction(
+    /** @return 0-based pages covered by the range overlay; those pages must be rasterised. */
+    private Set<Integer> applyRangeRedaction(
             PDDocument document,
             TextRange range,
             RedactStyle style,
@@ -342,6 +334,11 @@ class RedactExecuteService {
                         style.getPadding(),
                         ManualRedactionService.decodeOrDefault(style.getColor()),
                         false);
+                Set<Integer> pages = new HashSet<>();
+                for (PDFText block : blocks) {
+                    pages.add(block.getPageIndex());
+                }
+                return pages;
             } else {
                 log.warn(
                         "[redact/execute] range not found: start='{}' end='{}'",
@@ -351,9 +348,11 @@ class RedactExecuteService {
         } catch (Exception e) {
             log.warn("[redact/execute] range redaction failed: {}", e.getMessage());
         }
+        return Collections.emptySet();
     }
 
-    private void applyImageBoxRedaction(PDDocument document, ImageBox box, RedactStyle style)
+    /** @return 0-based page covered by the image-box overlay; that page must be rasterised. */
+    private Set<Integer> applyImageBoxRedaction(PDDocument document, ImageBox box, RedactStyle style)
             throws IOException {
         List<float[]> boxes =
                 List.of(
@@ -363,6 +362,7 @@ class RedactExecuteService {
         log.info("[redact/execute] image box overlay on page {}", box.pageIndex());
         Color boxColor = ManualRedactionService.decodeOrDefault(style.getColor());
         manualRedactionService.redactImageBoxes(document, boxes, boxColor);
+        return Set.of(box.pageIndex());
     }
 
     private void applyAllImagesRedaction(
@@ -406,18 +406,9 @@ class RedactExecuteService {
         }
     }
 
-    // -----------------------------------------------------------------------
     // Range collection helpers
-    // -----------------------------------------------------------------------
 
-    /**
-     * Locates {@code startStr} in the document and returns {@link PDFText} blocks for every text
-     * line and image from that point up to (but NOT including) the line where {@code endStr}
-     * begins. If {@code endStr} is blank, redacts from {@code startStr} to the end of the document.
-     *
-     * <p>Multi-column pages follow reading order: down the start column, jump to the top of the
-     * next column, continue to the end anchor. Single-column pages reduce to a plain Y-band check.
-     */
+    /** Locates {@code startStr} in the document and returns {@link PDFText} blocks for every text line and image from that point up to (but NOT including) the line where {@code endStr} begins. If {@code endStr} is blank, redacts from {@code startStr} to the end of the document. <p>Multi-column pages follow reading order: down the start column, jump to the top of the next column, continue to the end anchor. Single-column pages reduce to a plain Y-band check. */
     List<PDFText> collectRangeBlocks(
             PDDocument document,
             String startStr,
@@ -478,7 +469,7 @@ class RedactExecuteService {
                 }
                 if (end == null) {
                     log.warn(
-                            "[redact/execute] no end anchor after start at (page={}, col={}, y={}) — skipping",
+                            "[redact/execute] no end anchor after start at (page={}, col={}, y={}) - skipping",
                             start.page + 1,
                             start.col,
                             start.y);
@@ -499,19 +490,14 @@ class RedactExecuteService {
         }
 
         log.info(
-                "[redact/execute] range '{}'→'{}': {} total blocks",
+                "[redact/execute] range '{}'->'{}': {} total blocks",
                 startStr,
                 openEnded ? "<end of document>" : endStr,
                 blocks.size());
         return blocks;
     }
 
-    /**
-     * Collects all redactable content (text line segments and images) between two anchor positions.
-     *
-     * <p>Line boxes are cached per page number in {@code lineBoxCache} and reused across range
-     * iterations within one execute() call, avoiding redundant {@link AllTextLineExtractor} passes.
-     */
+    /** Collects all redactable content (text line segments and images) between two anchor positions. <p>Line boxes are cached per page number in {@code lineBoxCache} and reused across range iterations within one execute() call, avoiding redundant {@link AllTextLineExtractor} passes. */
     private void collectBlocksForRange(
             PDDocument document,
             PDPageTree allPages,
@@ -531,7 +517,6 @@ class RedactExecuteService {
         float endY = openEnded ? Float.POSITIVE_INFINITY : end.text.getY2();
 
         // Line-box cache: populated lazily per page, reused across range iterations.
-        // Cannot use computeIfAbsent because AllTextLineExtractor's constructor throws IOException.
         Map<Integer, List<float[]>> lineBoxCache = new HashMap<>();
 
         for (int pageIdx = startPage; pageIdx <= endPage; pageIdx++) {
@@ -601,10 +586,7 @@ class RedactExecuteService {
         blocks.add(new PDFText(pageIdx, x1, yTop, x2, yBottom, ""));
     }
 
-    /**
-     * Reading-order predicate: true when (col, yBottom) on page {@code pageIdx} sits between the
-     * start anchor (inclusive) and end anchor (inclusive).
-     */
+    /** Reading-order predicate: true when (col, yBottom) on page {@code pageIdx} sits between the start anchor (inclusive) and end anchor (inclusive). */
     static boolean inColumnZone(
             int pageIdx,
             int col,
@@ -697,16 +679,13 @@ class RedactExecuteService {
             if (i > 0) sb.append(", ");
             sb.append(String.format("(p=%d,c=%d,y=%.1f)", a.page + 1, a.col, a.y));
         }
-        if (anchors.size() > max) sb.append(", …");
+        if (anchors.size() > max) sb.append(", ...");
         return sb.toString();
     }
 
     private record Anchor(int page, int col, float y, PDFText text) {}
 
-    /**
-     * Tries progressively more permissive variants: raw (regex then literal), letter-spacing
-     * collapsed, then a punctuation-tolerant regex over alphanumeric runs.
-     */
+    /** Tries progressively more permissive variants: raw (regex then literal), letter-spacing collapsed, then a punctuation-tolerant regex over alphanumeric runs. */
     private Map<Integer, List<PDFText>> findWithFallbacks(PDDocument document, String raw) {
         String trimmed = raw.trim();
         String collapsed = collapseLetterSpacing(trimmed);
@@ -723,9 +702,7 @@ class RedactExecuteService {
             candidates.add(new Candidate(tolerant, true));
         }
 
-        // If the anchor spans multiple lines (model provided entire paragraph instead of a short
-        // phrase), try just the first non-empty line — it's usually sufficient to locate the
-        // position and avoids mismatches from mid-paragraph text extraction artifacts.
+        // Long multi-line anchors mismatch on extraction artifacts, so try just the first non-empty line.
         if (trimmed.contains("\n")) {
             String firstLine =
                     Arrays.stream(trimmed.split("\n"))
@@ -753,7 +730,7 @@ class RedactExecuteService {
             if (!m.isEmpty()) {
                 if (!c.pattern.equals(trimmed)) {
                     log.info(
-                            "[redact/execute] range boundary matched via fallback: '{}' → '{}'",
+                            "[redact/execute] range boundary matched via fallback: '{}' -> '{}'",
                             trimmed,
                             c.pattern);
                 }
@@ -765,14 +742,9 @@ class RedactExecuteService {
 
     private record Candidate(String pattern, boolean useRegex) {}
 
-    // -----------------------------------------------------------------------
     // Static helpers
-    // -----------------------------------------------------------------------
 
-    /**
-     * Joins {@code raw}'s alphanumeric runs with {@code \W*} so anchors match across punctuation
-     * drift. Returns {@code null} when fewer than two tokens exist.
-     */
+    /** Joins {@code raw}'s alphanumeric runs with {@code \W*} so anchors match across punctuation drift. Returns {@code null} when fewer than two tokens exist. */
     private static String punctuationTolerantRegex(String raw) {
         List<String> tokens = new ArrayList<>();
         StringBuilder current = new StringBuilder();
@@ -795,13 +767,7 @@ class RedactExecuteService {
         return out.toString();
     }
 
-    /**
-     * Collapses letter-spaced text produced by position-sorted text extraction.
-     *
-     * <p>When a PDF text stripper runs with {@code setSortByPosition(true)}, letter-spaced headings
-     * come out as {@code "T a b l e o f c o n t e n t s"}. This method converts the spaced form
-     * back to words.
-     */
+    /** Collapses letter-spaced text produced by position-sorted text extraction. <p>When a PDF text stripper runs with {@code setSortByPosition(true)}, letter-spaced headings come out as {@code "T a b l e o f c o n t e n t s"}. This method converts the spaced form back to words. */
     private static String collapseLetterSpacing(String text) {
         String[] tokens = text.split(" ", -1);
         StringBuilder result = new StringBuilder();
@@ -847,10 +813,7 @@ class RedactExecuteService {
                 .toArray(String[]::new);
     }
 
-    /**
-     * Converts 1-based page numbers from the request to the 0-based indices used internally.
-     * Out-of-range and non-positive values are silently dropped.
-     */
+    /** Converts 1-based page numbers from the request to the 0-based indices used internally. Out-of-range and non-positive values are silently dropped. */
     private static List<Integer> toZeroBasedIndices(List<Integer> oneBasedPageNumbers) {
         if (oneBasedPageNumbers == null || oneBasedPageNumbers.isEmpty()) {
             return new ArrayList<>();

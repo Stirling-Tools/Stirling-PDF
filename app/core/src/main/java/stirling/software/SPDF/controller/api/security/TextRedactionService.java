@@ -49,9 +49,7 @@ class TextRedactionService {
     private static final Set<String> TEXT_SHOWING_OPERATORS = Set.of("Tj", "TJ", "'", "\"");
     private static final COSString EMPTY_COS_STRING = new COSString("");
 
-    // -----------------------------------------------------------------------
     // Public API
-    // -----------------------------------------------------------------------
 
     Map<Integer, List<PDFText>> findTextToRedact(
             PDDocument document, String[] listOfText, boolean useRegex, boolean wholeWordSearch) {
@@ -135,9 +133,7 @@ class TextRedactionService {
         }
     }
 
-    // -----------------------------------------------------------------------
     // Content stream manipulation
-    // -----------------------------------------------------------------------
 
     List<Object> createTokensWithoutTargetText(
             PDDocument document,
@@ -271,9 +267,7 @@ class TextRedactionService {
         }
     }
 
-    // -----------------------------------------------------------------------
     // Placeholder creation
-    // -----------------------------------------------------------------------
 
     String createPlaceholderWithFont(String originalWord, PDFont font) {
         if (originalWord == null || originalWord.isEmpty()) {
@@ -410,9 +404,7 @@ class TextRedactionService {
         }
     }
 
-    // -----------------------------------------------------------------------
     // Width calculation
-    // -----------------------------------------------------------------------
 
     private float safeGetStringWidth(PDFont font, String text) {
         if (font == null || text == null || text.isEmpty()) {
@@ -601,9 +593,7 @@ class TextRedactionService {
         }
     }
 
-    // -----------------------------------------------------------------------
     // Token and segment operations
-    // -----------------------------------------------------------------------
 
     private void processPageXObjects(
             PDDocument document,
@@ -706,8 +696,7 @@ class TextRedactionService {
     private void writeRedactedContentToXObject(
             PDDocument document, PDFormXObject formXObject, List<Object> redactedTokens)
             throws IOException {
-        // A form XObject's content IS its own stream body; overwrite it in place. Attaching a
-        // /Contents key would be a no-op (its content is not read from /Contents).
+        // A form XObject's content IS its own stream body; overwrite it in place.
         PDStream formStream = new PDStream(formXObject.getCOSObject());
         try (var out = formStream.createOutputStream(COSName.FLATE_DECODE)) {
             ContentStreamWriter writer = new ContentStreamWriter(out);
@@ -1165,9 +1154,7 @@ class TextRedactionService {
         };
     }
 
-    // -----------------------------------------------------------------------
     // Inner data classes
-    // -----------------------------------------------------------------------
 
     @Data
     private static class GraphicsState {

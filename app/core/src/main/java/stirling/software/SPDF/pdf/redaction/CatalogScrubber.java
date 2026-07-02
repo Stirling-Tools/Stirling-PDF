@@ -2,6 +2,7 @@ package stirling.software.SPDF.pdf.redaction;
 
 import java.util.Calendar;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -32,6 +33,9 @@ import lombok.extern.slf4j.Slf4j;
 /** Removes/rewrites every catalog carrier that could leak redacted text. */
 @Slf4j
 public final class CatalogScrubber {
+
+    // A literal shorter than this won't delete a whole carrier (JS/XFA/action/embedded file).
+    private static final int MIN_CARRIER_DROP_LITERAL = 3;
 
     private CatalogScrubber() {}
 
@@ -78,10 +82,24 @@ public final class CatalogScrubber {
         if (value == null) {
             return;
         }
-        if (containsTarget(value, targets, patterns, new HashSet<>())) {
+        if (containsTarget(value, carrierDropLiterals(targets), patterns, new HashSet<>())) {
             log.debug("Removing catalog {} due to target match", key.getName());
             parent.removeItem(key);
         }
+    }
+
+    /** Literals specific enough to justify DELETING an entire carrier (JS / XFA / action / embedded file). Sub-threshold literals (a single digit, a 2-char run) would nuke unrelated carriers, so they are excluded from whole-carrier drops - they are still removed in-string by stripMatches where the carrier is a plain string. */
+    private static Set<String> carrierDropLiterals(Set<String> targets) {
+        if (targets == null) {
+            return java.util.Collections.emptySet();
+        }
+        Set<String> specific = new LinkedHashSet<>();
+        for (String t : targets) {
+            if (t != null && t.trim().length() >= MIN_CARRIER_DROP_LITERAL) {
+                specific.add(t);
+            }
+        }
+        return specific;
     }
 
     private static boolean containsTarget(
@@ -112,7 +130,7 @@ public final class CatalogScrubber {
                 if (matches(text, targets, patterns)) {
                     return true;
                 }
-                // Fail closed: content past the 2 MiB cap is unproven, so treat as a match (F7c).
+                // Fail closed: content past the 2 MiB cap is unproven, so treat as a match.
                 return total >= buf.length && is.read() >= 0;
             } catch (Exception e) {
                 log.debug("Failed to scan stream for targets: {}", e.getMessage());
@@ -153,6 +171,15 @@ public final class CatalogScrubber {
             info.setCreator(null);
             info.setProducer(null);
             info.setModificationDate(Calendar.getInstance());
+            // Drop any non-standard custom /Info string entries (e.g. a client-added "CaseName") that the typed setters above don't cover.
+            COSDictionary infoDict = info.getCOSObject();
+            if (infoDict != null) {
+                for (COSName key : new HashSet<>(infoDict.keySet())) {
+                    if (infoDict.getDictionaryObject(key) instanceof COSString) {
+                        infoDict.removeItem(key);
+                    }
+                }
+            }
         }
         PDDocumentCatalog catalog = document.getDocumentCatalog();
         if (catalog != null) {
@@ -233,7 +260,8 @@ public final class CatalogScrubber {
             if (xfaBase == null) {
                 return;
             }
-            boolean hit = containsTarget(xfaBase, targets, patterns, new HashSet<>());
+            boolean hit =
+                    containsTarget(xfaBase, carrierDropLiterals(targets), patterns, new HashSet<>());
             if (hit) {
                 // Simplest safe move: strip the XFA entry entirely.
                 log.warn(
@@ -253,13 +281,13 @@ public final class CatalogScrubber {
         }
         try {
             COSDictionary dict = field.getCOSObject();
-            // Only touch fields whose own values actually contain a target (F7a): clearing /AP
-            // document-wide blanks unrelated fields in viewers that ignore /NeedAppearances.
+            // Only touch fields whose own values actually contain a target: clearing /AP document-wide blanks unrelated fields in viewers that ignore /NeedAppearances.
             boolean matched =
                     dictValueMatches(dict, COSName.V, targets, patterns)
                             || dictValueMatches(dict, COSName.DV, targets, patterns)
                             || dictValueMatches(dict, COSName.getPDFName("RV"), targets, patterns)
                             || dictValueMatches(dict, COSName.getPDFName("TU"), targets, patterns)
+                            || buttonCaptionMatches(dict, targets, patterns)
                             || fieldValueMatches(field, targets, patterns);
             if (!matched) {
                 return;
@@ -279,9 +307,10 @@ public final class CatalogScrubber {
             } catch (Exception e) {
                 log.debug("Failed to rewrite field value via setValue: {}", e.getMessage());
             }
-            // Button on-states (/Btn) cannot be rebuilt from /V by /NeedAppearances, so leave their
-            // /AP intact and rely on value scrubbing; drop /AP only for matched text fields.
             if (!isButtonField(dict)) {
+                clearWidgetAppearances(dict);
+            } else if (scrubButtonCaption(dict, targets, patterns)) {
+                // A button caption (/MK /CA,/RC,/AC) that carried the target renders via /AP that /NeedAppearances can't rebuild, so drop the stale /AP too.
                 clearWidgetAppearances(dict);
             }
         } catch (Exception e) {
@@ -289,12 +318,63 @@ public final class CatalogScrubber {
         }
     }
 
+    private static final String[] MK_CAPTION_KEYS = {"CA", "RC", "AC"};
+
+    /** True if a button widget's /MK caption (down/rollover/alternate) contains a target. */
+    private static boolean buttonCaptionMatches(
+            COSDictionary dict, Set<String> targets, List<Pattern> patterns) {
+        for (COSDictionary mk : mkDicts(dict)) {
+            for (String k : MK_CAPTION_KEYS) {
+                if (dictValueMatches(mk, COSName.getPDFName(k), targets, patterns)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /** Strip target substrings from a button widget's /MK captions; true if any matched. */
+    private static boolean scrubButtonCaption(
+            COSDictionary dict, Set<String> targets, List<Pattern> patterns) {
+        boolean hit = false;
+        for (COSDictionary mk : mkDicts(dict)) {
+            for (String k : MK_CAPTION_KEYS) {
+                COSName key = COSName.getPDFName(k);
+                if (dictValueMatches(mk, key, targets, patterns)) {
+                    hit = true;
+                    scrubDictStrings(mk, key, targets, patterns);
+                }
+            }
+        }
+        return hit;
+    }
+
+    /** The /MK appearance-characteristics dicts on a field and any widget kids. */
+    private static List<COSDictionary> mkDicts(COSDictionary dict) {
+        List<COSDictionary> out = new java.util.ArrayList<>();
+        if (dict.getDictionaryObject(COSName.getPDFName("MK")) instanceof COSDictionary mk) {
+            out.add(mk);
+        }
+        if (dict.getDictionaryObject(COSName.KIDS) instanceof COSArray kids) {
+            for (int i = 0; i < kids.size(); i++) {
+                if (kids.getObject(i) instanceof COSDictionary kid
+                        && kid.getDictionaryObject(COSName.getPDFName("MK"))
+                                instanceof COSDictionary mk) {
+                    out.add(mk);
+                }
+            }
+        }
+        return out;
+    }
+
     private static boolean isButtonField(COSDictionary dict) {
-        COSName ft = (COSName) dict.getDictionaryObject(COSName.FT);
+        COSBase ftBase = dict.getDictionaryObject(COSName.FT);
+        COSName ft = ftBase instanceof COSName n ? n : null;
         if (ft == null) {
             COSBase parent = dict.getDictionaryObject(COSName.PARENT);
-            if (parent instanceof COSDictionary p) {
-                ft = (COSName) p.getDictionaryObject(COSName.FT);
+            if (parent instanceof COSDictionary p
+                    && p.getDictionaryObject(COSName.FT) instanceof COSName pn) {
+                ft = pn;
             }
         }
         return COSName.getPDFName("Btn").equals(ft);
@@ -350,6 +430,9 @@ public final class CatalogScrubber {
             PDDocument document, Set<String> targets, List<Pattern> patterns) {
         try {
             for (PDPage page : document.getPages()) {
+                // Page-level additional actions (/AA - open/close JS) can carry the target too.
+                scrubActionIfMatching(
+                        page.getCOSObject(), COSName.getPDFName("AA"), targets, patterns);
                 List<PDAnnotation> annotations;
                 try {
                     annotations = page.getAnnotations();
@@ -387,6 +470,9 @@ public final class CatalogScrubber {
             scrubDictStrings(dict, COSName.getPDFName("Subj"), targets, patterns);
             scrubDictStrings(dict, COSName.getPDFName("T"), targets, patterns);
             scrubDictStrings(dict, COSName.getPDFName("NM"), targets, patterns);
+            // Link/widget annotation actions can encode the target in a /URI or JS body.
+            scrubActionIfMatching(dict, COSName.A, targets, patterns);
+            scrubActionIfMatching(dict, COSName.getPDFName("AA"), targets, patterns);
         } catch (Exception e) {
             log.debug("Failed to scrub annotation: {}", e.getMessage());
         }
@@ -476,19 +562,21 @@ public final class CatalogScrubber {
         if (dict == null) {
             return;
         }
-        COSArray namesArray = (COSArray) dict.getDictionaryObject(COSName.NAMES);
+        // Guarded casts: a malformed /Names or /Kids must skip that carrier, not throw a swallowed ClassCastException.
+        COSArray namesArray =
+                dict.getDictionaryObject(COSName.NAMES) instanceof COSArray a ? a : null;
         if (namesArray != null) {
             for (int i = namesArray.size() - 2; i >= 0; i -= 2) {
                 COSBase keyBase = namesArray.getObject(i);
                 String key = keyBase instanceof COSString s ? s.getString() : null;
-                // Drop the pair when the KEY or the VALUE (JS /JS stream, embedded-file bytes)
-                // contains a target - not just the key (F7b).
-                boolean keyHit = key != null && matches(key, targets, patterns);
+                // Drop the pair when the KEY or the VALUE (JS /JS stream, embedded-file bytes) contains a target - not just the key.
+                Set<String> dropLiterals = carrierDropLiterals(targets);
+                boolean keyHit = key != null && matches(key, dropLiterals, patterns);
                 boolean valueHit =
                         i + 1 < namesArray.size()
                                 && containsTarget(
                                         namesArray.getObject(i + 1),
-                                        targets,
+                                        dropLiterals,
                                         patterns,
                                         new HashSet<>());
                 if (keyHit || valueHit) {
@@ -497,7 +585,7 @@ public final class CatalogScrubber {
                 }
             }
         }
-        COSArray kids = (COSArray) dict.getDictionaryObject(COSName.KIDS);
+        COSArray kids = dict.getDictionaryObject(COSName.KIDS) instanceof COSArray a ? a : null;
         if (kids != null) {
             for (int i = 0; i < kids.size(); i++) {
                 COSBase kid = kids.getObject(i);
@@ -553,10 +641,9 @@ public final class CatalogScrubber {
                 try {
                     // Force case-insensitive matching for catalog carriers regardless
                     Pattern ci = withCaseInsensitive(pattern);
-                    result = ci.matcher(result).replaceAll("");
+                    result = ci.matcher(DeadlineCharSequence.of(result)).replaceAll("");
                 } catch (RuntimeException | StackOverflowError e) {
-                    // Fail closed (X2): a throwing regex means we cannot prove the carrier clean,
-                    // so drop the whole string rather than leaving it intact.
+                    // Fail closed: a throwing regex means we cannot prove the carrier clean, so drop the whole string rather than leaving it intact.
                     log.warn("Pattern replace failed for {}; dropping carrier text", pattern);
                     return "";
                 }
@@ -582,12 +669,13 @@ public final class CatalogScrubber {
         if (patterns != null) {
             for (Pattern pattern : patterns) {
                 try {
-                    if (withCaseInsensitive(pattern).matcher(source).find()) {
+                    if (withCaseInsensitive(pattern)
+                            .matcher(DeadlineCharSequence.of(source))
+                            .find()) {
                         return true;
                     }
                 } catch (RuntimeException | StackOverflowError e) {
-                    // Fail closed (X2): a throwing regex counts as a match so the carrier is
-                    // scrubbed.
+                    // Fail closed: a throwing regex counts as a match so the carrier is scrubbed.
                     log.warn("Pattern match failed for {}; treating carrier as a match", pattern);
                     return true;
                 }

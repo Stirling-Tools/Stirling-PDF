@@ -191,8 +191,7 @@ public class RedactController {
                     (useRegex || wholeWordSearchBool) ? Collections.emptySet() : literalTargets;
 
             if (allFoundTextsByPage.isEmpty()) {
-                // No page hit, but the target may live in a bookmark/annotation/form/JS carrier, so
-                // still run the scrub + verify path rather than just wiping metadata (F5).
+                // No page hit, but the target may live in a bookmark/annotation/form/JS carrier, so still run the scrub + verify path rather than just wiping metadata.
                 log.info("No page text matched; scrubbing catalog carriers and verifying");
                 TempFile finalized =
                         manualRedactionService.finalizeRedaction(
@@ -266,11 +265,10 @@ public class RedactController {
             throw new RuntimeException("Failed to perform PDF redaction: " + e.getMessage(), e);
 
         } finally {
+            // Both are distinct PDDocument handles.
             if (document != null) {
                 try {
-                    if (fallbackDocument == null) {
-                        document.close();
-                    }
+                    document.close();
                 } catch (IOException e) {
                     log.warn("Failed to close main document: {}", e.getMessage());
                 }
