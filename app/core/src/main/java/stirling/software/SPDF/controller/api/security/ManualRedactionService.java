@@ -203,7 +203,8 @@ class ManualRedactionService {
                 }
             }
 
-            // Remove annotations whose bounding rect overlaps a redacted block, to prevent users from hovering over redacted URLs and seeing the underlying destination.
+            // Remove annotations whose bounding rect overlaps a redacted block, to prevent users
+            // from hovering over redacted URLs and seeing the underlying destination.
             try {
                 float pageH = page.getBBox().getHeight();
                 List<PDAnnotation> kept = new ArrayList<>();
@@ -266,7 +267,8 @@ class ManualRedactionService {
                 cs.saveGraphicsState();
                 cs.setNonStrokingColor(color);
                 for (float[] box : entry.getValue()) {
-                    // Box coords are CropBox-relative; offset by the CropBox origin (cropbox-overlay).
+                    // Box coords are CropBox-relative; offset by the CropBox origin
+                    // (cropbox-overlay).
                     float x1 = box[1], y1 = box[2], x2 = box[3], y2 = box[4];
                     cs.addRect(cropX + x1, cropY + y1, x2 - x1, y2 - y1);
                 }
@@ -278,7 +280,10 @@ class ManualRedactionService {
 
     // Page element extraction
 
-    /** Returns bounding boxes for every text line and image on {@code page} in PDF user-space coordinates: {@code [x1, y1, x2, y2]} (origin bottom-left, Y increases upward). */
+    /**
+     * Returns bounding boxes for every text line and image on {@code page} in PDF user-space
+     * coordinates: {@code [x1, y1, x2, y2]} (origin bottom-left, Y increases upward).
+     */
     List<float[]> extractPageElementBoxes(PDDocument document, PDPage page, int pageIndex)
             throws IOException {
         List<float[]> boxes = new ArrayList<>();
@@ -321,7 +326,11 @@ class ManualRedactionService {
                 Collections.emptySet());
     }
 
-    /** @param geometricRasterPages 0-based pages carrying a range / image-box redaction, whose covered content (text under an overlay, or an image) is not text-removable and so must be rasterised to guarantee removal. */
+    /**
+     * @param geometricRasterPages 0-based pages carrying a range / image-box redaction, whose
+     *     covered content (text under an overlay, or an image) is not text-removable and so must be
+     *     rasterised to guarantee removal.
+     */
     TempFile finalizeRedaction(
             PDDocument document,
             Map<Integer, List<PDFText>> allFoundTextsByPage,

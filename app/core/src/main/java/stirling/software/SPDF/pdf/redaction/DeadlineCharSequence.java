@@ -1,6 +1,11 @@
 package stirling.software.SPDF.pdf.redaction;
 
-/** Wraps a match subject so a runaway (catastrophic-backtracking) regex aborts instead of hanging the request thread: every {@link #charAt(int)} the matcher performs checks a wall-clock deadline and throws once it is exceeded. The thrown {@link RegexTimeoutException} is a {@link RuntimeException}, so the redaction match sites' existing fail-closed catches handle it. */
+/**
+ * Wraps a match subject so a runaway (catastrophic-backtracking) regex aborts instead of hanging
+ * the request thread: every {@link #charAt(int)} the matcher performs checks a wall-clock deadline
+ * and throws once it is exceeded. The thrown {@link RegexTimeoutException} is a {@link
+ * RuntimeException}, so the redaction match sites' existing fail-closed catches handle it.
+ */
 final class DeadlineCharSequence implements CharSequence {
 
     /** Per-match wall-clock budget. A legitimate whole-document match finishes far inside this. */

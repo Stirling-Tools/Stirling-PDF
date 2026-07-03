@@ -59,10 +59,12 @@ public final class RedactionPipeline {
     private static final Set<String> TEXT_SHOWING_OPERATORS = Set.of("Tj", "TJ", "'", "\"");
     private static final int MAX_XOBJECT_DEPTH = 10;
 
-    // Latched false when the native PDFium binding can't load, so the host falls back to the PDFBox pass.
+    // Latched false when the native PDFium binding can't load, so the host falls back to the PDFBox
+    // pass.
     private static volatile boolean jpdfiumAvailable = true;
 
-    // Skip the additive native pass above this size to bound off-heap copy + native runtime on adversarial inputs; the PDFBox glyph-blind pass still verifies.
+    // Skip the additive native pass above this size to bound off-heap copy + native runtime on
+    // adversarial inputs; the PDFBox glyph-blind pass still verifies.
     private static final long MAX_JPDFIUM_VERIFY_BYTES = 100L * 1024 * 1024;
 
     private RedactionPipeline() {}
@@ -91,7 +93,8 @@ public final class RedactionPipeline {
             PDPage page = document.getPage(pageIndex);
             capturedStrings.addAll(captureTextInRects(page, rects));
 
-            // Rotation / non-zero CropBox origin break the coordinate flip, and text-bearing forms or in-rect images defeat page-stream ordinal removal.
+            // Rotation / non-zero CropBox origin break the coordinate flip, and text-bearing forms
+            // or in-rect images defeat page-stream ordinal removal.
             boolean surgical =
                     isSurgicallySafe(page) && removeTokensIntersectingRects(document, page, rects);
             if (!surgical) {
@@ -264,7 +267,8 @@ public final class RedactionPipeline {
             Set<String> capturedTargets)
             throws IOException {
 
-        // Text captured under the rects may also live in a bookmark / form value / annotation / JS carrier.
+        // Text captured under the rects may also live in a bookmark / form value / annotation / JS
+        // carrier.
         Set<String> carrierTargets =
                 capturedTargets == null ? Collections.emptySet() : capturedTargets;
         CatalogScrubber.scrub(document, carrierTargets, Collections.emptyList());
@@ -293,7 +297,11 @@ public final class RedactionPipeline {
         }
     }
 
-    /** Rasterise the given pages of already-finalized bytes to guarantee removal of geometric (range / image-box) redactions whose covered content - text under an overlay, or an image - is not removed by content-stream text redaction. Scrubs carriers and re-saves. */
+    /**
+     * Rasterise the given pages of already-finalized bytes to guarantee removal of geometric (range
+     * / image-box) redactions whose covered content - text under an overlay, or an image - is not
+     * removed by content-stream text redaction. Scrubs carriers and re-saves.
+     */
     public static byte[] rasteriseSpecificPages(
             byte[] bytes, Set<Integer> pages, Set<String> literalTargets, List<Pattern> patterns)
             throws IOException {
@@ -745,7 +753,8 @@ public final class RedactionPipeline {
                     continue;
                 }
                 PDPage page = source.getPage(i);
-                // PDFRenderer renders the CropBox region, so draw the raster over the CropBox (not the MediaBox) or a CropBox != MediaBox page is stretched/offset.
+                // PDFRenderer renders the CropBox region, so draw the raster over the CropBox (not
+                // the MediaBox) or a CropBox != MediaBox page is stretched/offset.
                 PDRectangle crop = page.getCropBox();
 
                 BufferedImage img = renderer.renderImageWithDPI(i, 150, ImageType.RGB);
@@ -755,7 +764,8 @@ public final class RedactionPipeline {
                         PDImageXObject.createFromByteArray(
                                 source, imgOut.toByteArray(), "redacted-page-" + i);
 
-                // Drop all prior content / resources / annotations / thumbnail; the raster is the page.
+                // Drop all prior content / resources / annotations / thumbnail; the raster is the
+                // page.
                 page.getCOSObject().removeItem(COSName.CONTENTS);
                 page.setResources(new PDResources());
                 page.getCOSObject().removeItem(COSName.ANNOTS);
@@ -857,7 +867,11 @@ public final class RedactionPipeline {
 
     // Content-stream rewriting (rect-driven glyph removal)
 
-    /** Blanks show-text operands whose glyphs fall in a rect. Returns false (surgical removal is unreliable, caller must rasterise) when text-bearing form XObjects skew the operator ordinals or an image sits under a rect - leaving the page stream untouched so the raster is correct. */
+    /**
+     * Blanks show-text operands whose glyphs fall in a rect. Returns false (surgical removal is
+     * unreliable, caller must rasterise) when text-bearing form XObjects skew the operator ordinals
+     * or an image sits under a rect - leaving the page stream untouched so the raster is correct.
+     */
     private static boolean removeTokensIntersectingRects(
             PDDocument document, PDPage page, List<PDRectangle> rects) throws IOException {
 
@@ -915,7 +929,9 @@ public final class RedactionPipeline {
         return true;
     }
 
-    /** True if any image on the page overlaps a redaction rect (would survive under the overlay). */
+    /**
+     * True if any image on the page overlaps a redaction rect (would survive under the overlay).
+     */
     private static boolean imageIntersectsAnyRect(
             PDPage page, int pageIndex, List<PDRectangle> rects) {
         try {
@@ -1032,11 +1048,13 @@ public final class RedactionPipeline {
             throw new RedactionVerificationFailedException(
                     "Failed to reopen redacted PDF for verification", e);
         }
-        // Additive producer-independent pass: native PDFium sees glyphs PDFBox may miss (fonts with no ToUnicode).
+        // Additive producer-independent pass: native PDFium sees glyphs PDFBox may miss (fonts with
+        // no ToUnicode).
         if (needNativePass) {
             String nativeText = extractTextJPDFium(bytes, pageSet);
             if (nativeText == null) {
-                // Required independent pass could not run (native unavailable or doc over the size guard); fail closed.
+                // Required independent pass could not run (native unavailable or doc over the size
+                // guard); fail closed.
                 throw new RedactionVerificationFailedException(
                         "Independent native verification could not run for a document whose fonts "
                                 + "PDFBox cannot reliably extract; cannot confirm removal");
@@ -1045,7 +1063,13 @@ public final class RedactionPipeline {
         }
     }
 
-    /** True if any font (on any page or nested form XObject) is not provably reliable for PDFBox glyph extraction - i.e. it is neither a built-in Standard-14 font nor carries a /ToUnicode map. These are exactly the fonts (CID/Type3/symbolic without ToUnicode) where the PDFBox pass can go blind, so the independent native pass earns its cost. Biased to {@code true} on any inspection failure so the native pass runs whenever reliability is uncertain. */
+    /**
+     * True if any font (on any page or nested form XObject) is not provably reliable for PDFBox
+     * glyph extraction - i.e. it is neither a built-in Standard-14 font nor carries a /ToUnicode
+     * map. These are exactly the fonts (CID/Type3/symbolic without ToUnicode) where the PDFBox pass
+     * can go blind, so the independent native pass earns its cost. Biased to {@code true} on any
+     * inspection failure so the native pass runs whenever reliability is uncertain.
+     */
     static boolean documentHasUnreliableFont(PDDocument document) {
         try {
             Set<COSBase> visited = new HashSet<>();
@@ -1099,7 +1123,12 @@ public final class RedactionPipeline {
         return false;
     }
 
-    /** A subset-embedded font carries a 6-uppercase-letter '+' BaseFont tag (e.g. {@code ABCDEF+}). Its /ToUnicode is custom-built and cannot be trusted for the reliability gate: a partial map silently loses text, and a crafted map can defeat text-based redaction entirely (only convert-to-image fully mitigates that adversarial case). */
+    /**
+     * A subset-embedded font carries a 6-uppercase-letter '+' BaseFont tag (e.g. {@code ABCDEF+}).
+     * Its /ToUnicode is custom-built and cannot be trusted for the reliability gate: a partial map
+     * silently loses text, and a crafted map can defeat text-based redaction entirely (only
+     * convert-to-image fully mitigates that adversarial case).
+     */
     private static boolean isSubsetFont(PDFont font) {
         String name = font.getName();
         if (name == null || name.length() < 8 || name.charAt(6) != '+') {
@@ -1121,7 +1150,8 @@ public final class RedactionPipeline {
             return;
         }
         String normalised = extracted.toLowerCase(Locale.ROOT).replaceAll("\\s+", " ");
-        // De-hyphenated view catches a target split by a soft hyphen (U+00AD) or a line-break hyphen ("-" + space).
+        // De-hyphenated view catches a target split by a soft hyphen (U+00AD) or a line-break
+        // hyphen ("-" + space).
         String dehyphenated = normalised.replace("\u00ad", "").replaceAll("-\\s+", "");
         if (literalTargets != null) {
             for (String target : literalTargets) {
@@ -1178,7 +1208,9 @@ public final class RedactionPipeline {
         return out.toString();
     }
 
-    /** Independent native (PDFium) extraction; null if the binding is unavailable (additive only). */
+    /**
+     * Independent native (PDFium) extraction; null if the binding is unavailable (additive only).
+     */
     private static String extractTextJPDFium(byte[] bytes, Set<Integer> pageIndexes) {
         if (!jpdfiumAvailable || bytes.length > MAX_JPDFIUM_VERIFY_BYTES) {
             return null;
@@ -1232,7 +1264,10 @@ public final class RedactionPipeline {
         }
     }
 
-    /** A native-binding load error latches the pass off process-wide (warn once) so a host without the native stops retrying; a per-document error only skips this one document (debug). */
+    /**
+     * A native-binding load error latches the pass off process-wide (warn once) so a host without
+     * the native stops retrying; a per-document error only skips this one document (debug).
+     */
     private static void onJpdfiumFailure(Throwable e) {
         boolean nativeUnavailable =
                 e instanceof UnsatisfiedLinkError
@@ -1255,10 +1290,12 @@ public final class RedactionPipeline {
             byte[] bytes, Set<String> literalTargets, List<Pattern> patterns) {
         List<String> jpdfiumPages = extractPagesJPDFium(bytes);
         try (PDDocument reopened = org.apache.pdfbox.Loader.loadPDF(bytes)) {
-            // Native pass required but unavailable: PDFBox can't localise the leak, so rasterise every page.
+            // Native pass required but unavailable: PDFBox can't localise the leak, so rasterise
+            // every page.
             if (jpdfiumPages == null && documentHasUnreliableFont(reopened)) {
-                log.warn("Independent native pass unavailable on an unreliable-font document; "
-                        + "rasterising all pages to guarantee removal.");
+                log.warn(
+                        "Independent native pass unavailable on an unreliable-font document; "
+                                + "rasterising all pages to guarantee removal.");
                 return null;
             }
             Set<Integer> leaking = new TreeSet<>();

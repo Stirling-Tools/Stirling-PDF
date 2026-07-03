@@ -753,8 +753,7 @@ class RedactionPipelineTest {
             // Page-level font is reliable (Standard-14); the risky font hides in a form XObject.
             PDResources pageRes = new PDResources();
             pageRes.put(
-                    COSName.getPDFName("PF"),
-                    new PDType1Font(Standard14Fonts.FontName.HELVETICA));
+                    COSName.getPDFName("PF"), new PDType1Font(Standard14Fonts.FontName.HELVETICA));
 
             PDFormXObject form = new PDFormXObject(doc);
             PDResources formRes = new PDResources();
@@ -825,7 +824,8 @@ class RedactionPipelineTest {
     }
 
     @Test
-    @DisplayName("verify fails closed and rasterises when a required native pass can't run (must-fix-3)")
+    @DisplayName(
+            "verify fails closed and rasterises when a required native pass can't run (must-fix-3)")
     void failsClosedWhenNativeUnavailableForUnreliableFont() throws Exception {
         RedactionPipeline.setJpdfiumAvailableForTest(false);
         try {
@@ -845,7 +845,9 @@ class RedactionPipelineTest {
                     cs.showText("keep me");
                     cs.endText();
                 }
-                out = RedactionPipeline.finalize(doc, new LinkedHashSet<>(Set.of("SECRET")), List.of());
+                out =
+                        RedactionPipeline.finalize(
+                                doc, new LinkedHashSet<>(Set.of("SECRET")), List.of());
             }
             try (PDDocument reopened = Loader.loadPDF(out)) {
                 assertTrue(

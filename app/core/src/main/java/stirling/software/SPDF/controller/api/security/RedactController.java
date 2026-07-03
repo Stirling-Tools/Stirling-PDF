@@ -191,7 +191,8 @@ public class RedactController {
                     (useRegex || wholeWordSearchBool) ? Collections.emptySet() : literalTargets;
 
             if (allFoundTextsByPage.isEmpty()) {
-                // No page hit, but the target may live in a bookmark/annotation/form/JS carrier, so still run the scrub + verify path rather than just wiping metadata.
+                // No page hit, but the target may live in a bookmark/annotation/form/JS carrier, so
+                // still run the scrub + verify path rather than just wiping metadata.
                 log.info("No page text matched; scrubbing catalog carriers and verifying");
                 TempFile finalized =
                         manualRedactionService.finalizeRedaction(
