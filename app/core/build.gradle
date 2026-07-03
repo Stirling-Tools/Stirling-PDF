@@ -135,7 +135,6 @@ sourceSets {
 
 }
 
-
 // Disable regular jar
 jar {
     enabled = false
