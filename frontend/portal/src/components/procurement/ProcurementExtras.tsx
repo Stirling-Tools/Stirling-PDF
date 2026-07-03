@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@shared/components";
 import type { ProcurementSnapshot } from "@portal/api/procurement";
+import { useFocusTrap } from "@portal/components/procurement/ProcurementModal";
 import "@portal/views/Procurement.css";
 
 /**
@@ -25,6 +26,8 @@ function SideModal({
   children: React.ReactNode;
   footer?: React.ReactNode;
 }) {
+  const trapRef = useFocusTrap(open);
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -38,7 +41,13 @@ function SideModal({
       className="portal-sidemodal"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="portal-sidemodal__panel" role="dialog" aria-modal="true">
+      <div
+        ref={trapRef}
+        className="portal-sidemodal__panel"
+        role="dialog"
+        aria-modal="true"
+        tabIndex={-1}
+      >
         <button
           type="button"
           className="portal-procmodal__close"

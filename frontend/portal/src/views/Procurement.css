@@ -1119,6 +1119,12 @@
   flex-wrap: wrap;
   margin-top: 1rem;
 }
+.portal-proc__milestone-for {
+  margin: 0.15rem 0 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-2);
+}
 .portal-proc__milestone-lines {
   margin: 0.85rem 0 0.5rem;
 }

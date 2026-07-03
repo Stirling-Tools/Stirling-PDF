@@ -8,7 +8,7 @@ import {
 } from "@portal/api/procurement";
 import "@portal/views/Procurement.css";
 
-const STEPS = ["volume", "plan", "details", "quote"] as const;
+const STEPS = ["volume", "plan", "details"] as const;
 const TERM_DISCOUNT = [0, 0.05, 0.1, 0.12, 0.15]; // 1..5 years
 const SLA_UPLIFT: Record<string, number> = {
   standard: 0,
@@ -17,10 +17,10 @@ const SLA_UPLIFT: Record<string, number> = {
 };
 
 /**
- * The enterprise quote builder — volume → commitment &amp; service → details → the itemised,
- * server-priced quote — copying the marketing prototype (radio/checkbox cards with descriptions,
- * tight density). A client-side preview drives the live footer total; the backend is authoritative
- * (`buildQuote`) for the quote shown on the final step and persisted on accept.
+ * The enterprise quote builder — volume → commitment &amp; service → details. A client-side preview
+ * drives the live footer total; the backend is authoritative. Completing the form generates the
+ * quote directly (build + issue in one step) — the issued quote is then shown as the milestone, so
+ * there's no redundant in-builder preview.
  */
 export function QuoteBuilder({
   deployment,
@@ -51,30 +51,29 @@ export function QuoteBuilder({
   );
   // A seeded quote carries a volume but no user count, so treat it as manually set.
   const [manualVolume, setManualVolume] = useState(initial != null);
-  const [eula, setEula] = useState(false);
-  const [quote, setQuote] = useState<QuoteResult | null>(null);
+  const [eula, setEula] = useState(initial != null);
   const [busy, setBusy] = useState(false);
 
   function set<K extends keyof QuoteConfigInput>(k: K, v: QuoteConfigInput[K]) {
     setCfg((c) => ({ ...c, [k]: v }));
   }
 
-  // Re-editing an existing quote: the config is seeded above, so jump straight to the filled review
-  // (the buyer sees everything preserved and can step Back to change a field) rather than walking
-  // the wizard again from step 1.
+  // Re-editing an existing quote: everything is seeded, so jump to the last step (details) with the
+  // agreement pre-accepted — one click re-generates, or Back to change a field. No walking from step 1.
   useEffect(() => {
-    if (initial) void reviewQuote();
+    if (initial) setStep(STEPS.length - 1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const preview = previewAnnualMinor(cfg);
   const tcvPreview = preview * cfg.termYears + (cfg.training ? 750_000 : 0);
 
-  async function reviewQuote() {
+  // Fully filled → price + hand the draft to the parent to issue as a Stripe Quote (which then shows
+  // as the milestone). No separate in-builder preview step.
+  async function generate() {
     setBusy(true);
     try {
-      setQuote(await buildQuote(cfg));
-      setStep(3);
+      onGenerate(await buildQuote(cfg));
     } finally {
       setBusy(false);
     }
@@ -85,7 +84,7 @@ export function QuoteBuilder({
       <div className="portal-qb__head">
         <h3 className="portal-qb__title">{t("procurement.builder.title")}</h3>
         <span className="portal-qb__stepchip">
-          {t("procurement.builder.stepOf", { n: step + 1, total: 4 })}
+          {t("procurement.builder.stepOf", { n: step + 1, total: STEPS.length })}
         </span>
       </div>
       <div className="portal-qb__progress">
@@ -250,10 +249,6 @@ export function QuoteBuilder({
             </label>
           </Step>
         )}
-
-        {step === 3 && quote && (
-          <QuotePaper quote={quote} businessName={cfg.businessName} t={t} />
-        )}
       </div>
 
       <div className="portal-qb__foot">
@@ -295,17 +290,7 @@ export function QuoteBuilder({
               accent="purple"
               loading={busy}
               disabled={!eula}
-              onClick={reviewQuote}
-            >
-              {t("procurement.builder.review")}
-            </Button>
-          )}
-          {step === 3 && quote && (
-            <Button
-              variant="gradient"
-              accent="purple"
-              loading={busy}
-              onClick={() => onGenerate(quote)}
+              onClick={generate}
             >
               {t("procurement.builder.generate")}
             </Button>
@@ -411,76 +396,6 @@ function AddOn({
   );
 }
 
-function QuotePaper({
-  quote,
-  businessName,
-  t,
-}: {
-  quote: QuoteResult;
-  businessName: string;
-  t: (k: string, o?: Record<string, unknown>) => string;
-}) {
-  return (
-    <div className="portal-qb__papertray">
-      <div className="portal-qb__paper">
-        <div className="portal-qb__paper-head">
-          <div>
-            <div className="portal-qb__paper-brand">Stirling PDF Inc.</div>
-            <div className="portal-qb__paper-eyebrow">
-              {t("procurement.builder.paperEyebrow")}
-            </div>
-          </div>
-          <div className="portal-qb__paper-meta">
-            <div className="portal-qb__quote-number">{quote.quoteNumber}</div>
-            {quote.validUntil && (
-              <div>
-                {t("procurement.builder.validUntil", {
-                  date: quote.validUntil,
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-        {businessName && (
-          <div className="portal-qb__paper-for">
-            <div className="portal-qb__field-label">
-              {t("procurement.builder.preparedFor")}
-            </div>
-            <div className="portal-qb__paper-company">{businessName}</div>
-          </div>
-        )}
-        <ul className="portal-qb__lines">
-          {quote.lineItems.map((li) => (
-            <li key={li.key} data-kind={li.kind}>
-              <span>{li.label}</span>
-              <span>
-                {li.kind === "INCLUDED"
-                  ? t("procurement.builder.included")
-                  : money(li.amountMinor, quote.currency)}
-              </span>
-            </li>
-          ))}
-        </ul>
-        <div className="portal-qb__total">
-          <div>
-            <div className="portal-qb__total-label">
-              {t("procurement.builder.annualTotal")}
-            </div>
-            <div className="portal-qb__total-tcv">
-              {t("procurement.builder.tcv", {
-                value: money(quote.tcvMinor, quote.currency),
-              })}
-            </div>
-          </div>
-          <div className="portal-qb__total-num">
-            <strong>{money(quote.annualNetMinor, quote.currency)}</strong>
-            <span>{t("procurement.builder.perYear")}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function estimateVolume(users: number): number {
   const raw = Math.max(0, users) * 5 * 230 * 1.75;

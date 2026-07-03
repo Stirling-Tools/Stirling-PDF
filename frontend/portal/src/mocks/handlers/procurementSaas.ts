@@ -219,6 +219,7 @@ export const procurementSaasHandlers = [
       status: "accepted",
       subscriptionId: "sub_mock_procurement",
       invoiceUrl,
+      invoicePdf: "https://invoice.stripe.com/i/mock_procurement/pdf",
     });
   }),
   http.post(`${SAAS}/functions/v1/get-procurement-quote-pdf`, () => {

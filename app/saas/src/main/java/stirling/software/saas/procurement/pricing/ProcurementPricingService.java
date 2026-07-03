@@ -40,8 +40,16 @@ public class ProcurementPricingService {
     }
 
     public QuoteBreakdown price(QuoteConfig cfg, PricingRates rates) {
-        long perPdf = rates.perPdfMinor(cfg.volume());
-        long usage = Math.round(cfg.volume() * (double) perPdf); // base, pre-service-level
+        // Never trust the client's volume: clamp to non-negative so a tampered request can't drive
+        // a
+        // negative amount. The rate card and formula are server-side, so the browser can't lower
+        // the
+        // price — only pick a smaller, legitimate config. (See MIN_ACV_MINOR for the committed
+        // floor,
+        // a policy decision that is intentionally not force-applied here — see the review notes.)
+        long volume = Math.max(0, cfg.volume());
+        long perPdf = rates.perPdfMinor(volume);
+        long usage = Math.round(volume * (double) perPdf); // base, pre-service-level
         double slaUplift = rates.serviceLevelUplift(cfg.serviceLevel());
         long withSla = Math.round(usage * (1.0 + slaUplift));
         long withIndemnity =

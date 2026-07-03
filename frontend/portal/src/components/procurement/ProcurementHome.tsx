@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, Card, EmptyState, Skeleton } from "@shared/components";
 import { useLink } from "@portal/contexts/LinkContext";
@@ -57,12 +57,12 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
     [isLinked],
   );
   const [snap, setSnap] = useState<ProcurementSnapshot | null>(null);
-  const [open, setOpen] = useState(autoOpen);
+  const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [invoicePdf, setInvoicePdf] = useState<string | null>(null);
   const [extra, setExtra] = useState<null | "docs" | "schedule" | "trial">(null);
-  const autoStarted = useRef(false);
 
   const data = snap ?? (state.loading ? null : state.data);
   const started = data?.dealId != null;
@@ -96,7 +96,11 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
   // Milestone → agreement (security) stage; then agreeing accepts into a subscription.
   const onAcceptQuote = () => run(startAgreement);
   const onAgree = () =>
-    run(() => (latest ? acceptQuote(latest.quoteId) : Promise.resolve()));
+    run(async () => {
+      if (!latest) return;
+      const res = await acceptQuote(latest.quoteId);
+      setInvoicePdf(res.invoicePdf);
+    });
 
   async function onDownloadPdf() {
     if (!latest) return;
@@ -121,19 +125,11 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
     }
   }
 
+  // A deep link (/procurement) opens the flow when a deal is already underway; if there's no deal
+  // yet it must NOT silently start a trial — leave the modal closed so the Start-trial CTA shows.
   useEffect(() => {
-    if (autoOpen) setOpen(true);
-  }, [autoOpen]);
-
-  // Deep-linking to /procurement should start the journey, not present a "start a trial" prompt:
-  // if we land here linked but with no deal, kick the trial off once.
-  useEffect(() => {
-    if (autoOpen && isLinked && !state.loading && !started && !autoStarted.current) {
-      autoStarted.current = true;
-      onStartTrial();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoOpen, isLinked, state.loading, started]);
+    if (autoOpen && started) setOpen(true);
+  }, [autoOpen, started]);
 
   const banner =
     isLinked && started && data ? (
@@ -222,6 +218,13 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
                 <h3 className="portal-proc__builder-title">
                   {t("procurement.milestone.title")}
                 </h3>
+                {latest.config.businessName && (
+                  <p className="portal-proc__milestone-for">
+                    {t("procurement.milestone.preparedFor", {
+                      company: latest.config.businessName,
+                    })}
+                  </p>
+                )}
                 <p className="portal-proc__subtitle">
                   {t("procurement.milestone.description")}
                 </p>
@@ -289,17 +292,33 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
                   <p className="portal-proc__subtitle">
                     {t("procurement.payment.description")}
                   </p>
-                  {latest.invoiceUrl && (
+                  {(latest.invoiceUrl || invoicePdf) && (
                     <div className="portal-proc__payment-actions">
-                      <Button
-                        variant="gradient"
-                        accent="purple"
-                        onClick={() =>
-                          window.open(latest.invoiceUrl!, "_blank", "noopener")
-                        }
-                      >
-                        {t("procurement.payment.viewInvoice")}
-                      </Button>
+                      {latest.invoiceUrl && (
+                        <Button
+                          variant="gradient"
+                          accent="purple"
+                          onClick={() =>
+                            window.open(
+                              latest.invoiceUrl!,
+                              "_blank",
+                              "noopener",
+                            )
+                          }
+                        >
+                          {t("procurement.payment.viewInvoice")}
+                        </Button>
+                      )}
+                      {invoicePdf && (
+                        <Button
+                          variant="outline"
+                          onClick={() =>
+                            window.open(invoicePdf, "_blank", "noopener")
+                          }
+                        >
+                          {t("procurement.payment.downloadInvoice")}
+                        </Button>
+                      )}
                     </div>
                   )}
                 </Card>

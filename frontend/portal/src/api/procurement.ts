@@ -138,6 +138,7 @@ export interface AcceptResult {
   status: string;
   subscriptionId: string | null;
   invoiceUrl: string | null;
+  invoicePdf: string | null;
 }
 
 /** One shape for every state; an unstarted procurement has {@link ProcurementSnapshot.dealId} null. */
