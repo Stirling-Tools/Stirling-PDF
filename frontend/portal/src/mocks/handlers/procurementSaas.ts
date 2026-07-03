@@ -191,6 +191,14 @@ export const procurementSaasHandlers = [
     (deal as Record<string, unknown>).stage = "security";
     return HttpResponse.json(deal);
   }),
+  http.post(`${SAAS}/api/v1/procurement/go-live`, () => {
+    const d = deal as Record<string, unknown>;
+    if (d.dealId) {
+      d.stage = "active";
+      d.licensed = true;
+    }
+    return HttpResponse.json(deal);
+  }),
   http.post(`${SAAS}/api/v1/procurement/reset`, () => {
     resetProcurementSaasStore();
     return HttpResponse.json(EMPTY);

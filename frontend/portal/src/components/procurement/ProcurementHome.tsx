@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, Card, EmptyState, Skeleton } from "@shared/components";
+import { Banner, Button, Card, EmptyState, Skeleton } from "@shared/components";
 import { useLink } from "@portal/contexts/LinkContext";
 import { useUI } from "@portal/contexts/UIContext";
 import { useView } from "@portal/contexts/ViewContext";
@@ -10,6 +10,7 @@ import {
   extendTrial,
   fetchQuotePdf,
   fetchSnapshot,
+  goLive,
   issueQuote,
   JOURNEY,
   resetProcurement,
@@ -62,6 +63,7 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
   const [editing, setEditing] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [invoicePdf, setInvoicePdf] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [extra, setExtra] = useState<null | "docs" | "schedule" | "trial">(null);
 
   const data = snap ?? (state.loading ? null : state.data);
@@ -73,9 +75,13 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
 
   async function run(fn: () => Promise<unknown>) {
     setBusy(true);
+    setError(null);
     try {
       await fn();
       setSnap(await fetchSnapshot());
+    } catch (e) {
+      console.error("[procurement] action failed", e);
+      setError(e instanceof Error ? e.message : String(e));
     } finally {
       setBusy(false);
     }
@@ -119,7 +125,7 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
       setTimeout(() => URL.revokeObjectURL(url), 60_000);
     } catch (e) {
       console.error("[procurement] quote PDF download failed", e);
-      window.alert(t("procurement.milestone.downloadError"));
+      setError(t("procurement.milestone.downloadError"));
     } finally {
       setDownloading(false);
     }
@@ -175,6 +181,16 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
         title={t("procurement.title")}
         subtitle={t("procurement.subtitle")}
       >
+        {error && (
+          <Banner
+            tone="danger"
+            title={t("procurement.error.title")}
+            onDismiss={() => setError(null)}
+          >
+            {error}
+          </Banner>
+        )}
+
         {!isLinked && (
           <EmptyState
             eyebrow={t("procurement.link.eyebrow")}
@@ -282,47 +298,64 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
               />
             )}
 
-            {!editing &&
-              (stage === "procurement" || stage === "active") &&
-              latest && (
-                <Card padding="loose">
-                  <h3 className="portal-proc__builder-title">
-                    {t("procurement.payment.title")}
-                  </h3>
-                  <p className="portal-proc__subtitle">
-                    {t("procurement.payment.description")}
-                  </p>
-                  {(latest.invoiceUrl || invoicePdf) && (
-                    <div className="portal-proc__payment-actions">
-                      {latest.invoiceUrl && (
-                        <Button
-                          variant="gradient"
-                          accent="purple"
-                          onClick={() =>
-                            window.open(
-                              latest.invoiceUrl!,
-                              "_blank",
-                              "noopener",
-                            )
-                          }
-                        >
-                          {t("procurement.payment.viewInvoice")}
-                        </Button>
-                      )}
-                      {invoicePdf && (
-                        <Button
-                          variant="outline"
-                          onClick={() =>
-                            window.open(invoicePdf, "_blank", "noopener")
-                          }
-                        >
-                          {t("procurement.payment.downloadInvoice")}
-                        </Button>
-                      )}
-                    </div>
-                  )}
-                </Card>
-              )}
+            {!editing && stage === "procurement" && latest && (
+              <Card padding="loose">
+                <h3 className="portal-proc__builder-title">
+                  {t("procurement.payment.title")}
+                </h3>
+                <p className="portal-proc__subtitle">
+                  {t("procurement.payment.description")}
+                </p>
+                {(latest.invoiceUrl || invoicePdf) && (
+                  <div className="portal-proc__payment-actions">
+                    {latest.invoiceUrl && (
+                      <Button
+                        variant="gradient"
+                        accent="purple"
+                        onClick={() =>
+                          window.open(latest.invoiceUrl!, "_blank", "noopener")
+                        }
+                      >
+                        {t("procurement.payment.viewInvoice")}
+                      </Button>
+                    )}
+                    {invoicePdf && (
+                      <Button
+                        variant="outline"
+                        onClick={() =>
+                          window.open(invoicePdf, "_blank", "noopener")
+                        }
+                      >
+                        {t("procurement.payment.downloadInvoice")}
+                      </Button>
+                    )}
+                  </div>
+                )}
+                <div className="portal-proc__reset">
+                  <button
+                    type="button"
+                    onClick={() => run(goLive)}
+                    disabled={busy}
+                  >
+                    {t("procurement.payment.simulate")}
+                  </button>
+                </div>
+              </Card>
+            )}
+
+            {!editing && stage === "active" && (
+              <Card padding="loose">
+                <span className="portal-proc__eyebrow">
+                  {t("procurement.live.eyebrow")}
+                </span>
+                <h3 className="portal-proc__builder-title">
+                  {t("procurement.live.title")}
+                </h3>
+                <p className="portal-proc__subtitle">
+                  {t("procurement.live.description")}
+                </p>
+              </Card>
+            )}
 
             <div className="portal-proc__reset">
               <button type="button" onClick={onReset} disabled={busy}>

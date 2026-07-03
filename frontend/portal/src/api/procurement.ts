@@ -246,6 +246,15 @@ export async function fetchQuotePdf(quoteId: number): Promise<Blob> {
   return data;
 }
 
+/**
+ * Demo/manual stand-in for the invoice.paid webhook: mark the deal live (issue licence, go active).
+ */
+export function goLive(): Promise<ProcurementSnapshot> {
+  return apiClient.saas.json<ProcurementSnapshot>(`${BASE}/go-live`, {
+    method: "POST",
+  });
+}
+
 /** Reset the team's procurement (delete the deal) and get the fresh empty snapshot. */
 export function resetProcurement(): Promise<ProcurementSnapshot> {
   return apiClient.saas.json<ProcurementSnapshot>(`${BASE}/reset`, {

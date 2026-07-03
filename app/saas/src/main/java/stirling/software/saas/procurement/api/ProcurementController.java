@@ -208,6 +208,22 @@ public class ProcurementController {
         }
     }
 
+    /**
+     * Demo/manual stand-in for the {@code invoice.paid} webhook: mark the deal live (issue the
+     * annual licence, advance to active). The real go-live is webhook-driven once payment settles.
+     */
+    @PostMapping("/go-live")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<SnapshotResponse> goLive(Authentication auth) {
+        Long teamId = requireLeader(auth);
+        if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        try {
+            return ResponseEntity.ok(toSnapshot(procurement.markLive(teamId)));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+    }
+
     /** Reset the team's procurement (delete the deal + quotes); returns the empty snapshot. */
     @PostMapping("/reset")
     @PreAuthorize("isAuthenticated()")

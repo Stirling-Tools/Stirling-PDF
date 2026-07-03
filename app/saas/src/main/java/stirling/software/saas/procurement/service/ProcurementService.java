@@ -198,6 +198,36 @@ public class ProcurementService {
     }
 
     /**
+     * Mark the deal live: issue the annual licence and advance to the active stage. In production
+     * this is driven by the {@code invoice.paid} webhook once the first invoice is settled; this
+     * method is the demo/manual stand-in until that webhook lands.
+     */
+    @Transactional
+    public ProcurementDeal markLive(Long teamId) {
+        ProcurementDeal deal =
+                dealRepo.findByTeamId(teamId)
+                        .orElseThrow(() -> new IllegalStateException("No deal for team " + teamId));
+        int term = 1;
+        String deployment = "cloud";
+        if (deal.getAcceptedQuoteId() != null) {
+            ProcurementQuote q = quoteRepo.findById(deal.getAcceptedQuoteId()).orElse(null);
+            if (q != null) {
+                term = Math.max(1, q.getTermYears());
+                if (q.getDeployment() != null && !q.getDeployment().isBlank()) {
+                    deployment = q.getDeployment();
+                }
+            }
+        }
+        deal.setLicenseRef(
+                licenses.issueAnnualLicense(
+                        teamId, deployment, LocalDateTime.now().plusYears(term)));
+        deal.setStage(ProcurementDeal.STAGE_LIVE);
+        deal = dealRepo.save(deal);
+        log.info("[procurement] deal live team={} deal={}", teamId, deal.getDealId());
+        return deal;
+    }
+
+    /**
      * Reset a team's procurement: delete the deal (quotes + activity cascade). For
      * re-demos/testing.
      */

@@ -1895,6 +1895,9 @@ title = "The procurement track opens with Enterprise"
 description = "Trial keys, committed-volume quotes, the one-signature agreement, payment, and your document ledger all live here once you start an enterprise evaluation."
 talkToSales = "Talk to sales"
 
+[procurement.error]
+title = "Something went wrong"
+
 [procurement.link]
 eyebrow = "Enterprise"
 title = "Link your account to begin"
@@ -1913,6 +1916,12 @@ title = "Subscription created"
 description = "Your quote is accepted and a committed annual subscription has been created. Pay the first invoice to go live — you can pay or download it right here, no email needed."
 viewInvoice = "View & pay invoice"
 downloadInvoice = "Download invoice"
+simulate = "Simulate payment received (demo)"
+
+[procurement.live]
+eyebrow = "Live"
+title = "You're live on Stirling Enterprise"
+description = "Your subscription is active and your licence is issued. Your team is provisioned and billing has started."
 
 [procurement.milestone]
 eyebrow = "Quote {{number}}"
