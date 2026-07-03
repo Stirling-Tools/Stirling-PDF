@@ -231,10 +231,13 @@ subprojects {
     dependencyManagement {
         imports {
             mavenBom "org.springframework.boot:spring-boot-dependencies:$springBootVersion"
+            mavenBom "org.opensaml:opensaml-bom:$openSamlVersion"
         }
         dependencies {
             // Override BOM-managed commons-lang3 for CVE-2025-48924 fix
             dependency "org.apache.commons:commons-lang3:$commonsLang3"
+            // Keep the OpenSAML XML security stack on the patched Santuario line.
+            dependency "org.apache.santuario:xmlsec:4.0.4"
         }
     }
 
