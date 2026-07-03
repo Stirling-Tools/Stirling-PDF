@@ -1793,13 +1793,13 @@ bodyAfter = "in the portal env to enable in-app checkout."
 title = "Couldn't start checkout"
 
 [billing.checkout.finalizing]
-title = "Activating your Processor plan…"
-body = "Your payment went through. We're switching on metered processing across your linked instances — this usually takes a few seconds."
+title = "Activating your Processor plan..."
+body = "Your payment went through. We're switching on metered processing across your linked instances - this usually takes a few seconds."
 hint = "Please keep this window open."
 
 [billing.checkout.activationSlow]
 title = "Almost there"
-body = "Your payment succeeded, but activation is taking a little longer than usual. It'll switch on automatically — close this and it'll appear here shortly."
+body = "Your payment succeeded, but activation is taking a little longer than usual. It'll switch on automatically - close this and it'll appear here shortly."
 close = "Close"
 
 [billing.subscribedPlan.capWarn]

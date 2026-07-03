@@ -173,13 +173,13 @@ export function StripeCheckoutModal({
           <h3 className="portal-billing__checkout-status-title">
             {t(
               "billing.checkout.finalizing.title",
-              "Activating your Processor plan…",
+              "Activating your Processor plan...",
             )}
           </h3>
           <p className="portal-billing__checkout-status-body">
             {t(
               "billing.checkout.finalizing.body",
-              "Your payment went through. We're switching on metered processing across your linked instances — this usually takes a few seconds.",
+              "Your payment went through. We're switching on metered processing across your linked instances - this usually takes a few seconds.",
             )}
           </p>
           <p className="portal-billing__checkout-status-hint">
@@ -199,7 +199,7 @@ export function StripeCheckoutModal({
           <p className="portal-billing__checkout-status-body">
             {t(
               "billing.checkout.activationSlow.body",
-              "Your payment succeeded, but activation is taking a little longer than usual. It'll switch on automatically — close this and it'll appear here shortly.",
+              "Your payment succeeded, but activation is taking a little longer than usual. It'll switch on automatically - close this and it'll appear here shortly.",
             )}
           </p>
           <Button variant="outline" onClick={onClose}>
