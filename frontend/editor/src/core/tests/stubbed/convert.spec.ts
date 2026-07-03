@@ -23,13 +23,13 @@ async function dismissTourTooltip(page: Page) {
 }
 
 // ---------------------------------------------------------------------------
-// Helper: upload a file by setting it directly on the FileSidebar's hidden
-// `data-testid="file-input"` (always in the DOM in either sidebar state).
-// We must NOT click `files-button` first: its handler calls `input.click()`,
-// opening a native OS picker that Playwright fails to suppress on
-// firefox/webkit (it leaks a real Finder dialog and hangs the run).
+// Helper: upload a file via the FileSidebar's "Open from computer" action. The
+// button's native OS picker is mocked globally by `suppressNativeFilePicker`
+// (test fixtures), so the click is safe cross-browser; the hidden
+// `data-testid="file-input"` then accepts `setInputFiles` in either state.
 // ---------------------------------------------------------------------------
 async function uploadFile(page: Page, filePath: string) {
+  await page.getByTestId("files-button").click();
   await page.locator('[data-testid="file-input"]').setInputFiles(filePath);
 }
 

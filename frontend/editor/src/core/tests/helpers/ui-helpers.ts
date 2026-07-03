@@ -12,6 +12,32 @@ import { expect, type Page, type Locator } from "@playwright/test";
 const MANTINE_MODAL_OVERLAY = ".mantine-Modal-overlay";
 
 /**
+ * Neutralise the native OS file picker for the whole page.
+ *
+ * Several upload entry points (the FileSidebar "Open from computer" button,
+ * AddFileCard, etc.) open a file dialog by calling `.click()` on a hidden
+ * `<input type="file">`. That opens the real OS file-chooser, which Playwright
+ * intercepts on chromium but NOT on firefox/webkit - there the native dialog
+ * leaks onto the host and hangs the run. Specs never need the dialog: they load
+ * files with `setInputFiles()`, which sets the files and fires `change`
+ * directly. Stubbing the programmatic file-input `.click()` to a no-op lets a
+ * spec click those buttons (exercising the real entry point) while the picker
+ * stays mocked on every browser. Non-file inputs keep their native `.click()`.
+ *
+ * Installed once per page by the shared test fixtures (stub + live), so no spec
+ * has to opt in.
+ */
+export async function suppressNativeFilePicker(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    const nativeClick = HTMLInputElement.prototype.click;
+    HTMLInputElement.prototype.click = function (this: HTMLInputElement) {
+      if (this.type === "file") return;
+      return nativeClick.call(this);
+    };
+  });
+}
+
+/**
  * Wait for a Mantine Modal overlay to appear or disappear. Most file pickers,
  * settings dialogs, encrypted-PDF unlock prompts and so on render through
  * this overlay; specs use it as a synchronisation point.
@@ -37,17 +63,12 @@ export async function waitForModalClose(
 }
 
 /**
- * Upload one or more files by setting them directly on the FileSidebar's
- * hidden `data-testid="file-input"`, which is always rendered (collapsed or
- * expanded sidebar) and feeds the global workspace.
- *
- * We deliberately do NOT click the "Open from computer" (`files-button`)
- * entry point first. That handler calls `input.click()`, which opens a real
- * native OS file picker. Playwright suppresses that dialog on chromium but
- * NOT on firefox/webkit, where the native picker leaks onto the host, hangs
- * the run, and fails the nightly cross-browser suite. `setInputFiles` sets
- * the files and dispatches `change` on its own, so the button click is
- * unnecessary and must be avoided for cross-browser parity.
+ * Upload one or more files through the FileSidebar's "Open from computer"
+ * action. The button is always rendered (collapsed or expanded sidebar) and
+ * fires the hidden `data-testid="file-input"`. Its native OS picker is mocked
+ * globally by `suppressNativeFilePicker` (installed by the test fixtures), so
+ * the click is safe on every browser; we then set the files directly on the
+ * input via `setInputFiles`.
  *
  * `setInputFiles` doesn't await the input's async onChange (which writes to
  * IndexedDB via `addFiles`), so without a sync point a caller that follows
@@ -60,6 +81,7 @@ export async function uploadFiles(
   filePaths: string | string[],
 ): Promise<void> {
   const paths = Array.isArray(filePaths) ? filePaths : [filePaths];
+  await page.getByTestId("files-button").click();
   await page.locator('[data-testid="file-input"]').setInputFiles(paths);
   // Sync point: wait until at least one file lands in the sidebar's file
   // list. The list only renders once `addFiles` has resolved (which awaits

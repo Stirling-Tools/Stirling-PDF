@@ -16,9 +16,10 @@ test.describe("Reader - in-document text search", () => {
     await page.goto("/read");
     await page.waitForLoadState("domcontentloaded");
 
-    // Upload a PDF first so the reader has content. Set files directly on the
-    // hidden input; clicking `files-button` would open a native OS picker that
-    // firefox/webkit leak onto the host and hang on.
+    // Upload a PDF first so the reader has content. The `files-button` native
+    // picker is mocked globally (suppressNativeFilePicker), so the click is
+    // safe cross-browser; set the files on the hidden input directly.
+    await page.getByTestId("files-button").click();
     await page.locator('[data-testid="file-input"]').setInputFiles(SAMPLE_PDF);
 
     // The WorkbenchBar exposes a "Search PDF" button (aria-label="Search PDF")
