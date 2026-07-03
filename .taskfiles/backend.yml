@@ -113,23 +113,23 @@ tasks:
     # Cover the backend with the main build/property combinations that change
     # Gradle behavior in this repo.
     cmds:
-      - cmd: cmd /c ".\gradlew.bat test" >> log-spotlessCheck.txt
+      - cmd: cmd /c ".\gradlew.bat test"
         platforms: [windows]
       - cmd: ./gradlew test
         platforms: [linux, darwin]
-      - cmd: cmd /c ".\gradlew.bat test -PbuildWithFrontend=true" >> log-spotlessCheck-buildWithFrontend.txt
+      - cmd: cmd /c ".\gradlew.bat test -PbuildWithFrontend=true"
         platforms: [windows]
       - cmd: ./gradlew test -PbuildWithFrontend=true
         platforms: [linux, darwin]
-      - cmd: cmd /c ".\gradlew.bat test -PbuildWithFrontend=true -PprototypesMode=true" >> log-spotlessCheck-buildWithFrontend-prototypesMode.txt
+      - cmd: cmd /c ".\gradlew.bat test -PbuildWithFrontend=true -PprototypesMode=true"
         platforms: [windows]
       - cmd: ./gradlew test -PbuildWithFrontend=true -PprototypesMode=true
         platforms: [linux, darwin]
-      - cmd: cmd /c "set STIRLING_FLAVOR=core&& .\gradlew.bat test" >> log-spotlessCheck-STIRLING_FLAVOR-core.txt
+      - cmd: cmd /c "set STIRLING_FLAVOR=core&& .\gradlew.bat test"
         platforms: [windows]
       - cmd: STIRLING_FLAVOR=core ./gradlew test
         platforms: [linux, darwin]
-      - cmd: cmd /c "set STIRLING_FLAVOR=saas&& .\gradlew.bat test" >> log-spotlessCheck-STIRLING_FLAVOR-saas.txt
+      - cmd: cmd /c "set STIRLING_FLAVOR=saas&& .\gradlew.bat test"
         platforms: [windows]
       - cmd: STIRLING_FLAVOR=saas ./gradlew test
         platforms: [linux, darwin]
