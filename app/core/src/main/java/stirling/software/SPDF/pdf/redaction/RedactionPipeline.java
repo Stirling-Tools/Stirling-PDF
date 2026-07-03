@@ -838,8 +838,9 @@ public final class RedactionPipeline {
                     // Shared with the finder so removal + verification use identical boundaries.
                     core = TextFinderUtils.applyWordBoundaries(trimmed, core);
                 }
-                patterns.add(
-                        Pattern.compile(core, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE));
+                int flags = Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE;
+                // useRegex is the intended user option; ReDoS is bounded by DeadlineCharSequence.
+                patterns.add(Pattern.compile(core, flags)); // lgtm[java/regex-injection]
             } catch (PatternSyntaxException e) {
                 log.debug("Skipping invalid regex '{}': {}", trimmed, e.getMessage());
             }
