@@ -24,6 +24,7 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDFontDescriptor;
 import org.apache.pdfbox.pdmodel.font.PDTrueTypeFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
@@ -140,6 +141,16 @@ class RedactionPdfVarietyTest {
         byte[] out = autoRedact(type0NoToUnicodePdf("alpha SECRET omega"), "SECRET");
         assertGone(out, "SECRET");
         assertThat(pdfText(out)).contains("alpha").contains("omega");
+    }
+
+    @Test
+    @DisplayName("symbolic TrueType (no encoding, no ToUnicode): target not extractable")
+    void symbolicTrueType() throws IOException {
+        // PDFBox extraction is glyph-blind here, so removal is guaranteed by the native pass +
+        // rasterise fallback rather than surgical decode; this pins that the pipeline handles a
+        // symbolic font without error and leaves no extractable target.
+        byte[] out = autoRedact(symbolicTtfPdf("alpha SECRET omega"), "SECRET");
+        assertGone(out, "SECRET");
     }
 
     @Test
@@ -372,16 +383,46 @@ class RedactionPdfVarietyTest {
         }
     }
 
+    private byte[] symbolicTtfPdf(String line) throws IOException {
+        try (PDDocument doc = new PDDocument()) {
+            PDTrueTypeFont font;
+            try (InputStream ttf = PDDocument.class.getResourceAsStream(LIBERATION)) {
+                font = PDTrueTypeFont.load(doc, ttf, WinAnsiEncoding.INSTANCE);
+            }
+            addTextPage(doc, font, line, 0, null);
+            // Strip /Encoding and flag the descriptor Symbolic so extraction must use the cmap.
+            font.getCOSObject().removeItem(org.apache.pdfbox.cos.COSName.ENCODING);
+            PDFontDescriptor fd = font.getFontDescriptor();
+            fd.setFlags((fd.getFlags() | 4) & ~32);
+            return save(doc);
+        }
+    }
+
     private byte[] type0NoToUnicodePdf(String line) throws IOException {
+        byte[] pdf;
         try (PDDocument doc = new PDDocument()) {
             PDFont font;
             try (InputStream ttf = PDDocument.class.getResourceAsStream(LIBERATION)) {
-                font = PDType0Font.load(doc, ttf, true);
+                // Full embed, not subset: the subsetter regenerates /ToUnicode at save, undoing the strip.
+                font = PDType0Font.load(doc, ttf, false);
             }
             addTextPage(doc, font, line, 0, null);
             font.getCOSObject().removeItem(org.apache.pdfbox.cos.COSName.TO_UNICODE);
-            return save(doc);
+            pdf = save(doc);
         }
+        // Guard: the strip must survive save so this fixture genuinely exercises the no-mapping path.
+        try (PDDocument reopened = Loader.loadPDF(pdf)) {
+            PDResources res = reopened.getPage(0).getResources();
+            for (org.apache.pdfbox.cos.COSName n : res.getFontNames()) {
+                assertThat(
+                                res.getFont(n)
+                                        .getCOSObject()
+                                        .containsKey(org.apache.pdfbox.cos.COSName.TO_UNICODE))
+                        .as("no-ToUnicode fixture must not ship /ToUnicode")
+                        .isFalse();
+            }
+        }
+        return pdf;
     }
 
     private byte[] subsetTaggedPdf(String line) throws IOException {

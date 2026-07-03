@@ -104,3 +104,40 @@ Feature: PDF redaction physically removes text
     Then the response status code should be 200
     And the response PDF should not contain the text "EXAMPLE"
     And the response PDF should contain the text "CROP"
+
+  Scenario: Auto-redact removes the target from an embedded TrueType font PDF
+    Given I generate a PDF file as "fileInput"
+    And the pdf pages all contain the text "keepA SECRET88 keepB" in an embedded font
+    And the request data includes
+      | parameter  | value    |
+      | listOfText | SECRET88 |
+    When I send the API request to the endpoint "/api/v1/security/auto-redact"
+    Then the response status code should be 200
+    And the response content type should be "application/pdf"
+    And the response PDF should not contain the text "SECRET88"
+    And the response PDF should contain the text "keepA"
+    And the response PDF should contain the text "keepB"
+
+  Scenario: Auto-redact with a regex pattern on an embedded-font PDF
+    Given I generate a PDF file as "fileInput"
+    And the pdf pages all contain the text "invoice 987-65-4321 total" in an embedded font
+    And the request data includes
+      | parameter  | value             |
+      | listOfText | \d{3}-\d{2}-\d{4} |
+      | useRegex   | true              |
+    When I send the API request to the endpoint "/api/v1/security/auto-redact"
+    Then the response status code should be 200
+    And the response PDF should not contain the text "987-65-4321"
+    And the response PDF should contain the text "invoice"
+
+  Scenario: Auto-redact convert-to-image on an embedded-font PDF drops the text layer
+    Given I generate a PDF file as "fileInput"
+    And the pdf pages all contain the text "keep SECRET66 hidden" in an embedded font
+    And the request data includes
+      | parameter         | value    |
+      | listOfText        | SECRET66 |
+      | convertPDFToImage | true     |
+    When I send the API request to the endpoint "/api/v1/security/auto-redact"
+    Then the response status code should be 200
+    And the response PDF should not contain the text "SECRET66"
+    And the response PDF should not contain the text "keep"

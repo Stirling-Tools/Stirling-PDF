@@ -280,6 +280,47 @@ def step_pdf_pages_contain_text(context, text):
     context.files[context.param_name] = open(context.file_name, "rb")
 
 
+# DejaVuSans is a repo asset; embedding it exercises redaction over a real embedded (Type0/CID,
+# non Standard-14) font whose text pypdf can still extract to verify removal end-to-end.
+_DEJAVU_TTF = os.path.normpath(
+    os.path.join(
+        os.path.dirname(__file__),
+        "..", "..", "..", "..",
+        "app", "core", "src", "main", "resources", "static", "fonts", "DejaVuSans.ttf",
+    )
+)
+_embedded_font_registered = False
+
+
+def _ensure_embedded_font():
+    global _embedded_font_registered
+    if not _embedded_font_registered:
+        from reportlab.pdfbase.ttfonts import TTFont
+        from reportlab.pdfbase import pdfmetrics
+
+        pdfmetrics.registerFont(TTFont("DejaVuEmbedded", _DEJAVU_TTF))
+        _embedded_font_registered = True
+
+
+@given('the pdf pages all contain the text "{text}" in an embedded font')
+def step_pdf_pages_contain_text_embedded(context, text):
+    _ensure_embedded_font()
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+    for _ in range(len(PdfReader(context.file_name).pages)):
+        c.setFont("DejaVuEmbedded", 14)
+        c.drawString(100, height - 100, text)
+        c.showPage()
+    c.save()
+
+    with open(context.file_name, "wb") as f:
+        f.write(buffer.getvalue())
+
+    context.files[context.param_name].close()
+    context.files[context.param_name] = open(context.file_name, "rb")
+
+
 @given('the pdf is encrypted with password "{password}"')
 def step_encrypt_pdf(context, password):
     writer = PdfWriter()
