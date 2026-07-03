@@ -1,20 +1,21 @@
 package stirling.software.proprietary.accountlink;
 
 import java.time.LocalDateTime;
+import java.util.EnumMap;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
+import stirling.software.proprietary.billing.BillingCategory;
+
 /**
- * Reads this instance's <b>locally accrued but not-yet-synced</b> usage for the current period
- * (combined-billing "Mode A"). The portal adds this on top of the SaaS-synced spend so "current
- * usage" reflects work done since the last daily sync, not just what SaaS has already billed.
+ * Reads this instance's locally accrued but not-yet-synced usage for the current period. The portal
+ * adds this on top of SaaS-synced spend so "current usage" reflects work done since the last sync.
  *
- * <p>Unsynced per category = {@code cumulativeUnits − lastSyncedUnits} (floored at 0). Scoped to
- * the entitlement's current period so prior-period leftovers (reported separately on rollover)
- * don't inflate the current figure. Returns zeros when the period is unknown or metering is off (no
- * counters accrue).
+ * <p>Unsynced per category = {@code cumulativeUnits − lastSyncedUnits} (floored at 0), scoped to
+ * the current period so prior-period leftovers don't inflate it. Zeros when the period is unknown
+ * or metering is off.
  */
 @Service
 @Profile("!saas")
@@ -43,20 +44,16 @@ public class LocalUsageService {
         if (period == null) {
             return new LocalUsage(null, 0, 0, 0, 0);
         }
-        long api = 0;
-        long ai = 0;
-        long automation = 0;
+        EnumMap<BillingCategory, Long> unsynced = new EnumMap<>(BillingCategory.class);
         for (UsageCounter c : counters.findByPeriodStart(period)) {
-            long unsynced = Math.max(0, c.getCumulativeUnits() - c.getLastSyncedUnits());
-            switch (c.getCategory()) {
-                case "API" -> api = unsynced;
-                case "AI" -> ai = unsynced;
-                case "AUTOMATION" -> automation = unsynced;
-                default -> {
-                    // BYPASSED never accrues; ignore any unexpected category.
-                }
+            BillingCategory cat = c.billingCategory();
+            if (cat != null && cat != BillingCategory.BYPASSED) {
+                unsynced.merge(cat, c.unsyncedUnits(), Long::sum);
             }
         }
+        long api = unsynced.getOrDefault(BillingCategory.API, 0L);
+        long ai = unsynced.getOrDefault(BillingCategory.AI, 0L);
+        long automation = unsynced.getOrDefault(BillingCategory.AUTOMATION, 0L);
         return new LocalUsage(period, api, ai, automation, api + ai + automation);
     }
 }

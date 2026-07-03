@@ -2,10 +2,11 @@ package stirling.software.proprietary.accountlink;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.DigestOutputStream;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -37,24 +38,14 @@ import stirling.software.proprietary.billing.UnitCalcPolicy;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 
 /**
- * Request-time gate + meter for combined-billing "Mode A". {@code preHandle} classifies the request
- * and blocks billable (API / AI / automation) work when the instance is unlinked or over its limit;
- * manual tools pass straight through. {@code afterCompletion} meters a <em>successful</em> billable
- * op into the per-period cumulative counter (the daily sync later reports the totals).
+ * Request-time gate + meter for combined-billing "Mode A". {@code preHandle} blocks billable (API /
+ * AI / automation) work when the instance is unlinked or over its limit; manual tools pass through.
+ * {@code afterCompletion} meters a successful billable op into the per-period cumulative counter.
  *
- * <p>Metering materialises each uploaded input once to a temp file and reads it twice from disk:
- * the page count via <b>jpdfium</b> (parser-identical to the SaaS classifier, so the page axis
- * can't drift between instance and cloud) and a SHA-256 via the shared {@link ContentHasher} (the
- * input-set signature for lineage dedup — a re-submission of the identical inputs isn't re-charged,
- * matching the in-cloud lineage join). Either read failing degrades gracefully to bytes-only.
- *
- * <p>Blocking responds {@code 402 Payment Required} with a small machine-readable body — {@code
- * {"error":"ACCOUNT_LINK_REQUIRED","reason":"NOT_LINKED"}} — that the FE maps to a "link to
- * activate" prompt. Fail-open and flag-off both let the request continue.
- *
- * <p>Gated + {@code @Profile("!saas")}; metering is additionally gated behind {@code
- * …account-link.metering.enabled} via an {@link ObjectProvider} — when that switch is off the
- * {@link UsageMeterService} bean is absent and nothing accrues, while the gate still works.
+ * <p>Blocking responds {@code 402} with a machine-readable body the FE maps to a "link to activate"
+ * prompt; fail-open and flag-off both let the request continue. Metering is separately gated behind
+ * {@code …metering.enabled} via {@link ObjectProvider} — switch off means the {@link
+ * UsageMeterService} bean is absent and nothing accrues, while the gate still works.
  */
 @Slf4j
 @Component
@@ -87,8 +78,7 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
             throws Exception {
         GateDecision decision;
         try {
-            // API-key tool calls are billable too (category API), so resolve the auth principal and
-            // gate on "not a manual UI tool". Stash the category for afterCompletion's meter.
+            // API-key tool calls are billable (category API); stash the category for the meter.
             boolean apiKey =
                     SecurityContextHolder.getContext().getAuthentication()
                             instanceof ApiKeyAuthenticationToken;
@@ -148,11 +138,10 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
     }
 
     /**
-     * Computes doc-units (page + byte axes) and the input-set signature for the request, then
-     * accrues. The instance is authoritative for units — SaaS bills the delta of what we report and
-     * never sees the file — so a page-heavy but small PDF must be page-counted or it under-bills. A
-     * fileless billable op has no input identity, so it carries a null signature (no dedup) and is
-     * billed the 1-unit floor each time.
+     * Computes doc-units (page + byte axes) and the input-set signature, then accrues. The instance
+     * is authoritative for units (SaaS bills the delta and never sees the file), so a page-heavy
+     * but small PDF must be page-counted or it under-bills. A fileless op has no input identity —
+     * null signature (no dedup), billed the 1-unit floor each time.
      */
     private void meterRequest(
             HttpServletRequest request,
@@ -178,17 +167,21 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
                     try {
                         TempFile temp = tempFileManager.createManagedTempFile(".bin");
                         temps.add(temp);
+                        // Hash in the same pass that writes the temp file — one read of the upload,
+                        // not a second full read just to fingerprint it.
+                        MessageDigest digest = ContentHasher.newSha256();
                         try (InputStream in = f.getInputStream();
-                                OutputStream out = Files.newOutputStream(temp.getPath())) {
+                                DigestOutputStream out =
+                                        new DigestOutputStream(
+                                                Files.newOutputStream(temp.getPath()), digest)) {
                             in.transferTo(out);
                         }
                         sizes.add(new FileSize(pageCount(temp.getPath(), f), f.getSize()));
-                        hashes.add(ContentHasher.sha256(temp.getPath()));
+                        hashes.add(ContentHasher.toHex(digest.digest()));
                     } catch (IOException | RuntimeException perFile) {
-                        // Couldn't materialise/hash this input — bill it on bytes only and (by
-                        // leaving it out of `hashes`) drop dedup for the whole op rather than risk
-                        // a
-                        // wrong match.
+                        // Couldn't materialise/hash this input — bill on bytes only and, by leaving
+                        // it out of `hashes`, drop dedup for the whole op rather than risk a
+                        // mismatch.
                         log.debug(
                                 "Metering materialise/hash failed for {}; bytes-only",
                                 f.getOriginalFilename());
@@ -200,7 +193,7 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
                     sizes.isEmpty()
                             ? DocumentUnitCalculator.unitsForFile(0, 0, policy)
                             : DocumentUnitCalculator.unitsForGroup(sizes, policy);
-            // Only dedup when every input hashed — a partial signature could collide with a
+            // Only dedup when every input hashed; a partial signature could collide with a
             // different input set, so fall back to no-dedup (bill it) if any file failed.
             String opSignature =
                     fileCount > 0 && hashes.size() == fileCount ? opSignature(hashes) : null;
@@ -224,8 +217,7 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
         try (PdfDocument doc = PdfDocument.open(path)) {
             return doc.pageCount();
         } catch (RuntimeException e) {
-            // Malformed / encrypted → fall back to the byte axis only, matching the SaaS
-            // classifier.
+            // Malformed / encrypted → byte axis only, matching the SaaS classifier.
             log.debug(
                     "Page count unavailable for {}; metering on bytes only",
                     file.getOriginalFilename());

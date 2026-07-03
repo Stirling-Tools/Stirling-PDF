@@ -127,12 +127,9 @@ public class InstanceController {
         if (!(auth instanceof LinkedInstanceAuthenticationToken token)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        // Drop any cached snapshot before building. The instance polls this only every few minutes
-        // and gates real-time billable work on the answer, so it must reflect subscription / cap
-        // changes (e.g. a just-completed checkout) immediately, not up to a cache-TTL later. The
-        // subscription flip is written by a Postgres function (payg_link_subscription) with no Java
-        // event to invalidate on, so this low-frequency instance-facing read is where we guarantee
-        // freshness — the SaaS caches still shield the high-frequency cloud guard path.
+        // Drop the cached snapshot first: this low-frequency read gates real-time billable work, so
+        // it must reflect a just-changed subscription/cap at once (the flip is a DB-function write
+        // with no Java event to invalidate on).
         entitlementService.invalidate(token.getTeamId());
         return ResponseEntity.ok(buildEntitlement(token.getTeamId()));
     }
@@ -161,10 +158,8 @@ public class InstanceController {
             return ResponseEntity.badRequest().build();
         }
         Long teamId = token.getTeamId();
-        // periodStart is the (team, period, category) partition key the dedup/regression guards key
-        // on, so a fabricated value could reset those guards. Bound it to a plausible window around
-        // the authoritative snapshot period — the current period or the immediately-prior one
-        // (rollover lag), never the future — rejecting anything else.
+        // periodStart is the dedup/regression partition key, so bound a fabricated value to the
+        // snapshot window (current or immediately-prior period, never future).
         EntitlementSnapshot snap = entitlementService.getSnapshot(teamId);
         LocalDateTime reported = req.periodStart();
         if (!reported.isBefore(snap.periodEnd())
@@ -195,11 +190,8 @@ public class InstanceController {
                         BillingCategory.API, c.api(),
                         BillingCategory.AI, c.ai(),
                         BillingCategory.AUTOMATION, c.automation()));
-        // A sync lands the whole delta at once — the admin is typically watching the usage page
-        // right after — so drop the 30s snapshot/billing cache now instead of letting the daily
-        // charge sit invisible until the TTL lapses. Refreshes both the period spend and the
-        // free-grant balance the ingest just moved. The buildEntitlement below (and the portal's
-        // next wallet read) then reflect the charge immediately.
+        // Drop the cache so the buildEntitlement below (and the portal's next read) reflect the
+        // just-charged delta + moved free-grant balance now, not after the TTL.
         entitlementService.invalidate(teamId);
         return ResponseEntity.ok(buildEntitlement(teamId));
     }

@@ -1,5 +1,7 @@
 package stirling.software.proprietary.accountlink;
 
+import java.time.Duration;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -62,5 +64,13 @@ public class AccountLinkProperties {
          * Block billable work after this many days with no successful sync (fail-open → closed).
          */
         private int graceDays = 3;
+
+        /**
+         * Dedup window for identical input sets. A re-run of the same inputs within this window is
+         * treated as workflow chaining and not re-charged; the same inputs run again after it are
+         * billed afresh. Mirrors the cloud's {@code payg.lineage.workflow-window} so the same op
+         * costs the same on the instance and in the cloud.
+         */
+        private Duration workflowWindow = Duration.ofMinutes(5);
     }
 }

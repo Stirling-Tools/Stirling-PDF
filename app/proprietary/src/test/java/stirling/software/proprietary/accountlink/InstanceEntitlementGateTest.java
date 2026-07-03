@@ -140,6 +140,53 @@ class InstanceEntitlementGateTest {
     }
 
     @Test
+    void billable_linked_subscribedCapped_pendingLocalUsageWouldExceedCap_blocks() {
+        // Within cap per the last sync (spend 10 / cap 100), but 95 accrued locally since would
+        // push
+        // projected spend to 105 → the gate stops now, not after the next sync reconciles.
+        GateDecision d =
+                InstanceEntitlementGate.decide(
+                        true, true, true, Optional.of(subscribedWithinCap()), false, 95L);
+        assertFalse(d.allowed());
+        assertEquals(Reason.OVER_LIMIT, d.reason());
+    }
+
+    @Test
+    void billable_linked_subscribedCapped_pendingLeavesCapRoom_allows() {
+        // 10 synced + 80 pending = 90 < 100 cap → still room.
+        GateDecision d =
+                InstanceEntitlementGate.decide(
+                        true, true, true, Optional.of(subscribedWithinCap()), false, 80L);
+        assertTrue(d.allowed());
+        assertEquals(Reason.ENTITLED, d.reason());
+    }
+
+    @Test
+    void billable_linked_subscribedCapped_freeGrantAbsorbsPending_allows() {
+        // 50 free units remain, so 40 pending is entirely free → 0 projected paid < 100 cap →
+        // allow.
+        InstanceEntitlement subscribedWithGrant =
+                new InstanceEntitlement(true, 50, 0, 100L, EntitlementState.OK);
+        GateDecision d =
+                InstanceEntitlementGate.decide(
+                        true, true, true, Optional.of(subscribedWithGrant), false, 40L);
+        assertTrue(d.allowed());
+        assertEquals(Reason.ENTITLED, d.reason());
+    }
+
+    @Test
+    void billable_linked_subscribedUncapped_pendingIgnored_allows() {
+        // No cap → local pending has no ceiling to hit → always allowed.
+        InstanceEntitlement uncapped =
+                new InstanceEntitlement(true, 0, 999, null, EntitlementState.OK);
+        GateDecision d =
+                InstanceEntitlementGate.decide(
+                        true, true, true, Optional.of(uncapped), false, 500L);
+        assertTrue(d.allowed());
+        assertEquals(Reason.ENTITLED, d.reason());
+    }
+
+    @Test
     void billable_linked_revoked_blocksWithRevokedSignal() {
         // Authoritative deny (revoked/invalid credential) surfaced by the cache as REVOKED —
         // blocks distinctly from over-limit, even though the snapshot is "present".
@@ -229,6 +276,22 @@ class InstanceEntitlementGateTest {
         when(entitlementCache.current()).thenReturn(Optional.of(free()));
         when(localUsageService.currentPeriodUnsynced())
                 .thenReturn(new LocalUsageService.LocalUsage(LocalDateTime.now(), 100, 0, 0, 100));
+
+        GateDecision d = gate(props(true, 3)).evaluate(true);
+
+        assertFalse(d.allowed());
+        assertEquals(Reason.OVER_LIMIT, d.reason());
+    }
+
+    @Test
+    void evaluate_subscribedCapped_localUsageWouldExceedCap_blocksInRealTime() {
+        // Subscribed within cap per the last sync (spend 10 / cap 100), but 90 accrued locally
+        // since — evaluate() now depletes the cap by pending usage for capped subscriptions too, so
+        // the gate stops now instead of overshooting the cap until the next sync.
+        when(credentialStore.isLinked()).thenReturn(true);
+        when(entitlementCache.current()).thenReturn(Optional.of(subscribedWithinCap()));
+        when(localUsageService.currentPeriodUnsynced())
+                .thenReturn(new LocalUsageService.LocalUsage(LocalDateTime.now(), 0, 90, 0, 90));
 
         GateDecision d = gate(props(true, 3)).evaluate(true);
 

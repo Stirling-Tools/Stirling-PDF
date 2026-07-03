@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,7 +32,7 @@ class UsageMeterServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new UsageMeterService(repo, signatureRepo);
+        service = new UsageMeterService(repo, signatureRepo, new AccountLinkProperties());
     }
 
     @Test
@@ -75,7 +76,9 @@ class UsageMeterServiceTest {
     }
 
     @Test
-    void claimsNewSignatureThenAccrues() {
+    void chargesNewSignatureThenAccrues() {
+        when(signatureRepo.findByPeriodStartAndSignature(period, "op-sig-new"))
+                .thenReturn(Optional.empty());
         when(repo.increment(eq(period), eq("AI"), eq(5L), any())).thenReturn(1);
 
         service.accrue(period, BillingCategory.AI, 5, "op-sig-new");
@@ -85,14 +88,46 @@ class UsageMeterServiceTest {
     }
 
     @Test
-    void skipsAccrualWhenSignatureAlreadyClaimed() {
-        // Re-submission of the identical input set → signature claim fails → not re-charged.
+    void skipsConcurrentDuplicateClaim() {
+        // Unseen this period, but a concurrent op wins the insert first → treated as within-window
+        // chaining, not re-charged.
+        when(signatureRepo.findByPeriodStartAndSignature(period, "op-sig-race"))
+                .thenReturn(Optional.empty());
         when(signatureRepo.saveAndFlush(any()))
                 .thenThrow(new DataIntegrityViolationException("dup"));
 
-        service.accrue(period, BillingCategory.AI, 5, "op-sig-dup");
+        service.accrue(period, BillingCategory.AI, 5, "op-sig-race");
 
         verify(repo, never()).increment(any(), any(), anyLong(), any());
         verify(repo, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void skipsRepeatWithinWorkflowWindow() {
+        // Same input set seen moments ago → chaining → not re-charged; the window slides.
+        MeteredInputSignature recent =
+                new MeteredInputSignature(period, "op-sig", LocalDateTime.now());
+        when(signatureRepo.findByPeriodStartAndSignature(period, "op-sig"))
+                .thenReturn(Optional.of(recent));
+
+        service.accrue(period, BillingCategory.AI, 5, "op-sig");
+
+        verify(repo, never()).increment(any(), any(), anyLong(), any());
+        verify(signatureRepo).save(recent); // window touched
+    }
+
+    @Test
+    void chargesRepeatOutsideWorkflowWindow() {
+        // Same input set last seen well past the 5-minute window → an independent re-run → charged.
+        MeteredInputSignature stale =
+                new MeteredInputSignature(period, "op-sig", LocalDateTime.now().minusMinutes(10));
+        when(signatureRepo.findByPeriodStartAndSignature(period, "op-sig"))
+                .thenReturn(Optional.of(stale));
+        when(repo.increment(eq(period), eq("AI"), eq(5L), any())).thenReturn(1);
+
+        service.accrue(period, BillingCategory.AI, 5, "op-sig");
+
+        verify(repo).increment(eq(period), eq("AI"), eq(5L), any());
+        verify(signatureRepo).save(stale); // window touched
     }
 }

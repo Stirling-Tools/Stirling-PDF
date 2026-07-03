@@ -64,17 +64,19 @@ public class InstanceEntitlementGate {
         Optional<InstanceEntitlement> entitlement =
                 linked ? entitlementCache.current() : Optional.empty();
         boolean graceExpired = linked && entitlement.isEmpty() && isGraceExpired();
-        // For an unsubscribed team the one-time free grant is the ceiling, and it depletes in real
-        // time as billable work accrues locally between daily syncs. Subtract the not-yet-synced
-        // local usage from the last-synced free balance so the gate stops AT the grant, rather than
-        // running until the next sync charges the backlog and only then flips. Subscribed teams
-        // bill
-        // past the grant (their gate is the money cap), so this doesn't apply to them — pass 0.
+        // Deplete the applicable ceiling — free grant (unsubscribed) or spend cap (capped
+        // subscription) — by local usage not yet synced, so the gate stops in real time instead of
+        // overshooting until the next sync. An uncapped subscription has no ceiling to deplete → 0.
         long pendingUnsynced =
-                entitlement.map(e -> !e.subscribed()).orElse(false)
+                entitlement.map(InstanceEntitlementGate::depletesCeiling).orElse(false)
                         ? localUsageService.currentPeriodUnsynced().totalUnsyncedUnits()
                         : 0L;
         return decide(true, true, linked, entitlement, graceExpired, pendingUnsynced);
+    }
+
+    /** Whether local unsynced usage pushes against a real ceiling (free grant or a spend cap). */
+    private static boolean depletesCeiling(InstanceEntitlement e) {
+        return !e.subscribed() || e.periodCapUnits() != null;
     }
 
     /**
@@ -82,9 +84,10 @@ public class InstanceEntitlementGate {
      * (unreachable): when linked, that fails open unless {@code graceExpired} (the metering grace
      * window elapsed with no authoritative contact), in which case it blocks.
      *
-     * @param pendingUnsyncedUnits billable units accrued locally since the last sync — subtracted
-     *     from an unsubscribed team's free balance so the grant depletes in real time (0 for
-     *     subscribed / unknown-entitlement cases, where it has no effect).
+     * @param pendingUnsyncedUnits billable units accrued locally since the last sync — depletes the
+     *     free grant (unsubscribed) or the spend cap (capped subscription) in real time so the gate
+     *     stops without waiting for the next sync (0 for uncapped-subscribed / unknown-entitlement
+     *     cases, where it has no effect).
      */
     public static GateDecision decide(
             boolean flagEnabled,
@@ -103,10 +106,9 @@ public class InstanceEntitlementGate {
             return GateDecision.block(GateDecision.Reason.NOT_LINKED);
         }
         if (entitlement.isEmpty()) {
-            // Linked but entitlement source unreachable. Normally fail open (never hard-block on
-            // our
-            // inability to reach billing) — but once the grace window has expired, block so the
-            // fail-open can't grant unbounded free/unbilled billable work indefinitely.
+            // Linked but entitlement unreachable: fail open, unless the grace window has expired
+            // (so
+            // the fail-open can't grant unbounded unbilled work forever).
             return graceExpired
                     ? GateDecision.block(GateDecision.Reason.GRACE_EXPIRED)
                     : GateDecision.allow(GateDecision.Reason.FAIL_OPEN);
@@ -122,11 +124,9 @@ public class InstanceEntitlementGate {
     }
 
     /**
-     * True when metering is on and SaaS has been unreachable past the grace window — i.e. it's been
-     * {@code graceDays} since the last authoritative contact. The reference is the last successful
-     * daily sync (persisted, survives restart), falling back to the link time for a never-synced
-     * instance. {@code graceDays <= 0} disables the backstop; metering off never blocks (nothing
-     * accrues, so a stale sync must not gate manual-free or pre-metering work).
+     * True when metering is on and it's been {@code graceDays} since the last authoritative contact
+     * (last successful sync, or link time if never synced). {@code graceDays <= 0} or metering off
+     * disables the backstop.
      */
     private boolean isGraceExpired() {
         AccountLinkProperties.Metering metering = properties.getMetering();
@@ -158,13 +158,17 @@ public class InstanceEntitlementGate {
             return false;
         }
         if (e.subscribed()) {
-            // Subscribed: allowed unless a period cap is set and exceeded.
-            return e.periodCapUnits() == null || e.periodSpendUnits() < e.periodCapUnits();
+            if (e.periodCapUnits() == null) {
+                return true; // uncapped subscription
+            }
+            // Project the cap the way the grant is projected: synced paid spend plus the paid part
+            // of local usage not yet synced (free grant is consumed first, so only the excess
+            // bills) — stops at the cap in real time instead of overshooting until the next sync.
+            long pendingPaid = Math.max(0, pendingUnsyncedUnits - e.freeRemainingUnits());
+            return e.periodSpendUnits() + pendingPaid < e.periodCapUnits();
         }
-        // Unsubscribed: the free pool must cover both what SaaS has already charged (already netted
-        // out of freeRemainingUnits) and the local usage accrued since the last sync but not yet
-        // reported. Depleting by the pending delta stops the (grant+1)-th unit here in real time,
-        // instead of allowing it until a sync reconciles and the gate belatedly flips.
+        // Unsubscribed: free pool must cover SaaS-charged usage (in freeRemainingUnits) plus local
+        // usage not yet synced — deplete by the pending delta so we stop at the grant in real time.
         return e.freeRemainingUnits() - pendingUnsyncedUnits > 0;
     }
 }

@@ -1,5 +1,6 @@
 package stirling.software.proprietary.accountlink;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -12,19 +13,14 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.proprietary.billing.BillingCategory;
 
 /**
- * Accrues metered usage into the durable per-(period, category) {@link UsageCounter} on the
- * instance. The daily sync later reports the cumulative totals to SaaS.
+ * Accrues metered usage into the durable per-(period, category) {@link UsageCounter}; the daily
+ * sync later reports the cumulative totals to SaaS.
  *
- * <p>Lineage dedup: a billable op carries an {@code opSignature} (a hash of its input set). Before
- * accruing, the meter <b>claims</b> that signature for the period — a re-submission of the
- * identical inputs finds it already claimed and is not re-charged, the instance-local equivalent of
- * the cloud's lineage join (so the same op costs the same on the instance and in the cloud).
- * Fileless ops pass a null signature and always accrue (no input identity to dedup on).
- *
- * <p>Gated behind the dedicated {@code stirling.billing.account-link.metering.enabled} switch (on
- * top of {@code @Profile("!saas")}), so the bean is absent — and nothing accrues — unless billing
- * is explicitly turned on. {@link #accrue} is best-effort and self-contained: callers (the gate
- * interceptor's success path) need not handle persistence errors.
+ * <p>Workflow-window dedup: an identical input set re-submitted within {@code metering.workflow-
+ * window} is treated as chaining and not re-charged; the same inputs run again after the window are
+ * billed afresh — matching the cloud's open-job lineage window so the same op costs the same on the
+ * instance and in the cloud. Fileless ops pass a null signature and always accrue. {@link #accrue}
+ * is best-effort: callers need not handle persistence errors.
  */
 @Slf4j
 @Service
@@ -36,18 +32,21 @@ public class UsageMeterService {
 
     private final UsageCounterRepository repo;
     private final MeteredInputSignatureRepository signatureRepo;
+    private final Duration workflowWindow;
 
     public UsageMeterService(
-            UsageCounterRepository repo, MeteredInputSignatureRepository signatureRepo) {
+            UsageCounterRepository repo,
+            MeteredInputSignatureRepository signatureRepo,
+            AccountLinkProperties properties) {
         this.repo = repo;
         this.signatureRepo = signatureRepo;
+        this.workflowWindow = properties.getMetering().getWorkflowWindow();
     }
 
     /**
-     * Adds {@code units} to the {@code (periodStart, category)} counter, creating the row on first
-     * use, unless {@code opSignature} (the op's input-set hash) was already metered this period — a
-     * re-submission of identical inputs, which is skipped. No-ops for non-billable categories,
-     * non-positive units, or a missing period (e.g. entitlement not yet synced).
+     * Adds {@code units} to the {@code (periodStart, category)} counter (creating the row on first
+     * use), unless {@code opSignature} was already metered this period. No-ops for non-billable
+     * categories, non-positive units, or a missing period.
      */
     public void accrue(
             LocalDateTime periodStart, BillingCategory category, long units, String opSignature) {
@@ -57,27 +56,42 @@ public class UsageMeterService {
                 || units <= 0) {
             return;
         }
-        // Claim the input-set signature first (insert-as-claim): if it already exists this is a
-        // re-submission already billed — skip. Claiming before incrementing means the rare failure
-        // mode is a missed accrual (self-favouring), never a double-charge.
-        if (opSignature != null && !claimSignature(periodStart, opSignature)) {
-            return;
+        if (opSignature != null && !shouldCharge(periodStart, opSignature)) {
+            return; // identical inputs seen within the workflow window — chaining, already billed
         }
         incrementOrInsert(periodStart, category.name(), units);
     }
 
-    private boolean claimSignature(LocalDateTime periodStart, String opSignature) {
-        try {
-            signatureRepo.saveAndFlush(
-                    new MeteredInputSignature(periodStart, opSignature, LocalDateTime.now()));
-            return true;
-        } catch (DataIntegrityViolationException alreadyMetered) {
-            return false; // same input set already billed this period
-        } catch (RuntimeException e) {
-            // Never let a dedup-store hiccup drop a charge; treat as "not a duplicate" and accrue.
-            log.debug("Signature claim failed for {}: {}", periodStart, e.getMessage());
-            return true;
+    /**
+     * True when this input set should be charged: unseen this period, or last seen outside the
+     * workflow window. Records a first sighting (an atomic insert-as-claim under concurrency) and
+     * slides the window on a repeat. Fails toward charging so a store hiccup never drops a charge.
+     */
+    private boolean shouldCharge(LocalDateTime periodStart, String opSignature) {
+        LocalDateTime now = LocalDateTime.now();
+        MeteredInputSignature seen =
+                signatureRepo.findByPeriodStartAndSignature(periodStart, opSignature).orElse(null);
+        if (seen == null) {
+            try {
+                signatureRepo.saveAndFlush(
+                        new MeteredInputSignature(periodStart, opSignature, now));
+                return true; // first sighting this period
+            } catch (DataIntegrityViolationException raced) {
+                return false; // a concurrent op just claimed it — within window → chaining
+            } catch (RuntimeException e) {
+                log.debug("Signature claim failed for {}: {}", periodStart, e.getMessage());
+                return true;
+            }
         }
+        LocalDateTime last = seen.getLastMeteredAt() != null ? seen.getLastMeteredAt() : now;
+        boolean withinWindow = last.isAfter(now.minus(workflowWindow));
+        try {
+            seen.touch(now);
+            signatureRepo.save(seen);
+        } catch (RuntimeException e) {
+            log.debug("Signature touch failed for {}: {}", periodStart, e.getMessage());
+        }
+        return !withinWindow;
     }
 
     private void incrementOrInsert(LocalDateTime periodStart, String category, long units) {
@@ -93,9 +107,8 @@ public class UsageMeterService {
                 repo.increment(periodStart, category, units, now);
             }
         } catch (RuntimeException e) {
-            // Metering must never break the request it rode in on; lost accrual self-heals on the
-            // next operation's increment, and the daily sync reports the cumulative total either
-            // way.
+            // Metering must never break the request it rode in on; a lost accrual self-heals on the
+            // next increment and the daily sync reports the cumulative total either way.
             log.debug("Usage accrual failed for {}/{}: {}", periodStart, category, e.getMessage());
         }
     }

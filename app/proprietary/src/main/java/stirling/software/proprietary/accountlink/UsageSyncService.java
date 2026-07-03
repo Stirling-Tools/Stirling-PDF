@@ -2,6 +2,7 @@ package stirling.software.proprietary.accountlink;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,19 +15,17 @@ import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.proprietary.billing.BillingCategory;
+
 /**
  * Daily usage sender for combined-billing "Mode A". Reports each period's cumulative per-category
  * usage to SaaS, which bills the delta against its own last-seen totals.
  *
- * <p>The model is deliberately resilient: the sync seq is reserved (persisted) <em>before</em> the
- * report so it never regresses across restarts/failures; a transport failure leaves the per-counter
- * {@code lastSyncedUnits} markers untouched so the usage simply rolls into the next sync; and
- * reporting the same cumulative twice bills nothing (SaaS dedups on the delta + seq). All periods
- * with unsynced usage are reported, not just the current one, so usage isn't stranded when the
- * billing period rolls over between syncs.
- *
- * <p>Gated behind the dedicated {@code stirling.billing.account-link.metering.enabled} switch (plus
- * {@code @Profile("!saas")}): off → bean absent → nothing syncs.
+ * <p>Resilience: the sync seq is persisted before the report so it never regresses across
+ * restarts/failures; a transport failure leaves the {@code lastSyncedUnits} markers untouched so
+ * usage rolls into the next sync; and reporting the same cumulative twice bills nothing. All
+ * periods with unsynced usage are reported so nothing is stranded when the period rolls over
+ * between syncs.
  */
 @Slf4j
 @Service
@@ -36,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
         havingValue = "true")
 public class UsageSyncService implements SchedulingConfigurer {
 
-    // First run waits out startup (entitlement fetch + any restart churn); then every interval.
+    // First run waits out startup churn; then every interval.
     private static final Duration INITIAL_DELAY = Duration.ofMinutes(5);
 
     private final UsageCounterRepository counters;
@@ -62,10 +61,9 @@ public class UsageSyncService implements SchedulingConfigurer {
     }
 
     /**
-     * Registers the daily sync with the interval bound from {@code metering.sync-interval-hours} in
-     * code rather than a {@code @Scheduled} SpEL string — a bad interval is then a unit-test/boot
-     * failure, not a flags-on-bootRun-only surprise. {@code @EnableScheduling} (on the app) drives
-     * this.
+     * Registers the daily sync, binding the interval from {@code metering.sync-interval-hours} in
+     * code rather than a {@code @Scheduled} SpEL string so a bad interval fails at boot/test rather
+     * than only on a flags-on run.
      */
     @Override
     public void configureTasks(ScheduledTaskRegistrar registrar) {
@@ -94,11 +92,9 @@ public class UsageSyncService implements SchedulingConfigurer {
         }
         List<LocalDateTime> periods = counters.findPeriodsWithUnsyncedUsage();
         if (periods.isEmpty()) {
-            // Nothing accrued to report — but a sync is also our cue to pick up an out-of-band
-            // entitlement change (e.g. the admin just subscribed), which otherwise wouldn't surface
-            // until the entitlement-cache TTL lapses. Force an immediate refresh so the gate
-            // reflects the new plan now. invalidate() marks the snapshot stale; current() then does
-            // the blocking re-fetch and re-populates the cache for the next billable request.
+            // Nothing to report, but a sync is also our cue to pick up an out-of-band entitlement
+            // change (e.g. the admin just subscribed) that otherwise wouldn't surface until the
+            // cache TTL lapses. Force an immediate refresh so the gate reflects the new plan now.
             entitlementCache.invalidate();
             entitlementCache.current();
             return;
@@ -127,59 +123,55 @@ public class UsageSyncService implements SchedulingConfigurer {
 
     /** Reports one period; returns the fresh entitlement, or null on a transport/server failure. */
     private InstanceEntitlement syncPeriod(DeviceCredential cred, LocalDateTime period) {
-        long api = 0;
-        long ai = 0;
-        long automation = 0;
+        EnumMap<BillingCategory, Long> cumulative = new EnumMap<>(BillingCategory.class);
         for (UsageCounter c : counters.findByPeriodStart(period)) {
-            switch (c.getCategory()) {
-                case "API" -> api = c.getCumulativeUnits();
-                case "AI" -> ai = c.getCumulativeUnits();
-                case "AUTOMATION" -> automation = c.getCumulativeUnits();
-                default -> {
-                    // BYPASSED never accrues; ignore any unexpected category.
-                }
+            BillingCategory cat = c.billingCategory();
+            if (cat != null && cat != BillingCategory.BYPASSED) {
+                cumulative.merge(cat, c.getCumulativeUnits(), Long::sum);
             }
         }
-        long seq = reserveNextSeq();
+        AccountLinkSyncState state = loadState();
+        long seq = reserveNextSeq(state);
         InstanceEntitlement fresh =
                 client.reportUsage(
                         cred.getDeviceId(),
                         cred.getDeviceSecret(),
                         seq,
                         period,
-                        api,
-                        ai,
-                        automation);
+                        cumulative.getOrDefault(BillingCategory.API, 0L),
+                        cumulative.getOrDefault(BillingCategory.AI, 0L),
+                        cumulative.getOrDefault(BillingCategory.AUTOMATION, 0L));
         if (fresh == null) {
-            // Transport/server failure: leave the synced markers; the burned seq is harmless (seqs
-            // need only be monotonic) and SaaS bills the delta on the next successful sync.
+            // Transport/server failure: leave the synced markers untouched. The burned seq is
+            // harmless (seqs need only be monotonic) and the delta bills on the next successful
+            // sync.
             return null;
         }
-        recordSuccess(period, api, ai, automation);
+        recordSuccess(period, cumulative, state);
         return fresh;
     }
 
     /** Reserves and persists the next strictly-increasing sequence before the report goes out. */
-    private long reserveNextSeq() {
-        AccountLinkSyncState state = loadState();
+    private long reserveNextSeq(AccountLinkSyncState state) {
         long next = state.getLastSyncSeq() + 1;
         state.setLastSyncSeq(next);
         syncState.save(state);
         return next;
     }
 
-    /** Advances the per-counter synced markers to the reported totals + stamps the success time. */
-    private void recordSuccess(LocalDateTime period, long api, long ai, long automation) {
-        if (api > 0) {
-            counters.markSynced(period, "API", api);
-        }
-        if (ai > 0) {
-            counters.markSynced(period, "AI", ai);
-        }
-        if (automation > 0) {
-            counters.markSynced(period, "AUTOMATION", automation);
-        }
-        AccountLinkSyncState state = loadState();
+    /**
+     * Advances the per-category synced markers to the reported totals + stamps the success time.
+     */
+    private void recordSuccess(
+            LocalDateTime period,
+            EnumMap<BillingCategory, Long> cumulative,
+            AccountLinkSyncState state) {
+        cumulative.forEach(
+                (category, units) -> {
+                    if (units > 0) {
+                        counters.markSynced(period, category.name(), units);
+                    }
+                });
         state.setLastSuccessAt(LocalDateTime.now());
         syncState.save(state);
     }

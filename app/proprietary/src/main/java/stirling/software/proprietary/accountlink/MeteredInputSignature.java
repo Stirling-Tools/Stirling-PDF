@@ -15,11 +15,16 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * One {@code (billing period, input-set signature)} the instance has already metered — the local
- * equivalent of the cloud's lineage join (combined-billing "Mode A"). Before accruing a billable
- * op, the meter claims its op signature here; a re-submission of the identical input set finds the
- * signature present and is <b>not</b> re-charged, matching the in-cloud dedup so the same operation
- * costs the same whether it runs on the instance or in the cloud.
+ * The last time the instance metered a given input set this period — the local equivalent of the
+ * cloud's lineage join (combined-billing "Mode A"). The meter dedups on a rolling <b>workflow
+ * window</b>: an identical input set re-submitted within the window (see {@link
+ * AccountLinkProperties.Metering}) is treated as workflow chaining and not re-charged, while the
+ * same inputs run again after the window are billed afresh — matching the cloud's 5-minute open-job
+ * window so the same operation costs the same on the instance and in the cloud.
+ *
+ * <p>{@code lastMeteredAt} is refreshed on every sighting (the window slides, as recording a cloud
+ * artifact touches its job). One row per {@code (period, signature)}; the unique constraint also
+ * makes the first-sighting insert an atomic claim under concurrency.
  *
  * <p>Auto-created by Hibernate ({@code ddl-auto=update}); written only by the flag-gated meter.
  */
@@ -48,10 +53,21 @@ public class MeteredInputSignature {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    public MeteredInputSignature(
-            LocalDateTime periodStart, String signature, LocalDateTime createdAt) {
+    /**
+     * When this input set was last metered — the anchor the workflow-window dedup compares against.
+     */
+    @Column(name = "last_metered_at")
+    private LocalDateTime lastMeteredAt;
+
+    public MeteredInputSignature(LocalDateTime periodStart, String signature, LocalDateTime at) {
         this.periodStart = periodStart;
         this.signature = signature;
-        this.createdAt = createdAt;
+        this.createdAt = at;
+        this.lastMeteredAt = at;
+    }
+
+    /** Slides the window forward — the input set was seen again. */
+    public void touch(LocalDateTime at) {
+        this.lastMeteredAt = at;
     }
 }

@@ -18,33 +18,12 @@ import stirling.software.saas.payg.model.ProcessType;
 import stirling.software.saas.payg.repository.PaygInstanceUsageRepository;
 
 /**
- * Ingests a linked self-hosted instance's daily usage sync (combined-billing "Mode A").
- *
- * <p>The instance reports a <b>monotonic cumulative</b> unit total per {@link BillingCategory} for
- * the current billing period. We bill only the <b>delta</b> since the last sync, which makes the
- * model idempotent (a resend reports the same total → delta 0 → no charge) and tamper-evident (a
- * total that goes backwards is refused, not credited; a monotonic {@code syncSeq} dedups replays).
- * The charge itself <b>reuses {@link JobChargeService#chargeStandalone}</b> — the same free-grant
- * split, {@code wallet_ledger} DEBIT, Stripe meter, and idempotency the in-cloud charge path uses —
- * so there is no separate billing logic for this flow.
- *
- * <p><b>Cap enforcement is the request-time gate's job, not this charge path's</b> — exactly as the
- * in-cloud path enforces the cap at {@code EntitlementGuard}, not in {@code JobChargeService}. The
- * instance's own {@code InstanceEntitlementGate} blocks billable work once the team is over its cap
- * (a $0 cap blocks everything metered), so usage stops accruing at the cap and the reported delta
- * does not run past it. We deliberately do NOT re-check the cap here: a customer is never charged
- * past a limit their gate already enforces, and the only residual is the bounded
- * (~entitlement-cache TTL) overshoot inherent to any eventually-consistent meter. If the instance
- * ever meters past the cap that is an instance bug to fix, not something this aggregate path should
- * silently absorb.
- *
- * <p>{@code minChargeUnits} is applied by {@code chargeStandalone} <b>per sync-delta</b> here,
- * which intentionally differs from the per-operation floor in-cloud: the cumulative-delta model
- * carries no per-op identity, so a daily delta of D bills {@code max(D, minChargeUnits)} once, not
- * per underlying op. With the shipped default ({@code minChargeUnits=1}) this is a no-op (the
- * delta>0 guard already covers the only floored case).
- *
- * <p>Gated behind {@code stirling.billing.account-link.enabled}.
+ * Ingests a linked instance's daily usage sync (combined-billing "Mode A"). The instance reports a
+ * monotonic cumulative unit total per {@link BillingCategory}; we bill only the delta since the
+ * last sync via {@link JobChargeService#chargeStandalone} (reusing the in-cloud free-grant split,
+ * ledger DEBIT, Stripe meter and idempotency). Idempotent (a resend → delta 0 → no charge) and
+ * tamper-evident (a backwards total is refused; a monotonic {@code syncSeq} dedups replays). The
+ * cap is enforced at the instance gate, not here. Gated behind {@code account-link.enabled}.
  */
 @Slf4j
 @Service
@@ -106,11 +85,8 @@ public class InstanceUsageIngestService {
             LocalDateTime periodStart,
             BillingCategory category,
             long cumulative) {
-        // Pessimistic row lock: an external duplicate delivery of the same sync (e.g. a proxy
-        // retry) would otherwise let two transactions read the same baseline and both charge the
-        // delta. Locking serialises them — the second sees the advanced seq and replay-skips. A
-        // first-insert race is caught by uk_payg_instance_usage (the losing txn rolls back + the
-        // instance retries next sync).
+        // Pessimistic row lock so a duplicate delivery can't have two txns read the same baseline
+        // and both charge: the second waits, then sees the advanced seq and replay-skips.
         PaygInstanceUsage row =
                 usageRepository
                         .findByTeamIdAndPeriodStartAndCategoryForUpdate(

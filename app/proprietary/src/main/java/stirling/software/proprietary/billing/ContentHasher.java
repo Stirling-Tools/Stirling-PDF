@@ -43,6 +43,20 @@ public final class ContentHasher {
         return HexFormat.of().formatHex(newDigest().digest(bytes));
     }
 
+    /**
+     * A fresh SHA-256 digest, for callers that stream bytes through a {@link
+     * java.security.DigestOutputStream} to hash in the same pass that writes the file — avoiding a
+     * second full read just to fingerprint it. Pair with {@link #toHex(byte[])}.
+     */
+    public static MessageDigest newSha256() {
+        return newDigest();
+    }
+
+    /** Lower-case hex of a completed digest — the same format {@link #sha256(Path)} produces. */
+    public static String toHex(byte[] digest) {
+        return HexFormat.of().formatHex(digest);
+    }
+
     private static MessageDigest newDigest() {
         try {
             return MessageDigest.getInstance(ALGORITHM);

@@ -14,16 +14,14 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import stirling.software.proprietary.billing.BillingCategory;
+
 /**
- * Durable per-(billing period, category) cumulative usage counter for combined-billing "Mode A"
- * metering. Each successful billable operation increments the matching row; the daily sync reports
- * these cumulative totals and SaaS bills the <em>delta</em> since the last sync — the cumulative
- * model is idempotent (a resend bills nothing) and tamper-evident (a counter that drops is a
- * signal).
- *
- * <p>One row per {@code (period_start, category)}. Auto-created by Hibernate ({@code
- * ddl-auto=update} on self-hosted); only the flag-gated {@link UsageMeterService} writes it, so
- * when metering is off the table is simply an empty additive table.
+ * Durable per-(billing period, category) cumulative usage counter for combined-billing "Mode A".
+ * Each successful billable op increments its row; the daily sync reports the cumulative totals and
+ * SaaS bills the delta since the last sync. The cumulative model is idempotent (a resend bills
+ * nothing) and tamper-evident (a counter that drops is a signal). One row per {@code (period_start,
+ * category)}, auto-created by Hibernate; only the flag-gated {@link UsageMeterService} writes it.
  */
 @Entity
 @Table(
@@ -55,12 +53,10 @@ public class UsageCounter {
     private long cumulativeUnits;
 
     /**
-     * Value of {@link #cumulativeUnits} as of the last sync SaaS accepted. {@code cumulativeUnits −
-     * lastSyncedUnits} is the as-yet-unreported usage the portal shows on top of SaaS-synced spend.
-     *
-     * <p>{@code columnDefinition} default keeps the {@code ddl-auto=update} ADD COLUMN safe if an
-     * earlier build already populated this table on an external Postgres (NOT NULL with no default
-     * would otherwise fail the ALTER).
+     * {@link #cumulativeUnits} as of the last sync SaaS accepted; the difference is the unreported
+     * usage the portal shows on top of SaaS-synced spend. The {@code columnDefinition} default
+     * keeps the {@code ddl-auto=update} ADD COLUMN safe against a table an earlier build already
+     * populated (NOT NULL with no default would fail the ALTER).
      */
     @Column(
             name = "last_synced_units",
@@ -91,5 +87,19 @@ public class UsageCounter {
         this.cumulativeUnits = cumulativeUnits;
         this.lastSyncedUnits = lastSyncedUnits;
         this.updatedAt = updatedAt;
+    }
+
+    /** This row's category as the enum, or {@code null} for an unrecognised stored value. */
+    public BillingCategory billingCategory() {
+        try {
+            return BillingCategory.valueOf(category);
+        } catch (IllegalArgumentException unknown) {
+            return null;
+        }
+    }
+
+    /** Units accrued but not yet accepted by SaaS (floored at 0). */
+    public long unsyncedUnits() {
+        return Math.max(0, cumulativeUnits - lastSyncedUnits);
     }
 }

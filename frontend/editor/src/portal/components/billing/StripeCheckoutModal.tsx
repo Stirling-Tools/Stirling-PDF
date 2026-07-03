@@ -49,6 +49,55 @@ function loadStripeOnce(pk: string): Promise<Stripe | null> {
   return stripePromise;
 }
 
+/** Payment done, waiting for the subscription webhook to activate the plan. */
+function CheckoutFinalizing() {
+  const { t } = useTranslation();
+  return (
+    <div className="portal-billing__checkout-finalizing" role="status">
+      <Spinner size="lg" />
+      <h3 className="portal-billing__checkout-status-title">
+        {t(
+          "portal.billing.checkout.finalizing.title",
+          "Activating your Processor plan...",
+        )}
+      </h3>
+      <p className="portal-billing__checkout-status-body">
+        {t(
+          "portal.billing.checkout.finalizing.body",
+          "Your payment went through. We're switching on metered processing across your linked instances - this usually takes a few seconds.",
+        )}
+      </p>
+      <p className="portal-billing__checkout-status-hint">
+        {t(
+          "portal.billing.checkout.finalizing.hint",
+          "Please keep this window open.",
+        )}
+      </p>
+    </div>
+  );
+}
+
+/** Webhook lagging past the poll window — dismissable "it'll appear shortly" notice. */
+function CheckoutActivationSlow({ onClose }: { onClose: () => void }) {
+  const { t } = useTranslation();
+  return (
+    <div className="portal-billing__checkout-finalizing" role="status">
+      <h3 className="portal-billing__checkout-status-title">
+        {t("portal.billing.checkout.activationSlow.title", "Almost there")}
+      </h3>
+      <p className="portal-billing__checkout-status-body">
+        {t(
+          "portal.billing.checkout.activationSlow.body",
+          "Your payment succeeded, but activation is taking a little longer than usual. It'll switch on automatically - close this and it'll appear here shortly.",
+        )}
+      </p>
+      <Button variant="outline" onClick={onClose}>
+        {t("portal.billing.checkout.activationSlow.close", "Close")}
+      </Button>
+    </div>
+  );
+}
+
 export function StripeCheckoutModal({
   open,
   onClose,
@@ -167,45 +216,10 @@ export function StripeCheckoutModal({
         "Add a card to keep going past your free Editor-plan grant. Stripe handles the rest.",
       )}
     >
-      {phase === "finalizing" && (
-        <div className="portal-billing__checkout-finalizing" role="status">
-          <Spinner size="lg" />
-          <h3 className="portal-billing__checkout-status-title">
-            {t(
-              "portal.billing.checkout.finalizing.title",
-              "Activating your Processor plan...",
-            )}
-          </h3>
-          <p className="portal-billing__checkout-status-body">
-            {t(
-              "portal.billing.checkout.finalizing.body",
-              "Your payment went through. We're switching on metered processing across your linked instances - this usually takes a few seconds.",
-            )}
-          </p>
-          <p className="portal-billing__checkout-status-hint">
-            {t(
-              "portal.billing.checkout.finalizing.hint",
-              "Please keep this window open.",
-            )}
-          </p>
-        </div>
-      )}
+      {phase === "finalizing" && <CheckoutFinalizing />}
 
       {phase === "activationSlow" && (
-        <div className="portal-billing__checkout-finalizing" role="status">
-          <h3 className="portal-billing__checkout-status-title">
-            {t("portal.billing.checkout.activationSlow.title", "Almost there")}
-          </h3>
-          <p className="portal-billing__checkout-status-body">
-            {t(
-              "portal.billing.checkout.activationSlow.body",
-              "Your payment succeeded, but activation is taking a little longer than usual. It'll switch on automatically - close this and it'll appear here shortly.",
-            )}
-          </p>
-          <Button variant="outline" onClick={onClose}>
-            {t("portal.billing.checkout.activationSlow.close", "Close")}
-          </Button>
-        </div>
+        <CheckoutActivationSlow onClose={onClose} />
       )}
 
       {phase === "checkout" && (

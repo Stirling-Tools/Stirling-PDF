@@ -38,9 +38,8 @@ import tools.jackson.databind.node.ObjectNode;
  *       /api/v1/instance/revoke-self}).
  * </ul>
  *
- * <p>Uses {@code java.net.http.HttpClient} (the established self-hosted outbound pattern, see
- * {@code AiEngineClient}). The base URL + client are injectable so tests can stub the SaaS
- * endpoint.
+ * <p>Uses {@code java.net.http.HttpClient} (the established self-hosted outbound pattern; see
+ * {@code AiEngineClient}); base URL + client are injectable so tests can stub SaaS.
  */
 @Slf4j
 @Service
@@ -94,11 +93,9 @@ public class AccountLinkClient {
     }
 
     /**
-     * Authoritative deny (401/403) from the entitlement endpoint — the device credential is revoked
-     * or invalid. Distinct from a transport/server failure (which returns {@code null} and fails
-     * open): the cache must BLOCK billable work on this rather than serve a stale entitled
-     * snapshot. Unchecked so it propagates cleanly through {@link #fetchEntitlement}'s transport
-     * try/catch.
+     * Authoritative deny (401/403) — the device credential is revoked or invalid. Unlike a
+     * transport/server failure (which returns {@code null} and fails open), the cache must BLOCK on
+     * this. Unchecked so it propagates through {@link #fetchEntitlement}'s transport try/catch.
      */
     public static final class RevokedException extends RuntimeException {
         private final int status;
@@ -150,11 +147,9 @@ public class AccountLinkClient {
     }
 
     /**
-     * Revokes this instance's own credential on the SaaS side ({@code POST
-     * /api/v1/instance/revoke-self}), authenticated by the device credential — a credential is
-     * allowed to revoke its own identity. Best-effort: returns {@code false} if SaaS is unreachable
-     * or rejects the call, so the caller (local unlink) can still clear locally and log the orphan
-     * row for follow-up. Idempotent on SaaS (already-revoked → still 204).
+     * Revokes this instance's own credential on the SaaS side, authenticated by that credential.
+     * Best-effort: returns {@code false} if SaaS is unreachable or rejects, so the caller (local
+     * unlink) can still clear locally and log the orphan for follow-up. Idempotent on SaaS.
      */
     public boolean revokeSelf(String deviceId, String deviceSecret) {
         try {
@@ -227,14 +222,11 @@ public class AccountLinkClient {
     }
 
     /**
-     * Reports the current period's cumulative per-category units to {@code POST
-     * /api/v1/instance/sync} and returns the fresh entitlement in the same reply — one round-trip
-     * both reports usage and refreshes the gate. SaaS bills the delta against its own last-seen
-     * cumulative, so reporting the same totals twice charges nothing (idempotent).
-     *
-     * <p>Same three outcomes as {@link #fetchEntitlement}: 2xx → parsed snapshot; 401/403 → {@link
-     * RevokedException}; transport / other non-2xx / malformed body → {@code null} (caller must not
-     * advance its last-synced markers, so the usage retries on the next sync).
+     * Reports the period's cumulative per-category units to {@code POST /api/v1/instance/sync} and
+     * returns the fresh entitlement in the same reply — one round-trip both reports and refreshes.
+     * SaaS bills the delta against its last-seen cumulative, so resending the same totals is
+     * idempotent. Same three outcomes as {@link #fetchEntitlement}; on {@code null} the caller must
+     * not advance its last-synced markers so the usage retries next sync.
      */
     public InstanceEntitlement reportUsage(
             String deviceId,
@@ -248,8 +240,7 @@ public class AccountLinkClient {
         try {
             ObjectNode root = mapper.createObjectNode();
             root.put("syncSeq", syncSeq);
-            // periodStart as an explicit ISO-8601 string so it round-trips to the SaaS
-            // LocalDateTime regardless of the mapper's time-module config.
+            // Explicit ISO-8601 string so it round-trips regardless of the mapper's time config.
             root.put("periodStart", periodStart.toString());
             ObjectNode units = root.putObject("cumulativeUnits");
             units.put("api", apiUnits);
