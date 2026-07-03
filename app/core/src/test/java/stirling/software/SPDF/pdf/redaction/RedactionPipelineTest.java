@@ -894,6 +894,74 @@ class RedactionPipelineTest {
         }
     }
 
+    @Test
+    @DisplayName("manual area over part of a run removes only the boxed glyphs, not the whole run")
+    void manualAreaRemovesOnlyBoxedGlyphs() throws Exception {
+        float fontSize = 16f;
+        float startX = 72f;
+        float baselineY = 700f;
+        PDType1Font font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+        String prefix = "Label: ";
+        String target = "SECRET";
+        byte[] out;
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage(PDRectangle.A4);
+            doc.addPage(page);
+            try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
+                cs.beginText();
+                cs.setFont(font, fontSize);
+                cs.newLineAtOffset(startX, baselineY);
+                cs.showText(prefix + target + " value");
+                cs.endText();
+            }
+            float rectX = startX + font.getStringWidth(prefix) / 1000f * fontSize;
+            float targetW = font.getStringWidth(target) / 1000f * fontSize;
+            PDRectangle rect = new PDRectangle(rectX, baselineY - fontSize, targetW, 3 * fontSize);
+            Map<Integer, List<PDRectangle>> rectsByPage = new HashMap<>();
+            rectsByPage.put(0, List.of(rect));
+            RedactionPipeline.RedactionResult result =
+                    RedactionPipeline.redactAreas(doc, rectsByPage, Color.BLACK);
+            out =
+                    RedactionPipeline.finalizeAreas(
+                            doc,
+                            rectsByPage,
+                            result.getForceRasterPages(),
+                            result.getCapturedStrings());
+        }
+        try (PDDocument reopened = Loader.loadPDF(out)) {
+            String text = new PDFTextStripper().getText(reopened);
+            assertFalse(text.contains("SECRET"), "boxed target must be removed");
+            assertTrue(text.contains("Label:"), "text left of the box must survive");
+            assertTrue(text.contains("value"), "text right of the box must survive");
+            assertFalse(pageHasImage(reopened.getPage(0)), "should be surgical, not rasterised");
+        }
+    }
+
+    @Test
+    @DisplayName("metadata scrub keeps non-matching Info entries and strips only the target")
+    void metadataScrubIsTargetScoped() throws Exception {
+        byte[] bytes;
+        try (PDDocument doc = new PDDocument()) {
+            doc.addPage(new PDPage(PDRectangle.A4));
+            org.apache.pdfbox.pdmodel.PDDocumentInformation info = doc.getDocumentInformation();
+            info.setTitle("Quarterly Public Report");
+            info.setAuthor("Written by Smith");
+            info.setCustomMetadataValue("CaseName", "Smith matter");
+            CatalogScrubber.scrub(
+                    doc, new LinkedHashSet<>(Set.of("Smith")), Collections.emptyList());
+            ByteArrayOutputStream b = new ByteArrayOutputStream();
+            doc.save(b);
+            bytes = b.toByteArray();
+        }
+        try (PDDocument reopened = Loader.loadPDF(bytes)) {
+            org.apache.pdfbox.pdmodel.PDDocumentInformation info =
+                    reopened.getDocumentInformation();
+            assertEquals(
+                    "Quarterly Public Report", info.getTitle(), "non-matching Title must survive");
+            assertFalse(info.getAuthor().contains("Smith"), "matching Author must be scrubbed");
+        }
+    }
+
     private static boolean pageHasImage(PDPage page) throws Exception {
         PDResources res = page.getResources();
         if (res == null) {

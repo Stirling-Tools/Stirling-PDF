@@ -46,7 +46,8 @@ class TextRedactionService {
     private static final int MAX_XOBJECT_DEPTH = 10;
     private static final float PRECISION_THRESHOLD = 1e-3f;
     private static final int FONT_SCALE_FACTOR = 1000;
-    private static final Set<String> TEXT_SHOWING_OPERATORS = Set.of("Tj", "TJ", "'", "\"");
+    private static final Set<String> TEXT_SHOWING_OPERATORS =
+            stirling.software.SPDF.pdf.redaction.RedactionPipeline.TEXT_SHOWING_OPERATORS;
     private static final COSString EMPTY_COS_STRING = new COSString("");
 
     // Public API

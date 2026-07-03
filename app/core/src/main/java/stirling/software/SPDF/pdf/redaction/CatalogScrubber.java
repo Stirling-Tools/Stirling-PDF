@@ -1,6 +1,5 @@
 package stirling.software.SPDF.pdf.redaction;
 
-import java.util.Calendar;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -57,6 +56,7 @@ public final class CatalogScrubber {
         scrubStructTree(catalog.getStructureTreeRoot(), literalTargets, patterns);
         scrubNames(catalog.getNames(), literalTargets, patterns);
         scrubCatalogActions(catalog, literalTargets, patterns);
+        scrubDocumentInfo(document, literalTargets, patterns);
     }
 
     // Catalog actions: OpenAction, AA, and any JavaScript / URI payloads
@@ -162,37 +162,43 @@ public final class CatalogScrubber {
         return false;
     }
 
-    /** Wipe Info-dict entries and the XMP metadata stream. */
-    public static void wipeMetadata(PDDocument document) {
-        if (document == null) {
-            return;
-        }
+    /**
+     * Remove the redaction target from /Info string entries and drop the XMP packet only if it
+     * carries a target. Non-matching document properties (Title, Author, dates) are left intact -
+     * redaction removes the target, it does not blanket-wipe metadata.
+     */
+    private static void scrubDocumentInfo(
+            PDDocument document, Set<String> targets, List<Pattern> patterns) {
         PDDocumentInformation info = document.getDocumentInformation();
-        if (info != null) {
-            info.setAuthor(null);
-            info.setSubject(null);
-            info.setKeywords(null);
-            info.setTitle(null);
-            info.setCreator(null);
-            info.setProducer(null);
-            info.setModificationDate(Calendar.getInstance());
-            // Drop any non-standard custom /Info string entries (e.g. a client-added "CaseName")
-            // that the typed setters above don't cover.
+        if (info != null && info.getCOSObject() != null) {
             COSDictionary infoDict = info.getCOSObject();
-            if (infoDict != null) {
-                for (COSName key : new HashSet<>(infoDict.keySet())) {
-                    if (infoDict.getDictionaryObject(key) instanceof COSString) {
-                        infoDict.removeItem(key);
+            for (COSName key : new HashSet<>(infoDict.keySet())) {
+                if (infoDict.getDictionaryObject(key) instanceof COSString cs) {
+                    String stripped = stripMatches(cs.getString(), targets, patterns);
+                    if (!stripped.equals(cs.getString())) {
+                        if (stripped.isEmpty()) {
+                            infoDict.removeItem(key);
+                        } else {
+                            infoDict.setString(key, stripped);
+                        }
                     }
                 }
             }
         }
         PDDocumentCatalog catalog = document.getDocumentCatalog();
-        if (catalog != null) {
+        if (catalog != null && catalog.getMetadata() != null) {
             try {
-                catalog.setMetadata(null);
+                String xmp =
+                        new String(
+                                catalog.getMetadata().toByteArray(),
+                                java.nio.charset.StandardCharsets.UTF_8);
+                // XMP is RDF/XML that usually mirrors /Info; drop the whole packet if it carries a
+                // target rather than risk a broken partial edit.
+                if (matches(xmp, targets, patterns)) {
+                    catalog.setMetadata(null);
+                }
             } catch (Exception e) {
-                log.debug("Could not clear XMP metadata: {}", e.getMessage());
+                log.debug("Could not scan XMP metadata: {}", e.getMessage());
             }
         }
     }
@@ -576,12 +582,12 @@ public final class CatalogScrubber {
         COSArray namesArray =
                 dict.getDictionaryObject(COSName.NAMES) instanceof COSArray a ? a : null;
         if (namesArray != null) {
+            Set<String> dropLiterals = carrierDropLiterals(targets);
             for (int i = namesArray.size() - 2; i >= 0; i -= 2) {
                 COSBase keyBase = namesArray.getObject(i);
                 String key = keyBase instanceof COSString s ? s.getString() : null;
                 // Drop the pair when the KEY or the VALUE (JS /JS stream, embedded-file bytes)
                 // contains a target - not just the key.
-                Set<String> dropLiterals = carrierDropLiterals(targets);
                 boolean keyHit = key != null && matches(key, dropLiterals, patterns);
                 boolean valueHit =
                         i + 1 < namesArray.size()

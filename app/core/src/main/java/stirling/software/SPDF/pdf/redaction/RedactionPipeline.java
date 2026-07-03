@@ -26,6 +26,7 @@ import org.apache.pdfbox.contentstream.operator.Operator;
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSFloat;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.cos.COSString;
 import org.apache.pdfbox.pdfparser.PDFStreamParser;
@@ -56,7 +57,7 @@ import stirling.software.SPDF.utils.text.TextFinderUtils;
 @Slf4j
 public final class RedactionPipeline {
 
-    private static final Set<String> TEXT_SHOWING_OPERATORS = Set.of("Tj", "TJ", "'", "\"");
+    public static final Set<String> TEXT_SHOWING_OPERATORS = Set.of("Tj", "TJ", "'", "\"");
     private static final int MAX_XOBJECT_DEPTH = 10;
 
     // Latched false when the native PDFium binding can't load, so the host falls back to the PDFBox
@@ -223,7 +224,6 @@ public final class RedactionPipeline {
             throws IOException {
 
         CatalogScrubber.scrub(document, literalTargets, patterns);
-        CatalogScrubber.wipeMetadata(document);
         warnAboutEmbeddedFontGlyphs(document);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -246,7 +246,6 @@ public final class RedactionPipeline {
                             : new HashSet<>(affectedPages);
             try (PDDocument rasterised = rasterisePages(bytes, pagesToRaster)) {
                 CatalogScrubber.scrub(rasterised, literalTargets, patterns);
-                CatalogScrubber.wipeMetadata(rasterised);
                 ByteArrayOutputStream rasterOut = new ByteArrayOutputStream();
                 rasterised.save(rasterOut);
                 byte[] rasterBytes = rasterOut.toByteArray();
@@ -272,7 +271,6 @@ public final class RedactionPipeline {
         Set<String> carrierTargets =
                 capturedTargets == null ? Collections.emptySet() : capturedTargets;
         CatalogScrubber.scrub(document, carrierTargets, Collections.emptyList());
-        CatalogScrubber.wipeMetadata(document);
         warnAboutEmbeddedFontGlyphs(document);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -287,7 +285,6 @@ public final class RedactionPipeline {
         }
         log.warn("Manual redaction rasterising page(s) {} to guarantee removal", toRaster);
         try (PDDocument rasterised = rasterisePages(bytes, toRaster)) {
-            CatalogScrubber.wipeMetadata(rasterised);
             ByteArrayOutputStream rasterOut = new ByteArrayOutputStream();
             rasterised.save(rasterOut);
             return rasterOut.toByteArray();
@@ -311,7 +308,6 @@ public final class RedactionPipeline {
         log.warn("Rasterising page(s) {} to guarantee geometric redaction removal", pages);
         try (PDDocument rasterised = rasterisePages(bytes, new HashSet<>(pages))) {
             CatalogScrubber.scrub(rasterised, literalTargets, patterns);
-            CatalogScrubber.wipeMetadata(rasterised);
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             rasterised.save(out);
             return out.toByteArray();
@@ -332,10 +328,8 @@ public final class RedactionPipeline {
                     continue;
                 }
                 PDPage page = reopened.getPage(pageIndex);
-                boolean textLeft =
-                        captureTextInRects(page, entry.getValue()).stream()
-                                .anyMatch(s -> s != null && !s.isBlank());
-                if (textLeft || annotationOverlapsRect(page, entry.getValue())) {
+                if (glyphStillInRects(reopened, page, pageIndex, entry.getValue())
+                        || annotationOverlapsRect(page, entry.getValue())) {
                     leaking.add(pageIndex);
                 }
             }
@@ -344,6 +338,31 @@ public final class RedactionPipeline {
             return new HashSet<>(rectsByPage.keySet());
         }
         return leaking;
+    }
+
+    /**
+     * True if any non-blank glyph is still painted inside a rect. Position-based (not ToUnicode),
+     * so it catches residual CID/Type3/no-ToUnicode glyphs the text stripper would miss; fails
+     * closed.
+     */
+    private static boolean glyphStillInRects(
+            PDDocument doc, PDPage page, int pageIndex, List<PDRectangle> rects) {
+        try {
+            List<Rectangle2D.Float> areaRects = new ArrayList<>();
+            for (PDRectangle rect : rects) {
+                float pdfY = page.getBBox().getHeight() - rect.getUpperRightY();
+                areaRects.add(
+                        new Rectangle2D.Float(
+                                rect.getLowerLeftX(), pdfY, rect.getWidth(), rect.getHeight()));
+            }
+            TokenIndexCollector collector = new TokenIndexCollector(areaRects);
+            collector.setStartPage(pageIndex + 1);
+            collector.setEndPage(pageIndex + 1);
+            collector.getText(doc);
+            return collector.anyGlyphInRect();
+        } catch (Exception e) {
+            return true; // cannot prove the rect is clean - rasterise to be safe
+        }
     }
 
     private static boolean annotationOverlapsRect(PDPage page, List<PDRectangle> rects) {
@@ -888,45 +907,173 @@ public final class RedactionPipeline {
         collector.setStartPage(pageIndex + 1);
         collector.setEndPage(pageIndex + 1);
         collector.getText(document);
-        Set<Integer> dropTokenIndexes = collector.tokenIndexesToDrop;
         int collectorTextOps = collector.totalTextOps();
 
         List<Object> tokens = parseTokens(new PDFStreamParser(page));
-        Set<Integer> blankArgIndexes = new HashSet<>();
         int pageTextOps = 0;
-        for (int i = 0; i < tokens.size(); i++) {
-            Object t = tokens.get(i);
+        for (Object t : tokens) {
             if (t instanceof Operator op && TEXT_SHOWING_OPERATORS.contains(op.getName())) {
-                if (dropTokenIndexes.contains(pageTextOps) && i > 0) {
-                    blankArgIndexes.add(i - 1);
-                }
                 pageTextOps++;
             }
         }
-
-        // Collector ordinals span form XObjects.
+        // Collector ordinals span form XObjects; images under a rect can't be surgically removed.
         if (collectorTextOps != pageTextOps || imageIntersectsAnyRect(page, pageIndex, rects)) {
             return false;
         }
 
-        for (Integer idx : blankArgIndexes) {
-            Object arg = tokens.get(idx);
-            if (arg instanceof COSString) {
-                tokens.set(idx, new COSString(""));
-            } else if (arg instanceof COSArray arr) {
-                COSArray empty = new COSArray();
-                // Preserve numeric kerning entries so page layout doesn't shift wildly.
-                for (COSBase element : arr) {
-                    if (!(element instanceof COSString)) {
-                        empty.add(element);
-                    }
+        // Drop ONLY the in-rect glyphs of each operand (not the whole run), tracking the active
+        // font so codes decode. Bail to rasterise if the font can't decode or glyph!=code counts.
+        PDResources resources = page.getResources();
+        PDFont currentFont = null;
+        int opCounter = -1;
+        boolean modified = false;
+        for (int i = 0; i < tokens.size(); i++) {
+            Object tok = tokens.get(i);
+            if (!(tok instanceof Operator op)) {
+                continue;
+            }
+            String name = op.getName();
+            if ("Tf".equals(name) && i >= 2 && tokens.get(i - 2) instanceof COSName fn) {
+                try {
+                    currentFont = resources != null ? resources.getFont(fn) : null;
+                } catch (IOException e) {
+                    currentFont = null;
                 }
-                tokens.set(idx, empty);
+            } else if (TEXT_SHOWING_OPERATORS.contains(name)) {
+                opCounter++;
+                Set<Integer> dropGlyphs = collector.dropGlyphsByOp.get(opCounter);
+                if (dropGlyphs == null || dropGlyphs.isEmpty() || i < 1) {
+                    continue;
+                }
+                // ' and " also move to the next line; converting them to TJ would lose that -
+                // raster.
+                if ("'".equals(name) || "\"".equals(name)) {
+                    return false;
+                }
+                int expected = collector.glyphCountByOp.getOrDefault(opCounter, -1);
+                COSArray rebuilt =
+                        rebuildAdvancePreserving(
+                                tokens.get(i - 1), currentFont, dropGlyphs, expected);
+                if (rebuilt == null) {
+                    return false; // undecodable / glyph-count mismatch - rasterise instead
+                }
+                // Emit as TJ so the removed glyphs' advance is preserved (no reflow).
+                tokens.set(i - 1, rebuilt);
+                tokens.set(i, Operator.getOperator("TJ"));
+                modified = true;
             }
         }
 
-        writePageTokens(document, page, tokens);
+        if (modified) {
+            writePageTokens(document, page, tokens);
+        }
         return true;
+    }
+
+    /** Distinct code byte-starts in order (one per glyph/code) from a per-char DecodeResult. */
+    private static int[] distinctCodeStarts(DecodeResult d) {
+        List<Integer> starts = new ArrayList<>();
+        int last = -1;
+        for (int s : d.codeStarts) {
+            if (s != last) {
+                starts.add(s);
+                last = s;
+            }
+        }
+        return starts.stream().mapToInt(Integer::intValue).toArray();
+    }
+
+    private static int codeAt(PDFont font, byte[] bytes, int start, int len) throws IOException {
+        try (ByteArrayInputStream in = new ByteArrayInputStream(bytes, start, len)) {
+            return font.readCode(in);
+        }
+    }
+
+    /**
+     * Rebuild a Tj/TJ operand as a TJ array that keeps every glyph EXCEPT the given 0-based
+     * indexes, replacing each dropped run with a numeric adjustment equal to its advance so the
+     * surviving text does not reflow into (or out of) the box. Returns null (caller rasterises) if
+     * anything can't be decoded or the glyph count doesn't line up with the position pass.
+     */
+    private static COSArray rebuildAdvancePreserving(
+            Object operand, PDFont font, Set<Integer> dropGlyphs, int expectedGlyphs) {
+        if (font == null) {
+            return null;
+        }
+        List<COSBase> elements = new ArrayList<>();
+        if (operand instanceof COSString cs) {
+            elements.add(cs);
+        } else if (operand instanceof COSArray arr) {
+            for (COSBase b : arr) {
+                elements.add(b);
+            }
+        } else {
+            return null;
+        }
+
+        COSArray out = new COSArray();
+        ByteArrayOutputStream seg = new ByteArrayOutputStream();
+        float pendingAdvance = 0f; // accumulated width of dropped codes, in 1/1000 text units
+        int globalCode = 0;
+        for (COSBase el : elements) {
+            if (!(el instanceof COSString s)) {
+                // Existing numeric adjustment: flush whichever run is pending, then preserve it.
+                if (seg.size() > 0) {
+                    out.add(new COSString(seg.toByteArray()));
+                    seg.reset();
+                } else if (pendingAdvance != 0f) {
+                    out.add(new COSFloat(-pendingAdvance));
+                    pendingAdvance = 0f;
+                }
+                out.add(el);
+                continue;
+            }
+            DecodeResult d = decodeCosString(s, font);
+            if (d == null) {
+                return null;
+            }
+            byte[] b = s.getBytes();
+            int[] starts = distinctCodeStarts(d);
+            Map<Integer, Integer> lenByStart = new HashMap<>();
+            for (int j = 0; j < d.codeStarts.length; j++) {
+                lenByStart.putIfAbsent(d.codeStarts[j], d.codeLens[j]);
+            }
+            for (int k = 0; k < starts.length; k++) {
+                int bs = starts[k];
+                int len = lenByStart.getOrDefault(bs, -1);
+                if (len <= 0) {
+                    return null;
+                }
+                if (dropGlyphs.contains(globalCode)) {
+                    if (seg.size() > 0) { // close the kept run before accumulating advance
+                        out.add(new COSString(seg.toByteArray()));
+                        seg.reset();
+                    }
+                    try {
+                        pendingAdvance += font.getWidth(codeAt(font, b, bs, len));
+                    } catch (Exception e) {
+                        return null;
+                    }
+                } else {
+                    if (pendingAdvance != 0f) { // emit the removed run's advance, then keep glyphs
+                        out.add(new COSFloat(-pendingAdvance));
+                        pendingAdvance = 0f;
+                    }
+                    seg.write(b, bs, len);
+                }
+                globalCode++;
+            }
+        }
+        if (pendingAdvance != 0f) {
+            out.add(new COSFloat(-pendingAdvance));
+        }
+        if (seg.size() > 0) {
+            out.add(new COSString(seg.toByteArray()));
+        }
+        if (expectedGlyphs >= 0 && globalCode != expectedGlyphs) {
+            return null;
+        }
+        return out;
     }
 
     /**
@@ -1374,11 +1521,18 @@ public final class RedactionPipeline {
     }
 
     /** A PDFTextStripper subclass that records the ordinal index of every */
+    /**
+     * Position-based (ToUnicode-independent) glyph locator: records, per text-showing operator, the
+     * 0-based indexes of the non-blank glyphs whose box intersects a rect, plus each operator's
+     * total glyph count. Blank glyphs are ignored so a space left behind by removal is not a
+     * "leak".
+     */
     private static final class TokenIndexCollector extends PDFTextStripper {
         private final List<Rectangle2D.Float> rects;
-        private final Set<Integer> tokenIndexesToDrop = new HashSet<>();
+        private final Map<Integer, Set<Integer>> dropGlyphsByOp = new HashMap<>();
+        private final Map<Integer, Integer> glyphCountByOp = new HashMap<>();
         private int showTextOpCounter = -1;
-        private boolean currentOpInRect = false;
+        private int glyphInOp = 0;
 
         TokenIndexCollector(List<Rectangle2D.Float> rects) throws IOException {
             this.rects = rects;
@@ -1389,17 +1543,26 @@ public final class RedactionPipeline {
             return showTextOpCounter + 1;
         }
 
+        boolean anyGlyphInRect() {
+            return !dropGlyphsByOp.isEmpty();
+        }
+
         @Override
         protected void processTextPosition(TextPosition text) {
-            // PDFBox reports coordinates with top-left origin here.
-            float x = text.getX();
-            float y = text.getY() - text.getHeight();
-            Rectangle2D.Float glyph =
-                    new Rectangle2D.Float(x, y, text.getWidth(), text.getHeight());
-            for (Rectangle2D.Float rect : rects) {
-                if (rect.intersects(glyph)) {
-                    currentOpInRect = true;
-                    return;
+            int op = showTextOpCounter;
+            int idx = glyphInOp++;
+            String u = text.getUnicode();
+            if (u != null && !u.isBlank()) {
+                // PDFBox reports coordinates with top-left origin here.
+                float x = text.getX();
+                float y = text.getY() - text.getHeight();
+                Rectangle2D.Float glyph =
+                        new Rectangle2D.Float(x, y, text.getWidth(), text.getHeight());
+                for (Rectangle2D.Float rect : rects) {
+                    if (rect.intersects(glyph)) {
+                        dropGlyphsByOp.computeIfAbsent(op, k -> new HashSet<>()).add(idx);
+                        return;
+                    }
                 }
             }
             super.processTextPosition(text);
@@ -1412,11 +1575,11 @@ public final class RedactionPipeline {
             boolean textOp = TEXT_SHOWING_OPERATORS.contains(name);
             if (textOp) {
                 showTextOpCounter++;
-                currentOpInRect = false;
+                glyphInOp = 0;
             }
             super.processOperator(operator, operands);
-            if (textOp && currentOpInRect) {
-                tokenIndexesToDrop.add(showTextOpCounter);
+            if (textOp) {
+                glyphCountByOp.put(showTextOpCounter, glyphInOp);
             }
         }
     }

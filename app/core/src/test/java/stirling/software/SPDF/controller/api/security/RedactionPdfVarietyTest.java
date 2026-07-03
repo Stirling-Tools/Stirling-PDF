@@ -17,12 +17,18 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSArray;
+import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSInteger;
+import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.cos.COSStream;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDFormContentStream;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.common.PDStream;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDFontDescriptor;
 import org.apache.pdfbox.pdmodel.font.PDTrueTypeFont;
@@ -188,6 +194,30 @@ class RedactionPdfVarietyTest {
         byte[] out = autoRedact(type0Pdf(false, "alpha SECRET omega"), "SECRET");
         assertGone(out, "SECRET");
         assertThat(pdfText(out)).contains("alpha").contains("omega");
+    }
+
+    @Test
+    @DisplayName("embedded Type1 (PFB) font: target gone, neighbours survive")
+    void embeddedType1() throws IOException {
+        byte[] out = autoRedact(type1Pdf("PUBLICA SECRETWORD KEEP"), "SECRETWORD");
+        assertGone(out, "SECRETWORD");
+        assertThat(pdfText(out)).contains("PUBLICA").contains("KEEP");
+    }
+
+    @Test
+    @DisplayName("embedded CJK Type0 (CIDFontType2) font: CJK target gone, neighbours survive")
+    void embeddedCjkType0() throws IOException {
+        byte[] out = autoRedact(cjkPdf("PUBLICA \u79D8\u5BC6 KEEP"), "\u79D8\u5BC6");
+        assertGone(out, "\u79D8\u5BC6");
+        assertThat(pdfText(out)).contains("PUBLICA").contains("KEEP");
+    }
+
+    @Test
+    @DisplayName("embedded CIDFontType0 (CFF) font: target gone, neighbours survive")
+    void embeddedCidFontType0() throws IOException {
+        byte[] out = autoRedact(cidFontType0Pdf("PUBLICA SECRETWORD KEEP"), "SECRETWORD");
+        assertGone(out, "SECRETWORD");
+        assertThat(pdfText(out)).contains("PUBLICA").contains("KEEP");
     }
 
     @Test
@@ -383,6 +413,137 @@ class RedactionPdfVarietyTest {
         }
     }
 
+    // GID order emitted by generators/gen_cff_cidfont.py: 0=.notdef 1=space then the letters.
+    private static final String CFF_GLYPHS = "\0 ABCDEIKLOPRSTUW";
+
+    private static int cffGid(char c) {
+        int i = CFF_GLYPHS.indexOf(c);
+        return i < 0 ? 0 : i;
+    }
+
+    /**
+     * PDFBox 3.0.7 has no CFF embedder, so hand-assemble a Type0 -> CIDFontType0 (CFF in
+     * /FontFile3, Identity-H, CID==GID, explicit /ToUnicode) from the generated CFF program.
+     */
+    private byte[] cidFontType0Pdf(String line) throws IOException {
+        byte[] cff;
+        try (InputStream in = getClass().getResourceAsStream("/redaction/cidfont0_cff.bin")) {
+            cff = in.readAllBytes();
+        }
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage(PDRectangle.A4);
+            doc.addPage(page);
+
+            PDStream fontFile = new PDStream(doc);
+            try (var os = fontFile.createOutputStream()) {
+                os.write(cff);
+            }
+            COSStream ff = fontFile.getCOSObject();
+            ff.setItem(COSName.SUBTYPE, COSName.getPDFName("CIDFontType0C"));
+
+            COSDictionary fdesc = new COSDictionary();
+            fdesc.setItem(COSName.TYPE, COSName.FONT_DESC);
+            fdesc.setName(COSName.FONT_NAME, "MinimalCFFCID");
+            fdesc.setInt(COSName.FLAGS, 4);
+            COSArray bbox = new COSArray();
+            for (int v : new int[] {0, -200, 600, 800}) {
+                bbox.add(COSInteger.get(v));
+            }
+            fdesc.setItem(COSName.FONT_BBOX, bbox);
+            fdesc.setInt(COSName.ITALIC_ANGLE, 0);
+            fdesc.setInt(COSName.ASCENT, 800);
+            fdesc.setInt(COSName.DESCENT, -200);
+            fdesc.setInt(COSName.CAP_HEIGHT, 700);
+            fdesc.setInt(COSName.STEM_V, 80);
+            fdesc.setItem(COSName.getPDFName("FontFile3"), ff);
+
+            COSDictionary cidSystemInfo = new COSDictionary();
+            cidSystemInfo.setString(COSName.REGISTRY, "Adobe");
+            cidSystemInfo.setString(COSName.ORDERING, "Identity");
+            cidSystemInfo.setInt(COSName.SUPPLEMENT, 0);
+
+            COSDictionary cidFont = new COSDictionary();
+            cidFont.setItem(COSName.TYPE, COSName.FONT);
+            cidFont.setItem(COSName.SUBTYPE, COSName.CID_FONT_TYPE0);
+            cidFont.setName(COSName.BASE_FONT, "MinimalCFFCID");
+            cidFont.setItem(COSName.CIDSYSTEMINFO, cidSystemInfo);
+            cidFont.setItem(COSName.FONT_DESC, fdesc);
+            cidFont.setInt(COSName.DW, 600);
+
+            COSStream toUni = new PDStream(doc).getCOSObject();
+            try (var os = toUni.createOutputStream()) {
+                os.write(cffToUnicode().getBytes(java.nio.charset.StandardCharsets.US_ASCII));
+            }
+
+            COSDictionary type0 = new COSDictionary();
+            type0.setItem(COSName.TYPE, COSName.FONT);
+            type0.setItem(COSName.SUBTYPE, COSName.TYPE0);
+            type0.setName(COSName.BASE_FONT, "MinimalCFFCID");
+            type0.setItem(COSName.ENCODING, COSName.IDENTITY_H);
+            COSArray descendants = new COSArray();
+            descendants.add(cidFont);
+            type0.setItem(COSName.DESCENDANT_FONTS, descendants);
+            type0.setItem(COSName.TO_UNICODE, toUni);
+
+            PDFont font = org.apache.pdfbox.pdmodel.font.PDFontFactory.createFont(type0);
+            PDResources res = new PDResources();
+            COSName fName = res.add(font);
+            page.setResources(res);
+
+            StringBuilder csb = new StringBuilder();
+            csb.append("BT\n/").append(fName.getName()).append(" 24 Tf\n50 700 Td\n<");
+            for (int i = 0; i < line.length(); i++) {
+                csb.append(String.format("%04X", cffGid(line.charAt(i))));
+            }
+            csb.append("> Tj\nET\n");
+            PDStream content = new PDStream(doc);
+            try (var os = content.createOutputStream()) {
+                os.write(csb.toString().getBytes(java.nio.charset.StandardCharsets.US_ASCII));
+            }
+            page.setContents(content);
+            return save(doc);
+        }
+    }
+
+    private static String cffToUnicode() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("/CIDInit /ProcSet findresource begin\n12 dict begin\nbegincmap\n");
+        sb.append("/CIDSystemInfo << /Registry (Adobe) /Ordering (UCS) /Supplement 0 >> def\n");
+        sb.append("/CMapName /Adobe-Identity-UCS def\n/CMapType 2 def\n");
+        sb.append("1 begincodespacerange\n<0000> <FFFF>\nendcodespacerange\n");
+        StringBuilder body = new StringBuilder();
+        int count = 0;
+        for (int gid = 1; gid < CFF_GLYPHS.length(); gid++) {
+            body.append(String.format("<%04X> <%04X>\n", gid, (int) CFF_GLYPHS.charAt(gid)));
+            count++;
+        }
+        sb.append(count).append(" beginbfchar\n").append(body).append("endbfchar\n");
+        sb.append("endcmap\nCMapName currentdict /CMap defineresource pop\nend\nend\n");
+        return sb.toString();
+    }
+
+    private byte[] type1Pdf(String line) throws IOException {
+        try (PDDocument doc = new PDDocument()) {
+            PDFont font;
+            try (InputStream pfb = getClass().getResourceAsStream("/redaction/type1_minimal.pfb")) {
+                font = new PDType1Font(doc, pfb, WinAnsiEncoding.INSTANCE);
+            }
+            addTextPage(doc, font, line, 0, null);
+            return save(doc);
+        }
+    }
+
+    private byte[] cjkPdf(String line) throws IOException {
+        try (PDDocument doc = new PDDocument()) {
+            PDFont font;
+            try (InputStream ttf = getClass().getResourceAsStream("/redaction/cjk_minimal.ttf")) {
+                font = PDType0Font.load(doc, ttf, true);
+            }
+            addTextPage(doc, font, line, 0, null);
+            return save(doc);
+        }
+    }
+
     private byte[] symbolicTtfPdf(String line) throws IOException {
         try (PDDocument doc = new PDDocument()) {
             PDTrueTypeFont font;
@@ -403,14 +564,16 @@ class RedactionPdfVarietyTest {
         try (PDDocument doc = new PDDocument()) {
             PDFont font;
             try (InputStream ttf = PDDocument.class.getResourceAsStream(LIBERATION)) {
-                // Full embed, not subset: the subsetter regenerates /ToUnicode at save, undoing the strip.
+                // Full embed, not subset: the subsetter regenerates /ToUnicode at save, undoing the
+                // strip.
                 font = PDType0Font.load(doc, ttf, false);
             }
             addTextPage(doc, font, line, 0, null);
             font.getCOSObject().removeItem(org.apache.pdfbox.cos.COSName.TO_UNICODE);
             pdf = save(doc);
         }
-        // Guard: the strip must survive save so this fixture genuinely exercises the no-mapping path.
+        // Guard: the strip must survive save so this fixture genuinely exercises the no-mapping
+        // path.
         try (PDDocument reopened = Loader.loadPDF(pdf)) {
             PDResources res = reopened.getPage(0).getResources();
             for (org.apache.pdfbox.cos.COSName n : res.getFontNames()) {
