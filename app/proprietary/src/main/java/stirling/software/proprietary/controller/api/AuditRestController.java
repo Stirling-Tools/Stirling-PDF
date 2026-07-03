@@ -143,19 +143,12 @@ public class AuditRestController {
             @RequestParam(value = "period", defaultValue = "week") String period) {
 
         // Calculate days based on period
-        int days;
-        switch (period.toLowerCase()) {
-            case "day":
-                days = 1;
-                break;
-            case "month":
-                days = 30;
-                break;
-            case "week":
-            default:
-                days = 7;
-                break;
-        }
+        int days =
+                switch (period.toLowerCase()) {
+                    case "day" -> 1;
+                    case "month" -> 30;
+                    default -> 7;
+                };
 
         // Get events from the specified period
         Instant startDate = Instant.now().minus(java.time.Duration.ofDays(days));
@@ -269,19 +262,12 @@ public class AuditRestController {
             @RequestParam(value = "period", defaultValue = "week") String period) {
 
         // Calculate days based on period
-        int days;
-        switch (period.toLowerCase()) {
-            case "day":
-                days = 1;
-                break;
-            case "month":
-                days = 30;
-                break;
-            case "week":
-            default:
-                days = 7;
-                break;
-        }
+        int days =
+                switch (period.toLowerCase()) {
+                    case "day" -> 1;
+                    case "month" -> 30;
+                    default -> 7;
+                };
 
         // Get events from the specified period and previous period
         Instant now = Instant.now();

@@ -204,7 +204,7 @@ class ConvertOfficeControllerTest {
                                 inv -> {
                                     // unoconvert writes directly to the output path (last arg)
                                     List<String> command = inv.getArgument(0);
-                                    Path out = Path.of(command.get(command.size() - 1));
+                                    Path out = Path.of(command.getLast());
                                     Files.writeString(out, "%PDF-1.4 produced");
                                     return result;
                                 });
@@ -239,7 +239,7 @@ class ConvertOfficeControllerTest {
                                 inv -> {
                                     // soffice writes <basename>.pdf into the --outdir (workDir)
                                     List<String> command = inv.getArgument(0);
-                                    Path inputPath = Path.of(command.get(command.size() - 1));
+                                    Path inputPath = Path.of(command.getLast());
                                     Path out = inputPath.getParent().resolve("report.pdf");
                                     Files.writeString(out, "%PDF soffice");
                                     return result;
@@ -311,7 +311,7 @@ class ConvertOfficeControllerTest {
                         .thenAnswer(
                                 inv -> {
                                     List<String> command = inv.getArgument(0);
-                                    Path inputPath = Path.of(command.get(command.size() - 1));
+                                    Path inputPath = Path.of(command.getLast());
                                     Path out = inputPath.getParent().resolve("report.pdf");
                                     Files.write(out, new byte[0]);
                                     return result;
@@ -344,7 +344,7 @@ class ConvertOfficeControllerTest {
                         .thenAnswer(
                                 inv -> {
                                     List<String> command = inv.getArgument(0);
-                                    Path inputPath = Path.of(command.get(command.size() - 1));
+                                    Path inputPath = Path.of(command.getLast());
                                     Path out = inputPath.getParent().resolve("page.pdf");
                                     Files.writeString(out, "%PDF html");
                                     return result;
@@ -398,7 +398,7 @@ class ConvertOfficeControllerTest {
                         .thenAnswer(
                                 inv -> {
                                     List<String> command = inv.getArgument(0);
-                                    Path inputPath = Path.of(command.get(command.size() - 1));
+                                    Path inputPath = Path.of(command.getLast());
                                     Path out = inputPath.getParent().resolve("report.pdf");
                                     Files.writeString(out, "%PDF produced");
                                     return result;

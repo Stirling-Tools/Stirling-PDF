@@ -334,7 +334,7 @@ public class PaygWalletController {
 
     private Optional<TeamMembership> primaryMembership(Long userId) {
         List<TeamMembership> rows = memberRepo.findPrimaryMembership(userId);
-        return rows.isEmpty() ? Optional.empty() : Optional.of(rows.get(0));
+        return rows.isEmpty() ? Optional.empty() : Optional.of(rows.getFirst());
     }
 
     private List<MemberRow> buildMemberRows(
