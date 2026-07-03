@@ -33,7 +33,9 @@ export const addAttachmentsToApiParams = (
 export const addAttachmentsFromApiParams = (
   apiParams: AddAttachmentsApiParams,
 ): Partial<AddAttachmentsParameters> => ({
-  convertToPdfA3b: apiParams.convertToPdfA3b ?? false,
+  convertToPdfA3b:
+    apiParams.convertToPdfA3b ??
+    DEFAULT_ADD_ATTACHMENTS_PARAMETERS.convertToPdfA3b,
 });
 
 const buildFormData = (

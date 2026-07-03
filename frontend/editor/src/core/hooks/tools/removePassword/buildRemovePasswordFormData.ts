@@ -1,4 +1,7 @@
-import { RemovePasswordParameters } from "@app/hooks/tools/removePassword/useRemovePasswordParameters";
+import {
+  RemovePasswordParameters,
+  defaultParameters,
+} from "@app/hooks/tools/removePassword/useRemovePasswordParameters";
 import {
   objectToFormData,
   type ToolApiParams,
@@ -25,7 +28,7 @@ export const removePasswordToApiParams = (
 export const removePasswordFromApiParams = (
   apiParams: RemovePasswordApiParams,
 ): Partial<RemovePasswordParameters> => ({
-  password: apiParams.password ?? "",
+  password: apiParams.password ?? defaultParameters.password,
 });
 
 /**

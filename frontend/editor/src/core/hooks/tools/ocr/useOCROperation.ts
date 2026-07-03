@@ -86,9 +86,9 @@ export const ocrFromApiParams = (
   if (apiParams.removeImagesAfter) additionalOptions.push("removeImagesAfter");
 
   return {
-    languages: apiParams.languages ?? [],
+    languages: apiParams.languages ?? defaultParameters.languages,
     ocrType: apiParams.ocrType,
-    ocrRenderType: apiParams.ocrRenderType ?? "hocr",
+    ocrRenderType: apiParams.ocrRenderType ?? defaultParameters.ocrRenderType,
     additionalOptions,
   };
 };

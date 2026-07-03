@@ -102,7 +102,7 @@ export const splitFromApiParams = (
         apiParams.xfactor !== undefined ? `${apiParams.xfactor}` : undefined,
       yFactor:
         apiParams.yfactor !== undefined ? `${apiParams.yfactor}` : undefined,
-      rightToLeft: apiParams.rightToLeft ?? false,
+      rightToLeft: apiParams.rightToLeft ?? defaultParameters.rightToLeft,
     };
   }
   if ("horizontalDivisions" in apiParams || "verticalDivisions" in apiParams) {
@@ -119,7 +119,9 @@ export const splitFromApiParams = (
       merge: apiParams.merge ?? false,
       splitMode: apiParams.splitMode ?? "SPLIT_ALL",
       customPages:
-        apiParams.splitMode === "CUSTOM" ? apiParams.pageNumbers : "",
+        apiParams.splitMode === "CUSTOM"
+          ? apiParams.pageNumbers
+          : defaultParameters.customPages,
     };
   }
   if ("bookmarkLevel" in apiParams) {
@@ -153,7 +155,7 @@ export const splitFromApiParams = (
   const pages = "pageNumbers" in apiParams ? apiParams.pageNumbers : undefined;
   return {
     method: SPLIT_METHODS.BY_PAGES,
-    pages: pages ?? "",
+    pages: pages ?? defaultParameters.pages,
   };
 };
 

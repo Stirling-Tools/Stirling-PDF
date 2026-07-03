@@ -10,7 +10,10 @@ import {
   type ToolEndpoint,
 } from "@app/hooks/tools/shared/toolApiMapping";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
-import { ReorganizePagesParameters } from "@app/hooks/tools/reorganizePages/useReorganizePagesParameters";
+import {
+  ReorganizePagesParameters,
+  defaultReorganizePagesParameters,
+} from "@app/hooks/tools/reorganizePages/useReorganizePagesParameters";
 
 const ENDPOINT = "/api/v1/general/rearrange-pages" satisfies ToolEndpoint;
 type ReorganizePagesApiParams = ToolApiParams[typeof ENDPOINT];
@@ -37,8 +40,10 @@ export const reorganizePagesToApiParams = (
 export const reorganizePagesFromApiParams = (
   apiParams: ReorganizePagesApiParams,
 ): Partial<ReorganizePagesParameters> => ({
-  customMode: apiParams.customMode ?? "",
-  pageNumbers: apiParams.pageNumbers ?? "",
+  customMode:
+    apiParams.customMode ?? defaultReorganizePagesParameters.customMode,
+  pageNumbers:
+    apiParams.pageNumbers ?? defaultReorganizePagesParameters.pageNumbers,
 });
 
 const buildFormData = (

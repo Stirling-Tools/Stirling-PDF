@@ -39,11 +39,15 @@ export const redactFromApiParams = (
 ): Partial<RedactParameters> => ({
   mode: "automatic",
   wordsToRedact: apiParams.listOfText ? apiParams.listOfText.split("\n") : [],
-  useRegex: apiParams.useRegex ?? false,
-  wholeWordSearch: apiParams.wholeWordSearch ?? false,
-  redactColor: apiParams.redactColor ? `#${apiParams.redactColor}` : "#000000",
+  useRegex: apiParams.useRegex ?? defaultParameters.useRegex,
+  wholeWordSearch:
+    apiParams.wholeWordSearch ?? defaultParameters.wholeWordSearch,
+  redactColor: apiParams.redactColor
+    ? `#${apiParams.redactColor}`
+    : defaultParameters.redactColor,
   customPadding: apiParams.customPadding,
-  convertPDFToImage: apiParams.convertPDFToImage ?? true,
+  convertPDFToImage:
+    apiParams.convertPDFToImage ?? defaultParameters.convertPDFToImage,
 });
 
 // Static configuration that can be used by both the hook and automation executor

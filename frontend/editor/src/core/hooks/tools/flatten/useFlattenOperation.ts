@@ -40,7 +40,8 @@ export const flattenFromApiParams = (
   apiParams: FlattenApiParams,
 ): Partial<FlattenParameters> => {
   const result: Partial<FlattenParameters> = {
-    flattenOnlyForms: apiParams.flattenOnlyForms ?? false,
+    flattenOnlyForms:
+      apiParams.flattenOnlyForms ?? defaultParameters.flattenOnlyForms,
   };
 
   if (apiParams.renderDpi != null) {

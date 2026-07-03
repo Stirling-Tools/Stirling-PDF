@@ -100,12 +100,12 @@ export const certSignFromApiParams = (
 ): Partial<CertSignParameters> => {
   const result: Partial<CertSignParameters> = {
     signMode: apiParams.certType === "SERVER" ? "AUTO" : "MANUAL",
-    showSignature: apiParams.showSignature ?? false,
+    showSignature: apiParams.showSignature ?? defaultParameters.showSignature,
   };
 
   if (apiParams.certType !== "SERVER") {
     result.certType = apiParams.certType;
-    result.password = apiParams.password ?? "";
+    result.password = apiParams.password ?? defaultParameters.password;
   }
   if (apiParams.alias !== undefined) result.alias = apiParams.alias;
   if (apiParams.pkcs11LibraryPath !== undefined) {

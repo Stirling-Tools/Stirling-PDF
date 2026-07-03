@@ -54,9 +54,9 @@ export const compressFromApiParams = (
 ): Partial<CompressParameters> => {
   const result: Partial<CompressParameters> = {
     compressionLevel: apiParams.optimizeLevel,
-    grayscale: apiParams.grayscale ?? false,
-    lineArt: apiParams.lineArt ?? false,
-    linearize: apiParams.linearize ?? false,
+    grayscale: apiParams.grayscale ?? defaultParameters.grayscale,
+    lineArt: apiParams.lineArt ?? defaultParameters.lineArt,
+    linearize: apiParams.linearize ?? defaultParameters.linearize,
   };
 
   if (apiParams.lineArtThreshold !== undefined) {

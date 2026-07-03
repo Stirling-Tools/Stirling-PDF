@@ -52,15 +52,24 @@ export const changePermissionsToApiParams = (
 export const changePermissionsFromApiParams = (
   apiParams: AddPasswordApiParams,
 ): Partial<ChangePermissionsParameters> => ({
-  preventAssembly: apiParams.preventAssembly ?? false,
-  preventExtractContent: apiParams.preventExtractContent ?? false,
+  preventAssembly:
+    apiParams.preventAssembly ?? defaultParameters.preventAssembly,
+  preventExtractContent:
+    apiParams.preventExtractContent ?? defaultParameters.preventExtractContent,
   preventExtractForAccessibility:
-    apiParams.preventExtractForAccessibility ?? false,
-  preventFillInForm: apiParams.preventFillInForm ?? false,
-  preventModify: apiParams.preventModify ?? false,
-  preventModifyAnnotations: apiParams.preventModifyAnnotations ?? false,
-  preventPrinting: apiParams.preventPrinting ?? false,
-  preventPrintingFaithful: apiParams.preventPrintingFaithful ?? false,
+    apiParams.preventExtractForAccessibility ??
+    defaultParameters.preventExtractForAccessibility,
+  preventFillInForm:
+    apiParams.preventFillInForm ?? defaultParameters.preventFillInForm,
+  preventModify: apiParams.preventModify ?? defaultParameters.preventModify,
+  preventModifyAnnotations:
+    apiParams.preventModifyAnnotations ??
+    defaultParameters.preventModifyAnnotations,
+  preventPrinting:
+    apiParams.preventPrinting ?? defaultParameters.preventPrinting,
+  preventPrintingFaithful:
+    apiParams.preventPrintingFaithful ??
+    defaultParameters.preventPrintingFaithful,
 });
 
 // Static function that can be used by both the hook and automation executor

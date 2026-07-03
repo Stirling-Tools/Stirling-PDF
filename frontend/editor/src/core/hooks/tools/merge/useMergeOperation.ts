@@ -33,8 +33,10 @@ export const mergeToApiParams = (
 export const mergeFromApiParams = (
   apiParams: MergeApiParams,
 ): Partial<MergeParameters> => ({
-  removeDigitalSignature: apiParams.removeCertSign ?? false,
-  generateTableOfContents: apiParams.generateToc ?? false,
+  removeDigitalSignature:
+    apiParams.removeCertSign ?? defaultParameters.removeDigitalSignature,
+  generateTableOfContents:
+    apiParams.generateToc ?? defaultParameters.generateTableOfContents,
 });
 
 const buildFormData = (

@@ -36,12 +36,15 @@ export const sanitizeToApiParams = (
 export const sanitizeFromApiParams = (
   apiParams: SanitizeApiParams,
 ): Partial<SanitizeParameters> => ({
-  removeJavaScript: apiParams.removeJavaScript ?? false,
-  removeEmbeddedFiles: apiParams.removeEmbeddedFiles ?? false,
-  removeXMPMetadata: apiParams.removeXMPMetadata ?? false,
-  removeMetadata: apiParams.removeMetadata ?? false,
-  removeLinks: apiParams.removeLinks ?? false,
-  removeFonts: apiParams.removeFonts ?? false,
+  removeJavaScript:
+    apiParams.removeJavaScript ?? defaultParameters.removeJavaScript,
+  removeEmbeddedFiles:
+    apiParams.removeEmbeddedFiles ?? defaultParameters.removeEmbeddedFiles,
+  removeXMPMetadata:
+    apiParams.removeXMPMetadata ?? defaultParameters.removeXMPMetadata,
+  removeMetadata: apiParams.removeMetadata ?? defaultParameters.removeMetadata,
+  removeLinks: apiParams.removeLinks ?? defaultParameters.removeLinks,
+  removeFonts: apiParams.removeFonts ?? defaultParameters.removeFonts,
 });
 
 // Static function that can be used by both the hook and automation executor

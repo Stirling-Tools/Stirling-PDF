@@ -31,7 +31,9 @@ export const autoRenameToApiParams = (
 export const autoRenameFromApiParams = (
   apiParams: AutoRenameApiParams,
 ): Partial<AutoRenameParameters> => ({
-  useFirstTextAsFallback: apiParams.useFirstTextAsFallback ?? false,
+  useFirstTextAsFallback:
+    apiParams.useFirstTextAsFallback ??
+    defaultParameters.useFirstTextAsFallback,
 });
 
 // Static function that can be used by both the hook and automation executor

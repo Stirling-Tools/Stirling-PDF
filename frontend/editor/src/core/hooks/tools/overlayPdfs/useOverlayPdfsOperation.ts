@@ -10,7 +10,10 @@ import {
   type ToolEndpoint,
 } from "@app/hooks/tools/shared/toolApiMapping";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
-import { type OverlayPdfsParameters } from "@app/hooks/tools/overlayPdfs/useOverlayPdfsParameters";
+import {
+  type OverlayPdfsParameters,
+  defaultParameters,
+} from "@app/hooks/tools/overlayPdfs/useOverlayPdfsParameters";
 
 const ENDPOINT = "/api/v1/general/overlay-pdfs" satisfies ToolEndpoint;
 type OverlayPdfsApiParams = ToolApiParams[typeof ENDPOINT];
@@ -44,7 +47,7 @@ export const overlayPdfsFromApiParams = (
 ): Partial<OverlayPdfsParameters> => ({
   overlayMode: apiParams.overlayMode,
   overlayPosition: apiParams.overlayPosition,
-  counts: apiParams.counts ?? [],
+  counts: apiParams.counts ?? defaultParameters.counts,
 });
 
 const buildFormData = (

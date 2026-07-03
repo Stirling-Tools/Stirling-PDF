@@ -58,9 +58,10 @@ export const addWatermarkFromApiParams = (
     rotation: apiParams.rotation,
     widthSpacer: apiParams.widthSpacer,
     heightSpacer: apiParams.heightSpacer,
-    alphabet: apiParams.alphabet ?? "",
-    customColor: apiParams.customColor ?? "",
-    convertPDFToImage: apiParams.convertPDFToImage ?? false,
+    alphabet: apiParams.alphabet ?? defaultParameters.alphabet,
+    customColor: apiParams.customColor ?? defaultParameters.customColor,
+    convertPDFToImage:
+      apiParams.convertPDFToImage ?? defaultParameters.convertPDFToImage,
   };
 
   if (apiParams.opacity !== undefined) {

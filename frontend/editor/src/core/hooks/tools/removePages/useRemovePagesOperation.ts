@@ -33,7 +33,7 @@ export const removePagesToApiParams = (
 export const removePagesFromApiParams = (
   apiParams: RemovePagesApiParams,
 ): Partial<RemovePagesParameters> => ({
-  pageNumbers: apiParams.pageNumbers ?? "",
+  pageNumbers: apiParams.pageNumbers ?? defaultParameters.pageNumbers,
 });
 
 export const buildRemovePagesFormData = (

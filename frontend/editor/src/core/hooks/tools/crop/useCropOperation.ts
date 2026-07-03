@@ -42,7 +42,7 @@ export const cropToApiParams = (parameters: CropParameters): CropApiParams => {
 export const cropFromApiParams = (
   apiParams: CropApiParams,
 ): Partial<CropParameters> => ({
-  autoCrop: apiParams.autoCrop ?? false,
+  autoCrop: apiParams.autoCrop ?? defaultParameters.autoCrop,
   cropArea: {
     x: apiParams.x ?? DEFAULT_CROP_AREA.x,
     y: apiParams.y ?? DEFAULT_CROP_AREA.y,

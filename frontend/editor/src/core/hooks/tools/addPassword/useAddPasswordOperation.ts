@@ -44,19 +44,29 @@ export const addPasswordToApiParams = (
 export const addPasswordFromApiParams = (
   apiParams: AddPasswordApiParams,
 ): Partial<AddPasswordFullParameters> => ({
-  password: apiParams.password ?? "",
-  ownerPassword: apiParams.ownerPassword ?? "",
+  password: apiParams.password ?? defaultParameters.password,
+  ownerPassword: apiParams.ownerPassword ?? defaultParameters.ownerPassword,
   keyLength: apiParams.keyLength,
   permissions: {
-    preventAssembly: apiParams.preventAssembly ?? false,
-    preventExtractContent: apiParams.preventExtractContent ?? false,
+    preventAssembly:
+      apiParams.preventAssembly ?? permissionsDefaults.preventAssembly,
+    preventExtractContent:
+      apiParams.preventExtractContent ??
+      permissionsDefaults.preventExtractContent,
     preventExtractForAccessibility:
-      apiParams.preventExtractForAccessibility ?? false,
-    preventFillInForm: apiParams.preventFillInForm ?? false,
-    preventModify: apiParams.preventModify ?? false,
-    preventModifyAnnotations: apiParams.preventModifyAnnotations ?? false,
-    preventPrinting: apiParams.preventPrinting ?? false,
-    preventPrintingFaithful: apiParams.preventPrintingFaithful ?? false,
+      apiParams.preventExtractForAccessibility ??
+      permissionsDefaults.preventExtractForAccessibility,
+    preventFillInForm:
+      apiParams.preventFillInForm ?? permissionsDefaults.preventFillInForm,
+    preventModify: apiParams.preventModify ?? permissionsDefaults.preventModify,
+    preventModifyAnnotations:
+      apiParams.preventModifyAnnotations ??
+      permissionsDefaults.preventModifyAnnotations,
+    preventPrinting:
+      apiParams.preventPrinting ?? permissionsDefaults.preventPrinting,
+    preventPrintingFaithful:
+      apiParams.preventPrintingFaithful ??
+      permissionsDefaults.preventPrintingFaithful,
   },
 });
 
