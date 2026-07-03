@@ -41,7 +41,7 @@ const COVERAGE_DIR = path.resolve(
 
 export const test = base.extend({
   page: async ({ page }, use, testInfo) => {
-    await suppressNativeFilePicker(page);
+    suppressNativeFilePicker(page);
     await page.context().addCookies([
       {
         name: "cc_cookie",

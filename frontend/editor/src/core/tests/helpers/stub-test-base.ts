@@ -58,7 +58,7 @@ export const test = base.extend<StubFixtures>({
   seedJwt: [false, { option: true }],
 
   page: async ({ page, stubOptions, autoGoto, seedJwt }, use) => {
-    await suppressNativeFilePicker(page);
+    suppressNativeFilePicker(page);
     await seedCookieConsent(page);
     if (seedJwt) {
       // Logged-in users hit the orchestrator path that surfaces the

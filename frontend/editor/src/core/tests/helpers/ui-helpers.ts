@@ -12,28 +12,33 @@ import { expect, type Page, type Locator } from "@playwright/test";
 const MANTINE_MODAL_OVERLAY = ".mantine-Modal-overlay";
 
 /**
- * Neutralise the native OS file picker for the whole page.
+ * Suppress the native OS file picker for the whole page, on every browser.
  *
  * Several upload entry points (the FileSidebar "Open from computer" button,
- * AddFileCard, etc.) open a file dialog by calling `.click()` on a hidden
- * `<input type="file">`. That opens the real OS file-chooser, which Playwright
- * intercepts on chromium but NOT on firefox/webkit - there the native dialog
- * leaks onto the host and hangs the run. Specs never need the dialog: they load
- * files with `setInputFiles()`, which sets the files and fires `change`
- * directly. Stubbing the programmatic file-input `.click()` to a no-op lets a
- * spec click those buttons (exercising the real entry point) while the picker
- * stays mocked on every browser. Non-file inputs keep their native `.click()`.
+ * the Mantine `<FileInput>`, AddFileCard, etc.) open a file dialog by clicking
+ * a hidden `<input type="file">`. On firefox/webkit Playwright only intercepts
+ * that dialog while the page has a `filechooser` listener - it toggles
+ * `Page.setInterceptFileChooserDialog` off the event subscription. With no
+ * listener the real OS picker leaks onto the host and hangs the nightly run.
+ *
+ * Registering a (no-op) `filechooser` listener flips that interception on for
+ * every browser, so the dialog is suppressed at the browser level however it
+ * was triggered - a programmatic `.click()`, a `<label>` activation, or
+ * Playwright's own click. We deliberately don't set files in the handler: specs
+ * still drive uploads explicitly via `setInputFiles()`, which sets files
+ * through the protocol regardless of the pending intercepted chooser. This lets
+ * a spec click the real entry-point button while the picker stays mocked
+ * cross-browser - unlike a global `HTMLInputElement.prototype.click` override,
+ * which misses `<label>`-triggered pickers and never enables Playwright's own
+ * interception.
  *
  * Installed once per page by the shared test fixtures (stub + live), so no spec
  * has to opt in.
  */
-export async function suppressNativeFilePicker(page: Page): Promise<void> {
-  await page.addInitScript(() => {
-    const nativeClick = HTMLInputElement.prototype.click;
-    HTMLInputElement.prototype.click = function (this: HTMLInputElement) {
-      if (this.type === "file") return;
-      return nativeClick.call(this);
-    };
+export function suppressNativeFilePicker(page: Page): void {
+  page.on("filechooser", () => {
+    // Interception alone suppresses the native dialog; specs provide the files
+    // themselves via setInputFiles() on the hidden input.
   });
 }
 
