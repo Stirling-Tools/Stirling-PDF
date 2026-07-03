@@ -147,11 +147,17 @@ class SvgToPdfTest {
         ImageIO.write(red, "png", external.toFile());
 
         try {
+            String rootRelativeExternal =
+                    "/"
+                            + external.toAbsolutePath()
+                                    .toString()
+                                    .replace('\\', '/')
+                                    .replaceFirst("^/+", "");
             String svg =
                     "<svg xmlns=\"http://www.w3.org/2000/svg\" "
                             + "xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"100\" height=\"100\">"
                             + "<image x=\"0\" y=\"0\" width=\"100\" height=\"100\" xlink:href=\""
-                            + external.toUri()
+                            + rootRelativeExternal
                             + "\"/></svg>";
 
             byte[] pdf;

@@ -13,7 +13,7 @@ spotless {
     java {
         target 'src/**/java/**/*.java'
         targetExclude 'src/main/resources/static/**', 'src/main/java/org/apache/**'
-        googleJavaFormat(googleJavaFormatVersion).aosp().reorderImports(false)
+        googleJavaFormat(rootProject.ext.googleJavaFormatVersion).aosp().reorderImports(false)
         // google-java-format 1.28.0 bundles Guava 32.x which crashes Spotless lint on JDK 24/25
         suppressLintsFor { setStep('google-java-format') }
 
@@ -67,21 +67,21 @@ dependencies {
         exclude group: 'com.fasterxml.jackson.jaxrs'
         exclude group: 'com.fasterxml.jackson.module', module: 'jackson-module-jaxb-annotations'
     }
-    implementation "commons-io:commons-io:$commonsIoVersion"
-    implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
-    implementation "org.bouncycastle:bcpkix-jdk18on:$bouncycastleVersion"
+    implementation "commons-io:commons-io:${rootProject.ext.commonsIoVersion}"
+    implementation "org.bouncycastle:bcprov-jdk18on:${rootProject.ext.bouncycastleVersion}"
+    implementation "org.bouncycastle:bcpkix-jdk18on:${rootProject.ext.bouncycastleVersion}"
     implementation 'io.micrometer:micrometer-core'
     implementation 'com.google.zxing:core:3.5.4'
-    implementation "org.commonmark:commonmark:$commonmarkVersion" // https://mvnrepository.com/artifact/org.commonmark/commonmark
-    implementation "org.commonmark:commonmark-ext-gfm-tables:$commonmarkVersion"
+    implementation "org.commonmark:commonmark:${rootProject.ext.commonmarkVersion}" // https://mvnrepository.com/artifact/org.commonmark/commonmark
+    implementation "org.commonmark:commonmark-ext-gfm-tables:${rootProject.ext.commonmarkVersion}"
 
     // General PDF dependencies
-    implementation "org.apache.pdfbox:preflight:$pdfboxVersion"
-    implementation "org.apache.pdfbox:xmpbox:$pdfboxVersion"
+    implementation "org.apache.pdfbox:preflight:${rootProject.ext.pdfboxVersion}"
+    implementation "org.apache.pdfbox:xmpbox:${rootProject.ext.pdfboxVersion}"
 
     implementation 'org.verapdf:validation-model:1.28.2'
     // CVE-2025-66453: Explicit rhino 1.7.15 to override verapdf's 1.7.13
-    implementation "org.mozilla:rhino:${rhinoVersion}"
+    implementation "org.mozilla:rhino:${rootProject.ext.rhinoVersion}"
 
     // veraPDF still uses javax.xml.bind, not the new jakarta namespace
     implementation 'javax.xml.bind:jaxb-api:2.3.1'
@@ -89,33 +89,33 @@ dependencies {
     implementation 'com.sun.xml.bind:jaxb-core:4.0.7'
 
     // CVE-2022-25647: Explicit gson to prevent unsafe deserialization (tabula would pull 2.8.7)
-    implementation "com.google.code.gson:gson:${gsonVersion}"
+    implementation "com.google.code.gson:gson:${rootProject.ext.gsonVersion}"
     implementation 'org.apache.pdfbox:jbig2-imageio:3.0.4'
     implementation 'com.opencsv:opencsv:5.12.0' // https://mvnrepository.com/artifact/com.opencsv/opencsv
     implementation 'org.apache.poi:poi-ooxml:5.5.1'
 
     // Batik only bridge module needed (transitively pulls anim, gvt, util, css, dom, svg-dom)
     // Replaces batik-all which included unused codec, svggen, transcoder, script modules
-    implementation "org.apache.xmlgraphics:batik-bridge:${batikVersion}"
+    implementation "org.apache.xmlgraphics:batik-bridge:${rootProject.ext.batikVersion}"
     // Required by TwelveMonkeys imageio-batik SPI (SVGImageReaderSpi) during ImageIO init
-    runtimeOnly "org.apache.xmlgraphics:batik-transcoder:${batikVersion}"
+    runtimeOnly "org.apache.xmlgraphics:batik-transcoder:${rootProject.ext.batikVersion}"
 
     // PDFBox Graphics2D bridge for Batik SVG to PDF conversion
     implementation 'de.rototor.pdfbox:graphics2d:3.0.5'
 
     // TwelveMonkeys
-    runtimeOnly "com.twelvemonkeys.imageio:imageio-batik:$imageioVersion"
-    runtimeOnly "com.twelvemonkeys.imageio:imageio-bmp:$imageioVersion"
-    runtimeOnly "com.twelvemonkeys.imageio:imageio-jpeg:$imageioVersion"
-    runtimeOnly "com.twelvemonkeys.imageio:imageio-tiff:$imageioVersion"
-    runtimeOnly "com.twelvemonkeys.imageio:imageio-webp:$imageioVersion"
+    runtimeOnly "com.twelvemonkeys.imageio:imageio-batik:${rootProject.ext.imageioVersion}"
+    runtimeOnly "com.twelvemonkeys.imageio:imageio-bmp:${rootProject.ext.imageioVersion}"
+    runtimeOnly "com.twelvemonkeys.imageio:imageio-jpeg:${rootProject.ext.imageioVersion}"
+    runtimeOnly "com.twelvemonkeys.imageio:imageio-tiff:${rootProject.ext.imageioVersion}"
+    runtimeOnly "com.twelvemonkeys.imageio:imageio-webp:${rootProject.ext.imageioVersion}"
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-hdr:$imageioVersion"
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-icns:$imageioVersion"
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-iff:$imageioVersion"
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-pcx:$imageioVersion@
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-pict:$imageioVersion"
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-pnm:$imageioVersion"
-    runtimeOnly "com.twelvemonkeys.imageio:imageio-psd:$imageioVersion"
+    runtimeOnly "com.twelvemonkeys.imageio:imageio-psd:${rootProject.ext.imageioVersion}"
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-sgi:$imageioVersion"
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-tga:$imageioVersion"
     // runtimeOnly "com.twelvemonkeys.imageio:imageio-thumbsdb:$imageioVersion"
@@ -284,7 +284,9 @@ tasks.register('npmBuild', Exec) {
     group = 'frontend'
     description = 'Build editor frontend application'
     workingDir file('../..')
-    commandLine = ['task', frontendBuildTask]
+    commandLine = Os.isFamily(Os.FAMILY_WINDOWS) ?
+            ['powershell', '-NoProfile', '-Command', "task ${frontendBuildTask}"] :
+            ['task', frontendBuildTask]
     inputs.dir(new File(frontendEditorDir, 'src'))
     inputs.dir(new File(frontendEditorDir, 'public'))
     inputs.file(new File(frontendDir, 'package.json'))

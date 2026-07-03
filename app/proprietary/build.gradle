@@ -11,7 +11,7 @@ spotless {
         java {
         target 'src/**/java/**/*.java'
         targetExclude 'src/main/java/org/apache/**'
-        googleJavaFormat(googleJavaFormatVersion).aosp().reorderImports(false)
+        googleJavaFormat(rootProject.ext.googleJavaFormatVersion).aosp().reorderImports(false)
         // google-java-format 1.28.0 bundles Guava 32.x which crashes Spotless lint on JDK 24/25
         suppressLintsFor { setStep('google-java-format') }
 
@@ -35,13 +35,13 @@ spotless {
 }
 dependencies {
     implementation project(':common')
-    api "com.google.guava:guava:${guavaVersion}"
+    api "com.google.guava:guava:${rootProject.ext.guavaVersion}"
 
     api 'org.springframework:spring-jdbc'
     api 'org.springframework:spring-webmvc'
     api 'org.springframework.session:spring-session-core'
-    api "org.springframework.security:spring-security-core:$springSecuritySamlVersion"
-    api "org.springframework.security:spring-security-saml2-service-provider:$springSecuritySamlVersion"
+    api "org.springframework.security:spring-security-core:${rootProject.ext.springSecuritySamlVersion}"
+    api "org.springframework.security:spring-security-saml2-service-provider:${rootProject.ext.springSecuritySamlVersion}"
     api 'org.springframework.boot:spring-boot-starter-jetty'
     api 'org.springframework.boot:spring-boot-starter-security'
     api 'org.springframework.boot:spring-boot-starter-data-jpa'
@@ -55,30 +55,30 @@ dependencies {
     api 'com.github.ben-manes.caffeine:caffeine'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     api 'io.swagger.core.v3:swagger-core-jakarta:2.2.46'
-    implementation "com.bucket4j:bucket4j_jdk17-core:${bucket4jVersion}"
+    implementation "com.bucket4j:bucket4j_jdk17-core:${rootProject.ext.bucket4jVersion}"
     // Lettuce-backed Bucket4j ProxyManager used by ValkeyRateLimitStore for cluster-wide
     // token-bucket rate limiting (parity with in-process Bucket4j semantics; no fixed-window
     // boundary doubling).
-    implementation "com.bucket4j:bucket4j_jdk17-lettuce:${bucket4jVersion}"
+    implementation "com.bucket4j:bucket4j_jdk17-lettuce:${rootProject.ext.bucket4jVersion}"
 
     // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17
-    implementation "org.bouncycastle:bcprov-jdk18on:$bouncycastleVersion"
+    implementation "org.bouncycastle:bcprov-jdk18on:${rootProject.ext.bouncycastleVersion}"
 
-    implementation "com.google.code.gson:gson:${gsonVersion}"
+    implementation "com.google.code.gson:gson:${rootProject.ext.gsonVersion}"
 
     api 'io.micrometer:micrometer-registry-prometheus'
 
-    api "io.jsonwebtoken:jjwt-api:${jwtVersion}"
-    runtimeOnly "io.jsonwebtoken:jjwt-impl:${jwtVersion}"
-    runtimeOnly "io.jsonwebtoken:jjwt-jackson:${jwtVersion}"
+    api "io.jsonwebtoken:jjwt-api:${rootProject.ext.jwtVersion}"
+    runtimeOnly "io.jsonwebtoken:jjwt-impl:${rootProject.ext.jwtVersion}"
+    runtimeOnly "io.jsonwebtoken:jjwt-jackson:${rootProject.ext.jwtVersion}"
     runtimeOnly 'com.h2database:h2:2.3.232' // Don't upgrade h2database - file format incompatible with 2.4.x, would break existing user databases
     runtimeOnly 'org.postgresql:postgresql:42.7.11'
     implementation('com.coveo:saml-client:5.0.0') {
         exclude group: 'org.opensaml', module: 'opensaml-core'
     }
 
-    implementation "software.amazon.awssdk:s3:${awsSdkVersion}"
-    implementation "software.amazon.awssdk:url-connection-client:${awsSdkVersion}"
+    implementation "software.amazon.awssdk:s3:${rootProject.ext.awsSdkVersion}"
+    implementation "software.amazon.awssdk:url-connection-client:${rootProject.ext.awsSdkVersion}"
 
     // @DataJpaTest slice (Boot 4 ships test slices as separate starters, like webmvc-test at the
     // root) so policy.source repositories can be exercised against embedded H2.
@@ -86,10 +86,10 @@ dependencies {
 
     // Testcontainers: real MinIO/LocalStack (S3) and Valkey for integration tests in CI without
     // manually-started instances. Tests skip cleanly when Docker is unavailable.
-    testImplementation "org.testcontainers:testcontainers:${testcontainersMinioVersion}"
-    testImplementation "org.testcontainers:minio:${testcontainersMinioVersion}"
-    testImplementation "org.testcontainers:localstack:${testcontainersMinioVersion}"
-    testImplementation "org.testcontainers:junit-jupiter:${testcontainersMinioVersion}"
+    testImplementation "org.testcontainers:testcontainers:${rootProject.ext.testcontainersMinioVersion}"
+    testImplementation "org.testcontainers:minio:${rootProject.ext.testcontainersMinioVersion}"
+    testImplementation "org.testcontainers:localstack:${rootProject.ext.testcontainersMinioVersion}"
+    testImplementation "org.testcontainers:junit-jupiter:${rootProject.ext.testcontainersMinioVersion}"
 }
 
 tasks.register('prepareKotlinBuildScriptModel') {}

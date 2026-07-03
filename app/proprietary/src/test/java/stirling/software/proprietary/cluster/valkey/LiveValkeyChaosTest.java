@@ -28,7 +28,7 @@ import stirling.software.common.model.ApplicationProperties;
  * to reproduce a partition rather than {@code stop} (which would fail fast with
  * connection-refused).
  */
-@Testcontainers
+@Testcontainers(disabledWithoutDocker = true)
 @EnabledIf("isDockerAvailable")
 class LiveValkeyChaosTest {
 

@@ -109,27 +109,81 @@ tasks:
         platforms: [linux, darwin]
 
   test:
-    desc: "Run backend tests"
+    desc: "Run backend tests with and without frontend bundling"
+    # Cover the backend with the main build/property combinations that change
+    # Gradle behavior in this repo.
     cmds:
-      - cmd: cmd /c ".\gradlew.bat test"
+      - cmd: cmd /c ".\gradlew.bat test" >> log-spotlessCheck.txt
         platforms: [windows]
       - cmd: ./gradlew test
+        platforms: [linux, darwin]
+      - cmd: cmd /c ".\gradlew.bat test -PbuildWithFrontend=true" >> log-spotlessCheck-buildWithFrontend.txt
+        platforms: [windows]
+      - cmd: ./gradlew test -PbuildWithFrontend=true
+        platforms: [linux, darwin]
+      - cmd: cmd /c ".\gradlew.bat test -PbuildWithFrontend=true -PprototypesMode=true" >> log-spotlessCheck-buildWithFrontend-prototypesMode.txt
+        platforms: [windows]
+      - cmd: ./gradlew test -PbuildWithFrontend=true -PprototypesMode=true
+        platforms: [linux, darwin]
+      - cmd: cmd /c "set STIRLING_FLAVOR=core&& .\gradlew.bat test" >> log-spotlessCheck-STIRLING_FLAVOR-core.txt
+        platforms: [windows]
+      - cmd: STIRLING_FLAVOR=core ./gradlew test
+        platforms: [linux, darwin]
+      - cmd: cmd /c "set STIRLING_FLAVOR=saas&& .\gradlew.bat test" >> log-spotlessCheck-STIRLING_FLAVOR-saas.txt
+        platforms: [windows]
+      - cmd: STIRLING_FLAVOR=saas ./gradlew test
         platforms: [linux, darwin]
 
   format:
     desc: "Auto-fix code formatting"
+    # Mirror the test matrix so formatting is validated under the same backend
+    # configuration variants.
     cmds:
       - cmd: cmd /c ".\gradlew.bat spotlessApply"
         platforms: [windows]
       - cmd: ./gradlew spotlessApply
         platforms: [linux, darwin]
+      - cmd: cmd /c ".\gradlew.bat spotlessApply -PbuildWithFrontend=true"
+        platforms: [windows]
+      - cmd: ./gradlew spotlessApply -PbuildWithFrontend=true
+        platforms: [linux, darwin]
+      - cmd: cmd /c ".\gradlew.bat spotlessApply -PbuildWithFrontend=true -PprototypesMode=true"
+        platforms: [windows]
+      - cmd: ./gradlew spotlessApply -PbuildWithFrontend=true -PprototypesMode=true
+        platforms: [linux, darwin]
+      - cmd: cmd /c "set STIRLING_FLAVOR=core&& .\gradlew.bat spotlessApply"
+        platforms: [windows]
+      - cmd: STIRLING_FLAVOR=core ./gradlew spotlessApply
+        platforms: [linux, darwin]
+      - cmd: cmd /c "set STIRLING_FLAVOR=saas&& .\gradlew.bat spotlessApply"
+        platforms: [windows]
+      - cmd: STIRLING_FLAVOR=saas ./gradlew spotlessApply
+        platforms: [linux, darwin]
 
   format:check:
     desc: "Check code formatting"
+    # Mirror the test matrix so formatting checks use the same backend
+    # configuration variants.
     cmds:
       - cmd: cmd /c ".\gradlew.bat spotlessCheck"
         platforms: [windows]
       - cmd: ./gradlew spotlessCheck
+        platforms: [linux, darwin]
+      - cmd: cmd /c ".\gradlew.bat spotlessCheck -PbuildWithFrontend=true"
+        platforms: [windows]
+      - cmd: ./gradlew spotlessCheck -PbuildWithFrontend=true
+        platforms: [linux, darwin]
+      - cmd: cmd /c ".\gradlew.bat spotlessCheck -PbuildWithFrontend=true -PprototypesMode=true"
+        platforms: [windows]
+      - cmd: ./gradlew spotlessCheck -PbuildWithFrontend=true -PprototypesMode=true
+        platforms: [linux, darwin]
+      - cmd: cmd /c "set STIRLING_FLAVOR=core&& .\gradlew.bat spotlessCheck"
+        platforms: [windows]
+      - cmd: STIRLING_FLAVOR=core ./gradlew spotlessCheck
+        platforms: [linux, darwin]
+      - cmd: cmd /c "set STIRLING_FLAVOR=saas&& .\gradlew.bat spotlessCheck"
+        platforms: [windows]
+      - cmd: STIRLING_FLAVOR=saas ./gradlew spotlessCheck
         platforms: [linux, darwin]
 
   fix:
