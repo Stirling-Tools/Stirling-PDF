@@ -1,10 +1,5 @@
 import { useTranslation } from "react-i18next";
-<<<<<<< HEAD
-import { Button } from "@shared/components/Button";
-import { Card, Chip, StatusBadge, StatTile } from "@shared/components";
-=======
 import { Card, Chip, StatusBadge } from "@shared/components";
->>>>>>> 6c85200eb90e29c7bc00db99808695e9208dc75e
 import type { CatalogueEntry } from "@portal/api/policies";
 import { policyIcon } from "@portal/components/policies/policyIcons";
 import "@portal/views/Policies.css";
@@ -18,27 +13,7 @@ export function PolicyCategoryCard({ entry, onOpen }: PolicyCategoryCardProps) {
   const { t } = useTranslation();
   const { category, config, policy } = entry;
   const comingSoon = category.comingSoon === true;
-<<<<<<< HEAD
-
-  return (
-    <Card onClick={comingSoon ? undefined : () => onOpen(entry)}>
-      <header className="portal-policies__card-header">
-        <span
-          className={`portal-policies__cat-icon portal-policies__cat-icon--${category.tone}`}
-          aria-hidden
-        >
-          {policyIcon(category.icon)}
-        </span>
-        <div className="portal-policies__card-titles">
-          <h2 className="portal-policies__card-title">{category.label}</h2>
-          <span className="portal-policies__card-blurb">{category.desc}</span>
-        </div>
-        {comingSoon ? (
-          <Chip size="sm">{t("policies.card.comingSoon")}</Chip>
-        ) : policy ? (
-=======
   const openable = !comingSoon;
-  const status = policy?.state.status;
   const enforces = config.rules.join(" · ");
 
   return (
@@ -74,7 +49,7 @@ export function PolicyCategoryCard({ entry, onOpen }: PolicyCategoryCardProps) {
       </div>
 
       {comingSoon ? (
-        <Chip tone="neutral" size="sm">
+        <Chip accent="neutral" size="sm">
           {t("policies.card.comingSoon")}
         </Chip>
       ) : policy ? (
@@ -95,7 +70,6 @@ export function PolicyCategoryCard({ entry, onOpen }: PolicyCategoryCardProps) {
               {t("policies.stats.dataProcessed")}
             </span>
           </span>
->>>>>>> 6c85200eb90e29c7bc00db99808695e9208dc75e
           <StatusBadge
             tone={policy.state.status === "paused" ? "warning" : "success"}
             size="sm"
@@ -105,51 +79,11 @@ export function PolicyCategoryCard({ entry, onOpen }: PolicyCategoryCardProps) {
               ? t("policies.status.paused")
               : t("policies.status.active")}
           </StatusBadge>
-<<<<<<< HEAD
-        ) : (
-          <Chip size="sm">{t("policies.card.notSetUp")}</Chip>
-        )}
-      </header>
-
-      <p className="portal-policies__card-summary">{config.summary}</p>
-
-      {policy ? (
-        <footer className="portal-policies__card-stats">
-          <StatTile
-            label={t("policies.stats.docsEnforced")}
-            value={policy.stats.enforced.toLocaleString()}
-          />
-          <StatTile
-            label={t("policies.stats.dataProcessed")}
-            value={policy.stats.dataProcessed}
-          />
-          <StatTile
-            label={t("policies.stats.activeFor")}
-            value={policy.stats.activeFor}
-          />
-        </footer>
-      ) : (
-        <footer className="portal-policies__card-foot">
-          <div className="portal-policies__card-rules">
-            {config.rules.slice(0, 3).map((rule) => (
-              <Chip key={rule} size="sm">
-                {rule}
-              </Chip>
-            ))}
-          </div>
-          {!comingSoon && (
-            <Button variant="tertiary" size="sm">
-              {t("policies.card.setUp")}
-            </Button>
-          )}
-        </footer>
-=======
         </div>
       ) : (
-        <Chip tone="blue" size="sm">
+        <Chip accent="default" size="sm">
           {t("policies.card.notSetUp")}
         </Chip>
->>>>>>> 6c85200eb90e29c7bc00db99808695e9208dc75e
       )}
     </Card>
   );

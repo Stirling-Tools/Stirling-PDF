@@ -1,7 +1,4 @@
-/* Mantine Pill-backed chip/tag. Drives colour from the shared accent palette
- * (accents.css).
- *
- *   variant = primary (solid fill) | secondary (soft tinted tag, default) */
+/* Mantine Pill-backed chip/tag — colour from the shared accent palette (accents.css). */
 @import "./accents.css";
 
 .sui-chip.mantine-Pill-root {

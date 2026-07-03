@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
 import { type OAuthProvider } from "@shared/auth/spring/oauthTypes";
-import { Button } from "@mantine/core";
 import { Button as DSButton } from "@shared/components/Button";
 import {
   oauthIconUrl,
@@ -103,7 +102,7 @@ export default function OAuthButtons({
             key={p.id}
             title={`${t("login.signInWith", "Sign in with")} ${p.label}`}
           >
-            <Button
+            <DSButton
               onClick={() => onProviderClick(p.id)}
               disabled={isSubmitting}
               className="oauth-button-icon"
@@ -115,7 +114,7 @@ export default function OAuthButtons({
                 alt={p.label}
                 className="oauth-icon-small"
               />
-            </Button>
+            </DSButton>
           </div>
         ))}
       </div>
@@ -129,7 +128,7 @@ export default function OAuthButtons({
             key={p.id}
             title={`${t("login.signInWith", "Sign in with")} ${p.label}`}
           >
-            <Button
+            <DSButton
               onClick={() => onProviderClick(p.id)}
               disabled={isSubmitting}
               className="oauth-button-grid"
@@ -141,7 +140,7 @@ export default function OAuthButtons({
                 alt={p.label}
                 className="oauth-icon-medium"
               />
-            </Button>
+            </DSButton>
           </div>
         ))}
       </div>
@@ -188,7 +187,7 @@ export default function OAuthButtons({
           key={p.id}
           title={`${t("login.signInWith", "Sign in with")} ${p.label}`}
         >
-          <Button
+          <DSButton
             onClick={() => onProviderClick(p.id)}
             disabled={!demoMode && isSubmitting}
             className={`oauth-button-vertical${useNewStyle && isSingleProvider ? " oauth-button-vertical-single" : ""}${!useNewStyle ? " oauth-button-vertical-legacy" : ""}${isTinted ? " oauth-button-vertical-tinted" : ""}${isOutline ? " oauth-button-vertical-outline" : ""}${isLight ? " oauth-button-vertical-light" : ""}`}
@@ -231,7 +230,7 @@ export default function OAuthButtons({
                 </svg>
               </span>
             )}
-          </Button>
+          </DSButton>
         </div>
       ))}
     </div>

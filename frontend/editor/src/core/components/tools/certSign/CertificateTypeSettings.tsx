@@ -84,9 +84,7 @@ const CertificateTypeSettings = ({
         {isServerCertificateEnabled && (
           <Button
             variant={parameters.signMode === "AUTO" ? "primary" : "secondary"}
-            accent={
-              parameters.signMode === "AUTO" ? "success" : "default"
-            }
+            accent={parameters.signMode === "AUTO" ? "success" : "default"}
             onClick={selectServer}
             disabled={disabled}
             style={sourceButtonStyle}
@@ -97,9 +95,7 @@ const CertificateTypeSettings = ({
         {isHardwareAvailable && (
           <Button
             variant={parameters.signMode === "DEVICE" ? "primary" : "secondary"}
-            accent={
-              parameters.signMode === "DEVICE" ? "success" : "default"
-            }
+            accent={parameters.signMode === "DEVICE" ? "success" : "default"}
             onClick={selectDevice}
             disabled={disabled}
             style={sourceButtonStyle}

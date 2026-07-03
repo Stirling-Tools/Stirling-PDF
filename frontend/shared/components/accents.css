@@ -1,34 +1,65 @@
-/* Shared accent palette — the single source of truth for the design-system
- * colour dial, consumed by Button / SegmentedControl / Chip. Each accent class
- * sets the internal --_* palette; each component maps those onto its own
- * framework colour vars (Mantine --button-*, --sc-*, --chip-*).
- *
- *   default  blue (the unset default)   ai       AI gradient
- *   neutral  slate / grey               premium  purple upgrade gradient
- *   brand    Stirling red               danger   red (destructive)
- *   success  green                      warning  amber
- *
- * --_solid: fill (filled/primary).  --_solid-hover: fill hover.
- * --_on: text on the fill.  --_text: accent text (outlined/ghost).
- * --_bd: outline border.  --_tint: hover/selected wash. */
+/* Shared accent palette for Button/ActionIcon/SegmentedControl/Chip; standard
+ * accents derive from --color-* tokens (auto dark), neutral/brand/ai are explicit. */
 
-/* ---- light ---- */
 .sui-acc-default {
-  --_solid: #2563eb;
-  --_solid-hover: #1d4ed8;
+  --_solid: var(--color-blue);
+  --_solid-hover: var(--color-blue-dark);
   --_on: #ffffff;
-  --_text: #2563eb;
-  --_bd: #bfdbfe;
-  --_tint: rgba(37, 99, 235, 0.08);
+  --_text: var(--color-blue-dark);
+  --_bd: var(--color-blue-border);
+  --_tint: color-mix(in srgb, var(--color-blue) 12%, transparent);
 }
+.sui-acc-danger {
+  --_solid: var(--color-red);
+  --_solid-hover: var(--color-red-dark);
+  --_on: #ffffff;
+  --_text: var(--color-red-dark);
+  --_bd: var(--color-red-border);
+  --_tint: color-mix(in srgb, var(--color-red) 12%, transparent);
+}
+.sui-acc-success {
+  --_solid: var(--color-green);
+  --_solid-hover: var(--color-green-dark);
+  --_on: #ffffff;
+  --_text: var(--color-green-dark);
+  --_bd: var(--color-green-border);
+  --_tint: color-mix(in srgb, var(--color-green) 12%, transparent);
+}
+.sui-acc-warning {
+  --_solid: var(--color-amber);
+  --_solid-hover: var(--color-amber-dark);
+  --_on: #ffffff;
+  --_text: var(--color-amber-dark);
+  --_bd: var(--color-amber-border);
+  --_tint: color-mix(in srgb, var(--color-amber) 12%, transparent);
+}
+/* premium: purple upgrade CTA — gradient fill (token), violet text/border. */
+.sui-acc-premium {
+  --_solid: var(--grad-purple-btn);
+  --_solid-hover: var(--grad-purple-btn);
+  --_on: #ffffff;
+  --_text: var(--color-purple-dark);
+  --_bd: var(--color-purple-border);
+  --_tint: color-mix(in srgb, var(--color-purple) 12%, transparent);
+}
+
+/* neutral: low-emphasis grey — no palette token, so explicit. */
 .sui-acc-neutral {
   --_solid: #475569;
   --_solid-hover: #334155;
   --_on: #ffffff;
   --_text: #475569;
   --_bd: #cbd5e1;
-  --_tint: rgba(71, 85, 105, 0.08);
+  --_tint: rgba(71, 85, 105, 0.1);
 }
+[data-theme="dark"] .sui-acc-neutral {
+  --_solid: #64748b;
+  --_solid-hover: #475569;
+  --_text: #cbd5e1;
+  --_bd: #334155;
+  --_tint: rgba(148, 163, 184, 0.16);
+}
+/* brand: Stirling red — a bespoke brand colour, not part of the token palette. */
 .sui-acc-brand {
   --_solid: #8e3131;
   --_solid-hover: #7a2929;
@@ -37,41 +68,12 @@
   --_bd: #d9a8a8;
   --_tint: rgba(142, 49, 49, 0.09);
 }
-.sui-acc-danger {
-  --_solid: #dc2626;
-  --_solid-hover: #b91c1c;
-  --_on: #ffffff;
-  --_text: #dc2626;
-  --_bd: #fca5a5;
-  --_tint: rgba(220, 38, 38, 0.08);
+[data-theme="dark"] .sui-acc-brand {
+  --_text: #d98a8a;
+  --_bd: #5a2424;
+  --_tint: rgba(217, 138, 138, 0.16);
 }
-.sui-acc-warning {
-  --_solid: #d97706;
-  --_solid-hover: #b45309;
-  --_on: #ffffff;
-  --_text: #b45309;
-  --_bd: #fcd34d;
-  --_tint: rgba(217, 119, 6, 0.1);
-}
-.sui-acc-success {
-  --_solid: #16a34a;
-  --_solid-hover: #15803d;
-  --_on: #ffffff;
-  --_text: #16a34a;
-  --_bd: #86efac;
-  --_tint: rgba(22, 163, 74, 0.08);
-}
-.sui-acc-premium {
-  --_solid: var(--grad-purple-btn, linear-gradient(180deg, #a78bfa, #7c3aed));
-  --_solid-hover: var(
-    --grad-purple-btn,
-    linear-gradient(180deg, #a78bfa, #7c3aed)
-  );
-  --_on: #ffffff;
-  --_text: #7c3aed;
-  --_bd: #c4b5fd;
-  --_tint: rgba(124, 58, 237, 0.1);
-}
+/* ai: multi-hue gradient for AI features — no single-colour token. */
 .sui-acc-ai {
   --_solid: linear-gradient(
     135deg,
@@ -91,47 +93,6 @@
   --_text: #6366f1;
   --_bd: #c7d2fe;
   --_tint: rgba(99, 102, 241, 0.1);
-}
-
-/* ---- dark nudges ---- */
-[data-theme="dark"] .sui-acc-default {
-  --_solid: #3b82f6;
-  --_solid-hover: #2563eb;
-  --_text: #60a5fa;
-  --_bd: #1e3a5f;
-  --_tint: rgba(96, 165, 250, 0.16);
-}
-[data-theme="dark"] .sui-acc-neutral {
-  --_solid: #64748b;
-  --_solid-hover: #475569;
-  --_text: #cbd5e1;
-  --_bd: #334155;
-  --_tint: rgba(148, 163, 184, 0.16);
-}
-[data-theme="dark"] .sui-acc-brand {
-  --_text: #d98a8a;
-  --_bd: #5a2424;
-  --_tint: rgba(217, 138, 138, 0.16);
-}
-[data-theme="dark"] .sui-acc-danger {
-  --_text: #f87171;
-  --_bd: #7f1d1d;
-  --_tint: rgba(248, 113, 113, 0.16);
-}
-[data-theme="dark"] .sui-acc-warning {
-  --_text: #fbbf24;
-  --_bd: #78350f;
-  --_tint: rgba(251, 191, 36, 0.16);
-}
-[data-theme="dark"] .sui-acc-success {
-  --_text: #4ade80;
-  --_bd: #14532d;
-  --_tint: rgba(74, 222, 128, 0.16);
-}
-[data-theme="dark"] .sui-acc-premium {
-  --_text: #c4b5fd;
-  --_bd: #5b21b6;
-  --_tint: rgba(167, 139, 250, 0.18);
 }
 [data-theme="dark"] .sui-acc-ai {
   --_text: #a5b4fc;

@@ -1,7 +1,4 @@
-/* Mantine ActionIcon-backed icon-only button. Drives Mantine's --ai-* colour
- * vars from the shared accent palette (accents.css), mirroring Button.
- *
- *   variant = primary (filled) | secondary (outlined) | tertiary (ghost) */
+/* Mantine ActionIcon-backed — colour driven by the shared accent palette (accents.css). */
 @import "./accents.css";
 
 /* ---- shape ---- */
@@ -18,7 +15,7 @@
   filter: brightness(1.06);
 }
 
-/* ---- no-hover: suppress hover background change ---- */
+/* no-hover: !important to beat Mantine's own :hover background rule. */
 .sui-ai--no-hover:not([data-disabled]):hover {
   background: var(--ai-bg, transparent) !important;
 }

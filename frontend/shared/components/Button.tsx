@@ -1,16 +1,17 @@
 import { Button as MantineButton } from "@mantine/core";
+import { forwardRef } from "react";
 import type {
-  ComponentPropsWithRef,
+  ComponentPropsWithoutRef,
   CSSProperties,
   ElementType,
   ReactNode,
 } from "react";
+import { CONTROL_HEIGHT } from "@shared/components/controlSizes";
 import "@shared/components/Button.css";
 
-/** primary=solid CTA, secondary=outlined, tertiary=ghost (transparent, tinted on hover). */
-export type ButtonVariant = "primary" | "secondary" | "tertiary";
-/** Unset = `default` (blue). neutral=grey low-emphasis, brand=Stirling red,
- * ai=AI gradient, premium=purple upgrade gradient, danger/success/warning=semantic. */
+/** primary=solid, secondary=outlined, tertiary=ghost (tinted hover), quiet=plain (no bg, hovers to text colour). */
+export type ButtonVariant = "primary" | "secondary" | "tertiary" | "quiet";
+/** default(blue) | neutral | brand | ai | premium | danger | success | warning. */
 export type ButtonAccent =
   | "default"
   | "neutral"
@@ -47,7 +48,7 @@ type ButtonOwnProps = {
 };
 
 export type ButtonProps = ButtonOwnProps &
-  Omit<ComponentPropsWithRef<"button">, keyof ButtonOwnProps | "color"> & {
+  Omit<ComponentPropsWithoutRef<"button">, keyof ButtonOwnProps | "color"> & {
     href?: string;
     target?: string;
     rel?: string;
@@ -72,6 +73,7 @@ const MANTINE_VARIANT: Record<ButtonVariant, string> = {
   primary: "filled",
   secondary: "outline",
   tertiary: "subtle",
+  quiet: "subtle",
 };
 
 const MANTINE_JUSTIFY: Record<ButtonJustify, string> = {
@@ -81,26 +83,30 @@ const MANTINE_JUSTIFY: Record<ButtonJustify, string> = {
   between: "space-between",
 };
 
-function ButtonRoot({
-  variant = "primary",
-  accent = "default",
-  size = "md",
-  justify = "center",
-  shape = "default",
-  text,
-  leftSection,
-  rightSection,
-  loading = false,
-  fullWidth = false,
-  hover = true,
-  overflow = "wrap",
-  as,
-  disabled,
-  className,
-  style,
-  children,
-  ...rest
-}: ButtonProps) {
+const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(
+  function ButtonRoot(
+    {
+      variant = "primary",
+      accent = "default",
+      size = "md",
+      justify = "center",
+      shape = "default",
+      text,
+      leftSection,
+      rightSection,
+      loading = false,
+      fullWidth = false,
+      hover = true,
+      overflow = "wrap",
+      as,
+      disabled,
+      className,
+      style,
+      children,
+      ...rest
+    },
+    ref,
+  ) {
   const label = text ?? children;
   const hasLabel = label != null && label !== false && label !== "";
   const iconOnly = !hasLabel && (!!leftSection || !!rightSection || loading);
@@ -124,11 +130,7 @@ function ButtonRoot({
     .filter(Boolean)
     .join(" ");
 
-  // Map the accent palette (set by the accent class) onto Mantine's button
-  // vars; inline so they win over Mantine's computed defaults.
-  // NB: --button-bd is Mantine's full `border` shorthand, not just a colour —
-  // a bare colour is an invalid border value and renders no border (which made
-  // secondary look identical to tertiary). Always pass `<width> solid <colour>`.
+  // Accent palette → Mantine button vars (inline to win). --button-bd is a full `border` shorthand.
   const accentVars =
     variant === "primary"
       ? {
@@ -137,24 +139,31 @@ function ButtonRoot({
           "--button-color": "var(--_on)",
           "--button-bd": "1px solid transparent",
         }
-      : {
-          "--button-bg": "transparent",
-          "--button-hover": "var(--_tint)",
-          "--button-color": "var(--_text)",
-          "--button-bd":
-            variant === "secondary"
-              ? "1px solid var(--_bd)"
-              : "1px solid transparent",
-        };
+      : variant === "quiet"
+        ? {
+            "--button-bg": "transparent",
+            "--button-hover": "transparent",
+            "--button-color": "var(--_text)",
+            "--button-hover-color": "var(--color-text-1)",
+            "--button-bd": "1px solid transparent",
+          }
+        : {
+            "--button-bg": "transparent",
+            "--button-hover": "var(--_tint)",
+            "--button-color": "var(--_text)",
+            "--button-bd":
+              variant === "secondary"
+                ? "1px solid var(--_bd)"
+                : "1px solid transparent",
+          };
 
-  // Mantine Button is polymorphic; render through a loosely-typed alias so the
-  // dynamic `component={as}` prop doesn't fight Mantine's generic typing. Our
-  // ButtonProps above stays the typed public surface.
+  // Loosely-typed alias so the polymorphic `component={as}` doesn't fight Mantine's typing.
   const Comp = MantineButton as ElementType;
 
   return (
     <Comp
       {...rest}
+      ref={ref}
       component={as}
       variant={MANTINE_VARIANT[variant]}
       size={size}
@@ -167,9 +176,8 @@ function ButtonRoot({
       className={classes}
       style={{
         ...(accentVars as CSSProperties),
-        // Icon-only: zero Mantine's size padding INLINE (it sets --button-padding-x
-        // inline, so a CSS class can't win) — otherwise the asymmetric
-        // with-section padding shoves the lone icon off-centre.
+        ...({ "--button-height": CONTROL_HEIGHT[size] } as CSSProperties),
+        // Icon-only: zero the size padding inline so the lone icon centres.
         ...(iconOnly ? ({ "--button-padding-x": "0" } as CSSProperties) : {}),
         ...style,
       }}
@@ -177,6 +185,7 @@ function ButtonRoot({
       {label}
     </Comp>
   );
-}
+  },
+);
 
 export const Button = Object.assign(ButtonRoot, { Group: ButtonGroup });

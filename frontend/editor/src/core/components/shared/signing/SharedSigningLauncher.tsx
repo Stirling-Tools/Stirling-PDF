@@ -1,4 +1,5 @@
-import { Badge, Button, Stack, Text } from "@mantine/core";
+import { Badge, Stack, Text } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { useTranslation } from "react-i18next";
 import GroupAddOutlinedIcon from "@mui/icons-material/GroupAddOutlined";
 import { useGroupSigningEnabled } from "@app/hooks/useGroupSigningEnabled";
@@ -35,7 +36,7 @@ export default function SharedSigningLauncher() {
       </Text>
       <Button
         fullWidth
-        variant="light"
+        variant="tertiary"
         leftSection={<GroupAddOutlinedIcon sx={{ fontSize: "1.1rem" }} />}
         rightSection={
           pendingCount > 0 ? (

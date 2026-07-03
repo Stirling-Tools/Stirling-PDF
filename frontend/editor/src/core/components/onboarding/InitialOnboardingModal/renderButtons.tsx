@@ -84,7 +84,9 @@ export function SlideButtons({
         onClick={() => onAction(button.action)}
         disabled={disabled}
         variant={variant === "primary" ? "primary" : "secondary"}
-        accent={button.accent ?? "neutral"}
+        accent={
+          button.accent ?? (variant === "primary" ? "default" : "neutral")
+        }
       >
         {label}
       </Button>

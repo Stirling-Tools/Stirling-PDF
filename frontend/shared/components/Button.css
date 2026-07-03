@@ -1,13 +1,4 @@
-/* Mantine-backed Button. The shared <Button> renders a Mantine <Button> and
- * drives its colour CSS vars (--button-bg/-hover/-color/-bd) from the shared
- * accent palette (accents.css), so Mantine owns layout/sizing/a11y while we
- * own the palette.
- *
- *   variant = primary (filled) | secondary (outlined) | tertiary (ghost)
- *   accent  = default | neutral | brand | ai | premium | danger | success | warning
- *
- * Button.tsx adds `sui-acc-<accent>` (palette) + `sui-btn--<variant>` and maps
- * the palette onto Mantine's button vars inline so they win over the defaults. */
+/* Mantine-backed Button — colour driven by the shared accent palette (accents.css). */
 @import "./accents.css";
 
 /* ---- icon-only: square, no horizontal padding ---- */
@@ -16,9 +7,7 @@
   width: var(--button-height);
   min-width: var(--button-height);
 }
-/* Mantine gives the section a margin (the icon↔label gap) and the label
- * side-padding; with no label that pushes the lone icon off-centre. Zero them
- * so the icon sits dead-centre. (Prefer <ActionIcon> for icon-only buttons.) */
+/* Zero the section margin / hide the empty label so the lone icon centres. */
 .sui-btn--icon .mantine-Button-section {
   margin-inline: 0;
 }
@@ -45,7 +34,7 @@
   white-space: normal;
 }
 
-/* ---- no-hover: suppress hover background change ---- */
+/* no-hover: !important to beat Mantine's own :hover background rule. */
 .sui-btn--no-hover:not(:disabled):hover {
   background: var(--button-bg, transparent) !important;
 }

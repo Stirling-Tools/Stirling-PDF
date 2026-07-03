@@ -23,10 +23,7 @@ export interface FilePickerProps<
   children?: ReactNode;
 }
 
-/** A file-picker button: a shared Button trigger wired to a hidden file input
- * (Mantine FileButton under the hood). Use this instead of Mantine FileButton
- * so app code stays on the shared design system. Takes all Button styling props
- * (variant/accent/size/leftSection/fullWidth/…). */
+/** File-picker button: a shared Button trigger over a hidden file input (Mantine FileButton). */
 export function FilePicker<Multiple extends boolean = false>({
   onChange,
   accept,

@@ -1,14 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Stack,
-  Text,
-  Group,
-  Badge,
-  Button,
-  Divider,
-  Modal,
-} from "@mantine/core";
+import { Stack, Text, Group, Badge, Divider, Modal } from "@mantine/core";
+import { Button } from "@shared/components/Button";
 import { alert } from "@app/components/toast";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -159,11 +152,10 @@ export const SessionDetailPanel = ({ data }: SessionDetailPanelProps) => {
     <Stack gap="md" p="md" h="100%" style={{ minHeight: 0 }}>
       <Button
         leftSection={<ArrowBackIcon fontSize="small" />}
-        variant="subtle"
+        variant="tertiary"
         size="sm"
         onClick={onBack}
-        justify="flex-start"
-        px={6}
+        justify="start"
         style={{ alignSelf: "flex-start" }}
       >
         {t("certSign.collab.sessionDetail.backToList", "Back to Sessions")}
@@ -220,8 +212,8 @@ export const SessionDetailPanel = ({ data }: SessionDetailPanelProps) => {
       {!session.finalized && (
         <Button
           leftSection={<DeleteIcon fontSize="small" />}
-          color="red"
-          variant="light"
+          accent="danger"
+          variant="tertiary"
           fullWidth
           onClick={() => setDeleteModalOpen(true)}
         >
@@ -253,10 +245,10 @@ export const SessionDetailPanel = ({ data }: SessionDetailPanelProps) => {
             )}
           </Text>
           <Group justify="flex-end">
-            <Button variant="subtle" onClick={() => setDeleteModalOpen(false)}>
+            <Button variant="tertiary" onClick={() => setDeleteModalOpen(false)}>
               {t("cancel", "Cancel")}
             </Button>
-            <Button color="red" onClick={handleDelete} loading={deleting}>
+            <Button accent="danger" onClick={handleDelete} loading={deleting}>
               {t("delete", "Delete")}
             </Button>
           </Group>

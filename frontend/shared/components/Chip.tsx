@@ -1,5 +1,5 @@
 import { Pill as MantinePill } from "@mantine/core";
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties, KeyboardEvent, ReactNode } from "react";
 import "@shared/components/Chip.css";
 
 /** Same accent dial as Button. */
@@ -31,7 +31,6 @@ export interface ChipProps {
   style?: CSSProperties;
   children?: ReactNode;
   className?: string;
-  "data-consolidate-as"?: string;
 }
 
 /** Open-ended chip/tag (Mantine Pill-backed). For semantic status use StatusBadge. */
@@ -61,6 +60,22 @@ export function Chip({
     .filter(Boolean)
     .join(" ");
 
+  // Interactive chips are a <span>, so add button semantics + Enter/Space activation.
+  const interactive = !!onClick && !loading;
+  const interactiveProps = interactive
+    ? {
+        role: "button",
+        tabIndex: 0,
+        onClick,
+        onKeyDown: (e: KeyboardEvent<HTMLElement>) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onClick();
+          }
+        },
+      }
+    : {};
+
   return (
     <MantinePill
       {...rest}
@@ -69,8 +84,7 @@ export function Chip({
       size={size}
       withRemoveButton={!!onRemove && !loading}
       onRemove={onRemove}
-      onClick={loading ? undefined : onClick}
-      {...(onClick ? { role: "button", tabIndex: 0 } : {})}
+      {...interactiveProps}
     >
       {showDot && <span className="sui-chip__dot" aria-hidden />}
       {loading ? (

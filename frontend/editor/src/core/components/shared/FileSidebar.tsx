@@ -7,7 +7,6 @@ import React, {
   forwardRef,
 } from "react";
 import { Loader, Tooltip } from "@mantine/core";
-import { Button } from "@shared/components/Button";
 import { ActionIcon } from "@shared/components/ActionIcon";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -905,7 +904,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                     {t("fileSidebar.files", "Files")}
                   </span>
                   <ActionIcon
-                    variant="tertiary"
+                    variant="quiet"
                     className="file-sidebar-section-btn file-sidebar-section-btn-external"
                     onClick={() => navigate("/files")}
                     title={t(
@@ -921,7 +920,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                     <OpenInNewIcon sx={{ fontSize: "1rem" }} />
                   </ActionIcon>
                   <ActionIcon
-                    variant="tertiary"
+                    variant="quiet"
                     className="file-sidebar-section-btn file-sidebar-section-btn-add"
                     onClick={() => nativeFileInputRef.current?.click()}
                     title={t("fileSidebar.addFiles", "Add files")}
@@ -936,37 +935,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                   </div>
                 ) : filteredFileStubs.length > 0 ? (
                   <div className="file-sidebar-file-list">
-                    <Button
-                      variant="tertiary"
-                      hover={false}
-                      fullWidth
-                      justify="start"
-                      type="button"
-                      onClick={() => nativeFileInputRef.current?.click()}
-                      data-testid="add-files-row"
-                      leftSection={<AddIcon sx={{ fontSize: "0.9rem" }} />}
-                      style={{
-                        background: "transparent",
-                        border: "none",
-                        cursor: "pointer",
-                        color: "var(--text-muted)",
-                        padding: "4px 6px",
-                        marginBottom: 4,
-                        gap: 6,
-                        fontSize: 12,
-                        width: "100%",
-                        textAlign: "left",
-                        borderRadius: 4,
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = "var(--hover-bg)";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = "transparent";
-                      }}
-                    >
-                      {t("fileSidebar.addFiles", "Add files")}
-                    </Button>
                     {filteredFileStubs.map((stub) => {
                       const workbenchFileId = state.files.ids.find(
                         (id) => (id as string) === (stub.id as string),

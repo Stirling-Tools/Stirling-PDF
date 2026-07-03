@@ -56,7 +56,7 @@ const meta: Meta<typeof Button> = {
   argTypes: {
     variant: {
       control: "inline-radio",
-      options: ["primary", "secondary", "tertiary"],
+      options: ["primary", "secondary", "tertiary", "quiet"],
     },
     accent: {
       control: "inline-radio",

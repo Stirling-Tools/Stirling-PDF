@@ -1,5 +1,6 @@
 import { SegmentedControl as MantineSegmentedControl } from "@mantine/core";
 import type { CSSProperties, ReactNode } from "react";
+import { CONTROL_HEIGHT } from "@shared/components/controlSizes";
 import "@shared/components/SegmentedControl.css";
 
 /** Same accent dial as Button. Only the active segment is accented. */
@@ -16,6 +17,14 @@ export type SegmentedSize = "xs" | "sm" | "md" | "lg";
 /** primary = accent-filled active pill; secondary = subtle tinted pill, no track chrome. */
 export type SegmentedVariant = "primary" | "secondary";
 
+// Overall height, in sync with Button/ActionIcon via CONTROL_HEIGHT (xs is segmented-only).
+const SEG_HEIGHT: Record<SegmentedSize, string> = {
+  xs: "26px",
+  sm: CONTROL_HEIGHT.sm,
+  md: CONTROL_HEIGHT.md,
+  lg: CONTROL_HEIGHT.lg,
+};
+
 export interface SegmentedOption<T extends string> {
   label: ReactNode;
   value: T;
@@ -30,8 +39,11 @@ export interface SegmentedControlProps<T extends string> {
   size?: SegmentedSize;
   variant?: SegmentedVariant;
   fullWidth?: boolean;
-  /** Disables the whole control. */
+  disabled?: boolean;
+  /** Alias of `disabled`; also disables the control. */
   loading?: boolean;
+  /** Accessible name for the radiogroup. */
+  ariaLabel?: string;
   className?: string;
   style?: CSSProperties;
 }
@@ -45,7 +57,9 @@ export function SegmentedControl<T extends string>({
   size = "md",
   variant = "primary",
   fullWidth = false,
+  disabled = false,
   loading = false,
+  ariaLabel,
   className,
   style,
 }: SegmentedControlProps<T>) {
@@ -67,7 +81,12 @@ export function SegmentedControl<T extends string>({
   return (
     <MantineSegmentedControl
       className={classes}
-      style={{ ...(accentVars as CSSProperties), ...style }}
+      style={{
+        ...(accentVars as CSSProperties),
+        // Fixed height (matches Button/ActionIcon per size); CSS fills the labels.
+        height: SEG_HEIGHT[size],
+        ...style,
+      }}
       data={options.map((o) => ({
         label: o.label,
         value: o.value,
@@ -77,7 +96,8 @@ export function SegmentedControl<T extends string>({
       onChange={(v) => onChange(v as T)}
       size={size}
       fullWidth={fullWidth}
-      disabled={loading}
+      disabled={disabled || loading}
+      aria-label={ariaLabel}
     />
   );
 }

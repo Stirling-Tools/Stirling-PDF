@@ -47,7 +47,7 @@ const meta: Meta<typeof ActionIcon> = {
   argTypes: {
     variant: {
       control: "inline-radio",
-      options: ["primary", "secondary", "tertiary"],
+      options: ["primary", "secondary", "tertiary", "quiet"],
     },
     accent: { control: "inline-radio", options: ACCENTS },
     size: { control: "inline-radio", options: ["sm", "md", "lg", "xl"] },
