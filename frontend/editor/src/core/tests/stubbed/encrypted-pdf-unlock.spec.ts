@@ -63,8 +63,9 @@ function mockRemovePasswordWrongPassword(page: Page) {
 }
 
 async function uploadEncryptedFile(page: Page, filePath: string) {
-  await page.getByTestId("files-button").click();
-  // No modal flow - `files-button` triggers the native picker directly.
+  // Set files directly on the hidden input. Clicking `files-button` would call
+  // input.click() and open a native OS picker that firefox/webkit leak onto the
+  // host (a real Finder dialog) and hang on.
   await page.locator('[data-testid="file-input"]').setInputFiles(filePath);
 }
 
@@ -153,8 +154,8 @@ test.describe("Encrypted PDF Unlock Modal", () => {
   }) => {
     await mockRemovePasswordSuccess(page);
 
-    await page.getByTestId("files-button").click();
-    // No modal flow - `files-button` triggers the native picker directly.
+    // Set files directly on the hidden input; clicking `files-button` would open
+    // a native OS picker that firefox/webkit leak onto the host and hang on.
     await page.locator('[data-testid="file-input"]').setInputFiles([
       {
         name: "encrypted-a.pdf",

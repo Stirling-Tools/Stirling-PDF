@@ -31,7 +31,8 @@ test.describe("Encrypted PDF: unlock then merge", () => {
     await page.goto("/merge");
     await page.waitForLoadState("domcontentloaded");
 
-    await page.getByTestId("files-button").click();
+    // Set files directly on the hidden input; clicking `files-button` would open
+    // a native OS picker that firefox/webkit leak onto the host and hang on.
     await page
       .locator('[data-testid="file-input"]')
       .setInputFiles([ENCRYPTED_PDF, SAMPLE_PDF]);

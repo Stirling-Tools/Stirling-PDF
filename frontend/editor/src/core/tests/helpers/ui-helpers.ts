@@ -37,10 +37,17 @@ export async function waitForModalClose(
 }
 
 /**
- * Upload one or more files through the FileSidebar's "Open from computer"
- * action. The button is always rendered (collapsed or expanded sidebar) and
- * triggers the hidden `data-testid="file-input"` native picker directly -
- * there is no modal to wait for under the post-refactor design.
+ * Upload one or more files by setting them directly on the FileSidebar's
+ * hidden `data-testid="file-input"`, which is always rendered (collapsed or
+ * expanded sidebar) and feeds the global workspace.
+ *
+ * We deliberately do NOT click the "Open from computer" (`files-button`)
+ * entry point first. That handler calls `input.click()`, which opens a real
+ * native OS file picker. Playwright suppresses that dialog on chromium but
+ * NOT on firefox/webkit, where the native picker leaks onto the host, hangs
+ * the run, and fails the nightly cross-browser suite. `setInputFiles` sets
+ * the files and dispatches `change` on its own, so the button click is
+ * unnecessary and must be avoided for cross-browser parity.
  *
  * `setInputFiles` doesn't await the input's async onChange (which writes to
  * IndexedDB via `addFiles`), so without a sync point a caller that follows
@@ -53,7 +60,6 @@ export async function uploadFiles(
   filePaths: string | string[],
 ): Promise<void> {
   const paths = Array.isArray(filePaths) ? filePaths : [filePaths];
-  await page.getByTestId("files-button").click();
   await page.locator('[data-testid="file-input"]').setInputFiles(paths);
   // Sync point: wait until at least one file lands in the sidebar's file
   // list. The list only renders once `addFiles` has resolved (which awaits
@@ -73,8 +79,15 @@ export async function switchToEditorIfViewerMode(page: Page): Promise<void> {
   const goToEditor = page.getByRole("button", {
     name: /go to file editor/i,
   });
+  // The affordance only exists while the workbench is transiently in viewer
+  // mode after an upload. The app can auto-leave viewer mode and detach the
+  // button between our visibility check and the click - the transition timing
+  // differs on firefox/webkit, where the detached button hangs a plain
+  // `click()` for the full actionability timeout. Treat a vanished button as
+  // "already in editor mode": swallow the click failure and let the caller's
+  // run-button assertion catch any genuine regression.
   if (await goToEditor.isVisible({ timeout: 1_000 }).catch(() => false)) {
-    await goToEditor.click();
+    await goToEditor.click({ timeout: 5_000 }).catch(() => {});
   }
 }
 
