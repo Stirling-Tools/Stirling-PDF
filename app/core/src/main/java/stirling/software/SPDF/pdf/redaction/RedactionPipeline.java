@@ -52,6 +52,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.pdf.parser.PageImageLocator;
 import stirling.software.SPDF.utils.text.TextFinderUtils;
+import stirling.software.common.util.RegexPatternUtils;
 
 /** Shared plumbing for the manual-area, whole-page and auto-word redaction paths. */
 @Slf4j
@@ -838,9 +839,9 @@ public final class RedactionPipeline {
                     // Shared with the finder so removal + verification use identical boundaries.
                     core = TextFinderUtils.applyWordBoundaries(trimmed, core);
                 }
-                int flags = Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE;
-                // useRegex is the intended user option; ReDoS is bounded by DeadlineCharSequence.
-                patterns.add(Pattern.compile(core, flags)); // lgtm[java/regex-injection]
+                // Compile via the shared cache (same path as the finder) for consistent
+                // handling of user-supplied regex; ReDoS is bounded by DeadlineCharSequence.
+                patterns.add(RegexPatternUtils.getInstance().createSearchPattern(core, true));
             } catch (PatternSyntaxException e) {
                 log.debug("Skipping invalid regex '{}': {}", trimmed, e.getMessage());
             }
