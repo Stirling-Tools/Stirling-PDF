@@ -25,6 +25,13 @@ public class ProcurementConfigurationProperties {
     private int maxTrialExtensions = 2;
 
     /**
+     * Enables the demo-only endpoints (POST /reset, POST /go-live) that reset a team's procurement
+     * or mark it live without payment. Off by default; turn on ONLY in demo/dev environments —
+     * /go-live is a stand-in for the invoice.paid webhook and would let a leader activate unpaid.
+     */
+    private boolean demoControlsEnabled = false;
+
+    /**
      * Supabase edge function the portal calls to turn an accepted quote into a Stripe Checkout
      * session (Stripe lives in the edge layer, not Java). The portal builds the full URL.
      */

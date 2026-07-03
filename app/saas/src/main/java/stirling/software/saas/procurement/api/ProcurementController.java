@@ -25,6 +25,7 @@ import stirling.software.common.model.enumeration.TeamRole;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.saas.model.TeamMembership;
+import stirling.software.saas.procurement.config.ProcurementConfigurationProperties;
 import stirling.software.saas.procurement.model.ProcurementDeal;
 import stirling.software.saas.procurement.model.ProcurementQuote;
 import stirling.software.saas.procurement.pricing.QuoteConfig;
@@ -54,14 +55,17 @@ public class ProcurementController {
     private final ProcurementService procurement;
     private final TeamMembershipRepository memberRepo;
     private final UserRepository userRepository;
+    private final ProcurementConfigurationProperties config;
 
     public ProcurementController(
             ProcurementService procurement,
             TeamMembershipRepository memberRepo,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            ProcurementConfigurationProperties config) {
         this.procurement = Objects.requireNonNull(procurement);
         this.memberRepo = Objects.requireNonNull(memberRepo);
         this.userRepository = Objects.requireNonNull(userRepository);
+        this.config = Objects.requireNonNull(config);
     }
 
     // ---- request / response DTOs -------------------------------------------
@@ -215,6 +219,7 @@ public class ProcurementController {
     @PostMapping("/go-live")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<SnapshotResponse> goLive(Authentication auth) {
+        if (!config.isDemoControlsEnabled()) return ResponseEntity.notFound().build();
         Long teamId = requireLeader(auth);
         if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         try {
@@ -228,6 +233,7 @@ public class ProcurementController {
     @PostMapping("/reset")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<SnapshotResponse> reset(Authentication auth) {
+        if (!config.isDemoControlsEnabled()) return ResponseEntity.notFound().build();
         Long teamId = requireLeader(auth);
         if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         procurement.resetDeal(teamId);
