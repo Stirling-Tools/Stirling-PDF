@@ -962,6 +962,48 @@ class RedactionPipelineTest {
         }
     }
 
+    @Test
+    @DisplayName("XMP metadata scrub strips only the target and keeps non-matching properties")
+    void xmpScrubIsTargetScoped() throws Exception {
+        String xmp =
+                "<?xpacket begin=\"\" id=\"W5M0MpCehiHzreSzNTczkc9d\"?>\n"
+                        + "<x:xmpmeta xmlns:x=\"adobe:ns:meta/\">\n"
+                        + " <rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\">\n"
+                        + "  <rdf:Description rdf:about=\"\""
+                        + " xmlns:dc=\"http://purl.org/dc/elements/1.1/\">\n"
+                        + "   <dc:title>Quarterly Public Report</dc:title>\n"
+                        + "   <dc:creator>Written by Smith</dc:creator>\n"
+                        + "  </rdf:Description>\n"
+                        + " </rdf:RDF>\n"
+                        + "</x:xmpmeta>\n"
+                        + "<?xpacket end=\"w\"?>";
+        byte[] bytes;
+        try (PDDocument doc = new PDDocument()) {
+            doc.addPage(new PDPage(PDRectangle.A4));
+            doc.getDocumentCatalog()
+                    .setMetadata(
+                            new org.apache.pdfbox.pdmodel.common.PDMetadata(
+                                    doc,
+                                    new java.io.ByteArrayInputStream(
+                                            xmp.getBytes(StandardCharsets.UTF_8))));
+            CatalogScrubber.scrub(
+                    doc, new LinkedHashSet<>(Set.of("Smith")), Collections.emptyList());
+            ByteArrayOutputStream b = new ByteArrayOutputStream();
+            doc.save(b);
+            bytes = b.toByteArray();
+        }
+        try (PDDocument reopened = Loader.loadPDF(bytes)) {
+            org.apache.pdfbox.pdmodel.common.PDMetadata md =
+                    reopened.getDocumentCatalog().getMetadata();
+            assertNotNull(md, "XMP packet must be preserved, not wiped");
+            String out = new String(md.toByteArray(), StandardCharsets.UTF_8);
+            assertFalse(out.contains("Smith"), "target must be stripped from XMP");
+            assertTrue(
+                    out.contains("Quarterly Public Report"),
+                    "non-matching XMP property must survive");
+        }
+    }
+
     private static boolean pageHasImage(PDPage page) throws Exception {
         PDResources res = page.getResources();
         if (res == null) {

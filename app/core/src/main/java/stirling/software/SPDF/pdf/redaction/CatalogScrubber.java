@@ -1,5 +1,7 @@
 package stirling.software.SPDF.pdf.redaction;
 
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -19,6 +21,7 @@ import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.apache.pdfbox.pdmodel.PDDocumentNameDictionary;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.common.PDMetadata;
 import org.apache.pdfbox.pdmodel.common.PDNameTreeNode;
 import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureTreeRoot;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
@@ -187,20 +190,45 @@ public final class CatalogScrubber {
         }
         PDDocumentCatalog catalog = document.getDocumentCatalog();
         if (catalog != null && catalog.getMetadata() != null) {
-            try {
-                String xmp =
-                        new String(
-                                catalog.getMetadata().toByteArray(),
-                                java.nio.charset.StandardCharsets.UTF_8);
-                // XMP is RDF/XML that usually mirrors /Info; drop the whole packet if it carries a
-                // target rather than risk a broken partial edit.
-                if (matches(xmp, targets, patterns)) {
-                    catalog.setMetadata(null);
-                }
-            } catch (Exception e) {
-                log.debug("Could not scan XMP metadata: {}", e.getMessage());
-            }
+            scrubXmp(document, catalog, targets, patterns);
         }
+    }
+
+    /**
+     * XMP is RDF/XML that usually mirrors /Info. Strip only the target occurrences so non-matching
+     * properties (dates, rights, custom schema) survive; fall back to dropping the whole packet if
+     * the edit can't be proven to have removed the target (e.g. entity-encoded) or anything throws.
+     */
+    private static void scrubXmp(
+            PDDocument document,
+            PDDocumentCatalog catalog,
+            Set<String> targets,
+            List<Pattern> patterns) {
+        String xmp;
+        try {
+            xmp = new String(catalog.getMetadata().toByteArray(), StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            log.debug("Could not read XMP metadata: {}", e.getMessage());
+            return;
+        }
+        if (!matches(xmp, targets, patterns)) {
+            return;
+        }
+        try {
+            String stripped = stripMatches(xmp, targets, patterns);
+            // Only keep the edited packet if the target is provably gone from it.
+            if (!matches(stripped, targets, patterns)) {
+                catalog.setMetadata(
+                        new PDMetadata(
+                                document,
+                                new ByteArrayInputStream(
+                                        stripped.getBytes(StandardCharsets.UTF_8))));
+                return;
+            }
+        } catch (Exception e) {
+            log.debug("Surgical XMP scrub failed; dropping packet: {}", e.getMessage());
+        }
+        catalog.setMetadata(null);
     }
 
     // Outline
