@@ -52,11 +52,55 @@ export interface PolicyRunRecord {
 interface RunState {
   runs: PolicyRunRecord[];
   dispatched: string[];
+  /** startedAt of the run that began the current processing "wave" — a burst of
+   *  runs with no idle gap. Reset whenever a run is recorded while nothing is in
+   *  flight. The panel's progress counts (X of Y processed) scope to this so they
+   *  reflect the CURRENT upload, not the whole persisted history. */
+  waveStartedAt: number;
+}
+
+const IN_FLIGHT_STATUSES: ReadonlySet<PolicyRunStatus> = new Set([
+  "PENDING",
+  "RUNNING",
+  "WAITING_FOR_INPUT",
+]);
+
+/** True while a run is still working: dispatched/running, in a retry backoff, or
+ *  done on the backend but not yet imported into the workspace. Shared so the
+ *  wave tracking, the panel progress, and the file-row spinner all agree. */
+export function isRunInFlight(run: PolicyRunRecord): boolean {
+  if (run.retrying) return true;
+  if (IN_FLIGHT_STATUSES.has(run.status)) return true;
+  return run.status === "COMPLETED" && !run.imported;
 }
 
 const STORAGE_KEY = "stirling-policy-runs";
-/** Cap stored runs so the activity log can't grow without bound. */
-const MAX_RUNS = 50;
+/** Soft cap on stored runs so the activity log can't grow without bound. Only
+ *  TERMINAL runs are ever evicted (see {@link capRuns}); in-flight runs are always
+ *  kept, so a large upload batch (more files than this cap) still polls + imports
+ *  every one — and the panel's processing count stays accurate. */
+const MAX_RUNS = 200;
+
+const TERMINAL: ReadonlySet<PolicyRunStatus> = new Set([
+  "COMPLETED",
+  "FAILED",
+  "CANCELLED",
+]);
+
+/**
+ * Trim the run list toward MAX_RUNS by dropping the OLDEST terminal runs first,
+ * never in-flight ones. Runs are newest-first, so we walk from the tail. If more
+ * than MAX_RUNS runs are still in flight (a very large batch) they're all kept —
+ * dropping a live run would orphan its polling/import and undercount progress.
+ */
+function capRuns(runs: PolicyRunRecord[]): PolicyRunRecord[] {
+  if (runs.length <= MAX_RUNS) return runs;
+  const trimmed = [...runs];
+  for (let i = trimmed.length - 1; i >= 0 && trimmed.length > MAX_RUNS; i--) {
+    if (TERMINAL.has(trimmed[i].status)) trimmed.splice(i, 1);
+  }
+  return trimmed;
+}
 
 function read(): RunState {
   try {
@@ -81,12 +125,14 @@ function read(): RunState {
             }))
           : [],
         dispatched: Array.isArray(parsed.dispatched) ? parsed.dispatched : [],
+        waveStartedAt:
+          typeof parsed.waveStartedAt === "number" ? parsed.waveStartedAt : 0,
       };
     }
   } catch {
     // Corrupt/unavailable storage — start empty.
   }
-  return { runs: [], dispatched: [] };
+  return { runs: [], dispatched: [], waveStartedAt: 0 };
 }
 
 let state: RunState = read();
@@ -112,9 +158,20 @@ function getSnapshot(): RunState {
   return state;
 }
 
-const SERVER_SNAPSHOT: RunState = { runs: [], dispatched: [] };
+const SERVER_SNAPSHOT: RunState = {
+  runs: [],
+  dispatched: [],
+  waveStartedAt: 0,
+};
 function getServerSnapshot(): RunState {
   return SERVER_SNAPSHOT;
+}
+
+/** Non-hook check for background work that should yield while a policy wave is
+ *  running (e.g. the sidebar's category backfill) — reads the store without
+ *  subscribing, so callers don't re-render on every poll tick. */
+export function hasInFlightPolicyRuns(): boolean {
+  return state.runs.some(isRunInFlight);
 }
 
 /** Key identifying a single (policy, file) run attempt. */
@@ -130,11 +187,18 @@ export function isDispatched(categoryId: string, fileId: string): boolean {
 /** Record a newly-dispatched run (marks it dispatched + adds the record). */
 export function recordRunStart(record: PolicyRunRecord) {
   const key = dispatchKey(record.categoryId, record.fileId);
+  // A run recorded while nothing else is in flight begins a fresh wave, so the
+  // progress counts reset to this upload instead of accumulating across every
+  // past upload persisted in localStorage.
+  const waveStartedAt = state.runs.some(isRunInFlight)
+    ? state.waveStartedAt
+    : record.startedAt;
   state = {
-    runs: [record, ...state.runs].slice(0, MAX_RUNS),
+    runs: capRuns([record, ...state.runs]),
     dispatched: state.dispatched.includes(key)
       ? state.dispatched
       : [...state.dispatched, key],
+    waveStartedAt,
   };
   emit();
 }
@@ -147,7 +211,7 @@ export function recordRunStart(record: PolicyRunRecord) {
  */
 export function addReconciledRun(record: PolicyRunRecord) {
   if (state.runs.some((r) => r.runId === record.runId)) return;
-  state = { ...state, runs: [record, ...state.runs].slice(0, MAX_RUNS) };
+  state = { ...state, runs: capRuns([record, ...state.runs]) };
   emit();
 }
 
@@ -187,7 +251,7 @@ export function removeRun(runId: string) {
 
 /** Reset the store — used by tests to isolate it. */
 export function resetPolicyRuns() {
-  state = { runs: [], dispatched: [] };
+  state = { runs: [], dispatched: [], waveStartedAt: 0 };
   emit();
 }
 
@@ -196,5 +260,15 @@ export function usePolicyRuns(): PolicyRunRecord[] {
     subscribe,
     () => getSnapshot().runs,
     () => getServerSnapshot().runs,
+  );
+}
+
+/** startedAt of the current processing wave (see {@link RunState.waveStartedAt}).
+ *  The panel scopes its progress counts to runs at/after this. */
+export function usePolicyWaveStart(): number {
+  return useSyncExternalStore(
+    subscribe,
+    () => getSnapshot().waveStartedAt,
+    () => getServerSnapshot().waveStartedAt,
   );
 }

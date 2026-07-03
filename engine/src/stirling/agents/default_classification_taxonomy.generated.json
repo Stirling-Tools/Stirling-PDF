@@ -4,6 +4,7 @@
     {
       "id": "invoice",
       "label": "Invoice",
+      "icon": "receipt-long",
       "docTypes": [
         {
           "id": "invoice",
@@ -30,6 +31,7 @@
     {
       "id": "contract",
       "label": "Contract",
+      "icon": "handshake",
       "docTypes": [
         {
           "id": "nda",
@@ -64,6 +66,7 @@
     {
       "id": "financial_statement",
       "label": "Financial statement",
+      "icon": "account-balance",
       "docTypes": [
         {
           "id": "balance_sheet",
@@ -90,6 +93,7 @@
     {
       "id": "report",
       "label": "Report",
+      "icon": "bar-chart",
       "docTypes": [
         {
           "id": "business_report",
@@ -116,6 +120,7 @@
     {
       "id": "letter",
       "label": "Letter",
+      "icon": "mail",
       "docTypes": [
         {
           "id": "business_letter",
@@ -142,6 +147,7 @@
     {
       "id": "form",
       "label": "Form",
+      "icon": "assignment",
       "docTypes": [
         {
           "id": "application_form",
@@ -168,6 +174,7 @@
     {
       "id": "resume",
       "label": "Resume",
+      "icon": "contact-page",
       "docTypes": [
         {
           "id": "resume",
@@ -190,6 +197,7 @@
     {
       "id": "tax_form",
       "label": "Tax form",
+      "icon": "request-quote",
       "docTypes": [
         {
           "id": "tax_return",
@@ -216,6 +224,7 @@
     {
       "id": "expense_report",
       "label": "Expense report",
+      "icon": "payments",
       "docTypes": [
         {
           "id": "expense_report",
@@ -238,6 +247,7 @@
     {
       "id": "presentation",
       "label": "Presentation",
+      "icon": "slideshow",
       "docTypes": [
         {
           "id": "slide_deck",
@@ -260,6 +270,7 @@
     {
       "id": "medical_record",
       "label": "Medical record",
+      "icon": "medical-services",
       "docTypes": [
         {
           "id": "lab_result",
@@ -290,6 +301,7 @@
     {
       "id": "legal_filing",
       "label": "Legal filing",
+      "icon": "gavel",
       "docTypes": [
         {
           "id": "court_filing",
@@ -320,6 +332,7 @@
     {
       "id": "identity_document",
       "label": "Identity document",
+      "icon": "badge",
       "docTypes": [
         {
           "id": "passport",
@@ -346,6 +359,7 @@
     {
       "id": "insurance",
       "label": "Insurance",
+      "icon": "shield",
       "docTypes": [
         {
           "id": "insurance_policy",
@@ -368,6 +382,7 @@
     {
       "id": "real_estate",
       "label": "Real estate",
+      "icon": "home-work",
       "docTypes": [
         {
           "id": "deed",
@@ -394,6 +409,7 @@
     {
       "id": "shipping",
       "label": "Shipping",
+      "icon": "local-shipping",
       "docTypes": [
         {
           "id": "bill_of_lading",
@@ -420,6 +436,7 @@
     {
       "id": "hr_document",
       "label": "HR document",
+      "icon": "groups",
       "docTypes": [
         {
           "id": "offer_letter",
@@ -450,6 +467,7 @@
     {
       "id": "academic_record",
       "label": "Academic record",
+      "icon": "school",
       "docTypes": [
         {
           "id": "transcript",
@@ -480,6 +498,7 @@
     {
       "id": "marketing_material",
       "label": "Marketing material",
+      "icon": "campaign",
       "docTypes": [
         {
           "id": "brochure",
@@ -506,6 +525,7 @@
     {
       "id": "technical_document",
       "label": "Technical document",
+      "icon": "engineering",
       "docTypes": [
         {
           "id": "user_manual",

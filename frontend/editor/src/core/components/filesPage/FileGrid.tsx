@@ -19,6 +19,7 @@ import { FileId } from "@app/types/file";
 import { FolderId, FolderRecord, ROOT_FOLDER_ID } from "@app/types/folder";
 import { useFolders } from "@app/contexts/FolderContext";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
+import type { FileItemPolicyRef } from "@app/components/shared/FileSidebarFileItem";
 import { StirlingFileStub } from "@app/types/fileContext";
 import { formatFileSize, getFileDate } from "@app/utils/fileUtils";
 import {
@@ -340,6 +341,7 @@ function GridView({
   onVersionHistory,
   saveToServerDisabledReason,
 }: FileGridProps) {
+  const policyBadges = useEntryPolicyBadges(entries);
   return (
     <div className="files-page-grid" role="list">
       {entries.map((entry) => {
@@ -369,6 +371,9 @@ function GridView({
             <FileCard
               key={`file-${entry.file.id}`}
               file={entry.file}
+              policyBadges={
+                policyBadges.get(entry.file.id as string) ?? NO_BADGES
+              }
               parentPath={entry.parentPath}
               isSelected={selectedFileIds.has(entry.file.id)}
               isInWorkspace={
@@ -578,16 +583,46 @@ function FolderCard({
   );
 }
 
-/** Shield badges for the policies that have run on a file. */
-function PolicyBadges({ fileId }: { fileId: string }) {
-  const badges = usePolicyFileBadges().get(fileId) ?? [];
+/** Stable empty-badges identity for files no policy has touched. */
+const NO_BADGES: FileItemPolicyRef[] = [];
+
+/** At most this many policy badges inline; the rest collapse into "+N". */
+const MAX_VISIBLE_POLICY_BADGES = 2;
+
+/**
+ * One policy-badge map per VIEW (not per row), resolved over the page's own
+ * stubs — so files that aren't open in the workspace still show their full
+ * policy chain (the persisted records carry the lineage).
+ */
+function useEntryPolicyBadges(
+  entries: FilesPageEntry[],
+): Map<string, FileItemPolicyRef[]> {
+  const stubs = useMemo(
+    () =>
+      entries.flatMap((entry) =>
+        entry.kind === "file" && entry.file ? [entry.file] : [],
+      ),
+    [entries],
+  );
+  return usePolicyFileBadges(stubs);
+}
+
+/** Badges for the policies that have run on a file: each policy's own glyph in
+ *  its accent colour, first two inline, the rest as a same-sized neutral "+N"
+ *  counter (hover lists the hidden policies). */
+function PolicyBadges({ badges }: { badges: FileItemPolicyRef[] }) {
+  const { t } = useTranslation();
   if (badges.length === 0) return null;
+  const visible = badges.slice(0, MAX_VISIBLE_POLICY_BADGES);
+  const overflow = badges.length - visible.length;
   return (
     <span className="files-page-policy-badges" data-no-select>
-      {badges.slice(0, 3).map((policy) => (
+      {visible.map((policy) => (
         <Tooltip
           key={policy.id}
-          label={`${policy.name} policy ran on this file`}
+          label={t("filesPage.policyRan", "{{name}} policy ran on this file", {
+            name: policy.name,
+          })}
           withArrow
           position="top"
         >
@@ -595,16 +630,32 @@ function PolicyBadges({ fileId }: { fileId: string }) {
             className="files-page-policy-badge"
             style={{ color: policy.accentColor }}
           >
-            <ShieldOutlinedIcon sx={{ fontSize: "0.7rem" }} />
+            {policy.icon ?? <ShieldOutlinedIcon sx={{ fontSize: "0.7rem" }} />}
           </span>
         </Tooltip>
       ))}
+      {overflow > 0 && (
+        <Tooltip
+          label={badges
+            .slice(MAX_VISIBLE_POLICY_BADGES)
+            .map((p) => p.name)
+            .join(", ")}
+          withArrow
+          position="top"
+        >
+          <span className="files-page-policy-badge files-page-policy-badge--more">
+            +{overflow}
+          </span>
+        </Tooltip>
+      )}
     </span>
   );
 }
 
 interface FileCardProps {
   file: StirlingFileStub;
+  /** Policies that have run on this file (resolved once per view). */
+  policyBadges: FileItemPolicyRef[];
   isSelected: boolean;
   isInWorkspace: boolean;
   /** Subtitle for search results outside current folder. */
@@ -626,6 +677,7 @@ interface FileCardProps {
 
 function FileCard({
   file,
+  policyBadges,
   parentPath,
   isSelected,
   isInWorkspace,
@@ -763,7 +815,7 @@ function FileCard({
           <span>{fileSize}</span>
           <span>·</span>
           <span>{fileDate}</span>
-          <PolicyBadges fileId={file.id as string} />
+          <PolicyBadges badges={policyBadges} />
         </div>
       </div>
       <div className="files-page-card-actions">
@@ -884,6 +936,7 @@ function ListView({
   onChangeSortMode?: (next: FilesPageSortMode) => void;
 }) {
   const { t } = useTranslation();
+  const policyBadges = useEntryPolicyBadges(entries);
 
   // Tri-state header checkbox state - computed from current entries.
   const visibleFileIds = useMemo(
@@ -985,6 +1038,9 @@ function ListView({
             <FileRow
               key={`file-${entry.file.id}`}
               file={entry.file}
+              policyBadges={
+                policyBadges.get(entry.file.id as string) ?? NO_BADGES
+              }
               parentPath={entry.parentPath}
               isSelected={selectedFileIds.has(entry.file.id)}
               isInWorkspace={
@@ -1201,6 +1257,8 @@ function FolderRow({
 
 interface FileRowProps {
   file: StirlingFileStub;
+  /** Policies that have run on this file (resolved once per view). */
+  policyBadges: FileItemPolicyRef[];
   isSelected: boolean;
   isInWorkspace: boolean;
   parentPath?: string;
@@ -1221,6 +1279,7 @@ interface FileRowProps {
 
 function FileRow({
   file,
+  policyBadges,
   isSelected,
   isInWorkspace,
   parentPath,
@@ -1355,7 +1414,7 @@ function FileRow({
           )}
         </span>
         <FileOriginBadge origin={getFileOrigin(file)} compact />
-        <PolicyBadges fileId={file.id as string} />
+        <PolicyBadges badges={policyBadges} />
         {isInWorkspace && (
           <span className="files-page-row-open-pill">
             <span className="files-page-card-open-dot" />

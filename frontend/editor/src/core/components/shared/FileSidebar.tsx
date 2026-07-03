@@ -40,6 +40,10 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import SettingsIcon from "@mui/icons-material/Settings";
 import type { FileId } from "@app/types/file";
 import { FileItem } from "@app/components/shared/FileSidebarFileItem";
+import { LocalIcon } from "@app/components/shared/LocalIcon";
+import { useFileSidebarGroups } from "@app/components/shared/fileSidebarGrouping";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import BulkUploadToServerModal from "@app/components/shared/BulkUploadToServerModal";
 import { getFileOrigin } from "@app/components/filesPage/fileOrigin";
 import { VersionHistoryModal } from "@app/components/filesPage/VersionHistoryModal";
@@ -49,9 +53,10 @@ import {
   type DeleteScope,
 } from "@app/services/serverStorageDelete";
 import { fileStorage } from "@app/services/fileStorage";
+import { useBulkAddProgress } from "@app/services/bulkAddProgress";
 import { useFolderMembership } from "@app/hooks/useFolderMembership";
 import { useAllWatchedFolders } from "@app/hooks/useAllWatchedFolders";
-import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
+import { usePolicyFileProcessing } from "@app/hooks/usePolicyFileBadges";
 import {
   setWatchedFolderDraggedFileIds,
   clearWatchedFolderDraggedFileIds,
@@ -66,6 +71,14 @@ const EXPANDED_WIDTH = "16.25rem"; // ~260px
 // Inlined to avoid a circular import with WatchedFoldersRegistration.
 const WATCHED_FOLDER_VIEW_ID = "watchedFolder";
 const WATCHED_FOLDER_WORKBENCH_ID = "custom:watchedFolder";
+
+// Stable empty props for rows without folders, so the memoized FileItem
+// isn't re-rendered by a fresh `?? []` identity on every list render.
+const NO_FOLDERS: never[] = [];
+
+/** Only surface the "Adding files…" progress row for drops big enough that the
+ *  pre-dispatch scan is user-visible; small adds finish before it would paint. */
+const BULK_ADD_INDICATOR_MIN = 8;
 
 export interface FileSidebarProps {
   collapsed?: boolean;
@@ -90,6 +103,38 @@ export interface FileSidebarProps {
     disabledTooltip?: string;
     testId?: string;
   };
+}
+
+/**
+ * Slim "Adding files… X/Y" indicator during a bulk drop's pre-dispatch scan, so
+ * a 200-file folder never looks frozen between drop and rows appearing. A
+ * SEPARATE component so the per-file progress emissions re-render only this row
+ * — not the whole sidebar (and its file list) hundreds of times per drop.
+ */
+function BulkAddProgressRow() {
+  const { t } = useTranslation();
+  const bulkAdd = useBulkAddProgress();
+  if (bulkAdd.total < BULK_ADD_INDICATOR_MIN || bulkAdd.done >= bulkAdd.total) {
+    return null;
+  }
+  return (
+    <div className="file-sidebar-bulk-add" role="status" aria-live="polite">
+      <div className="file-sidebar-bulk-add-label">
+        <span>{t("fileSidebar.addingFiles", "Adding files…")}</span>
+        <span className="file-sidebar-bulk-add-count">
+          {bulkAdd.done}/{bulkAdd.total}
+        </span>
+      </div>
+      <div className="file-sidebar-bulk-add-track">
+        <div
+          className="file-sidebar-bulk-add-bar"
+          style={{
+            width: `${Math.round((bulkAdd.done / bulkAdd.total) * 100)}%`,
+          }}
+        />
+      </div>
+    </div>
+  );
 }
 
 const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
@@ -141,7 +186,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     // the workbench). The same map drives the per-file membership dots.
     const folderMembership = useFolderMembership();
     const allFolders = useAllWatchedFolders();
-    const policyFileBadges = usePolicyFileBadges();
+    const policyFileProcessing = usePolicyFileProcessing();
     const folderById = useMemo(
       () => new Map(allFolders.map((f) => [f.id, f])),
       [allFolders],
@@ -265,10 +310,26 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       setStubsLoaded(true);
     }, [indexedDB, state.files.ids, state.files.byId]);
 
-    // Refresh on mount, workbench changes, or external IndexedDB writes
+    // Refresh on mount, workbench changes, or external IndexedDB writes —
+    // COALESCED. refreshStubs is a full IDB metadata scan, and it's re-created on
+    // every workspace change: during a big folder drop (or a policy wave) that's
+    // hundreds of triggers (per-file thumbnail hydrations, versioned deliveries),
+    // which uncoalesced means O(files²) IDB reads and a re-render storm. A short
+    // trailing throttle turns a burst into one scan per window; the first run
+    // fires immediately so mount/load isn't delayed.
     const indexedDBRevision = useIndexedDBRevision();
+    const lastRefreshAt = useRef(0);
     useEffect(() => {
-      refreshStubs();
+      const REFRESH_COALESCE_MS = 300;
+      const wait = Math.max(
+        0,
+        lastRefreshAt.current + REFRESH_COALESCE_MS - Date.now(),
+      );
+      const timer = window.setTimeout(() => {
+        lastRefreshAt.current = Date.now();
+        void refreshStubs();
+      }, wait);
+      return () => window.clearTimeout(timer);
     }, [refreshStubs, indexedDBRevision]);
 
     // Kebab delete: local-only files go immediately (cheap, re-addable). When
@@ -359,6 +420,17 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           stub.name.toLowerCase().includes(searchQuery.toLowerCase()),
         )
       : allFileStubs;
+
+    // How to group the list: SaaS groups by classification category; core returns
+    // null → a single flat, recency-sorted list (unchanged for OSS/desktop).
+    const fileGroups = useFileSidebarGroups(filteredFileStubs);
+    // Per-group expand/collapse, falling back to each group's default until toggled.
+    const [groupOpen, setGroupOpen] = useState<Record<string, boolean>>({});
+    const setGroupOpenState = useCallback(
+      (id: string, open: boolean) =>
+        setGroupOpen((prev) => ({ ...prev, [id]: open })),
+      [],
+    );
 
     // Handle search activation
     const handleSearchClick = useCallback(() => {
@@ -614,6 +686,80 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       !isGoogleDriveEnabled && config?.hideDisabledToolsGoogleDrive;
 
     const width = collapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH;
+
+    // Render one file row. Extracted so both the flat list and the grouped
+    // (SaaS) layout share identical row rendering.
+    const renderFileRow = (stub: StirlingFileStub) => {
+      const workbenchFileId = state.files.ids.find(
+        (id) => (id as string) === (stub.id as string),
+      );
+      const isInWorkbench = !!workbenchFileId;
+      const isSelected = isWatchedFoldersActive
+        ? activeWatchedFolderId != null &&
+          (folderMembership
+            .get(stub.id as string)
+            ?.includes(activeWatchedFolderId) ??
+            false)
+        : isInWorkbench;
+      const showFolderDots =
+        WATCHED_FOLDERS_ENABLED &&
+        isWatchedFoldersActive &&
+        activeWatchedFolderId === null;
+      const memberFolders = showFolderDots
+        ? (folderMembership.get(stub.id as string) ?? [])
+            .map((fid) => folderById.get(fid))
+            .filter((f): f is NonNullable<typeof f> => !!f)
+            .map((f) => ({
+              id: f.id,
+              name: f.name,
+              accentColor: f.accentColor,
+            }))
+        : NO_FOLDERS;
+      const isViewedInViewer = !!(
+        viewedWorkbenchId && viewedWorkbenchId === (stub.id as string)
+      );
+      const isActive = isViewedInViewer;
+      const isEncryptedFile = stub.processedFile?.isEncrypted === true;
+      const thumbnailUrl = isEncryptedFile
+        ? undefined
+        : (workbenchFileId
+            ? state.files.byId[workbenchFileId]?.thumbnailUrl
+            : undefined) || stub.thumbnailUrl;
+      const fileOrigin = getFileOrigin(stub);
+      return (
+        // Key by lineage (originalFileId), not the leaf id: when a policy versions
+        // a file the leaf id changes, but keeping the key stable lets React update
+        // the row in place instead of unmounting/remounting it — no flicker as the
+        // tagged file swaps in, and the enforce-glow doesn't re-fire.
+        <FileItem
+          key={(stub.originalFileId ?? stub.id) as string}
+          fileId={stub.id}
+          name={stub.name}
+          size={stub.size}
+          lastModified={stub.lastModified}
+          isSelected={isSelected}
+          isActive={isActive}
+          isViewedInViewer={isViewedInViewer}
+          thumbnailUrl={thumbnailUrl}
+          onClick={handleFileClick}
+          onEyeClick={handleEyeClick}
+          draggable={isWatchedFoldersActive}
+          onDragStart={handleWatchedFolderDragStart}
+          folders={memberFolders}
+          onFolderClick={openWatchedFolder}
+          processingPolicy={policyFileProcessing.get(stub.id as string)}
+          onDelete={isWatchedFoldersActive ? undefined : handleSidebarDelete}
+          onSaveToCloud={isWatchedFoldersActive ? undefined : handleSaveToCloud}
+          canSaveToCloud={storageEnabled && fileOrigin !== "shared-with-me"}
+          isUploadedToCloud={fileOrigin === "cloud"}
+          onVersionHistory={
+            isWatchedFoldersActive ? undefined : handleVersionHistory
+          }
+          hasVersionHistory={(stub.versionNumber ?? 1) > 1}
+          categoryLabel={stub.classificationCategory?.label}
+        />
+      );
+    };
 
     return (
       <div
@@ -983,136 +1129,115 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                   </button>
                 </div>
 
+                <BulkAddProgressRow />
+
                 {!stubsLoaded ? (
                   <div className="file-sidebar-loading">
                     <Loader size="sm" color="var(--text-muted)" />
                   </div>
                 ) : filteredFileStubs.length > 0 ? (
                   <div className="file-sidebar-file-list">
-                    <button
-                      type="button"
-                      onClick={() => nativeFileInputRef.current?.click()}
-                      data-testid="add-files-row"
-                      style={{
-                        background: "transparent",
-                        border: "none",
-                        cursor: "pointer",
-                        color: "var(--text-muted)",
-                        padding: "4px 6px",
-                        marginBottom: 4,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 6,
-                        fontSize: 12,
-                        width: "100%",
-                        textAlign: "left",
-                        borderRadius: 4,
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = "var(--hover-bg)";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = "transparent";
-                      }}
-                    >
-                      <AddIcon sx={{ fontSize: "0.9rem" }} />
-                      {t("fileSidebar.addFiles", "Add files")}
-                    </button>
-                    {filteredFileStubs.map((stub) => {
-                      const workbenchFileId = state.files.ids.find(
-                        (id) => (id as string) === (stub.id as string),
-                      );
-                      const isInWorkbench = !!workbenchFileId;
-                      // On Watched Folders, the tick means "this file is already in
-                      // the open folder"; on the folder home (no folder open) a
-                      // click is a no-op, so show no tick at all.
-                      const isSelected = isWatchedFoldersActive
-                        ? activeWatchedFolderId != null &&
-                          (folderMembership
-                            .get(stub.id as string)
-                            ?.includes(activeWatchedFolderId) ??
-                            false)
-                        : isInWorkbench;
-                      // Membership dots only on the Watched Folders home (the folder
-                      // grid, no folder open). Inside a specific folder the tick
-                      // already shows "in this folder"; in other views they'd just
-                      // be noise.
-                      const showFolderDots =
-                        WATCHED_FOLDERS_ENABLED &&
-                        isWatchedFoldersActive &&
-                        activeWatchedFolderId === null;
-                      const memberFolders = showFolderDots
-                        ? (folderMembership.get(stub.id as string) ?? [])
-                            .map((fid) => folderById.get(fid))
-                            .filter((f): f is NonNullable<typeof f> => !!f)
-                            .map((f) => ({
-                              id: f.id,
-                              name: f.name,
-                              accentColor: f.accentColor,
-                            }))
-                        : [];
-                      // Both active and viewed-in-viewer are ID-based - never index-based.
-                      const isViewedInViewer = !!(
-                        viewedWorkbenchId &&
-                        viewedWorkbenchId === (stub.id as string)
-                      );
-                      const isActive = isViewedInViewer;
-                      // In-memory thumbnail may be fresher than the IndexedDB stub.
-                      // Encrypted files never get a raster thumbnail - use undefined
-                      // so the sidebar icon is shown instead of a stale canvas thumbnail.
-                      const isEncryptedFile =
-                        stub.processedFile?.isEncrypted === true;
-                      const thumbnailUrl = isEncryptedFile
-                        ? undefined
-                        : (workbenchFileId
-                            ? state.files.byId[workbenchFileId]?.thumbnailUrl
-                            : undefined) || stub.thumbnailUrl;
-                      // local | cloud | shared-with-me - drives the cloud badge
-                      // and the Upload-vs-Update menu label.
-                      const fileOrigin = getFileOrigin(stub);
-                      return (
-                        <FileItem
-                          key={stub.id}
-                          fileId={stub.id}
-                          name={stub.name}
-                          size={stub.size}
-                          lastModified={stub.lastModified}
-                          isSelected={isSelected}
-                          isActive={isActive}
-                          isViewedInViewer={isViewedInViewer}
-                          thumbnailUrl={thumbnailUrl}
-                          onClick={handleFileClick}
-                          onEyeClick={handleEyeClick}
-                          draggable={isWatchedFoldersActive}
-                          onDragStart={handleWatchedFolderDragStart}
-                          folders={memberFolders}
-                          onFolderClick={openWatchedFolder}
-                          policies={
-                            policyFileBadges.get(stub.id as string) ?? []
-                          }
-                          onDelete={
-                            isWatchedFoldersActive
-                              ? undefined
-                              : handleSidebarDelete
-                          }
-                          onSaveToCloud={
-                            isWatchedFoldersActive
-                              ? undefined
-                              : handleSaveToCloud
-                          }
-                          canSaveToCloud={
-                            storageEnabled && fileOrigin !== "shared-with-me"
-                          }
-                          isUploadedToCloud={fileOrigin === "cloud"}
-                          onVersionHistory={
-                            isWatchedFoldersActive
-                              ? undefined
-                              : handleVersionHistory
-                          }
-                          hasVersionHistory={(stub.versionNumber ?? 1) > 1}
-                        />
-                      );
-                    })}
+                    {/* Inline "Add files" row — kept for the flat list (OSS/desktop);
+                        omitted in the grouped (SaaS) view, where the header "+"
+                        covers adding files. */}
+                    {!fileGroups && (
+                      <button
+                        type="button"
+                        onClick={() => nativeFileInputRef.current?.click()}
+                        data-testid="add-files-row"
+                        style={{
+                          background: "transparent",
+                          border: "none",
+                          cursor: "pointer",
+                          color: "var(--text-muted)",
+                          padding: "4px 6px",
+                          marginBottom: 4,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 6,
+                          fontSize: 12,
+                          width: "100%",
+                          textAlign: "left",
+                          borderRadius: 4,
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = "var(--hover-bg)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = "transparent";
+                        }}
+                      >
+                        <AddIcon sx={{ fontSize: "0.9rem" }} />
+                        {t("fileSidebar.addFiles", "Add files")}
+                      </button>
+                    )}
+                    {fileGroups ? (
+                      <>
+                        {fileGroups.map((group) => {
+                          const isOpen =
+                            groupOpen[group.id] ?? group.defaultExpanded;
+                          return (
+                            <div className="file-sidebar-group" key={group.id}>
+                              <button
+                                type="button"
+                                className="file-sidebar-group-header"
+                                onClick={() =>
+                                  setGroupOpenState(group.id, !isOpen)
+                                }
+                                aria-expanded={isOpen}
+                              >
+                                {isOpen ? (
+                                  <KeyboardArrowDownIcon
+                                    sx={{ fontSize: "1.1rem" }}
+                                  />
+                                ) : (
+                                  <KeyboardArrowRightIcon
+                                    sx={{ fontSize: "1.1rem" }}
+                                  />
+                                )}
+                                {group.icon && (
+                                  <LocalIcon
+                                    icon={group.icon}
+                                    width="1.05rem"
+                                    className="file-sidebar-group-icon"
+                                    style={
+                                      group.color
+                                        ? { color: group.color }
+                                        : undefined
+                                    }
+                                  />
+                                )}
+                                <span className="file-sidebar-group-label">
+                                  {group.label}
+                                </span>
+                                <span className="file-sidebar-group-count">
+                                  {group.stubs.length}
+                                </span>
+                              </button>
+                              <div className="file-sidebar-group-items">
+                                {isOpen && group.stubs.map(renderFileRow)}
+                              </div>
+                            </div>
+                          );
+                        })}
+                        <button
+                          type="button"
+                          className="file-sidebar-view-all"
+                          onClick={() => navigate("/files")}
+                        >
+                          {t(
+                            "fileSidebar.viewAll",
+                            "View all {{count}} files",
+                            {
+                              count: filteredFileStubs.length,
+                            },
+                          )}
+                          <KeyboardArrowRightIcon sx={{ fontSize: "1rem" }} />
+                        </button>
+                      </>
+                    ) : (
+                      filteredFileStubs.map(renderFileRow)
+                    )}
                   </div>
                 ) : (
                   !searchActive && (

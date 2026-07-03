@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 class TaxonomyValidatorTest {
 
     private static TaxonomyCategory category(String id, TaxonomyDocumentType... docTypes) {
-        return new TaxonomyCategory(id, id + " label", List.of(docTypes));
+        return new TaxonomyCategory(id, id + " label", null, List.of(docTypes));
     }
 
     private static TaxonomyDocumentType docType(String id) {
@@ -66,7 +66,7 @@ class TaxonomyValidatorTest {
     void rejectsBlank() {
         ClassificationTaxonomy taxonomy =
                 new ClassificationTaxonomy(
-                        List.of(new TaxonomyCategory(" ", "label", List.of())), List.of());
+                        List.of(new TaxonomyCategory(" ", "label", null, List.of())), List.of());
         assertThatThrownBy(() -> TaxonomyValidator.validate(taxonomy))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("must not be blank");
@@ -102,7 +102,8 @@ class TaxonomyValidatorTest {
         String longLabel = "x".repeat(TaxonomyValidator.MAX_TEXT_LENGTH + 1);
         ClassificationTaxonomy taxonomy =
                 new ClassificationTaxonomy(
-                        List.of(new TaxonomyCategory("invoice", longLabel, List.of())), List.of());
+                        List.of(new TaxonomyCategory("invoice", longLabel, null, List.of())),
+                        List.of());
         assertThatThrownBy(() -> TaxonomyValidator.validate(taxonomy))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("too long");

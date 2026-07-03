@@ -53,6 +53,7 @@ class TaxonomyControllerTest {
                         new TaxonomyCategory(
                                 "invoice",
                                 "Invoice",
+                                "receipt-long",
                                 List.of(new TaxonomyDocumentType("receipt", "Receipt")))),
                 List.of("finance"));
     }

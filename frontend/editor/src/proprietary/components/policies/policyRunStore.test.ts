@@ -83,12 +83,62 @@ describe("policyRunStore", () => {
     expect(isDispatched("security", "f1")).toBe(true);
   });
 
-  it("caps stored runs at 50, newest first", () => {
-    for (let i = 0; i < 55; i++) {
-      recordRunStart(rec({ runId: `r${i}`, fileId: `f${i}`, startedAt: i }));
+  it("never evicts in-flight runs, even past the soft cap", () => {
+    // A large upload batch can exceed the cap while still processing. Dropping a
+    // live run would orphan its polling/import and undercount progress, so every
+    // in-flight run is kept regardless of the cap.
+    for (let i = 0; i < 210; i++) {
+      recordRunStart(
+        rec({
+          runId: `r${i}`,
+          fileId: `f${i}`,
+          status: "PENDING",
+          startedAt: i,
+        }),
+      );
     }
     const runs = read("stirling-policy-runs").runs;
-    expect(runs).toHaveLength(50);
-    expect(runs[0].runId).toBe("r54"); // most recent
+    expect(runs).toHaveLength(210);
+    expect(runs[0].runId).toBe("r209"); // newest first
+  });
+
+  it("evicts the oldest TERMINAL runs first once over the cap", () => {
+    for (let i = 0; i < 210; i++) {
+      recordRunStart(
+        rec({
+          runId: `r${i}`,
+          fileId: `f${i}`,
+          status: "COMPLETED",
+          startedAt: i,
+        }),
+      );
+    }
+    const runs = read("stirling-policy-runs").runs;
+    expect(runs).toHaveLength(200); // trimmed to MAX_RUNS
+    expect(runs[0].runId).toBe("r209"); // newest kept
+    expect(runs.some((r: PolicyRunRecord) => r.runId === "r0")).toBe(false); // oldest dropped
+  });
+
+  describe("processing wave (scopes the panel's progress counts to this upload)", () => {
+    it("begins a new wave when recording with nothing in flight", () => {
+      recordRunStart(rec({ runId: "a", fileId: "fa", startedAt: 500 }));
+      expect(read("stirling-policy-runs").waveStartedAt).toBe(500);
+    });
+
+    it("keeps the wave while earlier runs are still in flight", () => {
+      recordRunStart(rec({ runId: "a", fileId: "fa", startedAt: 100 }));
+      recordRunStart(rec({ runId: "b", fileId: "fb", startedAt: 200 }));
+      // b joined a's wave (a still PENDING) — the boundary stays at a.
+      expect(read("stirling-policy-runs").waveStartedAt).toBe(100);
+    });
+
+    it("starts a fresh wave once the prior batch has all finished", () => {
+      recordRunStart(rec({ runId: "a", fileId: "fa", startedAt: 100 }));
+      // Prior batch completes AND imports → no longer in flight.
+      updateRun("a", { status: "COMPLETED", imported: true });
+      // A new upload after the lull resets the wave to itself.
+      recordRunStart(rec({ runId: "b", fileId: "fb", startedAt: 5000 }));
+      expect(read("stirling-policy-runs").waveStartedAt).toBe(5000);
+    });
   });
 });

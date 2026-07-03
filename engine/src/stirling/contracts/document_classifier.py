@@ -19,6 +19,9 @@ class DocumentCategory(ApiModel):
 
     id: str = Field(min_length=1)
     label: str = Field(min_length=1)
+    # Presentational only (a UI icon key); accepted so the supplied taxonomy
+    # round-trips, but the classifier never reads it.
+    icon: str | None = None
     doc_types: list[DocumentType] = Field(default_factory=list)
 
 

@@ -9,6 +9,7 @@ import { FolderId } from "@app/types/folder";
 import {
   StirlingFile,
   StirlingFileStub,
+  StubFileClassification,
   createStirlingFile,
 } from "@app/types/fileContext";
 import {
@@ -29,6 +30,10 @@ export interface StoredStirlingFileRecord extends BaseFileMetadata {
   thumbnail?: string;
   thumbnailStoredAt?: number; // Epoch ms - sliding 30-day TTL
   url?: string; // For compatibility with existing components
+  // Cached classification (category + sub-category + tags) — mirrors the stub
+  // field so the sidebar can group by category without re-reading PDF bytes and
+  // it survives versioning. See StirlingFileStub / StubFileClassification.
+  classificationCategory?: StubFileClassification;
 }
 
 export interface StorageStats {
@@ -148,6 +153,9 @@ class FileStorageService {
 
       // Folder organisation (root when null)
       folderId: stub.folderId ?? null,
+
+      // Cached classification category, if already known (preserved across re-stores).
+      classificationCategory: stub.classificationCategory,
     };
 
     return new Promise((resolve, reject) => {
@@ -273,6 +281,7 @@ class FileStorageService {
           sourceFileIds: record.sourceFileIds,
           folderId: record.folderId ?? null,
           createdAt: record.createdAt || Date.now(),
+          classificationCategory: record.classificationCategory,
         };
 
         resolve(stub);
@@ -332,6 +341,7 @@ class FileStorageService {
               sourceFileIds: record.sourceFileIds,
               folderId: record.folderId ?? null,
               createdAt: record.createdAt || Date.now(),
+              classificationCategory: record.classificationCategory,
             });
           }
           cursor.continue();
@@ -423,6 +433,7 @@ class FileStorageService {
               sourceFileIds: record.sourceFileIds,
               folderId: record.folderId ?? null,
               createdAt: record.createdAt || Date.now(),
+              classificationCategory: record.classificationCategory,
             });
           }
           cursor.continue();

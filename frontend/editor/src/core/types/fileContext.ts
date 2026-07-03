@@ -42,6 +42,25 @@ export interface ProcessedFileMetadata {
  * separately in refs for memory efficiency. Supports multi-tool workflows
  * where files persist across tool operations.
  */
+/**
+ * Cached document-classification for a file — the source of truth the Files
+ * sidebar groups by (so it never re-reads PDF bytes). Written when the classify
+ * policy runs (SaaS) and CARRIED FORWARD onto every later version via the stub
+ * (see {@code createChildStub} + the CONSUME_FILES reducer), so a second policy
+ * or a tool edit keeps the file in its category instead of dropping it to
+ * "Other". Undefined for unclassified files / non-SaaS builds.
+ */
+export interface StubFileClassification {
+  /** Category id + human label — drives the sidebar grouping. */
+  id: string;
+  label: string;
+  /** Sub-category (doc type) id + label, when the classifier assigned one. */
+  docType?: string;
+  docTypeLabel?: string;
+  /** Taxonomy tags applied to the document. */
+  tags?: string[];
+}
+
 export interface StirlingFileStub extends BaseFileMetadata {
   quickKey?: string; // Fast deduplication key: name|size|lastModified
   thumbnailUrl?: string; // Generated thumbnail blob URL for visual display
@@ -51,6 +70,7 @@ export interface StirlingFileStub extends BaseFileMetadata {
   insertAfterPageId?: string; // Page ID after which this file should be inserted
   isPinned?: boolean; // Protected from tool consumption (replace/remove)
   isDirty?: boolean; // Has unsaved changes (only for files with localFilePath)
+  classificationCategory?: StubFileClassification;
   // Note: File object stored in provider ref, not in state
 }
 
@@ -274,6 +294,9 @@ export type FileContextAction =
       payload: {
         inputFileIds: FileId[];
         outputStirlingFileStubs: StirlingFileStub[];
+        /** Replace inputs in place without auto-selecting/reordering the outputs
+         *  (background enforcement). Defaults to false — normal tool behaviour. */
+        silent?: boolean;
       };
     }
   | {
@@ -353,6 +376,7 @@ export interface FileContextActions {
     inputFileIds: FileId[],
     outputStirlingFiles: StirlingFile[],
     outputStirlingFileStubs: StirlingFileStub[],
+    options?: { silent?: boolean },
   ) => Promise<FileId[]>;
   undoConsumeFiles: (
     inputFiles: File[],

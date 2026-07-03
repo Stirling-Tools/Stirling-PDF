@@ -502,6 +502,15 @@
   background: color-mix(in srgb, currentColor 16%, transparent);
 }
 
+/* Overflow counter: past two policies, the rest collapse into a same-sized
+   neutral "+N" badge (hover lists the hidden policy names). */
+.files-page-policy-badge--more {
+  color: var(--text-muted);
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1;
+}
+
 /* Parent-folder breadcrumb shown on cards/rows during recursive search so
    the user can tell which folder each hit lives in without navigating. */
 .files-page-card-path {

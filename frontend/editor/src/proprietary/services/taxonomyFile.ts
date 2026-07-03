@@ -7,6 +7,7 @@
  */
 
 import { downloadJsonAsFile } from "@app/utils/downloadUtils";
+import { CATEGORY_ICON_KEYS } from "@app/data/categoryIcons";
 import type {
   ClassificationTaxonomy,
   DocumentCategory,
@@ -104,6 +105,9 @@ export function normalizeTaxonomy(
       (c): DocumentCategory => ({
         id: c.id,
         label: c.label,
+        // Keep the icon only if it's a known palette key, so a hand-crafted
+        // import can't set an unbundled key that renders blank.
+        ...(c.icon && CATEGORY_ICON_KEYS.has(c.icon) ? { icon: c.icon } : {}),
         docTypes: (c.docTypes ?? []).map(
           (d): DocumentType => ({ id: d.id, label: d.label }),
         ),

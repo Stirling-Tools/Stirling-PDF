@@ -1,8 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { buildPolicyBadgeMap } from "@app/hooks/usePolicyFileBadges";
+import {
+  buildPolicyBadgeMap,
+  buildProcessingMap,
+} from "@app/hooks/usePolicyFileBadges";
 import type { PolicyRunRecord } from "@app/components/policies/policyRunStore";
 
-const NOW = 1_000_000;
 const labels = new Map([
   ["security", "Security"],
   ["watermark", "Watermark"],
@@ -20,29 +22,26 @@ function run(overrides: Partial<PolicyRunRecord>): PolicyRunRecord {
     outputs: [],
     outputFileIds: ["out"],
     error: null,
-    startedAt: NOW - 1_000, // recent by default
+    startedAt: 0,
     ...overrides,
   };
 }
 
 describe("buildPolicyBadgeMap — badge follows the document onto derived files", () => {
-  it("badges a policy's direct output, and marks it recent within the window", () => {
-    const map = buildPolicyBadgeMap([run({})], [{ id: "out" }], labels, NOW);
+  it("badges a policy's direct output", () => {
+    const map = buildPolicyBadgeMap([run({})], [{ id: "out" }], labels);
     const badges = map.get("out") ?? [];
     expect(badges.map((b) => b.id)).toEqual(["security"]);
-    expect(badges[0].recent).toBe(true);
   });
 
-  it("a versioned edit inherits the badge via parentFileId (never glows)", () => {
+  it("a versioned edit inherits the badge via parentFileId", () => {
     const map = buildPolicyBadgeMap(
       [run({})],
       [{ id: "out" }, { id: "edit", parentFileId: "out" }],
       labels,
-      NOW,
     );
     const edit = map.get("edit") ?? [];
     expect(edit.map((b) => b.id)).toEqual(["security"]);
-    expect(edit[0].recent).toBe(false);
   });
 
   it("SPLIT parts inherit the badge via sourceFileIds, though they have no parent", () => {
@@ -56,11 +55,9 @@ describe("buildPolicyBadgeMap — badge follows the document onto derived files"
         { id: "part2", sourceFileIds: ["out"] },
       ],
       labels,
-      NOW,
     );
     expect((map.get("part1") ?? []).map((b) => b.id)).toEqual(["security"]);
     expect((map.get("part2") ?? []).map((b) => b.id)).toEqual(["security"]);
-    expect((map.get("part1") ?? [])[0].recent).toBe(false);
   });
 
   it("resolves transitively when an intermediate edit was consumed/removed", () => {
@@ -70,7 +67,6 @@ describe("buildPolicyBadgeMap — badge follows the document onto derived files"
       [run({})],
       [{ id: "part", sourceFileIds: ["editGone", "out"] }],
       labels,
-      NOW,
     );
     expect((map.get("part") ?? []).map((b) => b.id)).toEqual(["security"]);
   });
@@ -83,7 +79,6 @@ describe("buildPolicyBadgeMap — badge follows the document onto derived files"
       ],
       [{ id: "merged", sourceFileIds: ["a", "b"] }],
       labels,
-      NOW,
     );
     expect((map.get("merged") ?? []).map((b) => b.id).sort()).toEqual([
       "security",
@@ -96,19 +91,58 @@ describe("buildPolicyBadgeMap — badge follows the document onto derived files"
       [run({})],
       [{ id: "out" }, { id: "unrelated", sourceFileIds: ["someUpload"] }],
       labels,
-      NOW,
     );
     expect(map.has("unrelated")).toBe(false);
   });
+});
 
-  it("inherited badges never glow even when the source run is recent", () => {
-    const map = buildPolicyBadgeMap(
-      [run({ startedAt: NOW })], // maximally recent
-      [{ id: "out" }, { id: "part", sourceFileIds: ["out"] }],
+describe("buildProcessingMap — spinner while a policy works on a file", () => {
+  it("marks the input file of an in-flight run as processing", () => {
+    const map = buildProcessingMap([run({ status: "RUNNING" })], labels);
+    expect(map.get("in")?.id).toBe("security");
+  });
+
+  it("treats a completed-but-not-yet-imported run as still processing", () => {
+    const map = buildProcessingMap(
+      [run({ status: "COMPLETED", imported: false })],
       labels,
-      NOW,
     );
-    expect((map.get("out") ?? [])[0].recent).toBe(true);
-    expect((map.get("part") ?? [])[0].recent).toBe(false);
+    expect(map.get("in")?.id).toBe("security");
+  });
+
+  it("clears once the run has been imported", () => {
+    const map = buildProcessingMap(
+      [run({ status: "COMPLETED", imported: true })],
+      labels,
+    );
+    expect(map.has("in")).toBe(false);
+  });
+
+  it("treats a retry-backoff run as processing", () => {
+    const map = buildProcessingMap(
+      [run({ status: "FAILED", retrying: true })],
+      labels,
+    );
+    expect(map.get("in")?.id).toBe("security");
+  });
+
+  it("does not mark failed or cancelled runs as processing", () => {
+    expect(
+      buildProcessingMap([run({ status: "FAILED" })], labels).has("in"),
+    ).toBe(false);
+    expect(
+      buildProcessingMap([run({ status: "CANCELLED" })], labels).has("in"),
+    ).toBe(false);
+  });
+
+  it("keeps the newest in-flight run per file (store is newest-first)", () => {
+    const map = buildProcessingMap(
+      [
+        run({ runId: "new", categoryId: "watermark", status: "RUNNING" }),
+        run({ runId: "old", categoryId: "security", status: "RUNNING" }),
+      ],
+      labels,
+    );
+    expect(map.get("in")?.id).toBe("watermark");
   });
 });

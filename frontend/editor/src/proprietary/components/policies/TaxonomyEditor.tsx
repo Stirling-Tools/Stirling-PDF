@@ -16,7 +16,10 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Input } from "@shared/components/Input";
 import { Button } from "@shared/components/Button";
+import { LocalIcon } from "@app/components/shared/LocalIcon";
 import { slugify } from "@app/utils/slug";
+import { CategoryIconPicker } from "@app/components/policies/CategoryIconPicker";
+import { DEFAULT_CATEGORY_ICON } from "@app/data/categoryIcons";
 import type {
   ClassificationTaxonomy,
   DocumentCategory,
@@ -141,6 +144,22 @@ export function TaxonomyEditor({
                   )}
                 </button>
                 <div className="tax-name">
+                  {readOnly ? (
+                    <LocalIcon
+                      icon={category.icon || DEFAULT_CATEGORY_ICON}
+                      width="1.15rem"
+                      className="tax-cat-icon"
+                    />
+                  ) : (
+                    <CategoryIconPicker
+                      value={category.icon}
+                      onChange={(icon) => updateCategory(catIndex, { icon })}
+                      ariaLabel={t(
+                        "policies.taxonomy.categoryIcon",
+                        "Category icon",
+                      )}
+                    />
+                  )}
                   {readOnly ? (
                     <span className="tax-label-text">{category.label}</span>
                   ) : (

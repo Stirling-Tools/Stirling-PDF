@@ -4,6 +4,59 @@
   gap: var(--space-3);
 }
 
+/* --- Category icon (picker trigger + read-only glyph + palette options). --- */
+.tax-cat-icon {
+  flex: none;
+  color: var(--color-text-2);
+}
+
+.tax-icon-pick {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text-2);
+  cursor: pointer;
+  transition:
+    background var(--motion-fast),
+    border-color var(--motion-fast),
+    color var(--motion-fast);
+}
+.tax-icon-pick:hover {
+  background: var(--color-bg-hover);
+  border-color: var(--border-strong);
+  color: var(--color-text-1);
+}
+
+.tax-icon-option {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-md);
+  color: var(--color-text-2);
+  cursor: pointer;
+  transition:
+    background var(--motion-fast),
+    color var(--motion-fast);
+}
+.tax-icon-option:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-1);
+}
+.tax-icon-option.is-selected {
+  background: var(--color-blue-light);
+  color: var(--color-blue);
+}
+
 /* --- Category / sub-category table (grid rows, not a <table>). --- */
 .tax-table {
   border: 1px solid var(--border-subtle);

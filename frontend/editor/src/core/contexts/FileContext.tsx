@@ -352,6 +352,7 @@ function FileContextInner({
       inputFileIds: FileId[],
       outputStirlingFiles: StirlingFile[],
       outputStirlingFileStubs: StirlingFileStub[],
+      options?: { silent?: boolean },
     ): Promise<FileId[]> => {
       return consumeFiles(
         inputFileIds,
@@ -359,6 +360,7 @@ function FileContextInner({
         outputStirlingFileStubs,
         filesRef,
         dispatch,
+        options,
       );
     },
     [],

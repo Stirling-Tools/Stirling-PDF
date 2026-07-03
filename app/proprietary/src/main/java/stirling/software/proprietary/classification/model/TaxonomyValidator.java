@@ -41,6 +41,10 @@ public final class TaxonomyValidator {
         for (TaxonomyCategory category : taxonomy.categories()) {
             requireText(category.id(), "Category id");
             requireText(category.label(), "Category label");
+            if (category.icon() != null && category.icon().length() > MAX_TEXT_LENGTH) {
+                throw new IllegalArgumentException(
+                        "Category icon is too long (max " + MAX_TEXT_LENGTH + " characters)");
+            }
             if (category.docTypes().size() > MAX_DOC_TYPES_PER_CATEGORY) {
                 throw new IllegalArgumentException(
                         "Too many sub-categories in '"

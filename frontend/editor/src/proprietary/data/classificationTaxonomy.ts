@@ -30,6 +30,9 @@ export interface DocumentType {
 export interface DocumentCategory {
   id: string;
   label: string;
+  /** Material Symbols icon key (see `categoryIcons.ts`); shown in the file
+   *  sidebar. Optional + purely presentational — the engine ignores it. */
+  icon?: string;
   /** Category-scoped tags. */
   docTypes: DocumentType[];
 }
@@ -46,6 +49,7 @@ export const DEFAULT_CLASSIFICATION_TAXONOMY: ClassificationTaxonomy = {
     {
       id: "invoice",
       label: "Invoice",
+      icon: "receipt-long",
       docTypes: [
         { id: "invoice", label: "Invoice" },
         { id: "receipt", label: "Receipt" },
@@ -57,6 +61,7 @@ export const DEFAULT_CLASSIFICATION_TAXONOMY: ClassificationTaxonomy = {
     {
       id: "contract",
       label: "Contract",
+      icon: "handshake",
       docTypes: [
         { id: "nda", label: "Non-disclosure agreement" },
         { id: "employment_agreement", label: "Employment agreement" },
@@ -70,6 +75,7 @@ export const DEFAULT_CLASSIFICATION_TAXONOMY: ClassificationTaxonomy = {
     {
       id: "financial_statement",
       label: "Financial statement",
+      icon: "account-balance",
       docTypes: [
         { id: "balance_sheet", label: "Balance sheet" },
         { id: "income_statement", label: "Income statement" },
@@ -81,6 +87,7 @@ export const DEFAULT_CLASSIFICATION_TAXONOMY: ClassificationTaxonomy = {
     {
       id: "report",
       label: "Report",
+      icon: "bar-chart",
       docTypes: [
         { id: "business_report", label: "Business report" },
         { id: "project_report", label: "Project report" },
@@ -92,6 +99,7 @@ export const DEFAULT_CLASSIFICATION_TAXONOMY: ClassificationTaxonomy = {
     {
       id: "letter",
       label: "Letter",
+      icon: "mail",
       docTypes: [
         { id: "business_letter", label: "Business letter" },
         { id: "cover_letter", label: "Cover letter" },
@@ -103,6 +111,7 @@ export const DEFAULT_CLASSIFICATION_TAXONOMY: ClassificationTaxonomy = {
     {
       id: "form",
       label: "Form",
+      icon: "assignment",
       docTypes: [
         { id: "application_form", label: "Application form" },
         { id: "registration_form", label: "Registration form" },
@@ -114,6 +123,7 @@ export const DEFAULT_CLASSIFICATION_TAXONOMY: ClassificationTaxonomy = {
     {
       id: "resume",
       label: "Resume",
+      icon: "contact-page",
       docTypes: [
         { id: "resume", label: "Resume" },
         { id: "curriculum_vitae", label: "Curriculum vitae" },
@@ -124,6 +134,7 @@ export const DEFAULT_CLASSIFICATION_TAXONOMY: ClassificationTaxonomy = {
     {
       id: "tax_form",
       label: "Tax form",
+      icon: "request-quote",
       docTypes: [
         { id: "tax_return", label: "Tax return" },
         { id: "w2", label: "W-2" },
@@ -135,6 +146,7 @@ export const DEFAULT_CLASSIFICATION_TAXONOMY: ClassificationTaxonomy = {
     {
       id: "expense_report",
       label: "Expense report",
+      icon: "payments",
       docTypes: [
         { id: "expense_report", label: "Expense report" },
         { id: "reimbursement_request", label: "Reimbursement request" },
@@ -145,6 +157,7 @@ export const DEFAULT_CLASSIFICATION_TAXONOMY: ClassificationTaxonomy = {
     {
       id: "presentation",
       label: "Presentation",
+      icon: "slideshow",
       docTypes: [
         { id: "slide_deck", label: "Slide deck" },
         { id: "pitch_deck", label: "Pitch deck" },
@@ -155,6 +168,7 @@ export const DEFAULT_CLASSIFICATION_TAXONOMY: ClassificationTaxonomy = {
     {
       id: "medical_record",
       label: "Medical record",
+      icon: "medical-services",
       docTypes: [
         { id: "lab_result", label: "Lab result" },
         { id: "prescription", label: "Prescription" },
@@ -167,6 +181,7 @@ export const DEFAULT_CLASSIFICATION_TAXONOMY: ClassificationTaxonomy = {
     {
       id: "legal_filing",
       label: "Legal filing",
+      icon: "gavel",
       docTypes: [
         { id: "court_filing", label: "Court filing" },
         { id: "complaint", label: "Complaint" },
@@ -179,6 +194,7 @@ export const DEFAULT_CLASSIFICATION_TAXONOMY: ClassificationTaxonomy = {
     {
       id: "identity_document",
       label: "Identity document",
+      icon: "badge",
       docTypes: [
         { id: "passport", label: "Passport" },
         { id: "drivers_license", label: "Driver's license" },
@@ -190,6 +206,7 @@ export const DEFAULT_CLASSIFICATION_TAXONOMY: ClassificationTaxonomy = {
     {
       id: "insurance",
       label: "Insurance",
+      icon: "shield",
       docTypes: [
         { id: "insurance_policy", label: "Insurance policy" },
         { id: "insurance_claim", label: "Insurance claim" },
@@ -200,6 +217,7 @@ export const DEFAULT_CLASSIFICATION_TAXONOMY: ClassificationTaxonomy = {
     {
       id: "real_estate",
       label: "Real estate",
+      icon: "home-work",
       docTypes: [
         { id: "deed", label: "Deed" },
         { id: "mortgage_agreement", label: "Mortgage agreement" },
@@ -211,6 +229,7 @@ export const DEFAULT_CLASSIFICATION_TAXONOMY: ClassificationTaxonomy = {
     {
       id: "shipping",
       label: "Shipping",
+      icon: "local-shipping",
       docTypes: [
         { id: "bill_of_lading", label: "Bill of lading" },
         { id: "packing_slip", label: "Packing slip" },
@@ -222,6 +241,7 @@ export const DEFAULT_CLASSIFICATION_TAXONOMY: ClassificationTaxonomy = {
     {
       id: "hr_document",
       label: "HR document",
+      icon: "groups",
       docTypes: [
         { id: "offer_letter", label: "Offer letter" },
         { id: "performance_review", label: "Performance review" },
@@ -234,6 +254,7 @@ export const DEFAULT_CLASSIFICATION_TAXONOMY: ClassificationTaxonomy = {
     {
       id: "academic_record",
       label: "Academic record",
+      icon: "school",
       docTypes: [
         { id: "transcript", label: "Transcript" },
         { id: "diploma", label: "Diploma" },
@@ -246,6 +267,7 @@ export const DEFAULT_CLASSIFICATION_TAXONOMY: ClassificationTaxonomy = {
     {
       id: "marketing_material",
       label: "Marketing material",
+      icon: "campaign",
       docTypes: [
         { id: "brochure", label: "Brochure" },
         { id: "flyer", label: "Flyer" },
@@ -257,6 +279,7 @@ export const DEFAULT_CLASSIFICATION_TAXONOMY: ClassificationTaxonomy = {
     {
       id: "technical_document",
       label: "Technical document",
+      icon: "engineering",
       docTypes: [
         { id: "user_manual", label: "User manual" },
         { id: "specification", label: "Specification" },

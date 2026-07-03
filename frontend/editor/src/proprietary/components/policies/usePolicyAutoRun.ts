@@ -39,6 +39,7 @@ import type {
 import { dispatchPaygLimitReached } from "@app/services/usageLimitBridge";
 import type { FileId } from "@app/types/file";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
+import { readClassificationCategoryFromFile } from "@app/services/fileClassification";
 import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
 import type { PoliciesByCategory } from "@app/types/policies";
 import { usePolicies } from "@app/hooks/usePolicies";
@@ -124,11 +125,18 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export function usePolicyAutoRun(): void {
   const { fileStubs } = useAllFiles();
-  const { addFiles } = useFileManagement();
+  const { addFiles, updateStirlingFileStub } = useFileManagement();
   const { consumeFiles } = useFileContext();
   const { bumpRevision } = useIndexedDB();
   const { policies } = usePolicies();
   const runs = usePolicyRuns();
+  // Live view of the workspace files, read inside the import effect WITHOUT making
+  // it a dependency. The silent consume that delivers an output mutates fileStubs,
+  // so if the import effect depended on fileStubs it would re-fire on its own
+  // delivery — an infinite import cascade (and a bumpRevision storm that trips
+  // React's max-update-depth). The effect only needs to fire when `runs` changes.
+  const fileStubsRef = useRef(fileStubs);
+  fileStubsRef.current = fileStubs;
   // Keys (run ids / dispatch keys) currently in flight, so the effects never
   // double-fire across re-renders while their first async step is pending.
   const polling = useRef<Set<string>>(new Set());
@@ -332,18 +340,32 @@ export function usePolicyAutoRun(): void {
       const outputMode = policies[run.categoryId]?.outputMode ?? "new_version";
       const outputName = policies[run.categoryId]?.outputName ?? "";
       const outputNamePosition = policies[run.categoryId]?.outputNamePosition;
-      const parentStub = fileStubs.find((s) => (s.id as string) === run.fileId);
+      const parentStub = fileStubsRef.current.find(
+        (s) => (s.id as string) === run.fileId,
+      );
       void importOutputs(run, {
         addFiles,
         consumeFiles,
+        updateStirlingFileStub,
         bumpRevision,
         outputMode,
         outputName,
         outputNamePosition,
         parentStub,
+        firstUploadCategory: orderedUploadCategories[0],
       }).finally(() => importing.current.delete(run.runId));
     }
-  }, [runs, addFiles, consumeFiles, policies, fileStubs]);
+    // NB: fileStubs is intentionally NOT a dependency — it's read via a ref so a
+    // delivery's own workspace mutation can't re-trigger this effect (see the ref
+    // declaration above). The effect fires on run completions, which is all it needs.
+  }, [
+    runs,
+    addFiles,
+    consumeFiles,
+    updateStirlingFileStub,
+    policies,
+    orderedUploadCategories,
+  ]);
 
   // Reconcile against the backend on load. The server owns runs (durable, user-scoped),
   // so a run started before this client recorded it, or before a refresh/crash, is
@@ -367,7 +389,13 @@ interface ImportContext {
     inputFileIds: FileId[],
     outputs: StirlingFile[],
     stubs: StirlingFileStub[],
+    options?: { silent?: boolean },
   ) => Promise<unknown>;
+  /** Patch a workspace stub in place (used to stamp a new-file output's category). */
+  updateStirlingFileStub: (
+    fileId: FileId,
+    updates: Partial<StirlingFileStub>,
+  ) => void;
   /** Bump the IndexedDB revision so the file views re-read after a storage-only version write. */
   bumpRevision: () => void;
   /** "new_file" adds the output as a separate file; "new_version" versions the input. */
@@ -379,6 +407,10 @@ interface ImportContext {
   outputNamePosition?: "prefix" | "suffix" | "auto-number";
   /** The input file's stub — required to version it; absent if it's been removed. */
   parentStub: StirlingFileStub | undefined;
+  /** The first upload policy in the chain — the only one the dispatch effect ever
+   *  fires. Every policy output is marked dispatched for it so a downstream policy's
+   *  output is never mistaken for a fresh upload and re-enforced (an endless loop). */
+  firstUploadCategory: string | undefined;
 }
 
 /**
@@ -536,6 +568,19 @@ async function importOutputs(
     return; // transient/mixed: retry the lot later; permanent: already failed.
   }
 
+  // Mark a delivered output as already-handled so the auto-run never re-enforces
+  // a policy on its own output. Covers the producing policy AND the first upload
+  // policy (the only one the dispatch effect fires) — without the latter, a
+  // downstream policy's output looks like a fresh upload and the first policy
+  // re-runs on it, versioning/duplicating endlessly. Forward chaining is
+  // unaffected: it only ever fires categories AFTER the producer, never the first.
+  const markHandled = (id: string) => {
+    markDispatched(run.categoryId, id);
+    if (ctx.firstUploadCategory && ctx.firstUploadCategory !== run.categoryId) {
+      markDispatched(ctx.firstUploadCategory, id);
+    }
+  };
+
   // Deliver, then mark exactly those imported. If delivery throws we don't mark
   // them, so they retry (without having been added).
   const files = fetched.map((f) => f.file);
@@ -552,6 +597,21 @@ async function importOutputs(
         (await fileStorage.getStirlingFileStub(run.fileId as FileId)) ??
         undefined)
       : undefined;
+
+  // Resolve each output's classification and put it ON the stub, so it rides
+  // through consume/persist to BOTH the workspace and storage — and every later
+  // version inherits it (createChildStub + the CONSUME_FILES reducer). This is the
+  // fix for files flashing into "Other" then "dripping" back when a 2nd policy or a
+  // tool runs: the category is a first-class stub field, never re-derived from the
+  // PDF at group time. Prefer the input's carried-forward category (cheap) and only
+  // read the freshly-tagged file when there's none to inherit (the classification
+  // origin) — so a 60-file batch doesn't re-read every downstream output.
+  const parentCategory = parentStub?.classificationCategory;
+  const resolveCategory = async (file: File) =>
+    parentCategory ??
+    (await readClassificationCategoryFromFile(file)) ??
+    undefined;
+
   if (parentStub) {
     // Replace the input file with a versioned child (preserves its history).
     // The version records "automate" as its origin tool — a policy is a
@@ -561,20 +621,49 @@ async function importOutputs(
       parentStub,
       "automate",
     );
+    // Transitive provenance for the PERSISTED record, mirroring what the
+    // CONSUME_FILES reducer computes for workspace state: the output derives
+    // from its input plus everything that input derived from. Without this the
+    // stored lineage misses intermediate hops, and a closed file's policy
+    // badges can't resolve past the most recent run in a 3+-policy chain.
+    const lineage = Array.from(
+      new Set([run.fileId as FileId, ...(parentStub.sourceFileIds ?? [])]),
+    );
+    // Stamp the resolved category onto each output stub (createChildStub already
+    // inherited the parent's; this also captures the classification origin, where
+    // the parent had none but the tagged file does).
+    const categorized = await Promise.all(
+      stubs.map(async (s, i) => {
+        const category = await resolveCategory(files[i]);
+        return {
+          ...s,
+          sourceFileIds: lineage,
+          ...(category ? { classificationCategory: category } : {}),
+        };
+      }),
+    );
     // Mark the outputs handled BEFORE adding them, so the auto-run never enforces
     // the policy on its own output — that would version endlessly in a loop.
-    for (const s of stubs) markDispatched(run.categoryId, s.id);
-    deliveredIds = stubs.map((s) => s.id as string);
+    for (const s of categorized) markHandled(s.id as string);
+    deliveredIds = categorized.map((s) => s.id as string);
     if (ctx.parentStub) {
-      // Input is in the active workspace: version it there (workspace + storage).
-      await ctx.consumeFiles([run.fileId as FileId], stirlingFiles, stubs);
+      // Input is in the active workspace: version it in place, silently — the
+      // output replaces the input in the same slot without being auto-selected,
+      // reordered to the top, or opened in the viewer. The category rides on the
+      // stub, so it lands in the right group instantly (no re-read, no flicker).
+      await ctx.consumeFiles(
+        [run.fileId as FileId],
+        stirlingFiles,
+        categorized,
+        { silent: true },
+      );
     } else {
       // Input is only in storage (run recovered after a reload): version it at the
       // storage layer, then refresh the file views.
       await fileStorage.persistVersionedOutputs(
         [run.fileId as FileId],
         stirlingFiles,
-        stubs,
+        categorized,
       );
       ctx.bumpRevision();
     }
@@ -582,8 +671,25 @@ async function importOutputs(
     const added = await ctx.addFiles(files, { skipUploadTracking: true });
     // Same loop-guard for new-file output: the produced file is a new workspace
     // file the auto-run would otherwise re-enforce indefinitely.
-    for (const f of added) markDispatched(run.categoryId, f.fileId);
+    for (const f of added) markHandled(f.fileId as string);
     deliveredIds = added.map((f) => f.fileId as string);
+    // A new-file output has no parent to inherit from — stamp its category onto
+    // both the workspace stub and storage so it lands in the right group at once.
+    let stampedCategory = false;
+    await Promise.all(
+      added.map(async (f, i) => {
+        const category = await resolveCategory(files[i]);
+        if (!category) return;
+        ctx.updateStirlingFileStub(f.fileId, {
+          classificationCategory: category,
+        });
+        const ok = await fileStorage.updateFileMetadata(f.fileId, {
+          classificationCategory: category,
+        });
+        if (ok) stampedCategory = true;
+      }),
+    );
+    if (stampedCategory) ctx.bumpRevision();
   }
   const importedFileIds = [...done, ...fetched.map((f) => f.fileId)];
   const imported = run.outputs.every((out) =>

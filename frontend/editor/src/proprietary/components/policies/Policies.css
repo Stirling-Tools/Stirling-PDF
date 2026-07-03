@@ -103,6 +103,109 @@
 .pol-row:focus-visible .sui-iconbadge {
   --ib-accent: var(--ib-base);
 }
+
+/* Processing indicator: a spinning ring around the category icon while the
+   policy has runs in flight. The ring carries the category accent; the badge
+   also shows its colour (not the neutral rest tint) so an active policy reads
+   clearly even before hover. */
+.pol-row-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  --pol-ring: var(--color-blue);
+}
+.pol-row-icon[data-accent="purple"] {
+  --pol-ring: var(--color-purple);
+}
+.pol-row-icon[data-accent="green"] {
+  --pol-ring: var(--color-green);
+}
+.pol-row-icon[data-accent="amber"] {
+  --pol-ring: var(--color-amber);
+}
+.pol-row-icon[data-accent="red"] {
+  --pol-ring: var(--color-red);
+}
+.pol-row-icon[data-accent="orange"] {
+  --pol-ring: var(--color-orange);
+}
+.pol-row-icon.is-processing .sui-iconbadge {
+  --ib-accent: var(--ib-base);
+}
+.pol-row-ring {
+  position: absolute;
+  inset: -3px;
+  border-radius: 999px;
+  border: 2px solid color-mix(in srgb, var(--pol-ring) 20%, transparent);
+  border-top-color: var(--pol-ring);
+  animation: pol-ring-spin 0.7s linear infinite;
+  pointer-events: none;
+}
+
+/* Global "Retry failed policies (N)" action under the panel header — one place
+   to resume every file the chain stranded, whichever step failed. Amber, so it
+   reads as "needs attention" without screaming error. */
+.pol-retry-failed {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1_5);
+  width: calc(100% - 2 * var(--space-1_5));
+  margin: 0 var(--space-1_5) var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border: none;
+  border-radius: var(--radius-lg);
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  color: var(--color-amber, #d97706);
+  background: color-mix(in srgb, var(--color-amber, #d97706) 12%, transparent);
+  transition: background var(--motion-fast);
+}
+.pol-retry-failed:hover {
+  background: color-mix(in srgb, var(--color-amber, #d97706) 20%, transparent);
+}
+.pol-retry-failed:focus-visible {
+  outline: 2px solid var(--color-amber, #d97706);
+  outline-offset: -2px;
+}
+@keyframes pol-ring-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Overall "N processing · X/Y done" summary under the section header. */
+.pol-processing-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1_5);
+  margin: 0 var(--space-1_5) var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  font-size: 0.75rem;
+  color: var(--color-text-2, var(--color-text-3));
+  background: var(--color-bg-hover);
+  border-radius: var(--radius-lg);
+}
+.pol-processing-spinner {
+  width: 0.75rem;
+  height: 0.75rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 2px solid color-mix(in srgb, var(--color-blue) 20%, transparent);
+  border-top-color: var(--color-blue);
+  animation: pol-ring-spin 0.7s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pol-row-ring,
+  .pol-processing-spinner {
+    animation-duration: 2s;
+  }
+}
+
 .pol-row-label {
   flex: 1;
   min-width: 0;
@@ -362,6 +465,7 @@
   text-align: left;
   font-family: inherit;
 }
+
 .pol-section-chevron {
   margin-left: auto;
   color: var(--color-text-4);

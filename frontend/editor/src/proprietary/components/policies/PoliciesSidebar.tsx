@@ -22,6 +22,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { Menu } from "@mantine/core";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import ReplayRounded from "@mui/icons-material/ReplayRounded";
 import DragIndicatorRounded from "@mui/icons-material/DragIndicatorRounded";
 import MoreHorizRounded from "@mui/icons-material/MoreHorizRounded";
 import TuneRounded from "@mui/icons-material/TuneRounded";
@@ -32,8 +33,18 @@ import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useAuth } from "@app/auth/UseSession";
 import { getPolicyAutomation } from "@app/services/policyFolders";
 import { watchedFolderStorage } from "@app/services/watchedFolderStorage";
-import { runsToActivity, runsToStats } from "@app/services/policyLiveData";
-import { usePolicyRuns } from "@app/components/policies/policyRunStore";
+import {
+  runsToActivity,
+  runsToStats,
+  progressByCategory,
+  retryableFailedRuns,
+  EMPTY_RUN_PROGRESS,
+} from "@app/services/policyLiveData";
+import {
+  removeRun,
+  usePolicyRuns,
+  usePolicyWaveStart,
+} from "@app/components/policies/policyRunStore";
 import { runPolicyOnFile } from "@app/components/policies/usePolicyAutoRun";
 import type { FileId } from "@app/types/file";
 import type {
@@ -124,6 +135,51 @@ export function PoliciesSection({
   const pol = usePolicies();
   const { categories } = usePolicyCatalog();
   const guestBlocked = usePolicyGuestBlocked();
+
+  // Live run tallies drive the per-row processing ring + the header summary,
+  // scoped to the current upload wave so they don't accumulate across the whole
+  // persisted run history.
+  const runs = usePolicyRuns();
+  const waveStart = usePolicyWaveStart();
+  const progress = useMemo(
+    () => progressByCategory(runs, waveStart),
+    [runs, waveStart],
+  );
+  // Failed runs still worth retrying, across ALL policies — drives the single
+  // global "Retry failed policies" action. Deliberately not per-policy: a chain
+  // failure strands the file mid-pipeline whichever step failed, and retrying
+  // globally resumes every stranded file (successful steps are never re-run;
+  // completed runs chain onward automatically). NOT wave-scoped: failures from
+  // earlier uploads still count.
+  const retryableRuns = useMemo(() => retryableFailedRuns(runs), [runs]);
+  const retryAllFailed = () => {
+    // Same replace-in-place pattern as the queue-full auto-retry: drop the stale
+    // failed row, fire a fresh run. Queue-full rejections during the burst are
+    // absorbed by the existing backoff.
+    for (const failed of retryableRuns) {
+      const backendId = pol.policies[failed.categoryId]?.backendId;
+      if (!backendId) continue;
+      removeRun(failed.runId);
+      void runPolicyOnFile(
+        failed.categoryId,
+        backendId,
+        failed.fileId as FileId,
+        failed.fileName,
+      );
+    }
+  };
+  const overall = useMemo(() => {
+    let running = 0;
+    let completed = 0;
+    let total = 0;
+    for (const p of progress.values()) {
+      running += p.running;
+      completed += p.completed;
+      total += p.total;
+    }
+    return { running, completed, total };
+  }, [progress]);
+
   // Persist the expand/collapse state across refreshes.
   const [expanded, setExpanded] = useState(() => {
     try {
@@ -220,6 +276,44 @@ export function PoliciesSection({
         </Menu>
       </div>
 
+      {overall.running > 0 && (
+        <div
+          className="pol-processing-summary"
+          role="status"
+          aria-live="polite"
+        >
+          <span className="pol-processing-spinner" aria-hidden="true" />
+          <span>
+            {t(
+              "policies.sidebar.processingSummary",
+              "{{running}} processing · {{completed}}/{{total}} done",
+              {
+                running: overall.running,
+                completed: overall.completed,
+                total: overall.total,
+              },
+            )}
+          </span>
+        </div>
+      )}
+
+      {retryableRuns.length > 0 && !guestBlocked && (
+        <button
+          type="button"
+          className="pol-retry-failed"
+          onClick={retryAllFailed}
+        >
+          <ReplayRounded sx={{ fontSize: "0.95rem" }} />
+          <span>
+            {t(
+              "policies.sidebar.retryFailed",
+              "Retry failed policies ({{count}})",
+              { count: retryableRuns.length },
+            )}
+          </span>
+        </button>
+      )}
+
       {expanded && (
         <>
           <div className="pol-list-rows">
@@ -250,6 +344,21 @@ export function PoliciesSection({
                 );
               }
               const status = deriveRowStatus(pol.policies[cat.id]);
+              const rowProgress = progress.get(cat.id) ?? EMPTY_RUN_PROGRESS;
+              const isProcessing = rowProgress.running > 0;
+              const icon = (
+                <span
+                  className={`pol-row-icon${isProcessing ? " is-processing" : ""}`}
+                  data-accent={ROW_ACCENT[cat.id] ?? "blue"}
+                >
+                  {isProcessing && (
+                    <span className="pol-row-ring" aria-hidden="true" />
+                  )}
+                  <IconBadge size="sm" accent={ROW_ACCENT[cat.id] ?? "blue"}>
+                    {cat.icon}
+                  </IconBadge>
+                </span>
+              );
               return (
                 <button
                   key={cat.id}
@@ -259,9 +368,23 @@ export function PoliciesSection({
                     guestBlocked ? promptGuestSignup() : selectPolicy(cat.id)
                   }
                 >
-                  <IconBadge size="sm" accent={ROW_ACCENT[cat.id] ?? "blue"}>
-                    {cat.icon}
-                  </IconBadge>
+                  {rowProgress.total > 0 ? (
+                    <AppTooltip
+                      content={t(
+                        "policies.sidebar.rowProgress",
+                        "{{completed}} of {{total}} files processed",
+                        {
+                          completed: rowProgress.completed,
+                          total: rowProgress.total,
+                        },
+                      )}
+                      position="left"
+                    >
+                      {icon}
+                    </AppTooltip>
+                  ) : (
+                    icon
+                  )}
                   <span className="pol-row-label">
                     {t(`policies.catalog.${cat.id}`, cat.label)}
                   </span>

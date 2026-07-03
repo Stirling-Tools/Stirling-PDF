@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, type ReactNode } from "react";
+import { memo, useState, useCallback, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Menu, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
@@ -131,7 +131,8 @@ export interface FileItemFolderRef {
   accentColor: string;
 }
 
-/** A policy that has run on this file, used for the activity badges. */
+/** A policy that has run on (or is running on) this file — drives the activity
+ *  badges and the in-progress spinner. */
 export interface FileItemPolicyRef {
   id: string;
   name: string;
@@ -139,9 +140,6 @@ export interface FileItemPolicyRef {
   icon?: ReactNode;
   /** CSS colour for the badge (matches the policy's accent). */
   accentColor: string;
-  /** True only just after the policy was applied — drives the one-off glow, so
-   *  it doesn't replay on every reload of an already-enforced file. */
-  recent: boolean;
 }
 
 export interface FileItemProps {
@@ -162,8 +160,9 @@ export interface FileItemProps {
   folders?: FileItemFolderRef[];
   /** Clicking a membership dot opens that folder. */
   onFolderClick?: (folderId: string) => void;
-  /** Policies that have run on this file — rendered as small shield badges. */
-  policies?: FileItemPolicyRef[];
+  /** Policy currently working on this file — swaps the file icon for a spinner
+   *  in the policy's colour with its badge inside. Omit when nothing is running. */
+  processingPolicy?: FileItemPolicyRef;
   /** Delete (local only) from the kebab menu. Omit to hide the menu's delete. */
   onDelete?: (fileId: FileId) => void;
   /** Save to cloud from the kebab menu. */
@@ -176,12 +175,19 @@ export interface FileItemProps {
   onVersionHistory?: (fileId: FileId) => void;
   /** Whether this file has more than one version (drives the menu item). */
   hasVersionHistory?: boolean;
+  /** When set (SaaS grouped sidebar), the meta line shows "{category} • {date}"
+   *  instead of "{date} · {type}". */
+  categoryLabel?: string;
 }
 
 const MAX_VISIBLE_FOLDER_TAGS = 2;
-const MAX_VISIBLE_POLICY_BADGES = 3;
 
-export function FileItem({
+// Memoized: the sidebar re-renders constantly during a policy wave / bulk add
+// (store emits, poll ticks, thumbnail hydrations), but most rows' props are
+// unchanged — memo keeps a 300-file list from re-rendering wholesale each time.
+// Parent must pass stable identities for arrays/callbacks (see FileSidebar's
+// NO_POLICIES/NO_FOLDERS + useCallback'd handlers).
+export const FileItem = memo(function FileItem({
   fileId,
   name,
   size,
@@ -196,13 +202,14 @@ export function FileItem({
   onDragStart,
   folders = [],
   onFolderClick,
-  policies = [],
+  processingPolicy,
   onDelete,
   onSaveToCloud,
   canSaveToCloud = false,
   isUploadedToCloud = false,
   onVersionHistory,
   hasVersionHistory = false,
+  categoryLabel,
 }: FileItemProps) {
   const { t } = useTranslation();
   const ext = getFileExtension(name);
@@ -229,9 +236,6 @@ export function FileItem({
 
   const handleMouseLeave = useCallback(() => setHoverRect(null), []);
 
-  // A just-applied policy (recent run) drives the one-off row glow.
-  const recentPolicy = policies.find((p) => p.recent);
-
   // Reactive: tooltip appears as soon as both hover rect and thumbnail are ready
   const thumbPos =
     hoverRect && resolvedThumbnail
@@ -245,14 +249,7 @@ export function FileItem({
     <>
       <div
         ref={itemRef}
-        className={`file-sidebar-file-item${isSelected ? " selected" : ""}${isActive ? " active" : ""}${isViewedInViewer ? " viewed" : ""}${recentPolicy ? " policy-enforced" : ""}`}
-        style={
-          recentPolicy
-            ? ({
-                "--policy-glow": recentPolicy.accentColor,
-              } as React.CSSProperties)
-            : undefined
-        }
+        className={`file-sidebar-file-item${isSelected ? " selected" : ""}${isActive ? " active" : ""}${isViewedInViewer ? " viewed" : ""}`}
         onClick={() => onClick(fileId)}
         draggable={draggable}
         onDragStart={
@@ -265,7 +262,34 @@ export function FileItem({
         onMouseLeave={handleMouseLeave}
       >
         <div className="file-sidebar-file-icon-wrapper">
-          {isSelected ? (
+          {processingPolicy ? (
+            <Tooltip
+              label={t(
+                "fileSidebar.fileItem.policyRunning",
+                "{{name}} policy is running…",
+                { name: processingPolicy.name },
+              )}
+              withArrow
+              position="top"
+            >
+              <span
+                className="file-sidebar-file-spinner"
+                style={{ color: processingPolicy.accentColor }}
+                aria-label={t(
+                  "fileSidebar.fileItem.policyRunning",
+                  "{{name}} policy is running…",
+                  { name: processingPolicy.name },
+                )}
+              >
+                <span className="file-sidebar-file-spinner-ring" />
+                <span className="file-sidebar-file-spinner-badge">
+                  {processingPolicy.icon ?? (
+                    <ShieldOutlinedIcon sx={{ fontSize: "0.7rem" }} />
+                  )}
+                </span>
+              </span>
+            </Tooltip>
+          ) : isSelected ? (
             <div className="file-sidebar-file-check">
               <CheckIcon className="file-sidebar-check-svg" />
             </div>
@@ -284,9 +308,19 @@ export function FileItem({
           </span>
           <span className="file-sidebar-file-meta-row">
             <span className="file-sidebar-file-meta">
-              {dateLabel}
-              {dateLabel && typeLabel ? " · " : ""}
-              {typeLabel}
+              {categoryLabel ? (
+                <>
+                  {categoryLabel}
+                  {categoryLabel && dateLabel ? " • " : ""}
+                  {dateLabel}
+                </>
+              ) : (
+                <>
+                  {dateLabel}
+                  {dateLabel && typeLabel ? " · " : ""}
+                  {typeLabel}
+                </>
+              )}
             </span>
             {isUploadedToCloud && (
               <Tooltip
@@ -301,27 +335,6 @@ export function FileItem({
                   <CloudDoneIcon sx={{ fontSize: "0.85rem" }} />
                 </span>
               </Tooltip>
-            )}
-            {policies.length > 0 && (
-              <span className="file-sidebar-policy-badges" data-no-select>
-                {policies.slice(0, MAX_VISIBLE_POLICY_BADGES).map((policy) => (
-                  <Tooltip
-                    key={policy.id}
-                    label={`${policy.name} policy ran on this file`}
-                    withArrow
-                    position="top"
-                  >
-                    <span
-                      className="file-sidebar-policy-badge"
-                      style={{ color: policy.accentColor }}
-                    >
-                      {policy.icon ?? (
-                        <ShieldOutlinedIcon sx={{ fontSize: "0.7rem" }} />
-                      )}
-                    </span>
-                  </Tooltip>
-                ))}
-              </span>
             )}
           </span>
           {folders.length > 0 && (
@@ -483,4 +496,4 @@ export function FileItem({
         )}
     </>
   );
-}
+});

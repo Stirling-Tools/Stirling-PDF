@@ -23,7 +23,10 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@app/constants/featureFlags", () => ({ POLICIES_ENABLED: true }));
 vi.mock("@app/contexts/FileContext", () => ({
   useAllFiles: () => ({ fileStubs: mocks.fileStubs }),
-  useFileManagement: () => ({ addFiles: mocks.addFiles }),
+  useFileManagement: () => ({
+    addFiles: mocks.addFiles,
+    updateStirlingFileStub: vi.fn(),
+  }),
   useFileContext: () => ({ consumeFiles: mocks.consumeFiles }),
 }));
 vi.mock("@app/contexts/IndexedDBContext", () => ({
@@ -133,17 +136,23 @@ describe("auto-run import: new-version output delivery", () => {
     expect(mocks.addFiles).not.toHaveBeenCalled();
   });
 
-  it("versions the input in the workspace when it's open (consumeFiles, not a storage write)", async () => {
+  it("versions the input in place SILENTLY when it's open (consumeFiles with silent, + sidebar bump)", async () => {
     mocks.fileStubs = [{ id: "file-1" }];
 
     recordCompletedRun();
     await runImport();
 
+    // Background enforcement must not disturb the workbench: the silent consume
+    // replaces the file in place without auto-selecting / reordering / opening it.
     expect(mocks.consumeFiles).toHaveBeenCalledWith(
       ["file-1"],
       expect.any(Array),
       expect.any(Array),
+      { silent: true },
     );
+    // No redundant bump in the in-workspace path — the silent consume's own state
+    // update drives the sidebar refresh (avoids an O(n) IDB re-read per delivery).
+    expect(mocks.bumpRevision).not.toHaveBeenCalled();
     expect(mocks.persistVersionedOutputs).not.toHaveBeenCalled();
     expect(mocks.addFiles).not.toHaveBeenCalled();
   });
