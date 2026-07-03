@@ -19,7 +19,7 @@ import {
 import { tauriBackendService } from "@app/services/tauriBackendService";
 import { STIRLING_SAAS_URL } from "@app/constants/connection";
 import { listen } from "@tauri-apps/api/event";
-import "@shared/auth/ui/auth.css";
+import "@app/auth/ui/auth.css";
 import { DisabledButtonWithTooltip } from "@app/components/shared/DisabledButtonWithTooltip";
 
 enum SetupStep {

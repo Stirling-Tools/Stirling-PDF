@@ -20,8 +20,8 @@ if that directory exists, is licensed under the license defined in "frontend/edi
 if that directory exists, is licensed under the license defined in "frontend/editor/src/cloud/LICENSE".
 * All content that resides under the "frontend/editor/src/prototypes/" directory of this repository,
 if that directory exists, is licensed under the license defined in "frontend/editor/src/prototypes/LICENSE".
-* All content that resides under the "frontend/portal/" directory of this repository,
-if that directory exists, is licensed under the license defined in "frontend/portal/LICENSE".
+* All content that resides under the "frontend/editor/src/portal/" directory of this repository,
+if that directory exists, is licensed under the license defined in "frontend/editor/src/portal/LICENSE".
 * Content outside of the above mentioned directories or restrictions above is
 available under the MIT License as defined below.
 

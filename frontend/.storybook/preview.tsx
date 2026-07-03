@@ -19,15 +19,11 @@ import { ThemeProvider } from "@portal/contexts/ThemeContext";
 import { UIProvider } from "@portal/contexts/UIContext";
 import { mantineTheme } from "@portal/theme/mantineTheme";
 import { handlers } from "@portal/mocks/handlers";
-import { configureSupabase } from "@shared/auth/supabase/supabaseClient";
-// Initialise i18n (side effect) so t()-based copy resolves in stories. Storybook serves the TOML
-// from portal/public via staticDirs; the config fetches it (useSuspense) — hence the Suspense
-// boundary around the story below.
-import "@portal/i18n/config";
+import { configureSupabase } from "@proprietary/auth/supabase/supabaseClient";
 
 import "@mantine/core/styles.css";
-import "@shared/tokens/tokens.css";
-import "@shared/tokens/base.css";
+import "@core/tokens/tokens.css";
+import "@core/tokens/base.css";
 
 // Start MSW once. Storybook runs in a browser so this uses the service worker.
 initialize({ onUnhandledRequest: "bypass" }, handlers);
