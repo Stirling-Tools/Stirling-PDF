@@ -21,6 +21,7 @@ import { test, expect, type Page } from "@playwright/test";
 import path from "path";
 import fs from "fs";
 import { mockAppApis } from "@app/tests/helpers/api-stubs";
+import { suppressNativeFilePicker } from "@app/tests/helpers/ui-helpers";
 
 const FIXTURES_DIR = path.join(__dirname, "../test-fixtures");
 const ENCRYPTED_PDF = path.join(FIXTURES_DIR, "encrypted.pdf");
@@ -78,6 +79,10 @@ test.describe.configure({ mode: "serial" });
 
 test.describe("Encrypted PDF Unlock Modal", () => {
   test.beforeEach(async ({ page }) => {
+    // Raw @playwright/test fixture: install the picker suppression directly so
+    // the files-button click is intercepted cross-browser (firefox/webkit
+    // otherwise leak the native dialog onto the host and close the page).
+    suppressNativeFilePicker(page);
     await mockAppApis(page);
     await page.goto("/?bypassOnboarding=true");
     await page.waitForSelector('[data-testid="files-button"]', {

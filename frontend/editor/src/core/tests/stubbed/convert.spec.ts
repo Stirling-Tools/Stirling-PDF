@@ -8,6 +8,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import path from "path";
 import { mockAppApis } from "@app/tests/helpers/api-stubs";
+import { suppressNativeFilePicker } from "@app/tests/helpers/ui-helpers";
 
 const FIXTURES_DIR = path.join(__dirname, "../test-fixtures");
 const SAMPLE_PDF = path.join(FIXTURES_DIR, "sample.pdf");
@@ -60,6 +61,11 @@ async function selectToFormat(page: Page, toValue: string) {
 // ---------------------------------------------------------------------------
 test.describe("Convert Tool", () => {
   test.beforeEach(async ({ page }) => {
+    // These specs use the raw @playwright/test fixture, so they don't get the
+    // shared stub-test-base suppression - install it here so the picker click
+    // is intercepted cross-browser (firefox/webkit otherwise leak the native
+    // dialog onto the host and close the page).
+    suppressNativeFilePicker(page);
     await mockAppApis(page);
     await page.goto("/?bypassOnboarding=true");
     await page.waitForSelector('[data-testid="files-button"]', {
