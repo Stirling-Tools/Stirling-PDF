@@ -285,7 +285,7 @@ tasks.register('npmBuild', Exec) {
     description = 'Build editor frontend application'
     workingDir file('../..')
     commandLine = Os.isFamily(Os.FAMILY_WINDOWS) ?
-            ['powershell', '-NoProfile', '-Command', "task ${frontendBuildTask}"] :
+            ['cmd', '/c', 'task', frontendBuildTask] :
             ['task', frontendBuildTask]
     inputs.dir(new File(frontendEditorDir, 'src'))
     inputs.dir(new File(frontendEditorDir, 'public'))
