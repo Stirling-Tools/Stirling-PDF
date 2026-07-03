@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import type { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);

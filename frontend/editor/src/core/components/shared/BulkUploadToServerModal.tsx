@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Modal, Stack, Text, Group, Alert } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { useTranslation } from "react-i18next";
 

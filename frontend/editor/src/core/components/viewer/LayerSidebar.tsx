@@ -9,7 +9,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import LayersIcon from "@mui/icons-material/Layers";
-import { ActionIcon } from "@shared/components/ActionIcon";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import LocalIcon from "@app/components/shared/LocalIcon";

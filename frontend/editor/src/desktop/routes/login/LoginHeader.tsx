@@ -1,5 +1,5 @@
 import CloseIcon from "@mui/icons-material/Close";
-import { ActionIcon } from "@shared/components/ActionIcon";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useLogoAssets } from "@app/hooks/useLogoAssets";
 
 interface LoginHeaderProps {

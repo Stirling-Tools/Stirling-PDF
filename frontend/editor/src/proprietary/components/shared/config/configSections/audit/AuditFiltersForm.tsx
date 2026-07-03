@@ -1,6 +1,6 @@
 import React from "react";
 import { Group, MultiSelect, Stack, SimpleGrid, Text } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import { DateInput } from "@mantine/dates";
 import { useTranslation } from "react-i18next";
 import { AuditFilters } from "@app/services/auditService";

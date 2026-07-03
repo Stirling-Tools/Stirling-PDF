@@ -1,6 +1,6 @@
 import React from "react";
 import { Modal, Stack, Text, Group } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 

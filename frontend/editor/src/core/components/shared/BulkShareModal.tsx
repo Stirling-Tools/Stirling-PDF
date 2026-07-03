@@ -9,7 +9,7 @@ import {
   Paper,
   Select,
 } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import LinkIcon from "@mui/icons-material/Link";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import { useTranslation } from "react-i18next";

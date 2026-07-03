@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert, Divider, Stack, Switch, Text, Tooltip } from "@mantine/core";
-import { Button as DSButton } from "@shared/components/Button";
-import { FilePicker } from "@shared/components/FilePicker";
+import { Button as DSButton } from "@app/ui/Button";
+import { FilePicker } from "@app/ui/FilePicker";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { BookmarkNode } from "@app/utils/editTableOfContents";
 interface EditTableOfContentsSettingsProps {

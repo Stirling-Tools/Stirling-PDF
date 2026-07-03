@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { Modal, Text, Group } from "@mantine/core";
-import { ActionIcon } from "@shared/components/ActionIcon";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import licenseService from "@app/services/licenseService";

@@ -38,7 +38,7 @@ import { useFileHandler } from "@app/hooks/useFileHandler";
 import { FolderTreePanel } from "@app/components/filesPage/FolderTreePanel";
 import type { FileSidebarProps } from "@app/components/shared/FileSidebar";
 
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import "@app/pages/HomePage.css";
 
 const SIDEBAR_COLLAPSED_STORAGE_KEY = "stirling.fileSidebarCollapsed";

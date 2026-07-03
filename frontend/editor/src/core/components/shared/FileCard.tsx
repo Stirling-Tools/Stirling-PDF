@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card, Stack, Text, Group, Badge, Box, Tooltip } from "@mantine/core";
-import { Button } from "@shared/components/Button";
-import { ActionIcon } from "@shared/components/ActionIcon";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import StorageIcon from "@mui/icons-material/Storage";
 import VisibilityIcon from "@mui/icons-material/Visibility";

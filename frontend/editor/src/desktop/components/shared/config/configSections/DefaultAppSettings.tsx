@@ -1,6 +1,6 @@
 import React from "react";
 import { Paper, Text, Group } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { useDefaultApp } from "@app/hooks/useDefaultApp";
 

@@ -13,7 +13,7 @@ import {
   Textarea,
   Tooltip,
 } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";

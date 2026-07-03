@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Modal, Stack, TextInput, Group } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import AddIcon from "@mui/icons-material/Add";
 import UserSelector from "@app/components/shared/UserSelector";

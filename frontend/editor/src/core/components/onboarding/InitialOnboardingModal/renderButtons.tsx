@@ -1,7 +1,7 @@
 import React from "react";
 import { Group } from "@mantine/core";
-import { ActionIcon } from "@shared/components/ActionIcon";
-import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { Button } from "@app/ui/Button";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import { useTranslation } from "react-i18next";
 import {

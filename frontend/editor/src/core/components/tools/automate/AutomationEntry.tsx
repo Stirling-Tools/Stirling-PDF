@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Group, Text, Menu, Box } from "@mantine/core";
-import { Button as SharedButton } from "@shared/components/Button";
+import { Button as SharedButton } from "@app/ui/Button";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";

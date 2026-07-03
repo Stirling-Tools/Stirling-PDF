@@ -2,7 +2,7 @@ import { Stack, NumberInput, Select } from "@mantine/core";
 import {
   SegmentedControl,
   type SegmentedOption,
-} from "@shared/components/SegmentedControl";
+} from "@app/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import {
   AdjustPageScaleParameters,

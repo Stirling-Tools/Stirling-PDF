@@ -9,7 +9,7 @@ import {
 import { useState, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import ColorizeIcon from "@mui/icons-material/Colorize";
-import { ActionIcon } from "@shared/components/ActionIcon";
+import { ActionIcon } from "@app/ui/ActionIcon";
 
 // safari and firefox do not support the eye dropper API, only edge, chrome and opera do.
 // the button is hidden in the UI if the API is not supported.

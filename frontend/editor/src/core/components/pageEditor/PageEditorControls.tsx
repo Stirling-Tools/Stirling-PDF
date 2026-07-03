@@ -1,5 +1,5 @@
 import { Tooltip } from "@mantine/core";
-import { ActionIcon } from "@shared/components/ActionIcon";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import UndoIcon from "@mui/icons-material/Undo";
 import RedoIcon from "@mui/icons-material/Redo";
 import ContentCutIcon from "@mui/icons-material/ContentCut";

@@ -1,6 +1,6 @@
 import React from "react";
 import { Text, Stack } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 
 interface ErrorBoundaryState {
   hasError: boolean;

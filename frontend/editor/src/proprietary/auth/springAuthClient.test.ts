@@ -5,7 +5,7 @@ import {
   POST_LOGIN_REDIRECT_STORAGE_KEY,
   setPostLoginRedirectPath,
   springAuth,
-} from "@shared/auth/spring/springAuthClient";
+} from "@app/auth/spring/springAuthClient";
 import { startOAuthNavigation } from "@app/extensions/oauthNavigation";
 import apiClient from "@app/services/apiClient";
 // Side-effect: configures the shared Spring engine with the (mocked) apiClient

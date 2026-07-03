@@ -2,9 +2,10 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "paths": {
-      "@app/*": ["./src/core/*"],
-      "@shared/*": ["../shared/*"]
+      "@app/ui": ["./src/proprietary/ui/index.ts"],
+      "@app/ui/*": ["./src/proprietary/ui/*"],
+      "@app/*": ["./src/core/*"]
     }
   },
-  "exclude": ["src/proprietary", "src/desktop"]
+  "exclude": ["src/desktop"]
 }

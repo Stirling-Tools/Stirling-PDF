@@ -2,7 +2,7 @@ import { Tooltip, Popover, Stack, Slider, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import OpacityIcon from "@mui/icons-material/Opacity";
-import { ActionIcon } from "@shared/components/ActionIcon";
+import { ActionIcon } from "@app/ui/ActionIcon";
 
 interface OpacityControlProps {
   value: number; // 0-100

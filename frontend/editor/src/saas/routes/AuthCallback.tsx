@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@app/auth/supabase";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import { withBasePath } from "@app/constants/app";
 
 interface CallbackState {

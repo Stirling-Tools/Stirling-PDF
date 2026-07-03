@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Box, Flex, Group, Text, TextInput, Select } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import SearchIcon from "@mui/icons-material/Search";
 import SortIcon from "@mui/icons-material/Sort";

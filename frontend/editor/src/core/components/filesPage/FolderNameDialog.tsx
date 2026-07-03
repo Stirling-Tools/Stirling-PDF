@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Alert, Group, Modal, Stack, TextInput } from "@mantine/core";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlined";
 
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 
 interface FolderNameDialogProps {
   opened: boolean;

@@ -10,7 +10,7 @@ import {
   Switch,
   Card,
 } from "@mantine/core";
-import { Button as DSButton } from "@shared/components/Button";
+import { Button as DSButton } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { LogoIcon } from "@app/components/shared/LogoIcon";
 import { Wordmark } from "@app/components/shared/Wordmark";

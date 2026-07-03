@@ -14,7 +14,7 @@ import {
   Tooltip,
   Modal,
 } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { WatchedFolder } from "@app/types/watchedFolders";
 import { AutomationConfig, AutomationMode } from "@app/types/automation";

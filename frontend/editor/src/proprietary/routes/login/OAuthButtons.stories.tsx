@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import OAuthButtons from "@shared/auth/ui/OAuthButtons";
-import "@shared/auth/ui/auth.css";
+import OAuthButtons from "@app/auth/ui/OAuthButtons";
+import "@app/auth/ui/auth.css";
 
 /**
  * The OAuth provider buttons the login page renders

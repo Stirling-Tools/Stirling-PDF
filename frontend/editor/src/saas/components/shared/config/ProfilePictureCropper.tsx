@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { Modal, Stack, Slider, Alert, Text, Box } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import Cropper from "react-easy-crop";
 import { getCroppedImage, type Area } from "@app/utils/cropImage";

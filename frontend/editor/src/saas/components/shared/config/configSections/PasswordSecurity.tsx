@@ -7,7 +7,7 @@ import {
   Modal,
   Divider,
 } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@app/auth/UseSession";
 import { supabase } from "@app/auth/supabase";

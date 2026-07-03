@@ -8,7 +8,7 @@ import React, {
   useMemo,
 } from "react";
 import { Group, Modal, Stack, Text } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import { fileStorage } from "@app/services/fileStorage";
 import { useFileActions, useFileManagement } from "@app/contexts/FileContext";
 import { zipFileService } from "@app/services/zipFileService";

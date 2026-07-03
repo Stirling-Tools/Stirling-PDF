@@ -13,8 +13,8 @@ import {
 } from "@mantine/core";
 import { Rnd } from "react-rnd";
 import { useTranslation } from "react-i18next";
-import { ChatFABButton } from "@shared/components/ChatFABButton";
-import { ChatFABWindow } from "@shared/components/ChatFABWindow";
+import { ChatFABButton } from "@app/ui/ChatFABButton";
+import { ChatFABWindow } from "@app/ui/ChatFABWindow";
 import { ChatPanel } from "@app/components/chat/ChatPanel";
 import { useChat } from "@app/components/chat/ChatContext";
 import { useAiEngineEnabled } from "@app/hooks/useAiEngineEnabled";

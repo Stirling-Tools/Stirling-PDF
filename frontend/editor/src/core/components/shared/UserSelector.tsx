@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { MultiSelect, Loader, Text, Stack } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import { useNavigate } from "react-router-dom";
 import { alert } from "@app/components/toast";
 import { UserSummary } from "@app/types/signingSession";

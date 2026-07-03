@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import UndoIcon from "@mui/icons-material/Undo";
 import ErrorNotification from "@app/components/tools/shared/ErrorNotification";
 import ResultsPreview from "@app/components/tools/shared/ResultsPreview";

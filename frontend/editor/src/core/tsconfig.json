@@ -2,8 +2,9 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "paths": {
-      "@app/*": ["../../src/core/*"],
-      "@shared/*": ["../../../shared/*"]
+      "@app/ui": ["../../src/proprietary/ui/index.ts"],
+      "@app/ui/*": ["../../src/proprietary/ui/*"],
+      "@app/*": ["../../src/core/*"]
     }
   },
   "include": ["../global.d.ts", "../*.js", "../*.ts", "../*.tsx", "."]

@@ -7,7 +7,7 @@ import { useBackendProbe } from "@app/hooks/useBackendProbe";
 import AuthLayout from "@app/routes/authShared/AuthLayout";
 import LoginHeader from "@app/routes/login/LoginHeader";
 import { useTranslation } from "react-i18next";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 
 /**
  * Landing component - Smart router based on authentication status

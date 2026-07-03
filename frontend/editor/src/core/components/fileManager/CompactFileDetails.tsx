@@ -1,7 +1,7 @@
 import React from "react";
 import { Stack, Box, Text, Center } from "@mantine/core";
-import { Button } from "@shared/components/Button";
-import { ActionIcon } from "@shared/components/ActionIcon";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";

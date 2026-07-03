@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Card, Text, Group, Stack, Checkbox } from "@mantine/core";
-import { Button } from "@shared/components/Button";
-import { SegmentedControl } from "@shared/components/SegmentedControl";
+import { Button } from "@app/ui/Button";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import auditService from "@app/services/auditService";
 import LocalIcon from "@app/components/shared/LocalIcon";

@@ -14,7 +14,7 @@ import {
   Box,
   Paper,
 } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import { AddStampParameters } from "@app/components/tools/addStamp/useAddStampParameters";
 import ButtonSelector from "@app/components/shared/ButtonSelector";
 import styles from "@app/components/tools/addStamp/StampPreview.module.css";

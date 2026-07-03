@@ -9,7 +9,7 @@ import {
   Tooltip,
   Box,
 } from "@mantine/core";
-import { SegmentedControl } from "@shared/components/SegmentedControl";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import SliderWithInput from "@app/components/shared/sliderWithInput/SliderWithInput";
 import { useTranslation } from "react-i18next";
 import { CompressParameters } from "@app/hooks/tools/compress/useCompressParameters";

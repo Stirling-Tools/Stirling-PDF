@@ -12,8 +12,8 @@ import { AddStampParameters } from "@app/components/tools/addStamp/useAddStampPa
 import LocalIcon from "@app/components/shared/LocalIcon";
 import styles from "@app/components/tools/addStamp/StampPreview.module.css";
 import { Tooltip } from "@app/components/shared/Tooltip";
-import { Button } from "@shared/components/Button";
-import { ActionIcon } from "@shared/components/ActionIcon";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface StampPositionFormattingSettingsProps {

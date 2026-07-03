@@ -1,9 +1,9 @@
 import { Suspense } from "react";
 import { useTranslation } from "react-i18next";
 import { Loader } from "@mantine/core";
-import { ToggleSwitch } from "@shared/components/ToggleSwitch";
-import { ActionIcon } from "@shared/components/ActionIcon";
-import { Card } from "@shared/components/Card";
+import { ToggleSwitch } from "@app/ui/ToggleSwitch";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { Card } from "@app/ui/Card";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
 import { PolicyRedactConfig } from "@app/components/policies/PolicyRedactConfig";

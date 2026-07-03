@@ -1,6 +1,6 @@
 import React from "react";
 import { Box, Group, Paper } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import FitText from "@app/components/shared/FitText";
 import { useTranslation } from "react-i18next";

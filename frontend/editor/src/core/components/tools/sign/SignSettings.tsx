@@ -9,8 +9,8 @@ import {
   Group,
   Box,
 } from "@mantine/core";
-import { Button } from "@shared/components/Button";
-import { SegmentedControl } from "@shared/components/SegmentedControl";
+import { Button } from "@app/ui/Button";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
 import { useSignature } from "@app/contexts/SignatureContext";
 import { useViewer } from "@app/contexts/ViewerContext";

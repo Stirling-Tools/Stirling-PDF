@@ -9,7 +9,7 @@
  */
 import React, { useCallback, useEffect, useRef } from "react";
 import { Box, Text, ScrollArea, Badge, Tooltip } from "@mantine/core";
-import { ActionIcon } from "@shared/components/ActionIcon";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import { useFormFill } from "@app/tools/formFill/FormFillContext";
 import { FieldInput } from "@app/tools/formFill/FieldInput";

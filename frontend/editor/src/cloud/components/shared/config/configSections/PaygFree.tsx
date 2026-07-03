@@ -25,7 +25,7 @@
  */
 import React, { useState } from "react";
 import { Stack } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import BoltIcon from "@mui/icons-material/BoltRounded";
 import AllInclusiveIcon from "@mui/icons-material/AllInclusiveRounded";
 import CheckIcon from "@mui/icons-material/CheckRounded";

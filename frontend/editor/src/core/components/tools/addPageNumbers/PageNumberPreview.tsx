@@ -5,7 +5,7 @@ import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
 import { useThumbnailGeneration } from "@app/hooks/useThumbnailGeneration";
 import styles from "@app/components/tools/addPageNumbers/PageNumberPreview.module.css";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 
 // Simple utilities for page numbers (adapted from stamp)
 const A4_ASPECT_RATIO = 0.707;

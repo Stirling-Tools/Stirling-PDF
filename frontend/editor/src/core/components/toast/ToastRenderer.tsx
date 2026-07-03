@@ -3,8 +3,8 @@ import { useTranslation } from "react-i18next";
 import { useToast } from "@app/components/toast/ToastContext";
 import { ToastInstance, ToastLocation } from "@app/components/toast/types";
 import { LocalIcon } from "@app/components/shared/LocalIcon";
-import { ActionIcon } from "@shared/components/ActionIcon";
-import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { Button } from "@app/ui/Button";
 import "@app/components/toast/ToastRenderer.css";
 
 const locationToClass: Record<ToastLocation, string> = {

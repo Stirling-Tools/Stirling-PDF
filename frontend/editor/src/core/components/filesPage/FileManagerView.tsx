@@ -8,9 +8,9 @@ import React, {
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Drawer, Group, MultiSelect, Select, Tooltip } from "@mantine/core";
-import { Button } from "@shared/components/Button";
-import { ActionIcon } from "@shared/components/ActionIcon";
-import { SegmentedControl } from "@shared/components/SegmentedControl";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useMediaQuery } from "@mantine/hooks";
 import SearchIcon from "@mui/icons-material/Search";
 import UploadFileIcon from "@mui/icons-material/UploadFile";

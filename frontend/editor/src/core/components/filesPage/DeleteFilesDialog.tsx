@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Alert, Group, Modal, Radio, Stack, Text } from "@mantine/core";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlined";
 
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 
 import type { StirlingFileStub } from "@app/types/fileContext";
 import type { DeleteScope } from "@app/services/serverStorageDelete";

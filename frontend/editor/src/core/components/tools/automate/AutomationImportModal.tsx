@@ -9,7 +9,7 @@ import {
   Text,
   Textarea,
 } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import { Dropzone } from "@mantine/dropzone";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { Z_INDEX_AUTOMATE_MODAL } from "@app/styles/zIndex";

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Badge, Group, Stack, Text } from "@mantine/core";
-import { SegmentedControl } from "@shared/components/SegmentedControl";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 

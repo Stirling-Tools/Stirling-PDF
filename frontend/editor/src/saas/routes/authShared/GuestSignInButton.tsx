@@ -1,8 +1,8 @@
 import React from "react";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 
 // TODO: add saas-auth.css to the same location as auth.css
-import "@shared/auth/ui/auth.css";
+import "@app/auth/ui/auth.css";
 import "@app/routes/authShared/saas-auth.css";
 
 interface GuestSignInButtonProps {

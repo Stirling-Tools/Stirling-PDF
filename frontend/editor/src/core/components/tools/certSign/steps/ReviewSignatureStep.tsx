@@ -1,5 +1,5 @@
 import { Stack, Text, Group, Divider, Paper } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import DrawIcon from "@mui/icons-material/Draw";

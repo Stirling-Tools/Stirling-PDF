@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { Group, Text, Tooltip } from "@mantine/core";
-import { ActionIcon } from "@shared/components/ActionIcon";
-import { SegmentedControl } from "@shared/components/SegmentedControl";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import SelectAllIcon from "@mui/icons-material/SelectAll";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";

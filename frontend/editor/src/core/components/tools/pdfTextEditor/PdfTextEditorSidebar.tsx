@@ -11,9 +11,9 @@ import {
   Switch,
   Text,
 } from "@mantine/core";
-import { Button } from "@shared/components/Button";
-import { ActionIcon } from "@shared/components/ActionIcon";
-import { SegmentedControl } from "@shared/components/SegmentedControl";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";

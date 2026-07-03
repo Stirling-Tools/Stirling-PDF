@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import { useAuth } from "@app/auth/UseSession";
 import { useTranslation } from "@app/hooks/useTranslation";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
 import AuthLayout from "@app/routes/authShared/AuthLayout";
-import "@shared/auth/ui/auth.css";
+import "@app/auth/ui/auth.css";
 import "@app/routes/authShared/saas-auth.css";
 import { withBasePath } from "@app/constants/app";
-import ErrorMessage from "@shared/auth/ui/ErrorMessage";
-import loginHeader from "@shared/assets/brand/modern-logo/LoginLightModeHeader.svg";
+import ErrorMessage from "@app/auth/ui/ErrorMessage";
+import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
 
 /**
  * OAuth 2.1 consent screen for the Supabase OAuth server (used by MCP clients

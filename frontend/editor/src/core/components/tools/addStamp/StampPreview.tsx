@@ -11,7 +11,7 @@ import {
 } from "@app/components/tools/addStamp/StampPreviewUtils";
 import styles from "@app/components/tools/addStamp/StampPreview.module.css";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 
 type Props = {
   parameters: AddStampParameters;

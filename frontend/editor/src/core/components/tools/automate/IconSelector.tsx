@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Box, Text, Stack, SimpleGrid, Tooltip, Popover } from "@mantine/core";
-import { ActionIcon } from "@shared/components/ActionIcon";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { iconMap, iconOptions } from "@app/components/tools/automate/iconMap";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";

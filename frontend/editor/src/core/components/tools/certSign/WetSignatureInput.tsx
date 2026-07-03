@@ -8,7 +8,7 @@ import {
   PasswordInput,
   Divider,
 } from "@mantine/core";
-import { SegmentedControl } from "@shared/components/SegmentedControl";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { DrawingCanvas } from "@app/components/annotation/shared/DrawingCanvas";
 import { ImageUploader } from "@app/components/annotation/shared/ImageUploader";
 import { TextInputWithFont } from "@app/components/annotation/shared/TextInputWithFont";

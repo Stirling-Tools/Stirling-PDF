@@ -16,8 +16,8 @@ import {
   TextInput,
   Select,
 } from "@mantine/core";
-import { Button } from "@shared/components/Button";
-import { ActionIcon } from "@shared/components/ActionIcon";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@app/styles/zIndex";
 
 import { useCardModalAnimation } from "@app/hooks/useCardModalAnimation";

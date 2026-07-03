@@ -12,7 +12,7 @@ import {
   Tooltip,
   ThemeIcon,
 } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { openAppSettings } from "@app/utils/appSettings";

@@ -1,6 +1,6 @@
 import React from "react";
 import { Trans } from "react-i18next";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import i18n from "@app/i18n";
 import { SlideConfig } from "@app/types/types";

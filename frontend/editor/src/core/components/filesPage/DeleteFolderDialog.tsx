@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Alert, Checkbox, Group, Modal, Stack, Text } from "@mantine/core";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlined";
 
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import { FolderRecord } from "@app/types/folder";
 
 interface DeleteFolderDialogProps {

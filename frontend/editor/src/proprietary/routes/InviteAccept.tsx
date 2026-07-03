@@ -15,10 +15,10 @@ import {
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
 import AuthLayout from "@app/routes/authShared/AuthLayout";
 import LoginHeader from "@app/routes/login/LoginHeader";
-import ErrorMessage from "@shared/auth/ui/ErrorMessage";
+import ErrorMessage from "@app/auth/ui/ErrorMessage";
 import { BASE_PATH } from "@app/constants/app";
 import apiClient from "@app/services/apiClient";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 interface InviteData {
   email: string | null;
   role: string;

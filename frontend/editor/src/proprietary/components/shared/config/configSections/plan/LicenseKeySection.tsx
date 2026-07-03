@@ -8,9 +8,9 @@ import {
   Group,
   Text,
 } from "@mantine/core";
-import { Button } from "@shared/components/Button";
-import { FilePicker } from "@shared/components/FilePicker";
-import { SegmentedControl } from "@shared/components/SegmentedControl";
+import { Button } from "@app/ui/Button";
+import { FilePicker } from "@app/ui/FilePicker";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { alert } from "@app/components/toast";

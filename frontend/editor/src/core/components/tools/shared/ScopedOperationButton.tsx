@@ -1,10 +1,6 @@
 import { Text, Box } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import {
-  Button,
-  type ButtonVariant,
-  type ButtonAccent,
-} from "@shared/components/Button";
+import { Button, type ButtonVariant, type ButtonAccent } from "@app/ui/Button";
 import OperationButton, {
   OperationButtonProps,
   operationButtonVariantMap,

@@ -1,4 +1,4 @@
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import { useTranslation } from "react-i18next";
 

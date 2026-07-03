@@ -6,13 +6,13 @@ import { useTranslation } from "@app/hooks/useTranslation";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
 import { getBaseUrl, withBasePath } from "@app/constants/app";
 import AuthLayout from "@app/routes/authShared/AuthLayout";
-import "@shared/auth/ui/auth.css";
+import "@app/auth/ui/auth.css";
 import "@app/routes/authShared/saas-auth.css";
 import { alert } from "@app/components/toast";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 
 // Import signup components
-import ErrorMessage from "@shared/auth/ui/ErrorMessage";
+import ErrorMessage from "@app/auth/ui/ErrorMessage";
 import OAuthButtons from "@app/routes/login/OAuthButtons";
 import SignupForm from "@app/routes/signup/SignupForm";
 import {
@@ -20,7 +20,7 @@ import {
   SignupFieldErrors,
 } from "@app/routes/signup/SignupFormValidation";
 import { useAuthService } from "@app/routes/signup/AuthService";
-import loginHeader from "@shared/assets/brand/modern-logo/LoginLightModeHeader.svg";
+import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
 
 export default function Signup() {
   const navigate = useNavigate();

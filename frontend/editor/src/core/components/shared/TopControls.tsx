@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo } from "react";
 import { Loader } from "@mantine/core";
-import { SegmentedControl } from "@shared/components/SegmentedControl";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import GridViewIcon from "@mui/icons-material/GridView";
 import FolderIcon from "@mui/icons-material/Folder";

@@ -9,7 +9,7 @@ import {
   Divider,
   Modal,
 } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import { Z_INDEX_AUTOMATE_MODAL } from "@app/styles/zIndex";
 import CheckIcon from "@mui/icons-material/Check";
 import DownloadIcon from "@mui/icons-material/Download";

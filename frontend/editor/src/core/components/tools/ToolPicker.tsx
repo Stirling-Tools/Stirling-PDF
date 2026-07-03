@@ -1,7 +1,7 @@
 import React, { useMemo, useRef } from "react";
 import { Box, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 import "@app/components/tools/toolPicker/ToolPicker.css";
 import { useToolSections } from "@app/hooks/useToolSections";

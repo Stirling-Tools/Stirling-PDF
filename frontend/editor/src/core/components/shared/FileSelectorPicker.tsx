@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Box, Popover, ScrollArea, Text, Loader } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import AddIcon from "@mui/icons-material/Add";
 import { useTranslation } from "react-i18next";
 import {

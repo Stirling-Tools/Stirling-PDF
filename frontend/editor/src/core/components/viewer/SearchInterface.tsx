@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Box, TextInput, Text, Group } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { LocalIcon } from "@app/components/shared/LocalIcon";
-import { ActionIcon } from "@shared/components/ActionIcon";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { ViewerContext } from "@app/contexts/ViewerContext";
 
 interface SearchInterfaceProps {

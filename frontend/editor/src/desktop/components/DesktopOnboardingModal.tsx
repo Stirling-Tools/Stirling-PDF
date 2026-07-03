@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { Modal, Stack, Group } from "@mantine/core";
-import { Button } from "@shared/components/Button";
-import { ActionIcon } from "@shared/components/ActionIcon";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import CloseIcon from "@mui/icons-material/Close";
 import LocalIcon from "@app/components/shared/LocalIcon";

@@ -1,6 +1,6 @@
 import React from "react";
 import { Card, Text, Stack, Divider, Tooltip } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { PlanTierGroup, LicenseInfo } from "@app/services/licenseService";
 import { PricingBadge } from "@app/components/shared/stripeCheckout/components/PricingBadge";

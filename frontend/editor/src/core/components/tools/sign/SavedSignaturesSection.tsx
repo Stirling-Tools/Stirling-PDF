@@ -12,7 +12,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { LocalIcon } from "@app/components/shared/LocalIcon";
-import { ActionIcon } from "@shared/components/ActionIcon";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import {
   SavedSignature,
   SavedSignatureType,

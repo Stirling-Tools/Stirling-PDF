@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next";
 import { AddAttachmentsParameters } from "@app/hooks/tools/addAttachments/useAddAttachmentsParameters";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
-import { Button as DSButton } from "@shared/components/Button";
+import { Button as DSButton } from "@app/ui/Button";
 interface AddAttachmentsSettingsProps {
   parameters: AddAttachmentsParameters;
   onParameterChange: <K extends keyof AddAttachmentsParameters>(

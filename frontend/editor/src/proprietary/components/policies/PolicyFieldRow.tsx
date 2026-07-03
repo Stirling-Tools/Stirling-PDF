@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
-import { ToggleSwitch } from "@shared/components/ToggleSwitch";
-import { Select } from "@shared/components/Select";
-import { Input } from "@shared/components/Input";
-import { Chip } from "@shared/components/Chip";
-import { SettingsRow } from "@shared/components/SettingsRow";
+import { ToggleSwitch } from "@app/ui/ToggleSwitch";
+import { Select } from "@app/ui/Select";
+import { Input } from "@app/ui/Input";
+import { Chip } from "@app/ui/Chip";
+import { SettingsRow } from "@app/ui/SettingsRow";
 import type { PolicyField } from "@app/types/policies";
 interface PolicyFieldRowProps {
   field: PolicyField;

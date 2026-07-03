@@ -1,5 +1,5 @@
 import { Badge, Stack, Text } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import GroupAddOutlinedIcon from "@mui/icons-material/GroupAddOutlined";
 import { useGroupSigningEnabled } from "@app/hooks/useGroupSigningEnabled";

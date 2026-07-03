@@ -10,8 +10,8 @@ import {
   Group,
 } from "@mantine/core";
 import LocalIcon from "@app/components/shared/LocalIcon";
-import { Button } from "@shared/components/Button";
-import { ActionIcon } from "@shared/components/ActionIcon";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useFileContext } from "@app/contexts/FileContext";

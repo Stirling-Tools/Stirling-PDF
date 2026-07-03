@@ -1,6 +1,6 @@
 import React from "react";
 import { Menu, Loader, Group, Text, Tooltip } from "@mantine/core";
-import { ActionIcon } from "@shared/components/ActionIcon";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";

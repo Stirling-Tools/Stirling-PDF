@@ -1,4 +1,4 @@
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 interface NavigationLinkProps {
   onClick: () => void;
   text: string;

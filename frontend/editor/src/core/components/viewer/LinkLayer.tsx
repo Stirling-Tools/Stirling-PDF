@@ -17,8 +17,8 @@ import {
   type PdfLinkAnnoObject,
 } from "@embedpdf/models";
 import { Z_INDEX_VIEWER_FLOATING_MENU } from "@app/styles/zIndex";
-import { Button } from "@shared/components/Button";
-import { ActionIcon } from "@shared/components/ActionIcon";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 // ---------------------------------------------------------------------------
 // Inline SVG icons (thin-stroke, modern)
 // ---------------------------------------------------------------------------

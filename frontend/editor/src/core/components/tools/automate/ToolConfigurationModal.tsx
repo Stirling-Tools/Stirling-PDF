@@ -1,7 +1,7 @@
 import { Suspense, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Modal, Title, Group, Stack, Text, Alert, Loader } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import { Z_INDEX_AUTOMATE_MODAL } from "@app/styles/zIndex";
 import SettingsIcon from "@mui/icons-material/Settings";
 import CheckIcon from "@mui/icons-material/Check";

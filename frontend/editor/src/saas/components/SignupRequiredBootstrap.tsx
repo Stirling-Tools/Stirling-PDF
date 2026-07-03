@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { Modal, Stack, Text } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import { useTranslation } from "react-i18next";
 import { withBasePath } from "@app/constants/app";

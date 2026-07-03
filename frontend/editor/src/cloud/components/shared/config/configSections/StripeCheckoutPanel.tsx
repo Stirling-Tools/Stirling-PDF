@@ -64,7 +64,7 @@
  */
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import { useAuth } from "@app/auth/UseSession";
 import {
   createCheckoutSession,

@@ -7,7 +7,7 @@
 
 import React from "react";
 import { Modal, Stack } from "@mantine/core";
-import { ActionIcon } from "@shared/components/ActionIcon";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import DiamondOutlinedIcon from "@mui/icons-material/DiamondOutlined";
 
 import type {

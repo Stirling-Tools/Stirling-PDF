@@ -13,7 +13,7 @@ import {
   FOLDER_ICONS,
   FolderIconOption,
 } from "@app/components/filesPage/folderIcons";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 
 interface FolderAppearancePickerProps {
   folder: FolderRecord;

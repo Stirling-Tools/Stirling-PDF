@@ -12,9 +12,9 @@ import {
   Anchor,
   Badge,
 } from "@mantine/core";
-import { Button } from "@shared/components/Button";
-import { ActionIcon } from "@shared/components/ActionIcon";
-import { SegmentedControl } from "@shared/components/SegmentedControl";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
@@ -112,12 +112,14 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
   // falling back to the backend version
   const currentVersion = appVersion ?? config?.appVersion ?? null;
 
-  // Check for updates on mount
+  // Check for updates on mount — skipped when the update UI is hidden (SaaS
+  // build, managed-disabled desktop) so no external update call ever fires.
   useEffect(() => {
+    if (hideUpdateSection) return;
     if (currentVersion) {
       checkForUpdate();
     }
-  }, [currentVersion, config?.machineType]);
+  }, [currentVersion, config?.machineType, hideUpdateSection]);
 
   const checkForUpdate = async () => {
     if (!currentVersion) return;

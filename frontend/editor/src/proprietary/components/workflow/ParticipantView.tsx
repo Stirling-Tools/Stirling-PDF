@@ -12,7 +12,7 @@ import {
   FileInput,
   Select,
 } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import { useParticipantSession } from "@app/hooks/workflow/useParticipantSession";
 import InfoIcon from "@mui/icons-material/Info";
 import DownloadIcon from "@mui/icons-material/Download";

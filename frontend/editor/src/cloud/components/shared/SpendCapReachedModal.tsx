@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Modal, Stack } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import TrendingUpIcon from "@mui/icons-material/TrendingUpOutlined";
 import AnimatedSlideBackground from "@app/components/onboarding/slides/AnimatedSlideBackground";

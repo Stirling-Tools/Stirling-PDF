@@ -1,5 +1,5 @@
 import React, { useCallback } from "react";
-import { ActionIcon } from "@shared/components/ActionIcon";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useWorkbenchBar } from "@app/contexts/WorkbenchBarContext";
 import { useNavigationState } from "@app/contexts/NavigationContext";
 import { Tooltip } from "@app/components/shared/Tooltip";

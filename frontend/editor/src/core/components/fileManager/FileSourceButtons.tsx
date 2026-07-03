@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Stack, Text, Group } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import HistoryIcon from "@mui/icons-material/History";
 import PhonelinkIcon from "@mui/icons-material/Phonelink";
 import { useTranslation } from "react-i18next";

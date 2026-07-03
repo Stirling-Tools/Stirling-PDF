@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Stack, Box } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { useIndexedDBThumbnail } from "@app/hooks/useIndexedDBThumbnail";
 import { useFileManagerContext } from "@app/contexts/FileManagerContext";

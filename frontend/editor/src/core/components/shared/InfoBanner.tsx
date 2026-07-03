@@ -1,11 +1,7 @@
 import React, { ReactNode } from "react";
 import { Paper, Group, Text, Stack } from "@mantine/core";
-import {
-  Button,
-  type ButtonVariant,
-  type ButtonAccent,
-} from "@shared/components/Button";
-import { ActionIcon } from "@shared/components/ActionIcon";
+import { Button, type ButtonVariant, type ButtonAccent } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 

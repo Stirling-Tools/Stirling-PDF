@@ -1,5 +1,5 @@
 import { Tooltip } from "@mantine/core";
-import { ActionIcon } from "@shared/components/ActionIcon";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";

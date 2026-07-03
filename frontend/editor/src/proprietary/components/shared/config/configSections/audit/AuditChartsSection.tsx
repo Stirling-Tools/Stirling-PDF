@@ -9,7 +9,7 @@ import {
   Box,
   SimpleGrid,
 } from "@mantine/core";
-import { SegmentedControl } from "@shared/components/SegmentedControl";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import {
   AreaChart,
   Area,

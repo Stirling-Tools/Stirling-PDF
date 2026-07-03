@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Badge, TextInput } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { SlideConfig } from "@app/types/types";
 import { createLightSlideBackground } from "@app/components/onboarding/slides/unifiedBackgroundConfig";

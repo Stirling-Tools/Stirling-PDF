@@ -1,6 +1,6 @@
 import React from "react";
 import { Stack, Text, Grid, Paper, Alert, Divider } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { PlanTierGroup } from "@app/services/licenseService";
 import { SavingsCalculation } from "@app/components/shared/stripeCheckout/types/checkout";

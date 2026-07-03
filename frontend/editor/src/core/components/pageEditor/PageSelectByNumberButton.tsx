@@ -1,5 +1,5 @@
 import { Popover } from "@mantine/core";
-import { ActionIcon } from "@shared/components/ActionIcon";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import BulkSelectionPanel from "@app/components/pageEditor/BulkSelectionPanel";

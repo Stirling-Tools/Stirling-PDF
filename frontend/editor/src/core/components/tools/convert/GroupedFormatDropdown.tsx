@@ -7,7 +7,7 @@ import {
   Popover,
   useMantineTheme,
 } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import CloudOutlinedIcon from "@mui/icons-material/CloudOutlined";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";

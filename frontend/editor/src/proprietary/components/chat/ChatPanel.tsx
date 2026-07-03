@@ -19,8 +19,8 @@ import {
   Text,
   Textarea,
 } from "@mantine/core";
-import { Button } from "@shared/components/Button";
-import { ActionIcon } from "@shared/components/ActionIcon";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
 import BuildOutlinedIcon from "@mui/icons-material/BuildOutlined";
@@ -42,7 +42,7 @@ import { formatRelativeTime } from "@app/utils/timeUtils";
 import { useTranslatedToolCatalog } from "@app/data/useTranslatedToolRegistry";
 import { StirlingLogoAnimated } from "@app/components/agents/StirlingLogoAnimated";
 import { StirlingLogoOutline } from "@app/components/agents/StirlingLogoOutline";
-import { PanelHeader } from "@shared/components/PanelHeader";
+import { PanelHeader } from "@app/ui/PanelHeader";
 import { ChatQuickActions } from "@app/components/chat/ChatQuickActions";
 import "@app/components/chat/ChatPanel.css";
 type TranslateFn = TFunction;

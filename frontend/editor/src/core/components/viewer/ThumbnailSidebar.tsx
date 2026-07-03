@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Box, ScrollArea, Text } from "@mantine/core";
-import { ActionIcon } from "@shared/components/ActionIcon";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import LocalIcon from "@app/components/shared/LocalIcon";

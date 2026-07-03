@@ -1,6 +1,6 @@
 import React, { memo } from "react";
 import { Badge } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { ToolIcon } from "@app/components/shared/ToolIcon";

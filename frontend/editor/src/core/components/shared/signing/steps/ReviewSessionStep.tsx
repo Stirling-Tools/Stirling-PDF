@@ -1,5 +1,5 @@
 import { Stack, Text, Group, Divider, TextInput } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import PeopleIcon from "@mui/icons-material/People";

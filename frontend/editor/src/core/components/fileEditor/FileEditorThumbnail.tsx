@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useMemo } from "react";
 import { Text, Modal, Group, Stack, Tooltip } from "@mantine/core";
-import { ActionIcon } from "@shared/components/ActionIcon";
-import { Button } from "@shared/components/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { Button } from "@app/ui/Button";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { alert } from "@app/components/toast";
 import { useTranslation } from "react-i18next";

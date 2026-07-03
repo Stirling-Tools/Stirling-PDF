@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useEffect, useRef, useCallback } from "react";
 import { Stack, Text, Divider, ColorInput } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import { useRedaction, useRedactionMode } from "@app/contexts/RedactionContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useSignature } from "@app/contexts/SignatureContext";

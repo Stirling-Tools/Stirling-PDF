@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, type ButtonProps } from "@shared/components/Button";
+import { Button, type ButtonProps } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { useUpdateSeats } from "@app/contexts/UpdateSeatsContext";
 

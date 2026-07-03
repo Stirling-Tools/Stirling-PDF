@@ -8,7 +8,7 @@ import TourOverviewSlide from "@app/components/onboarding/slides/TourOverviewSli
 import AnalyticsChoiceSlide from "@app/components/onboarding/slides/AnalyticsChoiceSlide";
 import MFASetupSlide from "@app/components/onboarding/slides/MFASetupSlide";
 import { SlideConfig, LicenseNotice } from "@app/types/types";
-import type { ButtonAccent } from "@shared/components/Button";
+import type { ButtonAccent } from "@app/ui/Button";
 
 export type SlideId =
   | "first-login"

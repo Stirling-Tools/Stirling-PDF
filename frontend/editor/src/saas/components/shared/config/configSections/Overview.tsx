@@ -11,8 +11,8 @@ import {
   TextInput,
   Modal,
 } from "@mantine/core";
-import { Button as DSButton } from "@shared/components/Button";
-import { FilePicker } from "@shared/components/FilePicker";
+import { Button as DSButton } from "@app/ui/Button";
+import { FilePicker } from "@app/ui/FilePicker";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@app/auth/UseSession";
 import {
@@ -21,7 +21,7 @@ import {
   linkOAuthIdentity,
   supabase,
 } from "@app/auth/supabase";
-import { oauthIconUrl } from "@shared/auth/ui/oauthIcons";
+import { oauthIconUrl } from "@app/auth/ui/oauthIcons";
 import { oauthProviders } from "@app/constants/authProviders";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { absoluteWithBasePath } from "@app/constants/app";

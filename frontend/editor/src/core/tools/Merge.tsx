@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Stack, Text } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 import MergeSettings from "@app/components/tools/merge/MergeSettings";
 import MergeFileSorter from "@app/components/tools/merge/MergeFileSorter";

@@ -1,5 +1,5 @@
 import { Stack } from "@mantine/core";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import { CertSignParameters } from "@app/hooks/tools/certSign/useCertSignParameters";
 
 interface CertificateFormatSettingsProps {

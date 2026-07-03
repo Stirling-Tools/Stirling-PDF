@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { FilePicker } from "@shared/components/FilePicker";
-import type { ButtonVariant } from "@shared/components/Button";
+import { FilePicker } from "@app/ui/FilePicker";
+import type { ButtonVariant } from "@app/ui/Button";
 
 // Accept both shared DS variants and the legacy Mantine variant names that
 // existing callers still pass, mapping the latter onto the DS equivalents.

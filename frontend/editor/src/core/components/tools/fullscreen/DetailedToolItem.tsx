@@ -14,7 +14,7 @@ import {
   useToolMeta,
   getDisabledLabel,
 } from "@app/components/tools/fullscreen/shared";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 
 interface DetailedToolItemProps {
   id: string;

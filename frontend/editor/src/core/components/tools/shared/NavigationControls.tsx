@@ -1,7 +1,7 @@
 import { Stack, Group, Text } from "@mantine/core";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import { ActionIcon } from "@shared/components/ActionIcon";
+import { ActionIcon } from "@app/ui/ActionIcon";
 
 export interface NavigationControlsProps {
   currentIndex: number;

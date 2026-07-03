@@ -1,4 +1,4 @@
-import { SegmentedControl } from "@shared/components/SegmentedControl";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 
 export interface ButtonToggleOption {
   value: string;
