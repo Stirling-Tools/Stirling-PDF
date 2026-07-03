@@ -1,10 +1,12 @@
-name: Frontend API Types CI
+name: Check generated models
 
-# Verifies the committed frontend tool API types
-# (frontend/editor/src/core/generated/toolApiTypes.ts) are still in sync with
-# the Java OpenAPI spec, mirroring the engine's tool_models check. Called from
-# build.yml when the backend Java or the frontend changes; also runs on push to
-# main as a post-merge safety net.
+# Verifies the committed generated API models are still in sync with the Java
+# OpenAPI spec: the frontend tool API types
+# (frontend/editor/src/core/generated/toolApiTypes.ts) and the engine tool
+# models (engine/src/stirling/models/tool_models.py). Regenerates both with the
+# single top-level `task generate:models` and fails if either committed file is
+# out of date. Called from build.yml when the backend Java, frontend, or engine
+# changes; also runs on push to main as a post-merge safety net.
 on:
   workflow_call:
   push:
@@ -14,7 +16,7 @@ permissions:
   contents: read
 
 jobs:
-  api-types:
+  generated-models:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -29,6 +31,11 @@ jobs:
 
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+        with:
+          enable-cache: true
 
       - name: Set up JDK 25
         uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
@@ -51,29 +58,35 @@ jobs:
       - name: Install Task
         uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
 
-      # Rebuilds the OpenAPI spec from the current Java and regenerates the tool
-      # API types in --check mode, failing if the committed file is out of date.
-      - name: Verify frontend API types are up to date
-        id: api-types-check
-        continue-on-error: true
-        run: task frontend:api-types:check
+      # Rebuilds the OpenAPI spec from the current Java and regenerates both the
+      # frontend types and the engine tool models from it.
+      - name: Regenerate generated models
+        run: task generate:models
 
-      - name: Comment on API types check failure
+      - name: Verify generated models are up to date
+        id: models-check
+        continue-on-error: true
+        run: |
+          git diff --exit-code \
+            frontend/editor/src/core/generated/toolApiTypes.ts \
+            engine/src/stirling/models/tool_models.py
+
+      - name: Comment on generated models check failure
         # Only post a comment on PRs. github-script's PR helpers need an
         # issue/PR number, which doesn't exist on merge_group runs.
-        if: steps.api-types-check.outcome == 'failure' && github.event_name == 'pull_request'
+        if: steps.models-check.outcome == 'failure' && github.event_name == 'pull_request'
         continue-on-error: true
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
-            const marker = '<!-- api-types-check -->';
+            const marker = '<!-- generated-models-check -->';
             const body = [
               marker,
-              '### Frontend API Types Check Failed',
+              '### Generated Models Check Failed',
               '',
-              'The generated `frontend/editor/src/core/generated/toolApiTypes.ts` is out of date with the Java OpenAPI spec and will need to be regenerated before it can be merged in.',
+              'The generated `frontend/editor/src/core/generated/toolApiTypes.ts` and/or `engine/src/stirling/models/tool_models.py` are out of date with the Java OpenAPI spec and will need to be regenerated before they can be merged in.',
               '',
-              'Run `task frontend:api-types` to regenerate, then commit the updated file.',
+              'Run `task generate:models` to regenerate both, then commit the updated files.',
             ].join('\n');
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
@@ -97,29 +110,29 @@ jobs:
               });
             }
 
-      - name: Fail if API types check failed
-        if: steps.api-types-check.outcome == 'failure'
+      - name: Fail if generated models check failed
+        if: steps.models-check.outcome == 'failure'
         run: |
           echo "============================================"
-          echo "  Frontend API Types Check Failed"
+          echo "  Generated Models Check Failed"
           echo "============================================"
           echo ""
-          echo "The generated frontend/editor/src/core/generated/toolApiTypes.ts"
-          echo "is out of date with the Java OpenAPI spec and will"
-          echo "need to be regenerated before it can be merged in."
+          echo "The generated frontend API types and/or engine tool"
+          echo "models are out of date with the Java OpenAPI spec and"
+          echo "will need to be regenerated before they can be merged in."
           echo ""
-          echo "Run 'task frontend:api-types' to regenerate, then"
-          echo "commit the updated file."
+          echo "Run 'task generate:models' to regenerate both, then"
+          echo "commit the updated files."
           echo "============================================"
           exit 1
 
-      - name: Remove API types check comment on success
-        if: steps.api-types-check.outcome == 'success' && github.event_name == 'pull_request'
+      - name: Remove generated models check comment on success
+        if: steps.models-check.outcome == 'success' && github.event_name == 'pull_request'
         continue-on-error: true
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
-            const marker = '<!-- api-types-check -->';
+            const marker = '<!-- generated-models-check -->';
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,

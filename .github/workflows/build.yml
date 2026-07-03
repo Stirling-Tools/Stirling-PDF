@@ -171,15 +171,16 @@ jobs:
     uses: ./.github/workflows/ai-engine.yml
     secrets: inherit
 
-  # The generated frontend tool API types depend on the Java OpenAPI spec, so
-  # they can go stale from either a backend (openapi) or frontend change.
-  frontend-api-types:
-    if: needs.files-changed.outputs.openapi == 'true' || needs.files-changed.outputs.frontend == 'true'
+  # The generated frontend types and engine tool models are both derived from
+  # the Java OpenAPI spec, so they can go stale from a backend (openapi),
+  # frontend, or engine change. One job checks both.
+  generated-models:
+    if: needs.files-changed.outputs.openapi == 'true' || needs.files-changed.outputs.frontend == 'true' || needs.files-changed.outputs.engine == 'true'
     needs: [files-changed]
     permissions:
       contents: read
       pull-requests: write
-    uses: ./.github/workflows/frontend-api-types.yml
+    uses: ./.github/workflows/check-generated-models.yml
     secrets: inherit
 
   pre-commit:
@@ -236,7 +237,7 @@ jobs:
       - test-build-docker-images
       - tauri-build
       - ai-engine
-      - frontend-api-types
+      - generated-models
       - pre-commit
       - dependency-review
     runs-on: ubuntu-latest
@@ -262,7 +263,7 @@ jobs:
             test-build-docker-images=${{ needs.test-build-docker-images.result }}
             tauri-build=${{ needs.tauri-build.result }}
             ai-engine=${{ needs.ai-engine.result }}
-            frontend-api-types=${{ needs.frontend-api-types.result }}
+            generated-models=${{ needs.generated-models.result }}
             pre-commit=${{ needs.pre-commit.result }}
             dependency-review=${{ needs.dependency-review.result }}
         run: |
