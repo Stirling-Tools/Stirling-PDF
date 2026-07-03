@@ -2,6 +2,7 @@ package stirling.software.proprietary.policy.engine;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -147,6 +148,40 @@ class PolicyExecutorTest {
 
         assertEquals(2, result.files().size());
         verify(internalApiClient, times(2)).post(eq(ROTATE), any());
+    }
+
+    @Test
+    void noInputGeneratorEndpointIsCalledOnceWithNoFile() throws IOException {
+        // A "create" workflow has no source documents: a generator tool (e.g.
+        // create-pdf-from-html-agent) produces its output purely from parameters. Per-file
+        // dispatch would skip it entirely (zero files = zero calls), so it must still run once.
+        String createPdf = "/api/v1/ai/tools/create-pdf-from-html-agent";
+        when(toolMetadataService.isMultiInput(createPdf)).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(createPdf)).thenReturn(false);
+        stubEndpoint(createPdf, pdf("generated", "purchase-order.pdf"));
+
+        PolicyExecutionResult result =
+                executor.execute(
+                        definition(
+                                new PipelineStep(
+                                        createPdf,
+                                        Map.of(
+                                                "htmlContent",
+                                                "<p>hi</p>",
+                                                "filename",
+                                                "purchase-order.pdf"))),
+                        PolicyInputs.of(List.of()),
+                        PolicyProgressListener.NOOP);
+
+        assertEquals(1, result.files().size());
+        assertEquals("purchase-order.pdf", result.files().get(0).getFilename());
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<MultiValueMap<String, Object>> bodyCaptor =
+                ArgumentCaptor.forClass(MultiValueMap.class);
+        verify(internalApiClient, times(1)).post(eq(createPdf), bodyCaptor.capture());
+        // No document stream: the body carries only the generator's parameters, no fileInput.
+        assertNull(bodyCaptor.getValue().get("fileInput"));
     }
 
     @Test

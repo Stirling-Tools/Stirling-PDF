@@ -1,9 +1,11 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Button,
   Card,
   EmptyState,
   MetricCard,
+  MetricStrip,
   Skeleton,
   StatusBadge,
 } from "@shared/components";
@@ -25,6 +27,9 @@ import { PopularUseCases } from "@portal/components/PopularUseCases";
 import { UsageAreaChart } from "@portal/components/UsageAreaChart";
 import { RecentActivity } from "@portal/components/RecentActivity";
 import { SingleOpRunner } from "@portal/components/SingleOpRunner";
+import { ProcessingStatusStrip } from "@portal/components/ProcessingStatusStrip";
+import { PolicySummary } from "@portal/components/PolicySummary";
+import { PipelineForkWizard } from "@portal/components/PipelineForkWizard";
 import "@portal/views/Home.css";
 
 /* ──────────────────────────────────────────────────────────────────────── */
@@ -74,31 +79,32 @@ function ProductCard({
 }
 
 function ProductGrid() {
+  const { t } = useTranslation();
   return (
     <section
       className="portal-home__product-grid"
-      aria-label="Process PDFs at scale"
+      aria-label={t("home.productGrid.ariaLabel")}
     >
       <ProductCard
         accent="purple"
-        title="Sources"
-        blurb="Attach pipelines where PDFs already live — S3, agents, SharePoint, webhooks, batch, email."
-        cta="Connect a source"
+        title={t("home.productGrid.sources.title")}
+        blurb={t("home.productGrid.sources.blurb")}
+        cta={t("home.productGrid.sources.cta")}
         target="sources"
       />
       <ProductCard
         accent="blue"
-        badge="Hero"
-        title="Pipelines"
-        blurb="Compose document workflows from typed operations. Upload a sample to get suggestions or start blank."
-        cta="Build a pipeline"
+        badge={t("home.productGrid.pipelines.badge")}
+        title={t("home.productGrid.pipelines.title")}
+        blurb={t("home.productGrid.pipelines.blurb")}
+        cta={t("home.productGrid.pipelines.cta")}
         target="pipelines"
       />
       <ProductCard
         accent="purple"
-        title="Agents"
-        blurb="Wire your agent via MCP, REST, or tool definitions. Deterministic operations, scenarios, evals."
-        cta="Connect an agent"
+        title={t("home.productGrid.agents.title")}
+        blurb={t("home.productGrid.agents.blurb")}
+        cta={t("home.productGrid.agents.cta")}
         target="sources"
       />
     </section>
@@ -110,12 +116,17 @@ function ProductGrid() {
 /* ──────────────────────────────────────────────────────────────────────── */
 
 function QuickActions({ onTryOp }: { onTryOp: () => void }) {
+  const { t } = useTranslation();
   const { setActiveView } = useView();
   return (
     <Card padding="loose" className="portal-home__quick">
       <div className="portal-home__quick-head">
-        <h2 className="portal-home__quick-title">Quick actions</h2>
-        <span className="portal-home__quick-sub">Top tasks for today</span>
+        <h2 className="portal-home__quick-title">
+          {t("home.quickActions.title")}
+        </h2>
+        <span className="portal-home__quick-sub">
+          {t("home.quickActions.subtitle")}
+        </span>
       </div>
       <div className="portal-home__quick-list">
         <button
@@ -134,8 +145,8 @@ function QuickActions({ onTryOp }: { onTryOp: () => void }) {
             ▶
           </span>
           <span className="portal-home__quick-text">
-            <strong>Try a PDF operation</strong>
-            <span>Drop a sample, pick an op, see the JSON</span>
+            <strong>{t("home.quickActions.tryOp.title")}</strong>
+            <span>{t("home.quickActions.tryOp.blurb")}</span>
           </span>
           <span className="portal-home__quick-arrow" aria-hidden>
             →
@@ -157,8 +168,8 @@ function QuickActions({ onTryOp }: { onTryOp: () => void }) {
             ⌃
           </span>
           <span className="portal-home__quick-text">
-            <strong>Build a pipeline</strong>
-            <span>3-step composer over the typed op library</span>
+            <strong>{t("home.quickActions.buildPipeline.title")}</strong>
+            <span>{t("home.quickActions.buildPipeline.blurb")}</span>
           </span>
           <span className="portal-home__quick-arrow" aria-hidden>
             →
@@ -180,8 +191,8 @@ function QuickActions({ onTryOp }: { onTryOp: () => void }) {
             ⇢
           </span>
           <span className="portal-home__quick-text">
-            <strong>Connect a source</strong>
-            <span>S3, agents, webhooks, watched folders</span>
+            <strong>{t("home.quickActions.connectSource.title")}</strong>
+            <span>{t("home.quickActions.connectSource.blurb")}</span>
           </span>
           <span className="portal-home__quick-arrow" aria-hidden>
             →
@@ -203,8 +214,8 @@ function QuickActions({ onTryOp }: { onTryOp: () => void }) {
             ⚙
           </span>
           <span className="portal-home__quick-text">
-            <strong>Issue an API key</strong>
-            <span>Scoped key with rate limits and IP allowlist</span>
+            <strong>{t("home.quickActions.issueApiKey.title")}</strong>
+            <span>{t("home.quickActions.issueApiKey.blurb")}</span>
           </span>
           <span className="portal-home__quick-arrow" aria-hidden>
             →
@@ -220,6 +231,7 @@ function QuickActions({ onTryOp }: { onTryOp: () => void }) {
 /* ──────────────────────────────────────────────────────────────────────── */
 
 function FreeOnboarding({ onTryOp }: { onTryOp: () => void }) {
+  const { t } = useTranslation();
   const { setActiveView } = useView();
   const state = useAsync<OnboardingStep[]>(() => fetchOnboarding(), []);
   const { data: steps } = state;
@@ -231,7 +243,7 @@ function FreeOnboarding({ onTryOp }: { onTryOp: () => void }) {
     if (step.done) {
       return (
         <Button size="sm" variant="ghost" onClick={onTryOp}>
-          Run again
+          {t("home.onboarding.runAgain")}
         </Button>
       );
     }
@@ -239,7 +251,7 @@ function FreeOnboarding({ onTryOp }: { onTryOp: () => void }) {
     if (step.cta.kind === "try-op") {
       return (
         <Button size="sm" variant="outline" onClick={onTryOp}>
-          Start
+          {t("home.onboarding.start")}
         </Button>
       );
     }
@@ -250,7 +262,7 @@ function FreeOnboarding({ onTryOp }: { onTryOp: () => void }) {
         variant="outline"
         onClick={() => setActiveView(target as ViewId)}
       >
-        Start
+        {t("home.onboarding.start")}
       </Button>
     );
   }
@@ -259,14 +271,19 @@ function FreeOnboarding({ onTryOp }: { onTryOp: () => void }) {
     <Card padding="loose" className="portal-home__onboard">
       <div className="portal-home__onboard-head">
         <div>
-          <h2 className="portal-home__onboard-title">Get to value</h2>
+          <h2 className="portal-home__onboard-title">
+            {t("home.onboarding.title")}
+          </h2>
           <p className="portal-home__onboard-sub">
-            Four steps to a production-shaped Stirling project.
+            {t("home.onboarding.subtitle")}
           </p>
         </div>
         {steps && steps.length > 0 && (
           <StatusBadge tone="info" size="sm">
-            {doneCount} / {steps.length} done
+            {t("home.onboarding.progress", {
+              done: doneCount,
+              total: steps.length,
+            })}
           </StatusBadge>
         )}
       </div>
@@ -290,8 +307,8 @@ function FreeOnboarding({ onTryOp }: { onTryOp: () => void }) {
       {isEmpty && (
         <EmptyState
           size="compact"
-          title="No onboarding steps yet"
-          description="Onboarding tasks will appear here once your workspace is set up."
+          title={t("home.onboarding.empty.title")}
+          description={t("home.onboarding.empty.description")}
         />
       )}
 
@@ -325,38 +342,42 @@ function FreeOnboarding({ onTryOp }: { onTryOp: () => void }) {
 /* ──────────────────────────────────────────────────────────────────────── */
 
 interface KpiLabelSpec {
-  label: string;
-  description?: string;
+  labelKey: string;
+  descriptionKey?: string;
 }
 
 /**
  * KPI labels are product copy — they describe what each metric IS, not what
  * its current value is. Labels stay client-side so the strip's structure is
  * stable across loading / error / ready states. Only the values + deltas
- * flow through the API.
+ * flow through the API. Stored as i18n keys, resolved at render time.
  */
 const KPI_LABELS_BY_TIER: Record<Tier, KpiLabelSpec[]> = {
   free: [
-    { label: "Docs processed", description: "Free plan cap" },
-    { label: "Operations" },
-    { label: "Pipelines" },
-    { label: "Agents" },
+    {
+      labelKey: "home.kpis.free.docsProcessed",
+      descriptionKey: "home.kpis.free.docsProcessedDescription",
+    },
+    { labelKey: "home.kpis.free.operations" },
+    { labelKey: "home.kpis.free.pipelines" },
+    { labelKey: "home.kpis.free.agents" },
   ],
   pro: [
-    { label: "Docs / 30d" },
-    { label: "Pipelines" },
-    { label: "Agents active" },
-    { label: "Eval pass rate" },
+    { labelKey: "home.kpis.pro.docs30d" },
+    { labelKey: "home.kpis.pro.pipelines" },
+    { labelKey: "home.kpis.pro.agentsActive" },
+    { labelKey: "home.kpis.pro.evalPassRate" },
   ],
   enterprise: [
-    { label: "Docs / 30d" },
-    { label: "P95 latency" },
-    { label: "Eval pass rate" },
-    { label: "SLA uptime (30d)" },
+    { labelKey: "home.kpis.enterprise.docs30d" },
+    { labelKey: "home.kpis.enterprise.p95Latency" },
+    { labelKey: "home.kpis.enterprise.evalPassRate" },
+    { labelKey: "home.kpis.enterprise.slaUptime" },
   ],
 };
 
 function TierKpiStrip() {
+  const { t } = useTranslation();
   const { tier } = useTier();
   const labels = KPI_LABELS_BY_TIER[tier];
   const { data: kpis, loading } = useAsync<KpiEntry[]>(
@@ -365,7 +386,7 @@ function TierKpiStrip() {
   );
 
   return (
-    <section className="portal-home__metrics">
+    <MetricStrip>
       {labels.map((spec, i) => {
         // useAsync keeps the previous tier's data during a refetch; ignore it
         // while loading so the new labels never pair with stale values.
@@ -373,15 +394,19 @@ function TierKpiStrip() {
         return (
           <MetricCard
             key={`${tier}-${i}`}
-            label={spec.label}
+            label={t(spec.labelKey)}
             value={fetched?.value ?? "—"}
             delta={fetched?.delta}
             deltaDirection={fetched?.deltaDirection}
-            description={spec.description ?? fetched?.description}
+            description={
+              spec.descriptionKey
+                ? t(spec.descriptionKey)
+                : fetched?.description
+            }
           />
         );
       })}
-    </section>
+    </MetricStrip>
   );
 }
 
@@ -396,6 +421,7 @@ const REGION_DOT: Record<RegionHealth["status"], string> = {
 };
 
 function EnterpriseRegions() {
+  const { t } = useTranslation();
   const state = useAsync<RegionHealth[]>(() => fetchRegionHealth(), []);
   const { data: regions } = state;
   const { isLoading, isEmpty } = useSectionFlags(state);
@@ -403,10 +429,8 @@ function EnterpriseRegions() {
   return (
     <section className="portal-home__region-block">
       <header className="portal-home__region-header">
-        <h2 className="portal-home__region-title">Region health</h2>
-        <p className="portal-home__region-sub">
-          Real-time status for every deployed Stirling region.
-        </p>
+        <h2 className="portal-home__region-title">{t("home.regions.title")}</h2>
+        <p className="portal-home__region-sub">{t("home.regions.subtitle")}</p>
       </header>
 
       {isLoading && (
@@ -423,8 +447,8 @@ function EnterpriseRegions() {
       {isEmpty && (
         <EmptyState
           size="compact"
-          title="No regions yet"
-          description="Once a region is deployed, its health appears here."
+          title={t("home.regions.empty.title")}
+          description={t("home.regions.empty.description")}
         />
       )}
 
@@ -455,6 +479,7 @@ function EnterpriseRegions() {
 /* ──────────────────────────────────────────────────────────────────────── */
 
 function ChartSection() {
+  const { t } = useTranslation();
   const state = useAsync<UsageSeriesResponse>(() => fetchUsageSeries(), []);
   const { data: usage } = state;
   const { isLoading } = useSectionFlags(state);
@@ -481,8 +506,8 @@ function ChartSection() {
   if (!usage || usage.points.length === 0) {
     return (
       <EmptyState
-        title="No usage yet"
-        description="Once documents are processed, your 30-day usage appears here."
+        title={t("home.chart.empty.title")}
+        description={t("home.chart.empty.description")}
       />
     );
   }
@@ -507,6 +532,7 @@ export function Home() {
   return (
     <div className="portal-home">
       <WelcomeCarousel onTryOp={() => setRunnerOpen(true)} />
+      <ProcessingStatusStrip />
 
       {tier === "free" && (
         <>
@@ -515,6 +541,8 @@ export function Home() {
             <FreeOnboarding onTryOp={() => setRunnerOpen(true)} />
             <QuickActions onTryOp={() => setRunnerOpen(true)} />
           </div>
+          <PolicySummary />
+          <PipelineForkWizard />
           <ProductGrid />
           <PopularUseCases />
         </>
@@ -528,6 +556,8 @@ export function Home() {
             <RecentActivity />
             <QuickActions onTryOp={() => setRunnerOpen(true)} />
           </div>
+          <PolicySummary />
+          <PipelineForkWizard />
           <ProductGrid />
           <PopularUseCases />
         </>
@@ -542,6 +572,8 @@ export function Home() {
             <RecentActivity />
             <QuickActions onTryOp={() => setRunnerOpen(true)} />
           </div>
+          <PolicySummary />
+          <PipelineForkWizard />
           <ProductGrid />
           <PopularUseCases />
         </>

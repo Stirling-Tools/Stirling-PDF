@@ -55,6 +55,9 @@ export default function TeamDetailsSection({
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [selectedTeamId, setSelectedTeamId] = useState<string>("");
   const [processing, setProcessing] = useState(false);
+  const availableUsersForTeam = team
+    ? availableUsers.filter((user) => user.team?.id !== team.id)
+    : [];
 
   // License information
   const [licenseInfo, setLicenseInfo] = useState<{
@@ -370,8 +373,7 @@ export default function TeamDetailsSection({
             {team.name}
           </Text>
           <Text size="sm" c="dimmed">
-            {t("workspace.teams.memberCount", { count: teamUsers.length })}{" "}
-            {teamUsers.length === 1 ? "member" : "members"}
+            {t("workspace.teams.memberCount", { count: teamUsers.length })}
           </Text>
         </div>
       </Group>
@@ -379,10 +381,9 @@ export default function TeamDetailsSection({
       {/* Add Member Button */}
       <Group justify="flex-end">
         <Tooltip
-          label={t(
-            "workspace.people.license.noSlotsAvailable",
-            "No user slots available",
-          )}
+          label={t("workspace.people.license.slotsAvailable", {
+            count: licenseInfo ? licenseInfo.availableSlots : 0,
+          })}
           disabled={!licenseInfo || licenseInfo.availableSlots > 0}
           position="bottom"
           withArrow
@@ -532,7 +533,7 @@ export default function TeamDetailsSection({
                     >
                       {(user.rolesAsString || "").includes("ROLE_ADMIN")
                         ? t("workspace.people.admin")
-                        : t("workspace.people.member")}
+                        : t("workspace.people.user")}
                     </Badge>
                   </Table.Td>
                   <Table.Td>
@@ -727,7 +728,7 @@ export default function TeamDetailsSection({
               placeholder={t(
                 "workspace.teams.addMemberToTeam.selectUserPlaceholder",
               )}
-              data={availableUsers.map((user) => ({
+              data={availableUsersForTeam.map((user) => ({
                 value: user.id.toString(),
                 label: `${user.username}${user.team ? ` (${t("workspace.teams.addMemberToTeam.currentlyIn")} ${user.team.name})` : ""}`,
               }))}
@@ -741,8 +742,9 @@ export default function TeamDetailsSection({
             />
 
             {selectedUserId &&
-              availableUsers.find((u) => u.id.toString() === selectedUserId)
-                ?.team && (
+              availableUsersForTeam.find(
+                (u) => u.id.toString() === selectedUserId,
+              )?.team && (
                 <Text size="xs" c="orange">
                   {t("workspace.teams.addMemberToTeam.willBeMoved")}
                 </Text>

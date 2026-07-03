@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase, signInAnonymously } from "@app/auth/supabase";
 import { useAuth } from "@app/auth/UseSession";
 import { useTranslation } from "@app/hooks/useTranslation";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
 import AuthLayout from "@app/routes/authShared/AuthLayout";
-import "@app/routes/authShared/auth.css";
+import "@shared/auth/ui/auth.css";
 import "@app/routes/authShared/saas-auth.css";
 import {
   absoluteWithBasePath,
@@ -15,10 +15,11 @@ import {
 import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
 
 // Import login components
-import ErrorMessage from "@app/routes/login/ErrorMessage";
+import ErrorMessage from "@shared/auth/ui/ErrorMessage";
 import EmailPasswordForm from "@app/routes/login/EmailPasswordForm";
 import OAuthButtons from "@app/routes/login/OAuthButtons";
 import LoggedInState from "@app/routes/login/LoggedInState";
+import loginHeader from "@shared/assets/brand/modern-logo/LoginLightModeHeader.svg";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -47,6 +48,25 @@ export default function Login() {
     }
   }, []);
 
+  // Same-origin relative path to return to after login (e.g. the OAuth
+  // consent page). Same sanitization rules as AuthCallback's `next`.
+  const nextPath = useMemo(() => {
+    try {
+      const next = new URL(window.location.href).searchParams.get("next");
+      return next && next.startsWith("/") && !next.startsWith("//")
+        ? next
+        : null;
+    } catch (_) {
+      return null;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (session && !loading && nextPath) {
+      navigate(nextPath, { replace: true });
+    }
+  }, [session, loading, nextPath, navigate]);
+
   const baseUrl = getBaseUrl();
 
   // Set document meta
@@ -65,8 +85,11 @@ export default function Login() {
     ogUrl: `${window.location.origin}${window.location.pathname}`,
   });
 
-  // Show logged in state if authenticated
+  // Show logged in state if authenticated (unless bouncing back to `next`)
   if (session && !loading) {
+    if (nextPath) {
+      return null;
+    }
     return <LoggedInState />;
   }
 
@@ -77,7 +100,9 @@ export default function Login() {
       setIsSigningIn(true);
       setError(null);
 
-      const redirectTo = absoluteWithBasePath("/auth/callback");
+      const redirectTo =
+        absoluteWithBasePath("/auth/callback") +
+        (nextPath ? `?next=${encodeURIComponent(nextPath)}` : "");
       console.log(`[Login] Signing in with ${provider}`);
 
       const oauthOptions: {
@@ -169,7 +194,9 @@ export default function Login() {
       const { error } = await supabase.auth.signInWithOtp({
         email: magicLinkEmail.trim(),
         options: {
-          emailRedirectTo: absoluteWithBasePath("/auth/callback"),
+          emailRedirectTo:
+            absoluteWithBasePath("/auth/callback") +
+            (nextPath ? `?next=${encodeURIComponent(nextPath)}` : ""),
         },
       });
 
@@ -241,7 +268,7 @@ export default function Login() {
       {/* Centered logo */}
       <div className="auth-logo-block">
         <img
-          src={withBasePath("/modern-logo/LoginLightModeHeader.svg")}
+          src={loginHeader}
           alt="Stirling PDF"
           className="auth-logo-header auth-logo-header--light"
         />

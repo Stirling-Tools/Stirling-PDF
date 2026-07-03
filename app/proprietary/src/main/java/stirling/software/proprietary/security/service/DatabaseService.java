@@ -90,6 +90,20 @@ public class DatabaseService implements DatabaseServiceInterface {
                     Pattern.compile("(?i)\\bFALSE\\b"),
                     Pattern.compile("(?i)\\bNULL\\b"));
 
+    private static final java.util.List<Pattern> DENIED_PATTERNS =
+            java.util.List.of(
+                    Pattern.compile("(?i)\\bCREATE\\s+(FORCE\\s+)?ALIAS\\b"),
+                    Pattern.compile("(?i)\\bCREATE\\s+(FORCE\\s+)?TRIGGER\\b"),
+                    Pattern.compile("(?i)\\bCREATE\\s+(FORCE\\s+)?AGGREGATE\\b"),
+                    Pattern.compile("(?i)\\bCREATE\\s+LINKED\\s+TABLE\\b"),
+                    Pattern.compile("(?i)\\bFILE_WRITE\\s*\\("),
+                    Pattern.compile("(?i)\\bFILE_READ\\s*\\("),
+                    Pattern.compile("(?i)\\bCSVWRITE\\s*\\("),
+                    Pattern.compile("(?i)\\bCSVREAD\\s*\\("),
+                    Pattern.compile("(?i)\\bLINK_SCHEMA\\s*\\("),
+                    Pattern.compile("(?i)\\bRUNSCRIPT\\b"),
+                    Pattern.compile("(?i)\\bSCRIPT\\s+TO\\b"));
+
     private final ApplicationProperties.Datasource datasourceProps;
     private final DataSource dataSource;
     private final DatabaseNotificationServiceInterface backupNotificationService;
@@ -508,6 +522,17 @@ public class DatabaseService implements DatabaseServiceInterface {
             String content = Files.readString(scriptPath);
             String normalizedContent = normalizeSqlContent(content);
 
+            String codeOnly = stripStringLiterals(normalizedContent);
+            for (Pattern deniedPattern : DENIED_PATTERNS) {
+                if (deniedPattern.matcher(codeOnly).find()) {
+                    log.error(
+                            "Blocked disallowed SQL in backup file matching: {}",
+                            deniedPattern.pattern());
+                    throw new IllegalArgumentException(
+                            "SQL script contains disallowed operations and was rejected.");
+                }
+            }
+
             // Validate that content only contains allowed operations (whitelist approach)
             // Split by semicolons to check individual statements
             String[] statements = normalizedContent.split(";");
@@ -556,6 +581,10 @@ public class DatabaseService implements DatabaseServiceInterface {
         // Collapse multiple whitespaces
         sql = sql.replaceAll("\\s+", " ");
         return sql.trim();
+    }
+
+    private String stripStringLiterals(String sql) {
+        return sql.replaceAll("'(?:[^']|'')*'", "''");
     }
 
     /**

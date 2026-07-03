@@ -14,6 +14,7 @@ const srcGlobs = [
 const nodeGlobs = [
   "scripts/**/*.{js,ts,mjs,mts}",
   "editor/scripts/**/*.{js,ts,mjs,mts}",
+  "portal/scripts/**/*.{js,ts,mjs,mts}",
   "editor/*.config.{js,ts,mjs}",
   "portal/*.config.{js,ts,mjs}",
   "*.config.{js,ts,mjs}",
@@ -104,6 +105,68 @@ export default defineConfig(
       ],
     },
   },
+  // The cloud/ layer is the SHARED hosted/SaaS experience consumed by BOTH the
+  // saas and desktop leaves, so it must stay platform-portable. It must not
+  // reach platform-specific things directly (Supabase, Tauri, raw fetch,
+  // window.location, web storage, or import.meta.env.VITE_*) — those arrive via
+  // @app/* seams (services/apiClient, auth/session, platform/openExternal, ...)
+  // that each leaf provides for its own platform.
+  {
+    files: ["editor/src/cloud/**/*.{js,mjs,jsx,ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            ...baseRestrictedImportPatterns,
+            {
+              regex: "^@supabase/",
+              message:
+                "cloud/ must stay platform-portable. Reach Supabase via an @app/* seam (e.g. @app/auth/supabase, @app/auth/session) provided per-platform in saas/ and desktop/.",
+            },
+            {
+              regex: "^@tauri-apps/",
+              message:
+                "cloud/ must stay platform-portable. Tauri APIs are desktop-only — reach native features via an @app/* seam (e.g. @app/platform/openExternal).",
+            },
+          ],
+        },
+      ],
+      "no-restricted-globals": [
+        "error",
+        {
+          name: "fetch",
+          message:
+            "cloud/ must not call raw fetch — use @app/services/apiClient so each platform supplies its own transport.",
+        },
+        {
+          name: "localStorage",
+          message:
+            "cloud/ must not touch localStorage — use an @app/* storage seam so desktop/web can differ.",
+        },
+        {
+          name: "sessionStorage",
+          message:
+            "cloud/ must not touch sessionStorage — use an @app/* storage seam so desktop/web can differ.",
+        },
+      ],
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "MemberExpression[object.name='window'][property.name='location']",
+          message:
+            "cloud/ must not touch window.location — use an @app/* seam (e.g. @app/platform/openExternal) so desktop/web can differ.",
+        },
+        {
+          selector:
+            "MemberExpression[property.name='env'][object.type='MetaProperty'][object.meta.name='import'][object.property.name='meta']",
+          message:
+            "cloud/ must not read import.meta.env — use @app/constants/app / @app/platform seams so config is supplied per-platform.",
+        },
+      ],
+    },
+  },
   // The shared/ layer is the seed of a future packages/shared-ui — it must
   // only depend on third-party packages and on itself. If it ever imports
   // from editor or portal layers, extraction to a standalone package later
@@ -144,21 +207,38 @@ export default defineConfig(
     },
   },
   // Stricter rules that not all sub-folders are conformant to yet.
-  // Keep this non-type-aware: `parserOptions.project`/`projectService` here OOMs
-  // the lint step (builds the whole TS program); tsc covers type correctness.
   {
     files: srcGlobs,
     ignores: [
-      "editor/src/core/components/**/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/contexts/**/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/data/**/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/hooks/**/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/pages/**/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/services/**/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/tests/**/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/tools/**/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/types/**/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/utils/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/components/annotation/**/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/components/pageEditor/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/components/pageEditor/commands/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/components/pageEditor/hooks/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/components/shared/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/components/shared/config/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/components/shared/config/configSections/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/components/shared/pageEditor/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/components/tools/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/components/tools/addStamp/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/components/tools/automate/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/components/tools/bookletImposition/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/components/tools/certSign/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/components/tools/pdfTextEditor/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/components/tools/shared/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/components/viewer/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/contexts/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/contexts/file/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/contexts/viewer/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/hooks/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/hooks/signing/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/hooks/tools/adjustContrast/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/hooks/tools/convert/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/hooks/tools/removePassword/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/hooks/tools/shared/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/services/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/tools/annotate/useAnnotationSelection.ts",
+      "editor/src/core/types/*.{js,mjs,jsx,ts,tsx}",
+      "editor/src/core/utils/*.{js,mjs,jsx,ts,tsx}",
     ],
     rules: {
       "@typescript-eslint/no-explicit-any": "error",

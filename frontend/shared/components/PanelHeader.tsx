@@ -1,60 +1,152 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
+import { ActionIcon, Menu } from "@mantine/core";
+import CloseIcon from "@mui/icons-material/Close";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import type { IconBadgeAccent } from "@shared/components/IconBadge";
 import "@shared/components/PanelHeader.css";
 
+export interface PanelHeaderMenuItem {
+  /** Stable key; falls back to the item index. */
+  key?: string;
+  /** Optional leading glyph. */
+  icon?: ReactNode;
+  label: ReactNode;
+  onClick: () => void;
+  disabled?: boolean;
+}
+
 export interface PanelHeaderProps {
+  /** Glyph rendered in the tinted circular badge at the header's leading edge. */
+  icon: ReactNode;
+  /** Header title. */
   title: ReactNode;
-  /** Sub-heading below the title. */
-  subtitle?: ReactNode;
-  /** Show a back chevron and trigger this callback when clicked. */
-  onBack?: () => void;
-  /** Right-aligned action buttons / chips. */
+  /** Close (X) handler. The trailing close button renders only when supplied. */
+  onClose?: () => void;
+  /** aria-label for the close button. */
+  closeLabel?: string;
+  /**
+   * When provided, the header becomes a dropdown trigger: a disclosure chevron is
+   * shown and clicking it opens a menu of these items (e.g. "Clear chat").
+   */
+  menuItems?: PanelHeaderMenuItem[];
+  /** aria-label for the header when it acts as a menu trigger. */
+  menuLabel?: string;
+  /**
+   * Tints the icon badge with a category colour (blue/purple/green/amber/red).
+   * Defaults to the standard blue when omitted (tool + AI chat headers).
+   */
+  accent?: IconBadgeAccent;
+  /** Shows a pulsing status dot on the icon + a tinted border (e.g. AI running). */
+  loading?: boolean;
+  /** Right-aligned content rendered inside the header bar, after the title
+   *  (e.g. a status badge). */
   actions?: ReactNode;
+  /** Applied to the inner header element — e.g. to set a view-transition-name. */
+  barClassName?: string;
+  /** Applied to the outer header container. */
   className?: string;
 }
 
 /**
- * Header strip used by drill-down panels (admin tabs, agent detail, settings
- * sub-pages). Back chevron renders only when `onBack` is supplied.
+ * The header shared by the rail surfaces — the active tool panel, the AI chat
+ * panel, and the Policies detail/wizard. A tinted icon badge + title sit in a
+ * rounded bar, with an optional dropdown menu and a trailing close button. The
+ * styling stays legible in dark mode (thin border, no heavy fill) across every
+ * surface.
  */
 export function PanelHeader({
+  icon,
   title,
-  subtitle,
-  onBack,
+  onClose,
+  closeLabel,
+  menuItems,
+  menuLabel,
+  accent,
+  loading = false,
   actions,
+  barClassName,
   className,
 }: PanelHeaderProps) {
+  const hasMenu = menuItems != null && menuItems.length > 0;
+
+  // Tint the icon badge with the category colour when an accent is given. Inline
+  // so it wins over the default blue treatment in both light and dark mode; the
+  // --color-* tokens are theme-aware and match the badge tint used elsewhere.
+  const iconStyle: CSSProperties | undefined = accent
+    ? {
+        color: `var(--color-${accent})`,
+        background: `color-mix(in srgb, var(--color-${accent}) 14%, transparent)`,
+      }
+    : undefined;
+
+  const barClasses = [
+    "sui-panelhdr__bar",
+    loading ? "sui-panelhdr__bar--loading" : "",
+    barClassName ?? "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const barBody = (
+    <>
+      <span className="sui-panelhdr__icon" style={iconStyle}>
+        {icon}
+        {loading && <span className="sui-panelhdr__dot" />}
+      </span>
+      <span className="sui-panelhdr__label">{title}</span>
+      {actions != null && (
+        <span className="sui-panelhdr__actions">{actions}</span>
+      )}
+      {hasMenu && (
+        <KeyboardArrowDownIcon
+          className="sui-panelhdr__chevron"
+          sx={{ fontSize: 18 }}
+        />
+      )}
+    </>
+  );
+
   return (
     <div
       className={["sui-panelhdr", className ?? ""].filter(Boolean).join(" ")}
     >
-      <div className="sui-panelhdr__left">
-        {onBack && (
-          <button
-            type="button"
-            className="sui-panelhdr__back"
-            onClick={onBack}
-            aria-label="Back"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              width={18}
-              height={18}
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={1.75}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
-          </button>
-        )}
-        <div className="sui-panelhdr__text">
-          <div className="sui-panelhdr__title">{title}</div>
-          {subtitle && <div className="sui-panelhdr__sub">{subtitle}</div>}
-        </div>
-      </div>
-      {actions && <div className="sui-panelhdr__actions">{actions}</div>}
+      {hasMenu ? (
+        <Menu shadow="md" width={220} position="bottom-start" withinPortal>
+          <Menu.Target>
+            <button type="button" className={barClasses} aria-label={menuLabel}>
+              {barBody}
+            </button>
+          </Menu.Target>
+          <Menu.Dropdown>
+            {(menuItems ?? []).map((item, i) => (
+              <Menu.Item
+                key={item.key ?? i}
+                leftSection={item.icon}
+                onClick={item.onClick}
+                disabled={item.disabled}
+              >
+                {item.label}
+              </Menu.Item>
+            ))}
+          </Menu.Dropdown>
+        </Menu>
+      ) : (
+        <div className={barClasses}>{barBody}</div>
+      )}
+
+      {onClose && (
+        <ActionIcon
+          className="sui-panelhdr__close"
+          variant="subtle"
+          color="gray"
+          radius="xl"
+          size="md"
+          onClick={onClose}
+          aria-label={closeLabel}
+        >
+          <CloseIcon sx={{ fontSize: 18 }} />
+        </ActionIcon>
+      )}
     </div>
   );
 }

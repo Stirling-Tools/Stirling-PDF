@@ -1,0 +1,213 @@
+import { useMemo } from "react";
+import { Modal, Stack, Button } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import CelebrationIcon from "@mui/icons-material/CelebrationOutlined";
+import AnimatedSlideBackground from "@app/components/onboarding/slides/AnimatedSlideBackground";
+import styles from "@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css";
+import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
+import { navigateToSettings } from "@app/utils/settingsNavigation";
+import {
+  FreeMeterPanel,
+  freeSnapshotFromWallet,
+} from "@app/components/shared/config/configSections/usageMeters";
+import { useWallet } from "@app/hooks/useWallet";
+
+interface FreeLimitReachedModalProps {
+  onClose: () => void;
+}
+
+function readColor(varName: string, fallback: string): string {
+  return (
+    getComputedStyle(document.documentElement)
+      .getPropertyValue(varName)
+      .trim() || fallback
+  );
+}
+
+export function FreeLimitReachedModal({ onClose }: FreeLimitReachedModalProps) {
+  const { t } = useTranslation();
+  const { wallet, loading } = useWallet();
+
+  // Resolve theme colours once; reading the CSS vars on every render would
+  // force a style recalc.
+  const gradientStops = useMemo<[string, string]>(
+    () => [
+      readColor("--color-primary-500", "#3b82f6"),
+      readColor("--color-primary-800", "#1e40af"),
+    ],
+    [],
+  );
+
+  // Hold the modal back until the wallet resolves so the meter never flashes
+  // placeholder numbers before the real ones land.
+  if (loading || !wallet) return null;
+  const snap = freeSnapshotFromWallet(wallet);
+
+  const circles = [
+    {
+      position: "bottom-left" as const,
+      size: 270,
+      color: "rgba(255, 255, 255, 0.25)",
+      opacity: 0.9,
+      amplitude: 24,
+      duration: 4.5,
+      offsetX: 18,
+      offsetY: 14,
+    },
+    {
+      position: "top-right" as const,
+      size: 300,
+      color: "rgba(255, 255, 255, 0.2)",
+      opacity: 0.9,
+      amplitude: 28,
+      duration: 4.5,
+      delay: 0.5,
+      offsetX: 24,
+      offsetY: 18,
+    },
+  ];
+
+  const handleUpgrade = () => {
+    onClose();
+    navigateToSettings("plan");
+  };
+
+  return (
+    <Modal
+      opened
+      onClose={onClose}
+      withCloseButton={false}
+      centered
+      size="lg"
+      radius="lg"
+      zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE}
+      styles={{
+        body: { padding: 0 },
+        content: {
+          overflow: "hidden",
+          border: "none",
+          background: "var(--bg-surface)",
+          maxHeight: "90vh",
+          display: "flex",
+          flexDirection: "column",
+        },
+      }}
+    >
+      <Stack
+        gap={0}
+        className={styles.modalContent}
+        style={{
+          height: "100%",
+          maxHeight: "90vh",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <div className={styles.heroWrapper} style={{ flexShrink: 0 }}>
+          <AnimatedSlideBackground
+            gradientStops={gradientStops}
+            circles={circles}
+            isActive
+            slideKey="free-limit-reached"
+          />
+          <div className={styles.heroLogo}>
+            <div className={styles.heroLogoCircle}>
+              <CelebrationIcon sx={{ fontSize: 64, color: "#000000" }} />
+            </div>
+          </div>
+        </div>
+
+        <div
+          className={styles.modalBody}
+          style={{
+            flex: 1,
+            overflowY: "auto",
+            overflowX: "hidden",
+            WebkitOverflowScrolling: "touch",
+          }}
+        >
+          <Stack gap={16}>
+            <div className={`${styles.title} ${styles.titleText}`}>
+              {t("plan.freeLimit.title", "Woah, {{total}} PDFs Processed!", {
+                total: snap.billableUsed.toLocaleString(),
+              })}
+            </div>
+
+            <div className={styles.bodyText}>
+              <div className={`${styles.bodyCopy} ${styles.bodyCopyInner}`}>
+                {t(
+                  "plan.freeLimit.message",
+                  "That's your whole free allowance for automation, AI and the API. Seriously impressive! Keep the momentum going for just pennies a day.",
+                )}
+              </div>
+            </div>
+
+            <FreeMeterPanel snap={snap} />
+
+            <div className={styles.buttonContainer}>
+              <style>{`
+                @media (max-width: 30rem) {
+                  .free-limit-button-container {
+                    justify-content: center !important;
+                  }
+                  .free-limit-modal-button {
+                    flex: 1 1 100% !important;
+                  }
+                }
+                .free-limit-modal-button-primary:hover {
+                  background: linear-gradient(135deg, var(--color-primary-600), var(--color-primary-900)) !important;
+                }
+              `}</style>
+              <div
+                className="free-limit-button-container"
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: "0.75rem",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Button
+                  onClick={onClose}
+                  variant="default"
+                  size="sm"
+                  className="free-limit-modal-button"
+                  style={{
+                    fontSize: "0.8125rem",
+                    padding: "0.5rem 1rem",
+                    height: "auto",
+                    minWidth: "8.125rem",
+                    flex: "0 1 auto",
+                    border: "0",
+                  }}
+                >
+                  {t("plan.freeLimit.dismiss", "Maybe Later")}
+                </Button>
+
+                <Button
+                  onClick={handleUpgrade}
+                  size="md"
+                  className="free-limit-modal-button free-limit-modal-button-primary"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, var(--color-primary-500), var(--color-primary-800))",
+                    color: "#FFFFFF",
+                    fontSize: "0.9375rem",
+                    fontWeight: 600,
+                    padding: "0.75rem 1.5rem",
+                    height: "auto",
+                    border: "none",
+                    minWidth: "10.625rem",
+                    flex: "0 1 auto",
+                  }}
+                >
+                  {t("plan.freeLimit.cta", "View Processor Plan")}
+                </Button>
+              </div>
+            </div>
+          </Stack>
+        </div>
+      </Stack>
+    </Modal>
+  );
+}

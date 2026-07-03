@@ -33,6 +33,10 @@ import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.PolicyRunStatus;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
+import stirling.software.proprietary.policy.source.InProcessSourceDocCounter;
+import stirling.software.proprietary.policy.source.InProcessSourceStore;
+import stirling.software.proprietary.policy.source.Source;
+import stirling.software.proprietary.policy.source.SourceStore;
 
 /**
  * Tests for {@link PolicyRunner}: the one place that turns a policy's sources into runs. Verifies
@@ -45,11 +49,17 @@ class PolicyRunnerTest {
     @Mock private PolicyEngine policyEngine;
     @Mock private InputSource folderSource;
 
+    private final SourceStore sourceStore = new InProcessSourceStore();
     private PolicyRunner runner;
 
     @BeforeEach
     void setUp() {
-        runner = new PolicyRunner(policyEngine, List.of(folderSource));
+        runner =
+                new PolicyRunner(
+                        policyEngine,
+                        List.of(folderSource),
+                        sourceStore,
+                        new InProcessSourceDocCounter());
     }
 
     @Test
@@ -145,15 +155,22 @@ class PolicyRunnerTest {
         verifyNoInteractions(folderSource);
     }
 
-    private static Policy policy(List<InputSpec> sources) {
+    /** Persists each spec as a source and returns a policy referencing them by id. */
+    private Policy policy(List<InputSpec> sources) {
+        List<String> sourceIds =
+                sources.stream().map(spec -> sourceStore.save(sourceFrom(spec)).id()).toList();
         return new Policy(
                 "p1",
                 "p",
                 "owner",
                 true,
                 null,
-                sources,
+                sourceIds,
                 List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                 OutputSpec.inline());
+    }
+
+    private static Source sourceFrom(InputSpec spec) {
+        return new Source(null, "src", spec.type(), spec.options(), true, "owner", null);
     }
 }

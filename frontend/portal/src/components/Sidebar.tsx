@@ -1,17 +1,28 @@
-import { NavItem } from "@shared/components";
+import { useTranslation } from "react-i18next";
+import { Dropdown, NavItem } from "@shared/components";
 import { useView, type ViewId } from "@portal/contexts/ViewContext";
 import { useTier } from "@portal/contexts/TierContext";
+import { useTheme } from "@portal/contexts/ThemeContext";
+import { useUI } from "@portal/contexts/UIContext";
+import { useLink } from "@portal/contexts/LinkContext";
 import { useAsync } from "@portal/hooks/useAsync";
 import { fetchHomeKpis, type KpiEntry } from "@portal/api/home";
+import { EDITOR_URL } from "@portal/auth/editorUrl";
+import markLight from "@shared/assets/brand/modern-logo/StirlingPDFLogoNoTextLight.svg";
+import markDark from "@shared/assets/brand/modern-logo/StirlingPDFLogoNoTextDark.svg";
 import {
   HomeIcon,
-  EditorIcon,
+  UsersIcon,
   SourcesIcon,
+  PoliciesIcon,
   PipelinesIcon,
   DocumentsIcon,
+  ComponentsIcon,
   InfrastructureIcon,
   UsageIcon,
+  LinkIcon,
   DocsIcon,
+  ProcurementIcon,
   SettingsIcon,
   ChevronDownIcon,
 } from "@portal/components/icons";
@@ -19,49 +30,50 @@ import "@portal/components/Sidebar.css";
 
 interface NavEntry {
   id: ViewId;
-  label: string;
   icon: React.ReactNode;
 }
 
-const GROUP_PRIMARY: NavEntry[] = [
-  { id: "home", label: "Home", icon: <HomeIcon /> },
-];
+const GROUP_PRIMARY: NavEntry[] = [{ id: "home", icon: <HomeIcon /> }];
 
 const GROUP_OPERATIONAL: NavEntry[] = [
-  { id: "editor", label: "Editor", icon: <EditorIcon /> },
-  { id: "sources", label: "Sources", icon: <SourcesIcon /> },
-  { id: "pipelines", label: "Pipelines", icon: <PipelinesIcon /> },
-  { id: "documents", label: "Documents", icon: <DocumentsIcon /> },
+  { id: "users", icon: <UsersIcon /> },
+  { id: "sources", icon: <SourcesIcon /> },
+  { id: "policies", icon: <PoliciesIcon /> },
+  { id: "pipelines", icon: <PipelinesIcon /> },
+  { id: "documents", icon: <DocumentsIcon /> },
+  { id: "components", icon: <ComponentsIcon /> },
 ];
 
 const GROUP_PLATFORM: NavEntry[] = [
-  {
-    id: "infrastructure",
-    label: "Infrastructure",
-    icon: <InfrastructureIcon />,
-  },
-  { id: "usage", label: "Usage & Billing", icon: <UsageIcon /> },
-  { id: "docs", label: "Developer Docs", icon: <DocsIcon /> },
+  { id: "infrastructure", icon: <InfrastructureIcon /> },
+  { id: "usage", icon: <UsageIcon /> },
+  { id: "docs", icon: <DocsIcon /> },
 ];
 
-function StirlingMark() {
-  // The Stirling brand mark — two stacked parallelograms in the brand blues.
+/**
+ * Sidebar-footer link-account CTA. Only visible when the org is unlinked — once
+ * linked, the linked-instances row + plan badge already communicate the state,
+ * so a permanent footer button would be noise. Click → opens the login modal
+ * directly.
+ */
+function LinkAccountFooterItem() {
+  const { t } = useTranslation();
+  const { openLinkModal } = useUI();
+  const { linkState } = useLink();
+  if (linkState !== "unlinked") return null;
   return (
-    <svg
-      width="22"
-      height="22"
-      viewBox="0 0 22 22"
-      aria-hidden
-      role="presentation"
-    >
-      <path d="M5 4 L20 4 L17 11 L2 11 Z" fill="var(--color-blue)" />
-      <path d="M5 11 L17 11 L14 18 L2 18 Z" fill="var(--color-blue-border)" />
-    </svg>
+    <NavItem
+      id="account-link"
+      label={t("shell.sidebar.linkAccount", "Link Stirling account")}
+      icon={<LinkIcon />}
+      onClick={() => openLinkModal()}
+    />
   );
 }
 
 function UsageFooter() {
   const { tier } = useTier();
+  const { t } = useTranslation();
   // Read the same endpoint Home's KPI strip uses so the doc count here can't
   // drift from the headline figure. The first KPI is always the doc total.
   const { data: kpis, loading } = useAsync<KpiEntry[]>(
@@ -80,7 +92,9 @@ function UsageFooter() {
     return (
       <div className="portal-sidebar__usage portal-sidebar__usage--free">
         <div className="portal-sidebar__usage-line">
-          <span className="portal-sidebar__usage-label">Docs processed</span>
+          <span className="portal-sidebar__usage-label">
+            {t("shell.sidebar.docsProcessed")}
+          </span>
           <span className="portal-sidebar__usage-value">{docs ?? "—"}</span>
         </div>
         <div
@@ -98,7 +112,10 @@ function UsageFooter() {
     );
   }
 
-  const planLabel = tier === "pro" ? "Pay-as-you-go" : "Enterprise Plan";
+  const planLabel =
+    tier === "pro"
+      ? t("shell.sidebar.planProcessor", "Processor plan")
+      : t("shell.sidebar.planEnterprise", "Enterprise plan");
 
   return (
     <div className="portal-sidebar__usage">
@@ -108,7 +125,7 @@ function UsageFooter() {
           {planLabel}
         </span>
         <span className="portal-sidebar__usage-value">
-          {docs != null ? `${docs} docs` : "—"}
+          {docs != null ? t("shell.sidebar.docsCount", { docs }) : "—"}
         </span>
       </div>
     </div>
@@ -117,13 +134,24 @@ function UsageFooter() {
 
 export function Sidebar() {
   const { activeView, setActiveView } = useView();
+  const { theme } = useTheme();
+  const { openSettings } = useUI();
+  const { tier } = useTier();
+  const { t } = useTranslation();
+
+  // Procurement is the enterprise buyer's commercial journey — surfaced only to
+  // enterprise tenants (it has no free/pro equivalent).
+  const platformGroup: NavEntry[] =
+    tier === "enterprise"
+      ? [{ id: "procurement", icon: <ProcurementIcon /> }, ...GROUP_PLATFORM]
+      : GROUP_PLATFORM;
 
   function renderGroup(entries: NavEntry[]) {
     return entries.map((entry) => (
       <NavItem
         key={entry.id}
         id={entry.id}
-        label={entry.label}
+        label={t(`nav.${entry.id}`)}
         icon={entry.icon}
         isActive={activeView === entry.id}
         onClick={(id) => setActiveView(id as ViewId)}
@@ -132,17 +160,61 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="portal-sidebar" aria-label="Primary navigation">
+    <aside
+      className="portal-sidebar"
+      aria-label={t("shell.sidebar.primaryNav")}
+    >
       <div className="portal-sidebar__logo">
-        <StirlingMark />
-        <span className="portal-sidebar__wordmark">Stirling</span>
-        <button
-          type="button"
-          className="portal-sidebar__workspace"
-          aria-label="Switch workspace"
-        >
-          <ChevronDownIcon size={14} />
-        </button>
+        <span className="portal-sidebar__brand">
+          <img
+            className="portal-sidebar__brand-mark"
+            src={theme === "dark" ? markDark : markLight}
+            alt="Stirling"
+          />
+          <span className="portal-sidebar__logo-suffix">
+            {t("shell.sidebar.brandSuffix")}
+          </span>
+        </span>
+
+        <Dropdown.Root align="end" className="portal-sidebar__app-switch">
+          <Dropdown.Trigger>
+            <button
+              type="button"
+              className="portal-sidebar__app-switch-btn"
+              aria-label={t("shell.sidebar.switchApp")}
+            >
+              <ChevronDownIcon size={14} />
+            </button>
+          </Dropdown.Trigger>
+          <Dropdown.Menu width="11rem">
+            <Dropdown.Item
+              active
+              leading={
+                <img
+                  className="portal-sidebar__app-icon"
+                  src={theme === "dark" ? markDark : markLight}
+                  alt=""
+                />
+              }
+            >
+              {t("shell.sidebar.appProcessor")}
+            </Dropdown.Item>
+            <Dropdown.Item
+              onSelect={() => {
+                window.location.href = EDITOR_URL;
+              }}
+              leading={
+                <img
+                  className="portal-sidebar__app-icon"
+                  src={theme === "dark" ? markDark : markLight}
+                  alt=""
+                />
+              }
+            >
+              {t("shell.sidebar.appEditor")}
+            </Dropdown.Item>
+          </Dropdown.Menu>
+        </Dropdown.Root>
       </div>
 
       <nav className="portal-sidebar__nav">
@@ -155,17 +227,17 @@ export function Sidebar() {
         </div>
         <div className="portal-sidebar__divider" aria-hidden />
         <div className="portal-sidebar__group">
-          {renderGroup(GROUP_PLATFORM)}
+          {renderGroup(platformGroup)}
         </div>
       </nav>
 
       <div className="portal-sidebar__footer">
+        <LinkAccountFooterItem />
         <NavItem
           id="settings"
-          label="Settings"
+          label={t("nav.settings")}
           icon={<SettingsIcon />}
-          isActive={activeView === "settings"}
-          onClick={(id) => setActiveView(id as ViewId)}
+          onClick={() => openSettings()}
         />
         <UsageFooter />
       </div>

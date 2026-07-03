@@ -30,6 +30,19 @@ ext {
     commonmarkVersion = "0.28.0"
     googleJavaFormatVersion = "1.28.0"
     logback = "1.5.32"
+    commonsIoVersion = "2.22.0"
+    commonsLang3 = "3.20.0"
+    rhinoVersion = "1.9.1"
+    okhttpBomVersion = "5.3.2"
+    gsonVersion = "2.14.0"
+    guavaVersion = "33.6.0-jre"
+    bucket4jVersion = "8.19.0"
+    archunitVersion = "1.4.2"
+    batikVersion = "1.19"
+    jpdfiumVersion = "1.0.2"
+    jwtVersion = "0.13.0"
+    awsSdkVersion = "2.44.12"
+    testcontainersMinioVersion = "1.21.4"
     // junit-platform-launcher version managed by Spring Boot BOM
     modernJavaVersion = 25
 }
@@ -78,7 +91,7 @@ springBoot {
 
 allprojects {
     group = 'stirling.software'
-    version = '2.12.0'
+    version = '2.14.0'
 
     configurations.configureEach {
         exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
@@ -185,9 +198,10 @@ subprojects {
                 allowInsecureProtocol = true
             }
         }
-        maven { url = "https://build.shibboleth.net/maven/releases" }
-        maven { url = "https://repository.jboss.org/" }
+        // Maven Central first; mirrors below are fallbacks for niche artifacts.
         mavenCentral()
+        maven { url = "https://repository.jboss.org/" }
+        maven { url = "https://build.shibboleth.net/maven/releases" }
     }
 
     configurations.configureEach {
@@ -202,12 +216,12 @@ subprojects {
         // - CVE-2022-25647: gson 2.8.9+ (explicit dependency overrides tabula 2.8.7)
         // - CVE-2025-66453: rhino 1.7.15 (explicit dependency overrides verapdf 1.7.13)
         // Fallback strategy force declarations for additional safety:
-        resolutionStrategy.force 'com.google.code.gson:gson:2.13.2'
-        resolutionStrategy.force 'org.mozilla:rhino:1.9.1'
+        resolutionStrategy.force "com.google.code.gson:gson:${gsonVersion}"
+        resolutionStrategy.force "org.mozilla:rhino:${rhinoVersion}"
         // CVE-2025-48924: commons-lang3 3.20.0 DoS prevention
-        resolutionStrategy.force 'org.apache.commons:commons-lang3:3.20.0'
-        // CVE-2024-47554: commons-io 2.21.0 DoS prevention
-        resolutionStrategy.force 'commons-io:commons-io:2.21.0'
+        resolutionStrategy.force "org.apache.commons:commons-lang3:${commonsLang3}"
+        // CVE-2024-47554: commons-io DoS prevention
+        resolutionStrategy.force "commons-io:commons-io:${commonsIoVersion}"
         // Keep BouncyCastle modules aligned to avoid runtime linkage errors
         resolutionStrategy.force "org.bouncycastle:bcprov-jdk18on:${bouncycastleVersion}"
         resolutionStrategy.force "org.bouncycastle:bcpkix-jdk18on:${bouncycastleVersion}"
@@ -220,7 +234,7 @@ subprojects {
         }
         dependencies {
             // Override BOM-managed commons-lang3 for CVE-2025-48924 fix
-            dependency 'org.apache.commons:commons-lang3:3.20.0'
+            dependency "org.apache.commons:commons-lang3:$commonsLang3"
         }
     }
 
@@ -242,7 +256,7 @@ subprojects {
         testRuntimeOnly 'org.mockito:mockito-inline:5.2.0'
         testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 
-        testImplementation platform("com.squareup.okhttp3:okhttp-bom:5.3.2")
+        testImplementation platform("com.squareup.okhttp3:okhttp-bom:${okhttpBomVersion}")
         testImplementation "com.squareup.okhttp3:mockwebserver"
     }
 
@@ -583,8 +597,9 @@ repositories {
             allowInsecureProtocol = true
         }
     }
-    maven { url = "https://build.shibboleth.net/maven/releases" }
     mavenCentral()
+    maven { url = "https://repository.jboss.org/" }
+    maven { url = "https://build.shibboleth.net/maven/releases" }
 }
 
 dependencies {
@@ -597,7 +612,7 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 
-    testImplementation platform("com.squareup.okhttp3:okhttp-bom:5.3.2")
+    testImplementation platform("com.squareup.okhttp3:okhttp-bom:${okhttpBomVersion}")
     testImplementation "com.squareup.okhttp3:mockwebserver"
 }
 
@@ -667,7 +682,6 @@ tasks.register('buildRestartHelper', Jar) {
         println "restart-helper.jar created at: ${destinationDirectory.get()}/restart-helper.jar"
     }
 }
-
 
 tasks.withType(Test).configureEach {
     // maxParallelForks: parallelise JUnit across cores

@@ -8,7 +8,8 @@ import LocalIcon from "@app/components/shared/LocalIcon";
 import Overview from "@app/components/shared/config/configSections/Overview";
 import { createSaasConfigNavSections } from "@app/components/shared/config/saasConfigNavSections";
 import { NavKey } from "@app/components/shared/config/types";
-import { withBasePath } from "@app/constants/app";
+import { stripBasePath, withBasePath } from "@app/constants/app";
+import { COOKIE_CONSENT_SCROLL_SHARD } from "@app/hooks/useCookieConsent";
 import "@app/components/shared/AppConfigModal.css";
 import {
   Z_INDEX_OVER_FULLSCREEN_SURFACE,
@@ -23,7 +24,7 @@ interface AppConfigModalProps {
 const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
   const isMobile = useMediaQuery("(max-width: 1024px)");
 
-  const { signOut, user, creditBalance, refreshCredits } = useAuth();
+  const { signOut, user } = useAuth();
   const { t } = useTranslation();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [active, setActive] = useState<NavKey>("overview");
@@ -46,6 +47,21 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
       );
   }, []);
 
+  // When the modal opens via a /settings/<section> deep link (navigateToSettings — e.g. the
+  // usage-limit modal CTAs, which need to land on the Plan section), select that section. The
+  // opener (QuickAccessBar) opens the modal whenever the path is /settings/*, but doesn't carry
+  // the section, and `active` defaults to "overview" — so without this a deep link would open on
+  // Overview rather than the linked section.
+  useEffect(() => {
+    if (!opened) return;
+    const match = stripBasePath(window.location.pathname).match(
+      /^\/settings\/([^/?#]+)/,
+    );
+    if (match) {
+      setActive(match[1] as NavKey);
+    }
+  }, [opened]);
+
   // Listen for notice updates (e.g., "Not enough credits..." next to Plan title)
   useEffect(() => {
     const handler = (ev: Event) => {
@@ -61,34 +77,23 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
       window.removeEventListener("appConfig:notice", handler as EventListener);
   }, []);
 
-  // When the modal opens to Plan, proactively refresh credits and log values
+  // Full-screen overlays that live inside our React tree (e.g. the PAYG
+  // UpgradeModal, portal'd to document.body) announce themselves here so we
+  // can hide — not unmount — while they're up. Unmounting would kill the
+  // overlay itself since it's our descendant; hiding keeps all section state
+  // (active tab, scroll, wallet data) intact for when the overlay closes.
+  const [overlayActive, setOverlayActive] = useState(false);
   useEffect(() => {
-    if (!opened) return;
-    if (active !== "plan") return;
-    console.log(
-      "[AppConfigModal] Opening Plan section. Current creditBalance:",
-      creditBalance,
-    );
-    (async () => {
-      try {
-        await refreshCredits();
-      } catch (e) {
-        console.warn(
-          "[AppConfigModal] Failed to refresh credits on Plan open:",
-          e,
-        );
-      }
-    })();
-  }, [opened, active]);
-
-  useEffect(() => {
-    if (!opened) return;
-    if (active !== "plan") return;
-    console.log(
-      "[AppConfigModal] Credit balance updated while viewing Plan:",
-      creditBalance,
-    );
-  }, [opened, active, creditBalance]);
+    const handler = (ev: Event) => {
+      const detail = (ev as CustomEvent).detail as
+        | { open?: boolean }
+        | undefined;
+      setOverlayActive(Boolean(detail?.open));
+    };
+    window.addEventListener("appConfig:overlay", handler as EventListener);
+    return () =>
+      window.removeEventListener("appConfig:overlay", handler as EventListener);
+  }, []);
 
   const colors = useMemo(
     () => ({
@@ -106,7 +111,9 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
 
   const openLogoutConfirm = useCallback(() => setConfirmOpen(true), []);
 
-  // Left navigation structure and icons
+  // Left navigation structure and icons. The Plan tab now internally branches
+  // free vs subscribed × leader vs member via useWallet(), so the modal no
+  // longer plumbs paygEnabled / isLeader through to the nav builder.
   const configNavSections = useMemo(
     () =>
       createSaasConfigNavSections(Overview, openLogoutConfirm, {
@@ -139,7 +146,7 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
         opened={opened}
         onClose={onClose}
         title={null}
-        size={isMobile ? "100%" : 980}
+        size={isMobile ? "100%" : 1200}
         centered
         radius="lg"
         withCloseButton={false}
@@ -147,6 +154,18 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
         overlayProps={{ opacity: 0.35, blur: 2 }}
         padding={0}
         fullScreen={isMobile}
+        removeScrollProps={{ shards: [COOKIE_CONSENT_SCROLL_SHARD] }}
+        // Hidden (not closed) while a child overlay like the PAYG UpgradeModal
+        // is up — see the appConfig:overlay listener above. The focus trap and
+        // escape/outside-close must release too: the trap would steal focus
+        // from the Stripe card iframe, and Escape would close US underneath
+        // the overlay — unmounting the checkout mid-payment.
+        styles={{
+          root: { display: overlayActive ? "none" : undefined },
+        }}
+        trapFocus={!overlayActive}
+        closeOnEscape={!overlayActive}
+        closeOnClickOutside={!overlayActive}
       >
         <div className="modal-container">
           {/* Left navigation */}
