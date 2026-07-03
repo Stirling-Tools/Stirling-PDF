@@ -10,11 +10,7 @@ import { CONTROL_HEIGHT } from "@shared/components/controlSizes";
 import "@shared/components/ActionIcon.css";
 
 /** Icon-only button (square) — same variant/accent dials as Button. */
-export type ActionIconVariant =
-  | "primary"
-  | "secondary"
-  | "tertiary"
-  | "quiet";
+export type ActionIconVariant = "primary" | "secondary" | "tertiary" | "quiet";
 export type ActionIconAccent =
   | "default"
   | "neutral"
@@ -45,7 +41,10 @@ type ActionIconOwnProps = {
 };
 
 export type ActionIconProps = ActionIconOwnProps &
-  Omit<ComponentPropsWithoutRef<"button">, keyof ActionIconOwnProps | "color"> & {
+  Omit<
+    ComponentPropsWithoutRef<"button">,
+    keyof ActionIconOwnProps | "color"
+  > & {
     href?: string;
     target?: string;
     rel?: string;
@@ -76,66 +75,66 @@ export const ActionIcon = forwardRef<HTMLButtonElement, ActionIconProps>(
     },
     ref,
   ) {
-  const classes = [
-    "sui-ai",
-    `sui-acc-${accent}`,
-    `sui-ai--${variant}`,
-    shape !== "default" ? `sui-ai--${shape}` : "",
-    !hover ? "sui-ai--no-hover" : "",
-    className ?? "",
-  ]
-    .filter(Boolean)
-    .join(" ");
+    const classes = [
+      "sui-ai",
+      `sui-acc-${accent}`,
+      `sui-ai--${variant}`,
+      shape !== "default" ? `sui-ai--${shape}` : "",
+      !hover ? "sui-ai--no-hover" : "",
+      className ?? "",
+    ]
+      .filter(Boolean)
+      .join(" ");
 
-  // Accent palette → Mantine ActionIcon vars (inline to win). --ai-bd is a full `border` shorthand.
-  const accentVars =
-    variant === "primary"
-      ? {
-          "--ai-bg": "var(--_solid)",
-          "--ai-hover": "var(--_solid-hover)",
-          "--ai-color": "var(--_on)",
-          "--ai-bd": "1px solid transparent",
-        }
-      : variant === "quiet"
+    // Accent palette → Mantine ActionIcon vars (inline to win). --ai-bd is a full `border` shorthand.
+    const accentVars =
+      variant === "primary"
         ? {
-            "--ai-bg": "transparent",
-            "--ai-hover": "transparent",
-            "--ai-color": "var(--_text)",
-            "--ai-hover-color": "var(--color-text-1)",
+            "--ai-bg": "var(--_solid)",
+            "--ai-hover": "var(--_solid-hover)",
+            "--ai-color": "var(--_on)",
             "--ai-bd": "1px solid transparent",
           }
-        : {
-            "--ai-bg": "transparent",
-            "--ai-hover": "var(--_tint)",
-            "--ai-color": "var(--_text)",
-            "--ai-bd":
-              variant === "secondary"
-                ? "1px solid var(--_bd)"
-                : "1px solid transparent",
-          };
+        : variant === "quiet"
+          ? {
+              "--ai-bg": "transparent",
+              "--ai-hover": "transparent",
+              "--ai-color": "var(--_text)",
+              "--ai-hover-color": "var(--color-text-1)",
+              "--ai-bd": "1px solid transparent",
+            }
+          : {
+              "--ai-bg": "transparent",
+              "--ai-hover": "var(--_tint)",
+              "--ai-color": "var(--_text)",
+              "--ai-bd":
+                variant === "secondary"
+                  ? "1px solid var(--_bd)"
+                  : "1px solid transparent",
+            };
 
-  // Loosely-typed alias so the polymorphic `component={as}` doesn't fight Mantine's typing.
-  const Comp = MantineActionIcon as ElementType;
+    // Loosely-typed alias so the polymorphic `component={as}` doesn't fight Mantine's typing.
+    const Comp = MantineActionIcon as ElementType;
 
-  return (
-    <Comp
-      {...rest}
-      ref={ref}
-      component={as}
-      variant={MANTINE_VARIANT[variant]}
-      size={size}
-      loading={loading}
-      disabled={disabled}
-      className={classes}
-      style={{
-        ...(accentVars as CSSProperties),
-        // Match Button's height per size (inline so it beats Mantine's --ai-size).
-        ...({ "--ai-size": CONTROL_HEIGHT[size] } as CSSProperties),
-        ...style,
-      }}
-    >
-      {children}
-    </Comp>
-  );
+    return (
+      <Comp
+        {...rest}
+        ref={ref}
+        component={as}
+        variant={MANTINE_VARIANT[variant]}
+        size={size}
+        loading={loading}
+        disabled={disabled}
+        className={classes}
+        style={{
+          ...(accentVars as CSSProperties),
+          // Match Button's height per size (inline so it beats Mantine's --ai-size).
+          ...({ "--ai-size": CONTROL_HEIGHT[size] } as CSSProperties),
+          ...style,
+        }}
+      >
+        {children}
+      </Comp>
+    );
   },
 );

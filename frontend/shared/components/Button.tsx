@@ -107,84 +107,84 @@ const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref,
   ) {
-  const label = text ?? children;
-  const hasLabel = label != null && label !== false && label !== "";
-  const iconOnly = !hasLabel && (!!leftSection || !!rightSection || loading);
+    const label = text ?? children;
+    const hasLabel = label != null && label !== false && label !== "";
+    const iconOnly = !hasLabel && (!!leftSection || !!rightSection || loading);
 
-  // Sections flank a label → spread them without requiring justify="between".
-  const effectiveJustify =
-    justify === "center" && hasLabel && !!leftSection && !!rightSection
-      ? "between"
-      : justify;
+    // Sections flank a label → spread them without requiring justify="between".
+    const effectiveJustify =
+      justify === "center" && hasLabel && !!leftSection && !!rightSection
+        ? "between"
+        : justify;
 
-  const classes = [
-    "sui-btn",
-    `sui-acc-${accent}`,
-    `sui-btn--${variant}`,
-    iconOnly ? "sui-btn--icon" : "",
-    shape !== "default" ? `sui-btn--${shape}` : "",
-    overflow === "wrap" ? "sui-btn--wrap" : "",
-    !hover ? "sui-btn--no-hover" : "",
-    className ?? "",
-  ]
-    .filter(Boolean)
-    .join(" ");
+    const classes = [
+      "sui-btn",
+      `sui-acc-${accent}`,
+      `sui-btn--${variant}`,
+      iconOnly ? "sui-btn--icon" : "",
+      shape !== "default" ? `sui-btn--${shape}` : "",
+      overflow === "wrap" ? "sui-btn--wrap" : "",
+      !hover ? "sui-btn--no-hover" : "",
+      className ?? "",
+    ]
+      .filter(Boolean)
+      .join(" ");
 
-  // Accent palette → Mantine button vars (inline to win). --button-bd is a full `border` shorthand.
-  const accentVars =
-    variant === "primary"
-      ? {
-          "--button-bg": "var(--_solid)",
-          "--button-hover": "var(--_solid-hover)",
-          "--button-color": "var(--_on)",
-          "--button-bd": "1px solid transparent",
-        }
-      : variant === "quiet"
+    // Accent palette → Mantine button vars (inline to win). --button-bd is a full `border` shorthand.
+    const accentVars =
+      variant === "primary"
         ? {
-            "--button-bg": "transparent",
-            "--button-hover": "transparent",
-            "--button-color": "var(--_text)",
-            "--button-hover-color": "var(--color-text-1)",
+            "--button-bg": "var(--_solid)",
+            "--button-hover": "var(--_solid-hover)",
+            "--button-color": "var(--_on)",
             "--button-bd": "1px solid transparent",
           }
-        : {
-            "--button-bg": "transparent",
-            "--button-hover": "var(--_tint)",
-            "--button-color": "var(--_text)",
-            "--button-bd":
-              variant === "secondary"
-                ? "1px solid var(--_bd)"
-                : "1px solid transparent",
-          };
+        : variant === "quiet"
+          ? {
+              "--button-bg": "transparent",
+              "--button-hover": "transparent",
+              "--button-color": "var(--_text)",
+              "--button-hover-color": "var(--color-text-1)",
+              "--button-bd": "1px solid transparent",
+            }
+          : {
+              "--button-bg": "transparent",
+              "--button-hover": "var(--_tint)",
+              "--button-color": "var(--_text)",
+              "--button-bd":
+                variant === "secondary"
+                  ? "1px solid var(--_bd)"
+                  : "1px solid transparent",
+            };
 
-  // Loosely-typed alias so the polymorphic `component={as}` doesn't fight Mantine's typing.
-  const Comp = MantineButton as ElementType;
+    // Loosely-typed alias so the polymorphic `component={as}` doesn't fight Mantine's typing.
+    const Comp = MantineButton as ElementType;
 
-  return (
-    <Comp
-      {...rest}
-      ref={ref}
-      component={as}
-      variant={MANTINE_VARIANT[variant]}
-      size={size}
-      justify={MANTINE_JUSTIFY[effectiveJustify]}
-      leftSection={leftSection}
-      rightSection={rightSection}
-      loading={loading}
-      fullWidth={fullWidth}
-      disabled={disabled}
-      className={classes}
-      style={{
-        ...(accentVars as CSSProperties),
-        ...({ "--button-height": CONTROL_HEIGHT[size] } as CSSProperties),
-        // Icon-only: zero the size padding inline so the lone icon centres.
-        ...(iconOnly ? ({ "--button-padding-x": "0" } as CSSProperties) : {}),
-        ...style,
-      }}
-    >
-      {label}
-    </Comp>
-  );
+    return (
+      <Comp
+        {...rest}
+        ref={ref}
+        component={as}
+        variant={MANTINE_VARIANT[variant]}
+        size={size}
+        justify={MANTINE_JUSTIFY[effectiveJustify]}
+        leftSection={leftSection}
+        rightSection={rightSection}
+        loading={loading}
+        fullWidth={fullWidth}
+        disabled={disabled}
+        className={classes}
+        style={{
+          ...(accentVars as CSSProperties),
+          ...({ "--button-height": CONTROL_HEIGHT[size] } as CSSProperties),
+          // Icon-only: zero the size padding inline so the lone icon centres.
+          ...(iconOnly ? ({ "--button-padding-x": "0" } as CSSProperties) : {}),
+          ...style,
+        }}
+      >
+        {label}
+      </Comp>
+    );
   },
 );
 
