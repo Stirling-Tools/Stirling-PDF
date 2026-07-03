@@ -4,30 +4,63 @@ import {
   type ToolOperationConfig,
   useToolOperation,
 } from "@app/hooks/tools/shared/useToolOperation";
+import {
+  objectToFormData,
+  type ToolApiParams,
+  type ToolEndpoint,
+} from "@app/hooks/tools/shared/toolApiMapping";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import { EditTableOfContentsParameters } from "@app/hooks/tools/editTableOfContents/useEditTableOfContentsParameters";
-import { serializeBookmarkNodes } from "@app/utils/editTableOfContents";
+import {
+  hydrateBookmarkPayload,
+  serializeBookmarkNodes,
+  type BookmarkPayload,
+} from "@app/utils/editTableOfContents";
+
+const ENDPOINT =
+  "/api/v1/general/edit-table-of-contents" satisfies ToolEndpoint;
+type EditTableOfContentsApiParams = ToolApiParams[typeof ENDPOINT];
+
+// bookmarkData is a string in the backend model even though it carries JSON, so
+// the serialized bookmark tree is JSON-encoded into that string here.
+export const editTableOfContentsToApiParams = (
+  parameters: EditTableOfContentsParameters,
+): EditTableOfContentsApiParams => ({
+  replaceExisting: parameters.replaceExisting,
+  bookmarkData: JSON.stringify(serializeBookmarkNodes(parameters.bookmarks)),
+});
+
+export const editTableOfContentsFromApiParams = (
+  apiParams: EditTableOfContentsApiParams,
+): Partial<EditTableOfContentsParameters> => {
+  const result: Partial<EditTableOfContentsParameters> = {
+    replaceExisting: apiParams.replaceExisting,
+  };
+
+  if (apiParams.bookmarkData !== undefined) {
+    const payload = JSON.parse(apiParams.bookmarkData) as BookmarkPayload[];
+    result.bookmarks = hydrateBookmarkPayload(payload);
+  }
+
+  return result;
+};
 
 const buildFormData = (
   parameters: EditTableOfContentsParameters,
   file: File,
-): FormData => {
-  const formData = new FormData();
-  formData.append("fileInput", file);
-  formData.append("replaceExisting", String(parameters.replaceExisting));
-  formData.append(
-    "bookmarkData",
-    JSON.stringify(serializeBookmarkNodes(parameters.bookmarks)),
-  );
-  return formData;
-};
+): FormData =>
+  objectToFormData(editTableOfContentsToApiParams(parameters), {
+    fileInput: file,
+  });
 
 export const editTableOfContentsOperationConfig: ToolOperationConfig<EditTableOfContentsParameters> =
   {
     toolType: ToolType.singleFile,
     operationType: "editTableOfContents",
-    endpoint: "/api/v1/general/edit-table-of-contents",
+    endpoint: ENDPOINT,
     buildFormData,
+    toApiParams: editTableOfContentsToApiParams,
+    fromApiParams: editTableOfContentsFromApiParams,
   };
 
 export const useEditTableOfContentsOperation = () => {

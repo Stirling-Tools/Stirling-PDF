@@ -8,15 +8,26 @@ import {
   AdjustPageScaleParameters,
   defaultParameters,
 } from "@app/hooks/tools/adjustPageScale/useAdjustPageScaleParameters";
-import { buildAdjustPageScaleFormData } from "@app/hooks/tools/adjustPageScale/adjustPageScaleFormData";
+import {
+  buildAdjustPageScaleFormData,
+  adjustPageScaleToApiParams,
+  adjustPageScaleFromApiParams,
+  ADJUST_PAGE_SCALE_ENDPOINT,
+} from "@app/hooks/tools/adjustPageScale/adjustPageScaleFormData";
 
-export { buildAdjustPageScaleFormData };
+export {
+  buildAdjustPageScaleFormData,
+  adjustPageScaleToApiParams,
+  adjustPageScaleFromApiParams,
+};
 
 export const adjustPageScaleOperationConfig = {
   toolType: ToolType.singleFile,
   buildFormData: buildAdjustPageScaleFormData,
+  toApiParams: adjustPageScaleToApiParams,
+  fromApiParams: adjustPageScaleFromApiParams,
   operationType: "scalePages",
-  endpoint: "/api/v1/general/scale-pages",
+  endpoint: ADJUST_PAGE_SCALE_ENDPOINT,
   defaultParameters,
 } as const;
 

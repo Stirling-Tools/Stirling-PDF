@@ -3,35 +3,69 @@ import {
   ToolType,
   useToolOperation,
 } from "@app/hooks/tools/shared/useToolOperation";
+import {
+  objectToFormData,
+  type ToolApiParams,
+  type ToolEndpoint,
+} from "@app/hooks/tools/shared/toolApiMapping";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import {
   AddPageNumbersParameters,
   defaultParameters,
 } from "@app/components/tools/addPageNumbers/useAddPageNumbersParameters";
 
+const ENDPOINT = "/api/v1/misc/add-page-numbers" satisfies ToolEndpoint;
+type AddPageNumbersApiParams = ToolApiParams[typeof ENDPOINT];
+
+// Convert the tool's UI parameters into the add-page-numbers request body. The
+// return type is the generated backend model, so a spec change that renames or
+// drops a field breaks the build here.
+export const addPageNumbersToApiParams = (
+  parameters: AddPageNumbersParameters,
+): AddPageNumbersApiParams => ({
+  customMargin: parameters.customMargin,
+  position: parameters.position,
+  fontSize: parameters.fontSize,
+  // The UI stores fontType capitalized ("Times"/"Helvetica"/"Courier") while
+  // the backend model expects lowercase; the wire value is sent as-is to
+  // preserve existing behaviour.
+  fontType:
+    parameters.fontType as unknown as AddPageNumbersApiParams["fontType"],
+  startingNumber: parameters.startingNumber,
+  pagesToNumber: parameters.pagesToNumber,
+  customText: parameters.customText,
+  zeroPad: parameters.zeroPad,
+});
+
+// Reconstruct the tool's UI parameters from an add-page-numbers request body,
+// so a stored or AI-authored step can be re-rendered in the settings UI.
+export const addPageNumbersFromApiParams = (
+  apiParams: AddPageNumbersApiParams,
+): Partial<AddPageNumbersParameters> => ({
+  customMargin: apiParams.customMargin,
+  position: apiParams.position,
+  fontSize: apiParams.fontSize,
+  fontType:
+    apiParams.fontType as unknown as AddPageNumbersParameters["fontType"],
+  startingNumber: apiParams.startingNumber,
+  pagesToNumber: apiParams.pagesToNumber,
+  customText: apiParams.customText,
+  zeroPad: apiParams.zeroPad,
+});
+
 export const buildAddPageNumbersFormData = (
   parameters: AddPageNumbersParameters,
   file: File,
-): FormData => {
-  const formData = new FormData();
-  formData.append("fileInput", file);
-  formData.append("customMargin", parameters.customMargin);
-  formData.append("position", String(parameters.position));
-  formData.append("fontSize", String(parameters.fontSize));
-  formData.append("fontType", parameters.fontType);
-  formData.append("startingNumber", String(parameters.startingNumber));
-  formData.append("pagesToNumber", parameters.pagesToNumber);
-  formData.append("customText", parameters.customText);
-  formData.append("zeroPad", String(parameters.zeroPad));
-
-  return formData;
-};
+): FormData =>
+  objectToFormData(addPageNumbersToApiParams(parameters), { fileInput: file });
 
 export const addPageNumbersOperationConfig = {
   toolType: ToolType.singleFile,
   buildFormData: buildAddPageNumbersFormData,
+  toApiParams: addPageNumbersToApiParams,
+  fromApiParams: addPageNumbersFromApiParams,
   operationType: "addPageNumbers",
-  endpoint: "/api/v1/misc/add-page-numbers",
+  endpoint: ENDPOINT,
   defaultParameters,
 } as const;
 

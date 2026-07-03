@@ -37,6 +37,17 @@ const ALLOWED_PATH_PREFIXES = [
 // request models only. Named file fields (stampImage, attachments, ...) are kept.
 const BASE_FILE_FIELDS = new Set(["fileInput", "fileId"]);
 
+// Component schemas that are pure file plumbing: the base "upload a file or provide a server-side
+// file ID" wrapper and its two branches. An endpoint whose request body is exactly one of these
+// takes no user parameters, so it must resolve to an empty model. Unlike the flat fileInput/fileId
+// properties stripped above, these express the file via a `oneOf` that would otherwise survive
+// stripping and surface the file fields in the output.
+const FILE_WRAPPER_COMPONENTS = new Set([
+  "PDFFile",
+  "PDFFileUpload",
+  "PDFFileRef",
+]);
+
 const COMPONENT_REF_PREFIX = "#/components/schemas/";
 
 const FILE_HEADER = [
@@ -200,13 +211,23 @@ async function main(): Promise<void> {
 
     // Resolve the request model into a fresh, mutable clone so we never mutate the shared spec.
     const ref = bodySchema.$ref;
+    const refComponent =
+      typeof ref === "string" && ref.startsWith(COMPONENT_REF_PREFIX)
+        ? ref.slice(COMPONENT_REF_PREFIX.length)
+        : null;
     let className: string;
     let modelSchema: Json;
-    if (typeof ref === "string" && ref.startsWith(COMPONENT_REF_PREFIX)) {
-      const componentName = ref.slice(COMPONENT_REF_PREFIX.length);
-      const component = components[componentName];
+    if (refComponent && FILE_WRAPPER_COMPONENTS.has(refComponent)) {
+      // Body is just the file wrapper, so the endpoint has no user parameters. Model it as an
+      // empty object (named after the path, since the wrapper name is shared) that becomes
+      // Record<string, never>, instead of surfacing the wrapper's fileInput/fileId union. Any
+      // query parameters are still merged in below.
+      className = pathToClassName(path);
+      modelSchema = { type: "object", properties: {} };
+    } else if (refComponent) {
+      const component = components[refComponent];
       if (!isObject(component)) continue;
-      className = componentName;
+      className = refComponent;
       modelSchema = structuredClone(component) as Json;
     } else {
       className = pathToClassName(path);

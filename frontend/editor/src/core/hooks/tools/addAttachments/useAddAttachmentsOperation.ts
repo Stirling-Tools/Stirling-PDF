@@ -4,37 +4,57 @@ import {
   ToolOperationConfig,
   ToolType,
 } from "@app/hooks/tools/shared/useToolOperation";
+import {
+  objectToFormData,
+  type ToolApiParams,
+  type ToolEndpoint,
+} from "@app/hooks/tools/shared/toolApiMapping";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
-import { AddAttachmentsParameters } from "@app/hooks/tools/addAttachments/useAddAttachmentsParameters";
+import {
+  AddAttachmentsParameters,
+  DEFAULT_ADD_ATTACHMENTS_PARAMETERS,
+} from "@app/hooks/tools/addAttachments/useAddAttachmentsParameters";
+
+const ENDPOINT = "/api/v1/misc/add-attachments" satisfies ToolEndpoint;
+type AddAttachmentsApiParams = ToolApiParams[typeof ENDPOINT];
+
+// Convert the tool's UI parameters into the add-attachments request body. The
+// attachment files are uploaded via the named "attachments" field (see
+// buildFormData); the model lists them but they are not scalar parameters.
+export const addAttachmentsToApiParams = (
+  parameters: AddAttachmentsParameters,
+): AddAttachmentsApiParams => ({
+  attachments: [],
+  convertToPdfA3b: parameters.convertToPdfA3b,
+});
+
+// Reconstruct the tool's UI parameters from an add-attachments request body (the
+// attachment files themselves are not recoverable from stored parameters).
+export const addAttachmentsFromApiParams = (
+  apiParams: AddAttachmentsApiParams,
+): Partial<AddAttachmentsParameters> => ({
+  convertToPdfA3b: apiParams.convertToPdfA3b ?? false,
+});
 
 const buildFormData = (
   parameters: AddAttachmentsParameters,
   file: File,
-): FormData => {
-  const formData = new FormData();
-
-  // Add the main PDF file (single file per request in singleFile mode)
-  if (file) {
-    formData.append("fileInput", file);
-  }
-
-  // Add attachment files
-  (parameters.attachments || []).forEach((attachment) => {
-    if (attachment) formData.append("attachments", attachment);
+): FormData =>
+  objectToFormData(addAttachmentsToApiParams(parameters), {
+    fileInput: file,
+    attachments: (parameters.attachments || []).filter(Boolean),
   });
-
-  formData.append("convertToPdfA3b", String(parameters.convertToPdfA3b));
-
-  return formData;
-};
 
 // Operation configuration for automation
 export const addAttachmentsOperationConfig: ToolOperationConfig<AddAttachmentsParameters> =
   {
     toolType: ToolType.singleFile,
     buildFormData,
+    toApiParams: addAttachmentsToApiParams,
+    fromApiParams: addAttachmentsFromApiParams,
     operationType: "addAttachments",
-    endpoint: "/api/v1/misc/add-attachments",
+    endpoint: ENDPOINT,
+    defaultParameters: DEFAULT_ADD_ATTACHMENTS_PARAMETERS,
   };
 
 export const useAddAttachmentsOperation = () => {

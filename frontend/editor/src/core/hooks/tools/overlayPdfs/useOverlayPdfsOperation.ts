@@ -4,41 +4,66 @@ import {
   ToolType,
   type ToolOperationConfig,
 } from "@app/hooks/tools/shared/useToolOperation";
+import {
+  objectToFormData,
+  type ToolApiParams,
+  type ToolEndpoint,
+} from "@app/hooks/tools/shared/toolApiMapping";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import { type OverlayPdfsParameters } from "@app/hooks/tools/overlayPdfs/useOverlayPdfsParameters";
+
+const ENDPOINT = "/api/v1/general/overlay-pdfs" satisfies ToolEndpoint;
+type OverlayPdfsApiParams = ToolApiParams[typeof ENDPOINT];
+
+// Convert the tool's UI parameters into the overlay-pdfs request body. The
+// overlay documents are actual File uploads sent as repeated `overlayFiles`
+// fields (see buildFormData), so `overlayFiles` here is an empty array: the real
+// uploads are appended separately and an empty array serializes to no fields.
+export const overlayPdfsToApiParams = (
+  parameters: OverlayPdfsParameters,
+): OverlayPdfsApiParams => {
+  const apiParams: OverlayPdfsApiParams = {
+    overlayFiles: [],
+    overlayMode: parameters.overlayMode,
+    overlayPosition: parameters.overlayPosition,
+  };
+
+  // Counts are only relevant for FixedRepeatOverlay; the server accepts repeated
+  // 'counts' fields.
+  if (parameters.overlayMode === "FixedRepeatOverlay") {
+    apiParams.counts = parameters.counts || [];
+  }
+
+  return apiParams;
+};
+
+// Reconstruct the tool's UI parameters from an overlay-pdfs request body. The
+// overlay File uploads cannot be recovered from the request model.
+export const overlayPdfsFromApiParams = (
+  apiParams: OverlayPdfsApiParams,
+): Partial<OverlayPdfsParameters> => ({
+  overlayMode: apiParams.overlayMode,
+  overlayPosition: apiParams.overlayPosition,
+  counts: apiParams.counts ?? [],
+});
 
 const buildFormData = (
   parameters: OverlayPdfsParameters,
   file: File,
-): FormData => {
-  const formData = new FormData();
-  formData.append("fileInput", file);
-
-  // Overlay files
-  for (const overlay of parameters.overlayFiles || []) {
-    formData.append("overlayFiles", overlay);
-  }
-
-  // Mode and position
-  formData.append("overlayMode", parameters.overlayMode);
-  formData.append("overlayPosition", String(parameters.overlayPosition));
-
-  // Counts (only relevant for FixedRepeatOverlay, server accepts repeated 'counts' fields)
-  if (parameters.overlayMode === "FixedRepeatOverlay") {
-    for (const count of parameters.counts || []) {
-      formData.append("counts", String(count));
-    }
-  }
-
-  return formData;
-};
+): FormData =>
+  objectToFormData(overlayPdfsToApiParams(parameters), {
+    fileInput: file,
+    overlayFiles: parameters.overlayFiles || [],
+  });
 
 export const overlayPdfsOperationConfig: ToolOperationConfig<OverlayPdfsParameters> =
   {
     toolType: ToolType.singleFile,
     buildFormData,
+    toApiParams: overlayPdfsToApiParams,
+    fromApiParams: overlayPdfsFromApiParams,
     operationType: "overlayPdfs",
-    endpoint: "/api/v1/general/overlay-pdfs",
+    endpoint: ENDPOINT,
   };
 
 export const useOverlayPdfsOperation = () => {

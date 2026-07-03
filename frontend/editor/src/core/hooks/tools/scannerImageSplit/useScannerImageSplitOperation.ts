@@ -5,6 +5,11 @@ import {
   useToolOperation,
   ToolOperationConfig,
 } from "@app/hooks/tools/shared/useToolOperation";
+import {
+  objectToFormData,
+  type ToolApiParams,
+  type ToolEndpoint,
+} from "@app/hooks/tools/shared/toolApiMapping";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import {
   ScannerImageSplitParameters,
@@ -12,26 +17,50 @@ import {
 } from "@app/hooks/tools/scannerImageSplit/useScannerImageSplitParameters";
 import { useToolResources } from "@app/hooks/tools/shared/useToolResources";
 
+const ENDPOINT = "/api/v1/misc/extract-image-scans" satisfies ToolEndpoint;
+type ScannerImageSplitApiParams = ToolApiParams[typeof ENDPOINT];
+
+// Convert the tool's UI parameters into the extract-image-scans request body.
+// The frontend uses snake_case field names, but the backend model (the contract)
+// uses camelCase, so the keys are renamed here.
+export const scannerImageSplitToApiParams = (
+  parameters: ScannerImageSplitParameters,
+): ScannerImageSplitApiParams => ({
+  angleThreshold: parameters.angle_threshold,
+  tolerance: parameters.tolerance,
+  minArea: parameters.min_area,
+  minContourArea: parameters.min_contour_area,
+  borderSize: parameters.border_size,
+});
+
+// Reconstruct the tool's UI parameters from an extract-image-scans request body,
+// so a stored or AI-authored step can be re-rendered in the settings UI.
+export const scannerImageSplitFromApiParams = (
+  apiParams: ScannerImageSplitApiParams,
+): Partial<ScannerImageSplitParameters> => ({
+  angle_threshold: apiParams.angleThreshold,
+  tolerance: apiParams.tolerance,
+  min_area: apiParams.minArea,
+  min_contour_area: apiParams.minContourArea,
+  border_size: apiParams.borderSize,
+});
+
 export const buildScannerImageSplitFormData = (
   parameters: ScannerImageSplitParameters,
   file: File,
-): FormData => {
-  const formData = new FormData();
-  formData.append("fileInput", file);
-  formData.append("angle_threshold", parameters.angle_threshold.toString());
-  formData.append("tolerance", parameters.tolerance.toString());
-  formData.append("min_area", parameters.min_area.toString());
-  formData.append("min_contour_area", parameters.min_contour_area.toString());
-  formData.append("border_size", parameters.border_size.toString());
-  return formData;
-};
+): FormData =>
+  objectToFormData(scannerImageSplitToApiParams(parameters), {
+    fileInput: file,
+  });
 
 // Static configuration object
 export const scannerImageSplitOperationConfig = {
   toolType: ToolType.singleFile,
   buildFormData: buildScannerImageSplitFormData,
+  toApiParams: scannerImageSplitToApiParams,
+  fromApiParams: scannerImageSplitFromApiParams,
   operationType: "scannerImageSplit",
-  endpoint: "/api/v1/misc/extract-image-scans",
+  endpoint: ENDPOINT,
   defaultParameters,
 } as const;
 

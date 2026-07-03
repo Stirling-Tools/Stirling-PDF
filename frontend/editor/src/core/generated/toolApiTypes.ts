@@ -3,11 +3,6 @@
 // (SwaggerDoc.json). Regenerate with: task frontend:api-types
 // Tools that take only a file input have no parameters; their model is Record<string, never>.
 
-/**
- * Either upload a file or provide a server-side file ID
- */
-export type PDFFile = PDFFileUpload | PDFFileRef;
-
 export interface ConvertCbrToPdfRequest {
   /**
    * Optimize the output PDF for ebook reading using Ghostscript
@@ -109,18 +104,7 @@ export interface ConvertPdfToEpubRequest {
    */
   outputFormat?: "EPUB" | "AZW3";
 }
-/**
- * Upload a PDF file
- */
-export interface PDFFileUpload {
-  fileInput: string;
-}
-/**
- * Reference a server-side file
- */
-export interface PDFFileRef {
-  fileId: string;
-}
+export type ConvertPdfHtmlRequest = Record<string, never>;
 export interface ConvertToImageRequest {
   /**
    * The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')
@@ -147,6 +131,7 @@ export interface ConvertToImageRequest {
    */
   includeAnnotations?: boolean;
 }
+export type ConvertPdfMarkdownRequest = Record<string, never>;
 export interface PdfToPdfARequest {
   /**
    * The output format type (PDF/A or PDF/X)
@@ -176,6 +161,10 @@ export interface PdfToTextOrRTFRequest {
    */
   outputFormat: "rtf" | "txt";
 }
+export interface ConvertPdfTextEditorRequest {
+  lightweight?: boolean;
+}
+export type ConvertPdfTextEditorMetadataRequest = Record<string, never>;
 export interface PdfVectorExportRequest {
   /**
    * Target vector format extension
@@ -192,6 +181,7 @@ export interface PdfToWordRequest {
    */
   outputFormat: "doc" | "docx" | "odt";
 }
+export type ConvertPdfXmlRequest = Record<string, never>;
 export interface SvgToPdfRequest {
   /**
    * Whether to combine all SVG files into a single PDF (each SVG as a separate page) or create separate PDF files for each SVG.
@@ -407,6 +397,7 @@ export interface OverlayPdfsRequest {
    */
   overlayPosition: 0 | 1;
 }
+export type GeneralPdfToSinglePageRequest = Record<string, never>;
 export interface RearrangePagesRequest {
   /**
    * The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')
@@ -434,6 +425,7 @@ export interface RearrangePagesRequest {
     | "REMOVE_FIRST_AND_LAST"
     | "DUPLICATE";
 }
+export type GeneralRemoveImagePdfRequest = Record<string, never>;
 export interface RotatePDFRequest {
   /**
    * The clockwise angle by which to rotate all pages in the PDF file. Must be a multiple of 90.
@@ -455,6 +447,10 @@ export interface ScalePagesRequest {
     | "LETTER"
     | "LEGAL"
     | "KEEP";
+  /**
+   * Orientation to apply to the target page size. Ignored when pageSize is KEEP.
+   */
+  orientation?: "PORTRAIT" | "LANDSCAPE";
   /**
    * The scale of the content on the pages of the output PDF. Acceptable values are floats.
    */
@@ -705,6 +701,7 @@ export interface OptimizePdfRequest {
    */
   lineArtEdgeLevel?: 1 | 2 | 3;
 }
+export type MiscDecompressPdfRequest = Record<string, never>;
 export interface DeleteAttachmentRequest {
   /**
    * The name of the attachment to delete
@@ -805,6 +802,7 @@ export interface RenameAttachmentRequest {
    */
   newName: string;
 }
+export type MiscRepairRequest = Record<string, never>;
 export interface ReplaceAndInvertColorRequest {
   /**
    * Replace and Invert color options of a pdf.
@@ -886,6 +884,8 @@ export interface ScannerEffectRequest {
   advancedEnabled?: boolean;
   rotationValue?: number;
 }
+export type MiscShowJavascriptRequest = Record<string, never>;
+export type MiscUnlockPdfFormsRequest = Record<string, never>;
 export interface MetadataRequest {
   /**
    * Delete all metadata if set to true
@@ -1054,17 +1054,36 @@ export interface RedactPdfRequest {
 }
 export interface SignPDFWithCertRequest {
   /**
-   * The type of the digital certificate
+   * The type of the digital certificate. WINDOWS_STORE and PKCS11 are hardware-backed and only available in the desktop app.
    */
-  certType: "PEM" | "PKCS12" | "PFX" | "JKS" | "SERVER";
+  certType:
+    | "PEM"
+    | "PKCS12"
+    | "PFX"
+    | "JKS"
+    | "SERVER"
+    | "WINDOWS_STORE"
+    | "PKCS11";
   privateKeyFile?: string;
   certFile?: string;
   p12File?: string;
   jksFile?: string;
   /**
-   * The password for the keystore or the private key
+   * The password for the keystore / private key, or the token PIN for PKCS11
    */
   password?: string;
+  /**
+   * The alias of the certificate to sign with. Required for WINDOWS_STORE and recommended for PKCS11 tokens holding multiple certificates.
+   */
+  alias?: string;
+  /**
+   * Absolute path to the PKCS#11 driver library (required for PKCS11 type). Must be an allowed driver - a detected one or configured via STIRLING_PKCS11_LIBRARIES.
+   */
+  pkcs11LibraryPath?: string;
+  /**
+   * Optional PKCS#11 slot index. When omitted the first slot with a token is used.
+   */
+  pkcs11Slot?: number;
   /**
    * Whether to visually show the signature in the PDF file
    */
@@ -1090,6 +1109,11 @@ export interface SignPDFWithCertRequest {
    */
   showLogo?: boolean;
 }
+export interface Pkcs11CertificatesRequest {
+  libraryPath?: string;
+  slot?: number;
+  pin?: string;
+}
 export interface SecurityCertSignSessionsRequest {
   file: string;
   request?: WorkflowCreationRequest;
@@ -1110,6 +1134,7 @@ export interface SecurityCertSignValidateCertificateRequest {
   p12File?: string;
   jksFile?: string;
 }
+export type SecurityGetInfoOnPdfRequest = Record<string, never>;
 export interface ManualRedactPdfRequest {
   /**
    * The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')
@@ -1157,6 +1182,93 @@ export interface RedactionArea {
    */
   color?: string;
 }
+export interface RedactExecuteRequest {
+  /**
+   * Exact strings to find and black out. One entry per phrase to redact. Best for known names, identifiers, and specific text found in the document.
+   */
+  textValues?: string[];
+  /**
+   * Regex patterns to match and redact. Each match anywhere in the document is blacked out. Uses Java/PCRE regex syntax. Well-suited for strings that follow known patterns, like phone numbers, email addresses, national ID numbers, or dates (which can appear with different separators, optional country codes, etc.). For fixed known strings such as names, use textValues instead.
+   */
+  regexPatterns?: string[];
+  /**
+   * 1-indexed page numbers to wipe entirely (all content removed from those pages).
+   */
+  wipePages?: number[];
+  /**
+   * Text ranges to redact by specifying a start and end anchor phrase. All content between the two phrases (inclusive) is redacted. Anchors work best when short and unique. They must appear verbatim in the document.
+   */
+  ranges?: TextRange[];
+  /**
+   * Rectangular areas to black out, each defined by a page number and bounding box coordinates.
+   */
+  imageBoxes?: ImageBox[];
+  /**
+   * 1-indexed page numbers to redact all detected images from. Pass an empty list to redact images from every page. Omit or pass null to skip image redaction entirely.
+   */
+  redactImagePages?: number[];
+  style?: RedactStyle;
+}
+/**
+ * Text ranges to redact by specifying a start and end anchor phrase. All content between the two phrases (inclusive) is redacted. Anchors work best when short and unique. They must appear verbatim in the document.
+ */
+export interface TextRange {
+  /**
+   * A short, distinctive phrase (5–15 words) that marks where redaction begins (inclusive). Must appear verbatim in the document — e.g. a section heading or a unique sentence fragment.
+   */
+  startString: string;
+  /**
+   * A short, distinctive phrase (5–15 words) that marks where redaction ends (inclusive). Must appear verbatim in the document. Shorter phrases match more reliably.
+   */
+  endString: string;
+}
+/**
+ * Rectangular areas to black out, each defined by a page number and bounding box coordinates.
+ */
+export interface ImageBox {
+  /**
+   * 0-indexed page number (first page = 0).
+   */
+  pageIndex: number;
+  /**
+   * Left x coordinate of the redaction rectangle in PDF user-space points.
+   */
+  x1: number;
+  /**
+   * Top y coordinate of the redaction rectangle in PDF user-space points.
+   */
+  y1: number;
+  /**
+   * Right x coordinate of the redaction rectangle in PDF user-space points.
+   */
+  x2: number;
+  /**
+   * Bottom y coordinate of the redaction rectangle in PDF user-space points.
+   */
+  y2: number;
+}
+/**
+ * Redaction style options
+ */
+export interface RedactStyle {
+  /**
+   * Hex redaction box color
+   */
+  color?: string;
+  /**
+   * Extra padding around each box in points
+   */
+  padding?: number;
+  /**
+   * Rasterize output to prevent text extraction
+   */
+  convertToImage?: boolean;
+  /**
+   * Execution strategy hint for the redaction pipeline
+   */
+  strategy?: "AUTO" | "OVERLAY_ONLY" | "IMAGE_FINALIZE";
+}
+export type SecurityRemoveCertSignRequest = Record<string, never>;
 export interface PDFPasswordRequest {
   /**
    * The password of the PDF file
@@ -1277,10 +1389,12 @@ export type ToolEndpoint =
   | "/api/v1/security/add-watermark"
   | "/api/v1/security/auto-redact"
   | "/api/v1/security/cert-sign"
+  | "/api/v1/security/cert-sign/hardware/pkcs11-certificates"
   | "/api/v1/security/cert-sign/sessions"
   | "/api/v1/security/cert-sign/validate-certificate"
   | "/api/v1/security/get-info-on-pdf"
   | "/api/v1/security/redact"
+  | "/api/v1/security/redact-execute"
   | "/api/v1/security/remove-cert-sign"
   | "/api/v1/security/remove-password"
   | "/api/v1/security/sanitize-pdf"
@@ -1302,18 +1416,18 @@ export interface ToolApiParams {
   "/api/v1/convert/pdf/cbz": ConvertPdfToCbzRequest;
   "/api/v1/convert/pdf/csv": PDFWithPageNums;
   "/api/v1/convert/pdf/epub": ConvertPdfToEpubRequest;
-  "/api/v1/convert/pdf/html": PDFFile;
+  "/api/v1/convert/pdf/html": ConvertPdfHtmlRequest;
   "/api/v1/convert/pdf/img": ConvertToImageRequest;
-  "/api/v1/convert/pdf/markdown": PDFFile;
+  "/api/v1/convert/pdf/markdown": ConvertPdfMarkdownRequest;
   "/api/v1/convert/pdf/pdfa": PdfToPdfARequest;
   "/api/v1/convert/pdf/presentation": PdfToPresentationRequest;
   "/api/v1/convert/pdf/text": PdfToTextOrRTFRequest;
-  "/api/v1/convert/pdf/text-editor": PDFFile;
-  "/api/v1/convert/pdf/text-editor/metadata": PDFFile;
+  "/api/v1/convert/pdf/text-editor": ConvertPdfTextEditorRequest;
+  "/api/v1/convert/pdf/text-editor/metadata": ConvertPdfTextEditorMetadataRequest;
   "/api/v1/convert/pdf/vector": PdfVectorExportRequest;
   "/api/v1/convert/pdf/word": PdfToWordRequest;
   "/api/v1/convert/pdf/xlsx": PDFWithPageNums;
-  "/api/v1/convert/pdf/xml": PDFFile;
+  "/api/v1/convert/pdf/xml": ConvertPdfXmlRequest;
   "/api/v1/convert/svg/pdf": SvgToPdfRequest;
   "/api/v1/convert/text-editor/pdf": GeneralFile;
   "/api/v1/convert/url/pdf": UrlToPdfRequest;
@@ -1326,9 +1440,9 @@ export interface ToolApiParams {
   "/api/v1/general/merge-pdfs": MergePdfsRequest;
   "/api/v1/general/multi-page-layout": MergeMultiplePagesRequest;
   "/api/v1/general/overlay-pdfs": OverlayPdfsRequest;
-  "/api/v1/general/pdf-to-single-page": PDFFile;
+  "/api/v1/general/pdf-to-single-page": GeneralPdfToSinglePageRequest;
   "/api/v1/general/rearrange-pages": RearrangePagesRequest;
-  "/api/v1/general/remove-image-pdf": PDFFile;
+  "/api/v1/general/remove-image-pdf": GeneralRemoveImagePdfRequest;
   "/api/v1/general/remove-pages": PDFWithPageNums;
   "/api/v1/general/rotate-pdf": RotatePDFRequest;
   "/api/v1/general/scale-pages": ScalePagesRequest;
@@ -1345,7 +1459,7 @@ export interface ToolApiParams {
   "/api/v1/misc/auto-rename": ExtractHeaderRequest;
   "/api/v1/misc/auto-split-pdf": AutoSplitPdfRequest;
   "/api/v1/misc/compress-pdf": OptimizePdfRequest;
-  "/api/v1/misc/decompress-pdf": PDFFile;
+  "/api/v1/misc/decompress-pdf": MiscDecompressPdfRequest;
   "/api/v1/misc/delete-attachment": DeleteAttachmentRequest;
   "/api/v1/misc/extract-attachments": ExtractAttachmentsRequest;
   "/api/v1/misc/extract-image-scans": ExtractImageScansRequest;
@@ -1355,21 +1469,23 @@ export interface ToolApiParams {
   "/api/v1/misc/ocr-pdf": ProcessPdfWithOcrRequest;
   "/api/v1/misc/remove-blanks": RemoveBlankPagesRequest;
   "/api/v1/misc/rename-attachment": RenameAttachmentRequest;
-  "/api/v1/misc/repair": PDFFile;
+  "/api/v1/misc/repair": MiscRepairRequest;
   "/api/v1/misc/replace-invert-pdf": ReplaceAndInvertColorRequest;
   "/api/v1/misc/scanner-effect": ScannerEffectRequest;
-  "/api/v1/misc/show-javascript": PDFFile;
-  "/api/v1/misc/unlock-pdf-forms": PDFFile;
+  "/api/v1/misc/show-javascript": MiscShowJavascriptRequest;
+  "/api/v1/misc/unlock-pdf-forms": MiscUnlockPdfFormsRequest;
   "/api/v1/misc/update-metadata": MetadataRequest;
   "/api/v1/security/add-password": AddPasswordRequest;
   "/api/v1/security/add-watermark": AddWatermarkRequest;
   "/api/v1/security/auto-redact": RedactPdfRequest;
   "/api/v1/security/cert-sign": SignPDFWithCertRequest;
+  "/api/v1/security/cert-sign/hardware/pkcs11-certificates": Pkcs11CertificatesRequest;
   "/api/v1/security/cert-sign/sessions": SecurityCertSignSessionsRequest;
   "/api/v1/security/cert-sign/validate-certificate": SecurityCertSignValidateCertificateRequest;
-  "/api/v1/security/get-info-on-pdf": PDFFile;
+  "/api/v1/security/get-info-on-pdf": SecurityGetInfoOnPdfRequest;
   "/api/v1/security/redact": ManualRedactPdfRequest;
-  "/api/v1/security/remove-cert-sign": PDFFile;
+  "/api/v1/security/redact-execute": RedactExecuteRequest;
+  "/api/v1/security/remove-cert-sign": SecurityRemoveCertSignRequest;
   "/api/v1/security/remove-password": PDFPasswordRequest;
   "/api/v1/security/sanitize-pdf": SanitizePdfRequest;
   "/api/v1/security/timestamp-pdf": TimestampPdfRequest;
@@ -1454,10 +1570,12 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/security/add-watermark",
   "/api/v1/security/auto-redact",
   "/api/v1/security/cert-sign",
+  "/api/v1/security/cert-sign/hardware/pkcs11-certificates",
   "/api/v1/security/cert-sign/sessions",
   "/api/v1/security/cert-sign/validate-certificate",
   "/api/v1/security/get-info-on-pdf",
   "/api/v1/security/redact",
+  "/api/v1/security/redact-execute",
   "/api/v1/security/remove-cert-sign",
   "/api/v1/security/remove-password",
   "/api/v1/security/sanitize-pdf",

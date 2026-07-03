@@ -46,6 +46,18 @@ export function identityMapping<TParams extends ToolApiRequest>(): {
   };
 }
 
+/**
+ * Mapping for tools that take only a file and have no request parameters (their
+ * generated model is `Record<string, never>`). Both directions are empty; the
+ * tool's buildFormData just appends the file.
+ */
+export function fileOnlyMapping(): {
+  toApiParams: () => Record<string, never>;
+  fromApiParams: () => Record<string, never>;
+} {
+  return { toApiParams: () => ({}), fromApiParams: () => ({}) };
+}
+
 /** Named file fields to append alongside the serialized parameters. */
 export interface FormDataFiles {
   /** Primary document input(s); appended under the `fileInput` field. */

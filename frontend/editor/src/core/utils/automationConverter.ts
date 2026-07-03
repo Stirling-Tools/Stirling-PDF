@@ -75,7 +75,8 @@ export function convertToFolderScanningConfig(
     pipeline: automation.operations.map((op) => {
       const toolId = op.operation as ToolId;
       const toolEntry = toolRegistry[toolId];
-      const endpointConfig = toolEntry?.operationConfig?.endpoint;
+      const operationConfig = toolEntry?.operationConfig;
+      const endpointConfig = operationConfig?.endpoint;
 
       let endpoint: string | undefined;
 
@@ -101,10 +102,18 @@ export function convertToFolderScanningConfig(
         );
       }
 
+      // Map the UI parameters to the backend request shape via the tool's typed
+      // Mapper B, so the pipeline gets the real field names (e.g. compress's
+      // "compressionMethod" collapses to "optimizeLevel") instead of the raw
+      // frontend params. Tools without a mapper fall back to the raw params.
+      const apiParams = operationConfig?.toApiParams
+        ? operationConfig.toApiParams(op.parameters)
+        : op.parameters;
+
       return {
         operation: endpoint || op.operation,
         parameters: {
-          ...op.parameters,
+          ...apiParams,
           fileInput: "automated",
         },
       };
