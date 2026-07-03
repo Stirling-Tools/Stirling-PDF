@@ -3,6 +3,7 @@ import { StirlingFile } from "@app/types/fileContext";
 import type { ResponseHandler } from "@app/utils/toolResponseProcessor";
 import { ToolId } from "@app/types/toolId";
 import type { ProcessingProgress } from "@app/hooks/tools/shared/useToolState";
+import type { ToolApiRequest } from "@app/generated/toolApiTypes";
 
 export type { ProcessingProgress, ResponseHandler };
 
@@ -71,6 +72,19 @@ interface BaseToolOperationConfig<TParams> {
 
   /** Default parameter values for automation */
   defaultParameters?: TParams;
+
+  /**
+   * Typed frontend params -> backend request model. When a tool provides this,
+   * it is the spec-checked source of truth for the request body and its
+   * buildFormData is derived from it via objectToFormData.
+   */
+  toApiParams?(params: TParams): ToolApiRequest;
+
+  /**
+   * Backend request model -> partial frontend params, so a stored API call
+   * can be re-hydrated into this tool's settings UI.
+   */
+  fromApiParams?(apiParams: ToolApiRequest): Partial<TParams>;
 
   /**
    * For custom tools: if true, success implies all input files were successfully processed.
