@@ -171,6 +171,17 @@ jobs:
     uses: ./.github/workflows/ai-engine.yml
     secrets: inherit
 
+  # The generated frontend tool API types depend on the Java OpenAPI spec, so
+  # they can go stale from either a backend (openapi) or frontend change.
+  frontend-api-types:
+    if: needs.files-changed.outputs.openapi == 'true' || needs.files-changed.outputs.frontend == 'true'
+    needs: [files-changed]
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/frontend-api-types.yml
+    secrets: inherit
+
   pre-commit:
     needs: [files-changed]
     permissions:
@@ -225,6 +236,7 @@ jobs:
       - test-build-docker-images
       - tauri-build
       - ai-engine
+      - frontend-api-types
       - pre-commit
       - dependency-review
     runs-on: ubuntu-latest
@@ -250,6 +262,7 @@ jobs:
             test-build-docker-images=${{ needs.test-build-docker-images.result }}
             tauri-build=${{ needs.tauri-build.result }}
             ai-engine=${{ needs.ai-engine.result }}
+            frontend-api-types=${{ needs.frontend-api-types.result }}
             pre-commit=${{ needs.pre-commit.result }}
             dependency-review=${{ needs.dependency-review.result }}
         run: |
