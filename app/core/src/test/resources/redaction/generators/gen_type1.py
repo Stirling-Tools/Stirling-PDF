@@ -68,7 +68,7 @@ def build_font(font_name="MinType1Test"):
     # every key AFTER Subrs is dropped. Keep Subrs LAST so nothing gets skipped.
     private = {
         "RD": t1Lib.RD_value,            # ('string','currentfile','exch','readstring','pop')
-        "ND": t1Lib.ND_values[0],        # ('def',)
+        "ND": t1Lib.ND_values[0],        # ('def',)  codespell:ignore
         "NP": t1Lib.PD_values[0],        # ('put',)
         "MinFeature": [16, 16],
         # PDFBox reads BlueValues[2] for CapHeight, so >=3 entries required.
