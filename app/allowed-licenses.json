@@ -82,6 +82,10 @@
     },
     {
       "moduleName": ".*",
+      "moduleLicense": "Apache License version 2.0"
+    },
+    {
+      "moduleName": ".*",
       "moduleLicense": "Apache License, Version 2.0"
     },
     {
@@ -107,6 +111,10 @@
     {
       "moduleName": ".*",
       "moduleLicense": "Mozilla Public License 2.0 (MPL-2.0)"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "Mozilla Public License Version 2.0"
     },
     {
       "moduleName": ".*",
