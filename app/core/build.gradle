@@ -283,9 +283,11 @@ tasks.register('npmBuild', Exec) {
     group = 'frontend'
     description = 'Build editor frontend application'
     workingDir file('../..')
+    // Pin the repo-root Taskfile explicitly so the Exec task does not inherit
+    // an unrelated TASKFILE override from the surrounding environment.
     commandLine = Os.isFamily(Os.FAMILY_WINDOWS) ?
-            ['cmd', '/c', 'task', frontendBuildTask] :
-            ['task', frontendBuildTask]
+            ['cmd', '/c', 'task', '--taskfile', 'Taskfile.yml', frontendBuildTask] :
+            ['task', '--taskfile', 'Taskfile.yml', frontendBuildTask]
     inputs.dir(new File(frontendEditorDir, 'src'))
     inputs.dir(new File(frontendEditorDir, 'public'))
     inputs.file(new File(frontendDir, 'package.json'))
