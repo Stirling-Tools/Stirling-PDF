@@ -257,8 +257,20 @@ tasks:
 
   licenses:generate:
     desc: "Generate the backend dependency license report"
+    env:
+      # Use the SaaS flavor so the license report includes all dependencies.
+      STIRLING_FLAVOR: 'saas'
     cmds:
       - '{{.GRADLE}} checkLicense generateLicenseReport --no-parallel'
+
+  licenses:generate:copy:
+    desc: "Generate and copy the backend dependency license report"
+    deps: [licenses:generate]
+    cmds:
+      - cmd: cp build/reports/dependency-license/index.json app/core/src/main/resources/static/3rdPartyLicenses.json
+        platforms: [linux, darwin]
+      - cmd: powershell -NoProfile -Command "New-Item -ItemType Directory -Force -Path 'app/core/src/main/resources/static' | Out-Null; Copy-Item -Force 'build/reports/dependency-license/index.json' 'app/core/src/main/resources/static/3rdPartyLicenses.json'"
+        platforms: [windows]
 
   clean:
     desc: "Clean backend build artifacts"
