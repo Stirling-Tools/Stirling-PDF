@@ -1,4 +1,4 @@
-import { createTheme, type MantineColorsTuple } from "@mantine/core";
+import { createTheme, type CSSVariablesResolver, type MantineColorsTuple } from "@mantine/core";
 
 /**
  * Mantine theme for the portal, bound to the SUI design tokens in
@@ -68,6 +68,39 @@ const purple = tuple(
   "--color-purple",
   "--color-purple-dark",
 );
+
+/**
+ * Maps Mantine's neutral CSS variables to SUI tokens so dropdowns, popovers,
+ * and other floating elements follow the SUI surface/border/text palette rather
+ * than Mantine's default white/gray-* / dark-* scale.
+ *
+ * The portal's PortalMantineProvider syncs Mantine's color scheme to SUI's
+ * light/dark toggle (forceColorScheme), so the light/dark buckets here align
+ * with [data-theme="light/dark"] and the SUI token values are correct.
+ */
+export const suiCssVariablesResolver: CSSVariablesResolver = () => ({
+  variables: {
+    "--mantine-color-text": "var(--color-text-1)",
+    "--mantine-color-placeholder": "var(--color-text-placeholder)",
+    "--mantine-color-body": "var(--color-bg)",
+  },
+  light: {
+    // Popover/dropdown background + combobox search input
+    "--mantine-color-white": "var(--color-surface)",
+    // Option hover background
+    "--mantine-color-gray-0": "var(--color-bg-hover)",
+    // Dropdown border
+    "--mantine-color-gray-2": "var(--color-border)",
+  },
+  dark: {
+    // Popover/dropdown background (dark-6 is the floating surface in dark mode)
+    "--mantine-color-dark-6": "var(--color-surface)",
+    // Deeper background used for option hover + combobox search input
+    "--mantine-color-dark-7": "var(--color-bg)",
+    // Border in dark mode
+    "--mantine-color-dark-4": "var(--color-border)",
+  },
+});
 
 export const mantineTheme = createTheme({
   primaryColor: "blue",

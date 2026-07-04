@@ -1,0 +1,85 @@
+/* ===================================================================
+ * MantineForms.css — SUI design tokens injected into Mantine inputs
+ *
+ * Applied via classNames.wrapper="sui-mantine-wrapper" on each
+ * Mantine-backed SUI component (MultiSelect, NumberInput, ColorInput).
+ * The inline `styles.wrapper` in each component sets the base CSS
+ * variables; this file adds focus ring + pill styling that require
+ * CSS pseudo-selectors or attribute selectors.
+ * =================================================================== */
+
+/* CSS custom properties for Mantine's input system, mapped to SUI tokens.
+ * These are also set as inline styles (higher specificity); the declarations
+ * here act as a typed reference and as a fallback for any slot Mantine reads
+ * before the inline vars are applied. */
+.sui-mantine-wrapper {
+  --input-bg: var(--color-surface);
+  --input-bd: var(--color-border-input);
+  --input-bd-focus: var(--color-blue);
+  --input-radius: var(--radius-md);
+  --input-color: var(--color-text-1);
+  --input-placeholder-color: var(--color-text-placeholder);
+  --input-height-sm: 1.75rem;
+  --input-height-md: 2.25rem;
+  font-size: 0.875rem;
+}
+
+/* SUI focus ring — matches .sui-input:focus-within */
+.sui-mantine-wrapper[data-focused],
+.sui-mantine-wrapper:focus-within {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-blue) 16%, transparent);
+}
+
+/* Error state */
+.sui-mantine-wrapper[data-invalid] {
+  --input-bd: var(--color-red);
+  --input-bd-focus: var(--color-red);
+}
+
+.sui-mantine-wrapper[data-invalid][data-focused],
+.sui-mantine-wrapper[data-invalid]:focus-within {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-red) 16%, transparent);
+}
+
+/* Disabled state */
+.sui-mantine-wrapper[data-disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---- MultiSelect pills ---- */
+/* Pills match SUI's Chip component: small rounded tags. */
+.sui-mantine-pill {
+  background: var(--color-blue-light) !important;
+  color: var(--color-blue-dark) !important;
+  border: 1px solid var(--color-blue-border) !important;
+  border-radius: var(--radius-sm) !important;
+  font-size: 0.75rem !important;
+  font-weight: 500 !important;
+}
+
+/* Pills list needs a min-height to not collapse when empty */
+.sui-mantine-pills-list {
+  min-height: var(--input-height-sm, 1.75rem);
+}
+
+/* ---- NumberInput controls (increment/decrement buttons) ---- */
+.sui-mantine-control {
+  border-color: var(--color-border-input) !important;
+  color: var(--color-text-3) !important;
+}
+
+.sui-mantine-control:hover {
+  background: var(--color-bg-hover) !important;
+  color: var(--color-text-1) !important;
+}
+
+/* ---- Dark mode: Mantine's own dark-mode vars beat ours when Mantine's
+ * color-scheme is "dark". Reassert SUI tokens so the two systems stay in sync.
+ * The portal's PortalMantineProvider syncs forceColorScheme to SUI theme, so
+ * [data-mantine-color-scheme="dark"] === [data-theme="dark"] in practice. ---- */
+[data-mantine-color-scheme="dark"] .sui-mantine-wrapper {
+  --input-bg: var(--color-surface);
+  --input-bd: var(--color-border-input);
+  --input-color: var(--color-text-1);
+}

@@ -34,3 +34,7 @@
 .sui-iconbadge--red {
   --ib-base: var(--color-red);
 }
+.sui-iconbadge--neutral {
+  --ib-base: var(--color-text-1);
+  background: none;
+}
