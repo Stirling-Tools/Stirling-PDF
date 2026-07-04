@@ -28,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.constants.JwtConstants;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.access.service.ResourceAccessService;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
@@ -64,6 +65,7 @@ public class AuthController {
     private final ApplicationProperties.Security securityProperties;
     private final ApplicationProperties applicationProperties;
     private final AiUserDataService aiUserDataService;
+    private final ResourceAccessService resourceAccessService;
 
     /**
      * Login endpoint - replaces Supabase signInWithPassword
@@ -628,6 +630,7 @@ public class AuthController {
         userMap.put("username", user.getUsername());
         userMap.put("role", user.getRolesAsString());
         userMap.put("enabled", user.isEnabled());
+        userMap.put("portalAccess", resourceAccessService.canAccessPortal(user));
         userMap.put(
                 "authenticationType",
                 user.getAuthenticationType()); // Expose authentication type for SSO detection

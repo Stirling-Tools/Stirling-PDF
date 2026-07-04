@@ -135,6 +135,7 @@ export function usePolicies(enabled = true) {
         reviewerEmail: result.reviewerEmail,
         outputMode: result.folder.outputMode,
         outputName: result.folder.outputName,
+        outputNamePosition: result.folder.outputNamePosition,
         runOn: result.folder.runOn,
       });
     },
@@ -171,6 +172,7 @@ export function usePolicies(enabled = true) {
         reviewerEmail: result.reviewerEmail,
         outputMode: result.folder.outputMode,
         outputName: result.folder.outputName,
+        outputNamePosition: result.folder.outputNamePosition,
         runOn: result.folder.runOn,
       });
     },
@@ -235,6 +237,7 @@ export function usePolicies(enabled = true) {
         reviewerEmail: result.reviewerEmail,
         outputMode: result.folder.outputMode,
         outputName: result.folder.outputName,
+        outputNamePosition: result.folder.outputNamePosition,
         runOn: result.folder.runOn,
       });
     },

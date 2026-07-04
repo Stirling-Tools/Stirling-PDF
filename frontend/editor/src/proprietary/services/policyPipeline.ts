@@ -56,6 +56,12 @@ export interface BackendPolicy {
   output: BackendOutputSpec;
 }
 
+/**
+ * Where a policy run executes, and therefore where its output files live and
+ * are downloaded from.
+ */
+export type PolicyExecutionTarget = "local" | "saas";
+
 /** Lifecycle states of a backend run (mirrors PolicyRunStatus). */
 export type PolicyRunStatus =
   | "PENDING"

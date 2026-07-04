@@ -23,6 +23,8 @@ interface SignatureCreationStepProps {
   onFontSizeChange: (size: number) => void;
   onTextColorChange: (color: string) => void;
   onNext: () => void;
+  /** Label for the confirm button; defaults to the cert-flow "continue" text. */
+  nextLabel?: string;
   disabled?: boolean;
 }
 
@@ -40,6 +42,7 @@ export const SignatureCreationStep: React.FC<SignatureCreationStepProps> = ({
   onFontSizeChange,
   onTextColorChange,
   onNext,
+  nextLabel,
   disabled = false,
 }) => {
   const { t } = useTranslation();
@@ -89,10 +92,11 @@ export const SignatureCreationStep: React.FC<SignatureCreationStepProps> = ({
       )}
 
       <Button onClick={onNext} disabled={!hasSignature || disabled} fullWidth>
-        {t(
-          "certSign.collab.signRequest.steps.continue",
-          "Continue to Certificate Selection",
-        )}
+        {nextLabel ??
+          t(
+            "certSign.collab.signRequest.steps.continue",
+            "Continue to Certificate Selection",
+          )}
       </Button>
     </Stack>
   );

@@ -12,6 +12,8 @@ import {
 import LayersIcon from "@mui/icons-material/Layers";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import LocalIcon from "@app/components/shared/LocalIcon";
+import { useViewer } from "@app/contexts/ViewerContext";
 import "@app/components/viewer/SidebarBase.css";
 import "@app/components/viewer/LayerSidebar.css";
 import {
@@ -49,6 +51,7 @@ export function LayerSidebar({
   onApplyLayers,
   onLayersDetected,
 }: LayerSidebarProps) {
+  const { toggleLayerSidebar } = useViewer();
   const [layers, setLayers] = useState<LayerInfo[]>([]);
   const [visibility, setVisibility] = useState<Record<string, boolean>>({});
   const [status, setStatus] = useState<LoadStatus>("idle");
@@ -337,30 +340,42 @@ export function LayerSidebar({
           {isApplying && <Loader size="xs" type="dots" />}
         </div>
 
-        {status === "ready" && leafIds.length > 0 && (
-          <div className="layer-sidebar__header-actions">
-            <ActionIcon
-              variant="subtle"
-              size="sm"
-              onClick={showAll}
-              disabled={allVisible || isApplying}
-              aria-label="Show all layers"
-              title="Show all"
-            >
-              <VisibilityIcon sx={{ fontSize: "1rem" }} />
-            </ActionIcon>
-            <ActionIcon
-              variant="subtle"
-              size="sm"
-              onClick={hideAll}
-              disabled={allHidden || isApplying}
-              aria-label="Hide all layers"
-              title="Hide all"
-            >
-              <VisibilityOffIcon sx={{ fontSize: "1rem" }} />
-            </ActionIcon>
-          </div>
-        )}
+        <div className="layer-sidebar__header-actions">
+          {status === "ready" && leafIds.length > 0 && (
+            <>
+              <ActionIcon
+                variant="subtle"
+                size="sm"
+                onClick={showAll}
+                disabled={allVisible || isApplying}
+                aria-label="Show all layers"
+                title="Show all"
+              >
+                <VisibilityIcon sx={{ fontSize: "1rem" }} />
+              </ActionIcon>
+              <ActionIcon
+                variant="subtle"
+                size="sm"
+                onClick={hideAll}
+                disabled={allHidden || isApplying}
+                aria-label="Hide all layers"
+                title="Hide all"
+              >
+                <VisibilityOffIcon sx={{ fontSize: "1rem" }} />
+              </ActionIcon>
+            </>
+          )}
+          <ActionIcon
+            variant="subtle"
+            size="sm"
+            color="gray"
+            onClick={toggleLayerSidebar}
+            aria-label="Close layers sidebar"
+            title="Close layers"
+          >
+            <LocalIcon icon="close-rounded" width="1.1rem" height="1.1rem" />
+          </ActionIcon>
+        </div>
       </div>
 
       {/* Content */}
