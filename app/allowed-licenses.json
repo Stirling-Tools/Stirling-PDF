@@ -90,6 +90,10 @@
     },
     {
       "moduleName": ".*",
+      "moduleLicense": "Apache License, version 2.0"
+    },
+    {
+      "moduleName": ".*",
       "moduleLicense": "The Apache License, Version 2.0"
     },
     {
