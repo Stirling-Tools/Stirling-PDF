@@ -17,6 +17,9 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.source.InProcessSourceStore;
+import stirling.software.proprietary.policy.source.Source;
+import stirling.software.proprietary.policy.source.SourceStore;
 
 /**
  * Tests for {@link FolderAccessGuard}: folder access is fail-closed, confined to the configured
@@ -26,12 +29,14 @@ class FolderAccessGuardTest {
 
     @TempDir Path tempDir;
 
+    private final SourceStore sourceStore = new InProcessSourceStore();
+
     private FolderAccessGuard guard(List<String> allowedRoots, String... activeProfiles) {
         ApplicationProperties properties = new ApplicationProperties();
         properties.getPolicies().setAllowedFolderRoots(allowedRoots);
         StandardEnvironment environment = new StandardEnvironment();
         environment.setActiveProfiles(activeProfiles);
-        return new FolderAccessGuard(properties, environment);
+        return new FolderAccessGuard(properties, environment, sourceStore);
     }
 
     @Test
@@ -93,7 +98,23 @@ class FolderAccessGuardTest {
         assertFalse(guard.usesFolderAccess(policy(List.of(), OutputSpec.inline())));
     }
 
-    private static Policy policy(List<InputSpec> sources, OutputSpec output) {
-        return new Policy("p1", "p", "owner", true, null, sources, List.of(), output);
+    private Policy policy(List<InputSpec> sources, OutputSpec output) {
+        List<String> sourceIds =
+                sources.stream()
+                        .map(
+                                spec ->
+                                        sourceStore
+                                                .save(
+                                                        new Source(
+                                                                null,
+                                                                "src",
+                                                                spec.type(),
+                                                                spec.options(),
+                                                                true,
+                                                                "owner",
+                                                                null))
+                                                .id())
+                        .toList();
+        return new Policy("p1", "p", "owner", true, null, sourceIds, List.of(), output);
     }
 }

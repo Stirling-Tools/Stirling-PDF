@@ -5,7 +5,7 @@ import { useAuth } from "@app/auth/UseSession";
 import { useTranslation } from "@app/hooks/useTranslation";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
 import AuthLayout from "@app/routes/authShared/AuthLayout";
-import "@shared/auth/ui/auth.css";
+import "@app/auth/ui/auth.css";
 import "@app/routes/authShared/saas-auth.css";
 import {
   absoluteWithBasePath,
@@ -15,11 +15,11 @@ import {
 import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
 
 // Import login components
-import ErrorMessage from "@shared/auth/ui/ErrorMessage";
+import ErrorMessage from "@app/auth/ui/ErrorMessage";
 import EmailPasswordForm from "@app/routes/login/EmailPasswordForm";
 import OAuthButtons from "@app/routes/login/OAuthButtons";
 import LoggedInState from "@app/routes/login/LoggedInState";
-import loginHeader from "@shared/assets/login/LoginLightModeHeader.svg";
+import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
 
 export default function Login() {
   const navigate = useNavigate();

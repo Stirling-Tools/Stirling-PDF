@@ -6,8 +6,9 @@ import java.util.List;
  * A stored automation: ordered tool steps, input sources, and an output destination.
  *
  * <p>Always runnable on demand. An optional {@link TriggerConfig} fires it automatically; a {@code
- * null} trigger means manual-only. Trigger decides when, {@link InputSpec sources} decide where
- * files come from; a run pulls from every source.
+ * null} trigger means manual-only. Trigger decides when; {@code sourceIds} reference the persisted
+ * {@code Source} connections (resolved live at run time) that decide where files come from; a run
+ * pulls from every referenced source.
  */
 public record Policy(
         String id,
@@ -15,13 +16,13 @@ public record Policy(
         String owner,
         boolean enabled,
         TriggerConfig trigger,
-        List<InputSpec> sources,
+        List<String> sourceIds,
         List<PipelineStep> steps,
         OutputSpec output,
         Long teamId) {
 
     public Policy {
-        sources = sources == null ? List.of() : List.copyOf(sources);
+        sourceIds = sourceIds == null ? List.of() : List.copyOf(sourceIds);
         steps = steps == null ? List.of() : steps;
         output = output == null ? OutputSpec.inline() : output;
     }
@@ -36,10 +37,10 @@ public record Policy(
             String owner,
             boolean enabled,
             TriggerConfig trigger,
-            List<InputSpec> sources,
+            List<String> sourceIds,
             List<PipelineStep> steps,
             OutputSpec output) {
-        this(id, name, owner, enabled, trigger, sources, steps, output, null);
+        this(id, name, owner, enabled, trigger, sourceIds, steps, output, null);
     }
 
     /** A policy with no configured sources (a generator, or files supplied directly to a run). */

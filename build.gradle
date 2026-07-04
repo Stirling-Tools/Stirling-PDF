@@ -91,7 +91,7 @@ springBoot {
 
 allprojects {
     group = 'stirling.software'
-    version = '2.13.2'
+    version = '2.14.0'
 
     configurations.configureEach {
         exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
