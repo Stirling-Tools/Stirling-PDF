@@ -1,10 +1,12 @@
-import { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
-import { Menu, Tooltip } from "@mantine/core";
+import { Group, Loader, Menu, Stack, Text } from "@mantine/core";
+import { Tooltip } from "@app/components/shared/Tooltip";
 import { useTranslation } from "react-i18next";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
+import AutorenewIcon from "@mui/icons-material/Autorenew";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
 import CloudDoneIcon from "@mui/icons-material/CloudDone";
@@ -140,6 +142,8 @@ export interface FileItemPolicyRef {
   /** True only just after the policy was applied — drives the one-off glow, so
    *  it doesn't replay on every reload of an already-enforced file. */
   recent: boolean;
+  /** True while the policy run is actively in-flight on this file. */
+  enforcing?: boolean;
 }
 
 export interface FileItemProps {
@@ -207,6 +211,23 @@ export function FileItem({
   const dateLabel = lastModified ? formatFileDate(lastModified) : "";
   const typeLabel = ext ? ext.toUpperCase() : "File";
 
+  const policyEnforcing = policies.some((p) => p.enforcing);
+  const enforcingTooltip = (action: string): React.ReactNode => (
+    <Stack gap={6} py={2} w={200}>
+      <Group gap={6} wrap="nowrap">
+        <ShieldOutlinedIcon style={{ fontSize: 13 }} />
+        <Text size="xs" fw={600}>
+          {t(
+            "policy.blockingAction",
+            "{{action}} blocked while enforcing policy, please wait",
+            { action },
+          )}
+        </Text>
+      </Group>
+      <Loader size="xs" />
+    </Stack>
+  );
+
   const visibleFolders = folders.slice(0, MAX_VISIBLE_FOLDER_TAGS);
   const overflowFolders = folders.slice(MAX_VISIBLE_FOLDER_TAGS);
 
@@ -227,9 +248,6 @@ export function FileItem({
 
   const handleMouseLeave = useCallback(() => setHoverRect(null), []);
 
-  // A just-applied policy (recent run) drives the one-off row glow.
-  const recentPolicy = policies.find((p) => p.recent);
-
   // Reactive: tooltip appears as soon as both hover rect and thumbnail are ready
   const thumbPos =
     hoverRect && resolvedThumbnail
@@ -243,14 +261,7 @@ export function FileItem({
     <>
       <div
         ref={itemRef}
-        className={`file-sidebar-file-item${isSelected ? " selected" : ""}${isActive ? " active" : ""}${isViewedInViewer ? " viewed" : ""}${recentPolicy ? " policy-enforced" : ""}`}
-        style={
-          recentPolicy
-            ? ({
-                "--policy-glow": recentPolicy.accentColor,
-              } as React.CSSProperties)
-            : undefined
-        }
+        className={`file-sidebar-file-item${isSelected ? " selected" : ""}${isActive ? " active" : ""}${isViewedInViewer ? " viewed" : ""}`}
         onClick={() => onClick(fileId)}
         draggable={draggable}
         onDragStart={
@@ -288,11 +299,11 @@ export function FileItem({
             </span>
             {isUploadedToCloud && (
               <Tooltip
-                label={t(
+                content={t(
                   "fileSidebar.fileItem.savedToServer",
                   "Saved to server",
                 )}
-                withArrow
+                arrow
                 position="top"
               >
                 <span className="file-sidebar-cloud-badge" data-no-select>
@@ -305,15 +316,23 @@ export function FileItem({
                 {policies.slice(0, MAX_VISIBLE_POLICY_BADGES).map((policy) => (
                   <Tooltip
                     key={policy.id}
-                    label={`${policy.name} policy ran on this file`}
-                    withArrow
+                    content={
+                      policy.enforcing
+                        ? `${policy.name} enforcing…`
+                        : `${policy.name} policy ran on this file`
+                    }
+                    arrow
                     position="top"
                   >
                     <span
-                      className="file-sidebar-policy-badge"
+                      className={`file-sidebar-policy-badge${policy.enforcing ? " file-sidebar-policy-badge--enforcing" : ""}${policy.recent && !policy.enforcing ? " file-sidebar-policy-badge--recent" : ""}`}
                       style={{ color: policy.accentColor }}
                     >
-                      <ShieldOutlinedIcon sx={{ fontSize: "0.7rem" }} />
+                      {policy.enforcing ? (
+                        <AutorenewIcon sx={{ fontSize: "0.7rem" }} />
+                      ) : (
+                        <ShieldOutlinedIcon sx={{ fontSize: "0.7rem" }} />
+                      )}
                     </span>
                   </Tooltip>
                 ))}
@@ -325,10 +344,10 @@ export function FileItem({
               {visibleFolders.map((folder) => (
                 <Tooltip
                   key={folder.id}
-                  label={folder.name}
-                  withArrow
+                  content={folder.name}
+                  arrow
                   position="top"
-                  withinPortal
+                  portalTarget={typeof document !== "undefined" ? document.body : undefined}
                 >
                   <span
                     className="file-sidebar-folder-tag"
@@ -356,10 +375,10 @@ export function FileItem({
               ))}
               {overflowFolders.length > 0 && (
                 <Tooltip
-                  label={overflowFolders.map((f) => f.name).join(", ")}
-                  withArrow
+                  content={overflowFolders.map((f) => f.name).join(", ")}
+                  arrow
                   position="top"
-                  withinPortal
+                  portalTarget={typeof document !== "undefined" ? document.body : undefined}
                 >
                   <span className="file-sidebar-folder-tag-more">
                     +{overflowFolders.length}
@@ -394,7 +413,7 @@ export function FileItem({
         </button>
 
         {(onDelete ||
-          onSaveToCloud ||
+          (canSaveToCloud && onSaveToCloud) ||
           (hasVersionHistory && onVersionHistory)) && (
           <Menu position="bottom-end" withinPortal shadow="md" width={190}>
             <Menu.Target>
@@ -423,39 +442,61 @@ export function FileItem({
                   {t("fileSidebar.fileItem.versionHistory", "Version history")}
                 </Menu.Item>
               )}
-              {canSaveToCloud && onSaveToCloud && (
-                <Menu.Item
-                  leftSection={
-                    <CloudUploadOutlinedIcon sx={{ fontSize: 16 }} />
-                  }
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onSaveToCloud(fileId);
-                  }}
-                >
-                  {isUploadedToCloud
-                    ? t(
-                        "fileSidebar.fileItem.updateOnServer",
-                        "Update on server",
-                      )
-                    : t(
-                        "fileSidebar.fileItem.uploadToServer",
-                        "Upload to server",
-                      )}
-                </Menu.Item>
-              )}
-              {onDelete && (
-                <Menu.Item
-                  color="red"
-                  leftSection={<DeleteOutlineIcon sx={{ fontSize: 16 }} />}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete(fileId);
-                  }}
-                >
-                  {t("fileSidebar.fileItem.delete", "Delete")}
-                </Menu.Item>
-              )}
+              {canSaveToCloud && onSaveToCloud && (() => {
+                const uploadLabel = isUploadedToCloud
+                  ? t("fileSidebar.fileItem.updateOnServer", "Update on server")
+                  : t("fileSidebar.fileItem.uploadToServer", "Upload to server");
+                return (
+                  <Tooltip
+                    content={policyEnforcing ? enforcingTooltip(uploadLabel) : undefined}
+                    disabled={!policyEnforcing}
+                    position="left"
+                    offset={6}
+                    arrow
+                    portalTarget={typeof document !== "undefined" ? document.body : undefined}
+                  >
+                    <div>
+                      <Menu.Item
+                        disabled={policyEnforcing}
+                        leftSection={<CloudUploadOutlinedIcon sx={{ fontSize: 16 }} />}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSaveToCloud(fileId);
+                        }}
+                      >
+                        {uploadLabel}
+                      </Menu.Item>
+                    </div>
+                  </Tooltip>
+                );
+              })()}
+              {onDelete && (() => {
+                const deleteLabel = t("fileSidebar.fileItem.delete", "Delete");
+                return (
+                  <Tooltip
+                    content={policyEnforcing ? enforcingTooltip(deleteLabel) : undefined}
+                    disabled={!policyEnforcing}
+                    position="left"
+                    offset={6}
+                    arrow
+                    portalTarget={typeof document !== "undefined" ? document.body : undefined}
+                  >
+                    <div>
+                      <Menu.Item
+                        disabled={policyEnforcing}
+                        color="red"
+                        leftSection={<DeleteOutlineIcon sx={{ fontSize: 16 }} />}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDelete(fileId);
+                        }}
+                      >
+                        {deleteLabel}
+                      </Menu.Item>
+                    </div>
+                  </Tooltip>
+                );
+              })()}
             </Menu.Dropdown>
           </Menu>
         )}

@@ -472,9 +472,14 @@ async function importOutputs(
       parentStub,
       "automate",
     );
-    // Mark the outputs handled BEFORE adding them, so the auto-run never enforces
-    // the policy on its own output — that would version endlessly in a loop.
-    for (const s of stubs) markDispatched(run.categoryId, s.id);
+    // derivedFromTool is the durable cross-session guard; markDispatched is the
+    // belt-and-suspenders session guard. Both are needed: dispatched lives only
+    // in localStorage (wiped on clear / absent on a different device), while
+    // derivedFromTool is stamped on the stub itself.
+    for (const s of stubs) {
+      s.derivedFromTool = true;
+      markDispatched(run.categoryId, s.id);
+    }
     deliveredIds = stubs.map((s) => s.id as string);
     if (ctx.parentStub) {
       // Input is in the active workspace: version it there (workspace + storage).

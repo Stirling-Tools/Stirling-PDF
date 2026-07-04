@@ -5899,6 +5899,15 @@ keyDescription = "Paste the license key from your email"
 success = "License Activated!"
 successMessage = "Your license has been successfully activated. You can now close this window."
 
+[policy]
+blockingAction = "{{action}} blocked while enforcing policy, please wait"
+blockingShare = "{{action}} blocked while enforcing policy, please wait"
+dismiss = "Dismiss overlay"
+enforcingTitle = "Enforcing policy…"
+failedBody = "This file did not pass the required policy check and cannot be used."
+failedTitle = "Policy check failed"
+viewAnyway = "View file (policy still enforcing)"
+
 [policies]
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
 deleteConfirmTitle = "Delete {{label}} policy?"

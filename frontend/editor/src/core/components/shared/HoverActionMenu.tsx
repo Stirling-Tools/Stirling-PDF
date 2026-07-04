@@ -1,5 +1,6 @@
 import React from "react";
-import { ActionIcon, Tooltip } from "@mantine/core";
+import { ActionIcon } from "@mantine/core";
+import { Tooltip } from "@app/components/shared/Tooltip";
 import styles from "@app/components/shared/HoverActionMenu.module.css";
 import { Z_INDEX_HOVER_ACTION_MENU } from "@app/styles/zIndex";
 
@@ -9,6 +10,8 @@ export interface HoverAction {
   label: string;
   onClick: (e: React.MouseEvent) => void;
   disabled?: boolean;
+  /** Overrides label in the tooltip — use for rich ReactNode content (e.g. enforcement messages). */
+  tooltip?: React.ReactNode;
   color?: string;
   hidden?: boolean;
   dataTour?: string;
@@ -57,19 +60,28 @@ const HoverActionMenu: React.FC<HoverActionMenuProps> = ({
       onClick={(e) => e.stopPropagation()}
     >
       {visibleActions.map((action) => (
-        <Tooltip key={action.id} label={action.label}>
-          <ActionIcon
-            size="md"
-            variant="subtle"
-            disabled={action.disabled}
-            onClick={action.onClick}
-            c={action.color}
-            aria-label={action.label}
-            style={{ color: action.color || "var(--text-secondary)" }}
-            data-tour={action.dataTour}
-          >
-            {action.icon}
-          </ActionIcon>
+        <Tooltip
+          key={action.id}
+          content={action.tooltip ?? action.label}
+          position="bottom"
+          offset={6}
+          arrow
+          portalTarget={typeof document !== "undefined" ? document.body : undefined}
+        >
+          <div style={{ display: "inline-flex", alignItems: "center" }}>
+            <ActionIcon
+              size="md"
+              variant="subtle"
+              disabled={action.disabled}
+              onClick={action.onClick}
+              c={action.color}
+              aria-label={action.label}
+              style={{ color: action.color || "var(--text-secondary)" }}
+              data-tour={action.dataTour}
+            >
+              {action.icon}
+            </ActionIcon>
+          </div>
         </Tooltip>
       ))}
     </div>

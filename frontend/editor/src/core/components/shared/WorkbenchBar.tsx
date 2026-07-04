@@ -5,7 +5,7 @@ import React, {
   useRef,
   useSyncExternalStore,
 } from "react";
-import { ActionIcon } from "@mantine/core";
+import { ActionIcon, Group, Loader, Progress, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -31,6 +31,8 @@ import { Tooltip } from "@app/components/shared/Tooltip";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import ViewerShareButton from "@app/components/viewer/ViewerShareButton";
 import { useSharingEnabled } from "@app/hooks/useSharingEnabled";
+import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
+import { usePolicyRuns } from "@app/components/policies/policyRunStore";
 import { downloadFileWithPolicy as downloadFile } from "@app/services/exportWithPolicy";
 import { enforceExportPolicies } from "@app/services/policyExport";
 import { downloadFile as downloadRaw } from "@app/services/downloadService";
@@ -44,9 +46,11 @@ import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import FolderIcon from "@mui/icons-material/Folder";
 import CloseIcon from "@mui/icons-material/Close";
 import PrintIcon from "@mui/icons-material/Print";
+import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import "@app/components/shared/WorkbenchBar.css";
 
 const SECTION_ORDER: WorkbenchBarSection[] = ["top", "middle", "bottom"];
+const IN_FLIGHT = ["PENDING", "RUNNING", "WAITING_FOR_INPUT"] as const;
 
 interface ViewOption {
   value: WorkbenchType;
@@ -117,6 +121,50 @@ export default function WorkbenchBar({
   const { actions: fileActions } = useFileActions();
   const activeFiles = selectors.getFiles();
   const { activeFileId, setActiveFileId } = useViewer();
+  const policyFileBadges = usePolicyFileBadges();
+  // Block print/export while the active file is under active policy enforcement.
+  const policyEnforcing =
+    currentView === "viewer" &&
+    !!activeFileId &&
+    (policyFileBadges.get(activeFileId) ?? []).some((p) => p.enforcing);
+  const policyRuns = usePolicyRuns();
+  const enforcingRun = policyEnforcing
+    ? policyRuns.find(
+        (r) =>
+          r.fileId === activeFileId &&
+          (IN_FLIGHT as readonly string[]).includes(r.status),
+      )
+    : undefined;
+  const enforcingProgress =
+    enforcingRun?.currentStep != null && enforcingRun.stepCount
+      ? Math.round((enforcingRun.currentStep / enforcingRun.stepCount) * 100)
+      : undefined;
+  const makeEnforcingTooltip = (action: string): React.ReactNode => (
+    <Stack gap={6} py={2} w={200}>
+      <Group gap={6} wrap="nowrap">
+        <ShieldOutlinedIcon style={{ fontSize: 13 }} />
+        <Text size="xs" fw={600}>
+          {t(
+            "policy.blockingAction",
+            "{{action}} blocked while enforcing policy, please wait",
+            { action },
+          )}
+        </Text>
+      </Group>
+      {enforcingProgress != null ? (
+        <Progress
+          w="100%"
+          size="xs"
+          radius="xl"
+          value={enforcingProgress}
+          striped
+          animated
+        />
+      ) : (
+        <Loader size="xs" />
+      )}
+    </Stack>
+  );
   const pageEditorTotalPages = pageEditorFunctions?.totalPages ?? 0;
   const pageEditorSelectedCount =
     pageEditorFunctions?.selectedPageIds?.length ?? 0;
@@ -498,13 +546,15 @@ export default function WorkbenchBar({
               className="workbench-bar-action-icon"
               onClick={handlePrint}
               disabled={
-                totalItems === 0 || allButtonsDisabled || disableForFullscreen
+                totalItems === 0 || allButtonsDisabled || disableForFullscreen || policyEnforcing
               }
               aria-label={t("workbenchBar.print", "Print PDF")}
             >
               <PrintIcon sx={{ fontSize: "1rem" }} />
             </ActionIcon>,
-            t("workbenchBar.print", "Print PDF"),
+            policyEnforcing
+              ? makeEnforcingTooltip(t("workbenchBar.print", "Print PDF"))
+              : t("workbenchBar.print", "Print PDF"),
           )}
 
         {/* Download (file-level action — not relevant in custom views) */}
@@ -516,7 +566,7 @@ export default function WorkbenchBar({
               className="workbench-bar-action-icon"
               onClick={() => handleExportAll()}
               disabled={
-                disableForFullscreen || totalItems === 0 || allButtonsDisabled
+                disableForFullscreen || totalItems === 0 || allButtonsDisabled || policyEnforcing
               }
             >
               <LocalIcon
@@ -525,7 +575,7 @@ export default function WorkbenchBar({
                 height="1rem"
               />
             </ActionIcon>,
-            downloadTooltip,
+            policyEnforcing ? makeEnforcingTooltip(downloadTooltip) : downloadTooltip,
           )}
 
         {/* Save As */}
@@ -538,7 +588,7 @@ export default function WorkbenchBar({
               className="workbench-bar-action-icon"
               onClick={() => handleExportAll(true)}
               disabled={
-                disableForFullscreen || totalItems === 0 || allButtonsDisabled
+                disableForFullscreen || totalItems === 0 || allButtonsDisabled || policyEnforcing
               }
             >
               <LocalIcon
@@ -547,7 +597,9 @@ export default function WorkbenchBar({
                 height="1rem"
               />
             </ActionIcon>,
-            t("workbenchBar.saveAs", "Save As"),
+            policyEnforcing
+              ? makeEnforcingTooltip(t("workbenchBar.saveAs", "Save As"))
+              : t("workbenchBar.saveAs", "Save As"),
           )}
 
         {/* Separator: export group | close */}

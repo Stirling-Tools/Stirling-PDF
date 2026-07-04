@@ -4,6 +4,7 @@ import {
   Modal,
   Button,
   Group,
+  Loader,
   Stack,
   ActionIcon,
   Tooltip,
@@ -22,11 +23,15 @@ import HistoryIcon from "@mui/icons-material/History";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
+import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
+import AutorenewIcon from "@mui/icons-material/Autorenew";
 import {
   draggable,
   dropTargetForElements,
 } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import { StirlingFileStub } from "@app/types/fileContext";
+import type { FileItemPolicyRef } from "@app/components/shared/FileSidebarFileItem";
+import { PolicyEnforcingOverlay } from "@app/components/shared/PolicyEnforcingOverlay";
 import { zipFileService } from "@app/services/zipFileService";
 
 import styles from "@app/components/fileEditor/FileEditorThumbnail.module.css";
@@ -63,6 +68,7 @@ interface FileEditorThumbnailProps {
   onUnzipFile?: (fileId: FileId) => void;
   toolMode?: boolean;
   isSupported?: boolean;
+  policies?: FileItemPolicyRef[];
 }
 
 const FileEditorThumbnail = ({
@@ -73,6 +79,7 @@ const FileEditorThumbnail = ({
   onDownloadFile,
   onUnzipFile,
   isSupported = true,
+  policies = [],
 }: FileEditorThumbnailProps) => {
   const { t } = useTranslation();
   const { config } = useAppConfig();
@@ -292,8 +299,29 @@ const FileEditorThumbnail = ({
 
   const [showVersionHistory, setShowVersionHistory] = useState(false);
 
+  const policyEnforcing = policies.some((p) => p.enforcing);
+
   const hoverActions = useMemo<HoverAction[]>(
-    () => [
+    () => {
+      const uploadLabel = isUploaded
+        ? t("fileManager.updateOnServer", "Update on Server")
+        : t("fileManager.uploadToServer", "Upload to Server");
+      const enforcingTooltip = (action: string): React.ReactNode => (
+        <Stack gap={4} py={2} w={180}>
+          <Group gap={6} wrap="nowrap">
+            <ShieldOutlinedIcon style={{ fontSize: 13 }} />
+            <Text size="xs" fw={600}>
+              {t(
+                "policy.blockingAction",
+                "{{action}} blocked while enforcing policy, please wait",
+                { action },
+              )}
+            </Text>
+          </Group>
+          <Loader size="xs" />
+        </Stack>
+      );
+      return [
       {
         id: "view",
         icon: <VisibilityIcon style={{ fontSize: 20 }} />,
@@ -337,6 +365,8 @@ const FileEditorThumbnail = ({
         id: "download",
         icon: <DownloadOutlinedIcon style={{ fontSize: 20 }} />,
         label: terminology.download,
+        disabled: policyEnforcing,
+        tooltip: policyEnforcing ? enforcingTooltip(terminology.download) : undefined,
         onClick: (e) => {
           e.stopPropagation();
           onDownloadFile(file.id);
@@ -347,9 +377,9 @@ const FileEditorThumbnail = ({
             {
               id: "upload",
               icon: <CloudUploadIcon style={{ fontSize: 20 }} />,
-              label: isUploaded
-                ? t("fileManager.updateOnServer", "Update on Server")
-                : t("fileManager.uploadToServer", "Upload to Server"),
+              label: uploadLabel,
+              disabled: policyEnforcing,
+              tooltip: policyEnforcing ? enforcingTooltip(uploadLabel) : undefined,
               onClick: (e: React.MouseEvent) => {
                 e.stopPropagation();
                 setShowUploadModal(true);
@@ -408,7 +438,8 @@ const FileEditorThumbnail = ({
         },
         color: "red",
       },
-    ],
+      ];
+    },
     [
       t,
       file.id,
@@ -425,6 +456,7 @@ const FileEditorThumbnail = ({
       onDownloadFile,
       onUnzipFile,
       handleCloseWithConfirmation,
+      policyEnforcing,
       canUpload,
       canShare,
       isUploaded,
@@ -502,6 +534,12 @@ const FileEditorThumbnail = ({
                   </span>
                 </div>
               )}
+
+              {/* Policy enforcement overlay — shown while any policy is in-flight */}
+              <PolicyEnforcingOverlay
+                enforcing={policies.some((p) => p.enforcing)}
+                zIndex={2}
+              />
 
               {/* Thumbnail image or loading state */}
               <DocumentThumbnail
@@ -583,7 +621,30 @@ const FileEditorThumbnail = ({
       {/* File name + meta */}
       <div className={styles.fileText}>
         <p className={styles.fileName}>
-          <PrivateContent>{truncateCenter(file.name, 40)}</PrivateContent>
+          <span className={styles.fileNameText}>
+            <PrivateContent>{truncateCenter(file.name, 40)}</PrivateContent>
+          </span>
+          {policies.length > 0 && (
+            <span className={styles.fileNameBadges}>
+              {policies.slice(0, 3).map((policy) => (
+                <Tooltip
+                  key={policy.id}
+                  label={policy.enforcing ? `${policy.name} enforcing…` : `${policy.name} policy ran on this file`}
+                  withArrow
+                  position="top"
+                >
+                  <span
+                    className={`${styles.policyBadge}${policy.enforcing ? ` ${styles.policyBadgeEnforcing}` : ""}${policy.recent && !policy.enforcing ? ` ${styles.policyBadgeRecent}` : ""}`}
+                    style={{ color: policy.accentColor }}
+                  >
+                    {policy.enforcing
+                      ? <AutorenewIcon style={{ fontSize: 11 }} />
+                      : <ShieldOutlinedIcon style={{ fontSize: 11 }} />}
+                  </span>
+                </Tooltip>
+              ))}
+            </span>
+          )}
         </p>
         <p className={styles.fileMeta}>{metaLine}</p>
       </div>

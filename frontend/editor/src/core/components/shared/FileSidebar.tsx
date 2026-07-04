@@ -1091,9 +1091,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                             policyFileBadges.get(stub.id as string) ?? []
                           }
                           onDelete={
-                            isWatchedFoldersActive
-                              ? undefined
-                              : handleSidebarDelete
+                            isWatchedFoldersActive ? undefined : handleSidebarDelete
                           }
                           onSaveToCloud={
                             isWatchedFoldersActive

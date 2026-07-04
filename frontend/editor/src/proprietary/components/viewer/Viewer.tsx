@@ -54,7 +54,8 @@ const Viewer = (props: ViewerProps & SignatureOverlayPassThrough) => {
       }}
     >
       <CoreViewer {...props} />
-      <PolicyEnforcementOverlay runs={activeFileRuns} />
+      {/* key resets dismissed state when the active file changes */}
+      <PolicyEnforcementOverlay key={activeFileId ?? ""} runs={activeFileRuns} />
     </Box>
   );
 };
