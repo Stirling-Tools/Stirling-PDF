@@ -595,7 +595,7 @@ public class ApplicationProperties {
         public static class SAML2 {
             private String provider;
             private Boolean enabled = false;
-            private Boolean autoCreateUser = false;
+            private Boolean autoCreateUser = true;
             private Boolean blockRegistration = false;
             private String registrationId = "stirling";
 
@@ -672,7 +672,7 @@ public class ApplicationProperties {
             private String issuer;
             private String clientId;
             @ToString.Exclude private String clientSecret;
-            private Boolean autoCreateUser = false;
+            private Boolean autoCreateUser = true;
             private Boolean blockRegistration = false;
             private String useAsUsername;
             private Collection<String> scopes = new ArrayList<>();
@@ -743,7 +743,6 @@ public class ApplicationProperties {
         @Data
         public static class Jwt {
             private boolean enableKeystore = true;
-            private boolean enableKeyRotation = false;
             private boolean enableKeyCleanup = true;
 
             /**
@@ -847,8 +846,8 @@ public class ApplicationProperties {
             @Data
             public static class Trust {
                 private boolean serverAsAnchor = true;
-                private boolean useSystemTrust = false;
-                private boolean useMozillaBundle = false;
+                private boolean useSystemTrust = true;
+                private boolean useMozillaBundle = true;
                 private boolean useAATL = false;
                 private boolean useEUTL = false;
             }
@@ -891,10 +890,10 @@ public class ApplicationProperties {
         private Boolean enableAnalytics;
         private Boolean enablePosthog;
         private Boolean enableScarf;
-        private Boolean enableDesktopInstallSlide;
+        private Boolean enableDesktopInstallSlide = true;
         private Datasource datasource;
         private boolean disableSanitize;
-        private int maxDPI;
+        private int maxDPI = 500;
         private boolean enableUrlToPDF;
         private Html html = new Html();
         private CustomPaths customPaths = new CustomPaths();
@@ -908,8 +907,9 @@ public class ApplicationProperties {
         private String frontendUrl; // Frontend URL for invite email links (e.g.
 
         // 'https://app.example.com'). If not set, falls back to backendUrl.
-        private boolean enableMobileScanner = false; // Enable mobile phone QR code upload feature
+        private boolean enableMobileScanner = true; // Enable mobile phone QR code upload feature
         private MobileScannerSettings mobileScannerSettings = new MobileScannerSettings();
+        private ServerCertificate serverCertificate = new ServerCertificate();
 
         @Data
         public static class MobileScannerSettings {
@@ -917,6 +917,16 @@ public class ApplicationProperties {
             private String imageResolution = "full"; // Options: "full", "reduced"
             private String pageFormat = "A4"; // Options: "keep", "A4", "letter"
             private boolean stretchToFit = false; // Whether to stretch image to fill page
+        }
+
+        @Data
+        public static class ServerCertificate {
+            private boolean enabled =
+                    true; // Enable server-side "Sign with Stirling-PDF" certificate
+            private String organizationName = "Stirling PDF Inc";
+            private int validity = 365; // Certificate validity in days
+            private boolean regenerateOnStartup =
+                    false; // Generate a new certificate on each startup
         }
 
         public boolean isAnalyticsEnabled() {
@@ -1003,7 +1013,7 @@ public class ApplicationProperties {
         @Data
         public static class Sharing {
             private boolean enabled = false;
-            private boolean linkEnabled = false;
+            private boolean linkEnabled = true;
             private boolean emailEnabled = false;
             private int linkExpirationDays = 3;
         }
@@ -1177,7 +1187,7 @@ public class ApplicationProperties {
 
     @Data
     public static class Metrics {
-        private boolean enabled;
+        private boolean enabled = true;
     }
 
     @Data
@@ -1229,7 +1239,7 @@ public class ApplicationProperties {
         private boolean enableInvites = false;
         private int inviteLinkExpiryHours = 72; // Default: 72 hours (3 days)
         private String host;
-        private int port;
+        private int port = 587;
         private String username;
         @ToString.Exclude private String password;
         private String from;
@@ -1256,10 +1266,10 @@ public class ApplicationProperties {
         @ToString.Exclude private String botToken;
         private String botUsername;
         private String pipelineInboxFolder = "telegram";
-        private Boolean customFolderSuffix = false;
-        private Boolean enableAllowUserIDs = false;
+        private Boolean customFolderSuffix = true;
+        private Boolean enableAllowUserIDs = true;
         private List<Long> allowUserIDs = new ArrayList<>();
-        private Boolean enableAllowChannelIDs = false;
+        private Boolean enableAllowChannelIDs = true;
         private List<Long> allowChannelIDs = new ArrayList<>();
         private long processingTimeoutSeconds = 180;
         private long pollingIntervalMillis = 2000;

@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import { useFileState, useFileActions } from "@app/contexts/FileContext";
-import { downloadFile } from "@app/services/downloadService";
+// Save through the export gateway so a "run on export" policy enforces before
+// the file is written out (no-op when no such policy is active).
+import { downloadFileWithPolicy as downloadFile } from "@app/services/exportWithPolicy";
 
 /**
  * Desktop-only keyboard shortcut: Ctrl/Cmd+S to save selected files

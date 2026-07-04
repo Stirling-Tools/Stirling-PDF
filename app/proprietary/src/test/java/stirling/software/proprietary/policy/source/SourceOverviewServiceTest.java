@@ -1,7 +1,6 @@
 package stirling.software.proprietary.policy.source;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -31,6 +30,7 @@ class SourceOverviewServiceTest {
 
     private final SourceStore sourceStore = new InProcessSourceStore();
     private final PolicyStore policyStore = new InProcessPolicyStore();
+    private final SourceDocCounter docCounter = new InProcessSourceDocCounter();
     private SourceOverviewService service;
 
     @BeforeEach
@@ -41,7 +41,9 @@ class SourceOverviewServiceTest {
         PolicyManagementAuthority authority = mock(PolicyManagementAuthority.class);
         SourceAccessGuard sourceGuard = new SourceAccessGuard(userService, properties, authority);
         PolicyAccessGuard policyGuard = new PolicyAccessGuard(userService, properties, authority);
-        service = new SourceOverviewService(sourceStore, policyStore, sourceGuard, policyGuard);
+        service =
+                new SourceOverviewService(
+                        sourceStore, policyStore, sourceGuard, policyGuard, docCounter);
     }
 
     @Test
@@ -111,7 +113,8 @@ class SourceOverviewServiceTest {
         SourceAccessGuard sourceGuard = new SourceAccessGuard(userService, properties, authority);
         PolicyAccessGuard policyGuard = new PolicyAccessGuard(userService, properties, authority);
         SourceOverviewService scoped =
-                new SourceOverviewService(sourceStore, policyStore, sourceGuard, policyGuard);
+                new SourceOverviewService(
+                        sourceStore, policyStore, sourceGuard, policyGuard, docCounter);
 
         Source ours = teamSource("Ours", "/ours", 1L);
         teamSource("Theirs", "/theirs", 2L);
@@ -128,9 +131,19 @@ class SourceOverviewServiceTest {
     }
 
     @Test
-    void documentVolumeIsNotTrackedYet() {
+    void documentCountsReflectRecordedDocs() {
         Source a = source("A", "/a");
-        assertNull(find(service.overview(), a.id()).docsTotal());
+        Source b = source("B", "/b");
+        docCounter.record(a.id(), 5);
+        docCounter.record(a.id(), 3);
+
+        SourceView av = find(service.overview(), a.id());
+        assertEquals(8, av.docsTotal());
+        assertEquals(8, av.docs24h());
+        assertEquals(8, av.docs30d());
+
+        // A source with no recorded documents reads as zero, not null.
+        assertEquals(0, find(service.overview(), b.id()).docsTotal());
     }
 
     private Source source(String name, String directory) {

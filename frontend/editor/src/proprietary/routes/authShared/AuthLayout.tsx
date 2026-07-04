@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { AuthShell } from "@shared/auth/ui/AuthShell";
-import LoginRightCarousel from "@shared/auth/ui/LoginRightCarousel";
+import { AuthShell } from "@app/auth/ui/AuthShell";
+import LoginRightCarousel from "@app/auth/ui/LoginRightCarousel";
 import buildLoginSlides from "@app/components/shared/loginSlides";
 import { useLogoVariant } from "@app/hooks/useLogoVariant";
 import Footer from "@app/components/shared/Footer";
