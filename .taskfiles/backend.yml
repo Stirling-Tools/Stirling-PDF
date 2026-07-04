@@ -15,6 +15,13 @@ version: '3'
 #                  stripping; cmd.exe also requires `.\` (not bare `gradlew.bat`)
 #                  because modern Windows excludes cwd from cmd's search path.
 
+vars:
+  GRADLE: '{{if eq OS "windows"}}cmd /c ".\gradlew.bat"{{else}}./gradlew{{end}}'
+  TEST: '{{.GRADLE}} test --no-daemon'
+  FORMAT: '{{.GRADLE}} spotlessApply'
+  FORMATCHECK: '{{.GRADLE}} spotlessCheck'
+  CLEAN: '{{.GRADLE}} clean'
+
 tasks:
   dev:
     desc: "Start backend dev server"
@@ -45,19 +52,13 @@ tasks:
     env:
       SERVER_PORT: '{{.PORT}}'
     cmds:
-      - cmd: '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED={{.AIENGINE_ENABLED}} AIENGINE_TIMEOUTSECONDS={{.AIENGINE_TIMEOUTSECONDS}} {{end}}{{if .SECURITY_ENABLELOGIN}}SECURITY_ENABLELOGIN={{.SECURITY_ENABLELOGIN}} {{end}}{{if .POLICIES_ENABLED}}POLICIES_ENABLED={{.POLICIES_ENABLED}} {{end}}cmd /c ".\gradlew.bat :stirling-pdf:bootRun"'
-        platforms: [windows]
-      - cmd: '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED={{.AIENGINE_ENABLED}} AIENGINE_TIMEOUTSECONDS={{.AIENGINE_TIMEOUTSECONDS}} {{end}}{{if .SECURITY_ENABLELOGIN}}SECURITY_ENABLELOGIN={{.SECURITY_ENABLELOGIN}} {{end}}{{if .POLICIES_ENABLED}}POLICIES_ENABLED={{.POLICIES_ENABLED}} {{end}}./gradlew :stirling-pdf:bootRun'
-        platforms: [linux, darwin]
+      - '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED={{.AIENGINE_ENABLED}} AIENGINE_TIMEOUTSECONDS={{.AIENGINE_TIMEOUTSECONDS}} {{end}}{{if .SECURITY_ENABLELOGIN}}SECURITY_ENABLELOGIN={{.SECURITY_ENABLELOGIN}} {{end}}{{if .POLICIES_ENABLED}}POLICIES_ENABLED={{.POLICIES_ENABLED}} {{end}}{{.GRADLE}} :stirling-pdf:bootRun'
 
   dev:bundled:
     desc: "Clean + bootRun with frontend bundled into the backend (single :8080 server)"
     ignore_error: true
     cmds:
-      - cmd: cmd /c ".\gradlew.bat clean bootRun -PbuildWithFrontend=true"
-        platforms: [windows]
-      - cmd: ./gradlew clean bootRun -PbuildWithFrontend=true
-        platforms: [linux, darwin]
+      - '{{.CLEAN}} bootRun -PbuildWithFrontend=true'
 
   dev:saas:
     desc: "Start backend in SaaS flavor against Supabase"
@@ -79,112 +80,144 @@ tasks:
       AIENGINE_ENABLED: '{{.AIENGINE_ENABLED}}'
       AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS}}'
     cmds:
-      - cmd: cmd /c ".\gradlew.bat :stirling-pdf:bootRun {{if .PROFILES}}--args=\"--spring.profiles.include={{.PROFILES}}\"{{end}}"
-        platforms: [windows]
-      - cmd: ./gradlew :stirling-pdf:bootRun {{if .PROFILES}}--args='--spring.profiles.include={{.PROFILES}}'{{end}}
-        platforms: [linux, darwin]
+      - '{{.GRADLE}} :stirling-pdf:bootRun {{if .PROFILES}}--args=\"--spring.profiles.include={{.PROFILES}}\"{{end}}'
 
   build:
     desc: "Full backend build"
     cmds:
-      - cmd: cmd /c ".\gradlew.bat clean build"
-        platforms: [windows]
-      - cmd: ./gradlew clean build
-        platforms: [linux, darwin]
+      - '{{.CLEAN}} build'
 
   build:fast:
     desc: "Build without tests"
     cmds:
-      - cmd: cmd /c ".\gradlew.bat clean build -x test"
-        platforms: [windows]
-      - cmd: ./gradlew clean build -x test
-        platforms: [linux, darwin]
+      - '{{.CLEAN}} build -x test'
 
   build:ci:
     desc: "Build for CI (formatting checked separately)"
     cmds:
-      - cmd: cmd /c ".\gradlew.bat build -PnoSpotless"
-        platforms: [windows]
-      - cmd: ./gradlew build -PnoSpotless
-        platforms: [linux, darwin]
+      - '{{.GRADLE}} build -PnoSpotless'
 
   test:
+    desc: Run backend test matrix
+    cmds:
+      - task: test:matrix
+        vars:
+          STIRLING_FLAVOR: "proprietary"
+          SECURITY_ENABLELOGIN: "true"
+      - task: test:matrix
+        vars:
+          STIRLING_FLAVOR: "proprietary"
+          SECURITY_ENABLELOGIN: "false"
+      - task: test:matrix
+        vars:
+          STIRLING_FLAVOR: "core"
+          SECURITY_ENABLELOGIN: "true"
+      - task: test:matrix
+        vars:
+          STIRLING_FLAVOR: "core"
+          SECURITY_ENABLELOGIN: "false"
+      - task: test:matrix
+        vars:
+          STIRLING_FLAVOR: "saas"
+          SECURITY_ENABLELOGIN: "true"
+      - task: test:matrix
+        vars:
+          STIRLING_FLAVOR: "saas"
+          SECURITY_ENABLELOGIN: "false"
+
+  test:matrix:
+    internal: true
+    env:
+      SECURITY_ENABLELOGIN: '{{.SECURITY_ENABLELOGIN}}'
+      STIRLING_FLAVOR: '{{.STIRLING_FLAVOR}}'
     desc: "Run backend tests with and without frontend bundling"
     # Cover the backend with the main build/property combinations that change
     # Gradle behavior in this repo.
     cmds:
-      - cmd: cmd /c ".\gradlew.bat test"
-        platforms: [windows]
-      - cmd: ./gradlew test
-        platforms: [linux, darwin]
-      - cmd: cmd /c ".\gradlew.bat test -PbuildWithFrontend=true"
-        platforms: [windows]
-      - cmd: ./gradlew test -PbuildWithFrontend=true
-        platforms: [linux, darwin]
-      - cmd: cmd /c ".\gradlew.bat test -PbuildWithFrontend=true -PprototypesMode=true"
-        platforms: [windows]
-      - cmd: ./gradlew test -PbuildWithFrontend=true -PprototypesMode=true
-        platforms: [linux, darwin]
-      - cmd: cmd /c "set STIRLING_FLAVOR=core&& .\gradlew.bat test"
-        platforms: [windows]
-      - cmd: STIRLING_FLAVOR=core ./gradlew test
-        platforms: [linux, darwin]
-      - cmd: cmd /c "set STIRLING_FLAVOR=saas&& .\gradlew.bat test"
-        platforms: [windows]
-      - cmd: STIRLING_FLAVOR=saas ./gradlew test
-        platforms: [linux, darwin]
+      - '{{.TEST}}'
+      - '{{.TEST}} -PbuildWithFrontend=true'
+      - '{{.TEST}} -PprototypesMode=true'
+      - '{{.TEST}} -PbuildWithFrontend=true -PprototypesMode=true'
 
   format:
-    desc: "Auto-fix code formatting"
-    # Mirror the test matrix so formatting is validated under the same backend
-    # configuration variants.
+    desc: Run backend format matrix
     cmds:
-      - cmd: cmd /c ".\gradlew.bat spotlessApply"
-        platforms: [windows]
-      - cmd: ./gradlew spotlessApply
-        platforms: [linux, darwin]
-      - cmd: cmd /c ".\gradlew.bat spotlessApply -PbuildWithFrontend=true"
-        platforms: [windows]
-      - cmd: ./gradlew spotlessApply -PbuildWithFrontend=true
-        platforms: [linux, darwin]
-      - cmd: cmd /c ".\gradlew.bat spotlessApply -PbuildWithFrontend=true -PprototypesMode=true"
-        platforms: [windows]
-      - cmd: ./gradlew spotlessApply -PbuildWithFrontend=true -PprototypesMode=true
-        platforms: [linux, darwin]
-      - cmd: cmd /c "set STIRLING_FLAVOR=core&& .\gradlew.bat spotlessApply"
-        platforms: [windows]
-      - cmd: STIRLING_FLAVOR=core ./gradlew spotlessApply
-        platforms: [linux, darwin]
-      - cmd: cmd /c "set STIRLING_FLAVOR=saas&& .\gradlew.bat spotlessApply"
-        platforms: [windows]
-      - cmd: STIRLING_FLAVOR=saas ./gradlew spotlessApply
-        platforms: [linux, darwin]
+      - task: format:matrix
+        vars:
+          STIRLING_FLAVOR: "proprietary"
+          SECURITY_ENABLELOGIN: "true"
+      - task: format:matrix
+        vars:
+          STIRLING_FLAVOR: "proprietary"
+          SECURITY_ENABLELOGIN: "false"
+      - task: format:matrix
+        vars:
+          STIRLING_FLAVOR: "core"
+          SECURITY_ENABLELOGIN: "true"
+      - task: format:matrix
+        vars:
+          STIRLING_FLAVOR: "core"
+          SECURITY_ENABLELOGIN: "false"
+      - task: format:matrix
+        vars:
+          STIRLING_FLAVOR: "saas"
+          SECURITY_ENABLELOGIN: "true"
+      - task: format:matrix
+        vars:
+          STIRLING_FLAVOR: "saas"
+          SECURITY_ENABLELOGIN: "false"
+
+  format:matrix:
+    internal: true
+    desc: Auto-fix code formatting
+    env:
+      SECURITY_ENABLELOGIN: '{{.SECURITY_ENABLELOGIN}}'
+      STIRLING_FLAVOR: '{{.STIRLING_FLAVOR}}'
+    cmds:
+      - '{{.FORMAT}}'
+      - '{{.FORMAT}} -PbuildWithFrontend=true'
+      - '{{.FORMAT}} -PprototypesMode=true'
 
   format:check:
-    desc: "Check code formatting"
+    desc: Run backend format matrix
+    cmds:
+      - task: format:check:matrix
+        vars:
+          STIRLING_FLAVOR: "proprietary"
+          SECURITY_ENABLELOGIN: "true"
+      - task: format:check:matrix
+        vars:
+          STIRLING_FLAVOR: "proprietary"
+          SECURITY_ENABLELOGIN: "false"
+      - task: format:check:matrix
+        vars:
+          STIRLING_FLAVOR: "core"
+          SECURITY_ENABLELOGIN: "true"
+      - task: format:check:matrix
+        vars:
+          STIRLING_FLAVOR: "core"
+          SECURITY_ENABLELOGIN: "false"
+      - task: format:check:matrix
+        vars:
+          STIRLING_FLAVOR: "saas"
+          SECURITY_ENABLELOGIN: "true"
+      - task: format:check:matrix
+        vars:
+          STIRLING_FLAVOR: "saas"
+          SECURITY_ENABLELOGIN: "false"
+
+  format:check:matrix:
+    internal: true
+    desc: Check code formatting
+    env:
+      SECURITY_ENABLELOGIN: '{{.SECURITY_ENABLELOGIN}}'
+      STIRLING_FLAVOR: '{{.STIRLING_FLAVOR}}'
     # Mirror the test matrix so formatting checks use the same backend
     # configuration variants.
     cmds:
-      - cmd: cmd /c ".\gradlew.bat spotlessCheck"
-        platforms: [windows]
-      - cmd: ./gradlew spotlessCheck
-        platforms: [linux, darwin]
-      - cmd: cmd /c ".\gradlew.bat spotlessCheck -PbuildWithFrontend=true"
-        platforms: [windows]
-      - cmd: ./gradlew spotlessCheck -PbuildWithFrontend=true
-        platforms: [linux, darwin]
-      - cmd: cmd /c ".\gradlew.bat spotlessCheck -PbuildWithFrontend=true -PprototypesMode=true"
-        platforms: [windows]
-      - cmd: ./gradlew spotlessCheck -PbuildWithFrontend=true -PprototypesMode=true
-        platforms: [linux, darwin]
-      - cmd: cmd /c "set STIRLING_FLAVOR=core&& .\gradlew.bat spotlessCheck"
-        platforms: [windows]
-      - cmd: STIRLING_FLAVOR=core ./gradlew spotlessCheck
-        platforms: [linux, darwin]
-      - cmd: cmd /c "set STIRLING_FLAVOR=saas&& .\gradlew.bat spotlessCheck"
-        platforms: [windows]
-      - cmd: STIRLING_FLAVOR=saas ./gradlew spotlessCheck
-        platforms: [linux, darwin]
+      - '{{.FORMATCHECK}}'
+      - '{{.FORMATCHECK}} -PbuildWithFrontend=true'
+      - '{{.FORMATCHECK}} -PprototypesMode=true'
 
   fix:
     desc: "Auto-fix backend"
@@ -194,10 +227,7 @@ tasks:
   swagger:
     desc: "Generate OpenAPI docs"
     cmds:
-      - cmd: cmd /c ".\gradlew.bat :stirling-pdf:copySwaggerDoc"
-        platforms: [windows]
-      - cmd: ./gradlew :stirling-pdf:copySwaggerDoc
-        platforms: [linux, darwin]
+      - '{{.GRADLE}} :stirling-pdf:copySwaggerDoc'
     sources:
       - app/core/src/main/java/**/*.java
       - app/proprietary/src/main/java/**/*.java
@@ -215,7 +245,7 @@ tasks:
     desc: "Print project version"
     silent: true
     cmds:
-      - cmd: cmd /c ".\gradlew.bat printVersion --quiet" | tail -1
+      - cmd: pwsh -NoProfile -File scripts/backend-version.ps1
         platforms: [windows]
       - cmd: ./gradlew printVersion --quiet | tail -1
         platforms: [linux, darwin]
@@ -223,23 +253,14 @@ tasks:
   licenses:check:
     desc: "Check dependency licenses"
     cmds:
-      - cmd: cmd /c ".\gradlew.bat checkLicense --no-parallel"
-        platforms: [windows]
-      - cmd: ./gradlew checkLicense --no-parallel
-        platforms: [linux, darwin]
+      - '{{.GRADLE}} checkLicense --no-parallel'
 
   licenses:generate:
     desc: "Check and generate dependency license report"
     cmds:
-      - cmd: cmd /c ".\gradlew.bat checkLicense generateLicenseReport --no-parallel"
-        platforms: [windows]
-      - cmd: ./gradlew checkLicense generateLicenseReport --no-parallel
-        platforms: [linux, darwin]
+      - '{{.GRADLE}} checkLicense generateLicenseReport --no-parallel'
 
   clean:
     desc: "Clean build artifacts"
     cmds:
-      - cmd: cmd /c ".\gradlew.bat clean"
-        platforms: [windows]
-      - cmd: ./gradlew clean
-        platforms: [linux, darwin]
+      - '{{.CLEAN}}'
