@@ -226,6 +226,7 @@ subprojects {
         resolutionStrategy.force "org.bouncycastle:bcprov-jdk18on:${bouncycastleVersion}"
         resolutionStrategy.force "org.bouncycastle:bcpkix-jdk18on:${bouncycastleVersion}"
         resolutionStrategy.force "org.bouncycastle:bcutil-jdk18on:${bouncycastleVersion}"
+        resolutionStrategy.force "org.apache.santuario:xmlsec:3.0.5"
     }
 
     dependencyManagement {
