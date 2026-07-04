@@ -444,6 +444,7 @@ export default function WorkbenchBar({
         )}
         {(hasFiles || isCustomView) && (
           <SegmentedControl<WorkbenchType>
+            className="workbench-bar-views"
             size="sm"
             value={currentView}
             onChange={setCurrentView}

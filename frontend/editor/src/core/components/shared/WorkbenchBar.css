@@ -77,6 +77,14 @@
   line-height: 1;
 }
 
+/* Segmented view switcher: size the icons to the pre-consolidation 16px
+ * (centering + gap come from the shared SegmentedControl innerLabel). */
+.workbench-bar-views .mantine-SegmentedControl-label svg {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
 /* ---- Center: tool buttons ---- */
 
 /* Single-row: center sits between views and globals */

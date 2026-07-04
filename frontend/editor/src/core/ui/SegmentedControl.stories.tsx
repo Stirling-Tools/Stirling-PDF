@@ -1,5 +1,7 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react";
+import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
+import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
 
 const meta: Meta<typeof SegmentedControl> = {
@@ -90,6 +92,42 @@ export const Small: Story = {
         options={[
           { label: "Pages", value: "pages" },
           { label: "Files", value: "files" },
+        ]}
+      />
+    );
+  },
+};
+
+/** Icon + label per segment (mirrors the workbench view switcher). Icons and
+ * labels should sit centered together in each segment. */
+export const WithIcons: Story = {
+  render: () => {
+    const [v, setV] = useState("viewer");
+    return (
+      <SegmentedControl
+        size="sm"
+        variant="secondary"
+        value={v}
+        onChange={setV}
+        options={[
+          {
+            value: "viewer",
+            label: (
+              <>
+                <InsertDriveFileOutlinedIcon fontSize="small" />
+                <span>Viewer</span>
+              </>
+            ),
+          },
+          {
+            value: "files",
+            label: (
+              <>
+                <FolderOutlinedIcon fontSize="small" />
+                <span>Active Files</span>
+              </>
+            ),
+          },
         ]}
       />
     );

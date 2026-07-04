@@ -31,7 +31,7 @@ const baseRestrictedImportPatterns = [
 ];
 
 // Button/SegmentedControl/Chip must come from the shared DS (@app/ui), not Mantine.
-// If no variant fits, extend @app/ui — that layer (editor/src/proprietary/ui) is exempt below.
+// If no variant fits, extend @app/ui — that layer (editor/src/core/ui) is exempt below.
 const mantineComponentImportRestrictions = [
   {
     selector:
@@ -204,7 +204,7 @@ export default defineConfig(
     files: ["editor/src/**/*.{js,mjs,jsx,ts,tsx}"],
     ignores: [
       "editor/src/cloud/**/*.{js,mjs,jsx,ts,tsx}", // covered by cloud/ block above
-      "editor/src/proprietary/ui/**/*.{js,mjs,jsx,ts,tsx}", // the shared DS itself — wraps Mantine/raw elements
+      "editor/src/core/ui/**/*.{js,mjs,jsx,ts,tsx}", // the shared DS itself — wraps Mantine/raw elements
       "**/*.stories.{js,mjs,jsx,ts,tsx}", // stories may demo Mantine directly
       "**/*.test.{js,mjs,jsx,ts,tsx}", // tests may use raw elements as fixtures
       "editor/src/prototypes/**/*.{js,mjs,jsx,ts,tsx}", // not shipped

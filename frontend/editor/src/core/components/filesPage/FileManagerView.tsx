@@ -904,7 +904,7 @@ export default function FileManagerView() {
                 >
                   <ActionIcon
                     variant="secondary"
-                    size="md"
+                    size="sm"
                     loading={refreshing}
                     disabled={refreshing || Boolean(signInRequiredReason)}
                     aria-busy={refreshing}
@@ -959,7 +959,7 @@ export default function FileManagerView() {
                     withinPortal
                   >
                     <ActionIcon
-                      size="lg"
+                      size="sm"
                       variant="secondary"
                       onClick={() => setMobileUploadModalOpen(true)}
                       aria-label={t(

@@ -2,8 +2,6 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "paths": {
-      "@app/ui": ["../../src/proprietary/ui/index.ts"],
-      "@app/ui/*": ["../../src/proprietary/ui/*"],
       "@app/*": ["../../src/core/*"]
     }
   },
