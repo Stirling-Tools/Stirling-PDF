@@ -5,10 +5,10 @@ import {
   I18N_PROJECTS,
   REPO_ROOT,
   findMissingKeys,
-} from "@shared/i18n/translationAudit";
+} from "@app/i18n/translationAudit";
 
 // One suite per frontend app (editor + portal). The scan logic lives in
-// @shared/i18n/translationAudit so both apps share one implementation.
+// @app/i18n/translationAudit so both apps share one implementation.
 describe.each(I18N_PROJECTS)(
   "Missing translation coverage — $name",
   (project) => {

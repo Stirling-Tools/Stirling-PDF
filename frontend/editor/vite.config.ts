@@ -271,20 +271,22 @@ export default defineConfig(async ({ mode }) => {
             src: "../node_modules/pdfjs-dist/standard_fonts/*",
             dest: "pdfjs/standard_fonts",
           },
+          {
+            // Brand assets live in core; the editor serves them by URL per
+            // variant, so copy each set to the /{variant}-logo path its
+            // manifests, index.html and useLogoAssets resolve against.
+            src: "src/core/assets/brand/classic-logo/*",
+            dest: "classic-logo",
+          },
+          {
+            src: "src/core/assets/brand/modern-logo/*",
+            dest: "modern-logo",
+          },
         ],
       }),
       compressStaticCopyPlugin(),
       prerenderOgPlugin(),
     ],
-    resolve: {
-      // Global alias so @shared resolves for ALL importers — including the
-      // shared components' own `@shared/components/X.css` self-imports, which
-      // live outside the editor tsconfig scope and so aren't rewritten by
-      // vite-tsconfig-paths. Required for the editor to consume SUI components.
-      alias: {
-        "@shared": path.resolve(__dirname, "../shared"),
-      },
-    },
     server: {
       host: true,
       allowedHosts: allowedHosts.length > 0 ? allowedHosts : undefined,

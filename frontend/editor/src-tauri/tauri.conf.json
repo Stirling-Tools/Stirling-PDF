@@ -1,7 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "Stirling-PDF",
-  "version": "2.13.2",
+  "productName": "Stirling PDF",
+  "mainBinaryName": "Stirling-PDF",
+  "version": "2.14.0",
   "identifier": "stirling.pdf.dev",
   "build": {
     "frontendDist": "../dist",
@@ -12,7 +13,7 @@
   "app": {
     "windows": [
       {
-        "title": "Stirling-PDF",
+        "title": "Stirling PDF",
         "width": 1280,
         "height": 800,
         "resizable": true,
@@ -63,6 +64,9 @@
       "digestAlgorithm": "sha256",
       "timestampUrl": "http://timestamp.digicert.com",
       "wix": {
+        "upgradeCode": "3305fba9-7e5e-5c09-bc71-eca0a65f4fee",
+        "bannerPath": "windows/wix/banner.bmp",
+        "dialogImagePath": "windows/wix/dialog.bmp",
         "fragmentPaths": ["windows/wix/provisioning.wxs"],
         "componentGroupRefs": ["ProvisioningComponentGroup"]
       }

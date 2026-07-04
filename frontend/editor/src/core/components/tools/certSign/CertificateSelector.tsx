@@ -183,20 +183,34 @@ export const CertificateSelector: React.FC<CertificateSelectorProps> = ({
             />
           )}
 
-          {/* PEM */}
+          {/* PEM — private key and certificate are two separate files */}
           {uploadFormat === "PEM" && (
-            <Stack gap="xs">
-              <FileUploadButton
-                file={privateKeyFile ?? undefined}
-                onChange={(file) => onPrivateKeyFileChange(file || null)}
-                accept=".pem,.der,.key"
-                disabled={disabled}
-                placeholder={t(
-                  "certSign.choosePrivateKey",
-                  "Choose Private Key File",
-                )}
-              />
-              {privateKeyFile && (
+            <Stack gap="sm">
+              <Stack gap={4}>
+                <Text size="xs" fw={600}>
+                  {t(
+                    "certSign.pemPrivateKeyLabel",
+                    "Private key (.pem / .key)",
+                  )}
+                </Text>
+                <FileUploadButton
+                  file={privateKeyFile ?? undefined}
+                  onChange={(file) => onPrivateKeyFileChange(file || null)}
+                  accept=".pem,.der,.key"
+                  disabled={disabled}
+                  placeholder={t(
+                    "certSign.choosePrivateKey",
+                    "Choose Private Key File",
+                  )}
+                />
+              </Stack>
+              <Stack gap={4}>
+                <Text size="xs" fw={600}>
+                  {t(
+                    "certSign.pemCertificateLabel",
+                    "Certificate (.pem / .crt)",
+                  )}
+                </Text>
                 <FileUploadButton
                   file={certFile ?? undefined}
                   onChange={(file) => onCertFileChange(file || null)}
@@ -207,7 +221,7 @@ export const CertificateSelector: React.FC<CertificateSelectorProps> = ({
                     "Choose Certificate File",
                   )}
                 />
-              )}
+              </Stack>
             </Stack>
           )}
 

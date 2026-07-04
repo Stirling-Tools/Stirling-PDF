@@ -25,6 +25,7 @@ vi.mock("@app/services/policyApi", () => ({
   runStoredPolicy: vi.fn(),
   getPolicyRun: vi.fn(),
   downloadPolicyOutput: vi.fn(),
+  resolvePolicyRunTarget: () => "saas",
 }));
 vi.mock("@app/services/fileStorage", () => ({
   fileStorage: { getStirlingFile: vi.fn(), getStirlingFileStub: vi.fn() },
@@ -80,6 +81,7 @@ describe("auto-run queue-rejection retry", () => {
       fileId: "file-1",
       fileName: "doc.pdf",
       fileSize: 1234,
+      target: "saas",
       status: "RUNNING",
       outputs: [],
       error: null,
