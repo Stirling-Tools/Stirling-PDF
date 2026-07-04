@@ -24,7 +24,7 @@ vars:
 
 tasks:
   dev:
-    desc: "Start backend dev server"
+    desc: "Start the backend dev server"
     cmds:
       - task: dev:proprietary
         vars:
@@ -36,7 +36,7 @@ tasks:
           POLICIES_ENABLED: '{{.POLICIES_ENABLED}}'
 
   dev:proprietary:
-    desc: "Start backend dev server in proprietary mode"
+    desc: "Start the backend dev server in proprietary mode"
     # `dotenv:` reads from the root Taskfile's directory (".") because this
     # subtaskfile is included with `dir: .`. Local overrides in
     # .env.proprietary.local win over the committed .env.proprietary defaults.
@@ -55,13 +55,13 @@ tasks:
       - '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED={{.AIENGINE_ENABLED}} AIENGINE_TIMEOUTSECONDS={{.AIENGINE_TIMEOUTSECONDS}} {{end}}{{if .SECURITY_ENABLELOGIN}}SECURITY_ENABLELOGIN={{.SECURITY_ENABLELOGIN}} {{end}}{{if .POLICIES_ENABLED}}POLICIES_ENABLED={{.POLICIES_ENABLED}} {{end}}{{.GRADLE}} :stirling-pdf:bootRun'
 
   dev:bundled:
-    desc: "Clean + bootRun with frontend bundled into the backend (single :8080 server)"
+    desc: "Start the backend with the frontend bundled into the JAR"
     ignore_error: true
     cmds:
       - '{{.CLEAN}} bootRun -PbuildWithFrontend=true'
 
   dev:saas:
-    desc: "Start backend in SaaS flavor against Supabase"
+    desc: "Start the backend in SaaS flavor"
     # `dotenv:` reads from the root Taskfile's directory (".") because this
     # subtaskfile is included with `dir: .`.
     dotenv: ['app/.env.saas.local', 'app/.env.saas']
@@ -83,22 +83,22 @@ tasks:
       - '{{.GRADLE}} :stirling-pdf:bootRun {{if .PROFILES}}--args=\"--spring.profiles.include={{.PROFILES}}\"{{end}}'
 
   build:
-    desc: "Full backend build"
+    desc: "Build the backend"
     cmds:
       - '{{.CLEAN}} build'
 
   build:fast:
-    desc: "Build without tests"
+    desc: "Build the backend without running tests"
     cmds:
       - '{{.CLEAN}} build -x test'
 
   build:ci:
-    desc: "Build for CI (formatting checked separately)"
+    desc: "Build the backend for CI"
     cmds:
       - '{{.GRADLE}} build -PnoSpotless'
 
   test:
-    desc: Run backend test matrix
+    desc: "Run the backend test matrix"
     cmds:
       - task: test:matrix
         vars:
@@ -130,7 +130,7 @@ tasks:
     env:
       SECURITY_ENABLELOGIN: '{{.SECURITY_ENABLELOGIN}}'
       STIRLING_FLAVOR: '{{.STIRLING_FLAVOR}}'
-    desc: "Run backend tests with and without frontend bundling"
+    desc: "Run backend tests for one configuration"
     # Cover the backend with the main build/property combinations that change
     # Gradle behavior in this repo.
     cmds:
@@ -140,7 +140,7 @@ tasks:
       - '{{.TEST}} -PbuildWithFrontend=true -PprototypesMode=true'
 
   format:
-    desc: Run backend format matrix
+    desc: "Run the backend formatting matrix"
     cmds:
       - task: format:matrix
         vars:
@@ -169,7 +169,7 @@ tasks:
 
   format:matrix:
     internal: true
-    desc: Auto-fix code formatting
+    desc: "Apply backend formatting for one configuration"
     env:
       SECURITY_ENABLELOGIN: '{{.SECURITY_ENABLELOGIN}}'
       STIRLING_FLAVOR: '{{.STIRLING_FLAVOR}}'
@@ -179,7 +179,7 @@ tasks:
       - '{{.FORMAT}} -PprototypesMode=true'
 
   format:check:
-    desc: Run backend format matrix
+    desc: "Check the backend formatting matrix"
     cmds:
       - task: format:check:matrix
         vars:
@@ -208,7 +208,7 @@ tasks:
 
   format:check:matrix:
     internal: true
-    desc: Check code formatting
+    desc: "Check backend formatting for one configuration"
     env:
       SECURITY_ENABLELOGIN: '{{.SECURITY_ENABLELOGIN}}'
       STIRLING_FLAVOR: '{{.STIRLING_FLAVOR}}'
@@ -220,12 +220,12 @@ tasks:
       - '{{.FORMATCHECK}} -PprototypesMode=true'
 
   fix:
-    desc: "Auto-fix backend"
+    desc: "Apply backend fixes"
     cmds:
       - task: format
 
   swagger:
-    desc: "Generate OpenAPI docs"
+    desc: "Generate the backend OpenAPI docs"
     cmds:
       - '{{.GRADLE}} :stirling-pdf:copySwaggerDoc'
     sources:
@@ -236,13 +236,13 @@ tasks:
       - SwaggerDoc.json
 
   check:
-    desc: "Backend quality gate"
+    desc: "Run the backend quality gate"
     cmds:
       - task: format:check
       - task: test
 
   version:
-    desc: "Print project version"
+    desc: "Print the backend version"
     silent: true
     cmds:
       - cmd: pwsh -NoProfile -File scripts/backend-version.ps1
@@ -251,16 +251,16 @@ tasks:
         platforms: [linux, darwin]
 
   licenses:check:
-    desc: "Check dependency licenses"
+    desc: "Check backend dependency licenses"
     cmds:
       - '{{.GRADLE}} checkLicense --no-parallel'
 
   licenses:generate:
-    desc: "Check and generate dependency license report"
+    desc: "Generate the backend dependency license report"
     cmds:
       - '{{.GRADLE}} checkLicense generateLicenseReport --no-parallel'
 
   clean:
-    desc: "Clean build artifacts"
+    desc: "Clean backend build artifacts"
     cmds:
       - '{{.CLEAN}}'
