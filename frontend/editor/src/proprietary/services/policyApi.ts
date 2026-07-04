@@ -6,9 +6,11 @@
  */
 
 import apiClient from "@app/services/apiClient";
+import { getPolicyOutputBaseUrl } from "@app/services/policyOutputBaseUrl";
 import type {
   BackendPipelineDefinition,
   BackendPolicy,
+  PolicyExecutionTarget,
   PolicyRunView,
 } from "@app/services/policyPipeline";
 
@@ -88,10 +90,25 @@ export async function runPolicyPipeline(
   return res.data.jobId;
 }
 
-/** Download a run's output file by id (via the shared general-files endpoint). */
-export async function downloadPolicyOutput(fileId: string): Promise<Blob> {
+/**
+ * Where a policy run executes, and thus the backend that holds its outputs.
+ */
+export function resolvePolicyRunTarget(): PolicyExecutionTarget {
+  return "saas";
+}
+
+/**
+ * Download a run's output file by id (via the shared general-files endpoint).
+ * `target` is where the run executed: it selects the backend the file is fetched
+ * from, so a SaaS run's output isn't looked for on the bundled local backend.
+ */
+export async function downloadPolicyOutput(
+  fileId: string,
+  target: PolicyExecutionTarget,
+): Promise<Blob> {
+  const base = getPolicyOutputBaseUrl(target);
   const res = await apiClient.get<Blob>(
-    `/api/v1/general/files/${encodeURIComponent(fileId)}`,
+    `${base}/api/v1/general/files/${encodeURIComponent(fileId)}`,
     { responseType: "blob" },
   );
   return res.data;

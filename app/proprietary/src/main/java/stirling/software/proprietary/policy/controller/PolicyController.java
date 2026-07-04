@@ -2,6 +2,7 @@ package stirling.software.proprietary.policy.controller;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,11 +53,15 @@ import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.PolicyRunStatus;
 import stirling.software.proprietary.policy.model.PolicyRunView;
+import stirling.software.proprietary.policy.overview.PoliciesOverviewResponse;
+import stirling.software.proprietary.policy.overview.PolicyOverviewService;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
 import stirling.software.proprietary.policy.source.SourceAccessGuard;
 import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
+import stirling.software.proprietary.policy.trigger.PolicyTrigger;
 import stirling.software.proprietary.policy.trigger.PolicyTriggerManager;
+import stirling.software.proprietary.policy.trigger.TriggerInfo;
 
 /**
  * Policy CRUD plus pipeline runs (stored or ad-hoc). Runs are async: returns a run id, poll {@code
@@ -80,6 +85,8 @@ public class PolicyController {
     private final PolicyAccessGuard policyAccessGuard;
     private final PolicyManagementAuthority policyManagementAuthority;
     private final PolicyTriggerManager policyTriggerManager;
+    private final PolicyOverviewService policyOverviewService;
+    private final List<PolicyTrigger> policyTriggers;
     private final ApplicationProperties applicationProperties;
     private final TempFileManager tempFileManager;
     private final JobOwnershipService jobOwnershipService;
@@ -287,6 +294,31 @@ public class PolicyController {
         return policyAccessGuard.visibleFrom(policyStore);
     }
 
+    @GetMapping("/overview")
+    @Operation(
+            summary = "Pipelines overview",
+            description =
+                    "Returns the KPI strip plus one row per policy the caller's team owns, each with"
+                            + " its referenced sources resolved to names, its pipeline steps, and a"
+                            + " trigger/output summary. Backs the portal's all-pipelines surface.")
+    public PoliciesOverviewResponse overview() {
+        return policyOverviewService.overview();
+    }
+
+    @GetMapping("/triggers")
+    @Operation(
+            summary = "List available triggers",
+            description =
+                    "Lists each trigger kind with whether it needs a source and which source types"
+                            + " it supports, so the UI can offer triggers and pair them with the"
+                            + " right sources.")
+    public List<TriggerInfo> triggers() {
+        return policyTriggers.stream()
+                .map(TriggerInfo::of)
+                .sorted(Comparator.comparing(TriggerInfo::type))
+                .toList();
+    }
+
     @GetMapping("/{policyId}")
     @Operation(summary = "Get a policy by id")
     public ResponseEntity<Policy> getPolicy(@PathVariable String policyId) {
@@ -335,6 +367,26 @@ public class PolicyController {
         PolicyInputs inputs = toInputs(files);
         String runId = policyRunner.runWith(policy, inputs, PolicyProgressListener.NOOP).runId();
         return ResponseEntity.accepted().body(new JobResponse<>(true, runId, null));
+    }
+
+    @PostMapping("/{policyId}/trigger")
+    @Operation(
+            summary = "Run a stored policy against its sources",
+            description =
+                    "Pulls the policy's configured sources and runs the pipeline now, regardless of"
+                            + " the enabled flag (which only gates automatic triggering). Returns"
+                            + " the ids of the runs started; poll the run-status endpoint for each."
+                            + " Empty when the sources yielded no work to do.")
+    public ResponseEntity<List<String>> trigger(@PathVariable String policyId) {
+        Policy policy =
+                policyStore
+                        .get(policyId)
+                        .filter(policyAccessGuard::canAccess)
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.NOT_FOUND, "No policy: " + policyId));
+        return ResponseEntity.accepted().body(policyRunner.run(policy));
     }
 
     private static void requireRunnable(PipelineDefinition definition) {

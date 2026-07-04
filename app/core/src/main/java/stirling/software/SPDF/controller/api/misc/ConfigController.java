@@ -350,6 +350,18 @@ public class ConfigController {
                     "serverCertificateEnabled",
                     serverCertificateService != null && serverCertificateService.isEnabled());
 
+            // Hardware-backed signing (Windows store / USB PKCS#11 tokens) is only viable on the
+            // desktop bundle, where the backend runs locally in the user's session. The Tauri
+            // bundle signals this via STIRLING_PDF_TAURI_MODE (machineType is Server-jar there);
+            // the bare-jar desktop launcher signals it via a Client-* machineType.
+            boolean hardwareSigningAvailable =
+                    Boolean.parseBoolean(System.getProperty("STIRLING_PDF_TAURI_MODE", "false"));
+            if (!hardwareSigningAvailable && applicationContext.containsBean("machineType")) {
+                String mt = applicationContext.getBean("machineType", String.class);
+                hardwareSigningAvailable = mt != null && mt.startsWith("Client-");
+            }
+            configData.put("hardwareSigningAvailable", hardwareSigningAvailable);
+
             // Legal settings
             configData.put(
                     "termsAndConditions", applicationProperties.getLegal().getTermsAndConditions());

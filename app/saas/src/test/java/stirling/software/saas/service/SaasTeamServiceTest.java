@@ -23,6 +23,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import stirling.software.common.model.enumeration.InvitationStatus;
 import stirling.software.common.model.enumeration.Role;
@@ -32,6 +34,7 @@ import stirling.software.proprietary.security.database.repository.UserRepository
 import stirling.software.proprietary.security.model.Authority;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamRepository;
+import stirling.software.saas.accountlink.LinkedInstanceRepository;
 import stirling.software.saas.billing.repository.BillingSubscriptionRepository;
 import stirling.software.saas.config.SupabaseConfigurationProperties;
 import stirling.software.saas.model.TeamInvitation;
@@ -62,6 +65,7 @@ class SaasTeamServiceTest {
     @Mock private UserRoleService userRoleService;
     @Mock private SaasTeamExtensionService saasTeamExtensionService;
     @Mock private SaasTeamExtensionsRepository saasTeamExtensionsRepository;
+    @Mock private LinkedInstanceRepository linkedInstanceRepository;
     @Mock private stirling.software.proprietary.security.service.UserService userService;
 
     @InjectMocks private SaasTeamService service;
@@ -1382,5 +1386,93 @@ class SaasTeamServiceTest {
                             saved.setId(newTeamId);
                             return saved;
                         });
+    }
+
+    /**
+     * acceptInvitation's orphan guard against linked self-hosted instances (combined-billing "Mode
+     * A"). The guard ({@code assertCanLeaveCurrentTeamsToJoinAnother}) is private; it's exercised
+     * through its only caller up to the point where a team with active linked instances must block
+     * the move. LENIENT because the pass-through case stubs the full leave/join path while the
+     * blocking case short-circuits before reaching all of it.
+     */
+    @Nested
+    @DisplayName("acceptInvitation - linked self-hosted instance orphan guard")
+    @MockitoSettings(strictness = Strictness.LENIENT)
+    class AcceptInvitationLinkedInstanceGuard {
+
+        private static final long USER_ID = 7L;
+        private static final long OLD_TEAM_ID = 100L;
+        private static final long NEW_TEAM_ID = 200L;
+        private static final String TOKEN = "tok-1";
+        private static final String EMAIL = "joiner@example.com";
+
+        @Test
+        @DisplayName("blocks accept when the current team has active linked instances")
+        void blocksWhenCurrentTeamHasActiveLinkedInstances() {
+            User joiner = user(USER_ID, EMAIL, EMAIL);
+            Team oldTeam = team(OLD_TEAM_ID, "old-team");
+            Team newTeam = team(NEW_TEAM_ID, "new-team");
+            TeamInvitation invitation = pendingInvitation(newTeam, joiner);
+
+            when(userRepository.findById(USER_ID)).thenReturn(Optional.of(joiner));
+            when(invitationRepository.findByInvitationToken(TOKEN))
+                    .thenReturn(Optional.of(invitation));
+            when(saasTeamExtensionService.hasAvailableSeats(newTeam)).thenReturn(true);
+            when(membershipRepository.findByUserId(USER_ID))
+                    .thenReturn(List.of(membership(oldTeam, joiner, TeamRole.LEADER)));
+            when(linkedInstanceRepository.countByTeamIdAndRevokedAtIsNull(OLD_TEAM_ID))
+                    .thenReturn(1L);
+
+            assertThatThrownBy(() -> service.acceptInvitation(TOKEN, joiner))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessage(
+                            "Revoke linked self-hosted instances on this team before joining another"
+                                    + " team.");
+
+            // Guard fires before any team mutation.
+            verify(membershipRepository, never()).delete(any());
+            verify(userRepository, never()).updateUserTeamId(anyLong(), anyLong());
+        }
+
+        @Test
+        @DisplayName("lets accept through when the current team has no linked instances")
+        void passesGuardWhenNoLinkedInstances() {
+            User joiner = user(USER_ID, EMAIL, EMAIL);
+            Team oldTeam = team(OLD_TEAM_ID, "old-team");
+            Team newTeam = team(NEW_TEAM_ID, "new-team");
+            TeamInvitation invitation = pendingInvitation(newTeam, joiner);
+            TeamMembership oldMembership = membership(oldTeam, joiner, TeamRole.LEADER);
+
+            when(userRepository.findById(USER_ID)).thenReturn(Optional.of(joiner));
+            when(invitationRepository.findByInvitationToken(TOKEN))
+                    .thenReturn(Optional.of(invitation));
+            when(saasTeamExtensionService.hasAvailableSeats(newTeam)).thenReturn(true);
+            when(membershipRepository.findByUserId(USER_ID)).thenReturn(List.of(oldMembership));
+            when(linkedInstanceRepository.countByTeamIdAndRevokedAtIsNull(OLD_TEAM_ID))
+                    .thenReturn(0L);
+            // Personal old team → guard skips the last-leader check and leave/join proceeds.
+            when(saasTeamExtensionService.isPersonal(oldTeam)).thenReturn(true);
+            when(membershipRepository.countByTeamId(OLD_TEAM_ID)).thenReturn(0L);
+            when(saasTeamExtensionsRepository.incrementSeatsUsed(NEW_TEAM_ID)).thenReturn(1);
+
+            service.acceptInvitation(TOKEN, joiner);
+
+            // Guard let the move through: the old membership was left and the user re-pointed.
+            verify(membershipRepository).delete(oldMembership);
+            verify(userRepository).updateUserTeamId(USER_ID, NEW_TEAM_ID);
+            verify(invitationRepository).save(invitation);
+            assertThat(invitation.getStatus()).isEqualTo(InvitationStatus.ACCEPTED);
+        }
+
+        private TeamInvitation pendingInvitation(Team team, User invitee) {
+            TeamInvitation inv = new TeamInvitation();
+            inv.setTeam(team);
+            inv.setInviter(invitee);
+            inv.setInviteeEmail(invitee.getEmail());
+            inv.setStatus(InvitationStatus.PENDING);
+            inv.setInvitationToken(TOKEN);
+            inv.setExpiresAt(LocalDateTime.now().plusDays(1));
+            return inv;
+        }
     }
 }
