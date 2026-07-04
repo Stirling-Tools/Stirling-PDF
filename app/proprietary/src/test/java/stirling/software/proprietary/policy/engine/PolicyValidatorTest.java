@@ -23,6 +23,9 @@ import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.TriggerConfig;
 import stirling.software.proprietary.policy.output.PolicyOutputSink;
+import stirling.software.proprietary.policy.source.InProcessSourceStore;
+import stirling.software.proprietary.policy.source.Source;
+import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.trigger.PolicyTrigger;
 
 /** Tests for {@link PolicyValidator}: routes each facet to its handler and surfaces failures. */
@@ -33,12 +36,14 @@ class PolicyValidatorTest {
     @Mock private InputSource inputSource;
     @Mock private PolicyOutputSink outputSink;
 
+    private final SourceStore sourceStore = new InProcessSourceStore();
     private PolicyValidator validator;
 
     @BeforeEach
     void setUp() {
         validator =
-                new PolicyValidator(List.of(trigger), List.of(inputSource), List.of(outputSink));
+                new PolicyValidator(
+                        List.of(trigger), List.of(inputSource), List.of(outputSink), sourceStore);
     }
 
     @Test
@@ -51,7 +56,7 @@ class PolicyValidatorTest {
         validator.validate(policy);
 
         verify(trigger).validate(policy);
-        verify(inputSource).validate(policy.sources().get(0));
+        verify(inputSource).validate(InputSpec.folder("/in"));
         verify(outputSink).validate(policy.output());
     }
 
@@ -88,27 +93,35 @@ class PolicyValidatorTest {
         assertTrue(ex.getMessage().contains("unknown trigger type"));
     }
 
-    private static Policy policy(String triggerType) {
+    private Policy policy(String triggerType) {
         return new Policy(
                 "p1",
                 "p",
                 "owner",
                 true,
                 new TriggerConfig(triggerType, Map.of()),
-                List.of(InputSpec.folder("/in")),
+                List.of(folderSourceId()),
                 List.of(),
                 OutputSpec.inline());
     }
 
-    private static Policy manualOnly() {
+    private Policy manualOnly() {
         return new Policy(
                 "p1",
                 "p",
                 "owner",
                 true,
                 null,
-                List.of(InputSpec.folder("/in")),
+                List.of(folderSourceId()),
                 List.of(),
                 OutputSpec.inline());
+    }
+
+    /** Persists a folder source ("/in") and returns its id for a policy to reference. */
+    private String folderSourceId() {
+        InputSpec spec = InputSpec.folder("/in");
+        return sourceStore
+                .save(new Source(null, "src", spec.type(), spec.options(), true, "owner", null))
+                .id();
     }
 }

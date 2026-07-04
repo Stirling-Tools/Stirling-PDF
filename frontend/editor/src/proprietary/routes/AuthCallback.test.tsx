@@ -5,14 +5,14 @@ import AuthCallback from "@app/routes/AuthCallback";
 import {
   POST_LOGIN_REDIRECT_STORAGE_KEY,
   springAuth,
-} from "@shared/auth/spring/springAuthClient";
+} from "@app/auth/spring/springAuthClient";
 import { expectConsole } from "@app/tests/failOnConsole";
 
 // Mock springAuth; keep the real redirect-path helpers.
-vi.mock("@shared/auth/spring/springAuthClient", async () => {
+vi.mock("@app/auth/spring/springAuthClient", async () => {
   const actual = await vi.importActual<
-    typeof import("@shared/auth/spring/springAuthClient")
-  >("@shared/auth/spring/springAuthClient");
+    typeof import("@app/auth/spring/springAuthClient")
+  >("@app/auth/spring/springAuthClient");
   return {
     ...actual,
     springAuth: {

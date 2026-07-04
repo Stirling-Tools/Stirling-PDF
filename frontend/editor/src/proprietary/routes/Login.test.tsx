@@ -5,10 +5,10 @@ import { BrowserRouter, MemoryRouter } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
 import Login from "@app/routes/Login";
 import { useAuth } from "@app/auth/UseSession";
-import { springAuth } from "@shared/auth/spring/springAuthClient";
+import { springAuth } from "@app/auth/spring/springAuthClient";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
 import apiClient from "@app/services/apiClient";
-import { configureSpringAuth } from "@shared/auth/config";
+import { configureSpringAuth } from "@app/auth/config";
 import type { AxiosInstance } from "axios";
 
 // Mock i18n to return fallback text
@@ -43,10 +43,10 @@ vi.mock("@app/auth/UseSession", () => ({
 }));
 
 // Mock springAuth; keep the real redirect-path helpers.
-vi.mock("@shared/auth/spring/springAuthClient", async () => {
+vi.mock("@app/auth/spring/springAuthClient", async () => {
   const actual = await vi.importActual<
-    typeof import("@shared/auth/spring/springAuthClient")
-  >("@shared/auth/spring/springAuthClient");
+    typeof import("@app/auth/spring/springAuthClient")
+  >("@app/auth/spring/springAuthClient");
   return {
     ...actual,
     springAuth: {
@@ -114,6 +114,7 @@ describe("Login", () => {
       displayName: null,
       isAnonymous: false,
       isAdmin: false,
+      portalAccess: false,
       role: null,
       loading: false,
       error: null,
@@ -169,6 +170,7 @@ describe("Login", () => {
       displayName: mockSession.user.username,
       isAnonymous: false,
       isAdmin: false,
+      portalAccess: false,
       role: mockSession.user.role,
       loading: false,
       error: null,
@@ -196,6 +198,7 @@ describe("Login", () => {
       displayName: null,
       isAnonymous: false,
       isAdmin: false,
+      portalAccess: false,
       role: null,
       loading: true,
       error: null,

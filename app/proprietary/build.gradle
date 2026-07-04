@@ -80,6 +80,10 @@ dependencies {
     implementation "software.amazon.awssdk:s3:${awsSdkVersion}"
     implementation "software.amazon.awssdk:url-connection-client:${awsSdkVersion}"
 
+    // @DataJpaTest slice (Boot 4 ships test slices as separate starters, like webmvc-test at the
+    // root) so policy.source repositories can be exercised against embedded H2.
+    testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
+
     // Testcontainers: real MinIO/LocalStack (S3) and Valkey for integration tests in CI without
     // manually-started instances. Tests skip cleanly when Docker is unavailable.
     testImplementation "org.testcontainers:testcontainers:${testcontainersMinioVersion}"

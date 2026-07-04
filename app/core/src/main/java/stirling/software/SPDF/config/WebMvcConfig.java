@@ -85,7 +85,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/icons/**",
                         "/modern-logo/**",
                         "/classic-logo/**",
-                        "/robots.txt",
                         "/3rdPartyLicenses.json",
                         "/pdfjs/**",
                         "/pdfjs-legacy/**",

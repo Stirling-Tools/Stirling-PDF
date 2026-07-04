@@ -6,16 +6,13 @@ import tsconfigPaths from "vite-tsconfig-paths";
  * Storybook 9 ships essentials, interactions, and docs as built-ins, so the
  * addon list is just the extras we want: theme switching + a11y auditing.
  *
- * Story files live next to their components in shared/, portal/src/, and
- * editor/src/ — the design system is shared by BOTH apps, so both surface
- * their stories here. MDX docs pages live in portal/src/docs/.
+ * Story files live next to their components under editor/src/ (which includes
+ * the portal layer at editor/src/portal/). MDX docs pages live in
+ * editor/src/portal/docs/.
  */
 const config: StorybookConfig = {
   stories: [
-    "../portal/src/**/*.mdx",
-    "../portal/src/**/*.stories.@(ts|tsx)",
-    "../shared/**/*.mdx",
-    "../shared/**/*.stories.@(ts|tsx)",
+    "../editor/src/portal/**/*.mdx",
     "../editor/src/**/*.stories.@(ts|tsx)",
   ],
   addons: ["@storybook/addon-themes", "@storybook/addon-a11y"],
@@ -26,17 +23,21 @@ const config: StorybookConfig = {
   typescript: {
     reactDocgen: "react-docgen-typescript",
   },
-  // Serve the MSW worker file from portal/public so Storybook can intercept
-  // network calls the same way the dev portal does.
-  staticDirs: ["../portal/public"],
+  // Serve the MSW worker file from the portal's public dir so Storybook can
+  // intercept network calls the same way the dev portal does.
+  staticDirs: ["../editor/public"],
   viteFinal: async (config) => {
-    // Wire @portal/* and @shared/* aliases directly on the Storybook bundler so
-    // portal story imports resolve without needing the portal's vite config.
+    // Wire the @portal/* alias directly on the Storybook bundler so portal
+    // story imports resolve without needing the portal's vite config.
     config.resolve = config.resolve ?? {};
     config.resolve.alias = {
       ...(config.resolve.alias ?? {}),
-      "@portal": resolve(__dirname, "../portal/src"),
-      "@shared": resolve(__dirname, "../shared"),
+      "@portal": resolve(__dirname, "../editor/src/portal"),
+      // Direct layer aliases so .storybook config files (preview.tsx), which sit
+      // outside src/ and so aren't covered by tsconfigPaths, can import layer
+      // modules (e.g. the auth supabase client that moved into proprietary).
+      "@proprietary": resolve(__dirname, "../editor/src/proprietary"),
+      "@core": resolve(__dirname, "../editor/src/core"),
     };
     // Editor stories import via @app/* (proprietary→core fallback), @core/* and
     // @proprietary/*. Resolve them exactly the way the editor's own build does —
@@ -51,6 +52,16 @@ const config: StorybookConfig = {
         ],
       }),
     );
+    // Point apiClient.saas at a mock origin so the SaaS-backed billing stories
+    // (SubscribedPlanView, PaymentMethodCard, InvoicesList) resolve a base URL and
+    // their MSW handlers (which match "*/api/v1/payg/...") can intercept. The host
+    // never receives a real request — MSW answers first. Injected here, next to the
+    // MSW setup, rather than via a frontend/.env so no stray env file can leak into a
+    // real portal/editor build (those load env from their own roots).
+    config.define = {
+      ...(config.define ?? {}),
+      "import.meta.env.VITE_SAAS_API_URL": JSON.stringify("http://saas.mock"),
+    };
     return config;
   },
 };

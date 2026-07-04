@@ -139,7 +139,8 @@ The project structure is defined in `engine/pyproject.toml`. Any new dependencie
 
 #### Environment Variables
 - All `VITE_*` variables must be declared in the appropriate committed env file:
-  - `frontend/editor/.env` — core, proprietary, and shared vars
+  - `frontend/editor/.env` — core and shared vars (base, loaded in every mode)
+  - `frontend/editor/.env.proprietary` — proprietary-only vars, e.g. the admin portal's SaaS/account-link keys (layered on top of `.env` in proprietary mode)
   - `frontend/editor/.env.saas` — SaaS-only vars (layered on top of `.env` in SaaS mode)
   - `frontend/editor/.env.desktop` — desktop (Tauri)-only vars (layered on top of `.env` in desktop mode)
 - These files are committed to Git and must not contain private keys
