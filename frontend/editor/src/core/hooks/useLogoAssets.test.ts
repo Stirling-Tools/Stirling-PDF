@@ -10,11 +10,11 @@ import type { LogoVariant } from "@app/services/preferencesService";
  */
 describe("useLogoAssets - Logo Asset Files", () => {
   const publicDir = path.resolve(__dirname, "../../../public");
-  // Brand logo assets live in the shared design system; the editor's vite
-  // config copies shared/assets/brand/<folder>/* into the served root at build
-  // time (see viteStaticCopy in editor/vite.config.ts), so useLogoAssets can
-  // keep referencing them by their public-URL path. Validate them at source.
-  const brandDir = path.resolve(__dirname, "../../../../shared/assets/brand");
+  // Brand logo assets live in core; the editor's vite config copies
+  // core/assets/brand/<folder>/* into the served root at build time (see
+  // viteStaticCopy in editor/vite.config.ts), so useLogoAssets can keep
+  // referencing them by their public-URL path. Validate them at source.
+  const brandDir = path.resolve(__dirname, "../assets/brand");
 
   // All asset files that useLogoAssets references
   const requiredAssets = [

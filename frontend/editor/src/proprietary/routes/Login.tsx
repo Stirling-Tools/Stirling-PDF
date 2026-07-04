@@ -6,7 +6,7 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { Text, Stack, Alert } from "@mantine/core";
-import { setPostLoginRedirectPath } from "@shared/auth/spring/springAuthClient";
+import { setPostLoginRedirectPath } from "@app/auth/spring/springAuthClient";
 import { useAuth } from "@app/auth/UseSession";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useTranslation } from "react-i18next";
@@ -18,11 +18,11 @@ import { updateSupportedLanguages } from "@app/i18n";
 import {
   DEBUG_SHOW_ALL_PROVIDERS,
   oauthProviderConfig,
-} from "@shared/auth/ui/OAuthButtons";
-import SpringLoginForm from "@shared/auth/ui/SpringLoginForm";
-import { useSpringLogin } from "@shared/auth/ui/useSpringLogin";
+} from "@app/auth/ui/OAuthButtons";
+import SpringLoginForm from "@app/auth/ui/SpringLoginForm";
+import { useSpringLogin } from "@app/auth/ui/useSpringLogin";
 import LoggedInState from "@app/routes/login/LoggedInState";
-import loginHeader from "@shared/assets/brand/modern-logo/LoginLightModeHeader.svg";
+import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
 
 export default function Login() {
   const navigate = useNavigate();
