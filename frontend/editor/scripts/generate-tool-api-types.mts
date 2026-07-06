@@ -56,6 +56,22 @@ function isObject(value: unknown): value is Json {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+/**
+ * Recursively sort object keys so the output is byte-stable regardless of the
+ * key ordering springdoc happens to emit.
+ */
+function deepSortKeys(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(deepSortKeys);
+  if (isObject(value)) {
+    const sorted: Json = {};
+    for (const key of Object.keys(value).sort()) {
+      sorted[key] = deepSortKeys(value[key]);
+    }
+    return sorted;
+  }
+  return value;
+}
+
 function pascalCase(segment: string): string {
   return segment
     .split(/[-_/]/)
@@ -297,7 +313,11 @@ async function compileAndWrite(
     definitions: definitions as Record<string, JSONSchema>,
   };
 
-  const compiled = await compile(rootSchema, rootName, {
+  // Canonicalize key order so a reordering in SwaggerDoc.json can never change
+  // the generated file (which would flake the committed-types CI check).
+  const canonicalRoot = deepSortKeys(rootSchema) as JSONSchema;
+
+  const compiled = await compile(canonicalRoot, rootName, {
     bannerComment: "",
     additionalProperties: false,
     declareExternallyReferenced: true,

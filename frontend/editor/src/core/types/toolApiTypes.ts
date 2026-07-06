@@ -3,540 +3,6 @@
 // (SwaggerDoc.json). Regenerate with: task frontend:tool-models
 // Tools that take only a file input have no parameters; their model is Record<string, never>.
 
-export interface ConvertCbrToPdfRequest {
-  /**
-   * Optimize the output PDF for ebook reading using Ghostscript
-   */
-  optimizeForEbook?: boolean;
-}
-export interface ConvertCbzToPdfRequest {
-  /**
-   * Optimize the output PDF for ebook reading using Ghostscript
-   */
-  optimizeForEbook?: boolean;
-}
-export interface ConvertEbookToPdfRequest {
-  /**
-   * Embed all fonts from the eBook into the generated PDF
-   */
-  embedAllFonts?: true | false;
-  /**
-   * Add a generated table of contents to the resulting PDF
-   */
-  includeTableOfContents?: true | false;
-  /**
-   * Add page numbers to the generated PDF
-   */
-  includePageNumbers?: true | false;
-  /**
-   * Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)
-   */
-  optimizeForEbook?: true | false;
-}
-export interface EmlToPdfRequest {
-  /**
-   * Include email attachments in the PDF output
-   */
-  includeAttachments?: boolean;
-  /**
-   * Maximum attachment size in MB to include (default 10MB, range: 1-100)
-   */
-  maxAttachmentSizeMB?: number;
-  /**
-   * Download HTML intermediate file instead of PDF
-   */
-  downloadHtml?: boolean;
-  /**
-   * Include CC and BCC recipients in header (if available)
-   */
-  includeAllRecipients?: boolean;
-}
-export type GeneralFile = Record<string, never>;
-export interface HTMLToPdfRequest {
-  /**
-   * Zoom level for displaying the website. Default is '1'.
-   */
-  zoom?: number;
-}
-export interface ConvertToPdfRequest {
-  /**
-   * Option to determine how the image will fit onto the page
-   */
-  fitOption?: "fillPage" | "fitDocumentToImage" | "maintainAspectRatio";
-  /**
-   * The color type of the output image(s)
-   */
-  colorType?: "color" | "greyscale" | "blackwhite";
-  /**
-   * Whether to automatically rotate the images to better fit the PDF page
-   */
-  autoRotate?: boolean;
-}
-export interface ConvertPdfToCbrRequest {
-  /**
-   * The DPI (Dots Per Inch) for rendering PDF pages as images
-   */
-  dpi: number;
-}
-export interface ConvertPdfToCbzRequest {
-  /**
-   * The DPI (Dots Per Inch) for rendering PDF pages as images
-   */
-  dpi: number;
-}
-export interface PDFWithPageNums {
-  /**
-   * The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')
-   */
-  pageNumbers?: string;
-}
-export interface ConvertPdfToEpubRequest {
-  /**
-   * Detect headings that look like chapters and insert EPUB page breaks.
-   */
-  detectChapters?: true | false;
-  /**
-   * Choose an output profile optimized for the reader device.
-   */
-  targetDevice?: "TABLET_PHONE_IMAGES" | "KINDLE_EINK_TEXT";
-  /**
-   * Choose the output format for the ebook.
-   */
-  outputFormat?: "EPUB" | "AZW3";
-}
-export type ConvertPdfHtmlRequest = Record<string, never>;
-export interface ConvertToImageRequest {
-  /**
-   * The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')
-   */
-  pageNumbers?: string;
-  /**
-   * The output image format
-   */
-  imageFormat?: "png" | "jpeg" | "jpg" | "gif" | "webp";
-  /**
-   * Choose between a single image containing all pages or separate images for each page
-   */
-  singleOrMultiple?: "single" | "multiple";
-  /**
-   * The color type of the output image(s)
-   */
-  colorType?: "color" | "greyscale" | "blackwhite";
-  /**
-   * The DPI (dots per inch) for the output image(s)
-   */
-  dpi?: number;
-  /**
-   * Include annotations such as comments in the output image(s)
-   */
-  includeAnnotations?: boolean;
-}
-export type ConvertPdfMarkdownRequest = Record<string, never>;
-export interface PdfToPdfARequest {
-  /**
-   * The output format type (PDF/A or PDF/X)
-   */
-  outputFormat:
-    | "pdfa"
-    | "pdfa-1"
-    | "pdfa-2"
-    | "pdfa-2b"
-    | "pdfa-3"
-    | "pdfa-3b"
-    | "pdfx";
-  /**
-   * If true, the conversion will fail if the output is not perfectly compliant
-   */
-  strict?: boolean;
-}
-export interface PdfToPresentationRequest {
-  /**
-   * The output Presentation format
-   */
-  outputFormat: "ppt" | "pptx" | "odp";
-}
-export interface PdfToTextOrRTFRequest {
-  /**
-   * The output Text or RTF format
-   */
-  outputFormat: "rtf" | "txt";
-}
-export interface ConvertPdfTextEditorRequest {
-  lightweight?: boolean;
-}
-export type ConvertPdfTextEditorMetadataRequest = Record<string, never>;
-export interface PdfVectorExportRequest {
-  /**
-   * Target vector format extension
-   */
-  outputFormat?: "eps" | "ps" | "pcl" | "xps";
-  /**
-   * Apply Ghostscript prepress settings
-   */
-  prepress?: true | false;
-}
-export interface PdfToWordRequest {
-  /**
-   * The output Word document format
-   */
-  outputFormat: "doc" | "docx" | "odt";
-}
-export type ConvertPdfXmlRequest = Record<string, never>;
-export interface SvgToPdfRequest {
-  /**
-   * Whether to combine all SVG files into a single PDF (each SVG as a separate page) or create separate PDF files for each SVG.
-   */
-  combineIntoSinglePdf?: boolean;
-}
-export interface UrlToPdfRequest {
-  /**
-   * The input URL to be converted to a PDF file
-   */
-  urlInput: string;
-}
-export interface BookletImpositionRequest {
-  /**
-   * The number of pages per side for booklet printing (always 2 for proper booklet).
-   */
-  pagesPerSheet?: 2;
-  /**
-   * Boolean for if you wish to add border around the pages
-   */
-  addBorder?: boolean;
-  /**
-   * The spine location for the booklet.
-   */
-  spineLocation?: "LEFT" | "RIGHT";
-  /**
-   * Add gutter margin (inner margin for binding)
-   */
-  addGutter?: boolean;
-  /**
-   * Gutter margin size in points (used when addGutter is true)
-   */
-  gutterSize?: number;
-  /**
-   * Generate both front and back sides (double-sided printing)
-   */
-  doubleSided?: boolean;
-  /**
-   * For manual duplex: which pass to generate
-   */
-  duplexPass?: "BOTH" | "FIRST" | "SECOND";
-  /**
-   * Flip back sides for short-edge duplex printing (default is long-edge)
-   */
-  flipOnShortEdge?: boolean;
-}
-export interface CropPdfForm {
-  /**
-   * The x-coordinate of the top-left corner of the crop area
-   */
-  x?: number;
-  /**
-   * The y-coordinate of the top-left corner of the crop area
-   */
-  y?: number;
-  /**
-   * The width of the crop area
-   */
-  width?: number;
-  /**
-   * The height of the crop area
-   */
-  height?: number;
-  /**
-   * Whether to remove text outside the crop area (keeps images)
-   */
-  removeDataOutsideCrop?: boolean;
-  /**
-   * Enable auto-crop to detect and remove white space
-   */
-  autoCrop?: boolean;
-}
-export interface EditTableOfContentsRequest {
-  /**
-   * Bookmark structure in JSON format
-   */
-  bookmarkData?: string;
-  /**
-   * Whether to replace existing bookmarks or append to them
-   */
-  replaceExisting?: boolean;
-}
-export interface EditTextRequest {
-  /**
-   * The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')
-   */
-  pageNumbers?: string;
-  /**
-   * Ordered list of find/replace operations. Each replaces every occurrence on the selected pages, in order; later operations see the result of earlier ones (so 'foo'->'foos' then 'foos'->'bars' turns 'foo' into 'bars').
-   */
-  edits: EditTextOperation[];
-  /**
-   * Whether matches must be whole words (boundaries determined by non-word characters)
-   */
-  wholeWordSearch?: boolean;
-}
-/**
- * Ordered list of find/replace operations. Each replaces every occurrence on the selected pages, in order; later operations see the result of earlier ones (so 'foo'->'foos' then 'foos'->'bars' turns 'foo' into 'bars').
- */
-export interface EditTextOperation {
-  /**
-   * The literal text to find.
-   */
-  find: string;
-  /**
-   * The replacement text. May be empty to delete the matched text.
-   */
-  replace: string;
-}
-export interface GeneralExtractBookmarksRequest {
-  file: string;
-}
-export interface MergePdfsRequest {
-  fileOrder?: string;
-  /**
-   * The type of sorting to be applied on the input files before merging.
-   */
-  sortType?:
-    | "orderProvided"
-    | "byFileName"
-    | "byDateModified"
-    | "byDateCreated"
-    | "byPDFTitle";
-  /**
-   * Flag indicating whether to remove certification signatures from the merged PDF. If true, all certification signatures will be removed from the final merged document.
-   */
-  removeCertSign?: boolean;
-  /**
-   * Flag indicating whether to generate a table of contents for the merged PDF. If true, a table of contents will be created using the input filenames as chapter names.
-   */
-  generateToc?: boolean;
-  /**
-   * JSON array of client-provided IDs for each uploaded file (same order as fileInput)
-   */
-  clientFileIds?: string;
-}
-export interface MergeMultiplePagesRequest {
-  /**
-   * Input mode: DEFAULT uses pagesPerSheet; CUSTOM uses explicit cols x rows.
-   */
-  mode?: "DEFAULT" | "CUSTOM";
-  /**
-   * The number of pages to fit onto a single sheet in the output PDF.
-   */
-  pagesPerSheet?: 2 | 4 | 9 | 16;
-  /**
-   * The arrangement of pages on the sheet: BY_ROWS fills pages row by row, while BY_COLUMNS fills pages column by column.
-   */
-  arrangement?: "BY_ROWS" | "BY_COLUMNS";
-  /**
-   * The direction in which pages are arranged on the sheet: LTR (left-to-right) or RTL (right-to-left).
-   */
-  readingDirection?: "LTR" | "RTL";
-  /**
-   * Number of rows
-   */
-  rows?: number;
-  /**
-   * Number of columns
-   */
-  cols?: number;
-  /**
-   * The orientation of the output PDF pages
-   */
-  orientation?: "PORTRAIT" | "LANDSCAPE";
-  /**
-   * Inner margin (in points) to apply around each page when merging
-   */
-  innerMargin?: number;
-  /**
-   * Top margin (in points) to apply to the output pages when merging
-   */
-  topMargin?: number;
-  /**
-   * Bottom margin (in points) to apply to the output pages when merging
-   */
-  bottomMargin?: number;
-  /**
-   * Left margin (in points) to apply to the output pages when merging
-   */
-  leftMargin?: number;
-  /**
-   * Right margin (in points) to apply to the output pages when merging
-   */
-  rightMargin?: number;
-  /**
-   * Border width (in points) to apply around each page when merging
-   */
-  borderWidth?: number;
-  /**
-   * Boolean for if you wish to add border around the pages
-   */
-  addBorder?: boolean;
-}
-export interface OverlayPdfsRequest {
-  /**
-   * An array of PDF files to be used as overlays on the base PDF. The order in these files is applied based on the selected mode.
-   */
-  overlayFiles: string[];
-  /**
-   * The mode of overlaying: 'SequentialOverlay' for sequential application, 'InterleavedOverlay' for round-robin application, 'FixedRepeatOverlay' for fixed repetition based on provided counts
-   */
-  overlayMode:
-    | "SequentialOverlay"
-    | "InterleavedOverlay"
-    | "FixedRepeatOverlay";
-  /**
-   * An array of integers specifying the number of times each corresponding overlay file should be applied in the 'FixedRepeatOverlay' mode. This should match the length of the overlayFiles array.
-   */
-  counts?: number[];
-  /**
-   * Overlay position 0 is Foregound, 1 is Background
-   */
-  overlayPosition: 0 | 1;
-}
-export type GeneralPdfToSinglePageRequest = Record<string, never>;
-export interface RearrangePagesRequest {
-  /**
-   * The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')
-   */
-  pageNumbers?: string;
-  /**
-   * The custom mode for page rearrangement. Valid values are:
-   * CUSTOM: Uses order defined in PageNums DUPLICATE: Duplicate pages n times (if Page order defined as 4, then duplicates each page 4 times)REVERSE_ORDER: Reverses the order of all pages.
-   * DUPLEX_SORT: Sorts pages as if all fronts were scanned then all backs in reverse (1, n, 2, n-1, ...). BOOKLET_SORT: Arranges pages for booklet printing (last, first, second, second last, ...).
-   * ODD_EVEN_SPLIT: Splits and arranges pages into odd and even numbered pages.
-   * REMOVE_FIRST: Removes the first page.
-   * REMOVE_LAST: Removes the last page.
-   * REMOVE_FIRST_AND_LAST: Removes both the first and the last pages.
-   *
-   */
-  customMode?:
-    | "CUSTOM"
-    | "REVERSE_ORDER"
-    | "DUPLEX_SORT"
-    | "BOOKLET_SORT"
-    | "SIDE_STITCH_BOOKLET_SORT"
-    | "ODD_EVEN_SPLIT"
-    | "REMOVE_FIRST"
-    | "REMOVE_LAST"
-    | "REMOVE_FIRST_AND_LAST"
-    | "DUPLICATE";
-}
-export type GeneralRemoveImagePdfRequest = Record<string, never>;
-export interface RotatePDFRequest {
-  /**
-   * The clockwise angle by which to rotate all pages in the PDF file. Must be a multiple of 90.
-   */
-  angle: 0 | 90 | 180 | 270;
-}
-export interface ScalePagesRequest {
-  /**
-   * The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER, LEGAL, KEEP.
-   */
-  pageSize:
-    | "A0"
-    | "A1"
-    | "A2"
-    | "A3"
-    | "A4"
-    | "A5"
-    | "A6"
-    | "LETTER"
-    | "LEGAL"
-    | "KEEP";
-  /**
-   * Orientation to apply to the target page size. Ignored when pageSize is KEEP.
-   */
-  orientation?: "PORTRAIT" | "LANDSCAPE";
-  /**
-   * The scale of the content on the pages of the output PDF. Acceptable values are floats.
-   */
-  scaleFactor?: number;
-}
-export interface SplitPdfBySizeOrCountRequest {
-  /**
-   * Determines the type of split: 0 for size, 1 for page count, 2 for document count
-   */
-  splitType?: number;
-  /**
-   * Value for split: size in MB (e.g., '10MB') or number of pages (e.g., '5')
-   */
-  splitValue?: string;
-}
-export interface PosterPdfRequest {
-  /**
-   * Target page size for output chunks (e.g., 'A4', 'Letter', 'A3')
-   */
-  pageSize: "A4" | "Letter" | "A3" | "A5" | "Legal" | "Tabloid";
-  /**
-   * Split right-to-left instead of left-to-right
-   */
-  rightToLeft?: boolean;
-  /**
-   * Horizontal decimation factor (how many columns to split into)
-   */
-  xFactor?: number;
-  /**
-   * Vertical decimation factor (how many rows to split into)
-   */
-  yFactor?: number;
-}
-export interface SplitPagesRequest {
-  /**
-   * Split points - page numbers after which the PDF will be cut. For example, `"2"` produces two documents (pages 1-2 and pages 3+); `"2,5"` produces three (pages 1-2, 3-5, 6+). Supports ranges (e.g. `"1,3,5-9"` splits after pages 1, 3, 5, 6, 7, 8, 9, yielding 8 documents), `"all"` (split after every page), or functions like `"2n+1"`, `"3n"`, `"6n-5"`.
-   */
-  pageNumbers?: string;
-}
-export interface SplitPdfByChaptersRequest {
-  /**
-   * Whether to include Metadata or not
-   */
-  includeMetadata?: boolean;
-  /**
-   * Whether to allow duplicates or not
-   */
-  allowDuplicates?: boolean;
-  /**
-   * Maximum bookmark level required
-   */
-  bookmarkLevel?: number;
-}
-export interface SplitPdfBySectionsRequest {
-  /**
-   * Pages to be split by section
-   */
-  pageNumbers?: string;
-  /**
-   * Modes for page split. Valid values are:
-   * SPLIT_ALL_EXCEPT_FIRST_AND_LAST: Splits all except the first and the last pages.
-   * SPLIT_ALL_EXCEPT_FIRST: Splits all except the first page.
-   * SPLIT_ALL_EXCEPT_LAST: Splits all except the last page.
-   * SPLIT_ALL: Splits all pages.
-   * CUSTOM: Custom split.
-   *
-   */
-  splitMode?:
-    | "CUSTOM"
-    | "SPLIT_ALL_EXCEPT_FIRST_AND_LAST"
-    | "SPLIT_ALL_EXCEPT_FIRST"
-    | "SPLIT_ALL_EXCEPT_LAST"
-    | "SPLIT_ALL";
-  /**
-   * Number of horizontal divisions for each PDF page
-   */
-  horizontalDivisions?: number;
-  /**
-   * Number of vertical divisions for each PDF page
-   */
-  verticalDivisions?: number;
-  /**
-   * Merge the split documents into a single PDF
-   */
-  merge?: boolean;
-}
 export interface AddAttachmentRequest {
   /**
    * The image file to be overlaid onto the PDF.
@@ -553,30 +19,19 @@ export interface AddCommentsRequest {
    */
   comments: string;
 }
-export interface OverlayImageRequest {
-  imageFile: string;
-  /**
-   * The x-coordinate at which to place the top-left corner of the image.
-   */
-  x?: number;
-  /**
-   * The y-coordinate at which to place the top-left corner of the image.
-   */
-  y?: number;
-  /**
-   * Whether to overlay the image onto every page of the PDF.
-   */
-  everyPage?: boolean;
-}
 export interface AddPageNumbersRequest {
-  /**
-   * The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')
-   */
-  pageNumbers?: string;
   /**
    * Custom margin: small/medium/large/x-large
    */
   customMargin?: "small" | "medium" | "large" | "x-large";
+  /**
+   * Custom text pattern. Available variables: {n}=current page number, {total}=total pages, {filename}=original filename
+   */
+  customText?: string;
+  /**
+   * Hex colour for page numbers (e.g. #FF0000)
+   */
+  fontColor?: string;
   /**
    * Font size for page numbers
    */
@@ -586,13 +41,13 @@ export interface AddPageNumbersRequest {
    */
   fontType: "helvetica" | "courier" | "times";
   /**
-   * Hex colour for page numbers (e.g. #FF0000)
+   * The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')
    */
-  fontColor?: string;
+  pageNumbers?: string;
   /**
-   * Zero-padding width for page numbers (Bates Stamping). Set to 0 to disable padding
+   * Which pages to number (e.g. '1,3-5,7' or 'all')
    */
-  zeroPad?: number;
+  pagesToNumber?: string;
   /**
    * Position: 1-9 representing positions on the page (1=top-left, 2=top-center, 3=top-right, 4=middle-left, 5=middle-center, 6=middle-right, 7=bottom-left, 8=bottom-center, 9=bottom-right)
    */
@@ -602,348 +57,15 @@ export interface AddPageNumbersRequest {
    */
   startingNumber?: number;
   /**
-   * Which pages to number (e.g. '1,3-5,7' or 'all')
+   * Zero-padding width for page numbers (Bates Stamping). Set to 0 to disable padding
    */
-  pagesToNumber?: string;
-  /**
-   * Custom text pattern. Available variables: {n}=current page number, {total}=total pages, {filename}=original filename
-   */
-  customText?: string;
-}
-export interface AddStampRequest {
-  /**
-   * The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')
-   */
-  pageNumbers?: string;
-  /**
-   * The stamp type (text or image)
-   */
-  stampType: "text" | "image";
-  /**
-   * The stamp text
-   */
-  stampText?: string;
-  stampImage?: string;
-  /**
-   * The selected alphabet of the stamp text
-   */
-  alphabet?: "roman" | "arabic" | "japanese" | "korean" | "chinese" | "thai";
-  /**
-   * The font size of the stamp text and image in points.
-   */
-  fontSize?: number;
-  /**
-   * The rotation of the stamp in degrees
-   */
-  rotation?: number;
-  /**
-   * The opacity of the stamp (0.0 - 1.0)
-   */
-  opacity?: number;
-  /**
-   * Position for stamp placement based on a 1-9 grid (1: bottom-left, 2: bottom-center, 3: bottom-right, 4: middle-left, 5: middle-center, 6: middle-right, 7: top-left, 8: top-center, 9: top-right)
-   */
-  position?: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
-  /**
-   * Override X coordinate for stamp placement. If set, it will override the position-based calculation. Negative value means no override.
-   */
-  overrideX?: number;
-  /**
-   * Override Y coordinate for stamp placement. If set, it will override the position-based calculation. Negative value means no override.
-   */
-  overrideY?: number;
-  /**
-   * Specifies the margin size for the stamp.
-   */
-  customMargin?: "small" | "medium" | "large" | "x-large";
-  /**
-   * The color of the stamp text
-   */
-  customColor?: string;
-}
-export interface ExtractHeaderRequest {
-  /**
-   * Flag indicating whether to use the first text as a fallback if no suitable title is found. Defaults to false.
-   */
-  useFirstTextAsFallback?: boolean;
-}
-export interface AutoSplitPdfRequest {
-  /**
-   * Flag indicating if the duplex mode is active, where the page after the divider also gets removed.
-   */
-  duplexMode?: boolean;
-}
-export interface OptimizePdfRequest {
-  /**
-   * The level of optimization to apply to the PDF file. Higher values indicate greater compression but may reduce quality.
-   */
-  optimizeLevel: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
-  /**
-   * The expected output size, e.g. '100MB', '25KB', etc.
-   */
-  expectedOutputSize?: string;
-  /**
-   * Whether to linearize the PDF for faster web viewing. Default is false.
-   */
-  linearize?: boolean;
-  /**
-   * Whether to normalize the PDF content for better compatibility. Default is false.
-   */
-  normalize?: boolean;
-  /**
-   * Whether to convert the PDF to grayscale. Default is false.
-   */
-  grayscale?: boolean;
-  /**
-   * Whether to convert images to high-contrast line art using ImageMagick. Default is false.
-   */
-  lineArt?: boolean;
-  /**
-   * Threshold to use for line art conversion (0-100).
-   */
-  lineArtThreshold?: number;
-  /**
-   * Edge detection strength to use for line art conversion (1-3). This maps to ImageMagick's -edge radius.
-   */
-  lineArtEdgeLevel?: 1 | 2 | 3;
-}
-export type MiscDecompressPdfRequest = Record<string, never>;
-export interface DeleteAttachmentRequest {
-  /**
-   * The name of the attachment to delete
-   */
-  attachmentName: string;
-}
-export type ExtractAttachmentsRequest = Record<string, never>;
-export interface ExtractImageScansRequest {
-  /**
-   * The angle threshold for the image scan extraction
-   */
-  angleThreshold?: number;
-  /**
-   * The tolerance for the image scan extraction
-   */
-  tolerance?: number;
-  /**
-   * The minimum area for the image scan extraction
-   */
-  minArea?: number;
-  /**
-   * The minimum contour area for the image scan extraction
-   */
-  minContourArea?: number;
-  /**
-   * The border size for the image scan extraction
-   */
-  borderSize?: number;
-}
-export interface PDFExtractImagesRequest {
-  /**
-   * The output image format e.g., 'png', 'jpeg', or 'gif'
-   */
-  format?: "png" | "jpeg" | "gif";
-}
-export interface FlattenRequest {
-  /**
-   * True to flatten only the forms, false to flatten full PDF (Convert page to image)
-   */
-  flattenOnlyForms?: boolean;
-  /**
-   * Optional DPI for page rendering when flattening the full document.
-   */
-  renderDpi?: number;
-}
-export type ListAttachmentsRequest = Record<string, never>;
-export interface ProcessPdfWithOcrRequest {
-  /**
-   * List of languages to use in OCR processing, e.g., 'eng', 'deu'
-   */
-  languages?: string[];
-  /**
-   * Include OCR text in a sidecar text file if set to true
-   */
-  sidecar?: boolean;
-  /**
-   * Deskew the input file if set to true
-   */
-  deskew?: boolean;
-  /**
-   * Clean the input file if set to true
-   */
-  clean?: boolean;
-  /**
-   * Clean the final output if set to true
-   */
-  cleanFinal?: boolean;
-  /**
-   * Specify the OCR type, e.g., 'skip-text', 'force-ocr', or 'Normal'
-   */
-  ocrType: "skip-text" | "force-ocr" | "Normal";
-  /**
-   * Specify the OCR render type, either 'hocr' or 'sandwich'
-   */
-  ocrRenderType?: "hocr" | "sandwich";
-  /**
-   * Remove images from the output PDF if set to true
-   */
-  removeImagesAfter?: boolean;
-}
-export interface RemoveBlankPagesRequest {
-  /**
-   * The threshold value to determine blank pages
-   */
-  threshold?: number;
-  /**
-   * The percentage of white color on a page to consider it as blank
-   */
-  whitePercent?: number;
-}
-export interface RenameAttachmentRequest {
-  /**
-   * The current name of the attachment to rename
-   */
-  attachmentName: string;
-  /**
-   * The new name for the attachment
-   */
-  newName: string;
-}
-export type MiscRepairRequest = Record<string, never>;
-export interface ReplaceAndInvertColorRequest {
-  /**
-   * Replace and Invert color options of a pdf.
-   */
-  replaceAndInvertOption?:
-    | "HIGH_CONTRAST_COLOR"
-    | "CUSTOM_COLOR"
-    | "FULL_INVERSION"
-    | "COLOR_SPACE_CONVERSION";
-  /**
-   * If HIGH_CONTRAST_COLOR option selected, then pick the default color option for text and background.
-   */
-  highContrastColorCombination?:
-    | "WHITE_TEXT_ON_BLACK"
-    | "BLACK_TEXT_ON_WHITE"
-    | "YELLOW_TEXT_ON_BLACK"
-    | "GREEN_TEXT_ON_BLACK";
-  /**
-   * If CUSTOM_COLOR option selected, then pick the custom color for background. Expected color value should be 24bit decimal value of a color
-   */
-  backGroundColor?: string;
-  /**
-   * If CUSTOM_COLOR option selected, then pick the custom color for text. Expected color value should be 24bit decimal value of a color
-   */
-  textColor?: string;
-}
-export interface ScannerEffectRequest {
-  /**
-   * Scan quality preset
-   */
-  quality: "low" | "medium" | "high";
-  /**
-   * Rotation preset
-   */
-  rotation: "none" | "slight" | "moderate" | "severe";
-  /**
-   * Colorspace for output image
-   */
-  colorspace?: "grayscale" | "color";
-  /**
-   * Border thickness in pixels
-   */
-  border?: number;
-  /**
-   * Base rotation in degrees
-   */
-  rotate?: number;
-  /**
-   * Random rotation variance in degrees
-   */
-  rotateVariance?: number;
-  /**
-   * Brightness multiplier (1.0 = no change)
-   */
-  brightness?: number;
-  /**
-   * Contrast multiplier (1.0 = no change)
-   */
-  contrast?: number;
-  /**
-   * Blur amount (0 = none, higher = more blur)
-   */
-  blur?: number;
-  /**
-   * Noise amount (0 = none, higher = more noise)
-   */
-  noise?: number;
-  /**
-   * Simulate yellowed paper
-   */
-  yellowish?: boolean;
-  /**
-   * Rendering resolution in DPI
-   */
-  resolution?: number;
-  /**
-   * Whether advanced settings are enabled
-   */
-  advancedEnabled?: boolean;
-  rotationValue?: number;
-}
-export type MiscShowJavascriptRequest = Record<string, never>;
-export type MiscUnlockPdfFormsRequest = Record<string, never>;
-export interface MetadataRequest {
-  /**
-   * Delete all metadata if set to true
-   */
-  deleteAll?: boolean;
-  /**
-   * The author of the document
-   */
-  author?: string;
-  /**
-   * The creation date of the document (format: yyyy/MM/dd HH:mm:ss)
-   */
-  creationDate?: string;
-  /**
-   * The creator of the document
-   */
-  creator?: string;
-  /**
-   * The keywords for the document
-   */
-  keywords?: string;
-  /**
-   * The modification date of the document (format: yyyy/MM/dd HH:mm:ss)
-   */
-  modificationDate?: string;
-  /**
-   * The producer of the document
-   */
-  producer?: string;
-  /**
-   * The subject of the document
-   */
-  subject?: string;
-  /**
-   * The title of the document
-   */
-  title?: string;
-  /**
-   * The trapped status of the document
-   */
-  trapped?: "True" | "False" | "Unknown";
-  /**
-   * Map list of key and value of custom parameters. Note these must start with customKey and customValue if they are non-standard
-   */
-  allRequestParams?: {
-    /**
-     * Map list of key and value of custom parameters. Note these must start with customKey and customValue if they are non-standard
-     */
-    [k: string]: string | undefined;
-  };
+  zeroPad?: number;
 }
 export interface AddPasswordRequest {
+  /**
+   * The length of the encryption key
+   */
+  keyLength: 40 | 128 | 256;
   /**
    * The owner password to be added to the PDF file (Restricts what can be done with the document once it is opened)
    */
@@ -952,10 +74,6 @@ export interface AddPasswordRequest {
    * The password to be added to the PDF file (Restricts the opening of the document itself.)
    */
   password?: string;
-  /**
-   * The length of the encryption key
-   */
-  keyLength: 40 | 128 | 256;
   /**
    * Whether document assembly is prevented
    */
@@ -989,180 +107,420 @@ export interface AddPasswordRequest {
    */
   preventPrintingFaithful?: boolean;
 }
-export interface AddWatermarkRequest {
+export interface AddStampRequest {
   /**
-   * The watermark type (text or image)
-   */
-  watermarkType: "text" | "image";
-  /**
-   * The watermark text
-   */
-  watermarkText?: string;
-  watermarkImage?: string;
-  /**
-   * The selected alphabet
+   * The selected alphabet of the stamp text
    */
   alphabet?: "roman" | "arabic" | "japanese" | "korean" | "chinese" | "thai";
   /**
-   * The font size of the watermark text
-   */
-  fontSize?: number;
-  /**
-   * The rotation of the watermark in degrees
-   */
-  rotation?: number;
-  /**
-   * The opacity of the watermark (0.0 - 1.0)
-   */
-  opacity?: number;
-  /**
-   * The width spacer between watermark elements
-   */
-  widthSpacer?: number;
-  /**
-   * The height spacer between watermark elements
-   */
-  heightSpacer?: number;
-  /**
-   * The color for watermark
+   * The color of the stamp text
    */
   customColor?: string;
   /**
-   * Convert the redacted PDF to an image
+   * Specifies the margin size for the stamp.
    */
-  convertPDFToImage?: boolean;
-}
-export interface RedactPdfRequest {
+  customMargin?: "small" | "medium" | "large" | "x-large";
   /**
-   * List of text to redact from the PDF
+   * The font size of the stamp text and image in points.
    */
-  listOfText?: string;
+  fontSize?: number;
   /**
-   * Whether to use regex for the listOfText
+   * The opacity of the stamp (0.0 - 1.0)
    */
-  useRegex?: boolean;
+  opacity?: number;
   /**
-   * Whether to use whole word search
+   * Override X coordinate for stamp placement. If set, it will override the position-based calculation. Negative value means no override.
    */
-  wholeWordSearch?: boolean;
+  overrideX?: number;
   /**
-   * The color for redaction
+   * Override Y coordinate for stamp placement. If set, it will override the position-based calculation. Negative value means no override.
    */
-  redactColor?: string;
-  /**
-   * Custom padding for redaction
-   */
-  customPadding: number;
-  /**
-   * Convert the redacted PDF to an image
-   */
-  convertPDFToImage?: boolean;
-}
-export interface SignPDFWithCertRequest {
-  /**
-   * The type of the digital certificate. WINDOWS_STORE and PKCS11 are hardware-backed and only available in the desktop app.
-   */
-  certType:
-    | "PEM"
-    | "PKCS12"
-    | "PFX"
-    | "JKS"
-    | "SERVER"
-    | "WINDOWS_STORE"
-    | "PKCS11";
-  privateKeyFile?: string;
-  certFile?: string;
-  p12File?: string;
-  jksFile?: string;
-  /**
-   * The password for the keystore / private key, or the token PIN for PKCS11
-   */
-  password?: string;
-  /**
-   * The alias of the certificate to sign with. Required for WINDOWS_STORE and recommended for PKCS11 tokens holding multiple certificates.
-   */
-  alias?: string;
-  /**
-   * Absolute path to the PKCS#11 driver library (required for PKCS11 type). Must be an allowed driver - a detected one or configured via STIRLING_PKCS11_LIBRARIES.
-   */
-  pkcs11LibraryPath?: string;
-  /**
-   * Optional PKCS#11 slot index. When omitted the first slot with a token is used.
-   */
-  pkcs11Slot?: number;
-  /**
-   * Whether to visually show the signature in the PDF file
-   */
-  showSignature?: boolean;
-  /**
-   * The reason for signing the PDF
-   */
-  reason?: string;
-  /**
-   * The location where the PDF is signed
-   */
-  location?: string;
-  /**
-   * The name of the signer
-   */
-  name?: string;
-  /**
-   * The page number where the signature should be visible. This is required if showSignature is set to true
-   */
-  pageNumber?: number;
-  /**
-   * Whether to visually show a signature logo along with the signature
-   */
-  showLogo?: boolean;
-}
-export interface Pkcs11CertificatesRequest {
-  libraryPath?: string;
-  slot?: number;
-  pin?: string;
-}
-export interface SecurityCertSignSessionsRequest {
-  file: string;
-  request?: WorkflowCreationRequest;
-}
-export interface WorkflowCreationRequest {
-  workflowType?: "SIGNING" | "REVIEW" | "APPROVAL";
-  documentName?: string;
-  ownerEmail?: string;
-  message?: string;
-  dueDate?: string;
-  participantUserIds?: number[];
-  participantEmails?: string[];
-  workflowMetadata?: string;
-}
-export interface SecurityCertSignValidateCertificateRequest {
-  certType: string;
-  password?: string;
-  p12File?: string;
-  jksFile?: string;
-}
-export type SecurityGetInfoOnPdfRequest = Record<string, never>;
-export interface ManualRedactPdfRequest {
+  overrideY?: number;
   /**
    * The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')
    */
   pageNumbers?: string;
   /**
-   * A list of areas that should be redacted
+   * Position for stamp placement based on a 1-9 grid (1: bottom-left, 2: bottom-center, 3: bottom-right, 4: middle-left, 5: middle-center, 6: middle-right, 7: top-left, 8: top-center, 9: top-right)
    */
-  redactions: RedactionArea[];
+  position?: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+  /**
+   * The rotation of the stamp in degrees
+   */
+  rotation?: number;
+  stampImage?: string;
+  /**
+   * The stamp text
+   */
+  stampText?: string;
+  /**
+   * The stamp type (text or image)
+   */
+  stampType: "text" | "image";
+}
+export interface AddWatermarkRequest {
+  /**
+   * The selected alphabet
+   */
+  alphabet?: "roman" | "arabic" | "japanese" | "korean" | "chinese" | "thai";
   /**
    * Convert the redacted PDF to an image
    */
   convertPDFToImage?: boolean;
   /**
+   * The color for watermark
+   */
+  customColor?: string;
+  /**
+   * The font size of the watermark text
+   */
+  fontSize?: number;
+  /**
+   * The height spacer between watermark elements
+   */
+  heightSpacer?: number;
+  /**
+   * The opacity of the watermark (0.0 - 1.0)
+   */
+  opacity?: number;
+  /**
+   * The rotation of the watermark in degrees
+   */
+  rotation?: number;
+  watermarkImage?: string;
+  /**
+   * The watermark text
+   */
+  watermarkText?: string;
+  /**
+   * The watermark type (text or image)
+   */
+  watermarkType: "text" | "image";
+  /**
+   * The width spacer between watermark elements
+   */
+  widthSpacer?: number;
+}
+export interface AutoSplitPdfRequest {
+  /**
+   * Flag indicating if the duplex mode is active, where the page after the divider also gets removed.
+   */
+  duplexMode?: boolean;
+}
+export interface BookletImpositionRequest {
+  /**
+   * Boolean for if you wish to add border around the pages
+   */
+  addBorder?: boolean;
+  /**
+   * Add gutter margin (inner margin for binding)
+   */
+  addGutter?: boolean;
+  /**
+   * Generate both front and back sides (double-sided printing)
+   */
+  doubleSided?: boolean;
+  /**
+   * For manual duplex: which pass to generate
+   */
+  duplexPass?: "BOTH" | "FIRST" | "SECOND";
+  /**
+   * Flip back sides for short-edge duplex printing (default is long-edge)
+   */
+  flipOnShortEdge?: boolean;
+  /**
+   * Gutter margin size in points (used when addGutter is true)
+   */
+  gutterSize?: number;
+  /**
+   * The number of pages per side for booklet printing (always 2 for proper booklet).
+   */
+  pagesPerSheet?: 2;
+  /**
+   * The spine location for the booklet.
+   */
+  spineLocation?: "LEFT" | "RIGHT";
+}
+export interface ConvertCbrToPdfRequest {
+  /**
+   * Optimize the output PDF for ebook reading using Ghostscript
+   */
+  optimizeForEbook?: boolean;
+}
+export interface ConvertCbzToPdfRequest {
+  /**
+   * Optimize the output PDF for ebook reading using Ghostscript
+   */
+  optimizeForEbook?: boolean;
+}
+export interface ConvertEbookToPdfRequest {
+  /**
+   * Embed all fonts from the eBook into the generated PDF
+   */
+  embedAllFonts?: true | false;
+  /**
+   * Add page numbers to the generated PDF
+   */
+  includePageNumbers?: true | false;
+  /**
+   * Add a generated table of contents to the resulting PDF
+   */
+  includeTableOfContents?: true | false;
+  /**
+   * Optimize the PDF for eBook reading (smaller file size, better rendering on eInk devices)
+   */
+  optimizeForEbook?: true | false;
+}
+export type ConvertPdfHtmlRequest = Record<string, never>;
+export type ConvertPdfMarkdownRequest = Record<string, never>;
+export type ConvertPdfTextEditorMetadataRequest = Record<string, never>;
+export interface ConvertPdfTextEditorRequest {
+  lightweight?: boolean;
+}
+export interface ConvertPdfToCbrRequest {
+  /**
+   * The DPI (Dots Per Inch) for rendering PDF pages as images
+   */
+  dpi: number;
+}
+export interface ConvertPdfToCbzRequest {
+  /**
+   * The DPI (Dots Per Inch) for rendering PDF pages as images
+   */
+  dpi: number;
+}
+export interface ConvertPdfToEpubRequest {
+  /**
+   * Detect headings that look like chapters and insert EPUB page breaks.
+   */
+  detectChapters?: true | false;
+  /**
+   * Choose the output format for the ebook.
+   */
+  outputFormat?: "EPUB" | "AZW3";
+  /**
+   * Choose an output profile optimized for the reader device.
+   */
+  targetDevice?: "TABLET_PHONE_IMAGES" | "KINDLE_EINK_TEXT";
+}
+export type ConvertPdfXmlRequest = Record<string, never>;
+export interface ConvertToImageRequest {
+  /**
+   * The color type of the output image(s)
+   */
+  colorType?: "color" | "greyscale" | "blackwhite";
+  /**
+   * The DPI (dots per inch) for the output image(s)
+   */
+  dpi?: number;
+  /**
+   * The output image format
+   */
+  imageFormat?: "png" | "jpeg" | "jpg" | "gif" | "webp";
+  /**
+   * Include annotations such as comments in the output image(s)
+   */
+  includeAnnotations?: boolean;
+  /**
+   * The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')
+   */
+  pageNumbers?: string;
+  /**
+   * Choose between a single image containing all pages or separate images for each page
+   */
+  singleOrMultiple?: "single" | "multiple";
+}
+export interface ConvertToPdfRequest {
+  /**
+   * Whether to automatically rotate the images to better fit the PDF page
+   */
+  autoRotate?: boolean;
+  /**
+   * The color type of the output image(s)
+   */
+  colorType?: "color" | "greyscale" | "blackwhite";
+  /**
+   * Option to determine how the image will fit onto the page
+   */
+  fitOption?: "fillPage" | "fitDocumentToImage" | "maintainAspectRatio";
+}
+export interface CropPdfForm {
+  /**
+   * Enable auto-crop to detect and remove white space
+   */
+  autoCrop?: boolean;
+  /**
+   * The height of the crop area
+   */
+  height?: number;
+  /**
+   * Whether to remove text outside the crop area (keeps images)
+   */
+  removeDataOutsideCrop?: boolean;
+  /**
+   * The width of the crop area
+   */
+  width?: number;
+  /**
+   * The x-coordinate of the top-left corner of the crop area
+   */
+  x?: number;
+  /**
+   * The y-coordinate of the top-left corner of the crop area
+   */
+  y?: number;
+}
+export interface DeleteAttachmentRequest {
+  /**
+   * The name of the attachment to delete
+   */
+  attachmentName: string;
+}
+export interface EditTableOfContentsRequest {
+  /**
+   * Bookmark structure in JSON format
+   */
+  bookmarkData?: string;
+  /**
+   * Whether to replace existing bookmarks or append to them
+   */
+  replaceExisting?: boolean;
+}
+export interface EditTextRequest {
+  /**
+   * Ordered list of find/replace operations. Each replaces every occurrence on the selected pages, in order; later operations see the result of earlier ones (so 'foo'->'foos' then 'foos'->'bars' turns 'foo' into 'bars').
+   */
+  edits: EditTextOperation[];
+  /**
+   * The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')
+   */
+  pageNumbers?: string;
+  /**
+   * Whether matches must be whole words (boundaries determined by non-word characters)
+   */
+  wholeWordSearch?: boolean;
+}
+/**
+ * Ordered list of find/replace operations. Each replaces every occurrence on the selected pages, in order; later operations see the result of earlier ones (so 'foo'->'foos' then 'foos'->'bars' turns 'foo' into 'bars').
+ */
+export interface EditTextOperation {
+  /**
+   * The literal text to find.
+   */
+  find: string;
+  /**
+   * The replacement text. May be empty to delete the matched text.
+   */
+  replace: string;
+}
+export interface EmlToPdfRequest {
+  /**
+   * Download HTML intermediate file instead of PDF
+   */
+  downloadHtml?: boolean;
+  /**
+   * Include CC and BCC recipients in header (if available)
+   */
+  includeAllRecipients?: boolean;
+  /**
+   * Include email attachments in the PDF output
+   */
+  includeAttachments?: boolean;
+  /**
+   * Maximum attachment size in MB to include (default 10MB, range: 1-100)
+   */
+  maxAttachmentSizeMB?: number;
+}
+export type ExtractAttachmentsRequest = Record<string, never>;
+export interface ExtractHeaderRequest {
+  /**
+   * Flag indicating whether to use the first text as a fallback if no suitable title is found. Defaults to false.
+   */
+  useFirstTextAsFallback?: boolean;
+}
+export interface ExtractImageScansRequest {
+  /**
+   * The angle threshold for the image scan extraction
+   */
+  angleThreshold?: number;
+  /**
+   * The border size for the image scan extraction
+   */
+  borderSize?: number;
+  /**
+   * The minimum area for the image scan extraction
+   */
+  minArea?: number;
+  /**
+   * The minimum contour area for the image scan extraction
+   */
+  minContourArea?: number;
+  /**
+   * The tolerance for the image scan extraction
+   */
+  tolerance?: number;
+}
+export interface FlattenRequest {
+  /**
+   * True to flatten only the forms, false to flatten full PDF (Convert page to image)
+   */
+  flattenOnlyForms?: boolean;
+  /**
+   * Optional DPI for page rendering when flattening the full document.
+   */
+  renderDpi?: number;
+}
+export interface GeneralExtractBookmarksRequest {
+  file: string;
+}
+export type GeneralFile = Record<string, never>;
+export type GeneralPdfToSinglePageRequest = Record<string, never>;
+export type GeneralRemoveImagePdfRequest = Record<string, never>;
+export interface HTMLToPdfRequest {
+  /**
+   * Zoom level for displaying the website. Default is '1'.
+   */
+  zoom?: number;
+}
+export type ListAttachmentsRequest = Record<string, never>;
+export interface ManualRedactPdfRequest {
+  /**
+   * Convert the redacted PDF to an image
+   */
+  convertPDFToImage?: boolean;
+  /**
+   * The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')
+   */
+  pageNumbers?: string;
+  /**
    * The color used to fully redact certain pages
    */
   pageRedactionColor?: string;
+  /**
+   * A list of areas that should be redacted
+   */
+  redactions: RedactionArea[];
 }
 /**
  * A list of areas that should be redacted
  */
 export interface RedactionArea {
+  /**
+   * The color used to redact the specified area.
+   */
+  color?: string;
+  /**
+   * The height of the area to be redacted.
+   */
+  height?: number;
+  /**
+   * The page on which the area should be redacted.
+   */
+  page?: number;
+  /**
+   * The width of the area to be redacted.
+   */
+  width?: number;
   /**
    * The left edge point of the area to be redacted.
    */
@@ -1171,62 +529,388 @@ export interface RedactionArea {
    * The top edge point of the area to be redacted.
    */
   y?: number;
+}
+export interface MergeMultiplePagesRequest {
   /**
-   * The height of the area to be redacted.
+   * Boolean for if you wish to add border around the pages
    */
-  height?: number;
+  addBorder?: boolean;
   /**
-   * The width of the area to be redacted.
+   * The arrangement of pages on the sheet: BY_ROWS fills pages row by row, while BY_COLUMNS fills pages column by column.
    */
-  width?: number;
+  arrangement?: "BY_ROWS" | "BY_COLUMNS";
   /**
-   * The page on which the area should be redacted.
+   * Border width (in points) to apply around each page when merging
    */
-  page?: number;
+  borderWidth?: number;
   /**
-   * The color used to redact the specified area.
+   * Bottom margin (in points) to apply to the output pages when merging
    */
-  color?: string;
+  bottomMargin?: number;
+  /**
+   * Number of columns
+   */
+  cols?: number;
+  /**
+   * Inner margin (in points) to apply around each page when merging
+   */
+  innerMargin?: number;
+  /**
+   * Left margin (in points) to apply to the output pages when merging
+   */
+  leftMargin?: number;
+  /**
+   * Input mode: DEFAULT uses pagesPerSheet; CUSTOM uses explicit cols x rows.
+   */
+  mode?: "DEFAULT" | "CUSTOM";
+  /**
+   * The orientation of the output PDF pages
+   */
+  orientation?: "PORTRAIT" | "LANDSCAPE";
+  /**
+   * The number of pages to fit onto a single sheet in the output PDF.
+   */
+  pagesPerSheet?: 2 | 4 | 9 | 16;
+  /**
+   * The direction in which pages are arranged on the sheet: LTR (left-to-right) or RTL (right-to-left).
+   */
+  readingDirection?: "LTR" | "RTL";
+  /**
+   * Right margin (in points) to apply to the output pages when merging
+   */
+  rightMargin?: number;
+  /**
+   * Number of rows
+   */
+  rows?: number;
+  /**
+   * Top margin (in points) to apply to the output pages when merging
+   */
+  topMargin?: number;
+}
+export interface MergePdfsRequest {
+  /**
+   * JSON array of client-provided IDs for each uploaded file (same order as fileInput)
+   */
+  clientFileIds?: string;
+  fileOrder?: string;
+  /**
+   * Flag indicating whether to generate a table of contents for the merged PDF. If true, a table of contents will be created using the input filenames as chapter names.
+   */
+  generateToc?: boolean;
+  /**
+   * Flag indicating whether to remove certification signatures from the merged PDF. If true, all certification signatures will be removed from the final merged document.
+   */
+  removeCertSign?: boolean;
+  /**
+   * The type of sorting to be applied on the input files before merging.
+   */
+  sortType?:
+    | "orderProvided"
+    | "byFileName"
+    | "byDateModified"
+    | "byDateCreated"
+    | "byPDFTitle";
+}
+export interface MetadataRequest {
+  /**
+   * Map list of key and value of custom parameters. Note these must start with customKey and customValue if they are non-standard
+   */
+  allRequestParams?: {
+    /**
+     * Map list of key and value of custom parameters. Note these must start with customKey and customValue if they are non-standard
+     */
+    [k: string]: string | undefined;
+  };
+  /**
+   * The author of the document
+   */
+  author?: string;
+  /**
+   * The creation date of the document (format: yyyy/MM/dd HH:mm:ss)
+   */
+  creationDate?: string;
+  /**
+   * The creator of the document
+   */
+  creator?: string;
+  /**
+   * Delete all metadata if set to true
+   */
+  deleteAll?: boolean;
+  /**
+   * The keywords for the document
+   */
+  keywords?: string;
+  /**
+   * The modification date of the document (format: yyyy/MM/dd HH:mm:ss)
+   */
+  modificationDate?: string;
+  /**
+   * The producer of the document
+   */
+  producer?: string;
+  /**
+   * The subject of the document
+   */
+  subject?: string;
+  /**
+   * The title of the document
+   */
+  title?: string;
+  /**
+   * The trapped status of the document
+   */
+  trapped?: "True" | "False" | "Unknown";
+}
+export type MiscDecompressPdfRequest = Record<string, never>;
+export type MiscRepairRequest = Record<string, never>;
+export type MiscShowJavascriptRequest = Record<string, never>;
+export type MiscUnlockPdfFormsRequest = Record<string, never>;
+export interface OptimizePdfRequest {
+  /**
+   * The expected output size, e.g. '100MB', '25KB', etc.
+   */
+  expectedOutputSize?: string;
+  /**
+   * Whether to convert the PDF to grayscale. Default is false.
+   */
+  grayscale?: boolean;
+  /**
+   * Whether to convert images to high-contrast line art using ImageMagick. Default is false.
+   */
+  lineArt?: boolean;
+  /**
+   * Edge detection strength to use for line art conversion (1-3). This maps to ImageMagick's -edge radius.
+   */
+  lineArtEdgeLevel?: 1 | 2 | 3;
+  /**
+   * Threshold to use for line art conversion (0-100).
+   */
+  lineArtThreshold?: number;
+  /**
+   * Whether to linearize the PDF for faster web viewing. Default is false.
+   */
+  linearize?: boolean;
+  /**
+   * Whether to normalize the PDF content for better compatibility. Default is false.
+   */
+  normalize?: boolean;
+  /**
+   * The level of optimization to apply to the PDF file. Higher values indicate greater compression but may reduce quality.
+   */
+  optimizeLevel: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+}
+export interface OverlayImageRequest {
+  /**
+   * Whether to overlay the image onto every page of the PDF.
+   */
+  everyPage?: boolean;
+  imageFile: string;
+  /**
+   * The x-coordinate at which to place the top-left corner of the image.
+   */
+  x?: number;
+  /**
+   * The y-coordinate at which to place the top-left corner of the image.
+   */
+  y?: number;
+}
+export interface OverlayPdfsRequest {
+  /**
+   * An array of integers specifying the number of times each corresponding overlay file should be applied in the 'FixedRepeatOverlay' mode. This should match the length of the overlayFiles array.
+   */
+  counts?: number[];
+  /**
+   * An array of PDF files to be used as overlays on the base PDF. The order in these files is applied based on the selected mode.
+   */
+  overlayFiles: string[];
+  /**
+   * The mode of overlaying: 'SequentialOverlay' for sequential application, 'InterleavedOverlay' for round-robin application, 'FixedRepeatOverlay' for fixed repetition based on provided counts
+   */
+  overlayMode:
+    | "SequentialOverlay"
+    | "InterleavedOverlay"
+    | "FixedRepeatOverlay";
+  /**
+   * Overlay position 0 is Foregound, 1 is Background
+   */
+  overlayPosition: 0 | 1;
+}
+export interface PDFExtractImagesRequest {
+  /**
+   * The output image format e.g., 'png', 'jpeg', or 'gif'
+   */
+  format?: "png" | "jpeg" | "gif";
+}
+export interface PDFPasswordRequest {
+  /**
+   * The password of the PDF file
+   */
+  password?: string;
+}
+export type PDFVerificationRequest = Record<string, never>;
+export interface PDFWithPageNums {
+  /**
+   * The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')
+   */
+  pageNumbers?: string;
+}
+export interface PdfToPdfARequest {
+  /**
+   * The output format type (PDF/A or PDF/X)
+   */
+  outputFormat:
+    | "pdfa"
+    | "pdfa-1"
+    | "pdfa-2"
+    | "pdfa-2b"
+    | "pdfa-3"
+    | "pdfa-3b"
+    | "pdfx";
+  /**
+   * If true, the conversion will fail if the output is not perfectly compliant
+   */
+  strict?: boolean;
+}
+export interface PdfToPresentationRequest {
+  /**
+   * The output Presentation format
+   */
+  outputFormat: "ppt" | "pptx" | "odp";
+}
+export interface PdfToTextOrRTFRequest {
+  /**
+   * The output Text or RTF format
+   */
+  outputFormat: "rtf" | "txt";
+}
+export interface PdfToWordRequest {
+  /**
+   * The output Word document format
+   */
+  outputFormat: "doc" | "docx" | "odt";
+}
+export interface PdfVectorExportRequest {
+  /**
+   * Target vector format extension
+   */
+  outputFormat?: "eps" | "ps" | "pcl" | "xps";
+  /**
+   * Apply Ghostscript prepress settings
+   */
+  prepress?: true | false;
+}
+export interface Pkcs11CertificatesRequest {
+  libraryPath?: string;
+  pin?: string;
+  slot?: number;
+}
+export interface PosterPdfRequest {
+  /**
+   * Target page size for output chunks (e.g., 'A4', 'Letter', 'A3')
+   */
+  pageSize: "A4" | "Letter" | "A3" | "A5" | "Legal" | "Tabloid";
+  /**
+   * Split right-to-left instead of left-to-right
+   */
+  rightToLeft?: boolean;
+  /**
+   * Horizontal decimation factor (how many columns to split into)
+   */
+  xFactor?: number;
+  /**
+   * Vertical decimation factor (how many rows to split into)
+   */
+  yFactor?: number;
+}
+export interface ProcessPdfWithOcrRequest {
+  /**
+   * Clean the input file if set to true
+   */
+  clean?: boolean;
+  /**
+   * Clean the final output if set to true
+   */
+  cleanFinal?: boolean;
+  /**
+   * Deskew the input file if set to true
+   */
+  deskew?: boolean;
+  /**
+   * List of languages to use in OCR processing, e.g., 'eng', 'deu'
+   */
+  languages?: string[];
+  /**
+   * Specify the OCR render type, either 'hocr' or 'sandwich'
+   */
+  ocrRenderType?: "hocr" | "sandwich";
+  /**
+   * Specify the OCR type, e.g., 'skip-text', 'force-ocr', or 'Normal'
+   */
+  ocrType: "skip-text" | "force-ocr" | "Normal";
+  /**
+   * Remove images from the output PDF if set to true
+   */
+  removeImagesAfter?: boolean;
+  /**
+   * Include OCR text in a sidecar text file if set to true
+   */
+  sidecar?: boolean;
+}
+export interface RearrangePagesRequest {
+  /**
+   * The custom mode for page rearrangement. Valid values are:
+   * CUSTOM: Uses order defined in PageNums DUPLICATE: Duplicate pages n times (if Page order defined as 4, then duplicates each page 4 times)REVERSE_ORDER: Reverses the order of all pages.
+   * DUPLEX_SORT: Sorts pages as if all fronts were scanned then all backs in reverse (1, n, 2, n-1, ...). BOOKLET_SORT: Arranges pages for booklet printing (last, first, second, second last, ...).
+   * ODD_EVEN_SPLIT: Splits and arranges pages into odd and even numbered pages.
+   * REMOVE_FIRST: Removes the first page.
+   * REMOVE_LAST: Removes the last page.
+   * REMOVE_FIRST_AND_LAST: Removes both the first and the last pages.
+   *
+   */
+  customMode?:
+    | "CUSTOM"
+    | "REVERSE_ORDER"
+    | "DUPLEX_SORT"
+    | "BOOKLET_SORT"
+    | "SIDE_STITCH_BOOKLET_SORT"
+    | "ODD_EVEN_SPLIT"
+    | "REMOVE_FIRST"
+    | "REMOVE_LAST"
+    | "REMOVE_FIRST_AND_LAST"
+    | "DUPLICATE";
+  /**
+   * The pages to select, Supports ranges (e.g., '1,3,5-9'), or 'all' or functions in the format 'an+b' where 'a' is the multiplier of the page number 'n', and 'b' is a constant (e.g., '2n+1', '3n', '6n-5')
+   */
+  pageNumbers?: string;
 }
 export interface RedactExecuteRequest {
-  /**
-   * Exact strings to find and black out. One entry per phrase to redact. Best for known names, identifiers, and specific text found in the document.
-   */
-  textValues?: string[];
-  /**
-   * Regex patterns to match and redact. Each match anywhere in the document is blacked out. Uses Java/PCRE regex syntax. Well-suited for strings that follow known patterns, like phone numbers, email addresses, national ID numbers, or dates (which can appear with different separators, optional country codes, etc.). For fixed known strings such as names, use textValues instead.
-   */
-  regexPatterns?: string[];
-  /**
-   * 1-indexed page numbers to wipe entirely (all content removed from those pages).
-   */
-  wipePages?: number[];
-  /**
-   * Text ranges to redact by specifying a start and end anchor phrase. All content between the two phrases (inclusive) is redacted. Anchors work best when short and unique. They must appear verbatim in the document.
-   */
-  ranges?: TextRange[];
   /**
    * Rectangular areas to black out, each defined by a page number and bounding box coordinates.
    */
   imageBoxes?: ImageBox[];
   /**
+   * Text ranges to redact by specifying a start and end anchor phrase. All content between the two phrases (inclusive) is redacted. Anchors work best when short and unique. They must appear verbatim in the document.
+   */
+  ranges?: TextRange[];
+  /**
    * 1-indexed page numbers to redact all detected images from. Pass an empty list to redact images from every page. Omit or pass null to skip image redaction entirely.
    */
   redactImagePages?: number[];
+  /**
+   * Regex patterns to match and redact. Each match anywhere in the document is blacked out. Uses Java/PCRE regex syntax. Well-suited for strings that follow known patterns, like phone numbers, email addresses, national ID numbers, or dates (which can appear with different separators, optional country codes, etc.). For fixed known strings such as names, use textValues instead.
+   */
+  regexPatterns?: string[];
   style?: RedactStyle;
-}
-/**
- * Text ranges to redact by specifying a start and end anchor phrase. All content between the two phrases (inclusive) is redacted. Anchors work best when short and unique. They must appear verbatim in the document.
- */
-export interface TextRange {
   /**
-   * A short, distinctive phrase (5–15 words) that marks where redaction begins (inclusive). Must appear verbatim in the document — e.g. a section heading or a unique sentence fragment.
+   * Exact strings to find and black out. One entry per phrase to redact. Best for known names, identifiers, and specific text found in the document.
    */
-  startString: string;
+  textValues?: string[];
   /**
-   * A short, distinctive phrase (5–15 words) that marks where redaction ends (inclusive). Must appear verbatim in the document. Shorter phrases match more reliably.
+   * 1-indexed page numbers to wipe entirely (all content removed from those pages).
    */
-  endString: string;
+  wipePages?: number[];
 }
 /**
  * Rectangular areas to black out, each defined by a page number and bounding box coordinates.
@@ -1241,17 +925,30 @@ export interface ImageBox {
    */
   x1: number;
   /**
-   * Top y coordinate of the redaction rectangle in PDF user-space points.
-   */
-  y1: number;
-  /**
    * Right x coordinate of the redaction rectangle in PDF user-space points.
    */
   x2: number;
   /**
+   * Top y coordinate of the redaction rectangle in PDF user-space points.
+   */
+  y1: number;
+  /**
    * Bottom y coordinate of the redaction rectangle in PDF user-space points.
    */
   y2: number;
+}
+/**
+ * Text ranges to redact by specifying a start and end anchor phrase. All content between the two phrases (inclusive) is redacted. Anchors work best when short and unique. They must appear verbatim in the document.
+ */
+export interface TextRange {
+  /**
+   * A short, distinctive phrase (5–15 words) that marks where redaction ends (inclusive). Must appear verbatim in the document. Shorter phrases match more reliably.
+   */
+  endString: string;
+  /**
+   * A short, distinctive phrase (5–15 words) that marks where redaction begins (inclusive). Must appear verbatim in the document — e.g. a section heading or a unique sentence fragment.
+   */
+  startString: string;
 }
 /**
  * Redaction style options
@@ -1262,50 +959,351 @@ export interface RedactStyle {
    */
   color?: string;
   /**
-   * Extra padding around each box in points
-   */
-  padding?: number;
-  /**
    * Rasterize output to prevent text extraction
    */
   convertToImage?: boolean;
+  /**
+   * Extra padding around each box in points
+   */
+  padding?: number;
   /**
    * Execution strategy hint for the redaction pipeline
    */
   strategy?: "AUTO" | "OVERLAY_ONLY" | "IMAGE_FINALIZE";
 }
-export type SecurityRemoveCertSignRequest = Record<string, never>;
-export interface PDFPasswordRequest {
+export interface RedactPdfRequest {
   /**
-   * The password of the PDF file
+   * Convert the redacted PDF to an image
    */
-  password?: string;
+  convertPDFToImage?: boolean;
+  /**
+   * Custom padding for redaction
+   */
+  customPadding: number;
+  /**
+   * List of text to redact from the PDF
+   */
+  listOfText?: string;
+  /**
+   * The color for redaction
+   */
+  redactColor?: string;
+  /**
+   * Whether to use regex for the listOfText
+   */
+  useRegex?: boolean;
+  /**
+   * Whether to use whole word search
+   */
+  wholeWordSearch?: boolean;
+}
+export interface RemoveBlankPagesRequest {
+  /**
+   * The threshold value to determine blank pages
+   */
+  threshold?: number;
+  /**
+   * The percentage of white color on a page to consider it as blank
+   */
+  whitePercent?: number;
+}
+export interface RenameAttachmentRequest {
+  /**
+   * The current name of the attachment to rename
+   */
+  attachmentName: string;
+  /**
+   * The new name for the attachment
+   */
+  newName: string;
+}
+export interface ReplaceAndInvertColorRequest {
+  /**
+   * If CUSTOM_COLOR option selected, then pick the custom color for background. Expected color value should be 24bit decimal value of a color
+   */
+  backGroundColor?: string;
+  /**
+   * If HIGH_CONTRAST_COLOR option selected, then pick the default color option for text and background.
+   */
+  highContrastColorCombination?:
+    | "WHITE_TEXT_ON_BLACK"
+    | "BLACK_TEXT_ON_WHITE"
+    | "YELLOW_TEXT_ON_BLACK"
+    | "GREEN_TEXT_ON_BLACK";
+  /**
+   * Replace and Invert color options of a pdf.
+   */
+  replaceAndInvertOption?:
+    | "HIGH_CONTRAST_COLOR"
+    | "CUSTOM_COLOR"
+    | "FULL_INVERSION"
+    | "COLOR_SPACE_CONVERSION";
+  /**
+   * If CUSTOM_COLOR option selected, then pick the custom color for text. Expected color value should be 24bit decimal value of a color
+   */
+  textColor?: string;
+}
+export interface RotatePDFRequest {
+  /**
+   * The clockwise angle by which to rotate all pages in the PDF file. Must be a multiple of 90.
+   */
+  angle: 0 | 90 | 180 | 270;
 }
 export interface SanitizePdfRequest {
-  /**
-   * Remove JavaScript actions from the PDF
-   */
-  removeJavaScript?: boolean;
   /**
    * Remove embedded files from the PDF
    */
   removeEmbeddedFiles?: boolean;
   /**
-   * Remove XMP metadata from the PDF
+   * Remove fonts from the PDF
    */
-  removeXMPMetadata?: boolean;
+  removeFonts?: boolean;
   /**
-   * Remove document info metadata from the PDF
+   * Remove JavaScript actions from the PDF
    */
-  removeMetadata?: boolean;
+  removeJavaScript?: boolean;
   /**
    * Remove links from the PDF
    */
   removeLinks?: boolean;
   /**
-   * Remove fonts from the PDF
+   * Remove document info metadata from the PDF
    */
-  removeFonts?: boolean;
+  removeMetadata?: boolean;
+  /**
+   * Remove XMP metadata from the PDF
+   */
+  removeXMPMetadata?: boolean;
+}
+export interface ScalePagesRequest {
+  /**
+   * Orientation to apply to the target page size. Ignored when pageSize is KEEP.
+   */
+  orientation?: "PORTRAIT" | "LANDSCAPE";
+  /**
+   * The scale of pages in the output PDF. Acceptable values are A0-A6, LETTER, LEGAL, KEEP.
+   */
+  pageSize:
+    | "A0"
+    | "A1"
+    | "A2"
+    | "A3"
+    | "A4"
+    | "A5"
+    | "A6"
+    | "LETTER"
+    | "LEGAL"
+    | "KEEP";
+  /**
+   * The scale of the content on the pages of the output PDF. Acceptable values are floats.
+   */
+  scaleFactor?: number;
+}
+export interface ScannerEffectRequest {
+  /**
+   * Whether advanced settings are enabled
+   */
+  advancedEnabled?: boolean;
+  /**
+   * Blur amount (0 = none, higher = more blur)
+   */
+  blur?: number;
+  /**
+   * Border thickness in pixels
+   */
+  border?: number;
+  /**
+   * Brightness multiplier (1.0 = no change)
+   */
+  brightness?: number;
+  /**
+   * Colorspace for output image
+   */
+  colorspace?: "grayscale" | "color";
+  /**
+   * Contrast multiplier (1.0 = no change)
+   */
+  contrast?: number;
+  /**
+   * Noise amount (0 = none, higher = more noise)
+   */
+  noise?: number;
+  /**
+   * Scan quality preset
+   */
+  quality: "low" | "medium" | "high";
+  /**
+   * Rendering resolution in DPI
+   */
+  resolution?: number;
+  /**
+   * Base rotation in degrees
+   */
+  rotate?: number;
+  /**
+   * Random rotation variance in degrees
+   */
+  rotateVariance?: number;
+  /**
+   * Rotation preset
+   */
+  rotation: "none" | "slight" | "moderate" | "severe";
+  rotationValue?: number;
+  /**
+   * Simulate yellowed paper
+   */
+  yellowish?: boolean;
+}
+export interface SecurityCertSignSessionsRequest {
+  file: string;
+  request?: WorkflowCreationRequest;
+}
+export interface WorkflowCreationRequest {
+  documentName?: string;
+  dueDate?: string;
+  message?: string;
+  ownerEmail?: string;
+  participantEmails?: string[];
+  participantUserIds?: number[];
+  workflowMetadata?: string;
+  workflowType?: "SIGNING" | "REVIEW" | "APPROVAL";
+}
+export interface SecurityCertSignValidateCertificateRequest {
+  certType: string;
+  jksFile?: string;
+  p12File?: string;
+  password?: string;
+}
+export type SecurityGetInfoOnPdfRequest = Record<string, never>;
+export type SecurityRemoveCertSignRequest = Record<string, never>;
+export interface SignPDFWithCertRequest {
+  /**
+   * The alias of the certificate to sign with. Required for WINDOWS_STORE and recommended for PKCS11 tokens holding multiple certificates.
+   */
+  alias?: string;
+  certFile?: string;
+  /**
+   * The type of the digital certificate. WINDOWS_STORE and PKCS11 are hardware-backed and only available in the desktop app.
+   */
+  certType:
+    | "PEM"
+    | "PKCS12"
+    | "PFX"
+    | "JKS"
+    | "SERVER"
+    | "WINDOWS_STORE"
+    | "PKCS11";
+  jksFile?: string;
+  /**
+   * The location where the PDF is signed
+   */
+  location?: string;
+  /**
+   * The name of the signer
+   */
+  name?: string;
+  p12File?: string;
+  /**
+   * The page number where the signature should be visible. This is required if showSignature is set to true
+   */
+  pageNumber?: number;
+  /**
+   * The password for the keystore / private key, or the token PIN for PKCS11
+   */
+  password?: string;
+  /**
+   * Absolute path to the PKCS#11 driver library (required for PKCS11 type). Must be an allowed driver - a detected one or configured via STIRLING_PKCS11_LIBRARIES.
+   */
+  pkcs11LibraryPath?: string;
+  /**
+   * Optional PKCS#11 slot index. When omitted the first slot with a token is used.
+   */
+  pkcs11Slot?: number;
+  privateKeyFile?: string;
+  /**
+   * The reason for signing the PDF
+   */
+  reason?: string;
+  /**
+   * Whether to visually show a signature logo along with the signature
+   */
+  showLogo?: boolean;
+  /**
+   * Whether to visually show the signature in the PDF file
+   */
+  showSignature?: boolean;
+}
+export interface SignatureValidationRequest {
+  certFile?: string;
+}
+export interface SplitPagesRequest {
+  /**
+   * Split points - page numbers after which the PDF will be cut. For example, `"2"` produces two documents (pages 1-2 and pages 3+); `"2,5"` produces three (pages 1-2, 3-5, 6+). Supports ranges (e.g. `"1,3,5-9"` splits after pages 1, 3, 5, 6, 7, 8, 9, yielding 8 documents), `"all"` (split after every page), or functions like `"2n+1"`, `"3n"`, `"6n-5"`.
+   */
+  pageNumbers?: string;
+}
+export interface SplitPdfByChaptersRequest {
+  /**
+   * Whether to allow duplicates or not
+   */
+  allowDuplicates?: boolean;
+  /**
+   * Maximum bookmark level required
+   */
+  bookmarkLevel?: number;
+  /**
+   * Whether to include Metadata or not
+   */
+  includeMetadata?: boolean;
+}
+export interface SplitPdfBySectionsRequest {
+  /**
+   * Number of horizontal divisions for each PDF page
+   */
+  horizontalDivisions?: number;
+  /**
+   * Merge the split documents into a single PDF
+   */
+  merge?: boolean;
+  /**
+   * Pages to be split by section
+   */
+  pageNumbers?: string;
+  /**
+   * Modes for page split. Valid values are:
+   * SPLIT_ALL_EXCEPT_FIRST_AND_LAST: Splits all except the first and the last pages.
+   * SPLIT_ALL_EXCEPT_FIRST: Splits all except the first page.
+   * SPLIT_ALL_EXCEPT_LAST: Splits all except the last page.
+   * SPLIT_ALL: Splits all pages.
+   * CUSTOM: Custom split.
+   *
+   */
+  splitMode?:
+    | "CUSTOM"
+    | "SPLIT_ALL_EXCEPT_FIRST_AND_LAST"
+    | "SPLIT_ALL_EXCEPT_FIRST"
+    | "SPLIT_ALL_EXCEPT_LAST"
+    | "SPLIT_ALL";
+  /**
+   * Number of vertical divisions for each PDF page
+   */
+  verticalDivisions?: number;
+}
+export interface SplitPdfBySizeOrCountRequest {
+  /**
+   * Determines the type of split: 0 for size, 1 for page count, 2 for document count
+   */
+  splitType?: number;
+  /**
+   * Value for split: size in MB (e.g., '10MB') or number of pages (e.g., '5')
+   */
+  splitValue?: string;
+}
+export interface SvgToPdfRequest {
+  /**
+   * Whether to combine all SVG files into a single PDF (each SVG as a separate page) or create separate PDF files for each SVG.
+   */
+  combineIntoSinglePdf?: boolean;
 }
 export interface TimestampPdfRequest {
   /**
@@ -1313,10 +1311,12 @@ export interface TimestampPdfRequest {
    */
   tsaUrl?: string;
 }
-export interface SignatureValidationRequest {
-  certFile?: string;
+export interface UrlToPdfRequest {
+  /**
+   * The input URL to be converted to a PDF file
+   */
+  urlInput: string;
 }
-export type PDFVerificationRequest = Record<string, never>;
 
 /** Endpoint path for a generated tool operation (the operation identity across languages). */
 export type ToolEndpoint =
