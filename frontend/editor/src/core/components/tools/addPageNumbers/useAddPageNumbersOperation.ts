@@ -17,6 +17,25 @@ import {
 const ENDPOINT = "/api/v1/misc/add-page-numbers" satisfies ToolEndpoint;
 type AddPageNumbersApiParams = ToolApiParams[typeof ENDPOINT];
 
+// The UI labels fonts capitalized while the backend model uses lowercase; these
+// maps translate between them so both mappers type-check without casting.
+const FONT_TYPE_TO_API = {
+  Times: "times",
+  Helvetica: "helvetica",
+  Courier: "courier",
+} as const satisfies Record<
+  AddPageNumbersParameters["fontType"],
+  AddPageNumbersApiParams["fontType"]
+>;
+const FONT_TYPE_FROM_API = {
+  times: "Times",
+  helvetica: "Helvetica",
+  courier: "Courier",
+} as const satisfies Record<
+  AddPageNumbersApiParams["fontType"],
+  AddPageNumbersParameters["fontType"]
+>;
+
 // Convert the tool's UI parameters into the add-page-numbers request body. The
 // return type is the generated backend model, so a spec change that renames or
 // drops a field breaks the build here.
@@ -26,11 +45,7 @@ export const addPageNumbersToApiParams = (
   customMargin: parameters.customMargin,
   position: parameters.position,
   fontSize: parameters.fontSize,
-  // The UI stores fontType capitalized ("Times"/"Helvetica"/"Courier") while
-  // the backend model expects lowercase; the wire value is sent as-is to
-  // preserve existing behaviour.
-  fontType:
-    parameters.fontType as unknown as AddPageNumbersApiParams["fontType"],
+  fontType: FONT_TYPE_TO_API[parameters.fontType],
   startingNumber: parameters.startingNumber,
   pagesToNumber: parameters.pagesToNumber,
   customText: parameters.customText,
@@ -45,8 +60,7 @@ export const addPageNumbersFromApiParams = (
   customMargin: apiParams.customMargin,
   position: apiParams.position,
   fontSize: apiParams.fontSize,
-  fontType:
-    apiParams.fontType as unknown as AddPageNumbersParameters["fontType"],
+  fontType: FONT_TYPE_FROM_API[apiParams.fontType],
   startingNumber: apiParams.startingNumber,
   pagesToNumber: apiParams.pagesToNumber,
   customText: apiParams.customText,
