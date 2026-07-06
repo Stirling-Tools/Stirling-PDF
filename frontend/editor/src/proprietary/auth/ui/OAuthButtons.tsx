@@ -6,6 +6,7 @@ import { oauthIconUrl, GENERIC_PROVIDER_ICON } from "@app/auth/ui/oauthIcons";
 // Debug flag to show all providers for UI testing
 // Set to true to see all SSO options regardless of backend configuration
 export const DEBUG_SHOW_ALL_PROVIDERS = false;
+
 // OAuth provider configuration - maps provider ID to display info
 // Known providers get custom icons; unknown providers use generic SSO icon
 export const oauthProviderConfig: Record<
@@ -38,6 +39,7 @@ interface OAuthButtonsProps {
   demoMode?: boolean;
   useNewStyle?: boolean;
 }
+
 export default function OAuthButtons({
   onProviderClick,
   isSubmitting,
@@ -49,14 +51,17 @@ export default function OAuthButtons({
   useNewStyle = false,
 }: OAuthButtonsProps) {
   const { t } = useTranslation();
+
   // Debug mode: show all providers for UI testing
   const providersToShow = DEBUG_SHOW_ALL_PROVIDERS
     ? Object.keys(oauthProviderConfig)
     : enabledProviders;
+
   // Build provider list - extract provider ID from full path for display
   const providers = providersToShow.map((pathOrId) => {
     // Extract provider ID from full path (e.g., '/saml2/authenticate/stirling' -> 'stirling')
     const providerId = pathOrId.split("/").pop() || pathOrId;
+
     if (providerId in oauthProviderConfig) {
       // Known provider - use predefined icon and label
       return {
@@ -73,10 +78,12 @@ export default function OAuthButtons({
       file: GENERIC_PROVIDER_ICON,
     };
   });
+
   // If no providers are enabled, don't render anything
   if (providers.length === 0) {
     return null;
   }
+
   const isSingleProvider = providers.length === 1;
   const isTinted = styleVariant === "tinted";
   const isOutline = styleVariant === "outline";
@@ -91,6 +98,7 @@ export default function OAuthButtons({
     authentik: "#FA7B17",
     oidc: "#334155",
   };
+
   if (layout === "icons") {
     return (
       <div className="oauth-container-icons">

@@ -30,6 +30,7 @@ import {
   KEY_MODE_LABEL,
   KEY_MODE_TONE,
 } from "@portal/components/infrastructure/infraFormat";
+
 export function SecurityTab() {
   const { t } = useTranslation();
   const { tier } = useTier();
@@ -106,8 +107,10 @@ export function SecurityTab() {
   // TODO(backend): PATCH /v1/infrastructure/security { accessPolicy, dataResidency }
   const [access, setAccess] = useState<AccessPolicy | null>(null);
   const [residency, setResidency] = useState<DataResidency | null>(null);
+
   const accessValue = access ?? data?.accessPolicy ?? "stirling";
   const residencyValue = residency ?? data?.dataResidency ?? "us";
+
   if (isLoading) {
     return (
       <div className="portal-infra__stack" aria-hidden>
@@ -116,6 +119,7 @@ export function SecurityTab() {
       </div>
     );
   }
+
   if (isEmpty || !data) {
     return (
       <EmptyState
@@ -125,6 +129,7 @@ export function SecurityTab() {
       />
     );
   }
+
   return (
     <div className="portal-infra__stack">
       <section className="portal-infra__split">
@@ -150,6 +155,7 @@ export function SecurityTab() {
             />
           )}
         </Card>
+
         <Card padding="loose">
           <SectionHeader
             title={t("portal.infrastructure.security.residencyHeader.heading")}
@@ -163,6 +169,7 @@ export function SecurityTab() {
           />
         </Card>
       </section>
+
       <section>
         <SectionHeader
           title={t("portal.infrastructure.security.keyManagement.heading")}
@@ -194,6 +201,7 @@ export function SecurityTab() {
               {t("portal.infrastructure.security.keyManagement.rotateKey")}
             </Button>
           </div>
+
           <dl className="portal-infra__kv">
             <div className="portal-infra__kv-wide">
               <dt>{t("portal.infrastructure.security.keyManagement.keyId")}</dt>
@@ -226,6 +234,7 @@ export function SecurityTab() {
               <dd>{data.keyManagement.rotationPolicy}</dd>
             </div>
           </dl>
+
           {!data.keyManagement.customerManaged && (
             <Banner
               tone="info"
@@ -238,6 +247,7 @@ export function SecurityTab() {
           )}
         </Card>
       </section>
+
       <section>
         <SectionHeader
           title={t("portal.infrastructure.security.compliance.heading")}
@@ -257,6 +267,7 @@ export function SecurityTab() {
           ))}
         </div>
       </section>
+
       <section>
         <SectionHeader
           title={t("portal.infrastructure.security.attestations.heading")}
@@ -295,6 +306,7 @@ export function SecurityTab() {
           ))}
         </div>
       </section>
+
       <section>
         <SectionHeader
           title={t("portal.infrastructure.security.ipAllowlist.heading")}
