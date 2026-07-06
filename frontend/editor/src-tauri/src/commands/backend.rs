@@ -54,7 +54,9 @@ fn check_backend_status() -> Result<(), String> {
     Ok(())
 }
 
-fn desktop_enable_login_flag() -> bool {
+/// Allow desktop launches to opt into the normal login flow when either the
+/// new desktop-specific flag or the existing SECURITY_ENABLELOGIN flag is set.
+fn desktop_login_enabled_from_env() -> bool {
     matches!(
         std::env::var("STIRLING_PDF_DESKTOP_ENABLE_LOGIN")
             .or_else(|_| std::env::var("SECURITY_ENABLELOGIN"))
@@ -223,7 +225,7 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
         // No reverse proxy in front of the local sidecar, so don't trust forwarded headers.
         // Stops a LAN caller spoofing X-Forwarded-For to defeat the desktop-only signing gate.
         "-Dserver.forward-headers-strategy=none",
-        if desktop_enable_login_flag() {
+        if desktop_login_enabled_from_env() {
             "-Dsecurity.enableLogin=true"
         } else {
             "-Dsecurity.enableLogin=false"

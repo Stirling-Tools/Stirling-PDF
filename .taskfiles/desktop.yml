@@ -27,9 +27,12 @@ vars:
       fi
 
 env:
+  # Desktop builds default to the smallest useful backend surface unless a task
+  # explicitly opts into extra features or login.
   DISABLE_ADDITIONAL_FEATURES: '{{.DISABLE_ADDITIONAL_FEATURES | default "true"}}'
   SECURITY_ENABLELOGIN: '{{.SECURITY_ENABLELOGIN | default "false"}}'
-  CACHE: '{{.CACHE | default "true"}}'
+  # Reuse the previously built backend JAR unless a clean rebuild is requested.
+  JLINK_REUSE_CACHE: '{{.JLINK_REUSE_CACHE | default "true"}}'
 
 tasks:
   prepare:
@@ -56,10 +59,15 @@ tasks:
       - npx tauri dev --no-watch
 
   dev:login:
-    desc: "Start Tauri desktop dev mode + login + with cache"
-    deps: [prepare]
+    desc: "Start Tauri desktop dev mode with login enabled and cache reuse"
+    deps:
+      - task: prepare
+        vars:
+          SECURITY_ENABLELOGIN: "true"
     ignore_error: true
     dir: editor
+    env:
+      SECURITY_ENABLELOGIN: "true"
     cmds:
       - npx tauri dev --no-watch
 
@@ -128,7 +136,7 @@ tasks:
       - task: jlink:verify
 
   jlink:verify:
-    desc: "Ensure the bundled JRE is present and meets the app JAR requirements"
+    desc: "Verify the bundled JRE exists and matches the app JAR's required Java version"
     dir: editor
     env:
       REQUIRED_JAVA: "{{.REQUIRED_JAVA}}"
@@ -136,8 +144,9 @@ tasks:
       - node scripts/verify-bundled-jre.mjs src-tauri/runtime/jre/release
 
   jlink:cacheremove:
+    desc: "Remove cached backend JARs before a clean desktop rebuild"
     dir: ..
-    if: '{{eq .CACHE "false"}}'
+    if: '{{eq .JLINK_REUSE_CACHE "false"}}'
     cmds:
       - cmd: rm -rf app/core/build/libs
       - 'echo "rm -rf app/core/build/libs"'

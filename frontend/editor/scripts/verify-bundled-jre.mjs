@@ -16,20 +16,30 @@ const required = Number(process.env.REQUIRED_JAVA ?? "25");
 const releasePath = process.argv[2] ?? "runtime/jre/release";
 
 function rebuildRuntime(reason) {
-  console.warn(`${reason} Rebuilding runtime with 'task desktop:jlink'.`);
+  console.warn(`${reason} Rebuilding runtime with 'task desktop:jlink:runtime'.`);
 
-  const taskCommand = process.platform === "win32" ? "task.cmd" : "task";
-  const result = spawnSync(taskCommand, ["jlink:runtime"], {
+  const isWindows = process.platform === "win32";
+  // Node does not reliably spawn the Task .cmd shim directly on Windows in
+  // this repo environment, so use cmd.exe as the stable trampoline.
+  const command = isWindows ? "cmd.exe" : "task";
+  const args = isWindows
+    ? ["/d", "/s", "/c", "task desktop:jlink:runtime"]
+    : ["desktop:jlink:runtime"];
+  const result = spawnSync(command, args, {
     stdio: "inherit",
   });
 
   if (result.error) {
-    console.error(`FATAL: failed to launch 'task jlink:runtime': ${result.error.message}`);
+    console.error(
+      `FATAL: failed to launch 'task desktop:jlink:runtime': ${result.error.message}`,
+    );
     process.exit(1);
   }
 
   if (result.status !== 0) {
-    console.error(`FATAL: 'task jlink:runtime' exited with status ${result.status}.`);
+    console.error(
+      `FATAL: 'task desktop:jlink:runtime' exited with status ${result.status}.`,
+    );
     process.exit(result.status ?? 1);
   }
 }
@@ -38,16 +48,20 @@ function readReleaseFile(path) {
   return readFileSync(path, "utf8");
 }
 
-function readReleaseOrFail(path, context) {
+function readReleaseOrFail(path) {
   try {
     return readReleaseFile(path);
   } catch (err) {
-    console.error(`FATAL: ${context} cannot read bundled JRE release file at "${path}": ${err.message}.`);
+    console.error(
+      `FATAL: cannot read bundled JRE release file at "${path}" after rebuilding: ${err.message}.`,
+    );
     process.exit(1);
   }
 }
 
 function parseMajor(raw) {
+  // jlink writes release metadata as plain text, so we can validate the
+  // embedded runtime without starting Java.
   const match = raw.match(/JAVA_VERSION="?(\d+)/);
   return match ? Number(match[1]) : 0;
 }
@@ -60,15 +74,17 @@ try {
     `WARN: cannot read bundled JRE release file at "${releasePath}": ${err.message}.`,
   );
   rebuildRuntime("Bundled runtime is missing.");
-  raw = readReleaseOrFail(releasePath, "After rebuilding,");
+  raw = readReleaseOrFail(releasePath);
 }
 
 let major = parseMajor(raw);
 if (!major || major < required) {
+  // Rebuild stale or too-old runtimes automatically so desktop launches can
+  // recover from a cached JRE instead of failing at app start.
   rebuildRuntime(
     `Bundled runtime/jre is Java ${major || "unknown"} but the app JAR requires Java ${required}.`,
   );
-  raw = readReleaseOrFail(releasePath, "After rebuilding,");
+  raw = readReleaseOrFail(releasePath);
   major = parseMajor(raw);
 }
 
