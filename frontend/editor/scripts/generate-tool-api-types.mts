@@ -1,18 +1,7 @@
 /**
- * Generate TypeScript tool API types from the Java backend's OpenAPI spec (SwaggerDoc.json).
- *
- * The TypeScript counterpart of engine/scripts/generate_tool_models.py. Both turn the same
- * OpenAPI spec into per-operation request models so their language stays in sync with the
- * backend. They deliberately differ in one way: the Python generator strips file/binary fields
- * and reinterprets "required" because it feeds an AI that never handles file bytes. The frontend
- * DOES send files (including named file fields such as `stampImage`), so the models here are
- * complete and faithful to the spec, filtered only at the endpoint level to the real tool APIs.
- *
- * Heavy lifting (JSON Schema -> TS) is done by the off-the-shelf `json-schema-to-typescript`;
- * this script only tweaks the input (discover tool endpoints, inline component refs) and the
- * output (append the ToolEndpoint union + ToolApiParams map), mirroring the Python approach.
- *
- * Run via: task frontend:tool-models   (pass --check to verify the committed file is up to date)
+ * Generates the committed frontend tool API types (toolApiTypes.ts) from the
+ * Java backend's OpenAPI spec, so the frontend's request shapes stay in step
+ * with the backend.
  */
 
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
@@ -21,10 +10,9 @@ import { parseArgs } from "node:util";
 import { compile, type JSONSchema } from "json-schema-to-typescript";
 import * as prettier from "prettier";
 
-// Namespaces exposed as callable tools. Mirrors engine ToolDiscovery.ALLOWED_PATH_PREFIXES and
-// InternalApiClient's allowlist. `/api/v1/filter/` is pipeline-only, and `/api/v1/ai/tools/` is
-// hand-maintained (see the agent-tool escape hatch, cf. engine agent_tool_models.py); neither is
-// generated here. Extend this list when those become relevant.
+// The API namespaces whose endpoints are real, callable tools. `/api/v1/filter/`
+// (pipeline-only) and `/api/v1/ai/tools/` (not in the spec) are intentionally
+// excluded. Extend this list when other namespaces become tools.
 const ALLOWED_PATH_PREFIXES = [
   "/api/v1/general/",
   "/api/v1/misc/",
@@ -32,16 +20,16 @@ const ALLOWED_PATH_PREFIXES = [
   "/api/v1/convert/",
 ];
 
-// Universal file plumbing, never a user-configurable parameter: `fileInput` is the document
-// stream the pipeline feeds; `fileId` is a server-side handle. Stripped from the top-level tool
-// request models only. Named file fields (stampImage, attachments, ...) are kept.
+// File plumbing, not user parameters: `fileInput` is the uploaded document and
+// `fileId` a server-side handle. Stripped from every generated request model.
+// Named file fields (stampImage, attachments, ...) are real parameters and kept.
 const BASE_FILE_FIELDS = new Set(["fileInput", "fileId"]);
 
-// Component schemas that are pure file plumbing: the base "upload a file or provide a server-side
-// file ID" wrapper and its two branches. An endpoint whose request body is exactly one of these
-// takes no user parameters, so it must resolve to an empty model. Unlike the flat fileInput/fileId
-// properties stripped above, these express the file via a `oneOf` that would otherwise survive
-// stripping and surface the file fields in the output.
+// The shared "upload a file or provide a file ID" wrapper schema and its two
+// branches. An endpoint whose body is exactly this has no parameters, so it must
+// resolve to an empty model. It needs separate handling because the wrapper is a
+// `oneOf`, which survives the flat-field stripping above and would otherwise leak
+// the file fields into the output.
 const FILE_WRAPPER_COMPONENTS = new Set([
   "PDFFile",
   "PDFFileUpload",
@@ -106,10 +94,10 @@ function requestBodySchema(pathItem: Json): Json | null {
 }
 
 /**
- * Query parameters declared on a POST endpoint, as a property map plus the names of the required
- * ones. A few tools (e.g. merge-pdfs' `fileOrder`) take inputs on the query string alongside the
- * multipart body, so a complete model must include them. Mirrors the Python generator's query
- * handling. Query param schemas may be `$ref`s; those are inlined later by rewriteRefs.
+ * A POST endpoint's query parameters as a property map plus the required ones.
+ * Some tools take inputs on the query string alongside the multipart body (e.g.
+ * merge-pdfs' `fileOrder`), so a complete model has to fold them in. Ref-valued
+ * param schemas are inlined later by rewriteRefs.
  */
 function queryParameters(pathItem: Json): { props: Json; required: string[] } {
   const props: Json = {};
@@ -136,9 +124,9 @@ function queryParameters(pathItem: Json): { props: Json; required: string[] } {
 }
 
 /**
- * Walk a schema, rewriting every `#/components/schemas/X` ref to `#/definitions/X` in place and
- * collecting each component name encountered so the caller can inline it. Mirrors the Python
- * generator's `_rewrite_refs`.
+ * Rewrite every `#/components/schemas/X` ref to `#/definitions/X` in place (the
+ * form json-schema-to-typescript expects) and collect the referenced component
+ * names so the caller can inline them.
  */
 function rewriteRefs(node: unknown, found: Set<string>): void {
   if (Array.isArray(node)) {
@@ -155,7 +143,7 @@ function rewriteRefs(node: unknown, found: Set<string>): void {
   for (const value of Object.values(node)) rewriteRefs(value, found);
 }
 
-/** Drop `required` entries that have a default (the client need not send them) or were stripped. */
+/** Keep only fields the client must send: drop those with a default or already stripped. */
 function computeRequired(schema: Json, properties: Json): string[] {
   const required = Array.isArray(schema.required)
     ? (schema.required as string[])
@@ -218,10 +206,10 @@ async function main(): Promise<void> {
     let className: string;
     let modelSchema: Json;
     if (refComponent && FILE_WRAPPER_COMPONENTS.has(refComponent)) {
-      // Body is just the file wrapper, so the endpoint has no user parameters. Model it as an
-      // empty object (named after the path, since the wrapper name is shared) that becomes
-      // Record<string, never>, instead of surfacing the wrapper's fileInput/fileId union. Any
-      // query parameters are still merged in below.
+      // File-only endpoint: model it as an empty object so it becomes
+      // Record<string, never> rather than the wrapper's file union. Named after
+      // the path since the wrapper schema is shared. Query params still fold in
+      // below.
       className = pathToClassName(path);
       modelSchema = { type: "object", properties: {} };
     } else if (refComponent) {
@@ -242,7 +230,7 @@ async function main(): Promise<void> {
         ? (structuredClone(modelSchema.properties) as Json)
         : {};
       const query = queryParameters(pathItem);
-      // Body wins over query on name collision (matches the Python generator).
+      // Body wins over query on a name collision.
       const properties: Json = { ...query.props, ...bodyProps };
       for (const field of BASE_FILE_FIELDS) delete properties[field];
       modelSchema.properties = properties;
@@ -294,8 +282,9 @@ async function compileAndWrite(
   check: boolean,
   skipped: string[],
 ): Promise<void> {
-  // A wrapper object whose properties reference every model, so json-schema-to-typescript emits
-  // each as a named, exported interface. The wrapper interface itself is stripped afterwards.
+  // json-schema-to-typescript only emits a named, exported interface per schema
+  // if something references it, so wrap every model in one root object. The root
+  // interface itself is stripped from the output afterwards.
   const rootName = "__ToolApiRootAutogen";
   const uniqueClassNames = [...new Set(tools.map((t) => t.className))];
   const rootSchema: JSONSchema = {
@@ -317,10 +306,9 @@ async function compileAndWrite(
     format: false,
   });
 
-  // Drop the wrapper interface (its lines are simple `Name: Type;` with no nested braces), then
-  // rewrite empty models (tools that take only a file) to `Record<string, never>`. The library
-  // has no option to avoid empty interfaces, and `Record<string, never>` is the precise, lint-clean
-  // type for "an object with no properties" -- so the output needs no lint exceptions.
+  // Drop the root wrapper interface, then rewrite empty models (file-only tools)
+  // to `Record<string, never>` - the precise, lint-clean type for an object with
+  // no properties (json-schema-to-typescript always emits `{}` interfaces here).
   const models = compiled
     .replace(new RegExp(`export interface ${rootName} \\{[^}]*\\}`), "")
     .replace(
