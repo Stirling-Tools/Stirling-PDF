@@ -196,7 +196,7 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
   {
     id: "retention",
     label: "Retention",
-    icon: "clock",
+    icon: "schedule",
     tone: "neutral",
     desc: "Set how long documents are kept, when to archive, and when to delete.",
     comingSoon: true,
