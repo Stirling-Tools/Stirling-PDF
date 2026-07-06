@@ -191,6 +191,12 @@ public class ProcurementService {
         ProcurementDeal deal =
                 dealRepo.findByTeamId(teamId)
                         .orElseThrow(() -> new IllegalStateException("No deal for team " + teamId));
+        boolean hasIssuedQuote =
+                quoteRepo.findByDealIdOrderByCreatedAtDesc(deal.getDealId()).stream()
+                        .anyMatch(q -> ProcurementQuote.STATUS_SENT.equals(q.getStatus()));
+        if (!hasIssuedQuote) {
+            throw new IllegalStateException("No issued quote for team " + teamId);
+        }
         deal.setStage(ProcurementDeal.STAGE_AGREEMENT);
         deal = dealRepo.save(deal);
         log.info("[procurement] agreement stage team={} deal={}", teamId, deal.getDealId());

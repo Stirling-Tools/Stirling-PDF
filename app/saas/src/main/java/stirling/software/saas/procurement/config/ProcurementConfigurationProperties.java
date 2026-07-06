@@ -19,7 +19,7 @@ public class ProcurementConfigurationProperties {
     private int trialDurationDays = 14;
 
     /** Days added per trial extension. */
-    private int trialExtensionDays = 15;
+    private int trialExtensionDays = 7;
 
     /** Maximum number of trial extensions a buyer may take. */
     private int maxTrialExtensions = 2;
