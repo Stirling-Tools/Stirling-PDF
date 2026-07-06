@@ -255,10 +255,26 @@
   gap: 0.625rem;
 }
 
+.portal-policies__tool-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--color-text-2);
+  flex-shrink: 0;
+}
+
 .portal-policies__tool-name {
   font-size: 0.8125rem;
   font-weight: 600;
   color: var(--color-text-1);
+}
+
+.portal-policies__tool-body {
+  border-top: 1px solid var(--color-border);
+  padding-top: 0.75rem;
+  margin-top: 0.75rem;
 }
 
 /* Sources picker */

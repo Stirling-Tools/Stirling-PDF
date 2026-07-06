@@ -1,4 +1,4 @@
-import { MultiSelect } from "@mantine/core";
+import { MultiSelect } from "@app/ui/MultiSelect";
 import { useTranslation } from "react-i18next";
 import { PII_PRESETS } from "@app/data/policyDefinitions";
 
@@ -49,8 +49,7 @@ export function PolicyPiiField({
 
   return (
     <MultiSelect
-      size="sm"
-      label={t("policies.pii.fieldLabel", "PII to redact")}
+      inputSize="sm"
       placeholder={t("policies.pii.placeholder", "Select PII types")}
       data={PII_PRESETS.map((p) => ({
         value: p.value,
@@ -62,7 +61,6 @@ export function PolicyPiiField({
       onChange={handleChange}
       disabled={disabled}
       clearable
-      checkIconPosition="right"
     />
   );
 }

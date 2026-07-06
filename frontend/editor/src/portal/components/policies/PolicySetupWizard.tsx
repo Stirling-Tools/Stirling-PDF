@@ -14,16 +14,21 @@ import {
 } from "@app/ui";
 import {
   POLICY_DOC_TYPES,
+  TOOL_ENDPOINTS,
   humanizeEndpoint,
   type CatalogueEntry,
   type PipelineStep,
   type PolicySetupResult,
 } from "@portal/api/policies";
+import type { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 import { fetchSources } from "@portal/api/sources";
 import { useAsync } from "@portal/hooks/useAsync";
 import { PolicyFieldRow } from "@portal/components/policies/PolicyFieldRow";
 import { policyIcon } from "@portal/components/policies/policyIcons";
 import { sourceTypeMeta } from "@portal/components/sources/sourceTypes";
+import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
+import { PolicyRedactConfig } from "@app/components/policies/PolicyRedactConfig";
+import { PolicyWatermarkConfig } from "@app/components/policies/PolicyWatermarkConfig";
 import "@portal/views/Policies.css";
 
 interface PolicySetupWizardProps {
@@ -117,6 +122,19 @@ function PolicySetupWizardBody({
   onSubmit: (entry: CatalogueEntry, result: PolicySetupResult) => Promise<void>;
 }) {
   const { t } = useTranslation();
+  const { allTools: toolRegistry } = useToolRegistry();
+
+  // Portal tool operations are endpoint paths (/api/v1/…), not short registry IDs.
+  // Build a reverse map so we can look up icons and display names by endpoint.
+  const registryByEndpoint = useMemo(() => {
+    const map = new Map<string, ToolRegistryEntry>();
+    for (const entry of Object.values(toolRegistry)) {
+      const ep = (entry as ToolRegistryEntry).operationConfig?.endpoint;
+      if (typeof ep === "string") map.set(ep, entry as ToolRegistryEntry);
+    }
+    return map;
+  }, [toolRegistry]);
+
   const { category, config, policy } = entry;
   const isEdit = policy != null;
 
@@ -306,24 +324,51 @@ function PolicySetupWizardBody({
           <p className="portal-policies__wizard-desc">
             {t("portal.policies.wizard.workflow.description")}
           </p>
-          {tools.map((tl) => (
-            <Card key={tl.operation} padding="tight">
-              <div className="portal-policies__tool-head">
-                <span className="portal-policies__tool-name">
-                  {humanizeEndpoint(tl.operation)}
-                </span>
-                <span style={{ flex: 1 }} />
-                <ToggleSwitch
-                  size="sm"
-                  checked={tl.enabled}
-                  onChange={(checked) =>
-                    patchTool(tl.operation, { enabled: checked })
-                  }
-                  label=""
-                />
-              </div>
-            </Card>
-          ))}
+          {tools.map((tl) => {
+            const regEntry = registryByEndpoint.get(tl.operation);
+            const toolName = regEntry?.name ?? humanizeEndpoint(tl.operation);
+            return (
+              <Card key={tl.operation} padding="tight">
+                <div className="portal-policies__tool-head">
+                  {regEntry?.icon && (
+                    <span className="portal-policies__tool-icon" aria-hidden>
+                      {regEntry.icon}
+                    </span>
+                  )}
+                  <span className="portal-policies__tool-name">{toolName}</span>
+                  <span style={{ flex: 1 }} />
+                  <ToggleSwitch
+                    size="sm"
+                    checked={tl.enabled}
+                    onChange={(checked) =>
+                      patchTool(tl.operation, { enabled: checked })
+                    }
+                    label=""
+                  />
+                </div>
+                {tl.enabled && tl.operation === TOOL_ENDPOINTS.redact && (
+                  <div className="portal-policies__tool-body">
+                    <PolicyRedactConfig
+                      parameters={tl.parameters}
+                      onChange={(parameters) =>
+                        patchTool(tl.operation, { parameters })
+                      }
+                    />
+                  </div>
+                )}
+                {tl.enabled && tl.operation === TOOL_ENDPOINTS.watermark && (
+                  <div className="portal-policies__tool-body">
+                    <PolicyWatermarkConfig
+                      parameters={tl.parameters}
+                      onChange={(parameters) =>
+                        patchTool(tl.operation, { parameters })
+                      }
+                    />
+                  </div>
+                )}
+              </Card>
+            );
+          })}
         </div>
       )}
 

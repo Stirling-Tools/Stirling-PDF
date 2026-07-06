@@ -17,13 +17,11 @@ export const STATUS_LABEL: Record<PolicyRowStatus, string> = {
   setup: "Set up",
 };
 
-/**
- * Per-category accent colour
- */
+/** Per-category icon accent — neutral (no tint background) across all categories. */
 export const ROW_ACCENT: Record<string, IconBadgeAccent> = {
-  ingestion: "blue",
-  security: "purple",
-  compliance: "green",
-  routing: "amber",
-  retention: "red",
+  ingestion: "neutral",
+  security: "neutral",
+  compliance: "neutral",
+  routing: "neutral",
+  retention: "neutral",
 };

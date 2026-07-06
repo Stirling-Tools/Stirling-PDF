@@ -90,19 +90,6 @@
   outline: 2px solid var(--color-blue);
   outline-offset: -2px;
 }
-/* Policy icons are colourless at rest; hovering or focusing the row reveals the
-   category colour (blue/purple/green/amber/red — see ROW_ACCENT). The accent
-   class sets --ib-base; we neutralise --ib-accent here and restore it on hover. */
-.pol-row .sui-iconbadge {
-  --ib-accent: var(--color-text-3);
-  transition:
-    color var(--motion-fast),
-    background var(--motion-fast);
-}
-.pol-row:hover .sui-iconbadge,
-.pol-row:focus-visible .sui-iconbadge {
-  --ib-accent: var(--ib-base);
-}
 .pol-row-label {
   flex: 1;
   min-width: 0;
