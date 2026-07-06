@@ -18,7 +18,7 @@ const PII_OPTIONS = [
 ];
 
 const meta: Meta = {
-  title: "Primitives/Mantine Forms",
+  title: "Primitives/Forms",
   parameters: { layout: "padded" },
   decorators: [
     (S) => (
