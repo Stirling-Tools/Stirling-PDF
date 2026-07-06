@@ -97,33 +97,40 @@ tasks:
     cmds:
       - '{{.GRADLE}} build -PnoSpotless'
 
+  prematrix:*:
+    desc: "Run the backend test matrix"
+    vars:
+      MATRIXNAME: '{{index .MATCH 0}}'
+    cmds:
+      - task: '{{.MATRIXNAME}}:matrix'
+        vars:
+          STIRLING_FLAVOR: "proprietary"
+          SECURITY_ENABLELOGIN: "true"
+      - task: '{{.MATRIXNAME}}:matrix'
+        vars:
+          STIRLING_FLAVOR: "proprietary"
+          SECURITY_ENABLELOGIN: "false"
+      - task: '{{.MATRIXNAME}}:matrix'
+        vars:
+          STIRLING_FLAVOR: "core"
+          SECURITY_ENABLELOGIN: "true"
+      - task: '{{.MATRIXNAME}}:matrix'
+        vars:
+          STIRLING_FLAVOR: "core"
+          SECURITY_ENABLELOGIN: "false"
+      - task: '{{.MATRIXNAME}}:matrix'
+        vars:
+          STIRLING_FLAVOR: "saas"
+          SECURITY_ENABLELOGIN: "true"
+      - task: '{{.MATRIXNAME}}:matrix'
+        vars:
+          STIRLING_FLAVOR: "saas"
+          SECURITY_ENABLELOGIN: "false"
+
   test:
     desc: "Run the backend test matrix"
     cmds:
-      - task: test:matrix
-        vars:
-          STIRLING_FLAVOR: "proprietary"
-          SECURITY_ENABLELOGIN: "true"
-      - task: test:matrix
-        vars:
-          STIRLING_FLAVOR: "proprietary"
-          SECURITY_ENABLELOGIN: "false"
-      - task: test:matrix
-        vars:
-          STIRLING_FLAVOR: "core"
-          SECURITY_ENABLELOGIN: "true"
-      - task: test:matrix
-        vars:
-          STIRLING_FLAVOR: "core"
-          SECURITY_ENABLELOGIN: "false"
-      - task: test:matrix
-        vars:
-          STIRLING_FLAVOR: "saas"
-          SECURITY_ENABLELOGIN: "true"
-      - task: test:matrix
-        vars:
-          STIRLING_FLAVOR: "saas"
-          SECURITY_ENABLELOGIN: "false"
+      - task: prematrix:test
 
   test:matrix:
     internal: true
@@ -142,30 +149,7 @@ tasks:
   format:
     desc: "Run the backend formatting matrix"
     cmds:
-      - task: format:matrix
-        vars:
-          STIRLING_FLAVOR: "proprietary"
-          SECURITY_ENABLELOGIN: "true"
-      - task: format:matrix
-        vars:
-          STIRLING_FLAVOR: "proprietary"
-          SECURITY_ENABLELOGIN: "false"
-      - task: format:matrix
-        vars:
-          STIRLING_FLAVOR: "core"
-          SECURITY_ENABLELOGIN: "true"
-      - task: format:matrix
-        vars:
-          STIRLING_FLAVOR: "core"
-          SECURITY_ENABLELOGIN: "false"
-      - task: format:matrix
-        vars:
-          STIRLING_FLAVOR: "saas"
-          SECURITY_ENABLELOGIN: "true"
-      - task: format:matrix
-        vars:
-          STIRLING_FLAVOR: "saas"
-          SECURITY_ENABLELOGIN: "false"
+      - task: prematrix:format
 
   format:matrix:
     internal: true
@@ -181,30 +165,7 @@ tasks:
   format:check:
     desc: "Check the backend formatting matrix"
     cmds:
-      - task: format:check:matrix
-        vars:
-          STIRLING_FLAVOR: "proprietary"
-          SECURITY_ENABLELOGIN: "true"
-      - task: format:check:matrix
-        vars:
-          STIRLING_FLAVOR: "proprietary"
-          SECURITY_ENABLELOGIN: "false"
-      - task: format:check:matrix
-        vars:
-          STIRLING_FLAVOR: "core"
-          SECURITY_ENABLELOGIN: "true"
-      - task: format:check:matrix
-        vars:
-          STIRLING_FLAVOR: "core"
-          SECURITY_ENABLELOGIN: "false"
-      - task: format:check:matrix
-        vars:
-          STIRLING_FLAVOR: "saas"
-          SECURITY_ENABLELOGIN: "true"
-      - task: format:check:matrix
-        vars:
-          STIRLING_FLAVOR: "saas"
-          SECURITY_ENABLELOGIN: "false"
+      - task: prematrix:format:check
 
   format:check:matrix:
     internal: true
