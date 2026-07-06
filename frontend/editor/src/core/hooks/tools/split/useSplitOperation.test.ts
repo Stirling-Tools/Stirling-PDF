@@ -104,6 +104,32 @@ describe("splitToApiParams", () => {
       ),
     ).toEqual({ pageSize: "A4", xFactor: 3, yFactor: 2, rightToLeft: true });
   });
+
+  // A cleared numeric field arrives as "". It must fall back to the default,
+  // not Number("") === 0, which the backend turns into an empty/degenerate PDF.
+  test("byPoster falls back to the default factor for empty fields", () => {
+    expect(
+      splitToApiParams(
+        params({ method: SPLIT_METHODS.BY_POSTER, xFactor: "", yFactor: "" }),
+      ),
+    ).toMatchObject({ xFactor: 2, yFactor: 2 });
+  });
+
+  test("bySections falls back to the default divisions for empty fields", () => {
+    expect(
+      splitToApiParams(
+        params({ method: SPLIT_METHODS.BY_SECTIONS, hDiv: "", vDiv: "" }),
+      ),
+    ).toMatchObject({ horizontalDivisions: 2, verticalDivisions: 2 });
+  });
+
+  test("byChapters falls back to the default bookmark level for an empty field", () => {
+    expect(
+      splitToApiParams(
+        params({ method: SPLIT_METHODS.BY_CHAPTERS, bookmarkLevel: "" }),
+      ),
+    ).toMatchObject({ bookmarkLevel: 1 });
+  });
 });
 
 describe("split round-trip", () => {

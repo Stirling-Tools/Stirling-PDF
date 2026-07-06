@@ -51,8 +51,8 @@ export const splitToApiParams = (
       return { pageNumbers: parameters.pages };
     case SPLIT_METHODS.BY_SECTIONS: {
       const sections: SectionsApiParams = {
-        horizontalDivisions: Number(parameters.hDiv),
-        verticalDivisions: Number(parameters.vDiv),
+        horizontalDivisions: Number(parameters.hDiv || "2"),
+        verticalDivisions: Number(parameters.vDiv || "2"),
         merge: parameters.merge ?? false,
         splitMode: (parameters.splitMode ||
           "SPLIT_ALL") as SectionsApiParams["splitMode"],
@@ -70,7 +70,7 @@ export const splitToApiParams = (
       return { splitType: 2, splitValue: parameters.splitValue };
     case SPLIT_METHODS.BY_CHAPTERS:
       return {
-        bookmarkLevel: Number(parameters.bookmarkLevel),
+        bookmarkLevel: Number(parameters.bookmarkLevel || "1"),
         includeMetadata: parameters.includeMetadata ?? false,
         allowDuplicates: parameters.allowDuplicates ?? false,
       };
@@ -79,8 +79,8 @@ export const splitToApiParams = (
     case SPLIT_METHODS.BY_POSTER:
       return {
         pageSize: (parameters.pageSize || "A4") as PosterApiParams["pageSize"],
-        xFactor: Number(parameters.xFactor ?? "2"),
-        yFactor: Number(parameters.yFactor ?? "2"),
+        xFactor: Number(parameters.xFactor || "2"),
+        yFactor: Number(parameters.yFactor || "2"),
         rightToLeft: parameters.rightToLeft ?? false,
       };
     default:
