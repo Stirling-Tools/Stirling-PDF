@@ -75,8 +75,7 @@ export function convertToFolderScanningConfig(
     pipeline: automation.operations.map((op) => {
       const toolId = op.operation as ToolId;
       const toolEntry = toolRegistry[toolId];
-      const operationConfig = toolEntry?.operationConfig;
-      const endpointConfig = operationConfig?.endpoint;
+      const endpointConfig = toolEntry?.operationConfig?.endpoint;
 
       let endpoint: string | undefined;
 
@@ -84,8 +83,6 @@ export function convertToFolderScanningConfig(
         endpoint = endpointConfig;
       } else if (typeof endpointConfig === "function") {
         try {
-          // A tool with no endpoint for these params (returns null) falls through
-          // to the no-endpoint warning below, same as a static null endpoint.
           endpoint = endpointConfig(op.parameters) ?? undefined;
         } catch (error) {
           console.warn(
@@ -104,30 +101,10 @@ export function convertToFolderScanningConfig(
         );
       }
 
-      // Map the UI parameters to the backend request shape via the tool's typed
-      // Mapper B, so the pipeline gets the real field names (e.g. compress's
-      // "compressionMethod" collapses to "optimizeLevel") instead of the raw
-      // frontend params. A mapper can throw on partial/legacy stored params
-      // (e.g. a tool whose mapper dereferences a nested field that isn't set);
-      // fall back to the raw params in that case, and for tools without a
-      // mapper, so one bad step never aborts the whole export.
-      const apiParams = (() => {
-        if (!operationConfig?.toApiParams) return op.parameters;
-        try {
-          return operationConfig.toApiParams(op.parameters);
-        } catch (error) {
-          console.warn(
-            `Failed to map parameters for operation "${op.operation}". ` +
-              `Falling back to raw parameters. Error: ${error}`,
-          );
-          return op.parameters;
-        }
-      })();
-
       return {
         operation: endpoint || op.operation,
         parameters: {
-          ...apiParams,
+          ...op.parameters,
           fileInput: "automated",
         },
       };

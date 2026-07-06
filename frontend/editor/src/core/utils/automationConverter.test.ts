@@ -121,7 +121,10 @@ describe("automationConverter", () => {
       expect(config.pipeline[0].operation).toBe("unknownTool");
     });
 
-    test("maps parameters through the tool's toApiParams when present", () => {
+    test("preserves frontend params on export, even for a tool with a toApiParams mapper", () => {
+      // The folder-scan export keeps frontend param shape; toApiParams runs at
+      // execution time, not here. A tool with a mapper still exports its UI
+      // field name (compressionLevel), not the backend one (optimizeLevel).
       const withMapper = {
         ...registry,
         compress: {
@@ -136,54 +139,15 @@ describe("automationConverter", () => {
       const automation: AutomationConfig = {
         ...sampleAutomation,
         operations: [
-          { operation: "compress", parameters: { compressionLevel: 3 } },
+          { operation: "compress", parameters: { compressionLevel: 9 } },
         ],
       };
       const config = convertToFolderScanningConfig(automation, withMapper);
+      // The UI field name and value are preserved as-is (not optimizeLevel).
       expect(config.pipeline[0].parameters).toEqual({
-        optimizeLevel: 3,
+        compressionLevel: 9,
         fileInput: "automated",
       });
-    });
-
-    test("falls back to raw params (and warns) when a tool's toApiParams throws", () => {
-      expectConsole.warn(/Failed to map parameters for operation "boom"/);
-      const throwingRegistry = {
-        ...registry,
-        boom: {
-          operationConfig: {
-            endpoint: "/api/v1/misc/boom",
-            toApiParams: () => {
-              // Mirrors a real mapper dereferencing a nested field that a
-              // partial/legacy stored step didn't populate.
-              throw new TypeError("cannot read properties of undefined");
-            },
-          },
-        },
-      } as unknown as Partial<ToolRegistry>;
-      const automation: AutomationConfig = {
-        ...sampleAutomation,
-        operations: [
-          { operation: "boom", parameters: { raw: "value" } },
-          { operation: "merge", parameters: { generateToc: true } },
-        ],
-      };
-      // One step's mapper throwing must not abort the whole export: the bad
-      // step degrades to raw params and the rest still map.
-      const config = convertToFolderScanningConfig(
-        automation,
-        throwingRegistry,
-      );
-      expect(config.pipeline).toEqual([
-        {
-          operation: "/api/v1/misc/boom",
-          parameters: { raw: "value", fileInput: "automated" },
-        },
-        {
-          operation: "/api/v1/general/merge-pdfs",
-          parameters: { generateToc: true, fileInput: "automated" },
-        },
-      ]);
     });
   });
 
@@ -274,6 +238,72 @@ describe("automationConverter", () => {
       expect(parsed.automation.operations[0].parameters).toEqual({
         fromExtension: "pdf",
         toExtension: "docx",
+      });
+    });
+
+    test("round-trips frontend params losslessly, even for a tool with a mapper", () => {
+      // A value set in the UI survives an export then import unchanged. Because
+      // the export keeps frontend shape, a tool with a toApiParams mapper
+      // round-trips just like one without.
+      const withMapper = {
+        ...registry,
+        compress: {
+          operationConfig: {
+            endpoint: "/api/v1/misc/compress-pdf",
+            toApiParams: (p: Record<string, any>) => ({
+              optimizeLevel: p.compressionLevel,
+            }),
+          },
+        },
+      } as unknown as Partial<ToolRegistry>;
+      const automation: AutomationConfig = {
+        ...sampleAutomation,
+        operations: [
+          { operation: "compress", parameters: { compressionLevel: 9 } },
+        ],
+      };
+      const exported = convertToFolderScanningConfig(automation, withMapper);
+      const parsed = parseFolderScanningConfig(exported, withMapper);
+      expect(parsed.automation.operations[0]).toEqual({
+        operation: "compress",
+        parameters: { compressionLevel: 9 },
+      });
+    });
+
+    test("round-trips a tool whose endpoint depends on a frontend-only field", () => {
+      // Split-style tool: the endpoint is chosen from a frontend-only `method`
+      // field. Keeping frontend shape on export lets import replay the endpoint
+      // and resolve the tool.
+      const splitLike = {
+        ...registry,
+        splitLike: {
+          operationConfig: {
+            endpoint: (p: Record<string, any>) =>
+              p.method === "size"
+                ? "/api/v1/general/split-by-size"
+                : "/api/v1/general/split-pages",
+          },
+        },
+      } as unknown as Partial<ToolRegistry>;
+      const automation: AutomationConfig = {
+        ...sampleAutomation,
+        operations: [
+          {
+            operation: "splitLike",
+            parameters: { method: "size", value: "10MB" },
+          },
+        ],
+      };
+      const exported = convertToFolderScanningConfig(automation, splitLike);
+      expect(exported.pipeline[0]).toEqual({
+        operation: "/api/v1/general/split-by-size",
+        parameters: { method: "size", value: "10MB", fileInput: "automated" },
+      });
+      const parsed = parseFolderScanningConfig(exported, splitLike);
+      expect(parsed.unresolvedOperations).toEqual([]);
+      expect(parsed.automation.operations[0]).toEqual({
+        operation: "splitLike",
+        parameters: { method: "size", value: "10MB" },
       });
     });
 
