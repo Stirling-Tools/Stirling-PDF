@@ -60,13 +60,29 @@ export interface MultiSelectProps {
 type PassthroughProps = Omit<
   Pick<
     MantineMultiSelectProps,
-    | "data" | "value" | "onChange" | "defaultValue"
-    | "searchable" | "clearable" | "limit" | "maxValues"
-    | "searchValue" | "onSearchChange"
-    | "nothingFoundMessage" | "maxDropdownHeight" | "filter"
+    | "data"
+    | "value"
+    | "onChange"
+    | "defaultValue"
+    | "searchable"
+    | "clearable"
+    | "limit"
+    | "maxValues"
+    | "searchValue"
+    | "onSearchChange"
+    | "nothingFoundMessage"
+    | "maxDropdownHeight"
+    | "filter"
     | "comboboxProps"
-    | "placeholder" | "id" | "name" | "disabled" | "readOnly"
-    | "onFocus" | "onBlur" | "onDropdownOpen" | "onDropdownClose"
+    | "placeholder"
+    | "id"
+    | "name"
+    | "disabled"
+    | "readOnly"
+    | "onFocus"
+    | "onBlur"
+    | "onDropdownOpen"
+    | "onDropdownClose"
   >,
   never
 >;
@@ -106,13 +122,29 @@ export function MultiSelect({
   onDropdownClose,
 }: MultiSelectProps) {
   const passthroughProps: PassthroughProps = {
-    data, value, onChange, defaultValue,
-    searchable, clearable, limit, maxValues,
-    searchValue, onSearchChange,
-    nothingFoundMessage, maxDropdownHeight, filter,
+    data,
+    value,
+    onChange,
+    defaultValue,
+    searchable,
+    clearable,
+    limit,
+    maxValues,
+    searchValue,
+    onSearchChange,
+    nothingFoundMessage,
+    maxDropdownHeight,
+    filter,
     comboboxProps,
-    placeholder, id, name, disabled, readOnly,
-    onFocus, onBlur, onDropdownOpen, onDropdownClose,
+    placeholder,
+    id,
+    name,
+    disabled,
+    readOnly,
+    onFocus,
+    onBlur,
+    onDropdownOpen,
+    onDropdownClose,
   };
 
   return (

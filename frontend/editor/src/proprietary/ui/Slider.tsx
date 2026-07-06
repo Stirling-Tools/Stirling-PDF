@@ -39,9 +39,16 @@ export interface SliderProps {
 type PassthroughProps = Omit<
   Pick<
     MantineSliderProps,
-    | "value" | "onChange" | "min" | "max" | "step"
-    | "marks" | "label"
-    | "id" | "disabled" | "size"
+    | "value"
+    | "onChange"
+    | "min"
+    | "max"
+    | "step"
+    | "marks"
+    | "label"
+    | "id"
+    | "disabled"
+    | "size"
   >,
   never
 >;

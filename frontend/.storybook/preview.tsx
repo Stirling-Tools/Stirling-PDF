@@ -17,7 +17,10 @@ import { TierProvider, type Tier } from "@portal/contexts/TierContext";
 import { LinkProvider, type LinkState } from "@portal/contexts/LinkContext";
 import { ThemeProvider } from "@portal/contexts/ThemeContext";
 import { UIProvider } from "@portal/contexts/UIContext";
-import { mantineTheme, suiCssVariablesResolver } from "@portal/theme/mantineTheme";
+import {
+  mantineTheme,
+  suiCssVariablesResolver,
+} from "@portal/theme/mantineTheme";
 import { handlers } from "@portal/mocks/handlers";
 import { configureSupabase } from "@proprietary/auth/supabase/supabaseClient";
 
@@ -102,7 +105,11 @@ const withProviders: Decorator = (Story, context) => {
   return (
     <MemoryRouter initialEntries={["/"]}>
       <ThemeProvider>
-        <MantineProvider theme={mantineTheme} cssVariablesResolver={suiCssVariablesResolver} forceColorScheme={colorScheme}>
+        <MantineProvider
+          theme={mantineTheme}
+          cssVariablesResolver={suiCssVariablesResolver}
+          forceColorScheme={colorScheme}
+        >
           {/* LinkProvider must wrap TierProvider: TierContext derives its tier
               from useLink() (matches App.tsx's nesting). */}
           <LinkProvider key={linkState} initialState={linkState}>

@@ -59,12 +59,22 @@ export interface SelectProps {
 type PassthroughProps = Omit<
   Pick<
     MantineSelectProps,
-    | "value" | "onChange" | "defaultValue"
-    | "searchable" | "clearable"
-    | "placeholder" | "nothingFoundMessage" | "maxDropdownHeight"
+    | "value"
+    | "onChange"
+    | "defaultValue"
+    | "searchable"
+    | "clearable"
+    | "placeholder"
+    | "nothingFoundMessage"
+    | "maxDropdownHeight"
     | "comboboxProps"
-    | "id" | "name" | "aria-label" | "disabled" | "readOnly"
-    | "onFocus" | "onBlur"
+    | "id"
+    | "name"
+    | "aria-label"
+    | "disabled"
+    | "readOnly"
+    | "onFocus"
+    | "onBlur"
   >,
   never
 >;

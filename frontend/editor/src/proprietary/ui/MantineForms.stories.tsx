@@ -40,7 +40,10 @@ export const MultiSelect_Default: Story = {
     function Bound() {
       const [value, setValue] = useState<string[]>([]);
       return (
-        <FormField label="PII field types" helperText="Select all entity types to detect.">
+        <FormField
+          label="PII field types"
+          helperText="Select all entity types to detect."
+        >
           <MultiSelect
             data={PII_OPTIONS}
             value={value}
@@ -98,7 +101,11 @@ export const MultiSelect_SmSize: Story = {
 
 export const MultiSelect_Error: Story = {
   render: () => (
-    <FormField label="PII field types" error="At least one field type is required." required>
+    <FormField
+      label="PII field types"
+      error="At least one field type is required."
+      required
+    >
       <MultiSelect
         data={PII_OPTIONS}
         value={[]}
@@ -255,12 +262,11 @@ export const ColorInput_Default: Story = {
     function Bound() {
       const [color, setColor] = useState("");
       return (
-        <FormField label="Watermark color" helperText="Pick a hex colour for the overlay text.">
-          <ColorInput
-            value={color}
-            onChange={setColor}
-            placeholder="#000000"
-          />
+        <FormField
+          label="Watermark color"
+          helperText="Pick a hex colour for the overlay text."
+        >
+          <ColorInput value={color} onChange={setColor} placeholder="#000000" />
         </FormField>
       );
     }
@@ -298,7 +304,11 @@ export const ColorInput_SmSize: Story = {
 
 export const ColorInput_Error: Story = {
   render: () => (
-    <FormField label="Watermark color" error="Enter a valid hex colour." required>
+    <FormField
+      label="Watermark color"
+      error="Enter a valid hex colour."
+      required
+    >
       <ColorInput
         value="not-a-color"
         onChange={() => {}}
@@ -333,7 +343,11 @@ export const Select_Default: Story = {
       const [value, setValue] = useState<string | null>("90");
       return (
         <FormField label="Retention period">
-          <Select options={RETENTION_OPTIONS} value={value} onChange={setValue} />
+          <Select
+            options={RETENTION_OPTIONS}
+            value={value}
+            onChange={setValue}
+          />
         </FormField>
       );
     }
@@ -394,7 +408,11 @@ export const Select_SmSize: Story = {
 
 export const Select_Error: Story = {
   render: () => (
-    <FormField label="Retention period" error="A retention period is required." required>
+    <FormField
+      label="Retention period"
+      error="A retention period is required."
+      required
+    >
       <Select
         options={RETENTION_OPTIONS}
         value={null}
@@ -410,7 +428,12 @@ export const Select_Error: Story = {
 export const Select_Disabled: Story = {
   render: () => (
     <FormField label="Retention period">
-      <Select options={RETENTION_OPTIONS} value="90" onChange={() => {}} disabled />
+      <Select
+        options={RETENTION_OPTIONS}
+        value="90"
+        onChange={() => {}}
+        disabled
+      />
     </FormField>
   ),
 };
@@ -422,8 +445,18 @@ export const Slider_Default: Story = {
     function Bound() {
       const [v, setV] = useState(0.85);
       return (
-        <FormField label="Confidence threshold" helperText="Documents below this route to the review queue.">
-          <Slider value={v} onChange={setV} min={0} max={1} step={0.01} formatValue={(x) => x.toFixed(2)} />
+        <FormField
+          label="Confidence threshold"
+          helperText="Documents below this route to the review queue."
+        >
+          <Slider
+            value={v}
+            onChange={setV}
+            min={0}
+            max={1}
+            step={0.01}
+            formatValue={(x) => x.toFixed(2)}
+          />
         </FormField>
       );
     }
@@ -464,7 +497,14 @@ export const Slider_NoLabel: Story = {
       const [v, setV] = useState(50);
       return (
         <FormField label="Opacity" helperText={`${v}%`}>
-          <Slider value={v} onChange={setV} min={0} max={100} step={1} showValue={false} />
+          <Slider
+            value={v}
+            onChange={setV}
+            min={0}
+            max={100}
+            step={1}
+            showValue={false}
+          />
         </FormField>
       );
     }
@@ -475,7 +515,14 @@ export const Slider_NoLabel: Story = {
 export const Slider_Disabled: Story = {
   render: () => (
     <FormField label="Confidence threshold">
-      <Slider value={0.85} min={0} max={1} step={0.01} formatValue={(x) => x.toFixed(2)} disabled />
+      <Slider
+        value={0.85}
+        min={0}
+        max={1}
+        step={0.01}
+        formatValue={(x) => x.toFixed(2)}
+        disabled
+      />
     </FormField>
   ),
 };
@@ -495,12 +542,27 @@ export const WatermarkForm: Story = {
             <ColorInput value={color} onChange={setColor} />
           </FormField>
           <FormField label="Opacity">
-            <NumberInput value={opacity} onChange={setOpacity} min={0} max={100} suffix="%" />
+            <NumberInput
+              value={opacity}
+              onChange={setOpacity}
+              min={0}
+              max={100}
+              suffix="%"
+            />
           </FormField>
           <FormField label="Font size">
-            <NumberInput value={fontSize} onChange={setFontSize} min={6} max={200} suffix=" pt" />
+            <NumberInput
+              value={fontSize}
+              onChange={setFontSize}
+              min={6}
+              max={200}
+              suffix=" pt"
+            />
           </FormField>
-          <FormField label="Redact PII types" helperText="Fields to strip before watermarking.">
+          <FormField
+            label="Redact PII types"
+            helperText="Fields to strip before watermarking."
+          >
             <MultiSelect
               data={PII_OPTIONS}
               value={piiFields}

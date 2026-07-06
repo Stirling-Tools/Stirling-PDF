@@ -1,4 +1,8 @@
-import { createTheme, type CSSVariablesResolver, type MantineColorsTuple } from "@mantine/core";
+import {
+  createTheme,
+  type CSSVariablesResolver,
+  type MantineColorsTuple,
+} from "@mantine/core";
 
 /**
  * Mantine theme for the portal, bound to the SUI design tokens in

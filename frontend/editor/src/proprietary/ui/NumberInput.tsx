@@ -65,13 +65,31 @@ export interface NumberInputProps {
 type PassthroughProps = Omit<
   Pick<
     MantineNumberInputProps,
-    | "value" | "onChange" | "defaultValue"
-    | "min" | "max" | "step"
-    | "decimalScale" | "fixedDecimalScale" | "allowNegative" | "allowDecimal" | "clampBehavior"
-    | "placeholder" | "suffix" | "prefix" | "hideControls"
-    | "rightSection" | "rightSectionWidth"
-    | "id" | "name" | "disabled" | "readOnly" | "autoFocus"
-    | "onFocus" | "onBlur" | "onKeyDown"
+    | "value"
+    | "onChange"
+    | "defaultValue"
+    | "min"
+    | "max"
+    | "step"
+    | "decimalScale"
+    | "fixedDecimalScale"
+    | "allowNegative"
+    | "allowDecimal"
+    | "clampBehavior"
+    | "placeholder"
+    | "suffix"
+    | "prefix"
+    | "hideControls"
+    | "rightSection"
+    | "rightSectionWidth"
+    | "id"
+    | "name"
+    | "disabled"
+    | "readOnly"
+    | "autoFocus"
+    | "onFocus"
+    | "onBlur"
+    | "onKeyDown"
   >,
   never
 >;
@@ -111,13 +129,31 @@ export function NumberInput({
   onKeyDown,
 }: NumberInputProps) {
   const passthroughProps: PassthroughProps = {
-    value, onChange, defaultValue,
-    min, max, step,
-    decimalScale, fixedDecimalScale, allowNegative, allowDecimal, clampBehavior,
-    placeholder, suffix, prefix, hideControls,
-    rightSection, rightSectionWidth,
-    id, name, disabled, readOnly, autoFocus,
-    onFocus, onBlur, onKeyDown,
+    value,
+    onChange,
+    defaultValue,
+    min,
+    max,
+    step,
+    decimalScale,
+    fixedDecimalScale,
+    allowNegative,
+    allowDecimal,
+    clampBehavior,
+    placeholder,
+    suffix,
+    prefix,
+    hideControls,
+    rightSection,
+    rightSectionWidth,
+    id,
+    name,
+    disabled,
+    readOnly,
+    autoFocus,
+    onFocus,
+    onBlur,
+    onKeyDown,
   };
 
   return (
@@ -125,7 +161,10 @@ export function NumberInput({
       size={inputSize}
       error={invalid ? (error ?? " ") : error}
       withAsterisk={false}
-      classNames={{ wrapper: "sui-mantine-wrapper", control: "sui-mantine-control" }}
+      classNames={{
+        wrapper: "sui-mantine-wrapper",
+        control: "sui-mantine-control",
+      }}
       styles={{ wrapper: SUI_INPUT_VARS }}
       {...passthroughProps}
     />

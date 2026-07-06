@@ -186,7 +186,9 @@ export function StorageTab() {
             <Select
               options={RETENTION_OPTS}
               value={retentionValue}
-              onChange={(value) => setRetention((value ?? "") as RetentionWindow)}
+              onChange={(value) =>
+                setRetention((value ?? "") as RetentionWindow)
+              }
             />
           </FormField>
 

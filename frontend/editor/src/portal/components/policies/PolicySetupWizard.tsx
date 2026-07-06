@@ -475,7 +475,9 @@ function PolicySetupWizardBody({
                     inputSize="sm"
                     value={outputMode}
                     onChange={(value) => {
-                      const mode = (value ?? "new_file") as "new_file" | "new_version";
+                      const mode = (value ?? "new_file") as
+                        | "new_file"
+                        | "new_version";
                       setOutputMode(mode);
                       // Auto-number only applies to separate new files.
                       if (
@@ -510,7 +512,10 @@ function PolicySetupWizardBody({
                       value={outputNamePosition}
                       onChange={(value) =>
                         setOutputNamePosition(
-                          (value ?? "suffix") as "prefix" | "suffix" | "auto-number",
+                          (value ?? "suffix") as
+                            | "prefix"
+                            | "suffix"
+                            | "auto-number",
                         )
                       }
                       options={[

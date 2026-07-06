@@ -51,11 +51,21 @@ export interface ColorInputProps {
 type PassthroughProps = Omit<
   Pick<
     MantineColorInputProps,
-    | "value" | "onChange" | "defaultValue"
-    | "format" | "swatches" | "swatchesPerRow" | "withPicker"
+    | "value"
+    | "onChange"
+    | "defaultValue"
+    | "format"
+    | "swatches"
+    | "swatchesPerRow"
+    | "withPicker"
     | "popoverProps"
-    | "placeholder" | "id" | "name" | "disabled" | "readOnly"
-    | "onFocus" | "onBlur"
+    | "placeholder"
+    | "id"
+    | "name"
+    | "disabled"
+    | "readOnly"
+    | "onFocus"
+    | "onBlur"
   >,
   never
 >;
@@ -88,11 +98,21 @@ export function ColorInput({
   onBlur,
 }: ColorInputProps) {
   const passthroughProps: PassthroughProps = {
-    value, onChange, defaultValue,
-    format, swatches, swatchesPerRow, withPicker,
+    value,
+    onChange,
+    defaultValue,
+    format,
+    swatches,
+    swatchesPerRow,
+    withPicker,
     popoverProps,
-    placeholder, id, name, disabled, readOnly,
-    onFocus, onBlur,
+    placeholder,
+    id,
+    name,
+    disabled,
+    readOnly,
+    onFocus,
+    onBlur,
   };
 
   return (

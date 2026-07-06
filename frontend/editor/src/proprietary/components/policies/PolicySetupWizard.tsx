@@ -483,7 +483,10 @@ export function PolicySetupWizard({
                     value={outputNamePosition}
                     onChange={(value) =>
                       setOutputNamePosition(
-                        (value ?? "suffix") as "prefix" | "suffix" | "auto-number",
+                        (value ?? "suffix") as
+                          | "prefix"
+                          | "suffix"
+                          | "auto-number",
                       )
                     }
                     aria-label={t(
