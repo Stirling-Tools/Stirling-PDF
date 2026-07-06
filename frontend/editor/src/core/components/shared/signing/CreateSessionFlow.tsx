@@ -47,9 +47,9 @@ const StepWrapper: React.FC<StepWrapperProps> = ({
           : "1px solid var(--mantine-color-default-border)",
         borderRadius: "var(--mantine-radius-default)",
         backgroundColor: isActive
-          ? "var(--mantine-color-blue-0)"
+          ? "var(--mantine-color-blue-light)"
           : isCompleted
-            ? "var(--mantine-color-gray-0)"
+            ? "var(--mantine-color-gray-light)"
             : "transparent",
         opacity: !isActive && !isCompleted ? 0.6 : 1,
       }}

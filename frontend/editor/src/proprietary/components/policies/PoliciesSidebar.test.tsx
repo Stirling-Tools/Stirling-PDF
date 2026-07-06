@@ -18,6 +18,10 @@ vi.mock("react-i18next", () => ({
   I18nextProvider: ({ children }: { children: ReactNode }) => children,
 }));
 
+// Policies ship gated SaaS-only via the build-flavor flag; these tests exercise
+// the component itself, so force the flag on regardless of the test build flavor.
+vi.mock("@app/constants/featureFlags", () => ({ POLICIES_ENABLED: true }));
+
 // usePolicies derives `canConfigure` from app-config; with no AppConfigProvider
 // here `config` is null, which (tri-state gate) hides the edit affordances. Mock
 // app-config as a single-user deployment (login off) so the local operator can
@@ -165,11 +169,11 @@ describe("Policies right-sidebar surface", () => {
     expect(await screen.findByText("No activity yet")).toBeInTheDocument();
   });
 
-  it("returns to the list via the back button", () => {
+  it("returns to the list via the close button", () => {
     renderHost();
     fireEvent.click(screen.getByText("Security"));
     expect(screen.getByText("Enforces")).toBeInTheDocument();
-    fireEvent.click(screen.getByLabelText("Back"));
+    fireEvent.click(screen.getByLabelText("Close"));
     expect(screen.getByText("Policies")).toBeInTheDocument();
   });
 });

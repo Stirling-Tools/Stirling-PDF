@@ -4,10 +4,11 @@ import { useAuth } from "@app/auth/UseSession";
 import { useTranslation } from "@app/hooks/useTranslation";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
 import AuthLayout from "@app/routes/authShared/AuthLayout";
-import "@app/routes/authShared/auth.css";
+import "@app/auth/ui/auth.css";
 import "@app/routes/authShared/saas-auth.css";
 import { withBasePath } from "@app/constants/app";
-import ErrorMessage from "@app/routes/login/ErrorMessage";
+import ErrorMessage from "@app/auth/ui/ErrorMessage";
+import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
 
 /**
  * OAuth 2.1 consent screen for the Supabase OAuth server (used by MCP clients
@@ -190,7 +191,7 @@ export default function OAuthConsent() {
   const logoBlock = (
     <div className="auth-logo-block">
       <img
-        src={withBasePath("/modern-logo/LoginLightModeHeader.svg")}
+        src={loginHeader}
         alt="Stirling PDF"
         className="auth-logo-header auth-logo-header--light"
       />

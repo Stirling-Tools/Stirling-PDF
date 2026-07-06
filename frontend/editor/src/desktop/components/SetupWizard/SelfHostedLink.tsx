@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import "@app/routes/authShared/auth.css";
+import "@app/auth/ui/auth.css";
 
 interface SelfHostedLinkProps {
   onClick: () => void;

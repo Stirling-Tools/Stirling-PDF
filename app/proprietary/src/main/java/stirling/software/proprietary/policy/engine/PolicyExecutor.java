@@ -116,6 +116,10 @@ public class PolicyExecutor {
             ToolResult r = callEndpoint(step, inputFiles, supportingFiles);
             files.addAll(r.files());
             report = r.report();
+        } else if (inputFiles.isEmpty()) {
+            ToolResult r = callEndpoint(step, List.of(), supportingFiles);
+            files.addAll(r.files());
+            report = r.report();
         } else {
             for (Resource file : inputFiles) {
                 ToolResult r = callEndpoint(step, List.of(file), supportingFiles);

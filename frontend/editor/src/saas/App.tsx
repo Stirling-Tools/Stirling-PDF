@@ -3,7 +3,7 @@ import { Routes, Route, useLocation } from "react-router-dom";
 import { isAuthRoute } from "@app/utils/pathUtils";
 import { AppProviders } from "@app/components/AppProviders";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
-import { RainbowThemeProvider } from "@app/components/shared/RainbowThemeProvider";
+import { ThemeProvider } from "@app/components/shared/ThemeProvider";
 import { setBaseUrl } from "@app/constants/app";
 import type { AppConfig } from "@app/contexts/AppConfigContext";
 import { AppLayout } from "@app/components/AppLayout";
@@ -17,6 +17,7 @@ import ResetPassword from "@app/routes/ResetPassword";
 import OAuthConsent from "@app/routes/OAuthConsent";
 import ShareLinkPage from "@app/routes/ShareLinkPage";
 import MobileScannerPage from "@app/pages/MobileScannerPage";
+import { getAdminRouteExtensions } from "@app/routes/adminRouteExtensions";
 import OnboardingBootstrap from "@app/components/OnboardingBootstrap";
 import SignupRequiredBootstrap from "@app/components/SignupRequiredBootstrap";
 import UsageLimitModalHost from "@app/components/UsageLimitModalHost";
@@ -40,7 +41,7 @@ function handleConfigLoaded(config: AppConfig) {
 function PublicRouteProviders({ children }: { children: ReactNode }) {
   return (
     <PreferencesProvider>
-      <RainbowThemeProvider>{children}</RainbowThemeProvider>
+      <ThemeProvider>{children}</ThemeProvider>
     </PreferencesProvider>
   );
 }
@@ -79,6 +80,10 @@ export default function App() {
             </PublicRouteProviders>
           }
         />
+
+        {/* Admin-only route-set (the portal): its own top-level shell, mounted
+            before the catch-all. */}
+        {getAdminRouteExtensions()}
 
         {/* Everything else needs the auth/backend providers. */}
         <Route

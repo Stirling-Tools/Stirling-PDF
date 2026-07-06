@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,7 @@ import tools.jackson.databind.ObjectMapper;
  */
 @Service
 @RequiredArgsConstructor
+@ConditionalOnBooleanProperty(name = "policies.enabled")
 public class JpaPolicyStore implements PolicyStore {
 
     private final PolicyRepository repository;
@@ -36,7 +38,7 @@ public class JpaPolicyStore implements PolicyStore {
                         policy.owner(),
                         policy.enabled(),
                         policy.trigger(),
-                        policy.sources(),
+                        policy.sourceIds(),
                         policy.steps(),
                         policy.output(),
                         policy.teamId());
@@ -47,6 +49,7 @@ public class JpaPolicyStore implements PolicyStore {
         entity.setOwner(stored.owner());
         entity.setEnabled(stored.enabled());
         entity.setTriggerType(stored.trigger() == null ? null : stored.trigger().type());
+        entity.setTeamId(stored.teamId());
         entity.setPolicyJson(objectMapper.writeValueAsString(stored));
         repository.save(entity);
         return stored;
@@ -60,6 +63,11 @@ public class JpaPolicyStore implements PolicyStore {
     @Override
     public List<Policy> all() {
         return repository.findAll().stream().map(this::toPolicy).toList();
+    }
+
+    @Override
+    public List<Policy> findByTeam(Long teamId) {
+        return repository.findByTeam(teamId).stream().map(this::toPolicy).toList();
     }
 
     @Override

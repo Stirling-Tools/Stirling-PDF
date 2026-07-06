@@ -32,7 +32,7 @@ import {
   toUnderscoreFormat,
   toUnderscoreLanguages,
 } from "@app/i18n";
-import { Z_INDEX_CONFIG_MODAL } from "@app/styles/zIndex";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 
 interface GeneralSettingsData {
   ui: {
@@ -591,7 +591,10 @@ export default function AdminGeneralSection() {
                   "admin.settings.general.languages.placeholder",
                   "Select languages",
                 )}
-                comboboxProps={{ zIndex: Z_INDEX_CONFIG_MODAL }}
+                comboboxProps={{
+                  withinPortal: true,
+                  zIndex: Z_INDEX_OVER_CONFIG_MODAL,
+                }}
                 disabled={!loginEnabled}
               />
             </div>
@@ -626,7 +629,10 @@ export default function AdminGeneralSection() {
                 searchable
                 clearable
                 placeholder="en_US"
-                comboboxProps={{ zIndex: Z_INDEX_CONFIG_MODAL }}
+                comboboxProps={{
+                  withinPortal: true,
+                  zIndex: Z_INDEX_OVER_CONFIG_MODAL,
+                }}
                 disabled={!loginEnabled}
               />
             </div>

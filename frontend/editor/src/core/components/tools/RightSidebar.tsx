@@ -1,10 +1,8 @@
 import { useMemo, useState } from "react";
 import { ActionIcon } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { useRainbowThemeContext } from "@app/components/shared/RainbowThemeProvider";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useSidebarContext } from "@app/contexts/SidebarContext";
-import rainbowStyles from "@app/styles/rainbow.module.css";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import ToolPanel from "@app/components/tools/ToolPanel";
 import ToolSearch from "@app/components/tools/toolPicker/ToolSearch";
@@ -13,6 +11,7 @@ import {
   PoliciesSection,
   PolicyDetailTakeover,
   usePoliciesEnabled,
+  usePoliciesVisible,
   usePolicyDetailActive,
 } from "@app/components/policies/PoliciesSidebar";
 import { PolicyAutoRunController } from "@app/components/policies/PolicyAutoRunController";
@@ -20,6 +19,7 @@ import { useFavoriteToolItems } from "@app/hooks/tools/useFavoriteToolItems";
 import { useToolSections } from "@app/hooks/useToolSections";
 import type { SubcategoryGroup } from "@app/hooks/useToolSections";
 import { ToolIcon } from "@app/components/shared/ToolIcon";
+import { ToolPanelHeader } from "@app/components/shared/ToolPanelHeader";
 import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
 import { withViewTransition } from "@app/utils/viewTransition";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
@@ -43,7 +43,6 @@ import "@app/components/tools/ToolPanel.css";
  */
 export default function RightSidebar() {
   const { t } = useTranslation();
-  const { isRainbowMode } = useRainbowThemeContext();
   const { sidebarRefs } = useSidebarContext();
   const { toolPanelRef, quickAccessRef } = sidebarRefs;
   const isMobile = useIsMobile();
@@ -67,6 +66,7 @@ export default function RightSidebar() {
   } = useToolWorkflow();
 
   const policiesEnabled = usePoliciesEnabled();
+  const policiesVisible = usePoliciesVisible();
   const rawPolicyDetailActive = usePolicyDetailActive();
   const fullscreenExpanded = useIsFullscreenExpanded();
   const fullscreenGeometry = useToolPanelGeometry({
@@ -118,9 +118,14 @@ export default function RightSidebar() {
   const inToolView = leftPanelView !== "toolPicker";
   // Show X (close) button only when there's somewhere to go back to.
   const showCloseButton = inToolView || allToolsView;
-  // Policies sit above the tool list in the default tool-picker view.
+  // Policies sit above the tool list in the default tool-picker view — but only
+  // when the current user actually has policies to see (see usePoliciesVisible),
+  // so regular users with none get the plain tool picker with no empty block.
   const showPolicies =
-    policiesEnabled && !allToolsView && leftPanelView === "toolPicker";
+    policiesEnabled &&
+    policiesVisible &&
+    !allToolsView &&
+    leftPanelView === "toolPicker";
   // When Policies are shown, the search moves OUT of the header to sit between
   // the Policies and Tools sections (separating them); otherwise it stays in the
   // header. Show the header search when there's a close button, or in the
@@ -207,9 +212,7 @@ export default function RightSidebar() {
       ref={toolPanelRef}
       data-sidebar="tool-panel"
       data-tour={fullscreenExpanded ? undefined : "tool-panel"}
-      className={`tool-panel flex flex-col ${fullscreenExpanded ? "tool-panel--fullscreen-active" : "overflow-hidden"} bg-[var(--bg-toolbar)] border-l border-[var(--border-subtle)] transition-all duration-300 ease-out ${
-        isRainbowMode ? rainbowStyles.rainbowPaper : ""
-      } ${isMobile ? "h-full border-r-0" : "h-screen"} ${fullscreenExpanded ? "tool-panel--fullscreen" : ""}`}
+      className={`tool-panel flex flex-col ${fullscreenExpanded ? "tool-panel--fullscreen-active" : "overflow-hidden"} bg-[var(--bg-toolbar)] border-l border-[var(--border-subtle)] transition-all duration-300 ease-out ${isMobile ? "h-full border-r-0" : "h-screen"} ${fullscreenExpanded ? "tool-panel--fullscreen" : ""}`}
       style={{
         width: computedWidth(),
         padding: "0",
@@ -233,7 +236,9 @@ export default function RightSidebar() {
             </ActionIcon>
           </div>
           <div className="tool-panel__collapsed-divider" />
-          <PoliciesCollapsedButton onExpand={handleOpenPolicy} />
+          {policiesEnabled && (
+            <PoliciesCollapsedButton onExpand={handleOpenPolicy} />
+          )}
           <div className="tool-panel__collapsed-tools">
             {collapsedRailItems.map(({ id, tool }) => (
               <AppTooltip
@@ -284,65 +289,67 @@ export default function RightSidebar() {
             </div>
           ) : (
             <>
-              {!showPolicies && (
-                <div className="tool-panel__compact-header">
-                  {activeTool ? (
-                    <div
-                      className="tool-panel__active-tool-pill"
-                      aria-label={activeTool.name}
-                    >
-                      <span className="tool-panel__active-tool-pill-icon">
-                        <ToolIcon
-                          icon={activeTool.icon}
-                          marginRight="0"
-                          color="var(--mantine-color-blue-filled)"
-                        />
-                      </span>
-                      <span className="tool-panel__active-tool-pill-label">
-                        {activeTool.name}
-                      </span>
-                    </div>
-                  ) : showHeaderSearch ? (
-                    <div className="tool-panel__compact-header-search">
-                      <ToolSearch
-                        value={searchQuery}
-                        onChange={handleHeaderSearchChange}
-                        toolRegistry={toolRegistry}
-                        mode="filter"
-                        autoFocus={allToolsView && !inToolView}
+              {!showPolicies &&
+                (activeTool ? (
+                  <ToolPanelHeader
+                    icon={
+                      <ToolIcon
+                        icon={activeTool.icon}
+                        marginRight="0"
+                        color="currentColor"
                       />
-                    </div>
-                  ) : null}
-                  {showCloseButton ? (
-                    <ActionIcon
-                      variant="subtle"
-                      color="gray"
-                      radius="xl"
-                      size="md"
-                      onClick={handleHeaderBack}
-                      aria-label={
-                        inToolView
-                          ? t("toolPanel.backToAllTools", "Back to all tools")
-                          : t("toolPanel.goBack", "Go back")
-                      }
-                      className="tool-panel__expand-btn"
-                    >
-                      <CloseIcon sx={{ fontSize: "1.1rem" }} />
-                    </ActionIcon>
-                  ) : (
-                    <ActionIcon
-                      variant="outline"
-                      radius="xl"
-                      size="md"
-                      onClick={handleCollapse}
-                      aria-label={t("toolPanel.collapse", "Collapse panel")}
-                      className="tool-panel__expand-btn tool-panel__toggle-vt"
-                    >
-                      <ChevronRightIcon sx={{ fontSize: "1.1rem" }} />
-                    </ActionIcon>
-                  )}
-                </div>
-              )}
+                    }
+                    title={activeTool.name}
+                    onClose={handleHeaderBack}
+                    closeLabel={
+                      inToolView
+                        ? t("toolPanel.backToAllTools", "Back to all tools")
+                        : t("toolPanel.goBack", "Go back")
+                    }
+                  />
+                ) : (
+                  <div className="tool-panel__compact-header">
+                    {showHeaderSearch ? (
+                      <div className="tool-panel__compact-header-search">
+                        <ToolSearch
+                          value={searchQuery}
+                          onChange={handleHeaderSearchChange}
+                          toolRegistry={toolRegistry}
+                          mode="filter"
+                          autoFocus={allToolsView && !inToolView}
+                        />
+                      </div>
+                    ) : null}
+                    {showCloseButton ? (
+                      <ActionIcon
+                        variant="subtle"
+                        color="gray"
+                        radius="xl"
+                        size="md"
+                        onClick={handleHeaderBack}
+                        aria-label={
+                          inToolView
+                            ? t("toolPanel.backToAllTools", "Back to all tools")
+                            : t("toolPanel.goBack", "Go back")
+                        }
+                        className="tool-panel__expand-btn"
+                      >
+                        <CloseIcon sx={{ fontSize: "1.1rem" }} />
+                      </ActionIcon>
+                    ) : (
+                      <ActionIcon
+                        variant="outline"
+                        radius="xl"
+                        size="md"
+                        onClick={handleCollapse}
+                        aria-label={t("toolPanel.collapse", "Collapse panel")}
+                        className="tool-panel__expand-btn tool-panel__toggle-vt"
+                      >
+                        <ChevronRightIcon sx={{ fontSize: "1.1rem" }} />
+                      </ActionIcon>
+                    )}
+                  </div>
+                ))}
 
               {showPolicies && (
                 <PoliciesSection

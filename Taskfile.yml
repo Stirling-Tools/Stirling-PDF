@@ -25,8 +25,28 @@ includes:
   e2e:
     taskfile: .taskfiles/e2e.yml
     dir: .
+  pre-commit:
+    taskfile: .taskfiles/pre-commit.yml
+    dir: .
 
 tasks:
+  # ============================================================
+  # Help (shown when you run `task` with no arguments)
+  # ============================================================
+
+  default:
+    desc: "List the most common commands"
+    silent: true
+    cmds:
+      - |
+        echo "Common commands (run 'task --list' to see all):"
+        echo ""
+        echo "  task dev            Start backend & frontend on free ports"
+        echo "  task backend:dev    Start backend on default port"
+        echo "  task frontend:dev   Start frontend on default port"
+        echo "  task desktop:dev    Start desktop app"
+        echo "  task check          Quality gate (lint, typecheck, test, etc.)"
+
   # ============================================================
   # Setup & Prerequisites
   # ============================================================
@@ -55,6 +75,25 @@ tasks:
       - task: frontend:dev
         vars:
           PORT: '{{.FRONTEND_PORT}}'
+          BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
+          OPEN: "true"
+
+  dev:portal:
+    desc: "Start backend + editor; the portal is an admin route at /portal"
+    vars:
+      PORTS:
+        sh: '{{if eq OS "windows"}}{{.FIND_FREE_PORT_PS}} 8080 5173{{else}}{{.FIND_FREE_PORT_SH}} 8080 5173{{end}}'
+      BACKEND_PORT: '{{index (splitList "\n" .PORTS) 0}}'
+      EDITOR_PORT: '{{index (splitList "\n" .PORTS) 1}}'
+    deps:
+      - task: backend:dev
+        vars:
+          PORT: '{{.BACKEND_PORT}}'
+          SECURITY_ENABLELOGIN: "true"
+          POLICIES_ENABLED: "true"
+      - task: frontend:dev:proprietary
+        vars:
+          PORT: '{{.EDITOR_PORT}}'
           BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
           OPEN: "true"
 
@@ -87,6 +126,7 @@ tasks:
         vars:
           PORT: '{{.BACKEND_PORT}}'
           AIENGINE_URL: 'http://localhost:{{.ENGINE_PORT}}'
+          AIENGINE_ENABLED: "true"
       - task: 'frontend:dev:{{.FRONTEND}}'
         vars:
           PORT: '{{.FRONTEND_PORT}}'
@@ -173,3 +213,4 @@ tasks:
       - task: backend:clean
       - task: frontend:clean
       - task: engine:clean
+      - task: pre-commit:clean

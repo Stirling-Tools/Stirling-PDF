@@ -3,6 +3,7 @@ package stirling.software.proprietary.policy.config;
 import java.util.List;
 import java.util.Objects;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.store.PolicyStore;
 
 /**
  * Policies are scoped to a team: a user may view, run, edit, and delete only the policies belonging
@@ -21,6 +23,7 @@ import stirling.software.proprietary.policy.model.Policy;
  */
 @Component
 @RequiredArgsConstructor
+@ConditionalOnBooleanProperty(name = "policies.enabled")
 public class PolicyAccessGuard {
 
     private final UserServiceInterface userService;
@@ -45,13 +48,16 @@ public class PolicyAccessGuard {
         return Objects.equals(policy.teamId(), policyManagementAuthority.currentUserTeamId());
     }
 
-    /** The subset of {@code policies} scoped to the current user's team. */
-    public List<Policy> visible(List<Policy> policies) {
+    /**
+     * The policies visible to the caller: their whole team's, loaded scoped rather than fetched
+     * globally and filtered, so on SaaS it never pulls another team's policies into memory. Login
+     * disabled (single-user) returns everything.
+     */
+    public List<Policy> visibleFrom(PolicyStore store) {
         if (!enforced()) {
-            return policies;
+            return store.all();
         }
-        Long teamId = policyManagementAuthority.currentUserTeamId();
-        return policies.stream().filter(policy -> Objects.equals(policy.teamId(), teamId)).toList();
+        return store.findByTeam(policyManagementAuthority.currentUserTeamId());
     }
 
     private boolean enforced() {

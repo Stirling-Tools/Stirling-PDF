@@ -106,7 +106,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
         with:
-          gradle-version: 9.5.1
+          gradle-version: 9.6.0
           cache-disabled: true
 
       - name: Install Task
@@ -155,6 +155,19 @@ jobs:
             echo "platforms=linux/amd64,linux/arm64/v8" >> "$GITHUB_OUTPUT"
           fi
 
+      # Base-changed PRs build the embedded image with the local docker driver
+      # so the locally-built stirling-pdf-base:pr-test (in the daemon image
+      # store) resolves. A buildx container builder cannot see it and would try
+      # to pull it from a registry, which fails. Single-platform, no gha cache.
+      - name: Build ${{ matrix.docker-rev }} against local base (PR base change)
+        if: github.event_name == 'pull_request' && inputs.docker-base-changed == 'true'
+        run: |
+          DOCKER_BUILDKIT=1 docker build \
+            --build-arg BASE_IMAGE=${{ steps.build-params.outputs.base_image }} \
+            --file ./${{ matrix.docker-rev }} \
+            --tag stirling-pdf-embedded:pr-test \
+            .
+
       - name: Build ${{ matrix.docker-rev }} (Depot)
         if: env.USE_DEPOT == 'true'
         uses: depot/build-push-action@98e78adca7817480b8185f474a400b451d74e287 # v1.16.0
@@ -169,8 +182,10 @@ jobs:
           provenance: true
           sbom: true
 
+      # Fork PRs that did NOT change the base use the buildx container builder
+      # (multi-platform + gha cache) against the published base image.
       - name: Build ${{ matrix.docker-rev }} (Docker fork fallback)
-        if: env.USE_DEPOT != 'true'
+        if: env.USE_DEPOT != 'true' && inputs.docker-base-changed != 'true'
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
           builder: ${{ steps.buildx.outputs.name }}

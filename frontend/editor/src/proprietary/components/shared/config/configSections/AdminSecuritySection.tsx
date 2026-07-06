@@ -26,6 +26,7 @@ import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStic
 import apiClient from "@app/services/apiClient";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 
 interface SecuritySettingsData {
   enableLogin?: boolean;
@@ -34,8 +35,6 @@ interface SecuritySettingsData {
   loginResetTimeMinutes?: number;
   xFrameOptions?: string;
   jwt?: {
-    persistence?: boolean;
-    enableKeyRotation?: boolean;
     enableKeyCleanup?: boolean;
     tokenExpiryMinutes?: number;
     desktopTokenExpiryMinutes?: number;
@@ -162,9 +161,6 @@ export default function AdminSecuritySection() {
           securitySettings.loginResetTimeMinutes,
         "security.xFrameOptions": securitySettings.xFrameOptions,
         // JWT settings
-        "security.jwt.persistence": securitySettings.jwt?.persistence,
-        "security.jwt.enableKeyRotation":
-          securitySettings.jwt?.enableKeyRotation,
         "security.jwt.enableKeyCleanup": securitySettings.jwt?.enableKeyCleanup,
         "security.jwt.tokenExpiryMinutes":
           securitySettings.jwt?.tokenExpiryMinutes,
@@ -364,7 +360,10 @@ export default function AdminSecuritySection() {
                     ),
                   },
                 ]}
-                comboboxProps={{ zIndex: 1400 }}
+                comboboxProps={{
+                  withinPortal: true,
+                  zIndex: Z_INDEX_OVER_CONFIG_MODAL,
+                }}
                 disabled={!loginEnabled}
               />
               {isFieldPending("loginMethod") && (
@@ -480,7 +479,10 @@ export default function AdminSecuritySection() {
                     ),
                   },
                 ]}
-                comboboxProps={{ zIndex: 1400 }}
+                comboboxProps={{
+                  withinPortal: true,
+                  zIndex: Z_INDEX_OVER_CONFIG_MODAL,
+                }}
                 disabled={!loginEnabled}
               />
             </div>
@@ -511,83 +513,6 @@ export default function AdminSecuritySection() {
             <Text fw={600} size="sm" mb="xs">
               {t("admin.settings.security.jwt.label", "JWT Configuration")}
             </Text>
-
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <Text fw={500} size="sm">
-                  {t(
-                    "admin.settings.security.jwt.persistence.label",
-                    "Enable Key Persistence",
-                  )}
-                </Text>
-                <Text size="xs" c="dimmed" mt={4}>
-                  {t(
-                    "admin.settings.security.jwt.persistence.description",
-                    "Store JWT keys persistently (required for multi-instance deployments)",
-                  )}
-                </Text>
-              </div>
-              <Group gap="xs">
-                <Switch
-                  name="jwt_persistence"
-                  checked={settings?.jwt?.persistence || false}
-                  onChange={(e) =>
-                    setSettings({
-                      ...settings,
-                      jwt: { ...settings?.jwt, persistence: e.target.checked },
-                    })
-                  }
-                  disabled={!loginEnabled}
-                />
-                <PendingBadge show={isFieldPending("jwt.persistence")} />
-              </Group>
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <Text fw={500} size="sm">
-                  {t(
-                    "admin.settings.security.jwt.enableKeyRotation.label",
-                    "Enable Key Rotation",
-                  )}
-                </Text>
-                <Text size="xs" c="dimmed" mt={4}>
-                  {t(
-                    "admin.settings.security.jwt.enableKeyRotation.description",
-                    "Automatically rotate JWT signing keys for improved security",
-                  )}
-                </Text>
-              </div>
-              <Group gap="xs">
-                <Switch
-                  name="jwt_enableKeyRotation"
-                  checked={settings?.jwt?.enableKeyRotation || false}
-                  onChange={(e) =>
-                    setSettings({
-                      ...settings,
-                      jwt: {
-                        ...settings?.jwt,
-                        enableKeyRotation: e.target.checked,
-                      },
-                    })
-                  }
-                  disabled={!loginEnabled}
-                />
-                <PendingBadge show={isFieldPending("jwt.enableKeyRotation")} />
-              </Group>
-            </div>
 
             <div
               style={{
@@ -1191,7 +1116,10 @@ export default function AdminSecuritySection() {
                     ),
                   },
                 ]}
-                comboboxProps={{ zIndex: 1400 }}
+                comboboxProps={{
+                  withinPortal: true,
+                  zIndex: Z_INDEX_OVER_CONFIG_MODAL,
+                }}
                 disabled={!loginEnabled}
               />
             </div>

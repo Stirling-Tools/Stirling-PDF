@@ -1,18 +1,17 @@
 import { useState, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import CloseIcon from "@mui/icons-material/Close";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import { PanelHeader } from "@shared/components/PanelHeader";
+import { PanelHeader } from "@app/ui/PanelHeader";
 import { ROW_ACCENT } from "@app/components/policies/policyStatus";
-import { Card } from "@shared/components/Card";
-import { Button } from "@shared/components/Button";
-import { Input } from "@shared/components/Input";
-import { Select } from "@shared/components/Select";
-import { SettingsRow } from "@shared/components/SettingsRow";
-import { Checkbox } from "@shared/components/Checkbox";
-import { Banner } from "@shared/components/Banner";
-import { EmptyState } from "@shared/components/EmptyState";
-import { StepIndicator } from "@shared/components/StepIndicator";
+import { Card } from "@app/ui/Card";
+import { Button } from "@app/ui/Button";
+import { Input } from "@app/ui/Input";
+import { Select } from "@app/ui/Select";
+import { SettingsRow } from "@app/ui/SettingsRow";
+import { Checkbox } from "@app/ui/Checkbox";
+import { Banner } from "@app/ui/Banner";
+import { EmptyState } from "@app/ui/EmptyState";
+import { StepIndicator } from "@app/ui/StepIndicator";
 import type {
   PolicyCategory,
   PolicyConfigDef,
@@ -159,7 +158,7 @@ export function PolicySetupWizard({
       <div className="pol-detail">
         <PanelHeader
           icon={category.icon}
-          iconAccent={ROW_ACCENT[category.id] ?? "blue"}
+          accent={ROW_ACCENT[category.id]}
           title={
             isEdit
               ? t("policies.wizard.editTitle", "Edit {{label}} Policy", {
@@ -169,7 +168,8 @@ export function PolicySetupWizard({
                   label: t(`policies.catalog.${category.id}`, category.label),
                 })
           }
-          onBack={onCancel}
+          onClose={onCancel}
+          closeLabel={t("policies.wizard.close", "Close")}
         />
         <div className="pol-scroll">
           <EmptyState
@@ -299,7 +299,7 @@ export function PolicySetupWizard({
     <div className="pol-detail">
       <PanelHeader
         icon={category.icon}
-        iconAccent={ROW_ACCENT[category.id] ?? "blue"}
+        accent={ROW_ACCENT[category.id]}
         title={
           isEdit
             ? t("policies.wizard.editTitle", "Edit {{label}} Policy", {
@@ -309,23 +309,17 @@ export function PolicySetupWizard({
                 label: t(`policies.catalog.${category.id}`, category.label),
               })
         }
-        subtitle={t("policies.wizard.stepOf", "Step {{step}} of {{total}}", {
-          step,
-          total: TOTAL_STEPS,
-        })}
-        onBack={back}
-        actions={
-          <Button
-            variant="ghost"
-            size="sm"
-            aria-label={t("cancel", "Cancel")}
-            onClick={onCancel}
-            leadingIcon={<CloseIcon sx={{ fontSize: "1.1rem" }} />}
-          />
-        }
+        onClose={onCancel}
+        closeLabel={t("cancel", "Cancel")}
       />
 
       <div className="pol-steps">
+        <span className="pol-step-label">
+          {t("policies.wizard.stepOf", "Step {{step}} of {{total}}", {
+            step,
+            total: TOTAL_STEPS,
+          })}
+        </span>
         <StepIndicator total={TOTAL_STEPS} current={step} />
       </div>
 
