@@ -74,6 +74,35 @@
   color: var(--color-text-1) !important;
 }
 
+/* ---- Select: hide Mantine's right-section clear button border ---- */
+.sui-mantine-wrapper .mantine-Select-section {
+  color: var(--color-text-3);
+}
+
+/* ---- Slider ---- */
+.sui-mantine-slider {
+  --slider-color: var(--color-blue);
+  --slider-track-bg: var(--color-border);
+  --slider-thumb-color: var(--color-surface);
+  --slider-thumb-bd: var(--color-blue);
+}
+
+.sui-mantine-slider:focus-within {
+  outline: none;
+}
+
+/* Thumb focus ring matches SUI */
+.sui-mantine-slider .mantine-Slider-thumb:focus-visible {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-blue) 16%, transparent);
+  outline: none;
+}
+
+/* Mark labels use SUI text tokens */
+.sui-mantine-slider .mantine-Slider-markLabel {
+  color: var(--color-text-3);
+  font-size: 0.75rem;
+}
+
 /* ---- Dark mode: Mantine's own dark-mode vars beat ours when Mantine's
  * color-scheme is "dark". Reassert SUI tokens so the two systems stay in sync.
  * The portal's PortalMantineProvider syncs forceColorScheme to SUI theme, so

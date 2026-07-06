@@ -251,7 +251,7 @@ export const FullForm: Story = {
           <FormField label="Retention">
             <Select
               value={retention}
-              onChange={(e) => setRetention(e.target.value)}
+              onChange={(value) => setRetention(value ?? "90")}
               options={[
                 { value: "30", label: "30 days" },
                 { value: "90", label: "90 days" },

@@ -5,6 +5,8 @@ import { Stack } from "@app/ui/Stack";
 import { MultiSelect } from "@app/ui/MultiSelect";
 import { NumberInput } from "@app/ui/NumberInput";
 import { ColorInput } from "@app/ui/ColorInput";
+import { Select } from "@app/ui/Select";
+import { Slider } from "@app/ui/Slider";
 
 const PII_OPTIONS = [
   { value: "ssn", label: "Social Security Number" },
@@ -311,6 +313,169 @@ export const ColorInput_Disabled: Story = {
   render: () => (
     <FormField label="Watermark color">
       <ColorInput value="#3B82F6" onChange={() => {}} disabled />
+    </FormField>
+  ),
+};
+
+// ─── Select ──────────────────────────────────────────────────────────────────
+
+const RETENTION_OPTIONS = [
+  { value: "30", label: "30 days" },
+  { value: "60", label: "60 days" },
+  { value: "90", label: "90 days (default)" },
+  { value: "180", label: "180 days" },
+  { value: "never", label: "Never expire" },
+];
+
+export const Select_Default: Story = {
+  render: () => {
+    function Bound() {
+      const [value, setValue] = useState<string | null>("90");
+      return (
+        <FormField label="Retention period">
+          <Select options={RETENTION_OPTIONS} value={value} onChange={setValue} />
+        </FormField>
+      );
+    }
+    return <Bound />;
+  },
+};
+
+export const Select_Searchable: Story = {
+  render: () => {
+    function Bound() {
+      const [value, setValue] = useState<string | null>(null);
+      return (
+        <FormField label="Output format" helperText="Start typing to filter.">
+          <Select
+            options={[
+              { value: "pdf", label: "PDF" },
+              { value: "pdfa", label: "PDF/A (archival)" },
+              { value: "pdfa2", label: "PDF/A-2 (archival)" },
+              { value: "pdfua", label: "PDF/UA (accessible)" },
+              { value: "docx", label: "Word document (.docx)" },
+              { value: "xlsx", label: "Spreadsheet (.xlsx)" },
+              { value: "txt", label: "Plain text (.txt)" },
+            ]}
+            value={value}
+            onChange={setValue}
+            placeholder="Choose format…"
+            searchable
+            clearable
+          />
+        </FormField>
+      );
+    }
+    return <Bound />;
+  },
+};
+
+export const Select_SmSize: Story = {
+  render: () => {
+    function Bound() {
+      const [value, setValue] = useState<string | null>("upload");
+      return (
+        <FormField label="Run on">
+          <Select
+            options={[
+              { value: "upload", label: "Upload" },
+              { value: "export", label: "Export" },
+            ]}
+            value={value}
+            onChange={setValue}
+            inputSize="sm"
+          />
+        </FormField>
+      );
+    }
+    return <Bound />;
+  },
+};
+
+export const Select_Error: Story = {
+  render: () => (
+    <FormField label="Retention period" error="A retention period is required." required>
+      <Select
+        options={RETENTION_OPTIONS}
+        value={null}
+        onChange={() => {}}
+        placeholder="Choose…"
+        invalid
+        error="A retention period is required."
+      />
+    </FormField>
+  ),
+};
+
+export const Select_Disabled: Story = {
+  render: () => (
+    <FormField label="Retention period">
+      <Select options={RETENTION_OPTIONS} value="90" onChange={() => {}} disabled />
+    </FormField>
+  ),
+};
+
+// ─── Slider ───────────────────────────────────────────────────────────────────
+
+export const Slider_Default: Story = {
+  render: () => {
+    function Bound() {
+      const [v, setV] = useState(0.85);
+      return (
+        <FormField label="Confidence threshold" helperText="Documents below this route to the review queue.">
+          <Slider value={v} onChange={setV} min={0} max={1} step={0.01} formatValue={(x) => x.toFixed(2)} />
+        </FormField>
+      );
+    }
+    return <Bound />;
+  },
+};
+
+export const Slider_WithMarks: Story = {
+  render: () => {
+    function Bound() {
+      const [days, setDays] = useState(90);
+      return (
+        <FormField label="Retain artifacts for">
+          <Slider
+            value={days}
+            onChange={setDays}
+            min={7}
+            max={365}
+            step={1}
+            formatValue={(d) => `${d}d`}
+            marks={[
+              { value: 30, label: "30d" },
+              { value: 90, label: "90d" },
+              { value: 180, label: "180d" },
+              { value: 365, label: "1y" },
+            ]}
+          />
+        </FormField>
+      );
+    }
+    return <Bound />;
+  },
+};
+
+export const Slider_NoLabel: Story = {
+  render: () => {
+    function Bound() {
+      const [v, setV] = useState(50);
+      return (
+        <FormField label="Opacity" helperText={`${v}%`}>
+          <Slider value={v} onChange={setV} min={0} max={100} step={1} showValue={false} />
+        </FormField>
+      );
+    }
+    return <Bound />;
+  },
+};
+
+export const Slider_Disabled: Story = {
+  render: () => (
+    <FormField label="Confidence threshold">
+      <Slider value={0.85} min={0} max={1} step={0.01} formatValue={(x) => x.toFixed(2)} disabled />
     </FormField>
   ),
 };

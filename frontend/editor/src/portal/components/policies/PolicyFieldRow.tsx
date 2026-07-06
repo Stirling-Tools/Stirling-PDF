@@ -64,7 +64,7 @@ export function PolicyFieldRow({
           inputSize="sm"
           value={typeof value === "string" ? value : ""}
           options={(field.options ?? []).map((o) => ({ value: o, label: o }))}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(value) => onChange(value ?? "")}
         />
       </FormField>
     );

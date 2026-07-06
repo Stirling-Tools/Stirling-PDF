@@ -81,7 +81,7 @@ export function PolicyFieldRow({
           label: t(`policies.fieldOption.${field.key}.${o}`, o),
         }))}
         value={typeof value === "string" ? value : ""}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(value) => onChange(value ?? "")}
         aria-label={fieldLabel}
       />
     ) : (
