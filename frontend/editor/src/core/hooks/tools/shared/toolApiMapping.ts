@@ -7,28 +7,6 @@ import {
 export type { ToolApiParams, ToolApiRequest, ToolEndpoint };
 
 /**
- * Typed, two-way translation between a tool's frontend parameter shape and its
- * backend request model.
- *
- * - `toApiParams` turns the tool's UI parameters into the backend request model
- *   for its endpoint.
- * - `fromApiParams` turns a backend request model (a stored pipeline step, or an
- *   AI-authored plan) back into the tool's UI parameters so it can be rendered
- *   in the real settings component.
- *
- * `TEndpoint` may be a union when a tool routes to several endpoints,
- * in which case both mappers operate over the union of request models.
- */
-export interface ToolApiMapping<TFrontend, TEndpoint extends ToolEndpoint> {
-  /** Backend endpoint path, or a router when it depends on the parameters. */
-  endpoint: TEndpoint | ((params: TFrontend) => TEndpoint);
-  /** Frontend params -> spec-checked backend request model. */
-  toApiParams: (params: TFrontend) => ToolApiParams[TEndpoint];
-  /** Backend request model -> partial frontend params (to re-render the UI). */
-  fromApiParams: (apiParams: ToolApiParams[TEndpoint]) => Partial<TFrontend>;
-}
-
-/**
  * Mapping for tools that take only a file and have no request parameters (their
  * generated model is `Record<string, never>`). Both directions are empty; the
  * tool's buildFormData just appends the file.
