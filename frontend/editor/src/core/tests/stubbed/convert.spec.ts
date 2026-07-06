@@ -8,6 +8,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import path from "path";
 import { mockAppApis } from "@app/tests/helpers/api-stubs";
+import { suppressNativeFilePicker } from "@app/tests/helpers/ui-helpers";
 
 const FIXTURES_DIR = path.join(__dirname, "../test-fixtures");
 const SAMPLE_PDF = path.join(FIXTURES_DIR, "sample.pdf");
@@ -23,10 +24,10 @@ async function dismissTourTooltip(page: Page) {
 }
 
 // ---------------------------------------------------------------------------
-// Helper: upload a file via the FileSidebar's "Open from computer" action.
-// The button now triggers the native OS picker directly - no modal - and
-// the hidden `data-testid="file-input"` accepts `setInputFiles` in either
-// sidebar state.
+// Helper: upload a file via the FileSidebar's "Open from computer" action. The
+// button's native OS picker is mocked globally by `suppressNativeFilePicker`
+// (test fixtures), so the click is safe cross-browser; the hidden
+// `data-testid="file-input"` then accepts `setInputFiles` in either state.
 // ---------------------------------------------------------------------------
 async function uploadFile(page: Page, filePath: string) {
   await page.getByTestId("files-button").click();
@@ -60,6 +61,11 @@ async function selectToFormat(page: Page, toValue: string) {
 // ---------------------------------------------------------------------------
 test.describe("Convert Tool", () => {
   test.beforeEach(async ({ page }) => {
+    // These specs use the raw @playwright/test fixture, so they don't get the
+    // shared stub-test-base suppression - install it here so the picker click
+    // is intercepted cross-browser (firefox/webkit otherwise leak the native
+    // dialog onto the host and close the page).
+    suppressNativeFilePicker(page);
     await mockAppApis(page);
     await page.goto("/?bypassOnboarding=true");
     await page.waitForSelector('[data-testid="files-button"]', {

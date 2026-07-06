@@ -36,6 +36,21 @@ export interface LinkStatus {
   name: string | null;
 }
 
+/**
+ * Locally-accrued usage not yet reported to SaaS (GET /api/v1/account-link/usage).
+ * The portal adds this on top of the SaaS-synced spend so "current usage"
+ * includes work done since the last daily sync. Per-category unsynced units for
+ * the current period; all zero when metering is off or nothing is pending.
+ */
+export interface LocalUsage {
+  /** ISO timestamp of the current period start; null when unknown (not yet synced). */
+  periodStart: string | null;
+  apiUnsyncedUnits: number;
+  aiUnsyncedUnits: number;
+  automationUnsyncedUnits: number;
+  totalUnsyncedUnits: number;
+}
+
 /* ──────────────────────────────────────────────────────────────────────── */
 /*  SaaS backend — team-wide instance management                             */
 /* ──────────────────────────────────────────────────────────────────────── */
@@ -85,15 +100,34 @@ function seedInstances(): LinkedInstanceRow[] {
   ];
 }
 
+function seedLocalUsage(): LocalUsage {
+  // A little unsynced usage so the portal's "+ pending sync" combine is visible
+  // in dev/Storybook.
+  return {
+    periodStart: daysAgo(6),
+    apiUnsyncedUnits: 12,
+    aiUnsyncedUnits: 3,
+    automationUnsyncedUnits: 0,
+    totalUnsyncedUnits: 15,
+  };
+}
+
 let store: LinkedInstanceRow[] = seedInstances();
 let nextId = 1004;
 let localStatus: LinkStatus = { linked: false, name: null };
+let localUsage: LocalUsage = seedLocalUsage();
 
 /** Resets the mock store + local link status to seed state (Storybook / tests). */
 export function resetLinkStore(): void {
   store = seedInstances();
   nextId = 1004;
   localStatus = { linked: false, name: null };
+  localUsage = seedLocalUsage();
+}
+
+/** Current instance-local unsynced usage (GET /api/v1/account-link/usage). */
+export function getLocalUsage(): LocalUsage {
+  return { ...localUsage };
 }
 
 /** Current local link status for this instance. */
