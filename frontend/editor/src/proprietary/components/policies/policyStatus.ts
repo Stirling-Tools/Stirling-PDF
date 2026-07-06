@@ -1,4 +1,4 @@
-import type { IconBadgeAccent } from "@shared/components/IconBadge";
+import type { IconBadgeAccent } from "@app/ui/IconBadge";
 import type { PolicyRowStatus, PolicyState } from "@app/types/policies";
 
 /** Derive a single row/detail status from a policy's persisted state. */

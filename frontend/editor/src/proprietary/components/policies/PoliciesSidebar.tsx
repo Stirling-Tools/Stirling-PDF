@@ -54,14 +54,14 @@ import type {
 import type { WatchedFolder } from "@app/types/watchedFolders";
 import { POLICIES_ENABLED } from "@app/constants/featureFlags";
 import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
-import { IconBadge } from "@shared/components/IconBadge";
+import { IconBadge } from "@app/ui/IconBadge";
 import {
   deriveRowStatus,
   STATUS_LABEL,
   ROW_ACCENT,
 } from "@app/components/policies/policyStatus";
-import { StatusBadge } from "@shared/components/StatusBadge";
-import { SectionHeader } from "@shared/components/SectionHeader";
+import { StatusBadge } from "@app/ui/StatusBadge";
+import { SectionHeader } from "@app/ui/SectionHeader";
 import { PolicySetupWizard } from "@app/components/policies/PolicySetupWizard";
 import { PolicyDetailPanel } from "@app/components/policies/PolicyDetailPanel";
 import { PolicyDeleteConfirmModal } from "@app/components/policies/PolicyDeleteConfirmModal";

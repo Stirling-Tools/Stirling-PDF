@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import path from "path";
+import { suppressNativeFilePicker } from "@app/tests/helpers/ui-helpers";
 
 // ---------------------------------------------------------------------------
 // Test fixtures — pre-generated keystores in test-fixtures/certs/
@@ -95,6 +96,10 @@ async function uploadCertFile(page: Page, filePath: string) {
 // ---------------------------------------------------------------------------
 test.describe("Certificate Validation — ParticipantView", () => {
   test.beforeEach(async ({ page }) => {
+    // Raw @playwright/test fixture: install the picker suppression directly so
+    // clicking the Mantine <FileInput> button is intercepted cross-browser
+    // (firefox/webkit otherwise leak the native dialog and close the page).
+    suppressNativeFilePicker(page);
     await mockParticipantApis(page);
   });
 

@@ -79,86 +79,12 @@ tasks:
           OPEN: "true"
 
   dev:portal:
-    desc: "Start backend + developer portal concurrently on free ports"
+    desc: "Start backend + editor; the portal is an admin route at /portal"
     vars:
       PORTS:
         sh: '{{if eq OS "windows"}}{{.FIND_FREE_PORT_PS}} 8080 5173{{else}}{{.FIND_FREE_PORT_SH}} 8080 5173{{end}}'
       BACKEND_PORT: '{{index (splitList "\n" .PORTS) 0}}'
-      PORTAL_PORT: '{{index (splitList "\n" .PORTS) 1}}'
-    deps:
-      - task: backend:dev
-        vars:
-          PORT: '{{.BACKEND_PORT}}'
-          SECURITY_ENABLELOGIN: "true"
-          POLICIES_ENABLED: "true"
-      - task: frontend:dev:portal
-        vars:
-          PORT: '{{.PORTAL_PORT}}'
-          BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
-          MOCKS: 'false'
-          OPEN: "true"
-
-  dev:portal:all:
-    desc: "Start backend + developer portal + editor concurrently on free ports"
-    vars:
-      PORTS:
-        sh: '{{if eq OS "windows"}}{{.FIND_FREE_PORT_PS}} 8080 5173 5174{{else}}{{.FIND_FREE_PORT_SH}} 8080 5173 5174{{end}}'
-      BACKEND_PORT: '{{index (splitList "\n" .PORTS) 0}}'
-      PORTAL_PORT: '{{index (splitList "\n" .PORTS) 1}}'
-      EDITOR_PORT: '{{index (splitList "\n" .PORTS) 2}}'
-    deps:
-      - task: backend:dev
-        vars:
-          PORT: '{{.BACKEND_PORT}}'
-          SECURITY_ENABLELOGIN: "true"
-          POLICIES_ENABLED: "true"
-      - task: frontend:dev:portal
-        vars:
-          PORT: '{{.PORTAL_PORT}}'
-          BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
-          # Point the portal's "Editor" app switcher at the editor we spawn here.
-          EDITOR_URL: 'http://localhost:{{.EDITOR_PORT}}/'
-          MOCKS: 'false'
-          OPEN: "true"
-      - task: frontend:dev
-        vars:
-          PORT: '{{.EDITOR_PORT}}'
-          BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
-
-  dev:portal:all:saas:
-    desc: "Start SaaS backend + developer portal + editor concurrently on free ports"
-    vars:
-      PORTS:
-        sh: '{{if eq OS "windows"}}{{.FIND_FREE_PORT_PS}} 8080 5173 5174{{else}}{{.FIND_FREE_PORT_SH}} 8080 5173 5174{{end}}'
-      BACKEND_PORT: '{{index (splitList "\n" .PORTS) 0}}'
-      PORTAL_PORT: '{{index (splitList "\n" .PORTS) 1}}'
-      EDITOR_PORT: '{{index (splitList "\n" .PORTS) 2}}'
-    deps:
-      - task: backend:dev:saas
-        vars:
-          PORT: '{{.BACKEND_PORT}}'
-          POLICIES_ENABLED: "true"
-      - task: frontend:dev:portal
-        vars:
-          PORT: '{{.PORTAL_PORT}}'
-          BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
-          EDITOR_URL: 'http://localhost:{{.EDITOR_PORT}}/'
-          MOCKS: 'false'
-          OPEN: "true"
-      - task: frontend:dev
-        vars:
-          PORT: '{{.EDITOR_PORT}}'
-          BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
-
-  dev:portal:proxy:
-    desc: "Editor + portal on ONE origin + backend via live dev servers (shared-token login)"
-    vars:
-      PORTS:
-        sh: '{{if eq OS "windows"}}{{.FIND_FREE_PORT_PS}} 8080 3000 5173 5174{{else}}{{.FIND_FREE_PORT_SH}} 8080 3000 5173 5174{{end}}'
-      BACKEND_PORT: '{{index (splitList "\n" .PORTS) 0}}'
-      PROXY_PORT: '{{index (splitList "\n" .PORTS) 1}}'
-      EDITOR_PORT: '{{index (splitList "\n" .PORTS) 2}}'
-      PORTAL_PORT: '{{index (splitList "\n" .PORTS) 3}}'
+      EDITOR_PORT: '{{index (splitList "\n" .PORTS) 1}}'
     deps:
       - task: backend:dev
         vars:
@@ -169,18 +95,7 @@ tasks:
         vars:
           PORT: '{{.EDITOR_PORT}}'
           BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
-      - task: frontend:dev:portal
-        vars:
-          PORT: '{{.PORTAL_PORT}}'
-          BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
-          SUBPATH: portal
-          MOCKS: 'false'
-      - task: frontend:dev:portal:proxy:serve
-        vars:
-          PORT: '{{.PROXY_PORT}}'
-          BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
-          EDITOR_DEV_URL: 'http://localhost:{{.EDITOR_PORT}}'
-          PORTAL_DEV_URL: 'http://localhost:{{.PORTAL_PORT}}'
+          OPEN: "true"
 
   dev:saas:
     desc: "Start SaaS backend + frontend concurrently on free ports"
@@ -227,24 +142,6 @@ tasks:
     cmds:
       - task: backend:build
       - task: frontend:build
-
-  preview:portal:proxy:
-    desc: "Build + serve editor + portal on ONE origin + backend (prod-like auth test)"
-    vars:
-      PORTS:
-        sh: '{{if eq OS "windows"}}{{.FIND_FREE_PORT_PS}} 8080 3000{{else}}{{.FIND_FREE_PORT_SH}} 8080 3000{{end}}'
-      BACKEND_PORT: '{{index (splitList "\n" .PORTS) 0}}'
-      PROXY_PORT: '{{index (splitList "\n" .PORTS) 1}}'
-    deps:
-      - task: backend:dev
-        vars:
-          PORT: '{{.BACKEND_PORT}}'
-          SECURITY_ENABLELOGIN: "true"
-          POLICIES_ENABLED: "true"
-      - task: frontend:preview:portal:proxy
-        vars:
-          PORT: '{{.PROXY_PORT}}'
-          BACKEND_URL: 'http://localhost:{{.BACKEND_PORT}}'
 
   # ============================================================
   # Test
