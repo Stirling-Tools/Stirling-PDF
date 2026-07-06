@@ -189,10 +189,10 @@ tasks:
   # Code generation
   # ============================================================
 
-  generate:models:
+  tool-models:
     desc: "Generate all API models from the Java OpenAPI spec"
     cmds:
-      - task: frontend:api-types
+      - task: frontend:tool-models
       - task: engine:tool-models
 
   # ============================================================

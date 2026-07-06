@@ -396,7 +396,7 @@ tasks:
   # Code Generation
   # ============================================================
 
-  api-types:
+  tool-models:
     desc: "Generate tool API types from the Java OpenAPI spec"
     deps: [install, ":backend:swagger"]
     cmds:
@@ -407,7 +407,7 @@ tasks:
     generates:
       - editor/src/core/generated/toolApiTypes.ts
 
-  api-types:check:
+  tool-models:check:
     desc: "Fail if committed tool API types are out of date"
     deps: [install, ":backend:swagger"]
     cmds:

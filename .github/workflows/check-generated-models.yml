@@ -4,7 +4,7 @@ name: Check generated models
 # OpenAPI spec: the frontend tool API types
 # (frontend/editor/src/core/generated/toolApiTypes.ts) and the engine tool
 # models (engine/src/stirling/models/tool_models.py). Regenerates both with the
-# single top-level `task generate:models` and fails if either committed file is
+# single top-level `task tool-models` and fails if either committed file is
 # out of date. Called from build.yml when the backend Java, frontend, or engine
 # changes; also runs on push to main as a post-merge safety net.
 on:
@@ -61,7 +61,7 @@ jobs:
       # Rebuilds the OpenAPI spec from the current Java and regenerates both the
       # frontend types and the engine tool models from it.
       - name: Regenerate generated models
-        run: task generate:models
+        run: task tool-models
 
       - name: Verify generated models are up to date
         id: models-check
@@ -86,7 +86,7 @@ jobs:
               '',
               'The generated `frontend/editor/src/core/generated/toolApiTypes.ts` and/or `engine/src/stirling/models/tool_models.py` are out of date with the Java OpenAPI spec and will need to be regenerated before they can be merged in.',
               '',
-              'Run `task generate:models` to regenerate both, then commit the updated files.',
+              'Run `task tool-models` to regenerate both, then commit the updated files.',
             ].join('\n');
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
@@ -121,7 +121,7 @@ jobs:
           echo "models are out of date with the Java OpenAPI spec and"
           echo "will need to be regenerated before they can be merged in."
           echo ""
-          echo "Run 'task generate:models' to regenerate both, then"
+          echo "Run 'task tool-models' to regenerate both, then"
           echo "commit the updated files."
           echo "============================================"
           exit 1
