@@ -101,6 +101,11 @@ public class ProcurementService {
         ProcurementDeal deal =
                 dealRepo.findByTeamId(teamId)
                         .orElseThrow(() -> new IllegalStateException("No deal for team " + teamId));
+        // Only extend while still in the trial. Past the trial (e.g. active), licenseRef points at
+        // the committed annual licence — extending would rewind its expiry.
+        if (!ProcurementDeal.STAGE_TRIAL.equals(deal.getStage())) {
+            throw new IllegalStateException("Trial extension only allowed during the trial stage");
+        }
         if (deal.getTrialExtensionsUsed() >= config.getMaxTrialExtensions()) {
             throw new IllegalStateException("Trial extension cap reached");
         }
@@ -120,9 +125,13 @@ public class ProcurementService {
     public ProcurementQuote buildQuote(Long teamId, QuoteConfig cfg, String businessName) {
         ProcurementDeal deal =
                 dealRepo.findByTeamId(teamId).orElseGet(() -> new ProcurementDeal(teamId));
-        if (ProcurementDeal.STAGE_TRIAL.equals(deal.getStage())) {
-            deal.setStage(ProcurementDeal.STAGE_QUOTE);
+        if (ProcurementDeal.STAGE_LIVE.equals(deal.getStage())) {
+            throw new IllegalStateException("Cannot rebuild a quote on a live deal");
         }
+        // (Re)building a quote returns the deal to the quote stage and drops any prior acceptance,
+        // so a rebuild from security/payment can't leave a stale stage or accepted-quote pointer.
+        deal.setStage(ProcurementDeal.STAGE_QUOTE);
+        deal.setAcceptedQuoteId(null);
         deal = dealRepo.save(deal);
 
         QuoteBreakdown breakdown = pricing.price(cfg);
@@ -153,31 +162,6 @@ public class ProcurementService {
                 quote.getQuoteNumber(),
                 quote.getAnnualNetMinor(),
                 quote.getTcvMinor());
-        return quote;
-    }
-
-    /**
-     * Accept a quote: mark it accepted and advance the deal to the payment stage, where the portal
-     * hands off to the checkout edge function. (Agreement e-sign is a later stage; for this slice
-     * acceptance moves straight to payment.)
-     */
-    @Transactional
-    public ProcurementQuote acceptQuote(Long teamId, Long quoteId) {
-        ProcurementDeal deal =
-                dealRepo.findByTeamId(teamId)
-                        .orElseThrow(() -> new IllegalStateException("No deal for team " + teamId));
-        ProcurementQuote quote =
-                quoteRepo
-                        .findById(quoteId)
-                        .filter(q -> q.getDealId().equals(deal.getDealId()))
-                        .orElseThrow(
-                                () -> new IllegalArgumentException("Quote not found: " + quoteId));
-        quote.setStatus(ProcurementQuote.STATUS_ACCEPTED);
-        quote = quoteRepo.save(quote);
-        deal.setAcceptedQuoteId(quote.getQuoteId());
-        deal.setStage(ProcurementDeal.STAGE_PAYMENT);
-        dealRepo.save(deal);
-        log.info("[procurement] quote accepted team={} quote={}", teamId, quote.getQuoteNumber());
         return quote;
     }
 
@@ -241,18 +225,6 @@ public class ProcurementService {
     public void resetDeal(Long teamId) {
         dealRepo.deleteByTeamId(teamId);
         log.info("[procurement] deal reset team={}", teamId);
-    }
-
-    public long estimateAnnualVolume(int users) {
-        return pricing.estimateAnnualVolume(users);
-    }
-
-    /**
-     * The Supabase edge function the portal calls to create the Stripe checkout for an accepted
-     * quote.
-     */
-    public String checkoutFunctionName() {
-        return config.getCheckoutFunction();
     }
 
     private String nextQuoteNumber(Long dealId) {

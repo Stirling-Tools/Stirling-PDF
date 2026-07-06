@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -134,8 +133,6 @@ public class ProcurementController {
             boolean licensed,
             QuoteResponse latestQuote) {}
 
-    public record EstimateResponse(long annualVolume) {}
-
     // ---- endpoints ----------------------------------------------------------
 
     /**
@@ -154,12 +151,6 @@ public class ProcurementController {
 
     private static final SnapshotResponse EMPTY_SNAPSHOT =
             new SnapshotResponse(null, null, null, null, 0, false, null);
-
-    @GetMapping("/estimate")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<EstimateResponse> estimate(@RequestParam("users") int users) {
-        return ResponseEntity.ok(new EstimateResponse(procurement.estimateAnnualVolume(users)));
-    }
 
     @PostMapping("/trial/start")
     @PreAuthorize("isAuthenticated()")

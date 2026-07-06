@@ -89,15 +89,6 @@ public class ProcurementQuote implements Serializable {
     @Column(name = "line_items", columnDefinition = "text")
     private String lineItemsJson;
 
-    @Column(name = "stripe_price_id", length = 128)
-    private String stripePriceId;
-
-    @Column(name = "checkout_session_id", length = 255)
-    private String checkoutSessionId;
-
-    @Column(name = "checkout_url", columnDefinition = "text")
-    private String checkoutUrl;
-
     // The Stripe Quote this was issued as (finalized → has a number + PDF). Set by the edge fn.
     @Column(name = "stripe_quote_id", length = 128)
     private String stripeQuoteId;

@@ -172,14 +172,6 @@ export function fetchSnapshot(): Promise<ProcurementSnapshot> {
   return apiClient.saas.json<ProcurementSnapshot>(BASE);
 }
 
-export function estimateVolume(
-  users: number,
-): Promise<{ annualVolume: number }> {
-  return apiClient.saas.json<{ annualVolume: number }>(
-    `${BASE}/estimate?users=${encodeURIComponent(users)}`,
-  );
-}
-
 export function startTrial(): Promise<ProcurementSnapshot> {
   return apiClient.saas.json<ProcurementSnapshot>(`${BASE}/trial/start`, {
     method: "POST",

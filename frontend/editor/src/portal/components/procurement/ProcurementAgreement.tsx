@@ -2,15 +2,8 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, Card } from "@app/ui";
 import type { QuoteResult } from "@portal/api/procurement";
+import { money } from "@portal/components/procurement/format";
 import "@portal/views/Procurement.css";
-
-function money(minor: number, currency: string): string {
-  return new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency: currency || "USD",
-    maximumFractionDigits: 0,
-  }).format(minor / 100);
-}
 
 /**
  * The agreement (security) step: a single combined Stirling Enterprise Agreement — Master Service

@@ -145,12 +145,6 @@ export function resetProcurementSaasStore() {
 
 export const procurementSaasHandlers = [
   http.get(`${SAAS}/api/v1/procurement`, () => HttpResponse.json(deal)),
-  http.get(`${SAAS}/api/v1/procurement/estimate`, ({ request }) => {
-    const users = Number(new URL(request.url).searchParams.get("users") ?? 0);
-    return HttpResponse.json({
-      annualVolume: Math.round(users * 5 * 230 * 1.75),
-    });
-  }),
   http.post(`${SAAS}/api/v1/procurement/trial/start`, () => {
     const now = Date.now();
     deal = {

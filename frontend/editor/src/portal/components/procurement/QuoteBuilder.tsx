@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui";
+import { money } from "@portal/components/procurement/format";
 import {
   buildQuote,
   type QuoteConfigInput,
@@ -243,8 +244,7 @@ export function QuoteBuilder({
                 >
                   <option value="USD">United States (USD $)</option>
                   <option value="GBP">United Kingdom (GBP £)</option>
-                  <option value="EUR">Germany (EUR €)</option>
-                  <option value="EUR">France (EUR €)</option>
+                  <option value="EUR">Eurozone (EUR €)</option>
                 </select>
               </Field>
             </div>
@@ -420,12 +420,4 @@ function previewAnnualMinor(cfg: QuoteConfigInput): number {
     withInd * TERM_DISCOUNT[Math.min(Math.max(cfg.termYears, 1), 5) - 1],
   );
   return withInd - disc + (cfg.qbr ? 800_000 : 0);
-}
-
-function money(minor: number, currency: string): string {
-  return new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency: currency || "USD",
-    maximumFractionDigits: 0,
-  }).format(minor / 100);
 }

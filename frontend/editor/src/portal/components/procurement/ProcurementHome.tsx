@@ -29,15 +29,8 @@ import {
 import { ProcurementModal } from "@portal/components/procurement/ProcurementModal";
 import { QuoteBuilder } from "@portal/components/procurement/QuoteBuilder";
 import { StageStepper } from "@portal/components/procurement/StageStepper";
+import { money } from "@portal/components/procurement/format";
 import "@portal/views/Procurement.css";
-
-function money(minor: number, currency: string): string {
-  return new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency: currency || "USD",
-    maximumFractionDigits: 0,
-  }).format(minor / 100);
-}
 
 /**
  * The procurement experience on Home: a compact deal-status hero once a trial is running (or the
@@ -72,8 +65,11 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
   const started = data?.dealId != null;
   const stage = data?.stage;
   const latest = data?.latestQuote ?? null;
-  const isDraft = !latest || latest.status === "draft";
   const isIssued = latest?.status === "sent" || latest?.status === "open";
+  // No live quote to act on (none yet, still a draft, or expired/canceled) → the buyer (re)builds.
+  const isDraft =
+    !latest ||
+    ["draft", "expired", "canceled", "cancelled"].includes(latest.status);
 
   async function run(fn: () => Promise<unknown>) {
     setBusy(true);
@@ -95,6 +91,7 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
     run(async () => {
       await resetProcurement();
       setEditing(false);
+      setInvoicePdf(null);
     });
   const onGenerate = (draft: QuoteResult) =>
     run(async () => {
