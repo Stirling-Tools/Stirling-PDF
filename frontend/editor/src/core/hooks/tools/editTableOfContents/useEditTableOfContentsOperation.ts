@@ -37,9 +37,20 @@ export const editTableOfContentsFromApiParams = (
     replaceExisting: apiParams.replaceExisting,
   };
 
+  // bookmarkData carries JSON in a string field, so a stored step
+  // could hold malformed or non-array content. Degrade to leaving bookmarks unset.
   if (apiParams.bookmarkData !== undefined) {
-    const payload = JSON.parse(apiParams.bookmarkData) as BookmarkPayload[];
-    result.bookmarks = hydrateBookmarkPayload(payload);
+    try {
+      const payload = JSON.parse(apiParams.bookmarkData) as BookmarkPayload[];
+      if (Array.isArray(payload)) {
+        result.bookmarks = hydrateBookmarkPayload(payload);
+      }
+    } catch (error) {
+      console.warn(
+        `editTableOfContents: could not parse bookmarkData; ` +
+          `leaving bookmarks unset. Error: ${error}`,
+      );
+    }
   }
 
   return result;
