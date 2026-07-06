@@ -475,8 +475,14 @@ export interface PosterPdfRequest {
    * Split right-to-left instead of left-to-right
    */
   rightToLeft?: boolean;
-  xfactor?: number;
-  yfactor?: number;
+  /**
+   * Horizontal decimation factor (how many columns to split into)
+   */
+  xFactor?: number;
+  /**
+   * Vertical decimation factor (how many rows to split into)
+   */
+  yFactor?: number;
 }
 export interface SplitPagesRequest {
   /**

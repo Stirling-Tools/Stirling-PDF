@@ -91,7 +91,7 @@ describe("splitToApiParams", () => {
     ).toEqual({ duplexMode: true });
   });
 
-  test("byPoster uses the spec's lower-case factor field names", () => {
+  test("byPoster maps the factors to the spec's xFactor/yFactor fields", () => {
     expect(
       splitToApiParams(
         params({
@@ -102,7 +102,7 @@ describe("splitToApiParams", () => {
           rightToLeft: true,
         }),
       ),
-    ).toEqual({ pageSize: "A4", xfactor: 3, yfactor: 2, rightToLeft: true });
+    ).toEqual({ pageSize: "A4", xFactor: 3, yFactor: 2, rightToLeft: true });
   });
 });
 

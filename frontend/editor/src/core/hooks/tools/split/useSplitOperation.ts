@@ -79,9 +79,8 @@ export const splitToApiParams = (
     case SPLIT_METHODS.BY_POSTER:
       return {
         pageSize: (parameters.pageSize || "A4") as PosterApiParams["pageSize"],
-        // The backend field names are lower-case (xfactor/yfactor) per the spec.
-        xfactor: Number(parameters.xFactor ?? "2"),
-        yfactor: Number(parameters.yFactor ?? "2"),
+        xFactor: Number(parameters.xFactor ?? "2"),
+        yFactor: Number(parameters.yFactor ?? "2"),
         rightToLeft: parameters.rightToLeft ?? false,
       };
     default:
@@ -99,9 +98,9 @@ export const splitFromApiParams = (
       method: SPLIT_METHODS.BY_POSTER,
       pageSize: apiParams.pageSize,
       xFactor:
-        apiParams.xfactor !== undefined ? `${apiParams.xfactor}` : undefined,
+        apiParams.xFactor !== undefined ? `${apiParams.xFactor}` : undefined,
       yFactor:
-        apiParams.yfactor !== undefined ? `${apiParams.yfactor}` : undefined,
+        apiParams.yFactor !== undefined ? `${apiParams.yFactor}` : undefined,
       rightToLeft: apiParams.rightToLeft ?? defaultParameters.rightToLeft,
     };
   }
