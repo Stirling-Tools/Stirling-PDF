@@ -19,11 +19,11 @@ import { ThemeProvider } from "@portal/contexts/ThemeContext";
 import { UIProvider } from "@portal/contexts/UIContext";
 import { mantineTheme } from "@portal/theme/mantineTheme";
 import { handlers } from "@portal/mocks/handlers";
-import { configureSupabase } from "@shared/auth/supabase/supabaseClient";
+import { configureSupabase } from "@proprietary/auth/supabase/supabaseClient";
 
 import "@mantine/core/styles.css";
-import "@shared/tokens/tokens.css";
-import "@shared/tokens/base.css";
+import "@core/tokens/tokens.css";
+import "@core/tokens/base.css";
 
 // Start MSW once. Storybook runs in a browser so this uses the service worker.
 initialize({ onUnhandledRequest: "bypass" }, handlers);
