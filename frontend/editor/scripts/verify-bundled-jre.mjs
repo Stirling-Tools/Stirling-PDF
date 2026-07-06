@@ -10,10 +10,15 @@
 // Required major comes from REQUIRED_JAVA (wired from .taskfiles/desktop.yml,
 // which mirrors build.gradle `modernJavaVersion`). Keep them in sync.
 import { spawnSync } from "node:child_process";
+import { resolve } from "node:path";
 import { readFileSync } from "node:fs";
 
 const required = Number(process.env.REQUIRED_JAVA ?? "25");
 const releasePath = process.argv[2] ?? "runtime/jre/release";
+const expectedReleasePath = resolve(
+  process.cwd(),
+  "src-tauri/runtime/jre/release",
+);
 
 function rebuildRuntime(reason) {
   console.warn(
@@ -47,6 +52,10 @@ function rebuildRuntime(reason) {
 }
 
 function readReleaseFile(path) {
+  if (resolve(process.cwd(), path) !== expectedReleasePath) {
+    throw new Error(`Refusing to read unexpected release file path: ${path}`);
+  }
+
   return readFileSync(path, "utf8");
 }
 

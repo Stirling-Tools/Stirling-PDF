@@ -5,6 +5,44 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+$AllowedModules = @(
+    "java.base",
+    "java.compiler",
+    "java.desktop",
+    "java.instrument",
+    "java.logging",
+    "java.management",
+    "java.naming",
+    "java.net.http",
+    "java.prefs",
+    "java.rmi",
+    "java.scripting",
+    "java.security.jgss",
+    "java.security.sasl",
+    "java.sql",
+    "java.transaction.xa",
+    "java.xml",
+    "java.xml.crypto",
+    "jdk.crypto.ec",
+    "jdk.crypto.cryptoki",
+    "jdk.unsupported",
+    "jdk.dynalink"
+)
+
+$RequestedModules = @($Modules -split "," | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+if ($RequestedModules.Count -eq 0) {
+    throw "At least one jlink module is required."
+}
+
+$InvalidModules = $RequestedModules | Where-Object {
+    ($_ -notmatch '^[A-Za-z0-9_.]+$') -or ($_ -notin $AllowedModules)
+}
+if ($InvalidModules) {
+    throw "Unsupported jlink module(s): $($InvalidModules -join ', ')"
+}
+
+$ModulesArg = $RequestedModules -join ","
+
 $Jlink = if ($env:JAVA_HOME) {
     Join-Path $env:JAVA_HOME "bin/jlink.exe"
 } else {
@@ -17,7 +55,7 @@ $HelpText = & $Jlink --help 2>&1 | Out-String
 $Compress = if ($HelpText -match "zip-\[0-9\]") { "zip-6" } else { "2" }
 
 & $Jlink `
-    --add-modules "$Modules,jdk.crypto.mscapi" `
+    --add-modules "$ModulesArg,jdk.crypto.mscapi" `
     --strip-debug `
     --compress="$Compress" `
     --no-header-files `
