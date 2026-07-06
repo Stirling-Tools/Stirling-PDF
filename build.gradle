@@ -47,11 +47,13 @@ ext {
     modernJavaVersion = 25
 }
 
-def buildJavaLanguageVersion = JavaLanguageVersion.of(project.findProperty('javaVersion')?.toString() ?: '25')
+def buildJavaMajorVersion = (project.findProperty('javaVersion') ?: ext.modernJavaVersion).toString().toInteger()
+def buildJavaLanguageVersion = JavaLanguageVersion.of(buildJavaMajorVersion)
+def buildJavaVersion = JavaVersion.toVersion(buildJavaMajorVersion.toString())
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_25
-    targetCompatibility = JavaVersion.VERSION_25
+    sourceCompatibility = buildJavaVersion
+    targetCompatibility = buildJavaVersion
     toolchain {
         languageVersion = buildJavaLanguageVersion
     }
@@ -173,8 +175,8 @@ subprojects {
     apply plugin: 'jacoco'
 
     java {
-        sourceCompatibility = JavaVersion.VERSION_25
-        targetCompatibility = JavaVersion.VERSION_25
+        sourceCompatibility = buildJavaVersion
+        targetCompatibility = buildJavaVersion
         toolchain {
             languageVersion = buildJavaLanguageVersion
         }
@@ -264,7 +266,7 @@ subprojects {
 
     tasks.withType(JavaCompile).configureEach {
         options.encoding = "UTF-8"
-        options.release = rootProject.ext.modernJavaVersion
+        options.release = buildJavaMajorVersion
         if (!project.hasProperty("noSpotless")) {
             dependsOn "spotlessApply"
         }
@@ -659,12 +661,13 @@ tasks.register('compileRestartHelper', JavaCompile) {
     source = fileTree(dir: 'scripts', include: 'RestartHelper.java')
     classpath = files()
     destinationDirectory = layout.buildDirectory.dir("restart-helper-classes")
-    def restartMajorVersion = project.ext.modernJavaVersion
+    def restartMajorVersion = buildJavaMajorVersion
+    def restartLanguageVersion = JavaLanguageVersion.of(restartMajorVersion)
     def restartCompatibility = JavaVersion.toVersion(restartMajorVersion.toString())
     sourceCompatibility = restartCompatibility
     targetCompatibility = restartCompatibility
     javaCompiler = javaToolchains.compilerFor {
-        languageVersion = buildJavaLanguageVersion
+        languageVersion = restartLanguageVersion
     }
     options.release.set(restartMajorVersion)
 }
