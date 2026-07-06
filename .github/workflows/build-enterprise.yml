@@ -2,7 +2,7 @@ name: Enterprise E2E (Playwright)
 
 # Enterprise Playwright suite — exercises premium-key gated features (audit,
 # teams, analytics) plus full OAuth + SAML logins via the Keycloak compose
-# stacks under testing/compose. Slow and secret-gated, so it runs in three
+# stacks under testing/compose. Slow and secret-gated, so it runs in four
 # situations:
 #
 #   - PRs that touch proprietary / premium / SSO compose / enterprise tests
@@ -12,8 +12,6 @@ name: Enterprise E2E (Playwright)
 #   - on a nightly cron schedule (catches Keycloak image drift, license
 #     expiry, upstream proprietary changes),
 #   - manual workflow_dispatch.
-#
-# Auto-skipped when secrets.PREMIUM_KEY_ENTERPRISE is missing (forks, dependabot).
 
 on:
   workflow_call:
@@ -52,6 +50,10 @@ jobs:
 
   playwright-e2e-enterprise:
     needs: pick
+    # Skip on fork PRs / untrusted authors: they have no PREMIUM_KEY_ENTERPRISE
+    # (nor DEPOT_TOKEN), so the suite can't boot premium and would fail. See the
+    # header comment. GitHub reports the skipped reusable workflow as success.
+    if: needs.pick.outputs.is_fork != 'true'
     runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || format('depot-ubuntu-24.04-{0}', inputs.depot_cores || '8') }}
     timeout-minutes: 45
     env:
@@ -285,5 +287,5 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: playwright-report-enterprise-${{ github.run_id }}
-          path: frontend/editor/playwright-report/
+          path: frontend/playwright-report/
           retention-days: 7

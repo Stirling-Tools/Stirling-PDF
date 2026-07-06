@@ -6242,8 +6242,18 @@ noClientSecret = "Edge function returned no client_secret."
 subtitle = "Add a card to keep going past your free Editor-plan grant. Stripe handles the rest."
 title = "Turn on the Processor plan"
 
+[portal.billing.checkout.activationSlow]
+body = "Your payment succeeded, but activation is taking a little longer than usual. It'll switch on automatically - close this and it'll appear here shortly."
+close = "Close"
+title = "Almost there"
+
 [portal.billing.checkout.error]
 title = "Couldn't start checkout"
+
+[portal.billing.checkout.finalizing]
+body = "Your payment went through. We're switching on metered processing across your linked instances - this usually takes a few seconds."
+hint = "Please keep this window open."
+title = "Activating your Processor plan..."
 
 [portal.billing.checkout.notConfigured]
 bodyAfter = "in the portal env to enable in-app checkout."
@@ -7758,10 +7768,6 @@ title = "Usage & billing"
 loadWallet = "Couldn't load wallet"
 openStripePortal = "Couldn't open Stripe portal"
 walletUnavailable = "Wallet unavailable: {{status}} {{statusText}}"
-
-[portal.usage.finalizing]
-body = "It can take a few seconds for your subscription to activate. This page updates automatically."
-title = "Finalizing your subscription…"
 
 [portal.usage.sessionExpired]
 action = "Sign in again"
