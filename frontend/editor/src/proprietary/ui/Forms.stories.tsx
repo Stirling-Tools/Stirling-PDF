@@ -73,23 +73,6 @@ export const Input_Error: Story = {
   ),
 };
 
-export const Select_Default: Story = {
-  render: () => (
-    <FormField label="Retention period">
-      <Select
-        defaultValue="90"
-        options={[
-          { value: "30", label: "30 days" },
-          { value: "60", label: "60 days" },
-          { value: "90", label: "90 days (default)" },
-          { value: "180", label: "180 days" },
-          { value: "never", label: "Never expire" },
-        ]}
-      />
-    </FormField>
-  ),
-};
-
 export const Checkbox_Single: Story = {
   render: () => (
     <Stack gap="2">
