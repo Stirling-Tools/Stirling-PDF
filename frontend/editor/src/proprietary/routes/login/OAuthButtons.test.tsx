@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MantineProvider } from "@mantine/core";
-import OAuthButtons from "@shared/auth/ui/OAuthButtons";
+import OAuthButtons from "@app/auth/ui/OAuthButtons";
 
 // Mock i18n
 vi.mock("react-i18next", () => ({
