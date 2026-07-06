@@ -1,6 +1,10 @@
 import { type TFunction } from "i18next";
 import React from "react";
-import { ToolOperationConfig } from "@app/hooks/tools/shared/toolOperationTypes";
+import {
+  type ErasedToolParams,
+  type ToolAutomationSettingsProps,
+  ToolOperationConfig,
+} from "@app/hooks/tools/shared/toolOperationTypes";
 import { BaseToolProps } from "@app/types/tool";
 import { WorkbenchType } from "@app/types/workbench";
 import {
@@ -58,10 +62,13 @@ export type ToolRegistryEntry = {
   kind?: ToolKind;
   // Workbench type for navigation
   workbench?: WorkbenchType;
-  // Operation configuration for automation
-  operationConfig?: ToolOperationConfig<any>;
-  // Settings component for automation configuration
-  automationSettings: React.ComponentType<any> | null;
+  // Operation configuration for automation. TParams is erased at the registry
+  // boundary; tools are authored type-safely via defineToolAutomation.
+  operationConfig?: ToolOperationConfig<ErasedToolParams>;
+  // Settings component for automation configuration.
+  automationSettings: React.ComponentType<
+    ToolAutomationSettingsProps<ErasedToolParams>
+  > | null;
   // Whether this tool supports automation (defaults to true)
   supportsAutomate?: boolean;
   // Synonyms for search (optional)

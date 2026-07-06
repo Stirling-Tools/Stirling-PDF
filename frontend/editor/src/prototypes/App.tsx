@@ -18,7 +18,7 @@ import Onboarding from "@app/components/onboarding/Onboarding";
 import "@app/styles/tailwind.css";
 import "@app/styles/cookieconsent.css";
 import "@app/styles/index.css";
-import "@app/styles/auth-theme.css";
+import "@app/auth/ui/auth-theme.css";
 
 // Import file ID debugging helpers (development only)
 import "@app/utils/fileIdSafety";

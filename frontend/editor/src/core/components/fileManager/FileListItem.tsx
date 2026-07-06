@@ -150,7 +150,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
         shareLinks?: Array<{ token?: string }>;
       }>(`/api/v1/storage/files/${file.remoteStorageId}`, {
         suppressErrorToast: true,
-      } as any);
+      });
       const links = response.data?.shareLinks ?? [];
       const token = links[links.length - 1]?.token;
       if (!token) {

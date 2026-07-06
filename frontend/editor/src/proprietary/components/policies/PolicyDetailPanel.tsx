@@ -9,15 +9,15 @@ import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 import LockIcon from "@mui/icons-material/Lock";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
-import { PanelHeader } from "@shared/components/PanelHeader";
+import { PanelHeader } from "@app/ui/PanelHeader";
 import { ROW_ACCENT } from "@app/components/policies/policyStatus";
-import { Card } from "@shared/components/Card";
-import { ChipFlow } from "@shared/components/ChipFlow";
-import { StatusBadge } from "@shared/components/StatusBadge";
-import { EmptyState } from "@shared/components/EmptyState";
-import { Button } from "@shared/components/Button";
-import { Banner } from "@shared/components/Banner";
-import { ListRow } from "@shared/components/ListRow";
+import { Card } from "@app/ui/Card";
+import { ChipFlow } from "@app/ui/ChipFlow";
+import { StatusBadge } from "@app/ui/StatusBadge";
+import { EmptyState } from "@app/ui/EmptyState";
+import { Button } from "@app/ui/Button";
+import { Banner } from "@app/ui/Banner";
+import { ListRow } from "@app/ui/ListRow";
 import type {
   PolicyActivityItem,
   PolicyCategory,
@@ -132,9 +132,10 @@ export function PolicyDetailPanel({
     <div className="pol-detail">
       <PanelHeader
         icon={category.icon}
-        iconAccent={ROW_ACCENT[category.id] ?? "blue"}
+        accent={ROW_ACCENT[category.id]}
         title={t(`policies.catalog.${category.id}`, category.label)}
-        onBack={onBack}
+        onClose={onBack}
+        closeLabel={t("policies.detail.close", "Close")}
         actions={
           <StatusBadge
             tone={isPaused ? "warning" : "success"}

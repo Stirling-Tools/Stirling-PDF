@@ -4,11 +4,11 @@ import { useTranslation } from "react-i18next";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
 import { useAuth } from "@app/auth/UseSession";
 import AuthLayout from "@app/routes/authShared/AuthLayout";
-import "@app/routes/authShared/auth.css";
+import "@app/auth/ui/auth.css";
 import { BASE_PATH, withBasePath } from "@app/constants/app";
 
 // Import signup components
-import ErrorMessage from "@app/routes/login/ErrorMessage";
+import ErrorMessage from "@app/auth/ui/ErrorMessage";
 import DividerWithText from "@app/components/shared/DividerWithText";
 import SignupForm from "@app/routes/signup/SignupForm";
 import {
@@ -16,6 +16,7 @@ import {
   SignupFieldErrors,
 } from "@app/routes/signup/SignupFormValidation";
 import { useAuthService } from "@app/routes/signup/AuthService";
+import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -93,7 +94,7 @@ export default function Signup() {
     <AuthLayout>
       <div className="auth-logo-block">
         <img
-          src={withBasePath("/modern-logo/LoginLightModeHeader.svg")}
+          src={loginHeader}
           alt="Stirling PDF"
           className="auth-logo-header auth-logo-header--light"
         />

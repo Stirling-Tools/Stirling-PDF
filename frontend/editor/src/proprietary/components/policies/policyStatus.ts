@@ -1,4 +1,4 @@
-import type { IconBadgeAccent } from "@shared/components/IconBadge";
+import type { IconBadgeAccent } from "@app/ui/IconBadge";
 import type { PolicyRowStatus, PolicyState } from "@app/types/policies";
 
 /** Derive a single row/detail status from a policy's persisted state. */
@@ -17,7 +17,9 @@ export const STATUS_LABEL: Record<PolicyRowStatus, string> = {
   setup: "Set up",
 };
 
-/** A soft tinted icon tile per category — gives each policy a calm identity colour. */
+/**
+ * Per-category accent colour
+ */
 export const ROW_ACCENT: Record<string, IconBadgeAccent> = {
   ingestion: "blue",
   security: "purple",

@@ -1,7 +1,7 @@
 import { oauthProviders } from "@app/constants/authProviders";
 import { useTranslation } from "@app/hooks/useTranslation";
 import { Tooltip } from "@app/components/shared/Tooltip";
-import { withBasePath } from "@app/constants/app";
+import { oauthIconUrl } from "@app/auth/ui/oauthIcons";
 
 // Exports for compatibility with proprietary code
 export const DEBUG_SHOW_ALL_PROVIDERS = false;
@@ -45,7 +45,7 @@ export default function OAuthButtons({
               aria-label={`${t("login.signInWith", "Sign in with")} ${p.label}`}
             >
               <img
-                src={withBasePath(`/Login/${p.file}`)}
+                src={oauthIconUrl(p.file)}
                 alt={p.label}
                 className={`oauth-icon-small ${p.isDisabled ? "opacity-20" : ""}`}
               />
@@ -72,7 +72,7 @@ export default function OAuthButtons({
               aria-label={`${t("login.signInWith", "Sign in with")} ${p.label}`}
             >
               <img
-                src={withBasePath(`/Login/${p.file}`)}
+                src={oauthIconUrl(p.file)}
                 alt={p.label}
                 className={`oauth-icon-medium ${p.isDisabled ? "opacity-20" : ""}`}
               />
@@ -96,7 +96,7 @@ export default function OAuthButtons({
           >
             <span className="oauth-btn-group">
               <img
-                src={withBasePath(`/Login/${p.file}`)}
+                src={oauthIconUrl(p.file)}
                 alt={p.label}
                 className={`oauth-icon-medium ${p.isDisabled ? "opacity-20" : ""}`}
                 style={{ marginRight: "0.5rem", flexShrink: 0 }}
@@ -123,7 +123,7 @@ export default function OAuthButtons({
           title={p.label}
         >
           <img
-            src={withBasePath(`/Login/${p.file}`)}
+            src={oauthIconUrl(p.file)}
             alt={p.label}
             className={`oauth-icon-tiny ${p.isDisabled ? "opacity-20" : ""}`}
           />

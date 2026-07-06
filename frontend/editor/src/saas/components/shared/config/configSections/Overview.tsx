@@ -21,7 +21,7 @@ import {
   linkOAuthIdentity,
   supabase,
 } from "@app/auth/supabase";
-import { BASE_PATH } from "@app/constants/app";
+import { oauthIconUrl } from "@app/auth/ui/oauthIcons";
 import { oauthProviders } from "@app/constants/authProviders";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { absoluteWithBasePath } from "@app/constants/app";
@@ -564,7 +564,7 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
                       size="sm"
                       leftSection={
                         <Image
-                          src={`${BASE_PATH}/Login/${provider.file}`}
+                          src={oauthIconUrl(provider.file)}
                           alt={provider.label}
                           style={{ width: 16, height: 16 }}
                         />
